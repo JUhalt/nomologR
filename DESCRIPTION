@@ -1,0 +1,43 @@
+Package: nomologR
+Type: Package
+Title: A Two-Step Workflow for Scale Development and Nomological Validation
+Version: 0.1.0
+Authors@R: c(
+    person(
+      "Joshua", "Uhalt",
+      email = "Josh.Uhalt@gmail.com",
+      role = c("aut", "cre")
+    )
+  )
+Description: Helpers to build unidimensional, reliable measurement models (EFA -> CFA),
+    then evaluate convergent, discriminant, and nomological validity via SEM. Provides
+    rule-based suggestions and a decision log.
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Depends: R (>= 4.2)
+Imports:
+    lavaan,
+    semTools,
+    psych,
+    semPlot,
+    dplyr,
+    purrr,
+    tibble,
+    tidyr,
+    stringr,
+    ggplot2,
+    stats,
+    utils,
+    glue,
+    gt
+Suggests:
+    testthat (>= 3.0.0),
+    knitr,
+    rmarkdown,
+    covr
+Config/testthat/edition: 3
+URL: https://github.com/JUhalt/nomologR
+BugReports: https://github.com/JUhalt/nomologR/issues

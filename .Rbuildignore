@@ -1,0 +1,11 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+^README\.Rmd$
+^\.github$
+^vignettes/.*\.html$
+^pkgdown$
+^_pkgdown\.yml$
+^renv$
+^renv\.lock$
+^dev$
+^data-raw$

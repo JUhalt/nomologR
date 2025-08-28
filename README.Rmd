@@ -1,0 +1,12 @@
+---
+output: github_document
+---
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+# nomologr
+
+Opinionated helpers for **two-step** scale development (EFA → CFA) and **nomological validation** with SEM.
+

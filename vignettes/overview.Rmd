@@ -1,0 +1,22 @@
+---
+title: "nomologr: two-step measurement -> nomological validation"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{nomologr: overview}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+This vignette outlines the intended pipeline:
+
+1) Screen items  
+2) EFA (parallel analysis, oblimin)  
+3) CFA (measurement-only)  
+4) Reliability & validity (CR, AVE, HTMT)  
+5) Nomological SEM (theory-driven)  
+6) Invariance (if groups)  
+7) Report (decision log)
