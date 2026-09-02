@@ -4,10 +4,17 @@
 \name{nomologR-package}
 \alias{nomologR}
 \alias{nomologR-package}
-\title{nomologR: Two-step scale development and nomological validation}
+\title{nomologR: Guided scale development and construct validation}
 \description{
-Opinionated helpers for EFA → CFA (measurement first) and then SEM for
-nomological validity, with rule-based suggestions and a decision log.
+\code{nomologR} coordinates established psychometric and structural-equation
+modeling tools while adding evidence-guided diagnostics, transparent
+decision logging, and teaching-oriented interpretation.
+}
+\details{
+The package follows a measurement-first philosophy: understand the item set
+and measurement model before interpreting a theory-specified structural
+network. Numerical reference values are prompts for investigation rather than
+universal deletion or validity rules.
 }
 \seealso{
 Useful links:
@@ -19,6 +26,11 @@ Useful links:
 }
 \author{
 \strong{Maintainer}: Joshua Uhalt \email{Josh.Uhalt@gmail.com}
+
+Authors:
+\itemize{
+  \item Joshua Uhalt \email{Josh.Uhalt@gmail.com}
+}
 
 }
 \keyword{internal}
