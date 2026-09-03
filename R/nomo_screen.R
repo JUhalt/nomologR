@@ -25,6 +25,13 @@
 #' has no observed values. These are hard data conditions rather than
 #' psychometric cutoff rules.
 #'
+#' Response concentration and near-zero-variance flags use configurable
+#' teaching references from [nomo_defaults()]. They are screening heuristics,
+#' not psychometric laws or automatic item-retention rules. Ordered and
+#' numeric-discrete items also receive descriptive boundary concentration
+#' summaries. Continuous-like numeric indicators receive descriptive skewness
+#' and excess-kurtosis summaries without a pass/fail normality judgment.
+#'
 #' @return An object of class `nomo_screen` containing item summaries, response
 #'   distributions, case-level completeness diagnostics, an evidence-guided
 #'   decision log, and the guidance settings used.
@@ -101,6 +108,13 @@ nomo_screen <- function(data, items = NULL, guidance = nomo_defaults()) {
       nomo_screen_distribution(selected[[item]], item)
     })
   )
+
+  descriptives <- nomo_screen_descriptives(
+    selected = selected,
+    item_summary = item_summary,
+    guidance = guidance
+  )
+  item_summary <- descriptives$item_summary
 
   missing_matrix <- is.na(selected)
   n_missing_case <- rowSums(missing_matrix)
@@ -273,6 +287,7 @@ nomo_screen <- function(data, items = NULL, guidance = nomo_defaults()) {
 
   decision_log <- dplyr::bind_rows(
     decision_log,
+    descriptives$decision_log,
     relationships$decision_log
   )
 
@@ -330,6 +345,20 @@ print.nomo_screen <- function(x, ...) {
       n_item_rest
     ))
   }
+
+  n_concentration <- sum(
+    x$decision_log$metric %in% c(
+      "response_concentration",
+      "floor_concentration",
+      "ceiling_concentration"
+    )
+  )
+  n_nzv <- sum(x$item_summary$near_zero_variance)
+  cat(sprintf(
+    "Response concentration flags: %d | Near-zero variance: %d\n",
+    n_concentration,
+    n_nzv
+  ))
 
   if (nrow(x$decision_log) > 0L) {
     severity_counts <- table(

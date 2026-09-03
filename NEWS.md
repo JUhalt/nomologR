@@ -1,5 +1,21 @@
 # nomologR 0.0.0.9000
 
+## Milestone 1B — psychometric screening
+
+- Added corrected item-rest and inter-item relationship diagnostics for
+  explicitly scored numeric/logical candidate items.
+- Added review guidance for negative and weak item-rest relationships without
+  automatic reverse-scoring or deletion.
+- Added configurable response-concentration and near-zero-variance screening.
+- Added descriptive floor/ceiling concentration for ordered and
+  numeric-discrete items where those boundaries are meaningful.
+- Added descriptive skewness and excess kurtosis for continuous-like numeric
+  indicators without normality pass/fail declarations.
+- Expanded `nomo_screen()` printing and tests for the psychometric screening layer.
+- Refocused the README on the `contentvalidR` -> `nomologR` measurement workflow
+  and the active v0.1 development path.
+- Added a GitHub issue form for roadmap-milestone tracking.
+
 ## Milestone 1 — item/data screening
 
 - Implemented the first production slice of `nomo_screen()`.
