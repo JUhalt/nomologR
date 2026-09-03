@@ -2,9 +2,13 @@
 #'
 #' `nomo_factors()` combines multiple pieces of factor-retention evidence rather
 #' than treating any single rule as definitive. The primary retention evidence is
-#' a common-factor parallel analysis, complemented by Velicer's original MAP (TR2) criterion.
-#' Scree information, Kaiser-Meyer-Olkin (KMO) sampling adequacy, and Bartlett's
-#' test are returned as supporting diagnostics.
+#' a common-factor parallel analysis, complemented by Velicer's original and
+#' revised MAP criteria and, under the default `criterion_set = "core"`, the
+#' empirical Kaiser criterion (EKC). Extended criterion sets can add NEST, Hull
+#' (CAF), comparison data, and the legacy Kaiser-Guttman rule when their
+#' assumptions are compatible with the analyzed data. Scree information,
+#' Kaiser-Meyer-Olkin (KMO) sampling adequacy, and Bartlett's test are returned
+#' as supporting diagnostics.
 #'
 #' Correlation choice is explicit and visible. With `correlation = "auto"`,
 #' continuous indicators use Pearson correlations, all-binary indicators use
@@ -29,6 +33,15 @@
 #' @param missing Missing-data handling for correlation estimation. `"pairwise"`
 #'   uses pairwise-complete observations; `"complete"` restricts the analysis to
 #'   cases complete on all selected items.
+#' @param criterion_set Retention-criterion bundle. `"minimal"` uses parallel
+#'   analysis plus original MAP; `"core"` (default) adds revised MAP and EKC;
+#'   `"extended"` adds NEST and Hull where supported; `"all"` additionally
+#'   requests comparison data and the legacy Kaiser-Guttman rule. Criteria whose
+#'   assumptions are not compatible with the current data are explicitly marked
+#'   as skipped rather than silently substituted.
+#' @param parallel_rule Parallel-analysis decision rule: `"percentile"`
+#'   (default), `"mean"`, or `"crawford"`. All three rules are computed from
+#'   the same null simulations and retained in the result as sensitivity evidence.
 #' @param n_iter Number of null-data iterations used for parallel analysis. If
 #'   `NULL`, the value in `guidance$factor_parallel_iterations` is used.
 #' @param quantile Quantile of null eigenvalues used as the parallel-analysis
@@ -46,9 +59,10 @@
 #' @param guidance Guidance settings from [nomo_defaults()].
 #'
 #' @return An object of class `nomo_factors` containing the analyzed correlation
-#'   matrix, item modeling types, KMO and Bartlett diagnostics, parallel-analysis
-#'   results, MAP results, scree information, a cautious retention synthesis,
-#'   and a decision log.
+#'   matrix, item modeling types, convenience aliases `correlation` and
+#'   `modeling_types`, KMO and Bartlett diagnostics, parallel-analysis results,
+#'   MAP results, criterion availability/status, method- and family-level concordance,
+#'   scree information, a cautious retention synthesis, and a decision log.
 #'
 #' @examples
 #' set.seed(42)
@@ -76,6 +90,8 @@ nomo_factors <- function(data,
                          ),
                          types = NULL,
                          missing = c("pairwise", "complete"),
+                         criterion_set = c("core", "minimal", "extended", "all"),
+                         parallel_rule = c("percentile", "mean", "crawford"),
                          n_iter = NULL,
                          quantile = NULL,
                          max_factors = NULL,
@@ -101,6 +117,8 @@ nomo_factors <- function(data,
 
   correlation <- match.arg(correlation)
   missing <- match.arg(missing)
+  criterion_set <- match.arg(criterion_set)
+  parallel_rule <- match.arg(parallel_rule)
 
   if (is.null(items)) {
     items <- names(data)
@@ -322,6 +340,7 @@ nomo_factors <- function(data,
     observed = observed_fa,
     n_iter = n_iter,
     quantile = quantile,
+    parallel_rule = parallel_rule,
     seed = seed,
     fm = fm
   )
@@ -343,9 +362,29 @@ nomo_factors <- function(data,
     factor_eigenvalue = as.numeric(observed_fa)
   )
 
+  common_n_available <- missing == "complete" || !anyNA(analysis_data)
+
+  criteria <- nomo_factors_build_criteria(
+    criterion_set = criterion_set,
+    pa = pa,
+    map = map,
+    corr = corr,
+    analysis_data = analysis_data,
+    item_types = item_types,
+    correlation_method = method,
+    common_n_available = common_n_available,
+    max_factors = max_factors,
+    n_iter = n_iter,
+    quantile = quantile,
+    seed = seed,
+    guidance = guidance,
+    component_values = component_values
+  )
+
   synthesis <- nomo_factors_synthesis(
+    evidence = criteria$evidence,
     parallel_n = pa$n_factors,
-    map_n = map$n_factors
+    status = criteria$status
   )
 
   decision_log <- nomo_factors_log(
@@ -360,6 +399,7 @@ nomo_factors <- function(data,
     bartlett = bartlett,
     pa = pa,
     map = map,
+    criteria = criteria,
     synthesis = synthesis,
     guidance = guidance
   )
@@ -370,7 +410,9 @@ nomo_factors <- function(data,
     n_items = length(items),
     items = items,
     item_types = item_types,
+    modeling_types = item_types,
     correlation_method = method,
+    correlation = method,
     correlation_requested = correlation,
     correlation_matrix = corr,
     pairwise_n = pairwise_n,
@@ -383,11 +425,14 @@ nomo_factors <- function(data,
     parallel = pa,
     map = map,
     scree = scree,
-    evidence = tibble::tibble(
-      method = c("Parallel analysis", "MAP (original)"),
-      n_factors = c(pa$n_factors, map$n_factors),
-      role = c("primary", "complementary")
-    ),
+    criterion_set = criterion_set,
+    criterion_status = criteria$status,
+    criterion_details = criteria$details,
+    evidence = criteria$evidence,
+    family_evidence = synthesis$family_evidence,
+    concordance = synthesis$concordance,
+    family_concordance = synthesis$family_concordance,
+    method_concordance = synthesis$method_concordance,
     plausible_factors = synthesis$plausible_factors,
     recommendation = synthesis$text,
     decision_log = decision_log,
@@ -395,6 +440,7 @@ nomo_factors <- function(data,
     seed = seed,
     n_iter = n_iter,
     quantile = quantile,
+    parallel_rule = parallel_rule,
     guidance = guidance
   )
 
@@ -720,6 +766,7 @@ nomo_factors_parallel <- function(x,
                                   observed,
                                   n_iter,
                                   quantile,
+                                  parallel_rule,
                                   seed,
                                   fm) {
   old_exists <- exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
@@ -817,7 +864,8 @@ nomo_factors_parallel <- function(x,
     )
   }
 
-  reference <- apply(
+  reference_mean <- colMeans(random_values, na.rm = TRUE)
+  reference_percentile <- apply(
     random_values,
     2,
     stats::quantile,
@@ -826,32 +874,48 @@ nomo_factors_parallel <- function(x,
     names = FALSE,
     type = 7
   )
+  reference_crawford <- reference_mean
+  reference_crawford[[1L]] <- reference_percentile[[1L]]
 
-  exceeds_reference <- observed > reference
+  references <- list(
+    mean = as.numeric(reference_mean),
+    percentile = as.numeric(reference_percentile),
+    crawford = as.numeric(reference_crawford)
+  )
 
-  # Parallel analysis retains the leading run of factors that exceed the null
-  # reference. A later chance crossing after the first failed factor is not a
-  # basis for retaining an additional dimension. This mirrors the stopping rule
-  # used by established parallel-analysis implementations such as psych::fa.parallel().
-  first_failure <- which(!exceeds_reference)[1L]
-  n_factors <- if (is.na(first_failure)) {
-    length(exceeds_reference)
-  } else {
-    first_failure - 1L
+  stopping_count <- function(reference) {
+    exceeds <- observed > reference
+    first_failure <- which(!exceeds)[1L]
+    if (is.na(first_failure)) length(exceeds) else first_failure - 1L
   }
 
+  counts <- vapply(references, stopping_count, integer(1))
+  selected_reference <- references[[parallel_rule]]
+  n_factors <- counts[[parallel_rule]]
+  exceeds_reference <- observed > selected_reference
   retained <- seq_along(exceeds_reference) <= n_factors
 
   table <- tibble::tibble(
     factor = seq_along(observed),
     observed_eigenvalue = as.numeric(observed),
-    random_reference = as.numeric(reference),
+    random_mean = as.numeric(reference_mean),
+    random_percentile = as.numeric(reference_percentile),
+    random_crawford = as.numeric(reference_crawford),
+    random_reference = as.numeric(selected_reference),
     exceeds_reference = as.logical(exceeds_reference),
     retained = as.logical(retained)
   )
 
+  sensitivity <- tibble::tibble(
+    rule = c("percentile", "mean", "crawford"),
+    n_factors = as.integer(counts[c("percentile", "mean", "crawford")]),
+    selected = c("percentile", "mean", "crawford") == parallel_rule
+  )
+
   list(
     n_factors = as.integer(n_factors),
+    rule = parallel_rule,
+    sensitivity = sensitivity,
     table = table,
     random_eigenvalues = random_values,
     n_requested = as.integer(n_iter),
@@ -865,32 +929,39 @@ nomo_factors_parallel <- function(x,
 
 
 nomo_factors_map <- function(corr, max_factors) {
-  # Velicer's original MAP (TR2) evaluates the mean squared off-diagonal
-  # partial correlations after successively partialling principal components
-  # from the correlation matrix. Importantly, m = 0 (the original correlation
-  # matrix) is part of the criterion. psych::VSS() reports the same TR2 series
-  # for m >= 1 but omits the zero-component candidate, so we compute the
-  # criterion directly here to preserve the full original procedure.
+  # Velicer MAP includes m = 0. TR2 is the original average squared partial
+  # correlation criterion; TR4 is the revised fourth-power criterion. Both are
+  # evaluated over the same sequence of residual partial-correlation matrices.
   p <- ncol(corr)
   max_factors <- min(as.integer(max_factors), p - 1L)
 
   eig <- eigen(corr, symmetric = TRUE)
   values <- pmax(eig$values, 0)
-  loadings <- sweep(
-    eig$vectors,
-    2,
-    sqrt(values),
-    `*`
-  )
+  loadings <- sweep(eig$vectors, 2, sqrt(values), `*`)
 
-  map_value <- function(partial_corr) {
-    off_diag <- partial_corr[row(partial_corr) != col(partial_corr)]
-    mean(off_diag^2)
+  map_values <- function(partial_corr) {
+    # TR2 is algebraically equal to (tr(M^2) - p) / p(p - 1), but
+    # calculating it directly from the off-diagonal squared partial
+    # correlations avoids subtractive cancellation when correlations are tiny.
+    # TR4 is genuinely based on the fourth *matrix* power and is therefore
+    # retained in trace form rather than as element-wise fourth powers.
+    off_diagonal <- partial_corr[row(partial_corr) != col(partial_corr)]
+    m2 <- partial_corr %*% partial_corr
+    m4 <- m2 %*% m2
+    c(
+      tr2 = mean(off_diagonal^2),
+      tr4 = (sum(diag(m4)) - p) / (p * (p - 1))
+    )
   }
 
   factor_grid <- 0:max_factors
-  criteria <- rep(NA_real_, length(factor_grid))
-  criteria[[1L]] <- map_value(corr)
+  criteria <- matrix(
+    NA_real_,
+    nrow = length(factor_grid),
+    ncol = 2L,
+    dimnames = list(NULL, c("tr2", "tr4"))
+  )
+  criteria[1L, ] <- map_values(corr)
   m_last <- 0L
 
   if (max_factors >= 1L) {
@@ -899,50 +970,84 @@ nomo_factors_map <- function(corr, max_factors) {
       residual_cov <- corr - tcrossprod(a_m)
       residual_var <- diag(residual_cov)
 
-      # At very high m the residual matrix can become degenerate. Stop rather
-      # than substituting an arbitrary value that could create a false minimum.
-      if (
-        any(!is.finite(residual_var)) ||
-          any(residual_var <= 1e-08)
-      ) {
+      if (any(!is.finite(residual_var)) || any(residual_var <= 1e-08)) {
         break
       }
 
       inv_sd <- 1 / sqrt(residual_var)
       partial_corr <- residual_cov * tcrossprod(inv_sd)
       diag(partial_corr) <- 1
-
-      criteria[[m + 1L]] <- map_value(partial_corr)
+      criteria[m + 1L, ] <- map_values(partial_corr)
       m_last <- m
     }
   }
 
-  usable <- is.finite(criteria)
-  if (!any(usable)) {
+  usable_tr2 <- is.finite(criteria[, "tr2"])
+  usable_tr4 <- is.finite(criteria[, "tr4"])
+  if (!any(usable_tr2) || !any(usable_tr4)) {
     stop("Velicer MAP did not return usable values.", call. = FALSE)
   }
 
-  usable_grid <- factor_grid[usable]
-  usable_values <- criteria[usable]
-  best <- usable_grid[[which.min(usable_values)]]
+  best_tr2 <- factor_grid[usable_tr2][which.min(criteria[usable_tr2, "tr2"])]
+  best_tr4 <- factor_grid[usable_tr4][which.min(criteria[usable_tr4, "tr4"])]
 
   list(
-    n_factors = as.integer(best),
+    n_factors = as.integer(best_tr2),
+    n_factors_original = as.integer(best_tr2),
+    n_factors_revised = as.integer(best_tr4),
     m_last = as.integer(m_last),
     truncated = m_last < min(max_factors, p - 2L),
     table = tibble::tibble(
       n_factors = as.integer(factor_grid),
-      map = as.numeric(criteria),
-      minimum = factor_grid == best
+      # Backward-compatible aliases from the M2A object schema. `map` and
+      # `minimum` always refer to the original TR2 criterion.
+      map = as.numeric(criteria[, "tr2"]),
+      map_original = as.numeric(criteria[, "tr2"]),
+      map_revised = as.numeric(criteria[, "tr4"]),
+      minimum = factor_grid == best_tr2,
+      minimum_original = factor_grid == best_tr2,
+      minimum_revised = factor_grid == best_tr4
     )
   )
 }
 
-
 nomo_factors_kmo <- function(corr, items) {
-  # psych::KMO() can print inversion diagnostics for singular/nearly singular
-  # matrices even when the failure is handled. Capture that engine chatter so
-  # nomologR can report KMO as unavailable through its own structured output.
+  # KMO requires an invertible correlation matrix. Avoid calling psych::KMO()
+  # when the matrix is singular or numerically near-singular because the engine
+  # can emit low-level LAPACK/inversion chatter before nomologR can recover.
+  # Returning KMO as unavailable is more transparent than silently repairing a
+  # matrix for this supporting diagnostic.
+  bad_condition <- any(!is.finite(corr))
+  if (!bad_condition) {
+    reciprocal_condition <- tryCatch(
+      rcond(corr),
+      error = function(e) 0
+    )
+    rank_corr <- tryCatch(
+      qr(corr, tol = 1e-10)$rank,
+      error = function(e) 0L
+    )
+    bad_condition <- !is.finite(reciprocal_condition) ||
+      reciprocal_condition < 1e-10 ||
+      rank_corr < ncol(corr)
+  }
+
+  if (bad_condition) {
+    return(
+      list(
+        available = FALSE,
+        overall = NA_real_,
+        item = tibble::tibble(
+          item = items,
+          msa = NA_real_
+        )
+      )
+    )
+  }
+
+  # psych::KMO() can still print inversion diagnostics for edge-case matrices
+  # even when the failure is handled. Capture ordinary output and suppress
+  # warnings/messages so nomologR reports through its structured result.
   result <- NULL
   invisible(
     utils::capture.output(
@@ -1024,65 +1129,6 @@ nomo_factors_bartlett <- function(corr, n, available) {
 }
 
 
-nomo_factors_synthesis <- function(parallel_n, map_n) {
-  plausible <- sort(unique(c(parallel_n, map_n)))
-
-  if (parallel_n == map_n) {
-    return(
-      list(
-        plausible_factors = as.integer(plausible),
-        agreement = "convergent",
-        text = sprintf(
-          paste(
-            "Parallel analysis and MAP converge on %d factor%s.",
-            "Treat this as strong reason to investigate that solution,",
-            "not as proof that the construct has exactly that many dimensions."
-          ),
-          parallel_n,
-          if (parallel_n == 1L) "" else "s"
-        )
-      )
-    )
-  }
-
-  if (abs(parallel_n - map_n) == 1L) {
-    return(
-      list(
-        plausible_factors = as.integer(plausible),
-        agreement = "near",
-        text = sprintf(
-          paste(
-            "Parallel analysis suggests %d factor%s and MAP suggests %d.",
-            "The evidence is close but not identical; inspect the scree and",
-            "compare the %s-factor solutions for interpretability and stability."
-          ),
-          parallel_n,
-          if (parallel_n == 1L) "" else "s",
-          map_n,
-          paste(plausible, collapse = " and ")
-        )
-      )
-    )
-  }
-
-  list(
-    plausible_factors = as.integer(seq(min(plausible), max(plausible))),
-    agreement = "divergent",
-    text = sprintf(
-      paste(
-        "Parallel analysis suggests %d factor%s whereas MAP suggests %d.",
-        "Retention evidence is meaningfully divergent; inspect the scree and",
-        "compare plausible neighboring solutions rather than selecting a count",
-        "from one criterion alone."
-      ),
-      parallel_n,
-      if (parallel_n == 1L) "" else "s",
-      map_n
-    )
-  )
-}
-
-
 nomo_factors_log <- function(item_types,
                              requested_correlation,
                              correlation_method,
@@ -1094,6 +1140,7 @@ nomo_factors_log <- function(item_types,
                              bartlett,
                              pa,
                              map,
+                             criteria,
                              synthesis,
                              guidance) {
   log <- nomo_log_new()
@@ -1297,40 +1344,82 @@ nomo_factors_log <- function(item_types,
     metric = "parallel_analysis",
     value = pa$n_factors,
     reference = sprintf(
-      "Observed common-factor eigenvalues > %.0fth percentile of null values",
+      "Common-factor PA using the selected %s rule; %.0fth percentile also retained as sensitivity evidence",
+      pa$rule,
       100 * pa$quantile
     ),
     severity = "info",
     observation = sprintf(
-      "Parallel analysis suggests investigating %d factor%s.",
+      "Parallel analysis (%s rule) suggests investigating %d factor%s.",
+      pa$rule,
       pa$n_factors,
       if (pa$n_factors == 1L) "" else "s"
     ),
     recommendation = paste(
-      "Use parallel analysis as primary retention evidence, then compare it",
-      "with MAP, the scree, theory, and factor interpretability."
+      "Use parallel analysis as primary retention evidence and inspect the",
+      "mean/percentile/Crawford rule sensitivity before treating the count as stable."
     )
+  )
+
+  pa_unique <- length(unique(pa$sensitivity$n_factors))
+  log <- nomo_log_add(
+    log,
+    stage = "factors",
+    object = "retention",
+    metric = "parallel_rule_sensitivity",
+    value = pa_unique,
+    reference = "Agreement across PA decision rules strengthens rule robustness",
+    severity = if (pa_unique == 1L) "info" else "review",
+    observation = paste0(
+      "PA rule suggestions: ",
+      paste(
+        sprintf("%s=%d", pa$sensitivity$rule, pa$sensitivity$n_factors),
+        collapse = "; "
+      ),
+      "."
+    ),
+    recommendation = if (pa_unique == 1L) {
+      "The selected PA count is insensitive to the three reported decision rules."
+    } else {
+      paste(
+        "Treat the PA count as rule-sensitive and compare the competing",
+        "factor solutions rather than hiding the analytical choice."
+      )
+    }
   )
 
   log <- nomo_log_add(
     log,
     stage = "factors",
     object = "retention",
-    metric = "map",
-    value = map$n_factors,
-    reference = paste(
-      "Velicer original MAP (TR2), including the zero-component candidate:",
-      "smaller average squared partial correlation is better"
-    ),
+    metric = "map_original",
+    value = map$n_factors_original,
+    reference = "Velicer original MAP (TR2), including m = 0",
     severity = "info",
     observation = sprintf(
-      "Velicer original MAP reaches its minimum at %d factor%s.",
-      map$n_factors,
-      if (map$n_factors == 1L) "" else "s"
+      "Original MAP (TR2) reaches its minimum at %d factor%s.",
+      map$n_factors_original,
+      if (map$n_factors_original == 1L) "" else "s"
+    ),
+    recommendation = "Treat original MAP as complementary retention evidence."
+  )
+
+  log <- nomo_log_add(
+    log,
+    stage = "factors",
+    object = "retention",
+    metric = "map_revised",
+    value = map$n_factors_revised,
+    reference = "Velicer revised MAP (TR4), including m = 0",
+    severity = if (map$n_factors_revised == map$n_factors_original) "info" else "review",
+    observation = sprintf(
+      "Revised MAP (TR4) reaches its minimum at %d factor%s.",
+      map$n_factors_revised,
+      if (map$n_factors_revised == 1L) "" else "s"
     ),
     recommendation = paste(
-      "Treat MAP as complementary retention evidence rather than a standalone",
-      "decision rule."
+      "Compare TR2 and TR4. Disagreement is sensitivity evidence, not a reason",
+      "to select whichever count is more convenient."
     )
   )
 
@@ -1344,24 +1433,84 @@ nomo_factors_log <- function(item_types,
       reference = "MAP should be interpreted over the factor counts it could evaluate",
       severity = "review",
       observation = sprintf(
-        "Velicer MAP could be evaluated only through %d partialled component%s.",
+        "MAP could be evaluated only through %d partialled component%s.",
         map$m_last,
         if (map$m_last == 1L) "" else "s"
       ),
       recommendation = paste(
-        "Inspect correlation-matrix stability; the MAP minimum is over the",
-        "evaluated range rather than the full requested grid."
+        "Inspect correlation-matrix stability; the minima are over the evaluated",
+        "range rather than the full requested grid."
       )
     )
+  }
+
+  if (is.data.frame(criteria$status) && nrow(criteria$status) > 0L) {
+    extra <- criteria$status[!criteria$status$criterion %in% c("parallel", "map_original", "map_revised"), , drop = FALSE]
+    if (nrow(extra) > 0L) {
+      for (i in seq_len(nrow(extra))) {
+        row_i <- extra[i, , drop = FALSE]
+        if (identical(row_i$status[[1L]], "available")) {
+          ev <- criteria$evidence[criteria$evidence$criterion == row_i$criterion[[1L]], , drop = FALSE]
+          ekc_approx <- identical(row_i$criterion[[1L]], "ekc") &&
+            !identical(correlation_method, "pearson")
+          severity_i <- if (identical(ev$role[[1L]], "legacy") || ekc_approx) {
+            "review"
+          } else {
+            "info"
+          }
+          recommendation_i <- if (identical(ev$role[[1L]], "legacy")) {
+            "Use this legacy rule for historical context only, not as a recommended retention criterion."
+          } else if (ekc_approx) {
+            paste(
+              "Treat EKC as sensitivity evidence here: its reference distribution is",
+              "derived for product-moment correlations, so use with non-Pearson",
+              "correlation matrices is approximate."
+            )
+          } else {
+            "Treat this as one additional piece of retention evidence and inspect its assumptions."
+          }
+
+          log <- nomo_log_add(
+            log,
+            stage = "factors",
+            object = "retention",
+            metric = row_i$criterion[[1L]],
+            value = ev$n_factors[[1L]],
+            reference = ev$reference[[1L]],
+            severity = severity_i,
+            observation = sprintf(
+              "%s suggests %d factor%s%s.",
+              ev$method[[1L]],
+              ev$n_factors[[1L]],
+              if (ev$n_factors[[1L]] == 1L) "" else "s",
+              if (ekc_approx) " (approximate under the current non-Pearson correlation model)" else ""
+            ),
+            recommendation = recommendation_i
+          )
+        } else {
+          log <- nomo_log_add(
+            log,
+            stage = "factors",
+            object = "retention",
+            metric = paste0(row_i$criterion[[1L]], "_skipped"),
+            value = NA_real_,
+            reference = "Criterion compatibility is checked explicitly",
+            severity = "info",
+            observation = sprintf("%s was skipped. %s", row_i$method[[1L]], row_i$reason[[1L]]),
+            recommendation = "Do not substitute a different correlation or missing-data strategy silently just to force this criterion to run."
+          )
+        }
+      }
+    }
   }
 
   log <- nomo_log_add(
     log,
     stage = "factors",
     object = "retention",
-    metric = "retention_concordance",
-    value = abs(pa$n_factors - map$n_factors),
-    reference = "Convergence strengthens; disagreement motivates sensitivity analysis",
+    metric = "retention_family_concordance",
+    value = synthesis$support_for_primary,
+    reference = "Convergence across criterion families strengthens a candidate; disagreement motivates sensitivity analysis",
     severity = if (synthesis$agreement == "convergent") "info" else "review",
     observation = synthesis$text,
     recommendation = paste(

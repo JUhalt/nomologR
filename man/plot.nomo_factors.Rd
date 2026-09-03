@@ -7,7 +7,8 @@
 \method{plot}{nomo_factors}(
   x,
   y = NULL,
-  type = c("retention", "scree", "evidence", "kmo"),
+  type = c("retention", "parallel_rules", "scree", "map", "evidence", "concordance",
+    "kmo"),
   show_values = TRUE,
   ...
 )
@@ -17,11 +18,15 @@
 
 \item{y}{Unused; included for the base \code{plot()} generic.}
 
-\item{type}{Plot type: \code{"retention"} compares observed common-factor
-eigenvalues with the parallel-analysis null reference; \code{"scree"} displays
-observed component and common-factor eigenvalues; \code{"evidence"} compares the
-factor counts suggested by parallel analysis and original MAP; \code{"kmo"}
-displays item-level KMO/MSA values.}
+\item{type}{Plot type. \code{"retention"} compares observed common-factor
+eigenvalues with the selected parallel-analysis reference;
+\code{"parallel_rules"} compares PA factor counts under mean, percentile, and
+Crawford rules; \code{"scree"} displays component and common-factor eigenvalues;
+\code{"map"} displays original TR2 and revised TR4 MAP curves; \code{"evidence"}
+compares available retention criteria; \code{"concordance"} groups related
+variants into criterion families before showing support for each factor
+count; and \code{"kmo"} displays
+item-level KMO/MSA values.}
 
 \item{show_values}{Logical; label values where useful.}
 

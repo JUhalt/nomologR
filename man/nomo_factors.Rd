@@ -10,6 +10,8 @@ nomo_factors(
   correlation = c("auto", "pearson", "polychoric", "tetrachoric", "mixed"),
   types = NULL,
   missing = c("pairwise", "complete"),
+  criterion_set = c("core", "minimal", "extended", "all"),
+  parallel_rule = c("percentile", "mean", "crawford"),
   n_iter = NULL,
   quantile = NULL,
   max_factors = NULL,
@@ -36,6 +38,17 @@ selected items. Allowed values are \code{"continuous"}, \code{"ordinal"}, and
 uses pairwise-complete observations; \code{"complete"} restricts the analysis to
 cases complete on all selected items.}
 
+\item{criterion_set}{Retention-criterion bundle. \code{"minimal"} uses parallel
+analysis plus original MAP; \code{"core"} (default) adds revised MAP and EKC;
+\code{"extended"} adds NEST and Hull where supported; \code{"all"} additionally
+requests comparison data and the legacy Kaiser-Guttman rule. Criteria whose
+assumptions are not compatible with the current data are explicitly marked
+as skipped rather than silently substituted.}
+
+\item{parallel_rule}{Parallel-analysis decision rule: \code{"percentile"}
+(default), \code{"mean"}, or \code{"crawford"}. All three rules are computed from
+the same null simulations and retained in the result as sensitivity evidence.}
+
 \item{n_iter}{Number of null-data iterations used for parallel analysis. If
 \code{NULL}, the value in \code{guidance$factor_parallel_iterations} is used.}
 
@@ -60,16 +73,21 @@ is explicit, recorded, and performed with \code{\link[psych:cor.smooth]{psych::c
 }
 \value{
 An object of class \code{nomo_factors} containing the analyzed correlation
-matrix, item modeling types, KMO and Bartlett diagnostics, parallel-analysis
-results, MAP results, scree information, a cautious retention synthesis,
-and a decision log.
+matrix, item modeling types, convenience aliases \code{correlation} and
+\code{modeling_types}, KMO and Bartlett diagnostics, parallel-analysis results,
+MAP results, criterion availability/status, method- and family-level concordance,
+scree information, a cautious retention synthesis, and a decision log.
 }
 \description{
 \code{nomo_factors()} combines multiple pieces of factor-retention evidence rather
 than treating any single rule as definitive. The primary retention evidence is
-a common-factor parallel analysis, complemented by Velicer's original MAP (TR2) criterion.
-Scree information, Kaiser-Meyer-Olkin (KMO) sampling adequacy, and Bartlett's
-test are returned as supporting diagnostics.
+a common-factor parallel analysis, complemented by Velicer's original and
+revised MAP criteria and, under the default \code{criterion_set = "core"}, the
+empirical Kaiser criterion (EKC). Extended criterion sets can add NEST, Hull
+(CAF), comparison data, and the legacy Kaiser-Guttman rule when their
+assumptions are compatible with the analyzed data. Scree information,
+Kaiser-Meyer-Olkin (KMO) sampling adequacy, and Bartlett's test are returned
+as supporting diagnostics.
 }
 \details{
 Correlation choice is explicit and visible. With \code{correlation = "auto"},

@@ -219,7 +219,11 @@ test_that("summary and plot methods expose retention evidence", {
   s <- summary(out)
 
   expect_s3_class(s, "summary_nomo_factors")
-  expect_equal(nrow(s$evidence), 2)
+  expect_equal(nrow(s$evidence), 4)
+  expect_identical(
+    s$evidence$criterion,
+    c("parallel", "map_original", "map_revised", "ekc")
+  )
   expect_match(s$recommendation, "factor")
 
   expect_s3_class(plot(out), "ggplot")
@@ -257,6 +261,8 @@ test_that("original MAP includes the zero-component candidate", {
   out <- nomo_factors_map(r, max_factors = 3)
 
   expect_equal(out$table$n_factors[[1L]], 0L)
+  expect_equal(out$table$map, out$table$map_original)
+  expect_identical(out$table$minimum, out$table$minimum_original)
   expect_equal(
     out$table$map[[1L]],
     mean(r[row(r) != col(r)]^2),
@@ -315,5 +321,13 @@ test_that("summary formats very small Bartlett p-values for people", {
     s$adequacy$display[s$adequacy$metric == "Bartlett"],
     "p < \\.001"
   )
-  expect_identical(out$evidence$method, c("Parallel analysis", "MAP (original)"))
+  expect_identical(
+    out$evidence$method,
+    c(
+      "Parallel analysis",
+      "MAP (original TR2)",
+      "MAP (revised TR4)",
+      "Empirical Kaiser criterion"
+    )
+  )
 })

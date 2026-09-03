@@ -1,5 +1,37 @@
 # nomologR 0.0.0.9000
 
+## Milestone 2B — retention triangulation and sensitivity
+
+- Refined concordance to group closely related methods into criterion families,
+  so original/revised MAP variants do not behave like independent votes.
+  Internally split families remain explicit and are not forced into one bar.
+- Added convenient `correlation` and `modeling_types` fields alongside the
+  existing internal-detail names for easier inspection of automatic choices.
+- Surface EKC's non-Pearson approximation directly in criterion status and
+  summary output rather than leaving that qualification only in the decision log.
+- Polished evidence/concordance plots for longer criterion sets and wrapped
+  captions to remain readable at ordinary RStudio plot-device sizes.
+- Expanded `nomo_factors()` from a two-criterion workflow into configurable
+  retention bundles: `minimal`, `core`, `extended`, and `all`.
+- Added revised Velicer MAP (TR4) alongside original MAP (TR2), with both
+  minima and criterion curves retained as sensitivity evidence.
+- Added the empirical Kaiser criterion (EKC) to the default `core` bundle.
+- Added optional NEST and Hull (CAF) criteria for supported continuous/Pearson
+  analyses, with explicit skip reasons when their reference machinery is not
+  compatible with ordinal, binary, mixed, or varying-N pairwise analyses.
+- Added optional comparison-data retention and a clearly labeled legacy
+  Kaiser-Guttman (> 1) rule in the `all` bundle; the legacy rule is excluded
+  from the evidence synthesis.
+- Parallel analysis now reports percentile, mean, and Crawford stopping-rule
+  suggestions from the same null simulations while preserving one explicit
+  selected rule for the primary recommendation.
+- Added criterion-status and concordance tables so unavailable methods are never
+  silently substituted and agreement is summarized without majority-vote logic.
+- Expanded `plot.nomo_factors()` with parallel-rule sensitivity, MAP curves,
+  multi-method evidence, and retention-concordance views.
+- Added `EFAtools (>= 0.8.0)` as the runtime engine for modern optional retention
+  criteria while preserving `nomologR`'s interpretation and decision-log layer.
+
 ## Milestone 2A — factor-retention evidence
 
 - Replaced the `nomo_factors()` development stub with a production factor-retention engine.

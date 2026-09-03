@@ -30,8 +30,6 @@ continuous-like shape summaries, integrated review tables, and five diagnostic
 plot views.
 
 ```r
-library(nomologR)
-
 items <- data.frame(
   item1 = c(1, 2, 3, 4, 5, 5),
   item2 = c(1, 2, 3, 4, 4, 5),
@@ -53,8 +51,15 @@ Milestone 2 asks a different question:
 
 > **How many latent dimensions deserve investigation?**
 
-`nomo_factors()` combines common-factor parallel analysis with Velicer MAP,
-then adds scree, KMO/MSA, and Bartlett information as supporting evidence.
+The default `core` workflow triangulates four pieces of retention evidence:
+
+- common-factor parallel analysis (primary);
+- Velicer original MAP / TR2;
+- Velicer revised MAP / TR4;
+- empirical Kaiser criterion (EKC).
+
+Scree information, KMO/MSA, and Bartlett's test are kept as supporting evidence
+rather than factor-count decision rules.
 
 ```r
 set.seed(42)
@@ -71,16 +76,81 @@ dat <- data.frame(
 fac <- nomo_factors(dat, seed = 2026)
 fac
 summary(fac)
-
-plot(fac)                    # observed vs null factor eigenvalues
-plot(fac, type = "scree")    # observed scree information
-plot(fac, type = "evidence") # parallel-analysis vs MAP factor count
-plot(fac, type = "kmo")      # item-level MSA
 ```
 
-Correlation choice is visible. Under `correlation = "auto"`, continuous,
-binary, ordinal, and genuinely mixed item sets are routed to Pearson,
-tetrachoric, polychoric, or mixed correlations as appropriate.
+#### Criterion bundles
+
+Different jobs need different amounts of computation and triangulation:
+
+```r
+nomo_factors(dat, criterion_set = "minimal")
+nomo_factors(dat, criterion_set = "core")       # default
+nomo_factors(dat, criterion_set = "extended")
+nomo_factors(dat, criterion_set = "all")
+```
+
+- `minimal`: parallel analysis + original MAP (TR2)
+- `core`: adds revised MAP (TR4) + EKC
+- `extended`: adds NEST + Hull (CAF) when their assumptions are supported
+- `all`: adds comparison data + legacy Kaiser-Guttman (> 1)
+
+The legacy Kaiser-Guttman result is displayed for historical context but is
+**excluded from the synthesis**. If a requested method is incompatible with the
+current indicator/correlation/missing-data setup, it is marked `skipped` with a
+reason rather than being silently replaced by another analysis.
+
+#### Parallel-analysis sensitivity
+
+Parallel analysis itself contains analytical choices. `nomologR` computes three
+rules from the same null simulations:
+
+```r
+fac$parallel$sensitivity
+
+nomo_factors(dat, parallel_rule = "percentile")  # default
+nomo_factors(dat, parallel_rule = "mean")
+nomo_factors(dat, parallel_rule = "crawford")
+```
+
+The selected rule drives the primary PA suggestion; the other rules remain
+visible as sensitivity evidence.
+
+#### Retention plots
+
+```r
+plot(fac)                            # observed vs selected PA null reference
+plot(fac, type = "parallel_rules")   # PA decision-rule sensitivity
+plot(fac, type = "scree")            # component + common-factor scree
+plot(fac, type = "map")              # original TR2 + revised TR4 MAP curves
+plot(fac, type = "evidence")         # criterion-by-criterion suggestions
+plot(fac, type = "concordance")      # where recommended evidence clusters
+plot(fac, type = "kmo")              # item-level MSA
+```
+
+The concordance view first groups closely related variants into **criterion
+families** (for example, original and revised MAP belong to one MAP family).
+This avoids making two variants of the same criterion look like two independent
+votes. Internally split families remain visible rather than being forced into a
+single count. A synthesis may say:
+
+> “Parallel analysis suggests 2 factors, and 4 of 5 available criterion families
+> point to that same count. At the criterion-family level, MAP points to 1.
+> Compare the plausible neighboring solutions in EFA.”
+
+It should never say:
+
+> “The scale has exactly 2 factors.”
+
+#### Correlation choice is explicit
+
+Under `correlation = "auto"`, continuous, binary, ordinal, and genuinely mixed
+item sets are routed to Pearson, tetrachoric, polychoric, or mixed correlations
+as appropriate. The selected method and modeling assumptions are also exposed
+through the convenience fields `fac$correlation` and `fac$modeling_types`.
+
+When EKC is used with a non-Pearson correlation matrix, `nomologR` keeps the
+criterion available but surfaces an explicit qualification that its reference
+series is approximate under that correlation model.
 
 Numeric-discrete storage is deliberately **not** treated as proof of ordinal
 measurement. For numeric Likert items, make the modeling choice explicitly:
@@ -97,15 +167,6 @@ fac_ord <- nomo_factors(
   )
 )
 ```
-
-The synthesis says things such as:
-
-> “Parallel analysis and MAP converge on 2 factors. Treat this as strong reason
-> to investigate that solution, not as proof that the construct has exactly two
-> dimensions.”
-
-If retention methods disagree, `nomologR` carries the competing factor counts
-forward as plausible solutions rather than silently choosing one.
 
 ## Development path
 
@@ -138,8 +199,8 @@ is implemented and tested.
 
 ## Development installation
 
-This package is still in the development series. To install the current
-GitHub version:
+This package is still in the development series. To install the current GitHub
+version after a milestone is merged to the public branch:
 
 ```r
 # install.packages("remotes")
