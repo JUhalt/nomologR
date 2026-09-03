@@ -114,6 +114,12 @@ nomo_screen <- function(data, items = NULL, guidance = nomo_defaults()) {
     all_missing = n_missing_case == n_items
   )
 
+  relationships <- nomo_screen_relationships(
+    selected = selected,
+    item_summary = item_summary,
+    guidance = guidance
+  )
+
   decision_log <- nomo_log_new()
 
   if (used_all_columns) {
@@ -265,6 +271,11 @@ nomo_screen <- function(data, items = NULL, guidance = nomo_defaults()) {
     )
   }
 
+  decision_log <- dplyr::bind_rows(
+    decision_log,
+    relationships$decision_log
+  )
+
   out <- list(
     call = match.call(),
     n_cases = nrow(data),
@@ -272,6 +283,9 @@ nomo_screen <- function(data, items = NULL, guidance = nomo_defaults()) {
     item_summary = item_summary,
     response_distribution = response_distribution,
     case_summary = case_summary,
+    relationship_summary = relationships$relationship_summary,
+    inter_item_correlations = relationships$inter_item_correlations,
+    relationship_method = relationships$relationship_method,
     decision_log = decision_log,
     guidance = guidance
   )
@@ -302,6 +316,20 @@ print.nomo_screen <- function(x, ...) {
     n_constant,
     n_all_missing
   ))
+
+  if (!is.null(x$relationship_summary)) {
+    n_relationship_eligible <-
+      sum(x$relationship_summary$relationship_eligible)
+
+    n_item_rest <-
+      sum(!is.na(x$relationship_summary$corrected_item_rest_r))
+
+    cat(sprintf(
+      "Relationship diagnostics: %d eligible items | %d item-rest estimates\n",
+      n_relationship_eligible,
+      n_item_rest
+    ))
+  }
 
   if (nrow(x$decision_log) > 0L) {
     severity_counts <- table(
