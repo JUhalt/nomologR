@@ -9,14 +9,46 @@ nomo_screen(data, items = NULL, guidance = nomo_defaults())
 \arguments{
 \item{data}{A data frame containing candidate items.}
 
-\item{items}{Optional character vector identifying item columns.}
+\item{items}{Optional character vector identifying item columns. If \code{NULL},
+all columns are audited and the decision log reminds the user to verify that
+identifiers, demographics, and other non-item columns were not included.}
 
 \item{guidance}{Guidance settings from \code{\link[=nomo_defaults]{nomo_defaults()}}.}
 }
 \value{
-During the development series this function is a documented API stub.
+An object of class \code{nomo_screen} containing item summaries, response
+distributions, case-level completeness diagnostics, an evidence-guided
+decision log, and the guidance settings used.
 }
 \description{
-\code{nomo_screen()} will provide item- and case-level diagnostics without
-automatically removing or modifying observations.
+\code{nomo_screen()} performs a conservative audit of candidate item data before
+factor-retention, EFA, or CFA decisions are made. It summarizes item storage
+and observed response patterns, missingness, response concentration, and
+case-level completeness. It also creates a decision log that distinguishes
+observations from recommendations.
+}
+\details{
+The function never removes rows or items, changes scores, reverse-keys items,
+or decides whether a scale is valid.
+
+Item-type labels are descriptive, not modeling decisions. In particular,
+\code{numeric_discrete} means that the observed numeric values are integer-like
+with 10 or fewer distinct observed values. It does \strong{not} automatically mean
+that the item should be treated as ordinal in later analyses.
+
+A \code{constant} item has only one distinct observed value. An \code{all_missing} item
+has no observed values. These are hard data conditions rather than
+psychometric cutoff rules.
+}
+\examples{
+dat <- data.frame(
+  item1 = c(1, 2, 3, 4, 5),
+  item2 = c(1, 2, NA, 4, 5),
+  item3 = c(3, 3, 3, 3, 3)
+)
+
+out <- nomo_screen(dat)
+out$item_summary
+out$decision_log
+
 }

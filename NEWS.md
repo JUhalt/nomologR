@@ -1,5 +1,20 @@
 # nomologR 0.0.0.9000
 
+## Milestone 1 — item/data screening
+
+- Implemented the first production slice of `nomo_screen()`.
+- Added conservative item-type descriptions, item-level missingness and response
+  summaries, response distributions, case-level completeness diagnostics, and
+  explicit zero-variance/all-missing flags.
+- Added an evidence-guided decision log for screening observations without
+  automatically deleting items or cases.
+- Added a concise `print.nomo_screen()` method.
+- Added focused tests for input validation, type classification, missingness,
+  response distributions, case completeness, decision logging, and the
+  non-destructive workflow.
+- Updated GitHub Actions checkout steps to `actions/checkout@v5` for the Node 24
+  runtime.
+
 ## Foundation milestone
 
 - Defined `nomologR` as a guided workflow for empirical scale development and
