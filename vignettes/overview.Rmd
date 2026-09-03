@@ -1,8 +1,8 @@
 ---
-title: "nomologr: two-step measurement -> nomological validation"
+title: "nomologR: measurement first, theory next"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{nomologr: overview}
+  %\VignetteIndexEntry{nomologR: measurement first, theory next}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -11,12 +11,29 @@ vignette: >
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 ```
 
-This vignette outlines the intended pipeline:
+# Purpose
 
-1) Screen items  
-2) EFA (parallel analysis, oblimin)  
-3) CFA (measurement-only)  
-4) Reliability & validity (CR, AVE, HTMT)  
-5) Nomological SEM (theory-driven)  
-6) Invariance (if groups)  
-7) Report (decision log)
+`nomologR` is being developed as an evidence-guided workflow for empirical scale
+development and construct validation.
+
+The package follows a measurement-first principle: researchers should understand
+how their indicators behave before assigning substantive meaning to structural
+relations among latent constructs.
+
+# Planned workflow
+
+1. Item and data audit.
+2. Factor-retention evidence.
+3. Exploratory factor analysis.
+4. Confirmatory measurement model.
+5. Reliability and convergent/discriminant evidence.
+6. Measurement invariance when comparisons require it.
+7. Theory-specified nomological network.
+8. Reproducible decision log and report.
+
+# Interpretation philosophy
+
+`nomologR` will use familiar numerical reference values to help teach and organize
+interpretation, but those values are not automatic deletion criteria or declarations
+of validity. The package is designed to flag, explain, and document; consequential
+researcher decisions remain visible and theory-aware.

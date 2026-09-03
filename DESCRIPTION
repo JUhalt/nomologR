@@ -1,7 +1,7 @@
 Package: nomologR
 Type: Package
-Title: A Two-Step Workflow for Scale Development and Nomological Validation
-Version: 0.1.0
+Title: Guided Scale Development and Construct Validation
+Version: 0.0.0.9000
 Authors@R: c(
     person(
       "Joshua", "Uhalt",
@@ -9,35 +9,31 @@ Authors@R: c(
       role = c("aut", "cre")
     )
   )
-Description: Helpers to build unidimensional, reliable measurement models (EFA -> CFA),
-    then evaluate convergent, discriminant, and nomological validity via SEM. Provides
-    rule-based suggestions and a decision log.
+Description: Provides an evidence-guided workflow for empirical scale development
+    and construct validation. The package is designed to help researchers examine
+    item performance, dimensionality, measurement models, reliability, convergent
+    and discriminant evidence, measurement invariance, and theory-specified
+    nomological networks. It emphasizes transparent diagnostics, reproducible
+    decision logging, and teaching-oriented guidance rather than automatic item
+    deletion or binary declarations that a measure is valid.
 License: MIT + file LICENSE
 Encoding: UTF-8
-LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.2
-Depends: R (>= 4.2)
+Depends:
+    R (>= 4.2)
 Imports:
-    lavaan,
-    semTools,
-    psych,
-    semPlot,
     dplyr,
-    purrr,
-    tibble,
-    tidyr,
-    stringr,
-    ggplot2,
-    stats,
-    utils,
-    glue,
-    gt
+    tibble
 Suggests:
-    testthat (>= 3.0.0),
+    covr,
     knitr,
+    lavaan,
+    psych,
     rmarkdown,
-    covr
+    semTools,
+    testthat (>= 3.0.0)
+VignetteBuilder: knitr
 Config/testthat/edition: 3
 URL: https://github.com/JUhalt/nomologR
 BugReports: https://github.com/JUhalt/nomologR/issues
+Config/roxygen2/version: 8.1.0

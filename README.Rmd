@@ -6,7 +6,56 @@ output: github_document
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 ```
 
-# nomologr
+# nomologR
 
-Opinionated helpers for **two-step** scale development (EFA → CFA) and **nomological validation** with SEM.
+**Development status: `0.0.0.9000` — Milestone 0 foundation**
 
+`nomologR` is a guided, evidence-based workflow for **empirical scale development
+and construct validation**.
+
+It is not intended to replace `psych`, `lavaan`, or `semTools`. Instead, the
+package will coordinate established methods, explain why each analysis is being
+used, preserve a transparent decision log, and help researchers decide what to
+investigate next.
+
+## Design principles
+
+- Measurement before structure.
+- Evidence accumulates; validity is not a single statistical test.
+- Cutoffs are reference points, not universal laws.
+- Flag, explain, and document; never silently delete an item.
+- Estimator and correlation choices should respect item type.
+- Modification indices do not authorize automatic model respecification.
+- Nomological evidence begins with explicit theoretical predictions.
+
+## Relationship to related packages
+
+- **contentvalidR**: conceptual/content representation and substantive validity.
+- **nomologR**: empirical measurement development and construct-validity evidence.
+- **solomonR**: analysis of Solomon four-group experimental designs.
+
+A newly developed measure may therefore move naturally from `contentvalidR` into
+`nomologR`; `solomonR` addresses a separate experimental-design problem.
+
+## Current public API
+
+During the development series, future-stage functions are intentionally explicit
+stubs rather than fake analyses. The planned API is:
+
+```r
+nomo_defaults()
+nomo_screen()
+nomo_factors()
+nomo_efa()
+nomo_cfa()
+nomo_reliability()
+nomo_validity()
+nomo_invariance()
+nomo_hypotheses()
+nomo_network()
+nomo_run()
+nomo_report()
+```
+
+The first implemented vertical slice will be
+`nomo_screen()` -> `nomo_factors()` -> `nomo_efa()`.

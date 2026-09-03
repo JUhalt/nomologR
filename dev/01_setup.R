@@ -1,18 +1,18 @@
-# Dev setup helpers (run interactively)
-usethis::use_roxygen_md()
-usethis::use_testthat()
-usethis::use_mit_license("Joshua Uhalt")
-usethis::use_readme_rmd(open = FALSE)
-usethis::use_vignette("overview")
-usethis::use_package("lavaan")
-usethis::use_package("semTools")
-usethis::use_package("psych")
-usethis::use_package("semPlot")
-usethis::use_package("dplyr")
-usethis::use_package("purrr")
-usethis::use_package("tibble")
-usethis::use_package("tidyr")
-usethis::use_package("stringr")
-usethis::use_package("ggplot2")
-usethis::use_package("glue")
-usethis::use_package("gt")
+# Development environment check -------------------------------------------
+#
+# This file intentionally does not mutate DESCRIPTION or recreate package
+# infrastructure. Run it when setting up a new development machine.
+
+dev_packages <- c(
+  "devtools", "roxygen2", "testthat", "covr", "knitr", "rmarkdown",
+  "psych", "lavaan", "semTools"
+)
+
+missing <- dev_packages[!vapply(dev_packages, requireNamespace, logical(1), quietly = TRUE)]
+
+if (length(missing)) {
+  message("Install missing development packages with:")
+  message("install.packages(c(", paste(sprintf('"%s"', missing), collapse = ", "), "))")
+} else {
+  message("nomologR development dependencies are available.")
+}

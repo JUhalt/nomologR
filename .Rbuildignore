@@ -9,3 +9,8 @@
 ^renv\.lock$
 ^dev$
 ^data-raw$
+^ROADMAP\.md$
+^VISION\.md$
+^CODE_OF_CONDUCT\.md$
+^CONTRIBUTING\.md$
+^LICENSE\.md$
