@@ -54,6 +54,14 @@ test_that("item types are classified conservatively", {
     ),
     nominal = factor(c("a", "b", "c", "a", "b")),
     text = c("a", "b", "c", "d", "e"),
+    sparse_ordered = ordered(
+      c("low", "high", "low", "high", NA),
+      levels = c("low", "mid", "high")
+    ),
+    sparse_nominal = factor(
+      c("a", "c", "a", "c", NA),
+      levels = c("a", "b", "c")
+    ),
     empty = rep(NA_real_, 5)
   )
 
@@ -67,6 +75,8 @@ test_that("item types are classified conservatively", {
   expect_identical(observed_types[["continuous"]], "numeric_continuous")
   expect_identical(observed_types[["ordered_item"]], "ordered")
   expect_identical(observed_types[["nominal"]], "nominal")
+  expect_identical(observed_types[["sparse_ordered"]], "ordered")
+  expect_identical(observed_types[["sparse_nominal"]], "nominal")
   expect_identical(observed_types[["text"]], "text")
   expect_identical(observed_types[["empty"]], "empty")
 })

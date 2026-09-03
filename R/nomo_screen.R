@@ -381,14 +381,14 @@ nomo_screen_item_type <- function(x) {
   }
 
   if (is.ordered(x)) {
-    if (n_unique <= 2L) {
+    if (length(levels(x)) <= 2L) {
       return("binary")
     }
     return("ordered")
   }
 
   if (is.factor(x)) {
-    if (n_unique <= 2L) {
+    if (length(levels(x)) <= 2L) {
       return("binary")
     }
     return("nominal")
