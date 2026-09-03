@@ -53,18 +53,18 @@ Every public function and report should follow these principles.
 **Purpose:** Stabilize the project's identity before implementing substantive methods.
 
 ### Scope
-- [ ] Standardize package name/casing as `nomologR`.
-- [ ] Replace generic `cv_*` user-facing API with package-specific `nomo_*` API.
-- [ ] Reset development version to `0.0.0.9000`.
-- [ ] Rewrite `DESCRIPTION` around the package's true niche.
-- [ ] Rewrite README around workflow, teaching, and decision support.
-- [ ] Create `NEWS.md`.
-- [ ] Create/commit this `ROADMAP.md`.
-- [ ] Update obsolete `usethis`/CI helper code.
-- [ ] Replace deprecated planned `semTools` APIs.
-- [ ] Decide the minimum supported R version.
-- [ ] Confirm MIT licensing metadata.
-- [ ] Confirm GitHub Actions R-CMD-check workflow is active.
+- [x] Standardize package name/casing as `nomologR`.
+- [x] Replace generic `cv_*` user-facing API with package-specific `nomo_*` API.
+- [x] Reset development version to `0.0.0.9000`.
+- [x] Rewrite `DESCRIPTION` around the package's true niche.
+- [x] Rewrite README around workflow, teaching, and decision support.
+- [x] Create `NEWS.md`.
+- [x] Create/commit this `ROADMAP.md`.
+- [x] Update obsolete `usethis`/CI helper code.
+- [x] Replace deprecated planned `semTools` APIs.
+- [x] Decide the minimum supported R version.
+- [x] Confirm MIT licensing metadata.
+- [x] Confirm GitHub Actions R-CMD-check workflow is active.
 
 ### Proposed public API
 ```r
@@ -94,18 +94,25 @@ nomo_explain()
 ### Exit gate
 Do **not** begin v0.1 implementation until:
 
-- [ ] `devtools::document()` succeeds without warnings attributable to package code.
-- [ ] `devtools::test()` passes.
-- [ ] `devtools::check()` has 0 errors and no unexplained warnings.
-- [ ] GitHub Actions runs successfully on the default branch.
-- [ ] README clearly distinguishes `nomologR`, `contentvalidR`, and `solomonR`.
+- [x] `devtools::document()` succeeds without warnings attributable to package code.
+- [x] `devtools::test()` passes.
+- [x] `devtools::check()` has 0 errors and no unexplained warnings.
+- [x] GitHub Actions runs successfully on the default branch.
+- [x] README clearly distinguishes `nomologR`, `contentvalidR`, and `solomonR`.
 
 ---
 
 # v0.1.0 — Minimum Useful Construct-Validation Workflow
 
 ## Milestone 1 — Data & Item Audit
+**Status:** Active — core analysis scope implemented; release-gate cleanup remains.
+
 **Goal:** Turn a raw item set into an interpretable diagnostic object without changing the data.
+
+### Current release-gate remainder
+- [ ] Stable regression fixture for decision-log presentation.
+- [ ] Confirm ≥ 90% line coverage for Milestone 1 code in CI.
+- [ ] Final Milestone 1 PR/CI review and merge.
 
 ### Functions
 ```r
@@ -114,14 +121,14 @@ nomo_defaults()
 ```
 
 ### Required analyses
-- [ ] Missingness by item and case.
-- [ ] Response frequencies / floor-ceiling concentration.
-- [ ] Number of unique response categories.
-- [ ] Zero / near-zero variance flags.
-- [ ] Corrected item-total correlations.
-- [ ] Inter-item correlations.
-- [ ] Optional skew/kurtosis summaries for continuous-like indicators.
-- [ ] Automatic recognition or user declaration of:
+- [x] Missingness by item and case.
+- [x] Response frequencies / floor-ceiling concentration.
+- [x] Number of unique response categories.
+- [x] Zero / near-zero variance flags.
+- [x] Corrected item-rest (item-total) correlations.
+- [x] Inter-item correlations.
+- [x] Optional skew/kurtosis summaries for continuous-like indicators.
+- [x] Automatic recognition or user declaration of:
   - continuous
   - ordinal
   - binary
@@ -145,20 +152,20 @@ Reference points may include:
 These values must be labeled as teaching references, not pass/fail laws.
 
 ### Tests
-- [ ] Continuous toy data.
-- [ ] Ordinal toy data.
-- [ ] Binary toy data.
-- [ ] Missing data.
-- [ ] Constant item.
-- [ ] Reverse-keyed item.
-- [ ] Invalid column names/types.
+- [x] Continuous toy data.
+- [x] Ordinal toy data.
+- [x] Binary toy data.
+- [x] Missing data.
+- [x] Constant item.
+- [x] Reverse-keyed item.
+- [x] Invalid column names/types.
 - [ ] Snapshot test of decision-log output.
 
 ### Exit gate
-- [ ] 100% of exported arguments documented.
+- [x] 100% of exported arguments documented.
 - [ ] ≥ 90% line coverage for Milestone 1 code.
-- [ ] No function alters supplied data unless explicitly requested.
-- [ ] README contains a working `nomo_screen()` example.
+- [x] No function alters supplied data unless explicitly requested.
+- [x] README contains a working `nomo_screen()` example.
 
 ---
 

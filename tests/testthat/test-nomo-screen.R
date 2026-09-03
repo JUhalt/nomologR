@@ -32,7 +32,8 @@ test_that("nomo_screen returns a stable structured object without modifying data
     c(
       "call", "n_cases", "items", "item_summary",
       "response_distribution", "case_summary",
-      "decision_log", "guidance"
+      "relationship_summary", "inter_item_correlations",
+      "relationship_method", "decision_log", "guidance"
     )
   )
 

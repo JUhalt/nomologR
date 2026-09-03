@@ -25,6 +25,13 @@
 #' has no observed values. These are hard data conditions rather than
 #' psychometric cutoff rules.
 #'
+#' Response concentration and near-zero-variance flags use configurable
+#' teaching references from [nomo_defaults()]. They are screening heuristics,
+#' not psychometric laws or automatic item-retention rules. Ordered and
+#' numeric-discrete items also receive descriptive boundary concentration
+#' summaries. Continuous-like numeric indicators receive descriptive skewness
+#' and excess-kurtosis summaries without a pass/fail normality judgment.
+#'
 #' @return An object of class `nomo_screen` containing item summaries, response
 #'   distributions, case-level completeness diagnostics, an evidence-guided
 #'   decision log, and the guidance settings used.
@@ -102,6 +109,13 @@ nomo_screen <- function(data, items = NULL, guidance = nomo_defaults()) {
     })
   )
 
+  descriptives <- nomo_screen_descriptives(
+    selected = selected,
+    item_summary = item_summary,
+    guidance = guidance
+  )
+  item_summary <- descriptives$item_summary
+
   missing_matrix <- is.na(selected)
   n_missing_case <- rowSums(missing_matrix)
   n_items <- length(items)
@@ -112,6 +126,12 @@ nomo_screen <- function(data, items = NULL, guidance = nomo_defaults()) {
     pct_missing = as.numeric(n_missing_case / n_items),
     complete = n_missing_case == 0L,
     all_missing = n_missing_case == n_items
+  )
+
+  relationships <- nomo_screen_relationships(
+    selected = selected,
+    item_summary = item_summary,
+    guidance = guidance
   )
 
   decision_log <- nomo_log_new()
@@ -265,6 +285,12 @@ nomo_screen <- function(data, items = NULL, guidance = nomo_defaults()) {
     )
   }
 
+  decision_log <- dplyr::bind_rows(
+    decision_log,
+    descriptives$decision_log,
+    relationships$decision_log
+  )
+
   out <- list(
     call = match.call(),
     n_cases = nrow(data),
@@ -272,6 +298,9 @@ nomo_screen <- function(data, items = NULL, guidance = nomo_defaults()) {
     item_summary = item_summary,
     response_distribution = response_distribution,
     case_summary = case_summary,
+    relationship_summary = relationships$relationship_summary,
+    inter_item_correlations = relationships$inter_item_correlations,
+    relationship_method = relationships$relationship_method,
     decision_log = decision_log,
     guidance = guidance
   )
@@ -301,6 +330,34 @@ print.nomo_screen <- function(x, ...) {
     n_missing_items,
     n_constant,
     n_all_missing
+  ))
+
+  if (!is.null(x$relationship_summary)) {
+    n_relationship_eligible <-
+      sum(x$relationship_summary$relationship_eligible)
+
+    n_item_rest <-
+      sum(!is.na(x$relationship_summary$corrected_item_rest_r))
+
+    cat(sprintf(
+      "Relationship diagnostics: %d eligible items | %d item-rest estimates\n",
+      n_relationship_eligible,
+      n_item_rest
+    ))
+  }
+
+  n_concentration <- sum(
+    x$decision_log$metric %in% c(
+      "response_concentration",
+      "floor_concentration",
+      "ceiling_concentration"
+    )
+  )
+  n_nzv <- sum(x$item_summary$near_zero_variance)
+  cat(sprintf(
+    "Response concentration flags: %d | Near-zero variance: %d\n",
+    n_concentration,
+    n_nzv
   ))
 
   if (nrow(x$decision_log) > 0L) {

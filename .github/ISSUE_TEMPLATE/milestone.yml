@@ -1,0 +1,47 @@
+name: Roadmap milestone
+description: Track one nomologR roadmap milestone from implementation through merge.
+title: "Milestone X — "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this issue as the GitHub-facing companion to `ROADMAP.md`.
+        Keep statistical/design decisions in the roadmap and use this issue for active implementation status.
+  - type: input
+    id: roadmap
+    attributes:
+      label: Roadmap section
+      description: Name the matching ROADMAP.md milestone/checkpoint.
+      placeholder: "Milestone 2 — Factor-Retention Evidence"
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: What must land before this milestone is complete?
+      placeholder: |
+        - [ ] Required analysis 1
+        - [ ] Required analysis 2
+        - [ ] Tests
+        - [ ] Documentation
+    validations:
+      required: true
+  - type: textarea
+    id: validation
+    attributes:
+      label: Validation gate
+      value: |
+        - [ ] `devtools::document()` clean
+        - [ ] `devtools::test()` clean
+        - [ ] `devtools::check()` clean
+        - [ ] GitHub Actions green
+        - [ ] Roadmap status updated
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Decisions / notes
+      description: Record consequential statistical or API decisions that emerge during the milestone.

@@ -39,6 +39,13 @@ that the item should be treated as ordinal in later analyses.
 A \code{constant} item has only one distinct observed value. An \code{all_missing} item
 has no observed values. These are hard data conditions rather than
 psychometric cutoff rules.
+
+Response concentration and near-zero-variance flags use configurable
+teaching references from \code{\link[=nomo_defaults]{nomo_defaults()}}. They are screening heuristics,
+not psychometric laws or automatic item-retention rules. Ordered and
+numeric-discrete items also receive descriptive boundary concentration
+summaries. Continuous-like numeric indicators receive descriptive skewness
+and excess-kurtosis summaries without a pass/fail normality judgment.
 }
 \examples{
 dat <- data.frame(

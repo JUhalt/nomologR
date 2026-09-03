@@ -15,6 +15,9 @@ nomo_defaults <- function(profile = "teaching") {
   list(
     profile = profile,
     item_total_reference = 0.30,
+    response_concentration_reference = 0.80,
+    nzv_frequency_ratio_reference = 19,
+    nzv_percent_unique_reference = 10,
     efa_loading_reference = 0.40,
     efa_crossloading_reference = 0.30,
     efa_communality_reference = 0.40,
