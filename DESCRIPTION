@@ -23,6 +23,7 @@ Depends:
     R (>= 4.2)
 Imports:
     dplyr,
+    ggplot2,
     tibble
 Suggests:
     covr,

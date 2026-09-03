@@ -59,6 +59,37 @@ A negative item-rest relationship is therefore treated as a reason to inspect
 keying, coding, wording, or multidimensionality — not as permission to
 automatically reverse-score or delete an item.
 
+## Integrated review and visual diagnostics
+
+`summary()` combines the separate screening signals into an item-level review
+table. The `attention` column uses `none`, `review`, or `concern`; it is an
+inspection aid rather than a retain/delete verdict.
+
+```r
+summary(scr)
+```
+
+`plot()` provides several complementary views:
+
+```r
+plot(scr)                         # integrated evidence map
+plot(scr, type = "item_rest")     # corrected item-rest relationships
+plot(scr, type = "interitem")     # inter-item correlation map
+plot(scr, type = "responses")     # response-category profiles
+plot(scr, type = "missingness")   # item-level missingness
+```
+
+The evidence map is intended to answer a practical question quickly:
+
+> **Which items deserve attention, and why?**
+
+It integrates signals without replacing the later dimensionality analyses in
+`nomo_factors()` and `nomo_efa()`.
+
+For ordered factors, the integrated review also reports declared response
+categories that were unused in the observed sample. Those empty categories are
+preserved rather than silently collapsed or recoded.
+
 ## Development path
 
 The detailed release specification lives in [`ROADMAP.md`](ROADMAP.md).
