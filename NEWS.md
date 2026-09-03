@@ -1,5 +1,23 @@
 # nomologR 0.0.0.9000
 
+## Milestone 2A — factor-retention evidence
+
+- Replaced the `nomo_factors()` development stub with a production factor-retention engine.
+- Added explicit correlation-model selection for Pearson, polychoric, tetrachoric,
+  and mixed indicator sets, with conservative handling of numeric-discrete items
+  and user overrides for intended measurement level.
+- Added reproducible common-factor parallel analysis using independently permuted
+  null data and a configurable null-eigenvalue quantile.
+- Added Velicer MAP as complementary retention evidence, plus observed scree information.
+- Added KMO/item-level MSA and Bartlett diagnostics as supporting evidence rather
+  than factor-count decision rules.
+- Added explicit non-positive-definite matrix handling: no silent smoothing;
+  optional smoothing must be user-requested and is recorded in the decision log.
+- Added `summary.nomo_factors()` and `plot.nomo_factors()` views for retention,
+  scree, method-concordance, and KMO evidence.
+- Promoted `psych` to a runtime dependency because factor-retention methods now
+  use its established factor/correlation engines directly.
+
 ## Milestone 1C — integrated review and visualization
 
 - Added `summary.nomo_screen()` with an integrated item-review table that

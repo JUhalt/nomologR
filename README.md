@@ -1,6 +1,6 @@
 # nomologR
 
-**Development status: `0.0.0.9000` — Milestone 1: Data & Item Audit**
+**Development status: `0.0.0.9000` — Milestone 2: Factor-Retention Evidence**
 
 `nomologR` is a guided, evidence-based workflow for **empirical scale
 development and construct validation**. It coordinates established R engines
@@ -20,23 +20,14 @@ and theory-specified nomological networks.
 
 ## What works now
 
-### `nomo_screen()`
+### 1. `nomo_screen()` — data and item audit
 
-The first production module audits candidate items **without modifying the
-supplied data**. Current screening includes:
-
-- item- and case-level missingness;
-- response distributions and category use;
-- zero- and near-zero-variance diagnostics;
-- response concentration plus descriptive floor/ceiling evidence where meaningful;
-- corrected item-rest correlations;
-- inter-item correlations;
-- reverse-key/coding review signals without automatic reverse scoring;
-- descriptive skewness and excess kurtosis for continuous-like indicators;
-- explicit decision logging with `info`, `review`, and `concern` severities.
-
-Numerical references are teaching/screening aids rather than universal
-pass/fail rules.
+The Milestone 1 module audits candidate items **without modifying the supplied
+data**. Screening includes item/case missingness, response distributions,
+category use, zero/near-zero variance, concentration, corrected item-rest and
+inter-item relationships, reverse-key/coding review signals, optional
+continuous-like shape summaries, integrated review tables, and five diagnostic
+plot views.
 
 ```r
 library(nomologR)
@@ -49,54 +40,80 @@ items <- data.frame(
 )
 
 scr <- nomo_screen(items)
-scr
-scr$item_summary
-scr$relationship_summary
-scr$decision_log
-```
-
-A negative item-rest relationship is therefore treated as a reason to inspect
-keying, coding, wording, or multidimensionality — not as permission to
-automatically reverse-score or delete an item.
-
-## Integrated review and visual diagnostics
-
-`summary()` combines the separate screening signals into an item-level review
-table. The `attention` column uses `none`, `review`, or `concern`; it is an
-inspection aid rather than a retain/delete verdict.
-
-```r
 summary(scr)
+plot(scr)
 ```
 
-`plot()` provides several complementary views:
+The package flags reasons to inspect an item; it does not automatically
+reverse-score, delete, collapse, or recode it.
+
+### 2. `nomo_factors()` — factor-retention evidence
+
+Milestone 2 asks a different question:
+
+> **How many latent dimensions deserve investigation?**
+
+`nomo_factors()` combines common-factor parallel analysis with Velicer MAP,
+then adds scree, KMO/MSA, and Bartlett information as supporting evidence.
 
 ```r
-plot(scr)                         # integrated evidence map
-plot(scr, type = "item_rest")     # corrected item-rest relationships
-plot(scr, type = "interitem")     # inter-item correlation map
-plot(scr, type = "responses")     # response-category profiles
-plot(scr, type = "missingness")   # item-level missingness
+set.seed(42)
+f <- rnorm(300)
+
+dat <- data.frame(
+  i1 = 0.8 * f + rnorm(300, sd = 0.6),
+  i2 = 0.8 * f + rnorm(300, sd = 0.6),
+  i3 = 0.7 * f + rnorm(300, sd = 0.7),
+  i4 = 0.7 * f + rnorm(300, sd = 0.7),
+  i5 = 0.8 * f + rnorm(300, sd = 0.6)
+)
+
+fac <- nomo_factors(dat, seed = 2026)
+fac
+summary(fac)
+
+plot(fac)                    # observed vs null factor eigenvalues
+plot(fac, type = "scree")    # observed scree information
+plot(fac, type = "evidence") # parallel-analysis vs MAP factor count
+plot(fac, type = "kmo")      # item-level MSA
 ```
 
-The evidence map is intended to answer a practical question quickly:
+Correlation choice is visible. Under `correlation = "auto"`, continuous,
+binary, ordinal, and genuinely mixed item sets are routed to Pearson,
+tetrachoric, polychoric, or mixed correlations as appropriate.
 
-> **Which items deserve attention, and why?**
+Numeric-discrete storage is deliberately **not** treated as proof of ordinal
+measurement. For numeric Likert items, make the modeling choice explicitly:
 
-It integrates signals without replacing the later dimensionality analyses in
-`nomo_factors()` and `nomo_efa()`.
+```r
+fac_ord <- nomo_factors(
+  dat_likert,
+  types = c(
+    i1 = "ordinal",
+    i2 = "ordinal",
+    i3 = "ordinal",
+    i4 = "ordinal",
+    i5 = "ordinal"
+  )
+)
+```
 
-For ordered factors, the integrated review also reports declared response
-categories that were unused in the observed sample. Those empty categories are
-preserved rather than silently collapsed or recoded.
+The synthesis says things such as:
+
+> “Parallel analysis and MAP converge on 2 factors. Treat this as strong reason
+> to investigate that solution, not as proof that the construct has exactly two
+> dimensions.”
+
+If retention methods disagree, `nomologR` carries the competing factor counts
+forward as plausible solutions rather than silently choosing one.
 
 ## Development path
 
 The detailed release specification lives in [`ROADMAP.md`](ROADMAP.md).
 The v0.1 path is:
 
-1. Data & Item Audit — `nomo_screen()` **(active)**
-2. Factor-Retention Evidence — `nomo_factors()`
+1. Data & Item Audit — `nomo_screen()` **complete**
+2. Factor-Retention Evidence — `nomo_factors()` **active**
 3. Exploratory Factor Analysis — `nomo_efa()`
 4. Confirmatory Factor Analysis — `nomo_cfa()`
 5. Reliability + convergent/discriminant evidence

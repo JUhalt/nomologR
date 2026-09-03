@@ -24,12 +24,12 @@ Depends:
 Imports:
     dplyr,
     ggplot2,
+    psych,
     tibble
 Suggests:
     covr,
     knitr,
     lavaan,
-    psych,
     rmarkdown,
     semTools,
     testthat (>= 3.0.0)
