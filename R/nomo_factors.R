@@ -29,7 +29,11 @@
 #'   `"polychoric"`, `"tetrachoric"`, or `"mixed"`.
 #' @param types Optional named character vector overriding modeling types for
 #'   selected items. Allowed values are `"continuous"`, `"ordinal"`, and
-#'   `"binary"`. For example, `c(item1 = "ordinal", item2 = "ordinal")`.
+#'   `"binary"`. Explicit overrides are applied before default-type rejection,
+#'   so researchers can intentionally model otherwise ambiguous storage (for
+#'   example, an unordered factor whose levels already encode a substantive
+#'   order). Overrides do not reorder, relabel, or recode the supplied data.
+#'   For example, `c(item1 = "ordinal", item2 = "ordinal")`.
 #' @param missing Missing-data handling for correlation estimation. `"pairwise"`
 #'   uses pairwise-complete observations; `"complete"` restricts the analysis to
 #'   cases complete on all selected items.
@@ -207,13 +211,9 @@ nomo_factors <- function(data,
     character(1)
   )
 
-  item_types <- nomo_factors_model_types(
-    selected = selected,
-    items = items,
-    screen_types = screen_types,
-    types = types
-  )
-
+  # Hard data failures should be reported before modeling-type inference.
+  # This keeps constant/all-missing items from surfacing as misleading type
+  # errors and gives the researcher the most actionable diagnosis first.
   hard_bad <- vapply(
     selected,
     function(x) {
@@ -231,6 +231,13 @@ nomo_factors <- function(data,
       call. = FALSE
     )
   }
+
+  item_types <- nomo_factors_model_types(
+    selected = selected,
+    items = items,
+    screen_types = screen_types,
+    types = types
+  )
 
   analysis_data <- nomo_factors_numeric_data(
     selected = selected,
@@ -474,19 +481,6 @@ nomo_factors_model_types <- function(selected,
     "inferred_from_storage"
   )
 
-  invalid <- is.na(model_type)
-  if (any(invalid)) {
-    stop(
-      paste0(
-        "Some selected columns do not have a defensible default factor-modeling ",
-        "type. Exclude, intentionally recode, or override appropriate columns: ",
-        paste(items[invalid], collapse = ", "),
-        "."
-      ),
-      call. = FALSE
-    )
-  }
-
   if (!is.null(types)) {
     if (
       !is.character(types) ||
@@ -529,6 +523,22 @@ nomo_factors_model_types <- function(selected,
       model_type[[idx]] <- types[[item]]
       source[[idx]] <- "user_override"
     }
+  }
+
+  # Only unresolved items are rejected. An explicit, valid `types` declaration
+  # is allowed to rescue ambiguous storage, while the storage-compatibility
+  # checks below still prevent unsafe coercions.
+  invalid <- is.na(model_type)
+  if (any(invalid)) {
+    stop(
+      paste0(
+        "Some selected columns do not have a defensible default factor-modeling ",
+        "type. Exclude, intentionally recode, or override appropriate columns: ",
+        paste(items[invalid], collapse = ", "),
+        "."
+      ),
+      call. = FALSE
+    )
   }
 
   for (i in seq_along(items)) {
@@ -1188,6 +1198,30 @@ nomo_factors_log <- function(item_types,
       recommendation = paste(
         "If these are Likert/ordered indicators, rerun with `types` marking",
         "them as ordinal and compare the retention evidence."
+      )
+    )
+  }
+
+  overridden <- item_types[item_types$source == "user_override", , drop = FALSE]
+  if (nrow(overridden) > 0L) {
+    mapping <- paste0(overridden$item, "=", overridden$model_type)
+    log <- nomo_log_add(
+      log,
+      stage = "factors",
+      object = paste(overridden$item, collapse = ", "),
+      metric = "modeling_type_override",
+      value = nrow(overridden),
+      reference = "Explicit researcher modeling choice",
+      severity = "info",
+      observation = sprintf(
+        "Explicit modeling-type override%s applied: %s.",
+        if (nrow(overridden) == 1L) " was" else "s were",
+        paste(mapping, collapse = ", ")
+      ),
+      recommendation = paste(
+        "Verify that the supplied coding supports the declared measurement level.",
+        "For factor-coded ordinal items, factor level order is used as the score order;",
+        "`types` does not reorder or relabel categories."
       )
     )
   }

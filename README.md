@@ -1,6 +1,6 @@
 # nomologR
 
-**Development status: `0.0.0.9000` — Milestone 2: Factor-Retention Evidence**
+**Development status: `0.0.0.9000` — Milestone 2 complete; Milestone 3 (EFA) next**
 
 `nomologR` is a guided, evidence-based workflow for **empirical scale
 development and construct validation**. It coordinates established R engines
@@ -168,13 +168,63 @@ fac_ord <- nomo_factors(
 )
 ```
 
+#### Researcher control with documented guardrails
+
+`types` is an explicit researcher decision, not a request for `nomologR` to guess.
+A valid override is applied **before** default-type rejection, which means an
+otherwise ambiguous storage format can be used when the researcher has encoded
+it intentionally. The override is recorded in the decision log.
+
+For example, an ordinary R factor is nominal by default. If its factor levels
+already encode the intended response order, the researcher can declare those
+items ordinal:
+
+```r
+response_levels <- c(
+  "Strongly disagree",
+  "Disagree",
+  "Agree",
+  "Strongly agree"
+)
+
+dat_factor$q1 <- factor(dat_factor$q1, levels = response_levels)
+dat_factor$q2 <- factor(dat_factor$q2, levels = response_levels)
+
+fac_factor <- nomo_factors(
+  dat_factor,
+  items = c("q1", "q2", "q3", "q4"),
+  types = c(
+    q1 = "ordinal", q2 = "ordinal",
+    q3 = "ordinal", q4 = "ordinal"
+  )
+)
+
+fac_factor$modeling_types
+fac_factor$decision_log
+```
+
+The control is deliberately bounded by storage-safety checks:
+
+- `types = "ordinal"` **does not reorder categories**. For factor-coded items,
+  the existing factor-level order is used. Set that order intentionally first.
+- Character/text columns are not silently converted to ordered scores. Recode
+  them deliberately to numeric/factor/ordered storage before modeling.
+- `types = "continuous"` requires numeric storage.
+- `types = "binary"` requires exactly two observed response values.
+- Constant or all-missing items fail first with a direct data-quality error; an
+  override cannot manufacture variance that is not present.
+
+This is the intended balance in `nomologR`: researchers retain control over
+substantive modeling choices, while consequential assumptions remain visible,
+documented, and protected from silent coercion.
+
 ## Development path
 
 The detailed release specification lives in [`ROADMAP.md`](ROADMAP.md).
 The v0.1 path is:
 
 1. Data & Item Audit — `nomo_screen()` **complete**
-2. Factor-Retention Evidence — `nomo_factors()` **active**
+2. Factor-Retention Evidence — `nomo_factors()` **complete**
 3. Exploratory Factor Analysis — `nomo_efa()`
 4. Confirmatory Factor Analysis — `nomo_cfa()`
 5. Reliability + convergent/discriminant evidence

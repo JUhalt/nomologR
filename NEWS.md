@@ -1,5 +1,20 @@
 # nomologR 0.0.0.9000
 
+## Milestone 2 closeout — researcher control and hardening
+
+- Changed modeling-type override precedence so an explicit, valid `types`
+  declaration can rescue otherwise ambiguous storage before default-type
+  rejection, while storage-compatibility checks still block unsafe coercions.
+- Added decision-log entries for researcher-specified modeling-type overrides.
+- Improved error ordering so constant and all-missing items are diagnosed as
+  hard data failures before modeling-type inference.
+- Expanded README guidance and examples showing when and how to use `types`,
+  including ordered interpretation of factor levels and the limits of overrides.
+- Added ordinal one- and two-factor regression simulations plus targeted
+  coverage hardening for validation, criterion, presentation, and failure paths.
+- Milestone 2 core computational files exceed the v0.1 >=90% coverage gate;
+  presentation coverage reached 100% in the closeout audit.
+
 ## Milestone 2B — retention triangulation and sensitivity
 
 - Refined concordance to group closely related methods into criterion families,

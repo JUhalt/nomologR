@@ -32,7 +32,11 @@ all columns are treated as candidate items.}
 
 \item{types}{Optional named character vector overriding modeling types for
 selected items. Allowed values are \code{"continuous"}, \code{"ordinal"}, and
-\code{"binary"}. For example, \code{c(item1 = "ordinal", item2 = "ordinal")}.}
+\code{"binary"}. Explicit overrides are applied before default-type rejection,
+so researchers can intentionally model otherwise ambiguous storage (for
+example, an unordered factor whose levels already encode a substantive
+order). Overrides do not reorder, relabel, or recode the supplied data.
+For example, \code{c(item1 = "ordinal", item2 = "ordinal")}.}
 
 \item{missing}{Missing-data handling for correlation estimation. \code{"pairwise"}
 uses pairwise-complete observations; \code{"complete"} restricts the analysis to
