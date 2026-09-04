@@ -168,7 +168,7 @@ These values are teaching references, not pass/fail laws.
 ---
 
 ## Milestone 2 — Factor-Retention Evidence
-**Status:** Complete — local release gate satisfied; milestone PR/CI is the final merge gate.
+**Status:** Complete
 
 **Goal:** Help users answer, “How many latent dimensions should I investigate?”
 
@@ -249,12 +249,12 @@ clean checks, and CI rather than as a stand-alone correctness claim.
 - [x] Requested but unsupported criteria are explicitly skipped with reasons.
 - [x] No retention criterion automatically deletes items or declares dimensionality proven.
 - [x] Core M2 computational modules exceed the >=90% v0.1 coverage requirement.
-- [ ] Final Milestone 2 PR/CI review and squash merge.
+- [x] Final Milestone 2 PR/CI review and squash merge.
 
 ---
 
 ## Milestone 3 — Exploratory Factor Analysis
-**Status:** Next
+**Status:** Complete
 
 **Goal:** Provide a transparent exploratory structure without automating scale purification.
 
@@ -264,17 +264,21 @@ nomo_efa()
 ```
 
 ### Required capabilities
-- [ ] Oblique rotation default.
-- [ ] Extraction method chosen or recommended based on data characteristics.
-- [ ] Tidy pattern matrix.
-- [ ] Structure matrix when applicable.
-- [ ] Communalities.
-- [ ] Cross-loading diagnostics.
-- [ ] Factor correlations.
-- [ ] Residual diagnostics.
-- [ ] Model/sample adequacy notes.
-- [ ] User-controlled factor count.
-- [ ] Integration with `nomo_factors()`.
+- [x] Oblique rotation default.
+- [x] Extraction method is explicit, validated, and accompanied by method guidance rather than an automatic skew/kurtosis rule.
+- [x] Tidy pattern matrix.
+- [x] Structure matrix when applicable.
+- [x] Communalities and uniquenesses.
+- [x] Cross-loading diagnostics.
+- [x] Factor correlations.
+- [x] Residual diagnostics, including localized residual pairs and off-diagonal RMSR.
+- [x] Model/sample adequacy notes.
+- [x] User-controlled factor count.
+- [x] Integration with `nomo_factors()`, including inherited modeling decisions and retention ambiguity.
+- [x] Explicit non-positive-definite handling and user-requested smoothing.
+- [x] Neutral public factor labels without sign/order manipulation.
+- [x] Decision logging with correct researcher-vs-inherited provenance.
+- [x] Teaching-oriented summary and plot methods.
 
 ### Teaching references
 Examples:
@@ -300,24 +304,48 @@ not:
 DELETE
 ```
 
+`KEEP` means that no configured numerical EFA teaching-reference flag fired. It
+does not certify substantive appropriateness or construct validity.
+
 ### Tests
-- [ ] Known simple structure.
-- [ ] Known cross-loading item.
-- [ ] Weak item.
-- [ ] Highly redundant item set.
-- [ ] Ordinal item set.
-- [ ] Factor-order/sign indeterminacy handled in tests.
+- [x] Known simple structure.
+- [x] Known cross-loading item.
+- [x] Weak item.
+- [x] Highly redundant item set.
+- [x] Ordinal item set.
+- [x] Factor-order/sign indeterminacy handled in tests.
+- [x] Missing-data failure and complete-case paths.
+- [x] Orthogonal rotation and one-factor behavior.
+- [x] Explicit smoothing and non-positive-definite failure.
+- [x] `nomo_factors()` handoff and modeling-type provenance.
+- [x] User modeling-type overrides.
+- [x] Presentation and plotting regression tests.
+- [x] Unsupported extraction-method validation.
+
+### Coverage closeout
+Final pre-closeout audit:
+- `R/nomo_efa.R`: 97.78%
+- `R/nomo_efa_presentation.R`: 98.70%
+- package-wide: 96.52%
+
+Coverage is treated as supporting software-quality evidence alongside known-answer
+simulation, edge-case testing, direct-engine behavior, clean `R CMD check`, and
+user-facing visual review.
 
 ### Exit gate
-- [ ] User can reproduce the EFA table from package output.
-- [ ] Every item flag has an explanation.
-- [ ] No hidden model refitting.
+- [x] User can reproduce the EFA table from package output.
+- [x] Every flagged item has an explanation.
+- [x] No hidden model refitting.
+- [x] Core M3 computational modules exceed the >=90% v0.1 coverage requirement.
+- [x] User-facing output/plot audit completed.
+- [ ] Final Milestone 3 PR/CI review and squash merge.
 
 ---
 
 ## Checkpoint A — Exploratory Workflow Complete
+**Status:** Complete locally; final Milestone 3 PR/CI merge is the checkpoint merge gate.
 
-At this checkpoint a new user must be able to:
+At this checkpoint a new user can:
 
 ```r
 x <- nomo_screen(dat, items = ...)
@@ -335,11 +363,19 @@ and understand:
 ### Checkpoint A release candidate
 `0.1.0.9001`
 
-Do not proceed until a vignette walks through this workflow on an internal example dataset.
+- [x] `nomo_screen()` → `nomo_factors()` → `nomo_efa()` works as a coherent handoff.
+- [x] A vignette walks through the exploratory workflow.
+- [x] Numerical review references remain non-prescriptive.
+- [x] Decision provenance is retained across stages.
+- [x] Checkpoint-A core modules satisfy the >=90% coverage gate.
+- [x] Local tests/checks and user-facing visual audit are clean.
+- [ ] GitHub Actions green and Milestone 3 squash merged.
 
 ---
 
 ## Milestone 4 — Confirmatory Factor Analysis
+**Status:** Next
+
 **Goal:** Test a researcher-specified measurement model on fresh/holdout data when feasible.
 
 ### Functions

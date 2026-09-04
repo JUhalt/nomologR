@@ -1,7 +1,12 @@
-test_that("remaining future public functions fail explicitly rather than returning fake results", {
-  dat <- data.frame(x = 1:5, y = 2:6)
+test_that("nomo_efa is implemented beginning in Milestone 3", {
+  set.seed(3001)
+  f <- rnorm(120)
+  dat <- data.frame(
+    x1 = .8 * f + rnorm(120, sd = .6),
+    x2 = .8 * f + rnorm(120, sd = .6),
+    x3 = .7 * f + rnorm(120, sd = .7),
+    x4 = .7 * f + rnorm(120, sd = .7)
+  )
 
-  # nomo_factors() is implemented beginning in Milestone 2 and therefore is no
-  # longer part of the future-API stub test.
-  expect_error(nomo_efa(dat, factors = 1), "Milestone 3")
+  expect_s3_class(nomo_efa(dat, factors = 1), "nomo_efa")
 })

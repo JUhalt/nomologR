@@ -1,4 +1,45 @@
-# nomologR 0.0.0.9000
+# nomologR 0.1.0.9001
+
+## Milestone 3 closeout — exploratory factor analysis and Checkpoint A
+
+- Replaced the `nomo_efa()` development stub with a production common-factor EFA
+  workflow using `psych::fa()` as the statistical engine and `nomologR` as the
+  guidance, diagnostics, logging, and presentation layer.
+- Added researcher-controlled factor counts and direct handoff from
+  `nomo_factors()`, including inherited item sets, modeling types, correlation
+  models, missing-data decisions, and explicit smoothing choices.
+- Preserved M2 retention ambiguity in the EFA decision log so a handoff is not
+  misrepresented as proof of dimensionality.
+- Added MINRES + oblimin defaults, while keeping extraction and rotation choices
+  explicit and validating supported extraction methods before calling the engine.
+- Added tidy pattern/structure matrices, communalities, uniquenesses, loading
+  complexity, factor correlations, reproduced correlations, residual matrices,
+  localized residual pairs, and off-diagonal RMSR.
+- Added `KEEP`, `REVIEW`, and `STRONG REVIEW` item guidance based on configurable
+  loading, cross-loading, and communality teaching references without automatic
+  deletion, reverse scoring, factor-count changes, rotation hunting, or hidden
+  model refitting.
+- Added KMO/Bartlett supporting evidence, descriptive sample-adequacy context,
+  small-sample review behavior, and explicit non-positive-definite/smoothing
+  handling.
+- Added neutral public factor labels (`F1`, `F2`, ...) while retaining the full
+  underlying `psych` fit object for advanced inspection.
+- Added `summary.nomo_efa()` and four teaching-oriented plot views for pattern
+  loadings, primary/secondary loadings, unique residual pairs, and unique
+  interfactor correlations.
+- Corrected modeling-decision provenance so types inherited from a
+  `nomo_factors()` object are distinguished from new researcher overrides made
+  at the EFA stage.
+- Added known-structure, cross-loading, weak-item, ordinal, redundancy,
+  missingness, orthogonal-rotation, smoothing, validation, handoff, provenance,
+  presentation, and failure-mode regression tests.
+- Added the Checkpoint A vignette, **“From item audit to exploratory structure,”**
+  demonstrating `nomo_screen()` -> `nomo_factors()` -> `nomo_efa()`.
+- Milestone 3 coverage closeout reached 97.78% for `R/nomo_efa.R`, 98.70% for
+  `R/nomo_efa_presentation.R`, and 96.52% package-wide in the final pre-closeout
+  audit.
+- Advanced the development version to `0.1.0.9001`, marking Checkpoint A:
+  the exploratory measurement workflow is complete and Milestone 4 (CFA) is next.
 
 ## Milestone 2 closeout — researcher control and hardening
 
