@@ -9,24 +9,90 @@ nomo_efa(
   items = NULL,
   factors,
   rotation = "oblimin",
+  fm = "minres",
+  correlation = NULL,
+  types = NULL,
+  missing = NULL,
+  smooth = NULL,
   guidance = nomo_defaults()
 )
 }
 \arguments{
 \item{data}{A data frame containing candidate items.}
 
-\item{items}{Optional character vector identifying item columns.}
+\item{items}{Optional character vector identifying item columns. If \code{factors}
+is a \code{nomo_factors} object and \code{items = NULL}, its item set is inherited.
+Otherwise all columns are used when \code{items = NULL}.}
 
-\item{factors}{Number of factors to extract.}
+\item{factors}{A positive integer number of factors to extract, or a
+\code{nomo_factors} object. For a \code{nomo_factors} object, the selected
+parallel-analysis factor count is used.}
 
-\item{rotation}{Rotation method; planned default is \code{"oblimin"}.}
+\item{rotation}{Rotation passed to \code{\link[psych:fa]{psych::fa()}}. The default is \code{"oblimin"}.
+Orthogonal rotations are allowed but are recorded as a researcher choice.}
+
+\item{fm}{Common-factor extraction method passed to \code{\link[psych:fa]{psych::fa()}}. The
+default is \code{"minres"}. Supported values are \code{"minres"}, \code{"uls"}, \code{"ols"},
+\code{"wls"}, \code{"gls"}, \code{"pa"}, \code{"ml"}, \code{"minchi"}, \code{"minrank"}, \code{"alpha"},
+and \code{"old.min"}.}
+
+\item{correlation}{Optional correlation strategy: \code{"auto"}, \code{"pearson"},
+\code{"polychoric"}, \code{"tetrachoric"}, or \code{"mixed"}. If \code{NULL}, the value is
+inherited from a supplied \code{nomo_factors} object when possible; otherwise
+\code{"auto"} is used.}
+
+\item{types}{Optional named character vector declaring selected items as
+\code{"continuous"}, \code{"ordinal"}, or \code{"binary"}. If \code{NULL}, modeling types are
+inherited from a supplied \code{nomo_factors} object when possible; otherwise
+they are inferred using the same conservative rules as \code{\link[=nomo_factors]{nomo_factors()}}.}
+
+\item{missing}{Optional missing-data strategy: \code{"pairwise"} or \code{"complete"}.
+If \code{NULL}, the value is inherited from a supplied \code{nomo_factors} object
+when possible; otherwise \code{"pairwise"} is used.}
+
+\item{smooth}{Optional logical. If \code{NULL} (default), smoothing is inherited
+from a supplied \code{nomo_factors} object when that object explicitly used
+smoothing; otherwise \code{FALSE}. If \code{FALSE}, a non-positive-definite
+correlation matrix stops the analysis. If \code{TRUE}, \code{\link[psych:cor.smooth]{psych::cor.smooth()}} is
+used explicitly and the intervention is recorded.}
 
 \item{guidance}{Guidance settings from \code{\link[=nomo_defaults]{nomo_defaults()}}.}
 }
 \value{
-During the development series this function is a documented API stub.
+An object of class \code{nomo_efa} containing the fitted EFA, tidy pattern
+and structure matrices, factor correlations, item diagnostics,
+communalities/uniquenesses, residual diagnostics, adequacy information,
+and a decision log.
 }
 \description{
-The planned implementation will use oblique solutions by default, respect the
-indicator type, and report item-level evidence without automatic deletion.
+\code{nomo_efa()} estimates a common-factor exploratory factor analysis while
+keeping the consequential analytical choices visible. Oblique rotation is
+the default, item-level diagnostics are framed as prompts for inspection,
+and no item is automatically deleted or model silently refit.
+}
+\details{
+The factor count may be supplied directly as a positive integer or by passing
+a \code{nomo_factors} object. When a \code{nomo_factors} object is supplied, its primary
+parallel-analysis suggestion is used as the requested EFA factor count and,
+unless overridden, its item set, modeling types, correlation model, and
+missing-data strategy are carried forward.
+}
+\examples{
+set.seed(2026)
+f1 <- rnorm(250)
+f2 <- 0.35 * f1 + sqrt(1 - 0.35^2) * rnorm(250)
+dat <- data.frame(
+  a1 = .75 * f1 + rnorm(250, sd = .65),
+  a2 = .70 * f1 + rnorm(250, sd = .70),
+  a3 = .80 * f1 + rnorm(250, sd = .60),
+  a4 = .72 * f1 + rnorm(250, sd = .68),
+  b1 = .75 * f2 + rnorm(250, sd = .65),
+  b2 = .70 * f2 + rnorm(250, sd = .70),
+  b3 = .80 * f2 + rnorm(250, sd = .60),
+  b4 = .72 * f2 + rnorm(250, sd = .68)
+)
+efa <- nomo_efa(dat, factors = 2)
+efa
+summary(efa)
+
 }

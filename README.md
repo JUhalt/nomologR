@@ -1,6 +1,6 @@
 # nomologR
 
-**Development status: `0.0.0.9000` — Milestone 2 complete; Milestone 3 (EFA) next**
+**Development status: `0.1.0.9001` — Checkpoint A complete; Milestone 4 (CFA) next**
 
 `nomologR` is a guided, evidence-based workflow for **empirical scale
 development and construct validation**. It coordinates established R engines
@@ -218,6 +218,115 @@ This is the intended balance in `nomologR`: researchers retain control over
 substantive modeling choices, while consequential assumptions remain visible,
 documented, and protected from silent coercion.
 
+### 3. `nomo_efa()` — exploratory structure without automatic purification
+
+Milestone 3 turns a researcher-controlled factor count into a transparent
+common-factor exploratory model. The default uses MINRES with oblimin rotation,
+keeps factor correlations visible, and reports evidence that may deserve review
+without silently deleting indicators or refitting a different model.
+
+The cleanest handoff is directly from `nomo_factors()`:
+
+```r
+set.seed(2026)
+
+f1 <- rnorm(500)
+f2 <- 0.35 * f1 + sqrt(1 - 0.35^2) * rnorm(500)
+
+dat2 <- data.frame(
+  A1 = .82 * f1 + rnorm(500, sd = .55),
+  A2 = .78 * f1 + rnorm(500, sd = .60),
+  A3 = .75 * f1 + rnorm(500, sd = .62),
+  A4 = .80 * f1 + rnorm(500, sd = .58),
+  B1 = .82 * f2 + rnorm(500, sd = .55),
+  B2 = .78 * f2 + rnorm(500, sd = .60),
+  B3 = .75 * f2 + rnorm(500, sd = .62),
+  B4 = .80 * f2 + rnorm(500, sd = .58)
+)
+
+scr <- nomo_screen(dat2)
+fac <- nomo_factors(dat2, criterion_set = "core", seed = 2026)
+efa <- nomo_efa(dat2, factors = fac)
+
+summary(efa)
+efa$item_summary
+```
+
+Passing a `nomo_factors` object carries forward its item set, modeling-type
+decisions, correlation model, missing-data strategy, and explicit smoothing
+choice where applicable. Those decisions are recorded as **inherited**, not
+misrepresented as new EFA-stage researcher overrides.
+
+#### What `nomo_efa()` returns
+
+The public result keeps the exploratory evidence reproducible and inspectable:
+
+- neutral factor labels (`F1`, `F2`, ...), while the underlying engine object
+  remains available in `efa$fit`;
+- pattern and structure matrices;
+- communalities, uniquenesses, and loading complexity;
+- primary/secondary loading diagnostics and loading gaps;
+- factor correlations;
+- reproduced and residual correlation matrices;
+- ranked localized residual pairs and off-diagonal RMSR;
+- KMO/Bartlett supporting adequacy evidence where available;
+- a structured decision log.
+
+Item-level numerical references are intentionally framed as review prompts:
+
+- primary loading around `.40`;
+- secondary/cross-loading around `.30`;
+- communality around `.40`.
+
+Each item receives `KEEP`, `REVIEW`, or `STRONG REVIEW`. `KEEP` means no
+configured numeric EFA flag fired; it is **not** a declaration that theory,
+content coverage, wording, redundancy, or later validity evidence has approved
+the item.
+
+#### EFA plots
+
+```r
+plot(efa, type = "pattern")
+plot(efa, type = "items")
+plot(efa, type = "residuals")
+plot(efa, type = "factor_correlations")
+```
+
+The pattern heatmap preserves loading sign; the loading plot distinguishes
+primary from secondary loadings and displays both teaching references; residual
+and factor-correlation plots show unique matrix information rather than
+duplicating symmetric cells.
+
+#### Researcher control remains visible
+
+A factor count may also be supplied directly:
+
+```r
+efa2 <- nomo_efa(dat2, factors = 2)
+```
+
+Alternative common-factor extraction and rotation choices remain explicit. An
+orthogonal rotation is allowed but logged as a choice requiring substantive
+justification. A non-positive-definite correlation matrix stops by default;
+`smooth = TRUE` makes any smoothing intervention explicit and records it.
+
+For numeric Likert indicators, modeling level should be declared rather than
+inferred from integer storage alone:
+
+```r
+efa_ord <- nomo_efa(
+  dat_likert,
+  factors = 2,
+  types = c(
+    q1 = "ordinal", q2 = "ordinal",
+    q3 = "ordinal", q4 = "ordinal"
+  )
+)
+```
+
+The full Checkpoint A walkthrough is in the
+**“From item audit to exploratory structure”** vignette.
+
 ## Development path
 
 The detailed release specification lives in [`ROADMAP.md`](ROADMAP.md).
@@ -225,8 +334,8 @@ The v0.1 path is:
 
 1. Data & Item Audit — `nomo_screen()` **complete**
 2. Factor-Retention Evidence — `nomo_factors()` **complete**
-3. Exploratory Factor Analysis — `nomo_efa()`
-4. Confirmatory Factor Analysis — `nomo_cfa()`
+3. Exploratory Factor Analysis — `nomo_efa()` **complete**
+4. Confirmatory Factor Analysis — `nomo_cfa()` **next**
 5. Reliability + convergent/discriminant evidence
 6. Theory-Specified Nomological Network
 7. Measurement Invariance

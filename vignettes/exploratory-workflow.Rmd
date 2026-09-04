@@ -1,0 +1,206 @@
+---
+title: "From item audit to exploratory structure"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{From item audit to exploratory structure}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+library(nomologR)
+
+knitr::opts_chunk$set(
+  echo = TRUE,
+  message = FALSE,
+  warning = FALSE,
+  fig.width = 7,
+  fig.height = 5
+)
+```
+
+# Why this workflow is staged
+
+Exploratory factor analysis is not a scale-purification button. Before interpreting
+an exploratory factor solution, researchers should know what items are being
+analyzed, how they are coded, whether the correlation model matches the intended
+measurement level, and how many dimensions are substantively plausible.
+
+`nomologR` therefore separates three questions:
+
+1. `nomo_screen()` — **What does the item/data set look like?**
+2. `nomo_factors()` — **How many latent dimensions deserve investigation?**
+3. `nomo_efa()` — **What does a requested exploratory structure look like?**
+
+The handoff is deliberate: no stage silently deletes items, changes the requested
+factor count, or treats a numerical reference value as proof.
+
+# A reproducible two-factor example
+
+The example below has two correlated latent variables with four indicators each.
+The population structure is intentionally clear so that the workflow can be
+inspected against a known data-generating process.
+
+```{r simulate}
+set.seed(2026)
+n <- 400
+
+f1 <- rnorm(n)
+f2 <- 0.35 * f1 + sqrt(1 - 0.35^2) * rnorm(n)
+
+dat <- data.frame(
+  a1 = .82 * f1 + rnorm(n, sd = .55),
+  a2 = .78 * f1 + rnorm(n, sd = .60),
+  a3 = .75 * f1 + rnorm(n, sd = .62),
+  a4 = .80 * f1 + rnorm(n, sd = .58),
+  b1 = .82 * f2 + rnorm(n, sd = .55),
+  b2 = .78 * f2 + rnorm(n, sd = .60),
+  b3 = .75 * f2 + rnorm(n, sd = .62),
+  b4 = .80 * f2 + rnorm(n, sd = .58)
+)
+```
+
+# Step 1: audit the items
+
+```{r screen}
+scr <- nomo_screen(dat)
+summary(scr)
+```
+
+The screening object is descriptive and diagnostic. A flag is a reason to inspect
+an item or coding decision, not an instruction to remove an item.
+
+# Step 2: investigate factor retention
+
+```{r factors}
+fac <- nomo_factors(
+  dat,
+  criterion_set = "core",
+  n_iter = 20,
+  seed = 2026
+)
+summary(fac)
+```
+
+Parallel analysis is the primary retention suggestion, with MAP and EKC providing
+complementary evidence. When methods disagree, the disagreement is part of the
+result rather than something `nomologR` resolves with a majority-vote rule.
+
+# Step 3: hand the retention result into EFA
+
+```{r efa}
+efa <- nomo_efa(
+  dat,
+  factors = fac
+)
+summary(efa)
+```
+
+Passing the `nomo_factors` object carries forward the selected item set, modeling
+types, correlation model, and missing-data strategy. The primary
+parallel-analysis count becomes the **requested** EFA factor count. If M2 identified
+neighboring plausible solutions, `nomo_efa()` records that context and recommends
+comparing those solutions rather than treating the handoff as proof.
+
+# Read the item table as evidence, not a deletion list
+
+```{r item-table}
+efa$item_summary
+```
+
+The item table reports:
+
+- the largest pattern loading;
+- the second-largest pattern loading;
+- the gap between them;
+- communality and uniqueness;
+- loading complexity;
+- `KEEP`, `REVIEW`, or `STRONG REVIEW`;
+- a plain-language explanation for every numerical flag.
+
+`KEEP` means that no configured numerical teaching-reference flag fired. It does
+**not** mean that theory, wording, content coverage, redundancy, or external
+validity evidence has approved the item.
+
+# Pattern versus structure matrices
+
+With oblique rotation, the pattern matrix contains regression-like factor
+coefficients and is the primary matrix for interpreting which indicators define
+which factors. The structure matrix contains item-factor correlations and also
+reflects correlations among the factors.
+
+```{r matrices}
+round(efa$pattern_matrix, 2)
+round(efa$structure_matrix, 2)
+round(efa$factor_correlations, 2)
+```
+
+```{r pattern-plot}
+plot(efa, type = "pattern")
+```
+
+# Residual strain
+
+A plausible loading pattern can still leave localized relationships unexplained.
+`nomo_efa()` therefore returns the reproduced correlation matrix, the residual
+matrix, the off-diagonal RMSR, and ranked residual pairs.
+
+```{r residuals}
+efa$rmsr
+head(efa$residual_pairs, 10)
+```
+
+```{r residual-plot}
+plot(efa, type = "residuals")
+```
+
+Residuals are diagnostic evidence. `nomologR` does not search for a better model,
+add correlated residuals, change the factor count, or remove indicators behind
+the user's back.
+
+# Researcher control remains explicit
+
+The default is common-factor MINRES extraction with oblimin rotation. Researchers
+may choose another common-factor extraction or rotation, but those choices remain
+visible in the result and decision log. For example:
+
+```{r orthogonal, eval=FALSE}
+efa_varimax <- nomo_efa(
+  dat,
+  factors = 2,
+  rotation = "varimax"
+)
+```
+
+An orthogonal choice is permitted rather than prohibited, but the output asks the
+researcher to justify the assumption that the factors should be uncorrelated.
+
+For numeric Likert items, declare the intended modeling level rather than assuming
+that integer storage proves continuous or ordinal measurement:
+
+```{r ordinal-example, eval=FALSE}
+types <- c(
+  q1 = "ordinal",
+  q2 = "ordinal",
+  q3 = "ordinal",
+  q4 = "ordinal"
+)
+
+efa_ord <- nomo_efa(
+  dat_likert,
+  factors = 1,
+  types = types
+)
+```
+
+# What should happen next?
+
+EFA contributes exploratory evidence about latent structure. A defensible
+measurement workflow still requires theoretical interpretation and, where
+feasible, confirmation on fresh or holdout data. The next `nomologR` milestone is
+confirmatory factor analysis.
+
+Methodological treatments that motivate the package's EFA philosophy include
+Fabrigar, Wegener, MacCallum, and Strahan (1999), Watkins (2018), and later
+reviews emphasizing common-factor models, evidence-based retention, and oblique
+rotation when factor correlations are plausible.
