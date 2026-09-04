@@ -23,13 +23,14 @@ Depends:
     R (>= 4.2)
 Imports:
     dplyr,
+    EFAtools (>= 0.8.0),
     ggplot2,
+    psych,
     tibble
 Suggests:
     covr,
     knitr,
     lavaan,
-    psych,
     rmarkdown,
     semTools,
     testthat (>= 3.0.0)

@@ -4,19 +4,120 @@
 \alias{nomo_factors}
 \title{Evaluate evidence about the number of latent factors}
 \usage{
-nomo_factors(data, items = NULL, guidance = nomo_defaults())
+nomo_factors(
+  data,
+  items = NULL,
+  correlation = c("auto", "pearson", "polychoric", "tetrachoric", "mixed"),
+  types = NULL,
+  missing = c("pairwise", "complete"),
+  criterion_set = c("core", "minimal", "extended", "all"),
+  parallel_rule = c("percentile", "mean", "crawford"),
+  n_iter = NULL,
+  quantile = NULL,
+  max_factors = NULL,
+  seed = 1234L,
+  fm = "minres",
+  smooth = FALSE,
+  guidance = nomo_defaults()
+)
 }
 \arguments{
 \item{data}{A data frame containing candidate items.}
 
-\item{items}{Optional character vector identifying item columns.}
+\item{items}{Optional character vector identifying item columns. If \code{NULL},
+all columns are treated as candidate items.}
+
+\item{correlation}{Correlation strategy: \code{"auto"}, \code{"pearson"},
+\code{"polychoric"}, \code{"tetrachoric"}, or \code{"mixed"}.}
+
+\item{types}{Optional named character vector overriding modeling types for
+selected items. Allowed values are \code{"continuous"}, \code{"ordinal"}, and
+\code{"binary"}. Explicit overrides are applied before default-type rejection,
+so researchers can intentionally model otherwise ambiguous storage (for
+example, an unordered factor whose levels already encode a substantive
+order). Overrides do not reorder, relabel, or recode the supplied data.
+For example, \code{c(item1 = "ordinal", item2 = "ordinal")}.}
+
+\item{missing}{Missing-data handling for correlation estimation. \code{"pairwise"}
+uses pairwise-complete observations; \code{"complete"} restricts the analysis to
+cases complete on all selected items.}
+
+\item{criterion_set}{Retention-criterion bundle. \code{"minimal"} uses parallel
+analysis plus original MAP; \code{"core"} (default) adds revised MAP and EKC;
+\code{"extended"} adds NEST and Hull where supported; \code{"all"} additionally
+requests comparison data and the legacy Kaiser-Guttman rule. Criteria whose
+assumptions are not compatible with the current data are explicitly marked
+as skipped rather than silently substituted.}
+
+\item{parallel_rule}{Parallel-analysis decision rule: \code{"percentile"}
+(default), \code{"mean"}, or \code{"crawford"}. All three rules are computed from
+the same null simulations and retained in the result as sensitivity evidence.}
+
+\item{n_iter}{Number of null-data iterations used for parallel analysis. If
+\code{NULL}, the value in \code{guidance$factor_parallel_iterations} is used.}
+
+\item{quantile}{Quantile of null eigenvalues used as the parallel-analysis
+reference. If \code{NULL}, the value in
+\code{guidance$factor_parallel_quantile} is used.}
+
+\item{max_factors}{Maximum number of factors/components evaluated for MAP. If
+\code{NULL}, up to 10 or \code{p - 1}, whichever is smaller, are evaluated.}
+
+\item{seed}{Integer seed for the null-data simulation. The caller's random
+number state is restored before return.}
+
+\item{fm}{Common-factor extraction method passed to \code{\link[psych:fa]{psych::fa()}} when
+obtaining factor eigenvalues. The default is \code{"minres"}.}
+
+\item{smooth}{Logical. If \code{FALSE} (default), a non-positive-definite observed
+correlation matrix blocks factor-retention analysis. If \code{TRUE}, smoothing
+is explicit, recorded, and performed with \code{\link[psych:cor.smooth]{psych::cor.smooth()}}.}
 
 \item{guidance}{Guidance settings from \code{\link[=nomo_defaults]{nomo_defaults()}}.}
 }
 \value{
-During the development series this function is a documented API stub.
+An object of class \code{nomo_factors} containing the analyzed correlation
+matrix, item modeling types, convenience aliases \code{correlation} and
+\code{modeling_types}, KMO and Bartlett diagnostics, parallel-analysis results,
+MAP results, criterion availability/status, method- and family-level concordance,
+scree information, a cautious retention synthesis, and a decision log.
 }
 \description{
-Planned evidence includes parallel analysis and complementary factor-retention
-diagnostics using correlations appropriate to the indicator type.
+\code{nomo_factors()} combines multiple pieces of factor-retention evidence rather
+than treating any single rule as definitive. The primary retention evidence is
+a common-factor parallel analysis, complemented by Velicer's original and
+revised MAP criteria and, under the default \code{criterion_set = "core"}, the
+empirical Kaiser criterion (EKC). Extended criterion sets can add NEST, Hull
+(CAF), comparison data, and the legacy Kaiser-Guttman rule when their
+assumptions are compatible with the analyzed data. Scree information,
+Kaiser-Meyer-Olkin (KMO) sampling adequacy, and Bartlett's test are returned
+as supporting diagnostics.
+}
+\details{
+Correlation choice is explicit and visible. With \code{correlation = "auto"},
+continuous indicators use Pearson correlations, all-binary indicators use
+tetrachoric correlations, ordinal/binary indicators use polychoric
+correlations, and genuinely mixed indicator sets use mixed correlations.
+Numeric variables with a small number of integer-like response values are
+treated conservatively as continuous unless the user explicitly overrides
+their modeling type through \code{types}.
+
+The function does not claim that a scale "has exactly" a particular number of
+factors. It reports which factor counts deserve investigation and records
+disagreements among retention methods.
+}
+\examples{
+set.seed(42)
+f <- rnorm(150)
+dat <- data.frame(
+  i1 = 0.8 * f + rnorm(150, sd = 0.6),
+  i2 = 0.8 * f + rnorm(150, sd = 0.6),
+  i3 = 0.7 * f + rnorm(150, sd = 0.7),
+  i4 = 0.7 * f + rnorm(150, sd = 0.7)
+)
+
+fac <- nomo_factors(dat, n_iter = 10, seed = 2026)
+fac
+summary(fac)
+
 }

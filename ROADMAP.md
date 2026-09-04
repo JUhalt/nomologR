@@ -22,7 +22,7 @@ The JUhalt measurement/design ecosystem should remain intentionally modular:
 
 ### Natural handoff
 
-`contentvalidR` → `nomologR` → substantive/experimental research
+`contentvalidR` → `nomologR` → substantive/experimental research  
 `solomonR` is invoked only when the substantive study uses a Solomon four-group design.
 
 ---
@@ -49,7 +49,9 @@ Every public function and report should follow these principles.
 # RELEASE TRACK
 
 ## Milestone 0 — Foundation Reset
-**Target version:** `0.0.0.9000`
+**Status:** Complete
+
+**Target version:** `0.0.0.9000`  
 **Purpose:** Stabilize the project's identity before implementing substantive methods.
 
 ### Scope
@@ -105,14 +107,9 @@ Do **not** begin v0.1 implementation until:
 # v0.1.0 — Minimum Useful Construct-Validation Workflow
 
 ## Milestone 1 — Data & Item Audit
-**Status:** Active — core analysis scope implemented; release-gate cleanup remains.
+**Status:** Complete
 
 **Goal:** Turn a raw item set into an interpretable diagnostic object without changing the data.
-
-### Current release-gate remainder
-- [ ] Stable regression fixture for decision-log presentation.
-- [ ] Confirm ≥ 90% line coverage for Milestone 1 code in CI.
-- [ ] Final Milestone 1 PR/CI review and merge.
 
 ### Functions
 ```r
@@ -146,10 +143,10 @@ Each flag must contain:
 
 ### Benchmarks
 Reference points may include:
-- corrected item-total around `.30` as a **review threshold**
+- corrected item-rest around `.30` as a **review threshold**
 - extreme missingness or response concentration as configurable flags
 
-These values must be labeled as teaching references, not pass/fail laws.
+These values are teaching references, not pass/fail laws.
 
 ### Tests
 - [x] Continuous toy data.
@@ -159,17 +156,20 @@ These values must be labeled as teaching references, not pass/fail laws.
 - [x] Constant item.
 - [x] Reverse-keyed item.
 - [x] Invalid column names/types.
-- [ ] Snapshot test of decision-log output.
+- [x] Stable regression coverage for decision-log and presentation behavior.
 
 ### Exit gate
 - [x] 100% of exported arguments documented.
-- [ ] ≥ 90% line coverage for Milestone 1 code.
+- [x] >= 90% line coverage for Milestone 1 code (96.6% at milestone closeout).
 - [x] No function alters supplied data unless explicitly requested.
 - [x] README contains a working `nomo_screen()` example.
+- [x] Milestone PR/CI review completed and merged.
 
 ---
 
 ## Milestone 2 — Factor-Retention Evidence
+**Status:** Complete — local release gate satisfied; milestone PR/CI is the final merge gate.
+
 **Goal:** Help users answer, “How many latent dimensions should I investigate?”
 
 ### Function
@@ -178,16 +178,30 @@ nomo_factors()
 ```
 
 ### Required analyses
-- [ ] Parallel analysis.
-- [ ] Scree information.
-- [ ] MAP as converging evidence where appropriate.
-- [ ] KMO as a supporting adequacy diagnostic.
-- [ ] Bartlett's test as descriptive/supporting evidence.
-- [ ] Correlation-matrix selection:
+- [x] Common-factor parallel analysis as the primary retention method.
+- [x] Scree information for common-factor and component eigenvalues.
+- [x] Velicer original MAP (TR2) as complementary evidence.
+- [x] Velicer revised MAP (TR4) as complementary sensitivity evidence.
+- [x] Empirical Kaiser criterion (EKC) in the default core bundle.
+- [x] Optional NEST and Hull (CAF) where assumptions are supported.
+- [x] Optional comparison data in the `all` bundle.
+- [x] Legacy Kaiser-Guttman (>1) displayed only as historical context and excluded from synthesis.
+- [x] KMO/item MSA as supporting adequacy diagnostics.
+- [x] Bartlett's test as descriptive/supporting evidence when one common N is available.
+- [x] Correlation-matrix selection:
   - Pearson
   - polychoric
   - tetrachoric
   - mixed, where supported
+- [x] Explicit researcher modeling-type overrides with documented storage-safety guardrails.
+- [x] Explicit non-positive-definite handling; no silent smoothing.
+- [x] Criterion-family synthesis so related variants are not double-counted as independent votes.
+
+### Criterion bundles
+- `minimal`: parallel analysis + original MAP (TR2)
+- `core`: adds revised MAP (TR4) + EKC
+- `extended`: adds NEST + Hull (CAF) when supported
+- `all`: adds comparison data + legacy Kaiser-Guttman context
 
 ### Important rule
 The package may recommend:
@@ -196,21 +210,52 @@ The package may recommend:
 It should **not** say:
 > “The scale has exactly 2 factors.”
 
+### Researcher control
+`types` may override an otherwise ambiguous default when the supplied coding can
+safely support the declared measurement level. Overrides are logged and do not
+reorder, relabel, or silently recode categories. Constant/all-missing items and
+incompatible storage remain hard failures. README examples document the intended
+workflow.
+
 ### Tests
-- [ ] Simulated 1-factor population.
-- [ ] Simulated 2-factor correlated population.
-- [ ] Ordinal version of same simulations.
-- [ ] Small-sample warning behavior.
-- [ ] Non-positive-definite correlation matrix behavior.
+- [x] Simulated 1-factor continuous population.
+- [x] Simulated 2-factor correlated continuous population.
+- [x] Ordinal one-factor population.
+- [x] Ordinal two-factor correlated population.
+- [x] Binary and mixed indicator workflows.
+- [x] Small-sample review behavior.
+- [x] Pairwise vs complete missing-data behavior.
+- [x] Non-positive-definite correlation-matrix behavior and explicit smoothing.
+- [x] Reproducible stochastic settings and caller RNG restoration.
+- [x] Ambiguous/disagreeing retention evidence with cautious synthesis.
+- [x] Criterion skipping/qualification behavior.
+- [x] Presentation, plotting, validation, wrapper-failure, and synthesis edge cases.
+
+### Coverage closeout
+Before the final researcher-control closeout patch, the M2 audit reported:
+- `R/nomo_factors.R`: 94.31%
+- `R/nomo_factors_criteria.R`: 97.07%
+- `R/nomo_factors_presentation.R`: 100.00%
+- package-wide: 96.21% despite future-milestone stubs remaining intentionally unimplemented
+
+The v0.1 core-computational coverage gate is therefore satisfied. Coverage is
+used alongside known-answer simulations, edge-case tests, engine comparisons,
+clean checks, and CI rather than as a stand-alone correctness claim.
 
 ### Exit gate
-- [ ] Factor recommendation agrees with known simulated structure under ordinary conditions.
-- [ ] Ambiguous simulations produce appropriately cautious output.
-- [ ] Seed and stochastic settings are reproducible and reported.
+- [x] Factor recommendation agrees with known simulated structure under ordinary conditions.
+- [x] Ambiguous simulations produce appropriately cautious output.
+- [x] Seed and stochastic settings are reproducible and reported.
+- [x] Requested but unsupported criteria are explicitly skipped with reasons.
+- [x] No retention criterion automatically deletes items or declares dimensionality proven.
+- [x] Core M2 computational modules exceed the >=90% v0.1 coverage requirement.
+- [ ] Final Milestone 2 PR/CI review and squash merge.
 
 ---
 
 ## Milestone 3 — Exploratory Factor Analysis
+**Status:** Next
+
 **Goal:** Provide a transparent exploratory structure without automating scale purification.
 
 ### Function
