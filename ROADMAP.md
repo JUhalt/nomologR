@@ -338,12 +338,12 @@ user-facing visual review.
 - [x] No hidden model refitting.
 - [x] Core M3 computational modules exceed the >=90% v0.1 coverage requirement.
 - [x] User-facing output/plot audit completed.
-- [ ] Final Milestone 3 PR/CI review and squash merge.
+- [x] Final Milestone 3 PR/CI review and squash merge.
 
 ---
 
 ## Checkpoint A — Exploratory Workflow Complete
-**Status:** Complete locally; final Milestone 3 PR/CI merge is the checkpoint merge gate.
+**Status:** Complete
 
 At this checkpoint a new user can:
 
@@ -369,12 +369,12 @@ and understand:
 - [x] Decision provenance is retained across stages.
 - [x] Checkpoint-A core modules satisfy the >=90% coverage gate.
 - [x] Local tests/checks and user-facing visual audit are clean.
-- [ ] GitHub Actions green and Milestone 3 squash merged.
+- [x] GitHub Actions green and Milestone 3 squash merged.
 
 ---
 
 ## Milestone 4 — Confirmatory Factor Analysis
-**Status:** Next
+**Status:** Complete locally; final PR/CI squash merge is the milestone merge gate.
 
 **Goal:** Test a researcher-specified measurement model on fresh/holdout data when feasible.
 
@@ -382,26 +382,30 @@ and understand:
 ```r
 nomo_cfa()
 nomo_model()
+nomo_split()
 ```
 
 ### Required capabilities
-- [ ] lavaan model syntax accepted directly.
-- [ ] Helper syntax generation for simple factor structures.
-- [ ] Continuous estimator guidance.
-- [ ] Ordinal/WLSMV guidance.
-- [ ] Robust ML support.
-- [ ] Standardized loadings.
-- [ ] Factor correlations.
-- [ ] Residuals.
-- [ ] Fit indices:
-  - χ²
-  - CFI
-  - TLI
-  - RMSEA + CI
-  - SRMR
-- [ ] Modification indices available but quarantined in a diagnostic section.
-- [ ] Heywood-case warnings.
-- [ ] Identification/convergence diagnostics.
+- [x] lavaan model syntax accepted directly.
+- [x] Helper syntax generation for simple factor structures.
+- [x] Continuous estimator guidance.
+- [x] Ordinal/WLSMV guidance.
+- [x] Robust ML support.
+- [x] Standardized loadings with uncertainty.
+- [x] Factor correlations.
+- [x] Residuals and localized residual-pair diagnostics.
+- [x] Fit indices:
+  - [x] χ²
+  - [x] CFI
+  - [x] TLI
+  - [x] RMSEA + CI
+  - [x] SRMR
+- [x] Modification indices available but quarantined in a diagnostic section.
+- [x] Heywood/improper-solution warnings.
+- [x] Identification/convergence diagnostics.
+- [x] Captured engine warnings and case-retention reporting.
+- [x] Underlying `lavaan` fit retained unchanged.
+- [x] No automatic model respecification.
 
 ### Fit philosophy
 Reference values such as CFI/TLI ≈ `.95`, RMSEA ≈ `.06`, SRMR ≈ `.08`
@@ -415,28 +419,49 @@ may appear in teaching output, but model evaluation must discuss:
 
 ### Sample-splitting behavior
 `nomologR` should:
-- encourage independent EFA/CFA samples,
-- support user-supplied calibration/validation samples,
-- optionally create a reproducible split,
-- explain the loss of power/generalizability tradeoff.
+- [x] encourage independent EFA/CFA samples when feasible,
+- [x] support user-supplied calibration/validation samples,
+- [x] optionally create a reproducible split with `nomo_split()`,
+- [x] explain the loss of power/generalizability tradeoff,
+- [x] restore caller RNG state after reproducible splitting.
 
 ### Tests
-- [ ] Correctly specified CFA.
-- [ ] Misspecified CFA.
-- [ ] Cross-loading omitted.
-- [ ] Correlated residual omitted.
-- [ ] Ordinal CFA.
-- [ ] Nonconvergence.
-- [ ] Heywood case.
+- [x] Correctly specified CFA.
+- [x] Misspecified CFA.
+- [x] Cross-loading omitted.
+- [x] Correlated residual omitted.
+- [x] Ordinal CFA.
+- [x] Robust ML.
+- [x] Continuous FIML.
+- [x] Nonconvergence.
+- [x] Heywood/improper-solution diagnostics.
+- [x] Direct `lavaan::cfa()` regression comparisons.
+- [x] Presentation/plotting behavior.
+- [x] Split-sample reproducibility.
+
+### Coverage closeout
+Final M4 audit:
+- package-wide: 96.69%
+- `R/nomo_cfa.R`: 97.37%
+- `R/nomo_cfa_presentation.R`: 99.58%
+- `R/nomo_model.R`: 97.73%
+- `R/nomo_split.R`: 98.31%
 
 ### Exit gate
-- [ ] Same model gives estimates consistent with direct `lavaan::cfa()`.
-- [ ] Package adds interpretation but does not change `lavaan` estimates.
-- [ ] Modification indices never trigger automatic respecification.
+- [x] Same model gives estimates consistent with direct `lavaan::cfa()`.
+- [x] Package adds interpretation but does not change `lavaan` estimates.
+- [x] Modification indices never trigger automatic respecification.
+- [x] Well-specified and deliberately poor models are clearly differentiated.
+- [x] Holdout CFA workflow operates coherently after calibration EFA.
+- [x] User-facing CFA output/plot audit completed.
+- [x] Local tests/checks are clean.
+- [ ] Final Milestone 4 PR/CI review and squash merge.
 
 ---
 
 ## Milestone 5 — Reliability & Convergent/Discriminant Evidence
+**Status:** Next
+
 **Goal:** Separate reliability from validity and present multiple forms of measurement evidence.
 
 ### Functions

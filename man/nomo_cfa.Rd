@@ -9,25 +9,71 @@ nomo_cfa(
   data,
   ordered = NULL,
   estimator = NULL,
+  missing = NULL,
+  std.lv = FALSE,
+  control = NULL,
+  modification_indices = TRUE,
+  mi_top = 10L,
   guidance = nomo_defaults()
 )
 }
 \arguments{
-\item{model}{A researcher-specified \code{lavaan} measurement model.}
+\item{model}{A researcher-specified \code{lavaan} measurement-model syntax string
+or an object created by \code{\link[=nomo_model]{nomo_model()}}.}
 
-\item{data}{A data frame containing the indicators.}
+\item{data}{A data frame containing the model indicators.}
 
-\item{ordered}{Optional character vector of ordered indicators.}
+\item{ordered}{Optional character vector naming binary/ordinal indicators.
+When supplied and \code{estimator = NULL}, \code{nomo_cfa()} explicitly requests
+\code{WLSMV}.}
 
-\item{estimator}{Optional \code{lavaan} estimator.}
+\item{estimator}{Optional \code{lavaan} estimator. For continuous indicators,
+leaving this as \code{NULL} preserves \code{lavaan::cfa()}'s default. Robust ML
+variants such as \code{"MLR"} remain explicit researcher choices.}
+
+\item{missing}{Optional \code{lavaan} missing-data option such as \code{"fiml"} for
+continuous ML models or \code{"pairwise"} where supported.}
+
+\item{std.lv}{Logical. Passed directly to \code{lavaan::cfa()}.}
+
+\item{control}{Optional named list passed to lavaan's optimizer through
+\code{lavaan::cfa(control = ...)}. This is an advanced troubleshooting/reproducibility
+option; non-default optimizer controls are recorded in the decision log.}
+
+\item{modification_indices}{Logical; if \code{TRUE}, compute modification indices
+as quarantined diagnostics. They never trigger automatic respecification.}
+
+\item{mi_top}{Number of largest modification indices to retain in the compact
+\verb{$top_modification_indices} view. The full table remains available in
+\verb{$modification_indices}.}
 
 \item{guidance}{Guidance settings from \code{\link[=nomo_defaults]{nomo_defaults()}}.}
 }
 \value{
-During the development series this function is a documented API stub.
+A \code{nomo_cfa} object containing the unchanged \code{lavaan} fit plus
+standardized loadings, factor correlations, fit evidence, residual
+diagnostics, Heywood checks, modification indices, engine warnings, and a
+decision log.
 }
 \description{
-The planned implementation will delegate estimation to \code{lavaan}, choose or
-recommend estimators appropriate to indicator type, and present global and
-local fit as evidence rather than as a binary pass/fail verdict.
+\code{nomo_cfa()} fits a researcher-specified confirmatory factor model with
+\code{lavaan::cfa()} and adds a transparent guidance layer around estimator
+choice, convergence, standardized loadings, global fit, local residuals,
+Heywood diagnostics, and modification indices.
+}
+\details{
+The fitted \code{lavaan} object is retained unchanged in \verb{$fit}. \code{nomologR} does
+not free parameters, add residual covariances, delete indicators, or refit a
+different model in response to fit statistics or modification indices.
+}
+\examples{
+\dontrun{
+model <- '
+  visual  =~ x1 + x2 + x3
+  textual =~ x4 + x5 + x6
+  speed   =~ x7 + x8 + x9
+'
+out <- nomo_cfa(model, data = lavaan::HolzingerSwineford1939)
+summary(out)
+}
 }
