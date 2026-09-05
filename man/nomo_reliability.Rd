@@ -4,19 +4,107 @@
 \alias{nomo_reliability}
 \title{Model-based reliability evidence}
 \usage{
-nomo_reliability(fit, guidance = nomo_defaults())
+nomo_reliability(
+  fit,
+  obs.var = TRUE,
+  ordinal_scale = TRUE,
+  include_alpha = TRUE,
+  ci = c("none", "bootstrap"),
+  ci_level = 0.95,
+  ci_boot = 1000L,
+  ci_seed = NULL,
+  guidance = nomo_defaults()
+)
 }
 \arguments{
-\item{fit}{A fitted measurement model.}
+\item{fit}{A fitted \code{\link[=nomo_cfa]{nomo_cfa()}} object or a fitted \code{lavaan} CFA model.}
 
-\item{guidance}{Guidance settings from \code{\link[=nomo_defaults]{nomo_defaults()}}.}
+\item{obs.var}{Logical passed to \code{\link[semTools:compRelSEM]{semTools::compRelSEM()}}. \code{TRUE} (default)
+uses observed covariances in the denominator; \code{FALSE} uses model-implied
+covariances.}
+
+\item{ordinal_scale}{Logical passed as \code{ord.scale} to
+\code{\link[semTools:compRelSEM]{semTools::compRelSEM()}}. For an all-ordered composite, \code{TRUE} (default)
+estimates reliability on the actual ordinal-score scale using the
+Green-Yang correction implemented by \code{semTools}; \code{FALSE} estimates the
+latent-response-scale coefficient.}
+
+\item{include_alpha}{Logical. If \code{TRUE} (default), also return coefficient
+alpha as a secondary statistic where the requested estimand is defined.
+For ordered indicators with \code{ordinal_scale = TRUE}, observed-score alpha is
+deliberately reported as unavailable rather than silently switching to
+latent-response ("ordinal alpha") or numeric-score alpha. Alpha is not
+treated as the preferred reliability estimate for a general congeneric CFA.}
+
+\item{ci}{Character. \code{"none"} (default) returns point estimates only.
+\code{"bootstrap"} adds nonparametric percentile confidence intervals by
+repeatedly refitting the same CFA with \code{\link[lavaan:bootstrapLavaan]{lavaan::bootstrapLavaan()}}.}
+
+\item{ci_level}{Confidence level for bootstrap intervals. Default is \code{0.95}.}
+
+\item{ci_boot}{Number of ordinary bootstrap resamples when
+\code{ci = "bootstrap"}. Default is \code{1000}.}
+
+\item{ci_seed}{Optional integer seed for reproducible bootstrap intervals.}
+
+\item{guidance}{Guidance settings from \code{\link[=nomo_defaults]{nomo_defaults()}}. The configured
+reliability reference is a review prompt, not a pass/fail criterion.}
 }
 \value{
-During the development series this function is a documented API stub.
+A \code{nomo_reliability} object containing direct \code{semTools} results,
+tidy reliability evidence, model-fit context, item-type context, literature
+references, and a structured decision log.
 }
 \description{
-The planned implementation will emphasize omega/composite reliability using
-current \code{semTools} infrastructure such as \code{compRelSEM()}. Coefficient alpha
-will be available as a familiar secondary statistic with its assumptions made
-explicit. AVE is intentionally handled by \code{\link[=nomo_validity]{nomo_validity()}}, not here.
+\code{nomo_reliability()} estimates score reliability from a fitted first-order
+CFA measurement model. The primary estimate is a model-based omega-type
+composite reliability from \code{\link[semTools:compRelSEM]{semTools::compRelSEM()}}. Coefficient alpha is
+available as a familiar secondary statistic and is explicitly qualified by
+its stronger assumptions.
+}
+\details{
+The function is deliberately measurement-first: it refuses nonconverged
+models, structural SEMs, higher-order models, and cross-loaded first-order
+indicators in the v0.1 workflow. When global CFA strain or an improper
+solution is present, reliability is still inspectable but the decision log
+warns that model-based reliability can be distorted by misspecification.
+
+Average variance extracted (AVE) is not a reliability coefficient and is
+intentionally handled by \code{\link[=nomo_validity]{nomo_validity()}} instead.
+}
+\examples{
+\dontrun{
+model <- '
+  visual  =~ x1 + x2 + x3
+  textual =~ x4 + x5 + x6
+  speed   =~ x7 + x8 + x9
+'
+cfa <- nomo_cfa(model, data = lavaan::HolzingerSwineford1939)
+rel <- nomo_reliability(cfa)
+rel$evidence
+rel$decision_log
+}
+}
+\references{
+Dunn, T. J., Baguley, T., & Brunsden, V. (2014). From alpha to omega: a
+practical solution to the pervasive problem of internal consistency
+estimation. \emph{British Journal of Psychology, 105}, 399-412.
+
+Flora, D. B. (2020). Your coefficient alpha is probably wrong, but which
+coefficient omega is right? A tutorial on using R to obtain better reliability
+estimates. \emph{Advances in Methods and Practices in Psychological Science, 3},
+484-501.
+
+Bell, S. M., Chalmers, R. P., & Flora, D. B. (2024). The impact of
+measurement model misspecification on coefficient omega estimates of
+composite reliability. \emph{Educational and Psychological Measurement, 84}, 5-39.
+
+Green, S. B., & Yang, Y. (2009). Reliability of summed item scores using
+structural equation modeling: an alternative to coefficient alpha.
+\emph{Psychometrika, 74}, 155-167.
+
+Kelley, K., & Pornprasertmanit, S. (2016). Confidence intervals for
+population reliability coefficients: Evaluation of methods,
+recommendations, and software for composite measures.
+\emph{Psychological Methods, 21}, 69-92.
 }

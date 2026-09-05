@@ -4,18 +4,95 @@
 \alias{nomo_validity}
 \title{Convergent and discriminant construct-validity evidence}
 \usage{
-nomo_validity(fit, guidance = nomo_defaults())
+nomo_validity(
+  fit,
+  ave_obs_var = TRUE,
+  htmt = c("both", "htmt2", "htmt", "none"),
+  htmt_missing = "default",
+  fornell_larcker = FALSE,
+  guidance = nomo_defaults()
+)
 }
 \arguments{
-\item{fit}{A fitted measurement model.}
+\item{fit}{A fitted \code{\link[=nomo_cfa]{nomo_cfa()}} object or fitted \code{lavaan} CFA model.}
 
-\item{guidance}{Guidance settings from \code{\link[=nomo_defaults]{nomo_defaults()}}.}
+\item{ave_obs_var}{Logical passed to \code{\link[semTools:AVE]{semTools::AVE()}}. \code{TRUE} (default) uses
+observed variances in the denominator; \code{FALSE} uses model-implied
+variances. For ordinal indicators, \code{semTools} calculates AVE using the
+polychoric correlation structure.}
+
+\item{htmt}{Which heterotrait-monotrait summaries to request: \code{"both"}
+(default), \code{"htmt2"}, \code{"htmt"}, or \code{"none"}. HTMT2 is prioritized
+because its geometric-mean formulation is designed for congeneric
+indicators; original HTMT assumes tau-equivalence.}
+
+\item{htmt_missing}{Missing-data option passed to \code{\link[semTools:htmt]{semTools::htmt()}}. The
+default \code{"default"} delegates the unrestricted-correlation missing-data
+handling to \code{lavaan::lavCor()} rather than silently imposing listwise
+deletion. Other supported values are \code{"listwise"}, \code{"pairwise"},
+\code{"direct"}, \code{"ml"}, and \code{"fiml"}.}
+
+\item{fornell_larcker}{Logical. If \code{TRUE}, also produce a legacy
+Fornell-Larcker matrix and pairwise comparison where available. It is not
+used as the primary discriminant-validity criterion.}
+
+\item{guidance}{Guidance settings from \code{\link[=nomo_defaults]{nomo_defaults()}}. The AVE and HTMT
+references are review prompts rather than universal pass/fail cutoffs.}
 }
 \value{
-During the development series this function is a documented API stub.
+A \code{nomo_validity} object containing standardized loading evidence,
+direct \code{semTools::AVE()} results, latent correlations, HTMT2/HTMT evidence,
+optional legacy Fornell-Larcker information, model-fit context, research
+references, and a structured decision log.
 }
 \description{
-Planned summaries include standardized loadings, AVE, latent correlations,
-HTMT/HTMT2, and optional legacy Fornell-Larcker information. No single index
-will be treated as a declaration that a construct is valid or invalid.
+\code{nomo_validity()} summarizes several complementary forms of measurement
+evidence from a fitted first-order CFA. Convergent evidence includes
+standardized loadings and average variance extracted (AVE). Discriminant
+evidence includes latent-factor correlations and, where appropriate, HTMT2
+as the primary heterotrait-monotrait summary, with the original HTMT available
+as a sensitivity/teaching comparison.
+}
+\details{
+The function deliberately avoids a binary declaration that a construct is
+"valid" or "invalid". Numerical references trigger inspection and
+explanation. HTMT-family results are considered together with theory,
+indicator content, CFA fit, and latent-factor overlap. The Fornell-Larcker
+comparison is available only by explicit request and is labeled legacy/
+supporting evidence because simulation work has shown that it can miss
+discriminant-validity problems that HTMT detects.
+}
+\examples{
+\dontrun{
+model <- '
+  visual  =~ x1 + x2 + x3
+  textual =~ x4 + x5 + x6
+  speed   =~ x7 + x8 + x9
+'
+cfa <- nomo_cfa(model, data = lavaan::HolzingerSwineford1939)
+val <- nomo_validity(cfa)
+val$ave
+val$htmt2
+val$decision_log
+}
+}
+\references{
+Fornell, C., & Larcker, D. F. (1981). Evaluating structural equation models
+with unobservable variables and measurement error. \emph{Journal of Marketing
+Research, 18}, 39-50. doi:10.2307/3151312
+
+Henseler, J., Ringle, C. M., & Sarstedt, M. (2015). A new criterion for
+assessing discriminant validity in variance-based structural equation
+modeling. \emph{Journal of the Academy of Marketing Science, 43}, 115-135.
+doi:10.1007/s11747-014-0403-8
+
+Roemer, E., Schuberth, F., & Henseler, J. (2021). HTMT2--An improved
+criterion for assessing discriminant validity in structural equation
+modeling. \emph{Industrial Management & Data Systems, 121}, 2637-2650.
+doi:10.1108/IMDS-02-2021-0082
+
+Voorhees, C. M., Brady, M. K., Calantone, R., & Ramirez, E. (2016).
+Discriminant validity testing in marketing: An analysis, causes for concern,
+and proposed remedies. \emph{Journal of the Academy of Marketing Science, 44},
+119-134. doi:10.1007/s11747-015-0455-4
 }

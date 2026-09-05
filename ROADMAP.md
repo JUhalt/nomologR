@@ -374,7 +374,7 @@ and understand:
 ---
 
 ## Milestone 4 — Confirmatory Factor Analysis
-**Status:** Complete locally; final PR/CI squash merge is the milestone merge gate.
+**Status:** Complete
 
 **Goal:** Test a researcher-specified measurement model on fresh/holdout data when feasible.
 
@@ -455,14 +455,15 @@ Final M4 audit:
 - [x] Holdout CFA workflow operates coherently after calibration EFA.
 - [x] User-facing CFA output/plot audit completed.
 - [x] Local tests/checks are clean.
-- [ ] Final Milestone 4 PR/CI review and squash merge.
+- [x] Final Milestone 4 PR/CI review and squash merge.
 
 ---
 
 ## Milestone 5 — Reliability & Convergent/Discriminant Evidence
-**Status:** Next
+**Status:** Complete
 
-**Goal:** Separate reliability from validity and present multiple forms of measurement evidence.
+**Goal:** Separate reliability from validity and present multiple forms of
+measurement evidence without turning reference values into binary verdicts.
 
 ### Functions
 ```r
@@ -472,46 +473,96 @@ nomo_validity()
 
 ### Reliability
 Primary:
-- [ ] omega / composite reliability via current `semTools` APIs.
-- [ ] ordinal-aware reliability where applicable.
+- [x] omega / composite reliability via current `semTools::compRelSEM()`.
+- [x] ordinal-aware reliability where applicable.
+- [x] explicit observed-ordinal versus latent-response score-scale interpretation.
+- [x] optional bootstrap confidence intervals without replacing point estimates.
 
 Secondary/common:
-- [ ] alpha, clearly qualified.
+- [x] alpha, clearly qualified.
+- [x] alpha unavailable rather than silently redefined when the requested
+      observed-ordinal estimand is not supported by the fitted CFA workflow.
 
 ### Convergent evidence
-- [ ] standardized loadings
-- [ ] AVE
-- [ ] uncertainty where available
+- [x] standardized loadings carried forward from CFA.
+- [x] AVE via current `semTools::AVE()`.
+- [x] uncertainty retained where available from the fitted CFA.
+- [x] AVE explicitly separated from reliability.
 
-### Discriminant evidence
-- [ ] HTMT / HTMT2
-- [ ] latent-factor correlations
-- [ ] optional legacy Fornell-Larcker table
+### Discriminant / construct-separation evidence
+- [x] HTMT2 as the preferred congeneric-oriented statistic.
+- [x] original HTMT as comparison evidence.
+- [x] latent-factor correlations with available CFA uncertainty.
+- [x] optional legacy/supporting Fornell-Larcker table.
+- [x] no silent pooling across groups/levels for HTMT-family evidence.
+- [x] cross-loaded simple-structure limitations surfaced explicitly.
 
 ### Important rule
-Output says:
-> “This result contributes evidence consistent/inconsistent with discriminant validity.”
+Output may say:
+> “This evidence warrants review of construct separation.”
 
-Never:
-> “Discriminant validity = PASS.”
+It should **not** say:
+> “Discriminant validity = PASS/FAIL.”
+
+Likewise, reliability and AVE reference values trigger interpretation and
+inspection rather than automatic scale revision.
+
+### Presentation
+- [x] compact reliability summary with omega primary and alpha secondary.
+- [x] reliability plot with optional bootstrap confidence intervals.
+- [x] AVE plot without duplicating CFA item-loading graphics.
+- [x] HTMT-family construct-separation plot.
+- [x] conceptual 0-to-1 coefficient display range by default, expanding only
+      when empirical values/intervals require it.
+- [x] redundant one-level legends and repetitive captions minimized.
+- [x] Checkpoint B vignette integrating CFA → reliability → validity evidence.
 
 ### Tests
-- [ ] High-reliability congeneric scale.
-- [ ] Tau-equivalent scale.
-- [ ] Two factors with strong separation.
-- [ ] Two nearly redundant factors.
-- [ ] Ordinal scale.
+- [x] high-reliability congeneric scale.
+- [x] weak measurement despite acceptable/global CFA fit.
+- [x] two factors with strong separation.
+- [x] two nearly redundant factors.
+- [x] ordinal scale.
+- [x] direct `semTools` regression comparisons.
+- [x] one-factor naming/status regression.
+- [x] mixed ordered/continuous composite refusal.
+- [x] higher-order/nonconverged model guards.
+- [x] bootstrap uncertainty and failure disclosure.
+- [x] HTMT/Fornell-Larcker unavailable-case disclosure.
+- [x] presentation/plotting regression tests.
+
+### Coverage closeout
+Final M5 audit:
+- package-wide: **95.13%**
+- `R/nomo_reliability.R`: **90.26%**
+- `R/nomo_validity.R`: **92.56%**
+- `R/nomo_measurement_helpers.R`: **92.70%**
+- `R/nomo_reliability_uncertainty.R`: **89.33%**
+- `R/nomo_reliability_presentation.R`: **88.93%**
+- `R/nomo_validity_presentation.R`: **81.20%**
+
+The primary M5 analytical modules and package-wide coverage meet the v0.1
+quality gate. The optional bootstrap uncertainty helper is just below 90% after
+targeted hardening; remaining uncovered branches are primarily defensive or
+failure-state paths. No tests were added merely to manufacture 100% coverage.
 
 ### Exit gate
-- [ ] Reliability results match direct engine results to tolerance.
-- [ ] AVE is not labeled as reliability.
-- [ ] HTMT warnings are appropriately cautious.
+- [x] Reliability results match direct engine results to tolerance.
+- [x] AVE is not labeled as reliability.
+- [x] HTMT-family warnings are appropriately cautious.
+- [x] Ordered score-scale distinctions are explicit.
+- [x] Bootstrap uncertainty does not alter point-estimate estimands.
+- [x] No automatic item deletion, construct merging, or validity declaration.
+- [x] User-facing tables/plots audited.
+- [x] Local tests/checks clean.
+- [x] Core M5 analytical coverage and package-wide coverage satisfy the v0.1 gate.
 
 ---
 
 ## Checkpoint B — Measurement Model Complete
+**Status:** Complete
 
-A user should now be able to move from raw scale data through a defensible measurement model:
+A user can now move from raw scale data through a defensible measurement model:
 
 ```r
 scr <- nomo_screen(...)
@@ -522,15 +573,36 @@ rel <- nomo_reliability(cfa)
 val <- nomo_validity(cfa)
 ```
 
+and distinguish among:
+1. item/data quality,
+2. dimensionality,
+3. exploratory structure,
+4. confirmatory model fit,
+5. score reliability,
+6. convergent evidence, and
+7. construct separation.
+
 ### Required teaching vignette
-**“From items to a defensible measurement model”**
+- [x] **“From CFA to a defensible measurement model”**
 
 ### Checkpoint B release candidate
 `0.1.0.9002`
 
+- [x] M1–M5 form a coherent staged measurement workflow.
+- [x] Reliability is separated from validity.
+- [x] Global fit is not allowed to substitute for measurement quality.
+- [x] Strong reliability/AVE is not allowed to substitute for construct separation.
+- [x] Uncertainty is retained or explicitly available where appropriate.
+- [x] Numerical references remain review prompts rather than universal laws.
+- [x] Decision logging preserves reasons and limitations.
+- [x] Package-wide coverage remains above the v0.1 release minimum.
+- [x] User-facing visual audit completed.
+
 ---
 
 ## Milestone 6 — Theory-Specified Nomological Network
+**Status:** Next
+
 **Goal:** Make nomological evidence the package's signature contribution.
 
 ### Functions

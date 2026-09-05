@@ -1,7 +1,7 @@
 Package: nomologR
 Type: Package
 Title: Guided Scale Development and Construct Validation
-Version: 0.1.0.9001
+Version: 0.1.0.9002
 Authors@R: c(
     person(
       "Joshua", "Uhalt",
@@ -25,14 +25,15 @@ Imports:
     dplyr,
     EFAtools (>= 0.8.0),
     ggplot2,
-    lavaan (>= 0.6-17),
+    lavaan (>= 0.6-21),
+    methods,
     psych,
+    semTools (>= 0.5-9),
     tibble
 Suggests:
     covr,
     knitr,
     rmarkdown,
-    semTools,
     testthat (>= 3.0.0)
 VignetteBuilder: knitr
 Config/testthat/edition: 3
