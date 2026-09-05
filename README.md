@@ -1,6 +1,6 @@
 # nomologR
 
-**Development status: `0.1.0.9001` — Milestone 4 (CFA) complete locally; Milestone 5 next**
+**Development status: `0.1.0.9002` — Checkpoint B complete; Milestone 6 (theory-specified nomological networks) next**
 
 `nomologR` is a guided, evidence-based workflow for **empirical scale
 development and construct validation**. It coordinates established R engines
@@ -414,6 +414,107 @@ cfa_val <- nomo_cfa(model, data = s$validation)
 The split is explicit, reproducible, and logged as a design choice; no split
 ratio is presented as universally optimal.
 
+
+### 5. `nomo_reliability()` + `nomo_validity()` — measurement evidence beyond model fit
+
+Milestone 5 completes the confirmatory measurement-model layer by separating
+**score reliability**, **convergent evidence**, and **construct-separation
+evidence** rather than collapsing them into one validity verdict.
+
+```r
+rel <- nomo_reliability(cfa)
+val <- nomo_validity(cfa, htmt = "both")
+
+summary(rel)
+summary(val)
+
+plot(rel)
+plot(val, type = "ave")
+plot(val, type = "discriminant")
+```
+
+#### Reliability is model-based and score-specific
+
+`nomo_reliability()` uses current `semTools::compRelSEM()` infrastructure.
+Model-based omega/composite reliability is primary for the congeneric CFA
+workflow. Coefficient alpha is retained as a familiar secondary statistic and
+is explicitly qualified by its stronger assumptions.
+
+For ordered indicators, the requested score scale remains visible. Observed
+ordinal-score omega is supported; observed-scale alpha is not silently replaced
+with a different latent-response or numeric-score estimand.
+
+Sampling uncertainty can be requested explicitly:
+
+```r
+rel_ci <- nomo_reliability(
+  cfa,
+  ci = "bootstrap",
+  ci_boot = 1000,
+  ci_seed = 2026
+)
+
+summary(rel_ci)
+plot(rel_ci)
+```
+
+Bootstrap intervals are optional because they require repeated CFA refitting.
+Point estimates remain the original reliability estimates; the bootstrap adds
+uncertainty rather than substituting a new estimand.
+
+#### Convergent evidence is not reliability
+
+`nomo_validity()` keeps standardized loading evidence connected to the fitted
+CFA and uses average variance extracted (AVE) as convergent evidence. AVE is
+deliberately **not** reported as a reliability coefficient.
+
+The familiar AVE reference around `.50` is a review prompt. A value above or
+below it does not, by itself, declare a construct valid or invalid.
+
+#### Construct separation uses multiple pieces of evidence
+
+For multi-construct models, `nomo_validity()` aligns:
+
+- latent-factor correlations, including available CFA uncertainty;
+- HTMT2 as the preferred congeneric-oriented construct-separation statistic;
+- original HTMT as a comparison;
+- optional Fornell-Larcker output as legacy/supporting evidence.
+
+```r
+val <- nomo_validity(
+  cfa,
+  htmt = "both",
+  fornell_larcker = TRUE
+)
+
+summary(val)
+```
+
+Values above the configured HTMT-family review reference prompt investigation
+of theoretical distinctiveness, item wording/content, cross-loadings, and
+construct overlap. They do **not** automatically merge constructs or delete
+indicators.
+
+The package also refuses to manufacture simple-structure evidence when the
+estimand is ambiguous. Cross-loaded models, mixed indicator composites, and
+multi-group/multilevel HTMT requests are surfaced with explicit limitations
+rather than silently pooled or redefined.
+
+#### Why the evidence is kept separate
+
+A model can reproduce the covariance structure well while its indicators still
+provide weak reliability and convergent evidence. Conversely, two constructs can
+each show strong loadings, omega, and AVE while remaining empirically difficult
+to distinguish from one another.
+
+That is the central Checkpoint B lesson:
+
+> Good global fit, high reliability, convergent evidence, and construct
+> separation answer different measurement questions.
+
+The full walkthrough is in the
+**“From CFA to a defensible measurement model”** vignette.
+
 ## Development path
 
 The detailed release specification lives in [`ROADMAP.md`](ROADMAP.md).
@@ -422,9 +523,9 @@ The v0.1 path is:
 1. Data & Item Audit — `nomo_screen()` **complete**
 2. Factor-Retention Evidence — `nomo_factors()` **complete**
 3. Exploratory Factor Analysis — `nomo_efa()` **complete**
-4. Confirmatory Factor Analysis — `nomo_cfa()` **complete locally**
-5. Reliability + convergent/discriminant evidence — **next**
-6. Theory-Specified Nomological Network
+4. Confirmatory Factor Analysis — `nomo_cfa()` **complete**
+5. Reliability + convergent/discriminant evidence — **complete**
+6. Theory-Specified Nomological Network — **next**
 7. Measurement Invariance
 8. Guided pipeline — `nomo_run()`
 9. Reporting, documentation, and v0.1 release gate

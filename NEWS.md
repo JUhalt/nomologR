@@ -1,4 +1,55 @@
-# nomologR 0.1.0.9001
+# nomologR 0.1.0.9002
+
+
+## Milestone 5 closeout — reliability, convergent/discriminant evidence, and Checkpoint B
+
+- Replaced the `nomo_reliability()` development stub with a model-based
+  reliability workflow using current `semTools::compRelSEM()` infrastructure.
+- Made omega/composite reliability the primary coefficient for the general
+  congeneric CFA workflow while retaining coefficient alpha as an explicitly
+  qualified secondary statistic.
+- Added ordered-indicator reliability guidance that distinguishes observed
+  ordinal-score reliability from latent-response-scale coefficients and refuses
+  to silently substitute a different alpha estimand.
+- Added optional nonparametric bootstrap confidence intervals for reliability
+  estimates through repeated refitting of the same lavaan CFA. Point estimates
+  remain unchanged; uncertainty is additive and explicit.
+- Replaced the `nomo_validity()` development stub with convergent and
+  construct-separation evidence including standardized loadings, AVE, latent
+  correlations, HTMT2, original HTMT, and optional legacy/supporting
+  Fornell-Larcker output.
+- Kept AVE in the validity layer rather than mislabeling it as reliability.
+- Prioritized HTMT2 for congeneric measurement models while retaining original
+  HTMT as comparison evidence.
+- Added explicit guards for ambiguous or unsupported simple-structure
+  reliability/validity estimands, including mixed ordered/continuous composites,
+  cross-loaded first-order structures, and silent multi-group/multilevel HTMT
+  pooling.
+- Added compact `print()`/`summary()` methods and nonredundant reliability, AVE,
+  and construct-separation plots. Coefficient plots use the conceptual 0-to-1
+  scale by default and expand only when empirical estimates or intervals require
+  it.
+- User-facing audits confirmed two key teaching cases: excellent global CFA fit
+  can coexist with weak reliability/AVE, and strong reliability/AVE can coexist
+  with poor construct separation.
+- Added the Checkpoint B vignette, **“From CFA to a defensible measurement
+  model,”** integrating CFA, reliability, convergent evidence, discriminant
+  evidence, uncertainty, and decision guidance.
+- Added direct regression tests against `semTools::compRelSEM()`,
+  `semTools::AVE()`, and `semTools::htmt()`, plus ordinal, redundant-construct,
+  weak-measurement, bootstrap-uncertainty, failure-disclosure, and presentation
+  hardening tests.
+- Final M5 coverage audit reached **95.13% package-wide**. Key M5 modules:
+  `R/nomo_reliability.R` 90.26%, `R/nomo_validity.R` 92.56%,
+  `R/nomo_measurement_helpers.R` 92.70%,
+  `R/nomo_reliability_uncertainty.R` 89.33%,
+  `R/nomo_reliability_presentation.R` 88.93%, and
+  `R/nomo_validity_presentation.R` 81.20%.
+  Coverage hardening targeted consequential branches rather than artificial
+  100% execution of low-value presentation/failure paths.
+- Advanced the development version to `0.1.0.9002`, marking **Checkpoint B:
+  Measurement Model Complete**. Milestone 6, theory-specified nomological
+  networks, is next.
 
 ## Milestone 4 closeout — confirmatory factor analysis
 
@@ -35,8 +86,8 @@
 - User-facing audit confirmed that well-specified, deliberately poor, and
   independent holdout CFA results are clearly differentiated without pass/fail
   validity language or hidden respecification.
-- Local tests and `R CMD check` are clean. The final Milestone 4 PR/CI squash
-  merge remains the merge gate; Milestone 5 is next.
+- Local tests/checks and GitHub Actions passed; the Milestone 4 PR was squash
+  merged before Milestone 5 development began.
 
 ## Milestone 3 closeout — exploratory factor analysis and Checkpoint A
 
