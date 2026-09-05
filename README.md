@@ -1,6 +1,6 @@
 # nomologR
 
-**Development status: `0.1.0.9001` — Checkpoint A complete; Milestone 4 (CFA) next**
+**Development status: `0.1.0.9001` — Milestone 4 (CFA) complete locally; Milestone 5 next**
 
 `nomologR` is a guided, evidence-based workflow for **empirical scale
 development and construct validation**. It coordinates established R engines
@@ -327,6 +327,93 @@ efa_ord <- nomo_efa(
 The full Checkpoint A walkthrough is in the
 **“From item audit to exploratory structure”** vignette.
 
+### 4. `nomo_cfa()` — confirmatory measurement-model evidence
+
+Milestone 4 adds a guided CFA layer around `lavaan::cfa()`. The underlying
+`lavaan` fit is retained in `cfa$fit`; `nomologR` adds diagnostics,
+literature-linked teaching references, plots, and decision logging without
+silently changing the researcher-specified model.
+
+```r
+model <- nomo_model(list(
+  F1 = c("A1", "A2", "A3", "A4"),
+  F2 = c("B1", "B2", "B3", "B4")
+))
+
+cfa <- nomo_cfa(
+  model,
+  data = dat2
+)
+
+cfa
+summary(cfa)
+```
+
+The CFA layer reports convergence and captured engine warnings, cases used,
+standardized loadings with uncertainty, factor correlations, chi-square, CFI,
+TLI, RMSEA with confidence interval, SRMR, localized residual correlations,
+and Heywood/improper-solution diagnostics.
+
+Modification indices are available as **post-hoc diagnostics only**:
+
+```r
+head(cfa$top_modification_indices)
+```
+
+They never free parameters or trigger automatic respecification.
+
+#### CFA plots
+
+```r
+plot(cfa, type = "loadings")
+plot(cfa, type = "fit")
+plot(cfa, type = "residuals")
+plot(cfa, type = "modification_indices")
+```
+
+Fit-index values are teaching references rather than pass/fail laws. The
+package deliberately asks users to interpret global fit, localized strain,
+parameter estimates, estimator, sample characteristics, and theory together.
+
+#### Continuous, robust, and ordinal estimation
+
+For continuous indicators, leaving `estimator = NULL` preserves lavaan's
+ordinary continuous-data default. Robust ML estimators such as `"MLR"` remain
+explicit researcher choices.
+
+Declared ordered indicators request WLSMV by default:
+
+```r
+cfa_ord <- nomo_cfa(
+  model,
+  data = dat_ord,
+  ordered = names(dat_ord)
+)
+```
+
+Incompatible ordered-indicator ML/FIML combinations stop with an explanation
+rather than being silently substituted.
+
+#### Calibration and validation samples
+
+`nomo_split()` supports a reproducible exploratory/confirmatory split when the
+gain in independence justifies the loss of precision:
+
+```r
+s <- nomo_split(
+  dat2,
+  validation_prop = .50,
+  seed = 2026
+)
+
+fac_cal <- nomo_factors(s$calibration, seed = 2026)
+efa_cal <- nomo_efa(s$calibration, factors = fac_cal)
+cfa_val <- nomo_cfa(model, data = s$validation)
+```
+
+The split is explicit, reproducible, and logged as a design choice; no split
+ratio is presented as universally optimal.
+
 ## Development path
 
 The detailed release specification lives in [`ROADMAP.md`](ROADMAP.md).
@@ -335,8 +422,8 @@ The v0.1 path is:
 1. Data & Item Audit — `nomo_screen()` **complete**
 2. Factor-Retention Evidence — `nomo_factors()` **complete**
 3. Exploratory Factor Analysis — `nomo_efa()` **complete**
-4. Confirmatory Factor Analysis — `nomo_cfa()` **next**
-5. Reliability + convergent/discriminant evidence
+4. Confirmatory Factor Analysis — `nomo_cfa()` **complete locally**
+5. Reliability + convergent/discriminant evidence — **next**
 6. Theory-Specified Nomological Network
 7. Measurement Invariance
 8. Guided pipeline — `nomo_run()`

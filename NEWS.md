@@ -1,5 +1,43 @@
 # nomologR 0.1.0.9001
 
+## Milestone 4 closeout — confirmatory factor analysis
+
+- Replaced the `nomo_cfa()` development stub with a production CFA workflow
+  around `lavaan::cfa()` while retaining the underlying lavaan fit unchanged.
+- Added `nomo_model()` for simple reflective CFA syntax generation without
+  automatically adding cross-loadings, residual covariances, or other post-hoc
+  parameters.
+- Added explicit estimator provenance and guidance for continuous ML,
+  researcher-selected robust ML estimators such as MLR, and declared
+  ordered-indicator WLSMV workflows.
+- Added early guardrails for estimator/missing-data combinations incompatible
+  with declared ordered indicators.
+- Added convergence status, captured engine warnings, case-retention reporting,
+  standardized loadings with uncertainty, latent-factor correlations, and
+  global-fit evidence including chi-square, CFI, TLI, RMSEA with confidence
+  interval, and SRMR.
+- Added localized residual-correlation diagnostics and Heywood/improper-solution
+  diagnostics.
+- Added modification indices as quarantined post-hoc diagnostics; they never
+  free parameters or trigger automatic model respecification.
+- Added `print()`, `summary()`, and four CFA plot views for standardized
+  loadings, global fit, localized residuals, and modification indices.
+- Added `nomo_split()` for reproducible calibration/validation splitting,
+  including the independence-versus-precision tradeoff and restoration of the
+  caller RNG state.
+- Added direct regression tests against `lavaan::cfa()` plus stress tests for
+  correctly specified and misspecified CFA, omitted cross-loading, omitted
+  correlated residual, ordinal CFA, robust ML, FIML, nonconvergence, improper
+  solutions, modification-index quarantine, and split-sample reproducibility.
+- Final M4 coverage audit reached 96.69% package-wide:
+  `R/nomo_cfa.R` 97.37%, `R/nomo_cfa_presentation.R` 99.58%,
+  `R/nomo_model.R` 97.73%, and `R/nomo_split.R` 98.31%.
+- User-facing audit confirmed that well-specified, deliberately poor, and
+  independent holdout CFA results are clearly differentiated without pass/fail
+  validity language or hidden respecification.
+- Local tests and `R CMD check` are clean. The final Milestone 4 PR/CI squash
+  merge remains the merge gate; Milestone 5 is next.
+
 ## Milestone 3 closeout — exploratory factor analysis and Checkpoint A
 
 - Replaced the `nomo_efa()` development stub with a production common-factor EFA
