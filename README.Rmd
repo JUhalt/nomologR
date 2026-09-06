@@ -12,7 +12,7 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 [![test-coverage](https://github.com/JUhalt/nomologR/actions/workflows/test-coverage.yaml/badge.svg)](https://github.com/JUhalt/nomologR/actions/workflows/test-coverage.yaml)
 
 
-**Development status: `0.1.0.9002` — Checkpoint B complete; Milestones 6–7 in active development; M8–M9 remain required for v0.1**
+**Development status: `0.1.0.9003` — Checkpoint C complete; Milestone 8 (`nomo_run()`) is next; M9 and release hardening remain required for v0.1**
 
 `nomologR` is a guided, evidence-based workflow for **empirical scale
 development and construct validation**. It coordinates established R engines
@@ -527,6 +527,92 @@ That is the central Checkpoint B lesson:
 The full walkthrough is in the
 **“From CFA to a defensible measurement model”** vignette.
 
+### 6. `nomo_hypotheses()` + `nomo_network()` — theory specified before evidence
+
+Milestone 6 makes the nomological network an explicit theory test rather than a
+post-hoc collection of correlations. Predictions are machine-readable before
+the model is interpreted:
+
+```r
+h <- nomo_hypotheses(
+  "A -> B" = positive(min = .20),
+  "A <-> C" = negligible(within = c(-.15, .15)),
+  "A -> criterion" = positive()
+)
+
+net <- nomo_network(
+  model,
+  data = calibration,
+  hypotheses = h,
+  validation_data = validation
+)
+
+net
+nomo_table(net, "relations")
+nomo_table(net, "replication")
+
+plot(net, type = "effects")
+plot(net, type = "replication")
+```
+
+`nomo_network()` keeps theory concordance, uncertainty, measurement context,
+a-priori/post-hoc provenance, and replication separate. A non-significant
+p-value never establishes negligibility; quantified negligible predictions
+require a researcher-specified equivalence region.
+
+When a validation sample is supplied, the exact same prespecified fitted model
+is used again. The package does not respecify the validation model from the
+primary-sample results.
+
+### 7. `nomo_invariance()` — identification-aware generalizability evidence
+
+Milestone 7 evaluates equality constraints without treating one fit-change
+cutoff as a universal law:
+
+```r
+inv <- nomo_invariance(
+  model,
+  data = dat,
+  group = "group",
+  levels = c("configural", "metric", "scalar"),
+  localize = TRUE
+)
+
+inv
+nomo_table(inv, "fit")
+plot(inv, type = "change")
+plot(inv, type = "local_strain")
+```
+
+Continuous and ordered indicators use identification-appropriate sequences.
+For categorical models, binary, three-category, and 4+ category structures are
+handled differently where identification requires it.
+
+Partial invariance remains an explicit researcher decision:
+
+```r
+release <- nomo_partial(
+  level = "metric",
+  syntax = "F =~ x2",
+  rationale = "Substantive and diagnostic review supports inspecting this loading."
+)
+
+inv_partial <- nomo_invariance(
+  model,
+  data = dat,
+  group = "group",
+  levels = c("configural", "metric", "scalar"),
+  partial = release
+)
+```
+
+Localized score diagnostics can identify where equality constraints are
+strained, but `nomologR` never searches until it finds a partial-invariance
+solution that “passes.”
+
+The full walkthroughs are in the **“Nomological network”** and
+**“Measurement invariance”** vignettes.
+
 ## Development path
 
 The detailed release specification lives in [`ROADMAP.md`](ROADMAP.md).
@@ -537,13 +623,13 @@ The v0.1 path is:
 3. Exploratory Factor Analysis — `nomo_efa()` **complete**
 4. Confirmatory Factor Analysis — `nomo_cfa()` **complete**
 5. Reliability + convergent/discriminant evidence — **complete**
-6. Theory-Specified Nomological Network — **next**
-7. Measurement Invariance
-8. Guided pipeline — `nomo_run()`
-9. Reporting, documentation, and v0.1 release gate
+6. Theory-Specified Nomological Network — **complete**
+7. Measurement Invariance — **complete**
+8. Guided pipeline — `nomo_run()` **next**
+9. Reproducible report + v0.1 release gate — `nomo_report()`
 
-Future-stage functions remain explicit development stubs until their milestone
-is implemented and tested.
+**Checkpoint C is complete at `0.1.0.9003`.** M8 and M9 remain explicit
+development stubs until their milestones are implemented and tested.
 
 ## Design principles
 

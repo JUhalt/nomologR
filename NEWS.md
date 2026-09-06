@@ -1,4 +1,41 @@
-# nomologR 0.1.0.9002
+# nomologR 0.1.0.9003
+
+## Milestones 6–7 closeout — theory-specified networks, invariance, and Checkpoint C
+
+- Added `positive()`, `negative()`, and `negligible()` expectation helpers plus
+  `nomo_hypotheses()` for machine-readable a-priori and post-hoc theory
+  specifications. Quantified negligible predictions use researcher-specified
+  SESOI/equivalence regions; bare negligible predictions remain qualitative and
+  are never confirmed merely because `p > .05`.
+- Added `nomo_network()` for theory-specified latent SEM with transparent
+  addition of missing prespecified theory paths, observed external
+  criteria/outcomes, standardized or explicitly unstandardized hypothesis
+  evaluation, measurement-context propagation, and calibration/validation
+  replication of the exact same prespecified fitted model.
+- Kept theory concordance, uncertainty, measurement quality, confirmatory
+  status, and replication as distinct evidence streams rather than collapsing
+  them into a single validity score.
+- Added `nomo_invariance()` using current `semTools::measEq.syntax()` and
+  `lavaan` infrastructure with identification-aware sequences for continuous,
+  ordered 4+ category, three-category, and binary indicators.
+- Added diagnostic-only localized equality-constraint score tests and
+  `nomo_partial()` for explicitly researcher-specified partial-invariance
+  releases with required rationale and cumulative provenance. The package never
+  searches until it finds a partial-invariance model that passes.
+- Added `nomo_table()` methods plus researcher-facing network and invariance
+  figures, including theory-compatible regions, replication comparison,
+  fit/change evidence, and human-readable localized equality constraints.
+- Added the **“Nomological network”** and **“Measurement invariance”**
+  vignettes plus truth simulations, edge/failure hardening, and presentation
+  regression tests.
+- Final Checkpoint C coverage audit reached **94.19% package-wide**. Core M6/M7
+  modules: `R/nomo_hypotheses.R` 94.33%, `R/nomo_network.R` 89.95%,
+  `R/nomo_network_presentation.R` 91.49%, `R/nomo_invariance.R` 92.04%,
+  `R/nomo_invariance_presentation.R` 93.27%, `R/nomo_partial.R` 90.57%, and
+  `R/nomo_table.R` 100.00%.
+- Advanced the development version to `0.1.0.9003`, marking **Checkpoint C:
+  Generalizability and Nomological Evidence Complete**. Milestone 8,
+  `nomo_run()`, is the next active development target.
 
 
 ## Milestone 5 closeout — reliability, convergent/discriminant evidence, and Checkpoint B

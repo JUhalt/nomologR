@@ -617,7 +617,7 @@ Features from later roadmap stages may be pulled forward when they close a metho
 For v0.1, planned pull-forwards include researcher-specified SESOI/equivalence regions for negligible nomological predictions, external criterion/predictive outcomes within the network layer, researcher-controlled partial invariance, holdout/replication support where feasible, and evidence provenance that can be carried into the guided pipeline and final report.
 
 ## Milestone 6 — Theory-Specified Nomological Network
-**Status:** In Progress — developed in parallel with Milestone 7
+**Status:** Complete
 
 **Goal:** Make nomological evidence the package's signature contribution.
 
@@ -628,106 +628,230 @@ nomo_network()
 ```
 
 ### Hypothesis specification
-Support expectations such as:
+Supported expectations include:
+
 ```r
 h <- nomo_hypotheses(
   "GSE -> Spirituality" = positive(),
-  "GSE -> Religiosity"  = negligible(),
-  "Religiosity -> ATLG" = positive(),
+  "GSE -> Religiosity" = negligible(within = c(-.10, .10)),
+  "Religiosity -> ATLG" = positive(min = .20),
   "Spirituality -> ATLG" = negligible()
 )
 ```
 
-Future syntax may support:
-```r
-positive(min = .20)
-negative(max = -.20)
-negligible(within = c(-.10, .10))
-```
+- [x] Positive and negative directional predictions.
+- [x] Optional minimum/maximum magnitude requirements.
+- [x] Researcher-specified negligible/SESOI regions.
+- [x] Qualitative bare `negligible()` expectations that are explicitly not
+      confirmable without a quantitative region.
+- [x] Standardized hypothesis evaluation by default.
+- [x] Explicit unstandardized expectations when raw units are substantively meaningful.
+- [x] A-priori versus post-hoc provenance.
 
 ### Required output
 For every theoretical relation:
-- predicted direction/range
-- estimate
-- SE
-- confidence interval
-- standardized estimate
-- p-value where relevant
-- concordance classification
-- interpretation
+- [x] predicted direction/range;
+- [x] estimate and uncertainty;
+- [x] standardized estimate;
+- [x] p-value where relevant;
+- [x] concordance classification;
+- [x] measurement-context interpretation;
+- [x] confirmatory/post-hoc status;
+- [x] replication evidence when a validation sample is supplied.
 
 ### Null/negligible predictions
-A non-significant p-value alone must **not** establish a null prediction.
+A non-significant p-value alone does **not** establish a null prediction.
 
 For v0.1:
-- report uncertainty explicitly;
-- support researcher-specified SESOI/equivalence regions for negligible predictions;
-- never invent a SESOI or treat `p > .05` as evidence that a relation is negligible;
-- allow observed external criteria/outcomes as network nodes when this preserves a clearly defined estimand;
-- support calibration/validation or holdout replication where feasible.
+- [x] uncertainty is explicit;
+- [x] researcher-specified SESOI/equivalence regions are supported;
+- [x] `nomologR` never invents a SESOI;
+- [x] observed external criteria/outcomes can enter the network while retaining
+      their observed-variable estimand;
+- [x] calibration/validation replication fits the exact same prespecified
+      network in the validation sample.
 
-Bayesian confirmation is reserved for later unless implementation proves small and robust.
+Bayesian confirmation remains reserved for a later extension.
 
 ### Structural-model rules
-- [ ] Full latent model by default when item-level measurement is available.
-- [ ] Composite single-indicator corrections allowed only as explicit advanced options.
-- [ ] Model modification must be labeled exploratory/post hoc.
-- [ ] Calibration → validation replication supported.
+- [x] Latent SEM is supported when item-level measurement is available.
+- [x] Missing theory-specified paths can be added transparently to the fitted
+      model and retained in provenance.
+- [x] Model additions outside the a-priori theory are visibly post-hoc.
+- [x] Measurement-quality review signals propagate into relation interpretation
+      without replacing theory concordance.
+- [x] The package does not create a one-number “nomological validity” score.
+- [x] Composite/single-indicator measurement-error corrections are **not**
+      inserted automatically. Observed criteria remain observed-variable
+      estimands in v0.1; reliability-corrected single-indicator latent constructs
+      are deferred to a later advanced extension.
+
+### Replication
+- [x] `validation_data=` is supported.
+- [x] `nomo_split` objects can supply calibration and validation samples.
+- [x] The exact prespecified fitted model is preserved across samples.
+- [x] Relation-level replication statuses distinguish replicated concordance,
+      uncertainty, instability, non-replication, replicated inconsistency, and
+      sign reversal.
 
 ### Tests
-- [ ] Positive expected path.
-- [ ] Negative expected path.
-- [ ] Unsupported prediction.
-- [ ] Imprecise estimate.
-- [ ] Model with a post-hoc added path.
-- [ ] Measurement misspecification warning propagates into network interpretation.
+- [x] Positive expected path.
+- [x] Negative expected path.
+- [x] Directionally correct but magnitude-insufficient prediction.
+- [x] Imprecise estimate.
+- [x] Quantified and unquantified negligible predictions.
+- [x] Post-hoc provenance.
+- [x] Measurement-quality review propagation.
+- [x] Primary/validation sign reversal.
+- [x] Ordered/WLSMV path.
+- [x] Argument/failure validation and presentation regression tests.
+
+### Coverage closeout
+Final Checkpoint C audit:
+- package-wide: **94.19%**
+- `R/nomo_hypotheses.R`: **94.33%**
+- `R/nomo_network.R`: **89.95%**
+- `R/nomo_network_presentation.R`: **91.49%**
+
+The network engine is effectively at the 90% core target and is backed by
+known-truth simulations and consequential branch/failure tests rather than
+coverage padding.
 
 ### Exit gate
-- [ ] A user can distinguish “theory unsupported” from “measurement inadequate.”
-- [ ] Hypotheses are machine-readable and included in reports.
-- [ ] Post-hoc paths are visibly distinguished from a priori paths.
+- [x] A user can distinguish theory inconsistency from measurement inadequacy.
+- [x] Hypotheses are machine-readable and retained in report-ready objects/tables
+      for Milestone 9.
+- [x] Post-hoc paths are visibly distinguished from a-priori paths.
+- [x] Replication does not silently respecify the validation model.
+- [x] User-facing tables and figures audited.
 
 ---
 
 ## Milestone 7 — Measurement Invariance
-**Status:** In Progress — developed in parallel with Milestone 6
+**Status:** Complete
 
 **Goal:** Support defensible comparisons across groups/time.
 
-### Function
+### Functions
 ```r
 nomo_invariance()
+nomo_partial()
 ```
 
-### Required levels
-- [ ] configural
-- [ ] metric
-- [ ] scalar
-- [ ] strict
+### Identification-aware sequences
+Continuous indicators:
+- [x] configural;
+- [x] metric;
+- [x] scalar;
+- [x] strict.
+
+Ordered indicators use category-aware sequences under Wu–Estabrook
+identification rather than forcing a continuous-data ladder onto categorical
+models:
+
+- [x] ordered 4+ categories:
+      configural → thresholds → metric → scalar → strict;
+- [x] three-category indicators:
+      configural → metric → scalar → strict, with threshold equality included
+      where identification requires it;
+- [x] binary indicators:
+      configural → strong → strict, with thresholds/loadings/intercepts bundled
+      where they are not separately testable;
+- [x] mixed ordered structures use the most restrictive identification case present.
 
 ### Implementation
-Use current `semTools` infrastructure such as `measEq.syntax()` rather than deprecated convenience APIs.
+- [x] Current `semTools::measEq.syntax()` infrastructure.
+- [x] Separate fitted `lavaan` models retained for each requested level.
+- [x] Syntax and estimator/identification provenance retained.
+- [x] WLSMV default for declared ordered indicators.
+- [x] No universal ΔCFI/ΔRMSEA/χ² pass/fail rule.
+
+### Local strain and partial invariance
+- [x] Equality-constraint score diagnostics via `lavaan::lavTestScore()` are
+      retained as **diagnostic only** evidence.
+- [x] `nomo_partial()` requires explicit level, syntax, and researcher rationale.
+- [x] Researcher-specified releases carry forward cumulatively to later
+      restrictive levels.
+- [x] Released constraints and rationale are retained in the decision log.
+- [x] Local diagnostics never free parameters automatically.
+- [x] `nomologR` never searches until it finds a partial-invariance model that
+      “passes.”
 
 ### Output
-- fit at each level
-- change in fit
-- parameter constraints
-- localized sources of non-invariance
-- researcher-specified partial-invariance refits when pursued
-- explicit documentation of every released equality constraint and its rationale
-- no automatic search for a partial-invariance solution
+- [x] fit at each level;
+- [x] change in fit;
+- [x] parameter constraints;
+- [x] ordered-category/identification context;
+- [x] localized sources of equality-constraint strain;
+- [x] researcher-specified partial-invariance refits;
+- [x] rationale/provenance for every explicit release;
+- [x] report-ready tables and figures.
 
-### Philosophy
-No single ΔCFI or χ² criterion determines invariance on its own.
+### Tests
+- [x] Continuous multi-group example.
+- [x] Ordered 4+ category example.
+- [x] Three-category identification behavior.
+- [x] Binary identification behavior.
+- [x] Mixed ordered-category structure behavior.
+- [x] Strong loading non-invariance worsens metric evidence.
+- [x] Strong intercept non-invariance worsens scalar evidence.
+- [x] Researcher-specified partial release can improve a deliberately strained
+      model while preserving rationale/provenance.
+- [x] Local diagnostics never create partial invariance themselves.
+- [x] Argument/failure validation and presentation regression tests.
+
+### Coverage closeout
+Final Checkpoint C audit:
+- `R/nomo_invariance.R`: **92.04%**
+- `R/nomo_invariance_presentation.R`: **93.27%**
+- `R/nomo_partial.R`: **90.57%**
+- `R/nomo_table.R`: **100.00%**
 
 ### Exit gate
-- [ ] Continuous multi-group example.
-- [ ] Ordinal multi-group example.
-- [ ] Non-invariance simulation correctly flagged.
+- [x] Continuous multi-group workflow.
+- [x] Identification-aware ordinal/binary workflows.
+- [x] Known non-invariance simulations localize strain.
+- [x] Partial invariance remains explicitly researcher controlled.
+- [x] User-facing tables and figures audited.
+
+---
+
+## Checkpoint C — Generalizability & Nomological Evidence Complete
+**Status:** Complete
+
+A user can now move from a defensible measurement model into two distinct
+questions:
+
+1. **Does the measurement model generalize sufficiently for the intended comparison?**
+2. **Does the construct behave as theory predicted in its nomological network?**
+
+Checkpoint C deliberately keeps those questions separate. Invariance evidence
+does not establish nomological validity, and nomological concordance does not
+repair weak measurement invariance.
+
+### Checkpoint C release candidate
+`0.1.0.9003`
+
+- [x] Theory expectations are machine-readable before fitting the network.
+- [x] Negligible predictions require researcher-specified equivalence regions
+      for quantitative confirmation.
+- [x] Measurement context, theory concordance, uncertainty, and replication
+      remain distinct evidence streams.
+- [x] Continuous and ordered invariance workflows are identification aware.
+- [x] Partial invariance is researcher specified and rationale documented.
+- [x] No automatic model respecification or parameter freeing.
+- [x] Network and invariance tables/figures completed a researcher-facing visual audit.
+- [x] Package-wide coverage is **94.19%** with core M6/M7 computational paths
+      approximately 90% or higher and backed by truth/failure tests.
+
+Checkpoint C is locked for PR/CI review. Milestone 8 begins from a fresh branch
+after this checkpoint is merged to `master`.
 
 ---
 
 ## Milestone 8 — One-Stop Guided Pipeline
+**Status:** Next — begin after Checkpoint C PR/CI merge
+
 **Goal:** Make the package genuinely usable by non-specialists without hiding decisions.
 
 ### Function
