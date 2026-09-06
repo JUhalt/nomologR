@@ -8,6 +8,7 @@ nomo_efa(
   data,
   items = NULL,
   factors,
+  factor_count = NULL,
   rotation = "oblimin",
   fm = "minres",
   correlation = NULL,
@@ -26,7 +27,13 @@ Otherwise all columns are used when \code{items = NULL}.}
 
 \item{factors}{A positive integer number of factors to extract, or a
 \code{nomo_factors} object. For a \code{nomo_factors} object, the selected
-parallel-analysis factor count is used.}
+parallel-analysis factor count is used unless \code{factor_count} is supplied.}
+
+\item{factor_count}{Optional positive integer. This may be supplied only when
+\code{factors} is a \code{nomo_factors} object. It preserves the M2 item/modeling/
+correlation/missingness context while recording a researcher-selected EFA
+factor count instead of pretending the primary parallel-analysis suggestion
+was adopted.}
 
 \item{rotation}{Rotation passed to \code{\link[psych:fa]{psych::fa()}}. The default is \code{"oblimin"}.
 Orthogonal rotations are allowed but are recorded as a researcher choice.}
