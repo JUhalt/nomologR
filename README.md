@@ -1,35 +1,38 @@
+
 # nomologR
 
-**Development status: `0.1.0.9002` — Checkpoint B complete; Milestone 6 (theory-specified nomological networks) next**
+**Development status: `0.1.0.9002` — Checkpoint B complete; Milestone 6
+(theory-specified nomological networks) next**
 
 `nomologR` is a guided, evidence-based workflow for **empirical scale
-development and construct validation**. It coordinates established R engines
-while adding transparent diagnostics, literature-linked explanations,
-decision logging, and theory-aware guidance.
+development and construct validation**. It coordinates established R
+engines while adding transparent diagnostics, literature-linked
+explanations, decision logging, and theory-aware guidance.
 
 > **Core rule:** Flag, explain, and document. Never silently delete.
 
 ## Where nomologR fits
 
-For new measures, [`contentvalidR`](https://github.com/JUhalt/contentvalidR)
-is the natural upstream companion: it addresses conceptual/content
-representation and substantive validity. `nomologR` begins when item-level
-empirical data are available and follows the measure through dimensionality,
-measurement modeling, reliability, construct-validity evidence, invariance,
-and theory-specified nomological networks.
+For new measures,
+[`contentvalidR`](https://github.com/JUhalt/contentvalidR) is the
+natural upstream companion: it addresses conceptual/content
+representation and substantive validity. `nomologR` begins when
+item-level empirical data are available and follows the measure through
+dimensionality, measurement modeling, reliability, construct-validity
+evidence, invariance, and theory-specified nomological networks.
 
 ## What works now
 
 ### 1. `nomo_screen()` — data and item audit
 
-The Milestone 1 module audits candidate items **without modifying the supplied
-data**. Screening includes item/case missingness, response distributions,
-category use, zero/near-zero variance, concentration, corrected item-rest and
-inter-item relationships, reverse-key/coding review signals, optional
-continuous-like shape summaries, integrated review tables, and five diagnostic
-plot views.
+The Milestone 1 module audits candidate items **without modifying the
+supplied data**. Screening includes item/case missingness, response
+distributions, category use, zero/near-zero variance, concentration,
+corrected item-rest and inter-item relationships, reverse-key/coding
+review signals, optional continuous-like shape summaries, integrated
+review tables, and five diagnostic plot views.
 
-```r
+``` r
 items <- data.frame(
   item1 = c(1, 2, 3, 4, 5, 5),
   item2 = c(1, 2, 3, 4, 4, 5),
@@ -51,17 +54,18 @@ Milestone 2 asks a different question:
 
 > **How many latent dimensions deserve investigation?**
 
-The default `core` workflow triangulates four pieces of retention evidence:
+The default `core` workflow triangulates four pieces of retention
+evidence:
 
 - common-factor parallel analysis (primary);
 - Velicer original MAP / TR2;
 - Velicer revised MAP / TR4;
 - empirical Kaiser criterion (EKC).
 
-Scree information, KMO/MSA, and Bartlett's test are kept as supporting evidence
-rather than factor-count decision rules.
+Scree information, KMO/MSA, and Bartlett’s test are kept as supporting
+evidence rather than factor-count decision rules.
 
-```r
+``` r
 set.seed(42)
 f <- rnorm(300)
 
@@ -82,7 +86,7 @@ summary(fac)
 
 Different jobs need different amounts of computation and triangulation:
 
-```r
+``` r
 nomo_factors(dat, criterion_set = "minimal")
 nomo_factors(dat, criterion_set = "core")       # default
 nomo_factors(dat, criterion_set = "extended")
@@ -91,20 +95,22 @@ nomo_factors(dat, criterion_set = "all")
 
 - `minimal`: parallel analysis + original MAP (TR2)
 - `core`: adds revised MAP (TR4) + EKC
-- `extended`: adds NEST + Hull (CAF) when their assumptions are supported
-- `all`: adds comparison data + legacy Kaiser-Guttman (> 1)
+- `extended`: adds NEST + Hull (CAF) when their assumptions are
+  supported
+- `all`: adds comparison data + legacy Kaiser-Guttman (\> 1)
 
-The legacy Kaiser-Guttman result is displayed for historical context but is
-**excluded from the synthesis**. If a requested method is incompatible with the
-current indicator/correlation/missing-data setup, it is marked `skipped` with a
-reason rather than being silently replaced by another analysis.
+The legacy Kaiser-Guttman result is displayed for historical context but
+is **excluded from the synthesis**. If a requested method is
+incompatible with the current indicator/correlation/missing-data setup,
+it is marked `skipped` with a reason rather than being silently replaced
+by another analysis.
 
 #### Parallel-analysis sensitivity
 
-Parallel analysis itself contains analytical choices. `nomologR` computes three
-rules from the same null simulations:
+Parallel analysis itself contains analytical choices. `nomologR`
+computes three rules from the same null simulations:
 
-```r
+``` r
 fac$parallel$sensitivity
 
 nomo_factors(dat, parallel_rule = "percentile")  # default
@@ -112,12 +118,12 @@ nomo_factors(dat, parallel_rule = "mean")
 nomo_factors(dat, parallel_rule = "crawford")
 ```
 
-The selected rule drives the primary PA suggestion; the other rules remain
-visible as sensitivity evidence.
+The selected rule drives the primary PA suggestion; the other rules
+remain visible as sensitivity evidence.
 
 #### Retention plots
 
-```r
+``` r
 plot(fac)                            # observed vs selected PA null reference
 plot(fac, type = "parallel_rules")   # PA decision-rule sensitivity
 plot(fac, type = "scree")            # component + common-factor scree
@@ -127,15 +133,16 @@ plot(fac, type = "concordance")      # where recommended evidence clusters
 plot(fac, type = "kmo")              # item-level MSA
 ```
 
-The concordance view first groups closely related variants into **criterion
-families** (for example, original and revised MAP belong to one MAP family).
-This avoids making two variants of the same criterion look like two independent
-votes. Internally split families remain visible rather than being forced into a
-single count. A synthesis may say:
+The concordance view first groups closely related variants into
+**criterion families** (for example, original and revised MAP belong to
+one MAP family). This avoids making two variants of the same criterion
+look like two independent votes. Internally split families remain
+visible rather than being forced into a single count. A synthesis may
+say:
 
-> “Parallel analysis suggests 2 factors, and 4 of 5 available criterion families
-> point to that same count. At the criterion-family level, MAP points to 1.
-> Compare the plausible neighboring solutions in EFA.”
+> “Parallel analysis suggests 2 factors, and 4 of 5 available criterion
+> families point to that same count. At the criterion-family level, MAP
+> points to 1. Compare the plausible neighboring solutions in EFA.”
 
 It should never say:
 
@@ -143,19 +150,21 @@ It should never say:
 
 #### Correlation choice is explicit
 
-Under `correlation = "auto"`, continuous, binary, ordinal, and genuinely mixed
-item sets are routed to Pearson, tetrachoric, polychoric, or mixed correlations
-as appropriate. The selected method and modeling assumptions are also exposed
-through the convenience fields `fac$correlation` and `fac$modeling_types`.
+Under `correlation = "auto"`, continuous, binary, ordinal, and genuinely
+mixed item sets are routed to Pearson, tetrachoric, polychoric, or mixed
+correlations as appropriate. The selected method and modeling
+assumptions are also exposed through the convenience fields
+`fac$correlation` and `fac$modeling_types`.
 
-When EKC is used with a non-Pearson correlation matrix, `nomologR` keeps the
-criterion available but surfaces an explicit qualification that its reference
-series is approximate under that correlation model.
+When EKC is used with a non-Pearson correlation matrix, `nomologR` keeps
+the criterion available but surfaces an explicit qualification that its
+reference series is approximate under that correlation model.
 
-Numeric-discrete storage is deliberately **not** treated as proof of ordinal
-measurement. For numeric Likert items, make the modeling choice explicitly:
+Numeric-discrete storage is deliberately **not** treated as proof of
+ordinal measurement. For numeric Likert items, make the modeling choice
+explicitly:
 
-```r
+``` r
 fac_ord <- nomo_factors(
   dat_likert,
   types = c(
@@ -170,16 +179,17 @@ fac_ord <- nomo_factors(
 
 #### Researcher control with documented guardrails
 
-`types` is an explicit researcher decision, not a request for `nomologR` to guess.
-A valid override is applied **before** default-type rejection, which means an
-otherwise ambiguous storage format can be used when the researcher has encoded
-it intentionally. The override is recorded in the decision log.
+`types` is an explicit researcher decision, not a request for `nomologR`
+to guess. A valid override is applied **before** default-type rejection,
+which means an otherwise ambiguous storage format can be used when the
+researcher has encoded it intentionally. The override is recorded in the
+decision log.
 
-For example, an ordinary R factor is nominal by default. If its factor levels
-already encode the intended response order, the researcher can declare those
-items ordinal:
+For example, an ordinary R factor is nominal by default. If its factor
+levels already encode the intended response order, the researcher can
+declare those items ordinal:
 
-```r
+``` r
 response_levels <- c(
   "Strongly disagree",
   "Disagree",
@@ -205,29 +215,32 @@ fac_factor$decision_log
 
 The control is deliberately bounded by storage-safety checks:
 
-- `types = "ordinal"` **does not reorder categories**. For factor-coded items,
-  the existing factor-level order is used. Set that order intentionally first.
-- Character/text columns are not silently converted to ordered scores. Recode
-  them deliberately to numeric/factor/ordered storage before modeling.
+- `types = "ordinal"` **does not reorder categories**. For factor-coded
+  items, the existing factor-level order is used. Set that order
+  intentionally first.
+- Character/text columns are not silently converted to ordered scores.
+  Recode them deliberately to numeric/factor/ordered storage before
+  modeling.
 - `types = "continuous"` requires numeric storage.
 - `types = "binary"` requires exactly two observed response values.
-- Constant or all-missing items fail first with a direct data-quality error; an
-  override cannot manufacture variance that is not present.
+- Constant or all-missing items fail first with a direct data-quality
+  error; an override cannot manufacture variance that is not present.
 
-This is the intended balance in `nomologR`: researchers retain control over
-substantive modeling choices, while consequential assumptions remain visible,
-documented, and protected from silent coercion.
+This is the intended balance in `nomologR`: researchers retain control
+over substantive modeling choices, while consequential assumptions
+remain visible, documented, and protected from silent coercion.
 
 ### 3. `nomo_efa()` — exploratory structure without automatic purification
 
-Milestone 3 turns a researcher-controlled factor count into a transparent
-common-factor exploratory model. The default uses MINRES with oblimin rotation,
-keeps factor correlations visible, and reports evidence that may deserve review
-without silently deleting indicators or refitting a different model.
+Milestone 3 turns a researcher-controlled factor count into a
+transparent common-factor exploratory model. The default uses MINRES
+with oblimin rotation, keeps factor correlations visible, and reports
+evidence that may deserve review without silently deleting indicators or
+refitting a different model.
 
 The cleanest handoff is directly from `nomo_factors()`:
 
-```r
+``` r
 set.seed(2026)
 
 f1 <- rnorm(500)
@@ -252,17 +265,19 @@ summary(efa)
 efa$item_summary
 ```
 
-Passing a `nomo_factors` object carries forward its item set, modeling-type
-decisions, correlation model, missing-data strategy, and explicit smoothing
-choice where applicable. Those decisions are recorded as **inherited**, not
-misrepresented as new EFA-stage researcher overrides.
+Passing a `nomo_factors` object carries forward its item set,
+modeling-type decisions, correlation model, missing-data strategy, and
+explicit smoothing choice where applicable. Those decisions are recorded
+as **inherited**, not misrepresented as new EFA-stage researcher
+overrides.
 
 #### What `nomo_efa()` returns
 
-The public result keeps the exploratory evidence reproducible and inspectable:
+The public result keeps the exploratory evidence reproducible and
+inspectable:
 
-- neutral factor labels (`F1`, `F2`, ...), while the underlying engine object
-  remains available in `efa$fit`;
+- neutral factor labels (`F1`, `F2`, …), while the underlying engine
+  object remains available in `efa$fit`;
 - pattern and structure matrices;
 - communalities, uniquenesses, and loading complexity;
 - primary/secondary loading diagnostics and loading gaps;
@@ -272,48 +287,50 @@ The public result keeps the exploratory evidence reproducible and inspectable:
 - KMO/Bartlett supporting adequacy evidence where available;
 - a structured decision log.
 
-Item-level numerical references are intentionally framed as review prompts:
+Item-level numerical references are intentionally framed as review
+prompts:
 
 - primary loading around `.40`;
 - secondary/cross-loading around `.30`;
 - communality around `.40`.
 
 Each item receives `KEEP`, `REVIEW`, or `STRONG REVIEW`. `KEEP` means no
-configured numeric EFA flag fired; it is **not** a declaration that theory,
-content coverage, wording, redundancy, or later validity evidence has approved
-the item.
+configured numeric EFA flag fired; it is **not** a declaration that
+theory, content coverage, wording, redundancy, or later validity
+evidence has approved the item.
 
 #### EFA plots
 
-```r
+``` r
 plot(efa, type = "pattern")
 plot(efa, type = "items")
 plot(efa, type = "residuals")
 plot(efa, type = "factor_correlations")
 ```
 
-The pattern heatmap preserves loading sign; the loading plot distinguishes
-primary from secondary loadings and displays both teaching references; residual
-and factor-correlation plots show unique matrix information rather than
-duplicating symmetric cells.
+The pattern heatmap preserves loading sign; the loading plot
+distinguishes primary from secondary loadings and displays both teaching
+references; residual and factor-correlation plots show unique matrix
+information rather than duplicating symmetric cells.
 
 #### Researcher control remains visible
 
 A factor count may also be supplied directly:
 
-```r
+``` r
 efa2 <- nomo_efa(dat2, factors = 2)
 ```
 
-Alternative common-factor extraction and rotation choices remain explicit. An
-orthogonal rotation is allowed but logged as a choice requiring substantive
-justification. A non-positive-definite correlation matrix stops by default;
-`smooth = TRUE` makes any smoothing intervention explicit and records it.
+Alternative common-factor extraction and rotation choices remain
+explicit. An orthogonal rotation is allowed but logged as a choice
+requiring substantive justification. A non-positive-definite correlation
+matrix stops by default; `smooth = TRUE` makes any smoothing
+intervention explicit and records it.
 
-For numeric Likert indicators, modeling level should be declared rather than
-inferred from integer storage alone:
+For numeric Likert indicators, modeling level should be declared rather
+than inferred from integer storage alone:
 
-```r
+``` r
 efa_ord <- nomo_efa(
   dat_likert,
   factors = 2,
@@ -324,17 +341,17 @@ efa_ord <- nomo_efa(
 )
 ```
 
-The full Checkpoint A walkthrough is in the
-**“From item audit to exploratory structure”** vignette.
+The full Checkpoint A walkthrough is in the **“From item audit to
+exploratory structure”** vignette.
 
 ### 4. `nomo_cfa()` — confirmatory measurement-model evidence
 
-Milestone 4 adds a guided CFA layer around `lavaan::cfa()`. The underlying
-`lavaan` fit is retained in `cfa$fit`; `nomologR` adds diagnostics,
-literature-linked teaching references, plots, and decision logging without
-silently changing the researcher-specified model.
+Milestone 4 adds a guided CFA layer around `lavaan::cfa()`. The
+underlying `lavaan` fit is retained in `cfa$fit`; `nomologR` adds
+diagnostics, literature-linked teaching references, plots, and decision
+logging without silently changing the researcher-specified model.
 
-```r
+``` r
 model <- nomo_model(list(
   F1 = c("A1", "A2", "A3", "A4"),
   F2 = c("B1", "B2", "B3", "B4")
@@ -349,14 +366,14 @@ cfa
 summary(cfa)
 ```
 
-The CFA layer reports convergence and captured engine warnings, cases used,
-standardized loadings with uncertainty, factor correlations, chi-square, CFI,
-TLI, RMSEA with confidence interval, SRMR, localized residual correlations,
-and Heywood/improper-solution diagnostics.
+The CFA layer reports convergence and captured engine warnings, cases
+used, standardized loadings with uncertainty, factor correlations,
+chi-square, CFI, TLI, RMSEA with confidence interval, SRMR, localized
+residual correlations, and Heywood/improper-solution diagnostics.
 
 Modification indices are available as **post-hoc diagnostics only**:
 
-```r
+``` r
 head(cfa$top_modification_indices)
 ```
 
@@ -364,7 +381,7 @@ They never free parameters or trigger automatic respecification.
 
 #### CFA plots
 
-```r
+``` r
 plot(cfa, type = "loadings")
 plot(cfa, type = "fit")
 plot(cfa, type = "residuals")
@@ -372,18 +389,19 @@ plot(cfa, type = "modification_indices")
 ```
 
 Fit-index values are teaching references rather than pass/fail laws. The
-package deliberately asks users to interpret global fit, localized strain,
-parameter estimates, estimator, sample characteristics, and theory together.
+package deliberately asks users to interpret global fit, localized
+strain, parameter estimates, estimator, sample characteristics, and
+theory together.
 
 #### Continuous, robust, and ordinal estimation
 
-For continuous indicators, leaving `estimator = NULL` preserves lavaan's
-ordinary continuous-data default. Robust ML estimators such as `"MLR"` remain
-explicit researcher choices.
+For continuous indicators, leaving `estimator = NULL` preserves lavaan’s
+ordinary continuous-data default. Robust ML estimators such as `"MLR"`
+remain explicit researcher choices.
 
 Declared ordered indicators request WLSMV by default:
 
-```r
+``` r
 cfa_ord <- nomo_cfa(
   model,
   data = dat_ord,
@@ -391,15 +409,15 @@ cfa_ord <- nomo_cfa(
 )
 ```
 
-Incompatible ordered-indicator ML/FIML combinations stop with an explanation
-rather than being silently substituted.
+Incompatible ordered-indicator ML/FIML combinations stop with an
+explanation rather than being silently substituted.
 
 #### Calibration and validation samples
 
-`nomo_split()` supports a reproducible exploratory/confirmatory split when the
-gain in independence justifies the loss of precision:
+`nomo_split()` supports a reproducible exploratory/confirmatory split
+when the gain in independence justifies the loss of precision:
 
-```r
+``` r
 s <- nomo_split(
   dat2,
   validation_prop = .50,
@@ -411,17 +429,17 @@ efa_cal <- nomo_efa(s$calibration, factors = fac_cal)
 cfa_val <- nomo_cfa(model, data = s$validation)
 ```
 
-The split is explicit, reproducible, and logged as a design choice; no split
-ratio is presented as universally optimal.
-
+The split is explicit, reproducible, and logged as a design choice; no
+split ratio is presented as universally optimal.
 
 ### 5. `nomo_reliability()` + `nomo_validity()` — measurement evidence beyond model fit
 
-Milestone 5 completes the confirmatory measurement-model layer by separating
-**score reliability**, **convergent evidence**, and **construct-separation
-evidence** rather than collapsing them into one validity verdict.
+Milestone 5 completes the confirmatory measurement-model layer by
+separating **score reliability**, **convergent evidence**, and
+**construct-separation evidence** rather than collapsing them into one
+validity verdict.
 
-```r
+``` r
 rel <- nomo_reliability(cfa)
 val <- nomo_validity(cfa, htmt = "both")
 
@@ -435,18 +453,20 @@ plot(val, type = "discriminant")
 
 #### Reliability is model-based and score-specific
 
-`nomo_reliability()` uses current `semTools::compRelSEM()` infrastructure.
-Model-based omega/composite reliability is primary for the congeneric CFA
-workflow. Coefficient alpha is retained as a familiar secondary statistic and
-is explicitly qualified by its stronger assumptions.
+`nomo_reliability()` uses current `semTools::compRelSEM()`
+infrastructure. Model-based omega/composite reliability is primary for
+the congeneric CFA workflow. Coefficient alpha is retained as a familiar
+secondary statistic and is explicitly qualified by its stronger
+assumptions.
 
-For ordered indicators, the requested score scale remains visible. Observed
-ordinal-score omega is supported; observed-scale alpha is not silently replaced
-with a different latent-response or numeric-score estimand.
+For ordered indicators, the requested score scale remains visible.
+Observed ordinal-score omega is supported; observed-scale alpha is not
+silently replaced with a different latent-response or numeric-score
+estimand.
 
 Sampling uncertainty can be requested explicitly:
 
-```r
+``` r
 rel_ci <- nomo_reliability(
   cfa,
   ci = "bootstrap",
@@ -458,29 +478,32 @@ summary(rel_ci)
 plot(rel_ci)
 ```
 
-Bootstrap intervals are optional because they require repeated CFA refitting.
-Point estimates remain the original reliability estimates; the bootstrap adds
-uncertainty rather than substituting a new estimand.
+Bootstrap intervals are optional because they require repeated CFA
+refitting. Point estimates remain the original reliability estimates;
+the bootstrap adds uncertainty rather than substituting a new estimand.
 
 #### Convergent evidence is not reliability
 
-`nomo_validity()` keeps standardized loading evidence connected to the fitted
-CFA and uses average variance extracted (AVE) as convergent evidence. AVE is
-deliberately **not** reported as a reliability coefficient.
+`nomo_validity()` keeps standardized loading evidence connected to the
+fitted CFA and uses average variance extracted (AVE) as convergent
+evidence. AVE is deliberately **not** reported as a reliability
+coefficient.
 
-The familiar AVE reference around `.50` is a review prompt. A value above or
-below it does not, by itself, declare a construct valid or invalid.
+The familiar AVE reference around `.50` is a review prompt. A value
+above or below it does not, by itself, declare a construct valid or
+invalid.
 
 #### Construct separation uses multiple pieces of evidence
 
 For multi-construct models, `nomo_validity()` aligns:
 
 - latent-factor correlations, including available CFA uncertainty;
-- HTMT2 as the preferred congeneric-oriented construct-separation statistic;
+- HTMT2 as the preferred congeneric-oriented construct-separation
+  statistic;
 - original HTMT as a comparison;
 - optional Fornell-Larcker output as legacy/supporting evidence.
 
-```r
+``` r
 val <- nomo_validity(
   cfa,
   htmt = "both",
@@ -490,48 +513,48 @@ val <- nomo_validity(
 summary(val)
 ```
 
-Values above the configured HTMT-family review reference prompt investigation
-of theoretical distinctiveness, item wording/content, cross-loadings, and
-construct overlap. They do **not** automatically merge constructs or delete
-indicators.
+Values above the configured HTMT-family review reference prompt
+investigation of theoretical distinctiveness, item wording/content,
+cross-loadings, and construct overlap. They do **not** automatically
+merge constructs or delete indicators.
 
-The package also refuses to manufacture simple-structure evidence when the
-estimand is ambiguous. Cross-loaded models, mixed indicator composites, and
-multi-group/multilevel HTMT requests are surfaced with explicit limitations
-rather than silently pooled or redefined.
+The package also refuses to manufacture simple-structure evidence when
+the estimand is ambiguous. Cross-loaded models, mixed indicator
+composites, and multi-group/multilevel HTMT requests are surfaced with
+explicit limitations rather than silently pooled or redefined.
 
 #### Why the evidence is kept separate
 
-A model can reproduce the covariance structure well while its indicators still
-provide weak reliability and convergent evidence. Conversely, two constructs can
-each show strong loadings, omega, and AVE while remaining empirically difficult
-to distinguish from one another.
+A model can reproduce the covariance structure well while its indicators
+still provide weak reliability and convergent evidence. Conversely, two
+constructs can each show strong loadings, omega, and AVE while remaining
+empirically difficult to distinguish from one another.
 
 That is the central Checkpoint B lesson:
 
 > Good global fit, high reliability, convergent evidence, and construct
 > separation answer different measurement questions.
 
-The full walkthrough is in the
-**“From CFA to a defensible measurement model”** vignette.
+The full walkthrough is in the **“From CFA to a defensible measurement
+model”** vignette.
 
 ## Development path
 
 The detailed release specification lives in [`ROADMAP.md`](ROADMAP.md).
 The v0.1 path is:
 
-1. Data & Item Audit — `nomo_screen()` **complete**
-2. Factor-Retention Evidence — `nomo_factors()` **complete**
-3. Exploratory Factor Analysis — `nomo_efa()` **complete**
-4. Confirmatory Factor Analysis — `nomo_cfa()` **complete**
-5. Reliability + convergent/discriminant evidence — **complete**
-6. Theory-Specified Nomological Network — **next**
-7. Measurement Invariance
-8. Guided pipeline — `nomo_run()`
-9. Reporting, documentation, and v0.1 release gate
+1.  Data & Item Audit — `nomo_screen()` **complete**
+2.  Factor-Retention Evidence — `nomo_factors()` **complete**
+3.  Exploratory Factor Analysis — `nomo_efa()` **complete**
+4.  Confirmatory Factor Analysis — `nomo_cfa()` **complete**
+5.  Reliability + convergent/discriminant evidence — **complete**
+6.  Theory-Specified Nomological Network — **next**
+7.  Measurement Invariance
+8.  Guided pipeline — `nomo_run()`
+9.  Reporting, documentation, and v0.1 release gate
 
-Future-stage functions remain explicit development stubs until their milestone
-is implemented and tested.
+Future-stage functions remain explicit development stubs until their
+milestone is implemented and tested.
 
 ## Design principles
 
@@ -546,10 +569,10 @@ is implemented and tested.
 
 ## Development installation
 
-This package is still in the development series. To install the current GitHub
-version after a milestone is merged to the public branch:
+This package is still in the development series. To install the current
+GitHub version after a milestone is merged to the public branch:
 
-```r
+``` r
 # install.packages("remotes")
 remotes::install_github("JUhalt/nomologR")
 ```
