@@ -2,26 +2,85 @@
 % Please edit documentation in R/nomo_invariance.R
 \name{nomo_invariance}
 \alias{nomo_invariance}
-\title{Evaluate measurement invariance across groups or occasions}
+\title{Evaluate measurement invariance across groups}
 \usage{
-nomo_invariance(model, data, group, ordered = NULL, guidance = nomo_defaults())
+nomo_invariance(
+  model,
+  data,
+  group,
+  ordered = NULL,
+  levels = NULL,
+  partial = NULL,
+  localize = TRUE,
+  estimator = NULL,
+  missing = NULL,
+  ID.fac = "std.lv",
+  ID.cat = "Wu.Estabrook.2016",
+  parameterization = "theta",
+  guidance = nomo_defaults()
+)
 }
 \arguments{
-\item{model}{A \code{lavaan} measurement model.}
+\item{model}{A researcher-specified lavaan measurement-model syntax string or
+an object created by \code{nomo_model()}.}
 
-\item{data}{A data frame.}
+\item{data}{A non-empty data frame.}
 
-\item{group}{Character scalar naming the grouping variable.}
+\item{group}{Character scalar naming the grouping variable in \code{data}.}
 
-\item{ordered}{Optional character vector of ordered indicators.}
+\item{ordered}{Optional character vector naming ordered indicators.}
 
-\item{guidance}{Guidance settings from \code{\link[=nomo_defaults]{nomo_defaults()}}.}
+\item{levels}{Optional invariance levels. \code{NULL} uses the sequence implied by
+the indicator category structure.}
+
+\item{partial}{Optional researcher-specified partial-invariance releases from
+\code{nomo_partial()}.}
+
+\item{localize}{Logical. If \code{TRUE}, retain equality-constraint score tests as
+diagnostic evidence. Diagnostics never trigger automatic release/refitting.}
+
+\item{estimator}{Optional lavaan estimator. Ordered models default to WLSMV.}
+
+\item{missing}{Optional lavaan missing-data option.}
+
+\item{ID.fac}{Factor-identification method passed to
+\code{semTools::measEq.syntax()}. \code{"std.lv"} is the default.}
+
+\item{ID.cat}{Ordered-indicator identification method. Wu-Estabrook is the
+default.}
+
+\item{parameterization}{Lavaan categorical parameterization. \code{"theta"} is
+the default for ordered indicators.}
+
+\item{guidance}{Guidance settings from \code{nomo_defaults()}.}
 }
 \value{
-During the development series this function is a documented API stub.
+A \code{nomo_invariance} object containing generated syntax objects/text,
+fitted models, fit/change evidence, category information, partial-invariance
+provenance, score diagnostics, and a decision log.
 }
 \description{
-The planned implementation will use current \code{semTools} infrastructure such as
-\code{measEq.syntax()} for configural, metric, scalar, and strict invariance. It will
-not rely on the deprecated \code{measurementInvariance()} convenience function.
+\code{nomo_invariance()} evaluates increasingly constrained multi-group CFA models
+while retaining every generated \code{semTools::measEq.syntax()} object and every
+fitted lavaan model.
+}
+\details{
+The sequence is adapted to the observed category structure. Continuous
+indicators use configural -> metric -> scalar -> strict. Ordered indicators
+with four or more categories permit a separate threshold step. Three-category
+indicators require threshold equality as part of the metric step. When any
+binary indicator is present, threshold, loading, and intercept restrictions
+are imposed together at the first equality step (\code{strong}) because those
+restrictions cannot be treated as independent tests under Wu-Estabrook
+identification.
+
+Partial invariance is researcher controlled. Supply an object from
+\code{nomo_partial()} to request specific equality-constraint releases. Releases
+are carried forward to more restrictive levels and their rationales are
+retained. \code{nomo_invariance()} never searches for a combination of releases
+that makes a fit rule pass.
+
+When \code{localize = TRUE}, univariate score tests for equality constraints are
+retained as diagnostic evidence. They are explicitly not used to modify the
+fitted model.
 }

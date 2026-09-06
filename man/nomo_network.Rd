@@ -4,23 +4,77 @@
 \alias{nomo_network}
 \title{Evaluate a theory-specified nomological network}
 \usage{
-nomo_network(model, data, hypotheses = NULL, guidance = nomo_defaults())
+nomo_network(
+  model,
+  data,
+  hypotheses,
+  validation_data = NULL,
+  add_missing = TRUE,
+  ordered = NULL,
+  estimator = NULL,
+  missing = NULL,
+  std.lv = TRUE,
+  control = NULL,
+  equivalence_alpha = 0.05,
+  guidance = nomo_defaults()
+)
 }
 \arguments{
-\item{model}{A \code{lavaan} structural model containing the measurement model.}
+\item{model}{One non-empty lavaan SEM/measurement-model syntax string or an
+object created by \code{nomo_model()}.}
 
-\item{data}{A data frame.}
+\item{data}{A non-empty data frame or a \code{nomo_split} object. For a
+\code{nomo_split}, the calibration subset is the primary sample and the
+validation subset is reserved for replication.}
 
-\item{hypotheses}{Optional theoretical expectations from \code{\link[=nomo_hypotheses]{nomo_hypotheses()}}.}
+\item{hypotheses}{A \code{nomo_hypotheses} object.}
 
-\item{guidance}{Guidance settings from \code{\link[=nomo_defaults]{nomo_defaults()}}.}
+\item{validation_data}{Optional independent validation data frame. Do not use
+this together with a \code{nomo_split} object.}
+
+\item{add_missing}{Logical. If \code{TRUE} (default), theory-specified relations
+absent from \code{model} are appended transparently before estimation.}
+
+\item{ordered}{Optional character vector naming ordered indicators.}
+
+\item{estimator}{Optional lavaan estimator. When ordered indicators are
+declared and \code{estimator = NULL}, WLSMV is requested.}
+
+\item{missing}{Optional lavaan missing-data option.}
+
+\item{std.lv}{Logical passed to \code{lavaan::sem()}.}
+
+\item{control}{Optional optimizer-control list passed to \code{lavaan::sem()}.}
+
+\item{equivalence_alpha}{One number strictly between 0 and .5. For
+quantitative negligible predictions, the equivalence confidence level is
+\code{1 - 2 * equivalence_alpha}.}
+
+\item{guidance}{Guidance settings returned by \code{nomo_defaults()}.}
 }
 \value{
-During the development series this function is a documented API stub.
+A \code{nomo_network} object retaining the primary fitted SEM, optional
+validation fit, measurement context, relation-level theory evidence,
+replication evidence, and decision log.
 }
 \description{
-The planned implementation will fit the full latent structural model when
-item-level measurement is available and compare observed relations with
-expectations supplied by \code{\link[=nomo_hypotheses]{nomo_hypotheses()}}. Post-hoc changes will be
-explicitly labeled as exploratory.
+\code{nomo_network()} combines a researcher-specified measurement/SEM model with a
+machine-readable object from \code{nomo_hypotheses()}. Hypothesized relations that
+are not already present in \code{model} can be added transparently before fitting,
+so the theory object itself can define the structural portion of the network.
+}
+\details{
+Directed \code{A -> B} hypotheses map to lavaan regression paths \code{B ~ A}.
+Association \verb{A <-> B} hypotheses map to covariance paths \code{A ~~ B}.
+
+For quantitative \code{negligible(within = ...)} predictions, \code{nomo_network()}
+evaluates the SESOI using a normal-approximation equivalence confidence
+interval. With the default \code{equivalence_alpha = .05}, this is a 90 percent
+interval, corresponding to the usual two one-sided tests logic. A bare
+\code{negligible()} prediction remains non-confirmable from \code{p > .05}.
+
+The function can also fit the same prespecified model in a validation sample.
+Pass \code{validation_data} explicitly, or pass a \code{nomo_split} object as \code{data} to
+use its calibration and validation subsets. No model relation is added or
+removed on the basis of validation results.
 }

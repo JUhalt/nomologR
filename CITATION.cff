@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+message: "If you use nomologR in research, please cite the software using this metadata."
+type: software
+title: "nomologR: Guided Scale Development and Construct Validation"
+version: 0.1.0.9002
+authors:
+  - family-names: Uhalt
+    given-names: Joshua
+    email: Josh.Uhalt@gmail.com
+repository-code: "https://github.com/JUhalt/nomologR"
+url: "https://github.com/JUhalt/nomologR"
+license: MIT

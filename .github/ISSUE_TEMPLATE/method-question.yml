@@ -1,0 +1,31 @@
+name: Methodological question
+description: Ask about the statistical reasoning, interpretation, or scope of a nomologR method.
+title: "[Method] "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form for questions about what nomologR computes, why a method is used, or how evidence should be interpreted.
+  - type: textarea
+    id: question
+    attributes:
+      label: Methodological question
+      description: What statistical or measurement question are you trying to resolve?
+    validations:
+      required: true
+  - type: input
+    id: function
+    attributes:
+      label: Relevant nomologR function
+      placeholder: "nomo_factors(), nomo_cfa(), nomo_validity(), ..."
+  - type: textarea
+    id: context
+    attributes:
+      label: Research context
+      description: Briefly describe the construct, design, indicators, or decision that motivates the question.
+  - type: textarea
+    id: references
+    attributes:
+      label: References or competing approaches
+      description: Optional citations, packages, papers, or alternative methods relevant to the question.

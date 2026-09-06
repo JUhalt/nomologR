@@ -600,8 +600,24 @@ and distinguish among:
 
 ---
 
+### v0.1 completion sequence after Checkpoint B
+
+Milestones 6–9 are all required before the first public v0.1 release and R-Universe launch.
+
+The planned sequence is:
+
+1. **M6 + M7 in parallel:** theory-specified nomological evidence and measurement invariance/generalizability;
+2. **M8:** one-stop guided pipeline without hidden consequential decisions;
+3. **M9:** reproducible researcher-facing report with methods, evidence, decisions, deviations, citations, and session information;
+4. **researcher-completeness and clean-install audit;**
+5. **pkgdown, release infrastructure, R-Universe, and v0.1.0.**
+
+Features from later roadmap stages may be pulled forward when they close a methodological gap required for a defensible v0.1 workflow, but not merely to expand scope.
+
+For v0.1, planned pull-forwards include researcher-specified SESOI/equivalence regions for negligible nomological predictions, external criterion/predictive outcomes within the network layer, researcher-controlled partial invariance, holdout/replication support where feasible, and evidence provenance that can be carried into the guided pipeline and final report.
+
 ## Milestone 6 — Theory-Specified Nomological Network
-**Status:** Next
+**Status:** In Progress — developed in parallel with Milestone 7
 
 **Goal:** Make nomological evidence the package's signature contribution.
 
@@ -645,7 +661,10 @@ A non-significant p-value alone must **not** establish a null prediction.
 
 For v0.1:
 - report uncertainty explicitly;
-- allow optional equivalence/SESOI logic if stable enough for release.
+- support researcher-specified SESOI/equivalence regions for negligible predictions;
+- never invent a SESOI or treat `p > .05` as evidence that a relation is negligible;
+- allow observed external criteria/outcomes as network nodes when this preserves a clearly defined estimand;
+- support calibration/validation or holdout replication where feasible.
 
 Bayesian confirmation is reserved for later unless implementation proves small and robust.
 
@@ -671,6 +690,8 @@ Bayesian confirmation is reserved for later unless implementation proves small a
 ---
 
 ## Milestone 7 — Measurement Invariance
+**Status:** In Progress — developed in parallel with Milestone 6
+
 **Goal:** Support defensible comparisons across groups/time.
 
 ### Function
@@ -692,7 +713,9 @@ Use current `semTools` infrastructure such as `measEq.syntax()` rather than depr
 - change in fit
 - parameter constraints
 - localized sources of non-invariance
-- partial-invariance documentation if pursued
+- researcher-specified partial-invariance refits when pursued
+- explicit documentation of every released equality constraint and its rationale
+- no automatic search for a partial-invariance solution
 
 ### Philosophy
 No single ΔCFI or χ² criterion determines invariance on its own.

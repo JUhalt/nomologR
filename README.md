@@ -1,8 +1,11 @@
 
 # nomologR
 
-**Development status: `0.1.0.9002` — Checkpoint B complete; Milestone 6
-(theory-specified nomological networks) next**
+[![R-CMD-check](https://github.com/JUhalt/nomologR/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/JUhalt/nomologR/actions/workflows/R-CMD-check.yaml)
+[![test-coverage](https://github.com/JUhalt/nomologR/actions/workflows/test-coverage.yaml/badge.svg)](https://github.com/JUhalt/nomologR/actions/workflows/test-coverage.yaml)
+
+**Development status: `0.1.0.9002` — Checkpoint B complete; Milestones
+6–7 in active development; M8–M9 remain required for v0.1**
 
 `nomologR` is a guided, evidence-based workflow for **empirical scale
 development and construct validation**. It coordinates established R

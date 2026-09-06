@@ -1,0 +1,12 @@
+citHeader(
+  "To cite nomologR in publications, please use:"
+)
+
+bibentry(
+  bibtype = "Manual",
+  title = "nomologR: Guided Scale Development and Construct Validation",
+  author = person("Joshua", "Uhalt"),
+  year = "2026",
+  note = "R package version 0.1.0.9002",
+  url = "https://github.com/JUhalt/nomologR"
+)
