@@ -5,26 +5,118 @@
 \title{Run the guided nomologR workflow}
 \usage{
 nomo_run(
-  data,
-  scales,
+  data = NULL,
+  scales = NULL,
   mode = c("teaching", "research"),
-  guidance = nomo_defaults()
+  guidance = nomo_defaults(),
+  decisions = list(),
+  settings = list(),
+  resume = NULL
 )
 }
 \arguments{
-\item{data}{A data frame.}
+\item{data}{A non-empty data frame or a \code{\link[=nomo_split]{nomo_split()}} object. A split uses
+calibration rows for exploratory stages and validation rows for CFA,
+reliability, validity, and invariance. A network branch receives the split
+object so the same prespecified network can be evaluated across calibration
+and validation samples.}
 
-\item{scales}{A named list defining candidate scale items.}
+\item{scales}{A non-empty named list. Each element is a character vector of
+candidate item-column names for one scale/construct.}
 
-\item{mode}{Planned output mode: \code{"teaching"} or \code{"research"}.}
+\item{mode}{Presentation mode: \code{"teaching"} or \code{"research"}. Mode changes
+presentation, not statistical behavior.}
 
 \item{guidance}{Guidance settings from \code{\link[=nomo_defaults]{nomo_defaults()}}.}
+
+\item{decisions}{Named list of explicit researcher decisions. Decisions may
+be supplied one pause at a time or all at once for a fully prespecified
+one-call run. A structured decision can be written as
+\code{list(value = ..., rationale = "...")}.}
+
+\item{settings}{Named list of stage-specific argument lists. Examples include
+\code{list(factors = list(n_iter = 200, seed = 2026))},
+\code{list(invariance = list(group = "group"))}, or
+\code{list(network = list(hypotheses = h))}. Pipeline-controlled arguments such
+as component data/model inputs cannot be overridden through \code{settings}.
+When resuming, settings for future stages may be supplied without
+recomputing completed stages.}
+
+\item{resume}{Optional prior \code{nomo_run} object. When supplied, the existing
+source data, scales, guidance, completed component results, decisions, and
+provenance are reused.}
 }
 \value{
-During the development series this function is a documented API stub.
+A \code{nomo_run} object containing component results, stage status,
+outstanding decision requests, researcher decisions/rationales, stage
+settings, workflow provenance, component decision logs, and source inputs
+required for reproducibility.
 }
 \description{
-\code{nomo_run()} will eventually coordinate the component functions while pausing
-at consequential researcher decisions. It will never silently remove items or
-respecify a model.
+\code{nomo_run()} coordinates the package's staged evidence workflow while
+stopping at consequential researcher decisions. Evidence can be computed
+automatically when doing so does not change the researcher's data or model,
+but \code{nomo_run()} does not silently select factor counts, remove items,
+construct a CFA model, free parameters, or respecify a model.
+}
+\details{
+The guided workflow is resumable. Completed component objects are retained
+rather than recomputed. Future-stage settings may be added or revised until
+that stage has completed; settings for completed/blocked stages are locked.
+
+Consequential decisions are currently:
+\enumerate{
+\item \code{factor_count}: the EFA factor count for each named scale;
+\item \code{cfa_model}: the prespecified confirmatory measurement model;
+\item \code{measurement_model}: \code{"proceed"} or \code{"revise"} after reviewing CFA,
+reliability, and convergent/discriminant evidence.
+}
+
+Optional invariance and nomological-network branches are requested explicitly
+through \code{settings$invariance} and \code{settings$network}. A network branch must
+include a \code{nomo_hypotheses} object. Invariance diagnostics never free
+parameters automatically, and network results never collapse to a one-number
+validity score.
+}
+\examples{
+\dontrun{
+h <- nomo_hypotheses(
+  "WellBeing -> criterion" = positive(min = .20)
+)
+
+run <- nomo_run(
+  data = dat,
+  scales = list(WellBeing = c("w1", "w2", "w3", "w4")),
+  settings = list(
+    factors = list(seed = 2026),
+    network = list(hypotheses = h)
+  )
+)
+
+run <- nomo_run(
+  resume = run,
+  decisions = list(factor_count = 1L)
+)
+
+run <- nomo_run(
+  resume = run,
+  decisions = list(
+    cfa_model = list(
+      value = "WellBeing =~ w1 + w2 + w3 + w4",
+      rationale = "Prespecified one-factor measurement model."
+    )
+  )
+)
+
+run <- nomo_run(
+  resume = run,
+  decisions = list(
+    measurement_model = list(
+      value = "proceed",
+      rationale = "Measurement evidence reviewed before downstream analyses."
+    )
+  )
+)
+}
+
 }

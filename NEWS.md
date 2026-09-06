@@ -1,4 +1,28 @@
-# nomologR 0.1.0.9003
+# nomologR 0.1.0.9004
+
+## Milestone 8 closeout — guided workflow and decision provenance
+
+- Replaced the `nomo_run()` development stub with a resumable guided workflow
+  spanning screening, factor-retention evidence, EFA, CFA, reliability,
+  convergent/discriminant evidence, optional invariance, and optional
+  theory-specified nomological-network analysis.
+- Added explicit researcher handoffs for EFA factor count, CFA model
+  specification, and downstream continuation after measurement evidence.
+- Preserved completed component results across resume calls; future-stage
+  settings can be added without silently recomputing completed work.
+- Added teaching and research presentation modes that change presentation,
+  not statistical behavior.
+- Added `nomo_split`-aware sample roles and exact-model network replication.
+- Added stage maps, decision/rationale provenance, component evidence logs,
+  reproducibility recipes, and the guided-workflow vignette.
+- Optional invariance/network branches remain researcher configured; no
+  automatic parameter freeing, respecification, item deletion, or one-number
+  validity score is introduced.
+- M8 closeout coverage reached **94.07% package-wide** and **93.16%** for
+  `R/nomo_run.R`; the full test suite and R CMD check were clean.
+- Milestone 8 is complete. Milestone 9, `nomo_report()`, is now active.
+
+
 
 ## Milestones 6–7 closeout — theory-specified networks, invariance, and Checkpoint C
 

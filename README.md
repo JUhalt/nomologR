@@ -4,9 +4,9 @@
 [![R-CMD-check](https://github.com/JUhalt/nomologR/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/JUhalt/nomologR/actions/workflows/R-CMD-check.yaml)
 [![test-coverage](https://github.com/JUhalt/nomologR/actions/workflows/test-coverage.yaml/badge.svg)](https://github.com/JUhalt/nomologR/actions/workflows/test-coverage.yaml)
 
-**Development status: `0.1.0.9003` — Checkpoint C complete; Milestone 8
-(`nomo_run()`) is next; M9 and release hardening remain required for
-v0.1**
+**Development status: `0.1.0.9004` — Milestone 8 (`nomo_run()`)
+complete; Milestone 9 (`nomo_report()`) is active; release hardening
+remains required for v0.1**
 
 `nomologR` is a guided, evidence-based workflow for **empirical scale
 development and construct validation**. It coordinates established R
@@ -630,6 +630,49 @@ partial-invariance solution that “passes.”
 The full walkthroughs are in the **“Nomological network”** and
 **“Measurement invariance”** vignettes.
 
+### 8. `nomo_run()` — guided orchestration without hidden decisions
+
+Milestone 8 connects the package components into a resumable workflow
+while keeping consequential choices explicit.
+
+``` r
+run <- nomo_run(
+  data = dat,
+  scales = list(WellBeing = c("w1", "w2", "w3", "w4"))
+)
+
+run <- nomo_run(
+  resume = run,
+  decisions = list(factor_count = 1L)
+)
+
+run <- nomo_run(
+  resume = run,
+  decisions = list(
+    cfa_model = list(
+      value = "WellBeing =~ w1 + w2 + w3 + w4",
+      rationale = "Prespecified one-factor measurement model."
+    )
+  )
+)
+```
+
+The guided object retains completed component results, sample roles,
+stage settings, explicit researcher decisions/rationales, and component
+evidence logs. Optional invariance and theory-specified network branches
+can be added for future stages without recomputing completed work.
+
+Teaching mode presents consequential pauses as **Observation / Reason /
+Options / Consequence**. Research mode provides a compact view of the
+same underlying analysis.
+
+`nomo_run()` never silently deletes items, creates a CFA model from EFA,
+frees invariance constraints, respecifies a model, or declares a
+construct valid/invalid.
+
+The full walkthrough is in the **“Guided workflow with nomo_run()”**
+vignette.
+
 ## Development path
 
 The detailed release specification lives in [`ROADMAP.md`](ROADMAP.md).
@@ -642,11 +685,14 @@ The v0.1 path is:
 5.  Reliability + convergent/discriminant evidence — **complete**
 6.  Theory-Specified Nomological Network — **complete**
 7.  Measurement Invariance — **complete**
-8.  Guided pipeline — `nomo_run()` **next**
-9.  Reproducible report + v0.1 release gate — `nomo_report()`
+8.  Guided pipeline — `nomo_run()` **complete**
+9.  Reproducible report — `nomo_report()` **active**
+10. v0.1 release hardening and infrastructure
 
-**Checkpoint C is complete at `0.1.0.9003`.** M8 and M9 remain explicit
-development stubs until their milestones are implemented and tested.
+**Milestone 8 is complete at `0.1.0.9004`.** `nomo_report()` is now the
+only remaining required feature milestone before
+researcher-completeness, release infrastructure, and the v0.1.0
+hardening gate.
 
 ## Design principles
 

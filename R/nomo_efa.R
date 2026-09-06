@@ -17,7 +17,12 @@
 #'   Otherwise all columns are used when `items = NULL`.
 #' @param factors A positive integer number of factors to extract, or a
 #'   `nomo_factors` object. For a `nomo_factors` object, the selected
-#'   parallel-analysis factor count is used.
+#'   parallel-analysis factor count is used unless `factor_count` is supplied.
+#' @param factor_count Optional positive integer. This may be supplied only when
+#'   `factors` is a `nomo_factors` object. It preserves the M2 item/modeling/
+#'   correlation/missingness context while recording a researcher-selected EFA
+#'   factor count instead of pretending the primary parallel-analysis suggestion
+#'   was adopted.
 #' @param rotation Rotation passed to [psych::fa()]. The default is `"oblimin"`.
 #'   Orthogonal rotations are allowed but are recorded as a researcher choice.
 #' @param fm Common-factor extraction method passed to [psych::fa()]. The
@@ -69,6 +74,7 @@
 nomo_efa <- function(data,
                      items = NULL,
                      factors,
+                     factor_count = NULL,
                      rotation = "oblimin",
                      fm = "minres",
                      correlation = NULL,
@@ -121,20 +127,41 @@ nomo_efa <- function(data,
   types_inherited_from_factors <- FALSE
 
   inherited <- inherits(factors, "nomo_factors")
-  factor_source <- if (inherited) "nomo_factors" else "researcher"
   factor_context <- NULL
 
   if (inherited) {
     factor_object <- factors
-    k <- factor_object$parallel$n_factors
-    if (is.null(k) || length(k) != 1L || is.na(k) || k < 1L) {
+    primary_k <- factor_object$parallel$n_factors
+
+    if (is.null(primary_k) ||
+        length(primary_k) != 1L ||
+        is.na(primary_k) ||
+        !is.numeric(primary_k) ||
+        primary_k < 1L) {
       stop(
         paste(
           "The supplied `nomo_factors` object does not contain a positive",
-          "parallel-analysis factor suggestion. Supply `factors` as a positive integer."
+          "parallel-analysis factor suggestion."
         ),
         call. = FALSE
       )
+    }
+    primary_k <- as.integer(primary_k)
+
+    if (!is.null(factor_count)) {
+      if (!is.numeric(factor_count) ||
+          length(factor_count) != 1L ||
+          is.na(factor_count) ||
+          !is.finite(factor_count) ||
+          factor_count < 1 ||
+          abs(factor_count - round(factor_count)) > sqrt(.Machine$double.eps)) {
+        stop("`factor_count` must be one positive integer.", call. = FALSE)
+      }
+      k <- as.integer(round(factor_count))
+      factor_source <- "researcher_with_nomo_factors_context"
+    } else {
+      k <- primary_k
+      factor_source <- "nomo_factors"
     }
 
     if (is.null(items)) {
@@ -162,8 +189,11 @@ nomo_efa <- function(data,
       as.integer(unlist(factor_object$plausible_factors, use.names = FALSE))
     )
     plausible <- sort(unique(plausible[is.finite(plausible) & plausible >= 1L]))
+
     factor_context <- list(
-      primary_parallel = as.integer(k),
+      primary_parallel = primary_k,
+      selected_factor_count = as.integer(k),
+      selection_source = factor_source,
       plausible_factors = plausible,
       recommendation = if (is.null(factor_object$recommendation)) {
         ""
@@ -172,7 +202,14 @@ nomo_efa <- function(data,
       }
     )
   } else {
+    if (!is.null(factor_count)) {
+      stop(
+        "`factor_count` can be used only when `factors` is a `nomo_factors` object.",
+        call. = FALSE
+      )
+    }
     k <- factors
+    factor_source <- "researcher"
   }
 
   if (is.null(smooth)) {
@@ -681,7 +718,13 @@ nomo_efa_log <- function(k,
     observation = sprintf(
       "%d-factor EFA requested via %s.",
       k,
-      if (factor_source == "nomo_factors") "nomo_factors() handoff" else "direct specification"
+      switch(
+        factor_source,
+        nomo_factors = "nomo_factors() handoff",
+        researcher_with_nomo_factors_context =
+          "researcher factor-count decision after nomo_factors() review",
+        "direct specification"
+      )
     ),
     recommendation = "Compare neighboring plausible solutions when retention evidence is ambiguous."
   )
@@ -689,6 +732,31 @@ nomo_efa_log <- function(k,
   if (!is.null(factor_context) &&
       length(factor_context$plausible_factors) > 0L &&
       any(factor_context$plausible_factors != k)) {
+    retention_observation <- if (
+      identical(
+        factor_source,
+        "researcher_with_nomo_factors_context"
+      )
+    ) {
+      sprintf(
+        paste0(
+          "The researcher selected %d factor%s after reviewing M2 evidence. ",
+          "Primary parallel analysis suggested %d; the broader plausible set includes: %s."
+        ),
+        k,
+        if (k == 1L) "" else "s",
+        factor_context$primary_parallel,
+        paste(factor_context$plausible_factors, collapse = ", ")
+      )
+    } else {
+      sprintf(
+        "The M2 handoff selected %d factor%s for this EFA, while the broader plausible set includes: %s.",
+        k,
+        if (k == 1L) "" else "s",
+        paste(factor_context$plausible_factors, collapse = ", ")
+      )
+    }
+
     log <- nomo_log_add(
       log,
       stage = "efa",
@@ -697,12 +765,7 @@ nomo_efa_log <- function(k,
       value = k,
       reference = "Retention evidence identifies solutions to investigate; it does not prove dimensionality",
       severity = "review",
-      observation = sprintf(
-        "The M2 handoff selected %d factor%s for this EFA, while the broader plausible set includes: %s.",
-        k,
-        if (k == 1L) "" else "s",
-        paste(factor_context$plausible_factors, collapse = ", ")
-      ),
+      observation = retention_observation,
       recommendation = "Fit and compare substantively plausible neighboring EFA solutions rather than treating the handoff as proof."
     )
   }
