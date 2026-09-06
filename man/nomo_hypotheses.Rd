@@ -2,19 +2,33 @@
 % Please edit documentation in R/nomo_hypotheses.R
 \name{nomo_hypotheses}
 \alias{nomo_hypotheses}
-\title{Specify theoretical expectations for a nomological network}
+\title{Specify a priori expectations for a nomological network}
 \usage{
 nomo_hypotheses(...)
 }
 \arguments{
-\item{...}{Named theoretical expectations.}
+\item{...}{Named \link{nomo_expectations} created by \code{\link[=positive]{positive()}}, \code{\link[=negative]{negative()}},
+or \code{\link[=negligible]{negligible()}}. Names must specify relations using \verb{->} or \verb{<->}.}
 }
 \value{
-During the development series this function is a documented API stub.
+A \code{nomo_hypotheses} object containing a tidy, machine-readable
+hypothesis table.
 }
 \description{
-This function will create machine-readable a priori expectations for paths or
-associations. Directional, negligible, and eventually SESOI-based predictions
-are planned so that nomological evidence is evaluated against theory rather
-than inferred from statistical significance alone.
+\code{nomo_hypotheses()} converts named theoretical predictions into a
+machine-readable object that can later be evaluated by \code{\link[=nomo_network]{nomo_network()}}.
+Relations use \code{A -> B} for directed structural paths and \verb{A <-> B} for
+associations/covariances.
+}
+\details{
+The function records theory; it does not inspect data, fit a model, or infer
+predictions from statistical significance.
+}
+\examples{
+h <- nomo_hypotheses(
+  "GSE -> Spirituality" = positive(),
+  "GSE -> Religiosity" = negligible(within = c(-.10, .10)),
+  "Religiosity <-> Spirituality" = positive(min = .20)
+)
+h
 }
