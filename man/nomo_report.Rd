@@ -4,18 +4,71 @@
 \alias{nomo_report}
 \title{Render a reproducible nomologR analysis report}
 \usage{
-nomo_report(x, file = "nomologR-report.html")
+nomo_report(
+  x,
+  file = "nomologR-report.html",
+  title = "nomologR reproducible analysis report",
+  include_plots = TRUE,
+  include_session = TRUE,
+  max_table_rows = 50L,
+  overwrite = FALSE,
+  quiet = TRUE
+)
 }
 \arguments{
-\item{x}{A future \code{nomologR} workflow object.}
+\item{x}{An object created by \code{\link[=nomo_run]{nomo_run()}}.}
 
-\item{file}{Output file path.}
+\item{file}{Output HTML path.}
+
+\item{title}{Report title.}
+
+\item{include_plots}{Logical; include a compact set of component plots when
+those plots are available.}
+
+\item{include_session}{Logical; include full \code{sessionInfo()} output.}
+
+\item{max_table_rows}{Positive integer used for ordinary display tables.
+The final evidence-trace appendix is not truncated.}
+
+\item{overwrite}{Logical; replace an existing \code{file}.}
+
+\item{quiet}{Logical passed to \code{\link[rmarkdown:render]{rmarkdown::render()}}.}
 }
 \value{
-During the development series this function is a documented API stub.
+The normalized report file path, invisibly.
 }
 \description{
-The planned report will combine statistical results, teaching explanations,
-methodological references, researcher decisions, deviations, and session
-information in a reproducible document.
+\code{nomo_report()} renders a self-contained HTML document from a \code{nomo_run}
+object. The report archives researcher inputs, sample roles, item and factor
+evidence, EFA/CFA results, reliability, convergent/discriminant evidence,
+optional invariance and nomological-network results, researcher decisions,
+deviations/post-hoc decisions, method citations, an evidence trace, and
+session information.
+}
+\details{
+The report is a presentation and provenance layer. It does not refit models,
+alter data, free parameters, remove items, or manufacture additional
+statistical conclusions.
+
+Reports can be rendered from complete, paused, or blocked \code{nomo_run} objects.
+Incomplete stages are labeled as such rather than silently omitted.
+}
+\examples{
+\dontrun{
+run <- nomo_run(
+  data = dat,
+  scales = list(WellBeing = c("w1", "w2", "w3", "w4")),
+  decisions = list(
+    factor_count = 1L,
+    cfa_model = "WellBeing =~ w1 + w2 + w3 + w4",
+    measurement_model = "proceed"
+  )
+)
+
+nomo_report(
+  run,
+  file = "well-being-validation.html"
+)
+}
+
 }

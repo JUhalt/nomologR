@@ -1,0 +1,644 @@
+---
+title: "__NOMO_REPORT_TITLE__"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+    self_contained: true
+    mathjax: null
+params:
+  run: null
+  report_title: "nomologR reproducible analysis report"
+  include_plots: true
+  include_session: true
+  max_table_rows: 50
+  generated_at: ""
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  message = FALSE,
+  warning = FALSE,
+  results = "asis",
+  comment = NA,
+  fig.width = 8,
+  fig.height = 5.2,
+  dpi = 110
+)
+
+run <- params$run
+
+html_escape <- function(x) {
+  x <- as.character(x)
+  x <- gsub("&", "&amp;", x, fixed = TRUE)
+  x <- gsub("<", "&lt;", x, fixed = TRUE)
+  x <- gsub(">", "&gt;", x, fixed = TRUE)
+  x <- gsub('"', "&quot;", x, fixed = TRUE)
+  x
+}
+
+emit_note <- function(text) {
+  cat(
+    '<div class="nomo-note">',
+    html_escape(text),
+    "</div>\n",
+    sep = ""
+  )
+}
+
+emit_summary <- function(obj) {
+  txt <- nomologR:::nomo_report_component_summary_text(obj)
+  cat(
+    '<details class="nomo-summary-details">',
+    '<summary>Detailed component summary</summary>',
+    '<pre class="nomo-summary">',
+    html_escape(txt),
+    "</pre>",
+    "</details>\n",
+    sep = ""
+  )
+}
+
+emit_table <- function(x,
+                       max_rows = params$max_table_rows,
+                       empty = "No rows are available for this section.",
+                       truncate = TRUE) {
+  x <- nomologR:::nomo_report_flatten_table(x)
+
+  if (!nrow(x)) {
+    emit_note(empty)
+    return(invisible(NULL))
+  }
+
+  n_total <- nrow(x)
+  if (isTRUE(truncate) && is.finite(max_rows) && n_total > max_rows) {
+    x <- utils::head(x, max_rows)
+  }
+
+  html <- knitr::kable(
+    x,
+    format = "html",
+    digits = 3,
+    escape = TRUE,
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-condensed nomo-table"'
+  )
+  cat('<div class="table-responsive">\n')
+  cat(paste(html, collapse = "\n"), "\n")
+  cat("</div>\n")
+
+  if (isTRUE(truncate) && n_total > nrow(x)) {
+    emit_note(sprintf(
+      "Showing %d of %d rows. The underlying nomo_run object retains all rows.",
+      nrow(x),
+      n_total
+    ))
+  }
+
+  invisible(NULL)
+}
+
+emit_code <- function(text) {
+  if (is.null(text) || !length(text) || !nzchar(as.character(text)[1L])) return()
+  cat(
+    "<pre><code>",
+    html_escape(paste(as.character(text), collapse = "\n")),
+    "</code></pre>\n",
+    sep = ""
+  )
+}
+
+emit_plot <- function(obj, type = NULL) {
+  if (!isTRUE(params$include_plots)) return(invisible(NULL))
+
+  ans <- nomologR:::nomo_report_safe_plot(obj, type)
+  if (isTRUE(ans$ok)) {
+    print(ans$plot)
+  } else {
+    emit_note(paste("Plot unavailable:", ans$message))
+  }
+
+  invisible(NULL)
+}
+
+stage_status <- nomologR:::nomo_report_run_table(run, "stages")
+workflow_decisions <- nomologR:::nomo_report_run_table(run, "decisions")
+outstanding <- nomologR:::nomo_report_run_table(run, "requests")
+recipe <- nomologR:::nomo_report_run_table(run, "recipe")
+settings <- nomologR:::nomo_report_run_table(run, "settings")
+scales <- nomologR:::nomo_report_run_table(run, "scales")
+trace <- nomologR:::nomo_report_evidence_trace(run)
+flagged_trace <- nomologR:::nomo_report_flagged_trace(run)
+deviations <- nomologR:::nomo_report_deviations(run)
+```
+
+<style>
+body { max-width: 1250px; }
+.nomo-banner {
+  border-left: 5px solid #555;
+  padding: 0.8em 1em;
+  margin: 1em 0 1.5em 0;
+  background: #f6f6f6;
+}
+.nomo-note {
+  border-left: 4px solid #999;
+  background: #fafafa;
+  padding: 0.6em 0.9em;
+  margin: 0.7em 0;
+}
+.nomo-summary {
+  white-space: pre-wrap;
+  background: #f8f8f8;
+  border: 1px solid #ddd;
+  padding: 0.8em;
+  margin-top: 0.7em;
+}
+.nomo-summary-details {
+  margin: 0.8em 0 1.1em 0;
+}
+.nomo-summary-details summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.nomo-table {
+  width: 100%;
+  font-size: 0.92em;
+}
+.nomo-table th,
+.nomo-table td {
+  vertical-align: top !important;
+  overflow-wrap: anywhere;
+}
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  margin-bottom: 0.8em;
+}
+details {
+  margin: 1em 0;
+}
+</style>
+
+**Generated:** `r params$generated_at`  
+**nomologR version:** `r as.character(utils::packageVersion("nomologR"))`  
+**Workflow status:** `r run$status`  
+**Sample design:** `r run$sample_design`
+
+<div class="nomo-banner">
+<strong>Interpretation contract.</strong>
+This report archives evidence and researcher decisions. It does not turn review
+references into universal pass/fail rules, does not silently delete items or
+cases, does not free parameters, and does not respecify models.
+</div>
+
+# Researcher inputs and data characteristics
+
+## Workflow state
+
+```{r}
+emit_table(stage_status, empty = "No stage-status table is available.")
+```
+
+## Scale definitions
+
+```{r}
+emit_table(scales, empty = "No scale definitions are available.")
+```
+
+## Sample/data roles
+
+```{r}
+emit_table(
+  nomologR:::nomo_report_data_characteristics(run),
+  empty = "Data characteristics could not be reconstructed."
+)
+```
+
+`r if (identical(run$sample_design, "same_sample")) "Exploratory and confirmatory stages used the same sample. Confirmatory evidence should therefore not be described as independent holdout confirmation." else "Calibration and validation roles were retained explicitly by the workflow."`
+
+## Configured stage settings
+
+```{r}
+emit_table(settings, empty = "No stage-specific settings were configured.")
+```
+
+## Component recipe
+
+```{r}
+emit_table(recipe, empty = "No component recipe is available.")
+```
+
+# Item audit
+
+```{r item-audit, results='asis'}
+screen <- nomologR:::nomo_report_component_list(run, "screen")
+
+if (!length(screen)) {
+  emit_note("The screening stage was not completed in this workflow.")
+} else {
+  for (scope in names(screen)) {
+    obj <- screen[[scope]]
+    cat("\n## Scale: ", html_escape(scope), "\n\n", sep = "")
+    emit_summary(obj)
+
+    cat("\n### Item summary\n\n")
+    emit_table(
+      nomologR:::nomo_report_component_table(obj, "screen", "primary")
+    )
+
+    cat("\n### Relationship summary\n\n")
+    emit_table(
+      nomologR:::nomo_report_component_table(obj, "screen", "relationships"),
+      empty = "No relationship diagnostics are available."
+    )
+
+    log <- nomologR:::nomo_report_component_table(obj, "screen", "decision_log")
+    if (nrow(log) && "severity" %in% names(log)) {
+      log <- log[tolower(log$severity) %in% c("review", "concern"), , drop = FALSE]
+    }
+    cat("\n### Review/concern evidence\n\n")
+    emit_table(log, empty = "No screening review/concern rows were recorded.")
+
+    emit_plot(obj, "evidence")
+  }
+}
+```
+
+# Factor-retention evidence
+
+```{r factor-retention, results='asis'}
+factors <- nomologR:::nomo_report_component_list(run, "factors")
+
+if (!length(factors)) {
+  emit_note("Factor-retention evidence was not completed in this workflow.")
+} else {
+  for (scope in names(factors)) {
+    obj <- factors[[scope]]
+    cat("\n## Scale: ", html_escape(scope), "\n\n", sep = "")
+    emit_summary(obj)
+
+    cat("\n### Retention criteria\n\n")
+    emit_table(
+      nomologR:::nomo_report_component_table(obj, "factors", "primary")
+    )
+
+    cat("\n### Criterion availability and qualifications\n\n")
+    emit_table(
+      nomologR:::nomo_report_component_table(obj, "factors", "criteria")
+    )
+
+    cat("\n### Supporting adequacy evidence\n\n")
+    emit_table(
+      nomologR:::nomo_report_component_table(obj, "factors", "adequacy")
+    )
+
+    emit_plot(obj, "evidence")
+  }
+}
+```
+
+# Exploratory factor analysis
+
+```{r efa, results='asis'}
+efa <- nomologR:::nomo_report_component_list(run, "efa")
+
+if (!length(efa)) {
+  emit_note("EFA was not completed in this workflow.")
+} else {
+  for (scope in names(efa)) {
+    obj <- efa[[scope]]
+    cat("\n## Scale: ", html_escape(scope), "\n\n", sep = "")
+    emit_summary(obj)
+
+    cat("\n### Item-level structure\n\n")
+    emit_table(
+      nomologR:::nomo_report_component_table(obj, "efa", "primary")
+    )
+
+    cat("\n### Pattern matrix\n\n")
+    emit_table(
+      nomologR:::nomo_report_component_table(obj, "efa", "pattern")
+    )
+
+    cat("\n### Largest localized residuals\n\n")
+    residuals <- nomologR:::nomo_report_component_table(obj, "efa", "residuals")
+    if (nrow(residuals)) residuals <- utils::head(residuals, 10L)
+    emit_table(residuals, empty = "No localized EFA residual table is available.")
+
+    emit_plot(obj, "items")
+  }
+}
+```
+
+# Confirmatory factor analysis
+
+```{r cfa, results='asis'}
+cfa_list <- nomologR:::nomo_report_component_list(run, "cfa")
+
+if (!length(cfa_list)) {
+  emit_note("CFA was not completed in this workflow.")
+} else {
+  cfa <- cfa_list[[1L]]
+  emit_summary(cfa)
+
+  if (!is.null(run$decisions$cfa_model$value)) {
+    cat("\n## Researcher-specified CFA syntax\n\n")
+    emit_code(run$decisions$cfa_model$value)
+  }
+
+  cat("\n## Global fit evidence\n\n")
+  emit_table(
+    nomologR:::nomo_report_component_table(cfa, "cfa", "primary")
+  )
+
+  cat("\n## Standardized loadings\n\n")
+  emit_table(
+    nomologR:::nomo_report_component_table(cfa, "cfa", "loadings")
+  )
+
+  cat("\n## Improper-solution / Heywood evidence\n\n")
+  emit_table(
+    nomologR:::nomo_report_component_table(cfa, "cfa", "heywood"),
+    empty = "No configured improper-solution/Heywood rows were recorded."
+  )
+
+  cat("\n## Modification indices - diagnostic only\n\n")
+  mi <- nomologR:::nomo_report_component_table(
+    cfa,
+    "cfa",
+    "modification_indices"
+  )
+  if (nrow(mi)) mi <- utils::head(mi, 10L)
+  emit_table(
+    mi,
+    empty = "No modification-index table is available."
+  )
+  emit_note(
+    "Modification indices are post-hoc diagnostic evidence. They do not authorize automatic model respecification."
+  )
+
+  emit_plot(cfa, "fit")
+  emit_plot(cfa, "loadings")
+}
+```
+
+# Reliability
+
+```{r reliability, results='asis'}
+rel_list <- nomologR:::nomo_report_component_list(run, "reliability")
+
+if (!length(rel_list)) {
+  emit_note("Reliability evidence was not completed in this workflow.")
+} else {
+  rel <- rel_list[[1L]]
+  emit_summary(rel)
+
+  cat("\n## Reliability coefficients\n\n")
+  emit_table(
+    nomologR:::nomo_report_component_table(rel, "reliability", "primary")
+  )
+
+  cat("\n## Alpha availability / estimand context\n\n")
+  emit_table(
+    nomologR:::nomo_report_component_table(rel, "reliability", "alpha_status"),
+    empty = "No secondary-alpha status table is available."
+  )
+
+  emit_plot(rel)
+}
+```
+
+# Convergent and discriminant evidence
+
+```{r validity, results='asis'}
+val_list <- nomologR:::nomo_report_component_list(run, "validity")
+
+if (!length(val_list)) {
+  emit_note("Convergent/discriminant evidence was not completed in this workflow.")
+} else {
+  val <- val_list[[1L]]
+  emit_summary(val)
+
+  cat("\n## Convergent evidence\n\n")
+  emit_table(
+    nomologR:::nomo_report_component_table(val, "validity", "primary")
+  )
+
+  cat("\n## Construct-separation evidence\n\n")
+  emit_table(
+    nomologR:::nomo_report_component_table(val, "validity", "discriminant"),
+    empty = "No pairwise construct-separation table is available."
+  )
+
+  cat("\n## HTMT-family availability\n\n")
+  emit_table(
+    nomologR:::nomo_report_component_table(val, "validity", "htmt_status"),
+    empty = "No HTMT-family status table is available."
+  )
+
+  emit_plot(val, "ave")
+  if (nrow(nomologR:::nomo_report_component_table(
+    val, "validity", "discriminant"
+  ))) {
+    emit_plot(val, "discriminant")
+  }
+}
+```
+
+# Measurement invariance
+
+```{r invariance, results='asis'}
+inv_list <- nomologR:::nomo_report_component_list(run, "invariance")
+
+if (!length(inv_list)) {
+  status <- stage_status$status[stage_status$stage == "invariance"]
+  if (length(status) && identical(status[[1L]], "not_requested")) {
+    emit_note("Measurement invariance was not requested in this workflow.")
+  } else {
+    emit_note("Measurement invariance was not completed in this workflow.")
+  }
+} else {
+  inv <- inv_list[[1L]]
+  emit_summary(inv)
+
+  cat("\n## Fit across invariance levels\n\n")
+  emit_table(
+    nomologR:::nomo_report_component_table(inv, "invariance", "primary")
+  )
+
+  cat("\n## Researcher-specified partial releases\n\n")
+  emit_table(
+    nomologR:::nomo_report_component_table(inv, "invariance", "partial"),
+    empty = "No partial-invariance releases were supplied."
+  )
+
+  cat("\n## Local equality-constraint strain\n\n")
+  emit_table(
+    nomologR:::nomo_report_component_table(inv, "invariance", "local_strain"),
+    empty = "No localized equality-constraint diagnostics are available."
+  )
+
+  emit_plot(inv, "change")
+}
+```
+
+# Nomological network
+
+```{r network, results='asis'}
+net_list <- nomologR:::nomo_report_component_list(run, "network")
+
+if (!length(net_list)) {
+  status <- stage_status$status[stage_status$stage == "network"]
+  if (length(status) && identical(status[[1L]], "not_requested")) {
+    emit_note("A theory-specified nomological network was not requested.")
+  } else {
+    emit_note("The nomological-network stage was not completed.")
+  }
+} else {
+  net <- net_list[[1L]]
+  emit_summary(net)
+
+  cat("\n## Theory-specified relation evidence\n\n")
+  emit_table(
+    nomologR:::nomo_report_component_table(net, "network", "primary")
+  )
+
+  cat("\n## Structural relation/model provenance\n\n")
+  emit_table(
+    nomologR:::nomo_report_component_table(net, "network", "relations")
+  )
+
+  cat("\n## Replication evidence\n\n")
+  replication <- nomologR:::nomo_report_component_table(
+    net, "network", "replication"
+  )
+  emit_table(
+    replication,
+    empty = "No validation-sample replication evidence is available."
+  )
+
+  emit_plot(net, "effects")
+  if (nrow(replication)) emit_plot(net, "replication")
+}
+```
+
+# Decision log
+
+## Workflow decisions
+
+```{r}
+emit_table(
+  workflow_decisions,
+  empty = "No explicit workflow decisions were recorded."
+)
+```
+
+## Outstanding decision requests
+
+```{r}
+emit_table(
+  outstanding,
+  empty = "No consequential researcher decisions remain outstanding."
+)
+```
+
+## Review and concern evidence
+
+Each row below carries a stable report-local **evidence ID**. The metric,
+reference, observation, and recommendation remain together so autogenerated
+guidance can be traced back to the evidence that produced it.
+
+```{r}
+emit_table(
+  flagged_trace,
+  empty = "No component review/concern evidence rows were recorded."
+)
+```
+
+# Deviations and post-hoc decisions
+
+```{r}
+emit_table(
+  deviations,
+  empty = paste(
+    "No researcher-specified partial-invariance releases, post-hoc network",
+    "relations, or explicit workflow revision decisions were identified."
+  )
+)
+```
+
+A diagnostic suggestion (for example, a CFA modification index) is not labeled
+as a deviation unless the researcher actually makes and records a model change.
+
+# Methods and citations
+
+The report reflects `nomologR` orchestration plus established statistical
+engines. `installed_version` records the package version used in this rendering
+session; package-provided citation text may identify a different citation
+release. Cite the software/method packages appropriate to the analyses actually
+reported in a manuscript.
+
+```{r}
+emit_table(nomologR:::nomo_report_citations(), max_rows = Inf)
+```
+
+# Reproducibility
+
+## Workflow call history
+
+```{r}
+emit_table(
+  nomologR:::nomo_report_call_history(run),
+  max_rows = Inf,
+  empty = "No call history is available."
+)
+```
+
+## Package versions
+
+```{r}
+emit_table(nomologR:::nomo_report_package_versions(), max_rows = Inf)
+```
+
+## Full evidence trace
+
+This appendix is intentionally **not truncated**. Each autogenerated
+recommendation remains on the same row as its evidence ID, component, metric,
+reference, severity, and observation.
+
+<details>
+<summary>Show full evidence trace</summary>
+
+```{r}
+emit_table(
+  trace,
+  max_rows = Inf,
+  empty = "No component evidence log rows are available.",
+  truncate = FALSE
+)
+```
+
+</details>
+
+## Session information
+
+```{r session-info, results='asis'}
+if (isTRUE(params$include_session)) {
+  cat(
+    '<pre class="nomo-summary">',
+    html_escape(nomologR:::nomo_report_session_text()),
+    "</pre>\n",
+    sep = ""
+  )
+} else {
+  emit_note("Full session information was disabled for this report.")
+}
+```
+
+---
+
+**Report boundary:** this document is a reproducible presentation of the
+supplied `nomo_run` object. It does not replace substantive theory, content
+validity, design justification, or researcher judgment.
