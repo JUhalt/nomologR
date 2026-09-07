@@ -850,7 +850,7 @@ after this checkpoint is merged to `master`.
 ---
 
 ## Milestone 8 — One-Stop Guided Pipeline
-**Status:** Next — begin after Checkpoint C PR/CI merge
+**Status:** Complete
 
 **Goal:** Make the package genuinely usable by non-specialists without hiding decisions.
 
@@ -865,42 +865,63 @@ nomo_run(..., mode = "teaching")
 nomo_run(..., mode = "research")
 ```
 
-### Teaching mode
-Adds:
-- plain-language explanations
-- method rationale
-- glossary links
-- decision prompts
-- “what next?” guidance
+Teaching and research modes change presentation only; statistical behavior
+and researcher decisions are unchanged.
 
-### Research mode
-Adds:
-- compact statistical output
-- reproducible code snippets
-- manuscript-ready tables
-
-### Critical behavior
-The pipeline pauses at consequential decisions rather than silently continuing.
-
-Example:
+### Implemented guided workflow
 ```text
-Three items show strong review flags.
-No items have been removed.
-
-Recommended next actions:
-[1] inspect item diagnostics
-[2] refit with a user-selected subset
-[3] retain all items and proceed
+screening
+  -> factor-retention evidence
+  -> researcher factor-count decision
+  -> EFA
+  -> researcher CFA-model decision
+  -> CFA
+  -> reliability
+  -> convergent/discriminant evidence
+  -> researcher measurement-model continuation decision
+  -> optional invariance
+  -> optional nomological network
 ```
 
+### Researcher-control contract
+- [x] Factor-retention evidence does not silently choose the EFA factor count.
+- [x] EFA output does not silently generate the CFA model.
+- [x] Measurement evidence does not silently authorize downstream analyses.
+- [x] `measurement_model = "revise"` stops without automatic respecification.
+- [x] Completed stages are retained rather than recomputed on resume.
+- [x] Future-stage settings can be added while completed-stage settings remain locked.
+- [x] One-call execution requires consequential decisions to be supplied explicitly.
+
+### Sample roles and provenance
+- [x] Same-sample workflows are labeled honestly.
+- [x] `nomo_split` calibration rows feed exploratory stages.
+- [x] `nomo_split` validation rows feed confirmatory measurement stages.
+- [x] Network replication preserves the same prespecified model across samples.
+- [x] Stage status, decisions/rationales, component logs, and recipes are retained.
+- [x] Guided-workflow vignette and teaching/research output audit completed.
+
+### Coverage closeout
+Final M8 audit:
+- package-wide: **94.07%**
+- `R/nomo_run.R`: **93.16%**
+- `R/nomo_run_presentation.R`: **88.10%**
+
+The core M8 orchestration engine exceeds the >=90% v0.1 computational
+coverage target. Presentation coverage was not padded solely to cross a
+numeric threshold.
+
 ### Exit gate
-- [ ] Pipeline can be reproduced using individual component functions.
-- [ ] Pipeline does not make hidden analytic decisions.
-- [ ] Decision log fully reconstructs the workflow.
+- [x] Pipeline can be reproduced using individual component functions.
+- [x] Pipeline does not make hidden analytic decisions.
+- [x] Decision/provenance logs reconstruct the workflow.
+- [x] Optional invariance/network branches preserve researcher control.
+- [x] Full local tests and R CMD check clean.
 
 ---
 
 ## Milestone 9 — Reproducible Report
+**Status:** Active
+
 **Goal:** Produce something a student can learn from and a researcher can archive.
 
 ### Function

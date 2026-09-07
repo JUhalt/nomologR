@@ -1,7 +1,7 @@
 Package: nomologR
 Type: Package
 Title: Guided Scale Development and Construct Validation
-Version: 0.1.0.9003
+Version: 0.1.0.9004
 Authors@R: c(
     person(
       "Joshua", "Uhalt",
