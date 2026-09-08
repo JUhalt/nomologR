@@ -37,6 +37,6 @@ Suggests:
     testthat (>= 3.0.0)
 VignetteBuilder: knitr
 Config/testthat/edition: 3
-URL: https://github.com/JUhalt/nomologR
+URL: https://github.com/JUhalt/nomologR, https://juhalt.github.io/nomologR/
 BugReports: https://github.com/JUhalt/nomologR/issues
 Config/roxygen2/version: 8.1.0

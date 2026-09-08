@@ -920,7 +920,7 @@ numeric threshold.
 ---
 
 ## Milestone 9 — Reproducible Report
-**Status:** Active
+**Status:** Complete
 
 **Goal:** Produce something a student can learn from and a researcher can archive.
 
@@ -945,8 +945,11 @@ nomo_report()
 13. Reproducibility/session information
 
 ### Exit gate
+- [x] HTML report renders on CI.
 - [ ] HTML report renders on CI.
+- [x] Report is understandable without inspecting raw R objects.
 - [ ] Report is understandable without inspecting raw R objects.
+- [x] Every recommendation links to the evidence that produced it.
 - [ ] Every recommendation links to the evidence that produced it.
 
 ---
@@ -986,11 +989,14 @@ nomo_report()
 - [ ] Every auto-generated conclusion can be traced to a metric/rule/source.
 
 ## Release infrastructure
-- [ ] GitHub release candidate tag tested.
+
+Final `v0.1.0` release-closeout work is tracked in GitHub issues #12–#16
+under the `v0.1.0` milestone.
+- [x] GitHub release candidate tag tested.
 - [ ] pkgdown site.
-- [ ] R-universe setup.
+- [x] R-universe setup.
 - [ ] Installation instructions verified on clean R session.
-- [ ] Public issue templates for bug / method question / feature request.
+- [x] Public issue templates for bug / method question / feature request.
 
 ---
 
