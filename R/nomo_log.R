@@ -48,15 +48,3 @@ nomo_log_add <- function(log,
     )
   )
 }
-
-nomo_not_implemented <- function(function_name, milestone) {
-  stop(
-    sprintf(
-      "%s() is part of %s and is intentionally not implemented in the Milestone 0 foundation build.",
-      function_name,
-      milestone
-    ),
-    "\nThe public API is being stabilized before statistical behavior is added.",
-    call. = FALSE
-  )
-}

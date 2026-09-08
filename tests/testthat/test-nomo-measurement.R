@@ -1,3 +1,4 @@
+# ---- consolidated from test-nomo-m5-coverage-hardening.R ----
 test_that("measurement helper validation and tidy conversion branches are exercised", {
   expect_error(
     nomo_guidance_value(list(), "reliability_reference"),
