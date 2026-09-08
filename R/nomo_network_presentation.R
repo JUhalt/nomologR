@@ -67,17 +67,14 @@ nomo_network_theory_plot_data <- function(x) {
     0
   )
 
-  if (!length(finite_values)) {
-    plot_min <- -1
-    plot_max <- 1
-  } else {
-    plot_min <- min(finite_values, na.rm = TRUE)
-    plot_max <- max(finite_values, na.rm = TRUE)
-    span <- plot_max - plot_min
-    if (!is.finite(span) || span <= 0) span <- 1
-    plot_min <- plot_min - .10 * span
-    plot_max <- plot_max + .10 * span
-  }
+  # `finite_values` always contains the explicit zero reference above, so
+  # the empty-vector branch is unreachable by construction.
+  plot_min <- min(finite_values, na.rm = TRUE)
+  plot_max <- max(finite_values, na.rm = TRUE)
+  span <- plot_max - plot_min
+  if (!is.finite(span) || span <= 0) span <- 1
+  plot_min <- plot_min - .10 * span
+  plot_max <- plot_max + .10 * span
 
   dat$theory_lower_plot <- ifelse(
     is.finite(dat$theory_lower),

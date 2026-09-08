@@ -260,3 +260,307 @@ test_that("single-factor reliability retains the CFA construct name and alpha av
   expect_true(out$alpha_status$available)
   expect_match(out$alpha_status$reason, "Alpha was computed")
 })
+
+# ---- recovered from hygiene consolidation: test-nomo-reliability.R ----
+# ---- consolidated from test-nomo-reliability-uncertainty.R ----
+test_that("bootstrap reliability intervals add uncertainty without changing point estimates", {
+  set.seed(5401)
+  n <- 450
+  f <- rnorm(n)
+  dat <- data.frame(
+    i1 = .82 * f + rnorm(n, sd = .58),
+    i2 = .78 * f + rnorm(n, sd = .62),
+    i3 = .80 * f + rnorm(n, sd = .60),
+    i4 = .76 * f + rnorm(n, sd = .65)
+  )
+
+  fit <- lavaan::cfa('F =~ i1 + i2 + i3 + i4', data = dat)
+  point <- nomo_reliability(fit, ci = "none")
+  boot <- nomo_reliability(
+    fit,
+    ci = "bootstrap",
+    ci_boot = 20,
+    ci_seed = 5401
+  )
+
+  expect_equal(boot$evidence$estimate, point$evidence$estimate, tolerance = 1e-10)
+  expect_true(all(c("ci_lower", "ci_upper", "ci_n_success") %in% names(boot$evidence)))
+  expect_true(any(is.finite(boot$evidence$ci_lower)))
+  expect_true(any(is.finite(boot$evidence$ci_upper)))
+  expect_equal(boot$ci_status$method, "bootstrap")
+  expect_equal(boot$ci_status$requested_draws, 20L)
+  expect_s3_class(plot(boot), "ggplot")
+})
+
+
+test_that("reliability CI arguments are validated", {
+  fit <- lavaan::cfa(
+    'F =~ x1 + x2 + x3',
+    data = lavaan::HolzingerSwineford1939
+  )
+  expect_error(nomo_reliability(fit, ci_level = 1), "strictly between")
+  expect_error(nomo_reliability(fit, ci_boot = 10), "at least 20")
+  expect_error(nomo_reliability(fit, ci_seed = Inf), "finite integer")
+})
+
+# ---- consolidated from test-coverage-sprint-reliability.R ----
+# Pre-v0.1 coverage sprint: reliability presentation and uncertainty ----------
+
+test_that("reliability summary table covers empty and missing-coefficient branches", {
+  run <- make_m9_report_run()
+  rel <- run$results$reliability
+
+  empty <- rel
+  empty$item_type_context <- empty$item_type_context[0, , drop = FALSE]
+  expect_equal(nrow(nomologR:::nomo_reliability_summary_table(empty)), 0L)
+
+  no_omega <- rel
+  no_omega$evidence <- no_omega$evidence[
+    no_omega$evidence$metric != "omega", , drop = FALSE
+  ]
+  out <- nomologR:::nomo_reliability_summary_table(no_omega)
+  expect_gt(nrow(out), 0L)
+  expect_true(all(is.na(out$omega)))
+  expect_true(all(out$signal == "info"))
+
+  no_alpha <- rel
+  no_alpha$evidence <- no_alpha$evidence[
+    no_alpha$evidence$metric != "alpha", , drop = FALSE
+  ]
+  out2 <- nomologR:::nomo_reliability_summary_table(no_alpha)
+  expect_gt(nrow(out2), 0L)
+  expect_true(all(is.na(out2$alpha)))
+})
+
+
+test_that("reliability summary signals and score scales cover ordered branches", {
+  run <- make_m9_report_run()
+  rel <- run$results$reliability
+
+  ordered <- rel
+  ordered$item_type_context$indicator_type[] <- "ordered"
+  ordered$ordinal_scale <- TRUE
+  ordered$evidence$attention[ordered$evidence$metric == "omega"] <- "concern"
+  out <- nomologR:::nomo_reliability_summary_table(ordered)
+  expect_true(all(out$omega_scale == "observed_ordinal"))
+  expect_true(all(out$signal == "concern"))
+
+  ordered$ordinal_scale <- FALSE
+  ordered$evidence$attention[ordered$evidence$metric == "omega"] <- "review"
+  out2 <- nomologR:::nomo_reliability_summary_table(ordered)
+  expect_true(all(out2$omega_scale == "latent_response"))
+  expect_true(all(out2$signal == "review"))
+
+  ordered$evidence$attention[ordered$evidence$metric == "omega"] <- NA_character_
+  out3 <- nomologR:::nomo_reliability_summary_table(ordered)
+  expect_true(all(out3$signal == "info"))
+})
+
+
+test_that("reliability CI formatting and plot limits cover edge branches", {
+  expect_true(is.na(
+    nomologR:::nomo_reliability_ci_string(NA_real_, .1, .2)
+  ))
+  expect_equal(
+    nomologR:::nomo_reliability_ci_string(.75, NA_real_, NA_real_),
+    "0.750"
+  )
+  expect_equal(
+    nomologR:::nomo_reliability_ci_string(.75, .60, .85),
+    "0.750 [0.600, 0.850]"
+  )
+
+  expect_equal(nomologR:::nomo_plot_x_limits(numeric()), c(0, 1))
+  expect_equal(
+    nomologR:::nomo_plot_x_limits(c(-.12, 1.08)),
+    c(-.15, 1.10)
+  )
+})
+
+
+test_that("reliability print methods cover point, bootstrap, strain, and empty branches", {
+  run <- make_m9_report_run()
+  rel <- run$results$reliability
+
+  point <- rel
+  point$ci_status$method[] <- "none"
+  txt <- paste(capture.output(print(point)), collapse = "\n")
+  expect_match(txt, "point estimates only", fixed = TRUE)
+
+  boot <- rel
+  boot$ci_status <- tibble::tibble(
+    method = "bootstrap",
+    level = .95,
+    requested_draws = 20L,
+    min_successful_draws = 15L,
+    available = TRUE,
+    seed = 42L,
+    reason = "Synthetic bootstrap qualification."
+  )
+  boot$model_strain <- TRUE
+  txt2 <- paste(capture.output(print(boot)), collapse = "\n")
+  expect_match(txt2, "percentile bootstrap CI", fixed = TRUE)
+  expect_match(txt2, "minimum successful draws", fixed = TRUE)
+  expect_match(txt2, "Bootstrap note", fixed = TRUE)
+  expect_match(txt2, "Measurement-model context", fixed = TRUE)
+
+  s <- summary(rel)
+  empty <- s
+  empty$table <- empty$table[0, , drop = FALSE]
+  empty$ci_status$method[] <- "none"
+  empty$model_strain <- TRUE
+  empty$alpha_status$requested[] <- TRUE
+  empty$alpha_status$available[] <- FALSE
+  empty$alpha_status$reason[] <- "Synthetic unavailable alpha."
+
+  txt3 <- paste(capture.output(print(empty)), collapse = "\n")
+  expect_match(txt3, "No reliability coefficients", fixed = TRUE)
+  expect_match(txt3, "Secondary alpha unavailable", fixed = TRUE)
+  expect_match(txt3, "Sampling uncertainty was not bootstrapped", fixed = TRUE)
+  expect_match(txt3, "requires review", fixed = TRUE)
+})
+
+
+test_that("reliability summary print reports bootstrap interval notation", {
+  run <- make_m9_report_run()
+  rel <- run$results$reliability
+  s <- summary(rel)
+
+  s$table$omega_ci_lower <- s$table$omega - .05
+  s$table$omega_ci_upper <- s$table$omega + .05
+
+  txt <- paste(capture.output(print(s)), collapse = "\n")
+  expect_match(txt, "Bracketed values are bootstrap confidence intervals", fixed = TRUE)
+})
+
+
+test_that("reliability plot covers errors, one-coefficient guides, CIs, and facets", {
+  run <- make_m9_report_run()
+  rel <- run$results$reliability
+
+  empty <- rel
+  empty$evidence$estimate[] <- NA_real_
+  expect_error(plot(empty), "No finite reliability coefficients")
+
+  one <- rel
+  one$evidence <- one$evidence[one$evidence$metric == "omega", , drop = FALSE]
+  one$evidence$ci_lower <- NULL
+  one$evidence$ci_upper <- NULL
+  p <- plot(one)
+  expect_s3_class(p, "ggplot")
+
+  ci <- rel
+  ci$evidence$ci_lower <- ci$evidence$estimate - .05
+  ci$evidence$ci_upper <- ci$evidence$estimate + .05
+  ci$ci_level <- .95
+  ci$evidence <- dplyr::bind_rows(
+    ci$evidence,
+    dplyr::mutate(ci$evidence, block = "second")
+  )
+  p2 <- plot(ci)
+  expect_s3_class(p2, "ggplot")
+  expect_match(p2$labels$subtitle, "bootstrap CIs", fixed = TRUE)
+  expect_true(length(p2$facet$params$facets) >= 1L)
+})
+
+
+test_that("reliability bootstrap helper returns aligned point statistics for a fitted CFA", {
+  run <- make_m9_report_run()
+  rel <- run$results$reliability
+  cfa <- run$results$cfa
+
+  fit <- cfa$fit
+  type_context <- rel$item_type_context
+  keys <- paste(
+    rel$evidence$metric,
+    rel$evidence$construct,
+    rel$evidence$block,
+    sep = "::"
+  )
+
+  stat <- nomologR:::nomo_reliability_boot_stat(
+    fit = fit,
+    expected_keys = keys,
+    construct_names = unique(rel$evidence$construct),
+    type_context = type_context,
+    obs.var = rel$obs.var,
+    ordinal_scale = rel$ordinal_scale,
+    include_alpha = rel$include_alpha
+  )
+
+  expect_equal(names(stat), keys)
+  expect_true(any(is.finite(stat)))
+})
+
+
+test_that("reliability bootstrap CI helper fails closed for an invalid fitted model", {
+  run <- make_m9_report_run()
+  rel <- run$results$reliability
+
+  fit_info <- list(
+    fit = NULL,
+    latent_names = unique(rel$evidence$construct)
+  )
+
+  ans <- nomologR:::nomo_reliability_bootstrap_ci(
+    fit_info = fit_info,
+    evidence = rel$evidence,
+    type_context = rel$item_type_context,
+    obs.var = rel$obs.var,
+    ordinal_scale = rel$ordinal_scale,
+    include_alpha = rel$include_alpha,
+    level = .95,
+    R = 20L,
+    seed = 2026L
+  )
+
+  expect_false(ans$status$available[[1L]])
+  expect_match(ans$status$reason[[1L]], "Bootstrap failed", fixed = TRUE)
+  expect_true(all(is.na(ans$intervals$ci_lower)))
+  expect_true(all(ans$intervals$n_success == 0L))
+})
+
+
+test_that("reliability print covers alpha-not-requested and no-finite-omega branches", {
+  run <- make_m9_report_run()
+  rel <- run$results$reliability
+
+  no_alpha <- rel
+  no_alpha$include_alpha <- FALSE
+  no_alpha$alpha_status$requested[] <- FALSE
+  no_alpha$alpha_status$available[] <- FALSE
+  no_alpha$evidence$estimate[no_alpha$evidence$metric == "omega"] <- NA_real_
+
+  txt <- paste(capture.output(print(no_alpha)), collapse = "\n")
+  expect_false(grepl("Omega range:", txt, fixed = TRUE))
+  expect_false(grepl("Alpha:", txt, fixed = TRUE))
+})
+
+
+test_that("reliability plot labels point-estimate subtitle without intervals", {
+  run <- make_m9_report_run()
+  rel <- run$results$reliability
+
+  rel$evidence$ci_lower <- NA_real_
+  rel$evidence$ci_upper <- NA_real_
+
+  p <- plot(rel)
+  expect_s3_class(p, "ggplot")
+  expect_match(p$labels$subtitle, "bootstrap CIs are optional", fixed = TRUE)
+})
+
+
+test_that("reliability summary table fills missing CI-success columns", {
+  run <- make_m9_report_run()
+  rel <- run$results$reliability
+
+  rel$evidence$ci_lower <- NULL
+  rel$evidence$ci_upper <- NULL
+  rel$evidence$ci_n_success <- NULL
+
+  out <- nomologR:::nomo_reliability_summary_table(rel)
+  expect_true("omega_ci_n_success" %in% names(out))
+  expect_true("alpha_ci_n_success" %in% names(out))
+  expect_true(all(is.na(out$omega_ci_n_success)))
+  expect_true(all(is.na(out$alpha_ci_n_success)))
+})

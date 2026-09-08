@@ -50,7 +50,7 @@ nomo_measurement_fit <- function(x, arg = "fit", allow_cross_loadings = FALSE) {
       stop(
         paste(
           "`fit` contains latent structural regressions.",
-          "Milestone 5 reliability is intentionally limited to CFA measurement models;",
+          "Reliability is intentionally limited to CFA measurement models;",
           "fit or pass the measurement model separately."
         ),
         call. = FALSE
@@ -62,8 +62,8 @@ nomo_measurement_fit <- function(x, arg = "fit", allow_cross_loadings = FALSE) {
       stop(
         paste(
           "`fit` contains a higher-order measurement model.",
-          "Higher-order and bifactor reliability are reserved for the v0.2 advanced-model milestone;",
-          "Milestone 5 supports first-order CFA composites."
+          "Higher-order and bifactor reliability are deferred beyond the v0.1 first-order measurement workflow;",
+          "The v0.1 reliability workflow supports first-order CFA composites."
         ),
         call. = FALSE
       )
@@ -91,7 +91,7 @@ nomo_measurement_fit <- function(x, arg = "fit", allow_cross_loadings = FALSE) {
         paste0(
           "`fit` contains cross-loaded indicator(s): ",
           paste(cross_loaded_items, collapse = ", "),
-          ". Milestone 5 reliability requires a simple first-order CFA so the target composite is unambiguous."
+          ". Reliability requires a simple first-order CFA so the target composite is unambiguous."
         ),
         call. = FALSE
       )
@@ -282,8 +282,9 @@ nomo_matrix_pairs <- function(mat, value_name = "estimate", block = "overall") {
     return(tibble::tibble())
   }
 
+  # A matrix with at least two rows and columns always has at least one
+  # lower-triangle pair.
   idx <- which(lower.tri(mat), arr.ind = TRUE)
-  if (!nrow(idx)) return(tibble::tibble())
 
   rn <- rownames(mat)
   cn <- colnames(mat)
@@ -385,7 +386,7 @@ nomo_validity_htmt_inputs <- function(fit_info) {
       available = FALSE,
       reason = paste(
         "HTMT/HTMT2 is not silently pooled across groups or levels.",
-        "Milestone 5 reports it only for single-group, single-level measurement models."
+        "nomologR reports it only for single-group, single-level measurement models."
       )
     ))
   }

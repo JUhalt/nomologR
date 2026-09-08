@@ -4,7 +4,7 @@
 [![R-CMD-check](https://github.com/JUhalt/nomologR/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/JUhalt/nomologR/actions/workflows/R-CMD-check.yaml)
 [![test-coverage](https://github.com/JUhalt/nomologR/actions/workflows/test-coverage.yaml/badge.svg)](https://github.com/JUhalt/nomologR/actions/workflows/test-coverage.yaml)
 
-**Development status: `0.1.0.9004` — Milestone 8 (`nomo_run()`)
+**Development status: `0.1.0.9005` — Milestone 8 (`nomo_run()`)
 complete; Milestone 9 (`nomo_report()`) is active; release hardening
 remains required for v0.1**
 
@@ -689,7 +689,7 @@ The v0.1 path is:
 9.  Reproducible report — `nomo_report()` **active**
 10. v0.1 release hardening and infrastructure
 
-**Milestone 8 is complete at `0.1.0.9004`.** `nomo_report()` is now the
+**Milestone 8 is complete at `0.1.0.9005`.** `nomo_report()` is now the
 only remaining required feature milestone before
 researcher-completeness, release infrastructure, and the v0.1.0
 hardening gate.

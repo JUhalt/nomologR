@@ -105,7 +105,7 @@ nomo_report_validate_file <- function(file, overwrite) {
 
   if (!grepl("\\.html?$", file, ignore.case = TRUE)) {
     stop(
-      "Milestone 9 renders HTML reports; `file` must end in `.html` or `.htm`.",
+      "nomologR currently renders HTML reports; `file` must end in `.html` or `.htm`.",
       call. = FALSE
     )
   }
@@ -124,18 +124,22 @@ nomo_report_validate_file <- function(file, overwrite) {
 }
 
 
-nomo_report_template_path <- function() {
-  installed <- system.file(
-    "rmarkdown",
-    "nomo-report.Rmd",
-    package = "nomologR"
-  )
+nomo_report_template_path <- function(
+    installed = system.file(
+      "rmarkdown",
+      "nomo-report.Rmd",
+      package = "nomologR"
+    ),
+    development = file.path(
+      "inst",
+      "rmarkdown",
+      "nomo-report.Rmd"
+    )) {
 
   if (nzchar(installed) && file.exists(installed)) {
     return(installed)
   }
 
-  development <- file.path("inst", "rmarkdown", "nomo-report.Rmd")
   if (file.exists(development)) {
     return(development)
   }
@@ -510,9 +514,13 @@ nomo_report_deviations <- function(x) {
 
   if (inherits(x$decision_log, "data.frame") && nrow(x$decision_log)) {
     dl <- x$decision_log
+    decision_revise <- if ("decision" %in% names(dl)) {
+      tolower(as.character(dl$decision)) == "revise"
+    } else {
+      rep(FALSE, nrow(dl))
+    }
     revise <- which(
-      ("decision" %in% names(dl) &
-         tolower(as.character(dl$decision)) == "revise") |
+      decision_revise |
         grepl("post|partial|deviation", dl$id, ignore.case = TRUE)
     )
 
@@ -550,24 +558,35 @@ nomo_report_deviations <- function(x) {
 }
 
 
-nomo_report_package_versions <- function() {
-  packages <- c(
-    "nomologR",
-    "psych",
-    "lavaan",
-    "semTools",
-    "EFAtools",
-    "rmarkdown",
-    "knitr"
-  )
+nomo_report_namespace_available <- function(pkg) {
+  requireNamespace(pkg, quietly = TRUE)
+}
 
+
+nomo_report_pandoc_available <- function() {
+  rmarkdown::pandoc_available()
+}
+
+
+nomo_report_package_versions <- function(
+    packages = c(
+      "nomologR",
+      "psych",
+      "lavaan",
+      "semTools",
+      "EFAtools",
+      "rmarkdown",
+      "knitr"
+    ),
+    namespace_available = nomo_report_namespace_available,
+    version_fun = utils::packageVersion) {
   tibble::tibble(
     package = packages,
     version = vapply(
       packages,
       function(pkg) {
-        if (!requireNamespace(pkg, quietly = TRUE)) return("not installed")
-        as.character(utils::packageVersion(pkg))
+        if (!isTRUE(namespace_available(pkg))) return("not installed")
+        as.character(version_fun(pkg))
       },
       character(1)
     )
@@ -592,11 +611,13 @@ nomo_report_sanitize_citation_text <- function(x) {
 }
 
 
-nomo_report_citations <- function() {
-  packages <- c("nomologR", "psych", "lavaan", "semTools", "EFAtools")
-
+nomo_report_citations <- function(
+    packages = c("nomologR", "psych", "lavaan", "semTools", "EFAtools"),
+    namespace_available = nomo_report_namespace_available,
+    citation_fun = utils::citation,
+    version_fun = utils::packageVersion) {
   rows <- lapply(packages, function(pkg) {
-    if (!requireNamespace(pkg, quietly = TRUE)) {
+    if (!isTRUE(namespace_available(pkg))) {
       return(tibble::tibble(
         package = pkg,
         installed_version = "not installed",
@@ -605,7 +626,7 @@ nomo_report_citations <- function() {
     }
 
     citation_text <- tryCatch(
-      paste(utils::capture.output(print(utils::citation(pkg))), collapse = " "),
+      paste(utils::capture.output(print(citation_fun(pkg))), collapse = " "),
       error = function(e) {
         paste0("Citation unavailable: ", conditionMessage(e))
       }
@@ -614,7 +635,7 @@ nomo_report_citations <- function() {
 
     tibble::tibble(
       package = pkg,
-      installed_version = as.character(utils::packageVersion(pkg)),
+      installed_version = as.character(version_fun(pkg)),
       citation = citation_text
     )
   })
@@ -761,21 +782,21 @@ nomo_report <- function(x,
   }
   max_table_rows <- as.integer(round(max_table_rows))
 
-  if (!requireNamespace("rmarkdown", quietly = TRUE)) {
+  if (!nomo_report_namespace_available("rmarkdown")) {
     stop(
       "Rendering a report requires the suggested package `rmarkdown`.",
       call. = FALSE
     )
   }
 
-  if (!requireNamespace("knitr", quietly = TRUE)) {
+  if (!nomo_report_namespace_available("knitr")) {
     stop(
       "Rendering a report requires the suggested package `knitr`.",
       call. = FALSE
     )
   }
 
-  if (!rmarkdown::pandoc_available()) {
+  if (!nomo_report_pandoc_available()) {
     stop(
       "Pandoc is required to render the HTML report but was not found.",
       call. = FALSE

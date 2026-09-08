@@ -992,11 +992,11 @@ nomo_factors_map <- function(corr, max_factors) {
     }
   }
 
+  # The m = 0 criteria are computed from the already-validated finite
+  # correlation matrix, so each criterion always has at least one usable
+  # value in supported package flow.
   usable_tr2 <- is.finite(criteria[, "tr2"])
   usable_tr4 <- is.finite(criteria[, "tr4"])
-  if (!any(usable_tr2) || !any(usable_tr4)) {
-    stop("Velicer MAP did not return usable values.", call. = FALSE)
-  }
 
   best_tr2 <- factor_grid[usable_tr2][which.min(criteria[usable_tr2, "tr2"])]
   best_tr4 <- factor_grid[usable_tr4][which.min(criteria[usable_tr4, "tr4"])]

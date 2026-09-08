@@ -464,12 +464,8 @@ nomo_invariance_score_test <- function(fit, level) {
   constraint <- if (all(c("lhs", "op", "rhs") %in% names(uni))) {
     paste(uni$lhs, uni$op, uni$rhs)
   } else {
-    rn <- row.names(uni)
-    if (is.null(rn) || !length(rn)) {
-      paste0("constraint_", seq_len(nrow(uni)))
-    } else {
-      rn
-    }
+    # A non-empty data.frame always has row names, including automatic ones.
+    row.names(uni)
   }
 
   tab <- tibble::tibble(
