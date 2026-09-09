@@ -791,5 +791,24 @@ test_that("full optional-branch report renders invariance and network evidence",
   expect_match(html, 'id="session-information"', fixed = TRUE)
 
   expect_false(grepl("MathJax.js", html, fixed = TRUE))
-  expect_false(grepl("%3E", html, fixed = TRUE))
+  # Self-contained HTML can contain percent-encoded characters inside
+# bundled third-party JavaScript and CSS. Strip those assets before
+# checking report-visible HTML for encoded arrows.
+report_html <- gsub(
+  "(?is)<script\\b[^>]*>.*?</script>",
+  "",
+  html,
+  perl = TRUE
+)
+
+report_html <- gsub(
+  "(?is)<style\\b[^>]*>.*?</style>",
+  "",
+  report_html,
+  perl = TRUE
+)
+
+expect_false(
+  grepl("%3E", report_html, fixed = TRUE)
+)
 })
