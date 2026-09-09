@@ -1,0 +1,166 @@
+# Theory-Specified Nomological Networks with nomologR
+
+## Why theory comes before the network
+
+`nomologR` treats nomological evidence as a test of **explicit
+theoretical predictions**, not as a search for statistically significant
+relationships.
+
+The intended sequence is:
+
+1.  establish a defensible measurement model;
+2.  specify the expected relations before inspecting the structural
+    results;
+3.  fit the full model;
+4.  compare estimates and uncertainty with the prespecified theoretical
+    region;
+5.  distinguish theory strain, imprecision, measurement problems, and
+    post-hoc exploration.
+
+## Specify theory
+
+``` r
+
+h <- nomo_hypotheses(
+  "Agency -> Persistence" = positive(min = .20),
+  "Agency <-> SocialDesirability" =
+    negligible(within = c(-.10, .10)),
+  "Agency -> Performance" = positive()
+)
+
+h
+```
+
+`A -> B` means a directed structural path. `A <-> B` means an
+association without asserting causal direction.
+
+A bare
+[`negligible()`](https://juhalt.github.io/nomologR/reference/nomo_expectations.md)
+records a theoretical expectation but does **not** supply a smallest
+effect size of interest (SESOI). `nomologR` will therefore refuse to
+treat `p > .05` as confirmation of negligibility.
+
+## Fit the latent network
+
+``` r
+
+model <- "
+  Agency =~ a1 + a2 + a3
+  Persistence =~ p1 + p2 + p3
+"
+
+net <- nomo_network(
+  model,
+  data = dat,
+  hypotheses = h
+)
+
+net
+summary(net)
+```
+
+If a theory-specified path is absent from the supplied measurement
+model,
+[`nomo_network()`](https://juhalt.github.io/nomologR/reference/nomo_network.md)
+can add it transparently. The exact fitted syntax and unchanged `lavaan`
+fit remain available in the returned object.
+
+## Read relation-level evidence
+
+``` r
+
+nomo_table(net, "hypotheses")
+```
+
+Every relation retains:
+
+- predicted direction or region;
+- estimate;
+- standard error;
+- confidence interval;
+- standardized estimate;
+- p-value where available;
+- concordance classification;
+- measurement-context flag;
+- a-priori versus post-hoc provenance.
+
+The goal is not to produce a single “validity score.”
+
+## Negligible predictions and equivalence evidence
+
+For:
+
+``` r
+
+negligible(within = c(-.10, .10))
+```
+
+the researcher has supplied a quantitative negligible-effect region.
+With the default `equivalence_alpha = .05`,
+[`nomo_network()`](https://juhalt.github.io/nomologR/reference/nomo_network.md)
+evaluates a 90% equivalence confidence interval. This is intentionally
+different from declaring a relation negligible because an ordinary
+null-hypothesis test was not significant.
+
+## Criterion and predictive evidence
+
+Observed outcomes can participate in the same network:
+
+``` r
+
+h <- nomo_hypotheses(
+  "Agency -> Performance" = positive()
+)
+```
+
+When `Performance` is an observed variable and `Agency` is latent, the
+evidence table labels the relation as a latent-to-observed outcome path.
+
+## Calibration and validation
+
+An internal split can be created explicitly:
+
+``` r
+
+s <- nomo_split(dat, validation_prop = .40, seed = 2026)
+
+net <- nomo_network(
+  model,
+  data = s,
+  hypotheses = h
+)
+```
+
+The calibration and validation subsets receive the **same prespecified
+fitted model**. `nomologR` does not respecify the validation model to
+rescue a primary sample result.
+
+External validation data can instead be supplied with
+`validation_data =`.
+
+## Figures and manuscript-ready tables
+
+``` r
+
+plot(net, "effects")
+plot(net, "concordance")
+plot(net, "fit")
+plot(net, "replication")
+
+nomo_table(net, "hypotheses")
+nomo_table(net, "measurement")
+nomo_table(net, "replication")
+```
+
+These are evidence summaries, not automated theory verdicts.
+
+## Interpretation rule
+
+A relation can be inconsistent with theory because the estimated
+relationship truly differs from the prediction. But weak measurement,
+improper solutions, poor global fit, or large uncertainty can also limit
+what the structural result can say.
+
+`nomologR` therefore keeps **measurement evidence, theory concordance,
+uncertainty, replication, and researcher provenance visible at the same
+time**.

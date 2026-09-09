@@ -1,0 +1,29 @@
+# nomologR: measurement first, theory next
+
+## Purpose
+
+`nomologR` is being developed as an evidence-guided workflow for
+empirical scale development and construct validation.
+
+The package follows a measurement-first principle: researchers should
+understand how their indicators behave before assigning substantive
+meaning to structural relations among latent constructs.
+
+## Planned workflow
+
+1.  Item and data audit.
+2.  Factor-retention evidence.
+3.  Exploratory factor analysis.
+4.  Confirmatory measurement model.
+5.  Reliability and convergent/discriminant evidence.
+6.  Measurement invariance when comparisons require it.
+7.  Theory-specified nomological network.
+8.  Reproducible decision log and report.
+
+## Interpretation philosophy
+
+`nomologR` will use familiar numerical reference values to help teach
+and organize interpretation, but those values are not automatic deletion
+criteria or declarations of validity. The package is designed to flag,
+explain, and document; consequential researcher decisions remain visible
+and theory-aware.
