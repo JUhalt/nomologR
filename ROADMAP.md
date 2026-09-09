@@ -946,11 +946,8 @@ nomo_report()
 
 ### Exit gate
 - [x] HTML report renders on CI.
-- [ ] HTML report renders on CI.
 - [x] Report is understandable without inspecting raw R objects.
-- [ ] Report is understandable without inspecting raw R objects.
 - [x] Every recommendation links to the evidence that produced it.
-- [ ] Every recommendation links to the evidence that produced it.
 
 ---
 
@@ -1001,6 +998,9 @@ under the `v0.1.0` milestone.
 ---
 
 # v0.2.x — Robustness & Broader Measurement Models
+
+**Status:** Active development  
+**Target:** `v0.2.0`
 
 Candidate modules:
 
