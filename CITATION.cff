@@ -2,7 +2,8 @@ cff-version: 1.2.0
 message: "If you use nomologR in research, please cite the software using this metadata."
 type: software
 title: "nomologR: Guided Scale Development and Construct Validation"
-version: 0.1.0.9005
+version: 0.1.0
+date-released: 2026-09-09
 authors:
   - family-names: Uhalt
     given-names: Joshua
