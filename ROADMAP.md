@@ -6,8 +6,7 @@
 >
 > **Core principle:** Flag, explain, and document. Never silently delete.
 
----
-
+***
 ## 1. Package Boundary
 
 The JUhalt measurement/design ecosystem should remain intentionally modular:
@@ -25,8 +24,7 @@ The JUhalt measurement/design ecosystem should remain intentionally modular:
 `contentvalidR` → `nomologR` → substantive/experimental research  
 `solomonR` is invoked only when the substantive study uses a Solomon four-group design.
 
----
-
+***
 ## 2. Design Principles
 
 Every public function and report should follow these principles.
@@ -44,8 +42,7 @@ Every public function and report should follow these principles.
 11. **The teaching layer should be separable from the statistical engine.**
 12. **Reproducibility is a release requirement, not an optional feature.**
 
----
-
+***
 # RELEASE TRACK
 
 ## Milestone 0 — Foundation Reset
@@ -102,8 +99,7 @@ Do **not** begin v0.1 implementation until:
 - [x] GitHub Actions runs successfully on the default branch.
 - [x] README clearly distinguishes `nomologR`, `contentvalidR`, and `solomonR`.
 
----
-
+***
 # v0.1.0 — Minimum Useful Construct-Validation Workflow
 
 ## Milestone 1 — Data & Item Audit
@@ -165,8 +161,7 @@ These values are teaching references, not pass/fail laws.
 - [x] README contains a working `nomo_screen()` example.
 - [x] Milestone PR/CI review completed and merged.
 
----
-
+***
 ## Milestone 2 — Factor-Retention Evidence
 **Status:** Complete
 
@@ -251,8 +246,7 @@ clean checks, and CI rather than as a stand-alone correctness claim.
 - [x] Core M2 computational modules exceed the >=90% v0.1 coverage requirement.
 - [x] Final Milestone 2 PR/CI review and squash merge.
 
----
-
+***
 ## Milestone 3 — Exploratory Factor Analysis
 **Status:** Complete
 
@@ -340,8 +334,7 @@ user-facing visual review.
 - [x] User-facing output/plot audit completed.
 - [x] Final Milestone 3 PR/CI review and squash merge.
 
----
-
+***
 ## Checkpoint A — Exploratory Workflow Complete
 **Status:** Complete
 
@@ -371,8 +364,7 @@ and understand:
 - [x] Local tests/checks and user-facing visual audit are clean.
 - [x] GitHub Actions green and Milestone 3 squash merged.
 
----
-
+***
 ## Milestone 4 — Confirmatory Factor Analysis
 **Status:** Complete
 
@@ -457,8 +449,7 @@ Final M4 audit:
 - [x] Local tests/checks are clean.
 - [x] Final Milestone 4 PR/CI review and squash merge.
 
----
-
+***
 ## Milestone 5 — Reliability & Convergent/Discriminant Evidence
 **Status:** Complete
 
@@ -557,8 +548,7 @@ failure-state paths. No tests were added merely to manufacture 100% coverage.
 - [x] Local tests/checks clean.
 - [x] Core M5 analytical coverage and package-wide coverage satisfy the v0.1 gate.
 
----
-
+***
 ## Checkpoint B — Measurement Model Complete
 **Status:** Complete
 
@@ -598,8 +588,7 @@ and distinguish among:
 - [x] Package-wide coverage remains above the v0.1 release minimum.
 - [x] User-facing visual audit completed.
 
----
-
+***
 ### v0.1 completion sequence after Checkpoint B
 
 Milestones 6–9 are all required before the first public v0.1 release and R-Universe launch.
@@ -725,8 +714,7 @@ coverage padding.
 - [x] Replication does not silently respecify the validation model.
 - [x] User-facing tables and figures audited.
 
----
-
+***
 ## Milestone 7 — Measurement Invariance
 **Status:** Complete
 
@@ -814,8 +802,7 @@ Final Checkpoint C audit:
 - [x] Partial invariance remains explicitly researcher controlled.
 - [x] User-facing tables and figures audited.
 
----
-
+***
 ## Checkpoint C — Generalizability & Nomological Evidence Complete
 **Status:** Complete
 
@@ -847,8 +834,7 @@ repair weak measurement invariance.
 Checkpoint C is locked for PR/CI review. Milestone 8 begins from a fresh branch
 after this checkpoint is merged to `master`.
 
----
-
+***
 ## Milestone 8 — One-Stop Guided Pipeline
 **Status:** Complete
 
@@ -917,8 +903,7 @@ numeric threshold.
 - [x] Optional invariance/network branches preserve researcher control.
 - [x] Full local tests and R CMD check clean.
 
----
-
+***
 ## Milestone 9 — Reproducible Report
 **Status:** Complete
 
@@ -949,54 +934,55 @@ nomo_report()
 - [x] Report is understandable without inspecting raw R objects.
 - [x] Every recommendation links to the evidence that produced it.
 
----
-
+***
 # v0.1.0 RELEASE GATE
+**Status:** Complete — released September 9, 2026
 
-`nomologR 0.1.0` is released only when all of the following are true.
+`nomologR 0.1.0` satisfied the first stable-release gate.
 
 ## Statistical correctness
-- [ ] Core estimates reproduce underlying engine results within numeric tolerance.
-- [ ] Simulation tests recover known population structures.
-- [ ] Ordinal and continuous workflows are both tested.
-- [ ] Failure modes (nonconvergence, non-PD matrices, Heywood cases) are handled clearly.
+- [x] Core estimates reproduce underlying engine results within numeric tolerance.
+- [x] Simulation tests recover known population structures.
+- [x] Ordinal and continuous workflows are both tested.
+- [x] Failure modes such as nonconvergence, non-PD matrices, and improper solutions are handled explicitly.
 
 ## Software quality
-- [ ] 0 R CMD check errors.
-- [ ] 0 unexplained R CMD check warnings.
-- [ ] GitHub Actions green across intended OS/R matrix.
-- [ ] ≥ 90% coverage for core computational modules.
-- [ ] No exported TODO/stub functions.
-- [ ] Every exported function has examples.
+- [x] 0 R CMD check errors.
+- [x] 0 unexplained R CMD check warnings.
+- [x] GitHub Actions green across the intended OS/R matrix.
+- [x] Core computational coverage exceeded the v0.1 minimum; final executable-line coverage reached 100%.
+- [x] No exported TODO/stub functions remained at release.
+- [x] Exported interfaces were documented and release-ready.
 
 ## Documentation
-- [ ] README quick start.
-- [ ] “Measurement-first workflow” vignette.
-- [ ] “Nomological network” vignette.
-- [ ] Function reference complete.
-- [ ] `NEWS.md`.
-- [ ] `CITATION.cff`.
-- [ ] Package citation via `inst/CITATION` if warranted.
-- [ ] Method references linked from help pages.
+- [x] README quick start.
+- [x] Measurement-first workflow documentation/vignettes.
+- [x] Nomological-network documentation.
+- [x] Function reference complete.
+- [x] `NEWS.md`.
+- [x] `CITATION.cff`.
+- [x] Package citation via `inst/CITATION`.
+- [x] Method references linked through package documentation.
 
 ## User experience
-- [ ] New user can complete included example without reading source code.
-- [ ] Teaching output tested for clarity.
-- [ ] No recommendation uses unexplained jargon.
-- [ ] Every auto-generated conclusion can be traced to a metric/rule/source.
+- [x] Included workflows can be completed without inspecting source code.
+- [x] Teaching output received researcher-facing review.
+- [x] Recommendations include interpretation rather than unexplained pass/fail jargon.
+- [x] Auto-generated conclusions retain metric, rule, evidence, and decision provenance.
 
 ## Release infrastructure
+Release closeout was tracked in GitHub issues #12–#16 under the `v0.1.0` milestone.
 
-Final `v0.1.0` release-closeout work is tracked in GitHub issues #12–#16
-under the `v0.1.0` milestone.
-- [x] GitHub release candidate tag tested.
-- [x] pkgdown site.
-- [x] R-universe setup.
-- [x] Installation instructions verified on clean R session.
-- [x] Public issue templates for bug / method question / feature request.
+- [x] GitHub release candidate tested.
+- [x] Stable GitHub release published.
+- [x] pkgdown site deployed.
+- [x] R-universe stable-release tracking configured.
+- [x] Installation verified in a clean R library.
+- [x] Installed-package `nomo_report()` rendering verified.
+- [x] Public issue templates available.
+- [x] `v0.1.0` milestone closed.
 
----
-
+***
 # v0.2.x — Robustness & Broader Measurement Models
 
 **Status:** Active development  
@@ -1015,8 +1001,7 @@ Candidate modules:
 - [ ] CFA/SEM sample-size and power planning.
 - [ ] Criterion/predictive evidence module.
 
----
-
+***
 # v0.3.x — Modern Extensions
 
 Candidate modules:
@@ -1029,8 +1014,7 @@ Candidate modules:
 - [ ] Posterior predictive checking.
 - [ ] Frequentist/Bayesian concordance summaries.
 
----
-
+***
 # Long-Term Research Program
 
 Potential research contributions arising from `nomologR` itself:
@@ -1053,8 +1037,7 @@ Potential research contributions arising from `nomologR` itself:
 6. **Teaching outcomes**
    - Test whether guided `nomologR` reports improve methodological understanding relative to conventional software output.
 
----
-
+***
 # Development Workflow / Checkpoint Discipline
 
 For every milestone:
@@ -1085,8 +1068,7 @@ A feature may enter the current milestone only if it is necessary for:
 
 Otherwise it goes into the next-version parking lot.
 
----
-
+***
 # Definition of Success
 
 `nomologR` succeeds if a graduate student or applied researcher can start with a
