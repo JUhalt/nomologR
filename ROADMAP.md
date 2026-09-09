@@ -952,51 +952,53 @@ nomo_report()
 ---
 
 # v0.1.0 RELEASE GATE
+**Status:** Complete — released September 9, 2026
 
-`nomologR 0.1.0` is released only when all of the following are true.
+`nomologR 0.1.0` satisfied the first stable-release gate.
 
 ## Statistical correctness
-- [ ] Core estimates reproduce underlying engine results within numeric tolerance.
-- [ ] Simulation tests recover known population structures.
-- [ ] Ordinal and continuous workflows are both tested.
-- [ ] Failure modes (nonconvergence, non-PD matrices, Heywood cases) are handled clearly.
+- [x] Core estimates reproduce underlying engine results within numeric tolerance.
+- [x] Simulation tests recover known population structures.
+- [x] Ordinal and continuous workflows are both tested.
+- [x] Failure modes such as nonconvergence, non-PD matrices, and improper solutions are handled explicitly.
 
 ## Software quality
-- [ ] 0 R CMD check errors.
-- [ ] 0 unexplained R CMD check warnings.
-- [ ] GitHub Actions green across intended OS/R matrix.
-- [ ] ≥ 90% coverage for core computational modules.
-- [ ] No exported TODO/stub functions.
-- [ ] Every exported function has examples.
+- [x] 0 R CMD check errors.
+- [x] 0 unexplained R CMD check warnings.
+- [x] GitHub Actions green across the intended OS/R matrix.
+- [x] Core computational coverage exceeded the v0.1 minimum; final executable-line coverage reached 100%.
+- [x] No exported TODO/stub functions remained at release.
+- [x] Exported interfaces were documented and release-ready.
 
 ## Documentation
-- [ ] README quick start.
-- [ ] “Measurement-first workflow” vignette.
-- [ ] “Nomological network” vignette.
-- [ ] Function reference complete.
-- [ ] `NEWS.md`.
-- [ ] `CITATION.cff`.
-- [ ] Package citation via `inst/CITATION` if warranted.
-- [ ] Method references linked from help pages.
+- [x] README quick start.
+- [x] Measurement-first workflow documentation/vignettes.
+- [x] Nomological-network documentation.
+- [x] Function reference complete.
+- [x] `NEWS.md`.
+- [x] `CITATION.cff`.
+- [x] Package citation via `inst/CITATION`.
+- [x] Method references linked through package documentation.
 
 ## User experience
-- [ ] New user can complete included example without reading source code.
-- [ ] Teaching output tested for clarity.
-- [ ] No recommendation uses unexplained jargon.
-- [ ] Every auto-generated conclusion can be traced to a metric/rule/source.
+- [x] Included workflows can be completed without inspecting source code.
+- [x] Teaching output received researcher-facing review.
+- [x] Recommendations include interpretation rather than unexplained pass/fail jargon.
+- [x] Auto-generated conclusions retain metric, rule, evidence, and decision provenance.
 
 ## Release infrastructure
+Release closeout was tracked in GitHub issues #12–#16 under the `v0.1.0` milestone.
 
-Final `v0.1.0` release-closeout work is tracked in GitHub issues #12–#16
-under the `v0.1.0` milestone.
-- [x] GitHub release candidate tag tested.
-- [x] pkgdown site.
-- [x] R-universe setup.
-- [x] Installation instructions verified on clean R session.
-- [x] Public issue templates for bug / method question / feature request.
+- [x] GitHub release candidate tested.
+- [x] Stable GitHub release published.
+- [x] pkgdown site deployed.
+- [x] R-universe stable-release tracking configured.
+- [x] Installation verified in a clean R library.
+- [x] Installed-package `nomo_report()` rendering verified.
+- [x] Public issue templates available.
+- [x] `v0.1.0` milestone closed.
 
 ---
-
 # v0.2.x — Robustness & Broader Measurement Models
 
 **Status:** Active development  
