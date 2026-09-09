@@ -1349,13 +1349,7 @@ nomo_report()
 
 HTML report renders on CI.
 
-HTML report renders on CI.
-
 Report is understandable without inspecting raw R objects.
-
-Report is understandable without inspecting raw R objects.
-
-Every recommendation links to the evidence that produced it.
 
 Every recommendation links to the evidence that produced it.
 
@@ -1430,6 +1424,9 @@ issue templates for bug / method question / feature request.
 ------------------------------------------------------------------------
 
 # v0.2.x — Robustness & Broader Measurement Models
+
+**Status:** Active development  
+**Target:** `v0.2.0`
 
 Candidate modules:
 

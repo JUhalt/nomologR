@@ -1,6 +1,11 @@
 # Changelog
 
-## nomologR 0.1.0
+## nomologR 0.1.0.9000
+
+### Post-v0.1 development
+
+- Opened development toward `v0.2.0`.
+- `v0.1.0` remains the current stable public release. \# nomologR 0.1.0
 
 ### First stable public release
 

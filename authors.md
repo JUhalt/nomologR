@@ -7,7 +7,7 @@
 ## Citation
 
 Source:
-[`inst/CITATION`](https://github.com/JUhalt/nomologR/blob/v0.1.0/inst/CITATION)
+[`inst/CITATION`](https://github.com/JUhalt/nomologR/blob/master/inst/CITATION)
 
 Uhalt J (2026). *nomologR: Guided Scale Development and Construct
 Validation*. R package version 0.1.0.9004,
