@@ -1423,7 +1423,7 @@ Every auto-generated conclusion can be traced to a metric/rule/source.
 
 Final `v0.1.0` release-closeout work is tracked in GitHub issues
 \#12–#16 under the `v0.1.0` milestone. - \[x\] GitHub release candidate
-tag tested. - \[ \] pkgdown site. - \[x\] R-universe setup. - \[ \]
+tag tested. - \[x\] pkgdown site. - \[x\] R-universe setup. - \[x\]
 Installation instructions verified on clean R session. - \[x\] Public
 issue templates for bug / method question / feature request.
 

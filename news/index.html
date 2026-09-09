@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">nomologR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9005</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -43,15 +43,21 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="0.1.0.9005" id="nomologr-0109005">nomologR 0.1.0.9005<a class="anchor" aria-label="anchor" href="#nomologr-0109005"></a></h2>
+<h2 class="pkg-version" data-toc-text="0.1.0" id="nomologr-010">nomologR 0.1.0<a class="anchor" aria-label="anchor" href="#nomologr-010"></a></h2>
 <div class="section level3">
-<h3 id="milestone-closeout--reproducible-reporting-and-pre-v01-hardening-0-1-0-9005">Milestone 9 closeout — reproducible reporting and pre-v0.1 hardening<a class="anchor" aria-label="anchor" href="#milestone-closeout--reproducible-reporting-and-pre-v01-hardening-0-1-0-9005"></a></h3>
+<h3 id="first-stable-public-release-0-1-0">First stable public release<a class="anchor" aria-label="anchor" href="#first-stable-public-release-0-1-0"></a></h3>
+<ul><li>First stable public release of the guided empirical scale-development and construct-validation workflow.</li>
+<li>Includes the complete v0.1 workflow from item screening through reproducible reporting.</li>
+<li>Release certification includes a clean test suite, R CMD check, coverage audit, installed-package smoke test, and public pkgdown documentation.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="milestone-closeout--reproducible-reporting-and-v01-release-hardening-0-1-0">Milestone 9 closeout — reproducible reporting and v0.1 release hardening<a class="anchor" aria-label="anchor" href="#milestone-closeout--reproducible-reporting-and-v01-release-hardening-0-1-0"></a></h3>
 <ul><li><p>Completed <code><a href="../reference/nomo_report.html">nomo_report()</a></code> as the archival reporting layer for guided <code><a href="../reference/nomo_run.html">nomo_run()</a></code> workflows.</p></li>
 <li><p>Added self-contained HTML reporting across item screening, factor retention, EFA, CFA, reliability, convergent/discriminant evidence, invariance, and theory-specified nomological networks.</p></li>
 <li><p>Added researcher inputs, data characteristics, decision provenance, deviations/post-hoc decisions, methods/citations, reproducibility information, and a full evidence trace linking recommendations back to their source evidence.</p></li>
 <li><p>Added report-render regression tests covering the core workflow and optional invariance/network branches.</p></li>
 <li><p>Completed pre-v0.1 engineering hardening with the full test suite passing, R CMD check at 0 errors / 0 warnings / 0 notes, executable-line coverage at 100%, and an empty <code><a href="http://covr.r-lib.org/reference/zero_coverage.html" class="external-link">covr::zero_coverage()</a></code> result.</p></li>
-<li><p>Published the <code>v0.1.0.9005</code> pre-release as the engineering-complete candidate for final public-release review. ## Milestone 8 closeout â€” guided workflow and decision provenance</p></li>
+<li><p>Finalized <code>v0.1.0</code> as the first stable public release after release-readiness review and certification. ## Milestone 8 closeout — guided workflow and decision provenance</p></li>
 <li><p>Replaced the <code><a href="../reference/nomo_run.html">nomo_run()</a></code> development stub with a resumable guided workflow spanning screening, factor-retention evidence, EFA, CFA, reliability, convergent/discriminant evidence, optional invariance, and optional theory-specified nomological-network analysis.</p></li>
 <li><p>Added explicit researcher handoffs for EFA factor count, CFA model specification, and downstream continuation after measurement evidence.</p></li>
 <li><p>Preserved completed component results across resume calls; future-stage settings can be added without silently recomputing completed work.</p></li>
@@ -63,19 +69,19 @@
 <li><p>Milestone 8 is complete. Milestone 9 was subsequently completed in this development version; see the closeout above.</p></li>
 </ul></div>
 <div class="section level3">
-<h3 id="milestonesâ7-closeout-â-theory-specified-networks-invariance-and-checkpoint-c-0-1-0-9005">Milestones 6â€“7 closeout â€” theory-specified networks, invariance, and Checkpoint C<a class="anchor" aria-label="anchor" href="#milestones%C3%A27-closeout-%C3%A2-theory-specified-networks-invariance-and-checkpoint-c-0-1-0-9005"></a></h3>
+<h3 id="milestones-closeout--theory-specified-networks-invariance-and-checkpoint-c-0-1-0">Milestones 6–7 closeout — theory-specified networks, invariance, and Checkpoint C<a class="anchor" aria-label="anchor" href="#milestones-closeout--theory-specified-networks-invariance-and-checkpoint-c-0-1-0"></a></h3>
 <ul><li>Added <code><a href="../reference/nomo_expectations.html">positive()</a></code>, <code><a href="../reference/nomo_expectations.html">negative()</a></code>, and <code><a href="../reference/nomo_expectations.html">negligible()</a></code> expectation helpers plus <code><a href="../reference/nomo_hypotheses.html">nomo_hypotheses()</a></code> for machine-readable a-priori and post-hoc theory specifications. Quantified negligible predictions use researcher-specified SESOI/equivalence regions; bare negligible predictions remain qualitative and are never confirmed merely because <code>p &gt; .05</code>.</li>
 <li>Added <code><a href="../reference/nomo_network.html">nomo_network()</a></code> for theory-specified latent SEM with transparent addition of missing prespecified theory paths, observed external criteria/outcomes, standardized or explicitly unstandardized hypothesis evaluation, measurement-context propagation, and calibration/validation replication of the exact same prespecified fitted model.</li>
 <li>Kept theory concordance, uncertainty, measurement quality, confirmatory status, and replication as distinct evidence streams rather than collapsing them into a single validity score.</li>
 <li>Added <code><a href="../reference/nomo_invariance.html">nomo_invariance()</a></code> using current <code><a href="https://rdrr.io/pkg/semTools/man/measEq.syntax.html" class="external-link">semTools::measEq.syntax()</a></code> and <code>lavaan</code> infrastructure with identification-aware sequences for continuous, ordered 4+ category, three-category, and binary indicators.</li>
 <li>Added diagnostic-only localized equality-constraint score tests and <code><a href="../reference/nomo_partial.html">nomo_partial()</a></code> for explicitly researcher-specified partial-invariance releases with required rationale and cumulative provenance. The package never searches until it finds a partial-invariance model that passes.</li>
 <li>Added <code><a href="../reference/nomo_table.html">nomo_table()</a></code> methods plus researcher-facing network and invariance figures, including theory-compatible regions, replication comparison, fit/change evidence, and human-readable localized equality constraints.</li>
-<li>Added the <strong>â€œNomological networkâ€</strong> and <strong>â€œMeasurement invarianceâ€</strong> vignettes plus truth simulations, edge/failure hardening, and presentation regression tests.</li>
+<li>Added the <strong>“Nomological network”</strong> and <strong>“Measurement invariance”</strong> vignettes plus truth simulations, edge/failure hardening, and presentation regression tests.</li>
 <li>Final Checkpoint C coverage audit reached <strong>94.19% package-wide</strong>. Core M6/M7 modules: <code>R/nomo_hypotheses.R</code> 94.33%, <code>R/nomo_network.R</code> 89.95%, <code>R/nomo_network_presentation.R</code> 91.49%, <code>R/nomo_invariance.R</code> 92.04%, <code>R/nomo_invariance_presentation.R</code> 93.27%, <code>R/nomo_partial.R</code> 90.57%, and <code>R/nomo_table.R</code> 100.00%.</li>
 <li>Advanced the development version to <code>0.1.0.9003</code>, marking <strong>Checkpoint C: Generalizability and Nomological Evidence Complete</strong>. Milestone 8, <code><a href="../reference/nomo_run.html">nomo_run()</a></code>, is the next active development target.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="milestone-closeout-â-reliability-convergentdiscriminant-evidence-and-checkpoint-b-0-1-0-9005">Milestone 5 closeout â€” reliability, convergent/discriminant evidence, and Checkpoint B<a class="anchor" aria-label="anchor" href="#milestone-closeout-%C3%A2-reliability-convergentdiscriminant-evidence-and-checkpoint-b-0-1-0-9005"></a></h3>
+<h3 id="milestone-closeout--reliability-convergentdiscriminant-evidence-and-checkpoint-b-0-1-0">Milestone 5 closeout — reliability, convergent/discriminant evidence, and Checkpoint B<a class="anchor" aria-label="anchor" href="#milestone-closeout--reliability-convergentdiscriminant-evidence-and-checkpoint-b-0-1-0"></a></h3>
 <ul><li>Replaced the <code><a href="../reference/nomo_reliability.html">nomo_reliability()</a></code> development stub with a model-based reliability workflow using current <code><a href="https://rdrr.io/pkg/semTools/man/compRelSEM.html" class="external-link">semTools::compRelSEM()</a></code> infrastructure.</li>
 <li>Made omega/composite reliability the primary coefficient for the general congeneric CFA workflow while retaining coefficient alpha as an explicitly qualified secondary statistic.</li>
 <li>Added ordered-indicator reliability guidance that distinguishes observed ordinal-score reliability from latent-response-scale coefficients and refuses to silently substitute a different alpha estimand.</li>
@@ -86,13 +92,13 @@
 <li>Added explicit guards for ambiguous or unsupported simple-structure reliability/validity estimands, including mixed ordered/continuous composites, cross-loaded first-order structures, and silent multi-group/multilevel HTMT pooling.</li>
 <li>Added compact <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>/<code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> methods and nonredundant reliability, AVE, and construct-separation plots. Coefficient plots use the conceptual 0-to-1 scale by default and expand only when empirical estimates or intervals require it.</li>
 <li>User-facing audits confirmed two key teaching cases: excellent global CFA fit can coexist with weak reliability/AVE, and strong reliability/AVE can coexist with poor construct separation.</li>
-<li>Added the Checkpoint B vignette, <strong>â€œFrom CFA to a defensible measurement model,â€</strong> integrating CFA, reliability, convergent evidence, discriminant evidence, uncertainty, and decision guidance.</li>
+<li>Added the Checkpoint B vignette, <strong>“From CFA to a defensible measurement model,”</strong> integrating CFA, reliability, convergent evidence, discriminant evidence, uncertainty, and decision guidance.</li>
 <li>Added direct regression tests against <code><a href="https://rdrr.io/pkg/semTools/man/compRelSEM.html" class="external-link">semTools::compRelSEM()</a></code>, <code><a href="https://rdrr.io/pkg/semTools/man/AVE.html" class="external-link">semTools::AVE()</a></code>, and <code><a href="https://rdrr.io/pkg/semTools/man/htmt.html" class="external-link">semTools::htmt()</a></code>, plus ordinal, redundant-construct, weak-measurement, bootstrap-uncertainty, failure-disclosure, and presentation hardening tests.</li>
 <li>Final M5 coverage audit reached <strong>95.13% package-wide</strong>. Key M5 modules: <code>R/nomo_reliability.R</code> 90.26%, <code>R/nomo_validity.R</code> 92.56%, <code>R/nomo_measurement_helpers.R</code> 92.70%, <code>R/nomo_reliability_uncertainty.R</code> 89.33%, <code>R/nomo_reliability_presentation.R</code> 88.93%, and <code>R/nomo_validity_presentation.R</code> 81.20%. Coverage hardening targeted consequential branches rather than artificial 100% execution of low-value presentation/failure paths.</li>
 <li>Advanced the development version to <code>0.1.0.9002</code>, marking <strong>Checkpoint B: Measurement Model Complete</strong>. Milestone 6, theory-specified nomological networks, is next.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="milestone-closeout-â-confirmatory-factor-analysis-0-1-0-9005">Milestone 4 closeout â€” confirmatory factor analysis<a class="anchor" aria-label="anchor" href="#milestone-closeout-%C3%A2-confirmatory-factor-analysis-0-1-0-9005"></a></h3>
+<h3 id="milestone-closeout--confirmatory-factor-analysis-0-1-0">Milestone 4 closeout — confirmatory factor analysis<a class="anchor" aria-label="anchor" href="#milestone-closeout--confirmatory-factor-analysis-0-1-0"></a></h3>
 <ul><li>Replaced the <code><a href="../reference/nomo_cfa.html">nomo_cfa()</a></code> development stub with a production CFA workflow around <code><a href="https://rdrr.io/pkg/lavaan/man/cfa.html" class="external-link">lavaan::cfa()</a></code> while retaining the underlying lavaan fit unchanged.</li>
 <li>Added <code><a href="../reference/nomo_model.html">nomo_model()</a></code> for simple reflective CFA syntax generation without automatically adding cross-loadings, residual covariances, or other post-hoc parameters.</li>
 <li>Added explicit estimator provenance and guidance for continuous ML, researcher-selected robust ML estimators such as MLR, and declared ordered-indicator WLSMV workflows.</li>
@@ -108,7 +114,7 @@
 <li>Local tests/checks and GitHub Actions passed; the Milestone 4 PR was squash merged before Milestone 5 development began.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="milestone-closeout-â-exploratory-factor-analysis-and-checkpoint-a-0-1-0-9005">Milestone 3 closeout â€” exploratory factor analysis and Checkpoint A<a class="anchor" aria-label="anchor" href="#milestone-closeout-%C3%A2-exploratory-factor-analysis-and-checkpoint-a-0-1-0-9005"></a></h3>
+<h3 id="milestone-closeout--exploratory-factor-analysis-and-checkpoint-a-0-1-0">Milestone 3 closeout — exploratory factor analysis and Checkpoint A<a class="anchor" aria-label="anchor" href="#milestone-closeout--exploratory-factor-analysis-and-checkpoint-a-0-1-0"></a></h3>
 <ul><li>Replaced the <code><a href="../reference/nomo_efa.html">nomo_efa()</a></code> development stub with a production common-factor EFA workflow using <code><a href="https://rdrr.io/pkg/psych/man/fa.html" class="external-link">psych::fa()</a></code> as the statistical engine and <code>nomologR</code> as the guidance, diagnostics, logging, and presentation layer.</li>
 <li>Added researcher-controlled factor counts and direct handoff from <code><a href="../reference/nomo_factors.html">nomo_factors()</a></code>, including inherited item sets, modeling types, correlation models, missing-data decisions, and explicit smoothing choices.</li>
 <li>Preserved M2 retention ambiguity in the EFA decision log so a handoff is not misrepresented as proof of dimensionality.</li>
@@ -120,12 +126,12 @@
 <li>Added <code><a href="../reference/summary.nomo_efa.html">summary.nomo_efa()</a></code> and four teaching-oriented plot views for pattern loadings, primary/secondary loadings, unique residual pairs, and unique interfactor correlations.</li>
 <li>Corrected modeling-decision provenance so types inherited from a <code><a href="../reference/nomo_factors.html">nomo_factors()</a></code> object are distinguished from new researcher overrides made at the EFA stage.</li>
 <li>Added known-structure, cross-loading, weak-item, ordinal, redundancy, missingness, orthogonal-rotation, smoothing, validation, handoff, provenance, presentation, and failure-mode regression tests.</li>
-<li>Added the Checkpoint A vignette, <strong>â€œFrom item audit to exploratory structure,â€</strong> demonstrating <code><a href="../reference/nomo_screen.html">nomo_screen()</a></code> -&gt; <code><a href="../reference/nomo_factors.html">nomo_factors()</a></code> -&gt; <code><a href="../reference/nomo_efa.html">nomo_efa()</a></code>.</li>
+<li>Added the Checkpoint A vignette, <strong>“From item audit to exploratory structure,”</strong> demonstrating <code><a href="../reference/nomo_screen.html">nomo_screen()</a></code> -&gt; <code><a href="../reference/nomo_factors.html">nomo_factors()</a></code> -&gt; <code><a href="../reference/nomo_efa.html">nomo_efa()</a></code>.</li>
 <li>Milestone 3 coverage closeout reached 97.78% for <code>R/nomo_efa.R</code>, 98.70% for <code>R/nomo_efa_presentation.R</code>, and 96.52% package-wide in the final pre-closeout audit.</li>
 <li>Advanced the development version to <code>0.1.0.9001</code>, marking Checkpoint A: the exploratory measurement workflow is complete and Milestone 4 (CFA) is next.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="milestone-closeout-â-researcher-control-and-hardening-0-1-0-9005">Milestone 2 closeout â€” researcher control and hardening<a class="anchor" aria-label="anchor" href="#milestone-closeout-%C3%A2-researcher-control-and-hardening-0-1-0-9005"></a></h3>
+<h3 id="milestone-closeout--researcher-control-and-hardening-0-1-0">Milestone 2 closeout — researcher control and hardening<a class="anchor" aria-label="anchor" href="#milestone-closeout--researcher-control-and-hardening-0-1-0"></a></h3>
 <ul><li>Changed modeling-type override precedence so an explicit, valid <code>types</code> declaration can rescue otherwise ambiguous storage before default-type rejection, while storage-compatibility checks still block unsafe coercions.</li>
 <li>Added decision-log entries for researcher-specified modeling-type overrides.</li>
 <li>Improved error ordering so constant and all-missing items are diagnosed as hard data failures before modeling-type inference.</li>
@@ -134,7 +140,7 @@
 <li>Milestone 2 core computational files exceed the v0.1 &gt;=90% coverage gate; presentation coverage reached 100% in the closeout audit.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="milestoneb-â-retention-triangulation-and-sensitivity-0-1-0-9005">Milestone 2B â€” retention triangulation and sensitivity<a class="anchor" aria-label="anchor" href="#milestoneb-%C3%A2-retention-triangulation-and-sensitivity-0-1-0-9005"></a></h3>
+<h3 id="milestoneb--retention-triangulation-and-sensitivity-0-1-0">Milestone 2B — retention triangulation and sensitivity<a class="anchor" aria-label="anchor" href="#milestoneb--retention-triangulation-and-sensitivity-0-1-0"></a></h3>
 <ul><li>Refined concordance to group closely related methods into criterion families, so original/revised MAP variants do not behave like independent votes. Internally split families remain explicit and are not forced into one bar.</li>
 <li>Added convenient <code>correlation</code> and <code>modeling_types</code> fields alongside the existing internal-detail names for easier inspection of automatic choices.</li>
 <li>Surface EKC’s non-Pearson approximation directly in criterion status and summary output rather than leaving that qualification only in the decision log.</li>
@@ -150,7 +156,7 @@
 <li>Added <code>EFAtools (&gt;= 0.8.0)</code> as the runtime engine for modern optional retention criteria while preserving <code>nomologR</code>’s interpretation and decision-log layer.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="milestonea-â-factor-retention-evidence-0-1-0-9005">Milestone 2A â€” factor-retention evidence<a class="anchor" aria-label="anchor" href="#milestonea-%C3%A2-factor-retention-evidence-0-1-0-9005"></a></h3>
+<h3 id="milestonea--factor-retention-evidence-0-1-0">Milestone 2A — factor-retention evidence<a class="anchor" aria-label="anchor" href="#milestonea--factor-retention-evidence-0-1-0"></a></h3>
 <ul><li>Replaced the <code><a href="../reference/nomo_factors.html">nomo_factors()</a></code> development stub with a production factor-retention engine.</li>
 <li>Added explicit correlation-model selection for Pearson, polychoric, tetrachoric, and mixed indicator sets, with conservative handling of numeric-discrete items and user overrides for intended measurement level.</li>
 <li>Added reproducible common-factor parallel analysis using independently permuted null data and a configurable null-eigenvalue quantile.</li>
@@ -161,7 +167,7 @@
 <li>Promoted <code>psych</code> to a runtime dependency because factor-retention methods now use its established factor/correlation engines directly.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="milestonec-â-integrated-review-and-visualization-0-1-0-9005">Milestone 1C â€” integrated review and visualization<a class="anchor" aria-label="anchor" href="#milestonec-%C3%A2-integrated-review-and-visualization-0-1-0-9005"></a></h3>
+<h3 id="milestonec--integrated-review-and-visualization-0-1-0">Milestone 1C — integrated review and visualization<a class="anchor" aria-label="anchor" href="#milestonec--integrated-review-and-visualization-0-1-0"></a></h3>
 <ul><li>Added <code><a href="../reference/summary.nomo_screen.html">summary.nomo_screen()</a></code> with an integrated item-review table that combines descriptive, relationship, response-category, and decision-log evidence.</li>
 <li>Added <code><a href="../reference/plot.nomo_screen.html">plot.nomo_screen()</a></code> with evidence-map, item-rest, inter-item, response-profile, and missingness views.</li>
 <li>Added explicit visibility for declared-but-unused ordered response categories without silently collapsing or recoding them.</li>
@@ -169,7 +175,7 @@
 <li>Added <code>ggplot2</code> as a core visualization dependency and expanded regression tests for presentation behavior.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="milestoneb-â-psychometric-screening-0-1-0-9005">Milestone 1B â€” psychometric screening<a class="anchor" aria-label="anchor" href="#milestoneb-%C3%A2-psychometric-screening-0-1-0-9005"></a></h3>
+<h3 id="milestoneb--psychometric-screening-0-1-0">Milestone 1B — psychometric screening<a class="anchor" aria-label="anchor" href="#milestoneb--psychometric-screening-0-1-0"></a></h3>
 <ul><li>Added corrected item-rest and inter-item relationship diagnostics for explicitly scored numeric/logical candidate items.</li>
 <li>Added review guidance for negative and weak item-rest relationships without automatic reverse-scoring or deletion.</li>
 <li>Added configurable response-concentration and near-zero-variance screening.</li>
@@ -180,7 +186,7 @@
 <li>Added a GitHub issue form for roadmap-milestone tracking.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="milestone-â-itemdata-screening-0-1-0-9005">Milestone 1 â€” item/data screening<a class="anchor" aria-label="anchor" href="#milestone-%C3%A2-itemdata-screening-0-1-0-9005"></a></h3>
+<h3 id="milestone--itemdata-screening-0-1-0">Milestone 1 — item/data screening<a class="anchor" aria-label="anchor" href="#milestone--itemdata-screening-0-1-0"></a></h3>
 <ul><li>Implemented the first production slice of <code><a href="../reference/nomo_screen.html">nomo_screen()</a></code>.</li>
 <li>Added conservative item-type descriptions, item-level missingness and response summaries, response distributions, case-level completeness diagnostics, and explicit zero-variance/all-missing flags.</li>
 <li>Added an evidence-guided decision log for screening observations without automatically deleting items or cases.</li>
@@ -189,7 +195,7 @@
 <li>Updated GitHub Actions checkout steps to <code>actions/checkout@v5</code> for the Node 24 runtime.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="foundation-milestone-0-1-0-9005">Foundation milestone<a class="anchor" aria-label="anchor" href="#foundation-milestone-0-1-0-9005"></a></h3>
+<h3 id="foundation-milestone-0-1-0">Foundation milestone<a class="anchor" aria-label="anchor" href="#foundation-milestone-0-1-0"></a></h3>
 <ul><li>Defined <code>nomologR</code> as a guided workflow for empirical scale development and construct-validity evidence rather than a replacement for <code>psych</code>, <code>lavaan</code>, or <code>semTools</code>.</li>
 <li>Clarified the package boundary relative to <code>contentvalidR</code> and <code>solomonR</code>.</li>
 <li>Standardized package naming and the planned public API on the <code>nomo_*</code> prefix.</li>

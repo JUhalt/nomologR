@@ -1,8 +1,18 @@
 # Changelog
 
-## nomologR 0.1.0.9005
+## nomologR 0.1.0
 
-### Milestone 9 closeout — reproducible reporting and pre-v0.1 hardening
+### First stable public release
+
+- First stable public release of the guided empirical scale-development
+  and construct-validation workflow.
+- Includes the complete v0.1 workflow from item screening through
+  reproducible reporting.
+- Release certification includes a clean test suite, R CMD check,
+  coverage audit, installed-package smoke test, and public pkgdown
+  documentation.
+
+### Milestone 9 closeout — reproducible reporting and v0.1 release hardening
 
 - Completed
   [`nomo_report()`](https://juhalt.github.io/nomologR/reference/nomo_report.md)
@@ -28,9 +38,9 @@
   [`covr::zero_coverage()`](http://covr.r-lib.org/reference/zero_coverage.md)
   result.
 
-- Published the `v0.1.0.9005` pre-release as the engineering-complete
-  candidate for final public-release review. \## Milestone 8 closeout
-  â€” guided workflow and decision provenance
+- Finalized `v0.1.0` as the first stable public release after
+  release-readiness review and certification. \## Milestone 8 closeout —
+  guided workflow and decision provenance
 
 - Replaced the
   [`nomo_run()`](https://juhalt.github.io/nomologR/reference/nomo_run.md)
@@ -65,7 +75,7 @@
 - Milestone 8 is complete. Milestone 9 was subsequently completed in
   this development version; see the closeout above.
 
-### Milestones 6â€“7 closeout â€” theory-specified networks, invariance, and Checkpoint C
+### Milestones 6–7 closeout — theory-specified networks, invariance, and Checkpoint C
 
 - Added
   [`positive()`](https://juhalt.github.io/nomologR/reference/nomo_expectations.md),
@@ -106,9 +116,9 @@
   including theory-compatible regions, replication comparison,
   fit/change evidence, and human-readable localized equality
   constraints.
-- Added the **â€œNomological networkâ€?** and **â€œMeasurement
-  invarianceâ€?** vignettes plus truth simulations, edge/failure
-  hardening, and presentation regression tests.
+- Added the **“Nomological network”** and **“Measurement invariance”**
+  vignettes plus truth simulations, edge/failure hardening, and
+  presentation regression tests.
 - Final Checkpoint C coverage audit reached **94.19% package-wide**.
   Core M6/M7 modules: `R/nomo_hypotheses.R` 94.33%, `R/nomo_network.R`
   89.95%, `R/nomo_network_presentation.R` 91.49%, `R/nomo_invariance.R`
@@ -119,7 +129,7 @@
   [`nomo_run()`](https://juhalt.github.io/nomologR/reference/nomo_run.md),
   is the next active development target.
 
-### Milestone 5 closeout â€” reliability, convergent/discriminant evidence, and Checkpoint B
+### Milestone 5 closeout — reliability, convergent/discriminant evidence, and Checkpoint B
 
 - Replaced the
   [`nomo_reliability()`](https://juhalt.github.io/nomologR/reference/nomo_reliability.md)
@@ -158,8 +168,8 @@
 - User-facing audits confirmed two key teaching cases: excellent global
   CFA fit can coexist with weak reliability/AVE, and strong
   reliability/AVE can coexist with poor construct separation.
-- Added the Checkpoint B vignette, **â€œFrom CFA to a defensible
-  measurement model,â€?** integrating CFA, reliability, convergent
+- Added the Checkpoint B vignette, **“From CFA to a defensible
+  measurement model,”** integrating CFA, reliability, convergent
   evidence, discriminant evidence, uncertainty, and decision guidance.
 - Added direct regression tests against
   [`semTools::compRelSEM()`](https://rdrr.io/pkg/semTools/man/compRelSEM.html),
@@ -179,7 +189,7 @@
   B: Measurement Model Complete**. Milestone 6, theory-specified
   nomological networks, is next.
 
-### Milestone 4 closeout â€” confirmatory factor analysis
+### Milestone 4 closeout — confirmatory factor analysis
 
 - Replaced the
   [`nomo_cfa()`](https://juhalt.github.io/nomologR/reference/nomo_cfa.md)
@@ -228,7 +238,7 @@
 - Local tests/checks and GitHub Actions passed; the Milestone 4 PR was
   squash merged before Milestone 5 development began.
 
-### Milestone 3 closeout â€” exploratory factor analysis and Checkpoint A
+### Milestone 3 closeout — exploratory factor analysis and Checkpoint A
 
 - Replaced the
   [`nomo_efa()`](https://juhalt.github.io/nomologR/reference/nomo_efa.md)
@@ -269,8 +279,8 @@
 - Added known-structure, cross-loading, weak-item, ordinal, redundancy,
   missingness, orthogonal-rotation, smoothing, validation, handoff,
   provenance, presentation, and failure-mode regression tests.
-- Added the Checkpoint A vignette, **â€œFrom item audit to exploratory
-  structure,â€?** demonstrating
+- Added the Checkpoint A vignette, **“From item audit to exploratory
+  structure,”** demonstrating
   [`nomo_screen()`](https://juhalt.github.io/nomologR/reference/nomo_screen.md)
   -\>
   [`nomo_factors()`](https://juhalt.github.io/nomologR/reference/nomo_factors.md)
@@ -283,7 +293,7 @@
   A: the exploratory measurement workflow is complete and Milestone 4
   (CFA) is next.
 
-### Milestone 2 closeout â€” researcher control and hardening
+### Milestone 2 closeout — researcher control and hardening
 
 - Changed modeling-type override precedence so an explicit, valid
   `types` declaration can rescue otherwise ambiguous storage before
@@ -302,7 +312,7 @@
 - Milestone 2 core computational files exceed the v0.1 \>=90% coverage
   gate; presentation coverage reached 100% in the closeout audit.
 
-### Milestone 2B â€” retention triangulation and sensitivity
+### Milestone 2B — retention triangulation and sensitivity
 
 - Refined concordance to group closely related methods into criterion
   families, so original/revised MAP variants do not behave like
@@ -346,7 +356,7 @@
   retention criteria while preserving `nomologR`’s interpretation and
   decision-log layer.
 
-### Milestone 2A â€” factor-retention evidence
+### Milestone 2A — factor-retention evidence
 
 - Replaced the
   [`nomo_factors()`](https://juhalt.github.io/nomologR/reference/nomo_factors.md)
@@ -372,7 +382,7 @@
 - Promoted `psych` to a runtime dependency because factor-retention
   methods now use its established factor/correlation engines directly.
 
-### Milestone 1C â€” integrated review and visualization
+### Milestone 1C — integrated review and visualization
 
 - Added
   [`summary.nomo_screen()`](https://juhalt.github.io/nomologR/reference/summary.nomo_screen.md)
@@ -389,7 +399,7 @@
 - Added `ggplot2` as a core visualization dependency and expanded
   regression tests for presentation behavior.
 
-### Milestone 1B â€” psychometric screening
+### Milestone 1B — psychometric screening
 
 - Added corrected item-rest and inter-item relationship diagnostics for
   explicitly scored numeric/logical candidate items.
@@ -408,7 +418,7 @@
   workflow and the active v0.1 development path.
 - Added a GitHub issue form for roadmap-milestone tracking.
 
-### Milestone 1 â€” item/data screening
+### Milestone 1 — item/data screening
 
 - Implemented the first production slice of
   [`nomo_screen()`](https://juhalt.github.io/nomologR/reference/nomo_screen.md).
