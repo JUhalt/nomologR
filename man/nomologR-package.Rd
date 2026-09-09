@@ -20,6 +20,7 @@ universal deletion or validity rules.
 Useful links:
 \itemize{
   \item \url{https://github.com/JUhalt/nomologR}
+  \item \url{https://juhalt.github.io/nomologR/}
   \item Report bugs at \url{https://github.com/JUhalt/nomologR/issues}
 }
 

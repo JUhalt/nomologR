@@ -4,9 +4,9 @@
 [![R-CMD-check](https://github.com/JUhalt/nomologR/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/JUhalt/nomologR/actions/workflows/R-CMD-check.yaml)
 [![test-coverage](https://github.com/JUhalt/nomologR/actions/workflows/test-coverage.yaml/badge.svg)](https://github.com/JUhalt/nomologR/actions/workflows/test-coverage.yaml)
 
-**Development status: `0.1.0.9005` — Milestone 8 (`nomo_run()`)
-complete; Milestone 9 (`nomo_report()`) is active; release hardening
-remains required for v0.1**
+**Development status: `0.1.0.9005` — planned v0.1 implementation and
+pre-release engineering hardening are complete; documentation,
+clean-install, and final release certification remain before `v0.1.0`.**
 
 `nomologR` is a guided, evidence-based workflow for **empirical scale
 development and construct validation**. It coordinates established R
@@ -14,6 +14,31 @@ engines while adding transparent diagnostics, literature-linked
 explanations, decision logging, and theory-aware guidance.
 
 > **Core rule:** Flag, explain, and document. Never silently delete.
+
+## Installation
+
+`nomologR` is currently in pre-release development. Until `v0.1.0` is
+published, install the current development version from GitHub:
+
+``` r
+# install.packages("pak")
+pak::pak("JUhalt/nomologR")
+```
+
+The development line is also available through the JUhalt R-universe:
+
+``` r
+install.packages(
+  "nomologR",
+  repos = c(
+    "https://juhalt.r-universe.dev",
+    "https://cloud.r-project.org"
+  )
+)
+```
+
+The R-universe registry currently follows the development branch. After
+the first stable release, it will track stable GitHub releases.
 
 ## Where nomologR fits
 
@@ -689,7 +714,7 @@ The v0.1 path is:
 9.  Reproducible report — `nomo_report()` **active**
 10. v0.1 release hardening and infrastructure
 
-**Milestone 8 is complete at `0.1.0.9005`.** `nomo_report()` is now the
+**Milestone 8 is complete at `0.1.0.9004`.** `nomo_report()` is now the
 only remaining required feature milestone before
 researcher-completeness, release infrastructure, and the v0.1.0
 hardening gate.

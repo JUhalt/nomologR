@@ -626,7 +626,12 @@ nomo_report_citations <- function(
     }
 
     citation_text <- tryCatch(
-      paste(utils::capture.output(print(citation_fun(pkg))), collapse = " "),
+      paste(
+        utils::capture.output(
+          print(suppressWarnings(citation_fun(pkg)))
+        ),
+        collapse = " "
+      ),
       error = function(e) {
         paste0("Citation unavailable: ", conditionMessage(e))
       }

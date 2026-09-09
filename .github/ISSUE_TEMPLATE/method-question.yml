@@ -1,7 +1,7 @@
 name: Methodological question
 description: Ask about the statistical reasoning, interpretation, or scope of a nomologR method.
 title: "[Method] "
-labels: []
+labels: ["question", "methodology"]
 body:
   - type: markdown
     attributes:

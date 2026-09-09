@@ -1,6 +1,23 @@
 # nomologR 0.1.0.9005
 
-## Milestone 8 closeout — guided workflow and decision provenance
+## Milestone 9 closeout — reproducible reporting and pre-v0.1 hardening
+
+- Completed `nomo_report()` as the archival reporting layer for guided
+  `nomo_run()` workflows.
+- Added self-contained HTML reporting across item screening, factor retention,
+  EFA, CFA, reliability, convergent/discriminant evidence, invariance, and
+  theory-specified nomological networks.
+- Added researcher inputs, data characteristics, decision provenance,
+  deviations/post-hoc decisions, methods/citations, reproducibility information,
+  and a full evidence trace linking recommendations back to their source evidence.
+- Added report-render regression tests covering the core workflow and optional
+  invariance/network branches.
+- Completed pre-v0.1 engineering hardening with the full test suite passing,
+  R CMD check at 0 errors / 0 warnings / 0 notes, executable-line coverage at
+  100%, and an empty `covr::zero_coverage()` result.
+- Published the `v0.1.0.9005` pre-release as the engineering-complete candidate
+  for final public-release review.
+## Milestone 8 closeout â€” guided workflow and decision provenance
 
 - Replaced the `nomo_run()` development stub with a resumable guided workflow
   spanning screening, factor-retention evidence, EFA, CFA, reliability,
@@ -20,11 +37,11 @@
   validity score is introduced.
 - M8 closeout coverage reached **94.07% package-wide** and **93.16%** for
   `R/nomo_run.R`; the full test suite and R CMD check were clean.
-- Milestone 8 is complete. Milestone 9, `nomo_report()`, is now active.
+- Milestone 8 is complete. Milestone 9 was subsequently completed in this development version; see the closeout above.
 
 
 
-## Milestones 6–7 closeout — theory-specified networks, invariance, and Checkpoint C
+## Milestones 6â€“7 closeout â€” theory-specified networks, invariance, and Checkpoint C
 
 - Added `positive()`, `negative()`, and `negligible()` expectation helpers plus
   `nomo_hypotheses()` for machine-readable a-priori and post-hoc theory
@@ -49,7 +66,7 @@
 - Added `nomo_table()` methods plus researcher-facing network and invariance
   figures, including theory-compatible regions, replication comparison,
   fit/change evidence, and human-readable localized equality constraints.
-- Added the **“Nomological network”** and **“Measurement invariance”**
+- Added the **â€œNomological networkâ€** and **â€œMeasurement invarianceâ€**
   vignettes plus truth simulations, edge/failure hardening, and presentation
   regression tests.
 - Final Checkpoint C coverage audit reached **94.19% package-wide**. Core M6/M7
@@ -62,7 +79,7 @@
   `nomo_run()`, is the next active development target.
 
 
-## Milestone 5 closeout — reliability, convergent/discriminant evidence, and Checkpoint B
+## Milestone 5 closeout â€” reliability, convergent/discriminant evidence, and Checkpoint B
 
 - Replaced the `nomo_reliability()` development stub with a model-based
   reliability workflow using current `semTools::compRelSEM()` infrastructure.
@@ -93,8 +110,8 @@
 - User-facing audits confirmed two key teaching cases: excellent global CFA fit
   can coexist with weak reliability/AVE, and strong reliability/AVE can coexist
   with poor construct separation.
-- Added the Checkpoint B vignette, **“From CFA to a defensible measurement
-  model,”** integrating CFA, reliability, convergent evidence, discriminant
+- Added the Checkpoint B vignette, **â€œFrom CFA to a defensible measurement
+  model,â€** integrating CFA, reliability, convergent evidence, discriminant
   evidence, uncertainty, and decision guidance.
 - Added direct regression tests against `semTools::compRelSEM()`,
   `semTools::AVE()`, and `semTools::htmt()`, plus ordinal, redundant-construct,
@@ -112,7 +129,7 @@
   Measurement Model Complete**. Milestone 6, theory-specified nomological
   networks, is next.
 
-## Milestone 4 closeout — confirmatory factor analysis
+## Milestone 4 closeout â€” confirmatory factor analysis
 
 - Replaced the `nomo_cfa()` development stub with a production CFA workflow
   around `lavaan::cfa()` while retaining the underlying lavaan fit unchanged.
@@ -150,7 +167,7 @@
 - Local tests/checks and GitHub Actions passed; the Milestone 4 PR was squash
   merged before Milestone 5 development began.
 
-## Milestone 3 closeout — exploratory factor analysis and Checkpoint A
+## Milestone 3 closeout â€” exploratory factor analysis and Checkpoint A
 
 - Replaced the `nomo_efa()` development stub with a production common-factor EFA
   workflow using `psych::fa()` as the statistical engine and `nomologR` as the
@@ -183,7 +200,7 @@
 - Added known-structure, cross-loading, weak-item, ordinal, redundancy,
   missingness, orthogonal-rotation, smoothing, validation, handoff, provenance,
   presentation, and failure-mode regression tests.
-- Added the Checkpoint A vignette, **“From item audit to exploratory structure,”**
+- Added the Checkpoint A vignette, **â€œFrom item audit to exploratory structure,â€**
   demonstrating `nomo_screen()` -> `nomo_factors()` -> `nomo_efa()`.
 - Milestone 3 coverage closeout reached 97.78% for `R/nomo_efa.R`, 98.70% for
   `R/nomo_efa_presentation.R`, and 96.52% package-wide in the final pre-closeout
@@ -191,7 +208,7 @@
 - Advanced the development version to `0.1.0.9001`, marking Checkpoint A:
   the exploratory measurement workflow is complete and Milestone 4 (CFA) is next.
 
-## Milestone 2 closeout — researcher control and hardening
+## Milestone 2 closeout â€” researcher control and hardening
 
 - Changed modeling-type override precedence so an explicit, valid `types`
   declaration can rescue otherwise ambiguous storage before default-type
@@ -206,7 +223,7 @@
 - Milestone 2 core computational files exceed the v0.1 >=90% coverage gate;
   presentation coverage reached 100% in the closeout audit.
 
-## Milestone 2B — retention triangulation and sensitivity
+## Milestone 2B â€” retention triangulation and sensitivity
 
 - Refined concordance to group closely related methods into criterion families,
   so original/revised MAP variants do not behave like independent votes.
@@ -238,7 +255,7 @@
 - Added `EFAtools (>= 0.8.0)` as the runtime engine for modern optional retention
   criteria while preserving `nomologR`'s interpretation and decision-log layer.
 
-## Milestone 2A — factor-retention evidence
+## Milestone 2A â€” factor-retention evidence
 
 - Replaced the `nomo_factors()` development stub with a production factor-retention engine.
 - Added explicit correlation-model selection for Pearson, polychoric, tetrachoric,
@@ -256,7 +273,7 @@
 - Promoted `psych` to a runtime dependency because factor-retention methods now
   use its established factor/correlation engines directly.
 
-## Milestone 1C — integrated review and visualization
+## Milestone 1C â€” integrated review and visualization
 
 - Added `summary.nomo_screen()` with an integrated item-review table that
   combines descriptive, relationship, response-category, and decision-log evidence.
@@ -269,7 +286,7 @@
 - Added `ggplot2` as a core visualization dependency and expanded regression
   tests for presentation behavior.
 
-## Milestone 1B — psychometric screening
+## Milestone 1B â€” psychometric screening
 
 - Added corrected item-rest and inter-item relationship diagnostics for
   explicitly scored numeric/logical candidate items.
@@ -285,7 +302,7 @@
   and the active v0.1 development path.
 - Added a GitHub issue form for roadmap-milestone tracking.
 
-## Milestone 1 — item/data screening
+## Milestone 1 â€” item/data screening
 
 - Implemented the first production slice of `nomo_screen()`.
 - Added conservative item-type descriptions, item-level missingness and response
