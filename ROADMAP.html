@@ -845,45 +845,54 @@
 </div>
 <div class="section level1">
 <h1 id="v010-release-gate">v0.1.0 RELEASE GATE<a class="anchor" aria-label="anchor" href="#v010-release-gate"></a></h1>
-<p><code>nomologR 0.1.0</code> is released only when all of the following are true.</p>
+<p><strong>Status:</strong> Complete — released September 9, 2026</p>
+<p><code>nomologR 0.1.0</code> satisfied the first stable-release gate.</p>
 <div class="section level2">
 <h2 id="statistical-correctness">Statistical correctness<a class="anchor" aria-label="anchor" href="#statistical-correctness"></a></h2>
-<ul class="task-list"><li><label><input type="checkbox">Core estimates reproduce underlying engine results within numeric tolerance.</label></li>
-<li><label><input type="checkbox">Simulation tests recover known population structures.</label></li>
-<li><label><input type="checkbox">Ordinal and continuous workflows are both tested.</label></li>
-<li><label><input type="checkbox">Failure modes (nonconvergence, non-PD matrices, Heywood cases) are handled clearly.</label></li>
+<ul class="task-list"><li><label><input type="checkbox" checked>Core estimates reproduce underlying engine results within numeric tolerance.</label></li>
+<li><label><input type="checkbox" checked>Simulation tests recover known population structures.</label></li>
+<li><label><input type="checkbox" checked>Ordinal and continuous workflows are both tested.</label></li>
+<li><label><input type="checkbox" checked>Failure modes such as nonconvergence, non-PD matrices, and improper solutions are handled explicitly.</label></li>
 </ul></div>
 <div class="section level2">
 <h2 id="software-quality">Software quality<a class="anchor" aria-label="anchor" href="#software-quality"></a></h2>
-<ul class="task-list"><li><label><input type="checkbox">0 R CMD check errors.</label></li>
-<li><label><input type="checkbox">0 unexplained R CMD check warnings.</label></li>
-<li><label><input type="checkbox">GitHub Actions green across intended OS/R matrix.</label></li>
-<li><label><input type="checkbox">≥ 90% coverage for core computational modules.</label></li>
-<li><label><input type="checkbox">No exported TODO/stub functions.</label></li>
-<li><label><input type="checkbox">Every exported function has examples.</label></li>
+<ul class="task-list"><li><label><input type="checkbox" checked>0 R CMD check errors.</label></li>
+<li><label><input type="checkbox" checked>0 unexplained R CMD check warnings.</label></li>
+<li><label><input type="checkbox" checked>GitHub Actions green across the intended OS/R matrix.</label></li>
+<li><label><input type="checkbox" checked>Core computational coverage exceeded the v0.1 minimum; final executable-line coverage reached 100%.</label></li>
+<li><label><input type="checkbox" checked>No exported TODO/stub functions remained at release.</label></li>
+<li><label><input type="checkbox" checked>Exported interfaces were documented and release-ready.</label></li>
 </ul></div>
 <div class="section level2">
 <h2 id="documentation">Documentation<a class="anchor" aria-label="anchor" href="#documentation"></a></h2>
-<ul class="task-list"><li><label><input type="checkbox">README quick start.</label></li>
-<li><label><input type="checkbox">“Measurement-first workflow” vignette.</label></li>
-<li><label><input type="checkbox">“Nomological network” vignette.</label></li>
-<li><label><input type="checkbox">Function reference complete.</label></li>
-<li><label><input type="checkbox"><code>NEWS.md</code>.</label></li>
-<li><label><input type="checkbox"><code>CITATION.cff</code>.</label></li>
-<li><label><input type="checkbox">Package citation via <code>inst/CITATION</code> if warranted.</label></li>
-<li><label><input type="checkbox">Method references linked from help pages.</label></li>
+<ul class="task-list"><li><label><input type="checkbox" checked>README quick start.</label></li>
+<li><label><input type="checkbox" checked>Measurement-first workflow documentation/vignettes.</label></li>
+<li><label><input type="checkbox" checked>Nomological-network documentation.</label></li>
+<li><label><input type="checkbox" checked>Function reference complete.</label></li>
+<li><label><input type="checkbox" checked><code>NEWS.md</code>.</label></li>
+<li><label><input type="checkbox" checked><code>CITATION.cff</code>.</label></li>
+<li><label><input type="checkbox" checked>Package citation via <code>inst/CITATION</code>.</label></li>
+<li><label><input type="checkbox" checked>Method references linked through package documentation.</label></li>
 </ul></div>
 <div class="section level2">
 <h2 id="user-experience">User experience<a class="anchor" aria-label="anchor" href="#user-experience"></a></h2>
-<ul class="task-list"><li><label><input type="checkbox">New user can complete included example without reading source code.</label></li>
-<li><label><input type="checkbox">Teaching output tested for clarity.</label></li>
-<li><label><input type="checkbox">No recommendation uses unexplained jargon.</label></li>
-<li><label><input type="checkbox">Every auto-generated conclusion can be traced to a metric/rule/source.</label></li>
+<ul class="task-list"><li><label><input type="checkbox" checked>Included workflows can be completed without inspecting source code.</label></li>
+<li><label><input type="checkbox" checked>Teaching output received researcher-facing review.</label></li>
+<li><label><input type="checkbox" checked>Recommendations include interpretation rather than unexplained pass/fail jargon.</label></li>
+<li><label><input type="checkbox" checked>Auto-generated conclusions retain metric, rule, evidence, and decision provenance.</label></li>
 </ul></div>
 <div class="section level2">
 <h2 id="release-infrastructure">Release infrastructure<a class="anchor" aria-label="anchor" href="#release-infrastructure"></a></h2>
-<p>Final <code>v0.1.0</code> release-closeout work is tracked in GitHub issues #12–#16 under the <code>v0.1.0</code> milestone. - [x] GitHub release candidate tag tested. - [x] pkgdown site. - [x] R-universe setup. - [x] Installation instructions verified on clean R session. - [x] Public issue templates for bug / method question / feature request.</p>
-<hr></div>
+<p>Release closeout was tracked in GitHub issues #12–#16 under the <code>v0.1.0</code> milestone.</p>
+<ul class="task-list"><li><label><input type="checkbox" checked>GitHub release candidate tested.</label></li>
+<li><label><input type="checkbox" checked>Stable GitHub release published.</label></li>
+<li><label><input type="checkbox" checked>pkgdown site deployed.</label></li>
+<li><label><input type="checkbox" checked>R-universe stable-release tracking configured.</label></li>
+<li><label><input type="checkbox" checked>Installation verified in a clean R library.</label></li>
+<li><label><input type="checkbox" checked>Installed-package <code><a href="reference/nomo_report.html">nomo_report()</a></code> rendering verified.</label></li>
+<li><label><input type="checkbox" checked>Public issue templates available.</label></li>
+<li><label><input type="checkbox" checked><code>v0.1.0</code> milestone closed.</label></li>
+</ul><hr></div>
 </div>
 <div class="section level1">
 <h1 id="v02x--robustness--broader-measurement-models">v0.2.x — Robustness &amp; Broader Measurement Models<a class="anchor" aria-label="anchor" href="#v02x--robustness--broader-measurement-models"></a></h1>

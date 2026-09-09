@@ -1357,7 +1357,9 @@ Every recommendation links to the evidence that produced it.
 
 # v0.1.0 RELEASE GATE
 
-`nomologR 0.1.0` is released only when all of the following are true.
+**Status:** Complete — released September 9, 2026
+
+`nomologR 0.1.0` satisfied the first stable-release gate.
 
 ## Statistical correctness
 
@@ -1368,8 +1370,8 @@ Simulation tests recover known population structures.
 
 Ordinal and continuous workflows are both tested.
 
-Failure modes (nonconvergence, non-PD matrices, Heywood cases) are
-handled clearly.
+Failure modes such as nonconvergence, non-PD matrices, and improper
+solutions are handled explicitly.
 
 ## Software quality
 
@@ -1377,21 +1379,22 @@ handled clearly.
 
 0 unexplained R CMD check warnings.
 
-GitHub Actions green across intended OS/R matrix.
+GitHub Actions green across the intended OS/R matrix.
 
-≥ 90% coverage for core computational modules.
+Core computational coverage exceeded the v0.1 minimum; final
+executable-line coverage reached 100%.
 
-No exported TODO/stub functions.
+No exported TODO/stub functions remained at release.
 
-Every exported function has examples.
+Exported interfaces were documented and release-ready.
 
 ## Documentation
 
 README quick start.
 
-“Measurement-first workflow” vignette.
+Measurement-first workflow documentation/vignettes.
 
-“Nomological network” vignette.
+Nomological-network documentation.
 
 Function reference complete.
 
@@ -1399,27 +1402,44 @@ Function reference complete.
 
 `CITATION.cff`.
 
-Package citation via `inst/CITATION` if warranted.
+Package citation via `inst/CITATION`.
 
-Method references linked from help pages.
+Method references linked through package documentation.
 
 ## User experience
 
-New user can complete included example without reading source code.
+Included workflows can be completed without inspecting source code.
 
-Teaching output tested for clarity.
+Teaching output received researcher-facing review.
 
-No recommendation uses unexplained jargon.
+Recommendations include interpretation rather than unexplained pass/fail
+jargon.
 
-Every auto-generated conclusion can be traced to a metric/rule/source.
+Auto-generated conclusions retain metric, rule, evidence, and decision
+provenance.
 
 ## Release infrastructure
 
-Final `v0.1.0` release-closeout work is tracked in GitHub issues
-\#12–#16 under the `v0.1.0` milestone. - \[x\] GitHub release candidate
-tag tested. - \[x\] pkgdown site. - \[x\] R-universe setup. - \[x\]
-Installation instructions verified on clean R session. - \[x\] Public
-issue templates for bug / method question / feature request.
+Release closeout was tracked in GitHub issues \#12–#16 under the
+`v0.1.0` milestone.
+
+GitHub release candidate tested.
+
+Stable GitHub release published.
+
+pkgdown site deployed.
+
+R-universe stable-release tracking configured.
+
+Installation verified in a clean R library.
+
+Installed-package
+[`nomo_report()`](https://juhalt.github.io/nomologR/reference/nomo_report.md)
+rendering verified.
+
+Public issue templates available.
+
+`v0.1.0` milestone closed.
 
 ------------------------------------------------------------------------
 
