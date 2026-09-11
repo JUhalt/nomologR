@@ -59,7 +59,7 @@ nomo_report(
 - quiet:
 
   Logical passed to
-  [`rmarkdown::render()`](https://rdrr.io/pkg/rmarkdown/man/render.html).
+  [`rmarkdown::render()`](https://pkgs.rstudio.com/rmarkdown/reference/render.html).
 
 ## Value
 

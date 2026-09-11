@@ -13,6 +13,11 @@ explanations, decision logging, and theory-aware guidance.
 
 > **Core rule:** Flag, explain, and document. Never silently delete.
 
+[Documentation](https://juhalt.github.io/nomologR/) ·
+[Roadmap](https://juhalt.github.io/nomologR/ROADMAP.md) · [v0.2.0
+milestone](https://github.com/JUhalt/nomologR/milestone/2) · [Open
+issues](https://github.com/JUhalt/nomologR/issues)
+
 ## Installation
 
 Install the stable release from the JUhalt R-universe:
@@ -726,6 +731,15 @@ valid/invalid.
 The full walkthrough is in the **“Guided workflow with nomo_run()”**
 vignette.
 
+### 9. `nomo_report()` — reproducible reporting
+
+[`nomo_report()`](https://juhalt.github.io/nomologR/reference/nomo_report.md)
+creates an archival HTML report from a guided workflow, including
+methods, evidence, researcher decisions, deviations, citations, and
+session information. See the [reproducible reporting
+walkthrough](https://juhalt.github.io/nomologR/articles/reproducible-report.html)
+for the documented inputs and limitations.
+
 ## Development path
 
 The detailed release specification lives in
@@ -756,8 +770,10 @@ The complete `v0.1.0` release track is:
     **complete**
 10. v0.1 release hardening and infrastructure — **complete**
 
-`v0.1.0` is the first stable public release. Planned `v0.2.x` work
-focuses on robustness and broader measurement models.
+`v0.1.0` is the first stable public release. The `v0.2.0` milestone is
+in scope planning and public-page reconciliation. Broader measurement
+models and robustness methods are candidates until accepted in linked
+issues; they are not all release commitments.
 
 ## Design principles
 
@@ -769,3 +785,24 @@ focuses on robustness and broader measurement models.
 - Nomological evidence begins with explicit theoretical predictions.
 - Null predictions require evidence beyond `p > .05`.
 - Consequential decisions should be visible and reproducible.
+
+## Citation
+
+Use `citation("nomologR")` for the installed package version. The
+default-branch
+[`CITATION.cff`](https://github.com/JUhalt/nomologR/blob/master/CITATION.cff)
+describes the current development source; each release tag retains the
+citation metadata appropriate to that release.
+
+## License
+
+The current development source is licensed under the **GNU General
+Public License, version 3 only (SPDX: GPL-3.0-only)**. See
+[LICENSE.md](https://juhalt.github.io/nomologR/LICENSE.md) and the
+preserved attribution in
+[inst/NOTICE](https://github.com/JUhalt/nomologR/blob/master/inst/NOTICE).
+
+Previously published releases, including `0.1.0`, retain their original
+MIT license. Stable installation currently retrieves that release; the
+next published release will carry GPL version 3 only. This source
+transition does not relabel existing tags or release artifacts.

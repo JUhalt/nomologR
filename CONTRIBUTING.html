@@ -95,7 +95,10 @@
 <div class="section level2">
 <h2 id="pull-requests">Pull requests<a class="anchor" aria-label="anchor" href="#pull-requests"></a></h2>
 <p>Pull requests should describe what changed, why it changed, how it was tested, and any statistical or API decisions that deserve review.</p>
-<p>The current development specification is maintained in <code>ROADMAP.md</code>.</p>
+<p>The current development specification is maintained in <a href="ROADMAP.html">ROADMAP.md</a>. Every accepted finding, code-review outcome, or research idea should have a linked issue before implementation. Keep uncommitted proposals separate from release scope; add a milestone only when the intended outcome and exit criteria are accepted. Closeout should link actual validation and release evidence.</p>
+<p>Each PR should identify its issue and documentation impact: README, roadmap, reference/vignettes, NEWS, citation/license metadata, and published site as applicable. Explain when a surface does not need updating.</p>
+<p>Edit <code>README.Rmd</code> and regenerate <code>README.md</code>. <code>_pkgdown.yml</code> and source documentation drive the website; the existing pkgdown workflow builds PRs and publishes <code>master</code> to <code>gh-pages</code>. Generated <code>docs/</code> output is not tracked on <code>master</code>. Verify the deployed site after merge, including its license, version, and planning links. Do not label historical release checks as current tests.</p>
+<p>New contributions use the current GPL version 3 only project license; preserve required copyright and third-party notices.</p>
 </div>
 </div>
 

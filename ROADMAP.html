@@ -50,6 +50,7 @@
 <p><code>nomologR</code> is a guided, evidence-based workflow for empirical scale development and construct validation. It coordinates established R engines (primarily <code>psych</code>, <code>lavaan</code>, and <code>semTools</code>) while adding transparent diagnostics, literature-linked explanations, decision logging, and theory-aware guidance.</p>
 <p><strong>Core principle:</strong> Flag, explain, and document. Never silently delete.</p>
 </blockquote>
+<p><strong>Current stable release:</strong> <a href="https://github.com/JUhalt/nomologR/releases/tag/v0.1.0" class="external-link">0.1.0</a> (September 9, 2026). <strong>Current source:</strong> <code>0.1.0.9000</code>, GPL-3.0-only. <strong>Next release:</strong> <a href="https://github.com/JUhalt/nomologR/milestone/2" class="external-link">v0.2.0 milestone</a>. Scope selection is tracked in <a href="https://github.com/JUhalt/nomologR/issues/22" class="external-link">#22</a>. The completed v0.1 sections preserve historical decisions and certification records; they are not new verification results from this housekeeping pass.</p>
 <hr><div class="section level2">
 <h2 id="id_1-package-boundary">1. Package Boundary<a class="anchor" aria-label="anchor" href="#id_1-package-boundary"></a></h2>
 <p>The JUhalt measurement/design ecosystem should remain intentionally modular:</p>
@@ -99,7 +100,7 @@
 <li><label><input type="checkbox" checked>Update obsolete <code>usethis</code>/CI helper code.</label></li>
 <li><label><input type="checkbox" checked>Replace deprecated planned <code>semTools</code> APIs.</label></li>
 <li><label><input type="checkbox" checked>Decide the minimum supported R version.</label></li>
-<li><label><input type="checkbox" checked>Confirm MIT licensing metadata.</label></li>
+<li><label><input type="checkbox" checked>Confirm MIT licensing metadata for the original foundation; the current development source subsequently moved to GPL-3.0-only (see README and NEWS).</label></li>
 <li><label><input type="checkbox" checked>Confirm GitHub Actions R-CMD-check workflow is active.</label></li>
 </ul></div>
 <div class="section level3">
@@ -558,8 +559,8 @@
 </ul><hr></div>
 <div class="section level3">
 <h3 id="v01-completion-sequence-after-checkpoint-b">v0.1 completion sequence after Checkpoint B<a class="anchor" aria-label="anchor" href="#v01-completion-sequence-after-checkpoint-b"></a></h3>
-<p>Milestones 6–9 are all required before the first public v0.1 release and R-Universe launch.</p>
-<p>The planned sequence is:</p>
+<p>Historical plan: Milestones 6–9 were required before the first public v0.1 release and R-universe launch. They were subsequently completed; see the September 9, 2026 <a href="https://github.com/JUhalt/nomologR/releases/tag/v0.1.0" class="external-link">v0.1.0 release record</a>.</p>
+<p>The sequence at that checkpoint was:</p>
 <ol style="list-style-type: decimal"><li>
 <strong>M6 + M7 in parallel:</strong> theory-specified nomological evidence and measurement invariance/generalizability;</li>
 <li>
@@ -569,7 +570,7 @@
 <li><strong>researcher-completeness and clean-install audit;</strong></li>
 <li><strong>pkgdown, release infrastructure, R-Universe, and v0.1.0.</strong></li>
 </ol><p>Features from later roadmap stages may be pulled forward when they close a methodological gap required for a defensible v0.1 workflow, but not merely to expand scope.</p>
-<p>For v0.1, planned pull-forwards include researcher-specified SESOI/equivalence regions for negligible nomological predictions, external criterion/predictive outcomes within the network layer, researcher-controlled partial invariance, holdout/replication support where feasible, and evidence provenance that can be carried into the guided pipeline and final report.</p>
+<p>The v0.1 pull-forwards documented in the completed sections below included researcher-specified SESOI/equivalence regions for negligible nomological predictions, external criterion/predictive outcomes within the network layer, researcher-controlled partial invariance, holdout/replication support where feasible, and evidence provenance that can be carried into the guided pipeline and final report.</p>
 </div>
 </div>
 <div class="section level2">
@@ -744,7 +745,7 @@
 <li><label><input type="checkbox" checked>No automatic model respecification or parameter freeing.</label></li>
 <li><label><input type="checkbox" checked>Network and invariance tables/figures completed a researcher-facing visual audit.</label></li>
 <li><label><input type="checkbox" checked>Package-wide coverage is <strong>94.19%</strong> with core M6/M7 computational paths approximately 90% or higher and backed by truth/failure tests.</label></li>
-</ul><p>Checkpoint C is locked for PR/CI review. Milestone 8 begins from a fresh branch after this checkpoint is merged to <code>master</code>.</p>
+</ul><p>Historical checkpoint: Checkpoint C preceded the completed Milestones 8 and 9. The resulting workflow shipped in the September 9, 2026 <a href="https://github.com/JUhalt/nomologR/releases/tag/v0.1.0" class="external-link">v0.1.0 release</a>. Current planning is tracked in the <a href="https://github.com/JUhalt/nomologR/milestone/2" class="external-link">v0.2.0 milestone</a>. Coverage and certification figures in these completed sections are historical closeout records, not newly rerun results from this pages update.</p>
 <hr></div>
 </div>
 <div class="section level2">
@@ -883,7 +884,7 @@
 </ul></div>
 <div class="section level2">
 <h2 id="release-infrastructure">Release infrastructure<a class="anchor" aria-label="anchor" href="#release-infrastructure"></a></h2>
-<p>Release closeout was tracked in GitHub issues #12–#16 under the <code>v0.1.0</code> milestone.</p>
+<p>Release closeout was tracked in <a href="https://github.com/JUhalt/nomologR/issues?q=is%3Aissue+milestone%3Av0.1.0" class="external-link">issues #12–#16</a> under the closed <a href="https://github.com/JUhalt/nomologR/milestone/1" class="external-link">v0.1.0 milestone</a>, with the final record in <a href="https://github.com/JUhalt/nomologR/pull/18" class="external-link">release PR #18</a> and <a href="https://github.com/JUhalt/nomologR/pull/21" class="external-link">closeout PR #21</a>. The checks below are historical release records, not results rerun by the pages audit.</p>
 <ul class="task-list"><li><label><input type="checkbox" checked>GitHub release candidate tested.</label></li>
 <li><label><input type="checkbox" checked>Stable GitHub release published.</label></li>
 <li><label><input type="checkbox" checked>pkgdown site deployed.</label></li>
@@ -896,26 +897,27 @@
 </div>
 <div class="section level1">
 <h1 id="v02x--robustness--broader-measurement-models">v0.2.x — Robustness &amp; Broader Measurement Models<a class="anchor" aria-label="anchor" href="#v02x--robustness--broader-measurement-models"></a></h1>
-<p><strong>Status:</strong> Active development<br><strong>Target:</strong> <code>v0.2.0</code></p>
+<p><strong>Status:</strong> Scope planning and public-page reconciliation</p>
+<p><strong>Target:</strong> <code>v0.2.0</code></p>
+<p><strong>Decision issue:</strong> <a href="https://github.com/JUhalt/nomologR/issues/22" class="external-link">#22 — select scope and exit criteria</a>. The candidate list below is not a commitment to ship all modules in v0.2. Only selected workstreams with accepted scope and exit criteria enter the milestone. The research proposal <a href="https://github.com/JUhalt/nomologR/issues/23" class="external-link">#23</a> may inform that decision but has no release assignment.</p>
 <p>Candidate modules:</p>
 <ul class="task-list"><li><label><input type="checkbox">Bifactor models.</label></li>
 <li><label><input type="checkbox">Higher-order CFA.</label></li>
 <li><label><input type="checkbox">ESEM.</label></li>
-<li><label><input type="checkbox">Cross-validation helpers.</label></li>
+<li><label><input type="checkbox">Extensions beyond the existing calibration/validation support; define the added resampling or validation behavior before commitment.</label></li>
 <li><label><input type="checkbox">Longitudinal invariance.</label></li>
 <li><label><input type="checkbox">Missing-data sensitivity.</label></li>
 <li><label><input type="checkbox">Multiple-imputation integration.</label></li>
 <li><label><input type="checkbox">Bootstrap stability summaries.</label></li>
 <li><label><input type="checkbox">CFA/SEM sample-size and power planning.</label></li>
-<li><label><input type="checkbox">Criterion/predictive evidence module.</label></li>
+<li><label><input type="checkbox">Criterion/predictive evidence beyond the external outcomes already supported by the nomological-network layer; define the additional estimands or reporting before commitment.</label></li>
 </ul><hr></div>
 <div class="section level1">
 <h1 id="v03x--modern-extensions">v0.3.x — Modern Extensions<a class="anchor" aria-label="anchor" href="#v03x--modern-extensions"></a></h1>
 <p>Candidate modules:</p>
 <ul class="task-list"><li><label><input type="checkbox">IRT as a complementary item-level framework.</label></li>
 <li><label><input type="checkbox">DIF.</label></li>
-<li><label><input type="checkbox">Equivalence testing for negligible structural relations.</label></li>
-<li><label><input type="checkbox">SESOI-aware hypothesis specifications.</label></li>
+<li><label><input type="checkbox">Additional equivalence/SESOI functionality beyond v0.1’s delivered researcher-specified negligible regions; define the increment before creating or assigning an implementation issue. No SESOI is invented by the package.</label></li>
 <li><label><input type="checkbox">Bayesian CFA/SEM (<code>blavaan</code>) robustness module.</label></li>
 <li><label><input type="checkbox">Posterior predictive checking.</label></li>
 <li><label><input type="checkbox">Frequentist/Bayesian concordance summaries.</label></li>
@@ -930,6 +932,8 @@
 <li>
 <strong>Cutoff sensitivity</strong>
 <ul><li>How sensitive are substantive conclusions to common loading, AVE, HTMT, and fit-index cutoffs?</li>
+<li>
+<a href="https://github.com/JUhalt/nomologR/issues/23" class="external-link">Provisional proposal #23</a>: evaluate model-specific CFA fit diagnostics with reproducible simulation provenance, drawing on McNeish and Wolf (2023), <a href="https://doi.org/10.1037/met0000425" class="external-link">doi:10.1037/met0000425</a>. This extends the teaching layer; it is not an automatic validity verdict or a committed release feature.</li>
 </ul></li>
 <li>
 <strong>Nomological concordance</strong>
