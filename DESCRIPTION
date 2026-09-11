@@ -16,7 +16,7 @@ Description: Provides an evidence-guided workflow for empirical scale developmen
     nomological networks. It emphasizes transparent diagnostics, reproducible
     decision logging, and teaching-oriented guidance rather than automatic item
     deletion or binary declarations that a measure is valid.
-License: MIT + file LICENSE
+License: GPL-3
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 Depends:
