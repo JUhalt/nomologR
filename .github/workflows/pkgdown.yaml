@@ -43,7 +43,13 @@ jobs:
           needs: website
 
       - name: Build site
-        run: pkgdown::build_site_github_pages(new_process = FALSE, install = FALSE)
+        run: |
+          pkgdown::build_site_github_pages(new_process = FALSE, install = FALSE)
+          # Refresh legacy license URLs retained by the incremental deployment.
+          license_sources <- c("docs/LICENSE.html", "docs/LICENSE.md")
+          license_aliases <- c("docs/LICENSE-text.html", "docs/LICENSE-text.md")
+          stopifnot(all(file.exists(license_sources)))
+          stopifnot(all(file.copy(license_sources, license_aliases, overwrite = TRUE)))
         shell: Rscript {0}
 
       - name: Deploy to GitHub pages 🚀
