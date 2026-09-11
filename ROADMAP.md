@@ -6,6 +6,13 @@
 >
 > **Core principle:** Flag, explain, and document. Never silently delete.
 
+**Current stable release:** [0.1.0](https://github.com/JUhalt/nomologR/releases/tag/v0.1.0)
+(September 9, 2026). **Current source:** `0.1.0.9000`, GPL-3.0-only.
+**Next release:** [v0.2.0 milestone](https://github.com/JUhalt/nomologR/milestone/2).
+Scope selection is tracked in [#22](https://github.com/JUhalt/nomologR/issues/22).
+The completed v0.1 sections preserve historical decisions and certification
+records; they are not new verification results from this housekeeping pass.
+
 ***
 ## 1. Package Boundary
 
@@ -62,7 +69,7 @@ Every public function and report should follow these principles.
 - [x] Update obsolete `usethis`/CI helper code.
 - [x] Replace deprecated planned `semTools` APIs.
 - [x] Decide the minimum supported R version.
-- [x] Confirm MIT licensing metadata.
+- [x] Confirm MIT licensing metadata for the original foundation; the current development source subsequently moved to GPL-3.0-only (see README and NEWS).
 - [x] Confirm GitHub Actions R-CMD-check workflow is active.
 
 ### Proposed public API
@@ -591,9 +598,9 @@ and distinguish among:
 ***
 ### v0.1 completion sequence after Checkpoint B
 
-Milestones 6–9 are all required before the first public v0.1 release and R-Universe launch.
+Historical plan: Milestones 6–9 were required before the first public v0.1 release and R-universe launch. They were subsequently completed; see the September 9, 2026 [v0.1.0 release record](https://github.com/JUhalt/nomologR/releases/tag/v0.1.0).
 
-The planned sequence is:
+The sequence at that checkpoint was:
 
 1. **M6 + M7 in parallel:** theory-specified nomological evidence and measurement invariance/generalizability;
 2. **M8:** one-stop guided pipeline without hidden consequential decisions;
@@ -603,7 +610,7 @@ The planned sequence is:
 
 Features from later roadmap stages may be pulled forward when they close a methodological gap required for a defensible v0.1 workflow, but not merely to expand scope.
 
-For v0.1, planned pull-forwards include researcher-specified SESOI/equivalence regions for negligible nomological predictions, external criterion/predictive outcomes within the network layer, researcher-controlled partial invariance, holdout/replication support where feasible, and evidence provenance that can be carried into the guided pipeline and final report.
+The v0.1 pull-forwards documented in the completed sections below included researcher-specified SESOI/equivalence regions for negligible nomological predictions, external criterion/predictive outcomes within the network layer, researcher-controlled partial invariance, holdout/replication support where feasible, and evidence provenance that can be carried into the guided pipeline and final report.
 
 ## Milestone 6 — Theory-Specified Nomological Network
 **Status:** Complete
@@ -831,8 +838,12 @@ repair weak measurement invariance.
 - [x] Package-wide coverage is **94.19%** with core M6/M7 computational paths
       approximately 90% or higher and backed by truth/failure tests.
 
-Checkpoint C is locked for PR/CI review. Milestone 8 begins from a fresh branch
-after this checkpoint is merged to `master`.
+Historical checkpoint: Checkpoint C preceded the completed Milestones 8 and 9.
+The resulting workflow shipped in the September 9, 2026
+[v0.1.0 release](https://github.com/JUhalt/nomologR/releases/tag/v0.1.0).
+Current planning is tracked in the [v0.2.0 milestone](https://github.com/JUhalt/nomologR/milestone/2).
+Coverage and certification figures in these completed sections are historical
+closeout records, not newly rerun results from this pages update.
 
 ***
 ## Milestone 8 — One-Stop Guided Pipeline
@@ -971,7 +982,7 @@ nomo_report()
 - [x] Auto-generated conclusions retain metric, rule, evidence, and decision provenance.
 
 ## Release infrastructure
-Release closeout was tracked in GitHub issues #12–#16 under the `v0.1.0` milestone.
+Release closeout was tracked in [issues #12–#16](https://github.com/JUhalt/nomologR/issues?q=is%3Aissue+milestone%3Av0.1.0) under the closed [v0.1.0 milestone](https://github.com/JUhalt/nomologR/milestone/1), with the final record in [release PR #18](https://github.com/JUhalt/nomologR/pull/18) and [closeout PR #21](https://github.com/JUhalt/nomologR/pull/21). The checks below are historical release records, not results rerun by the pages audit.
 
 - [x] GitHub release candidate tested.
 - [x] Stable GitHub release published.
@@ -985,21 +996,28 @@ Release closeout was tracked in GitHub issues #12–#16 under the `v0.1.0` miles
 ***
 # v0.2.x — Robustness & Broader Measurement Models
 
-**Status:** Active development  
+**Status:** Scope planning and public-page reconciliation
+
 **Target:** `v0.2.0`
+
+**Decision issue:** [#22 — select scope and exit criteria](https://github.com/JUhalt/nomologR/issues/22).
+The candidate list below is not a commitment to ship all modules in v0.2.
+Only selected workstreams with accepted scope and exit criteria enter the
+milestone. The research proposal [#23](https://github.com/JUhalt/nomologR/issues/23)
+may inform that decision but has no release assignment.
 
 Candidate modules:
 
 - [ ] Bifactor models.
 - [ ] Higher-order CFA.
 - [ ] ESEM.
-- [ ] Cross-validation helpers.
+- [ ] Extensions beyond the existing calibration/validation support; define the added resampling or validation behavior before commitment.
 - [ ] Longitudinal invariance.
 - [ ] Missing-data sensitivity.
 - [ ] Multiple-imputation integration.
 - [ ] Bootstrap stability summaries.
 - [ ] CFA/SEM sample-size and power planning.
-- [ ] Criterion/predictive evidence module.
+- [ ] Criterion/predictive evidence beyond the external outcomes already supported by the nomological-network layer; define the additional estimands or reporting before commitment.
 
 ***
 # v0.3.x — Modern Extensions
@@ -1008,8 +1026,10 @@ Candidate modules:
 
 - [ ] IRT as a complementary item-level framework.
 - [ ] DIF.
-- [ ] Equivalence testing for negligible structural relations.
-- [ ] SESOI-aware hypothesis specifications.
+- [ ] Additional equivalence/SESOI functionality beyond v0.1's delivered
+      researcher-specified negligible regions; define the increment before
+      creating or assigning an implementation issue. No SESOI is invented by
+      the package.
 - [ ] Bayesian CFA/SEM (`blavaan`) robustness module.
 - [ ] Posterior predictive checking.
 - [ ] Frequentist/Bayesian concordance summaries.
@@ -1024,6 +1044,12 @@ Potential research contributions arising from `nomologR` itself:
 
 2. **Cutoff sensitivity**
    - How sensitive are substantive conclusions to common loading, AVE, HTMT, and fit-index cutoffs?
+   - [Provisional proposal #23](https://github.com/JUhalt/nomologR/issues/23): evaluate
+     model-specific CFA fit diagnostics with reproducible simulation provenance,
+     drawing on McNeish and Wolf (2023),
+     [doi:10.1037/met0000425](https://doi.org/10.1037/met0000425).
+     This extends the teaching layer; it is not an automatic validity verdict
+     or a committed release feature.
 
 3. **Nomological concordance**
    - Develop formal summaries of how well an empirical structural network matches an a priori theoretical network.

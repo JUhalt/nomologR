@@ -1,6 +1,6 @@
 name: Roadmap milestone
 description: Track one nomologR roadmap milestone from implementation through merge.
-title: "Milestone X â€” "
+title: "Milestone X - "
 labels: ["maintenance"]
 body:
   - type: markdown
@@ -13,7 +13,7 @@ body:
     attributes:
       label: Roadmap section
       description: Name the matching ROADMAP.md milestone/checkpoint.
-      placeholder: "Milestone 2 â€” Factor-Retention Evidence"
+      placeholder: "Milestone 2 - Factor-Retention Evidence"
     validations:
       required: true
   - type: textarea

@@ -2,6 +2,14 @@
 
 ## Post-v0.1 development
 
+- Changed the current development source to GNU GPL version 3 only
+  (`GPL-3.0-only`; `GPL-3` in R metadata), retaining the historical MIT notice.
+  Previously published releases retain their original licenses.
+- Aligned source citation metadata with development version `0.1.0.9000`;
+  release tags retain their release-specific citation metadata.
+- Reconciled README, roadmap, issue navigation, historical checkpoint wording,
+  and the documentation/planning workflow. Candidate methods remain proposals
+  until their scope is accepted; no analytical behavior changes in this update.
 - Opened development toward `v0.2.0`.
 - `v0.1.0` remains the current stable public release.
 # nomologR 0.1.0
