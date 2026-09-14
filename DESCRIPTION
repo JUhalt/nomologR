@@ -10,14 +10,18 @@ Authors@R: c(
     )
   )
 Description: Provides an evidence-guided workflow for empirical scale development
-    and construct validation. The package is designed to help researchers examine
-    item performance, dimensionality, measurement models, reliability, convergent
-    and discriminant evidence, measurement invariance, and theory-specified
-    nomological networks. It emphasizes transparent diagnostics, reproducible
+    and construct validation, designed for graduate students and researchers.
+    The package helps users examine item performance, dimensionality,
+    measurement models, reliability, convergent and discriminant evidence,
+    measurement invariance, and theory-specified nomological networks. Methods
+    are documented from historical to contemporary practice with literature
+    references, and simulated teaching datasets with known population models
+    accompany the examples. It emphasizes transparent diagnostics, reproducible
     decision logging, and teaching-oriented guidance rather than automatic item
     deletion or binary declarations that a measure is valid.
 License: GPL-3
 Encoding: UTF-8
+LazyData: true
 Roxygen: list(markdown = TRUE)
 Depends:
     R (>= 4.2)
