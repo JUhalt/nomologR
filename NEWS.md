@@ -1,5 +1,41 @@
 # nomologR 0.1.0.9000
 
+## Learning foundations toward v0.2.0
+
+- Set the `v0.2.0` direction: research-backed, usable scale-development and
+  construct-validation workflows for graduate students and researchers,
+  spanning historical to contemporary methods. Scope, priorities, and exit
+  criteria were recorded in #22 and the linked workstream issues (#25–#37);
+  v0.3 candidates are tracked in #38. Distribution remains R-universe; CRAN
+  submission is deferred (#39).
+- Added three simulated teaching datasets with documented population models
+  and fixed-seed generation code in `data-raw/nomo_demo.R`:
+  `nomo_demo_continuous` (two correlated factors with a cross-loading item, a
+  weak item, and MCAR missingness), `nomo_demo_ordinal` (five-category ordered
+  version), and `nomo_demo_network` (three constructs, an observed outcome, and
+  two administration groups with a known source of scalar non-invariance)
+  (#25).
+- All workflow vignettes now evaluate against the teaching datasets, so the
+  guided workflow, measurement-invariance, nomological-network, and
+  reproducible-report articles show real output (#25).
+- Replaced the stale overview article with **Get started**, including a
+  learning path for graduate students and researchers, and added a
+  **Research basis** article mapping each workflow stage from historical to
+  contemporary practice (#25, #26).
+- Added DOI-verified references to every exported analysis function (#26).
+- Replaced `\dontrun{}` examples with runnable examples and added examples to
+  `nomo_network()`, `nomo_invariance()`, `nomo_table()`, and `nomo_defaults()`
+  (#25).
+- `nomo_table(<nomo_invariance>, "local_strain")` now adds a
+  `constraint_display` column with human-readable parameter labels (for
+  example `Intercept: ag3 (online vs. paper)`); the raw lavaan `constraint`
+  label is retained (#31). No statistical behavior changed.
+- Documented the table types available from `nomo_table()`.
+- Grouped the pkgdown reference index by workflow stage and articles by
+  learning path, with a redirect from the former overview URL (#25).
+- Archived the completed v0.1 roadmap specification in
+  `dev/roadmap-v0.1-record.md` and refocused `ROADMAP.md` on v0.2 and later.
+
 ## Post-v0.1 development
 
 - Changed the current development source to GNU GPL version 3 only
