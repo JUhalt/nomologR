@@ -1,3 +1,83 @@
 url: https://juhalt.github.io/nomologR/
 template:
   bootstrap: 5
+
+reference:
+  - title: Guided workflow and reporting
+    desc: >
+      Run the staged workflow with explicit researcher decisions, extract
+      report-ready tables, and archive evidence and decisions.
+    contents:
+      - nomo_run
+      - nomo_report
+      - nomo_table
+      - nomo_defaults
+  - title: "1. Item and data audit"
+    contents:
+      - nomo_screen
+      - print.nomo_screen
+      - summary.nomo_screen
+      - print.summary_nomo_screen
+      - plot.nomo_screen
+  - title: "2. Dimensionality and exploratory structure"
+    contents:
+      - nomo_factors
+      - print.nomo_factors
+      - summary.nomo_factors
+      - print.summary_nomo_factors
+      - plot.nomo_factors
+      - nomo_efa
+      - summary.nomo_efa
+      - plot.nomo_efa
+  - title: "3. Confirmatory measurement model"
+    contents:
+      - nomo_model
+      - nomo_split
+      - nomo_cfa
+      - summary.nomo_cfa
+      - plot.nomo_cfa
+  - title: "4. Reliability and construct-validity evidence"
+    contents:
+      - nomo_reliability
+      - summary.nomo_reliability
+      - plot.nomo_reliability
+      - nomo_validity
+      - summary.nomo_validity
+      - plot.nomo_validity
+  - title: "5. Measurement invariance"
+    contents:
+      - nomo_invariance
+      - nomo_partial
+      - plot.nomo_invariance
+  - title: "6. Theory-specified nomological network"
+    contents:
+      - nomo_hypotheses
+      - nomo_expectations
+      - nomo_network
+      - plot.nomo_network
+  - title: Teaching datasets
+    desc: >
+      Simulated data with documented population models, so learners can compare
+      package evidence with the known truth.
+    contents:
+      - nomo_demo_continuous
+      - nomo_demo_ordinal
+      - nomo_demo_network
+
+articles:
+  - title: Learning path
+    navbar: Learning path
+    contents:
+      - exploratory-workflow
+      - measurement-model-evidence
+      - measurement-invariance
+      - nomological-network
+      - guided-workflow
+      - reproducible-report
+  - title: Research basis
+    navbar: Research basis
+    contents:
+      - research-basis
+
+redirects:
+  - ["articles/overview.html", "articles/nomologR.html"]

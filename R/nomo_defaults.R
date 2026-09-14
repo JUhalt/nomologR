@@ -7,8 +7,26 @@
 #' @param profile Guidance profile. Only `"teaching"` is implemented during the
 #'   initial development series.
 #'
+#' @details
+#' Each value is a commonly taught reference point from the literature cited in
+#' the corresponding analysis function (for example, [nomo_efa()],
+#' [nomo_cfa()], [nomo_reliability()], and [nomo_validity()]). Changing a
+#' reference changes which evidence is flagged for review; it never deletes
+#' items, respecifies models, or declares validity.
+#'
 #' @return A named list of guidance settings.
 #' @export
+#'
+#' @examples
+#' guidance <- nomo_defaults()
+#' guidance$efa_loading_reference
+#' guidance$fit_reference
+#'
+#' # A deliberately stricter loading reference flags more items for review.
+#' stricter <- nomo_defaults()
+#' stricter$efa_loading_reference <- 0.60
+#' efa <- nomo_efa(nomo_demo_continuous, factors = 2, guidance = stricter)
+#' efa$item_summary[, c("item", "primary_loading", "attention")]
 nomo_defaults <- function(profile = "teaching") {
   profile <- match.arg(profile, choices = "teaching")
 

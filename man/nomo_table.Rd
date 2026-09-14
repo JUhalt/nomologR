@@ -9,14 +9,45 @@ nomo_table(x, ...)
 \arguments{
 \item{x}{A supported \code{nomologR} result object.}
 
-\item{...}{Additional arguments passed to methods.}
+\item{...}{Additional arguments passed to methods, usually \code{type}.}
 }
 \value{
 A tibble.
 }
 \description{
 \code{nomo_table()} returns compact tibbles intended for manuscripts, audit
-appendices, teaching materials, and the future \code{nomo_report()} workflow.
-It never rounds away the underlying object: full engine results remain stored
-in the original \code{nomologR} object.
+appendices, teaching materials, and \code{\link[=nomo_report]{nomo_report()}}. It never rounds away
+the underlying object: full engine results remain stored in the original
+\code{nomologR} object.
+}
+\details{
+Supported objects and \code{type} values:
+\itemize{
+\item \code{nomo_hypotheses}: the machine-readable hypothesis table (no \code{type}).
+\item \code{nomo_network}: \code{"hypotheses"} (default), \code{"fit"}, \code{"measurement"},
+\code{"relations"}, \code{"replication"}, \code{"decision_log"}.
+\item \code{nomo_invariance}: \code{"fit"} (default), \code{"categories"}, \code{"partial"},
+\code{"local_strain"}, \code{"decision_log"}. The local-strain table keeps lavaan's
+internal \code{constraint} label and adds a human-readable
+\code{constraint_display} column (for example, \verb{Intercept: ag3 (online vs. paper)}).
+\item \code{nomo_run}: \code{"stages"} (default), \code{"requests"}, \code{"decisions"},
+\code{"component_log"}, \code{"scales"}, \code{"recipe"}, \code{"settings"}; see
+\code{\link[=nomo_run]{nomo_run()}}.
+}
+}
+\examples{
+h <- nomo_hypotheses(
+  "Agency -> Persistence" = positive(min = .20),
+  "Agency <-> SocialDesirability" = negligible(within = c(-.15, .15))
+)
+nomo_table(h)
+
+inv <- nomo_invariance(
+  "Agency =~ ag1 + ag2 + ag3 + ag4",
+  data = nomo_demo_network,
+  group = "group",
+  levels = c("configural", "metric", "scalar")
+)
+nomo_table(inv, "fit")
+head(nomo_table(inv, "local_strain"))
 }

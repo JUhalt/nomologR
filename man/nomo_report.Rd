@@ -54,21 +54,22 @@ Reports can be rendered from complete, paused, or blocked \code{nomo_run} object
 Incomplete stages are labeled as such rather than silently omitted.
 }
 \examples{
-\dontrun{
+\dontshow{if (rmarkdown::pandoc_available()) withAutoprint(\{ # examplesIf}
 run <- nomo_run(
-  data = dat,
-  scales = list(WellBeing = c("w1", "w2", "w3", "w4")),
+  data = nomo_demo_network,
+  scales = list(Agency = c("ag1", "ag2", "ag3", "ag4")),
+  settings = list(factors = list(n_iter = 20, seed = 2026)),
   decisions = list(
     factor_count = 1L,
-    cfa_model = "WellBeing =~ w1 + w2 + w3 + w4",
+    cfa_model = "Agency =~ ag1 + ag2 + ag3 + ag4",
     measurement_model = "proceed"
   )
 )
 
-nomo_report(
+report_file <- nomo_report(
   run,
-  file = "well-being-validation.html"
+  file = tempfile(fileext = ".html")
 )
-}
-
+file.exists(report_file)
+\dontshow{\}) # examplesIf}
 }

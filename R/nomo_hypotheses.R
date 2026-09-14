@@ -307,6 +307,20 @@ nomo_expectation_region_label <- function(expectation) {
 #'
 #' @return A `nomo_hypotheses` object containing a tidy, machine-readable
 #'   hypothesis table.
+#'
+#' @references
+#' Cronbach, L. J., & Meehl, P. E. (1955). Construct validity in psychological
+#' tests. *Psychological Bulletin, 52*(4), 281-302. \doi{10.1037/h0040957}
+#'
+#' Lakens, D., Scheel, A. M., & Isager, P. M. (2018). Equivalence testing for
+#' psychological research: A tutorial. *Advances in Methods and Practices in
+#' Psychological Science, 1*(2), 259-269. \doi{10.1177/2515245918770963}
+#'
+#' Nosek, B. A., Ebersole, C. R., DeHaven, A. C., & Mellor, D. T. (2018). The
+#' preregistration revolution. *Proceedings of the National Academy of
+#' Sciences, 115*(11), 2600-2606. \doi{10.1073/pnas.1708274114}
+#'
+#' @seealso [nomo_network()] to evaluate the hypotheses.
 #' @export
 #'
 #' @examples

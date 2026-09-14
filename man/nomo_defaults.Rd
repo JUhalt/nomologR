@@ -18,3 +18,21 @@ The numerical values returned by this function are teaching/reference points,
 not universal pass/fail criteria. They are intended to trigger inspection and
 explanation in downstream \code{nomologR} functions.
 }
+\details{
+Each value is a commonly taught reference point from the literature cited in
+the corresponding analysis function (for example, \code{\link[=nomo_efa]{nomo_efa()}},
+\code{\link[=nomo_cfa]{nomo_cfa()}}, \code{\link[=nomo_reliability]{nomo_reliability()}}, and \code{\link[=nomo_validity]{nomo_validity()}}). Changing a
+reference changes which evidence is flagged for review; it never deletes
+items, respecifies models, or declares validity.
+}
+\examples{
+guidance <- nomo_defaults()
+guidance$efa_loading_reference
+guidance$fit_reference
+
+# A deliberately stricter loading reference flags more items for review.
+stricter <- nomo_defaults()
+stricter$efa_loading_reference <- 0.60
+efa <- nomo_efa(nomo_demo_continuous, factors = 2, guidance = stricter)
+efa$item_summary[, c("item", "primary_loading", "attention")]
+}

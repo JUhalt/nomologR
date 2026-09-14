@@ -84,3 +84,76 @@ When \code{localize = TRUE}, univariate score tests for equality constraints are
 retained as diagnostic evidence. They are explicitly not used to modify the
 fitted model.
 }
+\examples{
+inv <- nomo_invariance(
+  "Agency =~ ag1 + ag2 + ag3 + ag4",
+  data = nomo_demo_network,
+  group = "group",
+  levels = c("configural", "metric", "scalar")
+)
+inv
+nomo_table(inv, "fit")
+head(nomo_table(inv, "local_strain"))
+
+\donttest{
+# A release is a documented researcher decision, never an automatic search.
+release <- nomo_partial(
+  level = "scalar",
+  syntax = "ag3 ~ 1",
+  rationale = "Prior evidence anticipated a mode difference in ag3 wording."
+)
+inv_partial <- nomo_invariance(
+  "Agency =~ ag1 + ag2 + ag3 + ag4",
+  data = nomo_demo_network,
+  group = "group",
+  levels = c("configural", "metric", "scalar"),
+  partial = release
+)
+nomo_table(inv_partial, "fit")
+nomo_table(inv_partial, "partial")
+}
+}
+\references{
+Historical foundations:
+
+Jöreskog, K. G. (1971). Simultaneous factor analysis in several
+populations. \emph{Psychometrika, 36}(4), 409-426. \doi{10.1007/BF02291366}
+
+Meredith, W. (1993). Measurement invariance, factor analysis and factorial
+invariance. \emph{Psychometrika, 58}(4), 525-543. \doi{10.1007/BF02294825}
+
+Vandenberg, R. J., & Lance, C. E. (2000). A review and synthesis of the
+measurement invariance literature: Suggestions, practices, and
+recommendations for organizational research. \emph{Organizational Research
+Methods, 3}(1), 4-70. \doi{10.1177/109442810031002}
+
+Change-in-fit evidence:
+
+Chen, F. F. (2007). Sensitivity of goodness of fit indexes to lack of
+measurement invariance. \emph{Structural Equation Modeling, 14}(3), 464-504.
+\doi{10.1080/10705510701301834}
+
+Cheung, G. W., & Rensvold, R. B. (2002). Evaluating goodness-of-fit indexes
+for testing measurement invariance. \emph{Structural Equation Modeling, 9}(2),
+233-255. \doi{10.1207/S15328007SEM0902_5}
+
+Putnick, D. L., & Bornstein, M. H. (2016). Measurement invariance
+conventions and reporting: The state of the art and future directions for
+psychological research. \emph{Developmental Review, 41}, 71-90.
+\doi{10.1016/j.dr.2016.06.004}
+
+Ordered-categorical indicators:
+
+Svetina, D., Rutkowski, L., & Rutkowski, D. (2020). Multiple-group
+invariance with categorical outcomes using updated guidelines: An
+illustration using Mplus and the lavaan/semTools packages. \emph{Structural
+Equation Modeling, 27}(1), 111-130. \doi{10.1080/10705511.2019.1602776}
+
+Wu, H., & Estabrook, R. (2016). Identification of confirmatory factor
+analysis models of different levels of invariance for ordered categorical
+outcomes. \emph{Psychometrika, 81}(4), 1014-1045.
+\doi{10.1007/s11336-016-9506-0}
+}
+\seealso{
+\code{\link[=nomo_partial]{nomo_partial()}} for researcher-specified releases.
+}

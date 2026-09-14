@@ -237,6 +237,41 @@ alpha is deliberately reported as unavailable in this ordered-CFA estimand rathe
 silently replacing it with a different definition. The point is not to maximize the
 number of coefficients reported; it is to keep the score and estimand clear.
 
+# Continuing the exploratory example
+
+The [exploratory walkthrough](exploratory-workflow.html) flagged a cross-loading
+item (`a5`) and a weak item (`b5`) in `nomo_demo_continuous`. Suppose the
+researcher prespecifies the intended two-factor simple structure with all ten
+items and fits it as a CFA:
+
+```{r demo-cfa}
+demo_model <- nomo_model(list(
+  A = c("a1", "a2", "a3", "a4", "a5"),
+  B = c("b1", "b2", "b3", "b4", "b5")
+))
+
+demo_cfa <- nomo_cfa(demo_model, data = nomo_demo_continuous)
+demo_cfa$fit_evidence
+head(demo_cfa$top_modification_indices, 5)
+```
+
+Three lessons carry over from the exploratory stage:
+
+- **Modification indices are quarantined.** The largest index points toward the
+  cross-loading that the data-generating model contains, but `nomologR` does not
+  add it. Allowing a cross-loading, revising the item, or evaluating a model
+  without it is a theoretical decision; freeing parameters because an index is
+  large is capitalization on chance (MacCallum, Roznowski, & Necowitz, 1992).
+- **The same sample is not independent confirmation.** This CFA uses the data
+  that suggested the structure. `nomo_split()` or a new sample provides a
+  stronger test.
+- **Missing data are handled explicitly.** By default lavaan uses complete cases
+  here; `missing = "fiml"` requests full-information maximum likelihood for
+  continuous indicators, and the decision is recorded.
+
+A formal side-by-side model comparison with a recorded rationale is planned for
+`v0.2.0` ([#27](https://github.com/JUhalt/nomologR/issues/27)).
+
 # Reading the evidence as an argument
 
 A useful measurement conclusion is rarely "all cutoffs passed." A stronger conclusion

@@ -7,46 +7,107 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r, include=FALSE}
+```{r setup, include=FALSE}
+library(nomologR)
+
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  eval = FALSE
+  message = FALSE,
+  warning = FALSE
 )
+
+# Rendering an HTML report requires pandoc. Chunks that render reports are
+# skipped, with this explanation, when pandoc is unavailable.
+pandoc_ok <- rmarkdown::pandoc_available()
+
+# nomo_report() renders its own R Markdown template. Calling it from inside
+# another knitr document (such as this vignette) nests two renders, so knitr
+# must allow the template's chunk labels to repeat this document's labels.
+# Removing the need for this setting is tracked in the issue linked below.
+options(knitr.duplicate.label = "allow")
+report_dir <- tempfile("nomologR-reports-")
+dir.create(report_dir)
 ```
 
-`nomo_report()` is the final presentation and provenance layer in the v0.1
-workflow.
+`nomo_report()` is the final presentation and provenance layer in the
+`nomologR` workflow.
 
 It does **not** rerun the analyses. It renders the evidence and researcher
 decisions already stored in a `nomo_run` object.
 
+## A workflow to archive
+
+This example uses `nomo_demo_network` and supplies every consequential decision
+up front, as a researcher following a preregistered plan might:
+
+```{r run}
+scales <- list(
+  Agency = c("ag1", "ag2", "ag3", "ag4"),
+  Persistence = c("pe1", "pe2", "pe3", "pe4")
+)
+
+h <- nomo_hypotheses(
+  "Agency -> Persistence" = positive(min = .20),
+  "Agency -> Performance" = positive()
+)
+
+run <- nomo_run(
+  data = nomo_demo_network,
+  scales = scales,
+  mode = "research",
+  decisions = list(
+    factor_count = list(
+      value = c(Agency = 1, Persistence = 1),
+      rationale = "Each scale was written to measure one construct."
+    ),
+    cfa_model = list(
+      value = nomo_model(scales),
+      rationale = "Prespecified two-construct measurement model."
+    ),
+    measurement_model = list(
+      value = "proceed",
+      rationale = "Measurement evidence reviewed before planned downstream tests."
+    )
+  ),
+  settings = list(
+    factors = list(seed = 2026),
+    invariance = list(group = "group", levels = c("configural", "metric", "scalar")),
+    network = list(hypotheses = h)
+  )
+)
+
+nomo_table(run, "stages")
+nomo_table(run, "decisions")
+```
+
 ## Render a report
 
-```{r}
+```{r render, eval = pandoc_ok}
 report_file <- nomo_report(
   run,
-  file = "construct-validation-report.html"
+  file = file.path(report_dir, "construct-validation-report.html"),
+  title = "Construct validation audit: Agency and Persistence"
 )
 
-report_file
+file.exists(report_file)
 ```
 
-The HTML file is self-contained so it can be archived, attached to a project
-record, or shared with a collaborator without a separate figures directory or
-MathJax network dependency. The `title` argument becomes the document title:
+The HTML file is self-contained, so it can be archived, attached to a project
+record or thesis appendix, or shared with a collaborator without a separate
+figures directory or a network dependency. The `title` argument becomes the
+document title.
 
-```{r}
-nomo_report(
-  run,
-  file = "construct-validation-report.html",
-  title = "Construct validation audit"
-)
-```
+Calling `nomo_report()` from the R console or a script needs no extra setup.
+Calling it from a chunk inside your own R Markdown or Quarto document (for
+example, a thesis chapter) currently requires
+`options(knitr.duplicate.label = "allow")` first, as this article does. Removing
+that requirement is tracked in
+[issue #40](https://github.com/JUhalt/nomologR/issues/40).
 
 ## What the report contains
 
-The Milestone 9 report mirrors the full guided workflow:
+The report mirrors the full guided workflow:
 
 1. researcher inputs and data/sample roles;
 2. item audit;
@@ -70,22 +131,36 @@ produced it.
 
 A report can also be rendered from a paused or blocked workflow:
 
-```{r}
-nomo_report(
-  paused_run,
-  file = "paused-workflow-audit.html"
+```{r paused}
+paused_run <- nomo_run(
+  data = nomo_demo_network,
+  scales = scales,
+  settings = list(factors = list(seed = 2026))
 )
+
+nomo_table(paused_run, "stages")
 ```
 
-Missing stages are labeled as incomplete/not requested rather than silently
-disappearing.
+```{r paused-report, eval = pandoc_ok}
+paused_file <- nomo_report(
+  paused_run,
+  file = file.path(report_dir, "paused-workflow-audit.html"),
+  include_plots = FALSE
+)
 
-This is useful when a researcher wants to archive why an analysis stopped or
-what consequential decision remained unresolved.
+file.exists(paused_file)
+```
+
+Missing stages are labeled as incomplete or not requested rather than silently
+disappearing. This is useful when a researcher wants to archive why an analysis
+stopped or which consequential decision remained unresolved.
 
 ## Plots and session information
 
-```{r}
+The default includes a compact, nonredundant set of plots and full
+`sessionInfo()` output. Both can be turned off, as in the paused report above:
+
+```r
 nomo_report(
   run,
   file = "compact-report.html",
@@ -94,20 +169,18 @@ nomo_report(
 )
 ```
 
-The default includes a compact, nonredundant set of plots and full
-`sessionInfo()` output.
-
 ## Overwriting is explicit
 
-Existing reports are protected:
+Existing reports are protected. Rendering to a file that already exists stops
+unless `overwrite = TRUE` is supplied:
 
-```{r}
-nomo_report(
-  run,
-  file = "construct-validation-report.html",
-  overwrite = TRUE
-)
+```{r overwrite, eval = pandoc_ok, error = TRUE}
+nomo_report(run, file = report_file)
 ```
 
 As elsewhere in `nomologR`, consequential or destructive behavior is not
 silently assumed.
+
+```{r cleanup, include=FALSE}
+unlink(report_dir, recursive = TRUE)
+```

@@ -67,7 +67,6 @@ not free parameters, add residual covariances, delete indicators, or refit a
 different model in response to fit statistics or modification indices.
 }
 \examples{
-\dontrun{
 model <- '
   visual  =~ x1 + x2 + x3
   textual =~ x4 + x5 + x6
@@ -75,5 +74,74 @@ model <- '
 '
 out <- nomo_cfa(model, data = lavaan::HolzingerSwineford1939)
 summary(out)
+
+\donttest{
+# Declared ordered indicators request WLSMV rather than ML
+ordinal_model <- nomo_model(list(
+  A = c("a1", "a2", "a3", "a4", "a5"),
+  B = c("b1", "b2", "b3", "b4", "b5")
+))
+out_ord <- nomo_cfa(
+  ordinal_model,
+  data = nomo_demo_ordinal,
+  ordered = names(nomo_demo_ordinal)
+)
+out_ord$fit_evidence
 }
+}
+\references{
+Historical foundations:
+
+Bentler, P. M., & Bonett, D. G. (1980). Significance tests and goodness of
+fit in the analysis of covariance structures. \emph{Psychological Bulletin,
+88}(3), 588-606. \doi{10.1037/0033-2909.88.3.588}
+
+Jöreskog, K. G. (1969). A general approach to confirmatory maximum
+likelihood factor analysis. \emph{Psychometrika, 34}(2), 183-202.
+\doi{10.1007/BF02289343}
+
+Fit evaluation:
+
+Bentler, P. M. (1990). Comparative fit indexes in structural models.
+\emph{Psychological Bulletin, 107}(2), 238-246.
+\doi{10.1037/0033-2909.107.2.238}
+
+Browne, M. W., & Cudeck, R. (1992). Alternative ways of assessing model fit.
+\emph{Sociological Methods & Research, 21}(2), 230-258.
+\doi{10.1177/0049124192021002005}
+
+Hu, L., & Bentler, P. M. (1999). Cutoff criteria for fit indexes in
+covariance structure analysis: Conventional criteria versus new
+alternatives. \emph{Structural Equation Modeling, 6}(1), 1-55.
+\doi{10.1080/10705519909540118}
+
+Marsh, H. W., Hau, K.-T., & Wen, Z. (2004). In search of golden rules:
+Comment on hypothesis-testing approaches to setting cutoff values for fit
+indexes and dangers in overgeneralizing Hu and Bentler's (1999) findings.
+\emph{Structural Equation Modeling, 11}(3), 320-341.
+\doi{10.1207/s15328007sem1103_2}
+
+Estimation, respecification, and improper solutions:
+
+Flora, D. B., & Curran, P. J. (2004). An empirical evaluation of alternative
+methods of estimation for confirmatory factor analysis with ordinal data.
+\emph{Psychological Methods, 9}(4), 466-491. \doi{10.1037/1082-989X.9.4.466}
+
+Kolenikov, S., & Bollen, K. A. (2012). Testing negative error variances: Is
+a Heywood case a symptom of misspecification? \emph{Sociological Methods &
+Research, 41}(1), 124-167. \doi{10.1177/0049124112442138}
+
+MacCallum, R. C., Roznowski, M., & Necowitz, L. B. (1992). Model
+modifications in covariance structure analysis: The problem of
+capitalization on chance. \emph{Psychological Bulletin, 111}(3), 490-504.
+\doi{10.1037/0033-2909.111.3.490}
+
+Rhemtulla, M., Brosseau-Liard, P. É., & Savalei, V. (2012). When can
+categorical variables be treated as continuous? A comparison of robust
+continuous and categorical SEM estimation methods under suboptimal
+conditions. \emph{Psychological Methods, 17}(3), 354-373.
+\doi{10.1037/a0029315}
+
+Rosseel, Y. (2012). lavaan: An R package for structural equation modeling.
+\emph{Journal of Statistical Software, 48}(2), 1-36. \doi{10.18637/jss.v048.i02}
 }

@@ -1,0 +1,155 @@
+---
+title: "Get started with nomologR"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Get started with nomologR}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  message = FALSE,
+  warning = FALSE,
+  fig.width = 7,
+  fig.height = 4.5
+)
+```
+
+```{r library}
+library(nomologR)
+```
+
+# Who nomologR is for
+
+`nomologR` is written for three audiences:
+
+- **graduate students** (master's and doctoral) who are learning scale
+  development and construct validation and need to understand *why* each
+  analysis is performed, not only how to run it;
+- **faculty and advisors** who teach measurement and want output that explains
+  its own reasoning; and
+- **researchers** who need a defensible, reproducible record of how a measure
+  was evaluated.
+
+The package coordinates established engines — `psych`, `EFAtools`, `lavaan`,
+and `semTools` — and adds a teaching layer: diagnostics framed as evidence,
+explanations tied to the methodological literature, and a record of every
+consequential researcher decision.
+
+# The question behind every stage
+
+At each step, `nomologR` tries to help answer one question:
+
+> **What does this result tell me about the claim that these observations
+> measure the construct I say they measure, and what should I investigate
+> next?**
+
+The package flags, explains, and documents. It never silently deletes items,
+respecifies models, or declares a scale "valid."
+
+# The workflow at a glance
+
+| Stage | Question it answers | Functions | Walkthrough |
+|---|---|---|---|
+| 1. Item and data audit | What do the items and responses look like? | `nomo_screen()` | [From item audit to exploratory structure](exploratory-workflow.html) |
+| 2. Dimensionality | How many latent dimensions deserve investigation? | `nomo_factors()` | [From item audit to exploratory structure](exploratory-workflow.html) |
+| 3. Exploratory structure | What does a requested factor solution look like? | `nomo_efa()` | [From item audit to exploratory structure](exploratory-workflow.html) |
+| 4. Confirmatory measurement model | Does a prespecified model reproduce the data, and where is there strain? | `nomo_model()`, `nomo_split()`, `nomo_cfa()` | [From CFA to a defensible measurement model](measurement-model-evidence.html) |
+| 5. Reliability and construct-validity evidence | How precise are scores, and are constructs distinguishable? | `nomo_reliability()`, `nomo_validity()` | [From CFA to a defensible measurement model](measurement-model-evidence.html) |
+| 6. Generalizability | Is the construct measured comparably across groups? | `nomo_invariance()`, `nomo_partial()` | [Measurement invariance](measurement-invariance.html) |
+| 7. Nomological network | Does the construct relate to others as theory predicted? | `nomo_hypotheses()`, `nomo_network()` | [Theory-specified nomological networks](nomological-network.html) |
+| Guided workflow | How do the stages fit together with explicit decisions? | `nomo_run()` | [Guided workflow](guided-workflow.html) |
+| Reporting | How do I archive the evidence and decisions? | `nomo_report()`, `nomo_table()` | [Archiving a workflow](reproducible-report.html) |
+
+# Teaching datasets
+
+The examples and walkthroughs use simulated datasets whose population models
+are documented. Because the truth is known, you can check what the package
+reports against what actually generated the data — something real data never
+allow.
+
+| Dataset | Design | What it teaches |
+|---|---|---|
+| `nomo_demo_continuous` | Two correlated factors, five candidate items each, 500 cases | A cross-loading item (`a5`), a weak item (`b5`), and a small amount of missing data |
+| `nomo_demo_ordinal` | The same latent responses cut into five ordered categories | Polychoric correlations, WLSMV estimation, and ordinal reliability |
+| `nomo_demo_network` | Three constructs, an observed outcome, two administration groups, 800 cases | Theory-specified predictions, equivalence regions, replication, and a known source of scalar non-invariance |
+
+See `?nomo_demo_continuous`, `?nomo_demo_ordinal`, and `?nomo_demo_network`
+for the full population models.
+
+# A first look
+
+An item audit describes the data without changing it:
+
+```{r first-screen}
+scr <- nomo_screen(nomo_demo_continuous)
+scr
+```
+
+Factor-retention evidence triangulates several criteria rather than trusting a
+single rule:
+
+```{r first-factors}
+fac <- nomo_factors(nomo_demo_continuous, seed = 2026)
+fac
+```
+
+The population model for these data has two factors, and the retention evidence
+points to investigating two. Notice the wording: the evidence supports
+*investigating* a two-factor solution; it does not prove that the scale "has"
+two factors.
+
+# How to read nomologR output
+
+- **Observation, reason, options, consequence.** Recommendations state what was
+  found, why it may matter, what defensible choices exist, and what each choice
+  changes downstream.
+- **Reference values are prompts, not verdicts.** Familiar numbers such as a
+  loading of .40 or a CFI of .95 flag evidence for review. Items receive
+  `KEEP`, `REVIEW`, or `STRONG REVIEW`, never `DELETE`. The references live in
+  `nomo_defaults()`, and changing them is a visible researcher choice.
+- **Historical methods are labeled.** Techniques you will meet in published
+  work — eigenvalues greater than one, coefficient alpha, the Fornell–Larcker
+  comparison — are shown as context where useful, qualified, and kept separate
+  from contemporary evidence.
+- **Engine results are never hidden.** Every result keeps the underlying
+  `psych` or `lavaan` object (usually in `$fit`) for direct inspection.
+- **Decisions are recorded.** Each result carries a decision log, and
+  `nomo_run()` records the researcher's decisions and rationales across stages.
+
+# A suggested learning path
+
+1. [From item audit to exploratory structure](exploratory-workflow.html) —
+   screening, factor retention, and EFA.
+2. [From CFA to a defensible measurement model](measurement-model-evidence.html)
+   — confirmatory fit, reliability, and convergent and discriminant evidence.
+3. [Measurement invariance](measurement-invariance.html) — comparability across
+   groups, localized strain, and researcher-controlled partial invariance.
+4. [Theory-specified nomological networks](nomological-network.html) —
+   predictions, equivalence regions, and replication.
+5. [Guided workflow](guided-workflow.html) — the stages combined with explicit
+   decisions.
+6. [Archiving a workflow](reproducible-report.html) — a reproducible report.
+
+Throughout, the [research basis](research-basis.html) article explains where
+each method came from, what the contemporary literature recommends, and what
+`nomologR` implements. Every function's help page lists its references.
+
+# Where nomologR is heading
+
+The next release, `v0.2.0`, focuses on making the workflow research-backed from
+historical to contemporary practice and more useful to graduate students and
+researchers: model comparison, auditable model revision, bifactor and
+higher-order models, missing-data sensitivity, score guidance, careless-response
+screening, and manuscript-ready tables. See the
+[roadmap](https://github.com/JUhalt/nomologR/blob/master/ROADMAP.md) and the
+[v0.2.0 milestone](https://github.com/JUhalt/nomologR/milestone/2).
+
+# Citing nomologR
+
+```{r citation}
+citation("nomologR")
+```

@@ -36,6 +36,17 @@
 #'   distributions, case-level completeness diagnostics, an evidence-guided
 #'   decision log, and the guidance settings used.
 #'
+#' @references
+#' Clark, L. A., & Watson, D. (2019). Constructing validity: New developments
+#' in creating objective measuring instruments. *Psychological Assessment,
+#' 31*(12), 1412-1427. \doi{10.1037/pas0000626}
+#'
+#' Kuhn, M., & Johnson, K. (2013). *Applied predictive modeling*. Springer.
+#' \doi{10.1007/978-1-4614-6849-3}
+#'
+#' Nunnally, J. C., & Bernstein, I. H. (1994). *Psychometric theory* (3rd ed.).
+#' McGraw-Hill.
+#'
 #' @examples
 #' dat <- data.frame(
 #'   item1 = c(1, 2, 3, 4, 5),
@@ -46,6 +57,10 @@
 #' out <- nomo_screen(dat)
 #' out$item_summary
 #' out$decision_log
+#'
+#' # Simulated scale-development data with known teaching features
+#' scr <- nomo_screen(nomo_demo_continuous)
+#' summary(scr)
 #'
 #' @export
 nomo_screen <- function(data, items = NULL, guidance = nomo_defaults()) {

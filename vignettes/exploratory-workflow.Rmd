@@ -11,6 +11,8 @@ vignette: >
 library(nomologR)
 
 knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
   echo = TRUE,
   message = FALSE,
   warning = FALSE,
@@ -21,113 +23,157 @@ knitr::opts_chunk$set(
 
 # Why this workflow is staged
 
-Exploratory factor analysis is not a scale-purification button. Before interpreting
-an exploratory factor solution, researchers should know what items are being
-analyzed, how they are coded, whether the correlation model matches the intended
-measurement level, and how many dimensions are substantively plausible.
+Exploratory factor analysis is not a scale-purification button. Before
+interpreting an exploratory factor solution, researchers should know what items
+are being analyzed, how they are coded, whether the correlation model matches
+the intended measurement level, and how many dimensions are substantively
+plausible.
 
 `nomologR` therefore separates three questions:
 
-1. `nomo_screen()` — **What does the item/data set look like?**
+1. `nomo_screen()` — **What does the item and response data look like?**
 2. `nomo_factors()` — **How many latent dimensions deserve investigation?**
 3. `nomo_efa()` — **What does a requested exploratory structure look like?**
 
-The handoff is deliberate: no stage silently deletes items, changes the requested
-factor count, or treats a numerical reference value as proof.
+The handoff is deliberate: no stage silently deletes items, changes the
+requested factor count, or treats a numerical reference value as proof.
 
-# A reproducible two-factor example
+# A teaching dataset with a known answer
 
-The example below has two correlated latent variables with four indicators each.
-The population structure is intentionally clear so that the workflow can be
-inspected against a known data-generating process.
+`nomo_demo_continuous` was simulated from a documented population model, so the
+package's evidence can be checked against the truth:
 
-```{r simulate}
-set.seed(2026)
-n <- 400
+- two factors, A and B, correlated .40;
+- items `a1`–`a4` and `b1`–`b4` are ordinary indicators (population loadings
+  .70 to .80);
+- `a5` **cross-loads** on both factors (.45 on A and .35 on B);
+- `b5` is a **weak** indicator (.30 on B);
+- `a2` and `b3` contain a small amount of missing data.
 
-f1 <- rnorm(n)
-f2 <- 0.35 * f1 + sqrt(1 - 0.35^2) * rnorm(n)
-
-dat <- data.frame(
-  a1 = .82 * f1 + rnorm(n, sd = .55),
-  a2 = .78 * f1 + rnorm(n, sd = .60),
-  a3 = .75 * f1 + rnorm(n, sd = .62),
-  a4 = .80 * f1 + rnorm(n, sd = .58),
-  b1 = .82 * f2 + rnorm(n, sd = .55),
-  b2 = .78 * f2 + rnorm(n, sd = .60),
-  b3 = .75 * f2 + rnorm(n, sd = .62),
-  b4 = .80 * f2 + rnorm(n, sd = .58)
-)
+```{r data}
+str(nomo_demo_continuous)
+colSums(is.na(nomo_demo_continuous))
 ```
+
+With real data, of course, nobody hands you the population model. The point of
+a known-answer dataset is to learn what the evidence looks like when you *do*
+know what is true.
 
 # Step 1: audit the items
 
 ```{r screen}
-scr <- nomo_screen(dat)
+scr <- nomo_screen(nomo_demo_continuous)
 summary(scr)
 ```
 
-The screening object is descriptive and diagnostic. A flag is a reason to inspect
-an item or coding decision, not an instruction to remove an item.
+The screening object is descriptive and diagnostic. The missing values in `a2`
+and `b3` are visible here, before any model decides how to handle them. A flag
+is a reason to inspect an item or a coding decision, not an instruction to
+remove it.
+
+```{r screen-plot}
+plot(scr)
+```
 
 # Step 2: investigate factor retention
 
 ```{r factors}
 fac <- nomo_factors(
-  dat,
+  nomo_demo_continuous,
   criterion_set = "core",
-  n_iter = 20,
   seed = 2026
 )
 summary(fac)
 ```
 
-Parallel analysis is the primary retention suggestion, with MAP and EKC providing
-complementary evidence. When methods disagree, the disagreement is part of the
-result rather than something `nomologR` resolves with a majority-vote rule.
+Parallel analysis is the primary retention evidence, with MAP and the empirical
+Kaiser criterion (EKC) providing complementary evidence. Here parallel analysis
+and both MAP variants agree on two dimensions, which matches the population
+model. When methods disagree, the disagreement is part of the result rather than
+something `nomologR` resolves with a majority vote.
 
-# Step 3: hand the retention result into EFA
+Notice that EKC was requested but not run. The default pairwise-complete
+correlations use different numbers of cases for different item pairs (because of
+the missing values in `a2` and `b3`), and EKC needs one common sample size.
+`nomologR` reports that reason instead of silently substituting another
+criterion. Choosing `missing = "complete"` would make EKC available, at the cost
+of analyzing only the cases with no missing items — a trade-off for the
+researcher to make and record.
+
+```{r scree-plot}
+plot(fac, type = "scree")
+```
+
+## Historical note: eigenvalues greater than one
+
+For decades, many researchers retained every component with an eigenvalue
+greater than one (Guttman, 1954; Kaiser, 1960), often as part of the "Little
+Jiffy" routine of principal components, eigenvalues greater than one, and
+varimax rotation. Simulation research has shown that this rule frequently
+retains too many dimensions, and parallel analysis (Horn, 1965) is now preferred.
+`nomologR` can display the legacy rule with `criterion_set = "all"`, labeled as
+historical context and excluded from the synthesis, so that learners can
+recognize it in published work without relying on it.
+
+# Step 3: hand the retention evidence into EFA
 
 ```{r efa}
 efa <- nomo_efa(
-  dat,
+  nomo_demo_continuous,
   factors = fac
 )
 summary(efa)
 ```
 
-Passing the `nomo_factors` object carries forward the selected item set, modeling
-types, correlation model, and missing-data strategy. The primary
-parallel-analysis count becomes the **requested** EFA factor count. If M2 identified
-neighboring plausible solutions, `nomo_efa()` records that context and recommends
-comparing those solutions rather than treating the handoff as proof.
+Passing the `nomo_factors` object carries forward the item set, modeling types,
+correlation model, and missing-data strategy. The primary parallel-analysis
+count becomes the **requested** EFA factor count. If the retention evidence had
+identified neighboring plausible solutions, `nomo_efa()` would record that
+context and recommend comparing them rather than treating the handoff as proof.
 
 # Read the item table as evidence, not a deletion list
 
 ```{r item-table}
-efa$item_summary
+item_view <- efa$item_summary[, c(
+  "item", "primary_factor", "primary_loading", "secondary_loading",
+  "communality", "attention"
+)]
+item_view
 ```
 
-The item table reports:
+```{r item-values, include=FALSE}
+row_of <- function(item) efa$item_summary[efa$item_summary$item == item, ]
+a5 <- row_of("a5")
+b5 <- row_of("b5")
+b4 <- row_of("b4")
+```
 
-- the largest pattern loading;
-- the second-largest pattern loading;
-- the gap between them;
-- communality and uniqueness;
-- loading complexity;
-- `KEEP`, `REVIEW`, or `STRONG REVIEW`;
-- a plain-language explanation for every numerical flag.
+Compare the table with the known population model:
 
-`KEEP` means that no configured numerical teaching-reference flag fired. It does
+- `a5` receives **`r a5$attention`**. Its secondary loading of
+  `r sprintf("%.2f", a5$secondary_loading)` reaches the cross-loading reference,
+  exactly the feature built into the data.
+- `b5` receives **`r b5$attention`**. Its primary loading of
+  `r sprintf("%.2f", b5$primary_loading)` and communality of
+  `r sprintf("%.2f", b5$communality)` reflect the weak population loading.
+- `b4` receives **`r b4$attention`** even though its population loading is .70.
+  Its sample communality of `r sprintf("%.3f", b4$communality)` sits essentially
+  at the .40 reference. This is sampling variability around a teaching
+  reference — a reminder that references are prompts, not cliffs.
+
+`KEEP` means that no configured numerical teaching reference fired. It does
 **not** mean that theory, wording, content coverage, redundancy, or external
-validity evidence has approved the item.
+validity evidence has approved the item. Likewise, `REVIEW` does not mean
+"delete." Defensible options for `a5` include retaining it because its content
+is essential, revising its wording, or evaluating a model without it — and
+recording the rationale either way.
 
 # Pattern versus structure matrices
 
 With oblique rotation, the pattern matrix contains regression-like factor
 coefficients and is the primary matrix for interpreting which indicators define
-which factors. The structure matrix contains item-factor correlations and also
-reflects correlations among the factors.
+which factors. The structure matrix contains item–factor correlations and also
+reflects the correlation between factors.
 
 ```{r matrices}
 round(efa$pattern_matrix, 2)
@@ -141,9 +187,9 @@ plot(efa, type = "pattern")
 
 # Residual strain
 
-A plausible loading pattern can still leave localized relationships unexplained.
-`nomo_efa()` therefore returns the reproduced correlation matrix, the residual
-matrix, the off-diagonal RMSR, and ranked residual pairs.
+A plausible loading pattern can still leave localized relationships
+unexplained. `nomo_efa()` therefore returns the reproduced correlation matrix,
+the residual matrix, the off-diagonal RMSR, and ranked residual pairs.
 
 ```{r residuals}
 efa$rmsr
@@ -154,42 +200,54 @@ head(efa$residual_pairs, 10)
 plot(efa, type = "residuals")
 ```
 
-Residuals are diagnostic evidence. `nomologR` does not search for a better model,
-add correlated residuals, change the factor count, or remove indicators behind
-the user's back.
+Residuals are diagnostic evidence. `nomologR` does not search for a better
+model, add correlated residuals, change the factor count, or remove indicators
+behind the user's back.
 
 # Researcher control remains explicit
 
-The default is common-factor MINRES extraction with oblimin rotation. Researchers
-may choose another common-factor extraction or rotation, but those choices remain
-visible in the result and decision log. For example:
+The default is common-factor MINRES extraction with oblimin rotation.
+Researchers may choose another common-factor extraction or rotation, but those
+choices remain visible in the result and decision log.
 
-```{r orthogonal, eval=FALSE}
+```{r orthogonal}
 efa_varimax <- nomo_efa(
-  dat,
+  nomo_demo_continuous,
   factors = 2,
   rotation = "varimax"
 )
+efa_varimax$item_summary[, c("item", "primary_loading", "secondary_loading", "attention")]
 ```
 
-An orthogonal choice is permitted rather than prohibited, but the output asks the
-researcher to justify the assumption that the factors should be uncorrelated.
+An orthogonal rotation is permitted rather than prohibited, but it forces the
+factors to be uncorrelated even though A and B correlate .40 in the population.
+The decision log asks the researcher to justify that assumption.
 
-For numeric Likert items, declare the intended modeling level rather than assuming
-that integer storage proves continuous or ordinal measurement:
+# Ordered response categories
 
-```{r ordinal-example, eval=FALSE}
-types <- c(
-  q1 = "ordinal",
-  q2 = "ordinal",
-  q3 = "ordinal",
-  q4 = "ordinal"
-)
+Many rating scales produce ordered categories rather than continuous scores.
+`nomo_demo_ordinal` stores the same latent responses as five-category ordered
+factors, so `nomologR` uses polychoric correlations automatically:
 
-efa_ord <- nomo_efa(
-  dat_likert,
-  factors = 1,
-  types = types
+```{r ordinal-factors}
+fac_ord <- nomo_factors(nomo_demo_ordinal, seed = 2026)
+fac_ord$correlation
+
+efa_ord <- nomo_efa(nomo_demo_ordinal, factors = fac_ord)
+efa_ord$item_summary[, c("item", "primary_loading", "secondary_loading", "attention")]
+```
+
+When Likert-type responses are stored as integers instead of ordered factors,
+integer storage alone does not tell `nomologR` whether the researcher intends a
+continuous or ordinal model. Declare the modeling level explicitly. This chunk
+only illustrates the syntax, because the teaching data already store ordered
+factors:
+
+```{r ordinal-types, eval=FALSE}
+efa_declared <- nomo_efa(
+  my_likert_items,
+  factors = 2,
+  types = c(q1 = "ordinal", q2 = "ordinal", q3 = "ordinal", q4 = "ordinal")
 )
 ```
 
@@ -197,10 +255,17 @@ efa_ord <- nomo_efa(
 
 EFA contributes exploratory evidence about latent structure. A defensible
 measurement workflow still requires theoretical interpretation and, where
-feasible, confirmation on fresh or holdout data. The next `nomologR` milestone is
-confirmatory factor analysis.
+feasible, confirmation on fresh or holdout data. Continue with
+[From CFA to a defensible measurement model](measurement-model-evidence.html).
 
-Methodological treatments that motivate the package's EFA philosophy include
-Fabrigar, Wegener, MacCallum, and Strahan (1999), Watkins (2018), and later
-reviews emphasizing common-factor models, evidence-based retention, and oblique
-rotation when factor correlations are plausible.
+# Research basis
+
+The package's EFA philosophy follows reviews that documented problematic
+historical defaults — principal components presented as factor analysis,
+eigenvalues greater than one, orthogonal rotation, and mechanical deletion — and
+recommended common-factor models, evidence-based retention, and oblique rotation
+when factors may correlate (Fabrigar et al., 1999; Conway & Huffcutt, 2003;
+Browne, 2001; Watkins, 2018). Parallel analysis originates with Horn (1965); the
+eigenvalue-greater-than-one rule with Guttman (1954) and Kaiser (1960). See the
+[research basis](research-basis.html) article for full references and the
+broader historical-to-contemporary map.

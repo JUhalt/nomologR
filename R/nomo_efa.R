@@ -52,23 +52,41 @@
 #'   communalities/uniquenesses, residual diagnostics, adequacy information,
 #'   and a decision log.
 #'
+#' @references
+#' Browne, M. W. (2001). An overview of analytic rotation in exploratory factor
+#' analysis. *Multivariate Behavioral Research, 36*(1), 111-150.
+#' \doi{10.1207/S15327906MBR3601_05}
+#'
+#' Conway, J. M., & Huffcutt, A. I. (2003). A review and evaluation of
+#' exploratory factor analysis practices in organizational research.
+#' *Organizational Research Methods, 6*(2), 147-168.
+#' \doi{10.1177/1094428103251541}
+#'
+#' Costello, A. B., & Osborne, J. W. (2005). Best practices in exploratory
+#' factor analysis: Four recommendations for getting the most from your
+#' analysis. *Practical Assessment, Research, and Evaluation, 10*, Article 7.
+#' \doi{10.7275/jyj1-4868}
+#'
+#' Fabrigar, L. R., Wegener, D. T., MacCallum, R. C., & Strahan, E. J. (1999).
+#' Evaluating the use of exploratory factor analysis in psychological research.
+#' *Psychological Methods, 4*(3), 272-299. \doi{10.1037/1082-989X.4.3.272}
+#'
+#' Kaiser, H. F. (1958). The varimax criterion for analytic rotation in factor
+#' analysis. *Psychometrika, 23*(3), 187-200. \doi{10.1007/BF02289233}
+#'
+#' Watkins, M. W. (2018). Exploratory factor analysis: A guide to best
+#' practice. *Journal of Black Psychology, 44*(3), 219-246.
+#' \doi{10.1177/0095798418771807}
+#'
 #' @examples
-#' set.seed(2026)
-#' f1 <- rnorm(250)
-#' f2 <- 0.35 * f1 + sqrt(1 - 0.35^2) * rnorm(250)
-#' dat <- data.frame(
-#'   a1 = .75 * f1 + rnorm(250, sd = .65),
-#'   a2 = .70 * f1 + rnorm(250, sd = .70),
-#'   a3 = .80 * f1 + rnorm(250, sd = .60),
-#'   a4 = .72 * f1 + rnorm(250, sd = .68),
-#'   b1 = .75 * f2 + rnorm(250, sd = .65),
-#'   b2 = .70 * f2 + rnorm(250, sd = .70),
-#'   b3 = .80 * f2 + rnorm(250, sd = .60),
-#'   b4 = .72 * f2 + rnorm(250, sd = .68)
-#' )
-#' efa <- nomo_efa(dat, factors = 2)
+#' efa <- nomo_efa(nomo_demo_continuous, factors = 2)
 #' efa
-#' summary(efa)
+#' efa$item_summary[, c("item", "primary_loading", "secondary_loading", "attention")]
+#'
+#' # Carry retention evidence and its modeling decisions into the EFA
+#' fac <- nomo_factors(nomo_demo_continuous, n_iter = 20, seed = 2026)
+#' efa_from_evidence <- nomo_efa(nomo_demo_continuous, factors = fac)
+#' summary(efa_from_evidence)
 #'
 #' @export
 nomo_efa <- function(data,
