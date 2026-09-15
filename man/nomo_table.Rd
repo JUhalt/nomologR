@@ -30,6 +30,8 @@ Supported objects and \code{type} values:
 \code{"local_strain"}, \code{"decision_log"}. The local-strain table keeps lavaan's
 internal \code{constraint} label and adds a human-readable
 \code{constraint_display} column (for example, \verb{Intercept: ag3 (online vs. paper)}).
+\item \code{nomo_compare}: \code{"comparisons"} (default), \code{"models"}, \code{"loadings"},
+\code{"evidence"}, \code{"decision_log"}; see \code{\link[=nomo_compare]{nomo_compare()}}.
 \item \code{nomo_run}: \code{"stages"} (default), \code{"requests"}, \code{"decisions"},
 \code{"component_log"}, \code{"scales"}, \code{"recipe"}, \code{"settings"}; see
 \code{\link[=nomo_run]{nomo_run()}}.

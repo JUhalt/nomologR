@@ -18,6 +18,8 @@
 #'   internal `constraint` label and adds a human-readable
 #'   `constraint_display` column (for example, `Intercept: ag3 (online vs.
 #'   paper)`).
+#' * `nomo_compare`: `"comparisons"` (default), `"models"`, `"loadings"`,
+#'   `"evidence"`, `"decision_log"`; see [nomo_compare()].
 #' * `nomo_run`: `"stages"` (default), `"requests"`, `"decisions"`,
 #'   `"component_log"`, `"scales"`, `"recipe"`, `"settings"`; see
 #'   [nomo_run()].
@@ -120,6 +122,28 @@ nomo_table.nomo_invariance <- function(
   }
 
   if (type == "local_strain") return(nomo_invariance_local_strain_display(x))
+
+  x$decision_log
+}
+
+
+#' @export
+nomo_table.nomo_compare <- function(
+    x,
+    type = c(
+      "comparisons",
+      "models",
+      "loadings",
+      "evidence",
+      "decision_log"
+    ),
+    ...) {
+  type <- match.arg(type)
+
+  if (type == "comparisons") return(x$comparisons)
+  if (type == "models") return(x$models)
+  if (type == "loadings") return(x$loadings)
+  if (type == "evidence") return(x$evidence)
 
   x$decision_log
 }

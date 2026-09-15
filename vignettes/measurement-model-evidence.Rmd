@@ -269,8 +269,119 @@ Three lessons carry over from the exploratory stage:
   here; `missing = "fiml"` requests full-information maximum likelihood for
   continuous indicators, and the decision is recorded.
 
-A formal side-by-side model comparison with a recorded rationale is planned for
-`v0.2.0` ([#27](https://github.com/JUhalt/nomologR/issues/27)).
+# Comparing models with a recorded rationale
+
+`nomo_compare()` evaluates competing measurement models side by side. It
+requires a rationale, checks whether the models are nested, reports the
+difference test that matches the estimator when they are, and never selects a
+model automatically.
+
+## A cross-loading suggested by the results
+
+The largest modification index above pointed to a loading of `a5` on factor B.
+Because that idea came from the results rather than from theory stated in
+advance, the comparison is labeled post hoc:
+
+```{r compare-cross}
+cross_cfa <- nomo_cfa(
+  "A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4 + b5 + a5",
+  data = nomo_demo_continuous
+)
+
+cross_comparison <- nomo_compare(
+  simple_structure = demo_cfa,
+  cross_loading = cross_cfa,
+  rationale = "The largest modification index suggested that a5 also reflects factor B.",
+  origin = "post_hoc"
+)
+cross_comparison
+```
+
+```{r compare-values, include=FALSE}
+fmt_p <- function(p) {
+  if (!is.finite(p)) return("unavailable")
+  if (p < .001) "< .001" else paste("=", formatC(p, format = "f", digits = 3))
+}
+cc <- cross_comparison$comparisons
+```
+
+Estimating the cross-loading reduces misfit (chi-square difference =
+`r sprintf("%.1f", cc$chisq_diff)`, df = `r cc$df_diff`, p `r fmt_p(cc$p_value)`;
+CFI changes by `r sprintf("%+.3f", cc$delta_cfi)`). That is exactly the feature
+built into these simulated data, but with real data the evidence alone does not
+settle the question. Does the wording of `a5` plausibly reflect both
+constructs? Because the comparison is post hoc, the decision log records it as
+such and recommends confirming the retained model in independent data.
+
+## Is a weak item needed?
+
+`b5` loads weakly on B. Dropping `b5` from the model changes the data being
+modeled, so a model without the column cannot be tested against the full model.
+Instead, keep `b5` and fix its loading to zero:
+
+```{r compare-b5}
+b5_zero_cfa <- nomo_cfa(
+  "A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4 + 0*b5",
+  data = nomo_demo_continuous
+)
+
+b5_comparison <- nomo_compare(
+  full = demo_cfa,
+  b5_loading_zero = b5_zero_cfa,
+  rationale = paste(
+    "Evaluate whether the weakly loading item b5 contributes to factor B",
+    "before deciding whether to keep it."
+  )
+)
+summary(b5_comparison)
+```
+
+```{r b5-values, include=FALSE}
+bc <- b5_comparison$comparisons
+b5_loading <- b5_comparison$loadings$full[b5_comparison$loadings$item == "b5"]
+```
+
+Fixing the loading to zero worsens fit (chi-square difference =
+`r sprintf("%.1f", bc$chisq_diff)`, df = `r bc$df_diff`, p `r fmt_p(bc$p_value)`),
+so `b5` is statistically related to B. Its standardized loading, however, is
+only `r sprintf("%.2f", b5_loading)`. With `r b5_comparison$models$n_used[[1]]`
+cases, even a weak relation is detectable; statistical detectability is not the
+same as an adequate indicator. The decision still depends on whether `b5` covers
+content the construct needs.
+
+```{r compare-loadings-plot}
+plot(b5_comparison, type = "loadings")
+```
+
+The summary's measurement evidence carries a note: omega for B in the
+zero-loading model still includes `b5` in the composite, so it does not
+describe a shortened four-item scale. To see that scale's reliability, fit the
+model without `b5`. Because the two models contain different observed
+variables, `nomo_compare()` reports this comparison descriptively, without a
+difference test or information criteria:
+
+```{r compare-shortened}
+shortened_cfa <- nomo_cfa(
+  "A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4",
+  data = nomo_demo_continuous
+)
+
+shortened <- nomo_compare(
+  full = demo_cfa,
+  four_item_b = shortened_cfa,
+  rationale = "Describe the reliability of a four-item B scale alongside the full scale."
+)
+
+nomo_table(shortened, "comparisons")[, c("model", "relation", "test_available", "ic_available")]
+
+omega_rows <- nomo_table(shortened, "evidence")
+omega_rows[omega_rows$metric == "omega", c("model", "construct", "estimate")]
+```
+
+Together these results separate three questions that are easy to blur: whether
+an item is statistically related to its factor, whether it is a strong
+indicator, and how the score's reliability changes without it. None of them
+alone decides whether the item stays.
 
 # Reading the evidence as an argument
 
