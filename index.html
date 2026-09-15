@@ -89,7 +89,7 @@
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># install.packages("pak")</span></span>
 <span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pak.html" class="external-link">pak</a></span><span class="op">(</span><span class="st">"JUhalt/nomologR"</span><span class="op">)</span></span></code></pre></div>
-<p><code>nomologR</code> is distributed through R-universe, which builds the latest GitHub release. CRAN submission is planned for a later polish release (<a href="https://github.com/JUhalt/nomologR/issues/39" class="external-link">#39</a>).</p>
+<p><code>nomologR</code> is distributed through R-universe, which builds each GitHub release, usually within a few hours. The first CRAN submission is targeted for <code>v0.3.0</code> (<a href="https://github.com/JUhalt/nomologR/issues/39" class="external-link">#39</a>); until then, install from R-universe or GitHub.</p>
 </div>
 <div class="section level2">
 <h2 id="who-it-is-for">Who it is for<a class="anchor" aria-label="anchor" href="#who-it-is-for"></a>
@@ -605,11 +605,13 @@
 <p>The <a href="https://github.com/JUhalt/nomologR/milestone/2" class="external-link"><code>v0.2.0</code> milestone</a> makes the workflow research-backed from historical to contemporary practice and more useful to graduate students and researchers. Scope was selected in <a href="https://github.com/JUhalt/nomologR/issues/22" class="external-link">#22</a>:</p>
 <ul>
 <li>
-<strong>Core:</strong> learning foundations (#25), research basis (#26), model comparison with <code>nomo_compare()</code> (#27), auditable revision lineage (#28), bifactor and higher-order models (#29), replication-status language (#30), and release certification (#37).</li>
+<strong>Completed:</strong> learning foundations (#25) and readable invariance labels (#31), including the teaching datasets, runnable vignettes, and the research basis article; maintenance (#36).</li>
 <li>
-<strong>Planned:</strong> readable invariance labels (#31), missing-data sensitivity (#32), score guidance (#33), insufficient-effort responding screens (#34), manuscript-ready tables (#35), maintenance (#36), and rendering reports from inside R Markdown or Quarto documents (#40).</li>
+<strong>Core, in progress or next:</strong> research basis methods registry (#26), model comparison with <code>nomo_compare()</code> (#27), auditable revision lineage (#28), bifactor and higher-order models (#29), replication-status language (#30), and release certification with a CRAN-readiness gate (#37).</li>
+<li>
+<strong>Planned:</strong> missing-data sensitivity (#32), score guidance (#33), insufficient-effort responding screens (#34), manuscript-ready tables (#35), rendering reports from inside R Markdown or Quarto documents (#40), and optional parallel bootstrap intervals (#42).</li>
 </ul>
-<p>Candidates for <code>v0.3.0</code> (for example IRT/DIF, Bayesian SEM, ESEM, and longitudinal invariance) are tracked in <a href="https://github.com/JUhalt/nomologR/issues/38" class="external-link">#38</a>.</p>
+<p><code>v0.3.0</code> carries the first CRAN submission (<a href="https://github.com/JUhalt/nomologR/issues/39" class="external-link">#39</a>). Other candidates for that release (for example IRT/DIF, Bayesian SEM, ESEM, and longitudinal invariance) are tracked in <a href="https://github.com/JUhalt/nomologR/issues/38" class="external-link">#38</a>.</p>
 </div>
 <div class="section level3">
 <h3 id="completed-v010">Completed: <code>v0.1.0</code>

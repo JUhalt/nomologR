@@ -56,7 +56,7 @@
 <p><strong>Audience:</strong> graduate students (master’s and doctoral) learning these techniques, the faculty who teach and advise them, and researchers who apply them.</p>
 <p><strong>Core principle:</strong> Flag, explain, and document. Never silently delete.</p>
 </blockquote>
-<p><strong>Current stable release:</strong> <a href="https://github.com/JUhalt/nomologR/releases/tag/v0.1.0" class="external-link">0.1.0</a> (September 9, 2026). <strong>Current source:</strong> <code>0.1.0.9000</code>, GPL-3.0-only. <strong>Next release:</strong> <a href="https://github.com/JUhalt/nomologR/milestone/2" class="external-link">v0.2.0</a> — research-backed, usable measurement workflows. Scope was selected in <a href="https://github.com/JUhalt/nomologR/issues/22" class="external-link">#22</a> on September 13, 2026. <strong>Distribution:</strong> <a href="https://juhalt.r-universe.dev" class="external-link">R-universe</a>. CRAN submission is deferred to a later polish release (<a href="https://github.com/JUhalt/nomologR/issues/39" class="external-link">#39</a>).</p>
+<p><strong>Current stable release:</strong> <a href="https://github.com/JUhalt/nomologR/releases/tag/v0.1.0" class="external-link">0.1.0</a> (September 9, 2026). <strong>Current source:</strong> <code>0.1.0.9000</code>, GPL-3.0-only. <strong>Next release:</strong> <a href="https://github.com/JUhalt/nomologR/milestone/2" class="external-link">v0.2.0</a> — research-backed, usable measurement workflows. Scope was selected in <a href="https://github.com/JUhalt/nomologR/issues/22" class="external-link">#22</a> on September 13, 2026. <strong>Distribution:</strong> <a href="https://juhalt.r-universe.dev" class="external-link">R-universe</a>, which builds each GitHub release. The first CRAN submission is targeted for <code>v0.3.0</code> (<a href="https://github.com/JUhalt/nomologR/issues/39" class="external-link">#39</a>).</p>
 <p>The complete v0.1 milestone specifications, exit gates, and certification records are preserved verbatim in <a href="dev/roadmap-v0.1-record.html"><code>dev/roadmap-v0.1-record.md</code></a>. Those records are historical; they are not new verification results.</p>
 <hr><div class="section level2">
 <h2 id="id_1-package-boundary">1. Package Boundary<a class="anchor" aria-label="anchor" href="#id_1-package-boundary"></a></h2>
@@ -153,36 +153,37 @@
 </ol><p><strong>Core</strong> workstreams must ship in v0.2.0. <strong>Planned</strong> workstreams are in scope but may move to a later release with a recorded rationale. Each issue records the user problem, historical-to-contemporary lineage, estimand, assumptions and unsupported cases, validation plan, and exit criteria.</p>
 <div class="section level2">
 <h2 id="core-workstreams">Core workstreams<a class="anchor" aria-label="anchor" href="#core-workstreams"></a></h2>
-<ul class="task-list"><li><label><input type="checkbox"><a href="https://github.com/JUhalt/nomologR/issues/25" class="external-link">#25</a> Learning foundations — teaching datasets, runnable vignettes and examples, site navigation.</label></li>
-<li><label><input type="checkbox"><a href="https://github.com/JUhalt/nomologR/issues/26" class="external-link">#26</a> Research basis — historical-to-contemporary methods documentation, verified references, methods registry.</label></li>
+<ul class="task-list"><li><label><input type="checkbox" checked><a href="https://github.com/JUhalt/nomologR/issues/25" class="external-link">#25</a> Learning foundations — teaching datasets, runnable vignettes and examples, site navigation (completed in <a href="https://github.com/JUhalt/nomologR/pull/41" class="external-link">#41</a>).</label></li>
+<li><label><input type="checkbox"><a href="https://github.com/JUhalt/nomologR/issues/26" class="external-link">#26</a> Research basis — historical-to-contemporary methods documentation, verified references, methods registry. References and the research-basis article shipped in <a href="https://github.com/JUhalt/nomologR/pull/41" class="external-link">#41</a>; the methods registry and report-level method citations remain.</label></li>
 <li><label><input type="checkbox"><a href="https://github.com/JUhalt/nomologR/issues/27" class="external-link">#27</a> Model comparison — <code>nomo_compare()</code> for nested and non-nested measurement models.</label></li>
 <li><label><input type="checkbox"><a href="https://github.com/JUhalt/nomologR/issues/28" class="external-link">#28</a> Revision lineage — auditable revise-and-compare cycles in <code><a href="reference/nomo_run.html">nomo_run()</a></code>.</label></li>
 <li><label><input type="checkbox"><a href="https://github.com/JUhalt/nomologR/issues/29" class="external-link">#29</a> Bifactor and higher-order measurement models.</label></li>
 <li><label><input type="checkbox"><a href="https://github.com/JUhalt/nomologR/issues/30" class="external-link">#30</a> Replication-status language for near-zero sign changes.</label></li>
-<li><label><input type="checkbox"><a href="https://github.com/JUhalt/nomologR/issues/37" class="external-link">#37</a> Release certification and R-universe publication.</label></li>
+<li><label><input type="checkbox"><a href="https://github.com/JUhalt/nomologR/issues/37" class="external-link">#37</a> Release certification, CRAN-readiness gate, and R-universe publication.</label></li>
 </ul></div>
 <div class="section level2">
 <h2 id="planned-workstreams">Planned workstreams<a class="anchor" aria-label="anchor" href="#planned-workstreams"></a></h2>
-<ul class="task-list"><li><label><input type="checkbox"><a href="https://github.com/JUhalt/nomologR/issues/31" class="external-link">#31</a> Human-readable invariance local-strain labels.</label></li>
+<ul class="task-list"><li><label><input type="checkbox" checked><a href="https://github.com/JUhalt/nomologR/issues/31" class="external-link">#31</a> Human-readable invariance local-strain labels (completed in <a href="https://github.com/JUhalt/nomologR/pull/41" class="external-link">#41</a>).</label></li>
 <li><label><input type="checkbox"><a href="https://github.com/JUhalt/nomologR/issues/32" class="external-link">#32</a> Missing-data sensitivity across measurement stages.</label></li>
 <li><label><input type="checkbox"><a href="https://github.com/JUhalt/nomologR/issues/33" class="external-link">#33</a> Score guidance — <code>nomo_scores()</code> for sum and factor scores.</label></li>
 <li><label><input type="checkbox"><a href="https://github.com/JUhalt/nomologR/issues/34" class="external-link">#34</a> Insufficient-effort responding screen in <code><a href="reference/nomo_screen.html">nomo_screen()</a></code>.</label></li>
 <li><label><input type="checkbox"><a href="https://github.com/JUhalt/nomologR/issues/35" class="external-link">#35</a> Manuscript-ready tables and Word report output.</label></li>
-<li><label><input type="checkbox"><a href="https://github.com/JUhalt/nomologR/issues/36" class="external-link">#36</a> Maintenance — test organization, <code>nomo_run.R</code> modularization, minimum-dependency CI.</label></li>
+<li><label><input type="checkbox" checked><a href="https://github.com/JUhalt/nomologR/issues/36" class="external-link">#36</a> Maintenance — test organization, <code>nomo_run.R</code> modularization, minimum-dependency CI.</label></li>
 <li><label><input type="checkbox"><a href="https://github.com/JUhalt/nomologR/issues/40" class="external-link">#40</a> <code><a href="reference/nomo_report.html">nomo_report()</a></code> rendering from inside R Markdown or Quarto documents.</label></li>
+<li><label><input type="checkbox"><a href="https://github.com/JUhalt/nomologR/issues/42" class="external-link">#42</a> Optional parallel bootstrap for reliability confidence intervals.</label></li>
 </ul></div>
 <div class="section level2">
 <h2 id="suggested-sequence">Suggested sequence<a class="anchor" aria-label="anchor" href="#suggested-sequence"></a></h2>
 <ol style="list-style-type: decimal"><li>
-<strong>Foundations:</strong> #25 and #31, with #26 maintained alongside every later workstream.</li>
+<strong>Foundations (done):</strong> #25 and #31, with #26 maintained alongside every later workstream.</li>
 <li>
-<strong>Safe structure for revision work:</strong> #36 (modularize <code><a href="reference/nomo_run.html">nomo_run()</a></code>), then #27, then #28.</li>
+<strong>Safe structure for revision work:</strong> #36 (done), then #27, then #28.</li>
 <li>
 <strong>Broader measurement models and interpretation:</strong> #29 (builds on #27) and #30.</li>
 <li>
-<strong>Usability extensions:</strong> #32, #33, #34, #35.</li>
+<strong>Usability extensions:</strong> #32, #33, #34, #35, #40, #42.</li>
 <li>
-<strong>Release:</strong> #37, including the license/version/date gate carried from #22.</li>
+<strong>Release:</strong> #37, including the license/version/date gate carried from #22 and the CRAN-readiness gate.</li>
 </ol></div>
 <div class="section level2">
 <h2 id="deferred-from-v02-scope-selection">Deferred from v0.2 scope selection<a class="anchor" aria-label="anchor" href="#deferred-from-v02-scope-selection"></a></h2>
@@ -191,7 +192,8 @@
 </div>
 <div class="section level1">
 <h1 id="v03x--modern-extensions">v0.3.x — Modern Extensions<a class="anchor" aria-label="anchor" href="#v03x--modern-extensions"></a></h1>
-<p><strong>Status:</strong> Candidates. Scope selection in <a href="https://github.com/JUhalt/nomologR/issues/38" class="external-link">#38</a>; <a href="https://github.com/JUhalt/nomologR/milestone/3" class="external-link">v0.3.0 milestone</a>.</p>
+<p><strong>Status:</strong> Scope selection in <a href="https://github.com/JUhalt/nomologR/issues/38" class="external-link">#38</a>; <a href="https://github.com/JUhalt/nomologR/milestone/3" class="external-link">v0.3.0 milestone</a>.</p>
+<p><strong>Committed:</strong> the first CRAN submission (<a href="https://github.com/JUhalt/nomologR/issues/39" class="external-link">#39</a>); see <a href="#distribution--r-universe-now-cran-with-v030">Distribution</a> below.</p>
 <p>Candidate modules (not commitments until selected):</p>
 <ul class="task-list"><li><label><input type="checkbox">ESEM.</label></li>
 <li><label><input type="checkbox">Longitudinal invariance.</label></li>
@@ -206,8 +208,11 @@
 <li><label><input type="checkbox">A <code>contentvalidR</code> → <code>nomologR</code> handoff that carries content-validity decisions into the decision log.</label></li>
 </ul><hr></div>
 <div class="section level1">
-<h1 id="later--polish-and-wider-distribution">Later — Polish and Wider Distribution<a class="anchor" aria-label="anchor" href="#later--polish-and-wider-distribution"></a></h1>
-<ul class="task-list"><li><label><input type="checkbox">CRAN submission readiness (<a href="https://github.com/JUhalt/nomologR/issues/39" class="external-link">#39</a>). Until then, stable releases are distributed through R-universe.</label></li>
+<h1 id="distribution--r-universe-now-cran-with-v030">Distribution — R-universe Now, CRAN with v0.3.0<a class="anchor" aria-label="anchor" href="#distribution--r-universe-now-cran-with-v030"></a></h1>
+<ul><li>Stable releases are published as GitHub releases. <a href="https://juhalt.r-universe.dev" class="external-link">R-universe</a> builds each release, usually within a few hours.</li>
+<li>
+<code>v0.2.0</code> certification (<a href="https://github.com/JUhalt/nomologR/issues/37" class="external-link">#37</a>) includes a CRAN-readiness gate: <code>R CMD check --as-cran</code> clean on win-builder, the macOS builder, and R-hub; long-running tests skipped on CRAN; fast examples and vignettes.</li>
+<li><label><input type="checkbox">First CRAN submission with <code>v0.3.0</code> (<a href="https://github.com/JUhalt/nomologR/issues/39" class="external-link">#39</a>). Decision recorded September 15, 2026: submitting after the v0.2 functions have been used on R-universe avoids repeated CRAN resubmissions while the API is still growing.</label></li>
 </ul><hr></div>
 <div class="section level1">
 <h1 id="long-term-research-program">Long-Term Research Program<a class="anchor" aria-label="anchor" href="#long-term-research-program"></a></h1>
