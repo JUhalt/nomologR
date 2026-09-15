@@ -812,3 +812,258 @@ expect_false(
   grepl("%3E", report_html, fixed = TRUE)
 )
 })
+
+
+# Edge cases and failure paths ------------------------------------------------
+#
+# Moved from test-regressions.R (#36). These tests were consolidated during
+# pre-v0.1 hardening and exercise defensive branches, sometimes through
+# internal helpers directly.
+
+test_that("closeout: report table helpers return schema-correct empty fallbacks", {
+  m <- matrix(1:4, 2, 2)
+  flat <- nomologR:::nomo_report_flatten_table(m)
+  expect_s3_class(flat, "data.frame")
+
+  run <- make_m9_full_report_run()
+  stages <- c(
+    "screen", "factors", "efa", "cfa",
+    "reliability", "validity", "invariance", "network"
+  )
+
+  for (stage in stages) {
+    comps <- nomologR:::nomo_report_component_list(run, stage)
+    if (length(comps)) {
+      empty <- nomologR:::nomo_report_component_table(
+        comps[[1L]],
+        stage = stage,
+        type = "not_a_real_table"
+      )
+      expect_equal(nrow(empty), 0L)
+    }
+  }
+})
+
+
+test_that("closeout: report deviations cover sparse post-hoc and workflow-decision schemas", {
+  run <- make_m9_minimal_run()
+  run$results$network <- list(
+    hypothesis_evidence = tibble::tibble(
+      confirmatory_status = "post_hoc_exploratory"
+    )
+  )
+  run$decision_log <- tibble::tibble(
+    id = "post_decision",
+    decision = "revise"
+  )
+
+  dev <- nomologR:::nomo_report_deviations(run)
+  expect_true(any(dev$type == "post-hoc nomological relation"))
+  expect_true(any(dev$type == "workflow deviation/revision decision"))
+})
+
+
+test_that("closeout: report package-version and citation helpers expose package metadata", {
+  versions <- nomologR:::nomo_report_package_versions()
+  expect_s3_class(versions, "data.frame")
+  expect_true(all(c("package", "version") %in% names(versions)))
+  expect_true("nomologR" %in% versions$package)
+
+  cites <- nomologR:::nomo_report_citations()
+  expect_s3_class(cites, "data.frame")
+  expect_true(all(c("package", "installed_version", "citation") %in% names(cites)))
+  expect_true("nomologR" %in% cites$package)
+})
+
+
+test_that("closeout: report development-template fallback and missing-template guard are explicit", {
+
+  dev_root <- tempfile("nomo-report-dev-")
+
+  dev_template <- file.path(
+    dev_root,
+    "inst",
+    "rmarkdown",
+    "nomo-report.Rmd"
+  )
+
+  dir.create(
+    dirname(dev_template),
+    recursive = TRUE,
+    showWarnings = FALSE
+  )
+
+  writeLines(
+    'title: "__NOMO_REPORT_TITLE__"',
+    dev_template
+  )
+
+  path <- nomologR:::nomo_report_template_path(
+    installed = "",
+    development = dev_template
+  )
+
+  expect_identical(path, dev_template)
+  expect_true(file.exists(path))
+
+  missing_template <- file.path(
+    tempfile("nomo-report-missing-"),
+    "inst",
+    "rmarkdown",
+    "nomo-report.Rmd"
+  )
+
+  expect_error(
+    nomologR:::nomo_report_template_path(
+      installed = "",
+      development = missing_template
+    ),
+    "Could not locate"
+  )
+})
+
+
+test_that("closeout: report template preparation fails closed when copy is impossible", {
+  src <- tempfile(fileext = ".Rmd")
+  writeLines('title: "__NOMO_REPORT_TITLE__"', src)
+  impossible <- file.path(tempfile(), "child", "report.Rmd")
+  expect_error(
+    suppressWarnings(
+      nomologR:::nomo_report_prepare_template(src, impossible, "Title")
+    ),
+    "Could not prepare"
+  )
+})
+
+
+test_that("closeout: report rendering dependency and output-directory guards are explicit", {
+  run <- make_m9_report_run()
+
+  bad_parent <- tempfile()
+  writeLines("not a directory", bad_parent)
+  out <- file.path(bad_parent, "report.html")
+  expect_error(
+    nomo_report(run, file = out, overwrite = TRUE, quiet = TRUE),
+    "Could not create report output directory"
+  )
+})
+
+
+test_that("closeout B: report deviation extraction handles sparse partial and workflow-decision schemas", {
+  skip_if_not(
+    exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
+  )
+
+  x <- make_m9_minimal_run()
+  x$results$invariance <- structure(list(), class = "synthetic_invariance")
+  x$results$network <- NULL
+  x$decision_log <- tibble::tibble()
+
+  testthat::local_mocked_bindings(
+    nomo_table = function(object, type, ...) {
+      if (identical(type, "partial")) {
+        return(tibble::tibble(syntax = "x1 ~ 1"))
+      }
+      tibble::tibble()
+    },
+    .package = "nomologR"
+  )
+
+  partial <- nomologR:::nomo_report_deviations(x)
+  expect_identical(partial$scope[[1L]], "")
+  expect_identical(partial$rationale[[1L]], "")
+
+  x2 <- make_m9_minimal_run()
+  x2$results$invariance <- NULL
+  x2$results$network <- NULL
+  x2$decision_log <- tibble::tibble(id = "posthoc_deviation")
+
+  workflow <- nomologR:::nomo_report_deviations(x2)
+  expect_equal(nrow(workflow), 1L)
+  expect_identical(workflow$detail[[1L]], "")
+  expect_identical(workflow$rationale[[1L]], "")
+})
+
+
+test_that("closeout B: report package metadata helpers can represent unavailable packages and citation failures", {
+  missing <- nomologR:::nomo_report_package_versions(
+    packages = "definitely_not_a_real_nomologr_package",
+    namespace_available = function(pkg) FALSE
+  )
+  expect_identical(missing$version[[1L]], "not installed")
+
+  missing_citation <- nomologR:::nomo_report_citations(
+    packages = "definitely_not_a_real_nomologr_package",
+    namespace_available = function(pkg) FALSE
+  )
+  expect_identical(
+    missing_citation$installed_version[[1L]],
+    "not installed"
+  )
+
+  failed_citation <- nomologR:::nomo_report_citations(
+    packages = "nomologR",
+    namespace_available = function(pkg) TRUE,
+    citation_fun = function(pkg) stop("synthetic citation failure"),
+    version_fun = function(pkg) "0.0.0"
+  )
+  expect_match(
+    failed_citation$citation[[1L]],
+    "Citation unavailable: synthetic citation failure",
+    fixed = TRUE
+  )
+
+  expect_true(nomologR:::nomo_report_namespace_available("base"))
+  expect_type(nomologR:::nomo_report_pandoc_available(), "logical")
+})
+
+
+test_that("closeout B: report dependency guards distinguish rmarkdown, knitr, and Pandoc", {
+  skip_if_not(
+    exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
+  )
+
+  run <- make_m9_report_run()
+
+  testthat::local_mocked_bindings(
+    nomo_report_namespace_available = function(pkg) FALSE,
+    .package = "nomologR"
+  )
+  expect_error(
+    nomo_report(
+      run,
+      file = tempfile(fileext = ".html"),
+      overwrite = TRUE
+    ),
+    "requires the suggested package `rmarkdown`"
+  )
+
+  testthat::local_mocked_bindings(
+    nomo_report_namespace_available = function(pkg) {
+      !identical(pkg, "knitr")
+    },
+    .package = "nomologR"
+  )
+  expect_error(
+    nomo_report(
+      run,
+      file = tempfile(fileext = ".html"),
+      overwrite = TRUE
+    ),
+    "requires the suggested package `knitr`"
+  )
+
+  testthat::local_mocked_bindings(
+    nomo_report_namespace_available = function(pkg) TRUE,
+    nomo_report_pandoc_available = function() FALSE,
+    .package = "nomologR"
+  )
+  expect_error(
+    nomo_report(
+      run,
+      file = tempfile(fileext = ".html"),
+      overwrite = TRUE
+    ),
+    "Pandoc is required"
+  )
+})

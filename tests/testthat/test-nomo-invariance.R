@@ -1268,3 +1268,500 @@ test_that("invariance local-strain display handles empty diagnostics", {
   out <- nomologR:::nomo_invariance_local_strain_display(empty)
   expect_equal(nrow(out), 0L)
 })
+
+
+# Edge cases and failure paths ------------------------------------------------
+#
+# Moved from test-regressions.R (#36). These tests were consolidated during
+# pre-v0.1 hardening and exercise defensive branches, sometimes through
+# internal helpers directly.
+
+test_that("closeout: invariance sequence, level, partial, fit-row, and LRT error branches are covered", {
+  expect_error(
+    nomologR:::nomo_invariance_sequences("x1", NULL),
+    "observed category information"
+  )
+
+  seq3 <- nomologR:::nomo_invariance_sequences(
+    c("x1", "x2"),
+    tibble::tibble(item = c("x1", "x2"), categories = c(3L, 4L))
+  )
+  expect_identical(seq3$type, "ordered_with_three_category")
+
+  expect_error(
+    nomologR:::nomo_invariance_validate_levels(
+      1,
+      c("configural", "metric")
+    ),
+    "`levels`"
+  )
+
+  row <- nomologR:::nomo_invariance_fit_row(
+    level = "configural",
+    constraints = character(),
+    fit = NULL
+  )
+  expect_identical(row$constraints[[1L]], "none")
+
+  lrt <- nomologR:::nomo_invariance_lrt(NULL, NULL)
+  expect_true(is.na(lrt$chisq))
+
+  expect_error(
+    nomologR:::nomo_invariance_validate_partial(
+      list(),
+      c("configural", "metric")
+    ),
+    "object created by"
+  )
+})
+
+
+test_that("closeout: invariance score-test handles engine errors, warnings, and missing columns", {
+  skip_if_not(
+    exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
+  )
+
+  fit <- make_m9_full_report_run()$results$invariance$fits$metric
+
+  testthat::local_mocked_bindings(
+    lavTestScore = function(...) stop("synthetic score failure"),
+    .package = "lavaan"
+  )
+  bad <- nomologR:::nomo_invariance_score_test(fit, "metric")
+  expect_equal(nrow(bad$table), 0L)
+  expect_match(bad$error, "synthetic score failure", fixed = TRUE)
+
+  testthat::local_mocked_bindings(
+    lavTestScore = function(...) list(uni = data.frame()),
+    .package = "lavaan"
+  )
+  empty <- nomologR:::nomo_invariance_score_test(fit, "metric")
+  expect_equal(nrow(empty$table), 0L)
+
+  testthat::local_mocked_bindings(
+    lavTestScore = function(...) {
+      warning("synthetic score warning")
+      list(uni = data.frame(foo = 1:2))
+    },
+    .package = "lavaan"
+  )
+  sparse <- nomologR:::nomo_invariance_score_test(fit, "metric")
+  expect_equal(nrow(sparse$table), 2L)
+  expect_true(all(is.na(sparse$table$score_x2)))
+  expect_true(length(sparse$warning) >= 1L)
+})
+
+
+test_that("closeout: invariance decision log includes explicit missing-data configuration", {
+  fit_evidence <- tibble::tibble(
+    level = "configural",
+    status = "estimated",
+    constraints = "none",
+    partial_requested = "",
+    cfi = .95,
+    rmsea = .05,
+    srmr = .04,
+    delta_cfi = NA_real_,
+    delta_rmsea = NA_real_,
+    delta_srmr = NA_real_,
+    lrt_p = NA_real_
+  )
+  log <- nomologR:::nomo_invariance_decision_log(
+    group = "g",
+    groups = c("A", "B"),
+    requested_levels = "configural",
+    fit_evidence = fit_evidence,
+    estimator = "MLR",
+    missing = "fiml",
+    ID.fac = "std.lv",
+    ID.cat = "Wu.Estabrook.2016",
+    parameterization = "theta",
+    ordered = character(),
+    category_table = tibble::tibble(),
+    sequence_note = "Synthetic sequence.",
+    partial = NULL,
+    localize = FALSE,
+    score_diagnostics = NULL
+  )
+  expect_true(any(log$metric == "missing"))
+})
+
+
+test_that("closeout: invariance public validation covers model, ordered, identification, and guidance guards", {
+  dat <- lavaan::HolzingerSwineford1939
+  model <- "
+    visual =~ x1 + x2 + x3
+    textual =~ x4 + x5 + x6
+  "
+
+  expect_error(
+    nomo_invariance(model, dat, group = "school", ordered = 1),
+    "`ordered`"
+  )
+  expect_error(
+    nomo_invariance(model, dat, group = "school", ID.cat = ""),
+    "`ID.cat`"
+  )
+  expect_error(
+    nomo_invariance(model, dat, group = "school", parameterization = ""),
+    "`parameterization`"
+  )
+  expect_error(
+    nomo_invariance(model, dat, group = "school", guidance = 1),
+    "`guidance`"
+  )
+  expect_error(
+    nomo_invariance(
+      model,
+      dat,
+      group = "school",
+      ordered = c("x1", "x2", "x3"),
+      ID.fac = "marker"
+    ),
+    "Wu-Estabrook"
+  )
+
+  nm <- nomo_model(list(visual = c("x1", "x2", "x3")))
+  out <- nomo_invariance(
+    nm,
+    dat,
+    group = "school",
+    levels = "configural"
+  )
+  expect_s3_class(out, "nomo_invariance")
+})
+
+
+test_that("closeout: invariance pretty-constraint covers label fallbacks and unmatched labels", {
+  skip_if_not(
+    exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
+  )
+
+  fit <- make_m9_full_report_run()$results$invariance$fits$metric
+
+  expect_identical(
+    nomologR:::nomo_invariance_pretty_constraint("a == b == c", fit),
+    "a == b == c"
+  )
+
+  testthat::local_mocked_bindings(
+    parTable = function(...) data.frame(),
+    .package = "lavaan"
+  )
+  expect_identical(
+    nomologR:::nomo_invariance_pretty_constraint(".p1. == .p2.", fit),
+    ".p1. == .p2."
+  )
+
+  pt <- data.frame(
+    lhs = c("F", "F"),
+    op = c("=~", "=~"),
+    rhs = c("x1", "x1"),
+    group = c(1L, 2L),
+    label = c(".p1.", ".p2.")
+  )
+  testthat::local_mocked_bindings(
+    parTable = function(...) pt,
+    lavInspect = function(...) c("A", "B"),
+    .package = "lavaan"
+  )
+  same <- nomologR:::nomo_invariance_pretty_constraint(".p1. == .p2.", fit)
+  expect_match(same, "Loading:", fixed = TRUE)
+
+  expect_identical(
+    nomologR:::nomo_invariance_pretty_constraint(".missing. == .p2.", fit),
+    ".missing. == .p2."
+  )
+
+  pt2 <- data.frame(
+    lhs = c("F", "x2"),
+    op = c("=~", "~1"),
+    rhs = c("x1", ""),
+    group = c(1L, 2L),
+    label = c(".p1.", ".p2.")
+  )
+  testthat::local_mocked_bindings(
+    parTable = function(...) pt2,
+    lavInspect = function(...) c("A", "B"),
+    .package = "lavaan"
+  )
+  different <- nomologR:::nomo_invariance_pretty_constraint(".p1. == .p2.", fit)
+  expect_match(different, "=", fixed = TRUE)
+})
+
+
+test_that("closeout B: invariance LRT captures warnings and missing finite comparison values", {
+  skip_if_not(
+    exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
+  )
+
+  testthat::local_mocked_bindings(
+    lavTestLRT = function(...) {
+      warning("synthetic LRT warning")
+      data.frame(
+        "Chisq diff" = c(NA_real_, NA_real_),
+        "Df diff" = c(NA_real_, NA_real_),
+        "Pr(>Chisq)" = c(NA_real_, NA_real_),
+        check.names = FALSE
+      )
+    },
+    .package = "lavaan"
+  )
+
+  out <- nomologR:::nomo_invariance_lrt(list(), list())
+  expect_true(is.na(out$chisq))
+  expect_true(is.na(out$df))
+  expect_true(is.na(out$p))
+  expect_true(any(grepl(
+    "synthetic LRT warning",
+    out$warnings,
+    fixed = TRUE
+  )))
+})
+
+
+test_that("closeout B: invariance syntax-generation failures are wrapped by level", {
+  skip_if_not(
+    exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
+  )
+
+  testthat::local_mocked_bindings(
+    measEq.syntax = function(...) stop("synthetic syntax failure"),
+    .package = "semTools"
+  )
+
+  expect_error(
+    nomo_invariance(
+      "
+        visual =~ x1 + x2 + x3
+        textual =~ x4 + x5 + x6
+      ",
+      lavaan::HolzingerSwineford1939,
+      group = "school",
+      levels = "configural",
+      localize = FALSE
+    ),
+    "Could not generate configural invariance syntax"
+  )
+})
+
+
+test_that("closeout B: invariance captures CFA warnings and unavailable fit-measure detail", {
+  skip_if_not(
+    exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
+  )
+
+  original_cfa <- lavaan::cfa
+
+  testthat::local_mocked_bindings(
+    cfa = function(...) {
+      warning("synthetic invariance CFA warning")
+      original_cfa(...)
+    },
+    fitMeasures = function(...) stop("synthetic fit-measure failure"),
+    .package = "lavaan"
+  )
+
+  out <- suppressWarnings(
+    nomo_invariance(
+      "
+      visual =~ x1 + x2 + x3
+      textual =~ x4 + x5 + x6
+    ",
+      lavaan::HolzingerSwineford1939,
+      group = "school",
+      levels = "configural",
+      localize = FALSE
+    )
+  )
+
+  expect_true(any(grepl(
+    "synthetic invariance CFA warning",
+    out$engine_warnings$configural,
+    fixed = TRUE
+  )))
+  expect_length(out$fit_measures$configural, 0L)
+})
+
+
+test_that("closeout B: ordered invariance uses WLSMV and theta parameterization by default", {
+  set.seed(6204)
+  n <- 360
+  latent <- rnorm(n)
+  group <- rep(c("A", "B"), each = n / 2L)
+
+  make_ordered <- function(lambda) {
+    z <- lambda * latent + rnorm(n, sd = .75)
+    ordered(
+      cut(
+        z,
+        breaks = c(-Inf, -.60, 0, .60, Inf),
+        labels = FALSE
+      )
+    )
+  }
+
+  dat <- data.frame(
+    i1 = make_ordered(.80),
+    i2 = make_ordered(.75),
+    i3 = make_ordered(.70),
+    group = group
+  )
+
+  out <- nomo_invariance(
+    "F =~ i1 + i2 + i3",
+    dat,
+    group = "group",
+    ordered = c("i1", "i2", "i3"),
+    levels = "configural",
+    localize = FALSE
+  )
+
+  expect_identical(out$estimator, "WLSMV")
+  expect_identical(out$estimator_source, "ordered_default")
+  expect_identical(out$parameterization, "theta")
+})
+
+
+test_that("closeout B: invariance pretty constraints cover label-only tables and group-free fallbacks", {
+  skip_if_not(
+    exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
+  )
+
+  fit <- structure(list(), class = "synthetic_fit")
+
+  same <- data.frame(
+    lhs = c("F", "F"),
+    op = c("=~", "=~"),
+    rhs = c("x1", "x1"),
+    group = c(0L, 0L),
+    label = c(".p1.", ".p2."),
+    stringsAsFactors = FALSE
+  )
+
+  testthat::local_mocked_bindings(
+    parTable = function(...) same,
+    lavInspect = function(...) character(),
+    .package = "lavaan"
+  )
+  pretty_same <- nomologR:::nomo_invariance_pretty_constraint(
+    ".p1. == .p2.",
+    fit
+  )
+  expect_match(pretty_same, "Loading:", fixed = TRUE)
+  expect_false(grepl("[", pretty_same, fixed = TRUE))
+
+  no_labels <- same[, c("lhs", "op", "rhs", "group"), drop = FALSE]
+  testthat::local_mocked_bindings(
+    parTable = function(...) no_labels,
+    .package = "lavaan"
+  )
+  expect_identical(
+    nomologR:::nomo_invariance_pretty_constraint(
+      ".p1. == .p2.",
+      fit
+    ),
+    ".p1. == .p2."
+  )
+
+  different <- data.frame(
+    lhs = c("F", "x2"),
+    op = c("=~", "~1"),
+    rhs = c("x1", ""),
+    group = c(0L, 0L),
+    label = c(".p1.", ".p2."),
+    stringsAsFactors = FALSE
+  )
+  testthat::local_mocked_bindings(
+    parTable = function(...) different,
+    lavInspect = function(...) character(),
+    .package = "lavaan"
+  )
+  pretty_different <- nomologR:::nomo_invariance_pretty_constraint(
+    ".p1. == .p2.",
+    fit
+  )
+  expect_match(pretty_different, "Loading:", fixed = TRUE)
+  expect_match(pretty_different, "Intercept:", fixed = TRUE)
+})
+
+
+test_that("closeout C: invariance LRT returns NA when expected comparison columns are absent", {
+  skip_if_not(
+    exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
+  )
+
+  testthat::local_mocked_bindings(
+    lavTestLRT = function(...) {
+      data.frame(
+        arbitrary = c(1, 2),
+        another = c(3, 4)
+      )
+    },
+    .package = "lavaan"
+  )
+
+  out <- nomologR:::nomo_invariance_lrt(list(), list())
+
+  expect_true(is.na(out$chisq))
+  expect_true(is.na(out$df))
+  expect_true(is.na(out$p))
+})
+
+
+test_that("closeout C: invariance records researcher estimator and missing-data choices", {
+  out <- nomo_invariance(
+    "
+      visual =~ x1 + x2 + x3
+      textual =~ x4 + x5 + x6
+    ",
+    lavaan::HolzingerSwineford1939,
+    group = "school",
+    levels = "configural",
+    estimator = "MLR",
+    missing = "listwise",
+    localize = FALSE
+  )
+
+  expect_identical(out$estimator_source, "researcher")
+  expect_identical(out$estimator, "MLR")
+  expect_identical(out$missing, "listwise")
+})
+
+
+test_that("closeout C: invariance fit failures are retained as evidence instead of escaping the workflow", {
+  skip_if_not(
+    exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
+  )
+
+  model <- "
+    visual =~ x1 + x2 + x3
+    textual =~ x4 + x5 + x6
+  "
+
+  testthat::local_mocked_bindings(
+    measEq.syntax = function(...) model,
+    .package = "semTools"
+  )
+
+  testthat::local_mocked_bindings(
+    cfa = function(...) stop("synthetic invariance fit failure"),
+    .package = "lavaan"
+  )
+
+  out <- nomo_invariance(
+    model,
+    lavaan::HolzingerSwineford1939,
+    group = "school",
+    levels = "configural",
+    localize = FALSE
+  )
+
+  expect_false(out$fit_evidence$converged[[1L]])
+  expect_match(
+    out$fit_evidence$error[[1L]],
+    "synthetic invariance fit failure",
+    fixed = TRUE
+  )
+  expect_length(out$fit_measures$configural, 0L)
+})

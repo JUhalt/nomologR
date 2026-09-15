@@ -844,3 +844,229 @@ test_that("item-rest legend includes none when no-review item-rest evidence is p
   expect_true("none" %in% breaks)
   expect_false("concern" %in% breaks)
 })
+
+
+# Edge cases and failure paths ------------------------------------------------
+#
+# Moved from test-regressions.R (#36). These tests were consolidated during
+# pre-v0.1 hardening and exercise defensive branches, sometimes through
+# internal helpers directly.
+
+test_that("closeout: screen and split cover empty, binary, other, and RNG cleanup paths", {
+  empty_cols <- data.frame(row.names = 1:3)
+  expect_error(nomo_screen(empty_cols), "at least one column")
+
+  expect_equal(
+    nomologR:::nomo_screen_item_type(c(TRUE, FALSE, TRUE)),
+    "binary"
+  )
+  expect_equal(
+    nomologR:::nomo_screen_item_type(as.Date("2026-01-01") + 0:2),
+    "other"
+  )
+
+  scr <- nomo_screen(data.frame(x = c(1, 2, 3, 4, 5)), items = "x")
+  scr$decision_log <- nomologR:::nomo_log_new()
+  txt <- paste(capture.output(print(scr)), collapse = "\n")
+  expect_match(txt, "Decision log: no entries", fixed = TRUE)
+
+  had_seed <- exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
+  if (had_seed) {
+    old_seed <- get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
+  }
+  on.exit({
+    if (had_seed) {
+      assign(".Random.seed", old_seed, envir = .GlobalEnv)
+    } else if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
+      rm(".Random.seed", envir = .GlobalEnv)
+    }
+  }, add = TRUE)
+
+  if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
+    rm(".Random.seed", envir = .GlobalEnv)
+  }
+  invisible(nomo_split(data.frame(x = 1:10), seed = 2026L))
+  expect_false(exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE))
+})
+
+
+test_that("closeout: screening relationship diagnostics cover non-finite scores and no numeric reference", {
+  selected <- data.frame(
+    a = c(1, Inf, 3, 4, 5),
+    b = c(1, 2, 3, 4, 5)
+  )
+  item_summary <- dplyr::bind_rows(
+    nomologR:::nomo_screen_item_summary(selected$a, "a"),
+    nomologR:::nomo_screen_item_summary(selected$b, "b")
+  )
+  guidance <- nomo_defaults()
+  rel <- nomologR:::nomo_screen_relationships(
+    selected = selected,
+    item_summary = item_summary,
+    guidance = guidance
+  )
+  expect_true(any(rel$decision_log$metric == "non_finite_scores"))
+
+  selected2 <- data.frame(
+    a = 1:8,
+    b = 1:8,
+    c = 8:1
+  )
+  item_summary2 <- dplyr::bind_rows(
+    nomologR:::nomo_screen_item_summary(selected2$a, "a"),
+    nomologR:::nomo_screen_item_summary(selected2$b, "b"),
+    nomologR:::nomo_screen_item_summary(selected2$c, "c")
+  )
+  guidance2 <- nomo_defaults()
+  guidance2$item_total_reference <- NA_real_
+  rel2 <- nomologR:::nomo_screen_relationships(
+    selected = selected2,
+    item_summary = item_summary2,
+    guidance = guidance2
+  )
+  neg <- rel2$decision_log[
+    rel2$decision_log$metric == "corrected_item_rest" &
+      rel2$decision_log$value < 0,
+    ,
+    drop = FALSE
+  ]
+  expect_gt(nrow(neg), 0L)
+  expect_true(any(grepl(
+    "Negative sign requires coding/structure review",
+    neg$reference,
+    fixed = TRUE
+  )))
+})
+
+
+test_that("closeout: screening descriptives cover guidance fallback and ceiling concentration", {
+  x <- c(1, 2, 3, 4, rep(5, 16))
+  selected <- data.frame(item = x)
+  item_summary <- nomologR:::nomo_screen_item_summary(x, "item")
+
+  guidance <- nomo_defaults()
+  guidance$response_concentration_reference <- "bad"
+  guidance$nzv_frequency_ratio_reference <- NULL
+  guidance$nzv_percent_unique_reference <- Inf
+
+  out <- nomologR:::nomo_screen_descriptives(
+    selected = selected,
+    item_summary = item_summary,
+    guidance = guidance
+  )
+  expect_true(any(
+    out$decision_log$metric %in%
+      c("response_concentration", "ceiling_concentration")
+  ))
+
+  guidance$response_concentration_reference <- .70
+  out2 <- nomologR:::nomo_screen_descriptives(
+    selected = selected,
+    item_summary = item_summary,
+    guidance = guidance
+  )
+  expect_true(any(out2$decision_log$metric == "ceiling_concentration"))
+})
+
+
+test_that("closeout: screen presentation guards and rare evidence states are exercised", {
+  expect_error(
+    nomologR:::summary.nomo_screen(list()),
+    "inherit from `nomo_screen`"
+  )
+  expect_error(
+    nomologR:::plot.nomo_screen(list()),
+    "inherit from `nomo_screen`"
+  )
+
+  ord <- ordered(
+    c("low", "low", "high", "high"),
+    levels = c("low", "mid", "high")
+  )
+  scr <- nomo_screen(data.frame(ord = ord, x = 1:4))
+  ev <- nomologR:::nomo_screen_evidence_data(scr, scr$items)
+  expect_true(any(
+    ev$metric == "unused_response_categories" &
+      as.character(ev$severity) == "review"
+  ))
+
+  extra <- nomologR:::nomo_log_add(
+    scr$decision_log,
+    stage = "screen",
+    object = "x",
+    metric = "does_not_map_to_evidence_grid",
+    severity = "review"
+  )
+  scr$decision_log <- extra
+  expect_s3_class(
+    nomologR:::nomo_screen_evidence_data(scr, scr$items),
+    "data.frame"
+  )
+
+  one <- nomo_screen(data.frame(x = 1:6), items = "x")
+  expect_error(
+    plot(one, type = "interitem"),
+    "At least two relationship-eligible"
+  )
+
+  no_resp <- scr
+  no_resp$response_distribution <- no_resp$response_distribution[0, , drop = FALSE]
+  expect_error(
+    plot(no_resp, type = "responses"),
+    "No observed/declared response categories"
+  )
+
+  concern <- nomo_screen(data.frame(a = 1:8, b = 1:8, c = 8:1))
+  concern$decision_log <- nomologR:::nomo_log_add(
+    concern$decision_log,
+    stage = "screen",
+    object = "c",
+    metric = "corrected_item_rest",
+    severity = "concern"
+  )
+  p <- plot(concern, type = "item_rest")
+  expect_s3_class(p, "ggplot")
+})
+
+
+test_that("closeout B: model and screening type helpers cover missing factor names and ordered binary items", {
+  bad <- list(c("x1", "x2"), c("x3", "x4"))
+  names(bad) <- c("F1", NA_character_)
+  expect_error(
+    nomo_model(bad),
+    "unique, non-empty factor names"
+  )
+
+  binary_ordered <- ordered(
+    c("no", "yes", "no", "yes"),
+    levels = c("no", "yes")
+  )
+  expect_identical(
+    nomologR:::nomo_screen_item_type(binary_ordered),
+    "binary"
+  )
+})
+
+
+test_that("closeout B: screen evidence aliases floor and ceiling concentration to one presentation metric", {
+  scr <- nomo_screen(
+    data.frame(x = c(1, 1, 1, 1, 2, 3)),
+    items = "x"
+  )
+
+  scr$decision_log <- nomologR:::nomo_log_add(
+    scr$decision_log,
+    stage = "screen",
+    object = "x",
+    metric = "floor_concentration",
+    severity = "review"
+  )
+
+  dat <- nomologR:::nomo_screen_evidence_data(scr, "x")
+  row <- dat[
+    dat$metric == "response_concentration",
+    ,
+    drop = FALSE
+  ]
+  expect_identical(as.character(row$severity[[1L]]), "review")
+})

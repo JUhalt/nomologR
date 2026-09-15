@@ -1604,3 +1604,597 @@ test_that("ordinal one- and two-factor simulations recover ordinary structure", 
   expect_equal(two$parallel$n_factors, 2L)
   expect_true(2L %in% two$plausible_factors)
 })
+
+
+# Edge cases and failure paths ------------------------------------------------
+#
+# Moved from test-regressions.R (#36). These tests were consolidated during
+# pre-v0.1 hardening and exercise defensive branches, sometimes through
+# internal helpers directly.
+
+test_that("closeout: factor helpers cover singular adequacy and RNG cleanup", {
+  singular <- matrix(
+    1,
+    3, 3,
+    dimnames = list(c("a", "b", "c"), c("a", "b", "c"))
+  )
+  kmo <- nomologR:::nomo_factors_kmo(singular, c("a", "b", "c"))
+  expect_false(kmo$available)
+
+  had_seed <- exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
+  if (had_seed) {
+    old_seed <- get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
+  }
+  on.exit({
+    if (had_seed) {
+      assign(".Random.seed", old_seed, envir = .GlobalEnv)
+    } else if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
+      rm(".Random.seed", envir = .GlobalEnv)
+    }
+  }, add = TRUE)
+  if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
+    rm(".Random.seed", envir = .GlobalEnv)
+  }
+  expect_identical(
+    nomologR:::nomo_factors_with_seed(2026L, 42L),
+    42L
+  )
+  expect_false(exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE))
+})
+
+
+test_that("closeout: parallel analysis fails transparently when no null iterations are usable", {
+  dat <- data.frame(
+    a = rep(1, 20),
+    b = rep(1, 20),
+    c = rep(1, 20)
+  )
+  types <- tibble::tibble(
+    item = names(dat),
+    model_type = "continuous"
+  )
+  expect_error(
+    suppressWarnings(
+      nomologR:::nomo_factors_parallel(
+        x = dat,
+        model_types = types,
+        method = "pearson",
+        use = "pairwise.complete.obs",
+        observed = c(2, 1, .5),
+        n_iter = 10L,
+        quantile = .95,
+        parallel_rule = "percentile",
+        seed = 2026L,
+        fm = "minres"
+      )
+    ),
+    "usable null iterations"
+  )
+})
+
+
+test_that("closeout: factor criterion synthesis covers legacy fallback and unresolved families", {
+  legacy_parallel <- tibble::tibble(
+    criterion = "parallel",
+    method = "Parallel analysis",
+    family = "parallel",
+    family_method = "Parallel analysis",
+    n_factors = 2L,
+    role = "legacy",
+    reference = "synthetic"
+  )
+  syn <- nomologR:::nomo_factors_synthesis(
+    evidence = legacy_parallel,
+    parallel_n = 2L
+  )
+  expect_true(2L %in% syn$plausible_factors)
+
+  conflicted <- tibble::tibble(
+    criterion = c("map_original", "map_revised"),
+    method = c("MAP original", "MAP revised"),
+    family = c("map", "map"),
+    family_method = c("MAP", "MAP"),
+    n_factors = c(1L, 2L),
+    role = c("complementary", "complementary"),
+    reference = c("a", "b")
+  )
+  syn2 <- nomologR:::nomo_factors_synthesis(
+    evidence = conflicted,
+    parallel_n = 1L
+  )
+  expect_equal(nrow(syn2$family_concordance), 0L)
+  expect_identical(syn2$modal_factors, 1L)
+})
+
+
+test_that("closeout: unavailable extended factor criteria are recorded as skipped", {
+  skip_if_not(
+    exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
+  )
+
+  dat <- as.data.frame(matrix(rnorm(180), ncol = 6))
+  names(dat) <- paste0("x", 1:6)
+  corr <- stats::cor(dat)
+  types <- tibble::tibble(
+    item = names(dat),
+    model_type = "continuous"
+  )
+  pa <- list(n_factors = 1L)
+  map <- list(n_factors_original = 1L, n_factors_revised = 1L)
+
+  unavailable <- function(...) list(
+    available = FALSE,
+    n_factors = NA_integer_,
+    detail = NULL,
+    reason = "synthetic unavailable"
+  )
+
+  testthat::local_mocked_bindings(
+    nomo_factors_nest = unavailable,
+    nomo_factors_hull = unavailable,
+    nomo_factors_cd = unavailable,
+    .package = "nomologR"
+  )
+
+  out <- nomologR:::nomo_factors_build_criteria(
+    criterion_set = "all",
+    pa = pa,
+    map = map,
+    corr = corr,
+    analysis_data = dat,
+    item_types = types,
+    correlation_method = "pearson",
+    common_n_available = TRUE,
+    max_factors = 3L,
+    n_iter = 10L,
+    quantile = .95,
+    seed = 2026L,
+    guidance = nomo_defaults(),
+    component_values = eigen(corr, symmetric = TRUE)$values
+  )
+  expect_true(all(
+    c("nest", "hull", "comparison_data") %in%
+      out$status$criterion[out$status$status == "skipped"]
+  ))
+})
+
+
+test_that("closeout B: factor retention rejects non-finite correlation matrices and keeps explicit defaults", {
+  skip_if_not(
+    exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
+  )
+
+  dat <- data.frame(
+    a = rnorm(40),
+    b = rnorm(40),
+    c = rnorm(40)
+  )
+
+  testthat::local_mocked_bindings(
+    nomo_factors_correlation = function(...) {
+      matrix(
+        c(
+          1, NA, 0,
+          NA, 1, 0,
+          0, 0, 1
+        ),
+        3, 3
+      )
+    },
+    .package = "nomologR"
+  )
+
+  expect_error(
+    nomo_factors(
+      dat,
+      n_iter = 10L,
+      criterion_set = "minimal",
+      correlation = "pearson"
+    ),
+    "non-finite values"
+  )
+
+  expect_identical(nomologR:::nomo_null_default(5L, 1L), 5L)
+})
+
+
+test_that("closeout B: parallel analysis preserves an existing RNG state and handles all-retained solutions", {
+  skip_if_not(
+    exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
+  )
+
+  x <- data.frame(a = 1:20, b = 21:40, c = 41:60)
+
+  testthat::local_mocked_bindings(
+    nomo_factors_correlation = function(...) diag(3),
+    nomo_factors_factor_eigenvalues = function(...) c(.5, .4, .3),
+    .package = "nomologR"
+  )
+
+  set.seed(711)
+  before <- .Random.seed
+
+  out <- nomologR:::nomo_factors_parallel(
+    x = x,
+    model_types = rep("continuous", 3L),
+    method = "pearson",
+    use = "pairwise.complete.obs",
+    observed = c(10, 10, 10),
+    n_iter = 10L,
+    quantile = .95,
+    parallel_rule = "percentile",
+    seed = 2026L,
+    fm = "minres"
+  )
+
+  expect_identical(.Random.seed, before)
+  expect_identical(out$n_factors, 3L)
+})
+
+
+test_that("closeout B: parallel analysis records smoothed null matrices", {
+  skip_if_not(
+    exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
+  )
+
+  x <- data.frame(a = 1:20, b = 21:40, c = 41:60)
+  singular <- matrix(1, 3, 3)
+
+  testthat::local_mocked_bindings(
+    nomo_factors_correlation = function(...) singular,
+    nomo_factors_factor_eigenvalues = function(...) c(.5, .4, .3),
+    .package = "nomologR"
+  )
+
+  out <- suppressWarnings(
+    nomologR:::nomo_factors_parallel(
+      x = x,
+      model_types = rep("continuous", 3L),
+      method = "pearson",
+      use = "pairwise.complete.obs",
+      observed = c(1, .6, .2),
+      n_iter = 10L,
+      quantile = .95,
+      parallel_rule = "percentile",
+      seed = 2026L,
+      fm = "minres"
+    )
+  )
+
+  expect_equal(out$n_smoothed_null, 10L)
+})
+
+
+test_that("closeout B: parallel analysis skips null matrices that cannot be smoothed", {
+  skip_if_not(
+    exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
+  )
+
+  x <- data.frame(a = 1:20, b = 21:40, c = 41:60)
+  singular <- matrix(1, 3, 3)
+
+  testthat::local_mocked_bindings(
+    nomo_factors_correlation = function(...) singular,
+    .package = "nomologR"
+  )
+  testthat::local_mocked_bindings(
+    cor.smooth = function(...) stop("synthetic smoothing failure"),
+    .package = "psych"
+  )
+
+  expect_error(
+    nomologR:::nomo_factors_parallel(
+      x = x,
+      model_types = rep("continuous", 3L),
+      method = "pearson",
+      use = "pairwise.complete.obs",
+      observed = c(1, .6, .2),
+      n_iter = 10L,
+      quantile = .95,
+      parallel_rule = "percentile",
+      seed = 2026L,
+      fm = "minres"
+    ),
+    "usable null iterations"
+  )
+})
+
+
+test_that("closeout B: parallel analysis rejects unusable factor eigenvalues", {
+  skip_if_not(
+    exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
+  )
+
+  x <- data.frame(a = 1:20, b = 21:40, c = 41:60)
+
+  testthat::local_mocked_bindings(
+    nomo_factors_correlation = function(...) diag(3),
+    nomo_factors_factor_eigenvalues = function(...) c(1, NA_real_, .5),
+    .package = "nomologR"
+  )
+
+  expect_error(
+    nomologR:::nomo_factors_parallel(
+      x = x,
+      model_types = rep("continuous", 3L),
+      method = "pearson",
+      use = "pairwise.complete.obs",
+      observed = c(1, .6, .2),
+      n_iter = 10L,
+      quantile = .95,
+      parallel_rule = "percentile",
+      seed = 2026L,
+      fm = "minres"
+    ),
+    "usable null iterations"
+  )
+})
+
+
+test_that("closeout B: parallel analysis retains a qualified partial set of usable null iterations", {
+  skip_if_not(
+    exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
+  )
+
+  x <- data.frame(a = 1:30, b = 31:60, c = 61:90)
+  calls <- 0L
+
+  testthat::local_mocked_bindings(
+    nomo_factors_correlation = function(...) diag(3),
+    nomo_factors_factor_eigenvalues = function(...) {
+      calls <<- calls + 1L
+      if (calls <= 16L) c(.5, .4, .3) else NULL
+    },
+    .package = "nomologR"
+  )
+
+  out <- nomologR:::nomo_factors_parallel(
+    x = x,
+    model_types = rep("continuous", 3L),
+    method = "pearson",
+    use = "pairwise.complete.obs",
+    observed = c(1, .6, .2),
+    n_iter = 20L,
+    quantile = .95,
+    parallel_rule = "percentile",
+    seed = 2026L,
+    fm = "minres"
+  )
+
+  expect_equal(out$n_valid, 16L)
+  expect_equal(nrow(out$random_eigenvalues), 16L)
+})
+
+
+test_that("closeout B: MAP truncation and unavailable adequacy engines are explicit", {
+  map <- nomologR:::nomo_factors_map(
+    corr = matrix(1, 3, 3),
+    max_factors = 2L
+  )
+  expect_true(map$truncated)
+
+  skip_if_not(
+    exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
+  )
+
+  testthat::local_mocked_bindings(
+    KMO = function(...) stop("synthetic KMO failure"),
+    .package = "psych"
+  )
+  kmo <- nomologR:::nomo_factors_kmo(diag(3), c("a", "b", "c"))
+  expect_false(kmo$available)
+
+  testthat::local_mocked_bindings(
+    cortest.bartlett = function(...) stop("synthetic Bartlett failure"),
+    .package = "psych"
+  )
+  bart <- nomologR:::nomo_factors_bartlett(diag(3), n = 100L, available = TRUE)
+  expect_false(bart$available)
+  expect_match(bart$reason, "could not be computed", fixed = TRUE)
+})
+
+
+test_that("closeout B: KMO decision-log severity distinguishes concern and review", {
+  make_log <- function(kmo_value) {
+    nomologR:::nomo_factors_log(
+      item_types = tibble::tibble(
+        item = "x",
+        model_type = "continuous",
+        source = "inferred"
+      ),
+      requested_correlation = "pearson",
+      correlation_method = "pearson",
+      missing = "complete",
+      min_pairwise_n = 100L,
+      smoothed = FALSE,
+      original_min_eigen = .50,
+      kmo = list(
+        available = TRUE,
+        overall = kmo_value,
+        item = tibble::tibble(item = "x", msa = kmo_value)
+      ),
+      bartlett = list(
+        available = FALSE,
+        reason = "Synthetic unavailable."
+      ),
+      pa = list(
+        n_factors = 1L,
+        rule = "percentile",
+        quantile = .95,
+        sensitivity = tibble::tibble(
+          rule = c("percentile", "mean", "crawford"),
+          n_factors = c(1L, 1L, 1L)
+        )
+      ),
+      map = list(
+        n_factors_original = 1L,
+        n_factors_revised = 1L,
+        truncated = FALSE,
+        m_last = 1L
+      ),
+      criteria = list(
+        status = tibble::tibble(),
+        evidence = tibble::tibble()
+      ),
+      synthesis = list(
+        support_for_primary = 1L,
+        agreement = "convergent",
+        text = "Synthetic convergence."
+      ),
+      guidance = nomo_defaults()
+    )
+  }
+
+  concern <- make_log(.40)
+  review <- make_log(.55)
+
+  expect_identical(
+    concern$severity[concern$metric == "kmo"][[1L]],
+    "concern"
+  )
+  expect_identical(
+    review$severity[review$metric == "kmo"][[1L]],
+    "review"
+  )
+})
+
+
+test_that("closeout B: EKC and comparison-data helpers preserve no-suggestion outcomes", {
+  skip_if_not(
+    exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
+  )
+
+  testthat::local_mocked_bindings(
+    efa_ekc = function(...) list(n_factors = NA_real_),
+    .package = "EFAtools"
+  )
+  ekc <- nomologR:::nomo_factors_ekc(diag(3), n_obs = 100L)
+  expect_false(ekc$available)
+  expect_match(ekc$reason, "no usable", fixed = TRUE)
+
+  testthat::local_mocked_bindings(
+    efa_cd = function(...) list(n_factors = NA_real_),
+    .package = "EFAtools"
+  )
+  cd <- nomologR:::nomo_factors_cd(
+    x = data.frame(
+      a = rnorm(40),
+      b = rnorm(40),
+      c = rnorm(40)
+    ),
+    max_factors = 2L,
+    n_population = 100L,
+    n_samples = 10L,
+    alpha = .30,
+    seed = 2026L
+  )
+  expect_false(cd$available)
+  expect_match(cd$reason, "no usable", fixed = TRUE)
+})
+
+
+test_that("closeout C: parallel analysis restores an initially absent RNG state", {
+  skip_if_not(
+    exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
+  )
+
+  x <- data.frame(a = 1:20, b = 21:40, c = 41:60)
+
+  testthat::local_mocked_bindings(
+    nomo_factors_correlation = function(...) diag(3),
+    nomo_factors_factor_eigenvalues = function(...) c(.5, .4, .3),
+    .package = "nomologR"
+  )
+
+  probe <- function() {
+    old_exists <- exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
+    if (old_exists) {
+      old_seed <- get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
+    }
+
+    on.exit(
+      {
+        if (old_exists) {
+          assign(".Random.seed", old_seed, envir = .GlobalEnv)
+        } else if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
+          rm(".Random.seed", envir = .GlobalEnv)
+        }
+      },
+      add = TRUE
+    )
+
+    if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
+      rm(".Random.seed", envir = .GlobalEnv)
+    }
+
+    out <- nomologR:::nomo_factors_parallel(
+      x = x,
+      model_types = rep("continuous", 3L),
+      method = "pearson",
+      use = "pairwise.complete.obs",
+      observed = c(1, .6, .2),
+      n_iter = 10L,
+      quantile = .95,
+      parallel_rule = "percentile",
+      seed = 2026L,
+      fm = "minres"
+    )
+
+    list(
+      out = out,
+      seed_exists_after = exists(
+        ".Random.seed",
+        envir = .GlobalEnv,
+        inherits = FALSE
+      )
+    )
+  }
+
+  result <- probe()
+  expect_false(result$seed_exists_after)
+  expect_equal(result$out$n_valid, 10L)
+})
+
+
+test_that("closeout C: parallel analysis skips null matrices whose eigen decomposition fails", {
+  skip_if_not(
+    exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
+  )
+
+  x <- data.frame(a = 1:20, b = 21:40, c = 41:60)
+
+  testthat::local_mocked_bindings(
+    nomo_factors_correlation = function(...) {
+      matrix(seq_len(6), nrow = 2L, ncol = 3L)
+    },
+    .package = "nomologR"
+  )
+
+  expect_error(
+    nomologR:::nomo_factors_parallel(
+      x = x,
+      model_types = rep("continuous", 3L),
+      method = "pearson",
+      use = "pairwise.complete.obs",
+      observed = c(1, .6, .2),
+      n_iter = 10L,
+      quantile = .95,
+      parallel_rule = "percentile",
+      seed = 2026L,
+      fm = "minres"
+    ),
+    "usable null iterations"
+  )
+})
+
+
+test_that("closeout C: null-default helper covers both NULL and zero-length fallback inputs", {
+  expect_identical(
+    nomologR:::nomo_null_default(NULL, 7L),
+    7L
+  )
+  expect_identical(
+    nomologR:::nomo_null_default(integer(), 7L),
+    7L
+  )
+})

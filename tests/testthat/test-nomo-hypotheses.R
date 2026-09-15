@@ -109,3 +109,83 @@ test_that("hypothesis print and summary methods are stable", {
   expect_equal(s$quantitatively_confirmable, 1L)
   expect_output(print(s), "A priori")
 })
+
+
+# Edge cases and failure paths ------------------------------------------------
+#
+# Moved from test-regressions.R (#36). These tests were consolidated during
+# pre-v0.1 hardening and exercise defensive branches, sometimes through
+# internal helpers directly.
+
+test_that("M6 and M7 exported entry points are implemented", {
+  expect_true(is.function(nomo_hypotheses))
+  expect_true(is.function(nomo_network))
+  expect_true(is.function(nomo_invariance))
+  expect_true(is.function(nomo_partial))
+  expect_true(is.function(nomo_table))
+})
+
+
+test_that("hypothesis language preserves researcher provenance", {
+  h <- nomo_hypotheses(
+    "A -> B" = positive(origin = "a_priori"),
+    "A <-> C" = negligible(
+      within = c(-.10, .10),
+      origin = "post_hoc"
+    )
+  )
+
+  tab <- nomo_table(h)
+
+  expect_equal(tab$origin, c("a_priori", "post_hoc"))
+  expect_equal(tab$confirmable, c(TRUE, TRUE))
+})
+
+
+test_that("closeout: small public validators cover remaining malformed inputs", {
+  expect_error(
+    nomologR:::nomo_expectation_scalar(Inf, "demo"),
+    "finite numeric"
+  )
+  expect_error(positive(max = 0), "greater than zero")
+  expect_error(negative(min = 0), "less than zero")
+  expect_error(negligible(within = c(0, Inf)), "two finite numeric bounds")
+
+  expect_error(nomologR:::nomo_parse_relation(NULL), "non-empty relation")
+  expect_error(nomologR:::nomo_parse_relation("A -> B -> C"), "exactly two")
+  expect_error(
+    nomo_hypotheses(
+      "A -> B" = positive(),
+      "A -> B" = negative()
+    ),
+    "unique"
+  )
+  expect_error(
+    nomo_hypotheses("A -> B" = 1),
+    "positive"
+  )
+
+  expect_error(nomo_partial(1, "F =~ x2", "why"), "`level`")
+  expect_error(nomo_partial("metric", 1, "why"), "`syntax`")
+  expect_error(nomo_partial("metric", "F =~ x2", 1), "`rationale`")
+  expect_error(
+    nomo_partial(
+      level = c("metric", "scalar"),
+      syntax = c("F =~ x2", "x3 ~ 1", "x4 ~ 1"),
+      rationale = "why"
+    ),
+    "length 1 or a common length"
+  )
+  expect_error(
+    nomo_partial(
+      level = "metric",
+      syntax = c("F =~ x2", "F =~ x3", "F =~ x4"),
+      rationale = c("a", "b")
+    ),
+    "match the number"
+  )
+
+  dup <- list(c("x1", "x2"), c("x3", "x4"))
+  names(dup) <- c("F", "F")
+  expect_error(nomo_model(dup), "unique, non-empty factor names")
+})
