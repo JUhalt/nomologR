@@ -30,6 +30,11 @@
   `constraint_display` column with human-readable parameter labels (for
   example `Intercept: ag3 (online vs. paper)`); the raw lavaan `constraint`
   label is retained (#31). No statistical behavior changed.
+- Fixed invariance figures and constraint labels that used non-ASCII symbols
+  (Greek capital delta and arrows). On the default `pdf()` device these
+  symbols were dropped or mangled, and running the vignette code under
+  `R CMD check` failed. Labels now read `Delta CFI`, `Delta RMSEA`,
+  `Delta SRMR`, `->`, and `<->`, matching the hypothesis syntax.
 - Documented the table types available from `nomo_table()`.
 - Grouped the pkgdown reference index by workflow stage and articles by
   learning path, with a redirect from the former overview URL (#25).

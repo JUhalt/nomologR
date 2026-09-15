@@ -1,10 +1,13 @@
 # Measurement-invariance presentation -----------------------------------------
 
+# Labels use ASCII so figures render on every graphics device. Non-ASCII
+# symbols such as the Greek capital delta or arrows are dropped or mangled by
+# the default pdf() device, and R CMD check treats that as an error.
 nomo_invariance_metric_label <- function(x) {
   lookup <- c(
-    delta_cfi = "\u0394CFI",
-    delta_rmsea = "\u0394RMSEA",
-    delta_srmr = "\u0394SRMR"
+    delta_cfi = "Delta CFI",
+    delta_rmsea = "Delta RMSEA",
+    delta_srmr = "Delta SRMR"
   )
   out <- unname(lookup[as.character(x)])
   missing <- is.na(out)
@@ -19,7 +22,7 @@ nomo_invariance_parameter_label <- function(pt, row, group_labels) {
   rhs <- as.character(pt$rhs[[row]])
 
   base <- if (identical(op, "=~")) {
-    paste0("Loading: ", lhs, " \u2192 ", rhs)
+    paste0("Loading: ", lhs, " -> ", rhs)
   } else if (identical(op, "~1")) {
     paste0("Intercept: ", lhs)
   } else if (identical(op, "|")) {
@@ -27,7 +30,7 @@ nomo_invariance_parameter_label <- function(pt, row, group_labels) {
   } else if (identical(op, "~~") && identical(lhs, rhs)) {
     paste0("Residual variance: ", lhs)
   } else if (identical(op, "~~")) {
-    paste0("Covariance: ", lhs, " \u2194 ", rhs)
+    paste0("Covariance: ", lhs, " <-> ", rhs)
   } else {
     paste(lhs, op, rhs)
   }
@@ -397,7 +400,7 @@ plot.nomo_invariance <- function(
 
     dat$metric <- factor(
       dat$metric,
-      levels = c("\u0394CFI", "\u0394RMSEA", "\u0394SRMR")
+      levels = c("Delta CFI", "Delta RMSEA", "Delta SRMR")
     )
     dat$level <- factor(dat$level, levels = x$completed_levels)
 
