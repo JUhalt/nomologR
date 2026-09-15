@@ -63,7 +63,6 @@ supporting evidence because simulation work has shown that it can miss
 discriminant-validity problems that HTMT detects.
 }
 \examples{
-\dontrun{
 model <- '
   visual  =~ x1 + x2 + x3
   textual =~ x4 + x5 + x6
@@ -71,28 +70,38 @@ model <- '
 '
 cfa <- nomo_cfa(model, data = lavaan::HolzingerSwineford1939)
 val <- nomo_validity(cfa)
-val$ave
-val$htmt2
+summary(val)
 val$decision_log
 }
-}
 \references{
+Historical context:
+
+Campbell, D. T., & Fiske, D. W. (1959). Convergent and discriminant
+validation by the multitrait-multimethod matrix. \emph{Psychological Bulletin,
+56}(2), 81-105. \doi{10.1037/h0046016}
+
 Fornell, C., & Larcker, D. F. (1981). Evaluating structural equation models
 with unobservable variables and measurement error. \emph{Journal of Marketing
-Research, 18}, 39-50. doi:10.2307/3151312
+Research, 18}(1), 39-50. \doi{10.2307/3151312}
+
+Contemporary construct-separation evidence:
 
 Henseler, J., Ringle, C. M., & Sarstedt, M. (2015). A new criterion for
 assessing discriminant validity in variance-based structural equation
-modeling. \emph{Journal of the Academy of Marketing Science, 43}, 115-135.
-doi:10.1007/s11747-014-0403-8
+modeling. \emph{Journal of the Academy of Marketing Science, 43}(1), 115-135.
+\doi{10.1007/s11747-014-0403-8}
 
 Roemer, E., Schuberth, F., & Henseler, J. (2021). HTMT2--An improved
 criterion for assessing discriminant validity in structural equation
-modeling. \emph{Industrial Management & Data Systems, 121}, 2637-2650.
-doi:10.1108/IMDS-02-2021-0082
+modeling. \emph{Industrial Management & Data Systems, 121}(12), 2637-2650.
+\doi{10.1108/IMDS-02-2021-0082}
+
+Rönkkö, M., & Cho, E. (2022). An updated guideline for assessing
+discriminant validity. \emph{Organizational Research Methods, 25}(1).
+\doi{10.1177/1094428120968614}
 
 Voorhees, C. M., Brady, M. K., Calantone, R., & Ramirez, E. (2016).
 Discriminant validity testing in marketing: An analysis, causes for concern,
-and proposed remedies. \emph{Journal of the Academy of Marketing Science, 44},
-119-134. doi:10.1007/s11747-015-0455-4
+and proposed remedies. \emph{Journal of the Academy of Marketing Science, 44}(1),
+119-134. \doi{10.1007/s11747-015-0455-4}
 }

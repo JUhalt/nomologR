@@ -46,6 +46,48 @@ To install the current GitHub version:
 pak::pak("JUhalt/nomologR")
 ```
 
+`nomologR` is distributed through R-universe, which builds the latest GitHub
+release. CRAN submission is planned for a later polish release
+([#39](https://github.com/JUhalt/nomologR/issues/39)).
+
+## Who it is for
+
+`nomologR` is written for **graduate students** (master's and doctoral) learning
+scale development and construct validation, for the **faculty and advisors**
+who teach them, and for **researchers** who need a defensible, reproducible
+measurement workflow. Methods are documented from historical to contemporary
+practice, with literature references in every analysis function's help page.
+
+## Learning resources
+
+- [Get started](https://juhalt.github.io/nomologR/articles/nomologR.html) —
+  the workflow at a glance and a suggested learning path.
+- [Research basis](https://juhalt.github.io/nomologR/articles/research-basis.html)
+  — where each method came from, what current literature recommends, and what
+  `nomologR` implements.
+- Walkthroughs that run on simulated teaching data with known answers:
+  [exploratory structure](https://juhalt.github.io/nomologR/articles/exploratory-workflow.html),
+  [measurement-model evidence](https://juhalt.github.io/nomologR/articles/measurement-model-evidence.html),
+  [measurement invariance](https://juhalt.github.io/nomologR/articles/measurement-invariance.html),
+  [nomological networks](https://juhalt.github.io/nomologR/articles/nomological-network.html),
+  [guided workflow](https://juhalt.github.io/nomologR/articles/guided-workflow.html),
+  and [reproducible reports](https://juhalt.github.io/nomologR/articles/reproducible-report.html).
+
+The teaching datasets are `nomo_demo_continuous` (two correlated factors with a
+cross-loading item, a weak item, and missing data), `nomo_demo_ordinal` (the same
+structure as five-category ordered items), and `nomo_demo_network` (three
+constructs, an observed outcome, and two groups with a known source of
+non-invariance):
+
+```r
+library(nomologR)
+
+scr <- nomo_screen(nomo_demo_continuous)
+fac <- nomo_factors(nomo_demo_continuous, seed = 2026)
+efa <- nomo_efa(nomo_demo_continuous, factors = fac)
+efa$item_summary
+```
+
 ## Where nomologR fits
 
 For new measures, [`contentvalidR`](https://github.com/JUhalt/contentvalidR)
@@ -690,7 +732,29 @@ for the documented inputs and limitations.
 
 ## Development path
 
-The detailed release specification lives in [`ROADMAP.md`](ROADMAP.md).
+The detailed release plan lives in [`ROADMAP.md`](ROADMAP.md).
+
+### Next release: `v0.2.0`
+
+The [`v0.2.0` milestone](https://github.com/JUhalt/nomologR/milestone/2) makes
+the workflow research-backed from historical to contemporary practice and more
+useful to graduate students and researchers. Scope was selected in
+[#22](https://github.com/JUhalt/nomologR/issues/22):
+
+- **Core:** learning foundations (#25), research basis (#26), model comparison
+  with `nomo_compare()` (#27), auditable revision lineage (#28), bifactor and
+  higher-order models (#29), replication-status language (#30), and release
+  certification (#37).
+- **Planned:** readable invariance labels (#31), missing-data sensitivity
+  (#32), score guidance (#33), insufficient-effort responding screens (#34),
+  manuscript-ready tables (#35), maintenance (#36), and rendering reports
+  from inside R Markdown or Quarto documents (#40).
+
+Candidates for `v0.3.0` (for example IRT/DIF, Bayesian SEM, ESEM, and
+longitudinal invariance) are tracked in
+[#38](https://github.com/JUhalt/nomologR/issues/38).
+
+### Completed: `v0.1.0`
 
 The complete `v0.1.0` release track is:
 

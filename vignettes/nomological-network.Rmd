@@ -8,12 +8,15 @@ vignette: >
 ---
 
 ```{r setup, include=FALSE}
+library(nomologR)
+
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
   message = FALSE,
   warning = FALSE,
-  eval = FALSE
+  fig.width = 7,
+  fig.height = 4.5
 )
 ```
 
@@ -31,14 +34,32 @@ The intended sequence is:
 5. distinguish theory strain, imprecision, measurement problems, and post-hoc
    exploration.
 
-# Specify theory
+# The teaching study
 
-```{r}
+`nomo_demo_network` simulates a validation study of an **Agency** measure. Two
+related constructs were also measured — **Persistence** and **Social
+desirability** — along with an observed **Performance** outcome.
+
+The population model is known (see `?nomo_demo_network`):
+
+- Agency predicts Persistence (standardized coefficient .45);
+- Agency predicts Performance (.40);
+- Persistence has **no** direct effect on Performance once Agency is accounted
+  for (0);
+- Agency and Social desirability are unrelated (0).
+
+In real research you would not know these values. They are shown here so you
+can see how `nomologR` evidence behaves when a prediction is right, when it is
+wrong, and when it is about a negligible relation.
+
+# Specify theory before looking at results
+
+```{r hypotheses}
 h <- nomo_hypotheses(
   "Agency -> Persistence" = positive(min = .20),
-  "Agency <-> SocialDesirability" =
-    negligible(within = c(-.10, .10)),
-  "Agency -> Performance" = positive()
+  "Agency <-> SocialDesirability" = negligible(within = c(-.15, .15)),
+  "Agency -> Performance" = positive(),
+  "Persistence -> Performance" = positive(min = .20)
 )
 
 h
@@ -47,119 +68,199 @@ h
 `A -> B` means a directed structural path. `A <-> B` means an association
 without asserting causal direction.
 
-A bare `negligible()` records a theoretical expectation but does **not** supply
-a smallest effect size of interest (SESOI). `nomologR` will therefore refuse to
-treat `p > .05` as confirmation of negligibility.
+The fourth prediction is plausible-sounding — persistent people perform better —
+but it is **not** true in the population model. It is included on purpose.
+
+The negligible-effect region of ±.15 for Social desirability is a
+**researcher-specified smallest effect size of interest (SESOI)**. It must be
+justified by theory or study design before the analysis; `nomologR` never
+invents one. A bare `negligible()` records a theoretical expectation, but
+`nomologR` will refuse to treat `p > .05` as confirmation of negligibility.
 
 # Fit the latent network
 
-```{r}
-model <- "
-  Agency =~ a1 + a2 + a3
-  Persistence =~ p1 + p2 + p3
-"
+```{r fit}
+model <- nomo_model(list(
+  Agency = c("ag1", "ag2", "ag3", "ag4"),
+  Persistence = c("pe1", "pe2", "pe3", "pe4"),
+  SocialDesirability = c("sd1", "sd2", "sd3")
+))
 
 net <- nomo_network(
   model,
-  data = dat,
+  data = nomo_demo_network,
   hypotheses = h
 )
 
 net
-summary(net)
+nomo_table(net, "fit")
 ```
 
-If a theory-specified path is absent from the supplied measurement model,
-`nomo_network()` can add it transparently. The exact fitted syntax and unchanged
-`lavaan` fit remain available in the returned object.
+The measurement model supplies only the factor definitions. Theory-specified
+paths absent from that model are added transparently, and the exact fitted
+syntax and unchanged `lavaan` fit remain available in the returned object.
 
 # Read relation-level evidence
 
-```{r}
-nomo_table(net, "hypotheses")
+```{r evidence}
+evidence <- nomo_table(net, "hypotheses")
+evidence[, c(
+  "id", "relation", "theoretical_region", "estimate",
+  "ci_lower", "ci_upper", "equivalence_supported", "concordance"
+)]
 ```
 
-Every relation retains:
+```{r evidence-values, include=FALSE}
+ev <- function(id, col) evidence[[col]][evidence$id == id]
+fmt <- function(x) sprintf("%.2f", x)
+```
 
-- predicted direction or region;
-- estimate;
-- standard error;
-- confidence interval;
-- standardized estimate;
-- p-value where available;
-- concordance classification;
-- measurement-context flag;
-- a-priori versus post-hoc provenance.
+Reading each row:
 
-The goal is not to produce a single "validity score."
+- **H1** (`Agency -> Persistence`): estimate `r fmt(ev("H1", "estimate"))`,
+  interval [`r fmt(ev("H1", "ci_lower"))`, `r fmt(ev("H1", "ci_upper"))`],
+  classified **`r ev("H1", "concordance")`** with the prediction of at least
+  .20.
+- **H2** (`Agency <-> SocialDesirability`): estimate
+  `r fmt(ev("H2", "estimate"))`. The 90% equivalence interval
+  [`r fmt(ev("H2", "equivalence_ci_lower"))`,
+  `r fmt(ev("H2", "equivalence_ci_upper"))`] lies inside the ±.15 region, so
+  the negligible prediction is supported by equivalence evidence — not merely
+  by a non-significant p-value.
+- **H3** (`Agency -> Performance`): estimate `r fmt(ev("H3", "estimate"))`,
+  classified **`r ev("H3", "concordance")`**.
+- **H4** (`Persistence -> Performance`): estimate `r fmt(ev("H4", "estimate"))`,
+  interval [`r fmt(ev("H4", "ci_lower"))`, `r fmt(ev("H4", "ci_upper"))`],
+  classified **`r ev("H4", "concordance")`** with the predicted region.
+
+Every relation also retains its standard error, p-value, evidence scope, a-priori
+versus post-hoc provenance, and a measurement-context flag. The goal is not to
+produce a single "validity score."
+
+# A marginal association is not a structural prediction
+
+Why might a researcher have expected H4? Look at the simple correlation between
+a Persistence composite and Performance:
+
+```{r marginal}
+persistence_mean <- rowMeans(nomo_demo_network[, c("pe1", "pe2", "pe3", "pe4")])
+cor(persistence_mean, nomo_demo_network$Performance)
+```
+
+The marginal correlation is positive, because both Persistence and Performance
+depend on Agency. The theory-specified path asks a different question: does
+Persistence predict Performance *given* Agency? It does not. Treating a table
+of observed correlations as the nomological network would have produced the
+wrong conclusion.
 
 # Negligible predictions and equivalence evidence
 
 For:
 
-```{r}
-negligible(within = c(-.10, .10))
+```{r negligible-example}
+negligible(within = c(-.15, .15))
 ```
 
 the researcher has supplied a quantitative negligible-effect region. With the
 default `equivalence_alpha = .05`, `nomo_network()` evaluates a 90% equivalence
-confidence interval. This is intentionally different from declaring a relation
-negligible because an ordinary null-hypothesis test was not significant.
+confidence interval, corresponding to the two one-sided tests procedure. This
+is intentionally different from declaring a relation negligible because an
+ordinary null-hypothesis test was not significant.
 
 # Criterion and predictive evidence
 
-Observed outcomes can participate in the same network:
+`Performance` is an observed variable, while Agency is latent. The evidence table
+labels such relations explicitly:
 
-```{r}
-h <- nomo_hypotheses(
-  "Agency -> Performance" = positive()
-)
+```{r scope}
+evidence[, c("id", "relation", "evidence_scope")]
 ```
 
-When `Performance` is an observed variable and `Agency` is latent, the evidence
-table labels the relation as a latent-to-observed outcome path.
+Observed outcomes keep their observed-variable estimand; `nomologR` does not
+silently insert measurement-error corrections.
+
+# Measurement context
+
+```{r measurement}
+nomo_table(net, "measurement")
+```
+
+A relation can look inconsistent with theory because the estimated relationship
+truly differs from the prediction, or because weak measurement, improper
+solutions, poor fit, or large uncertainty limit what the structural result can
+say. The measurement context stays beside the theory evidence so the two are not
+confused.
 
 # Calibration and validation
 
 An internal split can be created explicitly:
 
-```{r}
-s <- nomo_split(dat, validation_prop = .40, seed = 2026)
+```{r split}
+s <- nomo_split(nomo_demo_network, validation_prop = .40, seed = 2026)
 
-net <- nomo_network(
+net_rep <- nomo_network(
   model,
   data = s,
   hypotheses = h
 )
+
+replication <- nomo_table(net_rep, "replication")
+replication[, c(
+  "id", "relation", "primary_estimate", "validation_estimate",
+  "validation_concordance", "replication_status"
+)]
+```
+
+```{r replication-values, include=FALSE}
+rs <- function(id) replication$replication_status[replication$id == id]
 ```
 
 The calibration and validation subsets receive the **same prespecified fitted
-model**. `nomologR` does not respecify the validation model to rescue a primary
-sample result.
+model**; `nomologR` does not respecify the validation model to rescue a primary
+result. Reading the statuses:
 
-External validation data can instead be supplied with `validation_data =`.
+- H1 and H3 are **`r rs("H1")`** and **`r rs("H3")`**.
+- H2 is **`r rs("H2")`**: with only `r nrow(s$validation)` validation cases, the
+  equivalence interval is too wide to confirm negligibility. Splitting a sample
+  buys independence at the cost of precision.
+- H4 is labeled **`r rs("H4")`**. Both estimates are close to zero and both
+  intervals include zero, so this label overstates the discrepancy: the current
+  rule compares the signs of point estimates before considering uncertainty.
+  Improving this language is tracked in
+  [issue #30](https://github.com/JUhalt/nomologR/issues/30). Read replication
+  statuses together with the estimates and their intervals.
 
-# Figures and manuscript-ready tables
+External validation data can instead be supplied with `validation_data =`, which
+is generally stronger evidence than an internal split.
 
-```{r}
-plot(net, "effects")
-plot(net, "concordance")
-plot(net, "fit")
-plot(net, "replication")
+# Figures
 
-nomo_table(net, "hypotheses")
-nomo_table(net, "measurement")
-nomo_table(net, "replication")
+```{r effects-plot}
+plot(net, type = "effects")
+```
+
+```{r replication-plot}
+plot(net_rep, type = "replication")
 ```
 
 These are evidence summaries, not automated theory verdicts.
 
 # Interpretation rule
 
-A relation can be inconsistent with theory because the estimated relationship
-truly differs from the prediction. But weak measurement, improper solutions,
-poor global fit, or large uncertainty can also limit what the structural result
-can say.
+`nomologR` keeps **measurement evidence, theory concordance, uncertainty,
+replication, and researcher provenance visible at the same time**. A supported
+prediction strengthens the validity argument for a particular interpretation of
+scores; an unsupported one is information about the theory, the measure, or
+both.
 
-`nomologR` therefore keeps **measurement evidence, theory concordance,
-uncertainty, replication, and researcher provenance visible at the same time**.
+# Research basis
+
+The nomological network as the core of construct validity comes from Cronbach
+and Meehl (1955), and convergent and discriminant correlation patterns from
+Campbell and Fiske (1959). Contemporary practice separates the measurement model
+from structural relations (Anderson & Gerbing, 1988), treats validity as an
+argument about score interpretation (Messick, 1995), evaluates negligible
+predictions with equivalence procedures (Schuirmann, 1987; Lakens, Scheel, &
+Isager, 2018), and distinguishes prespecified from post-hoc predictions (Nosek
+et al., 2018). Full references are in `?nomo_network` and the
+[research basis](research-basis.html) article.

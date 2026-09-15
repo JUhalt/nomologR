@@ -18,10 +18,21 @@
 #'
 #' @return A `nomo_split` object containing `calibration`, `validation`, a
 #'   row-level `assignment` table, split sizes, the seed, and a decision log.
+#'
+#' @references
+#' Fokkema, M., & Greiff, S. (2017). How performing PCA and CFA on the same
+#' data equals trouble. *European Journal of Psychological Assessment, 33*(6),
+#' 399-402. \doi{10.1027/1015-5759/a000460}
+#'
+#' MacCallum, R. C., Roznowski, M., & Necowitz, L. B. (1992). Model
+#' modifications in covariance structure analysis: The problem of
+#' capitalization on chance. *Psychological Bulletin, 111*(3), 490-504.
+#' \doi{10.1037/0033-2909.111.3.490}
+#'
 #' @export
 #'
 #' @examples
-#' split <- nomo_split(mtcars, validation_prop = 0.40, seed = 2026)
+#' split <- nomo_split(nomo_demo_continuous, validation_prop = 0.40, seed = 2026)
 #' split
 #' nrow(split$calibration)
 #' nrow(split$validation)

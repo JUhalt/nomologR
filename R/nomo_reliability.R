@@ -47,32 +47,47 @@
 #'   references, and a structured decision log.
 #'
 #' @references
-#' Dunn, T. J., Baguley, T., & Brunsden, V. (2014). From alpha to omega: a
-#' practical solution to the pervasive problem of internal consistency
-#' estimation. *British Journal of Psychology, 105*, 399-412.
+#' Historical context:
 #'
-#' Flora, D. B. (2020). Your coefficient alpha is probably wrong, but which
-#' coefficient omega is right? A tutorial on using R to obtain better reliability
-#' estimates. *Advances in Methods and Practices in Psychological Science, 3*,
-#' 484-501.
+#' Cronbach, L. J. (1951). Coefficient alpha and the internal structure of
+#' tests. *Psychometrika, 16*(3), 297-334. \doi{10.1007/BF02310555}
+#'
+#' Contemporary model-based reliability:
 #'
 #' Bell, S. M., Chalmers, R. P., & Flora, D. B. (2024). The impact of
 #' measurement model misspecification on coefficient omega estimates of
-#' composite reliability. *Educational and Psychological Measurement, 84*, 5-39.
+#' composite reliability. *Educational and Psychological Measurement, 84*(1),
+#' 5-39. \doi{10.1177/00131644231155804}
+#'
+#' Dunn, T. J., Baguley, T., & Brunsden, V. (2014). From alpha to omega: A
+#' practical solution to the pervasive problem of internal consistency
+#' estimation. *British Journal of Psychology, 105*(3), 399-412.
+#' \doi{10.1111/bjop.12046}
+#'
+#' Flora, D. B. (2020). Your coefficient alpha is probably wrong, but which
+#' coefficient omega is right? A tutorial on using R to obtain better reliability
+#' estimates. *Advances in Methods and Practices in Psychological Science,
+#' 3*(4), 484-501. \doi{10.1177/2515245920951747}
 #'
 #' Green, S. B., & Yang, Y. (2009). Reliability of summed item scores using
-#' structural equation modeling: an alternative to coefficient alpha.
-#' *Psychometrika, 74*, 155-167.
+#' structural equation modeling: An alternative to coefficient alpha.
+#' *Psychometrika, 74*(1), 155-167. \doi{10.1007/s11336-008-9099-3}
 #'
 #' Kelley, K., & Pornprasertmanit, S. (2016). Confidence intervals for
 #' population reliability coefficients: Evaluation of methods,
 #' recommendations, and software for composite measures.
-#' *Psychological Methods, 21*, 69-92.
+#' *Psychological Methods, 21*(1), 69-92. \doi{10.1037/a0040086}
+#'
+#' McNeish, D. (2018). Thanks coefficient alpha, we'll take it from here.
+#' *Psychological Methods, 23*(3), 412-433. \doi{10.1037/met0000144}
+#'
+#' Sijtsma, K. (2009). On the use, the misuse, and the very limited usefulness
+#' of Cronbach's alpha. *Psychometrika, 74*(1), 107-120.
+#' \doi{10.1007/s11336-008-9101-0}
 #'
 #' @export
 #'
 #' @examples
-#' \dontrun{
 #' model <- '
 #'   visual  =~ x1 + x2 + x3
 #'   textual =~ x4 + x5 + x6
@@ -80,8 +95,14 @@
 #' '
 #' cfa <- nomo_cfa(model, data = lavaan::HolzingerSwineford1939)
 #' rel <- nomo_reliability(cfa)
-#' rel$evidence
+#' summary(rel)
 #' rel$decision_log
+#'
+#' \donttest{
+#' # Bootstrap intervals refit the same CFA repeatedly; use more resamples
+#' # (for example 1000) for final reporting.
+#' rel_ci <- nomo_reliability(cfa, ci = "bootstrap", ci_boot = 100, ci_seed = 2026)
+#' summary(rel_ci)
 #' }
 nomo_reliability <- function(fit,
                              obs.var = TRUE,

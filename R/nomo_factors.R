@@ -68,19 +68,76 @@
 #'   MAP results, criterion availability/status, method- and family-level concordance,
 #'   scree information, a cautious retention synthesis, and a decision log.
 #'
-#' @examples
-#' set.seed(42)
-#' f <- rnorm(150)
-#' dat <- data.frame(
-#'   i1 = 0.8 * f + rnorm(150, sd = 0.6),
-#'   i2 = 0.8 * f + rnorm(150, sd = 0.6),
-#'   i3 = 0.7 * f + rnorm(150, sd = 0.7),
-#'   i4 = 0.7 * f + rnorm(150, sd = 0.7)
-#' )
+#' @references
+#' Historical retention rules shown as context:
 #'
-#' fac <- nomo_factors(dat, n_iter = 10, seed = 2026)
+#' Cattell, R. B. (1966). The scree test for the number of factors.
+#' *Multivariate Behavioral Research, 1*(2), 245-276.
+#' \doi{10.1207/s15327906mbr0102_10}
+#'
+#' Guttman, L. (1954). Some necessary conditions for common-factor analysis.
+#' *Psychometrika, 19*(2), 149-161. \doi{10.1007/BF02289162}
+#'
+#' Kaiser, H. F. (1960). The application of electronic computers to factor
+#' analysis. *Educational and Psychological Measurement, 20*(1), 141-151.
+#' \doi{10.1177/001316446002000116}
+#'
+#' Contemporary retention evidence:
+#'
+#' Achim, A. (2017). Testing the number of required dimensions in exploratory
+#' factor analysis. *The Quantitative Methods for Psychology, 13*(1), 64-74.
+#' \doi{10.20982/tqmp.13.1.p064}
+#'
+#' Braeken, J., & van Assen, M. A. L. M. (2017). An empirical Kaiser
+#' criterion. *Psychological Methods, 22*(3), 450-466.
+#' \doi{10.1037/met0000074}
+#'
+#' Crawford, A. V., Green, S. B., Levy, R., Lo, W.-J., Scott, L., Svetina, D.,
+#' & Thompson, M. S. (2010). Evaluation of parallel analysis methods for
+#' determining the number of factors. *Educational and Psychological
+#' Measurement, 70*(6), 885-901. \doi{10.1177/0013164410379332}
+#'
+#' Horn, J. L. (1965). A rationale and test for the number of factors in factor
+#' analysis. *Psychometrika, 30*(2), 179-185. \doi{10.1007/BF02289447}
+#'
+#' Lorenzo-Seva, U., Timmerman, M. E., & Kiers, H. A. L. (2011). The Hull
+#' method for selecting the number of common factors. *Multivariate Behavioral
+#' Research, 46*(2), 340-364. \doi{10.1080/00273171.2011.564527}
+#'
+#' Ruscio, J., & Roche, B. (2012). Determining the number of factors to retain
+#' in an exploratory factor analysis using comparison data of known factorial
+#' structure. *Psychological Assessment, 24*(2), 282-292.
+#' \doi{10.1037/a0025697}
+#'
+#' Velicer, W. F. (1976). Determining the number of components from the matrix
+#' of partial correlations. *Psychometrika, 41*(3), 321-327.
+#' \doi{10.1007/BF02293557}
+#'
+#' Velicer, W. F., Eaton, C. A., & Fava, J. L. (2000). Construct explication
+#' through factor or component analysis: A review and evaluation of alternative
+#' procedures for determining the number of factors or components. In R. D.
+#' Goffin & E. Helmes (Eds.), *Problems and solutions in human assessment*
+#' (pp. 41-71). Springer. \doi{10.1007/978-1-4615-4397-8_3}
+#'
+#' Supporting adequacy diagnostics:
+#'
+#' Bartlett, M. S. (1950). Tests of significance in factor analysis. *British
+#' Journal of Statistical Psychology, 3*(2), 77-85.
+#' \doi{10.1111/j.2044-8317.1950.tb00285.x}
+#'
+#' Kaiser, H. F. (1974). An index of factorial simplicity. *Psychometrika,
+#' 39*(1), 31-36. \doi{10.1007/BF02291575}
+#'
+#' @examples
+#' fac <- nomo_factors(nomo_demo_continuous, n_iter = 20, seed = 2026)
 #' fac
 #' summary(fac)
+#'
+#' \donttest{
+#' # Ordered five-category items are analyzed with polychoric correlations
+#' fac_ord <- nomo_factors(nomo_demo_ordinal, n_iter = 20, seed = 2026)
+#' fac_ord$correlation
+#' }
 #'
 #' @export
 nomo_factors <- function(data,

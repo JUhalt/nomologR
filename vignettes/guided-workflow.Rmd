@@ -7,84 +7,104 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r, include=FALSE}
+```{r setup, include=FALSE}
+library(nomologR)
+
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  eval = FALSE
+  message = FALSE,
+  warning = FALSE
 )
 ```
 
 `nomo_run()` is an orchestrator, not an automatic scale-decider.
 
-Its job is to make the staged workflow easier to reproduce while preserving
-the package's central rule:
+Its job is to make the staged workflow easier to reproduce while preserving the
+package's central rule:
 
 > Evidence may flow automatically. Consequential decisions do not.
 
+This walkthrough uses `nomo_demo_network`, a simulated validation study with
+three constructs (Agency, Persistence, and Social desirability), an observed
+Performance outcome, and two administration groups. See `?nomo_demo_network`.
+
 ## A fresh run
 
-```{r}
-run <- nomo_run(
-  data = dat,
-  scales = list(
-    WellBeing = c("w1", "w2", "w3", "w4")
-  )
+```{r fresh}
+scales <- list(
+  Agency = c("ag1", "ag2", "ag3", "ag4"),
+  Persistence = c("pe1", "pe2", "pe3", "pe4"),
+  SocialDesirability = c("sd1", "sd2", "sd3")
 )
+
+run <- nomo_run(
+  data = nomo_demo_network,
+  scales = scales,
+  settings = list(factors = list(seed = 2026))
+)
+
+run
 ```
 
-The initial run audits the supplied items and computes factor-retention
-evidence. It then pauses before EFA.
+The initial run audits each scale's items and computes factor-retention
+evidence. It then pauses before EFA. The factor count is not silently copied
+from parallel analysis.
 
-The factor count is not silently copied from parallel analysis.
-
-```{r}
+```{r requests-1}
 nomo_table(run, "requests")
 ```
 
-The decision request separates:
+Each decision request separates:
 
-- **Observation** - what the evidence shows;
-- **Reason** - why a researcher decision is required;
-- **Options** - what can defensibly happen next;
-- **Consequence** - what the choice changes.
+- **Observation** — what the evidence shows;
+- **Reason** — why a researcher decision is required;
+- **Options** — what can defensibly happen next;
+- **Consequence** — what the choice changes.
 
 ## Resume with an explicit factor count
 
-```{r}
+```{r factor-count}
 run <- nomo_run(
   resume = run,
   decisions = list(
     factor_count = list(
-      value = 1L,
-      rationale = "Retention evidence and theory support one exploratory factor."
+      value = c(Agency = 1, Persistence = 1, SocialDesirability = 1),
+      rationale = paste(
+        "Each scale was written to measure one construct, and the",
+        "retention evidence was reviewed before choosing one factor."
+      )
     )
   )
 )
+
+run
 ```
 
 The completed screening and factor-retention objects are reused. EFA is fitted
-using the explicit factor-count decision, with M2 correlation/modeling context
-retained.
-
-The workflow then pauses before CFA model specification.
+using the explicit factor-count decision, with the retention stage's correlation
+and modeling context retained. The workflow then pauses before CFA model
+specification.
 
 ## Confirmatory model handoff
 
-```{r}
+```{r cfa-model}
 run <- nomo_run(
   resume = run,
   decisions = list(
     cfa_model = list(
-      value = "WellBeing =~ w1 + w2 + w3 + w4",
-      rationale = "Prespecified one-factor confirmatory model."
+      value = nomo_model(scales),
+      rationale = "Prespecified three-construct measurement model."
     )
   )
 )
+
+run
 ```
 
-`nomo_run()` does not translate the EFA into CFA syntax. The researcher owns
-the confirmatory model.
+`nomo_run()` does not translate the EFA into CFA syntax. The researcher owns the
+confirmatory model; `nomo_model()` simply writes the simple-structure syntax for
+the scales that were already declared.
 
 Once supplied, the pipeline computes:
 
@@ -102,39 +122,31 @@ and pauses again.
 
 A model can converge and still contain evidence that deserves review.
 Reliability or AVE can look strong while construct separation or local CFA
-evidence remains strained.
+evidence remains strained. Therefore the pipeline does not automatically carry
+the model into invariance or structural theory tests.
 
-Therefore the pipeline does not automatically carry the model into invariance
-or structural theory tests.
-
-```{r}
+```{r requests-2}
 nomo_table(run, "requests")
 ```
 
-The researcher chooses either:
-
-```r
-measurement_model = "proceed"
-```
-
-or:
-
-```r
-measurement_model = "revise"
-```
-
-Choosing `revise` does not trigger automated modification-index search,
-parameter freeing, or item deletion. The current workflow remains an auditable
-record and the revised analysis starts as a new run.
+The researcher chooses either `measurement_model = "proceed"` or
+`measurement_model = "revise"`. Choosing `revise` does not trigger an automated
+modification-index search, parameter freeing, or item deletion; the current
+workflow remains an auditable record and the revised analysis starts as a new
+run. Linking a revised run to its parent with a formal model comparison is
+planned ([#27](https://github.com/JUhalt/nomologR/issues/27),
+[#28](https://github.com/JUhalt/nomologR/issues/28)).
 
 ## Optional invariance and network branches
 
 Future-stage settings can be added at a pause without recomputing completed
 stages.
 
-```{r}
+```{r branches}
 h <- nomo_hypotheses(
-  "WellBeing -> criterion" = positive(min = .20)
+  "Agency -> Persistence" = positive(min = .20),
+  "Agency <-> SocialDesirability" = negligible(within = c(-.15, .15)),
+  "Agency -> Performance" = positive()
 )
 
 run <- nomo_run(
@@ -142,7 +154,7 @@ run <- nomo_run(
   settings = list(
     invariance = list(
       group = "group",
-      levels = c("configural", "metric"),
+      levels = c("configural", "metric", "scalar"),
       localize = TRUE
     ),
     network = list(
@@ -154,7 +166,7 @@ run <- nomo_run(
 
 Then continue explicitly:
 
-```{r}
+```{r proceed}
 run <- nomo_run(
   resume = run,
   decisions = list(
@@ -164,26 +176,40 @@ run <- nomo_run(
     )
   )
 )
+
+run
+nomo_table(run, "stages")
 ```
 
-The invariance branch retains diagnostics without automatically releasing
-constraints. The network branch uses explicit hypotheses and does not create a
-single nomological-validity score.
+The completed component objects remain available for direct inspection:
+
+```{r components}
+nomo_table(run$results$invariance, "fit")[, c("level", "cfi", "rmsea", "delta_cfi")]
+
+nomo_table(run$results$network, "hypotheses")[, c(
+  "relation", "estimate", "ci_lower", "ci_upper", "concordance"
+)]
+```
+
+The invariance branch retains its diagnostics without automatically releasing
+constraints (see [Measurement invariance](measurement-invariance.html) for the
+`ag3` intercept). The network branch uses explicit hypotheses and does not
+create a single nomological-validity score.
 
 ## Prespecified one-call workflow
 
-Researchers who have already made the consequential decisions can supply them
-together:
+Researchers who have already made the consequential decisions — for example in
+a preregistration — can supply them together. `mode = "research"` gives a more
+compact presentation of the same statistical behavior:
 
-```{r}
-run <- nomo_run(
-  data = dat,
-  scales = list(
-    WellBeing = c("w1", "w2", "w3", "w4")
-  ),
+```{r one-call}
+run_prespecified <- nomo_run(
+  data = nomo_demo_network,
+  scales = scales,
+  mode = "research",
   decisions = list(
-    factor_count = 1L,
-    cfa_model = "WellBeing =~ w1 + w2 + w3 + w4",
+    factor_count = c(Agency = 1, Persistence = 1, SocialDesirability = 1),
+    cfa_model = nomo_model(scales),
     measurement_model = "proceed"
   ),
   settings = list(
@@ -191,6 +217,8 @@ run <- nomo_run(
     network = list(hypotheses = h)
   )
 )
+
+run_prespecified
 ```
 
 This is still not hidden automation: every consequential decision was explicit
@@ -198,12 +226,11 @@ before the run began.
 
 ## Reproducibility and provenance
 
-```{r}
-nomo_table(run, "stages")
+```{r provenance}
 nomo_table(run, "decisions")
 nomo_table(run, "settings")
 nomo_table(run, "recipe")
-nomo_table(run, "component_log")
+head(nomo_table(run, "component_log"), 10)
 ```
 
 The guided object retains:
@@ -214,8 +241,17 @@ The guided object retains:
 - explicit decisions and rationales;
 - complete component result objects;
 - outstanding decision requests;
-- component decision/evidence logs;
+- component decision and evidence logs;
 - the sequence of resume calls.
 
-This structure is designed to feed the reproducible `nomo_report()` workflow in
-Milestone 9.
+This structure feeds the reproducible report described in
+[Archiving a nomologR workflow](reproducible-report.html).
+
+## Research basis
+
+Staged scale development with explicit decisions follows guidance such as Clark
+and Watson (1995, 2019), Hinkin (1998), and Boateng et al. (2018). Recording
+decisions and rationales responds to evidence that undisclosed analytic
+flexibility undermines measurement claims (Simmons, Nelson, & Simonsohn, 2011;
+Flake, Pek, & Hehman, 2017; Flake & Fried, 2020). Full references are in
+`?nomo_run` and the [research basis](research-basis.html) article.

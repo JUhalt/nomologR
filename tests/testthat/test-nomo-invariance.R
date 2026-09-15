@@ -1152,7 +1152,7 @@ test_that("invariance label helpers cover metric and parameter types", {
     nomologR:::nomo_invariance_metric_label(
       c("delta_cfi", "delta_rmsea", "delta_srmr", "other")
     ),
-    c("\u0394CFI", "\u0394RMSEA", "\u0394SRMR", "other")
+    c("Delta CFI", "Delta RMSEA", "Delta SRMR", "other")
   )
 
   pt <- data.frame(

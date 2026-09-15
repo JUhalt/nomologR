@@ -58,4 +58,19 @@ out <- nomo_screen(dat)
 out$item_summary
 out$decision_log
 
+# Simulated scale-development data with known teaching features
+scr <- nomo_screen(nomo_demo_continuous)
+summary(scr)
+
+}
+\references{
+Clark, L. A., & Watson, D. (2019). Constructing validity: New developments
+in creating objective measuring instruments. \emph{Psychological Assessment,
+31}(12), 1412-1427. \doi{10.1037/pas0000626}
+
+Kuhn, M., & Johnson, K. (2013). \emph{Applied predictive modeling}. Springer.
+\doi{10.1007/978-1-4614-6849-3}
+
+Nunnally, J. C., & Bernstein, I. H. (1994). \emph{Psychometric theory} (3rd ed.).
+McGraw-Hill.
 }

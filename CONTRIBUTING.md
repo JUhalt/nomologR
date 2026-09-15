@@ -42,9 +42,19 @@ A proposed statistical feature should identify:
 - assumptions and known limitations;
 - how uncertainty is represented;
 - how failure or unsupported cases are disclosed;
+- where the method sits on the path from historical to contemporary practice,
+  and which references support that placement;
 - why the feature belongs in `nomologR` rather than solely in the underlying engine package.
 
-Methodological references are strongly encouraged.
+Methodological references are expected for statistical methods. Add them to the
+function's `@references` with DOIs where available, verify that each DOI
+resolves to the cited work, and update the
+[research basis](vignettes/research-basis.Rmd) article.
+
+Examples and vignettes should run on the teaching datasets
+(`nomo_demo_continuous`, `nomo_demo_ordinal`, `nomo_demo_network`) or other
+data with a known answer. Avoid `\dontrun{}` for code that can run; use
+`\donttest{}` for slow examples.
 
 ## Testing expectations
 
@@ -80,3 +90,10 @@ and planning links. Do not label historical release checks as current tests.
 
 New contributions use the current GPL version 3 only project license; preserve
 required copyright and third-party notices.
+
+## Distribution
+
+`nomologR` is distributed through [R-universe](https://juhalt.r-universe.dev),
+which builds the latest GitHub release. CRAN submission is deferred to a later
+polish release; readiness work is tracked in
+[#39](https://github.com/JUhalt/nomologR/issues/39).

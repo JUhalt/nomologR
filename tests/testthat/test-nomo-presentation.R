@@ -204,7 +204,10 @@ test_that("invariance fit and change plots remove redundant metric legends", {
 
   expect_true(all(
     unique(as.character(p_change$data$metric)) %in%
-      c("\u0394CFI", "\u0394RMSEA", "\u0394SRMR")
+      c("Delta CFI", "Delta RMSEA", "Delta SRMR")
+  ))
+  expect_true(all(
+    !grepl("[^ -~]", unique(as.character(p_change$data$metric)))
   ))
   expect_match(
     p_change$labels$caption,

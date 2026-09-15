@@ -46,3 +46,14 @@ partial <- nomo_partial(
 )
 partial
 }
+\references{
+Byrne, B. M., Shavelson, R. J., & Muthén, B. (1989). Testing for the
+equivalence of factor covariance and mean structures: The issue of partial
+measurement invariance. \emph{Psychological Bulletin, 105}(3), 456-466.
+\doi{10.1037/0033-2909.105.3.456}
+
+Putnick, D. L., & Bornstein, M. H. (2016). Measurement invariance
+conventions and reporting: The state of the art and future directions for
+psychological research. \emph{Developmental Review, 41}, 71-90.
+\doi{10.1016/j.dr.2016.06.004}
+}

@@ -79,31 +79,37 @@ parameters automatically, and network results never collapse to a one-number
 validity score.
 }
 \examples{
-\dontrun{
-h <- nomo_hypotheses(
-  "WellBeing -> criterion" = positive(min = .20)
+\donttest{
+scales <- list(
+  Agency = c("ag1", "ag2", "ag3", "ag4"),
+  Persistence = c("pe1", "pe2", "pe3", "pe4")
 )
 
+# Evidence is computed, then the run pauses for the factor-count decision.
 run <- nomo_run(
-  data = dat,
-  scales = list(WellBeing = c("w1", "w2", "w3", "w4")),
-  settings = list(
-    factors = list(seed = 2026),
-    network = list(hypotheses = h)
-  )
+  data = nomo_demo_network,
+  scales = scales,
+  settings = list(factors = list(n_iter = 20, seed = 2026))
 )
+run
+nomo_table(run, "requests")
 
 run <- nomo_run(
   resume = run,
-  decisions = list(factor_count = 1L)
+  decisions = list(
+    factor_count = list(
+      value = c(Agency = 1, Persistence = 1),
+      rationale = "Each scale was written to measure one construct."
+    )
+  )
 )
 
 run <- nomo_run(
   resume = run,
   decisions = list(
     cfa_model = list(
-      value = "WellBeing =~ w1 + w2 + w3 + w4",
-      rationale = "Prespecified one-factor measurement model."
+      value = "Agency =~ ag1 + ag2 + ag3 + ag4; Persistence =~ pe1 + pe2 + pe3 + pe4",
+      rationale = "Prespecified two-construct measurement model."
     )
   )
 )
@@ -117,6 +123,36 @@ run <- nomo_run(
     )
   )
 )
+nomo_table(run, "stages")
 }
 
+}
+\references{
+Boateng, G. O., Neilands, T. B., Frongillo, E. A., Melgar-Quiñonez, H. R.,
+& Young, S. L. (2018). Best practices for developing and validating scales
+for health, social, and behavioral research: A primer. \emph{Frontiers in Public
+Health, 6}, 149. \doi{10.3389/fpubh.2018.00149}
+
+Clark, L. A., & Watson, D. (1995). Constructing validity: Basic issues in
+objective scale development. \emph{Psychological Assessment, 7}(3), 309-319.
+\doi{10.1037/1040-3590.7.3.309}
+
+Flake, J. K., & Fried, E. I. (2020). Measurement schmeasurement:
+Questionable measurement practices and how to avoid them. \emph{Advances in
+Methods and Practices in Psychological Science, 3}(4), 456-465.
+\doi{10.1177/2515245920952393}
+
+Flake, J. K., Pek, J., & Hehman, E. (2017). Construct validation in social
+and personality research: Current practice and recommendations. \emph{Social
+Psychological and Personality Science, 8}(4), 370-378.
+\doi{10.1177/1948550617693063}
+
+Hinkin, T. R. (1998). A brief tutorial on the development of measures for
+use in survey questionnaires. \emph{Organizational Research Methods, 1}(1),
+104-121. \doi{10.1177/109442819800100106}
+
+Simmons, J. P., Nelson, L. D., & Simonsohn, U. (2011). False-positive
+psychology: Undisclosed flexibility in data collection and analysis allows
+presenting anything as significant. \emph{Psychological Science, 22}(11),
+1359-1366. \doi{10.1177/0956797611417632}
 }

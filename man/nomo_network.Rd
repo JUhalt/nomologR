@@ -78,3 +78,49 @@ Pass \code{validation_data} explicitly, or pass a \code{nomo_split} object as \c
 use its calibration and validation subsets. No model relation is added or
 removed on the basis of validation results.
 }
+\examples{
+model <- nomo_model(list(
+  Agency = c("ag1", "ag2", "ag3", "ag4"),
+  Persistence = c("pe1", "pe2", "pe3", "pe4"),
+  SocialDesirability = c("sd1", "sd2", "sd3")
+))
+
+h <- nomo_hypotheses(
+  "Agency -> Persistence" = positive(min = .20),
+  "Agency <-> SocialDesirability" = negligible(within = c(-.15, .15)),
+  "Agency -> Performance" = positive()
+)
+
+net <- nomo_network(model, data = nomo_demo_network, hypotheses = h)
+net
+nomo_table(net, "hypotheses")
+
+\donttest{
+# Evaluate the same prespecified network in calibration and validation rows
+s <- nomo_split(nomo_demo_network, validation_prop = 0.40, seed = 2026)
+net_rep <- nomo_network(model, data = s, hypotheses = h)
+nomo_table(net_rep, "replication")
+}
+}
+\references{
+Anderson, J. C., & Gerbing, D. W. (1988). Structural equation modeling in
+practice: A review and recommended two-step approach. \emph{Psychological
+Bulletin, 103}(3), 411-423. \doi{10.1037/0033-2909.103.3.411}
+
+Cronbach, L. J., & Meehl, P. E. (1955). Construct validity in psychological
+tests. \emph{Psychological Bulletin, 52}(4), 281-302. \doi{10.1037/h0040957}
+
+Lakens, D., Scheel, A. M., & Isager, P. M. (2018). Equivalence testing for
+psychological research: A tutorial. \emph{Advances in Methods and Practices in
+Psychological Science, 1}(2), 259-269. \doi{10.1177/2515245918770963}
+
+Messick, S. (1995). Validity of psychological assessment: Validation of
+inferences from persons' responses and performances as scientific inquiry
+into score meaning. \emph{American Psychologist, 50}(9), 741-749.
+\doi{10.1037/0003-066X.50.9.741}
+
+Schuirmann, D. J. (1987). A comparison of the two one-sided tests procedure
+and the power approach for assessing the equivalence of average
+bioavailability. \emph{Journal of Pharmacokinetics and Biopharmaceutics, 15}(6),
+657-680. \doi{10.1007/BF01068419}
+}
