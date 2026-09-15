@@ -1,5 +1,25 @@
 # nomologR 0.1.0.9000
 
+## Revision lineage (#28)
+
+- Added `nomo_revise()`, which creates a child workflow from a parent
+  `nomo_run()` with a revised measurement model, a revised item set, or both.
+  The parent workflow is never modified.
+- Each revision records what changed (model, items, or both), the required
+  researcher rationale, and whether the change was prespecified or post hoc.
+  Post-hoc revisions are labeled, and the decision log recommends confirming
+  the revised model in independent data.
+- Parent and revised measurement models are compared with `nomo_compare()`
+  (#27), so a revision carries its own evidence. Item changes alter the
+  observed variables, so those comparisons are descriptive, as documented.
+- The factor-count decision is inherited from the parent unless the researcher
+  supplies a new one, so a revision changes only what was intended.
+- Revisions chain: `$lineage` accumulates one row per revision and is available
+  through `nomo_table(run, "lineage")`, in `print()` output, and in a new
+  "Revision lineage" section of `nomo_report()`.
+- The `measurement_model = "revise"` decision now points to `nomo_revise()`
+  instead of only advising a fresh workflow.
+
 ## Model comparison (#27)
 
 - Added `nomo_compare()` for comparing two or more fitted `nomo_cfa()` models.
