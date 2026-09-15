@@ -64,6 +64,12 @@ Confirmatory measurement model
   : Summarize a guided confirmatory factor analysis
 - [`plot(`*`<nomo_cfa>`*`)`](https://juhalt.github.io/nomologR/reference/plot.nomo_cfa.md)
   : Plot confirmatory factor-analysis evidence
+- [`nomo_compare()`](https://juhalt.github.io/nomologR/reference/nomo_compare.md)
+  : Compare confirmatory measurement models
+- [`summary(`*`<nomo_compare>`*`)`](https://juhalt.github.io/nomologR/reference/summary.nomo_compare.md)
+  : Summarize a measurement-model comparison
+- [`plot(`*`<nomo_compare>`*`)`](https://juhalt.github.io/nomologR/reference/plot.nomo_compare.md)
+  : Plot a measurement-model comparison
 
 ## 
 

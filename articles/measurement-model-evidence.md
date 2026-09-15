@@ -450,9 +450,204 @@ Three lessons carry over from the exploratory stage:
   maximum likelihood for continuous indicators, and the decision is
   recorded.
 
-A formal side-by-side model comparison with a recorded rationale is
-planned for `v0.2.0`
-([\#27](https://github.com/JUhalt/nomologR/issues/27)).
+## Comparing models with a recorded rationale
+
+[`nomo_compare()`](https://juhalt.github.io/nomologR/reference/nomo_compare.md)
+evaluates competing measurement models side by side. It requires a
+rationale, checks whether the models are nested, reports the difference
+test that matches the estimator when they are, and never selects a model
+automatically.
+
+### A cross-loading suggested by the results
+
+The largest modification index above pointed to a loading of `a5` on
+factor B. Because that idea came from the results rather than from
+theory stated in advance, the comparison is labeled post hoc:
+
+``` r
+
+cross_cfa <- nomo_cfa(
+  "A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4 + b5 + a5",
+  data = nomo_demo_continuous
+)
+
+cross_comparison <- nomo_compare(
+  simple_structure = demo_cfa,
+  cross_loading = cross_cfa,
+  rationale = "The largest modification index suggested that a5 also reflects factor B.",
+  origin = "post_hoc"
+)
+cross_comparison
+```
+
+    ## <nomo_compare>
+    ## Models: 2 | Reference: simple_structure | Estimator: ML | Cases: 473 | Origin: post-hoc
+    ## Rationale: The largest modification index suggested that a5 also reflects factor B.
+    ## 
+    ## Compared with `simple_structure`:
+    ##   - cross_loading (nested, less constrained): chi-square difference = 48.72, df = 1, p < .001; dCFI +0.027, dRMSEA -0.051; dAIC -46.7
+    ## 
+    ## No model was selected automatically. Use summary() for interpretations and measurement evidence.
+
+Estimating the cross-loading reduces misfit (chi-square difference =
+48.7, df = 1, p \< .001; CFI changes by +0.027). That is exactly the
+feature built into these simulated data, but with real data the evidence
+alone does not settle the question. Does the wording of `a5` plausibly
+reflect both constructs? Because the comparison is post hoc, the
+decision log records it as such and recommends confirming the retained
+model in independent data.
+
+### Is a weak item needed?
+
+`b5` loads weakly on B. Dropping `b5` from the model changes the data
+being modeled, so a model without the column cannot be tested against
+the full model. Instead, keep `b5` and fix its loading to zero:
+
+``` r
+
+b5_zero_cfa <- nomo_cfa(
+  "A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4 + 0*b5",
+  data = nomo_demo_continuous
+)
+
+b5_comparison <- nomo_compare(
+  full = demo_cfa,
+  b5_loading_zero = b5_zero_cfa,
+  rationale = paste(
+    "Evaluate whether the weakly loading item b5 contributes to factor B",
+    "before deciding whether to keep it."
+  )
+)
+summary(b5_comparison)
+```
+
+    ## nomologR measurement-model comparison
+    ## Rationale: Evaluate whether the weakly loading item b5 contributes to factor B before deciding whether to keep it.
+    ## Origin: a-priori | Reference model: full
+    ## 
+    ## Model fit and information criteria
+    ## # A tibble: 2 × 11
+    ##   model            npar    df chisq   cfi   tli rmsea  srmr    aic    bic
+    ##   <chr>           <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl>  <dbl>  <dbl>
+    ## 1 full               21    34  75.8 0.973 0.965 0.051 0.052 11981  12068.
+    ## 2 b5_loading_zero    20    35 123.  0.944 0.928 0.073 0.093 12026. 12109.
+    ##   fixed_zero_loadings
+    ##                 <int>
+    ## 1                   0
+    ## 2                   1
+    ## 
+    ## Comparisons with the reference model
+    ## # A tibble: 1 × 12
+    ##   model           relation         nesting_check method   chisq_diff df_diff
+    ##   <chr>           <chr>            <chr>         <chr>         <dbl>   <dbl>
+    ## 1 b5_loading_zero more_constrained nested        standard       46.9       1
+    ##   p_value delta_cfi delta_rmsea delta_srmr delta_aic delta_bic
+    ##     <dbl>     <dbl>       <dbl>      <dbl>     <dbl>     <dbl>
+    ## 1       0    -0.029       0.022      0.042      44.9      40.8
+    ## 
+    ## Interpretation
+    ## - `b5_loading_zero` is nested within `full` and has 1 more degree(s) of freedom (additional constraints). Chi-Squared Difference Test: chi-square difference = 46.91, df = 1, p < .001. A small p-value indicates that the extra constraints are not fully consistent with the data; with large samples, even small misspecifications produce small p-values. Change in fit (`b5_loading_zero` minus `full`): CFI -0.029, TLI -0.036, RMSEA +0.022, SRMR +0.042. AIC +44.9 and BIC +40.8 (`b5_loading_zero` minus `full`); lower values favor a model for these data, and only differences are interpretable. No model is selected automatically; read this evidence with theory and the recorded rationale.
+    ## 
+    ## Standardized loadings by model
+    ## # A tibble: 10 × 4
+    ##    factor item   full b5_loading_zero
+    ##    <chr>  <chr> <dbl>           <dbl>
+    ##  1 A      a1    0.771           0.771
+    ##  2 A      a2    0.744           0.744
+    ##  3 A      a3    0.669           0.669
+    ##  4 A      a4    0.738           0.738
+    ##  5 A      a5    0.598           0.598
+    ##  6 B      b1    0.794           0.795
+    ##  7 B      b2    0.695           0.699
+    ##  8 B      b3    0.757           0.757
+    ##  9 B      b4    0.628           0.624
+    ## 10 B      b5    0.337           0    
+    ## 
+    ## Measurement evidence by model
+    ## # A tibble: 14 × 4
+    ##    model           construct metric estimate
+    ##    <chr>           <chr>     <chr>     <dbl>
+    ##  1 full            A         omega     0.835
+    ##  2 full            B         omega     0.784
+    ##  3 full            A         alpha     0.827
+    ##  4 full            B         alpha     0.771
+    ##  5 full            A         AVE       0.497
+    ##  6 full            B         AVE       0.434
+    ##  7 full            B vs A    HTMT2     0.533
+    ##  8 b5_loading_zero A         omega     0.835
+    ##  9 b5_loading_zero B         omega     0.622
+    ## 10 b5_loading_zero A         alpha     0.827
+    ## 11 b5_loading_zero B         alpha     0.771
+    ## 12 b5_loading_zero A         AVE       0.497
+    ## 13 b5_loading_zero B         AVE       0.521
+    ## 14 b5_loading_zero B vs A    HTMT2     0.533
+    ## Notes:
+    ## - Loading(s) fixed to zero for b5 keep those item(s) in this composite; the coefficient does not describe a shortened scale.
+    ## 
+    ## No model was selected automatically. Difference tests, changes in fit, information criteria, and measurement evidence answer different questions; read them together with theory and the recorded rationale.
+
+Fixing the loading to zero worsens fit (chi-square difference = 46.9, df
+= 1, p \< .001), so `b5` is statistically related to B. Its standardized
+loading, however, is only 0.34. With 473 cases, even a weak relation is
+detectable; statistical detectability is not the same as an adequate
+indicator. The decision still depends on whether `b5` covers content the
+construct needs.
+
+``` r
+
+plot(b5_comparison, type = "loadings")
+```
+
+![](measurement-model-evidence_files/figure-html/compare-loadings-plot-1.png)
+
+The summary’s measurement evidence carries a note: omega for B in the
+zero-loading model still includes `b5` in the composite, so it does not
+describe a shortened four-item scale. To see that scale’s reliability,
+fit the model without `b5`. Because the two models contain different
+observed variables,
+[`nomo_compare()`](https://juhalt.github.io/nomologR/reference/nomo_compare.md)
+reports this comparison descriptively, without a difference test or
+information criteria:
+
+``` r
+
+shortened_cfa <- nomo_cfa(
+  "A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4",
+  data = nomo_demo_continuous
+)
+
+shortened <- nomo_compare(
+  full = demo_cfa,
+  four_item_b = shortened_cfa,
+  rationale = "Describe the reliability of a four-item B scale alongside the full scale."
+)
+
+nomo_table(shortened, "comparisons")[, c("model", "relation", "test_available", "ic_available")]
+```
+
+    ## # A tibble: 1 × 4
+    ##   model       relation            test_available ic_available
+    ##   <chr>       <chr>               <lgl>          <lgl>       
+    ## 1 four_item_b different_variables FALSE          FALSE
+
+``` r
+
+omega_rows <- nomo_table(shortened, "evidence")
+omega_rows[omega_rows$metric == "omega", c("model", "construct", "estimate")]
+```
+
+    ## # A tibble: 4 × 3
+    ##   model       construct estimate
+    ##   <chr>       <chr>        <dbl>
+    ## 1 full        A            0.835
+    ## 2 full        B            0.784
+    ## 3 four_item_b A            0.835
+    ## 4 four_item_b B            0.812
+
+Together these results separate three questions that are easy to blur:
+whether an item is statistically related to its factor, whether it is a
+strong indicator, and how the score’s reliability changes without it.
+None of them alone decides whether the item stays.
 
 ## Reading the evidence as an argument
 

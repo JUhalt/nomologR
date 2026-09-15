@@ -20,6 +20,7 @@
 <url><loc>https://juhalt.github.io/nomologR/news/index.html</loc></url>
 <url><loc>https://juhalt.github.io/nomologR/reference/index.html</loc></url>
 <url><loc>https://juhalt.github.io/nomologR/reference/nomo_cfa.html</loc></url>
+<url><loc>https://juhalt.github.io/nomologR/reference/nomo_compare.html</loc></url>
 <url><loc>https://juhalt.github.io/nomologR/reference/nomo_defaults.html</loc></url>
 <url><loc>https://juhalt.github.io/nomologR/reference/nomo_demo_continuous.html</loc></url>
 <url><loc>https://juhalt.github.io/nomologR/reference/nomo_demo_network.html</loc></url>
@@ -41,6 +42,7 @@
 <url><loc>https://juhalt.github.io/nomologR/reference/nomo_validity.html</loc></url>
 <url><loc>https://juhalt.github.io/nomologR/reference/nomologR-package.html</loc></url>
 <url><loc>https://juhalt.github.io/nomologR/reference/plot.nomo_cfa.html</loc></url>
+<url><loc>https://juhalt.github.io/nomologR/reference/plot.nomo_compare.html</loc></url>
 <url><loc>https://juhalt.github.io/nomologR/reference/plot.nomo_efa.html</loc></url>
 <url><loc>https://juhalt.github.io/nomologR/reference/plot.nomo_factors.html</loc></url>
 <url><loc>https://juhalt.github.io/nomologR/reference/plot.nomo_invariance.html</loc></url>
@@ -53,6 +55,7 @@
 <url><loc>https://juhalt.github.io/nomologR/reference/print.summary_nomo_factors.html</loc></url>
 <url><loc>https://juhalt.github.io/nomologR/reference/print.summary_nomo_screen.html</loc></url>
 <url><loc>https://juhalt.github.io/nomologR/reference/summary.nomo_cfa.html</loc></url>
+<url><loc>https://juhalt.github.io/nomologR/reference/summary.nomo_compare.html</loc></url>
 <url><loc>https://juhalt.github.io/nomologR/reference/summary.nomo_efa.html</loc></url>
 <url><loc>https://juhalt.github.io/nomologR/reference/summary.nomo_factors.html</loc></url>
 <url><loc>https://juhalt.github.io/nomologR/reference/summary.nomo_reliability.html</loc></url>

@@ -535,6 +535,40 @@ cfa_val <- nomo_cfa(model, data = s$validation)
 The split is explicit, reproducible, and logged as a design choice; no
 split ratio is presented as universally optimal.
 
+#### Comparing measurement models
+
+[`nomo_compare()`](https://juhalt.github.io/nomologR/reference/nomo_compare.md)
+places fitted CFA models side by side. When the models are nested
+(checked automatically), it reports the difference test that matches the
+estimator; it also reports changes in fit indices, AIC and BIC when they
+are defined, and side-by-side loadings, reliability, and
+construct-separation evidence. A rationale is required, and no model is
+selected automatically.
+
+``` r
+
+full <- nomo_cfa(
+  "A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4 + b5",
+  data = nomo_demo_continuous
+)
+no_b5 <- nomo_cfa(
+  "A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4 + 0*b5",
+  data = nomo_demo_continuous
+)
+
+cmp <- nomo_compare(
+  full = full,
+  no_b5 = no_b5,
+  rationale = "Does the weakly loading item b5 contribute to factor B?"
+)
+cmp
+summary(cmp)
+```
+
+To test whether an item is needed, fix its loading to zero instead of
+dropping the column: models with different observed variables describe
+different data, so they receive descriptive evidence only.
+
 ### 5. `nomo_reliability()` + `nomo_validity()` — measurement evidence beyond model fit
 
 Milestone 5 completes the confirmatory measurement-model layer by
@@ -810,10 +844,11 @@ selected in [\#22](https://github.com/JUhalt/nomologR/issues/22):
   labels (#31), including the teaching datasets, runnable vignettes, and
   the research basis article; maintenance (#36).
 - **Core, in progress or next:** research basis methods registry (#26),
-  model comparison with `nomo_compare()` (#27), auditable revision
-  lineage (#28), bifactor and higher-order models (#29),
-  replication-status language (#30), and release certification with a
-  CRAN-readiness gate (#37).
+  model comparison with
+  [`nomo_compare()`](https://juhalt.github.io/nomologR/reference/nomo_compare.md)
+  (#27), auditable revision lineage (#28), bifactor and higher-order
+  models (#29), replication-status language (#30), and release
+  certification with a CRAN-readiness gate (#37).
 - **Planned:** missing-data sensitivity (#32), score guidance (#33),
   insufficient-effort responding screens (#34), manuscript-ready tables
   (#35), rendering reports from inside R Markdown or Quarto documents
@@ -955,6 +990,12 @@ Confirmatory measurement model
   : Summarize a guided confirmatory factor analysis
 - [`plot(`*`<nomo_cfa>`*`)`](https://juhalt.github.io/nomologR/reference/plot.nomo_cfa.md)
   : Plot confirmatory factor-analysis evidence
+- [`nomo_compare()`](https://juhalt.github.io/nomologR/reference/nomo_compare.md)
+  : Compare confirmatory measurement models
+- [`summary(`*`<nomo_compare>`*`)`](https://juhalt.github.io/nomologR/reference/summary.nomo_compare.md)
+  : Summarize a measurement-model comparison
+- [`plot(`*`<nomo_compare>`*`)`](https://juhalt.github.io/nomologR/reference/plot.nomo_compare.md)
+  : Plot a measurement-model comparison
 
 ## 
 

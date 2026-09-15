@@ -461,8 +461,184 @@ lavaan uses complete cases here; <code>missing = "fiml"</code> requests
 full-information maximum likelihood for continuous indicators, and the
 decision is recorded.</li>
 </ul>
-<p>A formal side-by-side model comparison with a recorded rationale is
-planned for <code>v0.2.0</code> (<a href="https://github.com/JUhalt/nomologR/issues/27" class="external-link">#27</a>).</p>
+</div>
+<div class="section level2">
+<h2 id="comparing-models-with-a-recorded-rationale">Comparing models with a recorded rationale<a class="anchor" aria-label="anchor" href="#comparing-models-with-a-recorded-rationale"></a>
+</h2>
+<p><code><a href="../reference/nomo_compare.html">nomo_compare()</a></code> evaluates competing measurement models
+side by side. It requires a rationale, checks whether the models are
+nested, reports the difference test that matches the estimator when they
+are, and never selects a model automatically.</p>
+<div class="section level3">
+<h3 id="a-cross-loading-suggested-by-the-results">A cross-loading suggested by the results<a class="anchor" aria-label="anchor" href="#a-cross-loading-suggested-by-the-results"></a>
+</h3>
+<p>The largest modification index above pointed to a loading of
+<code>a5</code> on factor B. Because that idea came from the results
+rather than from theory stated in advance, the comparison is labeled
+post hoc:</p>
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">cross_cfa</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_cfa.html">nomo_cfa</a></span><span class="op">(</span></span>
+<span>  <span class="st">"A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4 + b5 + a5"</span>,</span>
+<span>  data <span class="op">=</span> <span class="va">nomo_demo_continuous</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">cross_comparison</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_compare.html">nomo_compare</a></span><span class="op">(</span></span>
+<span>  simple_structure <span class="op">=</span> <span class="va">demo_cfa</span>,</span>
+<span>  cross_loading <span class="op">=</span> <span class="va">cross_cfa</span>,</span>
+<span>  rationale <span class="op">=</span> <span class="st">"The largest modification index suggested that a5 also reflects factor B."</span>,</span>
+<span>  origin <span class="op">=</span> <span class="st">"post_hoc"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">cross_comparison</span></span></code></pre></div>
+<pre><code><span><span class="co">## &lt;nomo_compare&gt;</span></span>
+<span><span class="co">## Models: 2 | Reference: simple_structure | Estimator: ML | Cases: 473 | Origin: post-hoc</span></span>
+<span><span class="co">## Rationale: The largest modification index suggested that a5 also reflects factor B.</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## Compared with `simple_structure`:</span></span>
+<span><span class="co">##   - cross_loading (nested, less constrained): chi-square difference = 48.72, df = 1, p &lt; .001; dCFI +0.027, dRMSEA -0.051; dAIC -46.7</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## No model was selected automatically. Use summary() for interpretations and measurement evidence.</span></span></code></pre>
+<p>Estimating the cross-loading reduces misfit (chi-square difference =
+48.7, df = 1, p &lt; .001; CFI changes by +0.027). That is exactly the
+feature built into these simulated data, but with real data the evidence
+alone does not settle the question. Does the wording of <code>a5</code>
+plausibly reflect both constructs? Because the comparison is post hoc,
+the decision log records it as such and recommends confirming the
+retained model in independent data.</p>
+</div>
+<div class="section level3">
+<h3 id="is-a-weak-item-needed">Is a weak item needed?<a class="anchor" aria-label="anchor" href="#is-a-weak-item-needed"></a>
+</h3>
+<p><code>b5</code> loads weakly on B. Dropping <code>b5</code> from the
+model changes the data being modeled, so a model without the column
+cannot be tested against the full model. Instead, keep <code>b5</code>
+and fix its loading to zero:</p>
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">b5_zero_cfa</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_cfa.html">nomo_cfa</a></span><span class="op">(</span></span>
+<span>  <span class="st">"A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4 + 0*b5"</span>,</span>
+<span>  data <span class="op">=</span> <span class="va">nomo_demo_continuous</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">b5_comparison</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_compare.html">nomo_compare</a></span><span class="op">(</span></span>
+<span>  full <span class="op">=</span> <span class="va">demo_cfa</span>,</span>
+<span>  b5_loading_zero <span class="op">=</span> <span class="va">b5_zero_cfa</span>,</span>
+<span>  rationale <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span></span>
+<span>    <span class="st">"Evaluate whether the weakly loading item b5 contributes to factor B"</span>,</span>
+<span>    <span class="st">"before deciding whether to keep it."</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">b5_comparison</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## nomologR measurement-model comparison</span></span>
+<span><span class="co">## Rationale: Evaluate whether the weakly loading item b5 contributes to factor B before deciding whether to keep it.</span></span>
+<span><span class="co">## Origin: a-priori | Reference model: full</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## Model fit and information criteria</span></span>
+<span><span class="co">## <span style="color: #949494;"># A tibble: 2 × 11</span></span></span>
+<span><span class="co">##   model            npar    df chisq   cfi   tli rmsea  srmr    aic    bic</span></span>
+<span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">1</span> full               21    34  75.8 0.973 0.965 0.051 0.052 <span style="text-decoration: underline;">11</span>981  <span style="text-decoration: underline;">12</span>068.</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">2</span> b5_loading_zero    20    35 123.  0.944 0.928 0.073 0.093 <span style="text-decoration: underline;">12</span>026. <span style="text-decoration: underline;">12</span>109.</span></span>
+<span><span class="co">##   fixed_zero_loadings</span></span>
+<span><span class="co">##                 <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">1</span>                   0</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">2</span>                   1</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## Comparisons with the reference model</span></span>
+<span><span class="co">## <span style="color: #949494;"># A tibble: 1 × 12</span></span></span>
+<span><span class="co">##   model           relation         nesting_check method   chisq_diff df_diff</span></span>
+<span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">1</span> b5_loading_zero more_constrained nested        standard       46.9       1</span></span>
+<span><span class="co">##   p_value delta_cfi delta_rmsea delta_srmr delta_aic delta_bic</span></span>
+<span><span class="co">##     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">1</span>       0    -<span style="color: #BB0000;">0.029</span>       0.022      0.042      44.9      40.8</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## Interpretation</span></span>
+<span><span class="co">## - `b5_loading_zero` is nested within `full` and has 1 more degree(s) of freedom (additional constraints). Chi-Squared Difference Test: chi-square difference = 46.91, df = 1, p &lt; .001. A small p-value indicates that the extra constraints are not fully consistent with the data; with large samples, even small misspecifications produce small p-values. Change in fit (`b5_loading_zero` minus `full`): CFI -0.029, TLI -0.036, RMSEA +0.022, SRMR +0.042. AIC +44.9 and BIC +40.8 (`b5_loading_zero` minus `full`); lower values favor a model for these data, and only differences are interpretable. No model is selected automatically; read this evidence with theory and the recorded rationale.</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## Standardized loadings by model</span></span>
+<span><span class="co">## <span style="color: #949494;"># A tibble: 10 × 4</span></span></span>
+<span><span class="co">##    factor item   full b5_loading_zero</span></span>
+<span><span class="co">##    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 1</span> A      a1    0.771           0.771</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 2</span> A      a2    0.744           0.744</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 3</span> A      a3    0.669           0.669</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 4</span> A      a4    0.738           0.738</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 5</span> A      a5    0.598           0.598</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 6</span> B      b1    0.794           0.795</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 7</span> B      b2    0.695           0.699</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 8</span> B      b3    0.757           0.757</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 9</span> B      b4    0.628           0.624</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">10</span> B      b5    0.337           0    </span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## Measurement evidence by model</span></span>
+<span><span class="co">## <span style="color: #949494;"># A tibble: 14 × 4</span></span></span>
+<span><span class="co">##    model           construct metric estimate</span></span>
+<span><span class="co">##    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 1</span> full            A         omega     0.835</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 2</span> full            B         omega     0.784</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 3</span> full            A         alpha     0.827</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 4</span> full            B         alpha     0.771</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 5</span> full            A         AVE       0.497</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 6</span> full            B         AVE       0.434</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 7</span> full            B vs A    HTMT2     0.533</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 8</span> b5_loading_zero A         omega     0.835</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 9</span> b5_loading_zero B         omega     0.622</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">10</span> b5_loading_zero A         alpha     0.827</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">11</span> b5_loading_zero B         alpha     0.771</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">12</span> b5_loading_zero A         AVE       0.497</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">13</span> b5_loading_zero B         AVE       0.521</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">14</span> b5_loading_zero B vs A    HTMT2     0.533</span></span>
+<span><span class="co">## Notes:</span></span>
+<span><span class="co">## - Loading(s) fixed to zero for b5 keep those item(s) in this composite; the coefficient does not describe a shortened scale.</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## No model was selected automatically. Difference tests, changes in fit, information criteria, and measurement evidence answer different questions; read them together with theory and the recorded rationale.</span></span></code></pre>
+<p>Fixing the loading to zero worsens fit (chi-square difference = 46.9,
+df = 1, p &lt; .001), so <code>b5</code> is statistically related to B.
+Its standardized loading, however, is only 0.34. With 473 cases, even a
+weak relation is detectable; statistical detectability is not the same
+as an adequate indicator. The decision still depends on whether
+<code>b5</code> covers content the construct needs.</p>
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">b5_comparison</span>, type <span class="op">=</span> <span class="st">"loadings"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="measurement-model-evidence_files/figure-html/compare-loadings-plot-1.png" class="r-plt" alt="" width="672"></p>
+<p>The summary’s measurement evidence carries a note: omega for B in the
+zero-loading model still includes <code>b5</code> in the composite, so
+it does not describe a shortened four-item scale. To see that scale’s
+reliability, fit the model without <code>b5</code>. Because the two
+models contain different observed variables, <code><a href="../reference/nomo_compare.html">nomo_compare()</a></code>
+reports this comparison descriptively, without a difference test or
+information criteria:</p>
+<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">shortened_cfa</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_cfa.html">nomo_cfa</a></span><span class="op">(</span></span>
+<span>  <span class="st">"A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4"</span>,</span>
+<span>  data <span class="op">=</span> <span class="va">nomo_demo_continuous</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">shortened</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_compare.html">nomo_compare</a></span><span class="op">(</span></span>
+<span>  full <span class="op">=</span> <span class="va">demo_cfa</span>,</span>
+<span>  four_item_b <span class="op">=</span> <span class="va">shortened_cfa</span>,</span>
+<span>  rationale <span class="op">=</span> <span class="st">"Describe the reliability of a four-item B scale alongside the full scale."</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">shortened</span>, <span class="st">"comparisons"</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"model"</span>, <span class="st">"relation"</span>, <span class="st">"test_available"</span>, <span class="st">"ic_available"</span><span class="op">)</span><span class="op">]</span></span></code></pre></div>
+<pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 1 × 4</span></span></span>
+<span><span class="co">##   model       relation            test_available ic_available</span></span>
+<span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>               <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>       </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">1</span> four_item_b different_variables FALSE          FALSE</span></span></code></pre>
+<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">omega_rows</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">shortened</span>, <span class="st">"evidence"</span><span class="op">)</span></span>
+<span><span class="va">omega_rows</span><span class="op">[</span><span class="va">omega_rows</span><span class="op">$</span><span class="va">metric</span> <span class="op">==</span> <span class="st">"omega"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"model"</span>, <span class="st">"construct"</span>, <span class="st">"estimate"</span><span class="op">)</span><span class="op">]</span></span></code></pre></div>
+<pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 4 × 3</span></span></span>
+<span><span class="co">##   model       construct estimate</span></span>
+<span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">1</span> full        A            0.835</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">2</span> full        B            0.784</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">3</span> four_item_b A            0.835</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">4</span> four_item_b B            0.812</span></span></code></pre>
+<p>Together these results separate three questions that are easy to
+blur: whether an item is statistically related to its factor, whether it
+is a strong indicator, and how the score’s reliability changes without
+it. None of them alone decides whether the item stays.</p>
+</div>
 </div>
 <div class="section level2">
 <h2 id="reading-the-evidence-as-an-argument">Reading the evidence as an argument<a class="anchor" aria-label="anchor" href="#reading-the-evidence-as-an-argument"></a>

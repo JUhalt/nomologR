@@ -150,7 +150,8 @@ methods registry. References and the research-basis article shipped in
 and report-level method citations remain.
 
 [\#27](https://github.com/JUhalt/nomologR/issues/27) Model comparison —
-`nomo_compare()` for nested and non-nested measurement models.
+[`nomo_compare()`](https://juhalt.github.io/nomologR/reference/nomo_compare.md)
+for nested and non-nested measurement models.
 
 [\#28](https://github.com/JUhalt/nomologR/issues/28) Revision lineage —
 auditable revise-and-compare cycles in
@@ -198,8 +199,8 @@ bootstrap for reliability confidence intervals.
 
 1.  **Foundations (done):** \#25 and \#31, with \#26 maintained
     alongside every later workstream.
-2.  **Safe structure for revision work:** \#36 (done), then \#27, then
-    \#28.
+2.  **Safe structure for revision work:** \#36 (done), then \#27 (done),
+    then \#28.
 3.  **Broader measurement models and interpretation:** \#29 (builds on
     \#27) and \#30.
 4.  **Usability extensions:** \#32, \#33, \#34, \#35, \#40, \#42.

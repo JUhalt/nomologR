@@ -425,12 +425,35 @@
 <span><span class="va">cfa_val</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/nomo_cfa.html">nomo_cfa</a></span><span class="op">(</span><span class="va">model</span>, data <span class="op">=</span> <span class="va">s</span><span class="op">$</span><span class="va">validation</span><span class="op">)</span></span></code></pre></div>
 <p>The split is explicit, reproducible, and logged as a design choice; no split ratio is presented as universally optimal.</p>
 </div>
+<div class="section level4">
+<h4 id="comparing-measurement-models">Comparing measurement models<a class="anchor" aria-label="anchor" href="#comparing-measurement-models"></a>
+</h4>
+<p><code><a href="reference/nomo_compare.html">nomo_compare()</a></code> places fitted CFA models side by side. When the models are nested (checked automatically), it reports the difference test that matches the estimator; it also reports changes in fit indices, AIC and BIC when they are defined, and side-by-side loadings, reliability, and construct-separation evidence. A rationale is required, and no model is selected automatically.</p>
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">full</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/nomo_cfa.html">nomo_cfa</a></span><span class="op">(</span></span>
+<span>  <span class="st">"A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4 + b5"</span>,</span>
+<span>  data <span class="op">=</span> <span class="va">nomo_demo_continuous</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">no_b5</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/nomo_cfa.html">nomo_cfa</a></span><span class="op">(</span></span>
+<span>  <span class="st">"A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4 + 0*b5"</span>,</span>
+<span>  data <span class="op">=</span> <span class="va">nomo_demo_continuous</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">cmp</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/nomo_compare.html">nomo_compare</a></span><span class="op">(</span></span>
+<span>  full <span class="op">=</span> <span class="va">full</span>,</span>
+<span>  no_b5 <span class="op">=</span> <span class="va">no_b5</span>,</span>
+<span>  rationale <span class="op">=</span> <span class="st">"Does the weakly loading item b5 contribute to factor B?"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">cmp</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">cmp</span><span class="op">)</span></span></code></pre></div>
+<p>To test whether an item is needed, fix its loading to zero instead of dropping the column: models with different observed variables describe different data, so they receive descriptive evidence only.</p>
+</div>
 </div>
 <div class="section level3">
 <h3 id="id_5-nomo_reliability--nomo_validity--measurement-evidence-beyond-model-fit">5. <code>nomo_reliability()</code> + <code>nomo_validity()</code> — measurement evidence beyond model fit<a class="anchor" aria-label="anchor" href="#id_5-nomo_reliability--nomo_validity--measurement-evidence-beyond-model-fit"></a>
 </h3>
 <p>Milestone 5 completes the confirmatory measurement-model layer by separating <strong>score reliability</strong>, <strong>convergent evidence</strong>, and <strong>construct-separation evidence</strong> rather than collapsing them into one validity verdict.</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rel</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/nomo_reliability.html">nomo_reliability</a></span><span class="op">(</span><span class="va">cfa</span><span class="op">)</span></span>
 <span><span class="va">val</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/nomo_validity.html">nomo_validity</a></span><span class="op">(</span><span class="va">cfa</span>, htmt <span class="op">=</span> <span class="st">"both"</span><span class="op">)</span></span>
 <span></span>
@@ -446,7 +469,7 @@
 <p><code><a href="reference/nomo_reliability.html">nomo_reliability()</a></code> uses current <code><a href="https://rdrr.io/pkg/semTools/man/compRelSEM.html" class="external-link">semTools::compRelSEM()</a></code> infrastructure. Model-based omega/composite reliability is primary for the congeneric CFA workflow. Coefficient alpha is retained as a familiar secondary statistic and is explicitly qualified by its stronger assumptions.</p>
 <p>For ordered indicators, the requested score scale remains visible. Observed ordinal-score omega is supported; observed-scale alpha is not silently replaced with a different latent-response or numeric-score estimand.</p>
 <p>Sampling uncertainty can be requested explicitly:</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rel_ci</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/nomo_reliability.html">nomo_reliability</a></span><span class="op">(</span></span>
 <span>  <span class="va">cfa</span>,</span>
 <span>  ci <span class="op">=</span> <span class="st">"bootstrap"</span>,</span>
@@ -474,7 +497,7 @@
 <li>original HTMT as a comparison;</li>
 <li>optional Fornell-Larcker output as legacy/supporting evidence.</li>
 </ul>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">val</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/nomo_validity.html">nomo_validity</a></span><span class="op">(</span></span>
 <span>  <span class="va">cfa</span>,</span>
 <span>  htmt <span class="op">=</span> <span class="st">"both"</span>,</span>
@@ -500,7 +523,7 @@
 <h3 id="id_6-nomo_hypotheses--nomo_network--theory-specified-before-evidence">6. <code>nomo_hypotheses()</code> + <code>nomo_network()</code> — theory specified before evidence<a class="anchor" aria-label="anchor" href="#id_6-nomo_hypotheses--nomo_network--theory-specified-before-evidence"></a>
 </h3>
 <p>Milestone 6 makes the nomological network an explicit theory test rather than a post-hoc collection of correlations. Predictions are machine-readable before the model is interpreted:</p>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">h</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/nomo_hypotheses.html">nomo_hypotheses</a></span><span class="op">(</span></span>
 <span>  <span class="st">"A -&gt; B"</span> <span class="op">=</span> <span class="fu"><a href="reference/nomo_expectations.html">positive</a></span><span class="op">(</span>min <span class="op">=</span> <span class="fl">.20</span><span class="op">)</span>,</span>
 <span>  <span class="st">"A &lt;-&gt; C"</span> <span class="op">=</span> <span class="fu"><a href="reference/nomo_expectations.html">negligible</a></span><span class="op">(</span>within <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">.15</span>, <span class="fl">.15</span><span class="op">)</span><span class="op">)</span>,</span>
@@ -527,7 +550,7 @@
 <h3 id="id_7-nomo_invariance--identification-aware-generalizability-evidence">7. <code>nomo_invariance()</code> — identification-aware generalizability evidence<a class="anchor" aria-label="anchor" href="#id_7-nomo_invariance--identification-aware-generalizability-evidence"></a>
 </h3>
 <p>Milestone 7 evaluates equality constraints without treating one fit-change cutoff as a universal law:</p>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">inv</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/nomo_invariance.html">nomo_invariance</a></span><span class="op">(</span></span>
 <span>  <span class="va">model</span>,</span>
 <span>  data <span class="op">=</span> <span class="va">dat</span>,</span>
@@ -542,7 +565,7 @@
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">inv</span>, type <span class="op">=</span> <span class="st">"local_strain"</span><span class="op">)</span></span></code></pre></div>
 <p>Continuous and ordered indicators use identification-appropriate sequences. For categorical models, binary, three-category, and 4+ category structures are handled differently where identification requires it.</p>
 <p>Partial invariance remains an explicit researcher decision:</p>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">release</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/nomo_partial.html">nomo_partial</a></span><span class="op">(</span></span>
 <span>  level <span class="op">=</span> <span class="st">"metric"</span>,</span>
 <span>  syntax <span class="op">=</span> <span class="st">"F =~ x2"</span>,</span>
@@ -563,7 +586,7 @@
 <h3 id="id_8-nomo_run--guided-orchestration-without-hidden-decisions">8. <code>nomo_run()</code> — guided orchestration without hidden decisions<a class="anchor" aria-label="anchor" href="#id_8-nomo_run--guided-orchestration-without-hidden-decisions"></a>
 </h3>
 <p>Milestone 8 connects the package components into a resumable workflow while keeping consequential choices explicit.</p>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">run</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/nomo_run.html">nomo_run</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">dat</span>,</span>
 <span>  scales <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>WellBeing <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"w1"</span>, <span class="st">"w2"</span>, <span class="st">"w3"</span>, <span class="st">"w4"</span><span class="op">)</span><span class="op">)</span></span>
@@ -607,7 +630,7 @@
 <li>
 <strong>Completed:</strong> learning foundations (#25) and readable invariance labels (#31), including the teaching datasets, runnable vignettes, and the research basis article; maintenance (#36).</li>
 <li>
-<strong>Core, in progress or next:</strong> research basis methods registry (#26), model comparison with <code>nomo_compare()</code> (#27), auditable revision lineage (#28), bifactor and higher-order models (#29), replication-status language (#30), and release certification with a CRAN-readiness gate (#37).</li>
+<strong>Core, in progress or next:</strong> research basis methods registry (#26), model comparison with <code><a href="reference/nomo_compare.html">nomo_compare()</a></code> (#27), auditable revision lineage (#28), bifactor and higher-order models (#29), replication-status language (#30), and release certification with a CRAN-readiness gate (#37).</li>
 <li>
 <strong>Planned:</strong> missing-data sensitivity (#32), score guidance (#33), insufficient-effort responding screens (#34), manuscript-ready tables (#35), rendering reports from inside R Markdown or Quarto documents (#40), and optional parallel bootstrap intervals (#42).</li>
 </ul>

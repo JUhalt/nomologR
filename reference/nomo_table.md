@@ -41,6 +41,10 @@ Supported objects and `type` values:
   `constraint_display` column (for example,
   `Intercept: ag3 (online vs. paper)`).
 
+- `nomo_compare`: `"comparisons"` (default), `"models"`, `"loadings"`,
+  `"evidence"`, `"decision_log"`; see
+  [`nomo_compare()`](https://juhalt.github.io/nomologR/reference/nomo_compare.md).
+
 - `nomo_run`: `"stages"` (default), `"requests"`, `"decisions"`,
   `"component_log"`, `"scales"`, `"recipe"`, `"settings"`; see
   [`nomo_run()`](https://juhalt.github.io/nomologR/reference/nomo_run.md).

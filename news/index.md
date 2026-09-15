@@ -2,6 +2,45 @@
 
 ## nomologR 0.1.0.9000
 
+### Model comparison ([\#27](https://github.com/JUhalt/nomologR/issues/27))
+
+- Added
+  [`nomo_compare()`](https://juhalt.github.io/nomologR/reference/nomo_compare.md)
+  for comparing two or more fitted
+  [`nomo_cfa()`](https://juhalt.github.io/nomologR/reference/nomo_cfa.md)
+  models. A researcher rationale is required and recorded, the
+  comparison can be labeled a priori or post hoc, and no model is ever
+  selected automatically.
+- Nested models receive the difference test that matches the estimator,
+  computed by
+  [`lavaan::lavTestLRT()`](https://rdrr.io/pkg/lavaan/man/lavTestLRT.html):
+  the ordinary chi-square difference test for ML, the scaled difference
+  test for robust ML (Satorra & Bentler, 2001), and the
+  scaled-and-shifted test for WLSMV (Satorra, 2000). A test lavaan
+  cannot compute, or a negative scaled statistic, is reported as
+  unavailable with lavaan’s message rather than replaced by another
+  method.
+- Nesting is checked from the models’ implied moments with
+  [`semTools::net()`](https://rdrr.io/pkg/semTools/man/net.html)
+  (Bentler & Satorra, 2010). Researchers can declare nesting when the
+  check cannot run, and a declaration the check contradicts is recorded
+  as a concern.
+- Each comparison reports changes in CFI, TLI, RMSEA, and SRMR without
+  cutoffs, AIC and BIC when they are defined, and a plain-language
+  interpretation.
+- Side-by-side standardized loadings, reliability, AVE, and HTMT2 are
+  reported for each model. Reliability for a model with loadings fixed
+  to zero is labeled as describing a composite that still includes those
+  items.
+- Comparisons are refused, with an explanation, when models use
+  different estimators, missing-data handling, cases, or data. Models
+  with different observed variables receive descriptive evidence only.
+- Added [`print()`](https://rdrr.io/r/base/print.html),
+  [`summary()`](https://rdrr.io/r/base/summary.html),
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html), and
+  [`nomo_table()`](https://juhalt.github.io/nomologR/reference/nomo_table.md)
+  methods.
+
 ### Maintenance ([\#36](https://github.com/JUhalt/nomologR/issues/36))
 
 - Split the guided-workflow implementation (`R/nomo_run.R`, 2,066 lines)

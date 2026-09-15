@@ -125,10 +125,25 @@ supports calibration and validation samples because evaluating an
 exploratory solution on the same data it came from overstates
 confirmation (Fokkema & Greiff, 2017).
 
-**Planned.** Nested and non-nested model comparison
-([\#27](https://github.com/JUhalt/nomologR/issues/27)) and auditable
-revision lineage ([\#28](https://github.com/JUhalt/nomologR/issues/28)).
-Model-specific fit cutoffs remain a research proposal
+**Comparing models.** Historically, competing models were compared by
+subtracting chi-square values and degrees of freedom, even for robust
+estimators, or by applying one fixed change-in-fit cutoff. Contemporary
+practice uses the difference test that matches the estimator — scaled
+differences for robust ML (Satorra & Bentler, 2001, 2010) and
+scaled-and-shifted tests for categorical estimators (Satorra, 2000) —
+verifies nesting rather than assuming it (Bentler & Satorra, 2010),
+reports several changes in fit (Cheung & Rensvold, 2002; Chen, 2007),
+and compares non-nested models of the same data with information
+criteria (Akaike, 1974; Schwarz, 1978; Raftery, 1995; Burnham &
+Anderson, 2004).
+[`nomo_compare()`](https://juhalt.github.io/nomologR/reference/nomo_compare.md)
+implements this: it requires a recorded rationale, labels post-hoc
+comparisons, refuses comparisons across different estimators, cases, or
+data, and never selects a model automatically.
+
+**Planned.** Auditable revision lineage
+([\#28](https://github.com/JUhalt/nomologR/issues/28)). Model-specific
+fit cutoffs remain a research proposal
 ([\#23](https://github.com/JUhalt/nomologR/issues/23)).
 
 ## 5. Reliability — `nomo_reliability()`
@@ -262,6 +277,10 @@ Achim, A. (2017). Testing the number of required dimensions in
 exploratory factor analysis. *The Quantitative Methods for Psychology,
 13*(1), 64–74. <https://doi.org/10.20982/tqmp.13.1.p064>
 
+Akaike, H. (1974). A new look at the statistical model identification.
+*IEEE Transactions on Automatic Control, 19*(6), 716–723.
+<https://doi.org/10.1109/TAC.1974.1100705>
+
 Anderson, J. C., & Gerbing, D. W. (1988). Structural equation modeling
 in practice: A review and recommended two-step approach. *Psychological
 Bulletin, 103*(3), 411–423.
@@ -284,6 +303,10 @@ Bentler, P. M., & Bonett, D. G. (1980). Significance tests and goodness
 of fit in the analysis of covariance structures. *Psychological
 Bulletin, 88*(3), 588–606. <https://doi.org/10.1037/0033-2909.88.3.588>
 
+Bentler, P. M., & Satorra, A. (2010). Testing model nesting and
+equivalence. *Psychological Methods, 15*(2), 111–123.
+<https://doi.org/10.1037/a0019625>
+
 Boateng, G. O., Neilands, T. B., Frongillo, E. A., Melgar-Quiñonez, H.
 R., & Young, S. L. (2018). Best practices for developing and validating
 scales for health, social, and behavioral research: A primer. *Frontiers
@@ -300,6 +323,10 @@ factor analysis. *Multivariate Behavioral Research, 36*(1), 111–150.
 Browne, M. W., & Cudeck, R. (1992). Alternative ways of assessing model
 fit. *Sociological Methods & Research, 21*(2), 230–258.
 <https://doi.org/10.1177/0049124192021002005>
+
+Burnham, K. P., & Anderson, D. R. (2004). Multimodel inference:
+Understanding AIC and BIC in model selection. *Sociological Methods &
+Research, 33*(2), 261–304. <https://doi.org/10.1177/0049124104268644>
 
 Byrne, B. M., Shavelson, R. J., & Muthén, B. (1989). Testing for the
 equivalence of factor covariance and mean structures: The issue of
@@ -529,6 +556,10 @@ conventions and reporting: The state of the art and future directions
 for psychological research. *Developmental Review, 41*, 71–90.
 <https://doi.org/10.1016/j.dr.2016.06.004>
 
+Raftery, A. E. (1995). Bayesian model selection in social research.
+*Sociological Methodology, 25*, 111–163.
+<https://doi.org/10.2307/271063>
+
 Rhemtulla, M., Brosseau-Liard, P. É., & Savalei, V. (2012). When can
 categorical variables be treated as continuous? A comparison of robust
 continuous and categorical SEM estimation methods under suboptimal
@@ -553,6 +584,19 @@ retain in an exploratory factor analysis using comparison data of known
 factorial structure. *Psychological Assessment, 24*(2), 282–292.
 <https://doi.org/10.1037/a0025697>
 
+Satorra, A. (2000). Scaled and adjusted restricted tests in multi-sample
+analysis of moment structures. In *Innovations in multivariate
+statistical analysis* (pp. 233–247). Springer.
+<https://doi.org/10.1007/978-1-4615-4603-0_17>
+
+Satorra, A., & Bentler, P. M. (2001). A scaled difference chi-square
+test statistic for moment structure analysis. *Psychometrika, 66*(4),
+507–514. <https://doi.org/10.1007/BF02296192>
+
+Satorra, A., & Bentler, P. M. (2010). Ensuring positiveness of the
+scaled difference chi-square test statistic. *Psychometrika, 75*(2),
+243–248. <https://doi.org/10.1007/s11336-009-9135-y>
+
 Schafer, J. L., & Graham, J. W. (2002). Missing data: Our view of the
 state of the art. *Psychological Methods, 7*(2), 147–177.
 <https://doi.org/10.1037/1082-989X.7.2.147>
@@ -561,6 +605,9 @@ Schuirmann, D. J. (1987). A comparison of the two one-sided tests
 procedure and the power approach for assessing the equivalence of
 average bioavailability. *Journal of Pharmacokinetics and
 Biopharmaceutics, 15*(6), 657–680. <https://doi.org/10.1007/BF01068419>
+
+Schwarz, G. (1978). Estimating the dimension of a model. *The Annals of
+Statistics, 6*(2), 461–464. <https://doi.org/10.1214/aos/1176344136>
 
 Sijtsma, K. (2009). On the use, the misuse, and the very limited
 usefulness of Cronbach’s alpha. *Psychometrika, 74*(1), 107–120.
