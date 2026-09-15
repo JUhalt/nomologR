@@ -126,13 +126,14 @@ unsupported cases, validation plan, and exit criteria.
 - [ ] [#35](https://github.com/JUhalt/nomologR/issues/35) Manuscript-ready tables and Word report output.
 - [x] [#36](https://github.com/JUhalt/nomologR/issues/36) Maintenance — test organization, `nomo_run.R` modularization, minimum-dependency CI.
 - [ ] [#40](https://github.com/JUhalt/nomologR/issues/40) `nomo_report()` rendering from inside R Markdown or Quarto documents.
+- [ ] [#42](https://github.com/JUhalt/nomologR/issues/42) Optional parallel bootstrap for reliability confidence intervals.
 
 ## Suggested sequence
 
 1. **Foundations (done):** #25 and #31, with #26 maintained alongside every later workstream.
 2. **Safe structure for revision work:** #36 (done), then #27, then #28.
 3. **Broader measurement models and interpretation:** #29 (builds on #27) and #30.
-4. **Usability extensions:** #32, #33, #34, #35, #40.
+4. **Usability extensions:** #32, #33, #34, #35, #40, #42.
 5. **Release:** #37, including the license/version/date gate carried from #22 and the CRAN-readiness gate.
 
 ## Deferred from v0.2 scope selection

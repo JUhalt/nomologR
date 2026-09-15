@@ -780,8 +780,8 @@ selected in [\#22](https://github.com/JUhalt/nomologR/issues/22):
   CRAN-readiness gate (#37).
 - **Planned:** missing-data sensitivity (#32), score guidance (#33),
   insufficient-effort responding screens (#34), manuscript-ready tables
-  (#35), and rendering reports from inside R Markdown or Quarto
-  documents (#40).
+  (#35), rendering reports from inside R Markdown or Quarto documents
+  (#40), and optional parallel bootstrap intervals (#42).
 
 `v0.3.0` carries the first CRAN submission
 ([\#39](https://github.com/JUhalt/nomologR/issues/39)). Other candidates
