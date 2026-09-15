@@ -49,17 +49,29 @@ The caller's random-number-generator state is restored after the split
 so that using `nomo_split()` does not silently alter later stochastic
 analyses.
 
+## References
+
+Fokkema, M., & Greiff, S. (2017). How performing PCA and CFA on the same
+data equals trouble. *European Journal of Psychological Assessment,
+33*(6), 399-402.
+[doi:10.1027/1015-5759/a000460](https://doi.org/10.1027/1015-5759/a000460)
+
+MacCallum, R. C., Roznowski, M., & Necowitz, L. B. (1992). Model
+modifications in covariance structure analysis: The problem of
+capitalization on chance. *Psychological Bulletin, 111*(3), 490-504.
+[doi:10.1037/0033-2909.111.3.490](https://doi.org/10.1037/0033-2909.111.3.490)
+
 ## Examples
 
 ``` r
-split <- nomo_split(mtcars, validation_prop = 0.40, seed = 2026)
+split <- nomo_split(nomo_demo_continuous, validation_prop = 0.40, seed = 2026)
 split
 #> <nomo_split>
-#> Rows: 32 total | 19 calibration | 13 validation
-#> Validation proportion: 0.400 requested | 0.406 realized | Seed: 2026
+#> Rows: 500 total | 300 calibration | 200 validation
+#> Validation proportion: 0.400 requested | 0.400 realized | Seed: 2026
 #> Use splitting only when the gain in independence justifies the loss of precision.
 nrow(split$calibration)
-#> [1] 19
+#> [1] 300
 nrow(split$validation)
-#> [1] 13
+#> [1] 200
 ```

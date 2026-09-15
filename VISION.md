@@ -14,6 +14,19 @@ merely the model.
 
 `nomologR` exists to make that reasoning visible.
 
+## Who nomologR serves
+
+- **Graduate students** (master’s and doctoral) learning scale
+  development and construct validation, who need to understand why each
+  analysis is performed.
+- **Faculty and advisors** who teach measurement and want output that
+  explains its own reasoning.
+- **Researchers** applying these techniques who need a defensible,
+  reproducible record of how a measure was evaluated.
+
+The package should be usable by the first group and trustworthy to the
+last.
+
 ## What nomologR is
 
 A guided layer around established psychometric and SEM tools that:
@@ -76,3 +89,22 @@ Example:
 > decision.
 
 That is the voice of `nomologR`.
+
+## Standard for methods
+
+Every method in `nomologR` should be:
+
+1.  **Research-backed** — grounded in the methodological literature,
+    with verifiable references in its documentation.
+2.  **Situated historically** — placed on the path from historical to
+    contemporary practice. Historical techniques that learners will meet
+    in published work (for example, eigenvalues greater than one,
+    coefficient alpha, the Fornell–Larcker comparison, fixed fit-index
+    cutoffs) may be shown as context, but they are labeled, qualified,
+    and never silently substituted for contemporary evidence.
+3.  **Honest about assumptions** — the estimand, assumptions, and
+    unsupported cases are stated; unsupported cases are refused or
+    disclosed rather than approximated silently.
+4.  **Demonstrable** — shown first on data with a known answer, so
+    learners can see what the evidence looks like when the truth is
+    known.

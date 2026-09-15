@@ -19,16 +19,21 @@ fitted lavaan model."></head><body>
     </button>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
-      <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+      <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/nomologR.html">Get started</a></li>
+<li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/exploratory-workflow.html">From item audit to exploratory structure</a></li>
-    <li><a class="dropdown-item" href="../articles/guided-workflow.html">Guided workflow with nomo_run()</a></li>
-    <li><a class="dropdown-item" href="../articles/measurement-invariance.html">Measurement Invariance with nomologR</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Learning path</h6></li>
+    <li><a class="dropdown-item" href="../articles/exploratory-workflow.html">From item audit to exploratory structure</a></li>
     <li><a class="dropdown-item" href="../articles/measurement-model-evidence.html">From CFA to a defensible measurement model</a></li>
+    <li><a class="dropdown-item" href="../articles/measurement-invariance.html">Measurement Invariance with nomologR</a></li>
     <li><a class="dropdown-item" href="../articles/nomological-network.html">Theory-Specified Nomological Networks with nomologR</a></li>
-    <li><a class="dropdown-item" href="../articles/overview.html">nomologR: measurement first, theory next</a></li>
+    <li><a class="dropdown-item" href="../articles/guided-workflow.html">Guided workflow with nomo_run()</a></li>
     <li><a class="dropdown-item" href="../articles/reproducible-report.html">Archiving a nomologR workflow with nomo_report()</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Research basis</h6></li>
+    <li><a class="dropdown-item" href="../articles/research-basis.html">Research basis: from historical to contemporary practice</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -160,7 +165,127 @@ that makes a fit rule pass.</p>
 retained as diagnostic evidence. They are explicitly not used to modify the
 fitted model.</p>
     </div>
+    <div class="section level2">
+    <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
+    <p>Historical foundations:</p>
+<p>Jöreskog, K. G. (1971). Simultaneous factor analysis in several
+populations. <em>Psychometrika, 36</em>(4), 409-426. <a href="https://doi.org/10.1007/BF02291366" class="external-link">doi:10.1007/BF02291366</a></p>
+<p>Meredith, W. (1993). Measurement invariance, factor analysis and factorial
+invariance. <em>Psychometrika, 58</em>(4), 525-543. <a href="https://doi.org/10.1007/BF02294825" class="external-link">doi:10.1007/BF02294825</a></p>
+<p>Vandenberg, R. J., &amp; Lance, C. E. (2000). A review and synthesis of the
+measurement invariance literature: Suggestions, practices, and
+recommendations for organizational research. <em>Organizational Research
+Methods, 3</em>(1), 4-70. <a href="https://doi.org/10.1177/109442810031002" class="external-link">doi:10.1177/109442810031002</a></p>
+<p>Change-in-fit evidence:</p>
+<p>Chen, F. F. (2007). Sensitivity of goodness of fit indexes to lack of
+measurement invariance. <em>Structural Equation Modeling, 14</em>(3), 464-504.
+<a href="https://doi.org/10.1080/10705510701301834" class="external-link">doi:10.1080/10705510701301834</a></p>
+<p>Cheung, G. W., &amp; Rensvold, R. B. (2002). Evaluating goodness-of-fit indexes
+for testing measurement invariance. <em>Structural Equation Modeling, 9</em>(2),
+233-255. <a href="https://doi.org/10.1207/S15328007SEM0902_5" class="external-link">doi:10.1207/S15328007SEM0902_5</a></p>
+<p>Putnick, D. L., &amp; Bornstein, M. H. (2016). Measurement invariance
+conventions and reporting: The state of the art and future directions for
+psychological research. <em>Developmental Review, 41</em>, 71-90.
+<a href="https://doi.org/10.1016/j.dr.2016.06.004" class="external-link">doi:10.1016/j.dr.2016.06.004</a></p>
+<p>Ordered-categorical indicators:</p>
+<p>Svetina, D., Rutkowski, L., &amp; Rutkowski, D. (2020). Multiple-group
+invariance with categorical outcomes using updated guidelines: An
+illustration using Mplus and the lavaan/semTools packages. <em>Structural
+Equation Modeling, 27</em>(1), 111-130. <a href="https://doi.org/10.1080/10705511.2019.1602776" class="external-link">doi:10.1080/10705511.2019.1602776</a></p>
+<p>Wu, H., &amp; Estabrook, R. (2016). Identification of confirmatory factor
+analysis models of different levels of invariance for ordered categorical
+outcomes. <em>Psychometrika, 81</em>(4), 1014-1045.
+<a href="https://doi.org/10.1007/s11336-016-9506-0" class="external-link">doi:10.1007/s11336-016-9506-0</a></p>
+    </div>
+    <div class="section level2">
+    <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
+    <div class="dont-index"><p><code><a href="nomo_partial.html">nomo_partial()</a></code> for researcher-specified releases.</p></div>
+    </div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">inv</span> <span class="op">&lt;-</span> <span class="fu">nomo_invariance</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="st">"Agency =~ ag1 + ag2 + ag3 + ag4"</span>,</span></span>
+<span class="r-in"><span>  data <span class="op">=</span> <span class="va">nomo_demo_network</span>,</span></span>
+<span class="r-in"><span>  group <span class="op">=</span> <span class="st">"group"</span>,</span></span>
+<span class="r-in"><span>  levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"configural"</span>, <span class="st">"metric"</span>, <span class="st">"scalar"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">inv</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;nomo_invariance&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Grouping variable: group (2 groups: online, paper)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Indicator treatment: continuous</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Requested: configural -&gt; metric -&gt; scalar</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Completed: configural -&gt; metric -&gt; scalar</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 3 × 11</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   level      status    constraints          partial_requested   cfi rmsea</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> configural estimated none                 <span style="color: #949494;">""</span>                1     0    </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> metric     estimated loadings             <span style="color: #949494;">""</span>                1     0    </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> scalar     estimated loadings, intercepts <span style="color: #949494;">""</span>                0.954 0.121</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      srmr delta_cfi delta_rmsea delta_srmr     lrt_p</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> 0.002<span style="text-decoration: underline;">00</span>   <span style="color: #BB0000;">NA</span>           <span style="color: #BB0000;">NA</span>        <span style="color: #BB0000;">NA</span>      <span style="color: #BB0000;">NA</span>   <span style="color: #949494;"> </span>   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> 0.027<span style="text-decoration: underline;">5</span>     0            0         0.025<span style="text-decoration: underline;">5</span>  1.46<span style="color: #949494;">e</span><span style="color: #BB0000;">- 1</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> 0.064<span style="text-decoration: underline;">7</span>    -<span style="color: #BB0000;">0.046</span><span style="color: #BB0000; text-decoration: underline;">2</span>       0.121     0.037<span style="text-decoration: underline;">1</span>  1.20<span style="color: #949494;">e</span><span style="color: #BB0000;">-13</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Localized equality-constraint diagnostics retained: 12</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Interpretation rule: fit changes and score diagnostics are evidence, not universal pass/fail rules, not automatic pass/fail decisions, and not automatic parameter-freeing rules.</span>
+<span class="r-in"><span><span class="fu"><a href="nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">inv</span>, <span class="st">"fit"</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 3 × 19</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   level     constraints partial_requested status converged  chisq    df   pvalue</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> configur… none        <span style="color: #949494;">""</span>                estim… TRUE       0.327     4 9.88<span style="color: #949494;">e</span><span style="color: #BB0000;">- 1</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> metric    loadings    <span style="color: #949494;">""</span>                estim… TRUE       5.71      7 5.75<span style="color: #949494;">e</span><span style="color: #BB0000;">- 1</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> scalar    loadings, … <span style="color: #949494;">""</span>                estim… TRUE      68.9      10 7.12<span style="color: #949494;">e</span><span style="color: #BB0000;">-11</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 11 more variables: cfi &lt;dbl&gt;, rmsea &lt;dbl&gt;, srmr &lt;dbl&gt;, delta_cfi &lt;dbl&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   delta_rmsea &lt;dbl&gt;, delta_srmr &lt;dbl&gt;, lrt_chisq &lt;dbl&gt;, lrt_df &lt;dbl&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   lrt_p &lt;dbl&gt;, warnings &lt;chr&gt;, error &lt;chr&gt;</span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">inv</span>, <span class="st">"local_strain"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 6 × 8</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   level  constraint_index constraint    score_x2    df  p_value diagnostic_only</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> metric                3 .p3. == .p17.   4.92       1 2.66<span style="color: #949494;">e</span><span style="color: #BB0000;">- 2</span> TRUE           </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> metric                2 .p2. == .p16.   1.03       1 3.10<span style="color: #949494;">e</span><span style="color: #BB0000;">- 1</span> TRUE           </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> metric                4 .p4. == .p18.   0.690      1 4.06<span style="color: #949494;">e</span><span style="color: #BB0000;">- 1</span> TRUE           </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> metric                1 .p1. == .p15.   0.027<span style="text-decoration: underline;">3</span>     1 8.69<span style="color: #949494;">e</span><span style="color: #BB0000;">- 1</span> TRUE           </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> scalar                7 .p7. == .p21.  61.1        1 5.33<span style="color: #949494;">e</span><span style="color: #BB0000;">-15</span> TRUE           </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">6</span> scalar                5 .p5. == .p19.  11.3        1 7.68<span style="color: #949494;">e</span><span style="color: #BB0000;">- 4</span> TRUE           </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 1 more variable: constraint_display &lt;chr&gt;</span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># \donttest{</span></span></span>
+<span class="r-in"><span><span class="co"># A release is a documented researcher decision, never an automatic search.</span></span></span>
+<span class="r-in"><span><span class="va">release</span> <span class="op">&lt;-</span> <span class="fu"><a href="nomo_partial.html">nomo_partial</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  level <span class="op">=</span> <span class="st">"scalar"</span>,</span></span>
+<span class="r-in"><span>  syntax <span class="op">=</span> <span class="st">"ag3 ~ 1"</span>,</span></span>
+<span class="r-in"><span>  rationale <span class="op">=</span> <span class="st">"Prior evidence anticipated a mode difference in ag3 wording."</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">inv_partial</span> <span class="op">&lt;-</span> <span class="fu">nomo_invariance</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="st">"Agency =~ ag1 + ag2 + ag3 + ag4"</span>,</span></span>
+<span class="r-in"><span>  data <span class="op">=</span> <span class="va">nomo_demo_network</span>,</span></span>
+<span class="r-in"><span>  group <span class="op">=</span> <span class="st">"group"</span>,</span></span>
+<span class="r-in"><span>  levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"configural"</span>, <span class="st">"metric"</span>, <span class="st">"scalar"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  partial <span class="op">=</span> <span class="va">release</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">inv_partial</span>, <span class="st">"fit"</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 3 × 19</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   level  constraints partial_requested status converged chisq    df pvalue   cfi</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> confi… none        <span style="color: #949494;">""</span>                estim… TRUE      0.327     4  0.988     1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> metric loadings    <span style="color: #949494;">""</span>                estim… TRUE      5.71      7  0.575     1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> scalar loadings, … <span style="color: #949494;">"</span>ag3 ~ 1<span style="color: #949494;">"</span>         estim… TRUE      6.79      9  0.659     1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 10 more variables: rmsea &lt;dbl&gt;, srmr &lt;dbl&gt;, delta_cfi &lt;dbl&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   delta_rmsea &lt;dbl&gt;, delta_srmr &lt;dbl&gt;, lrt_chisq &lt;dbl&gt;, lrt_df &lt;dbl&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   lrt_p &lt;dbl&gt;, warnings &lt;chr&gt;, error &lt;chr&gt;</span></span>
+<span class="r-in"><span><span class="fu"><a href="nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">inv_partial</span>, <span class="st">"partial"</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 4</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   release_id level  syntax  rationale                                           </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                                               </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> P1         scalar ag3 ~ 1 Prior evidence anticipated a mode difference in ag3…</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 

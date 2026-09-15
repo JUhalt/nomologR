@@ -29,17 +29,22 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
+<li class="nav-item"><a class="nav-link" href="../articles/nomologR.html">Get started</a></li>
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/exploratory-workflow.html">From item audit to exploratory structure</a></li>
-    <li><a class="dropdown-item" href="../articles/guided-workflow.html">Guided workflow with nomo_run()</a></li>
-    <li><a class="dropdown-item" href="../articles/measurement-invariance.html">Measurement Invariance with nomologR</a></li>
+<li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Learning path</h6></li>
+    <li><a class="dropdown-item" href="../articles/exploratory-workflow.html">From item audit to exploratory structure</a></li>
     <li><a class="dropdown-item" href="../articles/measurement-model-evidence.html">From CFA to a defensible measurement model</a></li>
+    <li><a class="dropdown-item" href="../articles/measurement-invariance.html">Measurement Invariance with nomologR</a></li>
     <li><a class="dropdown-item" href="../articles/nomological-network.html">Theory-Specified Nomological Networks with nomologR</a></li>
-    <li><a class="dropdown-item" href="../articles/overview.html">nomologR: measurement first, theory next</a></li>
+    <li><a class="dropdown-item" href="../articles/guided-workflow.html">Guided workflow with nomo_run()</a></li>
     <li><a class="dropdown-item" href="../articles/reproducible-report.html">Archiving a nomologR workflow with nomo_report()</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Research basis</h6></li>
+    <li><a class="dropdown-item" href="../articles/research-basis.html">Research basis: from historical to contemporary practice</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -72,35 +77,104 @@
     
     
 <p><code><a href="../reference/nomo_report.html">nomo_report()</a></code> is the final presentation and provenance
-layer in the v0.1 workflow.</p>
+layer in the <code>nomologR</code> workflow.</p>
 <p>It does <strong>not</strong> rerun the analyses. It renders the
 evidence and researcher decisions already stored in a
 <code>nomo_run</code> object.</p>
 <div class="section level2">
-<h2 id="render-a-report">Render a report<a class="anchor" aria-label="anchor" href="#render-a-report"></a>
+<h2 id="a-workflow-to-archive">A workflow to archive<a class="anchor" aria-label="anchor" href="#a-workflow-to-archive"></a>
 </h2>
+<p>This example uses <code>nomo_demo_network</code> and supplies every
+consequential decision up front, as a researcher following a
+preregistered plan might:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">report_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_report.html">nomo_report</a></span><span class="op">(</span></span>
-<span>  <span class="va">run</span>,</span>
-<span>  file <span class="op">=</span> <span class="st">"construct-validation-report.html"</span></span>
+<code class="sourceCode R"><span><span class="va">scales</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>  Agency <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ag1"</span>, <span class="st">"ag2"</span>, <span class="st">"ag3"</span>, <span class="st">"ag4"</span><span class="op">)</span>,</span>
+<span>  Persistence <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"pe1"</span>, <span class="st">"pe2"</span>, <span class="st">"pe3"</span>, <span class="st">"pe4"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">report_file</span></span></code></pre></div>
-<p>The HTML file is self-contained so it can be archived, attached to a
-project record, or shared with a collaborator without a separate figures
-directory or MathJax network dependency. The <code>title</code> argument
-becomes the document title:</p>
+<span><span class="va">h</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_hypotheses.html">nomo_hypotheses</a></span><span class="op">(</span></span>
+<span>  <span class="st">"Agency -&gt; Persistence"</span> <span class="op">=</span> <span class="fu"><a href="../reference/nomo_expectations.html">positive</a></span><span class="op">(</span>min <span class="op">=</span> <span class="fl">.20</span><span class="op">)</span>,</span>
+<span>  <span class="st">"Agency -&gt; Performance"</span> <span class="op">=</span> <span class="fu"><a href="../reference/nomo_expectations.html">positive</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">run</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_run.html">nomo_run</a></span><span class="op">(</span></span>
+<span>  data <span class="op">=</span> <span class="va">nomo_demo_network</span>,</span>
+<span>  scales <span class="op">=</span> <span class="va">scales</span>,</span>
+<span>  mode <span class="op">=</span> <span class="st">"research"</span>,</span>
+<span>  decisions <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>    factor_count <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>      value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>Agency <span class="op">=</span> <span class="fl">1</span>, Persistence <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span>
+<span>      rationale <span class="op">=</span> <span class="st">"Each scale was written to measure one construct."</span></span>
+<span>    <span class="op">)</span>,</span>
+<span>    cfa_model <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>      value <span class="op">=</span> <span class="fu"><a href="../reference/nomo_model.html">nomo_model</a></span><span class="op">(</span><span class="va">scales</span><span class="op">)</span>,</span>
+<span>      rationale <span class="op">=</span> <span class="st">"Prespecified two-construct measurement model."</span></span>
+<span>    <span class="op">)</span>,</span>
+<span>    measurement_model <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>      value <span class="op">=</span> <span class="st">"proceed"</span>,</span>
+<span>      rationale <span class="op">=</span> <span class="st">"Measurement evidence reviewed before planned downstream tests."</span></span>
+<span>    <span class="op">)</span></span>
+<span>  <span class="op">)</span>,</span>
+<span>  settings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>    factors <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>seed <span class="op">=</span> <span class="fl">2026</span><span class="op">)</span>,</span>
+<span>    invariance <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>group <span class="op">=</span> <span class="st">"group"</span>, levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"configural"</span>, <span class="st">"metric"</span>, <span class="st">"scalar"</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>    network <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>hypotheses <span class="op">=</span> <span class="va">h</span><span class="op">)</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">run</span>, <span class="st">"stages"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 8 × 3</span></span></span>
+<span><span class="co">#&gt;   stage       status    detail                                                  </span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                                                   </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> screen      completed Candidate items audited exactly as supplied; no data or…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> factors     completed Factor-retention evidence computed; no factor count was…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> efa         completed EFA fitted using explicit researcher factor-count decis…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> cfa         completed Researcher-specified CFA estimated; the model was not r…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> reliability completed Reliability evidence computed from the retained CFA mod…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> validity    completed Convergent/discriminant evidence computed; no valid/inv…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">7</span> invariance  completed Requested invariance evidence computed; diagnostics did…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">8</span> network     completed Theory-specified network evidence computed without a on…</span></span>
+<span><span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">run</span>, <span class="st">"decisions"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 8 × 10</span></span></span>
+<span><span class="co">#&gt;   id       stage scope observation reason options consequence decision rationale</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> sample_… desi… samp… 800 rows a… Sampl… Contin… Later CFA … <span style="color: #949494;">"</span>same_s… <span style="color: #949494;">""</span>       </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> scale_d… desi… Agen… Scale `Age… Item … Review… Screening,… <span style="color: #949494;">"</span>ag1, a… <span style="color: #949494;">""</span>       </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> scale_d… desi… Pers… Scale `Per… Item … Review… Screening,… <span style="color: #949494;">"</span>pe1, p… <span style="color: #949494;">""</span>       </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> factor_… efa   Agen… Parallel a… The E… Inspec… A 1-factor… <span style="color: #949494;">"</span>1<span style="color: #949494;">"</span>      <span style="color: #949494;">"</span>Each sc…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> factor_… efa   Pers… Parallel a… The E… Inspec… A 1-factor… <span style="color: #949494;">"</span>1<span style="color: #949494;">"</span>      <span style="color: #949494;">"</span>Each sc…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> cfa_mod… cfa   meas… EFA has co… CFA s… Inspec… The CFA wi… <span style="color: #949494;">"</span>Agency… <span style="color: #949494;">"</span>Prespec…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">7</span> measure… meas… meas… CFA conver… Invar… Choose… Proceeding… <span style="color: #949494;">"</span>procee… <span style="color: #949494;">"</span>Measure…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">8</span> workflo… work… pipe… All reques… The p… Inspec… No additio… <span style="color: #949494;">"</span>comple… <span style="color: #949494;">""</span>       </span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 1 more variable: source &lt;chr&gt;</span></span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="render-a-report">Render a report<a class="anchor" aria-label="anchor" href="#render-a-report"></a>
+</h2>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/nomo_report.html">nomo_report</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="va">report_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_report.html">nomo_report</a></span><span class="op">(</span></span>
 <span>  <span class="va">run</span>,</span>
-<span>  file <span class="op">=</span> <span class="st">"construct-validation-report.html"</span>,</span>
-<span>  title <span class="op">=</span> <span class="st">"Construct validation audit"</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span>  file <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">report_dir</span>, <span class="st">"construct-validation-report.html"</span><span class="op">)</span>,</span>
+<span>  title <span class="op">=</span> <span class="st">"Construct validation audit: Agency and Persistence"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/files.html" class="external-link">file.exists</a></span><span class="op">(</span><span class="va">report_file</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] TRUE</span></span></code></pre></div>
+<p>The HTML file is self-contained, so it can be archived, attached to a
+project record or thesis appendix, or shared with a collaborator without
+a separate figures directory or a network dependency. The
+<code>title</code> argument becomes the document title.</p>
+<p>Calling <code><a href="../reference/nomo_report.html">nomo_report()</a></code> from the R console or a script
+needs no extra setup. Calling it from a chunk inside your own R Markdown
+or Quarto document (for example, a thesis chapter) currently requires
+<code>options(knitr.duplicate.label = "allow")</code> first, as this
+article does. Removing that requirement is tracked in <a href="https://github.com/JUhalt/nomologR/issues/40" class="external-link">issue #40</a>.</p>
 </div>
 <div class="section level2">
 <h2 id="what-the-report-contains">What the report contains<a class="anchor" aria-label="anchor" href="#what-the-report-contains"></a>
 </h2>
-<p>The Milestone 9 report mirrors the full guided workflow:</p>
+<p>The report mirrors the full guided workflow:</p>
 <ol style="list-style-type: decimal">
 <li>researcher inputs and data/sample roles;</li>
 <li>item audit;</li>
@@ -125,38 +199,61 @@ severity, and observation that produced it.</p>
 </h2>
 <p>A report can also be rendered from a paused or blocked workflow:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/nomo_report.html">nomo_report</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="va">paused_run</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_run.html">nomo_run</a></span><span class="op">(</span></span>
+<span>  data <span class="op">=</span> <span class="va">nomo_demo_network</span>,</span>
+<span>  scales <span class="op">=</span> <span class="va">scales</span>,</span>
+<span>  settings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>factors <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>seed <span class="op">=</span> <span class="fl">2026</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">paused_run</span>, <span class="st">"stages"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 8 × 3</span></span></span>
+<span><span class="co">#&gt;   stage       status            detail                                          </span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                                           </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> screen      completed         <span style="color: #949494;">"</span>Candidate items audited exactly as supplied; n…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> factors     completed         <span style="color: #949494;">"</span>Factor-retention evidence computed; no factor …</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> efa         awaiting_decision <span style="color: #949494;">"</span>Explicit researcher factor-count decisions are…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> cfa         not_started       <span style="color: #949494;">""</span>                                              </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> reliability not_started       <span style="color: #949494;">""</span>                                              </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> validity    not_started       <span style="color: #949494;">""</span>                                              </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">7</span> invariance  not_started       <span style="color: #949494;">""</span>                                              </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">8</span> network     not_started       <span style="color: #949494;">""</span></span></span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">paused_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_report.html">nomo_report</a></span><span class="op">(</span></span>
 <span>  <span class="va">paused_run</span>,</span>
-<span>  file <span class="op">=</span> <span class="st">"paused-workflow-audit.html"</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<p>Missing stages are labeled as incomplete/not requested rather than
-silently disappearing.</p>
-<p>This is useful when a researcher wants to archive why an analysis
-stopped or what consequential decision remained unresolved.</p>
+<span>  file <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">report_dir</span>, <span class="st">"paused-workflow-audit.html"</span><span class="op">)</span>,</span>
+<span>  include_plots <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/files.html" class="external-link">file.exists</a></span><span class="op">(</span><span class="va">paused_file</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] TRUE</span></span></code></pre></div>
+<p>Missing stages are labeled as incomplete or not requested rather than
+silently disappearing. This is useful when a researcher wants to archive
+why an analysis stopped or which consequential decision remained
+unresolved.</p>
 </div>
 <div class="section level2">
 <h2 id="plots-and-session-information">Plots and session information<a class="anchor" aria-label="anchor" href="#plots-and-session-information"></a>
 </h2>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<p>The default includes a compact, nonredundant set of plots and full
+<code><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo()</a></code> output. Both can be turned off, as in the
+paused report above:</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/nomo_report.html">nomo_report</a></span><span class="op">(</span></span>
 <span>  <span class="va">run</span>,</span>
 <span>  file <span class="op">=</span> <span class="st">"compact-report.html"</span>,</span>
 <span>  include_plots <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  include_session <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>The default includes a compact, nonredundant set of plots and full
-<code><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo()</a></code> output.</p>
 </div>
 <div class="section level2">
 <h2 id="overwriting-is-explicit">Overwriting is explicit<a class="anchor" aria-label="anchor" href="#overwriting-is-explicit"></a>
 </h2>
-<p>Existing reports are protected:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/nomo_report.html">nomo_report</a></span><span class="op">(</span></span>
-<span>  <span class="va">run</span>,</span>
-<span>  file <span class="op">=</span> <span class="st">"construct-validation-report.html"</span>,</span>
-<span>  overwrite <span class="op">=</span> <span class="cn">TRUE</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<p>Existing reports are protected. Rendering to a file that already
+exists stops unless <code>overwrite = TRUE</code> is supplied:</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/nomo_report.html">nomo_report</a></span><span class="op">(</span><span class="va">run</span>, file <span class="op">=</span> <span class="va">report_file</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #BBBB00; font-weight: bold;">Error</span><span style="font-weight: bold;">:</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BBBB00;">!</span> Report file already exists: /tmp/RtmpMncHIT/nomologR-reports-1eef536c00d/construct-validation-report.html. Use `overwrite = TRUE` to replace it.</span></span></code></pre></div>
 <p>As elsewhere in <code>nomologR</code>, consequential or destructive
 behavior is not silently assumed.</p>
 </div>

@@ -15,16 +15,21 @@
     </button>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
-      <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+      <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/nomologR.html">Get started</a></li>
+<li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/exploratory-workflow.html">From item audit to exploratory structure</a></li>
-    <li><a class="dropdown-item" href="../articles/guided-workflow.html">Guided workflow with nomo_run()</a></li>
-    <li><a class="dropdown-item" href="../articles/measurement-invariance.html">Measurement Invariance with nomologR</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Learning path</h6></li>
+    <li><a class="dropdown-item" href="../articles/exploratory-workflow.html">From item audit to exploratory structure</a></li>
     <li><a class="dropdown-item" href="../articles/measurement-model-evidence.html">From CFA to a defensible measurement model</a></li>
+    <li><a class="dropdown-item" href="../articles/measurement-invariance.html">Measurement Invariance with nomologR</a></li>
     <li><a class="dropdown-item" href="../articles/nomological-network.html">Theory-Specified Nomological Networks with nomologR</a></li>
-    <li><a class="dropdown-item" href="../articles/overview.html">nomologR: measurement first, theory next</a></li>
+    <li><a class="dropdown-item" href="../articles/guided-workflow.html">Guided workflow with nomo_run()</a></li>
     <li><a class="dropdown-item" href="../articles/reproducible-report.html">Archiving a nomologR workflow with nomo_report()</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Research basis</h6></li>
+    <li><a class="dropdown-item" href="../articles/research-basis.html">Research basis: from historical to contemporary practice</a></li>
   </ul></li>
 <li class="active nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -44,6 +49,21 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.1.0.9000" id="nomologr-0109000">nomologR 0.1.0.9000<a class="anchor" aria-label="anchor" href="#nomologr-0109000"></a></h2>
+<div class="section level3">
+<h3 id="learning-foundations-toward-v020-0-1-0-9000">Learning foundations toward v0.2.0<a class="anchor" aria-label="anchor" href="#learning-foundations-toward-v020-0-1-0-9000"></a></h3>
+<ul><li>Set the <code>v0.2.0</code> direction: research-backed, usable scale-development and construct-validation workflows for graduate students and researchers, spanning historical to contemporary methods. Scope, priorities, and exit criteria were recorded in <a href="https://github.com/JUhalt/nomologR/issues/22" class="external-link">#22</a> and the linked workstream issues (<a href="https://github.com/JUhalt/nomologR/issues/25" class="external-link">#25</a>–#37); v0.3 candidates are tracked in <a href="https://github.com/JUhalt/nomologR/issues/38" class="external-link">#38</a>. Distribution remains R-universe; CRAN submission is deferred (<a href="https://github.com/JUhalt/nomologR/issues/39" class="external-link">#39</a>).</li>
+<li>Added three simulated teaching datasets with documented population models and fixed-seed generation code in <code>data-raw/nomo_demo.R</code>: <code>nomo_demo_continuous</code> (two correlated factors with a cross-loading item, a weak item, and MCAR missingness), <code>nomo_demo_ordinal</code> (five-category ordered version), and <code>nomo_demo_network</code> (three constructs, an observed outcome, and two administration groups with a known source of scalar non-invariance) (<a href="https://github.com/JUhalt/nomologR/issues/25" class="external-link">#25</a>).</li>
+<li>All workflow vignettes now evaluate against the teaching datasets, so the guided workflow, measurement-invariance, nomological-network, and reproducible-report articles show real output (<a href="https://github.com/JUhalt/nomologR/issues/25" class="external-link">#25</a>).</li>
+<li>Replaced the stale overview article with <strong>Get started</strong>, including a learning path for graduate students and researchers, and added a <strong>Research basis</strong> article mapping each workflow stage from historical to contemporary practice (<a href="https://github.com/JUhalt/nomologR/issues/25" class="external-link">#25</a>, <a href="https://github.com/JUhalt/nomologR/issues/26" class="external-link">#26</a>).</li>
+<li>Added DOI-verified references to every exported analysis function (<a href="https://github.com/JUhalt/nomologR/issues/26" class="external-link">#26</a>).</li>
+<li>Replaced <code>\dontrun{}</code> examples with runnable examples and added examples to <code><a href="../reference/nomo_network.html">nomo_network()</a></code>, <code><a href="../reference/nomo_invariance.html">nomo_invariance()</a></code>, <code><a href="../reference/nomo_table.html">nomo_table()</a></code>, and <code><a href="../reference/nomo_defaults.html">nomo_defaults()</a></code> (<a href="https://github.com/JUhalt/nomologR/issues/25" class="external-link">#25</a>).</li>
+<li>
+<code>nomo_table(&lt;nomo_invariance&gt;, "local_strain")</code> now adds a <code>constraint_display</code> column with human-readable parameter labels (for example <code>Intercept: ag3 (online vs. paper)</code>); the raw lavaan <code>constraint</code> label is retained (<a href="https://github.com/JUhalt/nomologR/issues/31" class="external-link">#31</a>). No statistical behavior changed.</li>
+<li>Fixed invariance figures and constraint labels that used non-ASCII symbols (Greek capital delta and arrows). On the default <code><a href="https://rdrr.io/r/grDevices/pdf.html" class="external-link">pdf()</a></code> device these symbols were dropped or mangled, and running the vignette code under <code>R CMD check</code> failed. Labels now read <code>Delta CFI</code>, <code>Delta RMSEA</code>, <code>Delta SRMR</code>, <code>-&gt;</code>, and <code>&lt;-&gt;</code>, matching the hypothesis syntax.</li>
+<li>Documented the table types available from <code><a href="../reference/nomo_table.html">nomo_table()</a></code>.</li>
+<li>Grouped the pkgdown reference index by workflow stage and articles by learning path, with a redirect from the former overview URL (<a href="https://github.com/JUhalt/nomologR/issues/25" class="external-link">#25</a>).</li>
+<li>Archived the completed v0.1 roadmap specification in <code>dev/roadmap-v0.1-record.md</code> and refocused <code>ROADMAP.md</code> on v0.2 and later.</li>
+</ul></div>
 <div class="section level3">
 <h3 id="post-v01-development-0-1-0-9000">Post-v0.1 development<a class="anchor" aria-label="anchor" href="#post-v01-development-0-1-0-9000"></a></h3>
 <ul><li>Changed the current development source to GNU GPL version 3 only (<code>GPL-3.0-only</code>; <code>GPL-3</code> in R metadata), retaining the historical MIT notice. Previously published releases retain their original licenses.</li>

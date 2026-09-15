@@ -29,17 +29,22 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
+<li class="nav-item"><a class="nav-link" href="../articles/nomologR.html">Get started</a></li>
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/exploratory-workflow.html">From item audit to exploratory structure</a></li>
-    <li><a class="dropdown-item" href="../articles/guided-workflow.html">Guided workflow with nomo_run()</a></li>
-    <li><a class="dropdown-item" href="../articles/measurement-invariance.html">Measurement Invariance with nomologR</a></li>
+<li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Learning path</h6></li>
+    <li><a class="dropdown-item" href="../articles/exploratory-workflow.html">From item audit to exploratory structure</a></li>
     <li><a class="dropdown-item" href="../articles/measurement-model-evidence.html">From CFA to a defensible measurement model</a></li>
+    <li><a class="dropdown-item" href="../articles/measurement-invariance.html">Measurement Invariance with nomologR</a></li>
     <li><a class="dropdown-item" href="../articles/nomological-network.html">Theory-Specified Nomological Networks with nomologR</a></li>
-    <li><a class="dropdown-item" href="../articles/overview.html">nomologR: measurement first, theory next</a></li>
+    <li><a class="dropdown-item" href="../articles/guided-workflow.html">Guided workflow with nomo_run()</a></li>
     <li><a class="dropdown-item" href="../articles/reproducible-report.html">Archiving a nomologR workflow with nomo_report()</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Research basis</h6></li>
+    <li><a class="dropdown-item" href="../articles/research-basis.html">Research basis: from historical to contemporary practice</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -75,37 +80,190 @@
 <h2 id="what-invariance-is-for">What invariance is for<a class="anchor" aria-label="anchor" href="#what-invariance-is-for"></a>
 </h2>
 <p>Measurement invariance asks whether a construct is measured
-comparably across groups or occasions. <code>nomologR</code> treats
+comparably across groups or occasions. If it is not, a difference in
+observed scores can reflect how an item functions in each group rather
+than a difference in the construct itself. <code>nomologR</code> treats
 invariance as <strong>graded evidence</strong> rather than a sequence of
 automatic PASS/FAIL decisions.</p>
 <p>Every fitted level retains:</p>
 <ul>
-<li>the generated <code><a href="https://rdrr.io/pkg/semTools/man/measEq.syntax.html" class="external-link">semTools::measEq.syntax()</a></code> object;</li>
-<li>the exact lavaan syntax;</li>
+<li>the generated <code><a href="https://rdrr.io/pkg/semTools/man/measEq.syntax.html" class="external-link">semTools::measEq.syntax()</a></code> object and the
+exact lavaan syntax;</li>
 <li>the fitted lavaan object;</li>
-<li>absolute fit;</li>
-<li>change in fit;</li>
+<li>absolute fit and change in fit;</li>
 <li>nested-model comparison evidence where available;</li>
 <li>localized equality-constraint diagnostics;</li>
 <li>researcher-specified partial-invariance provenance.</li>
 </ul>
 </div>
 <div class="section level2">
+<h2 id="a-teaching-example-with-a-known-answer">A teaching example with a known answer<a class="anchor" aria-label="anchor" href="#a-teaching-example-with-a-known-answer"></a>
+</h2>
+<p><code>nomo_demo_network</code> contains 800 responses collected in
+two administration groups, <code>online</code> and <code>paper</code>.
+Its population model builds in two features:</p>
+<ol style="list-style-type: decimal">
+<li>the latent <strong>Agency mean is .25 SD higher</strong> in the
+<code>paper</code> group (a real construct difference); and</li>
+<li>the <strong>intercept of item <code>ag3</code> is .50
+higher</strong> in the <code>paper</code> group (item bias:
+<code>ag3</code> is endorsed more on paper at the same level of
+Agency).</li>
+</ol>
+<p>All loadings are equal across groups.</p>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/aggregate.html" class="external-link">aggregate</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span><span class="va">ag1</span>, <span class="va">ag2</span>, <span class="va">ag3</span>, <span class="va">ag4</span><span class="op">)</span> <span class="op">~</span> <span class="va">group</span>,</span>
+<span>  data <span class="op">=</span> <span class="va">nomo_demo_network</span>,</span>
+<span>  FUN <span class="op">=</span> <span class="va">mean</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co">#&gt;    group     ag1      ag2      ag3      ag4</span></span>
+<span><span class="co">#&gt; 1 online 3.98885 3.971875 3.974900 4.027750</span></span>
+<span><span class="co">#&gt; 2  paper 4.23735 4.252500 4.640525 4.265525</span></span></code></pre></div>
+<p>Every item mean is higher in the <code>paper</code> group, but
+<code>ag3</code> is higher by much more. Observed means alone cannot
+separate the real latent difference from the item-level bias; that is
+the job of the invariance sequence.</p>
+</div>
+<div class="section level2">
 <h2 id="continuous-indicators">Continuous indicators<a class="anchor" aria-label="anchor" href="#continuous-indicators"></a>
 </h2>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">inv</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_invariance.html">nomo_invariance</a></span><span class="op">(</span></span>
-<span>  <span class="st">"Agency =~ a1 + a2 + a3 + a4"</span>,</span>
-<span>  data <span class="op">=</span> <span class="va">dat</span>,</span>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">agency_model</span> <span class="op">&lt;-</span> <span class="st">"Agency =~ ag1 + ag2 + ag3 + ag4"</span></span>
+<span></span>
+<span><span class="va">inv</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_invariance.html">nomo_invariance</a></span><span class="op">(</span></span>
+<span>  <span class="va">agency_model</span>,</span>
+<span>  data <span class="op">=</span> <span class="va">nomo_demo_network</span>,</span>
 <span>  group <span class="op">=</span> <span class="st">"group"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">inv</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">inv</span><span class="op">)</span></span></code></pre></div>
+<span><span class="co">#&gt; &lt;nomo_invariance&gt;</span></span>
+<span><span class="co">#&gt; Grouping variable: group (2 groups: online, paper)</span></span>
+<span><span class="co">#&gt; Indicator treatment: continuous</span></span>
+<span><span class="co">#&gt; Requested: configural -&gt; metric -&gt; scalar -&gt; strict</span></span>
+<span><span class="co">#&gt; Completed: configural -&gt; metric -&gt; scalar -&gt; strict</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4 × 11</span></span></span>
+<span><span class="co">#&gt;   level      status    constraints                     partial_requested   cfi</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                           <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> configural estimated none                            <span style="color: #949494;">""</span>                1    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> metric     estimated loadings                        <span style="color: #949494;">""</span>                1    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> scalar     estimated loadings, intercepts            <span style="color: #949494;">""</span>                0.954</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> strict     estimated loadings, intercepts, residuals <span style="color: #949494;">""</span>                0.954</span></span>
+<span><span class="co">#&gt;   rmsea    srmr delta_cfi delta_rmsea delta_srmr     lrt_p</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> 0     0.002<span style="text-decoration: underline;">00</span> <span style="color: #BB0000;">NA</span>            <span style="color: #BB0000;">NA</span>        <span style="color: #BB0000;">NA</span>       <span style="color: #BB0000;">NA</span>   <span style="color: #949494;"> </span>   </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> 0     0.027<span style="text-decoration: underline;">5</span>   0             0         0.025<span style="text-decoration: underline;">5</span>   1.46<span style="color: #949494;">e</span><span style="color: #BB0000;">- 1</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> 0.121 0.064<span style="text-decoration: underline;">7</span>  -<span style="color: #BB0000;">0.046</span><span style="color: #BB0000; text-decoration: underline;">2</span>        0.121     0.037<span style="text-decoration: underline;">1</span>   1.20<span style="color: #949494;">e</span><span style="color: #BB0000;">-13</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> 0.102 0.065<span style="text-decoration: underline;">9</span>   0.000<span style="text-decoration: underline;">420</span>     -<span style="color: #BB0000;">0.019</span><span style="color: #BB0000; text-decoration: underline;">3</span>    0.001<span style="text-decoration: underline;">20</span>  4.83<span style="color: #949494;">e</span><span style="color: #BB0000;">- 1</span></span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Localized equality-constraint diagnostics retained: 24</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Interpretation rule: fit changes and score diagnostics are evidence, not universal pass/fail rules, not automatic pass/fail decisions, and not automatic parameter-freeing rules.</span></span></code></pre></div>
 <p>The conventional continuous sequence is:</p>
 <pre class="text"><code><span><span class="va">configural</span> <span class="op">-&gt;</span> <span class="va">metric</span> <span class="op">-&gt;</span> <span class="va">scalar</span> <span class="op">-&gt;</span> <span class="va">strict</span></span></code></pre>
-<p>No single delta-CFI, delta-RMSEA, delta-SRMR, or chi-square
-difference rule is treated as universally decisive.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">inv</span>, <span class="st">"fit"</span><span class="op">)</span></span>
+<span><span class="va">fit</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"level"</span>, <span class="st">"constraints"</span>, <span class="st">"cfi"</span>, <span class="st">"rmsea"</span>, <span class="st">"srmr"</span>, <span class="st">"delta_cfi"</span>, <span class="st">"delta_rmsea"</span>, <span class="st">"lrt_p"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4 × 8</span></span></span>
+<span><span class="co">#&gt;   level      constraints       cfi rmsea    srmr delta_cfi delta_rmsea     lrt_p</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> configural none            1     0     0.002<span style="text-decoration: underline;">00</span> <span style="color: #BB0000;">NA</span>            <span style="color: #BB0000;">NA</span>      <span style="color: #BB0000;">NA</span>   <span style="color: #949494;"> </span>   </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> metric     loadings        1     0     0.027<span style="text-decoration: underline;">5</span>   0             0       1.46<span style="color: #949494;">e</span><span style="color: #BB0000;">- 1</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> scalar     loadings, inte… 0.954 0.121 0.064<span style="text-decoration: underline;">7</span>  -<span style="color: #BB0000;">0.046</span><span style="color: #BB0000; text-decoration: underline;">2</span>        0.121   1.20<span style="color: #949494;">e</span><span style="color: #BB0000;">-13</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> strict     loadings, inte… 0.954 0.102 0.065<span style="text-decoration: underline;">9</span>   0.000<span style="text-decoration: underline;">420</span>     -<span style="color: #BB0000;">0.019</span><span style="color: #BB0000; text-decoration: underline;">3</span>  4.83<span style="color: #949494;">e</span><span style="color: #BB0000;">- 1</span></span></span></code></pre></div>
+<p>The configural and metric models fit closely, consistent with equal
+loadings. Adding intercept equality at the scalar level changes CFI by
+-0.046 and RMSEA by 0.121, and the likelihood-ratio test is very small
+(p = 1.2e-13). No single delta-CFI, delta-RMSEA, delta-SRMR, or
+chi-square rule is treated as universally decisive; the evidence is read
+together, in context.</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">inv</span>, type <span class="op">=</span> <span class="st">"change"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="measurement-invariance_files/figure-html/change-plot-1.png" class="r-plt" alt="" width="672"></p>
+</div>
+<div class="section level2">
+<h2 id="localizing-strain">Localizing strain<a class="anchor" aria-label="anchor" href="#localizing-strain"></a>
+</h2>
+<p>Global change in fit says <em>that</em> a set of constraints is
+strained. Score diagnostics help locate <em>where</em>.</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">strain</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">inv</span>, <span class="st">"local_strain"</span><span class="op">)</span></span>
+<span><span class="va">strain</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"level"</span>, <span class="st">"constraint_display"</span>, <span class="st">"score_x2"</span>, <span class="st">"df"</span>, <span class="st">"p_value"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 24 × 5</span></span></span>
+<span><span class="co">#&gt;    level  constraint_display                        score_x2    df  p_value</span></span>
+<span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                                        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> metric Loading: Agency -&gt; ag3 (online vs. paper)   4.92       1 2.66<span style="color: #949494;">e</span><span style="color: #BB0000;">- 2</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> metric Loading: Agency -&gt; ag2 (online vs. paper)   1.03       1 3.10<span style="color: #949494;">e</span><span style="color: #BB0000;">- 1</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> metric Loading: Agency -&gt; ag4 (online vs. paper)   0.690      1 4.06<span style="color: #949494;">e</span><span style="color: #BB0000;">- 1</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> metric Loading: Agency -&gt; ag1 (online vs. paper)   0.027<span style="text-decoration: underline;">3</span>     1 8.69<span style="color: #949494;">e</span><span style="color: #BB0000;">- 1</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> scalar Intercept: ag3 (online vs. paper)          61.1        1 5.33<span style="color: #949494;">e</span><span style="color: #BB0000;">-15</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> scalar Intercept: ag1 (online vs. paper)          11.3        1 7.68<span style="color: #949494;">e</span><span style="color: #BB0000;">- 4</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> scalar Intercept: ag4 (online vs. paper)           5.56       1 1.83<span style="color: #949494;">e</span><span style="color: #BB0000;">- 2</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> scalar Intercept: ag2 (online vs. paper)           0.977      1 3.23<span style="color: #949494;">e</span><span style="color: #BB0000;">- 1</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> scalar Loading: Agency -&gt; ag2 (online vs. paper)   0.546      1 4.60<span style="color: #949494;">e</span><span style="color: #BB0000;">- 1</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> scalar Loading: Agency -&gt; ag1 (online vs. paper)   0.317      1 5.74<span style="color: #949494;">e</span><span style="color: #BB0000;">- 1</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 14 more rows</span></span></span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">inv</span>, type <span class="op">=</span> <span class="st">"local_strain"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="measurement-invariance_files/figure-html/local-plot-1.png" class="r-plt" alt="" width="672"></p>
+<p>The largest scalar-level diagnostic is <strong>Intercept: ag3 (online
+vs. paper)</strong> (score chi-square 61.1), which matches the item bias
+built into the data.</p>
+<p>Two cautions matter for real research:</p>
+<ul>
+<li>Score diagnostics <strong>never authorize an automatic parameter
+release</strong>. With many constraints, some diagnostics will look
+notable by chance; look at the smaller metric-level values above for an
+example.</li>
+<li>In real data you do not know the population model. A release chosen
+only because its diagnostic was largest is a post-hoc decision and
+should be reported as one.</li>
+</ul>
+</div>
+<div class="section level2">
+<h2 id="researcher-controlled-partial-invariance">Researcher-controlled partial invariance<a class="anchor" aria-label="anchor" href="#researcher-controlled-partial-invariance"></a>
+</h2>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">release</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_partial.html">nomo_partial</a></span><span class="op">(</span></span>
+<span>  level <span class="op">=</span> <span class="st">"scalar"</span>,</span>
+<span>  syntax <span class="op">=</span> <span class="st">"ag3 ~ 1"</span>,</span>
+<span>  rationale <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span></span>
+<span>    <span class="st">"The ag3 wording was expected to read differently on paper forms;"</span>,</span>
+<span>    <span class="st">"this expectation was documented before the analysis."</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">inv_partial</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_invariance.html">nomo_invariance</a></span><span class="op">(</span></span>
+<span>  <span class="va">agency_model</span>,</span>
+<span>  data <span class="op">=</span> <span class="va">nomo_demo_network</span>,</span>
+<span>  group <span class="op">=</span> <span class="st">"group"</span>,</span>
+<span>  partial <span class="op">=</span> <span class="va">release</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">inv_partial</span>, <span class="st">"partial"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 4</span></span></span>
+<span><span class="co">#&gt;   release_id level  syntax  rationale                                           </span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                                               </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> P1         scalar ag3 ~ 1 The ag3 wording was expected to read differently on…</span></span>
+<span></span>
+<span><span class="va">fit_partial</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">inv_partial</span>, <span class="st">"fit"</span><span class="op">)</span></span>
+<span><span class="va">fit_partial</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"level"</span>, <span class="st">"partial_requested"</span>, <span class="st">"cfi"</span>, <span class="st">"rmsea"</span>, <span class="st">"delta_cfi"</span>, <span class="st">"lrt_p"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4 × 6</span></span></span>
+<span><span class="co">#&gt;   level      partial_requested   cfi rmsea delta_cfi  lrt_p</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> configural <span style="color: #949494;">""</span>                    1     0        <span style="color: #BB0000;">NA</span> <span style="color: #BB0000;">NA</span>    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> metric     <span style="color: #949494;">""</span>                    1     0         0  0.146</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> scalar     <span style="color: #949494;">"</span>ag3 ~ 1<span style="color: #949494;">"</span>             1     0         0  0.582</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> strict     <span style="color: #949494;">"</span>ag3 ~ 1<span style="color: #949494;">"</span>             1     0         0  0.460</span></span></code></pre></div>
+<p>With the <code>ag3</code> intercept released, the remaining intercept
+equalities are consistent with the data, and the latent mean difference
+can be interpreted using the three invariant intercepts. The release is
+carried forward to the strict level so that a parameter freed at one
+level is not silently constrained again later.</p>
+<p><code>nomologR</code> records what was released and why. It does not
+search until a model meets a preferred cutoff.</p>
 </div>
 <div class="section level2">
 <h2 id="ordered-indicators">Ordered indicators<a class="anchor" aria-label="anchor" href="#ordered-indicators"></a>
@@ -115,75 +273,75 @@ merely substituting WLSMV for ML.</p>
 <p>For four-or-more-category ordered indicators:</p>
 <pre class="text"><code><span><span class="va">configural</span> <span class="op">-&gt;</span> <span class="va">thresholds</span> <span class="op">-&gt;</span> <span class="va">metric</span> <span class="op">-&gt;</span> <span class="va">scalar</span> <span class="op">-&gt;</span> <span class="va">strict</span></span></code></pre>
 <p>For three-category indicators, threshold equality is part of the
-metric step because it is needed for identification.</p>
-<p>For binary indicators, threshold, loading, and intercept restrictions
-cannot be treated as independent sequential tests under the implemented
-Wu-Estabrook approach. The sequence therefore begins:</p>
+metric step because it is needed for identification. For binary
+indicators, threshold, loading, and intercept restrictions cannot be
+treated as independent sequential tests under the implemented
+Wu–Estabrook approach, so the sequence begins:</p>
 <pre class="text"><code><span><span class="va">configural</span> <span class="op">-&gt;</span> <span class="va">strong</span> <span class="op">-&gt;</span> <span class="va">strict</span></span></code></pre>
 <p>where <code>strong</code> imposes thresholds, loadings, and
 intercepts together.</p>
-</div>
-<div class="section level2">
-<h2 id="localizing-strain">Localizing strain<a class="anchor" aria-label="anchor" href="#localizing-strain"></a>
-</h2>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">inv</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_invariance.html">nomo_invariance</a></span><span class="op">(</span></span>
-<span>  <span class="va">model</span>,</span>
-<span>  data <span class="op">=</span> <span class="va">dat</span>,</span>
-<span>  group <span class="op">=</span> <span class="st">"group"</span>,</span>
-<span>  levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"configural"</span>, <span class="st">"metric"</span><span class="op">)</span>,</span>
-<span>  localize <span class="op">=</span> <span class="cn">TRUE</span></span>
+<p>The example below uses four five-category items from
+<code>nomo_demo_ordinal</code>. The two “forms” are assigned by
+alternating rows purely to demonstrate the ordered workflow; no
+non-invariance was built into these groups.</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">ordinal_items</span> <span class="op">&lt;-</span> <span class="va">nomo_demo_ordinal</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"a1"</span>, <span class="st">"a2"</span>, <span class="st">"a3"</span>, <span class="st">"a4"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="va">ordinal_items</span><span class="op">$</span><span class="va">form</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"form_1"</span>, <span class="st">"form_2"</span><span class="op">)</span>, length.out <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">ordinal_items</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">inv_ord</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_invariance.html">nomo_invariance</a></span><span class="op">(</span></span>
+<span>  <span class="st">"A =~ a1 + a2 + a3 + a4"</span>,</span>
+<span>  data <span class="op">=</span> <span class="va">ordinal_items</span>,</span>
+<span>  group <span class="op">=</span> <span class="st">"form"</span>,</span>
+<span>  ordered <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"a1"</span>, <span class="st">"a2"</span>, <span class="st">"a3"</span>, <span class="st">"a4"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">inv</span>, <span class="st">"local_strain"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">inv</span>, <span class="st">"local_strain"</span><span class="op">)</span></span></code></pre></div>
-<p>Score diagnostics help researchers locate equality constraints that
-deserve inspection. They <strong>never authorize an automatic parameter
-release</strong>.</p>
-</div>
-<div class="section level2">
-<h2 id="researcher-controlled-partial-invariance">Researcher-controlled partial invariance<a class="anchor" aria-label="anchor" href="#researcher-controlled-partial-invariance"></a>
-</h2>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">partial</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_partial.html">nomo_partial</a></span><span class="op">(</span></span>
-<span>  level <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"metric"</span>, <span class="st">"scalar"</span><span class="op">)</span>,</span>
-<span>  syntax <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
-<span>    <span class="st">"Agency =~ a2"</span>,</span>
-<span>    <span class="st">"a3 ~ 1"</span></span>
-<span>  <span class="op">)</span>,</span>
-<span>  rationale <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
-<span>    <span class="st">"Loading difference was anticipated from prior evidence."</span>,</span>
-<span>    <span class="st">"Intercept release was theoretically justified."</span></span>
-<span>  <span class="op">)</span></span>
-<span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">inv_ord</span>, <span class="st">"categories"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4 × 2</span></span></span>
+<span><span class="co">#&gt;   item  categories</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> a1             5</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> a2             5</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> a3             5</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> a4             5</span></span>
 <span></span>
-<span><span class="va">inv_partial</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_invariance.html">nomo_invariance</a></span><span class="op">(</span></span>
-<span>  <span class="va">model</span>,</span>
-<span>  data <span class="op">=</span> <span class="va">dat</span>,</span>
-<span>  group <span class="op">=</span> <span class="st">"group"</span>,</span>
-<span>  partial <span class="op">=</span> <span class="va">partial</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<p>A release is carried forward to more restrictive levels so that a
-parameter freed at one level is not silently constrained again
-later.</p>
-<p><code>nomologR</code> records what was released and why. It does not
-search until a model meets a preferred cutoff.</p>
+<span><span class="va">fit_ord</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">inv_ord</span>, <span class="st">"fit"</span><span class="op">)</span></span>
+<span><span class="va">fit_ord</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"level"</span>, <span class="st">"constraints"</span>, <span class="st">"cfi"</span>, <span class="st">"rmsea"</span>, <span class="st">"delta_cfi"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 5 × 5</span></span></span>
+<span><span class="co">#&gt;   level      constraints                                   cfi  rmsea  delta_cfi</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                                       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> configural none                                        0.992 0.074<span style="text-decoration: underline;">3</span> <span style="color: #BB0000;">NA</span>        </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> thresholds thresholds                                  0.997 0.037<span style="text-decoration: underline;">2</span>  0.004<span style="text-decoration: underline;">39</span>  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> metric     thresholds, loadings                        0.997 0.033<span style="text-decoration: underline;">1</span>  0.000<span style="text-decoration: underline;">021</span>8</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> scalar     thresholds, loadings, intercepts            0.998 0.022<span style="text-decoration: underline;">7</span>  0.001<span style="text-decoration: underline;">50</span>  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> strict     thresholds, loadings, intercepts, residuals 1     0       0.001<span style="text-decoration: underline;">93</span></span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="tables-and-figures">Tables and figures<a class="anchor" aria-label="anchor" href="#tables-and-figures"></a>
 </h2>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">inv</span>, <span class="st">"fit"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">inv</span>, <span class="st">"categories"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">inv</span>, <span class="st">"partial"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">inv</span>, <span class="st">"local_strain"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">inv</span>, <span class="st">"fit"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">inv</span>, <span class="st">"change"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">inv</span>, <span class="st">"local_strain"</span><span class="op">)</span></span></code></pre></div>
-<p>These outputs are intended to flow naturally into later
-<code><a href="../reference/nomo_report.html">nomo_report()</a></code> development while remaining ordinary tibbles
-and ggplot objects for researchers who want direct control.</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">inv</span>, type <span class="op">=</span> <span class="st">"fit"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="measurement-invariance_files/figure-html/tables-1.png" class="r-plt" alt="" width="672"></p>
+<p><code><a href="../reference/nomo_table.html">nomo_table()</a></code> returns ordinary tibbles
+(<code>"fit"</code>, <code>"categories"</code>, <code>"partial"</code>,
+<code>"local_strain"</code>, <code>"decision_log"</code>), and plots are
+ordinary ggplot objects, so researchers keep direct control over
+reporting. The same evidence flows into <code><a href="../reference/nomo_report.html">nomo_report()</a></code> when
+invariance is part of a guided workflow.</p>
+</div>
+<div class="section level2">
+<h2 id="research-basis">Research basis<a class="anchor" aria-label="anchor" href="#research-basis"></a>
+</h2>
+<p>Multiple-group factor analysis originates with Jöreskog (1971), and
+the configural–metric–scalar–strict hierarchy with Meredith (1993) and
+Vandenberg and Lance (2000). A decrease in CFI of .01 became a widely
+used rule after Cheung and Rensvold (2002); later work showed that
+sensitivity of change-in-fit indices depends on sample size and model
+context (Chen, 2007; Putnick &amp; Bornstein, 2016), which is why
+<code>nomologR</code> reports several indices without a universal
+cutoff. Ordered-indicator sequences follow Wu and Estabrook (2016) as
+implemented in <code>semTools</code> (see also Svetina et al., 2020).
+Partial invariance follows Byrne, Shavelson, and Muthén (1989). Full
+references are in <code><a href="../reference/nomo_invariance.html">?nomo_invariance</a></code> and the <a href="research-basis.html">research basis</a> article.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

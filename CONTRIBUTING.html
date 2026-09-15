@@ -15,16 +15,21 @@
     </button>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
-      <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="reference/index.html">Reference</a></li>
+      <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="articles/nomologR.html">Get started</a></li>
+<li class="nav-item"><a class="nav-link" href="reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="articles/exploratory-workflow.html">From item audit to exploratory structure</a></li>
-    <li><a class="dropdown-item" href="articles/guided-workflow.html">Guided workflow with nomo_run()</a></li>
-    <li><a class="dropdown-item" href="articles/measurement-invariance.html">Measurement Invariance with nomologR</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Learning path</h6></li>
+    <li><a class="dropdown-item" href="articles/exploratory-workflow.html">From item audit to exploratory structure</a></li>
     <li><a class="dropdown-item" href="articles/measurement-model-evidence.html">From CFA to a defensible measurement model</a></li>
+    <li><a class="dropdown-item" href="articles/measurement-invariance.html">Measurement Invariance with nomologR</a></li>
     <li><a class="dropdown-item" href="articles/nomological-network.html">Theory-Specified Nomological Networks with nomologR</a></li>
-    <li><a class="dropdown-item" href="articles/overview.html">nomologR: measurement first, theory next</a></li>
+    <li><a class="dropdown-item" href="articles/guided-workflow.html">Guided workflow with nomo_run()</a></li>
     <li><a class="dropdown-item" href="articles/reproducible-report.html">Archiving a nomologR workflow with nomo_report()</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Research basis</h6></li>
+    <li><a class="dropdown-item" href="articles/research-basis.html">Research basis: from historical to contemporary practice</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -79,8 +84,10 @@
 <li>assumptions and known limitations;</li>
 <li>how uncertainty is represented;</li>
 <li>how failure or unsupported cases are disclosed;</li>
+<li>where the method sits on the path from historical to contemporary practice, and which references support that placement;</li>
 <li>why the feature belongs in <code>nomologR</code> rather than solely in the underlying engine package.</li>
-</ul><p>Methodological references are strongly encouraged.</p>
+</ul><p>Methodological references are expected for statistical methods. Add them to the function’s <code>@references</code> with DOIs where available, verify that each DOI resolves to the cited work, and update the <a href="vignettes/research-basis.Rmd">research basis</a> article.</p>
+<p>Examples and vignettes should run on the teaching datasets (<code>nomo_demo_continuous</code>, <code>nomo_demo_ordinal</code>, <code>nomo_demo_network</code>) or other data with a known answer. Avoid <code>\dontrun{}</code> for code that can run; use <code>\donttest{}</code> for slow examples.</p>
 </div>
 <div class="section level2">
 <h2 id="testing-expectations">Testing expectations<a class="anchor" aria-label="anchor" href="#testing-expectations"></a></h2>
@@ -99,6 +106,10 @@
 <p>Each PR should identify its issue and documentation impact: README, roadmap, reference/vignettes, NEWS, citation/license metadata, and published site as applicable. Explain when a surface does not need updating.</p>
 <p>Edit <code>README.Rmd</code> and regenerate <code>README.md</code>. <code>_pkgdown.yml</code> and source documentation drive the website; the existing pkgdown workflow builds PRs and publishes <code>master</code> to <code>gh-pages</code>. Generated <code>docs/</code> output is not tracked on <code>master</code>. Verify the deployed site after merge, including its license, version, and planning links. Do not label historical release checks as current tests.</p>
 <p>New contributions use the current GPL version 3 only project license; preserve required copyright and third-party notices.</p>
+</div>
+<div class="section level2">
+<h2 id="distribution">Distribution<a class="anchor" aria-label="anchor" href="#distribution"></a></h2>
+<p><code>nomologR</code> is distributed through <a href="https://juhalt.r-universe.dev" class="external-link">R-universe</a>, which builds the latest GitHub release. CRAN submission is deferred to a later polish release; readiness work is tracked in <a href="https://github.com/JUhalt/nomologR/issues/39" class="external-link">#39</a>.</p>
 </div>
 </div>
 

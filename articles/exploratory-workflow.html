@@ -29,17 +29,22 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
+<li class="nav-item"><a class="nav-link" href="../articles/nomologR.html">Get started</a></li>
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/exploratory-workflow.html">From item audit to exploratory structure</a></li>
-    <li><a class="dropdown-item" href="../articles/guided-workflow.html">Guided workflow with nomo_run()</a></li>
-    <li><a class="dropdown-item" href="../articles/measurement-invariance.html">Measurement Invariance with nomologR</a></li>
+<li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Learning path</h6></li>
+    <li><a class="dropdown-item" href="../articles/exploratory-workflow.html">From item audit to exploratory structure</a></li>
     <li><a class="dropdown-item" href="../articles/measurement-model-evidence.html">From CFA to a defensible measurement model</a></li>
+    <li><a class="dropdown-item" href="../articles/measurement-invariance.html">Measurement Invariance with nomologR</a></li>
     <li><a class="dropdown-item" href="../articles/nomological-network.html">Theory-Specified Nomological Networks with nomologR</a></li>
-    <li><a class="dropdown-item" href="../articles/overview.html">nomologR: measurement first, theory next</a></li>
+    <li><a class="dropdown-item" href="../articles/guided-workflow.html">Guided workflow with nomo_run()</a></li>
     <li><a class="dropdown-item" href="../articles/reproducible-report.html">Archiving a nomologR workflow with nomo_report()</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Research basis</h6></li>
+    <li><a class="dropdown-item" href="../articles/research-basis.html">Research basis: from historical to contemporary practice</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -82,8 +87,8 @@ dimensions are substantively plausible.</p>
 <p><code>nomologR</code> therefore separates three questions:</p>
 <ol style="list-style-type: decimal">
 <li>
-<code><a href="../reference/nomo_screen.html">nomo_screen()</a></code> — <strong>What does the item/data set
-look like?</strong>
+<code><a href="../reference/nomo_screen.html">nomo_screen()</a></code> — <strong>What does the item and response
+data look like?</strong>
 </li>
 <li>
 <code><a href="../reference/nomo_factors.html">nomo_factors()</a></code> — <strong>How many latent dimensions
@@ -99,213 +104,299 @@ the requested factor count, or treats a numerical reference value as
 proof.</p>
 </div>
 <div class="section level2">
-<h2 id="a-reproducible-two-factor-example">A reproducible two-factor example<a class="anchor" aria-label="anchor" href="#a-reproducible-two-factor-example"></a>
+<h2 id="a-teaching-dataset-with-a-known-answer">A teaching dataset with a known answer<a class="anchor" aria-label="anchor" href="#a-teaching-dataset-with-a-known-answer"></a>
 </h2>
-<p>The example below has two correlated latent variables with four
-indicators each. The population structure is intentionally clear so that
-the workflow can be inspected against a known data-generating
-process.</p>
+<p><code>nomo_demo_continuous</code> was simulated from a documented
+population model, so the package’s evidence can be checked against the
+truth:</p>
+<ul>
+<li>two factors, A and B, correlated .40;</li>
+<li>items <code>a1</code>–<code>a4</code> and
+<code>b1</code>–<code>b4</code> are ordinary indicators (population
+loadings .70 to .80);</li>
+<li>
+<code>a5</code> <strong>cross-loads</strong> on both factors (.45 on
+A and .35 on B);</li>
+<li>
+<code>b5</code> is a <strong>weak</strong> indicator (.30 on
+B);</li>
+<li>
+<code>a2</code> and <code>b3</code> contain a small amount of
+missing data.</li>
+</ul>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2026</span><span class="op">)</span></span>
-<span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">400</span></span>
-<span></span>
-<span><span class="va">f1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span></span>
-<span><span class="va">f2</span> <span class="op">&lt;-</span> <span class="fl">0.35</span> <span class="op">*</span> <span class="va">f1</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="fl">0.35</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>  a1 <span class="op">=</span> <span class="fl">.82</span> <span class="op">*</span> <span class="va">f1</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span>, sd <span class="op">=</span> <span class="fl">.55</span><span class="op">)</span>,</span>
-<span>  a2 <span class="op">=</span> <span class="fl">.78</span> <span class="op">*</span> <span class="va">f1</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span>, sd <span class="op">=</span> <span class="fl">.60</span><span class="op">)</span>,</span>
-<span>  a3 <span class="op">=</span> <span class="fl">.75</span> <span class="op">*</span> <span class="va">f1</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span>, sd <span class="op">=</span> <span class="fl">.62</span><span class="op">)</span>,</span>
-<span>  a4 <span class="op">=</span> <span class="fl">.80</span> <span class="op">*</span> <span class="va">f1</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span>, sd <span class="op">=</span> <span class="fl">.58</span><span class="op">)</span>,</span>
-<span>  b1 <span class="op">=</span> <span class="fl">.82</span> <span class="op">*</span> <span class="va">f2</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span>, sd <span class="op">=</span> <span class="fl">.55</span><span class="op">)</span>,</span>
-<span>  b2 <span class="op">=</span> <span class="fl">.78</span> <span class="op">*</span> <span class="va">f2</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span>, sd <span class="op">=</span> <span class="fl">.60</span><span class="op">)</span>,</span>
-<span>  b3 <span class="op">=</span> <span class="fl">.75</span> <span class="op">*</span> <span class="va">f2</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span>, sd <span class="op">=</span> <span class="fl">.62</span><span class="op">)</span>,</span>
-<span>  b4 <span class="op">=</span> <span class="fl">.80</span> <span class="op">*</span> <span class="va">f2</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span>, sd <span class="op">=</span> <span class="fl">.58</span><span class="op">)</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">nomo_demo_continuous</span><span class="op">)</span></span>
+<span><span class="co">#&gt; 'data.frame':    500 obs. of  10 variables:</span></span>
+<span><span class="co">#&gt;  $ a1: num  2.23 3.47 4.8 2.87 5.22 4.02 3.23 3.12 3.62 4.66 ...</span></span>
+<span><span class="co">#&gt;  $ a2: num  1.46 3.06 4.16 2.46 3.71 6.06 4.16 3.45 NA 5.27 ...</span></span>
+<span><span class="co">#&gt;  $ a3: num  2.25 4.71 4.08 3.45 5.94 4.3 3.39 3.41 3.21 5.31 ...</span></span>
+<span><span class="co">#&gt;  $ a4: num  2.59 3.39 4.59 3.85 4.01 3.65 4.09 3.81 4.77 5.16 ...</span></span>
+<span><span class="co">#&gt;  $ a5: num  1.85 3.23 4.54 4.22 3.62 4.67 4.14 3.46 4.95 3.08 ...</span></span>
+<span><span class="co">#&gt;  $ b1: num  2.67 4.05 5.31 4.6 3.57 3.11 4.16 3.99 3.49 2.71 ...</span></span>
+<span><span class="co">#&gt;  $ b2: num  4.21 3.91 3.65 3.72 3.94 3.01 4.32 2.72 3.17 3.95 ...</span></span>
+<span><span class="co">#&gt;  $ b3: num  2.33 4.72 4.85 4.63 2.84 2.95 3.75 4.02 3.69 3.08 ...</span></span>
+<span><span class="co">#&gt;  $ b4: num  4.79 3.72 4.24 4.27 4.6 2.28 5.01 4.62 2.94 2.87 ...</span></span>
+<span><span class="co">#&gt;  $ b5: num  3.42 4.47 5.4 4.38 3.87 2.97 4.75 5.63 3.65 2.97 ...</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">colSums</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">nomo_demo_continuous</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; a1 a2 a3 a4 a5 b1 b2 b3 b4 b5 </span></span>
+<span><span class="co">#&gt;  0 15  0  0  0  0  0 12  0  0</span></span></code></pre></div>
+<p>With real data, of course, nobody hands you the population model. The
+point of a known-answer dataset is to learn what the evidence looks like
+when you <em>do</em> know what is true.</p>
 </div>
 <div class="section level2">
 <h2 id="step-1-audit-the-items">Step 1: audit the items<a class="anchor" aria-label="anchor" href="#step-1-audit-the-items"></a>
 </h2>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">scr</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_screen.html">nomo_screen</a></span><span class="op">(</span><span class="va">dat</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">scr</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## &lt;summary_nomo_screen&gt;</span></span>
-<span><span class="co">## Cases: 400 | Items: 8 | No review flag: 8 | Review: 0 | Concern: 0</span></span>
-<span><span class="co">## Missingness flags: 0 | Constant: 0 | All missing: 0 | Relationship eligible: 8</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## Integrated item review:</span></span>
-<span><span class="co">## <span style="color: #949494;"># A tibble: 8 × 7</span></span></span>
-<span><span class="co">##   item  item_type          attention pct_missing mode_prop corrected_item_rest_r</span></span>
-<span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;ord&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>                 <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">1</span> a1    numeric_continuous none                0    0.002<span style="text-decoration: underline;">5</span>                 0.597</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">2</span> a2    numeric_continuous none                0    0.002<span style="text-decoration: underline;">5</span>                 0.548</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">3</span> a3    numeric_continuous none                0    0.002<span style="text-decoration: underline;">5</span>                 0.547</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">4</span> a4    numeric_continuous none                0    0.002<span style="text-decoration: underline;">5</span>                 0.544</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">5</span> b1    numeric_continuous none                0    0.002<span style="text-decoration: underline;">5</span>                 0.581</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">6</span> b2    numeric_continuous none                0    0.002<span style="text-decoration: underline;">5</span>                 0.561</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">7</span> b3    numeric_continuous none                0    0.002<span style="text-decoration: underline;">5</span>                 0.551</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">8</span> b4    numeric_continuous none                0    0.002<span style="text-decoration: underline;">5</span>                 0.574</span></span>
-<span><span class="co">##   review_metrics</span></span>
-<span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">1</span> <span style="color: #949494;">""</span>            </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">2</span> <span style="color: #949494;">""</span>            </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">3</span> <span style="color: #949494;">""</span>            </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">4</span> <span style="color: #949494;">""</span>            </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">5</span> <span style="color: #949494;">""</span>            </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">6</span> <span style="color: #949494;">""</span>            </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">7</span> <span style="color: #949494;">""</span>            </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">8</span> <span style="color: #949494;">""</span>            </span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## `attention` is a review aid, not an automatic retention/deletion decision.</span></span></code></pre>
-<p>The screening object is descriptive and diagnostic. A flag is a
-reason to inspect an item or coding decision, not an instruction to
-remove an item.</p>
+<code class="sourceCode R"><span><span class="va">scr</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_screen.html">nomo_screen</a></span><span class="op">(</span><span class="va">nomo_demo_continuous</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">scr</span><span class="op">)</span></span>
+<span><span class="co">#&gt; &lt;summary_nomo_screen&gt;</span></span>
+<span><span class="co">#&gt; Cases: 500 | Items: 10 | No review flag: 9 | Review: 1 | Concern: 0</span></span>
+<span><span class="co">#&gt; Missingness flags: 2 | Constant: 0 | All missing: 0 | Relationship eligible: 10</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Integrated item review:</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 10 × 7</span></span></span>
+<span><span class="co">#&gt;    item  item_type          attention pct_missing mode_prop</span></span>
+<span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;ord&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> a1    numeric_continuous none            0        0.01  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> a2    numeric_continuous none            0.03     0.012<span style="text-decoration: underline;">4</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> a3    numeric_continuous none            0        0.01  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> a4    numeric_continuous none            0        0.012 </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> a5    numeric_continuous none            0        0.016 </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> b1    numeric_continuous none            0        0.016 </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> b2    numeric_continuous none            0        0.014 </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> b3    numeric_continuous none            0.024    0.010<span style="text-decoration: underline;">2</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> b4    numeric_continuous none            0        0.012 </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> b5    numeric_continuous review          0        0.014 </span></span>
+<span><span class="co">#&gt;    corrected_item_rest_r review_metrics       </span></span>
+<span><span class="co">#&gt;                    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span>                 0.559 <span style="color: #949494;">""</span>                   </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span>                 0.580 <span style="color: #949494;">""</span>                   </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span>                 0.511 <span style="color: #949494;">""</span>                   </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span>                 0.549 <span style="color: #949494;">""</span>                   </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span>                 0.588 <span style="color: #949494;">""</span>                   </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span>                 0.602 <span style="color: #949494;">""</span>                   </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span>                 0.513 <span style="color: #949494;">""</span>                   </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span>                 0.571 <span style="color: #949494;">""</span>                   </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span>                 0.481 <span style="color: #949494;">""</span>                   </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span>                 0.279 <span style="color: #949494;">"</span>corrected_item_rest<span style="color: #949494;">"</span></span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; `attention` is a review aid, not an automatic retention/deletion decision.</span></span></code></pre></div>
+<p>The screening object is descriptive and diagnostic. The missing
+values in <code>a2</code> and <code>b3</code> are visible here, before
+any model decides how to handle them. A flag is a reason to inspect an
+item or a coding decision, not an instruction to remove it.</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">scr</span><span class="op">)</span></span></code></pre></div>
+<p><img src="exploratory-workflow_files/figure-html/screen-plot-1.png" class="r-plt" alt="" width="672"></p>
 </div>
 <div class="section level2">
 <h2 id="step-2-investigate-factor-retention">Step 2: investigate factor retention<a class="anchor" aria-label="anchor" href="#step-2-investigate-factor-retention"></a>
 </h2>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fac</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_factors.html">nomo_factors</a></span><span class="op">(</span></span>
-<span>  <span class="va">dat</span>,</span>
+<span>  <span class="va">nomo_demo_continuous</span>,</span>
 <span>  criterion_set <span class="op">=</span> <span class="st">"core"</span>,</span>
-<span>  n_iter <span class="op">=</span> <span class="fl">20</span>,</span>
 <span>  seed <span class="op">=</span> <span class="fl">2026</span></span>
 <span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fac</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## &lt;summary_nomo_factors&gt;</span></span>
-<span><span class="co">## Cases: 400 | Items: 8 | Correlation: pearson | Criteria: core</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## Parallel-analysis rule sensitivity:</span></span>
-<span><span class="co">## <span style="color: #949494;"># A tibble: 3 × 3</span></span></span>
-<span><span class="co">##   rule       n_factors selected</span></span>
-<span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>   </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">1</span> percentile         2 TRUE    </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">2</span> mean               2 FALSE   </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">3</span> crawford           2 FALSE   </span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## Retention evidence:</span></span>
-<span><span class="co">## <span style="color: #949494;"># A tibble: 4 × 3</span></span></span>
-<span><span class="co">##   method                     n_factors role         </span></span>
-<span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                          <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">1</span> Parallel analysis                  2 primary      </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">2</span> MAP (original TR2)                 2 complementary</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">3</span> MAP (revised TR4)                  2 complementary</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">4</span> Empirical Kaiser criterion         2 complementary</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## Criterion-family concordance:</span></span>
-<span><span class="co">## <span style="color: #949494;"># A tibble: 1 × 3</span></span></span>
-<span><span class="co">##   n_factors n_families families                                          </span></span>
-<span><span class="co">##       <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                                             </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">1</span>         2          3 Parallel analysis; MAP; Empirical Kaiser criterion</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## Supporting adequacy evidence:</span></span>
-<span><span class="co">## <span style="color: #949494;"># A tibble: 2 × 2</span></span></span>
-<span><span class="co">##   metric   display                           </span></span>
-<span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                             </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">1</span> KMO      0.844                             </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">2</span> Bartlett chi-square(28) = 1619.58, p &lt; .001</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## Synthesis:</span></span>
-<span><span class="co">## All 3 available criterion families (4 methods) point to 2 factors. Related methods within a family are grouped before concordance is summarized; this is strong converging evidence for investigating that solution, not proof of dimensionality. </span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## Factor counts are candidates for investigation, not automatic dimensionality verdicts.</span></span>
-<span><span class="co">## Common-factor eigenvalues come from a reduced common-variance matrix; later values can be negative.</span></span></code></pre>
-<p>Parallel analysis is the primary retention suggestion, with MAP and
-EKC providing complementary evidence. When methods disagree, the
-disagreement is part of the result rather than something
-<code>nomologR</code> resolves with a majority-vote rule.</p>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fac</span><span class="op">)</span></span>
+<span><span class="co">#&gt; &lt;summary_nomo_factors&gt;</span></span>
+<span><span class="co">#&gt; Cases: 500 | Items: 10 | Correlation: pearson | Criteria: core</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Parallel-analysis rule sensitivity:</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 3 × 3</span></span></span>
+<span><span class="co">#&gt;   rule       n_factors selected</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>   </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> percentile         2 TRUE    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> mean               2 FALSE   </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> crawford           2 FALSE   </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Retention evidence:</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 3 × 3</span></span></span>
+<span><span class="co">#&gt;   method             n_factors role         </span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                  <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Parallel analysis          2 primary      </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> MAP (original TR2)         2 complementary</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> MAP (revised TR4)          2 complementary</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Criteria requested but not run:</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 2</span></span></span>
+<span><span class="co">#&gt;   method                    </span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                     </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Empirical Kaiser criterion</span></span>
+<span><span class="co">#&gt;   reason                                                                        </span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                                                                         </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> EKC needs one common sample size for the analyzed matrix; pairwise missing-da…</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Criterion-family concordance:</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 3</span></span></span>
+<span><span class="co">#&gt;   n_factors n_families families              </span></span>
+<span><span class="co">#&gt;       <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                 </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>         2          2 Parallel analysis; MAP</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Supporting adequacy evidence:</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 2 × 2</span></span></span>
+<span><span class="co">#&gt;   metric  </span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> KMO     </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Bartlett</span></span>
+<span><span class="co">#&gt;   display                                                                       </span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                                                                         </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> 0.874                                                                         </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Bartlett's test was not computed because pairwise missing-data handling does …</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Synthesis:</span></span>
+<span><span class="co">#&gt; All 2 available criterion families (3 methods) point to 2 factors. Related methods within a family are grouped before concordance is summarized; this is strong converging evidence for investigating that solution, not proof of dimensionality. 1 requested method was not evaluated; see criterion status for the documented reason. </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Factor counts are candidates for investigation, not automatic dimensionality verdicts.</span></span>
+<span><span class="co">#&gt; Common-factor eigenvalues come from a reduced common-variance matrix; later values can be negative.</span></span></code></pre></div>
+<p>Parallel analysis is the primary retention evidence, with MAP and the
+empirical Kaiser criterion (EKC) providing complementary evidence. Here
+parallel analysis and both MAP variants agree on two dimensions, which
+matches the population model. When methods disagree, the disagreement is
+part of the result rather than something <code>nomologR</code> resolves
+with a majority vote.</p>
+<p>Notice that EKC was requested but not run. The default
+pairwise-complete correlations use different numbers of cases for
+different item pairs (because of the missing values in <code>a2</code>
+and <code>b3</code>), and EKC needs one common sample size.
+<code>nomologR</code> reports that reason instead of silently
+substituting another criterion. Choosing
+<code>missing = "complete"</code> would make EKC available, at the cost
+of analyzing only the cases with no missing items — a trade-off for the
+researcher to make and record.</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fac</span>, type <span class="op">=</span> <span class="st">"scree"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="exploratory-workflow_files/figure-html/scree-plot-1.png" class="r-plt" alt="" width="672"></p>
+<div class="section level3">
+<h3 id="historical-note-eigenvalues-greater-than-one">Historical note: eigenvalues greater than one<a class="anchor" aria-label="anchor" href="#historical-note-eigenvalues-greater-than-one"></a>
+</h3>
+<p>For decades, many researchers retained every component with an
+eigenvalue greater than one (Guttman, 1954; Kaiser, 1960), often as part
+of the “Little Jiffy” routine of principal components, eigenvalues
+greater than one, and varimax rotation. Simulation research has shown
+that this rule frequently retains too many dimensions, and parallel
+analysis (Horn, 1965) is now preferred. <code>nomologR</code> can
+display the legacy rule with <code>criterion_set = "all"</code>, labeled
+as historical context and excluded from the synthesis, so that learners
+can recognize it in published work without relying on it.</p>
+</div>
 </div>
 <div class="section level2">
-<h2 id="step-3-hand-the-retention-result-into-efa">Step 3: hand the retention result into EFA<a class="anchor" aria-label="anchor" href="#step-3-hand-the-retention-result-into-efa"></a>
+<h2 id="step-3-hand-the-retention-evidence-into-efa">Step 3: hand the retention evidence into EFA<a class="anchor" aria-label="anchor" href="#step-3-hand-the-retention-evidence-into-efa"></a>
 </h2>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">efa</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_efa.html">nomo_efa</a></span><span class="op">(</span></span>
-<span>  <span class="va">dat</span>,</span>
+<span>  <span class="va">nomo_demo_continuous</span>,</span>
 <span>  factors <span class="op">=</span> <span class="va">fac</span></span>
 <span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">efa</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## nomologR exploratory factor analysis</span></span>
-<span><span class="co">## 400 cases | 8 items | 2 factors (from nomo_factors())</span></span>
-<span><span class="co">## Correlation: pearson | Extraction: minres | Rotation: oblimin</span></span>
-<span><span class="co">## Supporting adequacy: KMO = 0.844 | Bartlett chi-square(28) = 1619.58, p &lt; .001</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## Item-level structural review</span></span>
-<span><span class="co">## <span style="color: #949494;"># A tibble: 8 × 7</span></span></span>
-<span><span class="co">##   item  primary_factor primary_loading secondary_factor secondary_loading</span></span>
-<span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">1</span> a1    F1                       0.804 F2                        0.044<span style="text-decoration: underline;">5</span>  </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">2</span> a2    F1                       0.806 F2                       -<span style="color: #BB0000;">0.015</span><span style="color: #BB0000; text-decoration: underline;">6</span>  </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">3</span> a3    F1                       0.780 F2                       -<span style="color: #BB0000;">0.001</span><span style="color: #BB0000; text-decoration: underline;">73</span> </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">4</span> a4    F1                       0.814 F2                       -<span style="color: #BB0000;">0.025</span><span style="color: #BB0000; text-decoration: underline;">2</span>  </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">5</span> b1    F2                       0.828 F1                       -<span style="color: #BB0000;">0.005</span><span style="color: #BB0000; text-decoration: underline;">99</span> </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">6</span> b2    F2                       0.782 F1                        0.002<span style="text-decoration: underline;">71</span> </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">7</span> b3    F2                       0.762 F1                        0.004<span style="text-decoration: underline;">91</span> </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">8</span> b4    F2                       0.806 F1                        0.000<span style="text-decoration: underline;">922</span></span></span>
-<span><span class="co">## <span style="color: #949494;"># ℹ 2 more variables: communality &lt;dbl&gt;, attention &lt;chr&gt;</span></span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## No configured numeric EFA review flags were triggered.</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## Factor correlations</span></span>
-<span><span class="co">##       F1    F2</span></span>
-<span><span class="co">## F1 1.000 0.316</span></span>
-<span><span class="co">## F2 0.316 1.000</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## Off-diagonal RMSR: 0.016</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## Largest localized residuals</span></span>
-<span><span class="co">## <span style="color: #949494;"># A tibble: 5 × 4</span></span></span>
-<span><span class="co">##   item1 item2 residual abs_residual</span></span>
-<span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">1</span> a3    b2      0.040<span style="text-decoration: underline;">1</span>       0.040<span style="text-decoration: underline;">1</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">2</span> a1    b2     -<span style="color: #BB0000;">0.032</span><span style="color: #BB0000; text-decoration: underline;">4</span>       0.032<span style="text-decoration: underline;">4</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">3</span> a2    b1     -<span style="color: #BB0000;">0.024</span><span style="color: #BB0000; text-decoration: underline;">1</span>       0.024<span style="text-decoration: underline;">1</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">4</span> a2    b4      0.022<span style="text-decoration: underline;">3</span>       0.022<span style="text-decoration: underline;">3</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">5</span> a3    b4     -<span style="color: #BB0000;">0.021</span><span style="color: #BB0000; text-decoration: underline;">5</span>       0.021<span style="text-decoration: underline;">5</span></span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## Interpretation rule: numerical references trigger inspection, not automatic deletion or hidden refitting.</span></span></code></pre>
-<p>Passing the <code>nomo_factors</code> object carries forward the
-selected item set, modeling types, correlation model, and missing-data
-strategy. The primary parallel-analysis count becomes the
-<strong>requested</strong> EFA factor count. If M2 identified
-neighboring plausible solutions, <code><a href="../reference/nomo_efa.html">nomo_efa()</a></code> records that
-context and recommends comparing those solutions rather than treating
-the handoff as proof.</p>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">efa</span><span class="op">)</span></span>
+<span><span class="co">#&gt; nomologR exploratory factor analysis</span></span>
+<span><span class="co">#&gt; 500 cases | 10 items | 2 factors (from nomo_factors())</span></span>
+<span><span class="co">#&gt; Correlation: pearson | Extraction: minres | Rotation: oblimin</span></span>
+<span><span class="co">#&gt; Supporting adequacy: KMO = 0.874</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Item-level structural review</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 10 × 7</span></span></span>
+<span><span class="co">#&gt;    item  primary_factor primary_loading secondary_factor secondary_loading</span></span>
+<span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> a1    F1                       0.808 F2                        -<span style="color: #BB0000;">0.044</span><span style="color: #BB0000; text-decoration: underline;">4</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> a2    F1                       0.709 F2                         0.064<span style="text-decoration: underline;">3</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> a3    F1                       0.667 F2                         0.015<span style="text-decoration: underline;">3</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> a4    F1                       0.770 F2                        -<span style="color: #BB0000;">0.037</span><span style="color: #BB0000; text-decoration: underline;">7</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> a5    F1                       0.414 F2                         0.335  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> b1    F2                       0.783 F1                         0.014<span style="text-decoration: underline;">1</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> b2    F2                       0.693 F1                        -<span style="color: #BB0000;">0.020</span><span style="color: #BB0000; text-decoration: underline;">0</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> b3    F2                       0.783 F1                        -<span style="color: #BB0000;">0.006</span><span style="color: #BB0000; text-decoration: underline;">73</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> b4    F2                       0.637 F1                        -<span style="color: #BB0000;">0.011</span><span style="color: #BB0000; text-decoration: underline;">8</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> b5    F2                       0.332 F1                         0.028<span style="text-decoration: underline;">6</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 2 more variables: communality &lt;dbl&gt;, attention &lt;chr&gt;</span></span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Items requiring review</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 3 × 3</span></span></span>
+<span><span class="co">#&gt;   item  attention    </span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> a5    REVIEW       </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> b4    REVIEW       </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> b5    STRONG REVIEW</span></span>
+<span><span class="co">#&gt;   explanation                                                                   </span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                                                                         </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> secondary loading |0.34| meets/exceeds the 0.30 cross-loading reference       </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> communality 0.40 is below the 0.40 teaching reference                         </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> primary loading |0.33| is below the 0.40 teaching reference; communality 0.12…</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Factor correlations</span></span>
+<span><span class="co">#&gt;       F1    F2</span></span>
+<span><span class="co">#&gt; F1 1.000 0.439</span></span>
+<span><span class="co">#&gt; F2 0.439 1.000</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Off-diagonal RMSR: 0.018</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Largest localized residuals</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 5 × 4</span></span></span>
+<span><span class="co">#&gt;   item1 item2 residual abs_residual</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> b4    b5      0.042<span style="text-decoration: underline;">5</span>       0.042<span style="text-decoration: underline;">5</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> a5    b5     -<span style="color: #BB0000;">0.038</span><span style="color: #BB0000; text-decoration: underline;">8</span>       0.038<span style="text-decoration: underline;">8</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> a4    b5      0.038<span style="text-decoration: underline;">0</span>       0.038<span style="text-decoration: underline;">0</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> a2    a5      0.029<span style="text-decoration: underline;">5</span>       0.029<span style="text-decoration: underline;">5</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> b2    b5     -<span style="color: #BB0000;">0.027</span><span style="color: #BB0000; text-decoration: underline;">7</span>       0.027<span style="text-decoration: underline;">7</span></span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Interpretation rule: numerical references trigger inspection, not automatic deletion or hidden refitting.</span></span></code></pre></div>
+<p>Passing the <code>nomo_factors</code> object carries forward the item
+set, modeling types, correlation model, and missing-data strategy. The
+primary parallel-analysis count becomes the <strong>requested</strong>
+EFA factor count. If the retention evidence had identified neighboring
+plausible solutions, <code><a href="../reference/nomo_efa.html">nomo_efa()</a></code> would record that context
+and recommend comparing them rather than treating the handoff as
+proof.</p>
 </div>
 <div class="section level2">
 <h2 id="read-the-item-table-as-evidence-not-a-deletion-list">Read the item table as evidence, not a deletion list<a class="anchor" aria-label="anchor" href="#read-the-item-table-as-evidence-not-a-deletion-list"></a>
 </h2>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">efa</span><span class="op">$</span><span class="va">item_summary</span></span></code></pre></div>
-<pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 8 × 14</span></span></span>
-<span><span class="co">##   item  primary_factor primary_loading secondary_factor secondary_loading</span></span>
-<span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">1</span> a1    F1                       0.804 F2                        0.044<span style="text-decoration: underline;">5</span>  </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">2</span> a2    F1                       0.806 F2                       -<span style="color: #BB0000;">0.015</span><span style="color: #BB0000; text-decoration: underline;">6</span>  </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">3</span> a3    F1                       0.780 F2                       -<span style="color: #BB0000;">0.001</span><span style="color: #BB0000; text-decoration: underline;">73</span> </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">4</span> a4    F1                       0.814 F2                       -<span style="color: #BB0000;">0.025</span><span style="color: #BB0000; text-decoration: underline;">2</span>  </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">5</span> b1    F2                       0.828 F1                       -<span style="color: #BB0000;">0.005</span><span style="color: #BB0000; text-decoration: underline;">99</span> </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">6</span> b2    F2                       0.782 F1                        0.002<span style="text-decoration: underline;">71</span> </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">7</span> b3    F2                       0.762 F1                        0.004<span style="text-decoration: underline;">91</span> </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">8</span> b4    F2                       0.806 F1                        0.000<span style="text-decoration: underline;">922</span></span></span>
-<span><span class="co">## <span style="color: #949494;"># ℹ 9 more variables: loading_gap &lt;dbl&gt;, communality &lt;dbl&gt;, uniqueness &lt;dbl&gt;,</span></span></span>
-<span><span class="co">## <span style="color: #949494;">#   complexity &lt;dbl&gt;, weak_primary &lt;lgl&gt;, cross_loading &lt;lgl&gt;,</span></span></span>
-<span><span class="co">## <span style="color: #949494;">#   low_communality &lt;lgl&gt;, attention &lt;chr&gt;, explanation &lt;chr&gt;</span></span></span></code></pre>
-<p>The item table reports:</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">item_view</span> <span class="op">&lt;-</span> <span class="va">efa</span><span class="op">$</span><span class="va">item_summary</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>  <span class="st">"item"</span>, <span class="st">"primary_factor"</span>, <span class="st">"primary_loading"</span>, <span class="st">"secondary_loading"</span>,</span>
+<span>  <span class="st">"communality"</span>, <span class="st">"attention"</span></span>
+<span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="va">item_view</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 10 × 6</span></span></span>
+<span><span class="co">#&gt;    item  primary_factor primary_loading secondary_loading communality attention </span></span>
+<span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> a1    F1                       0.808          -<span style="color: #BB0000;">0.044</span><span style="color: #BB0000; text-decoration: underline;">4</span>        0.624 KEEP      </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> a2    F1                       0.709           0.064<span style="text-decoration: underline;">3</span>        0.547 KEEP      </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> a3    F1                       0.667           0.015<span style="text-decoration: underline;">3</span>        0.454 KEEP      </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> a4    F1                       0.770          -<span style="color: #BB0000;">0.037</span><span style="color: #BB0000; text-decoration: underline;">7</span>        0.569 KEEP      </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> a5    F1                       0.414           0.335         0.406 REVIEW    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> b1    F2                       0.783           0.014<span style="text-decoration: underline;">1</span>        0.623 KEEP      </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> b2    F2                       0.693          -<span style="color: #BB0000;">0.020</span><span style="color: #BB0000; text-decoration: underline;">0</span>        0.469 KEEP      </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> b3    F2                       0.783          -<span style="color: #BB0000;">0.006</span><span style="color: #BB0000; text-decoration: underline;">73</span>       0.608 KEEP      </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> b4    F2                       0.637          -<span style="color: #BB0000;">0.011</span><span style="color: #BB0000; text-decoration: underline;">8</span>        0.400 REVIEW    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> b5    F2                       0.332           0.028<span style="text-decoration: underline;">6</span>        0.120 STRONG RE…</span></span></code></pre></div>
+<p>Compare the table with the known population model:</p>
 <ul>
-<li>the largest pattern loading;</li>
-<li>the second-largest pattern loading;</li>
-<li>the gap between them;</li>
-<li>communality and uniqueness;</li>
-<li>loading complexity;</li>
 <li>
-<code>KEEP</code>, <code>REVIEW</code>, or
-<code>STRONG REVIEW</code>;</li>
-<li>a plain-language explanation for every numerical flag.</li>
+<code>a5</code> receives <strong>REVIEW</strong>. Its secondary
+loading of 0.34 reaches the cross-loading reference, exactly the feature
+built into the data.</li>
+<li>
+<code>b5</code> receives <strong>STRONG REVIEW</strong>. Its primary
+loading of 0.33 and communality of 0.12 reflect the weak population
+loading.</li>
+<li>
+<code>b4</code> receives <strong>REVIEW</strong> even though its
+population loading is .70. Its sample communality of 0.400 sits
+essentially at the .40 reference. This is sampling variability around a
+teaching reference — a reminder that references are prompts, not
+cliffs.</li>
 </ul>
-<p><code>KEEP</code> means that no configured numerical
-teaching-reference flag fired. It does <strong>not</strong> mean that
-theory, wording, content coverage, redundancy, or external validity
-evidence has approved the item.</p>
+<p><code>KEEP</code> means that no configured numerical teaching
+reference fired. It does <strong>not</strong> mean that theory, wording,
+content coverage, redundancy, or external validity evidence has approved
+the item. Likewise, <code>REVIEW</code> does not mean “delete.”
+Defensible options for <code>a5</code> include retaining it because its
+content is essential, revising its wording, or evaluating a model
+without it — and recording the rationale either way.</p>
 </div>
 <div class="section level2">
 <h2 id="pattern-versus-structure-matrices">Pattern versus structure matrices<a class="anchor" aria-label="anchor" href="#pattern-versus-structure-matrices"></a>
@@ -313,36 +404,38 @@ evidence has approved the item.</p>
 <p>With oblique rotation, the pattern matrix contains regression-like
 factor coefficients and is the primary matrix for interpreting which
 indicators define which factors. The structure matrix contains
-item-factor correlations and also reflects correlations among the
+item–factor correlations and also reflects the correlation between
 factors.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">efa</span><span class="op">$</span><span class="va">pattern_matrix</span>, <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##       F1    F2</span></span>
-<span><span class="co">## a1  0.80  0.04</span></span>
-<span><span class="co">## a2  0.81 -0.02</span></span>
-<span><span class="co">## a3  0.78  0.00</span></span>
-<span><span class="co">## a4  0.81 -0.03</span></span>
-<span><span class="co">## b1 -0.01  0.83</span></span>
-<span><span class="co">## b2  0.00  0.78</span></span>
-<span><span class="co">## b3  0.00  0.76</span></span>
-<span><span class="co">## b4  0.00  0.81</span></span></code></pre>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">efa</span><span class="op">$</span><span class="va">structure_matrix</span>, <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##      F1   F2</span></span>
-<span><span class="co">## a1 0.82 0.30</span></span>
-<span><span class="co">## a2 0.80 0.24</span></span>
-<span><span class="co">## a3 0.78 0.24</span></span>
-<span><span class="co">## a4 0.81 0.23</span></span>
-<span><span class="co">## b1 0.26 0.83</span></span>
-<span><span class="co">## b2 0.25 0.78</span></span>
-<span><span class="co">## b3 0.25 0.76</span></span>
-<span><span class="co">## b4 0.26 0.81</span></span></code></pre>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">efa</span><span class="op">$</span><span class="va">factor_correlations</span>, <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##      F1   F2</span></span>
-<span><span class="co">## F1 1.00 0.32</span></span>
-<span><span class="co">## F2 0.32 1.00</span></span></code></pre>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">efa</span><span class="op">$</span><span class="va">pattern_matrix</span>, <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="co">#&gt;       F1    F2</span></span>
+<span><span class="co">#&gt; a1  0.81 -0.04</span></span>
+<span><span class="co">#&gt; a2  0.71  0.06</span></span>
+<span><span class="co">#&gt; a3  0.67  0.02</span></span>
+<span><span class="co">#&gt; a4  0.77 -0.04</span></span>
+<span><span class="co">#&gt; a5  0.41  0.34</span></span>
+<span><span class="co">#&gt; b1  0.01  0.78</span></span>
+<span><span class="co">#&gt; b2 -0.02  0.69</span></span>
+<span><span class="co">#&gt; b3 -0.01  0.78</span></span>
+<span><span class="co">#&gt; b4 -0.01  0.64</span></span>
+<span><span class="co">#&gt; b5  0.03  0.33</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">efa</span><span class="op">$</span><span class="va">structure_matrix</span>, <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="co">#&gt;      F1   F2</span></span>
+<span><span class="co">#&gt; a1 0.79 0.31</span></span>
+<span><span class="co">#&gt; a2 0.74 0.38</span></span>
+<span><span class="co">#&gt; a3 0.67 0.31</span></span>
+<span><span class="co">#&gt; a4 0.75 0.30</span></span>
+<span><span class="co">#&gt; a5 0.56 0.52</span></span>
+<span><span class="co">#&gt; b1 0.36 0.79</span></span>
+<span><span class="co">#&gt; b2 0.28 0.68</span></span>
+<span><span class="co">#&gt; b3 0.34 0.78</span></span>
+<span><span class="co">#&gt; b4 0.27 0.63</span></span>
+<span><span class="co">#&gt; b5 0.17 0.34</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">efa</span><span class="op">$</span><span class="va">factor_correlations</span>, <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="co">#&gt;      F1   F2</span></span>
+<span><span class="co">#&gt; F1 1.00 0.44</span></span>
+<span><span class="co">#&gt; F2 0.44 1.00</span></span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">efa</span>, type <span class="op">=</span> <span class="st">"pattern"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="exploratory-workflow_files/figure-html/pattern-plot-1.png" class="r-plt" alt="" width="672"></p>
 </div>
@@ -353,25 +446,24 @@ factors.</p>
 unexplained. <code><a href="../reference/nomo_efa.html">nomo_efa()</a></code> therefore returns the reproduced
 correlation matrix, the residual matrix, the off-diagonal RMSR, and
 ranked residual pairs.</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">efa</span><span class="op">$</span><span class="va">rmsr</span></span></code></pre></div>
-<pre><code><span><span class="co">## [1] 0.01605067</span></span></code></pre>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">efa</span><span class="op">$</span><span class="va">residual_pairs</span>, <span class="fl">10</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 10 × 4</span></span></span>
-<span><span class="co">##    item1 item2 residual abs_residual</span></span>
-<span><span class="co">##    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 1</span> a3    b2      0.040<span style="text-decoration: underline;">1</span>       0.040<span style="text-decoration: underline;">1</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 2</span> a1    b2     -<span style="color: #BB0000;">0.032</span><span style="color: #BB0000; text-decoration: underline;">4</span>       0.032<span style="text-decoration: underline;">4</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 3</span> a2    b1     -<span style="color: #BB0000;">0.024</span><span style="color: #BB0000; text-decoration: underline;">1</span>       0.024<span style="text-decoration: underline;">1</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 4</span> a2    b4      0.022<span style="text-decoration: underline;">3</span>       0.022<span style="text-decoration: underline;">3</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 5</span> a3    b4     -<span style="color: #BB0000;">0.021</span><span style="color: #BB0000; text-decoration: underline;">5</span>       0.021<span style="text-decoration: underline;">5</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 6</span> a4    b1      0.020<span style="text-decoration: underline;">2</span>       0.020<span style="text-decoration: underline;">2</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 7</span> a4    b4     -<span style="color: #BB0000;">0.018</span><span style="color: #BB0000; text-decoration: underline;">5</span>       0.018<span style="text-decoration: underline;">5</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 8</span> a1    b4      0.017<span style="text-decoration: underline;">4</span>       0.017<span style="text-decoration: underline;">4</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 9</span> b3    b4     -<span style="color: #BB0000;">0.015</span><span style="color: #BB0000; text-decoration: underline;">6</span>       0.015<span style="text-decoration: underline;">6</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">10</span> a1    b1      0.014<span style="text-decoration: underline;">4</span>       0.014<span style="text-decoration: underline;">4</span></span></span></code></pre>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">efa</span><span class="op">$</span><span class="va">rmsr</span></span>
+<span><span class="co">#&gt; [1] 0.01768766</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">efa</span><span class="op">$</span><span class="va">residual_pairs</span>, <span class="fl">10</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 10 × 4</span></span></span>
+<span><span class="co">#&gt;    item1 item2 residual abs_residual</span></span>
+<span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> b4    b5      0.042<span style="text-decoration: underline;">5</span>       0.042<span style="text-decoration: underline;">5</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> a5    b5     -<span style="color: #BB0000;">0.038</span><span style="color: #BB0000; text-decoration: underline;">8</span>       0.038<span style="text-decoration: underline;">8</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> a4    b5      0.038<span style="text-decoration: underline;">0</span>       0.038<span style="text-decoration: underline;">0</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> a2    a5      0.029<span style="text-decoration: underline;">5</span>       0.029<span style="text-decoration: underline;">5</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> b2    b5     -<span style="color: #BB0000;">0.027</span><span style="color: #BB0000; text-decoration: underline;">7</span>       0.027<span style="text-decoration: underline;">7</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> a3    b5     -<span style="color: #BB0000;">0.027</span><span style="color: #BB0000; text-decoration: underline;">2</span>       0.027<span style="text-decoration: underline;">2</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> a3    a4      0.026<span style="text-decoration: underline;">8</span>       0.026<span style="text-decoration: underline;">8</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> a4    b1      0.026<span style="text-decoration: underline;">4</span>       0.026<span style="text-decoration: underline;">4</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> a3    b4      0.024<span style="text-decoration: underline;">1</span>       0.024<span style="text-decoration: underline;">1</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> a4    b3     -<span style="color: #BB0000;">0.020</span><span style="color: #BB0000; text-decoration: underline;">6</span>       0.020<span style="text-decoration: underline;">6</span></span></span></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">efa</span>, type <span class="op">=</span> <span class="st">"residuals"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="exploratory-workflow_files/figure-html/residual-plot-1.png" class="r-plt" alt="" width="672"></p>
 <p>Residuals are diagnostic evidence. <code>nomologR</code> does not
@@ -383,32 +475,69 @@ count, or remove indicators behind the user’s back.</p>
 </h2>
 <p>The default is common-factor MINRES extraction with oblimin rotation.
 Researchers may choose another common-factor extraction or rotation, but
-those choices remain visible in the result and decision log. For
-example:</p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+those choices remain visible in the result and decision log.</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">efa_varimax</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_efa.html">nomo_efa</a></span><span class="op">(</span></span>
-<span>  <span class="va">dat</span>,</span>
+<span>  <span class="va">nomo_demo_continuous</span>,</span>
 <span>  factors <span class="op">=</span> <span class="fl">2</span>,</span>
 <span>  rotation <span class="op">=</span> <span class="st">"varimax"</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<p>An orthogonal choice is permitted rather than prohibited, but the
-output asks the researcher to justify the assumption that the factors
-should be uncorrelated.</p>
-<p>For numeric Likert items, declare the intended modeling level rather
-than assuming that integer storage proves continuous or ordinal
-measurement:</p>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">types</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
-<span>  q1 <span class="op">=</span> <span class="st">"ordinal"</span>,</span>
-<span>  q2 <span class="op">=</span> <span class="st">"ordinal"</span>,</span>
-<span>  q3 <span class="op">=</span> <span class="st">"ordinal"</span>,</span>
-<span>  q4 <span class="op">=</span> <span class="st">"ordinal"</span></span>
 <span><span class="op">)</span></span>
+<span><span class="va">efa_varimax</span><span class="op">$</span><span class="va">item_summary</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"item"</span>, <span class="st">"primary_loading"</span>, <span class="st">"secondary_loading"</span>, <span class="st">"attention"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 10 × 4</span></span></span>
+<span><span class="co">#&gt;    item  primary_loading secondary_loading attention    </span></span>
+<span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> a1              0.777             0.139 KEEP         </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> a2              0.705             0.223 KEEP         </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> a3              0.653             0.166 KEEP         </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> a4              0.742             0.137 KEEP         </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> a5              0.479             0.420 REVIEW       </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> b1              0.766             0.190 KEEP         </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> b2              0.671             0.136 KEEP         </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> b3              0.761             0.169 KEEP         </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> b4              0.618             0.132 REVIEW       </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> b5              0.330             0.103 STRONG REVIEW</span></span></code></pre></div>
+<p>An orthogonal rotation is permitted rather than prohibited, but it
+forces the factors to be uncorrelated even though A and B correlate .40
+in the population. The decision log asks the researcher to justify that
+assumption.</p>
+</div>
+<div class="section level2">
+<h2 id="ordered-response-categories">Ordered response categories<a class="anchor" aria-label="anchor" href="#ordered-response-categories"></a>
+</h2>
+<p>Many rating scales produce ordered categories rather than continuous
+scores. <code>nomo_demo_ordinal</code> stores the same latent responses
+as five-category ordered factors, so <code>nomologR</code> uses
+polychoric correlations automatically:</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">fac_ord</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_factors.html">nomo_factors</a></span><span class="op">(</span><span class="va">nomo_demo_ordinal</span>, seed <span class="op">=</span> <span class="fl">2026</span><span class="op">)</span></span>
+<span><span class="va">fac_ord</span><span class="op">$</span><span class="va">correlation</span></span>
+<span><span class="co">#&gt; [1] "polychoric"</span></span>
 <span></span>
-<span><span class="va">efa_ord</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_efa.html">nomo_efa</a></span><span class="op">(</span></span>
-<span>  <span class="va">dat_likert</span>,</span>
-<span>  factors <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>  types <span class="op">=</span> <span class="va">types</span></span>
+<span><span class="va">efa_ord</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_efa.html">nomo_efa</a></span><span class="op">(</span><span class="va">nomo_demo_ordinal</span>, factors <span class="op">=</span> <span class="va">fac_ord</span><span class="op">)</span></span>
+<span><span class="va">efa_ord</span><span class="op">$</span><span class="va">item_summary</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"item"</span>, <span class="st">"primary_loading"</span>, <span class="st">"secondary_loading"</span>, <span class="st">"attention"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 10 × 4</span></span></span>
+<span><span class="co">#&gt;    item  primary_loading secondary_loading attention    </span></span>
+<span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> a1              0.792          -<span style="color: #BB0000;">0.025</span><span style="color: #BB0000; text-decoration: underline;">7</span>  KEEP         </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> a2              0.695           0.043<span style="text-decoration: underline;">7</span>  KEEP         </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> a3              0.650           0.025<span style="text-decoration: underline;">8</span>  KEEP         </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> a4              0.768          -<span style="color: #BB0000;">0.053</span><span style="color: #BB0000; text-decoration: underline;">5</span>  KEEP         </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> a5              0.433           0.307   REVIEW       </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> b1              0.765           0.003<span style="text-decoration: underline;">70</span> KEEP         </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> b2              0.650          -<span style="color: #BB0000;">0.007</span><span style="color: #BB0000; text-decoration: underline;">01</span> KEEP         </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> b3              0.740           0.016<span style="text-decoration: underline;">7</span>  KEEP         </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> b4              0.658          -<span style="color: #BB0000;">0.027</span><span style="color: #BB0000; text-decoration: underline;">9</span>  KEEP         </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> b5              0.359          -<span style="color: #BB0000;">0.028</span><span style="color: #BB0000; text-decoration: underline;">3</span>  STRONG REVIEW</span></span></code></pre></div>
+<p>When Likert-type responses are stored as integers instead of ordered
+factors, integer storage alone does not tell <code>nomologR</code>
+whether the researcher intends a continuous or ordinal model. Declare
+the modeling level explicitly. This chunk only illustrates the syntax,
+because the teaching data already store ordered factors:</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">efa_declared</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_efa.html">nomo_efa</a></span><span class="op">(</span></span>
+<span>  <span class="va">my_likert_items</span>,</span>
+<span>  factors <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>  types <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>q1 <span class="op">=</span> <span class="st">"ordinal"</span>, q2 <span class="op">=</span> <span class="st">"ordinal"</span>, q3 <span class="op">=</span> <span class="st">"ordinal"</span>, q4 <span class="op">=</span> <span class="st">"ordinal"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
@@ -417,13 +546,22 @@ measurement:</p>
 <p>EFA contributes exploratory evidence about latent structure. A
 defensible measurement workflow still requires theoretical
 interpretation and, where feasible, confirmation on fresh or holdout
-data. The next <code>nomologR</code> milestone is confirmatory factor
-analysis.</p>
-<p>Methodological treatments that motivate the package’s EFA philosophy
-include Fabrigar, Wegener, MacCallum, and Strahan (1999), Watkins
-(2018), and later reviews emphasizing common-factor models,
-evidence-based retention, and oblique rotation when factor correlations
-are plausible.</p>
+data. Continue with <a href="measurement-model-evidence.html">From CFA
+to a defensible measurement model</a>.</p>
+</div>
+<div class="section level2">
+<h2 id="research-basis">Research basis<a class="anchor" aria-label="anchor" href="#research-basis"></a>
+</h2>
+<p>The package’s EFA philosophy follows reviews that documented
+problematic historical defaults — principal components presented as
+factor analysis, eigenvalues greater than one, orthogonal rotation, and
+mechanical deletion — and recommended common-factor models,
+evidence-based retention, and oblique rotation when factors may
+correlate (Fabrigar et al., 1999; Conway &amp; Huffcutt, 2003; Browne,
+2001; Watkins, 2018). Parallel analysis originates with Horn (1965); the
+eigenvalue-greater-than-one rule with Guttman (1954) and Kaiser (1960).
+See the <a href="research-basis.html">research basis</a> article for
+full references and the broader historical-to-contemporary map.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

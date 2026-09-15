@@ -29,17 +29,22 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
+<li class="nav-item"><a class="nav-link" href="../articles/nomologR.html">Get started</a></li>
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/exploratory-workflow.html">From item audit to exploratory structure</a></li>
-    <li><a class="dropdown-item" href="../articles/guided-workflow.html">Guided workflow with nomo_run()</a></li>
-    <li><a class="dropdown-item" href="../articles/measurement-invariance.html">Measurement Invariance with nomologR</a></li>
+<li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Learning path</h6></li>
+    <li><a class="dropdown-item" href="../articles/exploratory-workflow.html">From item audit to exploratory structure</a></li>
     <li><a class="dropdown-item" href="../articles/measurement-model-evidence.html">From CFA to a defensible measurement model</a></li>
+    <li><a class="dropdown-item" href="../articles/measurement-invariance.html">Measurement Invariance with nomologR</a></li>
     <li><a class="dropdown-item" href="../articles/nomological-network.html">Theory-Specified Nomological Networks with nomologR</a></li>
-    <li><a class="dropdown-item" href="../articles/overview.html">nomologR: measurement first, theory next</a></li>
+    <li><a class="dropdown-item" href="../articles/guided-workflow.html">Guided workflow with nomo_run()</a></li>
     <li><a class="dropdown-item" href="../articles/reproducible-report.html">Archiving a nomologR workflow with nomo_report()</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Research basis</h6></li>
+    <li><a class="dropdown-item" href="../articles/research-basis.html">Research basis: from historical to contemporary practice</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -78,32 +83,80 @@ preserving the package’s central rule:</p>
 <blockquote>
 <p>Evidence may flow automatically. Consequential decisions do not.</p>
 </blockquote>
+<p>This walkthrough uses <code>nomo_demo_network</code>, a simulated
+validation study with three constructs (Agency, Persistence, and Social
+desirability), an observed Performance outcome, and two administration
+groups. See <code><a href="../reference/nomo_demo_network.html">?nomo_demo_network</a></code>.</p>
 <div class="section level2">
 <h2 id="a-fresh-run">A fresh run<a class="anchor" aria-label="anchor" href="#a-fresh-run"></a>
 </h2>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">run</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_run.html">nomo_run</a></span><span class="op">(</span></span>
-<span>  data <span class="op">=</span> <span class="va">dat</span>,</span>
-<span>  scales <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>    WellBeing <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"w1"</span>, <span class="st">"w2"</span>, <span class="st">"w3"</span>, <span class="st">"w4"</span><span class="op">)</span></span>
-<span>  <span class="op">)</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<p>The initial run audits the supplied items and computes
-factor-retention evidence. It then pauses before EFA.</p>
-<p>The factor count is not silently copied from parallel analysis.</p>
+<code class="sourceCode R"><span><span class="va">scales</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>  Agency <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ag1"</span>, <span class="st">"ag2"</span>, <span class="st">"ag3"</span>, <span class="st">"ag4"</span><span class="op">)</span>,</span>
+<span>  Persistence <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"pe1"</span>, <span class="st">"pe2"</span>, <span class="st">"pe3"</span>, <span class="st">"pe4"</span><span class="op">)</span>,</span>
+<span>  SocialDesirability <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"sd1"</span>, <span class="st">"sd2"</span>, <span class="st">"sd3"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">run</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_run.html">nomo_run</a></span><span class="op">(</span></span>
+<span>  data <span class="op">=</span> <span class="va">nomo_demo_network</span>,</span>
+<span>  scales <span class="op">=</span> <span class="va">scales</span>,</span>
+<span>  settings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>factors <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>seed <span class="op">=</span> <span class="fl">2026</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">run</span></span>
+<span><span class="co">#&gt; &lt;nomo_run&gt;</span></span>
+<span><span class="co">#&gt; Guided nomologR workflow | teaching mode</span></span>
+<span><span class="co">#&gt; Status: PAUSED</span></span>
+<span><span class="co">#&gt; Sample design: same_sample | Exploratory N = 800 | Confirmatory N = 800</span></span>
+<span><span class="co">#&gt; Completed stages: screen -&gt; factors</span></span>
+<span><span class="co">#&gt; Next stage: efa</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Researcher decision required</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; [efa / Agency]</span></span>
+<span><span class="co">#&gt; Observation: Parallel analysis currently suggests 1 factor; the retained plausible set is 1. The pipeline has not adopted a factor count.</span></span>
+<span><span class="co">#&gt; Reason: The EFA factor count changes the fitted model. Retention evidence can inform that choice, but it does not authorize the pipeline to choose for the researcher.</span></span>
+<span><span class="co">#&gt; Options: Inspect the full `nomo_factors` result, compare plausible neighboring solutions when appropriate, and supply a positive integer for this scale.</span></span>
+<span><span class="co">#&gt; Consequence: No EFA is fitted until an explicit researcher factor-count decision is supplied.</span></span>
+<span><span class="co">#&gt; Example: decisions = list(factor_count = c(Agency = &lt;integer&gt;, Persistence = &lt;integer&gt;, SocialDesirability = &lt;integer&gt;))</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; [efa / Persistence]</span></span>
+<span><span class="co">#&gt; Observation: Parallel analysis currently suggests 1 factor; the retained plausible set is 1. The pipeline has not adopted a factor count.</span></span>
+<span><span class="co">#&gt; Reason: The EFA factor count changes the fitted model. Retention evidence can inform that choice, but it does not authorize the pipeline to choose for the researcher.</span></span>
+<span><span class="co">#&gt; Options: Inspect the full `nomo_factors` result, compare plausible neighboring solutions when appropriate, and supply a positive integer for this scale.</span></span>
+<span><span class="co">#&gt; Consequence: No EFA is fitted until an explicit researcher factor-count decision is supplied.</span></span>
+<span><span class="co">#&gt; Example: decisions = list(factor_count = c(Agency = &lt;integer&gt;, Persistence = &lt;integer&gt;, SocialDesirability = &lt;integer&gt;))</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; [efa / SocialDesirability]</span></span>
+<span><span class="co">#&gt; Observation: Parallel analysis currently suggests 1 factor; the retained plausible set is 1. The pipeline has not adopted a factor count.</span></span>
+<span><span class="co">#&gt; Reason: The EFA factor count changes the fitted model. Retention evidence can inform that choice, but it does not authorize the pipeline to choose for the researcher.</span></span>
+<span><span class="co">#&gt; Options: Inspect the full `nomo_factors` result, compare plausible neighboring solutions when appropriate, and supply a positive integer for this scale.</span></span>
+<span><span class="co">#&gt; Consequence: No EFA is fitted until an explicit researcher factor-count decision is supplied.</span></span>
+<span><span class="co">#&gt; Example: decisions = list(factor_count = c(Agency = &lt;integer&gt;, Persistence = &lt;integer&gt;, SocialDesirability = &lt;integer&gt;))</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; No later stage has been run automatically while this consequential decision is unresolved.</span></span></code></pre></div>
+<p>The initial run audits each scale’s items and computes
+factor-retention evidence. It then pauses before EFA. The factor count
+is not silently copied from parallel analysis.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">run</span>, <span class="st">"requests"</span><span class="op">)</span></span></code></pre></div>
-<p>The decision request separates:</p>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">run</span>, <span class="st">"requests"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 3 × 8</span></span></span>
+<span><span class="co">#&gt;   id                  stage scope observation reason options consequence example</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>               <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> factor_count:Agency efa   Agen… Parallel a… The E… Inspec… No EFA is … decisi…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> factor_count:Persi… efa   Pers… Parallel a… The E… Inspec… No EFA is … decisi…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> factor_count:Socia… efa   Soci… Parallel a… The E… Inspec… No EFA is … decisi…</span></span></code></pre></div>
+<p>Each decision request separates:</p>
 <ul>
 <li>
-<strong>Observation</strong> - what the evidence shows;</li>
+<strong>Observation</strong> — what the evidence shows;</li>
 <li>
-<strong>Reason</strong> - why a researcher decision is
+<strong>Reason</strong> — why a researcher decision is
 required;</li>
 <li>
-<strong>Options</strong> - what can defensibly happen next;</li>
+<strong>Options</strong> — what can defensibly happen next;</li>
 <li>
-<strong>Consequence</strong> - what the choice changes.</li>
+<strong>Consequence</strong> — what the choice changes.</li>
 </ul>
 </div>
 <div class="section level2">
@@ -114,15 +167,37 @@ required;</li>
 <span>  resume <span class="op">=</span> <span class="va">run</span>,</span>
 <span>  decisions <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    factor_count <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>      value <span class="op">=</span> <span class="fl">1L</span>,</span>
-<span>      rationale <span class="op">=</span> <span class="st">"Retention evidence and theory support one exploratory factor."</span></span>
+<span>      value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>Agency <span class="op">=</span> <span class="fl">1</span>, Persistence <span class="op">=</span> <span class="fl">1</span>, SocialDesirability <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span>
+<span>      rationale <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span></span>
+<span>        <span class="st">"Each scale was written to measure one construct, and the"</span>,</span>
+<span>        <span class="st">"retention evidence was reviewed before choosing one factor."</span></span>
+<span>      <span class="op">)</span></span>
 <span>    <span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">run</span></span>
+<span><span class="co">#&gt; &lt;nomo_run&gt;</span></span>
+<span><span class="co">#&gt; Guided nomologR workflow | teaching mode</span></span>
+<span><span class="co">#&gt; Status: PAUSED</span></span>
+<span><span class="co">#&gt; Sample design: same_sample | Exploratory N = 800 | Confirmatory N = 800</span></span>
+<span><span class="co">#&gt; Completed stages: screen -&gt; factors -&gt; efa</span></span>
+<span><span class="co">#&gt; Next stage: cfa</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Researcher decision required</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; [cfa / measurement_model]</span></span>
+<span><span class="co">#&gt; Observation: EFA has completed for every supplied scale. No confirmatory measurement model has been constructed or fitted.</span></span>
+<span><span class="co">#&gt; Reason: CFA syntax encodes consequential choices about item retention, factor membership, cross-loadings, and correlated residuals; these cannot be chosen silently.</span></span>
+<span><span class="co">#&gt; Options: Inspect the EFA evidence and theory, then supply a prespecified lavaan measurement model (or `nomo_model()` object).</span></span>
+<span><span class="co">#&gt; Consequence: The CFA will use the same sample unless a new workflow is started with a holdout/external design. Same-sample confirmation must remain labeled as such.</span></span>
+<span><span class="co">#&gt; Example: decisions = list(cfa_model = list(value = model, rationale = "Prespecified measurement model"))</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; No later stage has been run automatically while this consequential decision is unresolved.</span></span></code></pre></div>
 <p>The completed screening and factor-retention objects are reused. EFA
-is fitted using the explicit factor-count decision, with M2
-correlation/modeling context retained.</p>
-<p>The workflow then pauses before CFA model specification.</p>
+is fitted using the explicit factor-count decision, with the retention
+stage’s correlation and modeling context retained. The workflow then
+pauses before CFA model specification.</p>
 </div>
 <div class="section level2">
 <h2 id="confirmatory-model-handoff">Confirmatory model handoff<a class="anchor" aria-label="anchor" href="#confirmatory-model-handoff"></a>
@@ -132,13 +207,34 @@ correlation/modeling context retained.</p>
 <span>  resume <span class="op">=</span> <span class="va">run</span>,</span>
 <span>  decisions <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    cfa_model <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>      value <span class="op">=</span> <span class="st">"WellBeing =~ w1 + w2 + w3 + w4"</span>,</span>
-<span>      rationale <span class="op">=</span> <span class="st">"Prespecified one-factor confirmatory model."</span></span>
+<span>      value <span class="op">=</span> <span class="fu"><a href="../reference/nomo_model.html">nomo_model</a></span><span class="op">(</span><span class="va">scales</span><span class="op">)</span>,</span>
+<span>      rationale <span class="op">=</span> <span class="st">"Prespecified three-construct measurement model."</span></span>
 <span>    <span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">run</span></span>
+<span><span class="co">#&gt; &lt;nomo_run&gt;</span></span>
+<span><span class="co">#&gt; Guided nomologR workflow | teaching mode</span></span>
+<span><span class="co">#&gt; Status: PAUSED</span></span>
+<span><span class="co">#&gt; Sample design: same_sample | Exploratory N = 800 | Confirmatory N = 800</span></span>
+<span><span class="co">#&gt; Completed stages: screen -&gt; factors -&gt; efa -&gt; cfa -&gt; reliability -&gt; validity</span></span>
+<span><span class="co">#&gt; Next stage: measurement_review</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Researcher decision required</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; [measurement_review / measurement_model]</span></span>
+<span><span class="co">#&gt; Observation: CFA converged and reliability/validity evidence was computed. Across these components, 0 concern and 1 review log entries are retained.</span></span>
+<span><span class="co">#&gt; Reason: Invariance and nomological-network interpretations inherit the measurement model. Continuing downstream is therefore a researcher decision, not a fit-index side effect.</span></span>
+<span><span class="co">#&gt; Options: Choose `proceed` to retain this prespecified model for configured downstream branches, or choose `revise` to stop here and start a new workflow with a substantively justified revised model.</span></span>
+<span><span class="co">#&gt; Consequence: Proceeding does not declare the model valid and does not remove any review flags. Revising triggers no automatic parameter freeing, item deletion, or respecification.</span></span>
+<span><span class="co">#&gt; Example: decisions = list(measurement_model = list(value = "proceed", rationale = "Evidence reviewed; model retained for the planned analyses."))</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; No later stage has been run automatically while this consequential decision is unresolved.</span></span></code></pre></div>
 <p><code><a href="../reference/nomo_run.html">nomo_run()</a></code> does not translate the EFA into CFA syntax.
-The researcher owns the confirmatory model.</p>
+The researcher owns the confirmatory model; <code><a href="../reference/nomo_model.html">nomo_model()</a></code>
+simply writes the simple-structure syntax for the scales that were
+already declared.</p>
 <p>Once supplied, the pipeline computes:</p>
 <pre class="text"><code>nomo_cfa()
   |
@@ -152,30 +248,33 @@ The researcher owns the confirmatory model.</p>
 </h2>
 <p>A model can converge and still contain evidence that deserves review.
 Reliability or AVE can look strong while construct separation or local
-CFA evidence remains strained.</p>
-<p>Therefore the pipeline does not automatically carry the model into
-invariance or structural theory tests.</p>
+CFA evidence remains strained. Therefore the pipeline does not
+automatically carry the model into invariance or structural theory
+tests.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">run</span>, <span class="st">"requests"</span><span class="op">)</span></span></code></pre></div>
-<p>The researcher chooses either:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">measurement_model</span> <span class="op">=</span> <span class="st">"proceed"</span></span></code></pre></div>
-<p>or:</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">measurement_model</span> <span class="op">=</span> <span class="st">"revise"</span></span></code></pre></div>
-<p>Choosing <code>revise</code> does not trigger automated
-modification-index search, parameter freeing, or item deletion. The
-current workflow remains an auditable record and the revised analysis
-starts as a new run.</p>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">run</span>, <span class="st">"requests"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 8</span></span></span>
+<span><span class="co">#&gt;   id                stage   scope observation reason options consequence example</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> measurement_model measur… meas… CFA conver… Invar… Choose… Proceeding… <span style="color: #949494;">"</span>decis…</span></span></code></pre></div>
+<p>The researcher chooses either
+<code>measurement_model = "proceed"</code> or
+<code>measurement_model = "revise"</code>. Choosing <code>revise</code>
+does not trigger an automated modification-index search, parameter
+freeing, or item deletion; the current workflow remains an auditable
+record and the revised analysis starts as a new run. Linking a revised
+run to its parent with a formal model comparison is planned (<a href="https://github.com/JUhalt/nomologR/issues/27" class="external-link">#27</a>, <a href="https://github.com/JUhalt/nomologR/issues/28" class="external-link">#28</a>).</p>
 </div>
 <div class="section level2">
 <h2 id="optional-invariance-and-network-branches">Optional invariance and network branches<a class="anchor" aria-label="anchor" href="#optional-invariance-and-network-branches"></a>
 </h2>
 <p>Future-stage settings can be added at a pause without recomputing
 completed stages.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">h</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_hypotheses.html">nomo_hypotheses</a></span><span class="op">(</span></span>
-<span>  <span class="st">"WellBeing -&gt; criterion"</span> <span class="op">=</span> <span class="fu"><a href="../reference/nomo_expectations.html">positive</a></span><span class="op">(</span>min <span class="op">=</span> <span class="fl">.20</span><span class="op">)</span></span>
+<span>  <span class="st">"Agency -&gt; Persistence"</span> <span class="op">=</span> <span class="fu"><a href="../reference/nomo_expectations.html">positive</a></span><span class="op">(</span>min <span class="op">=</span> <span class="fl">.20</span><span class="op">)</span>,</span>
+<span>  <span class="st">"Agency &lt;-&gt; SocialDesirability"</span> <span class="op">=</span> <span class="fu"><a href="../reference/nomo_expectations.html">negligible</a></span><span class="op">(</span>within <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">.15</span>, <span class="fl">.15</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  <span class="st">"Agency -&gt; Performance"</span> <span class="op">=</span> <span class="fu"><a href="../reference/nomo_expectations.html">positive</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">run</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_run.html">nomo_run</a></span><span class="op">(</span></span>
@@ -183,7 +282,7 @@ completed stages.</p>
 <span>  settings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    invariance <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>      group <span class="op">=</span> <span class="st">"group"</span>,</span>
-<span>      levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"configural"</span>, <span class="st">"metric"</span><span class="op">)</span>,</span>
+<span>      levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"configural"</span>, <span class="st">"metric"</span>, <span class="st">"scalar"</span><span class="op">)</span>,</span>
 <span>      localize <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span>    <span class="op">)</span>,</span>
 <span>    network <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
@@ -192,7 +291,7 @@ completed stages.</p>
 <span>  <span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p>Then continue explicitly:</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">run</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_run.html">nomo_run</a></span><span class="op">(</span></span>
 <span>  resume <span class="op">=</span> <span class="va">run</span>,</span>
 <span>  decisions <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
@@ -201,44 +300,152 @@ completed stages.</p>
 <span>      rationale <span class="op">=</span> <span class="st">"Measurement evidence reviewed before planned downstream tests."</span></span>
 <span>    <span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<p>The invariance branch retains diagnostics without automatically
-releasing constraints. The network branch uses explicit hypotheses and
-does not create a single nomological-validity score.</p>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">run</span></span>
+<span><span class="co">#&gt; &lt;nomo_run&gt;</span></span>
+<span><span class="co">#&gt; Guided nomologR workflow | teaching mode</span></span>
+<span><span class="co">#&gt; Status: COMPLETE</span></span>
+<span><span class="co">#&gt; Sample design: same_sample | Exploratory N = 800 | Confirmatory N = 800</span></span>
+<span><span class="co">#&gt; Completed stages: screen -&gt; factors -&gt; efa -&gt; cfa -&gt; reliability -&gt; validity -&gt; invariance -&gt; network</span></span>
+<span><span class="co">#&gt; Next stage: none</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; All requested stages are complete or explicitly marked not requested.</span></span>
+<span><span class="co">#&gt; No hidden item deletion, model respecification, parameter freeing, or validity verdict was performed.</span></span>
+<span><span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">run</span>, <span class="st">"stages"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 8 × 3</span></span></span>
+<span><span class="co">#&gt;   stage       status    detail                                                  </span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                                                   </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> screen      completed Candidate items audited exactly as supplied; no data or…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> factors     completed Factor-retention evidence computed; no factor count was…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> efa         completed EFA fitted using explicit researcher factor-count decis…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> cfa         completed Researcher-specified CFA estimated; the model was not r…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> reliability completed Reliability evidence computed from the retained CFA mod…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> validity    completed Convergent/discriminant evidence computed; no valid/inv…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">7</span> invariance  completed Requested invariance evidence computed; diagnostics did…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">8</span> network     completed Theory-specified network evidence computed without a on…</span></span></code></pre></div>
+<p>The completed component objects remain available for direct
+inspection:</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">run</span><span class="op">$</span><span class="va">results</span><span class="op">$</span><span class="va">invariance</span>, <span class="st">"fit"</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"level"</span>, <span class="st">"cfi"</span>, <span class="st">"rmsea"</span>, <span class="st">"delta_cfi"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 3 × 4</span></span></span>
+<span><span class="co">#&gt;   level        cfi  rmsea delta_cfi</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> configural 0.995 0.020<span style="text-decoration: underline;">5</span>  <span style="color: #BB0000;">NA</span>      </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> metric     0.993 0.023<span style="text-decoration: underline;">3</span>  -<span style="color: #BB0000;">0.001</span><span style="color: #BB0000; text-decoration: underline;">95</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> scalar     0.974 0.044<span style="text-decoration: underline;">2</span>  -<span style="color: #BB0000;">0.019</span><span style="color: #BB0000; text-decoration: underline;">3</span></span></span>
+<span></span>
+<span><span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">run</span><span class="op">$</span><span class="va">results</span><span class="op">$</span><span class="va">network</span>, <span class="st">"hypotheses"</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>  <span class="st">"relation"</span>, <span class="st">"estimate"</span>, <span class="st">"ci_lower"</span>, <span class="st">"ci_upper"</span>, <span class="st">"concordance"</span></span>
+<span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 3 × 5</span></span></span>
+<span><span class="co">#&gt;   relation                      estimate ci_lower ci_upper concordance</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Agency -&gt; Persistence          0.458     0.389    0.526  concordant </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Agency &lt;-&gt; SocialDesirability  0.007<span style="text-decoration: underline;">73</span>  -<span style="color: #BB0000;">0.079</span><span style="color: #BB0000; text-decoration: underline;">4</span>   0.094<span style="text-decoration: underline;">8</span> concordant </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> Agency -&gt; Performance          0.389     0.325    0.454  concordant</span></span></code></pre></div>
+<p>The invariance branch retains its diagnostics without automatically
+releasing constraints (see <a href="measurement-invariance.html">Measurement invariance</a> for the
+<code>ag3</code> intercept). The network branch uses explicit hypotheses
+and does not create a single nomological-validity score.</p>
 </div>
 <div class="section level2">
 <h2 id="prespecified-one-call-workflow">Prespecified one-call workflow<a class="anchor" aria-label="anchor" href="#prespecified-one-call-workflow"></a>
 </h2>
-<p>Researchers who have already made the consequential decisions can
-supply them together:</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">run</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_run.html">nomo_run</a></span><span class="op">(</span></span>
-<span>  data <span class="op">=</span> <span class="va">dat</span>,</span>
-<span>  scales <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>    WellBeing <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"w1"</span>, <span class="st">"w2"</span>, <span class="st">"w3"</span>, <span class="st">"w4"</span><span class="op">)</span></span>
-<span>  <span class="op">)</span>,</span>
+<p>Researchers who have already made the consequential decisions — for
+example in a preregistration — can supply them together.
+<code>mode = "research"</code> gives a more compact presentation of the
+same statistical behavior:</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">run_prespecified</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_run.html">nomo_run</a></span><span class="op">(</span></span>
+<span>  data <span class="op">=</span> <span class="va">nomo_demo_network</span>,</span>
+<span>  scales <span class="op">=</span> <span class="va">scales</span>,</span>
+<span>  mode <span class="op">=</span> <span class="st">"research"</span>,</span>
 <span>  decisions <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>    factor_count <span class="op">=</span> <span class="fl">1L</span>,</span>
-<span>    cfa_model <span class="op">=</span> <span class="st">"WellBeing =~ w1 + w2 + w3 + w4"</span>,</span>
+<span>    factor_count <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>Agency <span class="op">=</span> <span class="fl">1</span>, Persistence <span class="op">=</span> <span class="fl">1</span>, SocialDesirability <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span>
+<span>    cfa_model <span class="op">=</span> <span class="fu"><a href="../reference/nomo_model.html">nomo_model</a></span><span class="op">(</span><span class="va">scales</span><span class="op">)</span>,</span>
 <span>    measurement_model <span class="op">=</span> <span class="st">"proceed"</span></span>
 <span>  <span class="op">)</span>,</span>
 <span>  settings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    factors <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>seed <span class="op">=</span> <span class="fl">2026</span><span class="op">)</span>,</span>
 <span>    network <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>hypotheses <span class="op">=</span> <span class="va">h</span><span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">run_prespecified</span></span>
+<span><span class="co">#&gt; &lt;nomo_run&gt; mode=research | status=complete | design=same_sample</span></span>
+<span><span class="co">#&gt; Completed: screen -&gt; factors -&gt; efa -&gt; cfa -&gt; reliability -&gt; validity -&gt; network | Next: none</span></span>
+<span><span class="co">#&gt; Scales: 3 | Exploratory N: 800 | Confirmatory N: 800</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Requested workflow complete. Use `nomo_table(x, "recipe")` for the component map and `nomo_table(x, "component_log")` for retained evidence provenance.</span></span></code></pre></div>
 <p>This is still not hidden automation: every consequential decision was
 explicit before the run began.</p>
 </div>
 <div class="section level2">
 <h2 id="reproducibility-and-provenance">Reproducibility and provenance<a class="anchor" aria-label="anchor" href="#reproducibility-and-provenance"></a>
 </h2>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">run</span>, <span class="st">"stages"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">run</span>, <span class="st">"decisions"</span><span class="op">)</span></span>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">run</span>, <span class="st">"decisions"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 10 × 10</span></span></span>
+<span><span class="co">#&gt;    id      stage scope observation reason options consequence decision rationale</span></span>
+<span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> sample… desi… samp… 800 rows a… Sampl… Contin… Later CFA … <span style="color: #949494;">"</span>same_s… <span style="color: #949494;">""</span>       </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> scale_… desi… Agen… Scale `Age… Item … Review… Screening,… <span style="color: #949494;">"</span>ag1, a… <span style="color: #949494;">""</span>       </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> scale_… desi… Pers… Scale `Per… Item … Review… Screening,… <span style="color: #949494;">"</span>pe1, p… <span style="color: #949494;">""</span>       </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> scale_… desi… Soci… Scale `Soc… Item … Review… Screening,… <span style="color: #949494;">"</span>sd1, s… <span style="color: #949494;">""</span>       </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> factor… efa   Agen… Parallel a… The E… Inspec… A 1-factor… <span style="color: #949494;">"</span>1<span style="color: #949494;">"</span>      <span style="color: #949494;">"</span>Each sc…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> factor… efa   Pers… Parallel a… The E… Inspec… A 1-factor… <span style="color: #949494;">"</span>1<span style="color: #949494;">"</span>      <span style="color: #949494;">"</span>Each sc…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> factor… efa   Soci… Parallel a… The E… Inspec… A 1-factor… <span style="color: #949494;">"</span>1<span style="color: #949494;">"</span>      <span style="color: #949494;">"</span>Each sc…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> cfa_mo… cfa   meas… EFA has co… CFA s… Inspec… The CFA wi… <span style="color: #949494;">"</span>Agency… <span style="color: #949494;">"</span>Prespec…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> measur… meas… meas… CFA conver… Invar… Choose… Proceeding… <span style="color: #949494;">"</span>procee… <span style="color: #949494;">"</span>Measure…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> workfl… work… pipe… All reques… The p… Inspec… No additio… <span style="color: #949494;">"</span>comple… <span style="color: #949494;">""</span>       </span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 1 more variable: source &lt;chr&gt;</span></span></span>
 <span><span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">run</span>, <span class="st">"settings"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 8 × 3</span></span></span>
+<span><span class="co">#&gt;   stage       configured setting_names            </span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> screen      FALSE      <span style="color: #949494;">""</span>                       </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> factors     TRUE       <span style="color: #949494;">"</span>seed<span style="color: #949494;">"</span>                   </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> efa         FALSE      <span style="color: #949494;">""</span>                       </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> cfa         FALSE      <span style="color: #949494;">""</span>                       </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> reliability FALSE      <span style="color: #949494;">""</span>                       </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> validity    FALSE      <span style="color: #949494;">""</span>                       </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">7</span> invariance  TRUE       <span style="color: #949494;">"</span>group, levels, localize<span style="color: #949494;">"</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">8</span> network     TRUE       <span style="color: #949494;">"</span>hypotheses<span style="color: #949494;">"</span></span></span>
 <span><span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">run</span>, <span class="st">"recipe"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">run</span>, <span class="st">"component_log"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 14 × 6</span></span></span>
+<span><span class="co">#&gt;    stage       scope           function_name data_role status researcher_control</span></span>
+<span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> screen      Agency          nomo_screen() explorat… compl… candidate item me…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> factors     Agency          nomo_factors… explorat… compl… retention evidenc…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> efa         Agency          nomo_efa()    explorat… compl… explicit `factor_…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> screen      Persistence     nomo_screen() explorat… compl… candidate item me…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> factors     Persistence     nomo_factors… explorat… compl… retention evidenc…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> efa         Persistence     nomo_efa()    explorat… compl… explicit `factor_…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> screen      SocialDesirabi… nomo_screen() explorat… compl… candidate item me…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> factors     SocialDesirabi… nomo_factors… explorat… compl… retention evidenc…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> efa         SocialDesirabi… nomo_efa()    explorat… compl… explicit `factor_…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> cfa         measurement_mo… nomo_cfa()    confirma… compl… explicit `cfa_mod…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">11</span> reliability measurement_mo… nomo_reliabi… confirma… compl… evidence computed…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">12</span> validity    measurement_mo… nomo_validit… confirma… compl… evidence computed…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">13</span> invariance  configured_bra… nomo_invaria… confirma… compl… requested through…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">14</span> network     configured_bra… nomo_network… same sam… compl… requested through…</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">run</span>, <span class="st">"component_log"</span><span class="op">)</span>, <span class="fl">10</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 10 × 12</span></span></span>
+<span><span class="co">#&gt;    pipeline_component pipeline_scope stage   object  metric      value reference</span></span>
+<span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> factors            Agency         factors correl… corre… <span style="color: #BB0000;">NA</span>   <span style="color: #949494;"> </span>     Indicato…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> factors            Agency         factors cases   pairw…  8   <span style="color: #949494;">e</span>+  2 Minimum …</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> factors            Agency         factors correl… kmo     8.21<span style="color: #949494;">e</span><span style="color: #BB0000;">-  1</span> 0.60/0.5…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> factors            Agency         factors correl… bartl…  1.89<span style="color: #949494;">e</span><span style="color: #BB0000;">-279</span> Supporti…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> factors            Agency         factors retent… paral…  1   <span style="color: #949494;">e</span>+  0 Common-f…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> factors            Agency         factors retent… paral…  1   <span style="color: #949494;">e</span>+  0 Agreemen…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> factors            Agency         factors retent… map_o…  1   <span style="color: #949494;">e</span>+  0 Velicer …</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> factors            Agency         factors retent… map_r…  1   <span style="color: #949494;">e</span>+  0 Velicer …</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> factors            Agency         factors retent… ekc     1   <span style="color: #949494;">e</span>+  0 Braeken …</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> factors            Agency         factors retent… reten…  3   <span style="color: #949494;">e</span>+  0 Converge…</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 5 more variables: severity &lt;chr&gt;, observation &lt;chr&gt;, recommendation &lt;chr&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   decision &lt;chr&gt;, rationale &lt;chr&gt;</span></span></span></code></pre></div>
 <p>The guided object retains:</p>
 <ul>
 <li>source sample roles;</li>
@@ -247,11 +454,21 @@ explicit before the run began.</p>
 <li>explicit decisions and rationales;</li>
 <li>complete component result objects;</li>
 <li>outstanding decision requests;</li>
-<li>component decision/evidence logs;</li>
+<li>component decision and evidence logs;</li>
 <li>the sequence of resume calls.</li>
 </ul>
-<p>This structure is designed to feed the reproducible
-<code><a href="../reference/nomo_report.html">nomo_report()</a></code> workflow in Milestone 9.</p>
+<p>This structure feeds the reproducible report described in <a href="reproducible-report.html">Archiving a nomologR workflow</a>.</p>
+</div>
+<div class="section level2">
+<h2 id="research-basis">Research basis<a class="anchor" aria-label="anchor" href="#research-basis"></a>
+</h2>
+<p>Staged scale development with explicit decisions follows guidance
+such as Clark and Watson (1995, 2019), Hinkin (1998), and Boateng et
+al. (2018). Recording decisions and rationales responds to evidence that
+undisclosed analytic flexibility undermines measurement claims (Simmons,
+Nelson, &amp; Simonsohn, 2011; Flake, Pek, &amp; Hehman, 2017; Flake
+&amp; Fried, 2020). Full references are in <code><a href="../reference/nomo_run.html">?nomo_run</a></code> and
+the <a href="research-basis.html">research basis</a> article.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

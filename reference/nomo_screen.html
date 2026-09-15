@@ -23,16 +23,21 @@ observations from recommendations."></head><body>
     </button>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
-      <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+      <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/nomologR.html">Get started</a></li>
+<li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/exploratory-workflow.html">From item audit to exploratory structure</a></li>
-    <li><a class="dropdown-item" href="../articles/guided-workflow.html">Guided workflow with nomo_run()</a></li>
-    <li><a class="dropdown-item" href="../articles/measurement-invariance.html">Measurement Invariance with nomologR</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Learning path</h6></li>
+    <li><a class="dropdown-item" href="../articles/exploratory-workflow.html">From item audit to exploratory structure</a></li>
     <li><a class="dropdown-item" href="../articles/measurement-model-evidence.html">From CFA to a defensible measurement model</a></li>
+    <li><a class="dropdown-item" href="../articles/measurement-invariance.html">Measurement Invariance with nomologR</a></li>
     <li><a class="dropdown-item" href="../articles/nomological-network.html">Theory-Specified Nomological Networks with nomologR</a></li>
-    <li><a class="dropdown-item" href="../articles/overview.html">nomologR: measurement first, theory next</a></li>
+    <li><a class="dropdown-item" href="../articles/guided-workflow.html">Guided workflow with nomo_run()</a></li>
     <li><a class="dropdown-item" href="../articles/reproducible-report.html">Archiving a nomologR workflow with nomo_report()</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Research basis</h6></li>
+    <li><a class="dropdown-item" href="../articles/research-basis.html">Research basis: from historical to contemporary practice</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -106,6 +111,16 @@ numeric-discrete items also receive descriptive boundary concentration
 summaries. Continuous-like numeric indicators receive descriptive skewness
 and excess-kurtosis summaries without a pass/fail normality judgment.</p>
     </div>
+    <div class="section level2">
+    <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
+    <p>Clark, L. A., &amp; Watson, D. (2019). Constructing validity: New developments
+in creating objective measuring instruments. <em>Psychological Assessment,
+31</em>(12), 1412-1427. <a href="https://doi.org/10.1037/pas0000626" class="external-link">doi:10.1037/pas0000626</a></p>
+<p>Kuhn, M., &amp; Johnson, K. (2013). <em>Applied predictive modeling</em>. Springer.
+<a href="https://doi.org/10.1007/978-1-4614-6849-3" class="external-link">doi:10.1007/978-1-4614-6849-3</a></p>
+<p>Nunnally, J. C., &amp; Bernstein, I. H. (1994). <em>Psychometric theory</em> (3rd ed.).
+McGraw-Hill.</p>
+    </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
@@ -137,6 +152,42 @@ and excess-kurtosis summaries without a pass/fail normality judgment.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> screen item2        item_…   4   <span style="color: #949494;">"</span>Descrip… info     `item2` ha… Do not infer …</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> screen item3        const…   1   <span style="color: #949494;">"</span>At leas… concern  `item3` ha… Inspect codin…</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 2 more variables: decision &lt;chr&gt;, rationale &lt;chr&gt;</span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Simulated scale-development data with known teaching features</span></span></span>
+<span class="r-in"><span><span class="va">scr</span> <span class="op">&lt;-</span> <span class="fu">nomo_screen</span><span class="op">(</span><span class="va">nomo_demo_continuous</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">scr</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;summary_nomo_screen&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Cases: 500 | Items: 10 | No review flag: 9 | Review: 1 | Concern: 0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Missingness flags: 2 | Constant: 0 | All missing: 0 | Relationship eligible: 10</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Integrated item review:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 10 × 7</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    item  item_type          attention pct_missing mode_prop</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;ord&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> a1    numeric_continuous none            0        0.01  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> a2    numeric_continuous none            0.03     0.012<span style="text-decoration: underline;">4</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> a3    numeric_continuous none            0        0.01  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> a4    numeric_continuous none            0        0.012 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> a5    numeric_continuous none            0        0.016 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> b1    numeric_continuous none            0        0.016 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> b2    numeric_continuous none            0        0.014 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> b3    numeric_continuous none            0.024    0.010<span style="text-decoration: underline;">2</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> b4    numeric_continuous none            0        0.012 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> b5    numeric_continuous review          0        0.014 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    corrected_item_rest_r review_metrics       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span>                 0.559 <span style="color: #949494;">""</span>                   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span>                 0.580 <span style="color: #949494;">""</span>                   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span>                 0.511 <span style="color: #949494;">""</span>                   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span>                 0.549 <span style="color: #949494;">""</span>                   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span>                 0.588 <span style="color: #949494;">""</span>                   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span>                 0.602 <span style="color: #949494;">""</span>                   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span>                 0.513 <span style="color: #949494;">""</span>                   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span>                 0.571 <span style="color: #949494;">""</span>                   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span>                 0.481 <span style="color: #949494;">""</span>                   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span>                 0.279 <span style="color: #949494;">"</span>corrected_item_rest<span style="color: #949494;">"</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> `attention` is a review aid, not an automatic retention/deletion decision.</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

@@ -15,16 +15,21 @@
     </button>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
-      <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+      <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/nomologR.html">Get started</a></li>
+<li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/exploratory-workflow.html">From item audit to exploratory structure</a></li>
-    <li><a class="dropdown-item" href="../articles/guided-workflow.html">Guided workflow with nomo_run()</a></li>
-    <li><a class="dropdown-item" href="../articles/measurement-invariance.html">Measurement Invariance with nomologR</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Learning path</h6></li>
+    <li><a class="dropdown-item" href="../articles/exploratory-workflow.html">From item audit to exploratory structure</a></li>
     <li><a class="dropdown-item" href="../articles/measurement-model-evidence.html">From CFA to a defensible measurement model</a></li>
+    <li><a class="dropdown-item" href="../articles/measurement-invariance.html">Measurement Invariance with nomologR</a></li>
     <li><a class="dropdown-item" href="../articles/nomological-network.html">Theory-Specified Nomological Networks with nomologR</a></li>
-    <li><a class="dropdown-item" href="../articles/overview.html">nomologR: measurement first, theory next</a></li>
+    <li><a class="dropdown-item" href="../articles/guided-workflow.html">Guided workflow with nomo_run()</a></li>
     <li><a class="dropdown-item" href="../articles/reproducible-report.html">Archiving a nomologR workflow with nomo_report()</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Research basis</h6></li>
+    <li><a class="dropdown-item" href="../articles/research-basis.html">Research basis: from historical to contemporary practice</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -42,9 +47,9 @@
     </div>
 
     <div class="section level2">
-      <h2 id="all-functions">All functions<a class="anchor" aria-label="anchor" href="#all-functions"></a></h2>
+      <h2 id="guided-workflow-and-reporting">Guided workflow and reporting<a class="anchor" aria-label="anchor" href="#guided-workflow-and-reporting"></a></h2>
 
-
+      <div class="section-desc"><p>Run the staged workflow with explicit researcher decisions, extract report-ready tables, and archive evidence and decisions.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -53,80 +58,10 @@
 
       <dl><dt>
 
-          <code><a href="nomo_cfa.html">nomo_cfa()</a></code>
+          <code><a href="nomo_run.html">nomo_run()</a></code>
 
         </dt>
-        <dd>Guided confirmatory factor analysis</dd>
-
-        <dt>
-
-          <code><a href="nomo_defaults.html">nomo_defaults()</a></code>
-
-        </dt>
-        <dd>Default guidance settings for nomologR</dd>
-
-        <dt>
-
-          <code><a href="nomo_efa.html">nomo_efa()</a></code>
-
-        </dt>
-        <dd>Guided exploratory factor analysis</dd>
-
-        <dt>
-
-          <code><a href="nomo_expectations.html">positive()</a></code> <code><a href="nomo_expectations.html">negative()</a></code> <code><a href="nomo_expectations.html">negligible()</a></code>
-
-        </dt>
-        <dd>Specify directional or negligible theoretical expectations</dd>
-
-        <dt>
-
-          <code><a href="nomo_factors.html">nomo_factors()</a></code>
-
-        </dt>
-        <dd>Evaluate evidence about the number of latent factors</dd>
-
-        <dt>
-
-          <code><a href="nomo_hypotheses.html">nomo_hypotheses()</a></code>
-
-        </dt>
-        <dd>Specify a priori expectations for a nomological network</dd>
-
-        <dt>
-
-          <code><a href="nomo_invariance.html">nomo_invariance()</a></code>
-
-        </dt>
-        <dd>Evaluate measurement invariance across groups</dd>
-
-        <dt>
-
-          <code><a href="nomo_model.html">nomo_model()</a></code>
-
-        </dt>
-        <dd>Build simple confirmatory factor-analysis syntax</dd>
-
-        <dt>
-
-          <code><a href="nomo_network.html">nomo_network()</a></code>
-
-        </dt>
-        <dd>Evaluate a theory-specified nomological network</dd>
-
-        <dt>
-
-          <code><a href="nomo_partial.html">nomo_partial()</a></code>
-
-        </dt>
-        <dd>Specify researcher-controlled partial-invariance releases</dd>
-
-        <dt>
-
-          <code><a href="nomo_reliability.html">nomo_reliability()</a></code>
-
-        </dt>
-        <dd>Model-based reliability evidence</dd>
+        <dd>Run the guided nomologR workflow</dd>
 
         <dt>
 
@@ -137,27 +72,6 @@
 
         <dt>
 
-          <code><a href="nomo_run.html">nomo_run()</a></code>
-
-        </dt>
-        <dd>Run the guided nomologR workflow</dd>
-
-        <dt>
-
-          <code><a href="nomo_screen.html">nomo_screen()</a></code>
-
-        </dt>
-        <dd>Audit item-level data before factor modeling</dd>
-
-        <dt>
-
-          <code><a href="nomo_split.html">nomo_split()</a></code>
-
-        </dt>
-        <dd>Create a reproducible calibration/validation split</dd>
-
-        <dt>
-
           <code><a href="nomo_table.html">nomo_table()</a></code>
 
         </dt>
@@ -165,73 +79,27 @@
 
         <dt>
 
-          <code><a href="nomo_validity.html">nomo_validity()</a></code>
+          <code><a href="nomo_defaults.html">nomo_defaults()</a></code>
 
         </dt>
-        <dd>Convergent and discriminant construct-validity evidence</dd>
+        <dd>Default guidance settings for nomologR</dd>
+      </dl></div><div class="section level2">
+      <h2 id="-item-and-data-audit"></h2><li>Item and data audit</li>
 
-        <dt>
 
-          <code><a href="plot.nomo_cfa.html">plot(<i>&lt;nomo_cfa&gt;</i>)</a></code>
 
-        </dt>
-        <dd>Plot confirmatory factor-analysis evidence</dd>
 
-        <dt>
+      <dl></dl></div><div class="section level2">
 
-          <code><a href="plot.nomo_efa.html">plot(<i>&lt;nomo_efa&gt;</i>)</a></code>
 
-        </dt>
-        <dd>Plot exploratory factor-analysis evidence</dd>
 
-        <dt>
 
-          <code><a href="plot.nomo_factors.html">plot(<i>&lt;nomo_factors&gt;</i>)</a></code>
+      <dl><dt>
+
+          <code><a href="nomo_screen.html">nomo_screen()</a></code>
 
         </dt>
-        <dd>Plot factor-retention evidence</dd>
-
-        <dt>
-
-          <code><a href="plot.nomo_invariance.html">plot(<i>&lt;nomo_invariance&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Plot measurement-invariance evidence</dd>
-
-        <dt>
-
-          <code><a href="plot.nomo_network.html">plot(<i>&lt;nomo_network&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Plot nomological-network evidence</dd>
-
-        <dt>
-
-          <code><a href="plot.nomo_reliability.html">plot(<i>&lt;nomo_reliability&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Plot model-based reliability evidence</dd>
-
-        <dt>
-
-          <code><a href="plot.nomo_screen.html">plot(<i>&lt;nomo_screen&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Plot a nomo_screen audit</dd>
-
-        <dt>
-
-          <code><a href="plot.nomo_validity.html">plot(<i>&lt;nomo_validity&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Plot convergent or discriminant validity evidence</dd>
-
-        <dt>
-
-          <code><a href="print.nomo_factors.html">print(<i>&lt;nomo_factors&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Print factor-retention evidence</dd>
+        <dd>Audit item-level data before factor modeling</dd>
 
         <dt>
 
@@ -242,10 +110,10 @@
 
         <dt>
 
-          <code><a href="print.summary_nomo_factors.html">print(<i>&lt;summary_nomo_factors&gt;</i>)</a></code>
+          <code><a href="summary.nomo_screen.html">summary(<i>&lt;nomo_screen&gt;</i>)</a></code>
 
         </dt>
-        <dd>Print a factor-retention summary</dd>
+        <dd>Summarize a nomo_screen audit</dd>
 
         <dt>
 
@@ -256,17 +124,34 @@
 
         <dt>
 
-          <code><a href="summary.nomo_cfa.html">summary(<i>&lt;nomo_cfa&gt;</i>)</a></code>
+          <code><a href="plot.nomo_screen.html">plot(<i>&lt;nomo_screen&gt;</i>)</a></code>
 
         </dt>
-        <dd>Summarize a guided confirmatory factor analysis</dd>
+        <dd>Plot a nomo_screen audit</dd>
+      </dl></div><div class="section level2">
+      <h2 id="-dimensionality-and-exploratory-structure"></h2><li>Dimensionality and exploratory structure</li>
+
+
+
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="nomo_factors.html">nomo_factors()</a></code>
+
+        </dt>
+        <dd>Evaluate evidence about the number of latent factors</dd>
 
         <dt>
 
-          <code><a href="summary.nomo_efa.html">summary(<i>&lt;nomo_efa&gt;</i>)</a></code>
+          <code><a href="print.nomo_factors.html">print(<i>&lt;nomo_factors&gt;</i>)</a></code>
 
         </dt>
-        <dd>Summarize a guided exploratory factor analysis</dd>
+        <dd>Print factor-retention evidence</dd>
 
         <dt>
 
@@ -277,6 +162,103 @@
 
         <dt>
 
+          <code><a href="print.summary_nomo_factors.html">print(<i>&lt;summary_nomo_factors&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Print a factor-retention summary</dd>
+
+        <dt>
+
+          <code><a href="plot.nomo_factors.html">plot(<i>&lt;nomo_factors&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Plot factor-retention evidence</dd>
+
+        <dt>
+
+          <code><a href="nomo_efa.html">nomo_efa()</a></code>
+
+        </dt>
+        <dd>Guided exploratory factor analysis</dd>
+
+        <dt>
+
+          <code><a href="summary.nomo_efa.html">summary(<i>&lt;nomo_efa&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Summarize a guided exploratory factor analysis</dd>
+
+        <dt>
+
+          <code><a href="plot.nomo_efa.html">plot(<i>&lt;nomo_efa&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Plot exploratory factor-analysis evidence</dd>
+      </dl></div><div class="section level2">
+      <h2 id="-confirmatory-measurement-model"></h2><li>Confirmatory measurement model</li>
+
+
+
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="nomo_model.html">nomo_model()</a></code>
+
+        </dt>
+        <dd>Build simple confirmatory factor-analysis syntax</dd>
+
+        <dt>
+
+          <code><a href="nomo_split.html">nomo_split()</a></code>
+
+        </dt>
+        <dd>Create a reproducible calibration/validation split</dd>
+
+        <dt>
+
+          <code><a href="nomo_cfa.html">nomo_cfa()</a></code>
+
+        </dt>
+        <dd>Guided confirmatory factor analysis</dd>
+
+        <dt>
+
+          <code><a href="summary.nomo_cfa.html">summary(<i>&lt;nomo_cfa&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Summarize a guided confirmatory factor analysis</dd>
+
+        <dt>
+
+          <code><a href="plot.nomo_cfa.html">plot(<i>&lt;nomo_cfa&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Plot confirmatory factor-analysis evidence</dd>
+      </dl></div><div class="section level2">
+      <h2 id="-reliability-and-construct-validity-evidence"></h2><li>Reliability and construct-validity evidence</li>
+
+
+
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="nomo_reliability.html">nomo_reliability()</a></code>
+
+        </dt>
+        <dd>Model-based reliability evidence</dd>
+
+        <dt>
+
           <code><a href="summary.nomo_reliability.html">summary(<i>&lt;nomo_reliability&gt;</i>)</a></code>
 
         </dt>
@@ -284,10 +266,17 @@
 
         <dt>
 
-          <code><a href="summary.nomo_screen.html">summary(<i>&lt;nomo_screen&gt;</i>)</a></code>
+          <code><a href="plot.nomo_reliability.html">plot(<i>&lt;nomo_reliability&gt;</i>)</a></code>
 
         </dt>
-        <dd>Summarize a nomo_screen audit</dd>
+        <dd>Plot model-based reliability evidence</dd>
+
+        <dt>
+
+          <code><a href="nomo_validity.html">nomo_validity()</a></code>
+
+        </dt>
+        <dd>Convergent and discriminant construct-validity evidence</dd>
 
         <dt>
 
@@ -295,8 +284,115 @@
 
         </dt>
         <dd>Summarize convergent and discriminant measurement evidence</dd>
+
+        <dt>
+
+          <code><a href="plot.nomo_validity.html">plot(<i>&lt;nomo_validity&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Plot convergent or discriminant validity evidence</dd>
+      </dl></div><div class="section level2">
+      <h2 id="-measurement-invariance"></h2><li>Measurement invariance</li>
+
+
+
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="nomo_invariance.html">nomo_invariance()</a></code>
+
+        </dt>
+        <dd>Evaluate measurement invariance across groups</dd>
+
+        <dt>
+
+          <code><a href="nomo_partial.html">nomo_partial()</a></code>
+
+        </dt>
+        <dd>Specify researcher-controlled partial-invariance releases</dd>
+
+        <dt>
+
+          <code><a href="plot.nomo_invariance.html">plot(<i>&lt;nomo_invariance&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Plot measurement-invariance evidence</dd>
+      </dl></div><div class="section level2">
+      <h2 id="-theory-specified-nomological-network"></h2><li>Theory-specified nomological network</li>
+
+
+
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="nomo_hypotheses.html">nomo_hypotheses()</a></code>
+
+        </dt>
+        <dd>Specify a priori expectations for a nomological network</dd>
+
+        <dt>
+
+          <code><a href="nomo_expectations.html">positive()</a></code> <code><a href="nomo_expectations.html">negative()</a></code> <code><a href="nomo_expectations.html">negligible()</a></code>
+
+        </dt>
+        <dd>Specify directional or negligible theoretical expectations</dd>
+
+        <dt>
+
+          <code><a href="nomo_network.html">nomo_network()</a></code>
+
+        </dt>
+        <dd>Evaluate a theory-specified nomological network</dd>
+
+        <dt>
+
+          <code><a href="plot.nomo_network.html">plot(<i>&lt;nomo_network&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Plot nomological-network evidence</dd>
+      </dl></div><div class="section level2">
+      <h2 id="teaching-datasets">Teaching datasets<a class="anchor" aria-label="anchor" href="#teaching-datasets"></a></h2>
+
+      <div class="section-desc"><p>Simulated data with documented population models, so learners can compare package evidence with the known truth.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="nomo_demo_continuous.html">nomo_demo_continuous</a></code>
+
+        </dt>
+        <dd>Simulated two-factor item data with known teaching features</dd>
+
+        <dt>
+
+          <code><a href="nomo_demo_ordinal.html">nomo_demo_ordinal</a></code>
+
+        </dt>
+        <dd>Simulated five-category ordered item data</dd>
+
+        <dt>
+
+          <code><a href="nomo_demo_network.html">nomo_demo_network</a></code>
+
+        </dt>
+        <dd>Simulated multi-construct validation study</dd>
       </dl></div>
-  </main></div>
+  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
+    </nav></aside></div>
 
 
     <footer><div class="pkgdown-footer-left">

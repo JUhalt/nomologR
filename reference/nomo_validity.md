@@ -87,29 +87,43 @@ that it can miss discriminant-validity problems that HTMT detects.
 
 ## References
 
+Historical context:
+
+Campbell, D. T., & Fiske, D. W. (1959). Convergent and discriminant
+validation by the multitrait-multimethod matrix. *Psychological
+Bulletin, 56*(2), 81-105.
+[doi:10.1037/h0046016](https://doi.org/10.1037/h0046016)
+
 Fornell, C., & Larcker, D. F. (1981). Evaluating structural equation
 models with unobservable variables and measurement error. *Journal of
-Marketing Research, 18*, 39-50. doi:10.2307/3151312
+Marketing Research, 18*(1), 39-50.
+[doi:10.2307/3151312](https://doi.org/10.2307/3151312)
+
+Contemporary construct-separation evidence:
 
 Henseler, J., Ringle, C. M., & Sarstedt, M. (2015). A new criterion for
 assessing discriminant validity in variance-based structural equation
-modeling. *Journal of the Academy of Marketing Science, 43*, 115-135.
-doi:10.1007/s11747-014-0403-8
+modeling. *Journal of the Academy of Marketing Science, 43*(1), 115-135.
+[doi:10.1007/s11747-014-0403-8](https://doi.org/10.1007/s11747-014-0403-8)
 
 Roemer, E., Schuberth, F., & Henseler, J. (2021). HTMT2–An improved
 criterion for assessing discriminant validity in structural equation
-modeling. *Industrial Management & Data Systems, 121*, 2637-2650.
-doi:10.1108/IMDS-02-2021-0082
+modeling. *Industrial Management & Data Systems, 121*(12), 2637-2650.
+[doi:10.1108/IMDS-02-2021-0082](https://doi.org/10.1108/IMDS-02-2021-0082)
+
+Rönkkö, M., & Cho, E. (2022). An updated guideline for assessing
+discriminant validity. *Organizational Research Methods, 25*(1).
+[doi:10.1177/1094428120968614](https://doi.org/10.1177/1094428120968614)
 
 Voorhees, C. M., Brady, M. K., Calantone, R., & Ramirez, E. (2016).
 Discriminant validity testing in marketing: An analysis, causes for
 concern, and proposed remedies. *Journal of the Academy of Marketing
-Science, 44*, 119-134. doi:10.1007/s11747-015-0455-4
+Science, 44*(1), 119-134.
+[doi:10.1007/s11747-015-0455-4](https://doi.org/10.1007/s11747-015-0455-4)
 
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
 model <- '
   visual  =~ x1 + x2 + x3
   textual =~ x4 + x5 + x6
@@ -117,8 +131,42 @@ model <- '
 '
 cfa <- nomo_cfa(model, data = lavaan::HolzingerSwineford1939)
 val <- nomo_validity(cfa)
-val$ave
-val$htmt2
+summary(val)
+#> nomologR convergent/discriminant evidence
+#> 
+#> Convergent evidence by construct
+#> # A tibble: 3 × 7
+#>   construct block     AVE min_abs_loading median_abs_loading n_loading_review
+#>   <chr>     <chr>   <dbl>           <dbl>              <dbl>            <int>
+#> 1 visual    overall 0.371           0.424              0.581                1
+#> 2 textual   overall 0.721           0.838              0.852                0
+#> 3 speed     overall 0.424           0.57               0.665                0
+#> # ℹ 1 more variable: signal <chr>
+#> 
+#> Construct-separation evidence
+#> # A tibble: 3 × 9
+#>   construct_1 construct_2 block   latent_r latent_r_ci_lower latent_r_ci_upper
+#>   <chr>       <chr>       <chr>      <dbl>             <dbl>             <dbl>
+#> 1 visual      textual     overall    0.459             0.334             0.584
+#> 2 visual      speed       overall    0.471             0.328             0.613
+#> 3 textual     speed       overall    0.283             0.148             0.418
+#> # ℹ 3 more variables: HTMT2 <dbl>, HTMT <dbl>, signal <chr>
+#> 
+#> Interpretation rule: standardized loadings and AVE address convergent evidence; latent correlations and HTMT-family statistics address construct separation. These are complementary questions, not interchangeable pass/fail tests.
 val$decision_log
-} # }
+#> # A tibble: 11 × 10
+#>    stage    object   metric  value reference severity observation recommendation
+#>    <chr>    <chr>    <chr>   <dbl> <chr>     <chr>    <chr>       <chr>         
+#>  1 validity measure… evide… NA     Fornell … info     Convergent… Interpret num…
+#>  2 validity x2       stand…  0.424 configur… review   Absolute s… Inspect item …
+#>  3 validity visual   AVE     0.371 configur… review   AVE is bel… Inspect stand…
+#>  4 validity textual  AVE     0.721 configur… info     AVE is at … Carry AVE for…
+#>  5 validity speed    AVE     0.424 configur… review   AVE is bel… Inspect stand…
+#>  6 validity textual… HTMT2   0.280 configur… info     HTMT2 does… Interpret thi…
+#>  7 validity visual … HTMT2   0.387 configur… info     HTMT2 does… Interpret thi…
+#>  8 validity visual … HTMT2   0.384 configur… info     HTMT2 does… Interpret thi…
+#>  9 validity textual… HTMT    0.290 configur… info     HTMT does … Interpret thi…
+#> 10 validity visual … HTMT    0.467 configur… info     HTMT does … Interpret thi…
+#> 11 validity visual … HTMT    0.424 configur… info     HTMT does … Interpret thi…
+#> # ℹ 2 more variables: decision <chr>, rationale <chr>
 ```

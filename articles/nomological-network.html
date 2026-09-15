@@ -29,17 +29,22 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
+<li class="nav-item"><a class="nav-link" href="../articles/nomologR.html">Get started</a></li>
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/exploratory-workflow.html">From item audit to exploratory structure</a></li>
-    <li><a class="dropdown-item" href="../articles/guided-workflow.html">Guided workflow with nomo_run()</a></li>
-    <li><a class="dropdown-item" href="../articles/measurement-invariance.html">Measurement Invariance with nomologR</a></li>
+<li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Learning path</h6></li>
+    <li><a class="dropdown-item" href="../articles/exploratory-workflow.html">From item audit to exploratory structure</a></li>
     <li><a class="dropdown-item" href="../articles/measurement-model-evidence.html">From CFA to a defensible measurement model</a></li>
+    <li><a class="dropdown-item" href="../articles/measurement-invariance.html">Measurement Invariance with nomologR</a></li>
     <li><a class="dropdown-item" href="../articles/nomological-network.html">Theory-Specified Nomological Networks with nomologR</a></li>
-    <li><a class="dropdown-item" href="../articles/overview.html">nomologR: measurement first, theory next</a></li>
+    <li><a class="dropdown-item" href="../articles/guided-workflow.html">Guided workflow with nomo_run()</a></li>
     <li><a class="dropdown-item" href="../articles/reproducible-report.html">Archiving a nomologR workflow with nomo_report()</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Research basis</h6></li>
+    <li><a class="dropdown-item" href="../articles/research-basis.html">Research basis: from historical to contemporary practice</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -90,133 +95,331 @@ post-hoc exploration.</li>
 </ol>
 </div>
 <div class="section level2">
-<h2 id="specify-theory">Specify theory<a class="anchor" aria-label="anchor" href="#specify-theory"></a>
+<h2 id="the-teaching-study">The teaching study<a class="anchor" aria-label="anchor" href="#the-teaching-study"></a>
+</h2>
+<p><code>nomo_demo_network</code> simulates a validation study of an
+<strong>Agency</strong> measure. Two related constructs were also
+measured — <strong>Persistence</strong> and <strong>Social
+desirability</strong> — along with an observed
+<strong>Performance</strong> outcome.</p>
+<p>The population model is known (see
+<code><a href="../reference/nomo_demo_network.html">?nomo_demo_network</a></code>):</p>
+<ul>
+<li>Agency predicts Persistence (standardized coefficient .45);</li>
+<li>Agency predicts Performance (.40);</li>
+<li>Persistence has <strong>no</strong> direct effect on Performance
+once Agency is accounted for (0);</li>
+<li>Agency and Social desirability are unrelated (0).</li>
+</ul>
+<p>In real research you would not know these values. They are shown here
+so you can see how <code>nomologR</code> evidence behaves when a
+prediction is right, when it is wrong, and when it is about a negligible
+relation.</p>
+</div>
+<div class="section level2">
+<h2 id="specify-theory-before-looking-at-results">Specify theory before looking at results<a class="anchor" aria-label="anchor" href="#specify-theory-before-looking-at-results"></a>
 </h2>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">h</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_hypotheses.html">nomo_hypotheses</a></span><span class="op">(</span></span>
 <span>  <span class="st">"Agency -&gt; Persistence"</span> <span class="op">=</span> <span class="fu"><a href="../reference/nomo_expectations.html">positive</a></span><span class="op">(</span>min <span class="op">=</span> <span class="fl">.20</span><span class="op">)</span>,</span>
-<span>  <span class="st">"Agency &lt;-&gt; SocialDesirability"</span> <span class="op">=</span></span>
-<span>    <span class="fu"><a href="../reference/nomo_expectations.html">negligible</a></span><span class="op">(</span>within <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">.10</span>, <span class="fl">.10</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>  <span class="st">"Agency -&gt; Performance"</span> <span class="op">=</span> <span class="fu"><a href="../reference/nomo_expectations.html">positive</a></span><span class="op">(</span><span class="op">)</span></span>
+<span>  <span class="st">"Agency &lt;-&gt; SocialDesirability"</span> <span class="op">=</span> <span class="fu"><a href="../reference/nomo_expectations.html">negligible</a></span><span class="op">(</span>within <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">.15</span>, <span class="fl">.15</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  <span class="st">"Agency -&gt; Performance"</span> <span class="op">=</span> <span class="fu"><a href="../reference/nomo_expectations.html">positive</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  <span class="st">"Persistence -&gt; Performance"</span> <span class="op">=</span> <span class="fu"><a href="../reference/nomo_expectations.html">positive</a></span><span class="op">(</span>min <span class="op">=</span> <span class="fl">.20</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">h</span></span></code></pre></div>
+<span><span class="va">h</span></span>
+<span><span class="co">#&gt; &lt;nomo_hypotheses&gt;</span></span>
+<span><span class="co">#&gt; 4 theory-specified relation(s)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4 × 6</span></span></span>
+<span><span class="co">#&gt;   id    relation                      prediction region        scale       </span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                         <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> H1    Agency -&gt; Persistence         positive   [0.2, +Inf)   standardized</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> H2    Agency &lt;-&gt; SocialDesirability negligible [-0.15, 0.15] standardized</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> H3    Agency -&gt; Performance         positive   (0, +Inf)     standardized</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> H4    Persistence -&gt; Performance    positive   [0.2, +Inf)   standardized</span></span>
+<span><span class="co">#&gt;   origin  </span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> a_priori</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> a_priori</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> a_priori</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> a_priori</span></span></code></pre></div>
 <p><code>A -&gt; B</code> means a directed structural path.
 <code>A &lt;-&gt; B</code> means an association without asserting causal
 direction.</p>
-<p>A bare <code><a href="../reference/nomo_expectations.html">negligible()</a></code> records a theoretical expectation
-but does <strong>not</strong> supply a smallest effect size of interest
-(SESOI). <code>nomologR</code> will therefore refuse to treat
-<code>p &gt; .05</code> as confirmation of negligibility.</p>
+<p>The fourth prediction is plausible-sounding — persistent people
+perform better — but it is <strong>not</strong> true in the population
+model. It is included on purpose.</p>
+<p>The negligible-effect region of ±.15 for Social desirability is a
+<strong>researcher-specified smallest effect size of interest
+(SESOI)</strong>. It must be justified by theory or study design before
+the analysis; <code>nomologR</code> never invents one. A bare
+<code><a href="../reference/nomo_expectations.html">negligible()</a></code> records a theoretical expectation, but
+<code>nomologR</code> will refuse to treat <code>p &gt; .05</code> as
+confirmation of negligibility.</p>
 </div>
 <div class="section level2">
 <h2 id="fit-the-latent-network">Fit the latent network<a class="anchor" aria-label="anchor" href="#fit-the-latent-network"></a>
 </h2>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="st">"</span></span>
-<span><span class="st">  Agency =~ a1 + a2 + a3</span></span>
-<span><span class="st">  Persistence =~ p1 + p2 + p3</span></span>
-<span><span class="st">"</span></span>
+<code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_model.html">nomo_model</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>  Agency <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ag1"</span>, <span class="st">"ag2"</span>, <span class="st">"ag3"</span>, <span class="st">"ag4"</span><span class="op">)</span>,</span>
+<span>  Persistence <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"pe1"</span>, <span class="st">"pe2"</span>, <span class="st">"pe3"</span>, <span class="st">"pe4"</span><span class="op">)</span>,</span>
+<span>  SocialDesirability <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"sd1"</span>, <span class="st">"sd2"</span>, <span class="st">"sd3"</span><span class="op">)</span></span>
+<span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">net</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_network.html">nomo_network</a></span><span class="op">(</span></span>
 <span>  <span class="va">model</span>,</span>
-<span>  data <span class="op">=</span> <span class="va">dat</span>,</span>
+<span>  data <span class="op">=</span> <span class="va">nomo_demo_network</span>,</span>
 <span>  hypotheses <span class="op">=</span> <span class="va">h</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">net</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">net</span><span class="op">)</span></span></code></pre></div>
-<p>If a theory-specified path is absent from the supplied measurement
-model, <code><a href="../reference/nomo_network.html">nomo_network()</a></code> can add it transparently. The exact
-fitted syntax and unchanged <code>lavaan</code> fit remain available in
-the returned object.</p>
+<span><span class="co">#&gt; &lt;nomo_network&gt;</span></span>
+<span><span class="co">#&gt; Primary sample: N = 800 | Converged: TRUE</span></span>
+<span><span class="co">#&gt; Theory relations: 4 | Added transparently to model: 3</span></span>
+<span><span class="co">#&gt; Measurement context: INFO | no configured measurement-context review signal was triggered</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4 × 9</span></span></span>
+<span><span class="co">#&gt;   id    relation                      prediction theoretical_region estimate</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                         <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                 <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> H1    Agency -&gt; Persistence         positive   [0.2, +Inf)         0.458  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> H2    Agency &lt;-&gt; SocialDesirability negligible [-0.15, 0.15]       0.007<span style="text-decoration: underline;">73</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> H3    Agency -&gt; Performance         positive   (0, +Inf)           0.418  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> H4    Persistence -&gt; Performance    positive   [0.2, +Inf)        -<span style="color: #BB0000;">0.062</span><span style="color: #BB0000; text-decoration: underline;">4</span> </span></span>
+<span><span class="co">#&gt;   ci_lower ci_upper concordance  confirmatory_status</span></span>
+<span><span class="co">#&gt;      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>              </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>   0.389    0.526  Concordant   A priori           </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span>  -<span style="color: #BB0000;">0.079</span><span style="color: #BB0000; text-decoration: underline;">4</span>   0.094<span style="text-decoration: underline;">8</span> Concordant   A priori           </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span>   0.341    0.495  Concordant   A priori           </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span>  -<span style="color: #BB0000;">0.146</span>    0.021<span style="text-decoration: underline;">5</span> Inconsistent A priori           </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Interpretation rule: theory concordance, uncertainty, measurement quality, and replication are distinct evidence streams. Statistical significance alone is not a validity verdict.</span></span>
+<span><span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">net</span>, <span class="st">"fit"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 7</span></span></span>
+<span><span class="co">#&gt;   chisq    df pvalue   cfi   tli  rmsea   srmr</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>  61.6    51  0.147 0.997 0.996 0.016<span style="text-decoration: underline;">1</span> 0.020<span style="text-decoration: underline;">5</span></span></span></code></pre></div>
+<p>The measurement model supplies only the factor definitions.
+Theory-specified paths absent from that model are added transparently,
+and the exact fitted syntax and unchanged <code>lavaan</code> fit remain
+available in the returned object.</p>
 </div>
 <div class="section level2">
 <h2 id="read-relation-level-evidence">Read relation-level evidence<a class="anchor" aria-label="anchor" href="#read-relation-level-evidence"></a>
 </h2>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">net</span>, <span class="st">"hypotheses"</span><span class="op">)</span></span></code></pre></div>
-<p>Every relation retains:</p>
+<code class="sourceCode R"><span><span class="va">evidence</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">net</span>, <span class="st">"hypotheses"</span><span class="op">)</span></span>
+<span><span class="va">evidence</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>  <span class="st">"id"</span>, <span class="st">"relation"</span>, <span class="st">"theoretical_region"</span>, <span class="st">"estimate"</span>,</span>
+<span>  <span class="st">"ci_lower"</span>, <span class="st">"ci_upper"</span>, <span class="st">"equivalence_supported"</span>, <span class="st">"concordance"</span></span>
+<span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4 × 8</span></span></span>
+<span><span class="co">#&gt;   id    relation                   theoretical_region estimate ci_lower ci_upper</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                 <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> H1    Agency -&gt; Persistence      [0.2, +Inf)         0.458     0.389    0.526 </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> H2    Agency &lt;-&gt; SocialDesirabi… [-0.15, 0.15]       0.007<span style="text-decoration: underline;">73</span>  -<span style="color: #BB0000;">0.079</span><span style="color: #BB0000; text-decoration: underline;">4</span>   0.094<span style="text-decoration: underline;">8</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> H3    Agency -&gt; Performance      (0, +Inf)           0.418     0.341    0.495 </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> H4    Persistence -&gt; Performance [0.2, +Inf)        -<span style="color: #BB0000;">0.062</span><span style="color: #BB0000; text-decoration: underline;">4</span>   -<span style="color: #BB0000;">0.146</span>    0.021<span style="text-decoration: underline;">5</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 2 more variables: equivalence_supported &lt;lgl&gt;, concordance &lt;chr&gt;</span></span></span></code></pre></div>
+<p>Reading each row:</p>
 <ul>
-<li>predicted direction or region;</li>
-<li>estimate;</li>
-<li>standard error;</li>
-<li>confidence interval;</li>
-<li>standardized estimate;</li>
-<li>p-value where available;</li>
-<li>concordance classification;</li>
-<li>measurement-context flag;</li>
-<li>a-priori versus post-hoc provenance.</li>
+<li>
+<strong>H1</strong> (<code>Agency -&gt; Persistence</code>):
+estimate 0.46, interval [0.39, 0.53], classified
+<strong>concordant</strong> with the prediction of at least .20.</li>
+<li>
+<strong>H2</strong>
+(<code>Agency &lt;-&gt; SocialDesirability</code>): estimate 0.01. The
+90% equivalence interval [-0.07, 0.08] lies inside the ±.15 region, so
+the negligible prediction is supported by equivalence evidence — not
+merely by a non-significant p-value.</li>
+<li>
+<strong>H3</strong> (<code>Agency -&gt; Performance</code>):
+estimate 0.42, classified <strong>concordant</strong>.</li>
+<li>
+<strong>H4</strong> (<code>Persistence -&gt; Performance</code>):
+estimate -0.06, interval [-0.15, 0.02], classified
+<strong>inconsistent</strong> with the predicted region.</li>
 </ul>
-<p>The goal is not to produce a single “validity score.”</p>
+<p>Every relation also retains its standard error, p-value, evidence
+scope, a-priori versus post-hoc provenance, and a measurement-context
+flag. The goal is not to produce a single “validity score.”</p>
+</div>
+<div class="section level2">
+<h2 id="a-marginal-association-is-not-a-structural-prediction">A marginal association is not a structural prediction<a class="anchor" aria-label="anchor" href="#a-marginal-association-is-not-a-structural-prediction"></a>
+</h2>
+<p>Why might a researcher have expected H4? Look at the simple
+correlation between a Persistence composite and Performance:</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">persistence_mean</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">rowMeans</a></span><span class="op">(</span><span class="va">nomo_demo_network</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"pe1"</span>, <span class="st">"pe2"</span>, <span class="st">"pe3"</span>, <span class="st">"pe4"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">cor</a></span><span class="op">(</span><span class="va">persistence_mean</span>, <span class="va">nomo_demo_network</span><span class="op">$</span><span class="va">Performance</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 0.1180501</span></span></code></pre></div>
+<p>The marginal correlation is positive, because both Persistence and
+Performance depend on Agency. The theory-specified path asks a different
+question: does Persistence predict Performance <em>given</em> Agency? It
+does not. Treating a table of observed correlations as the nomological
+network would have produced the wrong conclusion.</p>
 </div>
 <div class="section level2">
 <h2 id="negligible-predictions-and-equivalence-evidence">Negligible predictions and equivalence evidence<a class="anchor" aria-label="anchor" href="#negligible-predictions-and-equivalence-evidence"></a>
 </h2>
 <p>For:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/nomo_expectations.html">negligible</a></span><span class="op">(</span>within <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">.10</span>, <span class="fl">.10</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/nomo_expectations.html">negligible</a></span><span class="op">(</span>within <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">.15</span>, <span class="fl">.15</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; $prediction</span></span>
+<span><span class="co">#&gt; [1] "negligible"</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $lower</span></span>
+<span><span class="co">#&gt; [1] -0.15</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $upper</span></span>
+<span><span class="co">#&gt; [1] 0.15</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $lower_inclusive</span></span>
+<span><span class="co">#&gt; [1] TRUE</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $upper_inclusive</span></span>
+<span><span class="co">#&gt; [1] TRUE</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $scale</span></span>
+<span><span class="co">#&gt; [1] "standardized"</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $origin</span></span>
+<span><span class="co">#&gt; [1] "a_priori"</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $magnitude_specified</span></span>
+<span><span class="co">#&gt; [1] TRUE</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $confirmable</span></span>
+<span><span class="co">#&gt; [1] TRUE</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; attr(,"class")</span></span>
+<span><span class="co">#&gt; [1] "nomo_expectation" "list"</span></span></code></pre></div>
 <p>the researcher has supplied a quantitative negligible-effect region.
 With the default <code>equivalence_alpha = .05</code>,
 <code><a href="../reference/nomo_network.html">nomo_network()</a></code> evaluates a 90% equivalence confidence
-interval. This is intentionally different from declaring a relation
-negligible because an ordinary null-hypothesis test was not
-significant.</p>
+interval, corresponding to the two one-sided tests procedure. This is
+intentionally different from declaring a relation negligible because an
+ordinary null-hypothesis test was not significant.</p>
 </div>
 <div class="section level2">
 <h2 id="criterion-and-predictive-evidence">Criterion and predictive evidence<a class="anchor" aria-label="anchor" href="#criterion-and-predictive-evidence"></a>
 </h2>
-<p>Observed outcomes can participate in the same network:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">h</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_hypotheses.html">nomo_hypotheses</a></span><span class="op">(</span></span>
-<span>  <span class="st">"Agency -&gt; Performance"</span> <span class="op">=</span> <span class="fu"><a href="../reference/nomo_expectations.html">positive</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<p>When <code>Performance</code> is an observed variable and
-<code>Agency</code> is latent, the evidence table labels the relation as
-a latent-to-observed outcome path.</p>
+<p><code>Performance</code> is an observed variable, while Agency is
+latent. The evidence table labels such relations explicitly:</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">evidence</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"id"</span>, <span class="st">"relation"</span>, <span class="st">"evidence_scope"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4 × 3</span></span></span>
+<span><span class="co">#&gt;   id    relation                      evidence_scope            </span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                         <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                     </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> H1    Agency -&gt; Persistence         latent_structural         </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> H2    Agency &lt;-&gt; SocialDesirability latent_association        </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> H3    Agency -&gt; Performance         latent_to_observed_outcome</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> H4    Persistence -&gt; Performance    latent_to_observed_outcome</span></span></code></pre></div>
+<p>Observed outcomes keep their observed-variable estimand;
+<code>nomologR</code> does not silently insert measurement-error
+corrections.</p>
+</div>
+<div class="section level2">
+<h2 id="measurement-context">Measurement context<a class="anchor" aria-label="anchor" href="#measurement-context"></a>
+</h2>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">net</span>, <span class="st">"measurement"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 8</span></span></span>
+<span><span class="co">#&gt;   attention converged latent_constructs loading_review_flags</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>                 <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>                <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> info      TRUE                      3                    0</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 4 more variables: negative_variance_flags &lt;int&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   global_fit_review_flags &lt;int&gt;, engine_warning_count &lt;int&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   observation &lt;chr&gt;</span></span></span></code></pre></div>
+<p>A relation can look inconsistent with theory because the estimated
+relationship truly differs from the prediction, or because weak
+measurement, improper solutions, poor fit, or large uncertainty limit
+what the structural result can say. The measurement context stays beside
+the theory evidence so the two are not confused.</p>
 </div>
 <div class="section level2">
 <h2 id="calibration-and-validation">Calibration and validation<a class="anchor" aria-label="anchor" href="#calibration-and-validation"></a>
 </h2>
 <p>An internal split can be created explicitly:</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">s</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_split.html">nomo_split</a></span><span class="op">(</span><span class="va">dat</span>, validation_prop <span class="op">=</span> <span class="fl">.40</span>, seed <span class="op">=</span> <span class="fl">2026</span><span class="op">)</span></span>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">s</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_split.html">nomo_split</a></span><span class="op">(</span><span class="va">nomo_demo_network</span>, validation_prop <span class="op">=</span> <span class="fl">.40</span>, seed <span class="op">=</span> <span class="fl">2026</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">net</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_network.html">nomo_network</a></span><span class="op">(</span></span>
+<span><span class="va">net_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_network.html">nomo_network</a></span><span class="op">(</span></span>
 <span>  <span class="va">model</span>,</span>
 <span>  data <span class="op">=</span> <span class="va">s</span>,</span>
 <span>  hypotheses <span class="op">=</span> <span class="va">h</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">replication</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">net_rep</span>, <span class="st">"replication"</span><span class="op">)</span></span>
+<span><span class="va">replication</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>  <span class="st">"id"</span>, <span class="st">"relation"</span>, <span class="st">"primary_estimate"</span>, <span class="st">"validation_estimate"</span>,</span>
+<span>  <span class="st">"validation_concordance"</span>, <span class="st">"replication_status"</span></span>
+<span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4 × 6</span></span></span>
+<span><span class="co">#&gt;   id    relation     primary_estimate validation_estimate validation_concordance</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>               <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                 </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> H1    Agency -&gt; P…           0.472              0.441   concordant            </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> H2    Agency &lt;-&gt; …          -<span style="color: #BB0000;">0.028</span><span style="color: #BB0000; text-decoration: underline;">5</span>             0.053<span style="text-decoration: underline;">1</span>  directionally_concord…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> H3    Agency -&gt; P…           0.448              0.369   concordant            </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> H4    Persistence…          -<span style="color: #BB0000;">0.101</span>              0.003<span style="text-decoration: underline;">64</span> direction_concordant_…</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 1 more variable: replication_status &lt;chr&gt;</span></span></span></code></pre></div>
 <p>The calibration and validation subsets receive the <strong>same
-prespecified fitted model</strong>. <code>nomologR</code> does not
-respecify the validation model to rescue a primary sample result.</p>
+prespecified fitted model</strong>; <code>nomologR</code> does not
+respecify the validation model to rescue a primary result. Reading the
+statuses:</p>
+<ul>
+<li>H1 and H3 are <strong>replicated_concordance</strong> and
+<strong>replicated_concordance</strong>.</li>
+<li>H2 is <strong>mixed_or_inconclusive</strong>: with only 320
+validation cases, the equivalence interval is too wide to confirm
+negligibility. Splitting a sample buys independence at the cost of
+precision.</li>
+<li>H4 is labeled <strong>sign_reversal</strong>. Both estimates are
+close to zero and both intervals include zero, so this label overstates
+the discrepancy: the current rule compares the signs of point estimates
+before considering uncertainty. Improving this language is tracked in <a href="https://github.com/JUhalt/nomologR/issues/30" class="external-link">issue #30</a>. Read
+replication statuses together with the estimates and their
+intervals.</li>
+</ul>
 <p>External validation data can instead be supplied with
-<code>validation_data =</code>.</p>
+<code>validation_data =</code>, which is generally stronger evidence
+than an internal split.</p>
 </div>
 <div class="section level2">
-<h2 id="figures-and-manuscript-ready-tables">Figures and manuscript-ready tables<a class="anchor" aria-label="anchor" href="#figures-and-manuscript-ready-tables"></a>
+<h2 id="figures">Figures<a class="anchor" aria-label="anchor" href="#figures"></a>
 </h2>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">net</span>, <span class="st">"effects"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">net</span>, <span class="st">"concordance"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">net</span>, <span class="st">"fit"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">net</span>, <span class="st">"replication"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">net</span>, <span class="st">"hypotheses"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">net</span>, <span class="st">"measurement"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">net</span>, <span class="st">"replication"</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">net</span>, type <span class="op">=</span> <span class="st">"effects"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="nomological-network_files/figure-html/effects-plot-1.png" class="r-plt" alt="" width="672"></p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">net_rep</span>, type <span class="op">=</span> <span class="st">"replication"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="nomological-network_files/figure-html/replication-plot-1.png" class="r-plt" alt="" width="672"></p>
 <p>These are evidence summaries, not automated theory verdicts.</p>
 </div>
 <div class="section level2">
 <h2 id="interpretation-rule">Interpretation rule<a class="anchor" aria-label="anchor" href="#interpretation-rule"></a>
 </h2>
-<p>A relation can be inconsistent with theory because the estimated
-relationship truly differs from the prediction. But weak measurement,
-improper solutions, poor global fit, or large uncertainty can also limit
-what the structural result can say.</p>
-<p><code>nomologR</code> therefore keeps <strong>measurement evidence,
-theory concordance, uncertainty, replication, and researcher provenance
-visible at the same time</strong>.</p>
+<p><code>nomologR</code> keeps <strong>measurement evidence, theory
+concordance, uncertainty, replication, and researcher provenance visible
+at the same time</strong>. A supported prediction strengthens the
+validity argument for a particular interpretation of scores; an
+unsupported one is information about the theory, the measure, or
+both.</p>
+</div>
+<div class="section level2">
+<h2 id="research-basis">Research basis<a class="anchor" aria-label="anchor" href="#research-basis"></a>
+</h2>
+<p>The nomological network as the core of construct validity comes from
+Cronbach and Meehl (1955), and convergent and discriminant correlation
+patterns from Campbell and Fiske (1959). Contemporary practice separates
+the measurement model from structural relations (Anderson &amp; Gerbing,
+1988), treats validity as an argument about score interpretation
+(Messick, 1995), evaluates negligible predictions with equivalence
+procedures (Schuirmann, 1987; Lakens, Scheel, &amp; Isager, 2018), and
+distinguishes prespecified from post-hoc predictions (Nosek et al.,
+2018). Full references are in <code><a href="../reference/nomo_network.html">?nomo_network</a></code> and the <a href="research-basis.html">research basis</a> article.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

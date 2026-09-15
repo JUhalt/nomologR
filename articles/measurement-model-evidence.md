@@ -387,6 +387,73 @@ ordered-CFA estimand rather than silently replacing it with a different
 definition. The point is not to maximize the number of coefficients
 reported; it is to keep the score and estimand clear.
 
+## Continuing the exploratory example
+
+The [exploratory
+walkthrough](https://juhalt.github.io/nomologR/articles/exploratory-workflow.md)
+flagged a cross-loading item (`a5`) and a weak item (`b5`) in
+`nomo_demo_continuous`. Suppose the researcher prespecifies the intended
+two-factor simple structure with all ten items and fits it as a CFA:
+
+``` r
+
+demo_model <- nomo_model(list(
+  A = c("a1", "a2", "a3", "a4", "a5"),
+  B = c("b1", "b2", "b3", "b4", "b5")
+))
+
+demo_cfa <- nomo_cfa(demo_model, data = nomo_demo_continuous)
+demo_cfa$fit_evidence
+```
+
+    ## # A tibble: 9 × 7
+    ##   metric              value variant    reference direction attention explanation
+    ##   <chr>               <dbl> <chr>          <dbl> <chr>     <chr>     <chr>      
+    ## 1 chi_square     75.8       chisq          NA    informat… info      Descriptiv…
+    ## 2 df             34         df             NA    informat… info      Descriptiv…
+    ## 3 p_value         0.0000500 pvalue         NA    informat… info      Descriptiv…
+    ## 4 CFI             0.973     cfi             0.95 higher    info      At or abov…
+    ## 5 TLI             0.965     tli             0.95 higher    info      At or abov…
+    ## 6 RMSEA           0.0510    rmsea           0.06 lower     info      At or belo…
+    ## 7 RMSEA_CI_lower  0.0356    rmsea.ci.…     NA    informat… info      Descriptiv…
+    ## 8 RMSEA_CI_upper  0.0665    rmsea.ci.…     NA    informat… info      Descriptiv…
+    ## 9 SRMR            0.0519    srmr            0.08 lower     info      At or belo…
+
+``` r
+
+head(demo_cfa$top_modification_indices, 5)
+```
+
+    ## # A tibble: 5 × 8
+    ##   lhs   op    rhs      mi     epc sepc.lv sepc.all sepc.nox
+    ##   <chr> <chr> <chr> <dbl>   <dbl>   <dbl>    <dbl>    <dbl>
+    ## 1 B     =~    a5    48.3   0.488   0.377     0.365    0.365
+    ## 2 B     =~    a1     9.41 -0.183  -0.141    -0.145   -0.145
+    ## 3 a5    ~~    b3     7.57  0.0812  0.0812    0.150    0.150
+    ## 4 a5    ~~    b1     4.78  0.0610  0.0610    0.125    0.125
+    ## 5 a3    ~~    a4     4.64  0.0732  0.0732    0.133    0.133
+
+Three lessons carry over from the exploratory stage:
+
+- **Modification indices are quarantined.** The largest index points
+  toward the cross-loading that the data-generating model contains, but
+  `nomologR` does not add it. Allowing a cross-loading, revising the
+  item, or evaluating a model without it is a theoretical decision;
+  freeing parameters because an index is large is capitalization on
+  chance (MacCallum, Roznowski, & Necowitz, 1992).
+- **The same sample is not independent confirmation.** This CFA uses the
+  data that suggested the structure.
+  [`nomo_split()`](https://juhalt.github.io/nomologR/reference/nomo_split.md)
+  or a new sample provides a stronger test.
+- **Missing data are handled explicitly.** By default lavaan uses
+  complete cases here; `missing = "fiml"` requests full-information
+  maximum likelihood for continuous indicators, and the decision is
+  recorded.
+
+A formal side-by-side model comparison with a recorded rationale is
+planned for `v0.2.0`
+([\#27](https://github.com/JUhalt/nomologR/issues/27)).
+
 ## Reading the evidence as an argument
 
 A useful measurement conclusion is rarely “all cutoffs passed.” A

@@ -45,6 +45,19 @@ A release first requested at one level is carried forward to later,
 more-restrictive levels so that a loading freed at the metric level does
 not silently become constrained again at the scalar level.
 
+## References
+
+Byrne, B. M., Shavelson, R. J., & Muthén, B. (1989). Testing for the
+equivalence of factor covariance and mean structures: The issue of
+partial measurement invariance. *Psychological Bulletin, 105*(3),
+456-466.
+[doi:10.1037/0033-2909.105.3.456](https://doi.org/10.1037/0033-2909.105.3.456)
+
+Putnick, D. L., & Bornstein, M. H. (2016). Measurement invariance
+conventions and reporting: The state of the art and future directions
+for psychological research. *Developmental Review, 41*, 71-90.
+[doi:10.1016/j.dr.2016.06.004](https://doi.org/10.1016/j.dr.2016.06.004)
+
 ## Examples
 
 ``` r

@@ -106,33 +106,53 @@ instead.
 
 ## References
 
-Dunn, T. J., Baguley, T., & Brunsden, V. (2014). From alpha to omega: a
+Historical context:
+
+Cronbach, L. J. (1951). Coefficient alpha and the internal structure of
+tests. *Psychometrika, 16*(3), 297-334.
+[doi:10.1007/BF02310555](https://doi.org/10.1007/BF02310555)
+
+Contemporary model-based reliability:
+
+Bell, S. M., Chalmers, R. P., & Flora, D. B. (2024). The impact of
+measurement model misspecification on coefficient omega estimates of
+composite reliability. *Educational and Psychological Measurement,
+84*(1), 5-39.
+[doi:10.1177/00131644231155804](https://doi.org/10.1177/00131644231155804)
+
+Dunn, T. J., Baguley, T., & Brunsden, V. (2014). From alpha to omega: A
 practical solution to the pervasive problem of internal consistency
-estimation. *British Journal of Psychology, 105*, 399-412.
+estimation. *British Journal of Psychology, 105*(3), 399-412.
+[doi:10.1111/bjop.12046](https://doi.org/10.1111/bjop.12046)
 
 Flora, D. B. (2020). Your coefficient alpha is probably wrong, but which
 coefficient omega is right? A tutorial on using R to obtain better
 reliability estimates. *Advances in Methods and Practices in
-Psychological Science, 3*, 484-501.
-
-Bell, S. M., Chalmers, R. P., & Flora, D. B. (2024). The impact of
-measurement model misspecification on coefficient omega estimates of
-composite reliability. *Educational and Psychological Measurement, 84*,
-5-39.
+Psychological Science, 3*(4), 484-501.
+[doi:10.1177/2515245920951747](https://doi.org/10.1177/2515245920951747)
 
 Green, S. B., & Yang, Y. (2009). Reliability of summed item scores using
-structural equation modeling: an alternative to coefficient alpha.
-*Psychometrika, 74*, 155-167.
+structural equation modeling: An alternative to coefficient alpha.
+*Psychometrika, 74*(1), 155-167.
+[doi:10.1007/s11336-008-9099-3](https://doi.org/10.1007/s11336-008-9099-3)
 
 Kelley, K., & Pornprasertmanit, S. (2016). Confidence intervals for
 population reliability coefficients: Evaluation of methods,
 recommendations, and software for composite measures. *Psychological
-Methods, 21*, 69-92.
+Methods, 21*(1), 69-92.
+[doi:10.1037/a0040086](https://doi.org/10.1037/a0040086)
+
+McNeish, D. (2018). Thanks coefficient alpha, we'll take it from here.
+*Psychological Methods, 23*(3), 412-433.
+[doi:10.1037/met0000144](https://doi.org/10.1037/met0000144)
+
+Sijtsma, K. (2009). On the use, the misuse, and the very limited
+usefulness of Cronbach's alpha. *Psychometrika, 74*(1), 107-120.
+[doi:10.1007/s11336-008-9101-0](https://doi.org/10.1007/s11336-008-9101-0)
 
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
 model <- '
   visual  =~ x1 + x2 + x3
   textual =~ x4 + x5 + x6
@@ -140,7 +160,51 @@ model <- '
 '
 cfa <- nomo_cfa(model, data = lavaan::HolzingerSwineford1939)
 rel <- nomo_reliability(cfa)
-rel$evidence
+summary(rel)
+#> nomologR reliability evidence
+#> # A tibble: 3 × 7
+#>   construct block   indicator_type omega alpha omega_scale         signal
+#>   <chr>     <chr>   <chr>          <chr> <chr> <chr>               <chr> 
+#> 1 speed     overall continuous     0.686 0.688 observed_continuous review
+#> 2 textual   overall continuous     0.885 0.883 observed_continuous info  
+#> 3 visual    overall continuous     0.612 0.626 observed_continuous review
+#> 
+#> Sampling uncertainty was not bootstrapped. For report-ready intervals, rerun with `ci = "bootstrap"`.
+#> 
+#> Measurement-model context requires review: reliability is conditional on the fitted CFA.
+#> 
+#> Interpretation rule: omega is primary for the congeneric CFA workflow; alpha is secondary and assumption-dependent. Reliability contributes score-precision evidence, not construct validity.
 rel$decision_log
-} # }
+#> # A tibble: 9 × 10
+#>   stage       object metric  value reference severity observation recommendation
+#>   <chr>       <chr>  <chr>   <dbl> <chr>     <chr>    <chr>       <chr>         
+#> 1 reliability measu… coeff… NA     Dunn et … info     Model-base… Interpret rel…
+#> 2 reliability measu… model… NA     Bell, Ch… review   At least o… Investigate t…
+#> 3 reliability speed… alpha… NA     Dunn et … info     Coefficien… Report alpha …
+#> 4 reliability visual omega   0.612 configur… review   The coeffi… Inspect score…
+#> 5 reliability textu… omega   0.885 configur… info     The coeffi… Carry this re…
+#> 6 reliability speed  omega   0.686 configur… review   The coeffi… Inspect score…
+#> 7 reliability visual alpha   0.626 configur… review   The coeffi… Inspect score…
+#> 8 reliability textu… alpha   0.883 configur… info     The coeffi… Carry this re…
+#> 9 reliability speed  alpha   0.688 configur… review   The coeffi… Inspect score…
+#> # ℹ 2 more variables: decision <chr>, rationale <chr>
+
+# \donttest{
+# Bootstrap intervals refit the same CFA repeatedly; use more resamples
+# (for example 1000) for final reporting.
+rel_ci <- nomo_reliability(cfa, ci = "bootstrap", ci_boot = 100, ci_seed = 2026)
+summary(rel_ci)
+#> nomologR reliability evidence
+#> # A tibble: 3 × 7
+#>   construct block   indicator_type omega                alpha omega_scale signal
+#>   <chr>     <chr>   <chr>          <chr>                <chr> <chr>       <chr> 
+#> 1 speed     overall continuous     0.686 [0.585, 0.752] 0.68… observed_c… review
+#> 2 textual   overall continuous     0.885 [0.859, 0.900] 0.88… observed_c… info  
+#> 3 visual    overall continuous     0.612 [0.542, 0.686] 0.62… observed_c… review
+#> Bracketed values are bootstrap confidence intervals.
+#> 
+#> Measurement-model context requires review: reliability is conditional on the fitted CFA.
+#> 
+#> Interpretation rule: omega is primary for the congeneric CFA workflow; alpha is secondary and assumption-dependent. Reliability contributes score-precision evidence, not construct validity.
+# }
 ```
