@@ -27,7 +27,7 @@ Depends:
     R (>= 4.2)
 Imports:
     dplyr,
-    EFAtools (>= 0.8.0),
+    EFAtools (>= 1.0.0),
     ggplot2,
     lavaan (>= 0.6-21),
     methods,
