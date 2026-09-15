@@ -36,6 +36,9 @@ reference:
       - nomo_cfa
       - summary.nomo_cfa
       - plot.nomo_cfa
+      - nomo_compare
+      - summary.nomo_compare
+      - plot.nomo_compare
   - title: "4. Reliability and construct-validity evidence"
     contents:
       - nomo_reliability
