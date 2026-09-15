@@ -94,6 +94,11 @@ required copyright and third-party notices.
 ## Distribution
 
 `nomologR` is distributed through [R-universe](https://juhalt.r-universe.dev),
-which builds the latest GitHub release. CRAN submission is deferred to a later
-polish release; readiness work is tracked in
-[#39](https://github.com/JUhalt/nomologR/issues/39).
+which builds each GitHub release, usually within a few hours. The first CRAN
+submission is targeted for `v0.3.0`
+([#39](https://github.com/JUhalt/nomologR/issues/39)), and CRAN-readiness checks
+are part of `v0.2.0` release certification
+([#37](https://github.com/JUhalt/nomologR/issues/37)).
+
+Contributions should keep `R CMD check --as-cran` clean, keep examples and
+vignettes fast, and use `skip_on_cran()` for long-running simulations.

@@ -46,9 +46,10 @@ To install the current GitHub version:
 pak::pak("JUhalt/nomologR")
 ```
 
-`nomologR` is distributed through R-universe, which builds the latest GitHub
-release. CRAN submission is planned for a later polish release
-([#39](https://github.com/JUhalt/nomologR/issues/39)).
+`nomologR` is distributed through R-universe, which builds each GitHub release,
+usually within a few hours. The first CRAN submission is targeted for `v0.3.0`
+([#39](https://github.com/JUhalt/nomologR/issues/39)); until then, install from
+R-universe or GitHub.
 
 ## Who it is for
 
@@ -741,18 +742,21 @@ the workflow research-backed from historical to contemporary practice and more
 useful to graduate students and researchers. Scope was selected in
 [#22](https://github.com/JUhalt/nomologR/issues/22):
 
-- **Core:** learning foundations (#25), research basis (#26), model comparison
-  with `nomo_compare()` (#27), auditable revision lineage (#28), bifactor and
-  higher-order models (#29), replication-status language (#30), and release
-  certification (#37).
-- **Planned:** readable invariance labels (#31), missing-data sensitivity
-  (#32), score guidance (#33), insufficient-effort responding screens (#34),
-  manuscript-ready tables (#35), maintenance (#36), and rendering reports
-  from inside R Markdown or Quarto documents (#40).
+- **Completed:** learning foundations (#25) and readable invariance labels
+  (#31), including the teaching datasets, runnable vignettes, and the research
+  basis article; maintenance (#36).
+- **Core, in progress or next:** research basis methods registry (#26), model
+  comparison with `nomo_compare()` (#27), auditable revision lineage (#28),
+  bifactor and higher-order models (#29), replication-status language (#30),
+  and release certification with a CRAN-readiness gate (#37).
+- **Planned:** missing-data sensitivity (#32), score guidance (#33),
+  insufficient-effort responding screens (#34), manuscript-ready tables (#35),
+  and rendering reports from inside R Markdown or Quarto documents (#40).
 
-Candidates for `v0.3.0` (for example IRT/DIF, Bayesian SEM, ESEM, and
-longitudinal invariance) are tracked in
-[#38](https://github.com/JUhalt/nomologR/issues/38).
+`v0.3.0` carries the first CRAN submission
+([#39](https://github.com/JUhalt/nomologR/issues/39)). Other candidates for
+that release (for example IRT/DIF, Bayesian SEM, ESEM, and longitudinal
+invariance) are tracked in [#38](https://github.com/JUhalt/nomologR/issues/38).
 
 ### Completed: `v0.1.0`
 
