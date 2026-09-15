@@ -1112,3 +1112,501 @@ test_that("hardening keeps relation evidence report-ready and non-binary", {
     "fail"
   ) %in% names(tab)))
 })
+
+
+# Edge cases and failure paths ------------------------------------------------
+#
+# Moved from test-regressions.R (#36). These tests were consolidated during
+# pre-v0.1 hardening and exercise defensive branches, sometimes through
+# internal helpers directly.
+
+test_that("closeout: network low-level classifiers cover non-evaluable and inconclusive states", {
+  expect_error(
+    nomologR:::nomo_network_model_table("F =~"),
+    "Could not parse"
+  )
+  expect_false(
+    nomologR:::nomo_network_relation_present(
+      data.frame(),
+      list(relation_type = "directed", source = "A", target = "B")
+    )
+  )
+  expect_true(is.na(
+    nomologR:::nomo_network_fit_measure(numeric(), "cfi")
+  ))
+  expect_length(
+    nomologR:::nomo_network_match_index(
+      data.frame(),
+      list(relation_type = "directed", source = "A", target = "B")
+    ),
+    0L
+  )
+
+  expect_true(is.na(
+    nomologR:::nomo_network_interval_within_region(
+      NA_real_, .2, 0, Inf, FALSE, FALSE
+    )
+  ))
+  expect_true(
+    nomologR:::nomo_network_interval_within_region(
+      -.2, .2, -Inf, .5, FALSE, TRUE
+    )
+  )
+  expect_true(is.na(
+    nomologR:::nomo_network_interval_overlaps_region(
+      NA_real_, .2, 0, 1
+    )
+  ))
+  expect_true(is.na(
+    nomologR:::nomo_network_direction_correct(NA_real_, "positive")
+  ))
+
+  h <- as.list(
+    nomo_hypotheses("A -> B" = positive(min = .20))$hypotheses[1, , drop = FALSE]
+  )
+  ne <- nomologR:::nomo_network_classify(
+    h, estimate = .3, ci_lower = .2, ci_upper = .4, converged = FALSE
+  )
+  expect_identical(ne$concordance, "not_evaluable")
+
+  h_inconclusive <- as.list(
+    nomo_hypotheses("A -> B" = positive())$hypotheses[1, , drop = FALSE]
+  )
+  inc <- nomologR:::nomo_network_classify(
+    h_inconclusive,
+    estimate = -.10,
+    ci_lower = -.20,
+    ci_upper = .20,
+    converged = TRUE
+  )
+  expect_identical(inc$concordance, "inconclusive")
+})
+
+
+test_that("closeout: network measurement context covers empty and strained measurement evidence", {
+  fit <- make_m9_report_run()$results$cfa$fit
+  g <- nomo_defaults()
+
+  empty <- nomologR:::nomo_network_measurement_context(
+    fit = fit,
+    standardized_solution = data.frame(
+      lhs = character(), op = character(), rhs = character(),
+      est.std = numeric()
+    ),
+    parameter_estimates = data.frame(
+      lhs = character(), op = character(), rhs = character(), est = numeric()
+    ),
+    fit_evidence = tibble::tibble(
+      cfi = NA_real_, tli = NA_real_, rmsea = NA_real_, srmr = NA_real_
+    ),
+    converged = TRUE,
+    warnings = character(),
+    guidance = g
+  )
+  expect_equal(nrow(empty$loadings), 0L)
+  expect_equal(nrow(empty$variances), 0L)
+
+  g$cfa_loading_reference <- NA_real_
+  strained <- nomologR:::nomo_network_measurement_context(
+    fit = fit,
+    standardized_solution = data.frame(
+      lhs = "WellBeing", op = "=~", rhs = "i1", est.std = .30
+    ),
+    parameter_estimates = data.frame(
+      lhs = "i1", op = "~~", rhs = "i1", est = -.10
+    ),
+    fit_evidence = tibble::tibble(
+      cfi = .50, tli = .50, rmsea = .20, srmr = .20
+    ),
+    converged = FALSE,
+    warnings = "synthetic engine warning",
+    guidance = g
+  )
+  expect_identical(strained$summary$attention[[1L]], "concern")
+  expect_match(strained$summary$observation[[1L]], "negative variance", fixed = TRUE)
+})
+
+
+test_that("closeout: network replication and log handle non-evaluable evidence and warnings", {
+  a <- tibble::tibble(
+    id = "H1",
+    relation = "A -> B",
+    prediction = "positive",
+    estimate = NA_real_,
+    concordance = "not_evaluable"
+  )
+  b <- tibble::tibble(
+    id = "H1",
+    relation = "A -> B",
+    prediction = "positive",
+    estimate = .2,
+    concordance = "concordant"
+  )
+  rep <- nomologR:::nomo_network_replication_evidence(
+    list(hypothesis_evidence = a),
+    list(hypothesis_evidence = b)
+  )
+  expect_identical(rep$replication_status[[1L]], "not_evaluable")
+
+  measurement <- list(
+    summary = tibble::tibble(
+      loading_review_flags = 0L,
+      attention = "info",
+      observation = "Synthetic measurement context."
+    )
+  )
+  additions <- tibble::tibble(
+    relation = "A -> B",
+    syntax = "B ~ A",
+    added_from_hypothesis = FALSE
+  )
+  evidence <- tibble::tibble(
+    relation = "A -> B",
+    concordance = "not_evaluable",
+    estimate = NA_real_,
+    theoretical_region = "(0, +Inf)",
+    interpretation = "Not evaluable."
+  )
+  log <- nomologR:::nomo_network_decision_log(
+    model_additions = additions,
+    hypotheses_evidence = evidence,
+    converged = FALSE,
+    warnings = "synthetic warning",
+    estimator = "ML",
+    ordered = character(),
+    measurement_context = measurement,
+    sample_role = "primary"
+  )
+  expect_true(any(log$metric == "engine_warnings"))
+  expect_true(any(log$severity == "concern"))
+})
+
+
+test_that("closeout: network public validation covers ordered validation and ML/FIML guards", {
+  dat <- data.frame(
+    i1 = rnorm(30),
+    i2 = rnorm(30),
+    criterion = rnorm(30)
+  )
+  val <- dat
+  val$i1 <- NULL
+  h <- nomo_hypotheses("F -> criterion" = positive())
+  model <- "F =~ i1 + i2"
+
+  expect_error(
+    nomo_network(model, dat, h, guidance = 1),
+    "`guidance` must be a list"
+  )
+  expect_error(
+    nomo_network(model, dat, h, ordered = 1),
+    "`ordered`"
+  )
+  expect_error(
+    nomo_network(
+      model, dat, h,
+      validation_data = val,
+      ordered = "i1"
+    ),
+    "not found in validation data"
+  )
+  expect_error(
+    nomo_network(
+      model, dat, h,
+      ordered = "i1",
+      estimator = "ml"
+    ),
+    "ML-family"
+  )
+  expect_error(
+    nomo_network(
+      model, dat, h,
+      ordered = "i1",
+      missing = "fiml"
+    ),
+    "FIML"
+  )
+
+  nm <- nomo_model(list(F = c("i1", "i2")))
+  expect_error(
+    nomo_network(
+      nm,
+      dat,
+      nomo_hypotheses("F -> missing_node" = positive())
+    ),
+    "neither latent variables"
+  )
+})
+
+
+test_that("closeout: network fit wrapper exposes missing/control arguments before engine failure", {
+  h <- nomo_hypotheses("F -> criterion" = positive())
+  rels <- tibble::tibble(
+    id = "H1",
+    relation = "F -> criterion",
+    syntax = "criterion ~ F",
+    already_in_model = FALSE,
+    added_from_hypothesis = TRUE,
+    origin = "a_priori"
+  )
+  expect_error(
+    nomologR:::nomo_network_fit_once(
+      model_fitted = "F =~ missing_item",
+      model_relations = rels,
+      hypotheses = h,
+      data = data.frame(x = 1:10),
+      ordered = character(),
+      estimator_requested = NULL,
+      estimator_source = "lavaan_default",
+      missing = "fiml",
+      std.lv = TRUE,
+      control = list(iter.max = 1L),
+      guidance = nomo_defaults(),
+      equivalence_alpha = .05,
+      sample_role = "primary"
+    ),
+    "Nomological-network estimation failed"
+  )
+})
+
+
+test_that("closeout: network presentation covers empty evidence and replication branches", {
+  net <- make_m9_full_report_run()$results$network
+
+  if (nrow(net$replication_evidence)) {
+    s <- summary(net)
+    expect_gt(nrow(s$replication_counts), 0L)
+    txt <- paste(capture.output(print(s)), collapse = "\n")
+    expect_match(txt, "Replication evidence", fixed = TRUE)
+  }
+
+  empty_effects <- net
+  empty_effects$hypothesis_evidence$estimate[] <- NA_real_
+  empty_effects$hypothesis_evidence$ci_lower[] <- NA_real_
+  empty_effects$hypothesis_evidence$ci_upper[] <- NA_real_
+  expect_error(
+    plot(empty_effects, type = "effects"),
+    "No finite hypothesis estimates"
+  )
+
+  empty_con <- net
+  empty_con$hypothesis_evidence <- empty_con$hypothesis_evidence[0, , drop = FALSE]
+  expect_error(
+    plot(empty_con, type = "concordance"),
+    "No hypothesis evidence"
+  )
+
+  empty_fit <- net
+  for (nm in c("cfi", "tli", "rmsea", "srmr")) {
+    empty_fit$fit_evidence[[nm]] <- NA_real_
+  }
+  expect_error(
+    plot(empty_fit, type = "fit"),
+    "No finite global fit evidence"
+  )
+
+  no_rep <- net
+  no_rep$replication_evidence <- no_rep$replication_evidence[0, , drop = FALSE]
+  expect_error(
+    plot(no_rep, type = "replication"),
+    "No validation sample"
+  )
+
+  if (nrow(net$replication_evidence)) {
+    bad_rep <- net
+    bad_rep$replication_evidence$primary_estimate[] <- NA_real_
+    bad_rep$replication_evidence$validation_estimate[] <- NA_real_
+    expect_error(
+      plot(bad_rep, type = "replication"),
+      "No finite replication estimates"
+    )
+  }
+})
+
+
+test_that("closeout B: network fitting captures warnings and explicit researcher estimator selection", {
+  skip_if_not(
+    exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
+  )
+
+  dat <- lavaan::HolzingerSwineford1939
+  model <- "visual =~ x1 + x2 + x3"
+  h <- nomo_hypotheses("visual -> x4" = positive())
+  original_sem <- lavaan::sem
+
+  testthat::local_mocked_bindings(
+    sem = function(...) {
+      warning("synthetic SEM warning")
+      original_sem(...)
+    },
+    .package = "lavaan"
+  )
+
+  out <- nomo_network(
+    model,
+    dat,
+    h,
+    estimator = "MLR"
+  )
+
+  expect_identical(out$estimator_source, "researcher")
+  expect_true(any(grepl(
+    "synthetic SEM warning",
+    out$engine_warnings,
+    fixed = TRUE
+  )))
+})
+
+
+test_that("closeout B: network decision log classifies supportive replication as informational", {
+  measurement <- list(
+    summary = tibble::tibble(
+      loading_review_flags = 0L,
+      attention = "info",
+      observation = "Synthetic measurement context."
+    )
+  )
+  additions <- tibble::tibble(
+    relation = "A -> B",
+    syntax = "B ~ A",
+    added_from_hypothesis = FALSE
+  )
+  evidence <- tibble::tibble(
+    relation = "A -> B",
+    concordance = "concordant",
+    estimate = .30,
+    theoretical_region = "(0, +Inf)",
+    interpretation = "Synthetic concordance."
+  )
+  replication <- tibble::tibble(
+    relation = "A -> B",
+    replication_status = "replicated_concordance",
+    estimate_shift = .01,
+    interpretation = "Synthetic replication."
+  )
+
+  log <- nomologR:::nomo_network_decision_log(
+    model_additions = additions,
+    hypotheses_evidence = evidence,
+    converged = TRUE,
+    warnings = character(),
+    estimator = NULL,
+    ordered = character(),
+    measurement_context = measurement,
+    replication_evidence = replication,
+    sample_role = "primary"
+  )
+
+  row <- log[
+    log$stage == "network_replication",
+    ,
+    drop = FALSE
+  ]
+  expect_gt(nrow(row), 0L)
+  expect_identical(row$severity[[1L]], "info")
+})
+
+
+test_that("closeout B: network presentation covers zero-span theory regions and populated replication summaries", {
+  net <- make_m9_full_report_run()$results$network
+
+  zero_net <- net
+  zero_net$hypothesis_evidence$estimate[] <- 0
+  zero_net$hypothesis_evidence$ci_lower[] <- 0
+  zero_net$hypothesis_evidence$ci_upper[] <- 0
+  zero_net$hypotheses$hypotheses$lower[] <- -Inf
+  zero_net$hypotheses$hypotheses$upper[] <- Inf
+
+  prepared <- nomologR:::nomo_network_theory_plot_data(zero_net)
+  expect_equal(prepared$limits, c(-.1, .1))
+
+  net$validation_n <- 100L
+  net$replication_evidence <- tibble::tibble(
+    id = "H1",
+    relation = net$hypothesis_evidence$relation[[1L]],
+    prediction = net$hypothesis_evidence$prediction[[1L]],
+    primary_estimate = .30,
+    validation_estimate = .28,
+    estimate_shift = -.02,
+    primary_concordance = "concordant",
+    validation_concordance = "concordant",
+    replication_status = "replicated_concordance",
+    interpretation = "Synthetic replicated concordance."
+  )
+
+  s <- summary(net)
+  expect_gt(nrow(s$replication_counts), 0L)
+
+  txt <- paste(capture.output(print(s)), collapse = "\n")
+  expect_match(txt, "Validation N: 100", fixed = TRUE)
+  expect_match(txt, "Replication evidence", fixed = TRUE)
+
+  expect_s3_class(plot(net, type = "replication"), "ggplot")
+})
+
+
+test_that("closeout C: network replication decision log marks inconclusive replication for review", {
+  measurement <- list(
+    summary = tibble::tibble(
+      loading_review_flags = 0L,
+      attention = "info",
+      observation = "Synthetic measurement context."
+    )
+  )
+
+  additions <- tibble::tibble(
+    relation = "A -> B",
+    syntax = "B ~ A",
+    added_from_hypothesis = FALSE
+  )
+
+  evidence <- tibble::tibble(
+    relation = "A -> B",
+    concordance = "concordant",
+    estimate = .30,
+    theoretical_region = "(0, +Inf)",
+    interpretation = "Synthetic concordance."
+  )
+
+  replication <- tibble::tibble(
+    relation = "A -> B",
+    replication_status = "mixed_or_inconclusive",
+    estimate_shift = .01,
+    interpretation = "Synthetic mixed replication evidence."
+  )
+
+  log <- nomologR:::nomo_network_decision_log(
+    model_additions = additions,
+    hypotheses_evidence = evidence,
+    converged = TRUE,
+    warnings = character(),
+    estimator = NULL,
+    ordered = character(),
+    measurement_context = measurement,
+    replication_evidence = replication,
+    sample_role = "primary"
+  )
+
+  row <- log[
+    log$stage == "network_replication",
+    ,
+    drop = FALSE
+  ]
+
+  expect_gt(nrow(row), 0L)
+  expect_identical(row$severity[[1L]], "review")
+})
+
+
+test_that("closeout C: replication plots reject rows with no finite paired estimates", {
+  net <- make_m9_full_report_run()$results$network
+
+  net$replication_evidence <- tibble::tibble(
+    primary_estimate = NA_real_,
+    validation_estimate = NA_real_
+  )
+
+  expect_error(
+    plot(net, type = "replication"),
+    "No finite replication estimates are available to plot"
+  )
+})

@@ -564,3 +564,300 @@ test_that("reliability summary table fills missing CI-success columns", {
   expect_true(all(is.na(out$omega_ci_n_success)))
   expect_true(all(is.na(out$alpha_ci_n_success)))
 })
+
+
+# Edge cases and failure paths ------------------------------------------------
+#
+# Moved from test-regressions.R (#36). These tests were consolidated during
+# pre-v0.1 hardening and exercise defensive branches, sometimes through
+# internal helpers directly.
+
+test_that("closeout: reliability bootstrap helper covers alignment and finite-draw qualifications", {
+  skip_if_not(
+    exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
+  )
+
+  evidence <- tibble::tibble(
+    construct = c("F1", "F2"),
+    block = c("overall", "overall"),
+    metric = c("omega", "omega"),
+    estimate = c(.8, .8)
+  )
+  type_context <- tibble::tibble(
+    construct = c("F1", "F2"),
+    indicator_type = c("continuous", "continuous")
+  )
+  fit_info <- list(fit = structure(list(), class = "lavaan"), latent_names = c("F1", "F2"))
+
+  testthat::local_mocked_bindings(
+    bootstrapLavaan = function(...) matrix(numeric(), 0L, 0L),
+    .package = "lavaan"
+  )
+  bad_align <- nomologR:::nomo_reliability_bootstrap_ci(
+    fit_info, evidence, type_context,
+    obs.var = TRUE, ordinal_scale = TRUE, include_alpha = FALSE,
+    level = .95, R = 20L, seed = 1L
+  )
+  expect_false(bad_align$status$available[[1L]])
+  expect_match(bad_align$status$reason[[1L]], "could not be aligned", fixed = TRUE)
+
+  draws <- matrix(.80, nrow = 20L, ncol = 2L)
+  testthat::local_mocked_bindings(
+    bootstrapLavaan = function(...) draws,
+    .package = "lavaan"
+  )
+  ok <- nomologR:::nomo_reliability_bootstrap_ci(
+    fit_info, evidence, type_context,
+    obs.var = TRUE, ordinal_scale = TRUE, include_alpha = FALSE,
+    level = .95, R = 20L, seed = 1L
+  )
+  expect_true(ok$status$available[[1L]])
+  expect_identical(colnames(draws), NULL)
+
+  few <- matrix(NA_real_, nrow = 20L, ncol = 2L)
+  few[1:9, ] <- .80
+  colnames(few) <- c("omega::F1::overall", "omega::F2::overall")
+  testthat::local_mocked_bindings(
+    bootstrapLavaan = function(...) few,
+    .package = "lavaan"
+  )
+  too_few <- nomologR:::nomo_reliability_bootstrap_ci(
+    fit_info, evidence, type_context,
+    obs.var = TRUE, ordinal_scale = TRUE, include_alpha = FALSE,
+    level = .95, R = 20L, seed = 1L
+  )
+  expect_false(too_few$status$available[[1L]])
+  expect_match(too_few$status$reason[[1L]], "too few finite", fixed = TRUE)
+
+  qualified <- matrix(NA_real_, nrow = 20L, ncol = 2L)
+  qualified[1:15, ] <- seq(.70, .84, length.out = 15L)
+  colnames(qualified) <- c("omega::F1::overall", "omega::F2::overall")
+  testthat::local_mocked_bindings(
+    bootstrapLavaan = function(...) qualified,
+    .package = "lavaan"
+  )
+  q <- nomologR:::nomo_reliability_bootstrap_ci(
+    fit_info, evidence, type_context,
+    obs.var = TRUE, ordinal_scale = TRUE, include_alpha = FALSE,
+    level = .95, R = 20L, seed = 1L
+  )
+  expect_true(q$status$available[[1L]])
+  expect_match(q$status$reason[[1L]], "only 15 of 20", fixed = TRUE)
+})
+
+
+test_that("closeout: reliability bootstrap statistic returns all-NA when engines fail", {
+  skip_if_not(
+    exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
+  )
+
+  testthat::local_mocked_bindings(
+    compRelSEM = function(...) stop("synthetic engine failure"),
+    .package = "semTools"
+  )
+
+  out <- nomologR:::nomo_reliability_boot_stat(
+    fit = structure(list(), class = "lavaan"),
+    expected_keys = "omega::F::overall",
+    construct_names = "F",
+    type_context = tibble::tibble(
+      construct = "F",
+      indicator_type = "continuous"
+    ),
+    obs.var = TRUE,
+    ordinal_scale = TRUE,
+    include_alpha = FALSE
+  )
+  expect_true(is.na(out[[1L]]))
+})
+
+
+test_that("closeout: reliability engine errors and inadmissible coefficient interpretation are explicit", {
+  skip_if_not(
+    exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
+  )
+
+  cfa <- make_m9_report_run()$results$cfa
+
+  testthat::local_mocked_bindings(
+    compRelSEM = function(...) stop("synthetic omega failure"),
+    .package = "semTools"
+  )
+  expect_error(
+    nomo_reliability(cfa),
+    "Omega/composite-reliability estimation failed"
+  )
+
+  testthat::local_mocked_bindings(
+    compRelSEM = function(...) c(WellBeing = 1.20),
+    .package = "semTools"
+  )
+  bad <- nomo_reliability(cfa, include_alpha = FALSE)
+  expect_identical(bad$evidence$attention[[1L]], "concern")
+  expect_match(
+    bad$evidence$interpretation[[1L]],
+    "outside the conventional 0-1",
+    fixed = TRUE
+  )
+
+  testthat::local_mocked_bindings(
+    nomo_reliability_tidy = function(...) tibble::tibble(),
+    .package = "nomologR"
+  )
+  expect_error(
+    nomo_reliability(cfa, include_alpha = FALSE),
+    "could not be converted"
+  )
+})
+
+
+test_that("closeout: mixed ordered/continuous constructs compute alpha only for continuous composites", {
+  set.seed(5608)
+  n <- 500
+  f1 <- rnorm(n)
+  f2 <- .25 * f1 + sqrt(1 - .25^2) * rnorm(n)
+
+  a1 <- .8 * f1 + rnorm(n, sd = .6)
+  a2 <- .75 * f1 + rnorm(n, sd = .65)
+  a3 <- .7 * f1 + rnorm(n, sd = .7)
+
+  dat <- data.frame(
+    A1 = ordered(cut(a1, c(-Inf, -.5, .5, Inf), labels = FALSE)),
+    A2 = ordered(cut(a2, c(-Inf, -.5, .5, Inf), labels = FALSE)),
+    A3 = ordered(cut(a3, c(-Inf, -.5, .5, Inf), labels = FALSE)),
+    B1 = .8 * f2 + rnorm(n, sd = .6),
+    B2 = .75 * f2 + rnorm(n, sd = .65),
+    B3 = .7 * f2 + rnorm(n, sd = .7)
+  )
+
+  fit <- lavaan::cfa(
+    "
+      F1 =~ A1 + A2 + A3
+      F2 =~ B1 + B2 + B3
+    ",
+    data = dat,
+    ordered = c("A1", "A2", "A3"),
+    estimator = "WLSMV"
+  )
+  expect_true(lavaan::lavInspect(fit, "converged"))
+
+  rel <- nomo_reliability(
+    fit,
+    ordinal_scale = TRUE,
+    include_alpha = TRUE
+  )
+  expect_true(any(rel$alpha_status$construct == "F2"))
+  expect_false(rel$alpha_status$available[rel$alpha_status$construct == "F1"])
+})
+
+
+test_that("closeout B: reliability alpha engine errors remain specific to the requested estimand", {
+  skip_if_not(
+    exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
+  )
+
+  cfa <- make_m9_report_run()$results$cfa
+  original_comp <- semTools::compRelSEM
+  calls <- 0L
+
+  testthat::local_mocked_bindings(
+    compRelSEM = function(...) {
+      calls <<- calls + 1L
+      if (calls == 1L) {
+        return(original_comp(...))
+      }
+      stop("synthetic alpha failure")
+    },
+    .package = "semTools"
+  )
+
+  expect_error(
+    nomo_reliability(cfa, include_alpha = TRUE),
+    "Coefficient-alpha estimation failed"
+  )
+})
+
+
+test_that("closeout B: continuous-alpha failure is explicit in a model containing separate ordered and continuous composites", {
+  skip_if_not(
+    exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
+  )
+
+  set.seed(6203)
+  n <- 320
+  f1 <- rnorm(n)
+  f2 <- .25 * f1 + sqrt(1 - .25^2) * rnorm(n)
+
+  a1 <- .80 * f1 + rnorm(n, sd = .60)
+  a2 <- .75 * f1 + rnorm(n, sd = .65)
+  a3 <- .70 * f1 + rnorm(n, sd = .70)
+
+  dat <- data.frame(
+    A1 = ordered(cut(a1, c(-Inf, -.5, .5, Inf), labels = FALSE)),
+    A2 = ordered(cut(a2, c(-Inf, -.5, .5, Inf), labels = FALSE)),
+    A3 = ordered(cut(a3, c(-Inf, -.5, .5, Inf), labels = FALSE)),
+    B1 = .80 * f2 + rnorm(n, sd = .60),
+    B2 = .75 * f2 + rnorm(n, sd = .65),
+    B3 = .70 * f2 + rnorm(n, sd = .70)
+  )
+
+  fit <- lavaan::cfa(
+    "
+      F1 =~ A1 + A2 + A3
+      F2 =~ B1 + B2 + B3
+    ",
+    data = dat,
+    ordered = c("A1", "A2", "A3"),
+    estimator = "WLSMV"
+  )
+  expect_true(lavaan::lavInspect(fit, "converged"))
+
+  original_comp <- semTools::compRelSEM
+  testthat::local_mocked_bindings(
+    compRelSEM = function(..., tau.eq = FALSE) {
+      if (is.character(tau.eq)) {
+        stop("synthetic continuous-alpha failure")
+      }
+      original_comp(..., tau.eq = tau.eq)
+    },
+    .package = "semTools"
+  )
+
+  expect_error(
+    nomo_reliability(
+      fit,
+      ordinal_scale = TRUE,
+      include_alpha = TRUE
+    ),
+    "Coefficient-alpha estimation failed for continuous composites"
+  )
+})
+
+
+test_that("closeout B: reliability marks an improper measurement model as a model-dependence concern", {
+  skip_if_not(
+    exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
+  )
+
+  cfa <- make_m9_report_run()$results$cfa
+  original_measurement_fit <- nomologR:::nomo_measurement_fit
+
+  testthat::local_mocked_bindings(
+    nomo_measurement_fit = function(...) {
+      z <- original_measurement_fit(...)
+      z$post_check <- FALSE
+      z
+    },
+    .package = "nomologR"
+  )
+
+  rel <- nomo_reliability(cfa, include_alpha = FALSE)
+  dep <- rel$decision_log[
+    rel$decision_log$metric == "model_dependence",
+    ,
+    drop = FALSE
+  ]
+  expect_gt(nrow(dep), 0L)
+  expect_identical(dep$severity[[1L]], "concern")
+  expect_match(dep$observation[[1L]], "admissibility", fixed = TRUE)
+})

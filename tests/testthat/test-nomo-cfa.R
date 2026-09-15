@@ -974,3 +974,165 @@ test_that("optimizer control input is validated", {
     "named list"
   )
 })
+
+
+# Edge cases and failure paths ------------------------------------------------
+#
+# Moved from test-regressions.R (#36). These tests were consolidated during
+# pre-v0.1 hardening and exercise defensive branches, sometimes through
+# internal helpers directly.
+
+test_that("closeout: CFA accepts nomo_model and rejects non-list guidance", {
+  dat <- lavaan::HolzingerSwineford1939
+  nm <- nomo_model(list(visual = c("x1", "x2", "x3")))
+  out <- nomo_cfa(nm, dat, modification_indices = FALSE)
+  expect_s3_class(out, "nomo_cfa")
+
+  expect_error(
+    nomo_cfa(
+      "visual =~ x1 + x2 + x3",
+      dat,
+      guidance = 1
+    ),
+    "`guidance`"
+  )
+})
+
+
+test_that("closeout: CFA captures residual and modification-index warnings and MI errors", {
+  skip_if_not(
+    exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
+  )
+
+  dat <- lavaan::HolzingerSwineford1939
+  model <- "visual =~ x1 + x2 + x3"
+  original_residuals <- lavaan::lavResiduals
+  original_mi <- lavaan::modificationIndices
+
+  testthat::local_mocked_bindings(
+    lavResiduals = function(...) {
+      warning("synthetic residual warning")
+      original_residuals(...)
+    },
+    modificationIndices = function(...) {
+      warning("synthetic MI warning")
+      original_mi(...)
+    },
+    .package = "lavaan"
+  )
+  warned <- nomo_cfa(model, dat)
+  expect_true(any(grepl("synthetic", warned$engine_warnings, fixed = TRUE)))
+
+  testthat::local_mocked_bindings(
+    modificationIndices = function(...) stop("synthetic MI error"),
+    .package = "lavaan"
+  )
+  failed_mi <- nomo_cfa(model, dat)
+  expect_equal(nrow(failed_mi$modification_indices), 0L)
+  mi_log <- failed_mi$decision_log[
+    failed_mi$decision_log$metric == "modification_indices",
+    ,
+    drop = FALSE
+  ]
+  expect_gt(nrow(mi_log), 0L)
+  expect_true(any(grepl(
+    "synthetic MI error",
+    mi_log$observation,
+    fixed = TRUE
+  )))
+})
+
+
+test_that("closeout B: CFA fallbacks recover names when standardized output is unavailable and nobs is unusable", {
+  skip_if_not(
+    exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
+  )
+
+  dat <- lavaan::HolzingerSwineford1939
+  original_inspect <- lavaan::lavInspect
+
+  testthat::local_mocked_bindings(
+    lavInspect = function(object, what, ...) {
+      if (identical(what, "options")) return(list())
+      if (identical(what, "nobs")) return(0)
+      original_inspect(object, what, ...)
+    },
+    standardizedSolution = function(...) data.frame(),
+    .package = "lavaan"
+  )
+
+  out <- nomo_cfa(
+    "visual =~ x1 + x2 + x3",
+    dat,
+    estimator = "MLR",
+    modification_indices = FALSE
+  )
+
+  expect_true(is.na(out$n_used))
+  expect_true(is.na(out$n_dropped))
+  expect_true(length(lavaan::lavNames(out$fit, type = "lv")) >= 1L)
+})
+
+
+test_that("closeout B: CFA loading and factor-correlation helpers fill optional statistics with NA", {
+  loads <- nomologR:::nomo_cfa_loadings(
+    data.frame(
+      lhs = "F",
+      op = "=~",
+      rhs = "x1",
+      est.std = .70
+    ),
+    guidance = nomo_defaults()
+  )
+  expect_true(is.na(loads$se[[1L]]))
+  expect_true(is.na(loads$z[[1L]]))
+  expect_true(is.na(loads$p_value[[1L]]))
+  expect_true(is.na(loads$ci_lower[[1L]]))
+  expect_true(is.na(loads$ci_upper[[1L]]))
+
+  cors <- nomologR:::nomo_cfa_factor_correlations(
+    data.frame(
+      lhs = "F1",
+      op = "~~",
+      rhs = "F2",
+      est.std = .30
+    ),
+    latent_names = c("F1", "F2")
+  )
+  expect_true(is.na(cors$se[[1L]]))
+})
+
+
+test_that("closeout B: CFA summary displays engine/requested estimator differences", {
+  cfa <- make_m9_report_run()$results$cfa
+  s <- summary(cfa)
+  s$estimator <- "MLR"
+  s$estimator_engine <- "ML"
+
+  txt <- paste(capture.output(print(s)), collapse = "\n")
+  expect_match(txt, "engine: ML", fixed = TRUE)
+})
+
+
+test_that("closeout C: CFA loading helper returns its stable empty schema when no loading rows exist", {
+  standardized <- data.frame(
+    lhs = "F",
+    op = "~~",
+    rhs = "F",
+    est.std = 1
+  )
+
+  out <- nomologR:::nomo_cfa_loadings(
+    standardized,
+    guidance = nomo_defaults()
+  )
+
+  expect_equal(nrow(out), 0L)
+  expect_identical(
+    names(out),
+    c(
+      "factor", "item", "loading", "se", "z", "p_value",
+      "ci_lower", "ci_upper", "attention", "explanation"
+    )
+  )
+})

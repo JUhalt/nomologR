@@ -57,3 +57,76 @@ jobs:
         with:
           upload-snapshots: true
           build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'
+
+  # Checks the package against the minimum versions declared in DESCRIPTION
+  # Imports (for example `lavaan (>= 0.6-21)`), so a declared minimum is never
+  # an untested promise. Versions are read from DESCRIPTION rather than
+  # repeated here.
+  minimum-dependencies:
+    runs-on: ubuntu-latest
+
+    name: ubuntu-latest (release, minimum declared dependencies)
+
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      R_KEEP_PKG_SOURCE: yes
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Remove stale Google Chrome apt source
+        shell: bash
+        run: |
+          sudo rm -f /etc/apt/sources.list.d/google-chrome.list* /etc/apt/sources.list.d/google-chrome.sources*
+
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: release
+          use-public-rspm: true
+
+      - name: Read declared minimum versions
+        id: minimums
+        shell: Rscript {0}
+        run: |
+          imports <- read.dcf("DESCRIPTION", fields = "Imports")[[1]]
+          imports <- trimws(strsplit(imports, ",")[[1]])
+          matches <- regmatches(imports, regexec("^([A-Za-z0-9.]+)\\s*\\(>=\\s*([^)]+)\\)$", imports))
+          matches <- Filter(length, matches)
+          refs <- vapply(matches, function(m) paste0(m[[2]], "@", trimws(m[[3]])), character(1))
+          cat("Testing declared minimum versions:", refs, sep = "\n  ")
+          cat("refs=", paste(refs, collapse = ", "), "\n", file = Sys.getenv("GITHUB_OUTPUT"), sep = "", append = TRUE)
+          suggests <- read.dcf("DESCRIPTION", fields = "Suggests")[[1]]
+          suggests <- sub("\\s*\\(.*$", "", trimws(strsplit(suggests, ",")[[1]]))
+          suggests <- paste0("any::", suggests[nzchar(suggests)])
+          cat("suggests=", paste(suggests, collapse = ", "), "\n", file = Sys.getenv("GITHUB_OUTPUT"), sep = "", append = TRUE)
+
+      # Resolve hard dependencies only. Otherwise pak also installs the
+      # Suggests of the pinned packages (semTools suggests blavaan, which
+      # requires a newer lavaan) and cannot honor the declared minimums.
+      # nomologR's own Suggests are added explicitly so R CMD check can run
+      # tests and vignettes.
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          dependencies: '"hard"'
+          extra-packages: any::rcmdcheck, ${{ steps.minimums.outputs.suggests }}, ${{ steps.minimums.outputs.refs }}
+          needs: check
+
+      - name: Confirm minimum versions are installed
+        shell: Rscript {0}
+        run: |
+          imports <- read.dcf("DESCRIPTION", fields = "Imports")[[1]]
+          imports <- trimws(strsplit(imports, ",")[[1]])
+          matches <- Filter(length, regmatches(imports, regexec("^([A-Za-z0-9.]+)\\s*\\(>=\\s*([^)]+)\\)$", imports)))
+          for (m in matches) {
+            installed <- utils::packageVersion(m[[2]])
+            declared <- package_version(trimws(m[[3]]))
+            cat(sprintf("%-10s declared >= %-8s installed %s\n", m[[2]], format(declared), format(installed)))
+            if (installed != declared) stop(sprintf("%s %s is installed, not the declared minimum %s.", m[[2]], installed, declared))
+          }
+
+      - uses: r-lib/actions/check-r-package@v2
+        with:
+          upload-snapshots: true
+          build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'

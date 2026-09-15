@@ -759,3 +759,305 @@ test_that("polished EFA plots avoid redundant matrix cells", {
   expect_equal(nrow(p_phi$data), choose(out$n_factors, 2))
   expect_true(all(c("Primary", "Secondary") %in% p_items$data$loading_type))
 })
+
+
+# Edge cases and failure paths ------------------------------------------------
+#
+# Moved from test-regressions.R (#36). These tests were consolidated during
+# pre-v0.1 hardening and exercise defensive branches, sometimes through
+# internal helpers directly.
+
+test_that("closeout: EFA item summary uses documented fallback references", {
+  pattern <- matrix(
+    c(.6, .2, .3, .5),
+    nrow = 2,
+    byrow = TRUE,
+    dimnames = list(c("i1", "i2"), c("F1", "F2"))
+  )
+  out <- nomologR:::nomo_efa_item_summary(
+    pattern = pattern,
+    communality = c(.40, .34),
+    uniqueness = c(.60, .66),
+    complexity = c(1.2, 1.4),
+    guidance = list()
+  )
+  expect_equal(nrow(out), 2L)
+})
+
+
+test_that("closeout B: EFA estimation errors are wrapped with component context", {
+  skip_if_not(
+    exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
+  )
+
+  dat <- data.frame(
+    a = rnorm(80),
+    b = rnorm(80),
+    c = rnorm(80),
+    d = rnorm(80)
+  )
+
+  testthat::local_mocked_bindings(
+    fa = function(...) stop("synthetic EFA engine failure"),
+    .package = "psych"
+  )
+
+  expect_error(
+    nomo_efa(
+      dat,
+      factors = 1L,
+      rotation = "varimax",
+      correlation = "pearson",
+      missing = "complete"
+    ),
+    "EFA estimation failed"
+  )
+})
+
+
+test_that("closeout B: EFA derives structure, communalities, uniqueness, and complexity when engines omit them", {
+  skip_if_not(
+    exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
+  )
+
+  set.seed(6201)
+  n <- 90
+  f1 <- rnorm(n)
+  f2 <- .30 * f1 + sqrt(1 - .30^2) * rnorm(n)
+  dat <- data.frame(
+    a1 = .80 * f1 + rnorm(n, sd = .60),
+    a2 = .75 * f1 + rnorm(n, sd = .65),
+    a3 = .70 * f1 + rnorm(n, sd = .70),
+    b1 = .80 * f2 + rnorm(n, sd = .60),
+    b2 = .75 * f2 + rnorm(n, sd = .65),
+    b3 = .70 * f2 + rnorm(n, sd = .70)
+  )
+
+  original_fa <- psych::fa
+  testthat::local_mocked_bindings(
+    fa = function(...) {
+      z <- original_fa(...)
+      z$Structure <- NULL
+      z$communality <- NULL
+      z$communalities <- NULL
+      z$uniquenesses <- NULL
+      z$complexity <- NULL
+      z
+    },
+    .package = "psych"
+  )
+
+  guidance <- nomo_defaults()
+  guidance$factor_small_n_reference <- NULL
+
+  out <- nomo_efa(
+    dat,
+    factors = 2L,
+    rotation = "oblimin",
+    correlation = "pearson",
+    missing = "complete",
+    guidance = guidance
+  )
+
+  expect_equal(dim(out$structure_matrix), dim(out$pattern_matrix))
+  expect_true(all(is.finite(out$item_summary$communality)))
+  expect_true(any(out$decision_log$metric == "sample_size"))
+})
+
+
+test_that("closeout B: EFA uses an engine communalities alias when the primary field is absent", {
+  skip_if_not(
+    exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
+  )
+
+  set.seed(6202)
+  dat <- as.data.frame(matrix(rnorm(480), ncol = 6))
+  names(dat) <- paste0("x", 1:6)
+
+  original_fa <- psych::fa
+  testthat::local_mocked_bindings(
+    fa = function(...) {
+      z <- original_fa(...)
+      fallback <- if (!is.null(z$communality)) {
+        z$communality
+      } else {
+        rep(.50, nrow(unclass(z$loadings)))
+      }
+      z$communality <- NULL
+      z$communalities <- fallback
+      z
+    },
+    .package = "psych"
+  )
+
+  out <- nomo_efa(
+    dat,
+    factors = 1L,
+    rotation = "varimax",
+    correlation = "pearson",
+    missing = "complete"
+  )
+  expect_true(all(is.finite(out$item_summary$communality)))
+})
+
+
+test_that("closeout B: EFA presentation covers researcher, review, unavailable adequacy, and orthogonal branches", {
+  item_summary <- tibble::tibble(
+    item = c("i1", "i2"),
+    primary_factor = c("F1", "F2"),
+    primary_loading = c(.70, .60),
+    secondary_factor = c("F2", "F1"),
+    secondary_loading = c(.10, .20),
+    communality = c(.50, .45),
+    attention = c("KEEP", "REVIEW"),
+    explanation = c("No review.", "Synthetic review.")
+  )
+
+  efa <- structure(
+    list(
+      factor_source = "researcher",
+      n_cases = 80L,
+      n_items = 2L,
+      n_factors = 2L,
+      correlation = "pearson",
+      fm = "minres",
+      rotation = "varimax",
+      rmsr = .05,
+      item_summary = item_summary,
+      pattern_matrix = matrix(
+        0,
+        2, 2,
+        dimnames = list(c("i1", "i2"), c("F1", "F2"))
+      ),
+      items = c("i1", "i2"),
+      oblique = FALSE,
+      factor_correlations = matrix(
+        c(1, 0, 0, 1),
+        2, 2,
+        dimnames = list(c("F1", "F2"), c("F1", "F2"))
+      ),
+      residual_matrix = matrix(
+        0,
+        2, 2,
+        dimnames = list(c("i1", "i2"), c("i1", "i2"))
+      ),
+      residual_pairs = tibble::tibble(),
+      kmo = list(available = FALSE, overall = NA_real_),
+      bartlett = list(
+        available = TRUE,
+        df = 1,
+        chisq = 2,
+        p_value = .123
+      ),
+      factor_context = NULL,
+      extraction_note = "",
+      structure_matrix = matrix(
+        0,
+        2, 2,
+        dimnames = list(c("i1", "i2"), c("F1", "F2"))
+      ),
+      sample_adequacy = tibble::tibble(),
+      decision_log = tibble::tibble(),
+      guidance = nomo_defaults()
+    ),
+    class = c("nomo_efa", "list")
+  )
+
+  print_text <- paste(capture.output(print(efa)), collapse = "\n")
+  expect_match(print_text, "researcher specified", fixed = TRUE)
+
+  s <- summary(efa)
+  summary_text <- paste(capture.output(print(s)), collapse = "\n")
+  expect_match(summary_text, "researcher specified", fixed = TRUE)
+  expect_match(summary_text, "KMO unavailable", fixed = TRUE)
+  expect_match(summary_text, "p = 0.123", fixed = TRUE)
+  expect_match(summary_text, "Items requiring review", fixed = TRUE)
+  expect_match(summary_text, "Factor correlations", fixed = TRUE)
+
+  expect_s3_class(plot(efa, type = "pattern"), "ggplot")
+  expect_s3_class(plot(efa, type = "residuals"), "ggplot")
+  expect_s3_class(plot(efa, type = "factor_correlations"), "ggplot")
+})
+
+
+test_that("closeout C: EFA presentation covers nomo_factors handoff and oblique pattern text", {
+  item_summary <- tibble::tibble(
+    item = c("i1", "i2"),
+    primary_factor = c("F1", "F2"),
+    primary_loading = c(.70, .65),
+    secondary_factor = c("F2", "F1"),
+    secondary_loading = c(.15, .10),
+    communality = c(.50, .45),
+    attention = c("KEEP", "KEEP"),
+    explanation = c("No review.", "No review.")
+  )
+
+  efa <- structure(
+    list(
+      factor_source = "nomo_factors",
+      n_cases = 100L,
+      n_items = 2L,
+      n_factors = 2L,
+      correlation = "pearson",
+      fm = "minres",
+      rotation = "oblimin",
+      rmsr = .04,
+      item_summary = item_summary,
+      pattern_matrix = matrix(
+        c(.70, .15, .10, .65),
+        2, 2,
+        byrow = TRUE,
+        dimnames = list(c("i1", "i2"), c("F1", "F2"))
+      ),
+      items = c("i1", "i2"),
+      oblique = TRUE,
+      factor_correlations = matrix(
+        c(1, .30, .30, 1),
+        2, 2,
+        dimnames = list(c("F1", "F2"), c("F1", "F2"))
+      ),
+      residual_matrix = matrix(
+        c(0, .02, .02, 0),
+        2, 2,
+        dimnames = list(c("i1", "i2"), c("i1", "i2"))
+      ),
+      residual_pairs = tibble::tibble(),
+      kmo = list(available = FALSE, overall = NA_real_),
+      bartlett = list(
+        available = FALSE,
+        df = NA_real_,
+        chisq = NA_real_,
+        p_value = NA_real_
+      ),
+      factor_context = list(),
+      extraction_note = "",
+      structure_matrix = matrix(
+        c(.70, .36, .30, .65),
+        2, 2,
+        byrow = TRUE,
+        dimnames = list(c("i1", "i2"), c("F1", "F2"))
+      ),
+      sample_adequacy = tibble::tibble(),
+      decision_log = tibble::tibble(),
+      guidance = nomo_defaults()
+    ),
+    class = c("nomo_efa", "list")
+  )
+
+  printed <- paste(capture.output(print(efa)), collapse = "\n")
+  expect_match(printed, "nomo_factors() handoff", fixed = TRUE)
+
+  summary_printed <- paste(
+    capture.output(print(summary(efa))),
+    collapse = "\n"
+  )
+  expect_match(summary_printed, "from nomo_factors()", fixed = TRUE)
+
+  p <- plot(efa, type = "pattern")
+  expect_s3_class(p, "ggplot")
+  expect_match(
+    p$labels$subtitle,
+    "Oblique solution",
+    fixed = TRUE
+  )
+})

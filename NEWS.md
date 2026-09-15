@@ -1,5 +1,34 @@
 # nomologR 0.1.0.9000
 
+## Maintenance (#36)
+
+- Split the guided-workflow implementation (`R/nomo_run.R`, 2,066 lines) into
+  `nomo_run_state.R` (state and input validation), `nomo_run_decisions.R`
+  (researcher decisions), `nomo_run_stages.R` (stage execution and blocking),
+  `nomo_run_provenance.R` (provenance, recipe, and settings tables), and
+  `nomo_run.R` (entry point). Every function body and signature is unchanged,
+  verified by comparing the parsed functions with the previous source, and the
+  generated documentation is identical.
+- Redistributed the 102 tests in `tests/testthat/test-regressions.R`, which were
+  consolidated during pre-v0.1 hardening, into the per-module test files. Test
+  names, the number of tests (464), and expectation calls are unchanged.
+- Raised the declared minimum for `EFAtools` from 0.8.0 to 1.0.0. With
+  `EFAtools` 0.8.0, `nomo_factors()` could not run the empirical Kaiser
+  criterion, NEST, Hull, or comparison-data criteria, and 22 factor-retention
+  tests failed. The full test suite passes with the declared minimums
+  `lavaan` 0.6-21, `semTools` 0.5-9, and `EFAtools` 1.0.0.
+- Added a CI job that installs the minimum versions declared in `DESCRIPTION`
+  Imports, confirms they are the versions installed, and runs `R CMD check`,
+  so a declared minimum is never an untested promise.
+- Evaluated parallel execution for bootstrap reliability intervals. Four `snow`
+  workers were about 3.5 times faster than serial refitting, and results are
+  reproducible for a given seed and worker count but differ across worker
+  counts. Because an opt-in option adds a user-facing argument and provenance
+  fields, it is tracked separately (#42); bootstrap behavior is unchanged here.
+- Recorded the distribution plan: R-universe through `v0.2.x`, a
+  CRAN-readiness gate in `v0.2.0` certification (#37), and the first CRAN
+  submission targeted for `v0.3.0` (#39).
+
 ## Learning foundations toward v0.2.0
 
 - Set the `v0.2.0` direction: research-backed, usable scale-development and

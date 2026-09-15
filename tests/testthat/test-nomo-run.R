@@ -973,3 +973,443 @@ test_that("research and teaching modes retain identical statistical objects", {
   expect_output(print(teaching), "Observation:")
   expect_output(print(research), "Decision requests")
 })
+
+
+# Edge cases and failure paths ------------------------------------------------
+#
+# Moved from test-regressions.R (#36). These tests were consolidated during
+# pre-v0.1 hardening and exercise defensive branches, sometimes through
+# internal helpers directly.
+
+test_that("closeout: run helper validation covers the remaining argument branches", {
+  x <- make_m9_minimal_run()
+
+  expect_error(
+    nomologR:::nomo_run_set_stage(x, "not_a_stage", "completed"),
+    "Unknown workflow stage"
+  )
+
+  broken_split <- structure(
+    list(
+      calibration = data.frame(),
+      validation = data.frame(x = 1)
+    ),
+    class = c("nomo_split", "list")
+  )
+  expect_error(
+    nomologR:::nomo_run_data_roles(broken_split),
+    "non-empty"
+  )
+
+  scales <- list(S = c("i1", "i2"))
+  expect_error(
+    nomologR:::nomo_run_validate_settings(1, scales),
+    "named list"
+  )
+  expect_identical(
+    nomologR:::nomo_run_validate_settings(list(), scales),
+    list()
+  )
+
+  dup_stage <- list(list(), list())
+  names(dup_stage) <- c("efa", "efa")
+  expect_error(
+    nomologR:::nomo_run_validate_settings(dup_stage, scales),
+    "unique stage names"
+  )
+
+  dup_args <- list(1, 2)
+  names(dup_args) <- c("rotation", "rotation")
+  expect_error(
+    nomologR:::nomo_run_validate_settings(
+      list(efa = dup_args),
+      scales
+    ),
+    "uniquely named arguments"
+  )
+
+  expect_error(
+    nomologR:::nomo_run_validate_settings(
+      list(efa = list(types = c("continuous"))),
+      scales
+    ),
+    "named character vector"
+  )
+
+  expect_error(
+    nomologR:::nomo_run_scope_settings(
+      settings = list(
+        efa = list(types = c(i1 = "continuous", bad = "continuous"))
+      ),
+      stage = "efa",
+      items = scales$S,
+      scales = scales
+    ),
+    "unknown pipeline item"
+  )
+
+  scoped <- nomologR:::nomo_run_scope_settings(
+    settings = list(
+      efa = list(types = c(i1 = "continuous", i2 = "continuous"))
+    ),
+    stage = "efa",
+    items = "i1",
+    scales = scales
+  )
+  expect_identical(names(scoped$types), "i1")
+
+  none <- nomologR:::nomo_run_scope_settings(
+    settings = list(
+      efa = list(types = c(i1 = "continuous", i2 = "continuous"))
+    ),
+    stage = "efa",
+    items = "not_in_scope",
+    scales = scales
+  )
+  expect_null(none$types)
+
+  expect_error(
+    nomologR:::nomo_run_component_call(
+      fun = function(...) NULL,
+      fixed = list(a = 1),
+      extra = list(a = 2),
+      stage = "efa"
+    ),
+    "cannot override"
+  )
+
+  expect_error(
+    nomologR:::nomo_run_normalize_factor_counts("one", scales),
+    "positive integer"
+  )
+  expect_error(
+    nomologR:::nomo_run_normalize_factor_counts(
+      c(S = 1, Extra = 1),
+      scales
+    ),
+    "names must match"
+  )
+
+  expect_identical(
+    nomologR:::nomo_run_normalize_rationale(NULL, c("A", "B")),
+    c(A = "", B = "")
+  )
+  expect_error(
+    nomologR:::nomo_run_normalize_rationale(1, "A"),
+    "character text"
+  )
+  expect_identical(
+    nomologR:::nomo_run_normalize_rationale(
+      c(B = "b", A = "a"),
+      c("A", "B")
+    ),
+    c(A = "a", B = "b")
+  )
+
+  nm <- nomo_model(list(F = c("i1", "i2")))
+  expect_match(
+    nomologR:::nomo_run_normalize_cfa_model(nm),
+    "F =~"
+  )
+
+  expect_error(
+    nomologR:::nomo_run_normalize_measurement_decision(1),
+    "proceed"
+  )
+
+  expect_identical(
+    nomologR:::nomo_run_merge_future_settings(x, list()),
+    x
+  )
+
+  expect_error(
+    nomo_run(
+      data = data.frame(i1 = 1:6, i2 = 6:1),
+      scales = scales,
+      guidance = 1
+    ),
+    "`guidance` must be a list"
+  )
+})
+
+
+test_that("closeout: measurement request handles components without decision logs", {
+  x <- make_m9_minimal_run()
+  x$results$cfa <- list(heywood_detected = FALSE, decision_log = NULL)
+  x$results$reliability <- list(decision_log = NULL)
+  x$results$validity <- list(decision_log = NULL)
+
+  req <- nomologR:::nomo_run_measurement_request(x)
+  expect_equal(nrow(req), 1L)
+  expect_match(req$observation, "0 concern and 0 review", fixed = TRUE)
+})
+
+
+test_that("closeout: run decision handlers block cleanly when component calls fail", {
+  skip_if_not(
+    exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
+  )
+
+  x <- make_m9_minimal_run()
+
+  testthat::local_mocked_bindings(
+    nomo_efa = function(...) stop("synthetic EFA failure"),
+    .package = "nomologR"
+  )
+  blocked_efa <- nomologR:::nomo_run_apply_factor_decision(x, 1L)
+  expect_identical(blocked_efa$status, "blocked")
+})
+
+
+test_that("closeout: CFA workflow decision paths retain failed stages", {
+  skip_if_not(
+    exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
+  )
+
+  base <- make_m9_minimal_run()
+  base$next_stage <- "cfa"
+  base$decision_requests <- tibble::tibble(
+    id = "cfa_model",
+    stage = "cfa",
+    scope = "measurement_model",
+    observation = "",
+    reason = "",
+    options = "",
+    consequence = "",
+    example = ""
+  )
+
+  expect_error(
+    nomologR:::nomo_run_apply_cfa_model(
+      base,
+      list(value = "S =~ i1 + i2", rationale = 1)
+    ),
+    "rationale"
+  )
+
+  testthat::local_mocked_bindings(
+    nomo_cfa = function(...) structure(
+      list(converged = FALSE),
+      class = c("nomo_cfa", "list")
+    ),
+    .package = "nomologR"
+  )
+  nc <- nomologR:::nomo_run_apply_cfa_model(
+    base,
+    list(value = "S =~ i1 + i2", rationale = "fixture")
+  )
+  expect_identical(nc$status, "blocked")
+  expect_identical(nc$blocked$stage, "cfa")
+})
+
+
+test_that("closeout: reliability and validity failures block their own workflow stages", {
+  skip_if_not(
+    exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
+  )
+
+  base <- make_m9_minimal_run()
+  base$next_stage <- "cfa"
+  base$decision_requests <- tibble::tibble(
+    id = "cfa_model",
+    stage = "cfa",
+    scope = "measurement_model",
+    observation = "",
+    reason = "",
+    options = "",
+    consequence = "",
+    example = ""
+  )
+
+  fake_cfa <- structure(
+    list(converged = TRUE),
+    class = c("nomo_cfa", "list")
+  )
+
+  testthat::local_mocked_bindings(
+    nomo_cfa = function(...) fake_cfa,
+    nomo_reliability = function(...) stop("synthetic reliability failure"),
+    .package = "nomologR"
+  )
+  br <- nomologR:::nomo_run_apply_cfa_model(
+    base,
+    list(value = "S =~ i1 + i2", rationale = "fixture")
+  )
+  expect_identical(br$blocked$stage, "reliability")
+
+  testthat::local_mocked_bindings(
+    nomo_cfa = function(...) fake_cfa,
+    nomo_reliability = function(...) structure(
+      list(decision_log = nomologR:::nomo_log_new()),
+      class = c("nomo_reliability", "list")
+    ),
+    nomo_validity = function(...) stop("synthetic validity failure"),
+    .package = "nomologR"
+  )
+  bv <- nomologR:::nomo_run_apply_cfa_model(
+    base,
+    list(value = "S =~ i1 + i2", rationale = "fixture")
+  )
+  expect_identical(bv$blocked$stage, "validity")
+})
+
+
+test_that("closeout: downstream run helpers return blocked invariance and network states", {
+  skip_if_not(
+    exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
+  )
+
+  x <- make_m9_minimal_run()
+  x$decisions$cfa_model <- list(value = "S =~ i1 + i2")
+  x$settings$invariance <- list(group = "group")
+
+  testthat::local_mocked_bindings(
+    nomo_invariance = function(...) stop("synthetic invariance failure"),
+    .package = "nomologR"
+  )
+  bi <- nomologR:::nomo_run_run_invariance(x)
+  expect_identical(bi$status, "blocked")
+
+  x2 <- make_m9_minimal_run()
+  x2$decisions$cfa_model <- list(value = "S =~ i1 + i2")
+  x2$settings$network <- list(
+    hypotheses = nomo_hypotheses("S -> criterion" = positive())
+  )
+
+  testthat::local_mocked_bindings(
+    nomo_network = function(...) stop("synthetic network failure"),
+    .package = "nomologR"
+  )
+  bn <- nomologR:::nomo_run_run_network(x2)
+  expect_identical(bn$status, "blocked")
+})
+
+
+test_that("closeout: measurement-model decision rationale is scalar text", {
+  x <- make_m9_minimal_run()
+  x$decision_requests <- tibble::tibble(
+    id = "measurement_model",
+    stage = "measurement_review",
+    scope = "measurement_model",
+    observation = "",
+    reason = "",
+    options = "",
+    consequence = "",
+    example = ""
+  )
+  expect_error(
+    nomologR:::nomo_run_apply_measurement_decision(
+      x,
+      list(value = "proceed", rationale = 1)
+    ),
+    "rationale"
+  )
+})
+
+
+test_that("closeout B: run decision validation covers empty and unnamed decision sets", {
+  expect_identical(
+    nomologR:::nomo_run_validate_decisions(list()),
+    list()
+  )
+  expect_error(
+    nomologR:::nomo_run_validate_decisions(list(1L)),
+    "unique non-empty names"
+  )
+})
+
+
+test_that("closeout B: factor decision requests describe fallback and unavailable plausible sets", {
+  x <- make_m9_minimal_run()
+  x$scales <- list(A = c("a1", "a2"), B = c("b1", "b2"))
+  x$results$factors <- list(
+    A = list(
+      parallel = list(n_factors = 2L),
+      plausible_factors = integer()
+    ),
+    B = list(
+      parallel = list(n_factors = NA_integer_),
+      plausible_factors = integer()
+    )
+  )
+
+  req <- nomologR:::nomo_run_factor_requests(x)
+  expect_equal(nrow(req), 2L)
+  expect_true(any(grepl("2", req$observation, fixed = TRUE)))
+  expect_true(any(grepl(
+    "no compact plausible set was available",
+    req$observation,
+    fixed = TRUE
+  )))
+})
+
+
+test_that("closeout B: downstream workflow stops immediately at blocked invariance or network branches", {
+  skip_if_not(
+    exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
+  )
+
+  x <- make_m9_minimal_run()
+
+  testthat::local_mocked_bindings(
+    nomo_run_run_invariance = function(z) {
+      z$status <- "blocked"
+      z
+    },
+    .package = "nomologR"
+  )
+  inv_block <- nomologR:::nomo_run_finish_downstream(x)
+  expect_identical(inv_block$status, "blocked")
+
+  testthat::local_mocked_bindings(
+    nomo_run_run_invariance = function(z) {
+      z$status <- "paused"
+      z
+    },
+    nomo_run_run_network = function(z) {
+      z$status <- "blocked"
+      z
+    },
+    .package = "nomologR"
+  )
+  net_block <- nomologR:::nomo_run_finish_downstream(x)
+  expect_identical(net_block$status, "blocked")
+})
+
+
+test_that("closeout B: run recipe identifies split-sample network roles", {
+  x <- make_m9_minimal_run()
+  x$sample_design <- "calibration_validation"
+
+  recipe <- nomologR:::nomo_run_recipe_table(x)
+  network <- recipe[recipe$stage == "network", , drop = FALSE]
+  expect_identical(network$data_role[[1L]], "calibration + validation")
+})
+
+
+test_that("closeout B: fresh workflows block transparently when initial screening fails", {
+  skip_if_not(
+    exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
+  )
+
+  testthat::local_mocked_bindings(
+    nomo_screen = function(...) stop("synthetic screening failure"),
+    .package = "nomologR"
+  )
+
+  out <- nomo_run(
+    data = data.frame(i1 = 1:8, i2 = 8:1),
+    scales = list(S = c("i1", "i2"))
+  )
+  expect_identical(out$status, "blocked")
+  expect_identical(out$blocked$stage, "screen")
+})
+
+
+test_that("closeout C: workflow decision validation rejects non-list inputs", {
+  expect_error(
+    nomologR:::nomo_run_validate_decisions(1L),
+    "`decisions` must be a named list",
+    fixed = TRUE
+  )
+})

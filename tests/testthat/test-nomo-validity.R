@@ -234,3 +234,142 @@ test_that("single-factor AVE retains the CFA construct name", {
 
   expect_identical(out$ave$construct, "Weak")
 })
+
+
+# Edge cases and failure paths ------------------------------------------------
+#
+# Moved from test-regressions.R (#36). These tests were consolidated during
+# pre-v0.1 hardening and exercise defensive branches, sometimes through
+# internal helpers directly.
+
+test_that("closeout: validity AVE and HTMT engine failure paths are retained as evidence", {
+  skip_if_not(
+    exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
+  )
+
+  cfa <- make_m9_report_run()$results$cfa
+
+  testthat::local_mocked_bindings(
+    AVE = function(...) stop("synthetic AVE failure"),
+    .package = "semTools"
+  )
+  expect_error(
+    nomo_validity(cfa, htmt = "none"),
+    "AVE estimation failed"
+  )
+
+  testthat::local_mocked_bindings(
+    AVE = function(...) {
+      warning("synthetic AVE warning")
+      c(WellBeing = 1.20)
+    },
+    .package = "semTools"
+  )
+  out <- nomo_validity(cfa, htmt = "none")
+  expect_identical(out$ave$attention[[1L]], "concern")
+  expect_true(length(out$ave_warnings) >= 1L)
+})
+
+
+test_that("closeout: validity HTMT failures and inadmissible values are explicit", {
+  skip_if_not(
+    exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
+  )
+
+  dat <- lavaan::HolzingerSwineford1939
+  fit <- lavaan::cfa(
+    "
+      visual =~ x1 + x2 + x3
+      textual =~ x4 + x5 + x6
+    ",
+    data = dat
+  )
+  expect_true(lavaan::lavInspect(fit, "converged"))
+
+  testthat::local_mocked_bindings(
+    htmt = function(...) stop("synthetic HTMT failure"),
+    .package = "semTools"
+  )
+  failed <- nomo_validity(fit, htmt = "both")
+  expect_true(all(failed$htmt_status$requested))
+  expect_true(all(!failed$htmt_status$available))
+
+  bad_mat <- matrix(
+    c(1, -.20, -.20, 1),
+    2, 2,
+    dimnames = list(c("visual", "textual"), c("visual", "textual"))
+  )
+  testthat::local_mocked_bindings(
+    htmt = function(...) bad_mat,
+    .package = "semTools"
+  )
+  bad <- nomo_validity(fit, htmt = "both")
+  expect_true(any(bad$discriminant$attention == "concern"))
+  expect_true(any(grepl(
+    "unavailable or inadmissible",
+    bad$discriminant$interpretation,
+    fixed = TRUE
+  )))
+})
+
+
+test_that("closeout: validity grouped Fornell-Larcker and post-check concern paths are explicit", {
+  dat <- lavaan::HolzingerSwineford1939
+  fit <- lavaan::cfa(
+    "
+      visual =~ x1 + x2 + x3
+      textual =~ x4 + x5 + x6
+    ",
+    data = dat,
+    group = "school"
+  )
+  expect_true(lavaan::lavInspect(fit, "converged"))
+
+  grouped <- nomo_validity(
+    fit,
+    htmt = "none",
+    fornell_larcker = TRUE
+  )
+  expect_match(
+    grouped$fornell_larcker_reason,
+    "restricted to a single-group",
+    fixed = TRUE
+  )
+
+  skip_if_not(
+    exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
+  )
+  base_cfa <- make_m9_report_run()$results$cfa
+  original_measurement_fit <- nomologR:::nomo_measurement_fit
+  testthat::local_mocked_bindings(
+    nomo_measurement_fit = function(...) {
+      z <- original_measurement_fit(...)
+      z$post_check <- FALSE
+      z
+    },
+    .package = "nomologR"
+  )
+  strained <- nomo_validity(base_cfa, htmt = "none")
+  expect_true(any(
+    strained$decision_log$metric == "lavaan_post_check" &
+      strained$decision_log$severity == "concern"
+  ))
+})
+
+
+test_that("closeout B: validity handles an empty standardized-loading evidence table", {
+  skip_if_not(
+    exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
+  )
+
+  cfa <- make_m9_report_run()$results$cfa
+
+  testthat::local_mocked_bindings(
+    nomo_validity_standardized_loadings = function(...) tibble::tibble(),
+    .package = "nomologR"
+  )
+
+  out <- nomo_validity(cfa, htmt = "none")
+  expect_equal(nrow(out$standardized_loadings), 0L)
+  expect_false(any(out$decision_log$metric == "standardized_loading"))
+})

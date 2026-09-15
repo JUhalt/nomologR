@@ -390,3 +390,209 @@ test_that("presentation branches communicate point-only and interval workflows",
     fixed = TRUE
   )))
 })
+
+
+# Edge cases and failure paths ------------------------------------------------
+#
+# Moved from test-regressions.R (#36). These tests were consolidated during
+# pre-v0.1 hardening and exercise defensive branches, sometimes through
+# internal helpers directly.
+
+test_that("closeout: measurement helper fallback schemas cover data-frame, list, and HTMT alignment branches", {
+  tidy_df <- nomologR:::nomo_reliability_tidy(
+    data.frame(F1 = c(.8, .9)),
+    metric = "omega"
+  )
+  expect_true(all(tidy_df$block == "overall"))
+
+  tidy_list <- nomologR:::nomo_reliability_tidy(
+    list(F1 = c(.8, .9)),
+    metric = "omega"
+  )
+  expect_identical(tidy_list$block, c("block_1", "block_2"))
+
+  fit <- make_m9_report_run()$results$cfa$fit
+  fi <- nomologR:::nomo_measurement_fit(fit)
+  pe <- fi$parameter_estimates
+  pe2 <- pe[pe$op == "=~", , drop = FALSE]
+  pe2$lhs <- rep(c("A", "B"), length.out = nrow(pe2))
+  pe2$rhs <- paste0("not_an_observed_item_", seq_len(nrow(pe2)))
+  fi$parameter_estimates <- pe2
+  fi$latent_names <- c("A", "B")
+  fi$cross_loaded_items <- character()
+  fi$ngroups <- 1L
+  fi$nlevels <- 1L
+
+  h <- nomologR:::nomo_validity_htmt_inputs(fi)
+  expect_false(h$available)
+  expect_match(h$reason, "could not be aligned", fixed = TRUE)
+})
+
+
+test_that("closeout: latent-correlation helper covers missing-CI and cor.lv list fallbacks", {
+  skip_if_not(
+    exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
+  )
+
+  fit <- make_m9_report_run()$results$cfa$fit
+  original_lav_names <- lavaan::lavNames
+
+  testthat::local_mocked_bindings(
+    standardizedSolution = function(...) data.frame(
+      lhs = "A",
+      op = "~~",
+      rhs = "B",
+      est.std = .40
+    ),
+    lavNames = function(object, type, ...) {
+      if (identical(type, "lv")) c("A", "B") else original_lav_names(object, type, ...)
+    },
+    .package = "lavaan"
+  )
+  direct <- nomologR:::nomo_validity_latent_correlations(fit)
+  expect_true(all(is.na(direct$ci_lower)))
+  expect_true(all(is.na(direct$ci_upper)))
+
+  cor_list <- list(
+    g1 = matrix(
+      c(1, .3, .3, 1), 2, 2,
+      dimnames = list(c("A", "B"), c("A", "B"))
+    ),
+    g2 = matrix(
+      c(1, .4, .4, 1), 2, 2,
+      dimnames = list(c("A", "B"), c("A", "B"))
+    )
+  )
+  testthat::local_mocked_bindings(
+    standardizedSolution = function(...) data.frame(),
+    lavNames = function(...) character(),
+    lavInspect = function(object, what, ...) {
+      if (identical(what, "cor.lv")) cor_list else NULL
+    },
+    .package = "lavaan"
+  )
+  fallback <- nomologR:::nomo_validity_latent_correlations(fit)
+  expect_setequal(unique(fallback$block), c("g1", "g2"))
+})
+
+
+test_that("closeout B: measurement-fit fallbacks normalize absent parameter metadata and group-level counts", {
+  skip_if_not(
+    exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
+  )
+
+  fit <- make_m9_report_run()$results$cfa$fit
+  original_inspect <- lavaan::lavInspect
+
+  testthat::local_mocked_bindings(
+    parameterEstimates = function(...) NULL,
+    lavNames = function(...) character(),
+    lavInspect = function(object, what, ...) {
+      if (identical(what, "converged")) return(TRUE)
+      if (identical(what, "ordered")) return(character())
+      if (identical(what, "ngroups")) return(NA_real_)
+      if (identical(what, "nlevels")) return(NA_real_)
+      if (identical(what, "post.check")) return(TRUE)
+      original_inspect(object, what, ...)
+    },
+    .package = "lavaan"
+  )
+
+  info <- nomologR:::nomo_measurement_fit(fit)
+  expect_length(info$cross_loaded_items, 0L)
+  expect_identical(info$ngroups, 1L)
+  expect_identical(info$nlevels, 1L)
+})
+
+
+test_that("closeout B: measurement fit-context and latent-correlation helpers preserve empty and unnamed fallbacks", {
+  skip_if_not(
+    exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
+  )
+
+  fit <- make_m9_report_run()$results$cfa$fit
+
+  testthat::local_mocked_bindings(
+    fitMeasures = function(...) numeric(),
+    .package = "lavaan"
+  )
+  empty_fit <- nomologR:::nomo_reliability_fit_context(
+    fit,
+    nomo_defaults()
+  )
+  expect_equal(nrow(empty_fit), 0L)
+
+  mat <- matrix(
+    c(1, .30, .30, 1),
+    2, 2,
+    dimnames = list(c("A", "B"), c("A", "B"))
+  )
+
+  testthat::local_mocked_bindings(
+    standardizedSolution = function(...) data.frame(),
+    lavNames = function(...) character(),
+    lavInspect = function(object, what, ...) {
+      if (identical(what, "cor.lv")) {
+        return(unname(list(mat, mat)))
+      }
+      NULL
+    },
+    .package = "lavaan"
+  )
+  unnamed <- nomologR:::nomo_validity_latent_correlations(fit)
+  expect_setequal(unique(unnamed$block), c("block_1", "block_2"))
+
+  testthat::local_mocked_bindings(
+    standardizedSolution = function(...) data.frame(),
+    lavNames = function(...) character(),
+    lavInspect = function(...) NULL,
+    .package = "lavaan"
+  )
+  none <- nomologR:::nomo_validity_latent_correlations(fit)
+  expect_equal(nrow(none), 0L)
+})
+
+
+test_that("closeout B: HTMT input recovery handles one-element data lists and unavailable raw data", {
+  skip_if_not(
+    exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
+  )
+
+  fit <- lavaan::cfa(
+    "
+      visual =~ x1 + x2 + x3
+      textual =~ x4 + x5 + x6
+    ",
+    data = lavaan::HolzingerSwineford1939
+  )
+  fi <- nomologR:::nomo_measurement_fit(fit)
+
+  raw <- as.matrix(
+    lavaan::HolzingerSwineford1939[
+      ,
+      c("x1", "x2", "x3", "x4", "x5", "x6")
+    ]
+  )
+
+  testthat::local_mocked_bindings(
+    lavInspect = function(object, what, ...) {
+      if (identical(what, "data")) return(list(raw))
+      NULL
+    },
+    lavNames = function(object, type, ...) {
+      if (identical(type, "ov")) return(colnames(raw))
+      character()
+    },
+    .package = "lavaan"
+  )
+  available <- nomologR:::nomo_validity_htmt_inputs(fi)
+  expect_true(available$available)
+
+  testthat::local_mocked_bindings(
+    lavInspect = function(...) NULL,
+    .package = "lavaan"
+  )
+  unavailable <- nomologR:::nomo_validity_htmt_inputs(fi)
+  expect_false(unavailable$available)
+  expect_match(unavailable$reason, "Raw observed data", fixed = TRUE)
+})

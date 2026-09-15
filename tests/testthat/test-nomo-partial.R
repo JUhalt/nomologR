@@ -33,3 +33,21 @@ test_that("nomo_partial validates researcher specifications", {
     "specified more than once"
   )
 })
+
+
+# Edge cases and failure paths ------------------------------------------------
+#
+# Moved from test-regressions.R (#36). These tests were consolidated during
+# pre-v0.1 hardening and exercise defensive branches, sometimes through
+# internal helpers directly.
+
+test_that("partial invariance always requires rationale", {
+  expect_error(
+    nomo_partial(
+      level = "metric",
+      syntax = "F =~ x2",
+      rationale = ""
+    ),
+    "blank"
+  )
+})

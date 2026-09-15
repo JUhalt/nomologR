@@ -13,8 +13,9 @@
 **Next release:** [v0.2.0](https://github.com/JUhalt/nomologR/milestone/2) —
 research-backed, usable measurement workflows. Scope was selected in
 [#22](https://github.com/JUhalt/nomologR/issues/22) on September 13, 2026.
-**Distribution:** [R-universe](https://juhalt.r-universe.dev). CRAN submission
-is deferred to a later polish release ([#39](https://github.com/JUhalt/nomologR/issues/39)).
+**Distribution:** [R-universe](https://juhalt.r-universe.dev), which builds each
+GitHub release. The first CRAN submission is targeted for `v0.3.0`
+([#39](https://github.com/JUhalt/nomologR/issues/39)).
 
 The complete v0.1 milestone specifications, exit gates, and certification
 records are preserved verbatim in
@@ -108,31 +109,32 @@ unsupported cases, validation plan, and exit criteria.
 
 ## Core workstreams
 
-- [ ] [#25](https://github.com/JUhalt/nomologR/issues/25) Learning foundations — teaching datasets, runnable vignettes and examples, site navigation.
-- [ ] [#26](https://github.com/JUhalt/nomologR/issues/26) Research basis — historical-to-contemporary methods documentation, verified references, methods registry.
+- [x] [#25](https://github.com/JUhalt/nomologR/issues/25) Learning foundations — teaching datasets, runnable vignettes and examples, site navigation (completed in [#41](https://github.com/JUhalt/nomologR/pull/41)).
+- [ ] [#26](https://github.com/JUhalt/nomologR/issues/26) Research basis — historical-to-contemporary methods documentation, verified references, methods registry. References and the research-basis article shipped in [#41](https://github.com/JUhalt/nomologR/pull/41); the methods registry and report-level method citations remain.
 - [ ] [#27](https://github.com/JUhalt/nomologR/issues/27) Model comparison — `nomo_compare()` for nested and non-nested measurement models.
 - [ ] [#28](https://github.com/JUhalt/nomologR/issues/28) Revision lineage — auditable revise-and-compare cycles in `nomo_run()`.
 - [ ] [#29](https://github.com/JUhalt/nomologR/issues/29) Bifactor and higher-order measurement models.
 - [ ] [#30](https://github.com/JUhalt/nomologR/issues/30) Replication-status language for near-zero sign changes.
-- [ ] [#37](https://github.com/JUhalt/nomologR/issues/37) Release certification and R-universe publication.
+- [ ] [#37](https://github.com/JUhalt/nomologR/issues/37) Release certification, CRAN-readiness gate, and R-universe publication.
 
 ## Planned workstreams
 
-- [ ] [#31](https://github.com/JUhalt/nomologR/issues/31) Human-readable invariance local-strain labels.
+- [x] [#31](https://github.com/JUhalt/nomologR/issues/31) Human-readable invariance local-strain labels (completed in [#41](https://github.com/JUhalt/nomologR/pull/41)).
 - [ ] [#32](https://github.com/JUhalt/nomologR/issues/32) Missing-data sensitivity across measurement stages.
 - [ ] [#33](https://github.com/JUhalt/nomologR/issues/33) Score guidance — `nomo_scores()` for sum and factor scores.
 - [ ] [#34](https://github.com/JUhalt/nomologR/issues/34) Insufficient-effort responding screen in `nomo_screen()`.
 - [ ] [#35](https://github.com/JUhalt/nomologR/issues/35) Manuscript-ready tables and Word report output.
-- [ ] [#36](https://github.com/JUhalt/nomologR/issues/36) Maintenance — test organization, `nomo_run.R` modularization, minimum-dependency CI.
+- [x] [#36](https://github.com/JUhalt/nomologR/issues/36) Maintenance — test organization, `nomo_run.R` modularization, minimum-dependency CI.
 - [ ] [#40](https://github.com/JUhalt/nomologR/issues/40) `nomo_report()` rendering from inside R Markdown or Quarto documents.
+- [ ] [#42](https://github.com/JUhalt/nomologR/issues/42) Optional parallel bootstrap for reliability confidence intervals.
 
 ## Suggested sequence
 
-1. **Foundations:** #25 and #31, with #26 maintained alongside every later workstream.
-2. **Safe structure for revision work:** #36 (modularize `nomo_run()`), then #27, then #28.
+1. **Foundations (done):** #25 and #31, with #26 maintained alongside every later workstream.
+2. **Safe structure for revision work:** #36 (done), then #27, then #28.
 3. **Broader measurement models and interpretation:** #29 (builds on #27) and #30.
-4. **Usability extensions:** #32, #33, #34, #35.
-5. **Release:** #37, including the license/version/date gate carried from #22.
+4. **Usability extensions:** #32, #33, #34, #35, #40, #42.
+5. **Release:** #37, including the license/version/date gate carried from #22 and the CRAN-readiness gate.
 
 ## Deferred from v0.2 scope selection
 
@@ -146,8 +148,11 @@ diagnostics). None were rejected.
 ***
 # v0.3.x — Modern Extensions
 
-**Status:** Candidates. Scope selection in [#38](https://github.com/JUhalt/nomologR/issues/38);
+**Status:** Scope selection in [#38](https://github.com/JUhalt/nomologR/issues/38);
 [v0.3.0 milestone](https://github.com/JUhalt/nomologR/milestone/3).
+
+**Committed:** the first CRAN submission ([#39](https://github.com/JUhalt/nomologR/issues/39)); see
+[Distribution](#distribution--r-universe-now-cran-with-v030) below.
 
 Candidate modules (not commitments until selected):
 
@@ -164,9 +169,11 @@ Candidate modules (not commitments until selected):
 - [ ] A `contentvalidR` → `nomologR` handoff that carries content-validity decisions into the decision log.
 
 ***
-# Later — Polish and Wider Distribution
+# Distribution — R-universe Now, CRAN with v0.3.0
 
-- [ ] CRAN submission readiness ([#39](https://github.com/JUhalt/nomologR/issues/39)). Until then, stable releases are distributed through R-universe.
+- Stable releases are published as GitHub releases. [R-universe](https://juhalt.r-universe.dev) builds each release, usually within a few hours.
+- `v0.2.0` certification ([#37](https://github.com/JUhalt/nomologR/issues/37)) includes a CRAN-readiness gate: `R CMD check --as-cran` clean on win-builder, the macOS builder, and R-hub; long-running tests skipped on CRAN; fast examples and vignettes.
+- [ ] First CRAN submission with `v0.3.0` ([#39](https://github.com/JUhalt/nomologR/issues/39)). Decision recorded September 15, 2026: submitting after the v0.2 functions have been used on R-universe avoids repeated CRAN resubmissions while the API is still growing.
 
 ***
 # Long-Term Research Program
