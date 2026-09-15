@@ -97,10 +97,20 @@ jobs:
           refs <- vapply(matches, function(m) paste0(m[[2]], "@", trimws(m[[3]])), character(1))
           cat("Testing declared minimum versions:", refs, sep = "\n  ")
           cat("refs=", paste(refs, collapse = ", "), "\n", file = Sys.getenv("GITHUB_OUTPUT"), sep = "", append = TRUE)
+          suggests <- read.dcf("DESCRIPTION", fields = "Suggests")[[1]]
+          suggests <- sub("\\s*\\(.*$", "", trimws(strsplit(suggests, ",")[[1]]))
+          suggests <- paste0("any::", suggests[nzchar(suggests)])
+          cat("suggests=", paste(suggests, collapse = ", "), "\n", file = Sys.getenv("GITHUB_OUTPUT"), sep = "", append = TRUE)
 
+      # Resolve hard dependencies only. Otherwise pak also installs the
+      # Suggests of the pinned packages (semTools suggests blavaan, which
+      # requires a newer lavaan) and cannot honor the declared minimums.
+      # nomologR's own Suggests are added explicitly so R CMD check can run
+      # tests and vignettes.
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::rcmdcheck, ${{ steps.minimums.outputs.refs }}
+          dependencies: '"hard"'
+          extra-packages: any::rcmdcheck, ${{ steps.minimums.outputs.suggests }}, ${{ steps.minimums.outputs.refs }}
           needs: check
 
       - name: Confirm minimum versions are installed
