@@ -494,6 +494,37 @@ cfa_val <- nomo_cfa(model, data = s$validation)
 The split is explicit, reproducible, and logged as a design choice; no split
 ratio is presented as universally optimal.
 
+#### Comparing measurement models
+
+`nomo_compare()` places fitted CFA models side by side. When the models are
+nested (checked automatically), it reports the difference test that matches the
+estimator; it also reports changes in fit indices, AIC and BIC when they are
+defined, and side-by-side loadings, reliability, and construct-separation
+evidence. A rationale is required, and no model is selected automatically.
+
+```r
+full <- nomo_cfa(
+  "A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4 + b5",
+  data = nomo_demo_continuous
+)
+no_b5 <- nomo_cfa(
+  "A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4 + 0*b5",
+  data = nomo_demo_continuous
+)
+
+cmp <- nomo_compare(
+  full = full,
+  no_b5 = no_b5,
+  rationale = "Does the weakly loading item b5 contribute to factor B?"
+)
+cmp
+summary(cmp)
+```
+
+To test whether an item is needed, fix its loading to zero instead of dropping
+the column: models with different observed variables describe different data,
+so they receive descriptive evidence only.
+
 
 ### 5. `nomo_reliability()` + `nomo_validity()` — measurement evidence beyond model fit
 

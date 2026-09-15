@@ -1,5 +1,29 @@
 # nomologR 0.1.0.9000
 
+## Model comparison (#27)
+
+- Added `nomo_compare()` for comparing two or more fitted `nomo_cfa()` models.
+  A researcher rationale is required and recorded, the comparison can be
+  labeled a priori or post hoc, and no model is ever selected automatically.
+- Nested models receive the difference test that matches the estimator,
+  computed by `lavaan::lavTestLRT()`: the ordinary chi-square difference test
+  for ML, the scaled difference test for robust ML (Satorra & Bentler, 2001),
+  and the scaled-and-shifted test for WLSMV (Satorra, 2000). A test lavaan
+  cannot compute, or a negative scaled statistic, is reported as unavailable
+  with lavaan's message rather than replaced by another method.
+- Nesting is checked from the models' implied moments with `semTools::net()`
+  (Bentler & Satorra, 2010). Researchers can declare nesting when the check
+  cannot run, and a declaration the check contradicts is recorded as a concern.
+- Each comparison reports changes in CFI, TLI, RMSEA, and SRMR without cutoffs,
+  AIC and BIC when they are defined, and a plain-language interpretation.
+- Side-by-side standardized loadings, reliability, AVE, and HTMT2 are reported
+  for each model. Reliability for a model with loadings fixed to zero is
+  labeled as describing a composite that still includes those items.
+- Comparisons are refused, with an explanation, when models use different
+  estimators, missing-data handling, cases, or data. Models with different
+  observed variables receive descriptive evidence only.
+- Added `print()`, `summary()`, `plot()`, and `nomo_table()` methods.
+
 ## Maintenance (#36)
 
 - Split the guided-workflow implementation (`R/nomo_run.R`, 2,066 lines) into

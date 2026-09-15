@@ -111,7 +111,7 @@ unsupported cases, validation plan, and exit criteria.
 
 - [x] [#25](https://github.com/JUhalt/nomologR/issues/25) Learning foundations — teaching datasets, runnable vignettes and examples, site navigation (completed in [#41](https://github.com/JUhalt/nomologR/pull/41)).
 - [ ] [#26](https://github.com/JUhalt/nomologR/issues/26) Research basis — historical-to-contemporary methods documentation, verified references, methods registry. References and the research-basis article shipped in [#41](https://github.com/JUhalt/nomologR/pull/41); the methods registry and report-level method citations remain.
-- [ ] [#27](https://github.com/JUhalt/nomologR/issues/27) Model comparison — `nomo_compare()` for nested and non-nested measurement models.
+- [x] [#27](https://github.com/JUhalt/nomologR/issues/27) Model comparison — `nomo_compare()` for nested and non-nested measurement models.
 - [ ] [#28](https://github.com/JUhalt/nomologR/issues/28) Revision lineage — auditable revise-and-compare cycles in `nomo_run()`.
 - [ ] [#29](https://github.com/JUhalt/nomologR/issues/29) Bifactor and higher-order measurement models.
 - [ ] [#30](https://github.com/JUhalt/nomologR/issues/30) Replication-status language for near-zero sign changes.
@@ -131,7 +131,7 @@ unsupported cases, validation plan, and exit criteria.
 ## Suggested sequence
 
 1. **Foundations (done):** #25 and #31, with #26 maintained alongside every later workstream.
-2. **Safe structure for revision work:** #36 (done), then #27, then #28.
+2. **Safe structure for revision work:** #36 (done), then #27 (done), then #28.
 3. **Broader measurement models and interpretation:** #29 (builds on #27) and #30.
 4. **Usability extensions:** #32, #33, #34, #35, #40, #42.
 5. **Release:** #37, including the license/version/date gate carried from #22 and the CRAN-readiness gate.
