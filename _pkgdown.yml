@@ -9,6 +9,7 @@ reference:
       report-ready tables, and archive evidence and decisions.
     contents:
       - nomo_run
+      - nomo_revise
       - nomo_report
       - nomo_table
       - nomo_defaults

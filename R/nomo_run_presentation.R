@@ -37,6 +37,8 @@ print.nomo_run <- function(x, ...) {
     "none"
   }
 
+  lineage <- nomo_run_lineage(x)
+
   if (identical(x$mode, "research")) {
     cat(sprintf(
       "<nomo_run> mode=research | status=%s | design=%s\n",
@@ -54,6 +56,13 @@ print.nomo_run <- function(x, ...) {
       x$sample_n$n[x$sample_n$role == "exploratory"],
       x$sample_n$n[x$sample_n$role == "confirmatory"]
     ))
+    if (nrow(lineage)) {
+      cat(sprintf(
+        "Revisions: %d (%s) | see `nomo_table(x, \"lineage\")`\n",
+        nrow(lineage),
+        paste(unique(gsub("_", "-", lineage$origin)), collapse = ", ")
+      ))
+    }
 
     if (nrow(x$decision_requests)) {
       cat("\nDecision requests\n")
@@ -104,6 +113,13 @@ print.nomo_run <- function(x, ...) {
     "Next stage: %s\n",
     if (is.null(x$next_stage)) "none" else x$next_stage
   ))
+  if (nrow(lineage)) {
+    cat(sprintf(
+      "Revisions: %d (%s); see `nomo_table(x, \"lineage\")`\n",
+      nrow(lineage),
+      paste(unique(gsub("_", "-", lineage$origin)), collapse = ", ")
+    ))
+  }
 
   if (nrow(x$decision_requests)) {
     cat("\nResearcher decision required\n")
@@ -226,7 +242,8 @@ nomo_table.nomo_run <- function(
       "component_log",
       "scales",
       "recipe",
-      "settings"
+      "settings",
+      "lineage"
     ),
     ...) {
   type <- match.arg(type)
@@ -237,6 +254,7 @@ nomo_table.nomo_run <- function(
   if (type == "component_log") return(nomo_run_component_logs(x))
   if (type == "scales") return(nomo_run_scale_table(x))
   if (type == "recipe") return(nomo_run_recipe_table(x))
+  if (type == "lineage") return(nomo_run_lineage(x))
 
   nomo_run_settings_table(x)
 }

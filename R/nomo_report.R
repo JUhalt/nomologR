@@ -521,7 +521,7 @@ nomo_report_deviations <- function(x) {
     }
     revise <- which(
       decision_revise |
-        grepl("post|partial|deviation", dl$id, ignore.case = TRUE)
+        grepl("post|partial|deviation|revision", dl$id, ignore.case = TRUE)
     )
 
     for (i in revise) {
@@ -555,6 +555,13 @@ nomo_report_deviations <- function(x) {
   }
 
   dplyr::bind_rows(rows)
+}
+
+
+nomo_report_lineage <- function(x) {
+  lineage <- nomo_run_lineage(x)
+  if (!nrow(lineage)) return(tibble::tibble())
+  nomo_report_flatten_table(lineage)
 }
 
 

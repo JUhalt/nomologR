@@ -21,8 +21,9 @@
 #' * `nomo_compare`: `"comparisons"` (default), `"models"`, `"loadings"`,
 #'   `"evidence"`, `"decision_log"`; see [nomo_compare()].
 #' * `nomo_run`: `"stages"` (default), `"requests"`, `"decisions"`,
-#'   `"component_log"`, `"scales"`, `"recipe"`, `"settings"`; see
-#'   [nomo_run()].
+#'   `"component_log"`, `"scales"`, `"recipe"`, `"settings"`, `"lineage"`; see
+#'   [nomo_run()] and [nomo_revise()]. `"lineage"` returns one row per
+#'   revision, or no rows for a workflow that was never revised.
 #'
 #' @param x A supported `nomologR` result object.
 #' @param ... Additional arguments passed to methods, usually `type`.
