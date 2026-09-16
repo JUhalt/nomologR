@@ -33,8 +33,9 @@ internal \code{constraint} label and adds a human-readable
 \item \code{nomo_compare}: \code{"comparisons"} (default), \code{"models"}, \code{"loadings"},
 \code{"evidence"}, \code{"decision_log"}; see \code{\link[=nomo_compare]{nomo_compare()}}.
 \item \code{nomo_run}: \code{"stages"} (default), \code{"requests"}, \code{"decisions"},
-\code{"component_log"}, \code{"scales"}, \code{"recipe"}, \code{"settings"}; see
-\code{\link[=nomo_run]{nomo_run()}}.
+\code{"component_log"}, \code{"scales"}, \code{"recipe"}, \code{"settings"}, \code{"lineage"}; see
+\code{\link[=nomo_run]{nomo_run()}} and \code{\link[=nomo_revise]{nomo_revise()}}. \code{"lineage"} returns one row per
+revision, or no rows for a workflow that was never revised.
 }
 }
 \examples{

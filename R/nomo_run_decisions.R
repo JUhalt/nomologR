@@ -406,8 +406,9 @@ nomo_run_measurement_request <- function(x) {
     ),
     options = paste(
       "Choose `proceed` to retain this prespecified model for configured",
-      "downstream branches, or choose `revise` to stop here and start a new",
-      "workflow with a substantively justified revised model."
+      "downstream branches, or choose `revise` to stop here and continue with",
+      "`nomo_revise()`, which records a substantively justified revised model",
+      "and keeps this workflow as its parent."
     ),
     consequence = paste(
       "Proceeding does not declare the model valid and does not remove any",
@@ -636,14 +637,16 @@ nomo_run_apply_measurement_decision <- function(x, decision) {
         "provenance if the pipeline silently refit in place."
       ),
       options = paste(
-        "Start a new `nomo_run()` with a revised, substantively justified CFA",
-        "model decision. The current object remains an auditable record of this run."
+        "Use `nomo_revise()` to create a revised workflow that keeps this run",
+        "as its parent and records what changed, or start a new `nomo_run()`.",
+        "Either way, this object remains an auditable record of this run."
       ),
       consequence = paste(
         "No invariance or nomological-network analysis was run and no model",
-        "revision was performed automatically."
+        "revision was performed automatically. A revision records what changed,",
+        "why, and whether the change was prespecified or post hoc."
       ),
-      example = "Start a new workflow and retain this object as the prior analysis record."
+      example = "nomo_revise(run, cfa_model = \"...\", rationale = \"...\", origin = \"post_hoc\")"
     )
     return(x)
   }

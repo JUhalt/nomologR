@@ -132,10 +132,9 @@ nomo_table(run, "requests")
 The researcher chooses either `measurement_model = "proceed"` or
 `measurement_model = "revise"`. Choosing `revise` does not trigger an automated
 modification-index search, parameter freeing, or item deletion; the current
-workflow remains an auditable record and the revised analysis starts as a new
-run. Linking a revised run to its parent with a formal model comparison is
-planned ([#27](https://github.com/JUhalt/nomologR/issues/27),
-[#28](https://github.com/JUhalt/nomologR/issues/28)).
+workflow remains an auditable record. To carry a revision forward with its
+reasoning attached, use `nomo_revise()`, shown in
+[Revising with a recorded lineage](#revising-with-a-recorded-lineage) below.
 
 ## Optional invariance and network branches
 
@@ -223,6 +222,82 @@ run_prespecified
 
 This is still not hidden automation: every consequential decision was explicit
 before the run began.
+
+## Revising with a recorded lineage
+
+Suppose the measurement evidence prompts a change. `nomo_revise()` creates a
+child workflow that keeps the parent as its documented ancestor, instead of
+starting an unrelated run:
+
+```{r revise}
+revised <- nomo_revise(
+  run,
+  cfa_model = paste(
+    "Agency =~ ag1 + ag2 + ag3 + ag4",
+    "Persistence =~ pe1 + pe2 + pe3 + pe4",
+    "SocialDesirability =~ sd1 + sd2 + sd3",
+    "ag1 ~~ ag2",
+    sep = "\n"
+  ),
+  rationale = paste(
+    "Items ag1 and ag2 use nearly identical wording, so their residual",
+    "association plausibly exceeds what the common factor explains."
+  ),
+  origin = "post_hoc"
+)
+
+revised
+```
+
+The child reruns the staged evidence with the revised model and pauses at the
+measurement review, so the revised evidence is inspected before any downstream
+branch runs. The parent object is unchanged and remains a complete record.
+
+```{r revise-lineage}
+nomo_table(revised, "lineage")[, c(
+  "revision", "change_type", "origin", "rationale", "comparison"
+)]
+```
+
+Because a revision is a claim that one model is preferable to another,
+`nomo_revise()` compares them with `nomo_compare()`:
+
+```{r revise-comparison}
+nomo_table(revised$revision_comparison, "comparisons")[, c(
+  "model", "relation", "chisq_diff", "df_diff", "p_value", "delta_cfi"
+)]
+```
+
+```{r revise-values, include=FALSE}
+rev_cmp <- revised$revision_comparison$comparisons
+rev_log <- revised$decision_log[revised$decision_log$id == "revision", ]
+fmt_rev_p <- if (rev_cmp$p_value < .001) {
+  "< .001"
+} else {
+  paste("=", formatC(rev_cmp$p_value, format = "f", digits = 3))
+}
+```
+
+Here the revision changes almost nothing (chi-square difference =
+`r sprintf("%.2f", rev_cmp$chisq_diff)`, df = `r rev_cmp$df_diff`,
+p `r fmt_rev_p`; CFI changes by `r sprintf("%+.4f", rev_cmp$delta_cfi)`). Once
+the common factor is accounted for, the residual association these two items
+were expected to share is close to zero, so the data give no reason to prefer
+the revised model over its parent. A revision is not automatically an
+improvement, and `nomo_revise()` does not choose: it records the attempt, its
+rationale, and the comparison, so keeping the parent model is as visible as
+adopting the revision.
+
+The origin still matters. The change was prompted by inspecting these data, so
+the decision log records it as post hoc and says what follows from that:
+
+```{r revise-log}
+cat(rev_log$consequence)
+```
+
+Revisions chain. A revision of `revised` would carry two lineage rows, so the
+full path from the original model to the reported one stays visible in
+`nomo_table(x, "lineage")` and in the report's revision-lineage section.
 
 ## Reproducibility and provenance
 
