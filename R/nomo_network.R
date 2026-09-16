@@ -959,6 +959,103 @@ nomo_network_fit_once <- function(model_fitted,
 }
 
 
+# Which side of zero a confidence interval lies on: "positive" when it lies
+# entirely above zero, "negative" when entirely below, and NA when it includes
+# zero or is unavailable. An unavailable interval can never establish a side.
+nomo_network_interval_side <- function(ci_lower, ci_upper) {
+  if (length(ci_lower) != 1L || length(ci_upper) != 1L ||
+      !is.finite(ci_lower) || !is.finite(ci_upper)) {
+    return(NA_character_)
+  }
+  if (ci_lower > 0) return("positive")
+  if (ci_upper < 0) return("negative")
+  NA_character_
+}
+
+
+nomo_network_row_value <- function(row, column) {
+  if (!column %in% names(row)) return(NA_real_)
+  value <- row[[column]][[1L]]
+  if (is.null(value)) NA_real_ else as.numeric(value)
+}
+
+
+# Classifies a change in sign between samples for a directional prediction.
+#
+# Opposite point estimates alone are not a reversal: two estimates scattered
+# around a null relation will differ in sign about half the time. A reversal is
+# claimed only when each sample, on its own, places the relation on its side of
+# zero -- both confidence intervals exclude zero, in opposite directions. When
+# only one interval excludes zero, the other sample failed to replicate that
+# direction without establishing the opposite one. When neither does, the sign
+# change is within sampling uncertainty.
+nomo_network_sign_change <- function(primary_row, validation_row) {
+  side_a <- nomo_network_interval_side(
+    nomo_network_row_value(primary_row, "ci_lower"),
+    nomo_network_row_value(primary_row, "ci_upper")
+  )
+  side_b <- nomo_network_interval_side(
+    nomo_network_row_value(validation_row, "ci_lower"),
+    nomo_network_row_value(validation_row, "ci_upper")
+  )
+
+  intervals_missing <- any(!is.finite(c(
+    nomo_network_row_value(primary_row, "ci_lower"),
+    nomo_network_row_value(primary_row, "ci_upper"),
+    nomo_network_row_value(validation_row, "ci_lower"),
+    nomo_network_row_value(validation_row, "ci_upper")
+  )))
+
+  if (!is.na(side_a) && !is.na(side_b) && side_a != side_b) {
+    return(list(
+      status = "sign_reversal",
+      interpretation = paste(
+        "The relation changes sign across samples, and both confidence",
+        "intervals exclude zero on opposite sides, so each sample on its own",
+        "supports a relation in a different direction. This is a",
+        "substantively important replication discrepancy."
+      )
+    ))
+  }
+
+  if (!is.na(side_a) || !is.na(side_b)) {
+    established <- if (!is.na(side_a)) "primary" else "validation"
+    other <- if (!is.na(side_a)) "validation" else "primary"
+    return(list(
+      status = "direction_not_replicated",
+      interpretation = sprintf(
+        paste(
+          "The point estimates have opposite signs, but only the %s sample's",
+          "confidence interval excludes zero. The %s sample does not support",
+          "the direction found in the %s sample, but it does not establish the",
+          "opposite direction either: the direction was not replicated, which",
+          "is not the same as a reversal."
+        ),
+        established, other, established
+      )
+    ))
+  }
+
+  interpretation <- paste(
+    "The point estimates have opposite signs, but neither sample's confidence",
+    "interval excludes zero, so neither sample distinguishes the relation from",
+    "zero. The sign change is compatible with sampling variability around a",
+    "small or null relation and is not evidence of a reversal. A claim that",
+    "the relation is negligible needs a negligible() prediction with a",
+    "researcher-specified equivalence region."
+  )
+  if (intervals_missing) {
+    interpretation <- paste(
+      interpretation,
+      "Confidence intervals were unavailable for at least one sample, so a",
+      "reversal could not be established."
+    )
+  }
+
+  list(status = "sign_change_within_uncertainty", interpretation = interpretation)
+}
+
+
 nomo_network_replication_evidence <- function(primary, validation) {
   a <- primary$hypothesis_evidence
   b <- validation$hypothesis_evidence
@@ -1011,11 +1108,9 @@ nomo_network_replication_evidence <- function(primary, validation) {
                sign(est_a) != 0 &&
                sign(est_b) != 0 &&
                sign(est_a) != sign(est_b)) {
-      status <- "sign_reversal"
-      interpretation <- paste(
-        "The estimated relation changes sign across samples; this is a",
-        "substantively important replication discrepancy."
-      )
+      sign_change <- nomo_network_sign_change(aa, bb)
+      status <- sign_change$status
+      interpretation <- sign_change$interpretation
     } else if (identical(con_a, "concordant") &&
                identical(con_b, "concordant")) {
       status <- "replicated_concordance"
@@ -1224,6 +1319,7 @@ nomo_network_decision_log <- function(model_additions,
       row <- replication_evidence[i, , drop = FALSE]
       severity <- if (row$replication_status[[1L]] %in% c(
         "sign_reversal",
+        "direction_not_replicated",
         "not_replicated",
         "unstable",
         "replicated_inconsistency"
@@ -1232,6 +1328,7 @@ nomo_network_decision_log <- function(model_additions,
       } else if (row$replication_status[[1L]] %in% c(
         "mixed_or_inconclusive",
         "direction_replicated_but_uncertain",
+        "sign_change_within_uncertainty",
         "not_evaluable"
       )) {
         "review"
@@ -1291,6 +1388,30 @@ nomo_network_validate_data <- function(data, label) {
 #' Pass `validation_data` explicitly, or pass a `nomo_split` object as `data` to
 #' use its calibration and validation subsets. No model relation is added or
 #' removed on the basis of validation results.
+#'
+#' @section Replication status when the sign changes:
+#' When a directional prediction's primary and validation point estimates have
+#' opposite signs, `replication_status` is decided by the 95 percent confidence
+#' intervals, not by the point estimates alone:
+#'
+#' * `"sign_reversal"`: both intervals exclude zero, on opposite sides. Each
+#'   sample on its own supports a relation in a different direction.
+#' * `"direction_not_replicated"`: exactly one interval excludes zero. The
+#'   other sample does not support that direction, but it does not establish
+#'   the opposite direction either.
+#' * `"sign_change_within_uncertainty"`: neither interval excludes zero, or an
+#'   interval is unavailable. Neither sample distinguishes the relation from
+#'   zero, and the sign change is compatible with sampling variability around a
+#'   small or null relation.
+#'
+#' Point estimates scattered around a null relation differ in sign about half
+#' the time, so a sign change without interval evidence is not treated as a
+#' substantive discrepancy. Requiring both intervals to exclude zero is the
+#' interval counterpart of each sample separately rejecting a zero relation in
+#' its own direction. The rule does not turn a non-significant result into
+#' evidence of no relation: that claim needs a `negligible(within = ...)`
+#' prediction with a researcher-specified equivalence region (Lakens, Scheel, &
+#' Isager, 2018).
 #'
 #' @param model One non-empty lavaan SEM/measurement-model syntax string or an
 #'   object created by `nomo_model()`.

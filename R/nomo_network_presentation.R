@@ -16,6 +16,8 @@ nomo_network_pretty_status <- function(x) {
     replicated_inconsistency = "Replicated inconsistency",
     direction_replicated_but_uncertain = "Direction replicated / uncertain",
     sign_reversal = "Sign reversal",
+    direction_not_replicated = "Direction not replicated",
+    sign_change_within_uncertainty = "Sign change within uncertainty",
     post_hoc_exploratory = "Post-hoc / exploratory",
     a_priori = "A priori"
   )
