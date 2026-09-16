@@ -412,3 +412,8 @@ is prioritized because simulation research shows that older criteria can miss ov
 because it relaxes the original HTMT tau-equivalence assumption (Roemer, Schuberth, &
 Henseler, 2021). Fornell-Larcker output remains available only as optional historical/
 supporting information.
+
+The [research basis](research-basis.html) article places each of these methods
+between historical and contemporary practice, and
+`nomo_methods(stage = c("cfa", "compare", "reliability", "validity"))` returns
+the same information as a table, with full references.
