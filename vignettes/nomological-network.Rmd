@@ -213,6 +213,23 @@ replication[, c(
 
 ```{r replication-values, include=FALSE}
 rs <- function(id) replication$replication_status[replication$id == id]
+
+h4_reading <- switch(
+  rs("H4"),
+  sign_change_within_uncertainty = paste(
+    "neither sample's confidence interval excludes zero, so the sign change is",
+    "attributed to sampling uncertainty rather than to a substantive discrepancy"
+  ),
+  direction_not_replicated = paste(
+    "only one sample's confidence interval excludes zero, so the direction was",
+    "not replicated, but no reversal is established"
+  ),
+  sign_reversal = paste(
+    "both confidence intervals exclude zero on opposite sides, which is what a",
+    "reversal requires"
+  ),
+  "the status is read from both confidence intervals, not the point estimates alone"
+)
 ```
 
 The calibration and validation subsets receive the **same prespecified fitted
@@ -223,12 +240,23 @@ result. Reading the statuses:
 - H2 is **`r rs("H2")`**: with only `r nrow(s$validation)` validation cases, the
   equivalence interval is too wide to confirm negligibility. Splitting a sample
   buys independence at the cost of precision.
-- H4 is labeled **`r rs("H4")`**. Both estimates are close to zero and both
-  intervals include zero, so this label overstates the discrepancy: the current
-  rule compares the signs of point estimates before considering uncertainty.
-  Improving this language is tracked in
-  [issue #30](https://github.com/JUhalt/nomologR/issues/30). Read replication
-  statuses together with the estimates and their intervals.
+- H4 is **`r rs("H4")`**. The population path is zero, and the two point
+  estimates happen to differ in sign. Here `r h4_reading`.
+
+A change in sign between samples needs care. Estimates scattered around a null
+relation differ in sign about half the time, so `nomologR` does not call a sign
+change a **reversal** from the point estimates. It reads the 95 percent
+confidence intervals:
+
+| Status | Intervals | Meaning |
+|---|---|---|
+| `sign_reversal` | Both exclude zero, on opposite sides | Each sample on its own supports a different direction |
+| `direction_not_replicated` | Exactly one excludes zero | The other sample does not support that direction, nor establish the opposite |
+| `sign_change_within_uncertainty` | Neither excludes zero | Neither sample distinguishes the relation from zero |
+
+None of these turns a non-significant path into evidence of *no* relation. That
+claim needs a `negligible(within = ...)` prediction with an equivalence region,
+the kind of prediction H2 makes (Lakens, Scheel, & Isager, 2018).
 
 External validation data can instead be supplied with `validation_data =`, which
 is generally stronger evidence than an internal split.
