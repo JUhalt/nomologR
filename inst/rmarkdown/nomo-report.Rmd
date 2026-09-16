@@ -131,6 +131,7 @@ settings <- nomologR:::nomo_report_run_table(run, "settings")
 scales <- nomologR:::nomo_report_run_table(run, "scales")
 trace <- nomologR:::nomo_report_evidence_trace(run)
 flagged_trace <- nomologR:::nomo_report_flagged_trace(run)
+lineage <- nomologR:::nomo_report_lineage(run)
 deviations <- nomologR:::nomo_report_deviations(run)
 ```
 
@@ -556,6 +557,21 @@ emit_table(
   empty = "No component review/concern evidence rows were recorded."
 )
 ```
+
+# Revision lineage
+
+```{r}
+emit_table(
+  lineage,
+  empty = "This workflow was not produced by revising an earlier workflow."
+)
+```
+
+Each row records one revision: what changed, whether the change was
+prespecified or post hoc, the researcher's rationale, and the comparison
+between the parent and revised measurement models. A revision prompted by the
+results is evaluated on the data that prompted it, so independent confirmation
+is recommended.
 
 # Deviations and post-hoc decisions
 
