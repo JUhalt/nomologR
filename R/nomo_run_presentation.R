@@ -180,6 +180,7 @@ summary.nomo_run <- function(object, ...) {
     component_log = nomo_run_component_logs(object),
     recipe = nomo_run_recipe_table(object),
     settings = nomo_run_settings_table(object),
+    methods = nomo_methods(object),
     blocked = object$blocked
   )
 
@@ -221,6 +222,18 @@ print.summary_nomo_run <- function(x, ...) {
   cat("\nComponent recipe\n")
   print(x$recipe, n = Inf, width = Inf)
 
+  if (!is.null(x$methods) && nrow(x$methods)) {
+    cat(sprintf(
+      "\nMethods used (%d; full entries and references: nomo_methods(run))\n",
+      nrow(x$methods)
+    ))
+    print(
+      x$methods[, c("stage", "method", "lineage", "role"), drop = FALSE],
+      n = Inf,
+      width = Inf
+    )
+  }
+
   if (nrow(x$component_log)) {
     cat(sprintf(
       "\nComponent decision/evidence-log rows retained: %d\n",
@@ -243,7 +256,8 @@ nomo_table.nomo_run <- function(
       "scales",
       "recipe",
       "settings",
-      "lineage"
+      "lineage",
+      "methods"
     ),
     ...) {
   type <- match.arg(type)
@@ -255,6 +269,7 @@ nomo_table.nomo_run <- function(
   if (type == "scales") return(nomo_run_scale_table(x))
   if (type == "recipe") return(nomo_run_recipe_table(x))
   if (type == "lineage") return(nomo_run_lineage(x))
+  if (type == "methods") return(nomo_methods(x))
 
   nomo_run_settings_table(x)
 }

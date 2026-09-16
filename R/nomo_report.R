@@ -565,6 +565,37 @@ nomo_report_lineage <- function(x) {
 }
 
 
+nomo_report_methods <- function(x) {
+  methods <- nomo_methods(x)
+  if (!nrow(methods)) return(tibble::tibble())
+
+  nomo_report_flatten_table(
+    methods[, c(
+      "stage", "method", "lineage", "role", "estimand", "implemented_by",
+      "engine", "references"
+    ), drop = FALSE]
+  )
+}
+
+
+# One row per distinct work, not per method-reference pair: a reference list
+# should name each source once even when several methods rest on it.
+nomo_report_method_references <- function(x) {
+  refs <- nomo_methods(x, references = TRUE)
+  if (!nrow(refs)) return(tibble::tibble())
+
+  refs <- refs[!duplicated(refs$citation_key), , drop = FALSE]
+  refs <- refs[order(refs$citation), , drop = FALSE]
+  refs$doi <- ifelse(
+    is.na(refs$doi),
+    "",
+    paste0("https://doi.org/", refs$doi)
+  )
+
+  nomo_report_flatten_table(refs[, c("citation", "doi"), drop = FALSE])
+}
+
+
 nomo_report_namespace_available <- function(pkg) {
   requireNamespace(pkg, quietly = TRUE)
 }

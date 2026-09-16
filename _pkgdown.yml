@@ -13,6 +13,12 @@ reference:
       - nomo_report
       - nomo_table
       - nomo_defaults
+  - title: Research basis
+    desc: >
+      The methods the package implements, where each sits between historical
+      and contemporary practice, and the literature behind it.
+    contents:
+      - nomo_methods
   - title: "1. Item and data audit"
     contents:
       - nomo_screen

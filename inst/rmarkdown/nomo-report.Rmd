@@ -590,11 +590,43 @@ as a deviation unless the researcher actually makes and records a model change.
 
 # Methods and citations
 
+## Methods used in this workflow
+
+Every method below was used in producing this run. Methods the package can
+perform but this workflow did not use are deliberately absent, so this table
+describes what happened rather than what the package is capable of.
+
+`lineage` places a method in the literature: `contemporary` is current
+recommended practice, `historical` is a technique retained so published work
+can be recognized and interpreted, and `emerging` is a recent proposal with a
+smaller evidence base. `role` says how the evidence was used: `primary`,
+`supporting`, or `context`. A `context` method was displayed for recognition
+only and took no part in any synthesis or decision.
+
+```{r}
+emit_table(
+  nomologR:::nomo_report_methods(run),
+  max_rows = Inf,
+  empty = "No registry methods were recorded for this workflow."
+)
+```
+
+## Method references
+
+```{r}
+emit_table(
+  nomologR:::nomo_report_method_references(run),
+  max_rows = Inf,
+  empty = "No method references are available."
+)
+```
+
+## Software
+
 The report reflects `nomologR` orchestration plus established statistical
 engines. `installed_version` records the package version used in this rendering
 session; package-provided citation text may identify a different citation
-release. Cite the software/method packages appropriate to the analyses actually
-reported in a manuscript.
+release.
 
 ```{r}
 emit_table(nomologR:::nomo_report_citations(), max_rows = Inf)
