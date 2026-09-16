@@ -46,8 +46,13 @@ Supported objects and `type` values:
   [`nomo_compare()`](https://juhalt.github.io/nomologR/reference/nomo_compare.md).
 
 - `nomo_run`: `"stages"` (default), `"requests"`, `"decisions"`,
-  `"component_log"`, `"scales"`, `"recipe"`, `"settings"`; see
-  [`nomo_run()`](https://juhalt.github.io/nomologR/reference/nomo_run.md).
+  `"component_log"`, `"scales"`, `"recipe"`, `"settings"`, `"lineage"`;
+  see
+  [`nomo_run()`](https://juhalt.github.io/nomologR/reference/nomo_run.md)
+  and
+  [`nomo_revise()`](https://juhalt.github.io/nomologR/reference/nomo_revise.md).
+  `"lineage"` returns one row per revision, or no rows for a workflow
+  that was never revised.
 
 ## Examples
 

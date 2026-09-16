@@ -7,6 +7,8 @@ report-ready tables, and archive evidence and decisions.
 
 - [`nomo_run()`](https://juhalt.github.io/nomologR/reference/nomo_run.md)
   : Run the guided nomologR workflow
+- [`nomo_revise()`](https://juhalt.github.io/nomologR/reference/nomo_revise.md)
+  : Revise a guided workflow and keep its lineage
 - [`nomo_report()`](https://juhalt.github.io/nomologR/reference/nomo_report.md)
   : Render a reproducible nomologR analysis report
 - [`nomo_table()`](https://juhalt.github.io/nomologR/reference/nomo_table.md)

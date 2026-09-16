@@ -154,7 +154,7 @@ run
 #> [measurement_review / measurement_model]
 #> Observation: CFA converged and reliability/validity evidence was computed. Across these components, 0 concern and 1 review log entries are retained.
 #> Reason: Invariance and nomological-network interpretations inherit the measurement model. Continuing downstream is therefore a researcher decision, not a fit-index side effect.
-#> Options: Choose `proceed` to retain this prespecified model for configured downstream branches, or choose `revise` to stop here and start a new workflow with a substantively justified revised model.
+#> Options: Choose `proceed` to retain this prespecified model for configured downstream branches, or choose `revise` to stop here and continue with `nomo_revise()`, which records a substantively justified revised model and keeps this workflow as its parent.
 #> Consequence: Proceeding does not declare the model valid and does not remove any review flags. Revising triggers no automatic parameter freeing, item deletion, or respecification.
 #> Example: decisions = list(measurement_model = list(value = "proceed", rationale = "Evidence reviewed; model retained for the planned analyses."))
 #> 
@@ -200,11 +200,11 @@ nomo_table(run, "requests")
 The researcher chooses either `measurement_model = "proceed"` or
 `measurement_model = "revise"`. Choosing `revise` does not trigger an
 automated modification-index search, parameter freeing, or item
-deletion; the current workflow remains an auditable record and the
-revised analysis starts as a new run. Linking a revised run to its
-parent with a formal model comparison is planned
-([\#27](https://github.com/JUhalt/nomologR/issues/27),
-[\#28](https://github.com/JUhalt/nomologR/issues/28)).
+deletion; the current workflow remains an auditable record. To carry a
+revision forward with its reasoning attached, use
+[`nomo_revise()`](https://juhalt.github.io/nomologR/reference/nomo_revise.md),
+shown in [Revising with a recorded
+lineage](#revising-with-a-recorded-lineage) below.
 
 ## Optional invariance and network branches
 
@@ -335,6 +335,110 @@ run_prespecified
 
 This is still not hidden automation: every consequential decision was
 explicit before the run began.
+
+## Revising with a recorded lineage
+
+Suppose the measurement evidence prompts a change.
+[`nomo_revise()`](https://juhalt.github.io/nomologR/reference/nomo_revise.md)
+creates a child workflow that keeps the parent as its documented
+ancestor, instead of starting an unrelated run:
+
+``` r
+
+revised <- nomo_revise(
+  run,
+  cfa_model = paste(
+    "Agency =~ ag1 + ag2 + ag3 + ag4",
+    "Persistence =~ pe1 + pe2 + pe3 + pe4",
+    "SocialDesirability =~ sd1 + sd2 + sd3",
+    "ag1 ~~ ag2",
+    sep = "\n"
+  ),
+  rationale = paste(
+    "Items ag1 and ag2 use nearly identical wording, so their residual",
+    "association plausibly exceeds what the common factor explains."
+  ),
+  origin = "post_hoc"
+)
+
+revised
+#> <nomo_run>
+#> Guided nomologR workflow | teaching mode
+#> Status: PAUSED
+#> Sample design: same_sample | Exploratory N = 800 | Confirmatory N = 800
+#> Completed stages: screen -> factors -> efa -> cfa -> reliability -> validity
+#> Next stage: measurement_review
+#> Revisions: 1 (post-hoc); see `nomo_table(x, "lineage")`
+#> 
+#> Researcher decision required
+#> 
+#> [measurement_review / measurement_model]
+#> Observation: CFA converged and reliability/validity evidence was computed. Across these components, 0 concern and 1 review log entries are retained.
+#> Reason: Invariance and nomological-network interpretations inherit the measurement model. Continuing downstream is therefore a researcher decision, not a fit-index side effect.
+#> Options: Choose `proceed` to retain this prespecified model for configured downstream branches, or choose `revise` to stop here and continue with `nomo_revise()`, which records a substantively justified revised model and keeps this workflow as its parent.
+#> Consequence: Proceeding does not declare the model valid and does not remove any review flags. Revising triggers no automatic parameter freeing, item deletion, or respecification.
+#> Example: decisions = list(measurement_model = list(value = "proceed", rationale = "Evidence reviewed; model retained for the planned analyses."))
+#> 
+#> No later stage has been run automatically while this consequential decision is unresolved.
+```
+
+The child reruns the staged evidence with the revised model and pauses
+at the measurement review, so the revised evidence is inspected before
+any downstream branch runs. The parent object is unchanged and remains a
+complete record.
+
+``` r
+
+nomo_table(revised, "lineage")[, c(
+  "revision", "change_type", "origin", "rationale", "comparison"
+)]
+#> # A tibble: 1 × 5
+#>   revision change_type origin   rationale                             comparison
+#>      <int> <chr>       <chr>    <chr>                                 <chr>     
+#> 1        1 model       post_hoc Items ag1 and ag2 use nearly identic… Chi-Squar…
+```
+
+Because a revision is a claim that one model is preferable to another,
+[`nomo_revise()`](https://juhalt.github.io/nomologR/reference/nomo_revise.md)
+compares them with
+[`nomo_compare()`](https://juhalt.github.io/nomologR/reference/nomo_compare.md):
+
+``` r
+
+nomo_table(revised$revision_comparison, "comparisons")[, c(
+  "model", "relation", "chisq_diff", "df_diff", "p_value", "delta_cfi"
+)]
+#> # A tibble: 1 × 6
+#>   model   relation         chisq_diff df_diff p_value delta_cfi
+#>   <chr>   <chr>                 <dbl>   <dbl>   <dbl>     <dbl>
+#> 1 revised less_constrained     0.0105       1   0.918 -0.000333
+```
+
+Here the revision changes almost nothing (chi-square difference = 0.01,
+df = 1, p = 0.918; CFI changes by -0.0003). Once the common factor is
+accounted for, the residual association these two items were expected to
+share is close to zero, so the data give no reason to prefer the revised
+model over its parent. A revision is not automatically an improvement,
+and
+[`nomo_revise()`](https://juhalt.github.io/nomologR/reference/nomo_revise.md)
+does not choose: it records the attempt, its rationale, and the
+comparison, so keeping the parent model is as visible as adopting the
+revision.
+
+The origin still matters. The change was prompted by inspecting these
+data, so the decision log records it as post hoc and says what follows
+from that:
+
+``` r
+
+cat(rev_log$consequence)
+#> This revision was prompted by results, so it is recorded as post hoc. Data-driven respecification capitalizes on chance. The revision is evaluated on the same sample that motivated it. Confirm the revised model in independent data, for example with `nomo_split()` or a new sample.
+```
+
+Revisions chain. A revision of `revised` would carry two lineage rows,
+so the full path from the original model to the reported one stays
+visible in `nomo_table(x, "lineage")` and in the report’s
+revision-lineage section.
 
 ## Reproducibility and provenance
 

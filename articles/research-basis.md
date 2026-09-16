@@ -141,9 +141,16 @@ implements this: it requires a recorded rationale, labels post-hoc
 comparisons, refuses comparisons across different estimators, cases, or
 data, and never selects a model automatically.
 
-**Planned.** Auditable revision lineage
-([\#28](https://github.com/JUhalt/nomologR/issues/28)). Model-specific
-fit cutoffs remain a research proposal
+**Revising a model.** Historically, a model that fit poorly was
+respecified in place, and the published model was reported as though it
+had been the plan.
+[`nomo_revise()`](https://juhalt.github.io/nomologR/reference/nomo_revise.md)
+instead creates a child workflow from the parent run, records what
+changed, the researcher’s rationale, and whether the change was
+prespecified or post hoc, compares the parent and revised models, and
+recommends confirming a post-hoc revision in independent data.
+
+**Planned.** Model-specific fit cutoffs remain a research proposal
 ([\#23](https://github.com/JUhalt/nomologR/issues/23)).
 
 ## 5. Reliability — `nomo_reliability()`

@@ -219,8 +219,15 @@ data with information criteria (Akaike, 1974; Schwarz, 1978; Raftery,
 implements this: it requires a recorded rationale, labels post-hoc
 comparisons, refuses comparisons across different estimators, cases, or
 data, and never selects a model automatically.</p>
-<p><strong>Planned.</strong> Auditable revision lineage (<a href="https://github.com/JUhalt/nomologR/issues/28" class="external-link">#28</a>).
-Model-specific fit cutoffs remain a research proposal (<a href="https://github.com/JUhalt/nomologR/issues/23" class="external-link">#23</a>).</p>
+<p><strong>Revising a model.</strong> Historically, a model that fit
+poorly was respecified in place, and the published model was reported as
+though it had been the plan. <code><a href="../reference/nomo_revise.html">nomo_revise()</a></code> instead creates
+a child workflow from the parent run, records what changed, the
+researcher’s rationale, and whether the change was prespecified or post
+hoc, compares the parent and revised models, and recommends confirming a
+post-hoc revision in independent data.</p>
+<p><strong>Planned.</strong> Model-specific fit cutoffs remain a
+research proposal (<a href="https://github.com/JUhalt/nomologR/issues/23" class="external-link">#23</a>).</p>
 </div>
 <div class="section level2">
 <h2 id="reliability-nomo_reliability">5. Reliability — <code>nomo_reliability()</code><a class="anchor" aria-label="anchor" href="#reliability-nomo_reliability"></a>

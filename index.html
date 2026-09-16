@@ -609,6 +609,17 @@
 <p>The guided object retains completed component results, sample roles, stage settings, explicit researcher decisions/rationales, and component evidence logs. Optional invariance and theory-specified network branches can be added for future stages without recomputing completed work.</p>
 <p>Teaching mode presents consequential pauses as <strong>Observation / Reason / Options / Consequence</strong>. Research mode provides a compact view of the same underlying analysis.</p>
 <p><code><a href="reference/nomo_run.html">nomo_run()</a></code> never silently deletes items, creates a CFA model from EFA, frees invariance constraints, respecifies a model, or declares a construct valid/invalid.</p>
+<p>If the measurement evidence prompts a change, <code><a href="reference/nomo_revise.html">nomo_revise()</a></code> creates a child workflow that keeps the parent as its documented ancestor:</p>
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">revised</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/nomo_revise.html">nomo_revise</a></span><span class="op">(</span></span>
+<span>  <span class="va">run</span>,</span>
+<span>  cfa_model <span class="op">=</span> <span class="st">"WellBeing =~ w1 + w2 + w3 + w4\nw1 ~~ w2"</span>,</span>
+<span>  rationale <span class="op">=</span> <span class="st">"Item wording suggests w1 and w2 share method variance."</span>,</span>
+<span>  origin <span class="op">=</span> <span class="st">"post_hoc"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">revised</span>, <span class="st">"lineage"</span><span class="op">)</span></span></code></pre></div>
+<p>The revision records what changed, why, and whether the change was prespecified or post hoc; compares the parent and revised models with <code><a href="reference/nomo_compare.html">nomo_compare()</a></code>; and recommends confirming a post-hoc revision in independent data. Revisions chain, so <code>$lineage</code> and the report keep the whole history.</p>
 <p>The full walkthrough is in the <strong>“Guided workflow with nomo_run()”</strong> vignette.</p>
 </div>
 <div class="section level3">

@@ -226,7 +226,7 @@ pauses before CFA model specification.</p>
 <span><span class="co">#&gt; [measurement_review / measurement_model]</span></span>
 <span><span class="co">#&gt; Observation: CFA converged and reliability/validity evidence was computed. Across these components, 0 concern and 1 review log entries are retained.</span></span>
 <span><span class="co">#&gt; Reason: Invariance and nomological-network interpretations inherit the measurement model. Continuing downstream is therefore a researcher decision, not a fit-index side effect.</span></span>
-<span><span class="co">#&gt; Options: Choose `proceed` to retain this prespecified model for configured downstream branches, or choose `revise` to stop here and start a new workflow with a substantively justified revised model.</span></span>
+<span><span class="co">#&gt; Options: Choose `proceed` to retain this prespecified model for configured downstream branches, or choose `revise` to stop here and continue with `nomo_revise()`, which records a substantively justified revised model and keeps this workflow as its parent.</span></span>
 <span><span class="co">#&gt; Consequence: Proceeding does not declare the model valid and does not remove any review flags. Revising triggers no automatic parameter freeing, item deletion, or respecification.</span></span>
 <span><span class="co">#&gt; Example: decisions = list(measurement_model = list(value = "proceed", rationale = "Evidence reviewed; model retained for the planned analyses."))</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -262,8 +262,9 @@ tests.</p>
 <code>measurement_model = "revise"</code>. Choosing <code>revise</code>
 does not trigger an automated modification-index search, parameter
 freeing, or item deletion; the current workflow remains an auditable
-record and the revised analysis starts as a new run. Linking a revised
-run to its parent with a formal model comparison is planned (<a href="https://github.com/JUhalt/nomologR/issues/27" class="external-link">#27</a>, <a href="https://github.com/JUhalt/nomologR/issues/28" class="external-link">#28</a>).</p>
+record. To carry a revision forward with its reasoning attached, use
+<code><a href="../reference/nomo_revise.html">nomo_revise()</a></code>, shown in <a href="#revising-with-a-recorded-lineage">Revising with a recorded
+lineage</a> below.</p>
 </div>
 <div class="section level2">
 <h2 id="optional-invariance-and-network-branches">Optional invariance and network branches<a class="anchor" aria-label="anchor" href="#optional-invariance-and-network-branches"></a>
@@ -382,9 +383,94 @@ same statistical behavior:</p>
 explicit before the run began.</p>
 </div>
 <div class="section level2">
+<h2 id="revising-with-a-recorded-lineage">Revising with a recorded lineage<a class="anchor" aria-label="anchor" href="#revising-with-a-recorded-lineage"></a>
+</h2>
+<p>Suppose the measurement evidence prompts a change.
+<code><a href="../reference/nomo_revise.html">nomo_revise()</a></code> creates a child workflow that keeps the
+parent as its documented ancestor, instead of starting an unrelated
+run:</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">revised</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_revise.html">nomo_revise</a></span><span class="op">(</span></span>
+<span>  <span class="va">run</span>,</span>
+<span>  cfa_model <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span></span>
+<span>    <span class="st">"Agency =~ ag1 + ag2 + ag3 + ag4"</span>,</span>
+<span>    <span class="st">"Persistence =~ pe1 + pe2 + pe3 + pe4"</span>,</span>
+<span>    <span class="st">"SocialDesirability =~ sd1 + sd2 + sd3"</span>,</span>
+<span>    <span class="st">"ag1 ~~ ag2"</span>,</span>
+<span>    sep <span class="op">=</span> <span class="st">"\n"</span></span>
+<span>  <span class="op">)</span>,</span>
+<span>  rationale <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span></span>
+<span>    <span class="st">"Items ag1 and ag2 use nearly identical wording, so their residual"</span>,</span>
+<span>    <span class="st">"association plausibly exceeds what the common factor explains."</span></span>
+<span>  <span class="op">)</span>,</span>
+<span>  origin <span class="op">=</span> <span class="st">"post_hoc"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">revised</span></span>
+<span><span class="co">#&gt; &lt;nomo_run&gt;</span></span>
+<span><span class="co">#&gt; Guided nomologR workflow | teaching mode</span></span>
+<span><span class="co">#&gt; Status: PAUSED</span></span>
+<span><span class="co">#&gt; Sample design: same_sample | Exploratory N = 800 | Confirmatory N = 800</span></span>
+<span><span class="co">#&gt; Completed stages: screen -&gt; factors -&gt; efa -&gt; cfa -&gt; reliability -&gt; validity</span></span>
+<span><span class="co">#&gt; Next stage: measurement_review</span></span>
+<span><span class="co">#&gt; Revisions: 1 (post-hoc); see `nomo_table(x, "lineage")`</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Researcher decision required</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; [measurement_review / measurement_model]</span></span>
+<span><span class="co">#&gt; Observation: CFA converged and reliability/validity evidence was computed. Across these components, 0 concern and 1 review log entries are retained.</span></span>
+<span><span class="co">#&gt; Reason: Invariance and nomological-network interpretations inherit the measurement model. Continuing downstream is therefore a researcher decision, not a fit-index side effect.</span></span>
+<span><span class="co">#&gt; Options: Choose `proceed` to retain this prespecified model for configured downstream branches, or choose `revise` to stop here and continue with `nomo_revise()`, which records a substantively justified revised model and keeps this workflow as its parent.</span></span>
+<span><span class="co">#&gt; Consequence: Proceeding does not declare the model valid and does not remove any review flags. Revising triggers no automatic parameter freeing, item deletion, or respecification.</span></span>
+<span><span class="co">#&gt; Example: decisions = list(measurement_model = list(value = "proceed", rationale = "Evidence reviewed; model retained for the planned analyses."))</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; No later stage has been run automatically while this consequential decision is unresolved.</span></span></code></pre></div>
+<p>The child reruns the staged evidence with the revised model and
+pauses at the measurement review, so the revised evidence is inspected
+before any downstream branch runs. The parent object is unchanged and
+remains a complete record.</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">revised</span>, <span class="st">"lineage"</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>  <span class="st">"revision"</span>, <span class="st">"change_type"</span>, <span class="st">"origin"</span>, <span class="st">"rationale"</span>, <span class="st">"comparison"</span></span>
+<span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 5</span></span></span>
+<span><span class="co">#&gt;   revision change_type origin   rationale                             comparison</span></span>
+<span><span class="co">#&gt;      <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                                 <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>        1 model       post_hoc Items ag1 and ag2 use nearly identic… Chi-Squar…</span></span></code></pre></div>
+<p>Because a revision is a claim that one model is preferable to
+another, <code><a href="../reference/nomo_revise.html">nomo_revise()</a></code> compares them with
+<code><a href="../reference/nomo_compare.html">nomo_compare()</a></code>:</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">revised</span><span class="op">$</span><span class="va">revision_comparison</span>, <span class="st">"comparisons"</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>  <span class="st">"model"</span>, <span class="st">"relation"</span>, <span class="st">"chisq_diff"</span>, <span class="st">"df_diff"</span>, <span class="st">"p_value"</span>, <span class="st">"delta_cfi"</span></span>
+<span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 6</span></span></span>
+<span><span class="co">#&gt;   model   relation         chisq_diff df_diff p_value delta_cfi</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                 <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> revised less_constrained     0.010<span style="text-decoration: underline;">5</span>       1   0.918 -<span style="color: #BB0000;">0.000</span><span style="color: #BB0000; text-decoration: underline;">333</span></span></span></code></pre></div>
+<p>Here the revision changes almost nothing (chi-square difference =
+0.01, df = 1, p = 0.918; CFI changes by -0.0003). Once the common factor
+is accounted for, the residual association these two items were expected
+to share is close to zero, so the data give no reason to prefer the
+revised model over its parent. A revision is not automatically an
+improvement, and <code><a href="../reference/nomo_revise.html">nomo_revise()</a></code> does not choose: it records
+the attempt, its rationale, and the comparison, so keeping the parent
+model is as visible as adopting the revision.</p>
+<p>The origin still matters. The change was prompted by inspecting these
+data, so the decision log records it as post hoc and says what follows
+from that:</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="va">rev_log</span><span class="op">$</span><span class="va">consequence</span><span class="op">)</span></span>
+<span><span class="co">#&gt; This revision was prompted by results, so it is recorded as post hoc. Data-driven respecification capitalizes on chance. The revision is evaluated on the same sample that motivated it. Confirm the revised model in independent data, for example with `nomo_split()` or a new sample.</span></span></code></pre></div>
+<p>Revisions chain. A revision of <code>revised</code> would carry two
+lineage rows, so the full path from the original model to the reported
+one stays visible in <code>nomo_table(x, "lineage")</code> and in the
+report’s revision-lineage section.</p>
+</div>
+<div class="section level2">
 <h2 id="reproducibility-and-provenance">Reproducibility and provenance<a class="anchor" aria-label="anchor" href="#reproducibility-and-provenance"></a>
 </h2>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">run</span>, <span class="st">"decisions"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 10 × 10</span></span></span>
 <span><span class="co">#&gt;    id      stage scope observation reason options consequence decision rationale</span></span>

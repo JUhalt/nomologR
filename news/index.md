@@ -2,6 +2,35 @@
 
 ## nomologR 0.1.0.9000
 
+### Revision lineage ([\#28](https://github.com/JUhalt/nomologR/issues/28))
+
+- Added
+  [`nomo_revise()`](https://juhalt.github.io/nomologR/reference/nomo_revise.md),
+  which creates a child workflow from a parent
+  [`nomo_run()`](https://juhalt.github.io/nomologR/reference/nomo_run.md)
+  with a revised measurement model, a revised item set, or both. The
+  parent workflow is never modified.
+- Each revision records what changed (model, items, or both), the
+  required researcher rationale, and whether the change was prespecified
+  or post hoc. Post-hoc revisions are labeled, and the decision log
+  recommends confirming the revised model in independent data.
+- Parent and revised measurement models are compared with
+  [`nomo_compare()`](https://juhalt.github.io/nomologR/reference/nomo_compare.md)
+  ([\#27](https://github.com/JUhalt/nomologR/issues/27)), so a revision
+  carries its own evidence. Item changes alter the observed variables,
+  so those comparisons are descriptive, as documented.
+- The factor-count decision is inherited from the parent unless the
+  researcher supplies a new one, so a revision changes only what was
+  intended.
+- Revisions chain: `$lineage` accumulates one row per revision and is
+  available through `nomo_table(run, "lineage")`, in
+  [`print()`](https://rdrr.io/r/base/print.html) output, and in a new
+  “Revision lineage” section of
+  [`nomo_report()`](https://juhalt.github.io/nomologR/reference/nomo_report.md).
+- The `measurement_model = "revise"` decision now points to
+  [`nomo_revise()`](https://juhalt.github.io/nomologR/reference/nomo_revise.md)
+  instead of only advising a fresh workflow.
+
 ### Model comparison ([\#27](https://github.com/JUhalt/nomologR/issues/27))
 
 - Added

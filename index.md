@@ -816,6 +816,29 @@ never silently deletes items, creates a CFA model from EFA, frees
 invariance constraints, respecifies a model, or declares a construct
 valid/invalid.
 
+If the measurement evidence prompts a change,
+[`nomo_revise()`](https://juhalt.github.io/nomologR/reference/nomo_revise.md)
+creates a child workflow that keeps the parent as its documented
+ancestor:
+
+``` r
+
+revised <- nomo_revise(
+  run,
+  cfa_model = "WellBeing =~ w1 + w2 + w3 + w4\nw1 ~~ w2",
+  rationale = "Item wording suggests w1 and w2 share method variance.",
+  origin = "post_hoc"
+)
+
+nomo_table(revised, "lineage")
+```
+
+The revision records what changed, why, and whether the change was
+prespecified or post hoc; compares the parent and revised models with
+[`nomo_compare()`](https://juhalt.github.io/nomologR/reference/nomo_compare.md);
+and recommends confirming a post-hoc revision in independent data.
+Revisions chain, so `$lineage` and the report keep the whole history.
+
 The full walkthrough is in the **“Guided workflow with nomo_run()”**
 vignette.
 

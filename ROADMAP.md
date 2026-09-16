@@ -200,7 +200,7 @@ bootstrap for reliability confidence intervals.
 1.  **Foundations (done):** \#25 and \#31, with \#26 maintained
     alongside every later workstream.
 2.  **Safe structure for revision work:** \#36 (done), then \#27 (done),
-    then \#28.
+    then \#28 (done).
 3.  **Broader measurement models and interpretation:** \#29 (builds on
     \#27) and \#30.
 4.  **Usability extensions:** \#32, \#33, \#34, \#35, \#40, \#42.
