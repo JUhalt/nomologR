@@ -163,7 +163,8 @@ auditable revise-and-compare cycles in
 higher-order measurement models.
 
 [\#30](https://github.com/JUhalt/nomologR/issues/30) Replication-status
-language for near-zero sign changes.
+language for near-zero sign changes — a sign change is a reversal only
+when both confidence intervals exclude zero on opposite sides.
 
 [\#37](https://github.com/JUhalt/nomologR/issues/37) Release
 certification, CRAN-readiness gate, and R-universe publication.

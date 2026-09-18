@@ -885,12 +885,12 @@ selected in [\#22](https://github.com/JUhalt/nomologR/issues/22):
   [`nomo_compare()`](https://juhalt.github.io/nomologR/reference/nomo_compare.md)
   (#27); auditable revision lineage with
   [`nomo_revise()`](https://juhalt.github.io/nomologR/reference/nomo_revise.md)
-  (#28); and the methods registry with
+  (#28); the methods registry with
   [`nomo_methods()`](https://juhalt.github.io/nomologR/reference/nomo_methods.md)
-  (#26).
-- **Core, in progress or next:** bifactor and higher-order models (#29),
-  replication-status language (#30), and release certification with a
-  CRAN-readiness gate (#37).
+  (#26); and interval-based replication-status language for sign changes
+  (#30).
+- **Core, in progress or next:** bifactor and higher-order models (#29)
+  and release certification with a CRAN-readiness gate (#37).
 - **Planned:** missing-data sensitivity (#32), score guidance (#33),
   insufficient-effort responding screens (#34), manuscript-ready tables
   (#35), rendering reports from inside R Markdown or Quarto documents

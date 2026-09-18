@@ -376,13 +376,52 @@ statuses:</p>
 validation cases, the equivalence interval is too wide to confirm
 negligibility. Splitting a sample buys independence at the cost of
 precision.</li>
-<li>H4 is labeled <strong>sign_reversal</strong>. Both estimates are
-close to zero and both intervals include zero, so this label overstates
-the discrepancy: the current rule compares the signs of point estimates
-before considering uncertainty. Improving this language is tracked in <a href="https://github.com/JUhalt/nomologR/issues/30" class="external-link">issue #30</a>. Read
-replication statuses together with the estimates and their
-intervals.</li>
+<li>H4 is <strong>sign_change_within_uncertainty</strong>. The
+population path is zero, and the two point estimates happen to differ in
+sign. Here neither sample’s confidence interval excludes zero, so the
+sign change is attributed to sampling uncertainty rather than to a
+substantive discrepancy.</li>
 </ul>
+<p>A change in sign between samples needs care. Estimates scattered
+around a null relation differ in sign about half the time, so
+<code>nomologR</code> does not call a sign change a
+<strong>reversal</strong> from the point estimates. It reads the 95
+percent confidence intervals:</p>
+<table class="table">
+<colgroup>
+<col width="33%">
+<col width="33%">
+<col width="33%">
+</colgroup>
+<thead><tr class="header">
+<th>Status</th>
+<th>Intervals</th>
+<th>Meaning</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>sign_reversal</code></td>
+<td>Both exclude zero, on opposite sides</td>
+<td>Each sample on its own supports a different direction</td>
+</tr>
+<tr class="even">
+<td><code>direction_not_replicated</code></td>
+<td>Exactly one excludes zero</td>
+<td>The other sample does not support that direction, nor establish the
+opposite</td>
+</tr>
+<tr class="odd">
+<td><code>sign_change_within_uncertainty</code></td>
+<td>Neither excludes zero</td>
+<td>Neither sample distinguishes the relation from zero</td>
+</tr>
+</tbody>
+</table>
+<p>None of these turns a non-significant path into evidence of
+<em>no</em> relation. That claim needs a
+<code>negligible(within = ...)</code> prediction with an equivalence
+region, the kind of prediction H2 makes (Lakens, Scheel, &amp; Isager,
+2018).</p>
 <p>External validation data can instead be supplied with
 <code>validation_data =</code>, which is generally stronger evidence
 than an internal split.</p>

@@ -50,6 +50,12 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.1.0.9000" id="nomologr-0109000">nomologR 0.1.0.9000<a class="anchor" aria-label="anchor" href="#nomologr-0109000"></a></h2>
 <div class="section level3">
+<h3 id="replication-status-language-0-1-0-9000">Replication-status language (<a href="https://github.com/JUhalt/nomologR/issues/30" class="external-link">#30</a>)<a class="anchor" aria-label="anchor" href="#replication-status-language-0-1-0-9000"></a></h3>
+<ul><li>A change in sign between primary and validation estimates is no longer labeled <code>"sign_reversal"</code> from the point estimates alone. Estimates scattered around a null relation differ in sign about half the time, and the previous label called that “a substantively important replication discrepancy.”</li>
+<li>For directional predictions, a sign change is now classified from the two 95 percent confidence intervals: <code>"sign_reversal"</code> when both exclude zero on opposite sides, <code>"direction_not_replicated"</code> when exactly one excludes zero, and <code>"sign_change_within_uncertainty"</code> when neither does or an interval is unavailable. The first two are recorded as concerns and the third for review.</li>
+<li>The rule and its rationale are documented in <code><a href="../reference/nomo_network.html">?nomo_network</a></code>, the nomological-network vignette, and the research-basis article. It does not treat a non-significant path as evidence of no relation; that still requires a <code>negligible(within = ...)</code> prediction.</li>
+</ul></div>
+<div class="section level3">
 <h3 id="methods-registry-0-1-0-9000">Methods registry (<a href="https://github.com/JUhalt/nomologR/issues/26" class="external-link">#26</a>)<a class="anchor" aria-label="anchor" href="#methods-registry-0-1-0-9000"></a></h3>
 <ul><li>Added <code><a href="../reference/nomo_methods.html">nomo_methods()</a></code>, a machine-readable registry of the 65 methods the package implements. Each entry records its workflow stage; its lineage (<code>historical</code>, <code>contemporary</code>, or <code>emerging</code>); its role (<code>primary</code>, <code>supporting</code>, or <code>context</code>); its estimand and key assumptions; the function and computational engine that implement it; and its references.</li>
 <li>

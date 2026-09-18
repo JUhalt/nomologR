@@ -327,10 +327,11 @@ negligible predictions; researcher-specified equivalence regions (the
 package never invents one); latent SEM with observed outcomes;
 measurement context kept alongside theory concordance; a-priori versus
 post-hoc provenance; and replication of the exact same model in
-validation data.
-
-**Planned.** More careful replication-status language for estimates near
-zero ([\#30](https://github.com/JUhalt/nomologR/issues/30)).
+validation data. A change in sign between samples is called a reversal
+only when both confidence intervals exclude zero on opposite sides;
+otherwise it is reported as a direction that did not replicate, or as a
+sign change within sampling uncertainty, because estimates scattered
+around a null relation differ in sign about half the time.
 
 ## 9. Workflow, scores, and reporting — `nomo_run()`, `nomo_report()`
 

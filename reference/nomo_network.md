@@ -112,6 +112,33 @@ sample. Pass `validation_data` explicitly, or pass a `nomo_split` object
 as `data` to use its calibration and validation subsets. No model
 relation is added or removed on the basis of validation results.
 
+## Replication status when the sign changes
+
+When a directional prediction's primary and validation point estimates
+have opposite signs, `replication_status` is decided by the 95 percent
+confidence intervals, not by the point estimates alone:
+
+- `"sign_reversal"`: both intervals exclude zero, on opposite sides.
+  Each sample on its own supports a relation in a different direction.
+
+- `"direction_not_replicated"`: exactly one interval excludes zero. The
+  other sample does not support that direction, but it does not
+  establish the opposite direction either.
+
+- `"sign_change_within_uncertainty"`: neither interval excludes zero, or
+  an interval is unavailable. Neither sample distinguishes the relation
+  from zero, and the sign change is compatible with sampling variability
+  around a small or null relation.
+
+Point estimates scattered around a null relation differ in sign about
+half the time, so a sign change without interval evidence is not treated
+as a substantive discrepancy. Requiring both intervals to exclude zero
+is the interval counterpart of each sample separately rejecting a zero
+relation in its own direction. The rule does not turn a non-significant
+result into evidence of no relation: that claim needs a
+`negligible(within = ...)` prediction with a researcher-specified
+equivalence region (Lakens, Scheel, & Isager, 2018).
+
 ## References
 
 Anderson, J. C., & Gerbing, D. W. (1988). Structural equation modeling

@@ -310,12 +310,27 @@ rescue a primary result. Reading the statuses:
 - H2 is **mixed_or_inconclusive**: with only 320 validation cases, the
   equivalence interval is too wide to confirm negligibility. Splitting a
   sample buys independence at the cost of precision.
-- H4 is labeled **sign_reversal**. Both estimates are close to zero and
-  both intervals include zero, so this label overstates the discrepancy:
-  the current rule compares the signs of point estimates before
-  considering uncertainty. Improving this language is tracked in [issue
-  \#30](https://github.com/JUhalt/nomologR/issues/30). Read replication
-  statuses together with the estimates and their intervals.
+- H4 is **sign_change_within_uncertainty**. The population path is zero,
+  and the two point estimates happen to differ in sign. Here neither
+  sample’s confidence interval excludes zero, so the sign change is
+  attributed to sampling uncertainty rather than to a substantive
+  discrepancy.
+
+A change in sign between samples needs care. Estimates scattered around
+a null relation differ in sign about half the time, so `nomologR` does
+not call a sign change a **reversal** from the point estimates. It reads
+the 95 percent confidence intervals:
+
+| Status | Intervals | Meaning |
+|----|----|----|
+| `sign_reversal` | Both exclude zero, on opposite sides | Each sample on its own supports a different direction |
+| `direction_not_replicated` | Exactly one excludes zero | The other sample does not support that direction, nor establish the opposite |
+| `sign_change_within_uncertainty` | Neither excludes zero | Neither sample distinguishes the relation from zero |
+
+None of these turns a non-significant path into evidence of *no*
+relation. That claim needs a `negligible(within = ...)` prediction with
+an equivalence region, the kind of prediction H2 makes (Lakens, Scheel,
+& Isager, 2018).
 
 External validation data can instead be supplied with
 `validation_data =`, which is generally stronger evidence than an

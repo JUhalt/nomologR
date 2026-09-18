@@ -160,6 +160,30 @@ use its calibration and validation subsets. No model relation is added or
 removed on the basis of validation results.</p>
     </div>
     <div class="section level2">
+    <h2 id="replication-status-when-the-sign-changes">Replication status when the sign changes<a class="anchor" aria-label="anchor" href="#replication-status-when-the-sign-changes"></a></h2>
+
+
+<p>When a directional prediction's primary and validation point estimates have
+opposite signs, <code>replication_status</code> is decided by the 95 percent confidence
+intervals, not by the point estimates alone:</p><ul><li><p><code>"sign_reversal"</code>: both intervals exclude zero, on opposite sides. Each
+sample on its own supports a relation in a different direction.</p></li>
+<li><p><code>"direction_not_replicated"</code>: exactly one interval excludes zero. The
+other sample does not support that direction, but it does not establish
+the opposite direction either.</p></li>
+<li><p><code>"sign_change_within_uncertainty"</code>: neither interval excludes zero, or an
+interval is unavailable. Neither sample distinguishes the relation from
+zero, and the sign change is compatible with sampling variability around a
+small or null relation.</p></li>
+</ul><p>Point estimates scattered around a null relation differ in sign about half
+the time, so a sign change without interval evidence is not treated as a
+substantive discrepancy. Requiring both intervals to exclude zero is the
+interval counterpart of each sample separately rejecting a zero relation in
+its own direction. The rule does not turn a non-significant result into
+evidence of no relation: that claim needs a <code>negligible(within = ...)</code>
+prediction with a researcher-specified equivalence region (Lakens, Scheel, &amp;
+Isager, 2018).</p>
+    </div>
+    <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
     <p>Anderson, J. C., &amp; Gerbing, D. W. (1988). Structural equation modeling in
 practice: A review and recommended two-step approach. <em>Psychological
