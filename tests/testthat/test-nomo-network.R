@@ -389,13 +389,17 @@ test_that("replication helper covers major discrepancy classifications", {
       concordance,
       id = "H1",
       relation = "A -> B",
-      prediction = "positive") {
+      prediction = "positive",
+      ci_lower = estimate - .1,
+      ci_upper = estimate + .1) {
     list(
       hypothesis_evidence = tibble::tibble(
         id = id,
         relation = relation,
         prediction = prediction,
         estimate = estimate,
+        ci_lower = ci_lower,
+        ci_upper = ci_upper,
         concordance = concordance
       )
     )
@@ -449,6 +453,15 @@ test_that("replication helper covers major discrepancy classifications", {
     "direction_replicated_but_uncertain"
   )
 
+  # A sign change is a reversal only when both intervals exclude zero on
+  # opposite sides (#30).
+  reversal <- nomologR:::nomo_network_replication_evidence(
+    make_fit(.40, "concordant", ci_lower = .30, ci_upper = .50),
+    make_fit(-.30, "inconsistent", ci_lower = -.40, ci_upper = -.20)
+  )
+  expect_equal(reversal$replication_status, "sign_reversal")
+  expect_match(reversal$interpretation, "both confidence intervals exclude zero")
+
   missing_validation <- list(
     hypothesis_evidence = tibble::tibble(
       id = "H2",
@@ -466,6 +479,155 @@ test_that("replication helper covers major discrepancy classifications", {
     )$replication_status,
     "not_evaluable"
   )
+})
+
+
+test_that("a sign change near zero is not labeled a reversal (#30)", {
+  fit_with <- function(estimate, ci_lower, ci_upper, concordance,
+                       prediction = "positive") {
+    list(
+      hypothesis_evidence = tibble::tibble(
+        id = "H1",
+        relation = "A -> B",
+        prediction = prediction,
+        estimate = estimate,
+        ci_lower = ci_lower,
+        ci_upper = ci_upper,
+        concordance = concordance
+      )
+    )
+  }
+  classify <- function(a, b) {
+    nomologR:::nomo_network_replication_evidence(a, b)
+  }
+
+  # The pattern reported in #30: both estimates near zero, both intervals
+  # include zero.
+  near_zero <- classify(
+    fit_with(-.101, -.211, .008, "inconsistent"),
+    fit_with(.004, -.127, .134, "direction_concordant_below_magnitude")
+  )
+  expect_equal(near_zero$replication_status, "sign_change_within_uncertainty")
+  expect_match(near_zero$interpretation, "neither sample's confidence interval excludes zero")
+  expect_match(near_zero$interpretation, "not evidence of a reversal")
+  expect_match(near_zero$interpretation, "negligible()", fixed = TRUE)
+  expect_false(grepl("substantively important", near_zero$interpretation))
+
+  # Only the primary interval excludes zero.
+  primary_only <- classify(
+    fit_with(.30, .15, .45, "concordant"),
+    fit_with(-.05, -.20, .10, "inconclusive")
+  )
+  expect_equal(primary_only$replication_status, "direction_not_replicated")
+  expect_match(primary_only$interpretation, "only the primary sample's confidence interval")
+  expect_match(primary_only$interpretation, "not the same as a reversal")
+
+  # Only the validation interval excludes zero; the wording follows the sample.
+  validation_only <- classify(
+    fit_with(-.05, -.20, .10, "inconclusive"),
+    fit_with(.30, .15, .45, "concordant")
+  )
+  expect_equal(validation_only$replication_status, "direction_not_replicated")
+  expect_match(validation_only$interpretation, "only the validation sample's confidence interval")
+
+  # Negative predictions follow the same rule.
+  negative_reversal <- classify(
+    fit_with(-.40, -.50, -.30, "concordant", prediction = "negative"),
+    fit_with(.30, .20, .40, "inconsistent", prediction = "negative")
+  )
+  expect_equal(negative_reversal$replication_status, "sign_reversal")
+
+  # An interval that touches zero does not exclude it.
+  touching <- classify(
+    fit_with(.20, 0, .40, "directionally_concordant_imprecise"),
+    fit_with(-.20, -.40, 0, "inconsistent")
+  )
+  expect_equal(touching$replication_status, "sign_change_within_uncertainty")
+})
+
+
+test_that("missing intervals can never establish a reversal (#30)", {
+  no_ci <- function(estimate, concordance) {
+    list(
+      hypothesis_evidence = tibble::tibble(
+        id = "H1",
+        relation = "A -> B",
+        prediction = "positive",
+        estimate = estimate,
+        concordance = concordance
+      )
+    )
+  }
+
+  out <- nomologR:::nomo_network_replication_evidence(
+    no_ci(.40, "concordant"),
+    no_ci(-.30, "inconsistent")
+  )
+  expect_equal(out$replication_status, "sign_change_within_uncertainty")
+  expect_match(out$interpretation, "Confidence intervals were unavailable")
+
+  expect_true(is.na(nomologR:::nomo_network_interval_side(NA_real_, .5)))
+  expect_true(is.na(nomologR:::nomo_network_interval_side(-.1, .1)))
+  expect_equal(nomologR:::nomo_network_interval_side(.1, .5), "positive")
+  expect_equal(nomologR:::nomo_network_interval_side(-.5, -.1), "negative")
+})
+
+
+test_that("new replication statuses have readable labels", {
+  labels <- nomologR:::nomo_network_pretty_status(c(
+    "sign_reversal",
+    "direction_not_replicated",
+    "sign_change_within_uncertainty"
+  ))
+  expect_equal(labels, c(
+    "Sign reversal",
+    "Direction not replicated",
+    "Sign change within uncertainty"
+  ))
+})
+
+
+test_that("the #30 example is no longer reported as a sign reversal", {
+  model <- nomo_model(list(
+    Agency = paste0("ag", 1:4),
+    Persistence = paste0("pe", 1:4),
+    SocialDesirability = paste0("sd", 1:3)
+  ))
+  h <- nomo_hypotheses(
+    "Agency -> Persistence" = positive(min = .20),
+    "Agency <-> SocialDesirability" = negligible(within = c(-.15, .15)),
+    "Agency -> Performance" = positive(),
+    "Persistence -> Performance" = positive(min = .20)
+  )
+  s <- nomo_split(nomo_demo_network, validation_prop = .40, seed = 2026)
+  net <- nomo_network(model, data = s, hypotheses = h)
+
+  rep <- nomo_table(net, "replication")
+  h4 <- rep[rep$id == "H4", ]
+  validation_h4 <- net$validation$hypothesis_evidence
+  validation_h4 <- validation_h4[validation_h4$id == "H4", ]
+
+  # The population path is zero. The estimates differ in sign, but the
+  # validation interval clearly includes zero, so no reversal can be claimed.
+  expect_true(sign(h4$primary_estimate) != sign(h4$validation_estimate))
+  expect_lt(validation_h4$ci_lower, 0)
+  expect_gt(validation_h4$ci_upper, 0)
+  expect_false(identical(h4$replication_status, "sign_reversal"))
+  expect_true(h4$replication_status %in% c(
+    "sign_change_within_uncertainty",
+    "direction_not_replicated"
+  ))
+
+  log_row <- net$decision_log[
+    net$decision_log$stage == "network_replication" &
+      net$decision_log$object == "Persistence -> Performance",
+  ]
+  expected_severity <- if (identical(h4$replication_status, "direction_not_replicated")) {
+    "concern"
+  } else {
+    "review"
+  }
+  expect_equal(log_row$severity, expected_severity)
 })
 
 
