@@ -20,6 +20,8 @@
 #'   paper)`).
 #' * `nomo_compare`: `"comparisons"` (default), `"models"`, `"loadings"`,
 #'   `"evidence"`, `"decision_log"`; see [nomo_compare()].
+#' * `nomo_hierarchical`: `"indices"` (default), `"subscales"`, `"loadings"`,
+#'   `"notes"`, `"decision_log"`; see [nomo_hierarchical()].
 #' * `nomo_run`: `"stages"` (default), `"requests"`, `"decisions"`,
 #'   `"component_log"`, `"scales"`, `"recipe"`, `"settings"`, `"lineage"`,
 #'   `"methods"`; see [nomo_run()] and [nomo_revise()]. `"lineage"` returns one

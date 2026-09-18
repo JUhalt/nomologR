@@ -51,6 +51,8 @@ reference:
       - nomo_reliability
       - summary.nomo_reliability
       - plot.nomo_reliability
+      - nomo_hierarchical
+      - plot.nomo_hierarchical
       - nomo_validity
       - summary.nomo_validity
       - plot.nomo_validity
@@ -80,6 +82,7 @@ articles:
     contents:
       - exploratory-workflow
       - measurement-model-evidence
+      - hierarchical-models
       - measurement-invariance
       - nomological-network
       - guided-workflow

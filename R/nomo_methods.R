@@ -347,6 +347,14 @@ nomo_bibliography <- function() {
       "10.1177/109442819800100106"
     ),
     nomo_bib_entry(
+      "holzinger_swineford_1937", "Holzinger & Swineford (1937)",
+      paste(
+        "Holzinger, K. J., & Swineford, F. (1937). The bi-factor method.",
+        "Psychometrika, 2(1), 41-54."
+      ),
+      "10.1007/BF02287965"
+    ),
+    nomo_bib_entry(
       "horn_1965", "Horn (1965)",
       paste(
         "Horn, J. L. (1965). A rationale and test for the number of factors in",
@@ -528,6 +536,24 @@ nomo_bibliography <- function() {
       "10.2307/271063"
     ),
     nomo_bib_entry(
+      "reise_2012", "Reise (2012)",
+      paste(
+        "Reise, S. P. (2012). The rediscovery of bifactor measurement models.",
+        "Multivariate Behavioral Research, 47(5), 667-696."
+      ),
+      "10.1080/00273171.2012.715555"
+    ),
+    nomo_bib_entry(
+      "reise_bonifay_2013", "Reise, Bonifay, & Haviland (2013)",
+      paste(
+        "Reise, S. P., Bonifay, W. E., & Haviland, M. G. (2013). Scoring and",
+        "modeling psychological measures in the presence of",
+        "multidimensionality. Journal of Personality Assessment, 95(2),",
+        "129-140."
+      ),
+      "10.1080/00223891.2012.725437"
+    ),
+    nomo_bib_entry(
       "rhemtulla_2012", "Rhemtulla, Brosseau-Liard, & Savalei (2012)",
       paste(
         "Rhemtulla, M., Brosseau-Liard, P. \u00c9., & Savalei, V. (2012). When can",
@@ -536,6 +562,15 @@ nomo_bibliography <- function() {
         "conditions. Psychological Methods, 17(3), 354-373."
       ),
       "10.1037/a0029315"
+    ),
+    nomo_bib_entry(
+      "rodriguez_2016", "Rodriguez, Reise, & Haviland (2016)",
+      paste(
+        "Rodriguez, A., Reise, S. P., & Haviland, M. G. (2016). Evaluating",
+        "bifactor models: Calculating and interpreting statistical indices.",
+        "Psychological Methods, 21(2), 137-150."
+      ),
+      "10.1037/met0000045"
     ),
     nomo_bib_entry(
       "roemer_2021", "Roemer, Schuberth, & Henseler (2021)",
@@ -605,6 +640,14 @@ nomo_bibliography <- function() {
         "state of the art. Psychological Methods, 7(2), 147-177."
       ),
       "10.1037/1082-989X.7.2.147"
+    ),
+    nomo_bib_entry(
+      "schmid_leiman_1957", "Schmid & Leiman (1957)",
+      paste(
+        "Schmid, J., & Leiman, J. M. (1957). The development of hierarchical",
+        "factor solutions. Psychometrika, 22(1), 53-61."
+      ),
+      "10.1007/BF02289209"
     ),
     nomo_bib_entry(
       "schuirmann_1987", "Schuirmann (1987)",
@@ -708,6 +751,15 @@ nomo_bibliography <- function() {
         "checklist to avoid p-hacking. Frontiers in Psychology, 7, 1832."
       ),
       "10.3389/fpsyg.2016.01832"
+    ),
+    nomo_bib_entry(
+      "yung_1999", "Yung, Thissen, & McLeod (1999)",
+      paste(
+        "Yung, Y.-F., Thissen, D., & McLeod, L. D. (1999). On the relationship",
+        "between the higher-order factor model and the hierarchical factor",
+        "model. Psychometrika, 64(2), 113-128."
+      ),
+      "10.1007/BF02294531"
     ),
     nomo_bib_entry(
       "wu_estabrook_2016", "Wu & Estabrook (2016)",
@@ -1099,6 +1151,35 @@ nomo_methods_registry <- function() {
       c("kolenikov_bollen_2012")
     ),
     nomo_method_entry(
+      "bifactor_model", "cfa",
+      "Bifactor measurement model",
+      "contemporary", "primary",
+      paste(
+        "A general factor measured by every item plus orthogonal group factors",
+        "measured by subsets of items."
+      ),
+      paste(
+        "General and group factors must be orthogonal. It usually fits at least",
+        "as well as correlated-factors models of the same items even when it",
+        "did not generate the data, so fit alone does not choose it."
+      ),
+      "nomo_model()", "lavaan",
+      c("holzinger_swineford_1937", "reise_2012")
+    ),
+    nomo_method_entry(
+      "higher_order_model", "cfa",
+      "Higher-order (second-order) measurement model",
+      "contemporary", "primary",
+      "First-order factors whose correlations are explained by a second-order factor.",
+      paste(
+        "Needs at least three first-order factors; with exactly three it fits",
+        "exactly as well as correlated factors. It is a constrained version of",
+        "the bifactor model."
+      ),
+      "nomo_model()", "lavaan",
+      c("yung_1999", "reise_2012")
+    ),
+    nomo_method_entry(
       "holdout_split", "cfa",
       "Calibration and validation sample split",
       "contemporary", "supporting",
@@ -1216,6 +1297,73 @@ nomo_methods_registry <- function() {
       "Resampling-based; requires enough successful draws to be trustworthy.",
       "nomo_reliability()", "nomologR",
       c("kelley_pornprasertmanit_2016")
+    ),
+
+    nomo_method_entry(
+      "omega_hierarchical", "reliability",
+      "Omega hierarchical",
+      "contemporary", "primary",
+      "Proportion of unit-weighted total-score variance explained by the general factor.",
+      paste(
+        "Requires orthogonal general and group sources. Describes the observed",
+        "composite for continuous items and the latent-response composite for",
+        "ordered items."
+      ),
+      "nomo_hierarchical()", "nomologR",
+      c("reise_2012", "reise_bonifay_2013", "rodriguez_2016")
+    ),
+    nomo_method_entry(
+      "omega_hierarchical_subscale", "reliability",
+      "Omega hierarchical subscale",
+      "contemporary", "supporting",
+      paste(
+        "Proportion of a subscale composite's variance that is reliable and",
+        "specific to its group factor, after removing the general factor."
+      ),
+      "Requires orthogonal general and group sources.",
+      "nomo_hierarchical()", "nomologR",
+      c("reise_bonifay_2013", "rodriguez_2016")
+    ),
+    nomo_method_entry(
+      "ecv", "reliability",
+      "Explained common variance",
+      "contemporary", "supporting",
+      "Share of the common variance across items explained by the general factor.",
+      paste(
+        "Computed from standardized loadings. No benchmark value establishes",
+        "that the items are unidimensional."
+      ),
+      "nomo_hierarchical()", "nomologR",
+      c("reise_2012", "rodriguez_2016")
+    ),
+    nomo_method_entry(
+      "puc", "reliability",
+      "Percentage of uncontaminated correlations",
+      "contemporary", "supporting",
+      "Share of item correlations influenced only by the general factor.",
+      paste(
+        "Depends only on how items are assigned to group factors, not on the",
+        "estimates."
+      ),
+      "nomo_hierarchical()", "nomologR",
+      c("reise_2012", "rodriguez_2016")
+    ),
+    nomo_method_entry(
+      "schmid_leiman", "reliability",
+      "Schmid-Leiman decomposition",
+      "historical", "supporting",
+      paste(
+        "General and residualized group loadings implied by a higher-order",
+        "solution."
+      ),
+      paste(
+        "Originally an orthogonalization of exploratory solutions; applied here",
+        "to a confirmatory higher-order model, where it is exact. The",
+        "proportionality it imposes is what distinguishes a higher-order model",
+        "from a bifactor model."
+      ),
+      "nomo_hierarchical()", "nomologR",
+      c("schmid_leiman_1957", "yung_1999")
     ),
 
     # Stage 6: convergent and discriminant evidence --------------------------

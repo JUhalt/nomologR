@@ -2,28 +2,81 @@
 % Please edit documentation in R/nomo_model.R
 \name{nomo_model}
 \alias{nomo_model}
-\title{Build simple confirmatory factor-analysis syntax}
+\title{Build confirmatory factor-analysis syntax}
 \usage{
-nomo_model(factors)
+nomo_model(
+  factors,
+  structure = c("correlated", "higher_order", "bifactor"),
+  general = "G"
+)
 }
 \arguments{
 \item{factors}{A named list. Each element name is a latent-factor name and
-each element value is a character vector of observed indicators.}
+each element value is a character vector of observed indicators. For
+hierarchical structures these are the first-order or group factors.}
+
+\item{structure}{One of \code{"correlated"}, \code{"higher_order"}, or \code{"bifactor"}.}
+
+\item{general}{Name of the second-order or general factor. Used only when
+\code{structure} is \code{"higher_order"} or \code{"bifactor"}.}
 }
 \value{
 A character scalar of class \code{nomo_model} that can be passed directly
-to \code{\link[=nomo_cfa]{nomo_cfa()}} or to \code{lavaan::cfa()}.
+to \code{\link[=nomo_cfa]{nomo_cfa()}} or to \code{lavaan::cfa()}. Attributes record the \code{factors},
+\code{structure}, \code{general} factor, and any identification \code{notes}.
 }
 \description{
-\code{nomo_model()} is a small convenience helper for ordinary reflective CFA
-models. It converts a named list of factor-to-indicator assignments into
-\code{lavaan} measurement-model syntax. It deliberately does not add residual
-covariances, cross-loadings, equality constraints, or other post-hoc changes.
+\code{nomo_model()} is a small convenience helper for reflective CFA models. It
+converts a named list of factor-to-indicator assignments into \code{lavaan}
+measurement-model syntax. It deliberately does not add residual covariances,
+cross-loadings, equality constraints, or other post-hoc changes.
+}
+\details{
+Three structures are available, and the researcher chooses among them. The
+helper never derives a structure from exploratory results.
+\itemize{
+\item \code{"correlated"} (default): one factor per element of \code{factors}, with
+factors free to correlate.
+\item \code{"higher_order"}: the elements of \code{factors} become first-order factors,
+and a second-order factor named by \code{general} explains their correlations.
+At least three first-order factors are required, because with two the
+second-order loadings are not identified without further constraints.
+With exactly three, the second-order part is just identified: the model
+fits exactly as well as the correlated-factors model, so fit cannot
+distinguish the two.
+\item \code{"bifactor"}: a general factor named by \code{general} is measured by every
+indicator, and each element of \code{factors} becomes a group factor. All
+factors are orthogonal. Identification is written into the syntax (each
+factor's first loading is freed and its variance fixed to 1), so the model
+is identified the same way whatever \code{std.lv} is used to fit it. At least
+two group factors with at least two indicators each are required;
+configurations known to be fragile are noted.
+}
+
+Any identification notes are attached as the \code{"notes"} attribute and printed
+with the syntax. Use \code{\link[=nomo_hierarchical]{nomo_hierarchical()}} to evaluate a fitted higher-order
+or bifactor model.
 }
 \examples{
-model <- nomo_model(list(
+factors <- list(
   engagement = c("e1", "e2", "e3"),
-  belonging = c("b1", "b2", "b3")
-))
-model
+  belonging = c("b1", "b2", "b3"),
+  efficacy = c("f1", "f2", "f3")
+)
+
+nomo_model(factors)
+nomo_model(factors, structure = "higher_order", general = "Wellbeing")
+nomo_model(factors, structure = "bifactor", general = "Wellbeing")
+}
+\references{
+Holzinger, K. J., & Swineford, F. (1937). The bi-factor method.
+\emph{Psychometrika, 2}(1), 41-54. \doi{10.1007/BF02287965}
+
+Reise, S. P. (2012). The rediscovery of bifactor measurement models.
+\emph{Multivariate Behavioral Research, 47}(5), 667-696.
+\doi{10.1080/00273171.2012.715555}
+
+Yung, Y.-F., Thissen, D., & McLeod, L. D. (1999). On the relationship
+between the higher-order factor model and the hierarchical factor model.
+\emph{Psychometrika, 64}(2), 113-128. \doi{10.1007/BF02294531}
 }

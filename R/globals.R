@@ -22,5 +22,10 @@ utils::globalVariables(c(
   "theory_upper_plot",
   "concordance_display",
   "panel_x",
-  "replication_display"
+  "replication_display",
+  "loading",
+  "item",
+  "source",
+  "share",
+  "composite"
 ))
