@@ -686,3 +686,10 @@ Sarstedt, 2015). HTMT2 is emphasized for congeneric measurement because
 it relaxes the original HTMT tau-equivalence assumption (Roemer,
 Schuberth, & Henseler, 2021). Fornell-Larcker output remains available
 only as optional historical/ supporting information.
+
+The [research
+basis](https://juhalt.github.io/nomologR/articles/research-basis.md)
+article places each of these methods between historical and contemporary
+practice, and
+`nomo_methods(stage = c("cfa", "compare", "reliability", "validity"))`
+returns the same information as a table, with full references.

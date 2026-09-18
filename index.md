@@ -851,6 +851,22 @@ session information. See the [reproducible reporting
 walkthrough](https://juhalt.github.io/nomologR/articles/reproducible-report.html)
 for the documented inputs and limitations.
 
+The report cites the methods the workflow actually used, not every
+method the package offers. The same information is available directly:
+
+``` r
+
+nomo_methods(run)                     # methods this workflow used
+nomo_methods(lineage = "historical")  # shown for recognition, and why
+nomo_methods(run, references = TRUE)  # a reference list with DOIs
+```
+
+Each method records its stage, whether it is historical, contemporary,
+or emerging practice, how the package uses it, its estimand and
+assumptions, and DOI-verified references. The [research
+basis](https://juhalt.github.io/nomologR/articles/research-basis.html)
+article explains the lineage labels.
+
 ## Development path
 
 The detailed release plan lives in
@@ -865,13 +881,16 @@ selected in [\#22](https://github.com/JUhalt/nomologR/issues/22):
 
 - **Completed:** learning foundations (#25) and readable invariance
   labels (#31), including the teaching datasets, runnable vignettes, and
-  the research basis article; maintenance (#36).
-- **Core, in progress or next:** research basis methods registry (#26),
-  model comparison with
+  the research basis article; maintenance (#36); model comparison with
   [`nomo_compare()`](https://juhalt.github.io/nomologR/reference/nomo_compare.md)
-  (#27), auditable revision lineage (#28), bifactor and higher-order
-  models (#29), replication-status language (#30), and release
-  certification with a CRAN-readiness gate (#37).
+  (#27); auditable revision lineage with
+  [`nomo_revise()`](https://juhalt.github.io/nomologR/reference/nomo_revise.md)
+  (#28); and the methods registry with
+  [`nomo_methods()`](https://juhalt.github.io/nomologR/reference/nomo_methods.md)
+  (#26).
+- **Core, in progress or next:** bifactor and higher-order models (#29),
+  replication-status language (#30), and release certification with a
+  CRAN-readiness gate (#37).
 - **Planned:** missing-data sensitivity (#32), score guidance (#33),
   insufficient-effort responding screens (#34), manuscript-ready tables
   (#35), rendering reports from inside R Markdown or Quarto documents

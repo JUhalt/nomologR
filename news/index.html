@@ -50,6 +50,19 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.1.0.9000" id="nomologr-0109000">nomologR 0.1.0.9000<a class="anchor" aria-label="anchor" href="#nomologr-0109000"></a></h2>
 <div class="section level3">
+<h3 id="methods-registry-0-1-0-9000">Methods registry (<a href="https://github.com/JUhalt/nomologR/issues/26" class="external-link">#26</a>)<a class="anchor" aria-label="anchor" href="#methods-registry-0-1-0-9000"></a></h3>
+<ul><li>Added <code><a href="../reference/nomo_methods.html">nomo_methods()</a></code>, a machine-readable registry of the 65 methods the package implements. Each entry records its workflow stage; its lineage (<code>historical</code>, <code>contemporary</code>, or <code>emerging</code>); its role (<code>primary</code>, <code>supporting</code>, or <code>context</code>); its estimand and key assumptions; the function and computational engine that implement it; and its references.</li>
+<li>
+<code>role = "context"</code> marks methods displayed only so readers can recognize them in published work, such as the eigenvalue-greater-than-one rule and fixed fit-index cutoffs. They take no part in any synthesis or decision.</li>
+<li>The registry lists only what the package computes. Planned methods stay in the research-basis article and the issue tracker.</li>
+<li>
+<code>nomo_methods(x)</code> returns only the methods a result object actually used, read from what each component recorded: a skipped retention criterion, alpha that was not computed, or a comparison that was not run is not credited. A one-factor solution is credited with no rotation method, since none was applied.</li>
+<li>
+<code>references = TRUE</code> expands the result into a reference list with full citations and DOIs.</li>
+<li>The “Methods and citations” section of <code><a href="../reference/nomo_report.html">nomo_report()</a></code> now lists the methods the run used and a deduplicated reference list for them, ahead of the software citations it already contained. <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> of a <code>nomo_run</code> and <code>nomo_table(run, "methods")</code> show the same methods.</li>
+<li>Every reference is in a single bibliography that the tests keep consistent with the registry in both directions. <code>dev/verify-method-dois.R</code> resolves each DOI and checks that the registered first author, year, and title match the citation; all 79 DOIs pass.</li>
+</ul></div>
+<div class="section level3">
 <h3 id="revision-lineage-0-1-0-9000">Revision lineage (<a href="https://github.com/JUhalt/nomologR/issues/28" class="external-link">#28</a>)<a class="anchor" aria-label="anchor" href="#revision-lineage-0-1-0-9000"></a></h3>
 <ul><li>Added <code><a href="../reference/nomo_revise.html">nomo_revise()</a></code>, which creates a child workflow from a parent <code><a href="../reference/nomo_run.html">nomo_run()</a></code> with a revised measurement model, a revised item set, or both. The parent workflow is never modified.</li>
 <li>Each revision records what changed (model, items, or both), the required researcher rationale, and whether the change was prespecified or post hoc. Post-hoc revisions are labeled, and the decision log recommends confirming the revised model in independent data.</li>

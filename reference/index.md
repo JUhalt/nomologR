@@ -16,6 +16,15 @@ report-ready tables, and archive evidence and decisions.
 - [`nomo_defaults()`](https://juhalt.github.io/nomologR/reference/nomo_defaults.md)
   : Default guidance settings for nomologR
 
+## Research basis
+
+The methods the package implements, where each sits between historical
+and contemporary practice, and the literature behind it.
+
+- [`nomo_methods()`](https://juhalt.github.io/nomologR/reference/nomo_methods.md)
+  : The methods registry: what nomologR computes, and where it comes
+  from
+
 ## 
 
 Item and data audit

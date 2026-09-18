@@ -146,8 +146,10 @@ navigation (completed in
 [\#26](https://github.com/JUhalt/nomologR/issues/26) Research basis —
 historical-to-contemporary methods documentation, verified references,
 methods registry. References and the research-basis article shipped in
-[\#41](https://github.com/JUhalt/nomologR/pull/41); the methods registry
-and report-level method citations remain.
+[\#41](https://github.com/JUhalt/nomologR/pull/41);
+[`nomo_methods()`](https://juhalt.github.io/nomologR/reference/nomo_methods.md),
+report-level citations of the methods a run used, and release-time DOI
+verification completed the workstream.
 
 [\#27](https://github.com/JUhalt/nomologR/issues/27) Model comparison —
 [`nomo_compare()`](https://juhalt.github.io/nomologR/reference/nomo_compare.md)

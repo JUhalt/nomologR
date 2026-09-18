@@ -2,6 +2,40 @@
 
 ## nomologR 0.1.0.9000
 
+### Methods registry ([\#26](https://github.com/JUhalt/nomologR/issues/26))
+
+- Added
+  [`nomo_methods()`](https://juhalt.github.io/nomologR/reference/nomo_methods.md),
+  a machine-readable registry of the 65 methods the package implements.
+  Each entry records its workflow stage; its lineage (`historical`,
+  `contemporary`, or `emerging`); its role (`primary`, `supporting`, or
+  `context`); its estimand and key assumptions; the function and
+  computational engine that implement it; and its references.
+- `role = "context"` marks methods displayed only so readers can
+  recognize them in published work, such as the
+  eigenvalue-greater-than-one rule and fixed fit-index cutoffs. They
+  take no part in any synthesis or decision.
+- The registry lists only what the package computes. Planned methods
+  stay in the research-basis article and the issue tracker.
+- `nomo_methods(x)` returns only the methods a result object actually
+  used, read from what each component recorded: a skipped retention
+  criterion, alpha that was not computed, or a comparison that was not
+  run is not credited. A one-factor solution is credited with no
+  rotation method, since none was applied.
+- `references = TRUE` expands the result into a reference list with full
+  citations and DOIs.
+- The “Methods and citations” section of
+  [`nomo_report()`](https://juhalt.github.io/nomologR/reference/nomo_report.md)
+  now lists the methods the run used and a deduplicated reference list
+  for them, ahead of the software citations it already contained.
+  [`summary()`](https://rdrr.io/r/base/summary.html) of a `nomo_run` and
+  `nomo_table(run, "methods")` show the same methods.
+- Every reference is in a single bibliography that the tests keep
+  consistent with the registry in both directions.
+  `dev/verify-method-dois.R` resolves each DOI and checks that the
+  registered first author, year, and title match the citation; all 79
+  DOIs pass.
+
 ### Revision lineage ([\#28](https://github.com/JUhalt/nomologR/issues/28))
 
 - Added

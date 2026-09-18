@@ -24,6 +24,94 @@ How to read the labels:
 Full references appear at the end of this article and in each function’s
 help page.
 
+## The methods registry
+
+The same mapping is available as data.
+[`nomo_methods()`](https://juhalt.github.io/nomologR/reference/nomo_methods.md)
+returns one row per method the package implements, with its stage,
+lineage, role, estimand, key assumptions, implementing function,
+computational engine, and references.
+
+``` r
+
+methods <- nomo_methods()
+nrow(methods)
+#> [1] 65
+table(methods$stage, methods$lineage)
+#>              
+#>               contemporary emerging historical
+#>   cfa                    8        0          3
+#>   compare                6        0          0
+#>   efa                    3        0          2
+#>   factors                7        1          4
+#>   invariance             6        0          1
+#>   network                4        0          1
+#>   reliability            3        0          1
+#>   screen                 4        0          1
+#>   validity               3        0          2
+#>   workflow               5        0          0
+```
+
+The `role` column records how the evidence is used. A **context** method
+is shown so that a reader can recognize it in published work, and it
+takes no part in any synthesis or decision:
+
+``` r
+
+nomo_methods(lineage = "historical")[, c("stage", "method", "role")]
+#> # A tibble: 15 × 3
+#>    stage       method                                               role      
+#>    <chr>       <chr>                                                <chr>     
+#>  1 screen      Fixed item-total correlation reference (about .30)   context   
+#>  2 factors     Eigenvalue-greater-than-one rule                     context   
+#>  3 factors     Scree test                                           context   
+#>  4 factors     Kaiser-Meyer-Olkin sampling adequacy                 supporting
+#>  5 factors     Bartlett's test of sphericity                        supporting
+#>  6 efa         Orthogonal (varimax) rotation                        context   
+#>  7 efa         Fixed loading cutoff                                 context   
+#>  8 cfa         Chi-square exact-fit test                            supporting
+#>  9 cfa         Fixed fit-index cutoffs                              context   
+#> 10 cfa         Modification indices                                 context   
+#> 11 reliability Coefficient alpha                                    supporting
+#> 12 validity    Standardized loadings and average variance extracted supporting
+#> 13 validity    Fornell-Larcker comparison                           context   
+#> 14 invariance  Fixed change-in-CFI rule                             context   
+#> 15 network     Nomological network of construct relations           primary
+```
+
+The registry lists only what the package actually computes. Methods that
+are planned but not yet implemented appear in this article and in the
+issue tracker, not in the registry, so that
+[`nomo_methods()`](https://juhalt.github.io/nomologR/reference/nomo_methods.md)
+never describes a capability the package lacks.
+
+Given a workflow object, `nomo_methods(run)` returns only the methods
+that workflow used. For any selection, `references = TRUE` expands the
+result into a reference list:
+
+``` r
+
+nomo_methods(stage = "reliability", references = TRUE)[, c("method", "citation")]
+#> # A tibble: 8 × 2
+#>   method                                         citation                       
+#>   <chr>                                          <chr>                          
+#> 1 Model-based coefficient omega                  Dunn, T. J., Baguley, T., & Br…
+#> 2 Model-based coefficient omega                  McNeish, D. (2018). Thanks coe…
+#> 3 Model-based coefficient omega                  Flora, D. B. (2020). Your coef…
+#> 4 Model-based coefficient omega                  Bell, S. M., Chalmers, R. P., …
+#> 5 Reliability on the ordered-score scale         Green, S. B., & Yang, Y. (2009…
+#> 6 Coefficient alpha                              Cronbach, L. J. (1951). Coeffi…
+#> 7 Coefficient alpha                              Sijtsma, K. (2009). On the use…
+#> 8 Bootstrap confidence intervals for reliability Kelley, K., & Pornprasertmanit…
+```
+
+This is what the **Methods and citations** section of
+[`nomo_report()`](https://juhalt.github.io/nomologR/reference/nomo_report.md)
+is built from, so an archived report cites the methods a run used rather
+than every method the package knows about. Every DOI in the registry is
+checked against the DOI registries before each release, including that
+the registered author, year, and title match the citation.
+
 ## 1. Item and data audit — `nomo_screen()`
 
 **Historical practice.** Item analysis often meant screening corrected
@@ -268,13 +356,16 @@ rationale;
 [`nomo_report()`](https://juhalt.github.io/nomologR/reference/nomo_report.md)
 archives methods, evidence, decisions, deviations, and session
 information.
+[`nomo_methods()`](https://juhalt.github.io/nomologR/reference/nomo_methods.md)
+identifies which methods a workflow actually used, so the report cites
+those methods and their literature rather than only the software that
+computed them.
 
 **Planned.** Missing-data sensitivity
 ([\#32](https://github.com/JUhalt/nomologR/issues/32)), score guidance
-([\#33](https://github.com/JUhalt/nomologR/issues/33)), manuscript-ready
-tables ([\#35](https://github.com/JUhalt/nomologR/issues/35)), and a
-machine-readable methods registry so reports cite the methods actually
-used ([\#26](https://github.com/JUhalt/nomologR/issues/26)).
+([\#33](https://github.com/JUhalt/nomologR/issues/33)), and
+manuscript-ready tables
+([\#35](https://github.com/JUhalt/nomologR/issues/35)).
 
 ## References
 
