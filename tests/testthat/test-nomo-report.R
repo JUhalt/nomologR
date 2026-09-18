@@ -677,6 +677,9 @@ test_that("nomo_report renders a polished self-contained HTML archive when Pando
   )
   expect_match(html, 'id="decision-log"', fixed = TRUE)
   expect_match(html, 'id="methods-and-citations"', fixed = TRUE)
+  expect_match(html, 'id="methods-used-in-this-workflow"', fixed = TRUE)
+  expect_match(html, 'id="method-references"', fixed = TRUE)
+  expect_match(html, 'id="software"', fixed = TRUE)
   expect_match(html, 'id="full-evidence-trace"', fixed = TRUE)
   expect_match(html, "Report boundary", fixed = TRUE)
 
