@@ -841,11 +841,11 @@ selected in [\#22](https://github.com/JUhalt/nomologR/issues/22):
   labels (#31), including the teaching datasets, runnable vignettes, and
   the research basis article; maintenance (#36); model comparison with
   `nomo_compare()` (#27); auditable revision lineage with
-  `nomo_revise()` (#28); and the methods registry with `nomo_methods()`
-  (#26).
-- **Core, in progress or next:** bifactor and higher-order models (#29),
-  replication-status language (#30), and release certification with a
-  CRAN-readiness gate (#37).
+  `nomo_revise()` (#28); the methods registry with `nomo_methods()`
+  (#26); and interval-based replication-status language for sign changes
+  (#30).
+- **Core, in progress or next:** bifactor and higher-order models (#29)
+  and release certification with a CRAN-readiness gate (#37).
 - **Planned:** missing-data sensitivity (#32), score guidance (#33),
   insufficient-effort responding screens (#34), manuscript-ready tables
   (#35), rendering reports from inside R Markdown or Quarto documents

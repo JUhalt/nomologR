@@ -1,5 +1,21 @@
 # nomologR 0.1.0.9000
 
+## Replication-status language (#30)
+
+- A change in sign between primary and validation estimates is no longer
+  labeled `"sign_reversal"` from the point estimates alone. Estimates scattered
+  around a null relation differ in sign about half the time, and the previous
+  label called that "a substantively important replication discrepancy."
+- For directional predictions, a sign change is now classified from the two
+  95 percent confidence intervals: `"sign_reversal"` when both exclude zero on
+  opposite sides, `"direction_not_replicated"` when exactly one excludes zero,
+  and `"sign_change_within_uncertainty"` when neither does or an interval is
+  unavailable. The first two are recorded as concerns and the third for review.
+- The rule and its rationale are documented in `?nomo_network`, the
+  nomological-network vignette, and the research-basis article. It does not
+  treat a non-significant path as evidence of no relation; that still requires
+  a `negligible(within = ...)` prediction.
+
 ## Methods registry (#26)
 
 - Added `nomo_methods()`, a machine-readable registry of the 65 methods the

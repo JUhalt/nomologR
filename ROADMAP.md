@@ -114,7 +114,7 @@ unsupported cases, validation plan, and exit criteria.
 - [x] [#27](https://github.com/JUhalt/nomologR/issues/27) Model comparison — `nomo_compare()` for nested and non-nested measurement models.
 - [x] [#28](https://github.com/JUhalt/nomologR/issues/28) Revision lineage — auditable revise-and-compare cycles in `nomo_run()`.
 - [ ] [#29](https://github.com/JUhalt/nomologR/issues/29) Bifactor and higher-order measurement models.
-- [ ] [#30](https://github.com/JUhalt/nomologR/issues/30) Replication-status language for near-zero sign changes.
+- [x] [#30](https://github.com/JUhalt/nomologR/issues/30) Replication-status language for near-zero sign changes — a sign change is a reversal only when both confidence intervals exclude zero on opposite sides.
 - [ ] [#37](https://github.com/JUhalt/nomologR/issues/37) Release certification, CRAN-readiness gate, and R-universe publication.
 
 ## Planned workstreams
