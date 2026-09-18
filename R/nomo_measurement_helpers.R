@@ -62,8 +62,9 @@ nomo_measurement_fit <- function(x, arg = "fit", allow_cross_loadings = FALSE) {
       stop(
         paste(
           "`fit` contains a higher-order measurement model.",
-          "Higher-order and bifactor reliability are deferred beyond the v0.1 first-order measurement workflow;",
-          "The v0.1 reliability workflow supports first-order CFA composites."
+          "This function evaluates first-order CFA composites; use",
+          "`nomo_hierarchical()` for omega hierarchical, subscale omegas,",
+          "explained common variance, and PUC in higher-order and bifactor models."
         ),
         call. = FALSE
       )
@@ -91,7 +92,8 @@ nomo_measurement_fit <- function(x, arg = "fit", allow_cross_loadings = FALSE) {
         paste0(
           "`fit` contains cross-loaded indicator(s): ",
           paste(cross_loaded_items, collapse = ", "),
-          ". Reliability requires a simple first-order CFA so the target composite is unambiguous."
+          ". Reliability requires a simple first-order CFA so the target composite is unambiguous.",
+          " If this is a bifactor model, use `nomo_hierarchical()`."
         ),
         call. = FALSE
       )

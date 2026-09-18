@@ -32,6 +32,8 @@ internal \code{constraint} label and adds a human-readable
 \code{constraint_display} column (for example, \verb{Intercept: ag3 (online vs. paper)}).
 \item \code{nomo_compare}: \code{"comparisons"} (default), \code{"models"}, \code{"loadings"},
 \code{"evidence"}, \code{"decision_log"}; see \code{\link[=nomo_compare]{nomo_compare()}}.
+\item \code{nomo_hierarchical}: \code{"indices"} (default), \code{"subscales"}, \code{"loadings"},
+\code{"notes"}, \code{"decision_log"}; see \code{\link[=nomo_hierarchical]{nomo_hierarchical()}}.
 \item \code{nomo_run}: \code{"stages"} (default), \code{"requests"}, \code{"decisions"},
 \code{"component_log"}, \code{"scales"}, \code{"recipe"}, \code{"settings"}, \code{"lineage"},
 \code{"methods"}; see \code{\link[=nomo_run]{nomo_run()}} and \code{\link[=nomo_revise]{nomo_revise()}}. \code{"lineage"} returns one

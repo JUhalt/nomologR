@@ -113,7 +113,7 @@ unsupported cases, validation plan, and exit criteria.
 - [x] [#26](https://github.com/JUhalt/nomologR/issues/26) Research basis — historical-to-contemporary methods documentation, verified references, methods registry. References and the research-basis article shipped in [#41](https://github.com/JUhalt/nomologR/pull/41); `nomo_methods()`, report-level citations of the methods a run used, and release-time DOI verification completed the workstream.
 - [x] [#27](https://github.com/JUhalt/nomologR/issues/27) Model comparison — `nomo_compare()` for nested and non-nested measurement models.
 - [x] [#28](https://github.com/JUhalt/nomologR/issues/28) Revision lineage — auditable revise-and-compare cycles in `nomo_run()`.
-- [ ] [#29](https://github.com/JUhalt/nomologR/issues/29) Bifactor and higher-order measurement models.
+- [x] [#29](https://github.com/JUhalt/nomologR/issues/29) Bifactor and higher-order measurement models — `nomo_model()` structures and `nomo_hierarchical()` indices.
 - [x] [#30](https://github.com/JUhalt/nomologR/issues/30) Replication-status language for near-zero sign changes — a sign change is a reversal only when both confidence intervals exclude zero on opposite sides.
 - [ ] [#37](https://github.com/JUhalt/nomologR/issues/37) Release certification, CRAN-readiness gate, and R-universe publication.
 

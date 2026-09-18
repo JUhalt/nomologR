@@ -171,6 +171,41 @@ nomo_methods_used.nomo_cfa <- function(x, ...) {
 
   if (identical(x$missing, "fiml")) used <- c(used, "fiml")
 
+  structure <- nomo_methods_cfa_structure(x)
+  if (identical(structure, "bifactor")) used <- c(used, "bifactor_model")
+  if (identical(structure, "higher_order")) used <- c(used, "higher_order_model")
+
+  used
+}
+
+
+# The structure is read from the fitted model because nomo_cfa() keeps model
+# syntax as plain text. Anything that is not a recognizable bifactor or
+# higher-order model is treated as ordinary first-order CFA.
+nomo_methods_cfa_structure <- function(x) {
+  if (is.null(x$fit)) return(NA_character_)
+  tryCatch(
+    {
+      input <- nomo_hierarchical_input(x$fit)
+      nomo_hierarchical_structure(input)$type
+    },
+    error = function(e) NA_character_
+  )
+}
+
+
+#' @export
+nomo_methods_used.nomo_hierarchical <- function(x, ...) {
+  used <- c(
+    if (identical(x$structure, "bifactor")) "bifactor_model" else "higher_order_model",
+    "omega_hierarchical",
+    "ecv",
+    "puc"
+  )
+  if (is.data.frame(x$subscales) && nrow(x$subscales)) {
+    used <- c(used, "omega_hierarchical_subscale")
+  }
+  if (identical(x$structure, "higher_order")) used <- c(used, "schmid_leiman")
   used
 }
 
