@@ -160,7 +160,11 @@ auditable revise-and-compare cycles in
 [`nomo_run()`](https://juhalt.github.io/nomologR/reference/nomo_run.md).
 
 [\#29](https://github.com/JUhalt/nomologR/issues/29) Bifactor and
-higher-order measurement models.
+higher-order measurement models —
+[`nomo_model()`](https://juhalt.github.io/nomologR/reference/nomo_model.md)
+structures and
+[`nomo_hierarchical()`](https://juhalt.github.io/nomologR/reference/nomo_hierarchical.md)
+indices.
 
 [\#30](https://github.com/JUhalt/nomologR/issues/30) Replication-status
 language for near-zero sign changes — a sign change is a reversal only

@@ -8,6 +8,7 @@
 <url><loc>https://juhalt.github.io/nomologR/VISION.html</loc></url>
 <url><loc>https://juhalt.github.io/nomologR/articles/exploratory-workflow.html</loc></url>
 <url><loc>https://juhalt.github.io/nomologR/articles/guided-workflow.html</loc></url>
+<url><loc>https://juhalt.github.io/nomologR/articles/hierarchical-models.html</loc></url>
 <url><loc>https://juhalt.github.io/nomologR/articles/index.html</loc></url>
 <url><loc>https://juhalt.github.io/nomologR/articles/measurement-invariance.html</loc></url>
 <url><loc>https://juhalt.github.io/nomologR/articles/measurement-model-evidence.html</loc></url>
@@ -28,6 +29,7 @@
 <url><loc>https://juhalt.github.io/nomologR/reference/nomo_efa.html</loc></url>
 <url><loc>https://juhalt.github.io/nomologR/reference/nomo_expectations.html</loc></url>
 <url><loc>https://juhalt.github.io/nomologR/reference/nomo_factors.html</loc></url>
+<url><loc>https://juhalt.github.io/nomologR/reference/nomo_hierarchical.html</loc></url>
 <url><loc>https://juhalt.github.io/nomologR/reference/nomo_hypotheses.html</loc></url>
 <url><loc>https://juhalt.github.io/nomologR/reference/nomo_invariance.html</loc></url>
 <url><loc>https://juhalt.github.io/nomologR/reference/nomo_methods.html</loc></url>
@@ -47,6 +49,7 @@
 <url><loc>https://juhalt.github.io/nomologR/reference/plot.nomo_compare.html</loc></url>
 <url><loc>https://juhalt.github.io/nomologR/reference/plot.nomo_efa.html</loc></url>
 <url><loc>https://juhalt.github.io/nomologR/reference/plot.nomo_factors.html</loc></url>
+<url><loc>https://juhalt.github.io/nomologR/reference/plot.nomo_hierarchical.html</loc></url>
 <url><loc>https://juhalt.github.io/nomologR/reference/plot.nomo_invariance.html</loc></url>
 <url><loc>https://juhalt.github.io/nomologR/reference/plot.nomo_network.html</loc></url>
 <url><loc>https://juhalt.github.io/nomologR/reference/plot.nomo_reliability.html</loc></url>

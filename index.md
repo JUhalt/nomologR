@@ -70,6 +70,8 @@ every analysis function’s help page.
   structure](https://juhalt.github.io/nomologR/articles/exploratory-workflow.html),
   [measurement-model
   evidence](https://juhalt.github.io/nomologR/articles/measurement-model-evidence.html),
+  [total and subscale
+  scores](https://juhalt.github.io/nomologR/articles/hierarchical-models.html),
   [measurement
   invariance](https://juhalt.github.io/nomologR/articles/measurement-invariance.html),
   [nomological
@@ -682,6 +684,36 @@ That is the central Checkpoint B lesson:
 The full walkthrough is in the **“From CFA to a defensible measurement
 model”** vignette.
 
+#### Total and subscale scores
+
+When a scale reports a total score and subscale scores,
+[`nomo_model()`](https://juhalt.github.io/nomologR/reference/nomo_model.md)
+writes higher-order and bifactor structures, and
+[`nomo_hierarchical()`](https://juhalt.github.io/nomologR/reference/nomo_hierarchical.md)
+reports how much of each score reflects the general factor:
+
+``` r
+
+subscales <- list(
+  Focus = paste0("x", 1:4),
+  Drive = paste0("x", 5:8),
+  Poise = paste0("x", 9:12)
+)
+
+bifactor <- nomo_cfa(nomo_model(subscales, structure = "bifactor"), data = dat)
+h <- nomo_hierarchical(bifactor)
+
+nomo_table(h, "indices")    # omega total, omega hierarchical, ECV, PUC
+nomo_table(h, "subscales")  # what each subscale adds beyond the general factor
+```
+
+The indices carry their estimands and no pass/fail thresholds. A
+bifactor model usually fits at least as well as the alternatives even
+when it did not generate the data, so `nomologR` compares structures
+with
+[`nomo_compare()`](https://juhalt.github.io/nomologR/reference/nomo_compare.md)
+but does not choose between them. See **“Total and subscale scores”**.
+
 ### 6. `nomo_hypotheses()` + `nomo_network()` — theory specified before evidence
 
 Milestone 6 makes the nomological network an explicit theory test rather
@@ -887,10 +919,12 @@ selected in [\#22](https://github.com/JUhalt/nomologR/issues/22):
   [`nomo_revise()`](https://juhalt.github.io/nomologR/reference/nomo_revise.md)
   (#28); the methods registry with
   [`nomo_methods()`](https://juhalt.github.io/nomologR/reference/nomo_methods.md)
-  (#26); and interval-based replication-status language for sign changes
-  (#30).
-- **Core, in progress or next:** bifactor and higher-order models (#29)
-  and release certification with a CRAN-readiness gate (#37).
+  (#26); interval-based replication-status language for sign changes
+  (#30); and bifactor and higher-order models with
+  [`nomo_hierarchical()`](https://juhalt.github.io/nomologR/reference/nomo_hierarchical.md)
+  (#29).
+- **Core, in progress or next:** release certification with a
+  CRAN-readiness gate (#37).
 - **Planned:** missing-data sensitivity (#32), score guidance (#33),
   insufficient-effort responding screens (#34), manuscript-ready tables
   (#35), rendering reports from inside R Markdown or Quarto documents

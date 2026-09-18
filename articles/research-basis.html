@@ -38,6 +38,7 @@
     <li><h6 class="dropdown-header" data-toc-skip>Learning path</h6></li>
     <li><a class="dropdown-item" href="../articles/exploratory-workflow.html">From item audit to exploratory structure</a></li>
     <li><a class="dropdown-item" href="../articles/measurement-model-evidence.html">From CFA to a defensible measurement model</a></li>
+    <li><a class="dropdown-item" href="../articles/hierarchical-models.html">Total and subscale scores: bifactor and higher-order models</a></li>
     <li><a class="dropdown-item" href="../articles/measurement-invariance.html">Measurement Invariance with nomologR</a></li>
     <li><a class="dropdown-item" href="../articles/nomological-network.html">Theory-Specified Nomological Networks with nomologR</a></li>
     <li><a class="dropdown-item" href="../articles/guided-workflow.html">Guided workflow with nomo_run()</a></li>
@@ -116,17 +117,17 @@ computational engine, and references.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">methods</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_methods.html">nomo_methods</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">methods</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 65</span></span>
+<span><span class="co">#&gt; [1] 72</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">methods</span><span class="op">$</span><span class="va">stage</span>, <span class="va">methods</span><span class="op">$</span><span class="va">lineage</span><span class="op">)</span></span>
 <span><span class="co">#&gt;              </span></span>
 <span><span class="co">#&gt;               contemporary emerging historical</span></span>
-<span><span class="co">#&gt;   cfa                    8        0          3</span></span>
+<span><span class="co">#&gt;   cfa                   10        0          3</span></span>
 <span><span class="co">#&gt;   compare                6        0          0</span></span>
 <span><span class="co">#&gt;   efa                    3        0          2</span></span>
 <span><span class="co">#&gt;   factors                7        1          4</span></span>
 <span><span class="co">#&gt;   invariance             6        0          1</span></span>
 <span><span class="co">#&gt;   network                4        0          1</span></span>
-<span><span class="co">#&gt;   reliability            3        0          1</span></span>
+<span><span class="co">#&gt;   reliability            7        0          2</span></span>
 <span><span class="co">#&gt;   screen                 4        0          1</span></span>
 <span><span class="co">#&gt;   validity               3        0          2</span></span>
 <span><span class="co">#&gt;   workflow               5        0          0</span></span></code></pre></div>
@@ -136,7 +137,7 @@ it in published work, and it takes no part in any synthesis or
 decision:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/nomo_methods.html">nomo_methods</a></span><span class="op">(</span>lineage <span class="op">=</span> <span class="st">"historical"</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"stage"</span>, <span class="st">"method"</span>, <span class="st">"role"</span><span class="op">)</span><span class="op">]</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 15 × 3</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 16 × 3</span></span></span>
 <span><span class="co">#&gt;    stage       method                                               role      </span></span>
 <span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                                                <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> screen      Fixed item-total correlation reference (about .30)   context   </span></span>
@@ -150,10 +151,11 @@ decision:</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> cfa         Fixed fit-index cutoffs                              context   </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> cfa         Modification indices                                 context   </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">11</span> reliability Coefficient alpha                                    supporting</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">12</span> validity    Standardized loadings and average variance extracted supporting</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">13</span> validity    Fornell-Larcker comparison                           context   </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">14</span> invariance  Fixed change-in-CFI rule                             context   </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">15</span> network     Nomological network of construct relations           primary</span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">12</span> reliability Schmid-Leiman decomposition                          supporting</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">13</span> validity    Standardized loadings and average variance extracted supporting</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">14</span> validity    Fornell-Larcker comparison                           context   </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">15</span> invariance  Fixed change-in-CFI rule                             context   </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">16</span> network     Nomological network of construct relations           primary</span></span></code></pre></div>
 <p>The registry lists only what the package actually computes. Methods
 that are planned but not yet implemented appear in this article and in
 the issue tracker, not in the registry, so that
@@ -165,17 +167,28 @@ the methods that workflow used. For any selection,
 list:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/nomo_methods.html">nomo_methods</a></span><span class="op">(</span>stage <span class="op">=</span> <span class="st">"reliability"</span>, references <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"method"</span>, <span class="st">"citation"</span><span class="op">)</span><span class="op">]</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 8 × 2</span></span></span>
-<span><span class="co">#&gt;   method                                         citation                       </span></span>
-<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                                          <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                          </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Model-based coefficient omega                  Dunn, T. J., Baguley, T., &amp; Br…</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Model-based coefficient omega                  McNeish, D. (2018). Thanks coe…</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> Model-based coefficient omega                  Flora, D. B. (2020). Your coef…</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> Model-based coefficient omega                  Bell, S. M., Chalmers, R. P., …</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> Reliability on the ordered-score scale         Green, S. B., &amp; Yang, Y. (2009…</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> Coefficient alpha                              Cronbach, L. J. (1951). Coeffi…</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">7</span> Coefficient alpha                              Sijtsma, K. (2009). On the use…</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">8</span> Bootstrap confidence intervals for reliability Kelley, K., &amp; Pornprasertmanit…</span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 19 × 2</span></span></span>
+<span><span class="co">#&gt;    method                                         citation                      </span></span>
+<span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                                          <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                         </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> Model-based coefficient omega                  Dunn, T. J., Baguley, T., &amp; B…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> Model-based coefficient omega                  McNeish, D. (2018). Thanks co…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> Model-based coefficient omega                  Flora, D. B. (2020). Your coe…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> Model-based coefficient omega                  Bell, S. M., Chalmers, R. P.,…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> Reliability on the ordered-score scale         Green, S. B., &amp; Yang, Y. (200…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> Coefficient alpha                              Cronbach, L. J. (1951). Coeff…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> Coefficient alpha                              Sijtsma, K. (2009). On the us…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> Bootstrap confidence intervals for reliability Kelley, K., &amp; Pornprasertmani…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> Omega hierarchical                             Reise, S. P. (2012). The redi…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> Omega hierarchical                             Reise, S. P., Bonifay, W. E.,…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">11</span> Omega hierarchical                             Rodriguez, A., Reise, S. P., …</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">12</span> Omega hierarchical subscale                    Reise, S. P., Bonifay, W. E.,…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">13</span> Omega hierarchical subscale                    Rodriguez, A., Reise, S. P., …</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">14</span> Explained common variance                      Reise, S. P. (2012). The redi…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">15</span> Explained common variance                      Rodriguez, A., Reise, S. P., …</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">16</span> Percentage of uncontaminated correlations      Reise, S. P. (2012). The redi…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">17</span> Percentage of uncontaminated correlations      Rodriguez, A., Reise, S. P., …</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">18</span> Schmid-Leiman decomposition                    Schmid, J., &amp; Leiman, J. M. (…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">19</span> Schmid-Leiman decomposition                    Yung, Y.-F., Thissen, D., &amp; M…</span></span></code></pre></div>
 <p>This is what the <strong>Methods and citations</strong> section of
 <code><a href="../reference/nomo_report.html">nomo_report()</a></code> is built from, so an archived report cites
 the methods a run used rather than every method the package knows about.
@@ -323,8 +336,25 @@ awareness that measurement misspecification biases omega (Bell et al.,
 <code>semTools</code> is primary; alpha is a qualified secondary
 statistic and is reported as unavailable rather than silently redefined
 for ordered-score estimands; bootstrap intervals are optional.</p>
-<p><strong>Planned.</strong> Omega hierarchical, explained common
-variance, and related indices for bifactor and higher-order models (<a href="https://github.com/JUhalt/nomologR/issues/29" class="external-link">#29</a>).</p>
+<p><strong>Total and subscale scores.</strong> Historically, a scale
+with subscales was often summarized by coefficient alpha for its
+multidimensional total score. The bi-factor method (Holzinger &amp;
+Swineford, 1937) and the Schmid-Leiman orthogonalization of higher-order
+exploratory solutions (Schmid &amp; Leiman, 1957) long predate their
+wide use. Contemporary practice fits confirmatory bifactor and
+higher-order models and evaluates them with model-based indices: omega
+hierarchical for the total score, omega hierarchical subscale for what
+each subscale adds beyond the general factor, explained common variance,
+and the percentage of uncontaminated correlations (Reise, 2012; Reise,
+Bonifay, &amp; Haviland, 2013; Rodriguez, Reise, &amp; Haviland, 2016).
+A bifactor model will usually fit at least as well as the alternatives
+even when it did not generate the data (Reise, 2012), and a higher-order
+model is a constrained bifactor model (Yung, Thissen, &amp; McLeod,
+1999), so fit alone cannot choose between them.
+<code><a href="../reference/nomo_model.html">nomo_model()</a></code> writes all three structures,
+<code><a href="../reference/nomo_hierarchical.html">nomo_hierarchical()</a></code> computes the indices with their
+estimands stated and no pass/fail thresholds, and
+<code><a href="../reference/nomo_compare.html">nomo_compare()</a></code> compares the structures; see <a href="hierarchical-models.html">Total and subscale scores</a>.</p>
 </div>
 <div class="section level2">
 <h2 id="convergent-and-discriminant-evidence-nomo_validity">6. Convergent and discriminant evidence —
@@ -556,6 +586,8 @@ Science, 43</em>(1), 115–135. <a href="https://doi.org/10.1007/s11747-014-0403
 <p>Hinkin, T. R. (1998). A brief tutorial on the development of measures
 for use in survey questionnaires. <em>Organizational Research Methods,
 1</em>(1), 104–121. <a href="https://doi.org/10.1177/109442819800100106" class="external-link uri">https://doi.org/10.1177/109442819800100106</a></p>
+<p>Holzinger, K. J., &amp; Swineford, F. (1937). The bi-factor method.
+<em>Psychometrika, 2</em>(1), 41–54. <a href="https://doi.org/10.1007/BF02287965" class="external-link uri">https://doi.org/10.1007/BF02287965</a></p>
 <p>Horn, J. L. (1965). A rationale and test for the number of factors in
 factor analysis. <em>Psychometrika, 30</em>(2), 179–185. <a href="https://doi.org/10.1007/BF02289447" class="external-link uri">https://doi.org/10.1007/BF02289447</a></p>
 <p>Hu, L., &amp; Bentler, P. M. (1999). Cutoff criteria for fit indexes
@@ -627,11 +659,20 @@ conventions and reporting: The state of the art and future directions
 for psychological research. <em>Developmental Review, 41</em>, 71–90. <a href="https://doi.org/10.1016/j.dr.2016.06.004" class="external-link uri">https://doi.org/10.1016/j.dr.2016.06.004</a></p>
 <p>Raftery, A. E. (1995). Bayesian model selection in social research.
 <em>Sociological Methodology, 25</em>, 111–163. <a href="https://doi.org/10.2307/271063" class="external-link uri">https://doi.org/10.2307/271063</a></p>
+<p>Reise, S. P. (2012). The rediscovery of bifactor measurement models.
+<em>Multivariate Behavioral Research, 47</em>(5), 667–696. <a href="https://doi.org/10.1080/00273171.2012.715555" class="external-link uri">https://doi.org/10.1080/00273171.2012.715555</a></p>
+<p>Reise, S. P., Bonifay, W. E., &amp; Haviland, M. G. (2013). Scoring
+and modeling psychological measures in the presence of
+multidimensionality. <em>Journal of Personality Assessment, 95</em>(2),
+129–140. <a href="https://doi.org/10.1080/00223891.2012.725437" class="external-link uri">https://doi.org/10.1080/00223891.2012.725437</a></p>
 <p>Rhemtulla, M., Brosseau-Liard, P. É., &amp; Savalei, V. (2012). When
 can categorical variables be treated as continuous? A comparison of
 robust continuous and categorical SEM estimation methods under
 suboptimal conditions. <em>Psychological Methods, 17</em>(3), 354–373.
 <a href="https://doi.org/10.1037/a0029315" class="external-link uri">https://doi.org/10.1037/a0029315</a></p>
+<p>Rodriguez, A., Reise, S. P., &amp; Haviland, M. G. (2016). Evaluating
+bifactor models: Calculating and interpreting statistical indices.
+<em>Psychological Methods, 21</em>(2), 137–150. <a href="https://doi.org/10.1037/met0000045" class="external-link uri">https://doi.org/10.1037/met0000045</a></p>
 <p>Roemer, E., Schuberth, F., &amp; Henseler, J. (2021). HTMT2—An
 improved criterion for assessing discriminant validity in structural
 equation modeling. <em>Industrial Management &amp; Data Systems,
@@ -656,6 +697,8 @@ the scaled difference chi-square test statistic. <em>Psychometrika,
 75</em>(2), 243–248. <a href="https://doi.org/10.1007/s11336-009-9135-y" class="external-link uri">https://doi.org/10.1007/s11336-009-9135-y</a></p>
 <p>Schafer, J. L., &amp; Graham, J. W. (2002). Missing data: Our view of
 the state of the art. <em>Psychological Methods, 7</em>(2), 147–177. <a href="https://doi.org/10.1037/1082-989X.7.2.147" class="external-link uri">https://doi.org/10.1037/1082-989X.7.2.147</a></p>
+<p>Schmid, J., &amp; Leiman, J. M. (1957). The development of
+hierarchical factor solutions. <em>Psychometrika, 22</em>(1), 53–61. <a href="https://doi.org/10.1007/BF02289209" class="external-link uri">https://doi.org/10.1007/BF02289209</a></p>
 <p>Schuirmann, D. J. (1987). A comparison of the two one-sided tests
 procedure and the power approach for assessing the equivalence of
 average bioavailability. <em>Journal of Pharmacokinetics and
@@ -700,6 +743,9 @@ studies: A checklist to avoid p-hacking. <em>Frontiers in Psychology,
 <p>Wu, H., &amp; Estabrook, R. (2016). Identification of confirmatory
 factor analysis models of different levels of invariance for ordered
 categorical outcomes. <em>Psychometrika, 81</em>(4), 1014–1045. <a href="https://doi.org/10.1007/s11336-016-9506-0" class="external-link uri">https://doi.org/10.1007/s11336-016-9506-0</a></p>
+<p>Yung, Y.-F., Thissen, D., &amp; McLeod, L. D. (1999). On the
+relationship between the higher-order factor model and the hierarchical
+factor model. <em>Psychometrika, 64</em>(2), 113–128. <a href="https://doi.org/10.1007/BF02294531" class="external-link uri">https://doi.org/10.1007/BF02294531</a></p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

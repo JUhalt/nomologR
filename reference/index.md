@@ -66,7 +66,7 @@ Dimensionality and exploratory structure
 Confirmatory measurement model
 
 - [`nomo_model()`](https://juhalt.github.io/nomologR/reference/nomo_model.md)
-  : Build simple confirmatory factor-analysis syntax
+  : Build confirmatory factor-analysis syntax
 - [`nomo_split()`](https://juhalt.github.io/nomologR/reference/nomo_split.md)
   : Create a reproducible calibration/validation split
 - [`nomo_cfa()`](https://juhalt.github.io/nomologR/reference/nomo_cfa.md)
@@ -92,6 +92,10 @@ Reliability and construct-validity evidence
   : Summarize model-based reliability evidence
 - [`plot(`*`<nomo_reliability>`*`)`](https://juhalt.github.io/nomologR/reference/plot.nomo_reliability.md)
   : Plot model-based reliability evidence
+- [`nomo_hierarchical()`](https://juhalt.github.io/nomologR/reference/nomo_hierarchical.md)
+  : Evaluate general-factor strength in bifactor and higher-order models
+- [`plot(`*`<nomo_hierarchical>`*`)`](https://juhalt.github.io/nomologR/reference/plot.nomo_hierarchical.md)
+  : Plot hierarchical measurement evidence
 - [`nomo_validity()`](https://juhalt.github.io/nomologR/reference/nomo_validity.md)
   : Convergent and discriminant construct-validity evidence
 - [`summary(`*`<nomo_validity>`*`)`](https://juhalt.github.io/nomologR/reference/summary.nomo_validity.md)

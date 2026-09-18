@@ -36,17 +36,17 @@ computational engine, and references.
 
 methods <- nomo_methods()
 nrow(methods)
-#> [1] 65
+#> [1] 72
 table(methods$stage, methods$lineage)
 #>              
 #>               contemporary emerging historical
-#>   cfa                    8        0          3
+#>   cfa                   10        0          3
 #>   compare                6        0          0
 #>   efa                    3        0          2
 #>   factors                7        1          4
 #>   invariance             6        0          1
 #>   network                4        0          1
-#>   reliability            3        0          1
+#>   reliability            7        0          2
 #>   screen                 4        0          1
 #>   validity               3        0          2
 #>   workflow               5        0          0
@@ -59,7 +59,7 @@ takes no part in any synthesis or decision:
 ``` r
 
 nomo_methods(lineage = "historical")[, c("stage", "method", "role")]
-#> # A tibble: 15 × 3
+#> # A tibble: 16 × 3
 #>    stage       method                                               role      
 #>    <chr>       <chr>                                                <chr>     
 #>  1 screen      Fixed item-total correlation reference (about .30)   context   
@@ -73,10 +73,11 @@ nomo_methods(lineage = "historical")[, c("stage", "method", "role")]
 #>  9 cfa         Fixed fit-index cutoffs                              context   
 #> 10 cfa         Modification indices                                 context   
 #> 11 reliability Coefficient alpha                                    supporting
-#> 12 validity    Standardized loadings and average variance extracted supporting
-#> 13 validity    Fornell-Larcker comparison                           context   
-#> 14 invariance  Fixed change-in-CFI rule                             context   
-#> 15 network     Nomological network of construct relations           primary
+#> 12 reliability Schmid-Leiman decomposition                          supporting
+#> 13 validity    Standardized loadings and average variance extracted supporting
+#> 14 validity    Fornell-Larcker comparison                           context   
+#> 15 invariance  Fixed change-in-CFI rule                             context   
+#> 16 network     Nomological network of construct relations           primary
 ```
 
 The registry lists only what the package actually computes. Methods that
@@ -92,17 +93,28 @@ result into a reference list:
 ``` r
 
 nomo_methods(stage = "reliability", references = TRUE)[, c("method", "citation")]
-#> # A tibble: 8 × 2
-#>   method                                         citation                       
-#>   <chr>                                          <chr>                          
-#> 1 Model-based coefficient omega                  Dunn, T. J., Baguley, T., & Br…
-#> 2 Model-based coefficient omega                  McNeish, D. (2018). Thanks coe…
-#> 3 Model-based coefficient omega                  Flora, D. B. (2020). Your coef…
-#> 4 Model-based coefficient omega                  Bell, S. M., Chalmers, R. P., …
-#> 5 Reliability on the ordered-score scale         Green, S. B., & Yang, Y. (2009…
-#> 6 Coefficient alpha                              Cronbach, L. J. (1951). Coeffi…
-#> 7 Coefficient alpha                              Sijtsma, K. (2009). On the use…
-#> 8 Bootstrap confidence intervals for reliability Kelley, K., & Pornprasertmanit…
+#> # A tibble: 19 × 2
+#>    method                                         citation                      
+#>    <chr>                                          <chr>                         
+#>  1 Model-based coefficient omega                  Dunn, T. J., Baguley, T., & B…
+#>  2 Model-based coefficient omega                  McNeish, D. (2018). Thanks co…
+#>  3 Model-based coefficient omega                  Flora, D. B. (2020). Your coe…
+#>  4 Model-based coefficient omega                  Bell, S. M., Chalmers, R. P.,…
+#>  5 Reliability on the ordered-score scale         Green, S. B., & Yang, Y. (200…
+#>  6 Coefficient alpha                              Cronbach, L. J. (1951). Coeff…
+#>  7 Coefficient alpha                              Sijtsma, K. (2009). On the us…
+#>  8 Bootstrap confidence intervals for reliability Kelley, K., & Pornprasertmani…
+#>  9 Omega hierarchical                             Reise, S. P. (2012). The redi…
+#> 10 Omega hierarchical                             Reise, S. P., Bonifay, W. E.,…
+#> 11 Omega hierarchical                             Rodriguez, A., Reise, S. P., …
+#> 12 Omega hierarchical subscale                    Reise, S. P., Bonifay, W. E.,…
+#> 13 Omega hierarchical subscale                    Rodriguez, A., Reise, S. P., …
+#> 14 Explained common variance                      Reise, S. P. (2012). The redi…
+#> 15 Explained common variance                      Rodriguez, A., Reise, S. P., …
+#> 16 Percentage of uncontaminated correlations      Reise, S. P. (2012). The redi…
+#> 17 Percentage of uncontaminated correlations      Rodriguez, A., Reise, S. P., …
+#> 18 Schmid-Leiman decomposition                    Schmid, J., & Leiman, J. M. (…
+#> 19 Schmid-Leiman decomposition                    Yung, Y.-F., Thissen, D., & M…
 ```
 
 This is what the **Methods and citations** section of
@@ -258,9 +270,29 @@ alpha is a qualified secondary statistic and is reported as unavailable
 rather than silently redefined for ordered-score estimands; bootstrap
 intervals are optional.
 
-**Planned.** Omega hierarchical, explained common variance, and related
-indices for bifactor and higher-order models
-([\#29](https://github.com/JUhalt/nomologR/issues/29)).
+**Total and subscale scores.** Historically, a scale with subscales was
+often summarized by coefficient alpha for its multidimensional total
+score. The bi-factor method (Holzinger & Swineford, 1937) and the
+Schmid-Leiman orthogonalization of higher-order exploratory solutions
+(Schmid & Leiman, 1957) long predate their wide use. Contemporary
+practice fits confirmatory bifactor and higher-order models and
+evaluates them with model-based indices: omega hierarchical for the
+total score, omega hierarchical subscale for what each subscale adds
+beyond the general factor, explained common variance, and the percentage
+of uncontaminated correlations (Reise, 2012; Reise, Bonifay, & Haviland,
+2013; Rodriguez, Reise, & Haviland, 2016). A bifactor model will usually
+fit at least as well as the alternatives even when it did not generate
+the data (Reise, 2012), and a higher-order model is a constrained
+bifactor model (Yung, Thissen, & McLeod, 1999), so fit alone cannot
+choose between them.
+[`nomo_model()`](https://juhalt.github.io/nomologR/reference/nomo_model.md)
+writes all three structures,
+[`nomo_hierarchical()`](https://juhalt.github.io/nomologR/reference/nomo_hierarchical.md)
+computes the indices with their estimands stated and no pass/fail
+thresholds, and
+[`nomo_compare()`](https://juhalt.github.io/nomologR/reference/nomo_compare.md)
+compares the structures; see [Total and subscale
+scores](https://juhalt.github.io/nomologR/articles/hierarchical-models.md).
 
 ## 6. Convergent and discriminant evidence — `nomo_validity()`
 
@@ -549,6 +581,9 @@ Hinkin, T. R. (1998). A brief tutorial on the development of measures
 for use in survey questionnaires. *Organizational Research Methods,
 1*(1), 104–121. <https://doi.org/10.1177/109442819800100106>
 
+Holzinger, K. J., & Swineford, F. (1937). The bi-factor method.
+*Psychometrika, 2*(1), 41–54. <https://doi.org/10.1007/BF02287965>
+
 Horn, J. L. (1965). A rationale and test for the number of factors in
 factor analysis. *Psychometrika, 30*(2), 179–185.
 <https://doi.org/10.1007/BF02289447>
@@ -659,11 +694,25 @@ Raftery, A. E. (1995). Bayesian model selection in social research.
 *Sociological Methodology, 25*, 111–163.
 <https://doi.org/10.2307/271063>
 
+Reise, S. P. (2012). The rediscovery of bifactor measurement models.
+*Multivariate Behavioral Research, 47*(5), 667–696.
+<https://doi.org/10.1080/00273171.2012.715555>
+
+Reise, S. P., Bonifay, W. E., & Haviland, M. G. (2013). Scoring and
+modeling psychological measures in the presence of multidimensionality.
+*Journal of Personality Assessment, 95*(2), 129–140.
+<https://doi.org/10.1080/00223891.2012.725437>
+
 Rhemtulla, M., Brosseau-Liard, P. É., & Savalei, V. (2012). When can
 categorical variables be treated as continuous? A comparison of robust
 continuous and categorical SEM estimation methods under suboptimal
 conditions. *Psychological Methods, 17*(3), 354–373.
 <https://doi.org/10.1037/a0029315>
+
+Rodriguez, A., Reise, S. P., & Haviland, M. G. (2016). Evaluating
+bifactor models: Calculating and interpreting statistical indices.
+*Psychological Methods, 21*(2), 137–150.
+<https://doi.org/10.1037/met0000045>
 
 Roemer, E., Schuberth, F., & Henseler, J. (2021). HTMT2—An improved
 criterion for assessing discriminant validity in structural equation
@@ -699,6 +748,10 @@ scaled difference chi-square test statistic. *Psychometrika, 75*(2),
 Schafer, J. L., & Graham, J. W. (2002). Missing data: Our view of the
 state of the art. *Psychological Methods, 7*(2), 147–177.
 <https://doi.org/10.1037/1082-989X.7.2.147>
+
+Schmid, J., & Leiman, J. M. (1957). The development of hierarchical
+factor solutions. *Psychometrika, 22*(1), 53–61.
+<https://doi.org/10.1007/BF02289209>
 
 Schuirmann, D. J. (1987). A comparison of the two one-sided tests
 procedure and the power approach for assessing the equivalence of
@@ -758,3 +811,7 @@ Wu, H., & Estabrook, R. (2016). Identification of confirmatory factor
 analysis models of different levels of invariance for ordered
 categorical outcomes. *Psychometrika, 81*(4), 1014–1045.
 <https://doi.org/10.1007/s11336-016-9506-0>
+
+Yung, Y.-F., Thissen, D., & McLeod, L. D. (1999). On the relationship
+between the higher-order factor model and the hierarchical factor model.
+*Psychometrika, 64*(2), 113–128. <https://doi.org/10.1007/BF02294531>

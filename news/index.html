@@ -23,6 +23,7 @@
     <li><h6 class="dropdown-header" data-toc-skip>Learning path</h6></li>
     <li><a class="dropdown-item" href="../articles/exploratory-workflow.html">From item audit to exploratory structure</a></li>
     <li><a class="dropdown-item" href="../articles/measurement-model-evidence.html">From CFA to a defensible measurement model</a></li>
+    <li><a class="dropdown-item" href="../articles/hierarchical-models.html">Total and subscale scores: bifactor and higher-order models</a></li>
     <li><a class="dropdown-item" href="../articles/measurement-invariance.html">Measurement Invariance with nomologR</a></li>
     <li><a class="dropdown-item" href="../articles/nomological-network.html">Theory-Specified Nomological Networks with nomologR</a></li>
     <li><a class="dropdown-item" href="../articles/guided-workflow.html">Guided workflow with nomo_run()</a></li>
@@ -50,6 +51,16 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.1.0.9000" id="nomologr-0109000">nomologR 0.1.0.9000<a class="anchor" aria-label="anchor" href="#nomologr-0109000"></a></h2>
 <div class="section level3">
+<h3 id="bifactor-and-higher-order-models-0-1-0-9000">Bifactor and higher-order models (<a href="https://github.com/JUhalt/nomologR/issues/29" class="external-link">#29</a>)<a class="anchor" aria-label="anchor" href="#bifactor-and-higher-order-models-0-1-0-9000"></a></h3>
+<ul><li>
+<code><a href="../reference/nomo_model.html">nomo_model()</a></code> gains <code>structure = c("correlated", "higher_order", "bifactor")</code> and <code>general</code>. Bifactor syntax writes its identification and orthogonality explicitly, so it is identified the same way whatever <code>std.lv</code> is used. Higher-order models need at least three first-order factors; with exactly three the model is noted as fitting exactly as well as correlated factors. Impossible configurations are refused and fragile ones noted.</li>
+<li>Added <code><a href="../reference/nomo_hierarchical.html">nomo_hierarchical()</a></code>, which reads a fitted bifactor or higher-order model and reports omega total, omega hierarchical, their ratio, explained common variance (ECV), the percentage of uncontaminated correlations (PUC), and, per subscale, omega and omega hierarchical subscale, with item-level general and group loadings. For higher-order models these are the exact Schmid-Leiman decomposition.</li>
+<li>Indices match analytic population values and <code><a href="https://rdrr.io/pkg/semTools/man/compRelSEM.html" class="external-link">semTools::compRelSEM()</a></code> under both observed and model-implied denominators. Ordered indicators report the latent-response estimand, labeled as an upper bound on observed ordinal sum-score reliability.</li>
+<li>No index is treated as a pass/fail threshold, following Reise (2012), who notes that no benchmark value of ECV establishes unidimensionality. The output discloses that a bifactor model usually fits at least as well as the alternatives even when it did not generate the data.</li>
+<li>Models whose general and group factors correlate, multi-group and multilevel models, and non-hierarchical models are refused with an explanation. The higher-order refusal shared by <code><a href="../reference/nomo_reliability.html">nomo_reliability()</a></code> and <code><a href="../reference/nomo_validity.html">nomo_validity()</a></code>, and <code><a href="../reference/nomo_reliability.html">nomo_reliability()</a></code>’s cross-loading refusal, now point to <code><a href="../reference/nomo_hierarchical.html">nomo_hierarchical()</a></code>.</li>
+<li>Added <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>, <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>, <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>, and <code><a href="../reference/nomo_table.html">nomo_table()</a></code> methods, seven methods-registry entries, and the <strong>Total and subscale scores</strong> article.</li>
+</ul></div>
+<div class="section level3">
 <h3 id="replication-status-language-0-1-0-9000">Replication-status language (<a href="https://github.com/JUhalt/nomologR/issues/30" class="external-link">#30</a>)<a class="anchor" aria-label="anchor" href="#replication-status-language-0-1-0-9000"></a></h3>
 <ul><li>A change in sign between primary and validation estimates is no longer labeled <code>"sign_reversal"</code> from the point estimates alone. Estimates scattered around a null relation differ in sign about half the time, and the previous label called that “a substantively important replication discrepancy.”</li>
 <li>For directional predictions, a sign change is now classified from the two 95 percent confidence intervals: <code>"sign_reversal"</code> when both exclude zero on opposite sides, <code>"direction_not_replicated"</code> when exactly one excludes zero, and <code>"sign_change_within_uncertainty"</code> when neither does or an interval is unavailable. The first two are recorded as concerns and the third for review.</li>
@@ -57,7 +68,7 @@
 </ul></div>
 <div class="section level3">
 <h3 id="methods-registry-0-1-0-9000">Methods registry (<a href="https://github.com/JUhalt/nomologR/issues/26" class="external-link">#26</a>)<a class="anchor" aria-label="anchor" href="#methods-registry-0-1-0-9000"></a></h3>
-<ul><li>Added <code><a href="../reference/nomo_methods.html">nomo_methods()</a></code>, a machine-readable registry of the 65 methods the package implements. Each entry records its workflow stage; its lineage (<code>historical</code>, <code>contemporary</code>, or <code>emerging</code>); its role (<code>primary</code>, <code>supporting</code>, or <code>context</code>); its estimand and key assumptions; the function and computational engine that implement it; and its references.</li>
+<ul><li>Added <code><a href="../reference/nomo_methods.html">nomo_methods()</a></code>, a machine-readable registry of every method the package implements. Each entry records its workflow stage; its lineage (<code>historical</code>, <code>contemporary</code>, or <code>emerging</code>); its role (<code>primary</code>, <code>supporting</code>, or <code>context</code>); its estimand and key assumptions; the function and computational engine that implement it; and its references.</li>
 <li>
 <code>role = "context"</code> marks methods displayed only so readers can recognize them in published work, such as the eigenvalue-greater-than-one rule and fixed fit-index cutoffs. They take no part in any synthesis or decision.</li>
 <li>The registry lists only what the package computes. Planned methods stay in the research-basis article and the issue tracker.</li>

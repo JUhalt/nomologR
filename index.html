@@ -40,6 +40,7 @@
     <li><h6 class="dropdown-header" data-toc-skip>Learning path</h6></li>
     <li><a class="dropdown-item" href="articles/exploratory-workflow.html">From item audit to exploratory structure</a></li>
     <li><a class="dropdown-item" href="articles/measurement-model-evidence.html">From CFA to a defensible measurement model</a></li>
+    <li><a class="dropdown-item" href="articles/hierarchical-models.html">Total and subscale scores: bifactor and higher-order models</a></li>
     <li><a class="dropdown-item" href="articles/measurement-invariance.html">Measurement Invariance with nomologR</a></li>
     <li><a class="dropdown-item" href="articles/nomological-network.html">Theory-Specified Nomological Networks with nomologR</a></li>
     <li><a class="dropdown-item" href="articles/guided-workflow.html">Guided workflow with nomo_run()</a></li>
@@ -104,7 +105,7 @@
 <a href="https://juhalt.github.io/nomologR/articles/nomologR.html">Get started</a> — the workflow at a glance and a suggested learning path.</li>
 <li>
 <a href="https://juhalt.github.io/nomologR/articles/research-basis.html">Research basis</a> — where each method came from, what current literature recommends, and what <code>nomologR</code> implements.</li>
-<li>Walkthroughs that run on simulated teaching data with known answers: <a href="https://juhalt.github.io/nomologR/articles/exploratory-workflow.html">exploratory structure</a>, <a href="https://juhalt.github.io/nomologR/articles/measurement-model-evidence.html">measurement-model evidence</a>, <a href="https://juhalt.github.io/nomologR/articles/measurement-invariance.html">measurement invariance</a>, <a href="https://juhalt.github.io/nomologR/articles/nomological-network.html">nomological networks</a>, <a href="https://juhalt.github.io/nomologR/articles/guided-workflow.html">guided workflow</a>, and <a href="https://juhalt.github.io/nomologR/articles/reproducible-report.html">reproducible reports</a>.</li>
+<li>Walkthroughs that run on simulated teaching data with known answers: <a href="https://juhalt.github.io/nomologR/articles/exploratory-workflow.html">exploratory structure</a>, <a href="https://juhalt.github.io/nomologR/articles/measurement-model-evidence.html">measurement-model evidence</a>, <a href="https://juhalt.github.io/nomologR/articles/hierarchical-models.html">total and subscale scores</a>, <a href="https://juhalt.github.io/nomologR/articles/measurement-invariance.html">measurement invariance</a>, <a href="https://juhalt.github.io/nomologR/articles/nomological-network.html">nomological networks</a>, <a href="https://juhalt.github.io/nomologR/articles/guided-workflow.html">guided workflow</a>, and <a href="https://juhalt.github.io/nomologR/articles/reproducible-report.html">reproducible reports</a>.</li>
 </ul>
 <p>The teaching datasets are <code>nomo_demo_continuous</code> (two correlated factors with a cross-loading item, a weak item, and missing data), <code>nomo_demo_ordinal</code> (the same structure as five-category ordered items), and <code>nomo_demo_network</code> (three constructs, an observed outcome, and two groups with a known source of non-invariance):</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
@@ -518,12 +519,30 @@
 </blockquote>
 <p>The full walkthrough is in the <strong>“From CFA to a defensible measurement model”</strong> vignette.</p>
 </div>
+<div class="section level4">
+<h4 id="total-and-subscale-scores">Total and subscale scores<a class="anchor" aria-label="anchor" href="#total-and-subscale-scores"></a>
+</h4>
+<p>When a scale reports a total score and subscale scores, <code><a href="reference/nomo_model.html">nomo_model()</a></code> writes higher-order and bifactor structures, and <code><a href="reference/nomo_hierarchical.html">nomo_hierarchical()</a></code> reports how much of each score reflects the general factor:</p>
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">subscales</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>  Focus <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"x"</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">)</span>,</span>
+<span>  Drive <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"x"</span>, <span class="fl">5</span><span class="op">:</span><span class="fl">8</span><span class="op">)</span>,</span>
+<span>  Poise <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"x"</span>, <span class="fl">9</span><span class="op">:</span><span class="fl">12</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">bifactor</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/nomo_cfa.html">nomo_cfa</a></span><span class="op">(</span><span class="fu"><a href="reference/nomo_model.html">nomo_model</a></span><span class="op">(</span><span class="va">subscales</span>, structure <span class="op">=</span> <span class="st">"bifactor"</span><span class="op">)</span>, data <span class="op">=</span> <span class="va">dat</span><span class="op">)</span></span>
+<span><span class="va">h</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/nomo_hierarchical.html">nomo_hierarchical</a></span><span class="op">(</span><span class="va">bifactor</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">h</span>, <span class="st">"indices"</span><span class="op">)</span>    <span class="co"># omega total, omega hierarchical, ECV, PUC</span></span>
+<span><span class="fu"><a href="reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">h</span>, <span class="st">"subscales"</span><span class="op">)</span>  <span class="co"># what each subscale adds beyond the general factor</span></span></code></pre></div>
+<p>The indices carry their estimands and no pass/fail thresholds. A bifactor model usually fits at least as well as the alternatives even when it did not generate the data, so <code>nomologR</code> compares structures with <code><a href="reference/nomo_compare.html">nomo_compare()</a></code> but does not choose between them. See <strong>“Total and subscale scores”</strong>.</p>
+</div>
 </div>
 <div class="section level3">
 <h3 id="id_6-nomo_hypotheses--nomo_network--theory-specified-before-evidence">6. <code>nomo_hypotheses()</code> + <code>nomo_network()</code> — theory specified before evidence<a class="anchor" aria-label="anchor" href="#id_6-nomo_hypotheses--nomo_network--theory-specified-before-evidence"></a>
 </h3>
 <p>Milestone 6 makes the nomological network an explicit theory test rather than a post-hoc collection of correlations. Predictions are machine-readable before the model is interpreted:</p>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">h</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/nomo_hypotheses.html">nomo_hypotheses</a></span><span class="op">(</span></span>
 <span>  <span class="st">"A -&gt; B"</span> <span class="op">=</span> <span class="fu"><a href="reference/nomo_expectations.html">positive</a></span><span class="op">(</span>min <span class="op">=</span> <span class="fl">.20</span><span class="op">)</span>,</span>
 <span>  <span class="st">"A &lt;-&gt; C"</span> <span class="op">=</span> <span class="fu"><a href="reference/nomo_expectations.html">negligible</a></span><span class="op">(</span>within <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">.15</span>, <span class="fl">.15</span><span class="op">)</span><span class="op">)</span>,</span>
@@ -550,7 +569,7 @@
 <h3 id="id_7-nomo_invariance--identification-aware-generalizability-evidence">7. <code>nomo_invariance()</code> — identification-aware generalizability evidence<a class="anchor" aria-label="anchor" href="#id_7-nomo_invariance--identification-aware-generalizability-evidence"></a>
 </h3>
 <p>Milestone 7 evaluates equality constraints without treating one fit-change cutoff as a universal law:</p>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">inv</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/nomo_invariance.html">nomo_invariance</a></span><span class="op">(</span></span>
 <span>  <span class="va">model</span>,</span>
 <span>  data <span class="op">=</span> <span class="va">dat</span>,</span>
@@ -565,7 +584,7 @@
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">inv</span>, type <span class="op">=</span> <span class="st">"local_strain"</span><span class="op">)</span></span></code></pre></div>
 <p>Continuous and ordered indicators use identification-appropriate sequences. For categorical models, binary, three-category, and 4+ category structures are handled differently where identification requires it.</p>
 <p>Partial invariance remains an explicit researcher decision:</p>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">release</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/nomo_partial.html">nomo_partial</a></span><span class="op">(</span></span>
 <span>  level <span class="op">=</span> <span class="st">"metric"</span>,</span>
 <span>  syntax <span class="op">=</span> <span class="st">"F =~ x2"</span>,</span>
@@ -586,7 +605,7 @@
 <h3 id="id_8-nomo_run--guided-orchestration-without-hidden-decisions">8. <code>nomo_run()</code> — guided orchestration without hidden decisions<a class="anchor" aria-label="anchor" href="#id_8-nomo_run--guided-orchestration-without-hidden-decisions"></a>
 </h3>
 <p>Milestone 8 connects the package components into a resumable workflow while keeping consequential choices explicit.</p>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">run</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/nomo_run.html">nomo_run</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">dat</span>,</span>
 <span>  scales <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>WellBeing <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"w1"</span>, <span class="st">"w2"</span>, <span class="st">"w3"</span>, <span class="st">"w4"</span><span class="op">)</span><span class="op">)</span></span>
@@ -610,7 +629,7 @@
 <p>Teaching mode presents consequential pauses as <strong>Observation / Reason / Options / Consequence</strong>. Research mode provides a compact view of the same underlying analysis.</p>
 <p><code><a href="reference/nomo_run.html">nomo_run()</a></code> never silently deletes items, creates a CFA model from EFA, frees invariance constraints, respecifies a model, or declares a construct valid/invalid.</p>
 <p>If the measurement evidence prompts a change, <code><a href="reference/nomo_revise.html">nomo_revise()</a></code> creates a child workflow that keeps the parent as its documented ancestor:</p>
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">revised</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/nomo_revise.html">nomo_revise</a></span><span class="op">(</span></span>
 <span>  <span class="va">run</span>,</span>
 <span>  cfa_model <span class="op">=</span> <span class="st">"WellBeing =~ w1 + w2 + w3 + w4\nw1 ~~ w2"</span>,</span>
@@ -627,7 +646,7 @@
 </h3>
 <p><code><a href="reference/nomo_report.html">nomo_report()</a></code> creates an archival HTML report from a guided workflow, including methods, evidence, researcher decisions, deviations, citations, and session information. See the <a href="https://juhalt.github.io/nomologR/articles/reproducible-report.html">reproducible reporting walkthrough</a> for the documented inputs and limitations.</p>
 <p>The report cites the methods the workflow actually used, not every method the package offers. The same information is available directly:</p>
-<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/nomo_methods.html">nomo_methods</a></span><span class="op">(</span><span class="va">run</span><span class="op">)</span>                     <span class="co"># methods this workflow used</span></span>
 <span><span class="fu"><a href="reference/nomo_methods.html">nomo_methods</a></span><span class="op">(</span>lineage <span class="op">=</span> <span class="st">"historical"</span><span class="op">)</span>  <span class="co"># shown for recognition, and why</span></span>
 <span><span class="fu"><a href="reference/nomo_methods.html">nomo_methods</a></span><span class="op">(</span><span class="va">run</span>, references <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>  <span class="co"># a reference list with DOIs</span></span></code></pre></div>
@@ -645,9 +664,9 @@
 <p>The <a href="https://github.com/JUhalt/nomologR/milestone/2" class="external-link"><code>v0.2.0</code> milestone</a> makes the workflow research-backed from historical to contemporary practice and more useful to graduate students and researchers. Scope was selected in <a href="https://github.com/JUhalt/nomologR/issues/22" class="external-link">#22</a>:</p>
 <ul>
 <li>
-<strong>Completed:</strong> learning foundations (#25) and readable invariance labels (#31), including the teaching datasets, runnable vignettes, and the research basis article; maintenance (#36); model comparison with <code><a href="reference/nomo_compare.html">nomo_compare()</a></code> (#27); auditable revision lineage with <code><a href="reference/nomo_revise.html">nomo_revise()</a></code> (#28); the methods registry with <code><a href="reference/nomo_methods.html">nomo_methods()</a></code> (#26); and interval-based replication-status language for sign changes (#30).</li>
+<strong>Completed:</strong> learning foundations (#25) and readable invariance labels (#31), including the teaching datasets, runnable vignettes, and the research basis article; maintenance (#36); model comparison with <code><a href="reference/nomo_compare.html">nomo_compare()</a></code> (#27); auditable revision lineage with <code><a href="reference/nomo_revise.html">nomo_revise()</a></code> (#28); the methods registry with <code><a href="reference/nomo_methods.html">nomo_methods()</a></code> (#26); interval-based replication-status language for sign changes (#30); and bifactor and higher-order models with <code><a href="reference/nomo_hierarchical.html">nomo_hierarchical()</a></code> (#29).</li>
 <li>
-<strong>Core, in progress or next:</strong> bifactor and higher-order models (#29) and release certification with a CRAN-readiness gate (#37).</li>
+<strong>Core, in progress or next:</strong> release certification with a CRAN-readiness gate (#37).</li>
 <li>
 <strong>Planned:</strong> missing-data sensitivity (#32), score guidance (#33), insufficient-effort responding screens (#34), manuscript-ready tables (#35), rendering reports from inside R Markdown or Quarto documents (#40), and optional parallel bootstrap intervals (#42).</li>
 </ul>

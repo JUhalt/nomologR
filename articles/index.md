@@ -6,6 +6,8 @@
   structure](https://juhalt.github.io/nomologR/articles/exploratory-workflow.md):
 - [From CFA to a defensible measurement
   model](https://juhalt.github.io/nomologR/articles/measurement-model-evidence.md):
+- [Total and subscale scores: bifactor and higher-order
+  models](https://juhalt.github.io/nomologR/articles/hierarchical-models.md):
 - [Measurement Invariance with
   nomologR](https://juhalt.github.io/nomologR/articles/measurement-invariance.md):
 - [Theory-Specified Nomological Networks with

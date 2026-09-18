@@ -45,6 +45,10 @@ Supported objects and `type` values:
   `"evidence"`, `"decision_log"`; see
   [`nomo_compare()`](https://juhalt.github.io/nomologR/reference/nomo_compare.md).
 
+- `nomo_hierarchical`: `"indices"` (default), `"subscales"`,
+  `"loadings"`, `"notes"`, `"decision_log"`; see
+  [`nomo_hierarchical()`](https://juhalt.github.io/nomologR/reference/nomo_hierarchical.md).
+
 - `nomo_run`: `"stages"` (default), `"requests"`, `"decisions"`,
   `"component_log"`, `"scales"`, `"recipe"`, `"settings"`, `"lineage"`,
   `"methods"`; see
