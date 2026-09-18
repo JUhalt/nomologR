@@ -1,0 +1,310 @@
+---
+title: "Total and subscale scores: bifactor and higher-order models"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Total and subscale scores: bifactor and higher-order models}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+library(nomologR)
+
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  message = FALSE,
+  warning = FALSE,
+  fig.width = 7,
+  fig.height = 4
+)
+```
+
+Many published scales report a **total score** and several **subscale
+scores**. A correlated-factors CFA can show that the subscales are
+distinguishable, but it cannot say whether a total score is defensible, or how
+much a subscale score adds once the total is known. Those questions need a
+model with a general factor and indices that divide each score's variance
+between the general factor and the subscales.
+
+This article shows how `nomologR` fits and evaluates the two common models for
+that purpose, and why model fit alone cannot choose between them.
+
+# Two ways to model a general factor
+
+- A **higher-order** model has first-order factors, one per subscale, whose
+  correlations are explained by a second-order factor. The general factor
+  reaches the items only through the first-order factors.
+- A **bifactor** model has a general factor measured directly by every item,
+  plus a group factor for each subscale. All factors are orthogonal, so each
+  item's variance divides cleanly between the general factor, its group
+  factor, and error.
+
+The bifactor model dates to Holzinger and Swineford (1937), and Schmid and
+Leiman (1957) showed how to re-express a higher-order solution in bifactor
+form. Bifactor models were later rediscovered as a way to evaluate
+multidimensional measures (Reise, 2012), with indices for judging total and
+subscale scores (Reise, Bonifay, & Haviland, 2013; Rodriguez, Reise, &
+Haviland, 2016). The [research basis](research-basis.html) article places these
+methods in context.
+
+# An example with a general factor
+
+The data below are simulated from a bifactor population: twelve items in three
+four-item subscales, with a general factor that every item reflects and a
+weaker group factor for each subscale.
+
+```{r simulate}
+simulate_from <- function(sigma, n, seed) {
+  set.seed(seed)
+  z <- matrix(rnorm(n * ncol(sigma)), n, ncol(sigma))
+  dat <- as.data.frame(z %*% chol(sigma))
+  names(dat) <- colnames(sigma)
+  dat
+}
+
+items <- paste0("x", 1:12)
+subscale <- rep(1:3, each = 4)
+general_loading <- c(.70, .60, .65, .55, .60, .50, .70, .60, .50, .60, .55, .65)
+group_loading <- c(.40, .50, .30, .45, .50, .35, .40, .30, .45, .40, .50, .35)
+
+L <- cbind(
+  general_loading,
+  sapply(1:3, function(k) ifelse(subscale == k, group_loading, 0))
+)
+sigma_bifactor <- L %*% t(L)
+diag(sigma_bifactor) <- 1
+dimnames(sigma_bifactor) <- list(items, items)
+
+dat <- simulate_from(sigma_bifactor, n = 600, seed = 2026)
+```
+
+`nomo_model()` writes the syntax for all three structures from the same list of
+subscales. The researcher chooses the structure; `nomologR` never derives one
+from exploratory results.
+
+```{r models}
+subscales <- list(
+  Focus = paste0("x", 1:4),
+  Drive = paste0("x", 5:8),
+  Poise = paste0("x", 9:12)
+)
+
+nomo_model(subscales, structure = "bifactor", general = "G")
+```
+
+The bifactor syntax states its identification explicitly: each factor's first
+loading is freed, each factor's variance is fixed to 1, and every covariance
+among factors is fixed to 0. A higher-order model with three first-order factors
+carries a note that matters later:
+
+```{r higher-order-syntax}
+nomo_model(subscales, structure = "higher_order", general = "G")
+```
+
+```{r fit}
+correlated <- nomo_cfa(nomo_model(subscales), data = dat)
+higher <- nomo_cfa(nomo_model(subscales, "higher_order"), data = dat)
+bifactor <- nomo_cfa(nomo_model(subscales, "bifactor"), data = dat)
+```
+
+# How much of each score is general?
+
+`nomo_hierarchical()` reads the structure from the fitted model and reports the
+indices:
+
+```{r hierarchical}
+h <- nomo_hierarchical(bifactor)
+h
+```
+
+```{r values, include=FALSE}
+idx <- function(x, name) x$indices$estimate[x$indices$index == name]
+f2 <- function(x) sprintf("%.2f", x)
+sub <- h$subscales
+hs <- function(name) f2(sub$omega_hierarchical_subscale[sub$subscale == name])
+os <- function(name) f2(sub$omega_subscale[sub$subscale == name])
+rel <- function(name) f2(sub$omega_hs_relative[sub$subscale == name])
+```
+
+Reading the total score:
+
+- **Omega total** (`r f2(idx(h, "omega_total"))`) is the proportion of
+  total-score variance explained by all common factors.
+- **Omega hierarchical** (`r f2(idx(h, "omega_hierarchical"))`) is the part
+  explained by the general factor alone. It is the index that speaks to
+  interpreting the total score as a measure of one construct.
+- Their ratio (`r f2(idx(h, "omega_hierarchical_relative"))`) says how much of
+  the total score's reliable variance is general.
+- **ECV** (`r f2(idx(h, "ecv"))`) is the share of common item variance the
+  general factor explains, and **PUC** (`r f2(idx(h, "puc"))`) is the share of
+  item correlations influenced only by the general factor.
+
+The subscales tell a different story:
+
+```{r subscales}
+nomo_table(h, "subscales")[, c(
+  "subscale", "omega_subscale", "omega_hierarchical_subscale"
+)]
+```
+
+Focus has an omega of `r os("Focus")`, which looks like a reliable subscale.
+But its **omega hierarchical subscale** is `r hs("Focus")`: once the general
+factor is removed, that is the reliable variance specific to Focus. Only
+`r rel("Focus")` of a Focus score's reliable variance is specific to Focus; the
+rest is the general factor, which the total score already measures. Reise,
+Bonifay, and Haviland (2013) frame exactly this question: whether subscale
+scores are justified, and how much reliable variance they add after
+controlling for the general factor.
+
+The same division is shown for every composite:
+
+```{r variance-plot}
+plot(h)
+```
+
+`nomologR` does not turn these indices into verdicts. Published heuristic
+values exist, but Reise (2012) notes that no benchmark value of ECV establishes
+when a general factor is strong enough. Whether a subscale score is worth
+reporting depends on its intended use, and the indices are the evidence for
+that decision rather than the decision itself.
+
+# Comparing structures
+
+The three models can be compared with `nomo_compare()`, which requires a
+rationale and never selects a model:
+
+```{r compare}
+cmp <- nomo_compare(
+  correlated, higher, bifactor,
+  rationale = "Competing structures for the same twelve items.",
+  origin = "a_priori"
+)
+
+comparisons <- nomo_table(cmp, "comparisons")[, c(
+  "model", "relation", "chisq_diff", "df_diff", "delta_cfi"
+)]
+comparisons$delta_cfi <- round(comparisons$delta_cfi, 4)
+comparisons
+```
+
+```{r compare-values, include=FALSE}
+chisq <- function(x) unname(lavaan::fitMeasures(x$fit, "chisq"))
+dfree <- function(x) unname(lavaan::fitMeasures(x$fit, "df"))
+```
+
+Two features of this table are structural rather than empirical:
+
+- The higher-order model is **equivalent** to the correlated-factors model:
+  both have chi-square = `r sprintf("%.2f", chisq(higher))` on
+  `r dfree(higher)` degrees of freedom. With three first-order factors, the
+  second-order part is just identified, so it imposes no testable constraint.
+  Fit cannot distinguish the two, which is what the note on the syntax warned.
+- The bifactor model is **less constrained**. A higher-order model is a
+  constrained version of the bifactor model (Yung, Thissen, & McLeod, 1999), so
+  the bifactor model can only fit as well or better.
+
+# Why fit cannot choose the structure
+
+That last point has a consequence. The next data set is simulated from a
+**higher-order** population, so the higher-order model is the true one:
+
+```{r higher-order-population}
+first_order <- c(.70, .65, .60, .75, .70, .60, .65, .70, .55, .70, .65, .60)
+second_order <- c(.80, .70, .60)
+
+F <- sapply(1:3, function(k) ifelse(subscale == k, first_order, 0))
+phi <- second_order %*% t(second_order)
+diag(phi) <- 1
+sigma_higher <- F %*% phi %*% t(F)
+diag(sigma_higher) <- 1
+dimnames(sigma_higher) <- list(items, items)
+
+dat_higher <- simulate_from(sigma_higher, n = 600, seed = 2027)
+
+true_model <- nomo_cfa(nomo_model(subscales, "higher_order"), data = dat_higher)
+bifactor_model <- nomo_cfa(nomo_model(subscales, "bifactor"), data = dat_higher)
+```
+
+The higher-order model generated these data, yet the bifactor model fits better:
+chi-square = `r sprintf("%.2f", chisq(bifactor_model))` on
+`r dfree(bifactor_model)` degrees of freedom, against
+`r sprintf("%.2f", chisq(true_model))` on `r dfree(true_model)` for the true
+model. That is not a sign that the bifactor model is correct. Its extra
+parameters absorb sampling noise, and it will usually fit at least as well as
+correlated-factors or higher-order models of the same items (Reise, 2012).
+
+So the choice between structures has to rest on theory: is there a construct
+that every item measures directly, with subscale content as a secondary
+source? Or is the general construct what the subscales have in common? Fit
+comparison can reveal a structure that clearly does not work, but it cannot
+make this choice.
+
+# Higher-order models and Schmid-Leiman
+
+`nomo_hierarchical()` also evaluates higher-order models. There the group
+sources are the first-order factors' disturbances, and the item loadings are
+the Schmid-Leiman decomposition of the higher-order solution, which is exact
+for a confirmatory model:
+
+```{r higher-order-indices}
+h_higher <- nomo_hierarchical(true_model)
+nomo_table(h_higher, "indices")[, c("index", "estimate")]
+head(nomo_table(h_higher, "loadings"), 4)
+```
+
+Each item's general loading is its first-order loading multiplied by its
+factor's second-order loading. Every item in a subscale therefore has the same
+ratio of general to group loading, which is why `item_ecv` is identical for all
+four Focus items. That proportionality is the constraint that distinguishes a
+higher-order model from a bifactor model, where each item's split between
+general and group variance is free.
+
+# Ordered indicators
+
+When indicators are declared ordered, `nomo_cfa()` fits the model with WLSMV and
+`nomo_hierarchical()` computes the indices on the latent-response scale. Those
+omegas are upper bounds on the reliability of the observed ordinal sum score,
+and the output says so. The observed ordinal-scale versions are not provided.
+
+# What nomologR does not do
+
+- It does not generate a bifactor or higher-order structure from exploratory
+  results. The researcher specifies the structure.
+- It does not apply pass/fail thresholds to omega hierarchical, ECV, or PUC.
+- It does not choose between correlated-factors, higher-order, and bifactor
+  models, and it discloses that fit comparisons favor the bifactor model.
+- It evaluates single-group, single-level models, and refuses models whose
+  general and group factors are allowed to correlate, because variance cannot
+  then be attributed to a source.
+
+Every method used here is listed, with references, by `nomo_methods()`:
+
+```{r methods}
+nomo_methods(h)[, c("method", "lineage", "role")]
+```
+
+# References
+
+Holzinger, K. J., & Swineford, F. (1937). The bi-factor method.
+*Psychometrika, 2*(1), 41–54. https://doi.org/10.1007/BF02287965
+
+Reise, S. P. (2012). The rediscovery of bifactor measurement models.
+*Multivariate Behavioral Research, 47*(5), 667–696.
+https://doi.org/10.1080/00273171.2012.715555
+
+Reise, S. P., Bonifay, W. E., & Haviland, M. G. (2013). Scoring and modeling
+psychological measures in the presence of multidimensionality. *Journal of
+Personality Assessment, 95*(2), 129–140.
+https://doi.org/10.1080/00223891.2012.725437
+
+Rodriguez, A., Reise, S. P., & Haviland, M. G. (2016). Evaluating bifactor
+models: Calculating and interpreting statistical indices. *Psychological
+Methods, 21*(2), 137–150. https://doi.org/10.1037/met0000045
+
+Schmid, J., & Leiman, J. M. (1957). The development of hierarchical factor
+solutions. *Psychometrika, 22*(1), 53–61. https://doi.org/10.1007/BF02289209
+
+Yung, Y.-F., Thissen, D., & McLeod, L. D. (1999). On the relationship between
+the higher-order factor model and the hierarchical factor model.
+*Psychometrika, 64*(2), 113–128. https://doi.org/10.1007/BF02294531

@@ -1,5 +1,35 @@
 # nomologR 0.1.0.9000
 
+## Bifactor and higher-order models (#29)
+
+- `nomo_model()` gains `structure = c("correlated", "higher_order",
+  "bifactor")` and `general`. Bifactor syntax writes its identification and
+  orthogonality explicitly, so it is identified the same way whatever `std.lv`
+  is used. Higher-order models need at least three first-order factors; with
+  exactly three the model is noted as fitting exactly as well as correlated
+  factors. Impossible configurations are refused and fragile ones noted.
+- Added `nomo_hierarchical()`, which reads a fitted bifactor or higher-order
+  model and reports omega total, omega hierarchical, their ratio, explained
+  common variance (ECV), the percentage of uncontaminated correlations (PUC),
+  and, per subscale, omega and omega hierarchical subscale, with item-level
+  general and group loadings. For higher-order models these are the exact
+  Schmid-Leiman decomposition.
+- Indices match analytic population values and `semTools::compRelSEM()` under
+  both observed and model-implied denominators. Ordered indicators report the
+  latent-response estimand, labeled as an upper bound on observed ordinal
+  sum-score reliability.
+- No index is treated as a pass/fail threshold, following Reise (2012), who
+  notes that no benchmark value of ECV establishes unidimensionality. The output
+  discloses that a bifactor model usually fits at least as well as the
+  alternatives even when it did not generate the data.
+- Models whose general and group factors correlate, multi-group and multilevel
+  models, and non-hierarchical models are refused with an explanation. The
+  higher-order refusal shared by `nomo_reliability()` and `nomo_validity()`,
+  and `nomo_reliability()`'s cross-loading refusal, now point to
+  `nomo_hierarchical()`.
+- Added `print()`, `summary()`, `plot()`, and `nomo_table()` methods, seven
+  methods-registry entries, and the **Total and subscale scores** article.
+
 ## Replication-status language (#30)
 
 - A change in sign between primary and validation estimates is no longer
@@ -18,7 +48,7 @@
 
 ## Methods registry (#26)
 
-- Added `nomo_methods()`, a machine-readable registry of the 65 methods the
+- Added `nomo_methods()`, a machine-readable registry of every method the
   package implements. Each entry records its workflow stage; its lineage
   (`historical`, `contemporary`, or `emerging`); its role (`primary`,
   `supporting`, or `context`); its estimand and key assumptions; the function
