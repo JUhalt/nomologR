@@ -109,14 +109,21 @@ no_b5 <- nomo_cfa(
 cmp <- nomo_compare(
   full = full,
   no_b5 = no_b5,
-  rationale = "Evaluate whether the weakly loading item b5 contributes to factor B."
+  rationale = "Evaluate whether the weakly loading item b5 contributes to factor B.",
+  evidence = FALSE
 )
 cmp
 nomo_table(cmp, "comparisons")
 
 \donttest{
-summary(cmp)
-plot(cmp, type = "loadings")
+# Side-by-side loadings, reliability, AVE, and HTMT2 for each model
+cmp_evidence <- nomo_compare(
+  full = full,
+  no_b5 = no_b5,
+  rationale = "Evaluate whether the weakly loading item b5 contributes to factor B."
+)
+summary(cmp_evidence)
+plot(cmp_evidence, type = "loadings")
 }
 }
 \references{

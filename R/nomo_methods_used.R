@@ -169,7 +169,7 @@ nomo_methods_used.nomo_cfa <- function(x, ...) {
 
   if (!is.null(x$heywood)) used <- c(used, "improper_solutions")
 
-  if (identical(x$missing, "fiml")) used <- c(used, "fiml")
+  if (nomo_methods_is_fiml(x$missing)) used <- c(used, "fiml")
 
   structure <- nomo_methods_cfa_structure(x)
   if (identical(structure, "bifactor")) used <- c(used, "bifactor_model")
@@ -218,31 +218,54 @@ nomo_methods_used.nomo_compare <- function(x, ...) {
 
   comparisons <- x$comparisons
   if (is.data.frame(comparisons) && nrow(comparisons)) {
-    if ("method" %in% names(comparisons)) {
-      methods_run <- unique(comparisons$method[!is.na(comparisons$method)])
-      if (any(grepl("shift", methods_run, ignore.case = TRUE))) {
-        used <- c(used, "lrt_scaled_shifted")
-      }
-      if (any(grepl("satorra|scaled", methods_run, ignore.case = TRUE))) {
-        used <- c(used, "lrt_scaled")
-      }
-      if (any(grepl("standard|default", methods_run, ignore.case = TRUE))) {
-        used <- c(used, "lrt_standard")
-      }
+    # A difference test is credited only when it produced a result, and by
+    # lavaan's own method value. Matching on text such as "satorra" would
+    # credit the Satorra-Bentler scaled test for WLSMV comparisons, whose
+    # scaled-and-shifted test lavaan labels "satorra.2000".
+    if (all(c("method", "test_available") %in% names(comparisons))) {
+      ran <- comparisons$method[
+        !is.na(comparisons$method) & comparisons$test_available %in% TRUE
+      ]
+      lookup <- nomo_methods_difference_test_ids()
+      used <- c(used, unname(lookup[intersect(unique(ran), names(lookup))]))
     }
     if (any(grepl("^delta_", names(comparisons)))) {
       used <- c(used, "delta_fit")
     }
-    if (any(c("aic_diff", "bic_diff", "aic", "bic") %in% names(comparisons))) {
+    # AIC and BIC are undefined for some estimators, such as WLSMV, and are
+    # then reported as unavailable rather than computed.
+    if ("ic_available" %in% names(comparisons) &&
+        any(comparisons$ic_available %in% TRUE)) {
       used <- c(used, "information_criteria")
     }
-    if ("relation" %in% names(comparisons) &&
-        any(!is.na(comparisons$relation))) {
+    if ("nesting_check" %in% names(comparisons) &&
+        any(comparisons$nesting_check %in% c("nested", "equivalent", "not_nested"))) {
       used <- c(used, "nesting_check")
     }
   }
 
   used
+}
+
+
+# lavaan::lavTestLRT() method values mapped to registry ids.
+nomo_methods_difference_test_ids <- function() {
+  c(
+    standard = "lrt_standard",
+    default = "lrt_standard",
+    satorra.bentler.2001 = "lrt_scaled",
+    satorra.bentler.2010 = "lrt_scaled",
+    satorra.2000 = "lrt_scaled_shifted"
+  )
+}
+
+
+# lavaan treats "ml", "fiml", and "direct" (and their ".x" forms) as full
+# information maximum likelihood, so crediting only the spelling "fiml" would
+# miss researchers who wrote missing = "ml".
+nomo_methods_is_fiml <- function(missing) {
+  length(missing) == 1L && !is.na(missing) &&
+    tolower(missing) %in% c("ml", "fiml", "direct", "ml.x", "fiml.x")
 }
 
 
@@ -292,7 +315,8 @@ nomo_methods_used.nomo_validity <- function(x, ...) {
     if ("HTMT" %in% available) used <- c(used, "htmt")
   }
 
-  if (is.data.frame(x$fornell_larcker) && nrow(x$fornell_larcker)) {
+  # The comparison is produced only on request and is stored as a matrix.
+  if (isTRUE(x$fornell_larcker_requested) && NROW(x$fornell_larcker) > 0L) {
     used <- c(used, "fornell_larcker")
   }
 
@@ -318,9 +342,8 @@ nomo_methods_used.nomo_invariance <- function(x, ...) {
   }
 
   fit <- x$fit_evidence
-  if (is.data.frame(fit) && nrow(fit) > 1L) {
+  if (is.data.frame(fit) && nrow(fit) > 1L && any(grepl("^delta_", names(fit)))) {
     used <- c(used, "invariance_delta_fit")
-    if (any(grepl("^delta_", names(fit)))) used <- c(used, "delta_cfi_rule")
   }
 
   if (isTRUE(x$localize) &&
@@ -334,9 +357,11 @@ nomo_methods_used.nomo_invariance <- function(x, ...) {
 }
 
 
+# nomo_partial() specifies researcher releases; it fits nothing, so the
+# multiple-group model is credited to the nomo_invariance() fit that uses it.
 #' @export
 nomo_methods_used.nomo_partial <- function(x, ...) {
-  c("multigroup_cfa", "partial_invariance")
+  "partial_invariance"
 }
 
 
@@ -365,7 +390,7 @@ nomo_methods_used.nomo_network <- function(x, ...) {
     used <- c(used, "replication_same_model")
   }
 
-  if (identical(x$missing, "fiml")) used <- c(used, "fiml")
+  if (nomo_methods_is_fiml(x$missing)) used <- c(used, "fiml")
 
   used
 }

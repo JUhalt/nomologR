@@ -263,8 +263,247 @@ test_that("historical methods used in the run are labelled as context", {
   used <- nomo_methods(methods_run())
 
   context <- used[used$role == "context", ]
-  expect_true(all(c("fit_cutoffs", "delta_cfi_rule") %in% context$id))
+  expect_true(all(c("fit_cutoffs", "item_total_reference", "loading_reference") %in% context$id))
   expect_true(all(context$lineage %in% c("historical", "emerging")))
+})
+
+
+test_that("the registry holds no method the package never displays", {
+  # A fixed change-in-CFI rule is discussed in the invariance article but no
+  # function computes or displays it, so it must not be in the registry or be
+  # credited to a run.
+  expect_false("delta_cfi_rule" %in% nomo_methods_registry()$id)
+})
+
+
+# Regression tests for crediting rules ------------------------------------------
+
+methods_compare_models <- local({
+  cached <- NULL
+  function() {
+    if (!is.null(cached)) return(cached)
+    full <- "A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4 + b5"
+    fixed <- "A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4 + 0*b5"
+    items <- c(paste0("a", 1:5), paste0("b", 1:5))
+    cached <<- list(
+      ml = list(
+        nomo_cfa(full, data = nomo_demo_continuous),
+        nomo_cfa(fixed, data = nomo_demo_continuous)
+      ),
+      mlr = list(
+        nomo_cfa(full, data = nomo_demo_continuous, estimator = "MLR"),
+        nomo_cfa(fixed, data = nomo_demo_continuous, estimator = "MLR")
+      ),
+      wlsmv = list(
+        nomo_cfa(full, data = nomo_demo_ordinal, ordered = items),
+        nomo_cfa(fixed, data = nomo_demo_ordinal, ordered = items)
+      )
+    )
+    cached
+  }
+})
+
+
+test_that("each difference test is credited by lavaan's method, not by name", {
+  models <- methods_compare_models()
+  credit <- function(pair) {
+    nomo_methods(nomo_compare(
+      pair[[1]], pair[[2]],
+      rationale = "Crediting regression test.",
+      evidence = FALSE
+    ))$id
+  }
+
+  ml <- credit(models$ml)
+  expect_true("lrt_standard" %in% ml)
+  expect_false(any(c("lrt_scaled", "lrt_scaled_shifted") %in% ml))
+
+  mlr <- credit(models$mlr)
+  expect_true("lrt_scaled" %in% mlr)
+  expect_false(any(c("lrt_standard", "lrt_scaled_shifted") %in% mlr))
+
+  # lavaan labels the WLSMV test "satorra.2000"; it is the scaled-and-shifted
+  # test, not the Satorra-Bentler scaled test.
+  wlsmv <- credit(models$wlsmv)
+  expect_true("lrt_scaled_shifted" %in% wlsmv)
+  expect_false(any(c("lrt_standard", "lrt_scaled") %in% wlsmv))
+})
+
+
+test_that("information criteria are credited only where they are defined", {
+  models <- methods_compare_models()
+  ml <- nomo_compare(models$ml[[1]], models$ml[[2]],
+                     rationale = "IC regression test.", evidence = FALSE)
+  wlsmv <- nomo_compare(models$wlsmv[[1]], models$wlsmv[[2]],
+                        rationale = "IC regression test.", evidence = FALSE)
+
+  expect_true(any(ml$comparisons$ic_available))
+  expect_true("information_criteria" %in% nomo_methods(ml)$id)
+
+  expect_false(any(wlsmv$comparisons$ic_available))
+  expect_false("information_criteria" %in% nomo_methods(wlsmv)$id)
+})
+
+
+test_that("every lavaan spelling of FIML is credited", {
+  model <- "A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4 + b5"
+  for (miss in c("ml", "fiml", "direct")) {
+    fit <- nomo_cfa(model, data = nomo_demo_continuous, missing = miss)
+    expect_true("fiml" %in% nomo_methods(fit)$id, info = miss)
+  }
+  listwise <- nomo_cfa(model, data = nomo_demo_continuous, missing = "listwise")
+  expect_false("fiml" %in% nomo_methods(listwise)$id)
+
+  expect_false(nomo_methods_is_fiml(NA_character_))
+  expect_false(nomo_methods_is_fiml(c("ml", "fiml")))
+})
+
+
+test_that("categorical and rotated solutions credit their own methods", {
+  fo <- nomo_factors(nomo_demo_ordinal, n_iter = 10, seed = 2026)
+  expect_true("categorical_correlations" %in% nomo_methods(fo)$id)
+
+  oblique <- nomo_efa(nomo_demo_continuous, factors = 2)
+  used <- nomo_methods(oblique)$id
+  expect_true("oblique_rotation" %in% used)
+  expect_false("orthogonal_rotation" %in% used)
+
+  orthogonal <- nomo_efa(nomo_demo_continuous, factors = 2, rotation = "varimax")
+  used <- nomo_methods(orthogonal)$id
+  expect_true("orthogonal_rotation" %in% used)
+  expect_false("oblique_rotation" %in% used)
+
+  ordinal_efa <- nomo_efa(nomo_demo_ordinal, factors = 2)
+  expect_true("categorical_correlations" %in% nomo_methods(ordinal_efa)$id)
+})
+
+
+test_that("an ordered CFA credits WLSMV, not maximum likelihood", {
+  used <- nomo_methods(methods_compare_models()$wlsmv[[1]])$id
+  expect_true(all(c("wlsmv_cfa", "categorical_correlations") %in% used))
+  expect_false("ml_cfa" %in% used)
+
+  # Without a fitted model there is no structure to read.
+  expect_true(is.na(nomo_methods_cfa_structure(list())))
+})
+
+
+test_that("bootstrap intervals and ordinal-scale reliability are credited", {
+  models <- methods_compare_models()
+
+  boot <- nomo_reliability(models$ml[[1]], ci = "bootstrap", ci_boot = 20, ci_seed = 2026)
+  expect_true("reliability_bootstrap_ci" %in% nomo_methods(boot)$id)
+
+  ordinal <- nomo_methods(nomo_reliability(models$wlsmv[[1]]))$id
+  expect_true("omega_ordinal_scale" %in% ordinal)
+  # Alpha is unavailable for the ordered-score estimand and so is not cited.
+  expect_false("alpha" %in% ordinal)
+})
+
+
+test_that("invariance credits partial releases and categorical sequences", {
+  release <- nomo_partial(
+    level = "scalar",
+    syntax = "ag3 ~ 1",
+    rationale = "The ag3 intercept is known to differ by administration mode."
+  )
+  # A release specification fits nothing, so it credits only partial invariance.
+  expect_equal(nomo_methods(release)$id, "partial_invariance")
+
+  inv <- nomo_invariance(
+    "Agency =~ ag1 + ag2 + ag3 + ag4",
+    data = nomo_demo_network,
+    group = "group",
+    levels = c("configural", "metric", "scalar"),
+    partial = release
+  )
+  used <- nomo_methods(inv)$id
+  expect_true(all(c(
+    "multigroup_cfa", "invariance_hierarchy", "invariance_delta_fit",
+    "score_diagnostics", "partial_invariance"
+  ) %in% used))
+  expect_false("categorical_invariance" %in% used)
+
+  # The ordered branch, on the fields a categorical fit records.
+  ordered <- structure(
+    list(
+      ordered = c("x1", "x2", "x3"),
+      fit_evidence = tibble::tibble(
+        level = c("configural", "thresholds"),
+        delta_cfi = c(NA_real_, -.002)
+      ),
+      localize = FALSE,
+      partial = NULL
+    ),
+    class = c("nomo_invariance", "list")
+  )
+  used <- nomo_methods(ordered)$id
+  expect_true(all(c("categorical_invariance", "categorical_correlations") %in% used))
+  expect_false(any(c("invariance_hierarchy", "score_diagnostics", "partial_invariance") %in% used))
+})
+
+
+test_that("specifications, splits, and replication credit their methods", {
+  split <- nomo_split(nomo_demo_network, validation_prop = .40, seed = 2026)
+  expect_equal(nomo_methods(split)$id, "holdout_split")
+
+  h <- nomo_hypotheses(
+    "Agency -> Persistence" = positive(),
+    "Agency <-> SocialDesirability" = negligible(within = c(-.15, .15))
+  )
+  expect_setequal(
+    nomo_methods(h)$id,
+    c("nomological_network", "equivalence_testing", "prediction_provenance")
+  )
+
+  directional <- nomo_hypotheses("Agency -> Persistence" = positive())
+  expect_false("equivalence_testing" %in% nomo_methods(directional)$id)
+
+  model <- nomo_model(list(
+    Agency = paste0("ag", 1:4),
+    Persistence = paste0("pe", 1:4),
+    SocialDesirability = paste0("sd", 1:3)
+  ))
+  net <- nomo_network(model, data = split, hypotheses = h, missing = "ml")
+  used <- nomo_methods(net)$id
+  expect_true(all(c("replication_same_model", "fiml", "equivalence_testing") %in% used))
+})
+
+
+test_that("a split, revised workflow credits holdout, lineage, and its comparison", {
+  split <- nomo_split(nomo_demo_network, validation_prop = .40, seed = 2026)
+  scales <- list(Agency = paste0("ag", 1:4))
+  run <- nomo_run(
+    data = split,
+    scales = scales,
+    mode = "research",
+    decisions = list(
+      factor_count = c(Agency = 1),
+      cfa_model = nomo_model(scales)
+    ),
+    settings = list(factors = list(n_iter = 20, seed = 2026))
+  )
+  expect_identical(run$sample_design, "calibration_validation")
+  expect_true("holdout_split" %in% nomo_methods(run)$id)
+  expect_false("revision_lineage" %in% nomo_methods(run)$id)
+
+  revised <- nomo_revise(
+    run,
+    cfa_model = "Agency =~ ag1 + ag2 + ag3 + ag4\nag1 ~~ ag2",
+    rationale = "Items ag1 and ag2 share wording.",
+    origin = "post_hoc"
+  )
+  used <- nomo_methods(revised)$id
+  expect_true(all(c("revision_lineage", "holdout_split", "lrt_standard", "nesting_check") %in% used))
+})
+
+
+test_that("a requested Fornell-Larcker comparison is credited", {
+  fit <- methods_compare_models()$ml[[1]]
+  expect_false("fornell_larcker" %in% nomo_methods(nomo_validity(fit))$id)
+  expect_true(
+    "fornell_larcker" %in% nomo_methods(nomo_validity(fit, fornell_larcker = TRUE))$id
+  )
 })
 
 
@@ -280,6 +519,19 @@ test_that("component objects report their own methods", {
 
   # A component knows nothing about stages it did not run.
   expect_false("omega" %in% nomo_methods(run$results$validity)$id)
+})
+
+
+test_that("a credited method missing from the registry is an internal error", {
+  # Guards against a future component crediting a method nobody registered,
+  # which would otherwise drop silently out of the report's methods section.
+  local_mocked_bindings(
+    nomo_methods_used = function(x, ...) c("omega", "unregistered_method")
+  )
+  expect_error(
+    nomo_methods(structure(list(), class = "nomo_reliability")),
+    "Internal error: methods used but absent from the registry: unregistered_method"
+  )
 })
 
 
@@ -331,4 +583,10 @@ test_that("the report reference list names each work once, with a DOI link", {
 
   # Sorted so the list reads as a reference list rather than in run order.
   expect_equal(refs$citation, sort(refs$citation))
+})
+
+
+test_that("run components that are not result objects contribute no methods", {
+  expect_identical(nomologR:::nomo_methods_used_component("not a component"), character())
+  expect_identical(nomologR:::nomo_methods_used_component(NULL), character())
 })

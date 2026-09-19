@@ -4,8 +4,7 @@
 [![R-CMD-check](https://github.com/JUhalt/nomologR/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/JUhalt/nomologR/actions/workflows/R-CMD-check.yaml)
 [![test-coverage](https://github.com/JUhalt/nomologR/actions/workflows/test-coverage.yaml/badge.svg)](https://github.com/JUhalt/nomologR/actions/workflows/test-coverage.yaml)
 
-**Current stable release: `0.1.0`. Development version: `0.1.0.9000`,
-targeting `v0.2.0`.**
+**Current stable release: `0.2.0`.**
 
 `nomologR` is a guided, evidence-based workflow for **empirical scale
 development and construct validation**. It coordinates established R
@@ -15,9 +14,9 @@ explanations, decision logging, and theory-aware guidance.
 > **Core rule:** Flag, explain, and document. Never silently delete.
 
 [Documentation](https://juhalt.github.io/nomologR/) ·
-[Roadmap](ROADMAP.md) · [v0.2.0
-milestone](https://github.com/JUhalt/nomologR/milestone/2) · [Open
-issues](https://github.com/JUhalt/nomologR/issues)
+[Roadmap](https://github.com/JUhalt/nomologR/blob/master/ROADMAP.md) ·
+[v0.2.1 milestone](https://github.com/JUhalt/nomologR/milestone/4) ·
+[Open issues](https://github.com/JUhalt/nomologR/issues)
 
 ## Installation
 
@@ -856,34 +855,36 @@ article explains the lineage labels.
 
 ## Development path
 
-The detailed release plan lives in [`ROADMAP.md`](ROADMAP.md).
+The detailed release plan lives in
+[`ROADMAP.md`](https://github.com/JUhalt/nomologR/blob/master/ROADMAP.md).
 
-### Next release: `v0.2.0`
+### Current release: `v0.2.0`
 
-The [`v0.2.0` milestone](https://github.com/JUhalt/nomologR/milestone/2)
-makes the workflow research-backed from historical to contemporary
-practice and more useful to graduate students and researchers. Scope was
-selected in [\#22](https://github.com/JUhalt/nomologR/issues/22):
+`v0.2.0` makes the workflow research-backed from historical to
+contemporary practice and more useful to graduate students and
+researchers. Scope was selected in
+[\#22](https://github.com/JUhalt/nomologR/issues/22). It added learning
+foundations (#25) with teaching datasets, runnable vignettes, and the
+research-basis article; readable invariance labels (#31); maintenance
+(#36); model comparison with `nomo_compare()` (#27); auditable revision
+lineage with `nomo_revise()` (#28); the methods registry with
+`nomo_methods()` (#26); interval-based replication-status language for
+sign changes (#30); bifactor and higher-order models with
+`nomo_hierarchical()` (#29); and release certification (#37).
 
-- **Completed:** learning foundations (#25) and readable invariance
-  labels (#31), including the teaching datasets, runnable vignettes, and
-  the research basis article; maintenance (#36); model comparison with
-  `nomo_compare()` (#27); auditable revision lineage with
-  `nomo_revise()` (#28); the methods registry with `nomo_methods()`
-  (#26); interval-based replication-status language for sign changes
-  (#30); and bifactor and higher-order models with `nomo_hierarchical()`
-  (#29).
-- **Core, in progress or next:** release certification with a
-  CRAN-readiness gate (#37).
-- **Planned:** missing-data sensitivity (#32), score guidance (#33),
-  insufficient-effort responding screens (#34), manuscript-ready tables
-  (#35), rendering reports from inside R Markdown or Quarto documents
-  (#40), and optional parallel bootstrap intervals (#42).
+### Next: `v0.2.1` and `v0.3.0`
+
+The [`v0.2.1` milestone](https://github.com/JUhalt/nomologR/milestone/4)
+holds six workstreams moved out of `v0.2.0` at certification, each with
+its reason recorded: missing-data sensitivity (#32), score guidance
+(#33), insufficient-effort responding screens (#34), manuscript-ready
+tables (#35), rendering reports from inside R Markdown or Quarto
+documents (#40), and optional parallel bootstrap intervals (#42).
 
 `v0.3.0` carries the first CRAN submission
 ([\#39](https://github.com/JUhalt/nomologR/issues/39)). Other candidates
-for that release (for example IRT/DIF, Bayesian SEM, ESEM, and
-longitudinal invariance) are tracked in
+for that release (for example IRT/DIF, Bayesian SEM, ESEM, longitudinal
+invariance, and a `contentvalidR` handoff) are tracked in
 [\#38](https://github.com/JUhalt/nomologR/issues/38).
 
 ### Completed: `v0.1.0`
@@ -901,10 +902,7 @@ The complete `v0.1.0` release track is:
 9.  Reproducible report — `nomo_report()` **complete**
 10. v0.1 release hardening and infrastructure — **complete**
 
-`v0.1.0` is the first stable public release. The `v0.2.0` milestone is
-in scope planning and public-page reconciliation. Broader measurement
-models and robustness methods are candidates until accepted in linked
-issues; they are not all release commitments.
+`v0.1.0` was the first stable public release.
 
 ## Design principles
 
@@ -929,7 +927,8 @@ citation metadata appropriate to that release.
 
 The current development source is licensed under the **GNU General
 Public License, version 3 only (SPDX: GPL-3.0-only)**. See
-[LICENSE.md](LICENSE.md) and the preserved attribution in
+[LICENSE.md](https://github.com/JUhalt/nomologR/blob/master/LICENSE.md)
+and the preserved attribution in
 [inst/NOTICE](https://github.com/JUhalt/nomologR/blob/master/inst/NOTICE).
 
 Previously published releases, including `0.1.0`, retain their original
