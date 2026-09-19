@@ -251,3 +251,99 @@ test_that("comparison presentation methods and tables work", {
   }
   expect_identical(nomo_table(out), out$comparisons)
 })
+
+
+test_that("unconverged, disjoint, and inconsistently typed models are refused", {
+  full <- nomo_cfa(compare_syntax$full, nomo_demo_continuous)
+
+  unconverged <- suppressWarnings(nomo_cfa(
+    compare_syntax$zero_b5,
+    nomo_demo_continuous,
+    control = list(iter.max = 1L)
+  ))
+  skip_if(isTRUE(unconverged$converged))
+  expect_error(
+    nomo_compare(full = full, unconverged = unconverged, rationale = "x"),
+    "must converge before they are compared. Not converged: unconverged"
+  )
+})
+
+
+test_that("models sharing no observed variables are refused", {
+  # Complete data, so both models use the same cases and the variable check is
+  # the one that applies. (With missing data, listwise deletion would already
+  # give the two models different cases.)
+  agency <- nomo_cfa("Agency =~ ag1 + ag2 + ag3 + ag4", nomo_demo_network)
+  persistence <- nomo_cfa("Persistence =~ pe1 + pe2 + pe3 + pe4", nomo_demo_network)
+  expect_error(
+    nomo_compare(agency = agency, persistence = persistence, rationale = "x"),
+    "Models `agency` and `persistence` share no observed variables."
+  )
+})
+
+
+test_that("models treating shared indicators differently are refused", {
+  numeric_items <- as.data.frame(lapply(nomo_demo_ordinal, as.numeric))
+  a_items <- paste0("a", 1:5)
+  all_items <- c(a_items, paste0("b", 1:5))
+
+  all_ordered <- nomo_cfa(compare_syntax$full, numeric_items, ordered = all_items)
+  a_ordered <- nomo_cfa(
+    compare_syntax$zero_b5, numeric_items,
+    ordered = a_items, estimator = "WLSMV"
+  )
+  expect_error(
+    nomo_compare(all_ordered = all_ordered, a_ordered = a_ordered, rationale = "x"),
+    "treat shared indicators differently"
+  )
+})
+
+
+test_that("the difference-test method is validated and can be chosen", {
+  full <- nomo_cfa(compare_syntax$full, nomo_demo_continuous, estimator = "MLR")
+  zero <- nomo_cfa(compare_syntax$zero_b5, nomo_demo_continuous, estimator = "MLR")
+
+  expect_error(
+    nomo_compare(full = full, zero = zero, rationale = "x", method = ""),
+    "one non-empty character value"
+  )
+
+  cmp <- nomo_compare(
+    full = full, zero = zero,
+    rationale = "Request the 2010 scaled difference test.",
+    method = "satorra.bentler.2010",
+    evidence = FALSE
+  )
+  expect_identical(cmp$comparisons$method, "satorra.bentler.2010")
+  expect_true("lrt_scaled" %in% nomo_methods(cmp)$id)
+})
+
+
+test_that("presentation handles comparisons without tests or plottable values", {
+  full <- nomo_cfa(compare_syntax$full, nomo_demo_continuous)
+  one <- nomo_cfa(compare_syntax$one, nomo_demo_continuous)
+  cmp <- nomo_compare(
+    full = full, one = one,
+    rationale = "Compare against a single general factor.",
+    nested = "no",
+    evidence = FALSE
+  )
+  expect_output(print(cmp), "no difference test")
+
+  no_fit <- cmp
+  no_fit$comparisons$delta_cfi <- NA_real_
+  expect_output(print(no_fit), "change in fit unavailable")
+
+  no_fit$models[, c("cfi", "tli", "rmsea", "srmr")] <- NA_real_
+  expect_error(plot(no_fit, type = "fit"), "No finite fit indices")
+
+  no_loadings <- cmp
+  no_loadings$loadings <- no_loadings$loadings[0, ]
+  expect_error(plot(no_loadings, type = "loadings"), "No standardized loadings")
+
+  na_loadings <- cmp
+  for (nm in setdiff(names(na_loadings$loadings), c("factor", "item"))) {
+    na_loadings$loadings[[nm]] <- NA_real_
+  }
+  expect_error(plot(na_loadings, type = "loadings"), "No finite standardized loadings")
+})

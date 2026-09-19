@@ -284,6 +284,7 @@ test_that("ordered indicators report the latent-response estimand", {
   reference <- semTools::compRelSEM(fit$fit, true = "omegaH", obs.var = FALSE, ord.scale = FALSE)
 
   expect_equal(h$estimand, "latent_response")
+  expect_output(print(h), "latent-response composite (ordered indicators)", fixed = TRUE)
   expect_equal(hier_index(h, "omega_hierarchical"), hier_semtools_value(reference$G), tolerance = 1e-6)
   expect_true(any(grepl("latent-response", h$notes$note)))
   expect_true(any(grepl("upper bound", h$notes$note)))
@@ -394,12 +395,144 @@ test_that("multi-group models are refused", {
 })
 
 
+test_that("nonconverged fits and latent regressions are refused", {
+  dat <- hier_sample(hier_bifactor_population()$sigma, 400, 1401)
+
+  nonconverged <- suppressWarnings(lavaan::cfa(
+    as.character(nomo_model(hier_groups, "bifactor")),
+    data = dat,
+    control = list(iter.max = 1L)
+  ))
+  skip_if(isTRUE(lavaan::lavInspect(nonconverged, "converged")))
+  expect_error(nomo_hierarchical(nonconverged), "did not converge")
+
+  regression <- lavaan::sem(
+    "A =~ x1 + x2 + x3 + x4\nB =~ x5 + x6 + x7 + x8\nB ~ A",
+    data = dat
+  )
+  expect_error(nomo_hierarchical(regression), "latent regressions")
+})
+
+
+# Structure detection from constructed loading tables. Several of these
+# structures would not be identified if fitted, so detection is tested directly.
+hier_loadings <- function(...) {
+  pairs <- list(...)
+  data.frame(
+    lhs = unlist(lapply(pairs, `[[`, 1L)),
+    rhs = unlist(lapply(pairs, `[[`, 2L)),
+    stringsAsFactors = FALSE
+  )
+}
+hier_pairs <- function(lhs, rhs) lapply(rhs, function(r) c(lhs, r))
+
+
+test_that("higher-order detection refuses unsupported structures", {
+  ov <- paste0("x", 1:9)
+  first <- c(
+    hier_pairs("F1", ov[1:3]), hier_pairs("F2", ov[4:6]), hier_pairs("F3", ov[7:9])
+  )
+  lv <- c("F1", "F2", "F3", "G")
+
+  two_second <- do.call(hier_loadings, c(first, hier_pairs("G", "F1"), hier_pairs("H", c("F2", "F3"))))
+  expect_error(
+    nomologR:::nomo_hierarchical_structure_higher(two_second, c(lv, "H"), ov, c("G", "H"), NULL),
+    "more than one second-order factor"
+  )
+
+  mixed <- do.call(hier_loadings, c(first, hier_pairs("G", c("F1", "F2", "F3", "x1"))))
+  expect_error(
+    nomologR:::nomo_hierarchical_structure_higher(mixed, lv, ov, "G", NULL),
+    "also loads directly on items"
+  )
+
+  stray <- do.call(hier_loadings, c(
+    first, hier_pairs("F4", c("y1", "y2", "y3")), hier_pairs("G", c("F1", "F2", "F3"))
+  ))
+  expect_error(
+    nomologR:::nomo_hierarchical_structure_higher(
+      stray, c(lv, "F4"), c(ov, "y1", "y2", "y3"), "G", NULL
+    ),
+    "F4 does not"
+  )
+
+  cross <- do.call(hier_loadings, c(first, hier_pairs("F2", "x1"), hier_pairs("G", c("F1", "F2", "F3"))))
+  expect_error(
+    nomologR:::nomo_hierarchical_structure_higher(cross, lv, ov, "G", NULL),
+    "more than one first-order factor \\(x1\\)"
+  )
+})
+
+
+test_that("bifactor detection refuses ambiguous or overlapping structures", {
+  ov <- paste0("x", 1:6)
+
+  two_general <- do.call(hier_loadings, c(
+    hier_pairs("G1", ov), hier_pairs("G2", ov),
+    hier_pairs("A", ov[1:3]), hier_pairs("B", ov[4:6])
+  ))
+  expect_error(
+    nomologR:::nomo_hierarchical_structure_bifactor(
+      two_general, c("G1", "G2", "A", "B"), ov, NULL
+    ),
+    "More than one factor loads on every item \\(G1, G2\\)"
+  )
+  # Naming the general factor resolves the ambiguity only if the rest is valid.
+  expect_error(
+    nomologR:::nomo_hierarchical_structure_bifactor(
+      two_general, c("G1", "G2", "A", "B"), ov, "G1"
+    ),
+    "more than one group factor"
+  )
+
+  overlap <- do.call(hier_loadings, c(
+    hier_pairs("G", ov), hier_pairs("A", ov[1:4]), hier_pairs("B", ov[4:6])
+  ))
+  expect_error(
+    nomologR:::nomo_hierarchical_structure_bifactor(overlap, c("G", "A", "B"), ov, NULL),
+    "more than one group factor \\(x4\\)"
+  )
+})
+
+
+test_that("mixed-sign group loadings and improper solutions are noted", {
+  structure <- list(
+    type = "bifactor",
+    general = "G",
+    groups = list(A = c("x1", "x2"), B = c("x3", "x4")),
+    items = paste0("x", 1:4)
+  )
+  computed <- list(loadings = tibble::tibble(
+    item = paste0("x", 1:4),
+    subscale = c("A", "A", "B", "B"),
+    general_loading = c(.6, .6, .6, .6),
+    group_loading = c(.4, -.3, .4, .3)
+  ))
+  theta <- diag(c(.2, -.05, .3, .3))
+  dimnames(theta) <- list(paste0("x", 1:4), paste0("x", 1:4))
+  matrices <- list(theta = theta)
+  input <- list(ordered = character())
+
+  notes <- nomologR:::nomo_hierarchical_notes(input, structure, matrices, computed, TRUE)
+
+  mixed <- notes[notes$topic == "group_loadings", ]
+  expect_equal(nrow(mixed), 1L)
+  expect_equal(mixed$severity, "review")
+  expect_match(mixed$note, "Group factor\\(s\\) A have loadings of mixed sign")
+
+  improper <- notes[notes$topic == "improper_solution", ]
+  expect_equal(improper$severity, "concern")
+  expect_match(improper$note, "Negative residual variance for x2")
+})
+
+
 # Notes ------------------------------------------------------------------------
 
 test_that("identification and model-choice notes are recorded", {
   dat <- hier_sample(hier_higher_population()$sigma, 600, 1001)
   h <- nomo_hierarchical(nomo_cfa(nomo_model(hier_groups, "higher_order"), data = dat))
 
+  expect_output(print(h), "Higher-order model | general factor: G", fixed = TRUE)
   expect_true("identification" %in% h$notes$topic)
   expect_match(h$notes$note[h$notes$topic == "identification"], "just\\s+identified")
   expect_match(h$notes$note[h$notes$topic == "model_choice"], "Reise, 2012")

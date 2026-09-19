@@ -565,9 +565,10 @@ nomo_report_lineage <- function(x) {
 }
 
 
+# A workflow always credits at least the staged workflow and its decision log,
+# so neither table below is empty for a nomo_run.
 nomo_report_methods <- function(x) {
   methods <- nomo_methods(x)
-  if (!nrow(methods)) return(tibble::tibble())
 
   nomo_report_flatten_table(
     methods[, c(
@@ -582,7 +583,6 @@ nomo_report_methods <- function(x) {
 # should name each source once even when several methods rest on it.
 nomo_report_method_references <- function(x) {
   refs <- nomo_methods(x, references = TRUE)
-  if (!nrow(refs)) return(tibble::tibble())
 
   refs <- refs[!duplicated(refs$citation_key), , drop = FALSE]
   refs <- refs[order(refs$citation), , drop = FALSE]
