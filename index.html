@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="index.html">nomologR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -68,12 +68,12 @@
 <div class="page-header"><h1 id="nomologr">nomologR<a class="anchor" aria-label="anchor" href="#nomologr"></a>
 </h1></div>
 <p><a href="https://github.com/JUhalt/nomologR/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/JUhalt/nomologR/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check"></a> <a href="https://github.com/JUhalt/nomologR/actions/workflows/test-coverage.yaml" class="external-link"><img src="https://github.com/JUhalt/nomologR/actions/workflows/test-coverage.yaml/badge.svg" alt="test-coverage"></a></p>
-<p><strong>Current stable release: <code>0.1.0</code>. Development version: <code>0.1.0.9000</code>, targeting <code>v0.2.0</code>.</strong></p>
+<p><strong>Current stable release: <code>0.2.0</code>.</strong></p>
 <p><code>nomologR</code> is a guided, evidence-based workflow for <strong>empirical scale development and construct validation</strong>. It coordinates established R engines while adding transparent diagnostics, literature-linked explanations, decision logging, and theory-aware guidance.</p>
 <blockquote>
 <p><strong>Core rule:</strong> Flag, explain, and document. Never silently delete.</p>
 </blockquote>
-<p><a href="https://juhalt.github.io/nomologR/">Documentation</a> · <a href="ROADMAP.html">Roadmap</a> · <a href="https://github.com/JUhalt/nomologR/milestone/2" class="external-link">v0.2.0 milestone</a> · <a href="https://github.com/JUhalt/nomologR/issues" class="external-link">Open issues</a></p>
+<p><a href="https://juhalt.github.io/nomologR/">Documentation</a> · <a href="https://github.com/JUhalt/nomologR/blob/master/ROADMAP.md" class="external-link">Roadmap</a> · <a href="https://github.com/JUhalt/nomologR/milestone/4" class="external-link">v0.2.1 milestone</a> · <a href="https://github.com/JUhalt/nomologR/issues" class="external-link">Open issues</a></p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
@@ -656,21 +656,19 @@
 <div class="section level2">
 <h2 id="development-path">Development path<a class="anchor" aria-label="anchor" href="#development-path"></a>
 </h2>
-<p>The detailed release plan lives in <a href="ROADMAP.html"><code>ROADMAP.md</code></a>.</p>
+<p>The detailed release plan lives in <a href="https://github.com/JUhalt/nomologR/blob/master/ROADMAP.md" class="external-link"><code>ROADMAP.md</code></a>.</p>
 <div class="section level3">
-<h3 id="next-release-v020">Next release: <code>v0.2.0</code>
-<a class="anchor" aria-label="anchor" href="#next-release-v020"></a>
+<h3 id="current-release-v020">Current release: <code>v0.2.0</code>
+<a class="anchor" aria-label="anchor" href="#current-release-v020"></a>
 </h3>
-<p>The <a href="https://github.com/JUhalt/nomologR/milestone/2" class="external-link"><code>v0.2.0</code> milestone</a> makes the workflow research-backed from historical to contemporary practice and more useful to graduate students and researchers. Scope was selected in <a href="https://github.com/JUhalt/nomologR/issues/22" class="external-link">#22</a>:</p>
-<ul>
-<li>
-<strong>Completed:</strong> learning foundations (#25) and readable invariance labels (#31), including the teaching datasets, runnable vignettes, and the research basis article; maintenance (#36); model comparison with <code><a href="reference/nomo_compare.html">nomo_compare()</a></code> (#27); auditable revision lineage with <code><a href="reference/nomo_revise.html">nomo_revise()</a></code> (#28); the methods registry with <code><a href="reference/nomo_methods.html">nomo_methods()</a></code> (#26); interval-based replication-status language for sign changes (#30); and bifactor and higher-order models with <code><a href="reference/nomo_hierarchical.html">nomo_hierarchical()</a></code> (#29).</li>
-<li>
-<strong>Core, in progress or next:</strong> release certification with a CRAN-readiness gate (#37).</li>
-<li>
-<strong>Planned:</strong> missing-data sensitivity (#32), score guidance (#33), insufficient-effort responding screens (#34), manuscript-ready tables (#35), rendering reports from inside R Markdown or Quarto documents (#40), and optional parallel bootstrap intervals (#42).</li>
-</ul>
-<p><code>v0.3.0</code> carries the first CRAN submission (<a href="https://github.com/JUhalt/nomologR/issues/39" class="external-link">#39</a>). Other candidates for that release (for example IRT/DIF, Bayesian SEM, ESEM, and longitudinal invariance) are tracked in <a href="https://github.com/JUhalt/nomologR/issues/38" class="external-link">#38</a>.</p>
+<p><code>v0.2.0</code> makes the workflow research-backed from historical to contemporary practice and more useful to graduate students and researchers. Scope was selected in <a href="https://github.com/JUhalt/nomologR/issues/22" class="external-link">#22</a>. It added learning foundations (#25) with teaching datasets, runnable vignettes, and the research-basis article; readable invariance labels (#31); maintenance (#36); model comparison with <code><a href="reference/nomo_compare.html">nomo_compare()</a></code> (#27); auditable revision lineage with <code><a href="reference/nomo_revise.html">nomo_revise()</a></code> (#28); the methods registry with <code><a href="reference/nomo_methods.html">nomo_methods()</a></code> (#26); interval-based replication-status language for sign changes (#30); bifactor and higher-order models with <code><a href="reference/nomo_hierarchical.html">nomo_hierarchical()</a></code> (#29); and release certification (#37).</p>
+</div>
+<div class="section level3">
+<h3 id="next-v021-and-v030">Next: <code>v0.2.1</code> and <code>v0.3.0</code>
+<a class="anchor" aria-label="anchor" href="#next-v021-and-v030"></a>
+</h3>
+<p>The <a href="https://github.com/JUhalt/nomologR/milestone/4" class="external-link"><code>v0.2.1</code> milestone</a> holds six workstreams moved out of <code>v0.2.0</code> at certification, each with its reason recorded: missing-data sensitivity (#32), score guidance (#33), insufficient-effort responding screens (#34), manuscript-ready tables (#35), rendering reports from inside R Markdown or Quarto documents (#40), and optional parallel bootstrap intervals (#42).</p>
+<p><code>v0.3.0</code> carries the first CRAN submission (<a href="https://github.com/JUhalt/nomologR/issues/39" class="external-link">#39</a>). Other candidates for that release (for example IRT/DIF, Bayesian SEM, ESEM, longitudinal invariance, and a <code>contentvalidR</code> handoff) are tracked in <a href="https://github.com/JUhalt/nomologR/issues/38" class="external-link">#38</a>.</p>
 </div>
 <div class="section level3">
 <h3 id="completed-v010">Completed: <code>v0.1.0</code>
@@ -699,7 +697,7 @@
 <li>v0.1 release hardening and infrastructure — <strong>complete</strong>
 </li>
 </ol>
-<p><code>v0.1.0</code> is the first stable public release. The <code>v0.2.0</code> milestone is in scope planning and public-page reconciliation. Broader measurement models and robustness methods are candidates until accepted in linked issues; they are not all release commitments.</p>
+<p><code>v0.1.0</code> was the first stable public release.</p>
 </div>
 </div>
 <div class="section level2">
@@ -724,7 +722,7 @@
 <div class="section level2">
 <h2 id="license">License<a class="anchor" aria-label="anchor" href="#license"></a>
 </h2>
-<p>The current development source is licensed under the <strong>GNU General Public License, version 3 only (SPDX: GPL-3.0-only)</strong>. See <a href="LICENSE.html">LICENSE.md</a> and the preserved attribution in <a href="https://github.com/JUhalt/nomologR/blob/master/inst/NOTICE" class="external-link">inst/NOTICE</a>.</p>
+<p>The current development source is licensed under the <strong>GNU General Public License, version 3 only (SPDX: GPL-3.0-only)</strong>. See <a href="https://github.com/JUhalt/nomologR/blob/master/LICENSE.md" class="external-link">LICENSE.md</a> and the preserved attribution in <a href="https://github.com/JUhalt/nomologR/blob/master/inst/NOTICE" class="external-link">inst/NOTICE</a>.</p>
 <p>Previously published releases, including <code>0.1.0</code>, retain their original MIT license. Stable installation currently retrieves that release; the next published release will carry GPL version 3 only. This source transition does not relabel existing tags or release artifacts.</p>
 </div>
 </div>

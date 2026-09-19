@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">nomologR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -49,9 +49,20 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="0.1.0.9000" id="nomologr-0109000">nomologR 0.1.0.9000<a class="anchor" aria-label="anchor" href="#nomologr-0109000"></a></h2>
+<h2 class="pkg-version" data-toc-text="0.2.0" id="nomologr-020">nomologR 0.2.0<a class="anchor" aria-label="anchor" href="#nomologr-020"></a></h2>
+<p>nomologR 0.2.0 makes the workflow research-backed from historical to contemporary practice and more useful to graduate students and researchers. Every method is placed in its literature and cited in reports; researchers can compare competing models, revise a model with its lineage recorded, and evaluate total and subscale scores; and replication language no longer reads noise as a finding. Scope was selected in <a href="https://github.com/JUhalt/nomologR/issues/22" class="external-link">#22</a>.</p>
+<p>Six Planned workstreams moved to v0.2.1 at release certification (<a href="https://github.com/JUhalt/nomologR/issues/37" class="external-link">#37</a>), each with its reason recorded: missing-data sensitivity (<a href="https://github.com/JUhalt/nomologR/issues/32" class="external-link">#32</a>), score guidance (<a href="https://github.com/JUhalt/nomologR/issues/33" class="external-link">#33</a>), insufficient-effort responding screens (<a href="https://github.com/JUhalt/nomologR/issues/34" class="external-link">#34</a>), manuscript-ready tables (<a href="https://github.com/JUhalt/nomologR/issues/35" class="external-link">#35</a>), rendering reports inside R Markdown or Quarto (<a href="https://github.com/JUhalt/nomologR/issues/40" class="external-link">#40</a>), and optional parallel bootstrap intervals (<a href="https://github.com/JUhalt/nomologR/issues/42" class="external-link">#42</a>). The license is GPL-3.0-only; the published 0.1.0 release keeps its original MIT license. Distribution remains R-universe; the first CRAN submission is targeted for v0.3.0 (<a href="https://github.com/JUhalt/nomologR/issues/39" class="external-link">#39</a>).</p>
 <div class="section level3">
-<h3 id="bifactor-and-higher-order-models-0-1-0-9000">Bifactor and higher-order models (<a href="https://github.com/JUhalt/nomologR/issues/29" class="external-link">#29</a>)<a class="anchor" aria-label="anchor" href="#bifactor-and-higher-order-models-0-1-0-9000"></a></h3>
+<h3 id="release-certification-0-2-0">Release certification (<a href="https://github.com/JUhalt/nomologR/issues/37" class="external-link">#37</a>)<a class="anchor" aria-label="anchor" href="#release-certification-0-2-0"></a></h3>
+<ul><li>README links to files excluded from the built package (<code>ROADMAP.md</code>, <code>LICENSE.md</code>) now use absolute URLs, so they resolve for readers of the package tarball as well as on GitHub (<a href="https://github.com/JUhalt/nomologR/issues/48" class="external-link">#48</a>).</li>
+<li>The default-run part of the <code><a href="../reference/nomo_compare.html">nomo_compare()</a></code> example now skips the side-by-side evidence, which moved to <code>\donttest{}</code>, keeping every default-run example within CRAN’s time expectations.</li>
+<li>Added the R-hub v2 GitHub Actions workflow (run on demand) for multi-platform CRAN-style checks.</li>
+<li>Certification tests of every <code><a href="../reference/nomo_methods.html">nomo_methods()</a></code> crediting rule against real objects found, and fixed, methods that reports would have mis-cited: WLSMV comparisons were credited with the Satorra-Bentler scaled test instead of the scaled-and-shifted test; AIC and BIC were never credited; FIML requested as <code>missing = "ml"</code> or <code>"direct"</code> was not credited; a requested Fornell-Larcker comparison was not credited; and a <code><a href="../reference/nomo_partial.html">nomo_partial()</a></code> release specification was credited with a multiple-group fit it does not perform. A registry entry for a fixed change-in-CFI rule that no function displays was removed.</li>
+<li>
+<code><a href="../reference/nomo_revise.html">nomo_revise()</a></code> now refuses an item revision whose measurement model disagrees with the revised items. Previously, dropping an item without supplying a revised <code>cfa_model</code> screened and explored the reduced item set but still fitted the dropped item in the CFA, while the lineage recorded it as removed.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="bifactor-and-higher-order-models-0-2-0">Bifactor and higher-order models (<a href="https://github.com/JUhalt/nomologR/issues/29" class="external-link">#29</a>)<a class="anchor" aria-label="anchor" href="#bifactor-and-higher-order-models-0-2-0"></a></h3>
 <ul><li>
 <code><a href="../reference/nomo_model.html">nomo_model()</a></code> gains <code>structure = c("correlated", "higher_order", "bifactor")</code> and <code>general</code>. Bifactor syntax writes its identification and orthogonality explicitly, so it is identified the same way whatever <code>std.lv</code> is used. Higher-order models need at least three first-order factors; with exactly three the model is noted as fitting exactly as well as correlated factors. Impossible configurations are refused and fragile ones noted.</li>
 <li>Added <code><a href="../reference/nomo_hierarchical.html">nomo_hierarchical()</a></code>, which reads a fitted bifactor or higher-order model and reports omega total, omega hierarchical, their ratio, explained common variance (ECV), the percentage of uncontaminated correlations (PUC), and, per subscale, omega and omega hierarchical subscale, with item-level general and group loadings. For higher-order models these are the exact Schmid-Leiman decomposition.</li>
@@ -61,13 +72,13 @@
 <li>Added <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>, <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>, <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>, and <code><a href="../reference/nomo_table.html">nomo_table()</a></code> methods, seven methods-registry entries, and the <strong>Total and subscale scores</strong> article.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="replication-status-language-0-1-0-9000">Replication-status language (<a href="https://github.com/JUhalt/nomologR/issues/30" class="external-link">#30</a>)<a class="anchor" aria-label="anchor" href="#replication-status-language-0-1-0-9000"></a></h3>
+<h3 id="replication-status-language-0-2-0">Replication-status language (<a href="https://github.com/JUhalt/nomologR/issues/30" class="external-link">#30</a>)<a class="anchor" aria-label="anchor" href="#replication-status-language-0-2-0"></a></h3>
 <ul><li>A change in sign between primary and validation estimates is no longer labeled <code>"sign_reversal"</code> from the point estimates alone. Estimates scattered around a null relation differ in sign about half the time, and the previous label called that “a substantively important replication discrepancy.”</li>
 <li>For directional predictions, a sign change is now classified from the two 95 percent confidence intervals: <code>"sign_reversal"</code> when both exclude zero on opposite sides, <code>"direction_not_replicated"</code> when exactly one excludes zero, and <code>"sign_change_within_uncertainty"</code> when neither does or an interval is unavailable. The first two are recorded as concerns and the third for review.</li>
 <li>The rule and its rationale are documented in <code><a href="../reference/nomo_network.html">?nomo_network</a></code>, the nomological-network vignette, and the research-basis article. It does not treat a non-significant path as evidence of no relation; that still requires a <code>negligible(within = ...)</code> prediction.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="methods-registry-0-1-0-9000">Methods registry (<a href="https://github.com/JUhalt/nomologR/issues/26" class="external-link">#26</a>)<a class="anchor" aria-label="anchor" href="#methods-registry-0-1-0-9000"></a></h3>
+<h3 id="methods-registry-0-2-0">Methods registry (<a href="https://github.com/JUhalt/nomologR/issues/26" class="external-link">#26</a>)<a class="anchor" aria-label="anchor" href="#methods-registry-0-2-0"></a></h3>
 <ul><li>Added <code><a href="../reference/nomo_methods.html">nomo_methods()</a></code>, a machine-readable registry of every method the package implements. Each entry records its workflow stage; its lineage (<code>historical</code>, <code>contemporary</code>, or <code>emerging</code>); its role (<code>primary</code>, <code>supporting</code>, or <code>context</code>); its estimand and key assumptions; the function and computational engine that implement it; and its references.</li>
 <li>
 <code>role = "context"</code> marks methods displayed only so readers can recognize them in published work, such as the eigenvalue-greater-than-one rule and fixed fit-index cutoffs. They take no part in any synthesis or decision.</li>
@@ -80,7 +91,7 @@
 <li>Every reference is in a single bibliography that the tests keep consistent with the registry in both directions. <code>dev/verify-method-dois.R</code> resolves each DOI and checks that the registered first author, year, and title match the citation; all 79 DOIs pass.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="revision-lineage-0-1-0-9000">Revision lineage (<a href="https://github.com/JUhalt/nomologR/issues/28" class="external-link">#28</a>)<a class="anchor" aria-label="anchor" href="#revision-lineage-0-1-0-9000"></a></h3>
+<h3 id="revision-lineage-0-2-0">Revision lineage (<a href="https://github.com/JUhalt/nomologR/issues/28" class="external-link">#28</a>)<a class="anchor" aria-label="anchor" href="#revision-lineage-0-2-0"></a></h3>
 <ul><li>Added <code><a href="../reference/nomo_revise.html">nomo_revise()</a></code>, which creates a child workflow from a parent <code><a href="../reference/nomo_run.html">nomo_run()</a></code> with a revised measurement model, a revised item set, or both. The parent workflow is never modified.</li>
 <li>Each revision records what changed (model, items, or both), the required researcher rationale, and whether the change was prespecified or post hoc. Post-hoc revisions are labeled, and the decision log recommends confirming the revised model in independent data.</li>
 <li>Parent and revised measurement models are compared with <code><a href="../reference/nomo_compare.html">nomo_compare()</a></code> (<a href="https://github.com/JUhalt/nomologR/issues/27" class="external-link">#27</a>), so a revision carries its own evidence. Item changes alter the observed variables, so those comparisons are descriptive, as documented.</li>
@@ -89,7 +100,7 @@
 <li>The <code>measurement_model = "revise"</code> decision now points to <code><a href="../reference/nomo_revise.html">nomo_revise()</a></code> instead of only advising a fresh workflow.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="model-comparison-0-1-0-9000">Model comparison (<a href="https://github.com/JUhalt/nomologR/issues/27" class="external-link">#27</a>)<a class="anchor" aria-label="anchor" href="#model-comparison-0-1-0-9000"></a></h3>
+<h3 id="model-comparison-0-2-0">Model comparison (<a href="https://github.com/JUhalt/nomologR/issues/27" class="external-link">#27</a>)<a class="anchor" aria-label="anchor" href="#model-comparison-0-2-0"></a></h3>
 <ul><li>Added <code><a href="../reference/nomo_compare.html">nomo_compare()</a></code> for comparing two or more fitted <code><a href="../reference/nomo_cfa.html">nomo_cfa()</a></code> models. A researcher rationale is required and recorded, the comparison can be labeled a priori or post hoc, and no model is ever selected automatically.</li>
 <li>Nested models receive the difference test that matches the estimator, computed by <code><a href="https://rdrr.io/pkg/lavaan/man/lavTestLRT.html" class="external-link">lavaan::lavTestLRT()</a></code>: the ordinary chi-square difference test for ML, the scaled difference test for robust ML (Satorra &amp; Bentler, 2001), and the scaled-and-shifted test for WLSMV (Satorra, 2000). A test lavaan cannot compute, or a negative scaled statistic, is reported as unavailable with lavaan’s message rather than replaced by another method.</li>
 <li>Nesting is checked from the models’ implied moments with <code><a href="https://rdrr.io/pkg/semTools/man/net.html" class="external-link">semTools::net()</a></code> (Bentler &amp; Satorra, 2010). Researchers can declare nesting when the check cannot run, and a declaration the check contradicts is recorded as a concern.</li>
@@ -99,7 +110,7 @@
 <li>Added <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>, <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>, <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>, and <code><a href="../reference/nomo_table.html">nomo_table()</a></code> methods.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="maintenance-0-1-0-9000">Maintenance (<a href="https://github.com/JUhalt/nomologR/issues/36" class="external-link">#36</a>)<a class="anchor" aria-label="anchor" href="#maintenance-0-1-0-9000"></a></h3>
+<h3 id="maintenance-0-2-0">Maintenance (<a href="https://github.com/JUhalt/nomologR/issues/36" class="external-link">#36</a>)<a class="anchor" aria-label="anchor" href="#maintenance-0-2-0"></a></h3>
 <ul><li>Split the guided-workflow implementation (<code>R/nomo_run.R</code>, 2,066 lines) into <code>nomo_run_state.R</code> (state and input validation), <code>nomo_run_decisions.R</code> (researcher decisions), <code>nomo_run_stages.R</code> (stage execution and blocking), <code>nomo_run_provenance.R</code> (provenance, recipe, and settings tables), and <code>nomo_run.R</code> (entry point). Every function body and signature is unchanged, verified by comparing the parsed functions with the previous source, and the generated documentation is identical.</li>
 <li>Redistributed the 102 tests in <code>tests/testthat/test-regressions.R</code>, which were consolidated during pre-v0.1 hardening, into the per-module test files. Test names, the number of tests (464), and expectation calls are unchanged.</li>
 <li>Raised the declared minimum for <code>EFAtools</code> from 0.8.0 to 1.0.0. With <code>EFAtools</code> 0.8.0, <code><a href="../reference/nomo_factors.html">nomo_factors()</a></code> could not run the empirical Kaiser criterion, NEST, Hull, or comparison-data criteria, and 22 factor-retention tests failed. The full test suite passes with the declared minimums <code>lavaan</code> 0.6-21, <code>semTools</code> 0.5-9, and <code>EFAtools</code> 1.0.0.</li>
@@ -108,7 +119,7 @@
 <li>Recorded the distribution plan: R-universe through <code>v0.2.x</code>, a CRAN-readiness gate in <code>v0.2.0</code> certification (<a href="https://github.com/JUhalt/nomologR/issues/37" class="external-link">#37</a>), and the first CRAN submission targeted for <code>v0.3.0</code> (<a href="https://github.com/JUhalt/nomologR/issues/39" class="external-link">#39</a>).</li>
 </ul></div>
 <div class="section level3">
-<h3 id="learning-foundations-toward-v020-0-1-0-9000">Learning foundations toward v0.2.0<a class="anchor" aria-label="anchor" href="#learning-foundations-toward-v020-0-1-0-9000"></a></h3>
+<h3 id="learning-foundations-toward-v020-0-2-0">Learning foundations toward v0.2.0<a class="anchor" aria-label="anchor" href="#learning-foundations-toward-v020-0-2-0"></a></h3>
 <ul><li>Set the <code>v0.2.0</code> direction: research-backed, usable scale-development and construct-validation workflows for graduate students and researchers, spanning historical to contemporary methods. Scope, priorities, and exit criteria were recorded in <a href="https://github.com/JUhalt/nomologR/issues/22" class="external-link">#22</a> and the linked workstream issues (<a href="https://github.com/JUhalt/nomologR/issues/25" class="external-link">#25</a>–#37); v0.3 candidates are tracked in <a href="https://github.com/JUhalt/nomologR/issues/38" class="external-link">#38</a>. Distribution remains R-universe; CRAN submission is deferred (<a href="https://github.com/JUhalt/nomologR/issues/39" class="external-link">#39</a>).</li>
 <li>Added three simulated teaching datasets with documented population models and fixed-seed generation code in <code>data-raw/nomo_demo.R</code>: <code>nomo_demo_continuous</code> (two correlated factors with a cross-loading item, a weak item, and MCAR missingness), <code>nomo_demo_ordinal</code> (five-category ordered version), and <code>nomo_demo_network</code> (three constructs, an observed outcome, and two administration groups with a known source of scalar non-invariance) (<a href="https://github.com/JUhalt/nomologR/issues/25" class="external-link">#25</a>).</li>
 <li>All workflow vignettes now evaluate against the teaching datasets, so the guided workflow, measurement-invariance, nomological-network, and reproducible-report articles show real output (<a href="https://github.com/JUhalt/nomologR/issues/25" class="external-link">#25</a>).</li>
@@ -123,7 +134,7 @@
 <li>Archived the completed v0.1 roadmap specification in <code>dev/roadmap-v0.1-record.md</code> and refocused <code>ROADMAP.md</code> on v0.2 and later.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="post-v01-development-0-1-0-9000">Post-v0.1 development<a class="anchor" aria-label="anchor" href="#post-v01-development-0-1-0-9000"></a></h3>
+<h3 id="post-v01-development-0-2-0">Post-v0.1 development<a class="anchor" aria-label="anchor" href="#post-v01-development-0-2-0"></a></h3>
 <ul><li>Changed the current development source to GNU GPL version 3 only (<code>GPL-3.0-only</code>; <code>GPL-3</code> in R metadata), retaining the historical MIT notice. Previously published releases retain their original licenses.</li>
 <li>Aligned source citation metadata with development version <code>0.1.0.9000</code>; release tags retain their release-specific citation metadata.</li>
 <li>Reconciled README, roadmap, issue navigation, historical checkpoint wording, and the documentation/planning workflow. Candidate methods remain proposals until their scope is accepted; no analytical behavior changes in this update.</li>
@@ -132,13 +143,13 @@
 <code>v0.1.0</code> remains the current stable public release. # nomologR 0.1.0</li>
 </ul></div>
 <div class="section level3">
-<h3 id="first-stable-public-release-0-1-0-9000">First stable public release<a class="anchor" aria-label="anchor" href="#first-stable-public-release-0-1-0-9000"></a></h3>
+<h3 id="first-stable-public-release-0-2-0">First stable public release<a class="anchor" aria-label="anchor" href="#first-stable-public-release-0-2-0"></a></h3>
 <ul><li>First stable public release of the guided empirical scale-development and construct-validation workflow.</li>
 <li>Includes the complete v0.1 workflow from item screening through reproducible reporting.</li>
 <li>Release certification includes a clean test suite, R CMD check, coverage audit, installed-package smoke test, and public pkgdown documentation.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="milestone-closeout--reproducible-reporting-and-v01-release-hardening-0-1-0-9000">Milestone 9 closeout — reproducible reporting and v0.1 release hardening<a class="anchor" aria-label="anchor" href="#milestone-closeout--reproducible-reporting-and-v01-release-hardening-0-1-0-9000"></a></h3>
+<h3 id="milestone-closeout--reproducible-reporting-and-v01-release-hardening-0-2-0">Milestone 9 closeout — reproducible reporting and v0.1 release hardening<a class="anchor" aria-label="anchor" href="#milestone-closeout--reproducible-reporting-and-v01-release-hardening-0-2-0"></a></h3>
 <ul><li><p>Completed <code><a href="../reference/nomo_report.html">nomo_report()</a></code> as the archival reporting layer for guided <code><a href="../reference/nomo_run.html">nomo_run()</a></code> workflows.</p></li>
 <li><p>Added self-contained HTML reporting across item screening, factor retention, EFA, CFA, reliability, convergent/discriminant evidence, invariance, and theory-specified nomological networks.</p></li>
 <li><p>Added researcher inputs, data characteristics, decision provenance, deviations/post-hoc decisions, methods/citations, reproducibility information, and a full evidence trace linking recommendations back to their source evidence.</p></li>
@@ -156,7 +167,7 @@
 <li><p>Milestone 8 is complete. Milestone 9 was subsequently completed in this development version; see the closeout above.</p></li>
 </ul></div>
 <div class="section level3">
-<h3 id="milestones-closeout--theory-specified-networks-invariance-and-checkpoint-c-0-1-0-9000">Milestones 6–7 closeout — theory-specified networks, invariance, and Checkpoint C<a class="anchor" aria-label="anchor" href="#milestones-closeout--theory-specified-networks-invariance-and-checkpoint-c-0-1-0-9000"></a></h3>
+<h3 id="milestones-closeout--theory-specified-networks-invariance-and-checkpoint-c-0-2-0">Milestones 6–7 closeout — theory-specified networks, invariance, and Checkpoint C<a class="anchor" aria-label="anchor" href="#milestones-closeout--theory-specified-networks-invariance-and-checkpoint-c-0-2-0"></a></h3>
 <ul><li>Added <code><a href="../reference/nomo_expectations.html">positive()</a></code>, <code><a href="../reference/nomo_expectations.html">negative()</a></code>, and <code><a href="../reference/nomo_expectations.html">negligible()</a></code> expectation helpers plus <code><a href="../reference/nomo_hypotheses.html">nomo_hypotheses()</a></code> for machine-readable a-priori and post-hoc theory specifications. Quantified negligible predictions use researcher-specified SESOI/equivalence regions; bare negligible predictions remain qualitative and are never confirmed merely because <code>p &gt; .05</code>.</li>
 <li>Added <code><a href="../reference/nomo_network.html">nomo_network()</a></code> for theory-specified latent SEM with transparent addition of missing prespecified theory paths, observed external criteria/outcomes, standardized or explicitly unstandardized hypothesis evaluation, measurement-context propagation, and calibration/validation replication of the exact same prespecified fitted model.</li>
 <li>Kept theory concordance, uncertainty, measurement quality, confirmatory status, and replication as distinct evidence streams rather than collapsing them into a single validity score.</li>
@@ -168,7 +179,7 @@
 <li>Advanced the development version to <code>0.1.0.9003</code>, marking <strong>Checkpoint C: Generalizability and Nomological Evidence Complete</strong>. Milestone 8, <code><a href="../reference/nomo_run.html">nomo_run()</a></code>, is the next active development target.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="milestone-closeout--reliability-convergentdiscriminant-evidence-and-checkpoint-b-0-1-0-9000">Milestone 5 closeout — reliability, convergent/discriminant evidence, and Checkpoint B<a class="anchor" aria-label="anchor" href="#milestone-closeout--reliability-convergentdiscriminant-evidence-and-checkpoint-b-0-1-0-9000"></a></h3>
+<h3 id="milestone-closeout--reliability-convergentdiscriminant-evidence-and-checkpoint-b-0-2-0">Milestone 5 closeout — reliability, convergent/discriminant evidence, and Checkpoint B<a class="anchor" aria-label="anchor" href="#milestone-closeout--reliability-convergentdiscriminant-evidence-and-checkpoint-b-0-2-0"></a></h3>
 <ul><li>Replaced the <code><a href="../reference/nomo_reliability.html">nomo_reliability()</a></code> development stub with a model-based reliability workflow using current <code><a href="https://rdrr.io/pkg/semTools/man/compRelSEM.html" class="external-link">semTools::compRelSEM()</a></code> infrastructure.</li>
 <li>Made omega/composite reliability the primary coefficient for the general congeneric CFA workflow while retaining coefficient alpha as an explicitly qualified secondary statistic.</li>
 <li>Added ordered-indicator reliability guidance that distinguishes observed ordinal-score reliability from latent-response-scale coefficients and refuses to silently substitute a different alpha estimand.</li>
@@ -185,7 +196,7 @@
 <li>Advanced the development version to <code>0.1.0.9002</code>, marking <strong>Checkpoint B: Measurement Model Complete</strong>. Milestone 6, theory-specified nomological networks, is next.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="milestone-closeout--confirmatory-factor-analysis-0-1-0-9000">Milestone 4 closeout — confirmatory factor analysis<a class="anchor" aria-label="anchor" href="#milestone-closeout--confirmatory-factor-analysis-0-1-0-9000"></a></h3>
+<h3 id="milestone-closeout--confirmatory-factor-analysis-0-2-0">Milestone 4 closeout — confirmatory factor analysis<a class="anchor" aria-label="anchor" href="#milestone-closeout--confirmatory-factor-analysis-0-2-0"></a></h3>
 <ul><li>Replaced the <code><a href="../reference/nomo_cfa.html">nomo_cfa()</a></code> development stub with a production CFA workflow around <code><a href="https://rdrr.io/pkg/lavaan/man/cfa.html" class="external-link">lavaan::cfa()</a></code> while retaining the underlying lavaan fit unchanged.</li>
 <li>Added <code><a href="../reference/nomo_model.html">nomo_model()</a></code> for simple reflective CFA syntax generation without automatically adding cross-loadings, residual covariances, or other post-hoc parameters.</li>
 <li>Added explicit estimator provenance and guidance for continuous ML, researcher-selected robust ML estimators such as MLR, and declared ordered-indicator WLSMV workflows.</li>
@@ -201,7 +212,7 @@
 <li>Local tests/checks and GitHub Actions passed; the Milestone 4 PR was squash merged before Milestone 5 development began.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="milestone-closeout--exploratory-factor-analysis-and-checkpoint-a-0-1-0-9000">Milestone 3 closeout — exploratory factor analysis and Checkpoint A<a class="anchor" aria-label="anchor" href="#milestone-closeout--exploratory-factor-analysis-and-checkpoint-a-0-1-0-9000"></a></h3>
+<h3 id="milestone-closeout--exploratory-factor-analysis-and-checkpoint-a-0-2-0">Milestone 3 closeout — exploratory factor analysis and Checkpoint A<a class="anchor" aria-label="anchor" href="#milestone-closeout--exploratory-factor-analysis-and-checkpoint-a-0-2-0"></a></h3>
 <ul><li>Replaced the <code><a href="../reference/nomo_efa.html">nomo_efa()</a></code> development stub with a production common-factor EFA workflow using <code><a href="https://rdrr.io/pkg/psych/man/fa.html" class="external-link">psych::fa()</a></code> as the statistical engine and <code>nomologR</code> as the guidance, diagnostics, logging, and presentation layer.</li>
 <li>Added researcher-controlled factor counts and direct handoff from <code><a href="../reference/nomo_factors.html">nomo_factors()</a></code>, including inherited item sets, modeling types, correlation models, missing-data decisions, and explicit smoothing choices.</li>
 <li>Preserved M2 retention ambiguity in the EFA decision log so a handoff is not misrepresented as proof of dimensionality.</li>
@@ -218,7 +229,7 @@
 <li>Advanced the development version to <code>0.1.0.9001</code>, marking Checkpoint A: the exploratory measurement workflow is complete and Milestone 4 (CFA) is next.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="milestone-closeout--researcher-control-and-hardening-0-1-0-9000">Milestone 2 closeout — researcher control and hardening<a class="anchor" aria-label="anchor" href="#milestone-closeout--researcher-control-and-hardening-0-1-0-9000"></a></h3>
+<h3 id="milestone-closeout--researcher-control-and-hardening-0-2-0">Milestone 2 closeout — researcher control and hardening<a class="anchor" aria-label="anchor" href="#milestone-closeout--researcher-control-and-hardening-0-2-0"></a></h3>
 <ul><li>Changed modeling-type override precedence so an explicit, valid <code>types</code> declaration can rescue otherwise ambiguous storage before default-type rejection, while storage-compatibility checks still block unsafe coercions.</li>
 <li>Added decision-log entries for researcher-specified modeling-type overrides.</li>
 <li>Improved error ordering so constant and all-missing items are diagnosed as hard data failures before modeling-type inference.</li>
@@ -227,7 +238,7 @@
 <li>Milestone 2 core computational files exceed the v0.1 &gt;=90% coverage gate; presentation coverage reached 100% in the closeout audit.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="milestoneb--retention-triangulation-and-sensitivity-0-1-0-9000">Milestone 2B — retention triangulation and sensitivity<a class="anchor" aria-label="anchor" href="#milestoneb--retention-triangulation-and-sensitivity-0-1-0-9000"></a></h3>
+<h3 id="milestoneb--retention-triangulation-and-sensitivity-0-2-0">Milestone 2B — retention triangulation and sensitivity<a class="anchor" aria-label="anchor" href="#milestoneb--retention-triangulation-and-sensitivity-0-2-0"></a></h3>
 <ul><li>Refined concordance to group closely related methods into criterion families, so original/revised MAP variants do not behave like independent votes. Internally split families remain explicit and are not forced into one bar.</li>
 <li>Added convenient <code>correlation</code> and <code>modeling_types</code> fields alongside the existing internal-detail names for easier inspection of automatic choices.</li>
 <li>Surface EKC’s non-Pearson approximation directly in criterion status and summary output rather than leaving that qualification only in the decision log.</li>
@@ -243,7 +254,7 @@
 <li>Added <code>EFAtools (&gt;= 0.8.0)</code> as the runtime engine for modern optional retention criteria while preserving <code>nomologR</code>’s interpretation and decision-log layer.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="milestonea--factor-retention-evidence-0-1-0-9000">Milestone 2A — factor-retention evidence<a class="anchor" aria-label="anchor" href="#milestonea--factor-retention-evidence-0-1-0-9000"></a></h3>
+<h3 id="milestonea--factor-retention-evidence-0-2-0">Milestone 2A — factor-retention evidence<a class="anchor" aria-label="anchor" href="#milestonea--factor-retention-evidence-0-2-0"></a></h3>
 <ul><li>Replaced the <code><a href="../reference/nomo_factors.html">nomo_factors()</a></code> development stub with a production factor-retention engine.</li>
 <li>Added explicit correlation-model selection for Pearson, polychoric, tetrachoric, and mixed indicator sets, with conservative handling of numeric-discrete items and user overrides for intended measurement level.</li>
 <li>Added reproducible common-factor parallel analysis using independently permuted null data and a configurable null-eigenvalue quantile.</li>
@@ -254,7 +265,7 @@
 <li>Promoted <code>psych</code> to a runtime dependency because factor-retention methods now use its established factor/correlation engines directly.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="milestonec--integrated-review-and-visualization-0-1-0-9000">Milestone 1C — integrated review and visualization<a class="anchor" aria-label="anchor" href="#milestonec--integrated-review-and-visualization-0-1-0-9000"></a></h3>
+<h3 id="milestonec--integrated-review-and-visualization-0-2-0">Milestone 1C — integrated review and visualization<a class="anchor" aria-label="anchor" href="#milestonec--integrated-review-and-visualization-0-2-0"></a></h3>
 <ul><li>Added <code><a href="../reference/summary.nomo_screen.html">summary.nomo_screen()</a></code> with an integrated item-review table that combines descriptive, relationship, response-category, and decision-log evidence.</li>
 <li>Added <code><a href="../reference/plot.nomo_screen.html">plot.nomo_screen()</a></code> with evidence-map, item-rest, inter-item, response-profile, and missingness views.</li>
 <li>Added explicit visibility for declared-but-unused ordered response categories without silently collapsing or recoding them.</li>
@@ -262,7 +273,7 @@
 <li>Added <code>ggplot2</code> as a core visualization dependency and expanded regression tests for presentation behavior.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="milestoneb--psychometric-screening-0-1-0-9000">Milestone 1B — psychometric screening<a class="anchor" aria-label="anchor" href="#milestoneb--psychometric-screening-0-1-0-9000"></a></h3>
+<h3 id="milestoneb--psychometric-screening-0-2-0">Milestone 1B — psychometric screening<a class="anchor" aria-label="anchor" href="#milestoneb--psychometric-screening-0-2-0"></a></h3>
 <ul><li>Added corrected item-rest and inter-item relationship diagnostics for explicitly scored numeric/logical candidate items.</li>
 <li>Added review guidance for negative and weak item-rest relationships without automatic reverse-scoring or deletion.</li>
 <li>Added configurable response-concentration and near-zero-variance screening.</li>
@@ -273,7 +284,7 @@
 <li>Added a GitHub issue form for roadmap-milestone tracking.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="milestone--itemdata-screening-0-1-0-9000">Milestone 1 — item/data screening<a class="anchor" aria-label="anchor" href="#milestone--itemdata-screening-0-1-0-9000"></a></h3>
+<h3 id="milestone--itemdata-screening-0-2-0">Milestone 1 — item/data screening<a class="anchor" aria-label="anchor" href="#milestone--itemdata-screening-0-2-0"></a></h3>
 <ul><li>Implemented the first production slice of <code><a href="../reference/nomo_screen.html">nomo_screen()</a></code>.</li>
 <li>Added conservative item-type descriptions, item-level missingness and response summaries, response distributions, case-level completeness diagnostics, and explicit zero-variance/all-missing flags.</li>
 <li>Added an evidence-guided decision log for screening observations without automatically deleting items or cases.</li>
@@ -282,7 +293,7 @@
 <li>Updated GitHub Actions checkout steps to <code>actions/checkout@v5</code> for the Node 24 runtime.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="foundation-milestone-0-1-0-9000">Foundation milestone<a class="anchor" aria-label="anchor" href="#foundation-milestone-0-1-0-9000"></a></h3>
+<h3 id="foundation-milestone-0-2-0">Foundation milestone<a class="anchor" aria-label="anchor" href="#foundation-milestone-0-2-0"></a></h3>
 <ul><li>Defined <code>nomologR</code> as a guided workflow for empirical scale development and construct-validity evidence rather than a replacement for <code>psych</code>, <code>lavaan</code>, or <code>semTools</code>.</li>
 <li>Clarified the package boundary relative to <code>contentvalidR</code> and <code>solomonR</code>.</li>
 <li>Standardized package naming and the planned public API on the <code>nomo_*</code> prefix.</li>

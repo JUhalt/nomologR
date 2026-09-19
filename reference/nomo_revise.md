@@ -38,7 +38,11 @@ nomo_revise(
 - items:
 
   Optional named list of revised item vectors, one element per revised
-  scale. Scales that are not named keep the parent's items.
+  scale. Scales that are not named keep the parent's items. The
+  measurement model must agree with the revised items: a revision is
+  refused if the model still includes an item it drops, or omits an item
+  it adds. Supply `cfa_model` together with `items` when the change
+  requires it; `nomo_revise()` never rewrites the model.
 
 - rationale:
 

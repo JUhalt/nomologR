@@ -17,15 +17,17 @@
 > delete.
 
 **Current stable release:**
-[0.1.0](https://github.com/JUhalt/nomologR/releases/tag/v0.1.0)
-(September 9, 2026). **Current source:** `0.1.0.9000`, GPL-3.0-only.
-**Next release:**
-[v0.2.0](https://github.com/JUhalt/nomologR/milestone/2) —
-research-backed, usable measurement workflows. Scope was selected in
-[\#22](https://github.com/JUhalt/nomologR/issues/22) on September 13,
-2026. **Distribution:** [R-universe](https://juhalt.r-universe.dev),
-which builds each GitHub release. The first CRAN submission is targeted
-for `v0.3.0` ([\#39](https://github.com/JUhalt/nomologR/issues/39)).
+[0.2.0](https://github.com/JUhalt/nomologR/releases/tag/v0.2.0)
+(September 19, 2026), GPL-3.0-only — research-backed, usable measurement
+workflows, with scope selected in
+[\#22](https://github.com/JUhalt/nomologR/issues/22). The earlier
+[0.1.0](https://github.com/JUhalt/nomologR/releases/tag/v0.1.0) release
+(September 9, 2026) keeps its original MIT license. **Next release:**
+[v0.2.1](https://github.com/JUhalt/nomologR/milestone/4) — the Planned
+workstreams moved at v0.2.0 certification. **Distribution:**
+[R-universe](https://juhalt.r-universe.dev), which builds each GitHub
+release. The first CRAN submission is targeted for `v0.3.0`
+([\#39](https://github.com/JUhalt/nomologR/issues/39)).
 
 The complete v0.1 milestone specifications, exit gates, and
 certification records are preserved verbatim in
@@ -118,8 +120,11 @@ milestone are in
 
 \# v0.2.0 — Research-Backed, Usable Measurement Workflows
 
-**Status:** Implementation. Scope selected in
-[\#22](https://github.com/JUhalt/nomologR/issues/22).
+**Status:** Released September 19, 2026. Scope selected in
+[\#22](https://github.com/JUhalt/nomologR/issues/22). Every Core
+workstream shipped; six Planned workstreams moved to
+[v0.2.1](https://github.com/JUhalt/nomologR/milestone/4) at
+certification, each with its reason recorded on the issue.
 
 **Goals.** Make `nomologR`:
 
@@ -180,27 +185,29 @@ invariance local-strain labels (completed in
 [\#41](https://github.com/JUhalt/nomologR/pull/41)).
 
 [\#32](https://github.com/JUhalt/nomologR/issues/32) Missing-data
-sensitivity across measurement stages.
+sensitivity across measurement stages. **Moved to v0.2.1.**
 
 [\#33](https://github.com/JUhalt/nomologR/issues/33) Score guidance —
-`nomo_scores()` for sum and factor scores.
+`nomo_scores()` for sum and factor scores. **Moved to v0.2.1.**
 
 [\#34](https://github.com/JUhalt/nomologR/issues/34) Insufficient-effort
 responding screen in
 [`nomo_screen()`](https://juhalt.github.io/nomologR/reference/nomo_screen.md).
+**Moved to v0.2.1.**
 
 [\#35](https://github.com/JUhalt/nomologR/issues/35) Manuscript-ready
-tables and Word report output.
+tables and Word report output. **Moved to v0.2.1.**
 
 [\#36](https://github.com/JUhalt/nomologR/issues/36) Maintenance — test
 organization, `nomo_run.R` modularization, minimum-dependency CI.
 
 [\#40](https://github.com/JUhalt/nomologR/issues/40)
 [`nomo_report()`](https://juhalt.github.io/nomologR/reference/nomo_report.md)
-rendering from inside R Markdown or Quarto documents.
+rendering from inside R Markdown or Quarto documents. **Moved to
+v0.2.1.**
 
 [\#42](https://github.com/JUhalt/nomologR/issues/42) Optional parallel
-bootstrap for reliability confidence intervals.
+bootstrap for reliability confidence intervals. **Moved to v0.2.1.**
 
 ## Suggested sequence
 
@@ -210,7 +217,8 @@ bootstrap for reliability confidence intervals.
     then \#28 (done).
 3.  **Broader measurement models and interpretation:** \#29 (builds on
     \#27) and \#30.
-4.  **Usability extensions:** \#32, \#33, \#34, \#35, \#40, \#42.
+4.  **Usability extensions:** \#32, \#33, \#34, \#35, \#40, \#42 — moved
+    to v0.2.1 at certification.
 5.  **Release:** \#37, including the license/version/date gate carried
     from \#22 and the CRAN-readiness gate.
 

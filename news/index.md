@@ -1,6 +1,63 @@
 # Changelog
 
-## nomologR 0.1.0.9000
+## nomologR 0.2.0
+
+nomologR 0.2.0 makes the workflow research-backed from historical to
+contemporary practice and more useful to graduate students and
+researchers. Every method is placed in its literature and cited in
+reports; researchers can compare competing models, revise a model with
+its lineage recorded, and evaluate total and subscale scores; and
+replication language no longer reads noise as a finding. Scope was
+selected in [\#22](https://github.com/JUhalt/nomologR/issues/22).
+
+Six Planned workstreams moved to v0.2.1 at release certification
+([\#37](https://github.com/JUhalt/nomologR/issues/37)), each with its
+reason recorded: missing-data sensitivity
+([\#32](https://github.com/JUhalt/nomologR/issues/32)), score guidance
+([\#33](https://github.com/JUhalt/nomologR/issues/33)),
+insufficient-effort responding screens
+([\#34](https://github.com/JUhalt/nomologR/issues/34)), manuscript-ready
+tables ([\#35](https://github.com/JUhalt/nomologR/issues/35)), rendering
+reports inside R Markdown or Quarto
+([\#40](https://github.com/JUhalt/nomologR/issues/40)), and optional
+parallel bootstrap intervals
+([\#42](https://github.com/JUhalt/nomologR/issues/42)). The license is
+GPL-3.0-only; the published 0.1.0 release keeps its original MIT
+license. Distribution remains R-universe; the first CRAN submission is
+targeted for v0.3.0
+([\#39](https://github.com/JUhalt/nomologR/issues/39)).
+
+### Release certification ([\#37](https://github.com/JUhalt/nomologR/issues/37))
+
+- README links to files excluded from the built package (`ROADMAP.md`,
+  `LICENSE.md`) now use absolute URLs, so they resolve for readers of
+  the package tarball as well as on GitHub
+  ([\#48](https://github.com/JUhalt/nomologR/issues/48)).
+- The default-run part of the
+  [`nomo_compare()`](https://juhalt.github.io/nomologR/reference/nomo_compare.md)
+  example now skips the side-by-side evidence, which moved to
+  `\donttest{}`, keeping every default-run example within CRAN’s time
+  expectations.
+- Added the R-hub v2 GitHub Actions workflow (run on demand) for
+  multi-platform CRAN-style checks.
+- Certification tests of every
+  [`nomo_methods()`](https://juhalt.github.io/nomologR/reference/nomo_methods.md)
+  crediting rule against real objects found, and fixed, methods that
+  reports would have mis-cited: WLSMV comparisons were credited with the
+  Satorra-Bentler scaled test instead of the scaled-and-shifted test;
+  AIC and BIC were never credited; FIML requested as `missing = "ml"` or
+  `"direct"` was not credited; a requested Fornell-Larcker comparison
+  was not credited; and a
+  [`nomo_partial()`](https://juhalt.github.io/nomologR/reference/nomo_partial.md)
+  release specification was credited with a multiple-group fit it does
+  not perform. A registry entry for a fixed change-in-CFI rule that no
+  function displays was removed.
+- [`nomo_revise()`](https://juhalt.github.io/nomologR/reference/nomo_revise.md)
+  now refuses an item revision whose measurement model disagrees with
+  the revised items. Previously, dropping an item without supplying a
+  revised `cfa_model` screened and explored the reduced item set but
+  still fitted the dropped item in the CFA, while the lineage recorded
+  it as removed.
 
 ### Bifactor and higher-order models ([\#29](https://github.com/JUhalt/nomologR/issues/29))
 

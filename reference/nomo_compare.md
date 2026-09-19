@@ -194,7 +194,8 @@ no_b5 <- nomo_cfa(
 cmp <- nomo_compare(
   full = full,
   no_b5 = no_b5,
-  rationale = "Evaluate whether the weakly loading item b5 contributes to factor B."
+  rationale = "Evaluate whether the weakly loading item b5 contributes to factor B.",
+  evidence = FALSE
 )
 cmp
 #> <nomo_compare>
@@ -217,7 +218,13 @@ nomo_table(cmp, "comparisons")
 #> #   interpretation <chr>
 
 # \donttest{
-summary(cmp)
+# Side-by-side loadings, reliability, AVE, and HTMT2 for each model
+cmp_evidence <- nomo_compare(
+  full = full,
+  no_b5 = no_b5,
+  rationale = "Evaluate whether the weakly loading item b5 contributes to factor B."
+)
+summary(cmp_evidence)
 #> nomologR measurement-model comparison
 #> Rationale: Evaluate whether the weakly loading item b5 contributes to factor B.
 #> Origin: a-priori | Reference model: full
@@ -282,7 +289,7 @@ summary(cmp)
 #> - Loading(s) fixed to zero for b5 keep those item(s) in this composite; the coefficient does not describe a shortened scale.
 #> 
 #> No model was selected automatically. Difference tests, changes in fit, information criteria, and measurement evidence answer different questions; read them together with theory and the recorded rationale.
-plot(cmp, type = "loadings")
+plot(cmp_evidence, type = "loadings")
 
 # }
 ```

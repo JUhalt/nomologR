@@ -15,7 +15,7 @@ parent workflow is not modified."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">nomologR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -93,7 +93,11 @@ or an object from <code><a href="nomo_model.html">nomo_model()</a></code>.</p></
 
 <dt id="arg-items">items<a class="anchor" aria-label="anchor" href="#arg-items"></a></dt>
 <dd><p>Optional named list of revised item vectors, one element per
-revised scale. Scales that are not named keep the parent's items.</p></dd>
+revised scale. Scales that are not named keep the parent's items. The
+measurement model must agree with the revised items: a revision is refused
+if the model still includes an item it drops, or omits an item it adds.
+Supply <code>cfa_model</code> together with <code>items</code> when the change requires it;
+<code>nomo_revise()</code> never rewrites the model.</p></dd>
 
 
 <dt id="arg-rationale">rationale<a class="anchor" aria-label="anchor" href="#arg-rationale"></a></dt>

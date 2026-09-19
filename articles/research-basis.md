@@ -36,7 +36,7 @@ computational engine, and references.
 
 methods <- nomo_methods()
 nrow(methods)
-#> [1] 72
+#> [1] 71
 table(methods$stage, methods$lineage)
 #>              
 #>               contemporary emerging historical
@@ -44,7 +44,7 @@ table(methods$stage, methods$lineage)
 #>   compare                6        0          0
 #>   efa                    3        0          2
 #>   factors                7        1          4
-#>   invariance             6        0          1
+#>   invariance             6        0          0
 #>   network                4        0          1
 #>   reliability            7        0          2
 #>   screen                 4        0          1
@@ -59,7 +59,7 @@ takes no part in any synthesis or decision:
 ``` r
 
 nomo_methods(lineage = "historical")[, c("stage", "method", "role")]
-#> # A tibble: 16 × 3
+#> # A tibble: 15 × 3
 #>    stage       method                                               role      
 #>    <chr>       <chr>                                                <chr>     
 #>  1 screen      Fixed item-total correlation reference (about .30)   context   
@@ -76,8 +76,7 @@ nomo_methods(lineage = "historical")[, c("stage", "method", "role")]
 #> 12 reliability Schmid-Leiman decomposition                          supporting
 #> 13 validity    Standardized loadings and average variance extracted supporting
 #> 14 validity    Fornell-Larcker comparison                           context   
-#> 15 invariance  Fixed change-in-CFI rule                             context   
-#> 16 network     Nomological network of construct relations           primary
+#> 15 network     Nomological network of construct relations           primary
 ```
 
 The registry lists only what the package actually computes. Methods that
