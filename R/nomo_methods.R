@@ -1461,18 +1461,6 @@ nomo_methods_registry <- function() {
       c("chen_2007", "putnick_bornstein_2016")
     ),
     nomo_method_entry(
-      "delta_cfi_rule", "invariance",
-      "Fixed change-in-CFI rule",
-      "historical", "context",
-      "A conventional decrease of .01 in CFI taken as evidence against invariance.",
-      paste(
-        "Derived under particular simulation conditions and widely applied",
-        "outside them. Displayed as labeled context, not applied as a rule."
-      ),
-      "nomo_invariance()", "nomologR",
-      c("cheung_rensvold_2002")
-    ),
-    nomo_method_entry(
       "score_diagnostics", "invariance",
       "Score-test strain diagnostics",
       "contemporary", "supporting",
