@@ -21,7 +21,11 @@ nomo_revise(
 or an object from \code{\link[=nomo_model]{nomo_model()}}.}
 
 \item{items}{Optional named list of revised item vectors, one element per
-revised scale. Scales that are not named keep the parent's items.}
+revised scale. Scales that are not named keep the parent's items. The
+measurement model must agree with the revised items: a revision is refused
+if the model still includes an item it drops, or omits an item it adds.
+Supply \code{cfa_model} together with \code{items} when the change requires it;
+\code{nomo_revise()} never rewrites the model.}
 
 \item{rationale}{Required character scalar recording why the workflow is
 revised.}

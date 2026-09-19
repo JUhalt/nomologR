@@ -105,6 +105,53 @@ nomo_revise_item_changes <- function(parent_scales, revised_scales) {
 }
 
 
+# An item revision must agree with the measurement model it will be fitted
+# with. Keeping the parent's model after dropping an item would screen and
+# explore the reduced item set but still fit the dropped item in the CFA, while
+# the lineage recorded it as removed. nomologR does not rewrite the model, so
+# the mismatch is refused with the items named.
+nomo_revise_check_model_items <- function(model, scales, changes) {
+  # A pre-check only: nomo_run() parses the model again and reports lavaan's
+  # own warnings and errors, so they are not duplicated here.
+  pt <- tryCatch(suppressWarnings(lavaan::lavaanify(model)), error = function(e) NULL)
+  if (is.null(pt)) return(invisible(NULL))
+  model_items <- lavaan::lavNames(pt, "ov")
+
+  retained <- unique(unlist(scales, use.names = FALSE))
+  dropped <- setdiff(changes$removed, retained)
+  stale <- intersect(dropped, model_items)
+  if (length(stale)) {
+    stop(
+      sprintf(
+        paste(
+          "The measurement model still includes %s, which this revision",
+          "removes from the item set. Supply a revised `cfa_model` that",
+          "matches the revised items; nomologR does not rewrite the model."
+        ),
+        paste(stale, collapse = ", ")
+      ),
+      call. = FALSE
+    )
+  }
+
+  unmodeled <- setdiff(changes$added, model_items)
+  if (length(unmodeled)) {
+    stop(
+      sprintf(
+        paste(
+          "This revision adds %s, but the measurement model does not include",
+          "it. Supply a revised `cfa_model` that includes the added items."
+        ),
+        paste(unmodeled, collapse = ", ")
+      ),
+      call. = FALSE
+    )
+  }
+
+  invisible(NULL)
+}
+
+
 nomo_revise_inherited_factor_counts <- function(run, scales) {
   decision <- run$decisions$factor_count
   if (is.null(decision)) return(NULL)
@@ -212,7 +259,11 @@ nomo_revise_comparison_summary <- function(comparison, note) {
 #' @param cfa_model Optional revised measurement model: a lavaan syntax string
 #'   or an object from [nomo_model()].
 #' @param items Optional named list of revised item vectors, one element per
-#'   revised scale. Scales that are not named keep the parent's items.
+#'   revised scale. Scales that are not named keep the parent's items. The
+#'   measurement model must agree with the revised items: a revision is refused
+#'   if the model still includes an item it drops, or omits an item it adds.
+#'   Supply `cfa_model` together with `items` when the change requires it;
+#'   `nomo_revise()` never rewrites the model.
 #' @param rationale Required character scalar recording why the workflow is
 #'   revised.
 #' @param origin `"post_hoc"` (default) when the revision was prompted by
@@ -332,6 +383,8 @@ nomo_revise <- function(run,
       call. = FALSE
     )
   }
+
+  if (items_changed) nomo_revise_check_model_items(revised_model, scales, changes)
 
   change_type <- if (model_changed && items_changed) {
     "model_and_items"

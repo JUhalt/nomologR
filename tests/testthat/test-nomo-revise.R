@@ -241,3 +241,215 @@ test_that("revision lineage reaches presentation and reporting surfaces", {
   deviations <- nomologR:::nomo_report_deviations(revised)
   expect_true(any(grepl("revision", deviations$type, ignore.case = TRUE)))
 })
+
+
+test_that("an item revision must agree with the measurement model", {
+  skip_on_cran()
+  parent <- revise_parent_run()
+
+  # Keeping the parent's model would still fit the dropped item in the CFA
+  # while the lineage recorded it as removed.
+  expect_error(
+    nomo_revise(parent, items = list(B = paste0("b", 1:4)), rationale = "Drop b5."),
+    "still includes b5, which this revision removes"
+  )
+
+  # An added item must appear in the model it will be fitted with. This parent
+  # screens and models four B items, so b5 is absent from its model.
+  four_b <- nomo_run(
+    data = nomo_demo_continuous,
+    scales = list(A = paste0("a", 1:5), B = paste0("b", 1:4)),
+    settings = list(factors = list(criterion_set = "minimal", n_iter = 10L, seed = 2026L)),
+    decisions = list(
+      factor_count = c(A = 1, B = 1),
+      cfa_model = "A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4"
+    )
+  )
+  expect_error(
+    nomo_revise(four_b, items = list(B = paste0("b", 1:5)), rationale = "Restore b5."),
+    "adds b5, but the measurement model does not include it"
+  )
+
+  # The check is on presence in the model, not on factor assignment, which the
+  # researcher owns: an item added to B that the model already uses elsewhere
+  # is not refused.
+  expect_s3_class(
+    nomo_revise(
+      parent,
+      items = list(B = c(paste0("b", 1:5), "a5")),
+      cfa_model = "A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4 + b5 + a5",
+      rationale = "a5 cross-loads on B in the exploratory solution."
+    ),
+    "nomo_run"
+  )
+})
+
+
+test_that("an item-only revision is accepted when the model already agrees", {
+  skip_on_cran()
+
+  # The parent screens five B items but its CFA already uses four.
+  parent <- nomo_run(
+    data = nomo_demo_continuous,
+    scales = list(A = paste0("a", 1:5), B = paste0("b", 1:5)),
+    settings = list(factors = list(criterion_set = "minimal", n_iter = 10L, seed = 2026L)),
+    decisions = list(
+      factor_count = c(A = 1, B = 1),
+      cfa_model = "A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4"
+    )
+  )
+  revised <- nomo_revise(
+    parent,
+    items = list(B = paste0("b", 1:4)),
+    rationale = "b5 was already excluded from the confirmatory model."
+  )
+
+  lineage <- nomo_table(revised, "lineage")
+  expect_identical(lineage$change_type, "items")
+  expect_identical(lineage$items_removed, "b5")
+})
+
+
+test_that("an added item is recorded in the lineage", {
+  skip_on_cran()
+  parent <- revise_parent_run()
+
+  revised <- nomo_revise(
+    parent,
+    items = list(B = c(paste0("b", 1:5), "a5")),
+    cfa_model = "A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4 + b5 + a5",
+    rationale = "a5 cross-loads on B in the exploratory solution.",
+    decisions = list(factor_count = c(A = 1, B = 1))
+  )
+  lineage <- nomo_table(revised, "lineage")
+  expect_identical(lineage$items_added, "a5")
+})
+
+
+test_that("parents that cannot be revised are refused", {
+  skip_on_cran()
+  parent <- revise_parent_run()
+
+  expect_error(
+    nomo_revise(list(), cfa_model = revised_residual_model, rationale = "x"),
+    "must be a `nomo_run` object"
+  )
+
+  blocked <- parent
+  blocked$status <- "blocked"
+  expect_error(
+    nomo_revise(blocked, cfa_model = revised_residual_model, rationale = "x"),
+    "blocked by a component error"
+  )
+
+  expect_error(
+    nomo_revise(parent, items = list(), rationale = "x"),
+    "non-empty named list of item vectors"
+  )
+  expect_error(
+    nomo_revise(parent, cfa_model = revised_residual_model, rationale = "x", decisions = "x"),
+    "must be a named list of workflow decisions"
+  )
+})
+
+
+test_that("an inherited factor count is checked against the revised items", {
+  skip_on_cran()
+  parent <- revise_parent_run()
+
+  expect_error(
+    nomo_revise(
+      parent,
+      items = list(B = "b1"),
+      cfa_model = "A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1",
+      rationale = "Reduce B to a single item."
+    ),
+    "not smaller than the revised item count for B"
+  )
+})
+
+
+test_that("inherited factor counts are guarded against unusual parent state", {
+  # nomo_run() stores factor counts as named numeric vectors and refuses a model
+  # decision before a count exists, so these guards protect against state that
+  # the workflow does not normally produce.
+  inherited <- nomologR:::nomo_revise_inherited_factor_counts
+  expect_null(inherited(list(decisions = list()), list(A = "a1")))
+  expect_null(inherited(list(decisions = list(factor_count = list(value = 1L))), list(A = "a1")))
+  expect_null(inherited(list(decisions = list(factor_count = list(value = c(Z = 1)))), list(A = "a1")))
+})
+
+
+test_that("a revised workflow without a fitted model records why it was not compared", {
+  skip_on_cran()
+  parent <- revise_parent_run()
+
+  # Simulate a child workflow that stopped before fitting its measurement model.
+  local_mocked_bindings(nomo_run = function(...) {
+    child <- parent
+    child$results$cfa <- NULL
+    child
+  })
+  revised <- nomo_revise(
+    parent,
+    cfa_model = revised_residual_model,
+    rationale = "Shared wording between a1 and a2."
+  )
+  expect_null(revised$revision_comparison)
+  expect_match(
+    nomo_table(revised, "lineage")$comparison,
+    "did not produce a fitted measurement model"
+  )
+})
+
+
+test_that("a failed comparison is recorded rather than stopping the revision", {
+  skip_on_cran()
+  parent <- revise_parent_run()
+
+  local_mocked_bindings(
+    nomo_compare = function(...) stop("simulated comparison failure")
+  )
+  revised <- nomo_revise(
+    parent,
+    cfa_model = revised_residual_model,
+    rationale = "Shared wording between a1 and a2."
+  )
+  expect_null(revised$revision_comparison)
+  expect_match(
+    nomo_table(revised, "lineage")$comparison,
+    "Model comparison unavailable: simulated comparison failure"
+  )
+
+  expect_identical(
+    nomologR:::nomo_revise_comparison_summary(list(comparisons = tibble::tibble()), "kept"),
+    "kept"
+  )
+})
+
+
+test_that("research-mode printing shows the revision count", {
+  skip_on_cran()
+  parent <- revise_parent_run()
+  parent$mode <- "research"
+  revised <- nomo_revise(parent, cfa_model = revised_residual_model, rationale = "Shared wording.")
+  expect_output(print(revised), "Revisions: 1 (post-hoc)", fixed = TRUE)
+})
+
+
+test_that("revision guards handle unparseable models and missing rationales", {
+  # An unparseable model is left for nomo_run() to reject with lavaan's message.
+  expect_null(nomologR:::nomo_revise_check_model_items(
+    "this is not lavaan syntax ~~~ =~",
+    list(A = "a1"),
+    list(removed = "a2", added = character())
+  ))
+
+  # A stored factor-count decision without a rationale still inherits cleanly.
+  inherited <- nomologR:::nomo_revise_inherited_factor_counts(
+    list(decisions = list(factor_count = list(value = c(A = 1)))),
+    list(A = c("a1", "a2", "a3"))
+  )
+  expect_equal(inherited$value, c(A = 1))
+  expect_match(inherited$rationale, "Inherited from the parent workflow")
+})
