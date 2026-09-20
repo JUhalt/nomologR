@@ -748,3 +748,45 @@ test_that("the interpretation omits sections that have nothing to report", {
   expect_no_match(out, "Change in fit", fixed = TRUE)
   expect_no_match(out, "AIC", fixed = TRUE)
 })
+
+
+test_that("equal degrees of freedom read as equivalent even when the check could not run", {
+  pair <- compare_fitted_pair()
+
+  # Declared nested, the automatic check unavailable, and the two models have
+  # the same degrees of freedom: neither is more constrained than the other.
+  out <- testthat::with_mocked_bindings(
+    nomologR:::nomo_compare_nesting(
+      reference_fit = pair$full$fit,
+      other_fit = pair$zero$fit,
+      same_variables = TRUE,
+      df_reference = 34,
+      df_other = 34,
+      declared = "yes"
+    ),
+    net = function(...) stop("mocked nesting failure"),
+    .package = "semTools"
+  )
+
+  expect_identical(out$check, "unavailable")
+  expect_true(out$nested)
+  expect_identical(out$relation, "equivalent")
+})
+
+
+test_that("warnings are collected once while evidence is computed quietly", {
+  out <- nomologR:::nomo_compare_quietly({
+    warning("mocked evidence warning")
+    warning("mocked evidence warning")
+    warning("a second warning")
+    42L
+  })
+
+  expect_identical(out$value, 42L)
+  expect_identical(out$warnings, c("mocked evidence warning", "a second warning"))
+
+  # An error is returned rather than thrown, so the caller can report it.
+  failed <- nomologR:::nomo_compare_quietly(stop("mocked evidence failure"))
+  expect_s3_class(failed$value, "error")
+  expect_identical(conditionMessage(failed$value), "mocked evidence failure")
+})
