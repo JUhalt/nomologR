@@ -42,11 +42,18 @@ jobs:
 
       - uses: r-lib/actions/setup-pandoc@v2
 
+      # `always` rather than `true`: `true` enables Posit Package Manager only
+      # on x86_64 Windows and Linux, leaving the arm64 macOS runner on CRAN
+      # binaries. CRAN's macOS builder now compresses .tgz binaries with zstd,
+      # which pkgdepends cannot extract ("unknown archive type"), so the macOS
+      # job fails while Linux and Windows pass on the same commit. Posit
+      # Package Manager still serves gzip. Revert to `true` once
+      # https://github.com/r-lib/pkgdepends/issues/485 is fixed and released.
       - uses: r-lib/actions/setup-r@v2
         with:
           r-version: ${{ matrix.config.r }}
           http-user-agent: ${{ matrix.config.http-user-agent }}
-          use-public-rspm: true
+          use-public-rspm: always
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
