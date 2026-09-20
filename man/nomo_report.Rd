@@ -52,6 +52,14 @@ statistical conclusions.
 
 Reports can be rendered from complete, paused, or blocked \code{nomo_run} objects.
 Incomplete stages are labeled as such rather than silently omitted.
+
+\code{nomo_report()} behaves the same from the console, a script, or a chunk
+inside another R Markdown or Quarto document, such as a thesis chapter.
+Rendering from inside a document nests two renders that share knitr's global
+state, so the report is rendered with knitr's default chunk options, which
+its own template then sets, and the calling document's options are restored
+afterwards. The calling document's chunk options therefore cannot change the
+report, and rendering the report does not change the calling document.
 }
 \examples{
 \donttest{

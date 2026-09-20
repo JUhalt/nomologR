@@ -21,11 +21,6 @@ knitr::opts_chunk$set(
 # skipped, with this explanation, when pandoc is unavailable.
 pandoc_ok <- rmarkdown::pandoc_available()
 
-# nomo_report() renders its own R Markdown template. Calling it from inside
-# another knitr document (such as this vignette) nests two renders, so knitr
-# must allow the template's chunk labels to repeat this document's labels.
-# Removing the need for this setting is tracked in the issue linked below.
-options(knitr.duplicate.label = "allow")
 report_dir <- tempfile("nomologR-reports-")
 dir.create(report_dir)
 ```
@@ -98,12 +93,16 @@ record or thesis appendix, or shared with a collaborator without a separate
 figures directory or a network dependency. The `title` argument becomes the
 document title.
 
-Calling `nomo_report()` from the R console or a script needs no extra setup.
-Calling it from a chunk inside your own R Markdown or Quarto document (for
-example, a thesis chapter) currently requires
-`options(knitr.duplicate.label = "allow")` first, as this article does. Removing
-that requirement is tracked in
-[issue #40](https://github.com/JUhalt/nomologR/issues/40).
+`nomo_report()` works the same from the console, a script, or a chunk inside
+your own R Markdown or Quarto document, such as a thesis chapter. This article
+renders reports from its own chunks and needs no special setup.
+
+Rendering a report from inside another document nests two renders that share
+knitr's state, so `nomo_report()` isolates them: the report is rendered with
+knitr's default chunk options, which its template then sets for itself, and
+your document's options are restored afterwards. Your chunk options therefore
+do not change the report, and rendering the report does not change your
+document.
 
 ## What the report contains
 

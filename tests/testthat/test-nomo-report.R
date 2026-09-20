@@ -1070,3 +1070,138 @@ test_that("closeout B: report dependency guards distinguish rmarkdown, knitr, an
     "Pandoc is required"
   )
 })
+
+
+test_that("nomo_report isolates knitr state only while knitting (#40)", {
+  skip_if_not_installed("knitr")
+
+  saved_chunk <- knitr::opts_chunk$get()
+  saved_options <- options(
+    knitr.in.progress = NULL,
+    knitr.duplicate.label = NULL
+  )
+  on.exit(
+    {
+      options(saved_options)
+      knitr::opts_chunk$restore(saved_chunk)
+    },
+    add = TRUE
+  )
+
+  # Outside a knit there is no shared state to protect, so nothing is touched.
+  knitr::opts_chunk$set(comment = "#>")
+  restore_outside <- nomologR:::nomo_report_isolate_knitr()
+  expect_null(getOption("knitr.duplicate.label"))
+  expect_identical(knitr::opts_chunk$get("comment"), "#>")
+  restore_outside()
+  expect_identical(knitr::opts_chunk$get("comment"), "#>")
+
+  # Inside a knit the report is rendered with knitr's defaults, which its own
+  # template then sets for itself, so the caller's chunk options cannot reach
+  # it and duplicate chunk labels across the two documents are allowed.
+  knitr::opts_chunk$restore()
+  options(knitr.in.progress = TRUE)
+  knitr::opts_chunk$set(dev = "svg", fig.width = 3.1, comment = "#>")
+
+  restore_inside <- nomologR:::nomo_report_isolate_knitr()
+  expect_identical(getOption("knitr.duplicate.label"), "allow")
+  expect_null(knitr::opts_chunk$get("dev"))
+  expect_identical(knitr::opts_chunk$get("comment"), "##")
+  expect_equal(knitr::opts_chunk$get("fig.width"), 7)
+
+  # The caller's state comes back, including an unset duplicate-label option.
+  restore_inside()
+  expect_null(getOption("knitr.duplicate.label"))
+  expect_identical(knitr::opts_chunk$get("dev"), "svg")
+  expect_equal(knitr::opts_chunk$get("fig.width"), 3.1)
+  expect_identical(knitr::opts_chunk$get("comment"), "#>")
+})
+
+
+test_that("nomo_report renders from inside a knitted document (#40)", {
+  skip_on_cran()
+  skip_if_not_installed("rmarkdown")
+  skip_if_not_installed("knitr")
+  skip_if_not(rmarkdown::pandoc_available())
+
+  run <- make_m9_report_run()
+
+  dir <- tempfile("nomo-nested-report-")
+  dir.create(dir)
+  on.exit(unlink(dir, recursive = TRUE), add = TRUE)
+
+  # A calling document with no workaround of any kind: it reuses a chunk label
+  # the report template also uses, and sets chunk options that would replace
+  # the report's figures with an image format its template never asked for.
+  #
+  # The calling document sets `dev = "svg"` but never draws a figure of its
+  # own, deliberately. What is under test is what reaches the report, and
+  # svg() is not operational everywhere: on a macOS runner without cairo it
+  # falls back to PNG for the file while still writing the .svg name into
+  # the markdown, so a figure here would fail pandoc for a reason that has
+  # nothing to do with nomo_report().
+  outer <- file.path(dir, "outer.Rmd")
+  writeLines(
+    r"(---
+title: "Thesis chapter"
+output: html_document
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(dev = "svg", fig.width = 3.1, comment = "#>")
+duplicate_label_before <- getOption("knitr.duplicate.label")
+```
+
+```{r report}
+inner_file <- nomo_report(
+  run,
+  file = file.path(report_dir, "nested.html"),
+  include_session = FALSE,
+  quiet = TRUE
+)
+
+caller_state <- list(
+  dev = knitr::opts_chunk$get("dev"),
+  fig_width = knitr::opts_chunk$get("fig.width"),
+  comment = knitr::opts_chunk$get("comment"),
+  duplicate_label_restored = identical(
+    getOption("knitr.duplicate.label"),
+    duplicate_label_before
+  )
+)
+```
+)",
+    outer
+  )
+
+  envir <- new.env(parent = globalenv())
+  envir$run <- run
+  envir$report_dir <- dir
+  envir$nomo_report <- nomo_report
+
+  outer_html <- rmarkdown::render(
+    outer,
+    output_dir = dir,
+    intermediates_dir = dir,
+    envir = envir,
+    quiet = TRUE
+  )
+
+  # The nested render succeeds and keeps its own figures.
+  expect_true(file.exists(envir$inner_file))
+  inner <- paste(readLines(envir$inner_file, warn = FALSE), collapse = "\n")
+  png_figures <- gregexpr("data:image/png;base64", inner, fixed = TRUE)[[1]]
+  expect_gt(sum(png_figures > 0L), 0L)
+  expect_false(grepl("Plot unavailable", inner, fixed = TRUE))
+
+  # Pandoc wraps long heading lines, so compare on normalized whitespace.
+  inner_text <- gsub("\\s+", " ", inner)
+  expect_true(grepl("Methods and citations", inner_text, fixed = TRUE))
+
+  # Rendering the report leaves the calling document's state as it found it.
+  expect_identical(envir$caller_state$dev, "svg")
+  expect_equal(envir$caller_state$fig_width, 3.1)
+  expect_identical(envir$caller_state$comment, "#>")
+  expect_true(envir$caller_state$duplicate_label_restored)
+  expect_true(file.exists(outer_html))
+})

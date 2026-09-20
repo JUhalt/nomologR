@@ -601,6 +601,42 @@ nomo_report_namespace_available <- function(pkg) {
 }
 
 
+# Rendering the report from inside another knitr document (a thesis chapter,
+# say) nests two renders that share knitr's global state. Two things go wrong
+# without this, and the second is silent:
+#
+#   1. The outer document's chunk labels are already registered, so the
+#      template's own labels collide and the render stops with "Duplicate
+#      chunk label".
+#   2. The nested render inherits the outer document's chunk options. An outer
+#      `dev = "svg"`, for example, removes every figure from the report while
+#      it still renders and reports success.
+#
+# Chunk options are therefore reset to knitr's defaults for the report, which
+# sets its own options in its template, and the caller's options are restored
+# afterwards. rmarkdown::render() restores chunk options on exit itself, so
+# that half of the restore is a guarantee rather than the only protection; the
+# duplicate-label option is not one it touches.
+#
+# Returns a function that puts the caller's knitr state back; the caller runs
+# it on exit. Outside a knit it changes nothing and the restore is a no-op.
+nomo_report_isolate_knitr <- function() {
+  if (!isTRUE(getOption("knitr.in.progress"))) {
+    return(invisible(function() invisible(NULL)))
+  }
+
+  previous_options <- options(knitr.duplicate.label = "allow")
+  saved_chunk_options <- knitr::opts_chunk$get()
+  knitr::opts_chunk$restore()
+
+  invisible(function() {
+    options(previous_options)
+    knitr::opts_chunk$restore(saved_chunk_options)
+    invisible(NULL)
+  })
+}
+
+
 nomo_report_pandoc_available <- function() {
   rmarkdown::pandoc_available()
 }
@@ -761,6 +797,14 @@ nomo_report_prepare_template <- function(template, input, title) {
 #' Reports can be rendered from complete, paused, or blocked `nomo_run` objects.
 #' Incomplete stages are labeled as such rather than silently omitted.
 #'
+#' `nomo_report()` behaves the same from the console, a script, or a chunk
+#' inside another R Markdown or Quarto document, such as a thesis chapter.
+#' Rendering from inside a document nests two renders that share knitr's global
+#' state, so the report is rendered with knitr's default chunk options, which
+#' its own template then sets, and the calling document's options are restored
+#' afterwards. The calling document's chunk options therefore cannot change the
+#' report, and rendering the report does not change the calling document.
+#'
 #' @param x An object created by [nomo_run()].
 #' @param file Output HTML path.
 #' @param title Report title.
@@ -869,6 +913,9 @@ nomo_report <- function(x,
       )
     }
   }
+
+  restore_knitr <- nomo_report_isolate_knitr()
+  on.exit(restore_knitr(), add = TRUE)
 
   rendered <- rmarkdown::render(
     input = input,
