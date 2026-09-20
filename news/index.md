@@ -16,6 +16,16 @@
   therefore renders the same from the console, a script, or a chunk, and
   rendering one does not change the document that asked for it.
 
+- Restored full executable-line coverage by testing every
+  [`nomo_compare()`](https://juhalt.github.io/nomologR/reference/nomo_compare.md)
+  failure guard ([\#54](https://github.com/JUhalt/nomologR/issues/54)).
+  These branches handle a failure inside lavaan or semTools rather than
+  a researcher-facing input, and several of them produce the explanation
+  a researcher reads when a check cannot be run, such as why a nesting
+  check was skipped or why a difference test is unavailable. Wording
+  that has never executed can be wrong without anyone noticing, so those
+  sentences are now asserted against real fitted objects.
+
 ## nomologR 0.2.0
 
 nomologR 0.2.0 makes the workflow research-backed from historical to
