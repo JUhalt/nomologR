@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">nomologR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -71,7 +71,7 @@
       <h1>Archiving a nomologR workflow with nomo_report()</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/JUhalt/nomologR/blob/v0.2.0/vignettes/reproducible-report.Rmd" class="external-link"><code>vignettes/reproducible-report.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/JUhalt/nomologR/blob/master/vignettes/reproducible-report.Rmd" class="external-link"><code>vignettes/reproducible-report.Rmd</code></a></small>
       <div class="d-none name"><code>reproducible-report.Rmd</code></div>
     </div>
 
@@ -166,11 +166,16 @@ preregistered plan might:</p>
 project record or thesis appendix, or shared with a collaborator without
 a separate figures directory or a network dependency. The
 <code>title</code> argument becomes the document title.</p>
-<p>Calling <code><a href="../reference/nomo_report.html">nomo_report()</a></code> from the R console or a script
-needs no extra setup. Calling it from a chunk inside your own R Markdown
-or Quarto document (for example, a thesis chapter) currently requires
-<code>options(knitr.duplicate.label = "allow")</code> first, as this
-article does. Removing that requirement is tracked in <a href="https://github.com/JUhalt/nomologR/issues/40" class="external-link">issue #40</a>.</p>
+<p><code><a href="../reference/nomo_report.html">nomo_report()</a></code> works the same from the console, a script,
+or a chunk inside your own R Markdown or Quarto document, such as a
+thesis chapter. This article renders reports from its own chunks and
+needs no special setup.</p>
+<p>Rendering a report from inside another document nests two renders
+that share knitr’s state, so <code><a href="../reference/nomo_report.html">nomo_report()</a></code> isolates them:
+the report is rendered with knitr’s default chunk options, which its
+template then sets for itself, and your document’s options are restored
+afterwards. Your chunk options therefore do not change the report, and
+rendering the report does not change your document.</p>
 </div>
 <div class="section level2">
 <h2 id="what-the-report-contains">What the report contains<a class="anchor" aria-label="anchor" href="#what-the-report-contains"></a>
@@ -260,7 +265,7 @@ exists stops unless <code>overwrite = TRUE</code> is supplied:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/nomo_report.html">nomo_report</a></span><span class="op">(</span><span class="va">run</span>, file <span class="op">=</span> <span class="va">report_file</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #BBBB00; font-weight: bold;">Error</span><span style="font-weight: bold;">:</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BBBB00;">!</span> Report file already exists: /tmp/Rtmp7IGpJO/nomologR-reports-1e99139f2640/construct-validation-report.html. Use `overwrite = TRUE` to replace it.</span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #BBBB00;">!</span> Report file already exists: /tmp/RtmpEUdCSk/nomologR-reports-1f9fd67be5d/construct-validation-report.html. Use `overwrite = TRUE` to replace it.</span></span></code></pre></div>
 <p>As elsewhere in <code>nomologR</code>, consequential or destructive
 behavior is not silently assumed.</p>
 </div>

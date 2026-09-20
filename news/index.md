@@ -1,5 +1,21 @@
 # Changelog
 
+## nomologR 0.2.0.9000 (development)
+
+- [`nomo_report()`](https://juhalt.github.io/nomologR/reference/nomo_report.md)
+  now works from inside a knitted R Markdown or Quarto document, such as
+  a thesis chapter, with no workaround in the calling document
+  ([\#40](https://github.com/JUhalt/nomologR/issues/40)). A nested
+  render shares knitr’s state with the document that started it, which
+  previously stopped the report with a duplicate chunk label, and which
+  silently dropped every figure from the report when the calling
+  document set a graphics device its template did not expect. The report
+  is now rendered with knitr’s default chunk options, which its own
+  template then sets for itself, and the calling document’s chunk
+  options and duplicate-label setting are restored afterwards. A report
+  therefore renders the same from the console, a script, or a chunk, and
+  rendering one does not change the document that asked for it.
+
 ## nomologR 0.2.0
 
 nomologR 0.2.0 makes the workflow research-backed from historical to

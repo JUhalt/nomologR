@@ -95,14 +95,19 @@ project record or thesis appendix, or shared with a collaborator without
 a separate figures directory or a network dependency. The `title`
 argument becomes the document title.
 
-Calling
 [`nomo_report()`](https://juhalt.github.io/nomologR/reference/nomo_report.md)
-from the R console or a script needs no extra setup. Calling it from a
-chunk inside your own R Markdown or Quarto document (for example, a
-thesis chapter) currently requires
-`options(knitr.duplicate.label = "allow")` first, as this article does.
-Removing that requirement is tracked in [issue
-\#40](https://github.com/JUhalt/nomologR/issues/40).
+works the same from the console, a script, or a chunk inside your own R
+Markdown or Quarto document, such as a thesis chapter. This article
+renders reports from its own chunks and needs no special setup.
+
+Rendering a report from inside another document nests two renders that
+share knitr’s state, so
+[`nomo_report()`](https://juhalt.github.io/nomologR/reference/nomo_report.md)
+isolates them: the report is rendered with knitr’s default chunk
+options, which its template then sets for itself, and your document’s
+options are restored afterwards. Your chunk options therefore do not
+change the report, and rendering the report does not change your
+document.
 
 ## What the report contains
 
@@ -202,7 +207,7 @@ stops unless `overwrite = TRUE` is supplied:
 
 nomo_report(run, file = report_file)
 #> Error:
-#> ! Report file already exists: /tmp/Rtmp7IGpJO/nomologR-reports-1e99139f2640/construct-validation-report.html. Use `overwrite = TRUE` to replace it.
+#> ! Report file already exists: /tmp/RtmpEUdCSk/nomologR-reports-1f9fd67be5d/construct-validation-report.html. Use `overwrite = TRUE` to replace it.
 ```
 
 As elsewhere in `nomologR`, consequential or destructive behavior is not
