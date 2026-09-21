@@ -76,8 +76,13 @@ test_that("every DOI is well formed, and only a book may lack one", {
   present <- bib$doi[!is.na(bib$doi)]
   expect_true(all(grepl("^10\\.[0-9]{4,9}/[^[:space:]]+$", present)))
 
-  # A missing DOI has to be a deliberate exception, not an oversight.
-  expect_equal(bib$key[is.na(bib$doi)], "nunnally_bernstein_1994")
+  # A missing DOI has to be a deliberate exception, not an oversight. Books and
+  # book chapters predate DOIs or were never assigned one, so they are listed
+  # here individually rather than allowed as a category.
+  expect_equal(
+    sort(bib$key[is.na(bib$doi)]),
+    c("gorsuch_1983", "hancock_mueller_2001", "nunnally_bernstein_1994")
+  )
 })
 
 

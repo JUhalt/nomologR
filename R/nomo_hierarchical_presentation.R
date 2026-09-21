@@ -36,6 +36,19 @@ print.nomo_hierarchical <- function(x, digits = 3, ...) {
   cat("\nSubscales\n")
   print(sub, n = Inf, width = Inf)
 
+  if (!is.null(x$factors) && nrow(x$factors)) {
+    fac <- x$factors[, c(
+      "factor", "role", "factor_determinacy", "min_competing_r",
+      "construct_replicability"
+    )]
+    for (nm in c("factor_determinacy", "min_competing_r",
+                 "construct_replicability")) {
+      fac[[nm]] <- round(fac[[nm]], digits)
+    }
+    cat("\nFactor scores\n")
+    print(fac, n = Inf, width = Inf)
+  }
+
   flagged <- x$notes[x$notes$severity %in% c("review", "concern"), , drop = FALSE]
   if (nrow(flagged)) {
     cat("\nNotes\n")
@@ -174,11 +187,14 @@ plot.nomo_hierarchical <- function(x, type = c("variance", "loadings"), ...) {
 #' @export
 nomo_table.nomo_hierarchical <- function(
     x,
-    type = c("indices", "subscales", "loadings", "notes", "decision_log"),
+    type = c(
+      "indices", "subscales", "factors", "loadings", "notes", "decision_log"
+    ),
     ...) {
   type <- match.arg(type)
 
   if (type == "indices") return(x$indices)
+  if (type == "factors") return(x$factors)
   if (type == "subscales") return(x$subscales)
   if (type == "loadings") return(x$loadings)
   if (type == "notes") return(x$notes)

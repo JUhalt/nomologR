@@ -77,9 +77,51 @@ relatively unbiased estimates from a unidimensional model.
 as a correlated-factors or higher-order model of the same items, including
 when it is not the model that generated the data (Reise, 2012), and a
 higher-order model is a constrained version of the bifactor model (Yung,
-Thissen, & McLeod, 1999). Compare the alternatives with \code{\link[=nomo_compare]{nomo_compare()}} and
-choose on substantive grounds, not on fit alone. \code{nomo_hierarchical()} does
-not choose.
+Thissen, & McLeod, 1999). Bonifay, Lane, and Reise (2017) treat that
+tendency to show superior goodness of fit as a particular concern, and note
+that the superior performance "may be a symptom of overfitting", capturing
+unwanted noise as well as real trends. Murray and Johnson (2013) compared
+these two structures directly and found the comparison itself biased: unless
+there was essentially no unmodelled complexity, their simulation favored the
+bifactor model even when a higher-order model generated the data, and they
+concluded that the choice "should not rely on which is better fitting".
+Compare the alternatives with
+\code{\link[=nomo_compare]{nomo_compare()}} and choose on substantive grounds, not on fit alone.
+\code{nomo_hierarchical()} does not choose.
+
+\strong{Factor scores: two indices that answer different questions.} The
+\code{factors} table reports, for the general factor and each group factor,
+factor determinacy and construct replicability.
+
+\emph{Factor determinacy} (Beauducel, 2011; Rodriguez, Reise, & Haviland, 2016)
+is the correlation between a factor and its estimated factor score. It is
+computed from the whole model-reproduced correlation matrix, so a group
+factor's score estimate can use the other items to partial out the general
+factor. \code{determinacy_r2} is its square, the proportion of variance in factor
+scores explained by the factor, and \code{min_competing_r} is the minimum possible
+correlation between two equally valid sets of factor scores, twice the
+squared determinacy minus one. A negative value there means two researchers
+scoring the same data could rank people in opposite orders and both be
+consistent with the model.
+
+\emph{Construct replicability} H (Hancock & Mueller, 2001) is the proportion of
+variance in a factor explainable by its own indicators when optimally
+weighted. It uses only that factor's loadings and treats the remainder of
+each item as uncorrelated residual.
+
+The two are the same quantity when the data are unidimensional, and can
+differ under a bifactor model, where an item's residual with respect to one
+factor contains the other factors and is correlated across items. Rodriguez
+et al. (2016) state this and decline to prefer either, so both are reported.
+Determinacy is always computed from the model-reproduced matrix, whatever
+\code{obs.var} is set to, because that is what the formula is defined on.
+
+Gorsuch (1983) recommended using factor score estimates only when
+determinacy exceeds .90, with competing score sets correlating above .70, and
+Hancock and Mueller (2001) proposed .70 as a standard for H. These are
+reported as their authors' recommendations where a value falls below them,
+as with fixed fit-index cutoffs elsewhere in the package, and are never
+applied as rules.
 }
 \examples{
 set.seed(2026)
@@ -103,8 +145,29 @@ h
 nomo_table(h, "subscales")
 }
 \references{
+Beauducel, A. (2011). Indeterminacy of factor score estimates in slightly
+misspecified confirmatory factor models. \emph{Journal of Modern Applied
+Statistical Methods, 10}(2), 583-598.
+\doi{10.22237/jmasm/1320120900}
+
+Bonifay, W., Lane, S. P., & Reise, S. P. (2017). Three concerns with applying
+a bifactor model as a structure of psychopathology. \emph{Clinical Psychological
+Science, 5}(1), 184-186. \doi{10.1177/2167702616657069}
+
+Gorsuch, R. L. (1983). \emph{Factor analysis} (2nd ed.). Lawrence Erlbaum.
+
+Hancock, G. R., & Mueller, R. O. (2001). Rethinking construct reliability
+within latent variable systems. In R. Cudeck, S. du Toit, & D. Sorbom (Eds.),
+\emph{Structural equation modeling: Present and future} (pp. 195-216). Scientific
+Software International.
+
 Holzinger, K. J., & Swineford, F. (1937). The bi-factor method.
 \emph{Psychometrika, 2}(1), 41-54. \doi{10.1007/BF02287965}
+
+Murray, A. L., & Johnson, W. (2013). The limitations of model fit in
+comparing the bi-factor versus higher-order models of human cognitive
+ability structure. \emph{Intelligence, 41}(5), 407-422.
+\doi{10.1016/j.intell.2013.06.004}
 
 Reise, S. P. (2012). The rediscovery of bifactor measurement models.
 \emph{Multivariate Behavioral Research, 47}(5), 667-696.
