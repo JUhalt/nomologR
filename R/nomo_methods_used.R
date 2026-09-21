@@ -205,6 +205,20 @@ nomo_methods_used.nomo_hierarchical <- function(x, ...) {
   if (is.data.frame(x$subscales) && nrow(x$subscales)) {
     used <- c(used, "omega_hierarchical_subscale")
   }
+
+  # Credited from the values actually produced. A run whose reproduced matrix
+  # was singular, or whose loadings made H undefined, reports NA and must not
+  # be cited as having used the index.
+  factors <- x$factors
+  if (is.data.frame(factors) && nrow(factors)) {
+    if (any(is.finite(factors$factor_determinacy))) {
+      used <- c(used, "factor_determinacy")
+    }
+    if (any(is.finite(factors$construct_replicability))) {
+      used <- c(used, "construct_replicability")
+    }
+  }
+
   if (identical(x$structure, "higher_order")) used <- c(used, "schmid_leiman")
   used
 }

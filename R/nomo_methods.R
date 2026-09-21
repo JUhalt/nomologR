@@ -53,6 +53,15 @@ nomo_bibliography <- function() {
       "10.1111/j.2044-8317.1950.tb00285.x"
     ),
     nomo_bib_entry(
+      "beauducel_2011", "Beauducel (2011)",
+      paste(
+        "Beauducel, A. (2011). Indeterminacy of factor score estimates in",
+        "slightly misspecified confirmatory factor models. Journal of Modern",
+        "Applied Statistical Methods, 10(2), 583-598."
+      ),
+      "10.22237/jmasm/1320120900"
+    ),
+    nomo_bib_entry(
       "bell_2024", "Bell, Chalmers, & Flora (2024)",
       paste(
         "Bell, S. M., Chalmers, R. P., & Flora, D. B. (2024). The impact of",
@@ -96,6 +105,15 @@ nomo_bibliography <- function() {
         "research: A primer. Frontiers in Public Health, 6, 149."
       ),
       "10.3389/fpubh.2018.00149"
+    ),
+    nomo_bib_entry(
+      "bonifay_2017", "Bonifay, Lane, & Reise (2017)",
+      paste(
+        "Bonifay, W., Lane, S. P., & Reise, S. P. (2017). Three concerns with",
+        "applying a bifactor model as a structure of psychopathology. Clinical",
+        "Psychological Science, 5(1), 184-186."
+      ),
+      "10.1177/2167702616657069"
     ),
     nomo_bib_entry(
       "braeken_vanassen_2017", "Braeken & van Assen (2017)",
@@ -312,6 +330,13 @@ nomo_bibliography <- function() {
       "10.2307/3151312"
     ),
     nomo_bib_entry(
+      "gorsuch_1983", "Gorsuch (1983)",
+      paste(
+        "Gorsuch, R. L. (1983). Factor analysis (2nd ed.). Lawrence Erlbaum."
+      ),
+      NA_character_
+    ),
+    nomo_bib_entry(
       "green_yang_2009", "Green & Yang (2009)",
       paste(
         "Green, S. B., & Yang, Y. (2009). Reliability of summed item scores",
@@ -327,6 +352,16 @@ nomo_bibliography <- function() {
         "analysis. Psychometrika, 19(2), 149-161."
       ),
       "10.1007/BF02289162"
+    ),
+    nomo_bib_entry(
+      "hancock_mueller_2001", "Hancock & Mueller (2001)",
+      paste(
+        "Hancock, G. R., & Mueller, R. O. (2001). Rethinking construct",
+        "reliability within latent variable systems. In R. Cudeck, S. du Toit, &",
+        "D. Sorbom (Eds.), Structural equation modeling: Present and future",
+        "(pp. 195-216). Scientific Software International."
+      ),
+      NA_character_
     ),
     nomo_bib_entry(
       "henseler_2015", "Henseler, Ringle, & Sarstedt (2015)",
@@ -504,6 +539,15 @@ nomo_bibliography <- function() {
         "inquiry into score meaning. American Psychologist, 50(9), 741-749."
       ),
       "10.1037/0003-066X.50.9.741"
+    ),
+    nomo_bib_entry(
+      "murray_johnson_2013", "Murray & Johnson (2013)",
+      paste(
+        "Murray, A. L., & Johnson, W. (2013). The limitations of model fit in",
+        "comparing the bi-factor versus higher-order models of human cognitive",
+        "ability structure. Intelligence, 41(5), 407-422."
+      ),
+      "10.1016/j.intell.2013.06.004"
     ),
     nomo_bib_entry(
       "nosek_2018", "Nosek et al. (2018)",
@@ -1161,10 +1205,12 @@ nomo_methods_registry <- function() {
       paste(
         "General and group factors must be orthogonal. It usually fits at least",
         "as well as correlated-factors models of the same items even when it",
-        "did not generate the data, so fit alone does not choose it."
+        "did not generate the data, so fit alone does not choose it; Bonifay,",
+        "Lane, and Reise (2017) treat that superior fit as possible",
+        "overfitting."
       ),
       "nomo_model()", "lavaan",
-      c("holzinger_swineford_1937", "reise_2012")
+      c("holzinger_swineford_1937", "reise_2012", "bonifay_2017")
     ),
     nomo_method_entry(
       "higher_order_model", "cfa",
@@ -1174,10 +1220,12 @@ nomo_methods_registry <- function() {
       paste(
         "Needs at least three first-order factors; with exactly three it fits",
         "exactly as well as correlated factors. It is a constrained version of",
-        "the bifactor model."
+        "the bifactor model, and Murray and Johnson (2013) found the fit",
+        "comparison between the two biased in favor of the bifactor model",
+        "whenever complexity is left unmodelled."
       ),
       "nomo_model()", "lavaan",
-      c("yung_1999", "reise_2012")
+      c("yung_1999", "reise_2012", "murray_johnson_2013")
     ),
     nomo_method_entry(
       "holdout_split", "cfa",
@@ -1335,6 +1383,38 @@ nomo_methods_registry <- function() {
       ),
       "nomo_hierarchical()", "nomologR",
       c("reise_2012", "rodriguez_2016")
+    ),
+    nomo_method_entry(
+      "factor_determinacy", "reliability",
+      "Factor determinacy",
+      "contemporary", "supporting",
+      "Correlation between a factor and its estimated factor score.",
+      paste(
+        "Computed from the model-reproduced correlation matrix, so it does not",
+        "depend on the omega denominator. Gorsuch's (1983) recommendation that",
+        "scores be used above .90, and that competing score sets correlate",
+        "above .70, is reported as his recommendation and not applied."
+      ),
+      "nomo_hierarchical()", "nomologR",
+      c("beauducel_2011", "gorsuch_1983", "rodriguez_2016")
+    ),
+    nomo_method_entry(
+      "construct_replicability", "reliability",
+      "Construct replicability (H)",
+      "contemporary", "supporting",
+      paste(
+        "Proportion of variance in a factor explainable by its own indicators",
+        "when optimally weighted."
+      ),
+      paste(
+        "Uses only that factor's loadings and treats the rest of each item as",
+        "uncorrelated residual, which holds for a unidimensional construct. It",
+        "equals squared factor determinacy in that case and can differ under a",
+        "bifactor model. Hancock and Mueller's (2001) standard of .70 is",
+        "reported as their standard and not applied."
+      ),
+      "nomo_hierarchical()", "nomologR",
+      c("hancock_mueller_2001", "rodriguez_2016")
     ),
     nomo_method_entry(
       "puc", "reliability",

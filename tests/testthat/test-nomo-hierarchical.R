@@ -642,3 +642,198 @@ test_that("nomo_methods() credits hierarchical methods only where used", {
   h_ho <- nomo_methods(nomo_hierarchical(higher))$id
   expect_true(all(c("higher_order_model", "schmid_leiman") %in% h_ho))
 })
+
+
+# Factor determinacy and construct replicability (#56) -------------------------
+
+# Standardized loadings from Table 2 of Rodriguez, Reise and Haviland (2016),
+# taken from Osman et al. (2009): the MASC, 39 items, one general factor and
+# four group factors. The paper publishes the determinacy and replicability
+# values these loadings produce, so this table is a reference computation
+# rather than a fixture of our own making.
+masc_table2 <- function() {
+  general <- c(
+    .38, .82, .82, .77, .74, .98, .77, .79, .66, .73, .82, .98,
+    .24, .56, .06, .51, .46, .68, .59, .71, .60,
+    .55, .83, .97, .90, .81, .90, .60, .78, .65,
+    .60, .84, .66, .73, .70, .76, .74, .86, .76
+  )
+  ps <- c(-.13, .10, .38, .35, .28, .02, .28, .32, .39, .19, .42, .11)
+  ha <- c(.59, .43, .78, .71, .45, .13, .43, .17, .50)
+  sa <- c(.75, .47, .06, .31, .51, .36, .27, .28, .17)
+  sp <- c(.24, .36, .26, .09, .10, .28, .16, .11, .41)
+
+  items <- sprintf("i%02d", seq_along(general))
+  groups <- list(
+    PS = items[1:12], HA = items[13:21], SA = items[22:30], SP = items[31:39]
+  )
+  group_std <- c(ps, ha, sa, sp)
+  group_of <- rep(names(groups), times = lengths(groups))
+
+  names(general) <- items
+  names(group_std) <- items
+  names(group_of) <- items
+
+  lambda <- cbind(
+    GEN = general,
+    PS = ifelse(group_of == "PS", group_std, 0),
+    HA = ifelse(group_of == "HA", group_std, 0),
+    SA = ifelse(group_of == "SA", group_std, 0),
+    SP = ifelse(group_of == "SP", group_std, 0)
+  )
+  implied <- lambda %*% t(lambda)
+  diag(implied) <- 1
+  dimnames(implied) <- list(items, items)
+
+  list(
+    matrices = list(implied = implied),
+    structure = list(type = "bifactor", general = "GEN", groups = groups,
+                     items = items),
+    items = items,
+    general_std = general,
+    group_std = group_std,
+    group_of = group_of
+  )
+}
+
+
+test_that("factor determinacy and construct replicability reproduce the published MASC values", {
+  masc <- masc_table2()
+
+  out <- nomologR:::nomo_hierarchical_factor_scores(
+    matrices = masc$matrices,
+    structure = masc$structure,
+    items = masc$items,
+    general_std = masc$general_std,
+    group_std = masc$group_std,
+    group_of = masc$group_of
+  )
+
+  expect_identical(out$factor, c("GEN", "PS", "HA", "SA", "SP"))
+  expect_identical(out$role, c("general", rep("group", 4L)))
+  expect_identical(out$n_items, c(39L, 12L, 9L, 9L, 9L))
+
+  # Rodriguez et al. (2016), p. 142: factor determinacy for the general factor
+  # and PS, HA, SA, SP.
+  expect_equal(round(out$factor_determinacy, 2), c(.99, .86, .92, .95, .80))
+
+  # Same page: the minimum possible correlation between two sets of equally
+  # valid factor scores, 2 * rho^2 - 1. The paper squares loadings already
+  # rounded to two decimals, so PS differs in the second decimal.
+  expect_equal(round(out$min_competing_r, 2), c(.98, .47, .71, .80, .28))
+
+  # Rodriguez et al. (2016), p. 143: H for the general factor and each group.
+  expect_equal(round(out$construct_replicability, 2), c(.99, .52, .81, .70, .39))
+})
+
+
+test_that("determinacy and replicability are the same quantity only without group factors", {
+  masc <- masc_table2()
+
+  # Hancock and Mueller derived H for a unidimensional construct, where it is
+  # the squared correlation between the factor and an optimally weighted
+  # composite: exactly what determinacy squares to. Removing the group factors
+  # must therefore make the two agree.
+  flat <- masc
+  flat$structure$groups <- list()
+  flat$group_std[] <- 0
+  flat$group_of[] <- NA_character_
+  lambda <- matrix(flat$general_std, ncol = 1L)
+  implied <- lambda %*% t(lambda)
+  diag(implied) <- 1
+  dimnames(implied) <- list(flat$items, flat$items)
+  flat$matrices$implied <- implied
+
+  out <- nomologR:::nomo_hierarchical_factor_scores(
+    matrices = flat$matrices,
+    structure = flat$structure,
+    items = flat$items,
+    general_std = flat$general_std,
+    group_std = flat$group_std,
+    group_of = flat$group_of
+  )
+
+  expect_equal(
+    out$determinacy_r2[[1L]],
+    out$construct_replicability[[1L]],
+    tolerance = 1e-10
+  )
+
+  # With the group factors present they are not the same quantity, and the
+  # difference is not rounding: H cannot see the group factors at all.
+  bifactor <- nomologR:::nomo_hierarchical_factor_scores(
+    matrices = masc$matrices,
+    structure = masc$structure,
+    items = masc$items,
+    general_std = masc$general_std,
+    group_std = masc$group_std,
+    group_of = masc$group_of
+  )
+
+  expect_equal(bifactor$construct_replicability[[1L]], out$construct_replicability[[1L]])
+  expect_lt(bifactor$determinacy_r2[[1L]], out$determinacy_r2[[1L]])
+})
+
+
+test_that("determinacy and replicability are credited only when they produced values", {
+  pop <- hier_bifactor_population()
+  fit <- hier_population_fit(
+    nomo_model(hier_groups, structure = "bifactor", general = "G"),
+    pop$sigma
+  )
+
+  h <- nomo_hierarchical(fit)
+  credited <- nomo_methods_used(h)
+  expect_true("factor_determinacy" %in% credited)
+  expect_true("construct_replicability" %in% credited)
+
+  # Determinacy does not depend on the omega denominator, because it is defined
+  # on the model-reproduced matrix.
+  expect_equal(
+    nomo_hierarchical(fit, obs.var = FALSE)$factors$factor_determinacy,
+    h$factors$factor_determinacy
+  )
+
+  # A run that could not produce either value must not be cited for it.
+  none <- h
+  none$factors$factor_determinacy <- NA_real_
+  none$factors$construct_replicability <- NA_real_
+  expect_false("factor_determinacy" %in% nomo_methods_used(none))
+  expect_false("construct_replicability" %in% nomo_methods_used(none))
+
+  # The registry entries exist and carry their sources.
+  reg <- nomo_methods(h)
+  expect_true(all(c("factor_determinacy", "construct_replicability") %in% reg$id))
+})
+
+
+test_that("undefined determinacy and replicability are NA with a note, not guesses", {
+  masc <- masc_table2()
+
+  # A standardized loading at one leaves no residual for H to divide by.
+  heywood <- masc
+  heywood$general_std[[1L]] <- 1
+  out <- nomologR:::nomo_hierarchical_factor_scores(
+    matrices = heywood$matrices,
+    structure = heywood$structure,
+    items = heywood$items,
+    general_std = heywood$general_std,
+    group_std = heywood$group_std,
+    group_of = heywood$group_of
+  )
+  expect_true(is.na(out$construct_replicability[[1L]]))
+
+  notes <- nomologR:::nomo_hierarchical_factor_score_notes(
+    tibble::tibble(topic = character(), severity = character(), note = character()),
+    function(notes, topic, severity, note) {
+      tibble::add_row(notes, topic = topic, severity = severity, note = note)
+    },
+    out
+  )
+  expect_true(any(notes$severity == "concern"))
+  expect_match(
+    paste(notes$note, collapse = " "),
+    "NA rather than guessed",
+    fixed = TRUE
+  )
+})

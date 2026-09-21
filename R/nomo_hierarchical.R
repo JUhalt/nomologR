@@ -44,9 +44,51 @@
 #' as a correlated-factors or higher-order model of the same items, including
 #' when it is not the model that generated the data (Reise, 2012), and a
 #' higher-order model is a constrained version of the bifactor model (Yung,
-#' Thissen, & McLeod, 1999). Compare the alternatives with [nomo_compare()] and
-#' choose on substantive grounds, not on fit alone. `nomo_hierarchical()` does
-#' not choose.
+#' Thissen, & McLeod, 1999). Bonifay, Lane, and Reise (2017) treat that
+#' tendency to show superior goodness of fit as a particular concern, and note
+#' that the superior performance "may be a symptom of overfitting", capturing
+#' unwanted noise as well as real trends. Murray and Johnson (2013) compared
+#' these two structures directly and found the comparison itself biased: unless
+#' there was essentially no unmodelled complexity, their simulation favored the
+#' bifactor model even when a higher-order model generated the data, and they
+#' concluded that the choice "should not rely on which is better fitting".
+#' Compare the alternatives with
+#' [nomo_compare()] and choose on substantive grounds, not on fit alone.
+#' `nomo_hierarchical()` does not choose.
+#'
+#' **Factor scores: two indices that answer different questions.** The
+#' `factors` table reports, for the general factor and each group factor,
+#' factor determinacy and construct replicability.
+#'
+#' *Factor determinacy* (Beauducel, 2011; Rodriguez, Reise, & Haviland, 2016)
+#' is the correlation between a factor and its estimated factor score. It is
+#' computed from the whole model-reproduced correlation matrix, so a group
+#' factor's score estimate can use the other items to partial out the general
+#' factor. `determinacy_r2` is its square, the proportion of variance in factor
+#' scores explained by the factor, and `min_competing_r` is the minimum possible
+#' correlation between two equally valid sets of factor scores, twice the
+#' squared determinacy minus one. A negative value there means two researchers
+#' scoring the same data could rank people in opposite orders and both be
+#' consistent with the model.
+#'
+#' *Construct replicability* H (Hancock & Mueller, 2001) is the proportion of
+#' variance in a factor explainable by its own indicators when optimally
+#' weighted. It uses only that factor's loadings and treats the remainder of
+#' each item as uncorrelated residual.
+#'
+#' The two are the same quantity when the data are unidimensional, and can
+#' differ under a bifactor model, where an item's residual with respect to one
+#' factor contains the other factors and is correlated across items. Rodriguez
+#' et al. (2016) state this and decline to prefer either, so both are reported.
+#' Determinacy is always computed from the model-reproduced matrix, whatever
+#' `obs.var` is set to, because that is what the formula is defined on.
+#'
+#' Gorsuch (1983) recommended using factor score estimates only when
+#' determinacy exceeds .90, with competing score sets correlating above .70, and
+#' Hancock and Mueller (2001) proposed .70 as a standard for H. These are
+#' reported as their authors' recommendations where a value falls below them,
+#' as with fixed fit-index cutoffs elsewhere in the package, and are never
+#' applied as rules.
 #'
 #' @param fit A `nomo_cfa` object or fitted `lavaan` model containing a
 #'   bifactor or higher-order measurement model. Single-group, single-level
@@ -66,8 +108,29 @@
 #'   estimand notes, and a `decision_log`.
 #'
 #' @references
+#' Beauducel, A. (2011). Indeterminacy of factor score estimates in slightly
+#' misspecified confirmatory factor models. *Journal of Modern Applied
+#' Statistical Methods, 10*(2), 583-598.
+#' \doi{10.22237/jmasm/1320120900}
+#'
+#' Bonifay, W., Lane, S. P., & Reise, S. P. (2017). Three concerns with applying
+#' a bifactor model as a structure of psychopathology. *Clinical Psychological
+#' Science, 5*(1), 184-186. \doi{10.1177/2167702616657069}
+#'
+#' Gorsuch, R. L. (1983). *Factor analysis* (2nd ed.). Lawrence Erlbaum.
+#'
+#' Hancock, G. R., & Mueller, R. O. (2001). Rethinking construct reliability
+#' within latent variable systems. In R. Cudeck, S. du Toit, & D. Sorbom (Eds.),
+#' *Structural equation modeling: Present and future* (pp. 195-216). Scientific
+#' Software International.
+#'
 #' Holzinger, K. J., & Swineford, F. (1937). The bi-factor method.
 #' *Psychometrika, 2*(1), 41-54. \doi{10.1007/BF02287965}
+#'
+#' Murray, A. L., & Johnson, W. (2013). The limitations of model fit in
+#' comparing the bi-factor versus higher-order models of human cognitive
+#' ability structure. *Intelligence, 41*(5), 407-422.
+#' \doi{10.1016/j.intell.2013.06.004}
 #'
 #' Reise, S. P. (2012). The rediscovery of bifactor measurement models.
 #' *Multivariate Behavioral Research, 47*(5), 667-696.
@@ -144,6 +207,7 @@ nomo_hierarchical <- function(fit,
     indices = computed$indices,
     subscales = computed$subscales,
     loadings = computed$loadings,
+    factors = computed$factors,
     notes = notes,
     decision_log = nomo_hierarchical_decision_log(structure, notes, computed),
     fit = input$fit,
@@ -500,7 +564,93 @@ nomo_hierarchical_compute <- function(matrices, structure) {
   )
   indices$interpretation <- nomo_hierarchical_interpretation(indices, structure)
 
-  list(indices = indices, subscales = subscales, loadings = loadings)
+  factors <- nomo_hierarchical_factor_scores(
+    matrices = matrices,
+    structure = structure,
+    items = items,
+    general_std = general_std,
+    group_std = group_std,
+    group_of = group_of
+  )
+
+  list(
+    indices = indices, subscales = subscales, loadings = loadings,
+    factors = factors
+  )
+}
+
+
+# Factor determinacy and construct replicability -------------------------------
+#
+# Both describe how well a factor is recovered, and they are not the same
+# quantity under a bifactor model. Factor determinacy (Beauducel, 2011,
+# Equation 4; Rodriguez, Reise, & Haviland, 2016, Equation 8) is the correlation
+# between a factor and its estimated factor score, computed from the whole
+# model-reproduced correlation matrix, so estimating a group factor can use the
+# other items to partial out the general factor. Construct replicability
+# (Hancock & Mueller, 2001; Rodriguez et al., 2016, Equation 9) uses only that
+# factor's own loadings and treats 1 - lambda^2 as uncorrelated residual, which
+# is true for a unidimensional construct and not for a factor in a bifactor
+# model. The two are identical when the data are unidimensional and can differ
+# otherwise, which Rodriguez et al. state in their footnote 8 without advancing
+# either one over the other. Both are therefore reported.
+#
+# Determinacy is computed from the model-reproduced matrix whatever `obs.var`
+# is, because that is what Beauducel's formula is defined on.
+nomo_hierarchical_factor_scores <- function(matrices,
+                                            structure,
+                                            items,
+                                            general_std,
+                                            group_std,
+                                            group_of) {
+  general <- structure$general
+  groups <- structure$groups
+  sources <- c(general, names(groups))
+
+  lambda <- matrix(
+    0,
+    nrow = length(items), ncol = length(sources),
+    dimnames = list(items, sources)
+  )
+  lambda[, general] <- general_std
+  for (k in names(groups)) {
+    in_k <- !is.na(group_of) & group_of == k
+    lambda[in_k, k] <- group_std[in_k]
+  }
+
+  implied <- matrices$implied[items, items, drop = FALSE]
+  scale <- sqrt(diag(implied))
+  reproduced <- implied / tcrossprod(scale)
+
+  inverse <- tryCatch(solve(reproduced), error = function(e) NULL)
+
+  determinacy <- rep(NA_real_, length(sources))
+  names(determinacy) <- sources
+  if (!is.null(inverse)) {
+    quadratic <- diag(t(lambda) %*% inverse %*% lambda)
+    quadratic[quadratic < 0] <- NA_real_
+    determinacy <- sqrt(pmin(quadratic, 1))
+  }
+
+  replicability <- vapply(sources, function(k) {
+    l <- lambda[, k]
+    l <- l[l != 0]
+    if (!length(l) || any(abs(l) >= 1)) return(NA_real_)
+    1 / (1 + 1 / sum(l^2 / (1 - l^2)))
+  }, numeric(1))
+
+  tibble::tibble(
+    factor = sources,
+    role = c("general", rep("group", length(groups))),
+    n_items = as.integer(c(
+      length(items),
+      vapply(groups, length, integer(1), USE.NAMES = FALSE)
+    )),
+    factor_determinacy = unname(determinacy),
+    determinacy_r2 = unname(determinacy^2),
+    min_competing_r = unname(2 * determinacy^2 - 1),
+    construct_replicability = unname(replicability)
+  )
 }
 
 
@@ -607,9 +757,20 @@ nomo_hierarchical_notes <- function(input, structure, matrices, computed, obs.va
     "A bifactor model will usually fit at least as well as correlated-factors",
     "or higher-order models of the same items, even when it did not generate",
     "the data (Reise, 2012), and a higher-order model is a constrained version",
-    "of it (Yung, Thissen, & McLeod, 1999). Compare the alternatives with",
+    "of it (Yung, Thissen, & McLeod, 1999). Bonifay, Lane, and Reise (2017)",
+    "call the bifactor model's tendency to show superior goodness of fit in",
+    "model comparison studies a particular concern, and say that superior fit",
+    "may be a symptom of overfitting: modeling not only the trends in the data",
+    "but also unwanted noise. Murray and Johnson (2013) compared these two",
+    "structures directly and found the comparison biased in favor of the",
+    "bifactor model: unless there was essentially no unmodelled complexity,",
+    "their simulation favored the bifactor model even when a higher-order",
+    "model generated the data. They concluded that which model to adopt",
+    "should not rely on which is better fitting. Compare the alternatives with",
     "nomo_compare() and choose on substantive grounds, not on fit alone."
   ))
+
+  notes <- nomo_hierarchical_factor_score_notes(notes, add, computed$factors)
 
   if (length(input$ordered)) {
     notes <- add(notes, "estimand", "info", paste(
@@ -644,6 +805,81 @@ nomo_hierarchical_notes <- function(input, structure, matrices, computed, obs.va
       "Negative residual variance for ", paste(negative, collapse = ", "),
       ". The solution is improper and the indices should not be interpreted ",
       "until the cause is understood."
+    ))
+  }
+
+  notes
+}
+
+
+# Determinacy and replicability describe different things, and a researcher
+# reading them side by side will not know that unless told. The thresholds are
+# their original authors' and are reported as context, never applied.
+nomo_hierarchical_factor_score_notes <- function(notes, add, factors) {
+  if (is.null(factors) || !nrow(factors)) return(notes)
+
+  notes <- add(notes, "factor_scores", "info", paste(
+    "Factor determinacy is the correlation between a factor and its estimated",
+    "factor score (Beauducel, 2011; Rodriguez, Reise, & Haviland, 2016). It is",
+    "computed from the whole model-reproduced correlation matrix, so a group",
+    "factor's score can use the other items to partial out the general factor.",
+    "Construct replicability H (Hancock & Mueller, 2001) uses only that",
+    "factor's own loadings and treats the rest of each item as uncorrelated",
+    "residual. The two are equivalent when the data are unidimensional and can",
+    "differ under a bifactor model, which Rodriguez et al. note without",
+    "preferring either. Read each as the question it answers."
+  ))
+
+  undetermined <- factors$factor[
+    is.finite(factors$factor_determinacy) & factors$factor_determinacy <= 0.90
+  ]
+  if (length(undetermined)) {
+    notes <- add(notes, "factor_scores", "review", paste0(
+      "Factor determinacy is at or below .90 for ",
+      paste(undetermined, collapse = ", "),
+      ". Gorsuch (1983, p. 260) recommended using factor score estimates only ",
+      "above that value. This is his recommendation reported as context, not a ",
+      "rule applied here; the score may still be usable for some purposes."
+    ))
+  }
+
+  opposed <- factors$factor[
+    is.finite(factors$min_competing_r) & factors$min_competing_r <= 0.70
+  ]
+  if (length(opposed)) {
+    notes <- add(notes, "factor_scores", "review", paste0(
+      "Two equally valid sets of factor scores could correlate as low as ",
+      paste(sprintf(
+        "%s (%.2f)", opposed,
+        factors$min_competing_r[factors$factor %in% opposed]
+      ), collapse = ", "),
+      ". Gorsuch (1983, p. 260) suggested this minimum be above .70. A ",
+      "negative value means two researchers scoring the same data could rank ",
+      "people in opposite orders and both be consistent with the model."
+    ))
+  }
+
+  unreplicable <- factors$factor[
+    is.finite(factors$construct_replicability) &
+      factors$construct_replicability < 0.70
+  ]
+  if (length(unreplicable)) {
+    notes <- add(notes, "factor_scores", "review", paste0(
+      "Construct replicability H is below .70 for ",
+      paste(unreplicable, collapse = ", "),
+      ". Hancock and Mueller (2001) proposed .70 as a standard; a factor below ",
+      "it is not well defined by its own indicators and is expected to change ",
+      "across studies. Reported as their standard, not applied as a rule."
+    ))
+  }
+
+  if (anyNA(factors$factor_determinacy) || anyNA(factors$construct_replicability)) {
+    notes <- add(notes, "factor_scores", "concern", paste(
+      "Determinacy or replicability could not be computed for at least one",
+      "factor. This happens when the model-reproduced correlation matrix is",
+      "singular, or when a standardized loading is at or beyond one, which is",
+      "itself an improper solution. The affected values are NA rather than",
+      "guessed."
     ))
   }
 

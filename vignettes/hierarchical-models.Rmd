@@ -169,6 +169,41 @@ when a general factor is strong enough. Whether a subscale score is worth
 reporting depends on its intended use, and the indices are the evidence for
 that decision rather than the decision itself.
 
+# Can you score the factors?
+
+The omega indices describe unit-weighted composites: the sum score a researcher
+would actually compute. A different question is how well each *factor* can be
+recovered at all. The `factors` table answers it two ways:
+
+```{r factor-scores}
+nomo_table(h, "factors")
+```
+
+`factor_determinacy` is the correlation between a factor and its estimated
+factor score (Beauducel, 2011; Rodriguez, Reise, & Haviland, 2016). Gorsuch
+(1983) recommended using factor score estimates only above .90. `min_competing_r`
+is the lowest correlation two equally valid sets of scores could have. When it
+is negative, two researchers scoring the same data with equally defensible
+methods could rank people in opposite orders, and both would be consistent with
+the model.
+
+`construct_replicability`, Hancock and Mueller's (2001) H, is the proportion of
+variance in a factor its own indicators could explain if optimally weighted.
+They proposed .70 as a standard.
+
+The two indices answer different questions, and the difference is easy to miss.
+They are the same quantity when a construct is unidimensional. Under a bifactor
+model they are not: determinacy is computed from the whole reproduced
+correlation matrix, so a group factor's score can borrow the other items to
+partial out the general factor, while H sees only that factor's own loadings
+and treats the rest of each item as uncorrelated residual. Rodriguez et al.
+(2016) state that the two can differ here and decline to prefer either, so
+`nomologR` reports both and names what each one measures.
+
+Neither threshold is applied as a rule. They are reported as their authors'
+recommendations where a value falls below them, in the same way fixed fit-index
+cutoffs are treated elsewhere in the package.
+
 # Comparing structures
 
 The three models can be compared with `nomo_compare()`, which requires a
