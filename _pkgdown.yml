@@ -84,6 +84,7 @@ articles:
       - measurement-model-evidence
       - hierarchical-models
       - measurement-invariance
+      - scoring
       - nomological-network
       - guided-workflow
       - reproducible-report

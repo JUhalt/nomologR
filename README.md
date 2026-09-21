@@ -679,6 +679,30 @@ when it did not generate the data, so `nomologR` compares structures
 with `nomo_compare()` but does not choose between them. See **“Total and
 subscale scores”**.
 
+### `nomo_scores()` — scoring is a modeling decision
+
+Once a measurement model is established, `nomo_scores()` produces sum, mean,
+regression, or Bartlett scores and reports what they are and are not.
+
+``` r
+scored <- nomo_scores(fit, method = "sum")
+nomo_table(scored, "diagnostics")
+```
+
+Adding items is not arithmetic: it assumes a parallel model, with equal
+unstandardized loadings and equal residual variances, so for unit-weighted
+scores that constrained model is fitted and compared with the model you
+supplied. Every method reports Grice’s three criteria — validity,
+univocality, and correlational accuracy.
+
+The third matters before scores are used in later analyses. Correlations among
+scores do not reproduce correlations among the factors, and the direction of
+the discrepancy depends on the scoring method and the model rather than being a
+constant that could be corrected for, so `nomologR` reports it rather than
+adjusting for it. Where a question can be asked of the latent variables
+instead, asking it of scores replaces an unbiased answer with a biased one. See
+**“Scoring a measurement model”**.
+
 ### 6. `nomo_hypotheses()` + `nomo_network()` — theory specified before evidence
 
 Milestone 6 makes the nomological network an explicit theory test rather
