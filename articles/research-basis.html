@@ -117,7 +117,7 @@ computational engine, and references.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">methods</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_methods.html">nomo_methods</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">methods</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 71</span></span>
+<span><span class="co">#&gt; [1] 73</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">methods</span><span class="op">$</span><span class="va">stage</span>, <span class="va">methods</span><span class="op">$</span><span class="va">lineage</span><span class="op">)</span></span>
 <span><span class="co">#&gt;              </span></span>
 <span><span class="co">#&gt;               contemporary emerging historical</span></span>
@@ -127,7 +127,7 @@ computational engine, and references.</p>
 <span><span class="co">#&gt;   factors                7        1          4</span></span>
 <span><span class="co">#&gt;   invariance             6        0          0</span></span>
 <span><span class="co">#&gt;   network                4        0          1</span></span>
-<span><span class="co">#&gt;   reliability            7        0          2</span></span>
+<span><span class="co">#&gt;   reliability            9        0          2</span></span>
 <span><span class="co">#&gt;   screen                 4        0          1</span></span>
 <span><span class="co">#&gt;   validity               3        0          2</span></span>
 <span><span class="co">#&gt;   workflow               5        0          0</span></span></code></pre></div>
@@ -166,7 +166,7 @@ the methods that workflow used. For any selection,
 list:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/nomo_methods.html">nomo_methods</a></span><span class="op">(</span>stage <span class="op">=</span> <span class="st">"reliability"</span>, references <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"method"</span>, <span class="st">"citation"</span><span class="op">)</span><span class="op">]</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 19 × 2</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 24 × 2</span></span></span>
 <span><span class="co">#&gt;    method                                         citation                      </span></span>
 <span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                                          <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                         </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> Model-based coefficient omega                  Dunn, T. J., Baguley, T., &amp; B…</span></span>
@@ -179,15 +179,7 @@ list:</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> Bootstrap confidence intervals for reliability Kelley, K., &amp; Pornprasertmani…</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> Omega hierarchical                             Reise, S. P. (2012). The redi…</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> Omega hierarchical                             Reise, S. P., Bonifay, W. E.,…</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">11</span> Omega hierarchical                             Rodriguez, A., Reise, S. P., …</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">12</span> Omega hierarchical subscale                    Reise, S. P., Bonifay, W. E.,…</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">13</span> Omega hierarchical subscale                    Rodriguez, A., Reise, S. P., …</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">14</span> Explained common variance                      Reise, S. P. (2012). The redi…</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">15</span> Explained common variance                      Rodriguez, A., Reise, S. P., …</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">16</span> Percentage of uncontaminated correlations      Reise, S. P. (2012). The redi…</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">17</span> Percentage of uncontaminated correlations      Rodriguez, A., Reise, S. P., …</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">18</span> Schmid-Leiman decomposition                    Schmid, J., &amp; Leiman, J. M. (…</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">19</span> Schmid-Leiman decomposition                    Yung, Y.-F., Thissen, D., &amp; M…</span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 14 more rows</span></span></span></code></pre></div>
 <p>This is what the <strong>Methods and citations</strong> section of
 <code><a href="../reference/nomo_report.html">nomo_report()</a></code> is built from, so an archived report cites
 the methods a run used rather than every method the package knows about.

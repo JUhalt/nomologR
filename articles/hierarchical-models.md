@@ -145,8 +145,20 @@ h
 #> 2 Drive          4          0.819                       0.204
 #> 3 Poise          4          0.807                       0.295
 #> 
+#> Factor scores
+#> # A tibble: 4 × 5
+#>   factor role    factor_determinacy min_competing_r construct_replicability
+#>   <chr>  <chr>                <dbl>           <dbl>                   <dbl>
+#> 1 G      general              0.898           0.612                   0.878
+#> 2 Focus  group                0.709           0.007                   0.5  
+#> 3 Drive  group                0.639          -0.185                   0.403
+#> 4 Poise  group                0.699          -0.022                   0.485
+#> 
 #> Notes
-#> - [review] A bifactor model will usually fit at least as well as correlated-factors or higher-order models of the same items, even when it did not generate the data (Reise, 2012), and a higher-order model is a constrained version of it (Yung, Thissen, & McLeod, 1999). Compare the alternatives with nomo_compare() and choose on substantive grounds, not on fit alone.
+#> - [review] A bifactor model will usually fit at least as well as correlated-factors or higher-order models of the same items, even when it did not generate the data (Reise, 2012), and a higher-order model is a constrained version of it (Yung, Thissen, & McLeod, 1999). Bonifay, Lane, and Reise (2017) call the bifactor model's tendency to show superior goodness of fit in model comparison studies a particular concern, and say that superior fit may be a symptom of overfitting: modeling not only the trends in the data but also unwanted noise. Murray and Johnson (2013) compared these two structures directly and found the comparison biased in favor of the bifactor model: unless there was essentially no unmodelled complexity, their simulation favored the bifactor model even when a higher-order model generated the data. They concluded that which model to adopt should not rely on which is better fitting. Compare the alternatives with nomo_compare() and choose on substantive grounds, not on fit alone.
+#> - [review] Factor determinacy is at or below .90 for G, Focus, Drive, Poise. Gorsuch (1983, p. 260) recommended using factor score estimates only above that value. This is his recommendation reported as context, not a rule applied here; the score may still be usable for some purposes.
+#> - [review] Two equally valid sets of factor scores could correlate as low as G (0.61), Focus (0.01), Drive (-0.18), Poise (-0.02). Gorsuch (1983, p. 260) suggested this minimum be above .70. A negative value means two researchers scoring the same data could rank people in opposite orders and both be consistent with the model.
+#> - [review] Construct replicability H is below .70 for Focus, Drive, Poise. Hancock and Mueller (2001) proposed .70 as a standard; a factor below it is not well defined by its own indicators and is expected to change across studies. Reported as their standard, not applied as a rule.
 #> 
 #> No index is treated as a pass/fail threshold; see nomo_table(x, "indices").
 ```
@@ -203,6 +215,52 @@ of ECV establishes when a general factor is strong enough. Whether a
 subscale score is worth reporting depends on its intended use, and the
 indices are the evidence for that decision rather than the decision
 itself.
+
+## Can you score the factors?
+
+The omega indices describe unit-weighted composites: the sum score a
+researcher would actually compute. A different question is how well each
+*factor* can be recovered at all. The `factors` table answers it two
+ways:
+
+``` r
+
+nomo_table(h, "factors")
+#> # A tibble: 4 × 7
+#>   factor role    n_items factor_determinacy determinacy_r2 min_competing_r
+#>   <chr>  <chr>     <int>              <dbl>          <dbl>           <dbl>
+#> 1 G      general      12              0.898          0.806         0.612  
+#> 2 Focus  group         4              0.709          0.503         0.00660
+#> 3 Drive  group         4              0.639          0.408        -0.185  
+#> 4 Poise  group         4              0.699          0.489        -0.0222 
+#> # ℹ 1 more variable: construct_replicability <dbl>
+```
+
+`factor_determinacy` is the correlation between a factor and its
+estimated factor score (Beauducel, 2011; Rodriguez, Reise, & Haviland,
+2016). Gorsuch (1983) recommended using factor score estimates only
+above .90. `min_competing_r` is the lowest correlation two equally valid
+sets of scores could have. When it is negative, two researchers scoring
+the same data with equally defensible methods could rank people in
+opposite orders, and both would be consistent with the model.
+
+`construct_replicability`, Hancock and Mueller’s (2001) H, is the
+proportion of variance in a factor its own indicators could explain if
+optimally weighted. They proposed .70 as a standard.
+
+The two indices answer different questions, and the difference is easy
+to miss. They are the same quantity when a construct is unidimensional.
+Under a bifactor model they are not: determinacy is computed from the
+whole reproduced correlation matrix, so a group factor’s score can
+borrow the other items to partial out the general factor, while H sees
+only that factor’s own loadings and treats the rest of each item as
+uncorrelated residual. Rodriguez et al. (2016) state that the two can
+differ here and decline to prefer either, so `nomologR` reports both and
+names what each one measures.
+
+Neither threshold is applied as a rule. They are reported as their
+authors’ recommendations where a value falls below them, in the same way
+fixed fit-index cutoffs are treated elsewhere in the package.
 
 ## Comparing structures
 
@@ -345,14 +403,16 @@ Every method used here is listed, with references, by
 ``` r
 
 nomo_methods(h)[, c("method", "lineage", "role")]
-#> # A tibble: 5 × 3
+#> # A tibble: 7 × 3
 #>   method                                    lineage      role      
 #>   <chr>                                     <chr>        <chr>     
 #> 1 Bifactor measurement model                contemporary primary   
 #> 2 Omega hierarchical                        contemporary primary   
 #> 3 Omega hierarchical subscale               contemporary supporting
 #> 4 Explained common variance                 contemporary supporting
-#> 5 Percentage of uncontaminated correlations contemporary supporting
+#> 5 Factor determinacy                        contemporary supporting
+#> 6 Construct replicability (H)               contemporary supporting
+#> 7 Percentage of uncontaminated correlations contemporary supporting
 ```
 
 ## References

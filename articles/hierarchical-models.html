@@ -208,8 +208,20 @@ model and reports the indices:</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Drive          4          0.819                       0.204</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> Poise          4          0.807                       0.295</span></span>
 <span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Factor scores</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4 × 5</span></span></span>
+<span><span class="co">#&gt;   factor role    factor_determinacy min_competing_r construct_replicability</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>                   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> G      general              0.898           0.612                   0.878</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Focus  group                0.709           0.007                   0.5  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> Drive  group                0.639          -<span style="color: #BB0000;">0.185</span>                   0.403</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> Poise  group                0.699          -<span style="color: #BB0000;">0.022</span>                   0.485</span></span>
+<span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Notes</span></span>
-<span><span class="co">#&gt; - [review] A bifactor model will usually fit at least as well as correlated-factors or higher-order models of the same items, even when it did not generate the data (Reise, 2012), and a higher-order model is a constrained version of it (Yung, Thissen, &amp; McLeod, 1999). Compare the alternatives with nomo_compare() and choose on substantive grounds, not on fit alone.</span></span>
+<span><span class="co">#&gt; - [review] A bifactor model will usually fit at least as well as correlated-factors or higher-order models of the same items, even when it did not generate the data (Reise, 2012), and a higher-order model is a constrained version of it (Yung, Thissen, &amp; McLeod, 1999). Bonifay, Lane, and Reise (2017) call the bifactor model's tendency to show superior goodness of fit in model comparison studies a particular concern, and say that superior fit may be a symptom of overfitting: modeling not only the trends in the data but also unwanted noise. Murray and Johnson (2013) compared these two structures directly and found the comparison biased in favor of the bifactor model: unless there was essentially no unmodelled complexity, their simulation favored the bifactor model even when a higher-order model generated the data. They concluded that which model to adopt should not rely on which is better fitting. Compare the alternatives with nomo_compare() and choose on substantive grounds, not on fit alone.</span></span>
+<span><span class="co">#&gt; - [review] Factor determinacy is at or below .90 for G, Focus, Drive, Poise. Gorsuch (1983, p. 260) recommended using factor score estimates only above that value. This is his recommendation reported as context, not a rule applied here; the score may still be usable for some purposes.</span></span>
+<span><span class="co">#&gt; - [review] Two equally valid sets of factor scores could correlate as low as G (0.61), Focus (0.01), Drive (-0.18), Poise (-0.02). Gorsuch (1983, p. 260) suggested this minimum be above .70. A negative value means two researchers scoring the same data could rank people in opposite orders and both be consistent with the model.</span></span>
+<span><span class="co">#&gt; - [review] Construct replicability H is below .70 for Focus, Drive, Poise. Hancock and Mueller (2001) proposed .70 as a standard; a factor below it is not well defined by its own indicators and is expected to change across studies. Reported as their standard, not applied as a rule.</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; No index is treated as a pass/fail threshold; see nomo_table(x, "indices").</span></span></code></pre></div>
 <p>Reading the total score:</p>
@@ -259,11 +271,52 @@ intended use, and the indices are the evidence for that decision rather
 than the decision itself.</p>
 </div>
 <div class="section level2">
+<h2 id="can-you-score-the-factors">Can you score the factors?<a class="anchor" aria-label="anchor" href="#can-you-score-the-factors"></a>
+</h2>
+<p>The omega indices describe unit-weighted composites: the sum score a
+researcher would actually compute. A different question is how well each
+<em>factor</em> can be recovered at all. The <code>factors</code> table
+answers it two ways:</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">h</span>, <span class="st">"factors"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4 × 7</span></span></span>
+<span><span class="co">#&gt;   factor role    n_items factor_determinacy determinacy_r2 min_competing_r</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> G      general      12              0.898          0.806         0.612  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Focus  group         4              0.709          0.503         0.006<span style="text-decoration: underline;">60</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> Drive  group         4              0.639          0.408        -<span style="color: #BB0000;">0.185</span>  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> Poise  group         4              0.699          0.489        -<span style="color: #BB0000;">0.022</span><span style="color: #BB0000; text-decoration: underline;">2</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 1 more variable: construct_replicability &lt;dbl&gt;</span></span></span></code></pre></div>
+<p><code>factor_determinacy</code> is the correlation between a factor
+and its estimated factor score (Beauducel, 2011; Rodriguez, Reise, &amp;
+Haviland, 2016). Gorsuch (1983) recommended using factor score estimates
+only above .90. <code>min_competing_r</code> is the lowest correlation
+two equally valid sets of scores could have. When it is negative, two
+researchers scoring the same data with equally defensible methods could
+rank people in opposite orders, and both would be consistent with the
+model.</p>
+<p><code>construct_replicability</code>, Hancock and Mueller’s (2001) H,
+is the proportion of variance in a factor its own indicators could
+explain if optimally weighted. They proposed .70 as a standard.</p>
+<p>The two indices answer different questions, and the difference is
+easy to miss. They are the same quantity when a construct is
+unidimensional. Under a bifactor model they are not: determinacy is
+computed from the whole reproduced correlation matrix, so a group
+factor’s score can borrow the other items to partial out the general
+factor, while H sees only that factor’s own loadings and treats the rest
+of each item as uncorrelated residual. Rodriguez et al. (2016) state
+that the two can differ here and decline to prefer either, so
+<code>nomologR</code> reports both and names what each one measures.</p>
+<p>Neither threshold is applied as a rule. They are reported as their
+authors’ recommendations where a value falls below them, in the same way
+fixed fit-index cutoffs are treated elsewhere in the package.</p>
+</div>
+<div class="section level2">
 <h2 id="comparing-structures">Comparing structures<a class="anchor" aria-label="anchor" href="#comparing-structures"></a>
 </h2>
 <p>The three models can be compared with <code><a href="../reference/nomo_compare.html">nomo_compare()</a></code>,
 which requires a rationale and never selects a model:</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cmp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_compare.html">nomo_compare</a></span><span class="op">(</span></span>
 <span>  <span class="va">correlated</span>, <span class="va">higher</span>, <span class="va">bifactor</span>,</span>
 <span>  rationale <span class="op">=</span> <span class="st">"Competing structures for the same twelve items."</span>,</span>
@@ -299,7 +352,7 @@ or better.</li>
 <p>That last point has a consequence. The next data set is simulated
 from a <strong>higher-order</strong> population, so the higher-order
 model is the true one:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">first_order</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">.70</span>, <span class="fl">.65</span>, <span class="fl">.60</span>, <span class="fl">.75</span>, <span class="fl">.70</span>, <span class="fl">.60</span>, <span class="fl">.65</span>, <span class="fl">.70</span>, <span class="fl">.55</span>, <span class="fl">.70</span>, <span class="fl">.65</span>, <span class="fl">.60</span><span class="op">)</span></span>
 <span><span class="va">second_order</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">.80</span>, <span class="fl">.70</span>, <span class="fl">.60</span><span class="op">)</span></span>
 <span></span>
@@ -333,7 +386,7 @@ work, but it cannot make this choice.</p>
 There the group sources are the first-order factors’ disturbances, and
 the item loadings are the Schmid-Leiman decomposition of the
 higher-order solution, which is exact for a confirmatory model:</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">h_higher</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_hierarchical.html">nomo_hierarchical</a></span><span class="op">(</span><span class="va">true_model</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">h_higher</span>, <span class="st">"indices"</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"index"</span>, <span class="st">"estimate"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 5 × 2</span></span></span>
@@ -386,16 +439,18 @@ variance cannot then be attributed to a source.</li>
 </ul>
 <p>Every method used here is listed, with references, by
 <code><a href="../reference/nomo_methods.html">nomo_methods()</a></code>:</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/nomo_methods.html">nomo_methods</a></span><span class="op">(</span><span class="va">h</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"method"</span>, <span class="st">"lineage"</span>, <span class="st">"role"</span><span class="op">)</span><span class="op">]</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 5 × 3</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 7 × 3</span></span></span>
 <span><span class="co">#&gt;   method                                    lineage      role      </span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                                     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Bifactor measurement model                contemporary primary   </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Omega hierarchical                        contemporary primary   </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> Omega hierarchical subscale               contemporary supporting</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> Explained common variance                 contemporary supporting</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> Percentage of uncontaminated correlations contemporary supporting</span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> Factor determinacy                        contemporary supporting</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> Construct replicability (H)               contemporary supporting</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">7</span> Percentage of uncontaminated correlations contemporary supporting</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>

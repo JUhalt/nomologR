@@ -144,14 +144,67 @@ relatively unbiased estimates from a unidimensional model.</p>
 as a correlated-factors or higher-order model of the same items, including
 when it is not the model that generated the data (Reise, 2012), and a
 higher-order model is a constrained version of the bifactor model (Yung,
-Thissen, &amp; McLeod, 1999). Compare the alternatives with <code><a href="nomo_compare.html">nomo_compare()</a></code> and
-choose on substantive grounds, not on fit alone. <code>nomo_hierarchical()</code> does
-not choose.</p>
+Thissen, &amp; McLeod, 1999). Bonifay, Lane, and Reise (2017) treat that
+tendency to show superior goodness of fit as a particular concern, and note
+that the superior performance "may be a symptom of overfitting", capturing
+unwanted noise as well as real trends. Murray and Johnson (2013) compared
+these two structures directly and found the comparison itself biased: unless
+there was essentially no unmodelled complexity, their simulation favored the
+bifactor model even when a higher-order model generated the data, and they
+concluded that the choice "should not rely on which is better fitting".
+Compare the alternatives with
+<code><a href="nomo_compare.html">nomo_compare()</a></code> and choose on substantive grounds, not on fit alone.
+<code>nomo_hierarchical()</code> does not choose.</p>
+<p><strong>Factor scores: two indices that answer different questions.</strong> The
+<code>factors</code> table reports, for the general factor and each group factor,
+factor determinacy and construct replicability.</p>
+<p><em>Factor determinacy</em> (Beauducel, 2011; Rodriguez, Reise, &amp; Haviland, 2016)
+is the correlation between a factor and its estimated factor score. It is
+computed from the whole model-reproduced correlation matrix, so a group
+factor's score estimate can use the other items to partial out the general
+factor. <code>determinacy_r2</code> is its square, the proportion of variance in factor
+scores explained by the factor, and <code>min_competing_r</code> is the minimum possible
+correlation between two equally valid sets of factor scores, twice the
+squared determinacy minus one. A negative value there means two researchers
+scoring the same data could rank people in opposite orders and both be
+consistent with the model.</p>
+<p><em>Construct replicability</em> H (Hancock &amp; Mueller, 2001) is the proportion of
+variance in a factor explainable by its own indicators when optimally
+weighted. It uses only that factor's loadings and treats the remainder of
+each item as uncorrelated residual.</p>
+<p>The two are the same quantity when the data are unidimensional, and can
+differ under a bifactor model, where an item's residual with respect to one
+factor contains the other factors and is correlated across items. Rodriguez
+et al. (2016) state this and decline to prefer either, so both are reported.
+Determinacy is always computed from the model-reproduced matrix, whatever
+<code>obs.var</code> is set to, because that is what the formula is defined on.</p>
+<p>Gorsuch (1983) recommended using factor score estimates only when
+determinacy exceeds .90, with competing score sets correlating above .70, and
+Hancock and Mueller (2001) proposed .70 as a standard for H. These are
+reported as their authors' recommendations where a value falls below them,
+as with fixed fit-index cutoffs elsewhere in the package, and are never
+applied as rules.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
-    <p>Holzinger, K. J., &amp; Swineford, F. (1937). The bi-factor method.
+    <p>Beauducel, A. (2011). Indeterminacy of factor score estimates in slightly
+misspecified confirmatory factor models. <em>Journal of Modern Applied
+Statistical Methods, 10</em>(2), 583-598.
+<a href="https://doi.org/10.22237/jmasm/1320120900" class="external-link">doi:10.22237/jmasm/1320120900</a></p>
+<p>Bonifay, W., Lane, S. P., &amp; Reise, S. P. (2017). Three concerns with applying
+a bifactor model as a structure of psychopathology. <em>Clinical Psychological
+Science, 5</em>(1), 184-186. <a href="https://doi.org/10.1177/2167702616657069" class="external-link">doi:10.1177/2167702616657069</a></p>
+<p>Gorsuch, R. L. (1983). <em>Factor analysis</em> (2nd ed.). Lawrence Erlbaum.</p>
+<p>Hancock, G. R., &amp; Mueller, R. O. (2001). Rethinking construct reliability
+within latent variable systems. In R. Cudeck, S. du Toit, &amp; D. Sorbom (Eds.),
+<em>Structural equation modeling: Present and future</em> (pp. 195-216). Scientific
+Software International.</p>
+<p>Holzinger, K. J., &amp; Swineford, F. (1937). The bi-factor method.
 <em>Psychometrika, 2</em>(1), 41-54. <a href="https://doi.org/10.1007/BF02287965" class="external-link">doi:10.1007/BF02287965</a></p>
+<p>Murray, A. L., &amp; Johnson, W. (2013). The limitations of model fit in
+comparing the bi-factor versus higher-order models of human cognitive
+ability structure. <em>Intelligence, 41</em>(5), 407-422.
+<a href="https://doi.org/10.1016/j.intell.2013.06.004" class="external-link">doi:10.1016/j.intell.2013.06.004</a></p>
 <p>Reise, S. P. (2012). The rediscovery of bifactor measurement models.
 <em>Multivariate Behavioral Research, 47</em>(5), 667-696.
 <a href="https://doi.org/10.1080/00273171.2012.715555" class="external-link">doi:10.1080/00273171.2012.715555</a></p>
@@ -211,8 +264,20 @@ between the higher-order factor model and the hierarchical factor model.
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> B              3          0.791                       0.354</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> C              3          0.799                       0.239</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Factor scores</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 4 × 5</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   factor role    factor_determinacy min_competing_r construct_replicability</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>                   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> G      general              0.867           0.502                   0.829</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> A      group                0.704          -<span style="color: #BB0000;">0.009</span>                   0.489</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> B      group                0.715           0.023                   0.501</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> C      group                0.641          -<span style="color: #BB0000;">0.178</span>                   0.406</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Notes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - [review] A bifactor model will usually fit at least as well as correlated-factors or higher-order models of the same items, even when it did not generate the data (Reise, 2012), and a higher-order model is a constrained version of it (Yung, Thissen, &amp; McLeod, 1999). Compare the alternatives with nomo_compare() and choose on substantive grounds, not on fit alone.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> - [review] A bifactor model will usually fit at least as well as correlated-factors or higher-order models of the same items, even when it did not generate the data (Reise, 2012), and a higher-order model is a constrained version of it (Yung, Thissen, &amp; McLeod, 1999). Bonifay, Lane, and Reise (2017) call the bifactor model's tendency to show superior goodness of fit in model comparison studies a particular concern, and say that superior fit may be a symptom of overfitting: modeling not only the trends in the data but also unwanted noise. Murray and Johnson (2013) compared these two structures directly and found the comparison biased in favor of the bifactor model: unless there was essentially no unmodelled complexity, their simulation favored the bifactor model even when a higher-order model generated the data. They concluded that which model to adopt should not rely on which is better fitting. Compare the alternatives with nomo_compare() and choose on substantive grounds, not on fit alone.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> - [review] Factor determinacy is at or below .90 for G, A, B, C. Gorsuch (1983, p. 260) recommended using factor score estimates only above that value. This is his recommendation reported as context, not a rule applied here; the score may still be usable for some purposes.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> - [review] Two equally valid sets of factor scores could correlate as low as G (0.50), A (-0.01), B (0.02), C (-0.18). Gorsuch (1983, p. 260) suggested this minimum be above .70. A negative value means two researchers scoring the same data could rank people in opposite orders and both be consistent with the model.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> - [review] Construct replicability H is below .70 for A, B, C. Hancock and Mueller (2001) proposed .70 as a standard; a factor below it is not well defined by its own indicators and is expected to change across studies. Reported as their standard, not applied as a rule.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> No index is treated as a pass/fail threshold; see nomo_table(x, "indices").</span>
 <span class="r-in"><span><span class="fu"><a href="nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">h</span>, <span class="st">"subscales"</span><span class="op">)</span></span></span>

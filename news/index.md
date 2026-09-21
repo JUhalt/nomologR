@@ -26,6 +26,21 @@
   that has never executed can be wrong without anyone noticing, so those
   sentences are now asserted against real fitted objects.
 
+- [`nomo_hierarchical()`](https://juhalt.github.io/nomologR/reference/nomo_hierarchical.md)
+  now reports factor determinacy and construct replicability for the
+  general factor and each group factor, in a new `factors` table
+  reachable with `nomo_table(x, "factors")`
+  ([\#56](https://github.com/JUhalt/nomologR/issues/56)). Both reproduce
+  the published values for the MASC example in Rodriguez, Reise, and
+  Haviland (2016) exactly. The two indices are the same quantity only
+  when a construct is unidimensional: under a bifactor model,
+  determinacy uses the whole reproduced correlation matrix while H sees
+  one factor’s loadings alone, and Rodriguez et al. decline to prefer
+  either, so both are reported and each is labeled with the question it
+  answers. Gorsuch’s (1983) and Hancock and Mueller’s (2001) thresholds
+  appear as their authors’ recommendations where a value falls below
+  them, never as rules.
+
 ## nomologR 0.2.0
 
 nomologR 0.2.0 makes the workflow research-backed from historical to

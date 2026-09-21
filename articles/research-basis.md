@@ -36,7 +36,7 @@ computational engine, and references.
 
 methods <- nomo_methods()
 nrow(methods)
-#> [1] 71
+#> [1] 73
 table(methods$stage, methods$lineage)
 #>              
 #>               contemporary emerging historical
@@ -46,7 +46,7 @@ table(methods$stage, methods$lineage)
 #>   factors                7        1          4
 #>   invariance             6        0          0
 #>   network                4        0          1
-#>   reliability            7        0          2
+#>   reliability            9        0          2
 #>   screen                 4        0          1
 #>   validity               3        0          2
 #>   workflow               5        0          0
@@ -92,7 +92,7 @@ result into a reference list:
 ``` r
 
 nomo_methods(stage = "reliability", references = TRUE)[, c("method", "citation")]
-#> # A tibble: 19 × 2
+#> # A tibble: 24 × 2
 #>    method                                         citation                      
 #>    <chr>                                          <chr>                         
 #>  1 Model-based coefficient omega                  Dunn, T. J., Baguley, T., & B…
@@ -105,15 +105,7 @@ nomo_methods(stage = "reliability", references = TRUE)[, c("method", "citation")
 #>  8 Bootstrap confidence intervals for reliability Kelley, K., & Pornprasertmani…
 #>  9 Omega hierarchical                             Reise, S. P. (2012). The redi…
 #> 10 Omega hierarchical                             Reise, S. P., Bonifay, W. E.,…
-#> 11 Omega hierarchical                             Rodriguez, A., Reise, S. P., …
-#> 12 Omega hierarchical subscale                    Reise, S. P., Bonifay, W. E.,…
-#> 13 Omega hierarchical subscale                    Rodriguez, A., Reise, S. P., …
-#> 14 Explained common variance                      Reise, S. P. (2012). The redi…
-#> 15 Explained common variance                      Rodriguez, A., Reise, S. P., …
-#> 16 Percentage of uncontaminated correlations      Reise, S. P. (2012). The redi…
-#> 17 Percentage of uncontaminated correlations      Rodriguez, A., Reise, S. P., …
-#> 18 Schmid-Leiman decomposition                    Schmid, J., & Leiman, J. M. (…
-#> 19 Schmid-Leiman decomposition                    Yung, Y.-F., Thissen, D., & M…
+#> # ℹ 14 more rows
 ```
 
 This is what the **Methods and citations** section of
