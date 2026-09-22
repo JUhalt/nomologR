@@ -61,7 +61,10 @@ reference:
       - nomo_invariance
       - nomo_partial
       - plot.nomo_invariance
-  - title: "6. Theory-specified nomological network"
+  - title: "6. Scoring"
+    contents:
+      - nomo_scores
+  - title: "7. Theory-specified nomological network"
     contents:
       - nomo_hypotheses
       - nomo_expectations
@@ -84,6 +87,7 @@ articles:
       - measurement-model-evidence
       - hierarchical-models
       - measurement-invariance
+      - scoring
       - nomological-network
       - guided-workflow
       - reproducible-report

@@ -346,6 +346,14 @@ nomo_bibliography <- function() {
       "10.1007/s11336-008-9099-3"
     ),
     nomo_bib_entry(
+      "grice_2001", "Grice (2001)",
+      paste(
+        "Grice, J. W. (2001). Computing and evaluating factor scores.",
+        "Psychological Methods, 6(4), 430-450."
+      ),
+      "10.1037/1082-989X.6.4.430"
+    ),
+    nomo_bib_entry(
       "guttman_1954", "Guttman (1954)",
       paste(
         "Guttman, L. (1954). Some necessary conditions for common-factor",
@@ -522,6 +530,14 @@ nomo_bibliography <- function() {
         "Psychological Methods, 23(3), 412-433."
       ),
       "10.1037/met0000144"
+    ),
+    nomo_bib_entry(
+      "mcneish_wolf_2020", "McNeish & Wolf (2020)",
+      paste(
+        "McNeish, D., & Wolf, M. G. (2020). Thinking twice about sum scores.",
+        "Behavior Research Methods, 52(6), 2287-2305."
+      ),
+      "10.3758/s13428-020-01398-0"
     ),
     nomo_bib_entry(
       "meredith_1993", "Meredith (1993)",
@@ -1567,6 +1583,104 @@ nomo_methods_registry <- function() {
 
     # Stage 8: nomological network -------------------------------------------
     nomo_method_entry(
+      "unit_weighted_score", "scores",
+      "Unit-weighted sum or mean score",
+      "historical", "primary",
+      "Total or average of a set of item responses, weighting each item equally.",
+      paste(
+        "Not a model-free calculation. Adding items assumes a parallel model,",
+        "with equal unstandardized loadings and equal residual variances, so",
+        "it carries the same burden of justification as any other measurement",
+        "model. Coefficient alpha is the matching reliability coefficient."
+      ),
+      "nomo_scores()", "nomologR",
+      c("mcneish_wolf_2020")
+    ),
+    nomo_method_entry(
+      "parallel_model_test", "scores",
+      "Test of the constraints unit weighting assumes",
+      "contemporary", "supporting",
+      paste(
+        "Chi-square difference between the fitted model and the parallel model",
+        "that unit weighting assumes."
+      ),
+      paste(
+        "Compares nested models on the same items and cases. Rejection does not",
+        "forbid a sum score; it establishes that the items are not",
+        "interchangeable in the way adding them assumes."
+      ),
+      "nomo_scores()", "lavaan",
+      c("mcneish_wolf_2020")
+    ),
+    nomo_method_entry(
+      "factor_score_regression", "scores",
+      "Regression (Thurstone) factor scores",
+      "historical", "primary",
+      "Model-weighted factor score estimates that maximize validity.",
+      paste(
+        "Indeterminate: infinitely many score sets are consistent with the same",
+        "loadings. Maximizes the correlation with its own factor, and is not",
+        "univocal, so scores carry variance from the other factors."
+      ),
+      "nomo_scores()", "lavaan",
+      c("grice_2001")
+    ),
+    nomo_method_entry(
+      "factor_score_bartlett", "scores",
+      "Bartlett factor scores",
+      "historical", "primary",
+      "Model-weighted factor score estimates computed from the residual variances.",
+      paste(
+        "Indeterminate, as all factor scores are. Differs from regression",
+        "scores only by a scaling constant when one factor is estimated, so",
+        "the choice between them matters only with more than one factor."
+      ),
+      "nomo_scores()", "lavaan",
+      c("grice_2001")
+    ),
+    nomo_method_entry(
+      "factor_score_validity", "scores",
+      "Factor score validity",
+      "contemporary", "supporting",
+      "Correlation between a factor score estimate and the factor it estimates.",
+      paste(
+        "Equals the factor determinacy coefficient for regression scores, which",
+        "maximize it. Gorsuch's (1983) recommendation of at least .80, and",
+        "above .90 for scores used as substitutes for the factors, is reported",
+        "as his recommendation and not applied."
+      ),
+      "nomo_scores()", "nomologR",
+      c("grice_2001", "gorsuch_1983")
+    ),
+    nomo_method_entry(
+      "factor_score_univocality", "scores",
+      "Factor score univocality",
+      "contemporary", "supporting",
+      "Correlation between a factor score estimate and the factors it does not represent.",
+      paste(
+        "Requires more than one factor. A score that is not univocal cannot be",
+        "treated as though it measured its own factor alone."
+      ),
+      "nomo_scores()", "nomologR",
+      c("grice_2001")
+    ),
+    nomo_method_entry(
+      "factor_score_correlational_accuracy", "scores",
+      "Factor score correlational accuracy",
+      "contemporary", "supporting",
+      paste(
+        "Difference between correlations among factor score estimates and",
+        "correlations among the factors themselves."
+      ),
+      paste(
+        "Requires more than one factor. A relationship estimated from scores",
+        "carries this discrepancy as bias. Its direction depends on the scoring",
+        "method and the model, so it is reported rather than corrected for."
+      ),
+      "nomo_scores()", "nomologR",
+      c("grice_2001")
+    ),
+    nomo_method_entry(
       "nomological_network", "network",
       "Nomological network of construct relations",
       "historical", "primary",
@@ -1692,7 +1806,7 @@ nomo_methods_registry <- function() {
 nomo_methods_stages <- function() {
   c(
     "screen", "factors", "efa", "cfa", "compare", "reliability",
-    "validity", "invariance", "network", "workflow"
+    "validity", "invariance", "scores", "network", "workflow"
   )
 }
 

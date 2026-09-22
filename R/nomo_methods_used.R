@@ -224,6 +224,43 @@ nomo_methods_used.nomo_hierarchical <- function(x, ...) {
 }
 
 
+# Scores ----------------------------------------------------------------------
+
+#' @export
+nomo_methods_used.nomo_scores <- function(x, ...) {
+  used <- switch(
+    x$method,
+    sum = ,
+    mean = "unit_weighted_score",
+    regression = "factor_score_regression",
+    bartlett = "factor_score_bartlett"
+  )
+
+  # The parallel-model test is credited only when it produced a result; a
+  # model that would not converge was not a test that ran.
+  if (isTRUE(x$parallel_test$available)) {
+    used <- c(used, "parallel_model_test")
+  }
+
+  diagnostics <- x$diagnostics
+  if (is.data.frame(diagnostics) && nrow(diagnostics)) {
+    if (any(is.finite(diagnostics$validity))) {
+      used <- c(used, "factor_score_validity")
+    }
+    # Both need a second factor to be defined at all, so a single-factor run
+    # is not credited with them.
+    if (any(is.finite(diagnostics$univocality))) {
+      used <- c(used, "factor_score_univocality")
+    }
+    if (any(is.finite(diagnostics$correlational_accuracy))) {
+      used <- c(used, "factor_score_correlational_accuracy")
+    }
+  }
+
+  used
+}
+
+
 # Model comparison ------------------------------------------------------------
 
 #' @export

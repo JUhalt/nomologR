@@ -32,6 +32,25 @@
   Mueller's (2001) thresholds appear as their authors' recommendations where a
   value falls below them, never as rules.
 
+- Added `nomo_scores()`, which computes sum, mean, regression, or Bartlett
+  scores from a fitted measurement model and reports what those scores are and
+  are not (#33). Unit weighting is treated as the model it is: McNeish and Wolf
+  (2020) show that adding items assumes a parallel model, with equal
+  unstandardized loadings and equal residual variances, so for `"sum"` and
+  `"mean"` that constrained model is fitted and compared with the model
+  supplied. Every method reports Grice's (2001) three criteria, computed from
+  the fitted model: validity, univocality, and correlational accuracy. Validity
+  for regression scores is the factor determinacy coefficient reported by
+  `nomo_hierarchical()`, since that method maximizes it. Correlational accuracy
+  is the one to read before using scores in a later analysis: correlations among
+  scores do not reproduce correlations among the factors, the discrepancy is
+  substantial, and its direction depends on the method and the model rather than
+  being a constant that could be corrected for, so it is reported and left
+  visible. Gorsuch's (1983) thresholds appear as his recommendations where a
+  value falls below them, never as rules. The supplied data is never modified,
+  and only the cases the model used are scored. Includes the **Scoring a
+  measurement model** article.
+
 # nomologR 0.2.0
 
 nomologR 0.2.0 makes the workflow research-backed from historical to
