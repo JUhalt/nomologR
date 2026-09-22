@@ -116,6 +116,13 @@ Measurement invariance
 
 ## 
 
+Scoring
+
+- [`nomo_scores()`](https://juhalt.github.io/nomologR/reference/nomo_scores.md)
+  : Score a measurement model, with the evidence for the scoring choice
+
+## 
+
 Theory-specified nomological network
 
 - [`nomo_hypotheses()`](https://juhalt.github.io/nomologR/reference/nomo_hypotheses.md)

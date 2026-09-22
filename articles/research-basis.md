@@ -36,7 +36,7 @@ computational engine, and references.
 
 methods <- nomo_methods()
 nrow(methods)
-#> [1] 73
+#> [1] 80
 table(methods$stage, methods$lineage)
 #>              
 #>               contemporary emerging historical
@@ -47,6 +47,7 @@ table(methods$stage, methods$lineage)
 #>   invariance             6        0          0
 #>   network                4        0          1
 #>   reliability            9        0          2
+#>   scores                 4        0          3
 #>   screen                 4        0          1
 #>   validity               3        0          2
 #>   workflow               5        0          0
@@ -59,7 +60,7 @@ takes no part in any synthesis or decision:
 ``` r
 
 nomo_methods(lineage = "historical")[, c("stage", "method", "role")]
-#> # A tibble: 15 × 3
+#> # A tibble: 18 × 3
 #>    stage       method                                               role      
 #>    <chr>       <chr>                                                <chr>     
 #>  1 screen      Fixed item-total correlation reference (about .30)   context   
@@ -76,7 +77,10 @@ nomo_methods(lineage = "historical")[, c("stage", "method", "role")]
 #> 12 reliability Schmid-Leiman decomposition                          supporting
 #> 13 validity    Standardized loadings and average variance extracted supporting
 #> 14 validity    Fornell-Larcker comparison                           context   
-#> 15 network     Nomological network of construct relations           primary
+#> 15 scores      Unit-weighted sum or mean score                      primary   
+#> 16 scores      Regression (Thurstone) factor scores                 primary   
+#> 17 scores      Bartlett factor scores                               primary   
+#> 18 network     Nomological network of construct relations           primary
 ```
 
 The registry lists only what the package actually computes. Methods that
@@ -417,6 +421,11 @@ measurement model misspecification on coefficient omega estimates of
 composite reliability. *Educational and Psychological Measurement,
 84*(1), 5–39. <https://doi.org/10.1177/00131644231155804>
 
+Beauducel, A. (2011). Indeterminacy of factor score estimates in
+slightly misspecified confirmatory factor models. *Journal of Modern
+Applied Statistical Methods, 10*(2), 583–598.
+<https://doi.org/10.22237/jmasm/1320120900>
+
 Bentler, P. M. (1990). Comparative fit indexes in structural models.
 *Psychological Bulletin, 107*(2), 238–246.
 <https://doi.org/10.1037/0033-2909.107.2.238>
@@ -437,6 +446,11 @@ in Public Health, 6*, 149. <https://doi.org/10.3389/fpubh.2018.00149>
 Braeken, J., & van Assen, M. A. L. M. (2017). An empirical Kaiser
 criterion. *Psychological Methods, 22*(3), 450–466.
 <https://doi.org/10.1037/met0000074>
+
+Bonifay, W., Lane, S. P., & Reise, S. P. (2017). Three concerns with
+applying a bifactor model as a structure of psychopathology. *Clinical
+Psychological Science, 5*(1), 184–186.
+<https://doi.org/10.1177/2167702616657069>
 
 Browne, M. W. (2001). An overview of analytic rotation in exploratory
 factor analysis. *Multivariate Behavioral Research, 36*(1), 111–150.
@@ -555,6 +569,8 @@ structural equation modeling: An alternative to coefficient alpha.
 *Psychometrika, 74*(1), 155–167.
 <https://doi.org/10.1007/s11336-008-9099-3>
 
+Gorsuch, R. L. (1983). *Factor analysis* (2nd ed.). Lawrence Erlbaum.
+
 Grice, J. W. (2001). Computing and evaluating factor scores.
 *Psychological Methods, 6*(4), 430–450.
 <https://doi.org/10.1037/1082-989X.6.4.430>
@@ -571,6 +587,11 @@ modeling. *Journal of the Academy of Marketing Science, 43*(1), 115–135.
 Hinkin, T. R. (1998). A brief tutorial on the development of measures
 for use in survey questionnaires. *Organizational Research Methods,
 1*(1), 104–121. <https://doi.org/10.1177/109442819800100106>
+
+Hancock, G. R., & Mueller, R. O. (2001). Rethinking construct
+reliability within latent variable systems. In R. Cudeck, S. du Toit, &
+D. Sörbom (Eds.), *Structural equation modeling: Present and future*
+(pp. 195–216). Scientific Software International.
 
 Holzinger, K. J., & Swineford, F. (1937). The bi-factor method.
 *Psychometrika, 2*(1), 41–54. <https://doi.org/10.1007/BF02287965>
@@ -638,6 +659,12 @@ modifications in covariance structure analysis: The problem of
 capitalization on chance. *Psychological Bulletin, 111*(3), 490–504.
 <https://doi.org/10.1037/0033-2909.111.3.490>
 
+Marjanovic, Z., Holden, R., Struthers, W., Cribbie, R., & Greenglass, E.
+(2015). The inter-item standard deviation (ISD): An index that
+discriminates between conscientious and random responders. *Personality
+and Individual Differences, 84*, 79–83.
+<https://doi.org/10.1016/j.paid.2014.08.021>
+
 Marsh, H. W., Hau, K.-T., & Wen, Z. (2004). In search of golden rules:
 Comment on hypothesis-testing approaches to setting cutoff values for
 fit indexes and dangers in overgeneralizing Hu and Bentler’s (1999)
@@ -672,6 +699,11 @@ inquiry into score meaning. *American Psychologist, 50*(9), 741–749.
 Nosek, B. A., Ebersole, C. R., DeHaven, A. C., & Mellor, D. T. (2018).
 The preregistration revolution. *Proceedings of the National Academy of
 Sciences, 115*(11), 2600–2606. <https://doi.org/10.1073/pnas.1708274114>
+
+Murray, A. L., & Johnson, W. (2013). The limitations of model fit in
+comparing the bi-factor versus higher-order models of human cognitive
+ability structure. *Intelligence, 41*(5), 407–422.
+<https://doi.org/10.1016/j.intell.2013.06.004>
 
 Nunnally, J. C., & Bernstein, I. H. (1994). *Psychometric theory* (3rd
 ed.). McGraw-Hill.

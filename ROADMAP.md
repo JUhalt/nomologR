@@ -188,7 +188,8 @@ invariance local-strain labels (completed in
 sensitivity across measurement stages. **Moved to v0.2.1.**
 
 [\#33](https://github.com/JUhalt/nomologR/issues/33) Score guidance —
-`nomo_scores()` for sum and factor scores. **Moved to v0.2.1.**
+[`nomo_scores()`](https://juhalt.github.io/nomologR/reference/nomo_scores.md)
+for sum and factor scores. **Moved to v0.2.1.**
 
 [\#34](https://github.com/JUhalt/nomologR/issues/34) Insufficient-effort
 responding screen in

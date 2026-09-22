@@ -42,6 +42,7 @@
     <li><a class="dropdown-item" href="articles/measurement-model-evidence.html">From CFA to a defensible measurement model</a></li>
     <li><a class="dropdown-item" href="articles/hierarchical-models.html">Total and subscale scores: bifactor and higher-order models</a></li>
     <li><a class="dropdown-item" href="articles/measurement-invariance.html">Measurement Invariance with nomologR</a></li>
+    <li><a class="dropdown-item" href="articles/scoring.html">Scoring a measurement model with nomo_scores()</a></li>
     <li><a class="dropdown-item" href="articles/nomological-network.html">Theory-Specified Nomological Networks with nomologR</a></li>
     <li><a class="dropdown-item" href="articles/guided-workflow.html">Guided workflow with nomo_run()</a></li>
     <li><a class="dropdown-item" href="articles/reproducible-report.html">Archiving a nomologR workflow with nomo_report()</a></li>
@@ -539,10 +540,21 @@
 </div>
 </div>
 <div class="section level3">
+<h3 id="nomo_scores--scoring-is-a-modeling-decision">
+<code>nomo_scores()</code> — scoring is a modeling decision<a class="anchor" aria-label="anchor" href="#nomo_scores--scoring-is-a-modeling-decision"></a>
+</h3>
+<p>Once a measurement model is established, <code><a href="reference/nomo_scores.html">nomo_scores()</a></code> produces sum, mean, regression, or Bartlett scores and reports what they are and are not.</p>
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">scored</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/nomo_scores.html">nomo_scores</a></span><span class="op">(</span><span class="va">fit</span>, method <span class="op">=</span> <span class="st">"sum"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">scored</span>, <span class="st">"diagnostics"</span><span class="op">)</span></span></code></pre></div>
+<p>Adding items is not arithmetic: it assumes a parallel model, with equal unstandardized loadings and equal residual variances, so for unit-weighted scores that constrained model is fitted and compared with the model you supplied. Every method reports Grice’s three criteria — validity, univocality, and correlational accuracy.</p>
+<p>The third matters before scores are used in later analyses. Correlations among scores do not reproduce correlations among the factors, and the direction of the discrepancy depends on the scoring method and the model rather than being a constant that could be corrected for, so <code>nomologR</code> reports it rather than adjusting for it. Where a question can be asked of the latent variables instead, asking it of scores replaces an unbiased answer with a biased one. See <strong>“Scoring a measurement model”</strong>.</p>
+</div>
+<div class="section level3">
 <h3 id="id_6-nomo_hypotheses--nomo_network--theory-specified-before-evidence">6. <code>nomo_hypotheses()</code> + <code>nomo_network()</code> — theory specified before evidence<a class="anchor" aria-label="anchor" href="#id_6-nomo_hypotheses--nomo_network--theory-specified-before-evidence"></a>
 </h3>
 <p>Milestone 6 makes the nomological network an explicit theory test rather than a post-hoc collection of correlations. Predictions are machine-readable before the model is interpreted:</p>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">h</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/nomo_hypotheses.html">nomo_hypotheses</a></span><span class="op">(</span></span>
 <span>  <span class="st">"A -&gt; B"</span> <span class="op">=</span> <span class="fu"><a href="reference/nomo_expectations.html">positive</a></span><span class="op">(</span>min <span class="op">=</span> <span class="fl">.20</span><span class="op">)</span>,</span>
 <span>  <span class="st">"A &lt;-&gt; C"</span> <span class="op">=</span> <span class="fu"><a href="reference/nomo_expectations.html">negligible</a></span><span class="op">(</span>within <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">.15</span>, <span class="fl">.15</span><span class="op">)</span><span class="op">)</span>,</span>
@@ -569,7 +581,7 @@
 <h3 id="id_7-nomo_invariance--identification-aware-generalizability-evidence">7. <code>nomo_invariance()</code> — identification-aware generalizability evidence<a class="anchor" aria-label="anchor" href="#id_7-nomo_invariance--identification-aware-generalizability-evidence"></a>
 </h3>
 <p>Milestone 7 evaluates equality constraints without treating one fit-change cutoff as a universal law:</p>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">inv</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/nomo_invariance.html">nomo_invariance</a></span><span class="op">(</span></span>
 <span>  <span class="va">model</span>,</span>
 <span>  data <span class="op">=</span> <span class="va">dat</span>,</span>
@@ -584,7 +596,7 @@
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">inv</span>, type <span class="op">=</span> <span class="st">"local_strain"</span><span class="op">)</span></span></code></pre></div>
 <p>Continuous and ordered indicators use identification-appropriate sequences. For categorical models, binary, three-category, and 4+ category structures are handled differently where identification requires it.</p>
 <p>Partial invariance remains an explicit researcher decision:</p>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">release</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/nomo_partial.html">nomo_partial</a></span><span class="op">(</span></span>
 <span>  level <span class="op">=</span> <span class="st">"metric"</span>,</span>
 <span>  syntax <span class="op">=</span> <span class="st">"F =~ x2"</span>,</span>
@@ -605,7 +617,7 @@
 <h3 id="id_8-nomo_run--guided-orchestration-without-hidden-decisions">8. <code>nomo_run()</code> — guided orchestration without hidden decisions<a class="anchor" aria-label="anchor" href="#id_8-nomo_run--guided-orchestration-without-hidden-decisions"></a>
 </h3>
 <p>Milestone 8 connects the package components into a resumable workflow while keeping consequential choices explicit.</p>
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">run</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/nomo_run.html">nomo_run</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">dat</span>,</span>
 <span>  scales <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>WellBeing <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"w1"</span>, <span class="st">"w2"</span>, <span class="st">"w3"</span>, <span class="st">"w4"</span><span class="op">)</span><span class="op">)</span></span>
@@ -629,7 +641,7 @@
 <p>Teaching mode presents consequential pauses as <strong>Observation / Reason / Options / Consequence</strong>. Research mode provides a compact view of the same underlying analysis.</p>
 <p><code><a href="reference/nomo_run.html">nomo_run()</a></code> never silently deletes items, creates a CFA model from EFA, frees invariance constraints, respecifies a model, or declares a construct valid/invalid.</p>
 <p>If the measurement evidence prompts a change, <code><a href="reference/nomo_revise.html">nomo_revise()</a></code> creates a child workflow that keeps the parent as its documented ancestor:</p>
-<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">revised</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/nomo_revise.html">nomo_revise</a></span><span class="op">(</span></span>
 <span>  <span class="va">run</span>,</span>
 <span>  cfa_model <span class="op">=</span> <span class="st">"WellBeing =~ w1 + w2 + w3 + w4\nw1 ~~ w2"</span>,</span>
@@ -646,7 +658,7 @@
 </h3>
 <p><code><a href="reference/nomo_report.html">nomo_report()</a></code> creates an archival HTML report from a guided workflow, including methods, evidence, researcher decisions, deviations, citations, and session information. See the <a href="https://juhalt.github.io/nomologR/articles/reproducible-report.html">reproducible reporting walkthrough</a> for the documented inputs and limitations.</p>
 <p>The report cites the methods the workflow actually used, not every method the package offers. The same information is available directly:</p>
-<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/nomo_methods.html">nomo_methods</a></span><span class="op">(</span><span class="va">run</span><span class="op">)</span>                     <span class="co"># methods this workflow used</span></span>
 <span><span class="fu"><a href="reference/nomo_methods.html">nomo_methods</a></span><span class="op">(</span>lineage <span class="op">=</span> <span class="st">"historical"</span><span class="op">)</span>  <span class="co"># shown for recognition, and why</span></span>
 <span><span class="fu"><a href="reference/nomo_methods.html">nomo_methods</a></span><span class="op">(</span><span class="va">run</span>, references <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>  <span class="co"># a reference list with DOIs</span></span></code></pre></div>

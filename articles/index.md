@@ -10,6 +10,8 @@
   models](https://juhalt.github.io/nomologR/articles/hierarchical-models.md):
 - [Measurement Invariance with
   nomologR](https://juhalt.github.io/nomologR/articles/measurement-invariance.md):
+- [Scoring a measurement model with
+  nomo_scores()](https://juhalt.github.io/nomologR/articles/scoring.md):
 - [Theory-Specified Nomological Networks with
   nomologR](https://juhalt.github.io/nomologR/articles/nomological-network.md):
 - [Guided workflow with
