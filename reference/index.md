@@ -13,6 +13,8 @@ report-ready tables, and archive evidence and decisions.
   : Render a reproducible nomologR analysis report
 - [`nomo_table()`](https://juhalt.github.io/nomologR/reference/nomo_table.md)
   : Extract report-ready evidence tables
+- [`nomo_apa_table()`](https://juhalt.github.io/nomologR/reference/nomo_apa_table.md)
+  : Manuscript-ready tables in APA style
 - [`nomo_defaults()`](https://juhalt.github.io/nomologR/reference/nomo_defaults.md)
   : Default guidance settings for nomologR
 

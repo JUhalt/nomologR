@@ -179,6 +179,258 @@ afterwards. Your chunk options therefore do not change the report, and
 rendering the report does not change your document.</p>
 </div>
 <div class="section level2">
+<h2 id="tables-for-a-manuscript">Tables for a manuscript<a class="anchor" aria-label="anchor" href="#tables-for-a-manuscript"></a>
+</h2>
+<p>A report archives a workflow. A thesis or manuscript needs tables.
+<code><a href="../reference/nomo_apa_table.html">nomo_apa_table()</a></code> formats the evidence in a result as a
+table in APA 7 style — a bold number, an italic title, no vertical
+rules, and notes below — which knits directly into an R Markdown or
+Quarto document:</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/nomo_apa_table.html">nomo_apa_table</a></span><span class="op">(</span><span class="va">run</span><span class="op">$</span><span class="va">results</span><span class="op">$</span><span class="va">cfa</span>, <span class="st">"loadings"</span>, number <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code></pre></div>
+<p><strong>Table 1</strong></p>
+<p><em>Standardized Factor Loadings</em></p>
+<table class="table">
+<thead><tr class="header">
+<th align="left">Item</th>
+<th align="center">Agency</th>
+<th align="center">Persistence</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="left">ag1</td>
+<td align="center">0.82</td>
+<td align="center"></td>
+</tr>
+<tr class="even">
+<td align="left">ag2</td>
+<td align="center">0.75</td>
+<td align="center"></td>
+</tr>
+<tr class="odd">
+<td align="left">ag3</td>
+<td align="center">0.71</td>
+<td align="center"></td>
+</tr>
+<tr class="even">
+<td align="left">ag4</td>
+<td align="center">0.78</td>
+<td align="center"></td>
+</tr>
+<tr class="odd">
+<td align="left">pe1</td>
+<td align="center"></td>
+<td align="center">0.77</td>
+</tr>
+<tr class="even">
+<td align="left">pe2</td>
+<td align="center"></td>
+<td align="center">0.70</td>
+</tr>
+<tr class="odd">
+<td align="left">pe3</td>
+<td align="center"></td>
+<td align="center">0.74</td>
+</tr>
+<tr class="even">
+<td align="left">pe4</td>
+<td align="center"></td>
+<td align="center">0.69</td>
+</tr>
+</tbody>
+</table>
+<p><em>Note.</em> Standardized loadings from a confirmatory factor
+analysis. Estimated with ML; <em>N</em> = 800. Blank cells are loadings
+fixed to zero by the model.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/nomo_apa_table.html">nomo_apa_table</a></span><span class="op">(</span><span class="va">run</span><span class="op">$</span><span class="va">results</span><span class="op">$</span><span class="va">cfa</span>, <span class="st">"fit"</span>, number <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
+<p><strong>Table 2</strong></p>
+<p><em>Model Fit</em></p>
+<table style="width:100%;" class="table">
+<colgroup>
+<col width="10%">
+<col width="12%">
+<col width="12%">
+<col width="12%">
+<col width="12%">
+<col width="12%">
+<col width="12%">
+<col width="12%">
+</colgroup>
+<thead><tr class="header">
+<th align="left">Model</th>
+<th align="center">χ²</th>
+<th align="center"><em>df</em></th>
+<th align="center"><em>p</em></th>
+<th align="center">CFI</th>
+<th align="center">TLI</th>
+<th align="center">RMSEA [90% CI]</th>
+<th align="center">SRMR</th>
+</tr></thead>
+<tbody><tr class="odd">
+<td align="left">Measurement model</td>
+<td align="center">18.52</td>
+<td align="center">19</td>
+<td align="center">.488</td>
+<td align="center">1.000</td>
+<td align="center">1.000</td>
+<td align="center">0.000 [0.000, 0.030]</td>
+<td align="center">0.015</td>
+</tr></tbody>
+</table>
+<p><em>Note.</em> Estimated with ML; <em>N</em> = 800. CFI = comparative
+fit index; TLI = Tucker-Lewis index; RMSEA = root mean square error of
+approximation; SRMR = standardized root mean square residual. Fit
+indices are reported as evidence, not against fixed cutoffs.</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/nomo_apa_table.html">nomo_apa_table</a></span><span class="op">(</span><span class="va">run</span><span class="op">$</span><span class="va">results</span><span class="op">$</span><span class="va">reliability</span>, number <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></code></pre></div>
+<p><strong>Table 3</strong></p>
+<p><em>Reliability Estimates</em></p>
+<table class="table">
+<thead><tr class="header">
+<th align="left">Construct</th>
+<th align="center">ω</th>
+<th align="center">α</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="left">Agency</td>
+<td align="center">.85</td>
+<td align="center">.85</td>
+</tr>
+<tr class="even">
+<td align="left">Persistence</td>
+<td align="center">.82</td>
+<td align="center">.82</td>
+</tr>
+</tbody>
+</table>
+<p><em>Note.</em> ω = coefficient omega; α = coefficient alpha.
+Coefficient alpha assumes equal loadings and is reported alongside omega
+for comparison with published work.</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/nomo_apa_table.html">nomo_apa_table</a></span><span class="op">(</span><span class="va">run</span><span class="op">$</span><span class="va">results</span><span class="op">$</span><span class="va">invariance</span>, number <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span></code></pre></div>
+<p><strong>Table 4</strong></p>
+<p><em>Measurement Invariance Across Groups</em></p>
+<table class="table">
+<colgroup>
+<col width="8%">
+<col width="10%">
+<col width="10%">
+<col width="10%">
+<col width="10%">
+<col width="10%">
+<col width="10%">
+<col width="10%">
+<col width="10%">
+<col width="10%">
+</colgroup>
+<thead><tr class="header">
+<th align="left">Model</th>
+<th align="center">χ²</th>
+<th align="center"><em>df</em></th>
+<th align="center">CFI</th>
+<th align="center">RMSEA</th>
+<th align="center">SRMR</th>
+<th align="center">ΔCFI</th>
+<th align="center">ΔRMSEA</th>
+<th align="center">Δχ² (Δ<em>df</em>)</th>
+<th align="center"><em>p</em></th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="left">Configural</td>
+<td align="center">32.75</td>
+<td align="center">38</td>
+<td align="center">1.000</td>
+<td align="center">0.000</td>
+<td align="center">0.017</td>
+<td align="center">—</td>
+<td align="center">—</td>
+<td align="center">—</td>
+<td align="center">—</td>
+</tr>
+<tr class="even">
+<td align="left">Metric</td>
+<td align="center">41.15</td>
+<td align="center">44</td>
+<td align="center">1.000</td>
+<td align="center">0.000</td>
+<td align="center">0.027</td>
+<td align="center">.000</td>
+<td align="center">0.000</td>
+<td align="center">8.40 (6)</td>
+<td align="center">.210</td>
+</tr>
+<tr class="odd">
+<td align="left">Scalar</td>
+<td align="center">106.08</td>
+<td align="center">50</td>
+<td align="center">.977</td>
+<td align="center">0.053</td>
+<td align="center">0.044</td>
+<td align="center">-.023</td>
+<td align="center">0.053</td>
+<td align="center">64.92 (6)</td>
+<td align="center">&lt; .001</td>
+</tr>
+</tbody>
+</table>
+<p><em>Note.</em> Grouping variable: group. Each model adds constraints
+to the one above it; changes are relative to the preceding model.
+Changes in fit are reported as evidence and are not compared with fixed
+cutoffs.</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/nomo_apa_table.html">nomo_apa_table</a></span><span class="op">(</span><span class="va">run</span><span class="op">$</span><span class="va">results</span><span class="op">$</span><span class="va">network</span>, number <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></code></pre></div>
+<p><strong>Table 5</strong></p>
+<p><em>Theory-Specified Relations</em></p>
+<table class="table">
+<colgroup>
+<col width="21%">
+<col width="26%">
+<col width="26%">
+<col width="26%">
+</colgroup>
+<thead><tr class="header">
+<th align="left">Hypothesis</th>
+<th align="center">Prediction</th>
+<th align="center">Estimate [95% CI]</th>
+<th align="center">Evidence</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="left">H1: Agency -&gt; Persistence</td>
+<td align="center">positive</td>
+<td align="center">0.46 [0.39, 0.53]</td>
+<td align="center">Concordant</td>
+</tr>
+<tr class="even">
+<td align="left">H2: Agency -&gt; Performance</td>
+<td align="center">positive</td>
+<td align="center">0.39 [0.32, 0.45]</td>
+<td align="center">Concordant</td>
+</tr>
+</tbody>
+</table>
+<p><em>Note.</em> Estimates are on the standardized scale. Evidence
+describes how each estimate relates to the prediction registered for it;
+it is evidence about the prediction, not a verdict on the measure.</p>
+<p>Notice the leading zeros. APA 7 drops the zero before a decimal point
+only for a statistic that <em>cannot</em> exceed 1, so the rule follows
+the statistic rather than the value it happens to take. Reliability
+coefficients, correlations, CFI, and <em>p</em> values lose it; TLI,
+RMSEA, SRMR, and standardized loadings keep it, because each can exceed
+1 — TLI is not bounded above, and a standardized loading does in an
+improper solution. Many published tables print standardized loadings
+without the zero; these tables follow the rule as written.</p>
+<p>The notes keep the package’s reference-value language. Fit indices
+are reported as evidence rather than against fixed cutoffs, and the
+hypotheses table describes how each estimate relates to its prediction
+without calling any of them a pass or a fail. A hypothesis specified
+after the data were seen is marked with a note saying it is
+exploratory.</p>
+</div>
+<div class="section level2">
 <h2 id="what-the-report-contains">What the report contains<a class="anchor" aria-label="anchor" href="#what-the-report-contains"></a>
 </h2>
 <p>The report mirrors the full guided workflow:</p>
@@ -211,7 +463,7 @@ severity, and observation that produced it.</p>
 <h2 id="reports-from-incomplete-workflows">Reports from incomplete workflows<a class="anchor" aria-label="anchor" href="#reports-from-incomplete-workflows"></a>
 </h2>
 <p>A report can also be rendered from a paused or blocked workflow:</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">paused_run</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_run.html">nomo_run</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">nomo_demo_network</span>,</span>
 <span>  scales <span class="op">=</span> <span class="va">scales</span>,</span>
@@ -230,7 +482,7 @@ severity, and observation that produced it.</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> validity    not_started       <span style="color: #949494;">""</span>                                              </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">7</span> invariance  not_started       <span style="color: #949494;">""</span>                                              </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">8</span> network     not_started       <span style="color: #949494;">""</span></span></span></code></pre></div>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">paused_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_report.html">nomo_report</a></span><span class="op">(</span></span>
 <span>  <span class="va">paused_run</span>,</span>
 <span>  file <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">report_dir</span>, <span class="st">"paused-workflow-audit.html"</span><span class="op">)</span>,</span>
@@ -250,7 +502,7 @@ unresolved.</p>
 <p>The default includes a compact, nonredundant set of plots and full
 <code><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo()</a></code> output. Both can be turned off, as in the
 paused report above:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/nomo_report.html">nomo_report</a></span><span class="op">(</span></span>
 <span>  <span class="va">run</span>,</span>
 <span>  file <span class="op">=</span> <span class="st">"compact-report.html"</span>,</span>
@@ -263,10 +515,10 @@ paused report above:</p>
 </h2>
 <p>Existing reports are protected. Rendering to a file that already
 exists stops unless <code>overwrite = TRUE</code> is supplied:</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/nomo_report.html">nomo_report</a></span><span class="op">(</span><span class="va">run</span>, file <span class="op">=</span> <span class="va">report_file</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #BBBB00; font-weight: bold;">Error</span><span style="font-weight: bold;">:</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BBBB00;">!</span> Report file already exists: /tmp/RtmpldJw9S/nomologR-reports-1fd3108c5c19/construct-validation-report.html. Use `overwrite = TRUE` to replace it.</span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #BBBB00;">!</span> Report file already exists: /tmp/RtmpkSjePJ/nomologR-reports-200c7b29e887/construct-validation-report.html. Use `overwrite = TRUE` to replace it.</span></span></code></pre></div>
 <p>As elsewhere in <code>nomologR</code>, consequential or destructive
 behavior is not silently assumed.</p>
 </div>

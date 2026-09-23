@@ -663,6 +663,12 @@
 <span><span class="fu"><a href="reference/nomo_methods.html">nomo_methods</a></span><span class="op">(</span>lineage <span class="op">=</span> <span class="st">"historical"</span><span class="op">)</span>  <span class="co"># shown for recognition, and why</span></span>
 <span><span class="fu"><a href="reference/nomo_methods.html">nomo_methods</a></span><span class="op">(</span><span class="va">run</span>, references <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>  <span class="co"># a reference list with DOIs</span></span></code></pre></div>
 <p>Each method records its stage, whether it is historical, contemporary, or emerging practice, how the package uses it, its estimand and assumptions, and DOI-verified references. The <a href="https://juhalt.github.io/nomologR/articles/research-basis.html">research basis</a> article explains the lineage labels.</p>
+<p>For a thesis or manuscript, <code><a href="reference/nomo_apa_table.html">nomo_apa_table()</a></code> formats a result as an APA 7 table — a bold number, an italic title, no vertical rules, and notes below — that knits directly into R Markdown or Quarto:</p>
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="reference/nomo_apa_table.html">nomo_apa_table</a></span><span class="op">(</span><span class="va">cfa</span>, <span class="st">"loadings"</span>, number <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/nomo_apa_table.html">nomo_apa_table</a></span><span class="op">(</span><span class="va">reliability</span>, number <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/nomo_apa_table.html">nomo_apa_table</a></span><span class="op">(</span><span class="va">network</span>, number <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></code></pre></div>
+<p>Leading zeros follow the statistic rather than its value: reliability, correlations, CFI, and <em>p</em> lose theirs because they cannot exceed 1, while TLI, RMSEA, SRMR, and standardized loadings keep theirs because they can. No table labels a result as passing or failing.</p>
 </div>
 </div>
 <div class="section level2">
@@ -676,11 +682,34 @@
 <p><code>v0.2.0</code> makes the workflow research-backed from historical to contemporary practice and more useful to graduate students and researchers. Scope was selected in <a href="https://github.com/JUhalt/nomologR/issues/22" class="external-link">#22</a>. It added learning foundations (#25) with teaching datasets, runnable vignettes, and the research-basis article; readable invariance labels (#31); maintenance (#36); model comparison with <code><a href="reference/nomo_compare.html">nomo_compare()</a></code> (#27); auditable revision lineage with <code><a href="reference/nomo_revise.html">nomo_revise()</a></code> (#28); the methods registry with <code><a href="reference/nomo_methods.html">nomo_methods()</a></code> (#26); interval-based replication-status language for sign changes (#30); bifactor and higher-order models with <code><a href="reference/nomo_hierarchical.html">nomo_hierarchical()</a></code> (#29); and release certification (#37).</p>
 </div>
 <div class="section level3">
-<h3 id="next-v021-and-v030">Next: <code>v0.2.1</code> and <code>v0.3.0</code>
-<a class="anchor" aria-label="anchor" href="#next-v021-and-v030"></a>
+<h3 id="in-development-v021">In development: <code>v0.2.1</code>
+<a class="anchor" aria-label="anchor" href="#in-development-v021"></a>
 </h3>
-<p>The <a href="https://github.com/JUhalt/nomologR/milestone/4" class="external-link"><code>v0.2.1</code> milestone</a> holds six workstreams moved out of <code>v0.2.0</code> at certification, each with its reason recorded: missing-data sensitivity (#32), score guidance (#33), insufficient-effort responding screens (#34), manuscript-ready tables (#35), rendering reports from inside R Markdown or Quarto documents (#40), and optional parallel bootstrap intervals (#42).</p>
-<p><code>v0.3.0</code> carries the first CRAN submission (<a href="https://github.com/JUhalt/nomologR/issues/39" class="external-link">#39</a>). Other candidates for that release (for example IRT/DIF, Bayesian SEM, ESEM, longitudinal invariance, and a <code>contentvalidR</code> handoff) are tracked in <a href="https://github.com/JUhalt/nomologR/issues/38" class="external-link">#38</a>.</p>
+<p>The <a href="https://github.com/JUhalt/nomologR/milestone/4" class="external-link"><code>v0.2.1</code> milestone</a> began with six workstreams moved out of <code>v0.2.0</code> at certification. In the development version so far:</p>
+<ul>
+<li>reports render from inside R Markdown and Quarto documents (#40);</li>
+<li>
+<code><a href="reference/nomo_scores.html">nomo_scores()</a></code> produces sum, mean, regression, or Bartlett scores with Grice’s validity, univocality, and correlational-accuracy diagnostics, and tests the parallel model that unit weighting assumes (#33);</li>
+<li>
+<code>nomo_screen(effort = TRUE)</code> adds careless-responding indices, reported side by side because they detect different failures (#34);</li>
+<li>
+<code><a href="reference/nomo_hierarchical.html">nomo_hierarchical()</a></code> reports factor determinacy and construct replicability (#56);</li>
+<li>
+<code><a href="reference/nomo_network.html">nomo_network()</a></code> discloses relationships estimated between observed variables, which carry the bias that scoring introduces (#62);</li>
+<li>the reliability bootstrap can run on several workers (#42);</li>
+<li>
+<code><a href="reference/nomo_apa_table.html">nomo_apa_table()</a></code> formats manuscript-ready tables (#35), with Word output for reports to follow;</li>
+<li>
+<code><a href="reference/nomo_compare.html">nomo_compare()</a></code> is fully covered by tests again (#54).</li>
+</ul>
+<p>Missing-data sensitivity (#32) remains.</p>
+</div>
+<div class="section level3">
+<h3 id="next-v030-and-v100">Next: <code>v0.3.0</code> and <code>v1.0.0</code>
+<a class="anchor" aria-label="anchor" href="#next-v030-and-v100"></a>
+</h3>
+<p><code>v0.3.0</code> carries the first CRAN submission (<a href="https://github.com/JUhalt/nomologR/issues/39" class="external-link">#39</a>) and a reader for handoffs from <code>contentvalidR</code> (<a href="https://github.com/JUhalt/nomologR/issues/46" class="external-link">#46</a>), so items that passed content review can be screened and modeled here. Other candidates for that release (for example IRT/DIF, Bayesian SEM, ESEM, and longitudinal invariance) are tracked in <a href="https://github.com/JUhalt/nomologR/issues/38" class="external-link">#38</a>.</p>
+<p><code>v1.0.0</code> is planned as a joint release with <a href="https://github.com/JUhalt/contentvalidR" class="external-link"><code>contentvalidR</code></a>, the package’s content-validity counterpart, so the two show one item set crossing from expert review into empirical evidence (<a href="https://github.com/JUhalt/nomologR/issues/53" class="external-link">#53</a>). A companion article will demonstrate an item that passes content review and then behaves badly empirically, and one the reverse (<a href="https://github.com/JUhalt/nomologR/issues/60" class="external-link">#60</a>).</p>
 </div>
 <div class="section level3">
 <h3 id="completed-v010">Completed: <code>v0.1.0</code>

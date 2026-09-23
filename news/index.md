@@ -136,6 +136,33 @@
   the evaluation recorded on the issue, eight workers were slower than
   four. Tests use at most two workers, following CRAN policy.
 
+- Added
+  [`nomo_apa_table()`](https://juhalt.github.io/nomologR/reference/nomo_apa_table.md),
+  which formats the evidence in a result as an APA 7 table ready for a
+  thesis, dissertation, or manuscript
+  ([\#35](https://github.com/JUhalt/nomologR/issues/35)): standardized
+  loadings, factor correlations, and model fit from
+  [`nomo_cfa()`](https://juhalt.github.io/nomologR/reference/nomo_cfa.md);
+  reliability from
+  [`nomo_reliability()`](https://juhalt.github.io/nomologR/reference/nomo_reliability.md);
+  the invariance sequence from
+  [`nomo_invariance()`](https://juhalt.github.io/nomologR/reference/nomo_invariance.md);
+  and hypothesis evidence and model fit from
+  [`nomo_network()`](https://juhalt.github.io/nomologR/reference/nomo_network.md).
+  Tables carry a bold number, an italic title, no vertical rules, and
+  notes below in APA’s order, and they knit directly into R Markdown or
+  Quarto. Leading zeros follow the statistic rather than its value, as
+  APA 7 specifies: statistics that cannot exceed 1 (reliability,
+  correlations, CFI, *p*) lose the zero, and those that can (TLI, RMSEA,
+  SRMR, standardized loadings) keep it. A value that rounds to zero is
+  never printed with a sign, and an estimate the model could not produce
+  is shown as an em dash. The hypotheses table reports each estimate’s
+  evidence against its prediction, and marks a hypothesis specified
+  after the data were seen as exploratory. No cell reads pass or fail.
+  Word output for
+  [`nomo_report()`](https://juhalt.github.io/nomologR/reference/nomo_report.md)
+  follows separately.
+
 ## nomologR 0.2.0
 
 nomologR 0.2.0 makes the workflow research-backed from historical to

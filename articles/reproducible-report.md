@@ -109,6 +109,126 @@ options are restored afterwards. Your chunk options therefore do not
 change the report, and rendering the report does not change your
 document.
 
+## Tables for a manuscript
+
+A report archives a workflow. A thesis or manuscript needs tables.
+[`nomo_apa_table()`](https://juhalt.github.io/nomologR/reference/nomo_apa_table.md)
+formats the evidence in a result as a table in APA 7 style — a bold
+number, an italic title, no vertical rules, and notes below — which
+knits directly into an R Markdown or Quarto document:
+
+``` r
+
+nomo_apa_table(run$results$cfa, "loadings", number = 1)
+```
+
+**Table 1**
+
+*Standardized Factor Loadings*
+
+| Item | Agency | Persistence |
+|:-----|:------:|:-----------:|
+| ag1  |  0.82  |             |
+| ag2  |  0.75  |             |
+| ag3  |  0.71  |             |
+| ag4  |  0.78  |             |
+| pe1  |        |    0.77     |
+| pe2  |        |    0.70     |
+| pe3  |        |    0.74     |
+| pe4  |        |    0.69     |
+
+*Note.* Standardized loadings from a confirmatory factor analysis.
+Estimated with ML; *N* = 800. Blank cells are loadings fixed to zero by
+the model.
+
+``` r
+
+nomo_apa_table(run$results$cfa, "fit", number = 2)
+```
+
+**Table 2**
+
+*Model Fit*
+
+| Model             |  χ²   | *df* | *p*  |  CFI  |  TLI  |    RMSEA \[90% CI\]    | SRMR  |
+|:------------------|:-----:|:----:|:----:|:-----:|:-----:|:----------------------:|:-----:|
+| Measurement model | 18.52 |  19  | .488 | 1.000 | 1.000 | 0.000 \[0.000, 0.030\] | 0.015 |
+
+*Note.* Estimated with ML; *N* = 800. CFI = comparative fit index; TLI =
+Tucker-Lewis index; RMSEA = root mean square error of approximation;
+SRMR = standardized root mean square residual. Fit indices are reported
+as evidence, not against fixed cutoffs.
+
+``` r
+
+nomo_apa_table(run$results$reliability, number = 3)
+```
+
+**Table 3**
+
+*Reliability Estimates*
+
+| Construct   |  ω  |  α  |
+|:------------|:---:|:---:|
+| Agency      | .85 | .85 |
+| Persistence | .82 | .82 |
+
+*Note.* ω = coefficient omega; α = coefficient alpha. Coefficient alpha
+assumes equal loadings and is reported alongside omega for comparison
+with published work.
+
+``` r
+
+nomo_apa_table(run$results$invariance, number = 4)
+```
+
+**Table 4**
+
+*Measurement Invariance Across Groups*
+
+| Model      |   χ²   | *df* |  CFI  | RMSEA | SRMR  | ΔCFI  | ΔRMSEA | Δχ² (Δ*df*) |   *p*   |
+|:-----------|:------:|:----:|:-----:|:-----:|:-----:|:-----:|:------:|:-----------:|:-------:|
+| Configural | 32.75  |  38  | 1.000 | 0.000 | 0.017 |   —   |   —    |      —      |    —    |
+| Metric     | 41.15  |  44  | 1.000 | 0.000 | 0.027 | .000  | 0.000  |  8.40 (6)   |  .210   |
+| Scalar     | 106.08 |  50  | .977  | 0.053 | 0.044 | -.023 | 0.053  |  64.92 (6)  | \< .001 |
+
+*Note.* Grouping variable: group. Each model adds constraints to the one
+above it; changes are relative to the preceding model. Changes in fit
+are reported as evidence and are not compared with fixed cutoffs.
+
+``` r
+
+nomo_apa_table(run$results$network, number = 5)
+```
+
+**Table 5**
+
+*Theory-Specified Relations*
+
+| Hypothesis                 | Prediction | Estimate \[95% CI\] |  Evidence  |
+|:---------------------------|:----------:|:-------------------:|:----------:|
+| H1: Agency -\> Persistence |  positive  | 0.46 \[0.39, 0.53\] | Concordant |
+| H2: Agency -\> Performance |  positive  | 0.39 \[0.32, 0.45\] | Concordant |
+
+*Note.* Estimates are on the standardized scale. Evidence describes how
+each estimate relates to the prediction registered for it; it is
+evidence about the prediction, not a verdict on the measure.
+
+Notice the leading zeros. APA 7 drops the zero before a decimal point
+only for a statistic that *cannot* exceed 1, so the rule follows the
+statistic rather than the value it happens to take. Reliability
+coefficients, correlations, CFI, and *p* values lose it; TLI, RMSEA,
+SRMR, and standardized loadings keep it, because each can exceed 1 — TLI
+is not bounded above, and a standardized loading does in an improper
+solution. Many published tables print standardized loadings without the
+zero; these tables follow the rule as written.
+
+The notes keep the package’s reference-value language. Fit indices are
+reported as evidence rather than against fixed cutoffs, and the
+hypotheses table describes how each estimate relates to its prediction
+without calling any of them a pass or a fail. A hypothesis specified
+after the data were seen is marked with a note saying it is exploratory.
+
 ## What the report contains
 
 The report mirrors the full guided workflow:
@@ -207,7 +327,7 @@ stops unless `overwrite = TRUE` is supplied:
 
 nomo_report(run, file = report_file)
 #> Error:
-#> ! Report file already exists: /tmp/RtmpldJw9S/nomologR-reports-1fd3108c5c19/construct-validation-report.html. Use `overwrite = TRUE` to replace it.
+#> ! Report file already exists: /tmp/RtmpkSjePJ/nomologR-reports-200c7b29e887/construct-validation-report.html. Use `overwrite = TRUE` to replace it.
 ```
 
 As elsewhere in `nomologR`, consequential or destructive behavior is not
