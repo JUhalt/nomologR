@@ -861,3 +861,91 @@ test_that("closeout B: reliability marks an improper measurement model as a mode
   expect_identical(dep$severity[[1L]], "concern")
   expect_match(dep$observation[[1L]], "admissibility", fixed = TRUE)
 })
+
+
+# Parallel bootstrap (#42) -----------------------------------------------------
+
+reliability_boot_fit <- local({
+  cache <- NULL
+  function() {
+    if (!is.null(cache)) return(cache)
+    cache <<- nomo_cfa(
+      "A =~ a1 + a2 + a3 + a4\nB =~ b1 + b2 + b3 + b4",
+      nomo_demo_continuous
+    )
+    cache
+  }
+})
+
+
+test_that("the bootstrap stays serial by default and records it", {
+  rel <- nomo_reliability(reliability_boot_fit(), ci = "bootstrap",
+                          ci_boot = 20, ci_seed = 2026)
+
+  expect_identical(rel$ci_ncpus, 1L)
+  expect_identical(rel$ci_status$workers, 1L)
+
+  entry <- rel$decision_log[rel$decision_log$metric == "bootstrap_reproducibility", ]
+  expect_identical(nrow(entry), 1L)
+  expect_identical(entry$severity, "info")
+  expect_match(entry$observation, "seed 2026, serially", fixed = TRUE)
+  expect_match(entry$recommendation, "same number of workers", fixed = TRUE)
+})
+
+
+test_that("an unseeded bootstrap is flagged as not reproducible", {
+  rel <- nomo_reliability(reliability_boot_fit(), ci = "bootstrap", ci_boot = 20)
+  entry <- rel$decision_log[rel$decision_log$metric == "bootstrap_reproducibility", ]
+
+  expect_identical(entry$severity, "review")
+  expect_match(entry$recommendation, "cannot be reproduced exactly", fixed = TRUE)
+})
+
+
+test_that("point estimates record no workers and log no bootstrap", {
+  rel <- nomo_reliability(reliability_boot_fit())
+  expect_true(is.na(rel$ci_status$workers))
+  expect_false("bootstrap_reproducibility" %in% rel$decision_log$metric)
+})
+
+
+test_that("ci_ncpus must be a whole number of at least one", {
+  fit <- reliability_boot_fit()
+  for (bad in list(0, 1.5, -2, NA, "2", c(1, 2))) {
+    expect_error(nomo_reliability(fit, ci_ncpus = bad), "ci_ncpus")
+  }
+})
+
+
+test_that("a parallel bootstrap is reproducible for a seed and a worker count", {
+  skip_on_cran()
+
+  # Workers are separate R processes that must load an installed nomologR, which
+  # is not the case under devtools::load_all(). Probe rather than assume.
+  cl <- tryCatch(parallel::makePSOCKcluster(1L), error = function(e) NULL)
+  if (is.null(cl)) skip("could not start a worker process")
+  can_load <- tryCatch(
+    isTRUE(parallel::clusterEvalQ(
+      cl, requireNamespace("nomologR", quietly = TRUE)
+    )[[1L]]),
+    error = function(e) FALSE
+  )
+  parallel::stopCluster(cl)
+  if (!can_load) skip("worker processes cannot load an installed nomologR")
+
+  # CRAN policy: never more than two cores at once.
+  run <- function() {
+    nomo_reliability(reliability_boot_fit(), ci = "bootstrap",
+                     ci_boot = 30, ci_seed = 2026, ci_ncpus = 2)
+  }
+  first <- run()
+  second <- run()
+
+  expect_true(first$ci_status$available)
+  expect_identical(first$ci_status$workers, 2L)
+  expect_identical(first$omega$ci_lower, second$omega$ci_lower)
+  expect_identical(first$omega$ci_upper, second$omega$ci_upper)
+
+  entry <- first$decision_log[first$decision_log$metric == "bootstrap_reproducibility", ]
+  expect_match(entry$observation, "on 2 snow workers", fixed = TRUE)
+})

@@ -111,7 +111,8 @@ nomo_reliability_bootstrap_ci <- function(fit_info,
                                           include_alpha,
                                           level,
                                           R,
-                                          seed) {
+                                          seed,
+                                          ncpus = 1L) {
   expected_keys <- paste(
     evidence$metric, evidence$construct, evidence$block, sep = "::"
   )
@@ -133,6 +134,7 @@ nomo_reliability_bootstrap_ci <- function(fit_info,
       min_successful_draws = as.integer(min_success),
       available = isTRUE(available),
       seed = if (is.null(seed)) NA_integer_ else as.integer(seed),
+      workers = as.integer(ncpus),
       reason = reason
     )
   }
@@ -143,7 +145,10 @@ nomo_reliability_bootstrap_ci <- function(fit_info,
       R = R,
       type = "ordinary",
       FUN = nomo_reliability_boot_stat,
-      parallel = "no",
+      # snow rather than multicore, because forking is unavailable on Windows
+      # and one backend everywhere keeps results comparable across platforms.
+      parallel = if (ncpus > 1L) "snow" else "no",
+      ncpus = ncpus,
       iseed = seed,
       expected_keys = expected_keys,
       construct_names = fit_info$latent_names,

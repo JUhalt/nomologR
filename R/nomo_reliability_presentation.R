@@ -125,6 +125,12 @@ print.nomo_reliability <- function(x, ...) {
       cat(sprintf(" | minimum successful draws: %d",
                   x$ci_status$min_successful_draws[[1L]]))
     }
+    # Absent from status tables created before worker counts were recorded,
+    # such as a saved object from an earlier version.
+    workers <- if ("workers" %in% names(x$ci_status)) x$ci_status$workers else NULL
+    if (length(workers) && is.finite(workers[[1L]]) && workers[[1L]] > 1L) {
+      cat(sprintf(" | %d workers", workers[[1L]]))
+    }
     cat("\n")
     if (nzchar(x$ci_status$reason[[1L]])) {
       cat("Bootstrap note: ", x$ci_status$reason[[1L]], "\n", sep = "")
