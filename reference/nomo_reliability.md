@@ -19,6 +19,7 @@ nomo_reliability(
   ci_level = 0.95,
   ci_boot = 1000L,
   ci_seed = NULL,
+  ci_ncpus = 1L,
   guidance = nomo_defaults()
 )
 ```
@@ -76,6 +77,18 @@ nomo_reliability(
 - ci_seed:
 
   Optional integer seed for reproducible bootstrap intervals.
+
+- ci_ncpus:
+
+  Number of worker processes for the bootstrap. The default, `1`, runs
+  serially. Values above one use lavaan's `snow` backend, which works on
+  Windows, macOS, and Linux. The draws depend on the worker count as
+  well as the seed, so a result is reproducible for a given seed *and*
+  worker count, and both are recorded. More workers are not always
+  faster: each worker must start and load its packages, and in the
+  evaluation recorded in the package's issue tracker, eight workers were
+  slower than four. Workers must be able to load nomologR, lavaan, and
+  semTools from the library.
 
 - guidance:
 

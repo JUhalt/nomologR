@@ -77,6 +77,7 @@ its stronger assumptions.</p>
 <span>  ci_level <span class="op">=</span> <span class="fl">0.95</span>,</span>
 <span>  ci_boot <span class="op">=</span> <span class="fl">1000L</span>,</span>
 <span>  ci_seed <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  ci_ncpus <span class="op">=</span> <span class="fl">1L</span>,</span>
 <span>  guidance <span class="op">=</span> <span class="fu"><a href="nomo_defaults.html">nomo_defaults</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -129,6 +130,17 @@ repeatedly refitting the same CFA with <code><a href="https://rdrr.io/pkg/lavaan
 
 <dt id="arg-ci-seed">ci_seed<a class="anchor" aria-label="anchor" href="#arg-ci-seed"></a></dt>
 <dd><p>Optional integer seed for reproducible bootstrap intervals.</p></dd>
+
+
+<dt id="arg-ci-ncpus">ci_ncpus<a class="anchor" aria-label="anchor" href="#arg-ci-ncpus"></a></dt>
+<dd><p>Number of worker processes for the bootstrap. The default,
+<code>1</code>, runs serially. Values above one use lavaan's <code>snow</code> backend, which
+works on Windows, macOS, and Linux. The draws depend on the worker count as
+well as the seed, so a result is reproducible for a given seed <em>and</em> worker
+count, and both are recorded. More workers are not always faster: each
+worker must start and load its packages, and in the evaluation recorded in
+the package's issue tracker, eight workers were slower than four. Workers
+must be able to load nomologR, lavaan, and semTools from the library.</p></dd>
 
 
 <dt id="arg-guidance">guidance<a class="anchor" aria-label="anchor" href="#arg-guidance"></a></dt>
