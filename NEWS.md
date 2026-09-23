@@ -90,6 +90,22 @@
   outcome biased the estimate by +.10 in the same check that recovered the
   latent value.
 
+- Added `nomo_apa_table()`, which formats the evidence in a result as an APA 7
+  table ready for a thesis, dissertation, or manuscript (#35): standardized
+  loadings, factor correlations, and model fit from `nomo_cfa()`; reliability
+  from `nomo_reliability()`; the invariance sequence from `nomo_invariance()`;
+  and hypothesis evidence and model fit from `nomo_network()`. Tables carry a
+  bold number, an italic title, no vertical rules, and notes below in APA's
+  order, and they knit directly into R Markdown or Quarto. Leading zeros follow
+  the statistic rather than its value, as APA 7 specifies: statistics that
+  cannot exceed 1 (reliability, correlations, CFI, *p*) lose the zero, and those
+  that can (TLI, RMSEA, SRMR, standardized loadings) keep it. A value that rounds
+  to zero is never printed with a sign, and an estimate the model could not
+  produce is shown as an em dash. The hypotheses table reports each estimate's
+  evidence against its prediction, and marks a hypothesis specified after the
+  data were seen as exploratory. No cell reads pass or fail. Word output for
+  `nomo_report()` follows separately.
+
 # nomologR 0.2.0
 
 nomologR 0.2.0 makes the workflow research-backed from historical to

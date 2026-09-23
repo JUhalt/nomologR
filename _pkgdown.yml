@@ -12,6 +12,7 @@ reference:
       - nomo_revise
       - nomo_report
       - nomo_table
+      - nomo_apa_table
       - nomo_defaults
   - title: Research basis
     desc: >
