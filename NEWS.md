@@ -51,6 +51,23 @@
   and only the cases the model used are scored. Includes the **Scoring a
   measurement model** article.
 
+- `nomo_network()` now discloses relationships estimated between observed
+  variables (#62). When an endpoint is observed rather than latent, its
+  measurement error enters unmodelled, and if it is a composite of several items
+  (a sum, mean, or factor score) the relationship carries the discrepancy
+  `nomo_scores()` reports as correlational accuracy. The network cannot tell a
+  composite from a single measured variable, so it does not guess: it classifies
+  each hypothesis by its endpoints and discloses observed ones in the decision
+  log, for review when both ends are observed and for information when one is,
+  saying plainly that a single measured variable is not a composite. The
+  disclosure points to modelling the items as indicators and to `lavaan::sam()`
+  (Rosseel & Loh, 2024). No correction is applied. Skrondal and Laake's (2001)
+  correction was reproduced in the course of this work, and the reproduction
+  showed a condition that is easy to miss: the predictor's regression scores
+  must come from its own measurement model, because scoring it jointly with the
+  outcome biased the estimate by +.10 in the same check that recovered the
+  latent value.
+
 # nomologR 0.2.0
 
 nomologR 0.2.0 makes the workflow research-backed from historical to
