@@ -45,6 +45,10 @@ Supported objects and `type` values:
   `"evidence"`, `"decision_log"`; see
   [`nomo_compare()`](https://juhalt.github.io/nomologR/reference/nomo_compare.md).
 
+- `nomo_missing`: `"strategies"` (default), `"estimates"`, `"fit"`,
+  `"reliability"`, `"pattern"`, `"variables"`, `"decision_log"`; see
+  [`nomo_missing()`](https://juhalt.github.io/nomologR/reference/nomo_missing.md).
+
 - `nomo_hierarchical`: `"indices"` (default), `"subscales"`,
   `"loadings"`, `"notes"`, `"decision_log"`; see
   [`nomo_hierarchical()`](https://juhalt.github.io/nomologR/reference/nomo_hierarchical.md).

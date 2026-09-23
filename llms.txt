@@ -514,6 +514,29 @@ cfa_ord <- nomo_cfa(
 Incompatible ordered-indicator ML/FIML combinations stop with an
 explanation rather than being silently substituted.
 
+#### Does a result depend on missing-data handling?
+
+[`nomo_missing()`](https://juhalt.github.io/nomologR/reference/nomo_missing.md)
+refits the same model under listwise deletion and FIML, or under
+listwise and pairwise deletion for ordered indicators. It reports where
+the estimates, reliability, or theory evidence differ:
+
+``` r
+
+nomo_missing(cfa, data = dat2)
+```
+
+Listwise and pairwise deletion require data missing completely at
+random, and FIML requires data missing at random (Enders & Bandalos,
+2001). A difference larger than half the reference standard error is
+flagged, following Schafer and Graham’s (2002) rule for when bias
+becomes practically important. The flag comes with the caveat that the
+difference estimates bias only if the data are missing at random. That
+assumption cannot in general be tested from the data at hand, so
+agreement is reported as insensitivity to the choice, never as proof
+that either strategy is unbiased. See **“From CFA to a defensible
+measurement model”**.
+
 #### Calibration and validation samples
 
 [`nomo_split()`](https://juhalt.github.io/nomologR/reference/nomo_split.md)
@@ -1000,9 +1023,13 @@ the development version so far:
   [`nomo_report()`](https://juhalt.github.io/nomologR/reference/nomo_report.md)
   writes Word documents as well as HTML (#35);
 - [`nomo_compare()`](https://juhalt.github.io/nomologR/reference/nomo_compare.md)
-  is fully covered by tests again (#54).
+  is fully covered by tests again (#54);
+- [`nomo_missing()`](https://juhalt.github.io/nomologR/reference/nomo_missing.md)
+  shows whether a measurement model or network depends on how missing
+  data were handled (#32).
 
-Missing-data sensitivity (#32) remains.
+With missing-data sensitivity in place, every `v0.2.1` workstream is in
+the development version.
 
 ### Next: `v0.3.0` and `v1.0.0`
 
@@ -1170,6 +1197,9 @@ Confirmatory measurement model
   : Summarize a measurement-model comparison
 - [`plot(`*`<nomo_compare>`*`)`](https://juhalt.github.io/nomologR/reference/plot.nomo_compare.md)
   : Plot a measurement-model comparison
+- [`nomo_missing()`](https://juhalt.github.io/nomologR/reference/nomo_missing.md)
+  : Missing-data sensitivity: does a result depend on how missing data
+  were handled?
 
 ## 
 

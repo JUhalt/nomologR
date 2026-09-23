@@ -83,6 +83,9 @@ Confirmatory measurement model
   : Summarize a measurement-model comparison
 - [`plot(`*`<nomo_compare>`*`)`](https://juhalt.github.io/nomologR/reference/plot.nomo_compare.md)
   : Plot a measurement-model comparison
+- [`nomo_missing()`](https://juhalt.github.io/nomologR/reference/nomo_missing.md)
+  : Missing-data sensitivity: does a result depend on how missing data
+  were handled?
 
 ## 
 

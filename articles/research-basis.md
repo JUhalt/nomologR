@@ -36,7 +36,7 @@ computational engine, and references.
 
 methods <- nomo_methods()
 nrow(methods)
-#> [1] 86
+#> [1] 89
 table(methods$stage, methods$lineage)
 #>              
 #>               contemporary emerging historical
@@ -50,7 +50,7 @@ table(methods$stage, methods$lineage)
 #>   scores                 4        0          3
 #>   screen                10        0          1
 #>   validity               3        0          2
-#>   workflow               5        0          0
+#>   workflow               6        0          2
 ```
 
 The `role` column records how the evidence is used. A **context** method
@@ -60,7 +60,7 @@ takes no part in any synthesis or decision:
 ``` r
 
 nomo_methods(lineage = "historical")[, c("stage", "method", "role")]
-#> # A tibble: 18 × 3
+#> # A tibble: 20 × 3
 #>    stage       method                                               role      
 #>    <chr>       <chr>                                                <chr>     
 #>  1 screen      Fixed item-total correlation reference (about .30)   context   
@@ -80,7 +80,9 @@ nomo_methods(lineage = "historical")[, c("stage", "method", "role")]
 #> 15 scores      Unit-weighted sum or mean score                      primary   
 #> 16 scores      Regression (Thurstone) factor scores                 primary   
 #> 17 scores      Bartlett factor scores                               primary   
-#> 18 network     Nomological network of construct relations           primary
+#> 18 network     Nomological network of construct relations           primary   
+#> 19 workflow    Listwise deletion                                    context   
+#> 20 workflow    Pairwise deletion                                    context
 ```
 
 The registry lists only what the package actually computes. Methods that
@@ -377,7 +379,9 @@ block scored from a measurement model of its own (Skrondal & Laake,
 **Historical practice.** A sequence of undisclosed decisions — dropping
 items, adding residual covariances, trying estimators — reported as if
 it had been the plan all along; unit-weighted sum scores assumed to
-represent the construct.
+represent the construct; listwise deletion, pairwise deletion, or mean
+substitution applied without asking whether the data meet the assumption
+each requires.
 
 **Contemporary practice.** Transparent reporting of measurement
 decisions and their justification (Flake et al., 2017; Flake & Fried,
@@ -406,8 +410,23 @@ for the scores it returns, and
 [`nomo_apa_table()`](https://juhalt.github.io/nomologR/reference/nomo_apa_table.md)
 formats evidence as APA-style manuscript tables.
 
-**Planned.** Missing-data sensitivity
-([\#32](https://github.com/JUhalt/nomologR/issues/32)).
+[`nomo_missing()`](https://juhalt.github.io/nomologR/reference/nomo_missing.md)
+refits a prespecified measurement model or network under listwise
+deletion and FIML, or under listwise and pairwise deletion for ordered
+indicators, and reports where estimates, reliability, or theory evidence
+differ. Listwise and pairwise deletion require data missing completely
+at random; FIML requires data missing at random, and was unbiased under
+both in Enders and Bandalos’s (2001) simulations while the deletion
+methods were biased under MAR. A difference beyond half the reference
+standard error is flagged, following Schafer and Graham’s (2002) rule
+for when bias becomes practically important, with the caveat that it
+estimates bias only if the data are MAR. Because MAR cannot in general
+be tested from the data at hand (Schafer & Graham, 2002), agreement
+between strategies is reported as insensitivity, not as evidence that
+either is unbiased. Mean substitution is explained and not offered.
+
+**Planned.** Multiple-imputation integration is a candidate for v0.3
+scope selection ([\#38](https://github.com/JUhalt/nomologR/issues/38)).
 
 ## References
 

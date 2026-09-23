@@ -132,7 +132,7 @@ actually used, which is what <code><a href="nomo_report.html">nomo_report()</a><
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># The whole registry</span></span></span>
 <span class="r-in"><span><span class="fu">nomo_methods</span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 86 × 10</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 89 × 10</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    id      stage method lineage role  estimand assumptions implemented_by engine</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> missin… scre… Item … contem… supp… Proport… Descriptiv… nomo_screen()  nomol…</span>
@@ -145,12 +145,12 @@ actually used, which is what <code><a href="nomo_report.html">nomo_report()</a><
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> mahala… scre… Mahal… contem… supp… Multiva… Unaffected… nomo_screen()  nomol…</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> even_o… scre… Even-… contem… supp… Within-… Needs at l… nomo_screen()  nomol…</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> psycho… scre… Psych… contem… supp… Within-… Needs at l… nomo_screen()  nomol…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 76 more rows</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 79 more rows</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 1 more variable: references &lt;chr&gt;</span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># What is shown only as historical context, and why</span></span></span>
 <span class="r-in"><span><span class="fu">nomo_methods</span><span class="op">(</span>lineage <span class="op">=</span> <span class="st">"historical"</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"method"</span>, <span class="st">"role"</span>, <span class="st">"assumptions"</span><span class="op">)</span><span class="op">]</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 18 × 3</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 20 × 3</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    method                                               role       assumptions  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                                                <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> Fixed item-total correlation reference (about .30)   context    No simulatio…</span>
@@ -171,6 +171,8 @@ actually used, which is what <code><a href="nomo_report.html">nomo_report()</a><
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">16</span> Regression (Thurstone) factor scores                 primary    Indeterminat…</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">17</span> Bartlett factor scores                               primary    Indeterminat…</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">18</span> Nomological network of construct relations           primary    Evidence for…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">19</span> Listwise deletion                                    context    Requires dat…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">20</span> Pairwise deletion                                    context    Requires dat…</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># A reference list for one stage</span></span></span>
 <span class="r-in"><span><span class="fu">nomo_methods</span><span class="op">(</span>stage <span class="op">=</span> <span class="st">"reliability"</span>, references <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"method"</span>, <span class="st">"citation"</span><span class="op">)</span><span class="op">]</span></span></span>

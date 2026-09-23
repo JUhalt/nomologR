@@ -448,7 +448,9 @@ Three lessons carry over from the exploratory stage:
 - **Missing data are handled explicitly.** By default lavaan uses
   complete cases here; `missing = "fiml"` requests full-information
   maximum likelihood for continuous indicators, and the decision is
-  recorded.
+  recorded. Whether the results depend on that choice is a separate
+  question, taken up
+  [below](#does-a-result-depend-on-how-missing-data-were-handled).
 
 ## Comparing models with a recorded rationale
 
@@ -649,6 +651,171 @@ whether an item is statistically related to its factor, whether it is a
 strong indicator, and how the score’s reliability changes without it.
 None of them alone decides whether the item stays.
 
+## Does a result depend on how missing data were handled?
+
+`demo_cfa` used lavaan’s default, listwise deletion, which analyses only
+the cases observed on every item.
+[`nomo_missing()`](https://juhalt.github.io/nomologR/reference/nomo_missing.md)
+refits the same model under alternative strategies and reports what
+changes. For continuous indicators it compares listwise deletion with
+full-information maximum likelihood (FIML), which uses every observed
+response:
+
+``` r
+
+demo_missing <- nomo_missing(demo_cfa, data = nomo_demo_continuous)
+demo_missing
+```
+
+    ## <nomo_missing>
+    ## Missing-data sensitivity for a nomo_cfa | reference: FIML | fitted with: Listwise deletion
+    ## 27 of 500 cases incomplete (5.4%) in 3 pattern(s); lowest covariance coverage 0.946 (a2, b3)
+    ## 
+    ## Strategies
+    ## # A tibble: 2 × 8
+    ##   label             lavaan_missing requires role       available n_used
+    ##   <chr>             <chr>          <chr>    <chr>      <lgl>      <dbl>
+    ## 1 Listwise deletion listwise       MCAR     comparison TRUE         473
+    ## 2 FIML              ml             MAR      reference  TRUE         500
+    ##   converged admissible
+    ##   <lgl>     <lgl>     
+    ## 1 TRUE      TRUE      
+    ## 2 TRUE      TRUE      
+    ## 
+    ## Largest differences from the reference, in reference standard errors
+    ## # A tibble: 5 × 5
+    ##   parameter strategy          estimate reference difference_in_se
+    ##   <chr>     <chr>                <dbl>     <dbl>            <dbl>
+    ## 1 A ~~ B    Listwise deletion    0.499     0.48              0.45
+    ## 2 B =~ b5   Listwise deletion    0.337     0.353            -0.37
+    ## 3 A =~ a5   Listwise deletion    0.598     0.59              0.23
+    ## 4 A =~ a3   Listwise deletion    0.669     0.675            -0.21
+    ## 5 B =~ b3   Listwise deletion    0.757     0.762            -0.17
+    ## 
+    ## Whether data are missing at random cannot be tested from these data; see nomo_table(x, "decision_log").
+
+The two strategies make different assumptions. Listwise deletion
+requires data missing completely at random (MCAR). FIML requires the
+weaker condition that data are missing at random (MAR), meaning that
+whether a value is missing may depend on other observed values but not
+on the missing value itself. In Enders and Bandalos’s (2001)
+simulations, all of these methods were unbiased under MCAR, and FIML was
+the most efficient. Under MAR, FIML alone remained unbiased across the
+parameters they examined.
+
+The missing values in `nomo_demo_continuous` were introduced completely
+at random, so theory predicts agreement, and that is what the comparison
+shows. Listwise deletion discards 27 cases. No estimate moves by as much
+as half a standard error. That is the size Schafer and Graham (2002)
+treat as practically important for bias, because beyond it confidence
+intervals noticeably lose coverage. Reliability barely moves either:
+
+``` r
+
+nomo_table(demo_missing, "reliability")
+```
+
+    ## # A tibble: 8 × 8
+    ##   construct block   metric strategy role  estimate reference_estimate difference
+    ##   <chr>     <chr>   <chr>  <chr>    <chr>    <dbl>              <dbl>      <dbl>
+    ## 1 A         overall omega  listwise comp…    0.835              0.835  -0.000589
+    ## 2 A         overall omega  ml       refe…    0.835              0.835  NA       
+    ## 3 B         overall omega  listwise comp…    0.784              0.785  -0.00151 
+    ## 4 B         overall omega  ml       refe…    0.785              0.785  NA       
+    ## 5 A         overall alpha  listwise comp…    0.827              0.828  -0.000358
+    ## 6 A         overall alpha  ml       refe…    0.828              0.828  NA       
+    ## 7 B         overall alpha  listwise comp…    0.771              0.775  -0.00328 
+    ## 8 B         overall alpha  ml       refe…    0.775              0.775  NA
+
+### When the strategies disagree
+
+Differences appear when data are missing at random but not completely at
+random. In this simulation the population factor correlation is .50.
+Most cases with high scores on factor A are missing every B item, so
+whether B is missing depends on the observed A items:
+
+``` r
+
+set.seed(32)
+n <- 4000
+f <- matrix(rnorm(n * 2), n, 2) %*% chol(matrix(c(1, .5, .5, 1), 2))
+items <- cbind(
+  f[, 1] %o% rep(.7, 4) + matrix(rnorm(n * 4, sd = sqrt(1 - .7^2)), n),
+  f[, 2] %o% rep(.7, 4) + matrix(rnorm(n * 4, sd = sqrt(1 - .7^2)), n)
+)
+mar_data <- as.data.frame(items)
+names(mar_data) <- c(paste0("a", 1:4), paste0("b", 1:4))
+
+high_a <- rowMeans(mar_data[, paste0("a", 1:4)]) > 0
+drop <- high_a & runif(n) < .90
+mar_data[drop, paste0("b", 1:4)] <- NA
+
+mar_model <- "A =~ a1 + a2 + a3 + a4\nB =~ b1 + b2 + b3 + b4"
+mar_missing <- nomo_missing(
+  nomo_cfa(mar_model, data = mar_data),
+  data = mar_data,
+  reliability = FALSE
+)
+
+mar_estimates <- nomo_table(mar_missing, "estimates")
+mar_estimates[mar_estimates$type == "factor_correlation",
+              c("strategy", "estimate", "se", "difference_in_se")]
+```
+
+    ## # A tibble: 2 × 4
+    ##   strategy estimate     se difference_in_se
+    ##   <chr>       <dbl>  <dbl>            <dbl>
+    ## 1 listwise    0.411 0.0264            -2.01
+    ## 2 ml          0.467 0.0280            NA
+
+FIML’s estimate, 0.467, is 1.2 of its standard errors from the
+population value, within sampling error. Listwise deletion’s, 0.411, is
+3.4 standard errors below it. The complete cases under-represent high
+scorers on A, and that restricted range attenuates the correlation. The
+decision log flags the difference and says what it can and cannot mean:
+
+``` r
+
+mar_log <- nomo_table(mar_missing, "decision_log")
+mar_log$recommendation[mar_log$metric == "estimate_difference"]
+```
+
+    ## [1] "If the data are MAR and the model is correct, FIML is consistent and this difference estimates the bias listwise deletion introduces; Schafer and Graham (2002) treat a bias of this size as practically important. Listwise deletion analyses 1789 fewer cases than the fullest strategy (44.7%), and the more cases a strategy discards, the larger the differences that sampling variability alone produces. Report which strategy the results rest on and why."
+
+The flag carries two qualifications:
+
+- The difference estimates listwise deletion’s bias only if the data are
+  MAR and the model is correct, because only then is FIML consistent.
+- The two strategies analyse different cases, so part of any difference
+  is sampling variability. The more cases listwise deletion discards,
+  the larger that part becomes.
+
+### What the comparison cannot tell you
+
+Whether data are MAR cannot, in general, be tested from the data at hand
+(Schafer & Graham, 2002). Agreement between strategies therefore shows
+only that a result does not depend on the choice between them. It does
+not show that either strategy is unbiased: when data are missing not at
+random, neither is guaranteed to be. The strategy belongs in the
+analysis plan, decided in advance, and
+[`nomo_missing()`](https://juhalt.github.io/nomologR/reference/nomo_missing.md)
+reports how much the results depend on it.
+
+For ordered indicators estimated with WLSMV, lavaan does not offer FIML,
+so
+[`nomo_missing()`](https://juhalt.github.io/nomologR/reference/nomo_missing.md)
+compares listwise with pairwise deletion. Both require MCAR, so a
+difference between them shows that the result depends on the choice, but
+it cannot be attributed to either strategy.
+
+Mean substitution is not offered. Replacing each missing value with the
+item mean shrinks variances and distorts covariances. Schafer and Graham
+(2002) show that even under MCAR it narrows confidence intervals: with a
+quarter of values missing, a nominal 95% interval for a mean covers the
+true value only about 86% of the time. Multiple imputation, which
+Schafer and Graham recommend alongside maximum likelihood, is a
+candidate for a later release.
+
 ## Reading the evidence as an argument
 
 A useful measurement conclusion is rarely “all cutoffs passed.” A
@@ -686,6 +853,11 @@ Sarstedt, 2015). HTMT2 is emphasized for congeneric measurement because
 it relaxes the original HTMT tau-equivalence assumption (Roemer,
 Schuberth, & Henseler, 2021). Fornell-Larcker output remains available
 only as optional historical/ supporting information.
+
+The missing-data comparison follows Enders and Bandalos (2001), whose
+simulations compared FIML with listwise and pairwise deletion under MCAR
+and MAR, and Schafer and Graham (2002), who review the older methods and
+explain why MAR cannot be tested from the data at hand.
 
 The [research
 basis](https://juhalt.github.io/nomologR/articles/research-basis.md)

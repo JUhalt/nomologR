@@ -118,7 +118,7 @@ computational engine, and references.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">methods</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_methods.html">nomo_methods</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">methods</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 86</span></span>
+<span><span class="co">#&gt; [1] 89</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">methods</span><span class="op">$</span><span class="va">stage</span>, <span class="va">methods</span><span class="op">$</span><span class="va">lineage</span><span class="op">)</span></span>
 <span><span class="co">#&gt;              </span></span>
 <span><span class="co">#&gt;               contemporary emerging historical</span></span>
@@ -132,14 +132,14 @@ computational engine, and references.</p>
 <span><span class="co">#&gt;   scores                 4        0          3</span></span>
 <span><span class="co">#&gt;   screen                10        0          1</span></span>
 <span><span class="co">#&gt;   validity               3        0          2</span></span>
-<span><span class="co">#&gt;   workflow               5        0          0</span></span></code></pre></div>
+<span><span class="co">#&gt;   workflow               6        0          2</span></span></code></pre></div>
 <p>The <code>role</code> column records how the evidence is used. A
 <strong>context</strong> method is shown so that a reader can recognize
 it in published work, and it takes no part in any synthesis or
 decision:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/nomo_methods.html">nomo_methods</a></span><span class="op">(</span>lineage <span class="op">=</span> <span class="st">"historical"</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"stage"</span>, <span class="st">"method"</span>, <span class="st">"role"</span><span class="op">)</span><span class="op">]</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 18 × 3</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 20 × 3</span></span></span>
 <span><span class="co">#&gt;    stage       method                                               role      </span></span>
 <span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                                                <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> screen      Fixed item-total correlation reference (about .30)   context   </span></span>
@@ -159,7 +159,9 @@ decision:</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">15</span> scores      Unit-weighted sum or mean score                      primary   </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">16</span> scores      Regression (Thurstone) factor scores                 primary   </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">17</span> scores      Bartlett factor scores                               primary   </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">18</span> network     Nomological network of construct relations           primary</span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">18</span> network     Nomological network of construct relations           primary   </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">19</span> workflow    Listwise deletion                                    context   </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">20</span> workflow    Pairwise deletion                                    context</span></span></code></pre></div>
 <p>The registry lists only what the package actually computes. Methods
 that are planned but not yet implemented appear in this article and in
 the issue tracker, not in the registry, so that
@@ -444,7 +446,9 @@ automatically.</p>
 <p><strong>Historical practice.</strong> A sequence of undisclosed
 decisions — dropping items, adding residual covariances, trying
 estimators — reported as if it had been the plan all along;
-unit-weighted sum scores assumed to represent the construct.</p>
+unit-weighted sum scores assumed to represent the construct; listwise
+deletion, pairwise deletion, or mean substitution applied without asking
+whether the data meet the assumption each requires.</p>
 <p><strong>Contemporary practice.</strong> Transparent reporting of
 measurement decisions and their justification (Flake et al., 2017; Flake
 &amp; Fried, 2020), awareness of researcher degrees of freedom (Simmons
@@ -464,7 +468,22 @@ computed them. <code><a href="../reference/nomo_scores.html">nomo_scores()</a></
 score assumes and reports Grice’s criteria for the scores it returns,
 and <code><a href="../reference/nomo_apa_table.html">nomo_apa_table()</a></code> formats evidence as APA-style
 manuscript tables.</p>
-<p><strong>Planned.</strong> Missing-data sensitivity (<a href="https://github.com/JUhalt/nomologR/issues/32" class="external-link">#32</a>).</p>
+<p><code><a href="../reference/nomo_missing.html">nomo_missing()</a></code> refits a prespecified measurement model
+or network under listwise deletion and FIML, or under listwise and
+pairwise deletion for ordered indicators, and reports where estimates,
+reliability, or theory evidence differ. Listwise and pairwise deletion
+require data missing completely at random; FIML requires data missing at
+random, and was unbiased under both in Enders and Bandalos’s (2001)
+simulations while the deletion methods were biased under MAR. A
+difference beyond half the reference standard error is flagged,
+following Schafer and Graham’s (2002) rule for when bias becomes
+practically important, with the caveat that it estimates bias only if
+the data are MAR. Because MAR cannot in general be tested from the data
+at hand (Schafer &amp; Graham, 2002), agreement between strategies is
+reported as insensitivity, not as evidence that either is unbiased. Mean
+substitution is explained and not offered.</p>
+<p><strong>Planned.</strong> Multiple-imputation integration is a
+candidate for v0.3 scope selection (<a href="https://github.com/JUhalt/nomologR/issues/38" class="external-link">#38</a>).</p>
 </div>
 <div class="section level2">
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
