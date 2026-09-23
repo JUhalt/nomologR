@@ -164,9 +164,10 @@
     insensitivity to the choice, not as evidence that either strategy is
     unbiased.
   - **What lavaan actually did.** Each strategy records what lavaan
-    estimated, not only what was requested. lavaan substitutes its two-stage
-    method when FIML is requested with ULS or GLS, and refuses it for MLM, and
-    both are reported rather than hidden. The data supplied must reproduce the
+    estimated, not only what was requested. When FIML is requested with ULS,
+    lavaan 0.7 runs its two-stage method instead (as it does with GLS), while
+    lavaan 0.6-21 refuses. With MLM, FIML is refused. Each of these is
+    reported, not hidden, and the tests accept either lavaan behaviour. The data supplied must reproduce the
     fitted model when refitted with its original strategy, so a comparison
     cannot silently run on different data.
   - **Validation.** Tests reproduce lavaan's estimates for each strategy and

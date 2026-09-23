@@ -196,10 +196,18 @@ test_that("a strategy lavaan substitutes or refuses is recorded as such", {
     reliability = FALSE
   )
   row <- uls$strategies[uls$strategies$strategy == "ml", ]
-  expect_identical(row$lavaan_missing, "two.stage")
-  expect_true(is.na(row$requires))
-  expect_true("strategy_substituted" %in% uls$decision_log$metric)
-  # Credited by what lavaan estimated: two-stage ML is not FIML.
+  # What lavaan does here depends on its version: 0.7 runs its two-stage
+  # method in place of FIML, while 0.6-21, the declared minimum, refuses. Either
+  # way it is not FIML, and the table and log must say which happened.
+  if (isTRUE(row$available)) {
+    expect_false(row$lavaan_missing %in% c("ml", "ml.x"))
+    expect_true(is.na(row$requires))
+    expect_true("strategy_substituted" %in% uls$decision_log$metric)
+  } else {
+    expect_true(nzchar(row$note))
+    expect_true("strategy_unavailable" %in% uls$decision_log$metric)
+  }
+  # Credited by what lavaan estimated, so FIML is never credited here.
   expect_false("fiml" %in% nomo_methods(uls)$id)
 
   mlm <- nomo_missing(

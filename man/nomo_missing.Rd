@@ -63,10 +63,11 @@ pairwise deletion is the reference. The strategy the model was fitted with is
 always included.
 
 Each strategy records what was requested and what lavaan actually used,
-because the two can differ. lavaan substitutes its two-stage method when
-\code{missing = "ml"} is requested with some estimators, such as ULS and GLS, and
-refuses it for others, such as MLM. A refused strategy is reported as
-unavailable, with lavaan's reason. If the reference itself cannot be
+because the two can differ, and differently across lavaan versions. When
+\code{missing = "ml"} is requested with ULS, lavaan 0.7 runs its two-stage method
+instead, as it does with GLS, while lavaan 0.6-21 refuses; with MLM it is
+refused. A refused strategy is reported as unavailable, with lavaan's
+reason. If the reference itself cannot be
 fitted, another strategy that was fitted becomes the reference, and the
 decision log says so.
 
