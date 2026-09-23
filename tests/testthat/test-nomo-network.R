@@ -1772,3 +1772,59 @@ test_that("closeout C: replication plots reject rows with no finite paired estim
     "No finite replication estimates are available to plot"
   )
 })
+
+
+# Observed endpoints (#62) -----------------------------------------------------
+
+test_that("a network of latent variables raises no endpoint disclosure", {
+  out <- nomo_network(
+    "Agency =~ ag1 + ag2 + ag3 + ag4\nPersistence =~ pe1 + pe2 + pe3 + pe4",
+    data = nomo_demo_network,
+    hypotheses = nomo_hypotheses("Agency -> Persistence" = positive())
+  )
+  expect_false(any(out$decision_log$metric %in%
+                     c("observed_endpoints", "mixed_endpoints")))
+})
+
+
+test_that("relationships between observed composites are disclosed for review", {
+  d <- nomo_demo_network
+  d$agency_sum <- rowSums(d[, paste0("ag", 1:4)])
+  d$persist_sum <- rowSums(d[, paste0("pe", 1:4)])
+
+  out <- nomo_network(
+    "persist_sum ~ agency_sum",
+    data = d,
+    hypotheses = nomo_hypotheses("agency_sum -> persist_sum" = positive())
+  )
+  entry <- out$decision_log[out$decision_log$metric == "observed_endpoints", ]
+
+  expect_identical(nrow(entry), 1L)
+  expect_identical(entry$severity, "review")
+  expect_match(entry$observation, "agency_sum, persist_sum", fixed = TRUE)
+  expect_match(entry$recommendation, "correlational accuracy", fixed = TRUE)
+  expect_match(entry$recommendation, "lavaan::sam()", fixed = TRUE)
+})
+
+
+test_that("a latent-to-observed relationship is disclosed, and a single measure is excused", {
+  out <- nomo_network(
+    paste(
+      "Agency =~ ag1 + ag2 + ag3 + ag4",
+      "Persistence =~ pe1 + pe2 + pe3 + pe4",
+      "Performance ~ Agency",
+      sep = "\n"
+    ),
+    data = nomo_demo_network,
+    hypotheses = nomo_hypotheses("Agency -> Performance" = positive())
+  )
+  entry <- out$decision_log[out$decision_log$metric == "mixed_endpoints", ]
+
+  expect_identical(nrow(entry), 1L)
+  expect_identical(entry$severity, "info")
+  expect_match(entry$observation, "Performance", fixed = TRUE)
+
+  # The network cannot tell a composite from a single measured variable, so the
+  # disclosure must say plainly that it does not apply to the latter.
+  expect_match(entry$recommendation, "is not a composite", fixed = TRUE)
+})

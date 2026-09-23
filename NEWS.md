@@ -73,6 +73,23 @@
   never removed, and a screen that does not request these indices is unchanged.
   `nomo_table()` now supports `nomo_screen` objects.
 
+- `nomo_network()` now discloses relationships estimated between observed
+  variables (#62). When an endpoint is observed rather than latent, its
+  measurement error enters unmodelled, and if it is a composite of several items
+  (a sum, mean, or factor score) the relationship carries the discrepancy
+  `nomo_scores()` reports as correlational accuracy. The network cannot tell a
+  composite from a single measured variable, so it does not guess: it classifies
+  each hypothesis by its endpoints and discloses observed ones in the decision
+  log, for review when both ends are observed and for information when one is,
+  saying plainly that a single measured variable is not a composite. The
+  disclosure points to modelling the items as indicators and to `lavaan::sam()`
+  (Rosseel & Loh, 2024). No correction is applied. Skrondal and Laake's (2001)
+  correction was reproduced in the course of this work, and the reproduction
+  showed a condition that is easy to miss: the predictor's regression scores
+  must come from its own measurement model, because scoring it jointly with the
+  outcome biased the estimate by +.10 in the same check that recovered the
+  latent value.
+
 - `nomo_reliability()` gains `ci_ncpus`, which runs the bootstrap on several
   worker processes through lavaan's `snow` backend (#42). The default, `1`, keeps
   the bootstrap serial and unchanged. `snow` is used everywhere rather than
