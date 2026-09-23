@@ -106,7 +106,11 @@ jobs:
           cat("refs=", paste(refs, collapse = ", "), "\n", file = Sys.getenv("GITHUB_OUTPUT"), sep = "", append = TRUE)
           suggests <- read.dcf("DESCRIPTION", fields = "Suggests")[[1]]
           suggests <- sub("\\s*\\(.*$", "", trimws(strsplit(suggests, ",")[[1]]))
-          suggests <- paste0("any::", suggests[nzchar(suggests)])
+          suggests <- suggests[nzchar(suggests)]
+          # Packages that ship with R, such as parallel, are not on CRAN, so pak
+          # cannot resolve them as any::<pkg>. They are always installed anyway.
+          suggests <- setdiff(suggests, rownames(installed.packages(priority = "base")))
+          suggests <- paste0("any::", suggests)
           cat("suggests=", paste(suggests, collapse = ", "), "\n", file = Sys.getenv("GITHUB_OUTPUT"), sep = "", append = TRUE)
 
       # Resolve hard dependencies only. Otherwise pak also installs the
