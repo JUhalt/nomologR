@@ -247,6 +247,15 @@ nomo_bibliography <- function() {
       "10.1037/h0040957"
     ),
     nomo_bib_entry(
+      "curran_2016", "Curran (2016)",
+      paste(
+        "Curran, P. G. (2016). Methods for the detection of carelessly invalid",
+        "responses in survey data. Journal of Experimental Social Psychology, 66,",
+        "4-19."
+      ),
+      "10.1016/j.jesp.2015.07.006"
+    ),
+    nomo_bib_entry(
       "dunn_2014", "Dunn, Baguley, & Brunsden (2014)",
       paste(
         "Dunn, T. J., Baguley, T., & Brunsden, V. (2014). From alpha to omega: A",
@@ -415,6 +424,15 @@ nomo_bibliography <- function() {
       "10.1080/10705519909540118"
     ),
     nomo_bib_entry(
+      "huang_2012", "Huang, Curran, Keeney, Poposki, & DeShon (2012)",
+      paste(
+        "Huang, J. L., Curran, P. G., Keeney, J., Poposki, E. M., & DeShon, R. P.",
+        "(2012). Detecting and deterring insufficient effort responding to surveys.",
+        "Journal of Business and Psychology, 27(1), 99-114."
+      ),
+      "10.1007/s10869-011-9231-8"
+    ),
+    nomo_bib_entry(
       "joreskog_1969", "J\u00f6reskog (1969)",
       paste(
         "J\u00f6reskog, K. G. (1969). A general approach to confirmatory maximum",
@@ -514,6 +532,16 @@ nomo_bibliography <- function() {
       "10.1037/0033-2909.111.3.490"
     ),
     nomo_bib_entry(
+      "marjanovic_2015", "Marjanovic, Holden, Struthers, Cribbie, & Greenglass (2015)",
+      paste(
+        "Marjanovic, Z., Holden, R., Struthers, W., Cribbie, R., & Greenglass, E.",
+        "(2015). The inter-item standard deviation (ISD): An index that discriminates",
+        "between conscientious and random responders. Personality and Individual",
+        "Differences, 84, 79-83."
+      ),
+      "10.1016/j.paid.2014.08.021"
+    ),
+    nomo_bib_entry(
       "marsh_2004", "Marsh, Hau, & Wen (2004)",
       paste(
         "Marsh, H. W., Hau, K.-T., & Wen, Z. (2004). In search of golden rules:",
@@ -538,6 +566,14 @@ nomo_bibliography <- function() {
         "Behavior Research Methods, 52(6), 2287-2305."
       ),
       "10.3758/s13428-020-01398-0"
+    ),
+    nomo_bib_entry(
+      "meade_craig_2012", "Meade & Craig (2012)",
+      paste(
+        "Meade, A. W., & Craig, S. B. (2012). Identifying careless responses in",
+        "survey data. Psychological Methods, 17(3), 437-455."
+      ),
+      "10.1037/a0028085"
     ),
     nomo_bib_entry(
       "meredith_1993", "Meredith (1993)",
@@ -923,6 +959,82 @@ nomo_methods_registry <- function() {
     ),
 
     # Stage 2: dimensionality ------------------------------------------------
+    nomo_method_entry(
+      "long_string", "screen",
+      "Long-string analysis",
+      "contemporary", "supporting",
+      "Longest run of identical consecutive responses for each case.",
+      paste(
+        "Reads raw responses. Curran's half-the-scale rule of thumb is flagged",
+        "as his conservative starting point, which he says is not the best cut",
+        "score for every scale."
+      ),
+      "nomo_screen()", "nomologR",
+      c("curran_2016", "meade_craig_2012")
+    ),
+    nomo_method_entry(
+      "inter_item_sd", "screen",
+      "Inter-item standard deviation",
+      "contemporary", "supporting",
+      "Within-person standard deviation of responses, averaged within scales.",
+      paste(
+        "Detects random responding, and gives a respondent who answers every",
+        "item identically the best possible score, so it is read alongside",
+        "long-string rather than alone. No stated cut score."
+      ),
+      "nomo_screen()", "nomologR",
+      c("marjanovic_2015", "curran_2016")
+    ),
+    nomo_method_entry(
+      "mahalanobis_screen", "screen",
+      "Mahalanobis distance screen",
+      "contemporary", "supporting",
+      "Multivariate distance of each response vector from the sample means.",
+      paste(
+        "Unaffected by recoding reverse-keyed items. Relies on the covariance",
+        "structure of the sample, so extreme but attentive respondents are",
+        "distant too. No stated cut score."
+      ),
+      "nomo_screen()", "nomologR",
+      c("meade_craig_2012", "curran_2016")
+    ),
+    nomo_method_entry(
+      "even_odd_consistency", "screen",
+      "Even-odd consistency",
+      "contemporary", "supporting",
+      "Within-person correlation between odd and even halves of each scale.",
+      paste(
+        "Needs at least three scales and declared reverse keying. Spearman-Brown",
+        "corrected, which can fall below -1 for negative correlations. No stated",
+        "cut score."
+      ),
+      "nomo_screen()", "nomologR",
+      c("meade_craig_2012", "curran_2016")
+    ),
+    nomo_method_entry(
+      "psychometric_antonyms", "screen",
+      "Psychometric antonyms",
+      "contemporary", "supporting",
+      "Within-person correlation across item pairs with strong negative correlations.",
+      paste(
+        "Needs at least three pairs. Few pairs make each respondent's value",
+        "coarse, so attentive respondents cross zero by chance."
+      ),
+      "nomo_screen()", "nomologR",
+      c("meade_craig_2012", "curran_2016", "huang_2012")
+    ),
+    nomo_method_entry(
+      "psychometric_synonyms", "screen",
+      "Psychometric synonyms",
+      "contemporary", "supporting",
+      "Within-person correlation across item pairs with strong positive correlations.",
+      paste(
+        "Needs at least three pairs. Few pairs make each respondent's value",
+        "coarse, so attentive respondents cross zero by chance."
+      ),
+      "nomo_screen()", "nomologR",
+      c("meade_craig_2012", "curran_2016")
+    ),
     nomo_method_entry(
       "parallel_analysis", "factors",
       "Common-factor parallel analysis",
