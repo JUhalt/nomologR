@@ -82,13 +82,20 @@
   each hypothesis by its endpoints and discloses observed ones in the decision
   log, for review when both ends are observed and for information when one is,
   saying plainly that a single measured variable is not a composite. The
-  disclosure points to modelling the items as indicators and to `lavaan::sam()`
-  (Rosseel & Loh, 2024). No correction is applied. Skrondal and Laake's (2001)
-  correction was reproduced in the course of this work, and the reproduction
-  showed a condition that is easy to miss: the predictor's regression scores
-  must come from its own measurement model, because scoring it jointly with the
-  outcome biased the estimate by +.10 in the same check that recovered the
-  latent value.
+  disclosure points to modelling the items as indicators, to `lavaan::sam()`
+  (Rosseel & Loh, 2024), and, for a linear regression among factor scores, to
+  the design Skrondal and Laake (2001) proved consistent: regression-method
+  scores for the predictors and Bartlett scores for the outcome, each block
+  scored from a measurement model of its own. The second condition is easy to
+  miss. In reproducing their result, scoring both factors from one joint model
+  biased the estimate by about +.10 in the same check that recovered the latent
+  value with separate models. No correction is applied automatically.
+
+- `nomo_scores()` and the scoring article now describe that design (#62). The
+  note on correlational accuracy says that scores from one model containing
+  every factor are not it, and the article applies it to its own data next to
+  the two ways of getting it wrong: the same method for both blocks falls well
+  short of the latent slope, and scoring both factors jointly overshoots it.
 
 - `nomo_reliability()` gains `ci_ncpus`, which runs the bootstrap on several
   worker processes through lavaan's `snow` backend (#42). The default, `1`, keeps

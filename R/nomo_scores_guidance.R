@@ -95,7 +95,12 @@ nomo_scores_notes <- function(input, method, diagnostics, unit_weighting,
         "relationship estimated from these scores carries that much bias, and",
         "its direction is a property of the method and the model rather than a",
         "constant that can be corrected for. Where the question can be asked of",
-        "the latent variables, ask it there."
+        "the latent variables, ask it there. For a linear regression among",
+        "factors, Skrondal and Laake (2001) showed a scoring design that gives",
+        "consistent coefficients, and scores from one model containing every",
+        "factor, like these, are not it: the predictors need regression-method",
+        "scores and the outcome Bartlett scores, each from a measurement model",
+        "of its own."
       ),
       worst$correlational_accuracy[[1L]], worst$factor[[1L]]
     ))
@@ -186,6 +191,16 @@ nomo_scores_notes <- function(input, method, diagnostics, unit_weighting,
 #' latent variables instead, asking it of scores replaces an unbiased answer
 #' with a biased one.
 #'
+#' **One design recovers a regression.** For a linear regression among
+#' factors, Skrondal and Laake (2001) proved that regression-method scores for
+#' the predictors and Bartlett scores for the outcome, each block scored from a
+#' measurement model of its own, give consistent estimates of the regression
+#' coefficients. Both conditions matter: scoring every factor from one model,
+#' or using the same method for both blocks, does not. Standard errors that
+#' treat the scores as observed are not corrected by this, and the result does
+#' not extend to nonlinear models. `vignette("scoring", package = "nomologR")`
+#' works through the design.
+#'
 #' **Thresholds are context.** Gorsuch's (1983) recommendation that validity
 #' reach .80, and above .90 for scores serving as substitutes for the factors
 #' themselves, is reported where a value falls below it and is never applied as
@@ -214,6 +229,9 @@ nomo_scores_notes <- function(input, method, diagnostics, unit_weighting,
 #' McNeish, D., & Wolf, M. G. (2020). Thinking twice about sum scores.
 #' *Behavior Research Methods, 52*(6), 2287-2305.
 #' \doi{10.3758/s13428-020-01398-0}
+#'
+#' Skrondal, A., & Laake, P. (2001). Regression among factor scores.
+#' *Psychometrika, 66*(4), 563-575. \doi{10.1007/BF02296196}
 #'
 #' @seealso [nomo_hierarchical()] for factor determinacy and construct
 #'   replicability.

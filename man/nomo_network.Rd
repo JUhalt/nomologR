@@ -126,8 +126,18 @@ disclosure says so.
 Where the observed variables are composites, modelling their items as
 indicators of latent variables removes the discrepancy, and
 \code{lavaan::sam()} estimates the structural relationships after the
-measurement model (Rosseel & Loh, 2024). No correction is applied
-automatically.
+measurement model (Rosseel & Loh, 2024).
+
+Where they are factor scores and the hypothesis is a linear regression,
+Skrondal and Laake (2001) showed that one scoring design gives consistent
+estimates of the regression coefficients: regression-method scores for the
+predictors and Bartlett scores for the outcome, each block scored from a
+measurement model of its own. Scoring both with the same method, or scoring
+all the factors from one model, does not, and
+\code{vignette("scoring", package = "nomologR")} shows both failures. The
+standard errors still treat the scores as observed, and Skrondal and Laake
+note that corrected ones may require resampling. The result does not extend
+to nonlinear models. No correction is applied automatically.
 }
 
 \examples{
@@ -179,4 +189,7 @@ Schuirmann, D. J. (1987). A comparison of the two one-sided tests procedure
 and the power approach for assessing the equivalence of average
 bioavailability. \emph{Journal of Pharmacokinetics and Biopharmaceutics, 15}(6),
 657-680. \doi{10.1007/BF01068419}
+
+Skrondal, A., & Laake, P. (2001). Regression among factor scores.
+\emph{Psychometrika, 66}(4), 563-575. \doi{10.1007/BF02296196}
 }

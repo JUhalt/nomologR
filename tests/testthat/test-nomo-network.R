@@ -1804,6 +1804,12 @@ test_that("relationships between observed composites are disclosed for review", 
   expect_match(entry$observation, "agency_sum, persist_sum", fixed = TRUE)
   expect_match(entry$recommendation, "correlational accuracy", fixed = TRUE)
   expect_match(entry$recommendation, "lavaan::sam()", fixed = TRUE)
+
+  # For factor scores, the one design shown to give consistent regression
+  # coefficients, with both of its conditions.
+  expect_match(entry$recommendation, "Skrondal and Laake (2001)", fixed = TRUE)
+  expect_match(entry$recommendation, "Bartlett scores for the outcome", fixed = TRUE)
+  expect_match(entry$recommendation, "measurement model of its own", fixed = TRUE)
 })
 
 

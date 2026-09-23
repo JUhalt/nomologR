@@ -133,6 +133,52 @@ test_that("correlational accuracy records the bias that scoring introduces", {
 })
 
 
+test_that("the regression-then-Bartlett design recovers a latent regression (#62)", {
+  pop <- scores_population(r = .50)
+
+  # A sample whose covariance is exactly the population's, so every estimate is
+  # the population value and the comparison is not clouded by sampling error.
+  set.seed(62)
+  z <- scale(matrix(stats::rnorm(400 * 8), 400, 8), scale = FALSE)
+  z <- z %*% solve(chol(stats::cov(z))) %*% chol(pop$sigma)
+  dat <- as.data.frame(z)
+  names(dat) <- scores_items
+
+  predictor_model <- lavaan::cfa("F1 =~ x1 + x2 + x3 + x4", data = dat, std.lv = TRUE)
+  outcome_model <- lavaan::cfa("F2 =~ x5 + x6 + x7 + x8", data = dat, std.lv = TRUE)
+  joint_model <- lavaan::cfa(scores_model, data = dat, std.lv = TRUE)
+
+  slope <- function(outcome, predictor) {
+    unname(stats::coef(stats::lm(outcome ~ predictor))[2])
+  }
+  score <- function(fit, method, factor) nomo_scores(fit, method = method)$scores[[factor]]
+
+  # Skrondal and Laake (2001): regression scores for the predictor and Bartlett
+  # scores for the outcome, each from a model of its own block, are consistent.
+  expect_equal(
+    slope(score(outcome_model, "bartlett", "F2"), score(predictor_model, "regression", "F1")),
+    .50, tolerance = 1e-4
+  )
+
+  # Both conditions matter. The same method for both blocks falls short, and
+  # scoring both factors from one joint model overshoots.
+  expect_lt(
+    slope(score(outcome_model, "regression", "F2"), score(predictor_model, "regression", "F1")),
+    .45
+  )
+  expect_gt(
+    slope(score(joint_model, "bartlett", "F2"), score(joint_model, "regression", "F1")),
+    .55
+  )
+
+  # The note on a jointly scored model says it is not that design.
+  note <- nomo_scores(joint_model, method = "regression")$notes
+  accuracy <- note$note[note$topic == "correlational_accuracy"]
+  expect_match(accuracy, "Skrondal and Laake (2001)", fixed = TRUE)
+  expect_match(accuracy, "each from a measurement model of its own", fixed = TRUE)
+})
+
+
 test_that("a single-factor model has no univocality or accuracy to report", {
   dat <- scores_sample(scores_population()$sigma)
   fit <- lavaan::cfa(
