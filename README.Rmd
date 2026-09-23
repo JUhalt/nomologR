@@ -935,12 +935,22 @@ certification (#37).
 ### Next: `v0.3.0` and `v1.0.0`
 
 `v0.3.0` carries the first CRAN submission
-([#39](https://github.com/JUhalt/nomologR/issues/39)) and a reader for handoffs
-from `contentvalidR` ([#46](https://github.com/JUhalt/nomologR/issues/46)), so
-items that passed content review can be screened and modeled here. Other
-candidates for that release (for example IRT/DIF, Bayesian SEM, ESEM, and
-longitudinal invariance) are tracked in
-[#38](https://github.com/JUhalt/nomologR/issues/38).
+([#39](https://github.com/JUhalt/nomologR/issues/39)). Its scope is
+deliberately lean ([#38](https://github.com/JUhalt/nomologR/issues/38)):
+
+- a reader for handoffs from `contentvalidR`
+  ([#46](https://github.com/JUhalt/nomologR/issues/46)), so items that passed
+  content review can be screened and modeled here;
+- the guided workflow and report carrying scores, careless-responding screens,
+  missing-data sensitivity, and APA tables
+  ([#73](https://github.com/JUhalt/nomologR/issues/73));
+- full test coverage ([#72](https://github.com/JUhalt/nomologR/issues/72));
+- a written API-stability and deprecation policy
+  ([#74](https://github.com/JUhalt/nomologR/issues/74)).
+
+Larger extensions such as ESEM, IRT/DIF, Bayesian SEM, longitudinal invariance,
+and multiple imputation are deferred until after CRAN acceptance, with the
+reasons recorded in #38.
 
 `v1.0.0` is planned as a joint release with
 [`contentvalidR`](https://github.com/JUhalt/contentvalidR), the package's

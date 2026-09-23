@@ -170,27 +170,37 @@ workstreams opened during the cycle. Certification is recorded in
 - [x] [#70](https://github.com/JUhalt/nomologR/issues/70) Release certification and R-universe publication.
 
 ***
-# v0.3.x — Modern Extensions
+# v0.3.0 — First CRAN Release
 
-**Status:** Scope selection in [#38](https://github.com/JUhalt/nomologR/issues/38);
-[v0.3.0 milestone](https://github.com/JUhalt/nomologR/milestone/3).
+**Status:** Scope selected on September 23, 2026, in
+[#38](https://github.com/JUhalt/nomologR/issues/38)
+([v0.3.0 milestone](https://github.com/JUhalt/nomologR/milestone/3)). The scope
+is deliberately lean: v0.3.0 carries the first CRAN submission, so it selects
+only what makes that submission complete, stable, and well tested.
 
-**Committed:** the first CRAN submission ([#39](https://github.com/JUhalt/nomologR/issues/39)); see
-[Distribution](#distribution--r-universe-now-cran-with-v030) below.
+- [ ] [#39](https://github.com/JUhalt/nomologR/issues/39) First CRAN submission; see [Distribution](#distribution--r-universe-now-cran-with-v030) below.
+- [ ] [#46](https://github.com/JUhalt/nomologR/issues/46) A `contentvalidR` handoff reader. It is tested against stored producer fixtures from contentvalidR 0.6.0 and 0.7.0, and neither package depends on the other.
+- [ ] [#72](https://github.com/JUhalt/nomologR/issues/72) Restore full test coverage after v0.2.1.
+- [ ] [#73](https://github.com/JUhalt/nomologR/issues/73) The guided workflow and report carry scores, careless-responding screens, missing-data sensitivity, and APA tables.
+- [ ] [#74](https://github.com/JUhalt/nomologR/issues/74) A written API-stability and deprecation policy, which the joint 1.0 release requires ([#53](https://github.com/JUhalt/nomologR/issues/53)).
+- [ ] [#75](https://github.com/JUhalt/nomologR/issues/75) Release certification and CRAN submission.
 
-Candidate modules (not commitments until selected):
+# v0.4.x — Modern Extensions
 
-- [ ] ESEM.
+**Status:** Deferred from v0.3.0 until after CRAN acceptance, with the reasons
+recorded in [#38](https://github.com/JUhalt/nomologR/issues/38). None was
+rejected. Candidates are not commitments until selected.
+
+- [ ] ESEM. lavaan already fits it, so it needs no new dependency, which makes it a natural first candidate.
 - [ ] Longitudinal invariance.
-- [ ] Multiple-imputation integration.
+- [ ] Multiple-imputation integration. `nomo_missing()` covers listwise, FIML, and pairwise sensitivity meanwhile.
 - [ ] Bootstrap stability summaries.
 - [ ] CFA/SEM sample-size and power planning.
 - [ ] Criterion/predictive evidence beyond network outcomes.
 - [ ] IRT as a complementary item-level framework, and DIF.
-- [ ] Bayesian CFA/SEM (`blavaan`) robustness module, posterior predictive checking, and frequentist/Bayesian concordance summaries.
+- [ ] Bayesian CFA/SEM (`blavaan`) robustness module, posterior predictive checking, and frequentist/Bayesian concordance summaries; with it, content-validity evidence as informative priors ([#49](https://github.com/JUhalt/nomologR/issues/49)).
 - [ ] Additional equivalence/SESOI functionality beyond v0.1's researcher-specified negligible regions. No SESOI is invented by the package.
 - [ ] Model-specific fit diagnostics ([#23](https://github.com/JUhalt/nomologR/issues/23)).
-- [ ] A `contentvalidR` → `nomologR` handoff that carries content-validity decisions into the decision log.
 
 ***
 # Distribution — R-universe Now, CRAN with v0.3.0
