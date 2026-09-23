@@ -186,6 +186,30 @@ prediction with a researcher-specified equivalence region (Lakens, Scheel, &amp;
 Isager, 2018).</p>
     </div>
     <div class="section level2">
+    <h2 id="relationships-estimated-between-observed-variables">Relationships estimated between observed variables<a class="anchor" aria-label="anchor" href="#relationships-estimated-between-observed-variables"></a></h2>
+
+
+<p>A hypothesis whose endpoints are latent variables is estimated with their
+measurement error modelled. When an endpoint is an observed variable, that
+error enters unmodelled. If the observed variable is a composite of several
+items, such as a sum, mean, or factor score, the estimated relationship
+carries the discrepancy <code><a href="nomo_scores.html">nomo_scores()</a></code> reports as correlational accuracy,
+which can be substantial and runs in either direction depending on the
+scoring method and the model.</p>
+<p><code>nomo_network()</code> cannot tell from the model syntax whether an observed
+variable is a composite or a single measured quantity, so it does not guess.
+It classifies each hypothesis by whether its endpoints are latent, and the
+decision log discloses observed endpoints: for review when both ends are
+observed, and for information when one is. A single measured variable, such
+as a criterion recorded without items, is not a composite, and the
+disclosure says so.</p>
+<p>Where the observed variables are composites, modelling their items as
+indicators of latent variables removes the discrepancy, and
+<code><a href="https://rdrr.io/pkg/lavaan/man/sam.html" class="external-link">lavaan::sam()</a></code> estimates the structural relationships after the
+measurement model (Rosseel &amp; Loh, 2024). No correction is applied
+automatically.</p>
+    </div>
+    <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
     <p>Anderson, J. C., &amp; Gerbing, D. W. (1988). Structural equation modeling in
 practice: A review and recommended two-step approach. <em>Psychological
@@ -199,6 +223,9 @@ Psychological Science, 1</em>(2), 259-269. <a href="https://doi.org/10.1177/2515
 inferences from persons' responses and performances as scientific inquiry
 into score meaning. <em>American Psychologist, 50</em>(9), 741-749.
 <a href="https://doi.org/10.1037/0003-066X.50.9.741" class="external-link">doi:10.1037/0003-066X.50.9.741</a></p>
+<p>Rosseel, Y., &amp; Loh, W. W. (2024). A structural after measurement approach
+to structural equation modeling. <em>Psychological Methods, 29</em>(3), 561-588.
+<a href="https://doi.org/10.1037/met0000503" class="external-link">doi:10.1037/met0000503</a></p>
 <p>Schuirmann, D. J. (1987). A comparison of the two one-sided tests procedure
 and the power approach for assessing the equivalence of average
 bioavailability. <em>Journal of Pharmacokinetics and Biopharmaceutics, 15</em>(6),
