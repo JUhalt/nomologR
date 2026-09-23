@@ -70,6 +70,17 @@ being a constant that can be corrected for. Where a question can be
 asked of the latent variables instead, asking it of scores replaces an
 unbiased answer with a biased one.
 
+**One design recovers a regression.** For a linear regression among
+factors, Skrondal and Laake (2001) proved that regression-method scores
+for the predictors and Bartlett scores for the outcome, each block
+scored from a measurement model of its own, give consistent estimates of
+the regression coefficients. Both conditions matter: scoring every
+factor from one model, or using the same method for both blocks, does
+not. Standard errors that treat the scores as observed are not corrected
+by this, and the result does not extend to nonlinear models.
+[`vignette("scoring", package = "nomologR")`](https://juhalt.github.io/nomologR/articles/scoring.md)
+works through the design.
+
 **Thresholds are context.** Gorsuch's (1983) recommendation that
 validity reach .80, and above .90 for scores serving as substitutes for
 the factors themselves, is reported where a value falls below it and is
@@ -89,6 +100,10 @@ Grice, J. W. (2001). Computing and evaluating factor scores.
 McNeish, D., & Wolf, M. G. (2020). Thinking twice about sum scores.
 *Behavior Research Methods, 52*(6), 2287-2305.
 [doi:10.3758/s13428-020-01398-0](https://doi.org/10.3758/s13428-020-01398-0)
+
+Skrondal, A., & Laake, P. (2001). Regression among factor scores.
+*Psychometrika, 66*(4), 563-575.
+[doi:10.1007/BF02296196](https://doi.org/10.1007/BF02296196)
 
 ## See also
 

@@ -137,7 +137,7 @@ it with the model you supplied:</p>
 <span><span class="co">#&gt; Notes</span></span>
 <span><span class="co">#&gt; - [review] The parallel model that unit weighting assumes fits worse than the model you fitted (chi-square difference 30.70 on 12 df, p = .002). The items are not interchangeable in the way adding them assumes. This does not forbid a sum score; it means the choice needs a reason beyond convenience, and that `validity` and `correlational_accuracy` describe what it costs.</span></span>
 <span><span class="co">#&gt; - [review] Validity is below .90 for Persistence. Gorsuch (1983, p. 260) recommended at least .80, and above .90 if the scores are to serve as adequate substitutes for the factors themselves. Reported as his recommendation, not applied as a rule.</span></span>
-<span><span class="co">#&gt; - [concern] Correlations among these scores do not reproduce the correlations among the factors: the largest discrepancy is -0.186, for Agency. A relationship estimated from these scores carries that much bias, and its direction is a property of the method and the model rather than a constant that can be corrected for. Where the question can be asked of the latent variables, ask it there.</span></span>
+<span><span class="co">#&gt; - [concern] Correlations among these scores do not reproduce the correlations among the factors: the largest discrepancy is -0.186, for Agency. A relationship estimated from these scores carries that much bias, and its direction is a property of the method and the model rather than a constant that can be corrected for. Where the question can be asked of the latent variables, ask it there. For a linear regression among factors, Skrondal and Laake (2001) showed a scoring design that gives consistent coefficients, and scores from one model containing every factor, like these, are not it: the predictors need regression-method scores and the outcome Bartlett scores, each from a measurement model of its own.</span></span>
 <span><span class="co">#&gt; - [review] These scores also carry the other factors: the score for Agency correlates +0.525 with a factor it does not represent (Grice, 2001). A score that is not univocal cannot be treated as though it measured its own factor alone.</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; No value here is a pass/fail threshold; see nomo_table(x, "diagnostics").</span></span></code></pre></div>
@@ -210,9 +210,77 @@ question can be asked of the latent variables instead, asking it of
 scores replaces an unbiased answer with a biased one.</p>
 </div>
 <div class="section level2">
+<h2 id="one-design-recovers-a-regression">One design recovers a regression<a class="anchor" aria-label="anchor" href="#one-design-recovers-a-regression"></a>
+</h2>
+<p>There is one established exception, and its conditions are specific.
+For a linear regression of one factor on others, Skrondal and Laake
+(2001) proved that the regression coefficients are estimated
+consistently when</p>
+<ul>
+<li>the predictors are scored with the regression method and the outcome
+with the Bartlett method, and</li>
+<li>each block is scored from a measurement model of its own, not from
+one model containing both.</li>
+</ul>
+<p>Here is the design applied to the data above, with Agency predicting
+Persistence, next to the two ways of getting it wrong:</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">agency_model</span> <span class="op">&lt;-</span> <span class="fu">lavaan</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/lavaan/man/cfa.html" class="external-link">cfa</a></span><span class="op">(</span><span class="st">"Agency =~ x1 + x2 + x3 + x4"</span>,</span>
+<span>                            data <span class="op">=</span> <span class="va">dat</span>, std.lv <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">persistence_model</span> <span class="op">&lt;-</span> <span class="fu">lavaan</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/lavaan/man/cfa.html" class="external-link">cfa</a></span><span class="op">(</span><span class="st">"Persistence =~ x5 + x6 + x7 + x8"</span>,</span>
+<span>                                 data <span class="op">=</span> <span class="va">dat</span>, std.lv <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">slope</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">outcome</span>, <span class="va">predictor</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/unname.html" class="external-link">unname</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm</a></span><span class="op">(</span><span class="va">outcome</span> <span class="op">~</span> <span class="va">predictor</span><span class="op">)</span><span class="op">)</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">agency</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_scores.html">nomo_scores</a></span><span class="op">(</span><span class="va">agency_model</span>, method <span class="op">=</span> <span class="st">"regression"</span><span class="op">)</span><span class="op">$</span><span class="va">scores</span><span class="op">$</span><span class="va">Agency</span></span>
+<span><span class="va">persistence_bartlett</span> <span class="op">&lt;-</span></span>
+<span>  <span class="fu"><a href="../reference/nomo_scores.html">nomo_scores</a></span><span class="op">(</span><span class="va">persistence_model</span>, method <span class="op">=</span> <span class="st">"bartlett"</span><span class="op">)</span><span class="op">$</span><span class="va">scores</span><span class="op">$</span><span class="va">Persistence</span></span>
+<span><span class="va">persistence_regression</span> <span class="op">&lt;-</span></span>
+<span>  <span class="fu"><a href="../reference/nomo_scores.html">nomo_scores</a></span><span class="op">(</span><span class="va">persistence_model</span>, method <span class="op">=</span> <span class="st">"regression"</span><span class="op">)</span><span class="op">$</span><span class="va">scores</span><span class="op">$</span><span class="va">Persistence</span></span>
+<span></span>
+<span><span class="va">joint_agency</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_scores.html">nomo_scores</a></span><span class="op">(</span><span class="va">fit</span>, method <span class="op">=</span> <span class="st">"regression"</span><span class="op">)</span><span class="op">$</span><span class="va">scores</span><span class="op">$</span><span class="va">Agency</span></span>
+<span><span class="va">joint_persistence</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_scores.html">nomo_scores</a></span><span class="op">(</span><span class="va">fit</span>, method <span class="op">=</span> <span class="st">"bartlett"</span><span class="op">)</span><span class="op">$</span><span class="va">scores</span><span class="op">$</span><span class="va">Persistence</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  design <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>    <span class="st">"Latent variables (the target)"</span>,</span>
+<span>    <span class="st">"Regression then Bartlett, separate models"</span>,</span>
+<span>    <span class="st">"Regression scores for both, separate models"</span>,</span>
+<span>    <span class="st">"Regression then Bartlett, one joint model"</span></span>
+<span>  <span class="op">)</span>,</span>
+<span>  slope <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>    <span class="fu">lavaan</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/lavaan/man/lavInspect.html" class="external-link">lavInspect</a></span><span class="op">(</span><span class="va">fit</span>, <span class="st">"cov.lv"</span><span class="op">)</span><span class="op">[</span><span class="st">"Agency"</span>, <span class="st">"Persistence"</span><span class="op">]</span>,</span>
+<span>    <span class="fu">slope</span><span class="op">(</span><span class="va">persistence_bartlett</span>, <span class="va">agency</span><span class="op">)</span>,</span>
+<span>    <span class="fu">slope</span><span class="op">(</span><span class="va">persistence_regression</span>, <span class="va">agency</span><span class="op">)</span>,</span>
+<span>    <span class="fu">slope</span><span class="op">(</span><span class="va">joint_persistence</span>, <span class="va">joint_agency</span><span class="op">)</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co">#&gt;                                        design     slope</span></span>
+<span><span class="co">#&gt; 1               Latent variables (the target) 0.5771865</span></span>
+<span><span class="co">#&gt; 2   Regression then Bartlett, separate models 0.5703658</span></span>
+<span><span class="co">#&gt; 3 Regression scores for both, separate models 0.3203264</span></span>
+<span><span class="co">#&gt; 4   Regression then Bartlett, one joint model 0.6873507</span></span></code></pre></div>
+<p>Both factors have a variance of 1, so the target slope is their
+covariance in the fitted model. The design lands next to it. Using the
+regression method for both blocks falls well short, and scoring both
+factors from the one two-factor model overshoots, although it uses the
+right method for each. Each condition matters.</p>
+<p>Three limits come with the result. It is about regression
+coefficients, not the correlations <code>correlational_accuracy</code>
+describes. The standard errors <code><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm()</a></code> reports treat the
+scores as observed data, and Skrondal and Laake note that corrected
+standard errors and confidence intervals may require resampling. And it
+does not extend to nonlinear models, for which they caution that factor
+score regression appears to perform very badly.</p>
+<p><code>nomologR</code> does not apply the design for you, because it
+depends on which factor is the outcome, which is part of the research
+question. Where the question can be asked of the latent variables
+themselves, that remains the simpler route.</p>
+</div>
+<div class="section level2">
 <h2 id="choosing-a-method">Choosing a method<a class="anchor" aria-label="anchor" href="#choosing-a-method"></a>
 </h2>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="fu"><a href="../reference/nomo_scores.html">nomo_scores</a></span><span class="op">(</span><span class="va">fit</span>, method <span class="op">=</span> <span class="st">"regression"</span><span class="op">)</span>, <span class="st">"diagnostics"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 2 × 5</span></span></span>
 <span><span class="co">#&gt;   factor      n_items validity univocality correlational_accuracy</span></span>
@@ -246,6 +314,8 @@ Erlbaum.</p>
 <em>Psychological Methods, 6</em>(4), 430–450. <a href="https://doi.org/10.1037/1082-989X.6.4.430" class="external-link uri">https://doi.org/10.1037/1082-989X.6.4.430</a></p>
 <p>McNeish, D., &amp; Wolf, M. G. (2020). Thinking twice about sum
 scores. <em>Behavior Research Methods, 52</em>(6), 2287–2305. <a href="https://doi.org/10.3758/s13428-020-01398-0" class="external-link uri">https://doi.org/10.3758/s13428-020-01398-0</a></p>
+<p>Skrondal, A., &amp; Laake, P. (2001). Regression among factor scores.
+<em>Psychometrika, 66</em>(4), 563–575. <a href="https://doi.org/10.1007/BF02296196" class="external-link uri">https://doi.org/10.1007/BF02296196</a></p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

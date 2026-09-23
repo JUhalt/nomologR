@@ -206,8 +206,17 @@ disclosure says so.</p>
 <p>Where the observed variables are composites, modelling their items as
 indicators of latent variables removes the discrepancy, and
 <code><a href="https://rdrr.io/pkg/lavaan/man/sam.html" class="external-link">lavaan::sam()</a></code> estimates the structural relationships after the
-measurement model (Rosseel &amp; Loh, 2024). No correction is applied
-automatically.</p>
+measurement model (Rosseel &amp; Loh, 2024).</p>
+<p>Where they are factor scores and the hypothesis is a linear regression,
+Skrondal and Laake (2001) showed that one scoring design gives consistent
+estimates of the regression coefficients: regression-method scores for the
+predictors and Bartlett scores for the outcome, each block scored from a
+measurement model of its own. Scoring both with the same method, or scoring
+all the factors from one model, does not, and
+<code><a href="../articles/scoring.html">vignette("scoring", package = "nomologR")</a></code> shows both failures. The
+standard errors still treat the scores as observed, and Skrondal and Laake
+note that corrected ones may require resampling. The result does not extend
+to nonlinear models. No correction is applied automatically.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
@@ -230,6 +239,8 @@ to structural equation modeling. <em>Psychological Methods, 29</em>(3), 561-588.
 and the power approach for assessing the equivalence of average
 bioavailability. <em>Journal of Pharmacokinetics and Biopharmaceutics, 15</em>(6),
 657-680. <a href="https://doi.org/10.1007/BF01068419" class="external-link">doi:10.1007/BF01068419</a></p>
+<p>Skrondal, A., &amp; Laake, P. (2001). Regression among factor scores.
+<em>Psychometrika, 66</em>(4), 563-575. <a href="https://doi.org/10.1007/BF02296196" class="external-link">doi:10.1007/BF02296196</a></p>
     </div>
 
     <div class="section level2">

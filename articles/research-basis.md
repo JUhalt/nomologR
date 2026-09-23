@@ -360,6 +360,18 @@ otherwise it is reported as a direction that did not replicate, or as a
 sign change within sampling uncertainty, because estimates scattered
 around a null relation differ in sign about half the time.
 
+A hypothesis whose endpoints are observed variables, such as sum or
+factor scores, is disclosed in the decision log, because the measurement
+error of a composite enters the relationship unmodelled. The disclosure
+points to modelling the items as indicators, to estimating structural
+relationships after the measurement model with
+[`lavaan::sam()`](https://rdrr.io/pkg/lavaan/man/sam.html) (Rosseel &
+Loh, 2024), and, for a linear regression among factor scores, to the one
+scoring design shown to give consistent coefficients: regression-method
+scores for the predictors and Bartlett scores for the outcome, each
+block scored from a measurement model of its own (Skrondal & Laake,
+2001). None of these is applied automatically.
+
 ## 9. Workflow, scores, and reporting — `nomo_run()`, `nomo_report()`
 
 **Historical practice.** A sequence of undisclosed decisions — dropping
@@ -388,12 +400,14 @@ information.
 identifies which methods a workflow actually used, so the report cites
 those methods and their literature rather than only the software that
 computed them.
+[`nomo_scores()`](https://juhalt.github.io/nomologR/reference/nomo_scores.md)
+fits the parallel model a sum score assumes and reports Grice’s criteria
+for the scores it returns, and
+[`nomo_apa_table()`](https://juhalt.github.io/nomologR/reference/nomo_apa_table.md)
+formats evidence as APA-style manuscript tables.
 
 **Planned.** Missing-data sensitivity
-([\#32](https://github.com/JUhalt/nomologR/issues/32)), score guidance
-([\#33](https://github.com/JUhalt/nomologR/issues/33)), and
-manuscript-ready tables
-([\#35](https://github.com/JUhalt/nomologR/issues/35)).
+([\#32](https://github.com/JUhalt/nomologR/issues/32)).
 
 ## References
 
@@ -796,6 +810,9 @@ Simmons, J. P., Nelson, L. D., & Simonsohn, U. (2011). False-positive
 psychology: Undisclosed flexibility in data collection and analysis
 allows presenting anything as significant. *Psychological Science,
 22*(11), 1359–1366. <https://doi.org/10.1177/0956797611417632>
+
+Skrondal, A., & Laake, P. (2001). Regression among factor scores.
+*Psychometrika, 66*(4), 563–575. <https://doi.org/10.1007/BF02296196>
 
 Svetina, D., Rutkowski, L., & Rutkowski, D. (2020). Multiple-group
 invariance with categorical outcomes using updated guidelines: An

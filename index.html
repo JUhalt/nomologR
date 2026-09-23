@@ -548,7 +548,8 @@
 <code class="sourceCode R"><span><span class="va">scored</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/nomo_scores.html">nomo_scores</a></span><span class="op">(</span><span class="va">fit</span>, method <span class="op">=</span> <span class="st">"sum"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">scored</span>, <span class="st">"diagnostics"</span><span class="op">)</span></span></code></pre></div>
 <p>Adding items is not arithmetic: it assumes a parallel model, with equal unstandardized loadings and equal residual variances, so for unit-weighted scores that constrained model is fitted and compared with the model you supplied. Every method reports Grice’s three criteria — validity, univocality, and correlational accuracy.</p>
-<p>The third matters before scores are used in later analyses. Correlations among scores do not reproduce correlations among the factors, and the direction of the discrepancy depends on the scoring method and the model rather than being a constant that could be corrected for, so <code>nomologR</code> reports it rather than adjusting for it. Where a question can be asked of the latent variables instead, asking it of scores replaces an unbiased answer with a biased one. See <strong>“Scoring a measurement model”</strong>.</p>
+<p>The third matters before scores are used in later analyses. Correlations among scores do not reproduce correlations among the factors, and the direction of the discrepancy depends on the scoring method and the model rather than being a constant that could be corrected for, so <code>nomologR</code> reports it rather than adjusting for it. Where a question can be asked of the latent variables instead, asking it of scores replaces an unbiased answer with a biased one.</p>
+<p>One design is an established exception. For a linear regression among factors, Skrondal and Laake (2001) proved that regression-method scores for the predictors and Bartlett scores for the outcome, each block scored from a measurement model of its own, give consistent coefficients. The article applies it next to the two ways of getting it wrong. See <strong>“Scoring a measurement model”</strong>.</p>
 </div>
 <div class="section level3">
 <h3 id="id_6-nomo_hypotheses--nomo_network--theory-specified-before-evidence">6. <code>nomo_hypotheses()</code> + <code>nomo_network()</code> — theory specified before evidence<a class="anchor" aria-label="anchor" href="#id_6-nomo_hypotheses--nomo_network--theory-specified-before-evidence"></a>
@@ -695,7 +696,7 @@
 <li>
 <code><a href="reference/nomo_hierarchical.html">nomo_hierarchical()</a></code> reports factor determinacy and construct replicability (#56);</li>
 <li>
-<code><a href="reference/nomo_network.html">nomo_network()</a></code> discloses relationships estimated between observed variables, which carry the bias that scoring introduces (#62);</li>
+<code><a href="reference/nomo_network.html">nomo_network()</a></code> discloses relationships estimated between observed variables, which carry the bias that scoring introduces, and names the remedies the literature supports (#62);</li>
 <li>the reliability bootstrap can run on several workers (#42);</li>
 <li>
 <code><a href="reference/nomo_apa_table.html">nomo_apa_table()</a></code> formats manuscript-ready tables, and <code><a href="reference/nomo_report.html">nomo_report()</a></code> writes Word documents as well as HTML (#35);</li>

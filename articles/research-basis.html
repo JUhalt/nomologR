@@ -425,6 +425,17 @@ reversal only when both confidence intervals exclude zero on opposite
 sides; otherwise it is reported as a direction that did not replicate,
 or as a sign change within sampling uncertainty, because estimates
 scattered around a null relation differ in sign about half the time.</p>
+<p>A hypothesis whose endpoints are observed variables, such as sum or
+factor scores, is disclosed in the decision log, because the measurement
+error of a composite enters the relationship unmodelled. The disclosure
+points to modelling the items as indicators, to estimating structural
+relationships after the measurement model with
+<code><a href="https://rdrr.io/pkg/lavaan/man/sam.html" class="external-link">lavaan::sam()</a></code> (Rosseel &amp; Loh, 2024), and, for a linear
+regression among factor scores, to the one scoring design shown to give
+consistent coefficients: regression-method scores for the predictors and
+Bartlett scores for the outcome, each block scored from a measurement
+model of its own (Skrondal &amp; Laake, 2001). None of these is applied
+automatically.</p>
 </div>
 <div class="section level2">
 <h2 id="workflow-scores-and-reporting-nomo_run-nomo_report">9. Workflow, scores, and reporting — <code>nomo_run()</code>,
@@ -449,10 +460,11 @@ at consequential decisions and records the decision and rationale;
 deviations, and session information. <code><a href="../reference/nomo_methods.html">nomo_methods()</a></code>
 identifies which methods a workflow actually used, so the report cites
 those methods and their literature rather than only the software that
-computed them.</p>
-<p><strong>Planned.</strong> Missing-data sensitivity (<a href="https://github.com/JUhalt/nomologR/issues/32" class="external-link">#32</a>), score
-guidance (<a href="https://github.com/JUhalt/nomologR/issues/33" class="external-link">#33</a>), and
-manuscript-ready tables (<a href="https://github.com/JUhalt/nomologR/issues/35" class="external-link">#35</a>).</p>
+computed them. <code><a href="../reference/nomo_scores.html">nomo_scores()</a></code> fits the parallel model a sum
+score assumes and reports Grice’s criteria for the scores it returns,
+and <code><a href="../reference/nomo_apa_table.html">nomo_apa_table()</a></code> formats evidence as APA-style
+manuscript tables.</p>
+<p><strong>Planned.</strong> Missing-data sensitivity (<a href="https://github.com/JUhalt/nomologR/issues/32" class="external-link">#32</a>).</p>
 </div>
 <div class="section level2">
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
@@ -730,6 +742,8 @@ usefulness of Cronbach’s alpha. <em>Psychometrika, 74</em>(1), 107–120.
 False-positive psychology: Undisclosed flexibility in data collection
 and analysis allows presenting anything as significant.
 <em>Psychological Science, 22</em>(11), 1359–1366. <a href="https://doi.org/10.1177/0956797611417632" class="external-link uri">https://doi.org/10.1177/0956797611417632</a></p>
+<p>Skrondal, A., &amp; Laake, P. (2001). Regression among factor scores.
+<em>Psychometrika, 66</em>(4), 563–575. <a href="https://doi.org/10.1007/BF02296196" class="external-link uri">https://doi.org/10.1007/BF02296196</a></p>
 <p>Svetina, D., Rutkowski, L., &amp; Rutkowski, D. (2020).
 Multiple-group invariance with categorical outcomes using updated
 guidelines: An illustration using Mplus and the lavaan/semTools
