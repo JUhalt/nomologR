@@ -3,7 +3,7 @@
 [![R-CMD-check](https://github.com/JUhalt/nomologR/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/JUhalt/nomologR/actions/workflows/R-CMD-check.yaml)
 [![test-coverage](https://github.com/JUhalt/nomologR/actions/workflows/test-coverage.yaml/badge.svg)](https://github.com/JUhalt/nomologR/actions/workflows/test-coverage.yaml)
 
-**Current stable release: `0.2.0`.**
+**Current stable release: `0.2.1`.**
 
 `nomologR` is a guided, evidence-based workflow for **empirical scale
 development and construct validation**. It coordinates established R
@@ -14,7 +14,7 @@ explanations, decision logging, and theory-aware guidance.
 
 [Documentation](https://juhalt.github.io/nomologR/) ·
 [Roadmap](https://github.com/JUhalt/nomologR/blob/master/ROADMAP.md) ·
-[v0.2.1 milestone](https://github.com/JUhalt/nomologR/milestone/4) ·
+[v0.3.0 milestone](https://github.com/JUhalt/nomologR/milestone/3) ·
 [Open issues](https://github.com/JUhalt/nomologR/issues)
 
 ## Installation
@@ -979,30 +979,11 @@ they can. No table labels a result as passing or failing.
 The detailed release plan lives in
 [`ROADMAP.md`](https://github.com/JUhalt/nomologR/blob/master/ROADMAP.md).
 
-### Current release: `v0.2.0`
+### Current release: `v0.2.1`
 
-`v0.2.0` makes the workflow research-backed from historical to
-contemporary practice and more useful to graduate students and
-researchers. Scope was selected in
-[\#22](https://github.com/JUhalt/nomologR/issues/22). It added learning
-foundations (#25) with teaching datasets, runnable vignettes, and the
-research-basis article; readable invariance labels (#31); maintenance
-(#36); model comparison with
-[`nomo_compare()`](https://juhalt.github.io/nomologR/reference/nomo_compare.md)
-(#27); auditable revision lineage with
-[`nomo_revise()`](https://juhalt.github.io/nomologR/reference/nomo_revise.md)
-(#28); the methods registry with
-[`nomo_methods()`](https://juhalt.github.io/nomologR/reference/nomo_methods.md)
-(#26); interval-based replication-status language for sign changes
-(#30); bifactor and higher-order models with
-[`nomo_hierarchical()`](https://juhalt.github.io/nomologR/reference/nomo_hierarchical.md)
-(#29); and release certification (#37).
-
-### In development: `v0.2.1`
-
-The [`v0.2.1` milestone](https://github.com/JUhalt/nomologR/milestone/4)
-began with six workstreams moved out of `v0.2.0` at certification. In
-the development version so far:
+`v0.2.1` completes the v0.2 workflow for what happens after a
+measurement model is established
+([milestone](https://github.com/JUhalt/nomologR/milestone/4)):
 
 - reports render from inside R Markdown and Quarto documents (#40);
 - [`nomo_scores()`](https://juhalt.github.io/nomologR/reference/nomo_scores.md)
@@ -1022,14 +1003,33 @@ the development version so far:
   formats manuscript-ready tables, and
   [`nomo_report()`](https://juhalt.github.io/nomologR/reference/nomo_report.md)
   writes Word documents as well as HTML (#35);
-- [`nomo_compare()`](https://juhalt.github.io/nomologR/reference/nomo_compare.md)
-  is fully covered by tests again (#54);
 - [`nomo_missing()`](https://juhalt.github.io/nomologR/reference/nomo_missing.md)
   shows whether a measurement model or network depends on how missing
-  data were handled (#32).
+  data were handled (#32);
+- [`nomo_compare()`](https://juhalt.github.io/nomologR/reference/nomo_compare.md)
+  is fully covered by tests again (#54).
 
-With missing-data sensitivity in place, every `v0.2.1` workstream is in
-the development version.
+Certification is recorded in
+[\#70](https://github.com/JUhalt/nomologR/issues/70).
+
+### Previous release: `v0.2.0`
+
+`v0.2.0` made the workflow research-backed from historical to
+contemporary practice and more useful to graduate students and
+researchers. Scope was selected in
+[\#22](https://github.com/JUhalt/nomologR/issues/22). It added learning
+foundations (#25) with teaching datasets, runnable vignettes, and the
+research-basis article; readable invariance labels (#31); maintenance
+(#36); model comparison with
+[`nomo_compare()`](https://juhalt.github.io/nomologR/reference/nomo_compare.md)
+(#27); auditable revision lineage with
+[`nomo_revise()`](https://juhalt.github.io/nomologR/reference/nomo_revise.md)
+(#28); the methods registry with
+[`nomo_methods()`](https://juhalt.github.io/nomologR/reference/nomo_methods.md)
+(#26); interval-based replication-status language for sign changes
+(#30); bifactor and higher-order models with
+[`nomo_hierarchical()`](https://juhalt.github.io/nomologR/reference/nomo_hierarchical.md)
+(#29); and release certification (#37).
 
 ### Next: `v0.3.0` and `v1.0.0`
 

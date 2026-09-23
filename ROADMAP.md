@@ -17,17 +17,19 @@
 > delete.
 
 **Current stable release:**
+[0.2.1](https://github.com/JUhalt/nomologR/releases/tag/v0.2.1)
+(September 23, 2026), GPL-3.0-only — the v0.2 workflow completed:
+scoring, careless-responding screens, missing-data sensitivity,
+factor-score quality, and manuscript-ready output. It follows
 [0.2.0](https://github.com/JUhalt/nomologR/releases/tag/v0.2.0)
-(September 19, 2026), GPL-3.0-only — research-backed, usable measurement
-workflows, with scope selected in
-[\#22](https://github.com/JUhalt/nomologR/issues/22). The earlier
+(September 19, 2026). The earlier
 [0.1.0](https://github.com/JUhalt/nomologR/releases/tag/v0.1.0) release
 (September 9, 2026) keeps its original MIT license. **Next release:**
-[v0.2.1](https://github.com/JUhalt/nomologR/milestone/4) — the Planned
-workstreams moved at v0.2.0 certification. **Distribution:**
-[R-universe](https://juhalt.r-universe.dev), which builds each GitHub
-release. The first CRAN submission is targeted for `v0.3.0`
-([\#39](https://github.com/JUhalt/nomologR/issues/39)).
+[v0.3.0](https://github.com/JUhalt/nomologR/milestone/3) — the first
+CRAN submission and the `contentvalidR` handoff reader.
+**Distribution:** [R-universe](https://juhalt.r-universe.dev), which
+builds each GitHub release. The first CRAN submission is targeted for
+`v0.3.0` ([\#39](https://github.com/JUhalt/nomologR/issues/39)).
 
 The complete v0.1 milestone specifications, exit gates, and
 certification records are preserved verbatim in
@@ -185,30 +187,32 @@ invariance local-strain labels (completed in
 [\#41](https://github.com/JUhalt/nomologR/pull/41)).
 
 [\#32](https://github.com/JUhalt/nomologR/issues/32) Missing-data
-sensitivity across measurement stages. **Moved to v0.2.1.**
+sensitivity across measurement stages. **Moved to v0.2.1; shipped
+there.**
 
 [\#33](https://github.com/JUhalt/nomologR/issues/33) Score guidance —
 [`nomo_scores()`](https://juhalt.github.io/nomologR/reference/nomo_scores.md)
-for sum and factor scores. **Moved to v0.2.1.**
+for sum and factor scores. **Moved to v0.2.1; shipped there.**
 
 [\#34](https://github.com/JUhalt/nomologR/issues/34) Insufficient-effort
 responding screen in
 [`nomo_screen()`](https://juhalt.github.io/nomologR/reference/nomo_screen.md).
-**Moved to v0.2.1.**
+**Moved to v0.2.1; shipped there.**
 
 [\#35](https://github.com/JUhalt/nomologR/issues/35) Manuscript-ready
-tables and Word report output. **Moved to v0.2.1.**
+tables and Word report output. **Moved to v0.2.1; shipped there.**
 
 [\#36](https://github.com/JUhalt/nomologR/issues/36) Maintenance — test
 organization, `nomo_run.R` modularization, minimum-dependency CI.
 
 [\#40](https://github.com/JUhalt/nomologR/issues/40)
 [`nomo_report()`](https://juhalt.github.io/nomologR/reference/nomo_report.md)
-rendering from inside R Markdown or Quarto documents. **Moved to
-v0.2.1.**
+rendering from inside R Markdown or Quarto documents. **Moved to v0.2.1;
+shipped there.**
 
 [\#42](https://github.com/JUhalt/nomologR/issues/42) Optional parallel
-bootstrap for reliability confidence intervals. **Moved to v0.2.1.**
+bootstrap for reliability confidence intervals. **Moved to v0.2.1;
+shipped there.**
 
 ## Suggested sequence
 
@@ -219,7 +223,7 @@ bootstrap for reliability confidence intervals. **Moved to v0.2.1.**
 3.  **Broader measurement models and interpretation:** \#29 (builds on
     \#27) and \#30.
 4.  **Usability extensions:** \#32, \#33, \#34, \#35, \#40, \#42 — moved
-    to v0.2.1 at certification.
+    to v0.2.1 at certification and shipped in 0.2.1.
 5.  **Release:** \#37, including the license/version/date gate carried
     from \#22 and the CRAN-readiness gate.
 
@@ -233,6 +237,61 @@ power planning; criterion/predictive evidence beyond network outcomes;
 and research proposal
 [\#23](https://github.com/JUhalt/nomologR/issues/23) (model-specific fit
 diagnostics). None were rejected.
+
+------------------------------------------------------------------------
+
+# v0.2.1 — Completing the v0.2 Workflow
+
+**Status:** Released September 23, 2026 ([v0.2.1
+milestone](https://github.com/JUhalt/nomologR/milestone/4)). The six
+Planned workstreams moved at v0.2.0 certification all shipped, with
+three workstreams opened during the cycle. Certification is recorded in
+[\#70](https://github.com/JUhalt/nomologR/issues/70).
+
+[\#40](https://github.com/JUhalt/nomologR/issues/40)
+[`nomo_report()`](https://juhalt.github.io/nomologR/reference/nomo_report.md)
+renders from inside R Markdown and Quarto documents.
+
+[\#54](https://github.com/JUhalt/nomologR/issues/54) Full test coverage
+of the
+[`nomo_compare()`](https://juhalt.github.io/nomologR/reference/nomo_compare.md)
+failure guards.
+
+[\#56](https://github.com/JUhalt/nomologR/issues/56) Factor determinacy
+and construct replicability in
+[`nomo_hierarchical()`](https://juhalt.github.io/nomologR/reference/nomo_hierarchical.md),
+reproducing Rodriguez, Reise, and Haviland (2016).
+
+[\#33](https://github.com/JUhalt/nomologR/issues/33)
+[`nomo_scores()`](https://juhalt.github.io/nomologR/reference/nomo_scores.md):
+scores with Grice’s criteria and the parallel model that unit weighting
+assumes.
+
+[\#34](https://github.com/JUhalt/nomologR/issues/34) Careless-responding
+indices in
+[`nomo_screen()`](https://juhalt.github.io/nomologR/reference/nomo_screen.md),
+reproducing Curran (2016).
+
+[\#62](https://github.com/JUhalt/nomologR/issues/62) Disclosure of
+relationships estimated between observed variables, naming
+[`lavaan::sam()`](https://rdrr.io/pkg/lavaan/man/sam.html) and Skrondal
+and Laake’s (2001) scoring design.
+
+[\#42](https://github.com/JUhalt/nomologR/issues/42) Optional parallel
+bootstrap for reliability intervals.
+
+[\#35](https://github.com/JUhalt/nomologR/issues/35)
+[`nomo_apa_table()`](https://juhalt.github.io/nomologR/reference/nomo_apa_table.md)
+and Word output from
+[`nomo_report()`](https://juhalt.github.io/nomologR/reference/nomo_report.md).
+
+[\#32](https://github.com/JUhalt/nomologR/issues/32)
+[`nomo_missing()`](https://juhalt.github.io/nomologR/reference/nomo_missing.md):
+listwise deletion against FIML, or pairwise deletion for ordered
+indicators.
+
+[\#70](https://github.com/JUhalt/nomologR/issues/70) Release
+certification and R-universe publication.
 
 ------------------------------------------------------------------------
 

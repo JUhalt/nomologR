@@ -10,13 +10,13 @@ Source:
 [`inst/CITATION`](https://github.com/JUhalt/nomologR/blob/master/inst/CITATION)
 
 Uhalt J (2026). *nomologR: Guided Scale Development and Construct
-Validation*. R package version 0.2.0.9000,
+Validation*. R package version 0.2.1,
 <https://github.com/JUhalt/nomologR>.
 
     @Manual{,
       title = {nomologR: Guided Scale Development and Construct Validation},
       author = {Joshua Uhalt},
       year = {2026},
-      note = {R package version 0.2.0.9000},
+      note = {R package version 0.2.1},
       url = {https://github.com/JUhalt/nomologR},
     }

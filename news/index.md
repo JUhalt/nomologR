@@ -1,6 +1,41 @@
 # Changelog
 
-## nomologR 0.2.0.9000 (development)
+## nomologR 0.2.1
+
+nomologR 0.2.1 completes the six workstreams that moved out of v0.2.0 at
+certification ([\#37](https://github.com/JUhalt/nomologR/issues/37)). It
+also carries three workstreams opened during the cycle
+([\#54](https://github.com/JUhalt/nomologR/issues/54),
+[\#56](https://github.com/JUhalt/nomologR/issues/56),
+[\#62](https://github.com/JUhalt/nomologR/issues/62)). Together they
+cover what happens after a measurement model is established:
+
+- scoring it, with the evidence for the scoring choice
+  ([\#33](https://github.com/JUhalt/nomologR/issues/33));
+- screening for careless responding
+  ([\#34](https://github.com/JUhalt/nomologR/issues/34));
+- checking whether results depend on missing-data handling
+  ([\#32](https://github.com/JUhalt/nomologR/issues/32));
+- judging factor-score quality
+  ([\#56](https://github.com/JUhalt/nomologR/issues/56));
+- carrying scores into a network honestly
+  ([\#62](https://github.com/JUhalt/nomologR/issues/62));
+- reporting in manuscript-ready form
+  ([\#35](https://github.com/JUhalt/nomologR/issues/35)), including from
+  inside a thesis document
+  ([\#40](https://github.com/JUhalt/nomologR/issues/40)).
+
+Where a published worked example exists, the package reproduces it
+exactly: Curran’s (2016) examples for the careless-responding indices,
+and Rodriguez, Reise, and Haviland’s (2016) MASC values for factor
+determinacy and construct replicability. Skrondal and Laake’s (2001)
+factor-score regression design and the missing-data comparison are
+checked against known population values. Every source cited is in the
+research-basis reference list, with its DOI checked against the
+registry. Certification is recorded in
+[\#70](https://github.com/JUhalt/nomologR/issues/70). Distribution
+remains R-universe; the first CRAN submission is targeted for v0.3.0
+([\#39](https://github.com/JUhalt/nomologR/issues/39)).
 
 - [`nomo_report()`](https://juhalt.github.io/nomologR/reference/nomo_report.md)
   now works from inside a knitted R Markdown or Quarto document, such as
