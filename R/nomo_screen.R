@@ -14,6 +14,20 @@
 #'   all columns are audited and the decision log reminds the user to verify that
 #'   identifiers, demographics, and other non-item columns were not included.
 #' @param guidance Guidance settings from [nomo_defaults()].
+#' @param effort Logical. If `TRUE`, case-level indices of careless or
+#'   insufficient-effort responding are added. See **Careless responding**.
+#' @param scales Optional named list of character vectors assigning items to
+#'   scales. Needed for even-odd consistency and for the within-scale versions
+#'   of long-string and inter-item standard deviation.
+#' @param reverse Optional character vector naming reverse-keyed items. Used
+#'   only to recode an internal copy for the indices that need it; the data is
+#'   never recoded.
+#' @param scale_range Numeric `c(min, max)` of the response scale. Required
+#'   whenever `reverse` is supplied, and never inferred from the data.
+#' @param pair_magnitude Minimum absolute between-person correlation for an
+#'   item pair to count as a psychometric antonym or synonym. Curran (2016)
+#'   suggests .60 while saying there is no firm basis for it, so it is an
+#'   argument rather than a constant.
 #'
 #' @details
 #' Item-type labels are descriptive, not modeling decisions. In particular,
@@ -32,11 +46,56 @@
 #' summaries. Continuous-like numeric indicators receive descriptive skewness
 #' and excess-kurtosis summaries without a pass/fail normality judgment.
 #'
+#' **Careless responding.** With `effort = TRUE`, each case receives the indices
+#' Meade and Craig (2012), Huang et al. (2012), and Curran (2016) describe:
+#' long-string, inter-item standard deviation (Marjanovic et al., 2015),
+#' Mahalanobis distance, even-odd consistency, and psychometric antonym and
+#' synonym correlations. Curran recommends these be used in series because each
+#' has blind spots, and the output is built to show where they disagree rather
+#' than to combine them into one score.
+#'
+#' They disagree for a reason. Inter-item standard deviation detects random
+#' responding and gives a respondent who answers every item identically the
+#' best possible score; long-string detects exactly that respondent. When the
+#' two disagree about a case, the decision log says so.
+#'
+#' A case is flagged only where a source states a rule, and each flag carries
+#' the source's own qualification: long-string at half the number of items,
+#' which Curran offers as a conservative starting point and says is not the best
+#' cut score for every scale, and a positive antonym or negative synonym
+#' correlation. The other indices have no stated cut score and are reported
+#' without a flag. Huang et al. found the indices they recommended identified
+#' attentive respondents well and random responders poorly, so an unflagged case
+#' is not thereby shown to be attentive.
+#'
+#' Each respondent's antonym, synonym, and even-odd value is a correlation whose
+#' N is the number of pairs or scales. With two, every value is exactly +1 or
+#' -1, so at least three are required; with fewer than five the log says the
+#' flags are coarse. Cases are flagged, never removed.
+#'
 #' @return An object of class `nomo_screen` containing item summaries, response
 #'   distributions, case-level completeness diagnostics, an evidence-guided
 #'   decision log, and the guidance settings used.
 #'
 #' @references
+#' Curran, P. G. (2016). Methods for the detection of carelessly invalid
+#' responses in survey data. *Journal of Experimental Social Psychology, 66*,
+#' 4-19. \doi{10.1016/j.jesp.2015.07.006}
+#'
+#' Huang, J. L., Curran, P. G., Keeney, J., Poposki, E. M., & DeShon, R. P.
+#' (2012). Detecting and deterring insufficient effort responding to surveys.
+#' *Journal of Business and Psychology, 27*(1), 99-114.
+#' \doi{10.1007/s10869-011-9231-8}
+#'
+#' Marjanovic, Z., Holden, R., Struthers, W., Cribbie, R., & Greenglass, E.
+#' (2015). The inter-item standard deviation (ISD): An index that discriminates
+#' between conscientious and random responders. *Personality and Individual
+#' Differences, 84*, 79-83. \doi{10.1016/j.paid.2014.08.021}
+#'
+#' Meade, A. W., & Craig, S. B. (2012). Identifying careless responses in
+#' survey data. *Psychological Methods, 17*(3), 437-455.
+#' \doi{10.1037/a0028085}
+#'
 #' Clark, L. A., & Watson, D. (2019). Constructing validity: New developments
 #' in creating objective measuring instruments. *Psychological Assessment,
 #' 31*(12), 1412-1427. \doi{10.1037/pas0000626}
@@ -63,7 +122,14 @@
 #' summary(scr)
 #'
 #' @export
-nomo_screen <- function(data, items = NULL, guidance = nomo_defaults()) {
+nomo_screen <- function(data,
+                        items = NULL,
+                        guidance = nomo_defaults(),
+                        effort = FALSE,
+                        scales = NULL,
+                        reverse = NULL,
+                        scale_range = NULL,
+                        pair_magnitude = 0.60) {
   if (!is.data.frame(data)) {
     stop("`data` must be a data frame.", call. = FALSE)
   }
@@ -111,6 +177,12 @@ nomo_screen <- function(data, items = NULL, guidance = nomo_defaults()) {
   }
 
   selected <- data[items]
+
+  effort_args <- nomo_screen_effort_args(
+    effort = effort, selected = selected, items = items, scales = scales,
+    reverse = reverse, scale_range = scale_range,
+    pair_magnitude = pair_magnitude
+  )
 
   item_summary <- dplyr::bind_rows(
     lapply(items, function(item) {
@@ -300,10 +372,24 @@ nomo_screen <- function(data, items = NULL, guidance = nomo_defaults()) {
     )
   }
 
+  effort_result <- NULL
+  effort_log <- NULL
+  if (isTRUE(effort)) {
+    effort_result <- nomo_effort_screen(
+      selected,
+      scales = effort_args$scales,
+      reverse = effort_args$reverse,
+      scale_range = effort_args$scale_range,
+      pair_magnitude = pair_magnitude
+    )
+    effort_log <- nomo_effort_log(effort_result, n_items = length(items))
+  }
+
   decision_log <- dplyr::bind_rows(
     decision_log,
     descriptives$decision_log,
-    relationships$decision_log
+    relationships$decision_log,
+    effort_log
   )
 
   out <- list(
@@ -319,6 +405,31 @@ nomo_screen <- function(data, items = NULL, guidance = nomo_defaults()) {
     decision_log = decision_log,
     guidance = guidance
   )
+
+  # Added only when requested, so a screen that did not ask for careless-
+  # responding indices has exactly the shape it always had.
+  if (!is.null(effort_result)) {
+    tail_names <- c("decision_log", "guidance")
+    head <- out[setdiff(names(out), tail_names)]
+    out <- c(
+      head,
+      list(
+        effort = effort_result$effort,
+        effort_pairs = list(
+          antonym = effort_result$antonym_pairs,
+          synonym = effort_result$synonym_pairs
+        ),
+        effort_settings = list(
+          scales = effort_args$scales,
+          reverse = effort_args$reverse,
+          scale_range = effort_args$scale_range,
+          pair_magnitude = pair_magnitude,
+          long_string_limit = effort_result$long_string_limit
+        )
+      ),
+      out[tail_names]
+    )
+  }
 
   class(out) <- c("nomo_screen", "list")
   out
@@ -374,6 +485,23 @@ print.nomo_screen <- function(x, ...) {
     n_concentration,
     n_nzv
   ))
+
+  if (!is.null(x$effort) && nrow(x$effort)) {
+    e <- x$effort
+    flagged <- sum(e$n_flags > 0L)
+    by_rule <- vapply(
+      c(long_string = "flag_long_string", antonym = "flag_antonym",
+        synonym = "flag_synonym"),
+      function(col) sum(e[[col]]),
+      integer(1)
+    )
+    cat(sprintf(
+      "Careless-responding flags: %d case%s (long-string %d | antonym %d | synonym %d)\n",
+      flagged, if (flagged == 1L) "" else "s",
+      by_rule[["long_string"]], by_rule[["antonym"]], by_rule[["synonym"]]
+    ))
+    cat("  Cases are flagged, never removed. Indices disagree by design; see the decision log.\n")
+  }
 
   if (nrow(x$decision_log) > 0L) {
     severity_counts <- table(
@@ -574,4 +702,111 @@ nomo_screen_distribution <- function(x, item) {
   }
 
   out
+}
+
+
+
+# Validates the careless-responding arguments before any index is computed.
+# Keying and response range are never inferred: a reverse-keyed item recoded
+# against a range guessed from the data is recoded wrongly whenever a category
+# went unused, and the index would then report carelessness that is not there.
+nomo_screen_effort_args <- function(effort, selected, items, scales, reverse,
+                                    scale_range, pair_magnitude) {
+  if (!is.logical(effort) || length(effort) != 1L || is.na(effort)) {
+    stop("`effort` must be TRUE or FALSE.", call. = FALSE)
+  }
+  if (!isTRUE(effort)) {
+    return(list(scales = NULL, reverse = NULL, scale_range = NULL))
+  }
+
+  numeric_items <- vapply(selected, is.numeric, logical(1))
+  if (!all(numeric_items)) {
+    stop(
+      paste0(
+        "Careless-responding indices need numeric responses. Not numeric: ",
+        paste(items[!numeric_items], collapse = ", "), ". Convert the ",
+        "responses to their numeric codes, or leave `effort = FALSE`."
+      ),
+      call. = FALSE
+    )
+  }
+
+  if (!is.numeric(pair_magnitude) || length(pair_magnitude) != 1L ||
+        !is.finite(pair_magnitude) || pair_magnitude <= 0 || pair_magnitude >= 1) {
+    stop("`pair_magnitude` must be a single number between 0 and 1.", call. = FALSE)
+  }
+
+  if (!is.null(scales)) {
+    if (!is.list(scales) || !length(scales) ||
+          !all(vapply(scales, is.character, logical(1)))) {
+      stop("`scales` must be a list of character vectors of item names.", call. = FALSE)
+    }
+    unknown <- setdiff(unlist(scales, use.names = FALSE), items)
+    if (length(unknown)) {
+      stop(
+        paste0("`scales` names item(s) not being screened: ",
+               paste(unknown, collapse = ", "), "."),
+        call. = FALSE
+      )
+    }
+  }
+
+  if (!is.null(reverse)) {
+    if (!is.character(reverse)) {
+      stop("`reverse` must be a character vector of item names.", call. = FALSE)
+    }
+    unknown <- setdiff(reverse, items)
+    if (length(unknown)) {
+      stop(
+        paste0("`reverse` names item(s) not being screened: ",
+               paste(unknown, collapse = ", "), "."),
+        call. = FALSE
+      )
+    }
+    if (length(reverse) && is.null(scale_range)) {
+      stop(
+        paste(
+          "Recoding reverse-keyed items needs the response scale's minimum and",
+          "maximum, supplied as `scale_range = c(min, max)`. It is not inferred",
+          "from the data, because an unused category would make the inferred",
+          "range wrong and every recoded response with it."
+        ),
+        call. = FALSE
+      )
+    }
+  }
+
+  if (!is.null(scale_range)) {
+    if (!is.numeric(scale_range) || length(scale_range) != 2L ||
+          anyNA(scale_range) || scale_range[[1L]] >= scale_range[[2L]]) {
+      stop("`scale_range` must be `c(min, max)` with min below max.", call. = FALSE)
+    }
+  }
+
+  list(scales = scales, reverse = reverse, scale_range = scale_range)
+}
+
+
+#' @export
+nomo_table.nomo_screen <- function(x,
+                                   type = c(
+                                     "items", "distribution", "cases",
+                                     "relationships", "effort", "decision_log"
+                                   ),
+                                   ...) {
+  type <- match.arg(type)
+  if (type == "items") return(x$item_summary)
+  if (type == "distribution") return(x$response_distribution)
+  if (type == "cases") return(x$case_summary)
+  if (type == "relationships") return(x$relationship_summary)
+  if (type == "effort") {
+    if (is.null(x$effort)) {
+      stop(
+        "No careless-responding indices were computed. Rerun with `effort = TRUE`.",
+        call. = FALSE
+      )
+    }
+    return(x$effort)
+  }
+  x$decision_log
 }

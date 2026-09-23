@@ -45,7 +45,7 @@ nomo_methods_used.nomo_screen <- function(x, ...) {
     used <- c(used, "near_zero_variance")
   }
 
-  used
+  c(used, nomo_methods_used_effort(x$effort))
 }
 
 
@@ -223,6 +223,24 @@ nomo_methods_used.nomo_hierarchical <- function(x, ...) {
   used
 }
 
+
+# Careless responding ---------------------------------------------------------
+
+# Credited from the values a screen actually produced, so an index that could
+# not be computed (too few scales or pairs) is not cited as having been used.
+nomo_methods_used_effort <- function(effort) {
+  if (!is.data.frame(effort) || !nrow(effort)) return(character())
+  produced <- function(column) column %in% names(effort) &&
+    any(is.finite(effort[[column]]))
+  c(
+    if (produced("long_string")) "long_string",
+    if (produced("inter_item_sd")) "inter_item_sd",
+    if (produced("mahalanobis")) "mahalanobis_screen",
+    if (produced("even_odd")) "even_odd_consistency",
+    if (produced("antonym_r")) "psychometric_antonyms",
+    if (produced("synonym_r")) "psychometric_synonyms"
+  )
+}
 
 # Scores ----------------------------------------------------------------------
 
