@@ -681,8 +681,9 @@ subscale scores”**.
 
 ### `nomo_scores()` — scoring is a modeling decision
 
-Once a measurement model is established, `nomo_scores()` produces sum, mean,
-regression, or Bartlett scores and reports what they are and are not.
+Once a measurement model is established, `nomo_scores()` produces sum,
+mean, regression, or Bartlett scores and reports what they are and are
+not.
 
 ``` r
 scored <- nomo_scores(fit, method = "sum")
@@ -690,18 +691,19 @@ nomo_table(scored, "diagnostics")
 ```
 
 Adding items is not arithmetic: it assumes a parallel model, with equal
-unstandardized loadings and equal residual variances, so for unit-weighted
-scores that constrained model is fitted and compared with the model you
-supplied. Every method reports Grice’s three criteria — validity,
-univocality, and correlational accuracy.
+unstandardized loadings and equal residual variances, so for
+unit-weighted scores that constrained model is fitted and compared with
+the model you supplied. Every method reports Grice’s three criteria —
+validity, univocality, and correlational accuracy.
 
-The third matters before scores are used in later analyses. Correlations among
-scores do not reproduce correlations among the factors, and the direction of
-the discrepancy depends on the scoring method and the model rather than being a
-constant that could be corrected for, so `nomologR` reports it rather than
-adjusting for it. Where a question can be asked of the latent variables
-instead, asking it of scores replaces an unbiased answer with a biased one. See
-**“Scoring a measurement model”**.
+The third matters before scores are used in later analyses. Correlations
+among scores do not reproduce correlations among the factors, and the
+direction of the discrepancy depends on the scoring method and the model
+rather than being a constant that could be corrected for, so `nomologR`
+reports it rather than adjusting for it. Where a question can be asked
+of the latent variables instead, asking it of scores replaces an
+unbiased answer with a biased one. See **“Scoring a measurement
+model”**.
 
 ### 6. `nomo_hypotheses()` + `nomo_network()` — theory specified before evidence
 
@@ -877,6 +879,21 @@ assumptions, and DOI-verified references. The [research
 basis](https://juhalt.github.io/nomologR/articles/research-basis.html)
 article explains the lineage labels.
 
+For a thesis or manuscript, `nomo_apa_table()` formats a result as an
+APA 7 table — a bold number, an italic title, no vertical rules, and
+notes below — that knits directly into R Markdown or Quarto:
+
+``` r
+nomo_apa_table(cfa, "loadings", number = 1)
+nomo_apa_table(reliability, number = 2)
+nomo_apa_table(network, number = 3)
+```
+
+Leading zeros follow the statistic rather than its value: reliability,
+correlations, CFI, and *p* lose theirs because they cannot exceed 1,
+while TLI, RMSEA, SRMR, and standardized loadings keep theirs because
+they can. No table labels a result as passing or failing.
+
 ## Development path
 
 The detailed release plan lives in
@@ -896,20 +913,49 @@ lineage with `nomo_revise()` (#28); the methods registry with
 sign changes (#30); bifactor and higher-order models with
 `nomo_hierarchical()` (#29); and release certification (#37).
 
-### Next: `v0.2.1` and `v0.3.0`
+### In development: `v0.2.1`
 
 The [`v0.2.1` milestone](https://github.com/JUhalt/nomologR/milestone/4)
-holds six workstreams moved out of `v0.2.0` at certification, each with
-its reason recorded: missing-data sensitivity (#32), score guidance
-(#33), insufficient-effort responding screens (#34), manuscript-ready
-tables (#35), rendering reports from inside R Markdown or Quarto
-documents (#40), and optional parallel bootstrap intervals (#42).
+began with six workstreams moved out of `v0.2.0` at certification. In
+the development version so far:
+
+- reports render from inside R Markdown and Quarto documents (#40);
+- `nomo_scores()` produces sum, mean, regression, or Bartlett scores
+  with Grice’s validity, univocality, and correlational-accuracy
+  diagnostics, and tests the parallel model that unit weighting assumes
+  (#33);
+- `nomo_screen(effort = TRUE)` adds careless-responding indices,
+  reported side by side because they detect different failures (#34);
+- `nomo_hierarchical()` reports factor determinacy and construct
+  replicability (#56);
+- `nomo_network()` discloses relationships estimated between observed
+  variables, which carry the bias that scoring introduces (#62);
+- the reliability bootstrap can run on several workers (#42);
+- `nomo_apa_table()` formats manuscript-ready tables (#35), with Word
+  output for reports to follow;
+- `nomo_compare()` is fully covered by tests again (#54).
+
+Missing-data sensitivity (#32) remains.
+
+### Next: `v0.3.0` and `v1.0.0`
 
 `v0.3.0` carries the first CRAN submission
-([\#39](https://github.com/JUhalt/nomologR/issues/39)). Other candidates
-for that release (for example IRT/DIF, Bayesian SEM, ESEM, longitudinal
-invariance, and a `contentvalidR` handoff) are tracked in
+([\#39](https://github.com/JUhalt/nomologR/issues/39)) and a reader for
+handoffs from `contentvalidR`
+([\#46](https://github.com/JUhalt/nomologR/issues/46)), so items that
+passed content review can be screened and modeled here. Other candidates
+for that release (for example IRT/DIF, Bayesian SEM, ESEM, and
+longitudinal invariance) are tracked in
 [\#38](https://github.com/JUhalt/nomologR/issues/38).
+
+`v1.0.0` is planned as a joint release with
+[`contentvalidR`](https://github.com/JUhalt/contentvalidR), the
+package’s content-validity counterpart, so the two show one item set
+crossing from expert review into empirical evidence
+([\#53](https://github.com/JUhalt/nomologR/issues/53)). A companion
+article will demonstrate an item that passes content review and then
+behaves badly empirically, and one the reverse
+([\#60](https://github.com/JUhalt/nomologR/issues/60)).
 
 ### Completed: `v0.1.0`
 

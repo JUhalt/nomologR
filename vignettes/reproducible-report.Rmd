@@ -104,6 +104,47 @@ your document's options are restored afterwards. Your chunk options therefore
 do not change the report, and rendering the report does not change your
 document.
 
+## Tables for a manuscript
+
+A report archives a workflow. A thesis or manuscript needs tables.
+`nomo_apa_table()` formats the evidence in a result as a table in APA 7 style —
+a bold number, an italic title, no vertical rules, and notes below — which knits
+directly into an R Markdown or Quarto document:
+
+```{r apa-loadings}
+nomo_apa_table(run$results$cfa, "loadings", number = 1)
+```
+
+```{r apa-fit}
+nomo_apa_table(run$results$cfa, "fit", number = 2)
+```
+
+```{r apa-reliability}
+nomo_apa_table(run$results$reliability, number = 3)
+```
+
+```{r apa-invariance}
+nomo_apa_table(run$results$invariance, number = 4)
+```
+
+```{r apa-hypotheses}
+nomo_apa_table(run$results$network, number = 5)
+```
+
+Notice the leading zeros. APA 7 drops the zero before a decimal point only for a
+statistic that *cannot* exceed 1, so the rule follows the statistic rather than
+the value it happens to take. Reliability coefficients, correlations, CFI, and
+*p* values lose it; TLI, RMSEA, SRMR, and standardized loadings keep it, because
+each can exceed 1 — TLI is not bounded above, and a standardized loading does in
+an improper solution. Many published tables print standardized loadings without
+the zero; these tables follow the rule as written.
+
+The notes keep the package's reference-value language. Fit indices are reported
+as evidence rather than against fixed cutoffs, and the hypotheses table
+describes how each estimate relates to its prediction without calling any of
+them a pass or a fail. A hypothesis specified after the data were seen is marked
+with a note saying it is exploratory.
+
 ## What the report contains
 
 The report mirrors the full guided workflow:
