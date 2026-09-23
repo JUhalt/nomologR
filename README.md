@@ -702,8 +702,14 @@ direction of the discrepancy depends on the scoring method and the model
 rather than being a constant that could be corrected for, so `nomologR`
 reports it rather than adjusting for it. Where a question can be asked
 of the latent variables instead, asking it of scores replaces an
-unbiased answer with a biased one. See **“Scoring a measurement
-model”**.
+unbiased answer with a biased one.
+
+One design is an established exception. For a linear regression among
+factors, Skrondal and Laake (2001) proved that regression-method scores
+for the predictors and Bartlett scores for the outcome, each block
+scored from a measurement model of its own, give consistent
+coefficients. The article applies it next to the two ways of getting it
+wrong. See **“Scoring a measurement model”**.
 
 ### 6. `nomo_hypotheses()` + `nomo_network()` — theory specified before evidence
 
@@ -931,7 +937,8 @@ the development version so far:
 - `nomo_hierarchical()` reports factor determinacy and construct
   replicability (#56);
 - `nomo_network()` discloses relationships estimated between observed
-  variables, which carry the bias that scoring introduces (#62);
+  variables, which carry the bias that scoring introduces, and names the
+  remedies the literature supports (#62);
 - the reliability bootstrap can run on several workers (#42);
 - `nomo_apa_table()` formats manuscript-ready tables, and
   `nomo_report()` writes Word documents as well as HTML (#35);
