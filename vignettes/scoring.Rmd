@@ -129,6 +129,71 @@ from scores carries this discrepancy as bias. Where the question can be asked
 of the latent variables instead, asking it of scores replaces an unbiased
 answer with a biased one.
 
+## One design recovers a regression
+
+There is one established exception, and its conditions are specific. For a
+linear regression of one factor on others, Skrondal and Laake (2001) proved
+that the regression coefficients are estimated consistently when
+
+* the predictors are scored with the regression method and the outcome with
+  the Bartlett method, and
+* each block is scored from a measurement model of its own, not from one model
+  containing both.
+
+Here is the design applied to the data above, with Agency predicting
+Persistence, next to the two ways of getting it wrong:
+
+```{r skrondal-laake}
+agency_model <- lavaan::cfa("Agency =~ x1 + x2 + x3 + x4",
+                            data = dat, std.lv = TRUE)
+persistence_model <- lavaan::cfa("Persistence =~ x5 + x6 + x7 + x8",
+                                 data = dat, std.lv = TRUE)
+
+slope <- function(outcome, predictor) unname(coef(lm(outcome ~ predictor))[2])
+
+agency <- nomo_scores(agency_model, method = "regression")$scores$Agency
+persistence_bartlett <-
+  nomo_scores(persistence_model, method = "bartlett")$scores$Persistence
+persistence_regression <-
+  nomo_scores(persistence_model, method = "regression")$scores$Persistence
+
+joint_agency <- nomo_scores(fit, method = "regression")$scores$Agency
+joint_persistence <- nomo_scores(fit, method = "bartlett")$scores$Persistence
+
+data.frame(
+  design = c(
+    "Latent variables (the target)",
+    "Regression then Bartlett, separate models",
+    "Regression scores for both, separate models",
+    "Regression then Bartlett, one joint model"
+  ),
+  slope = c(
+    lavaan::lavInspect(fit, "cov.lv")["Agency", "Persistence"],
+    slope(persistence_bartlett, agency),
+    slope(persistence_regression, agency),
+    slope(joint_persistence, joint_agency)
+  )
+)
+```
+
+Both factors have a variance of 1, so the target slope is their covariance in
+the fitted model. The design lands next to it. Using the regression method for
+both blocks falls well short, and scoring both factors from the one
+two-factor model overshoots, although it uses the right method for each. Each
+condition matters.
+
+Three limits come with the result. It is about regression coefficients, not
+the correlations `correlational_accuracy` describes. The standard errors `lm()`
+reports treat the scores as observed data, and Skrondal and Laake note that
+corrected standard errors and confidence intervals may require resampling. And
+it does not extend to nonlinear models, for which they caution that factor
+score regression appears to perform very badly.
+
+`nomologR` does not apply the design for you, because it depends on which
+factor is the outcome, which is part of the research question. Where the
+question can be asked of the latent variables themselves, that remains the
+simpler route.
+
 ## Choosing a method
 
 ```{r methods}
@@ -165,3 +230,6 @@ Methods, 6*(4), 430–450. <https://doi.org/10.1037/1082-989X.6.4.430>
 McNeish, D., & Wolf, M. G. (2020). Thinking twice about sum scores. *Behavior
 Research Methods, 52*(6), 2287–2305.
 <https://doi.org/10.3758/s13428-020-01398-0>
+
+Skrondal, A., & Laake, P. (2001). Regression among factor scores.
+*Psychometrika, 66*(4), 563–575. <https://doi.org/10.1007/BF02296196>
