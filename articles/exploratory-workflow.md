@@ -107,6 +107,102 @@ plot(scr)
 
 ![](exploratory-workflow_files/figure-html/screen-plot-1.png)
 
+### Careless responding
+
+The audit above is about items. A second question is about respondents:
+did everyone read the items? The data below is **simulated**: four
+five-point scales of six items, two reverse keyed in each, with 15
+respondents who gave the same answer throughout and 15 who answered at
+random.
+
+``` r
+
+set.seed(34)
+n <- 400
+factors <- replicate(4, rnorm(n))
+respond <- function(f) pmin(5, pmax(1, round(3 + f + rnorm(n, sd = .7))))
+
+responses <- list()
+reverse <- character()
+scales <- list()
+for (s in 1:4) {
+  items <- paste0("s", s, "_", 1:6)
+  for (j in 1:6) {
+    r <- respond(factors[, s])
+    if (j %in% c(2, 5)) {
+      r <- 6 - r
+      reverse <- c(reverse, items[j])
+    }
+    responses[[items[j]]] <- r
+  }
+  scales[[paste0("S", s)]] <- items
+}
+survey <- as.data.frame(responses)
+survey[1:15, ] <- 3
+survey[16:30, ] <- matrix(sample(1:5, 15 * ncol(survey), TRUE), 15, ncol(survey))
+```
+
+`effort = TRUE` adds case-level indices from the careless-responding
+literature. Reverse keying and the response range are declared rather
+than inferred, because a range guessed from the data is wrong whenever a
+category went unused:
+
+``` r
+
+careful <- nomo_screen(
+  survey,
+  effort = TRUE,
+  scales = scales,
+  reverse = reverse,
+  scale_range = c(1, 5)
+)
+careful
+#> <nomo_screen>
+#> Cases: 400 | Candidate items: 24
+#> Items with missing responses: 0 | Constant: 0 | All missing: 0
+#> Relationship diagnostics: 24 eligible items | 24 item-rest estimates
+#> Response concentration flags: 0 | Near-zero variance: 0
+#> Careless-responding flags: 75 cases (long-string 15 | antonym 27 | synonym 36)
+#>   Cases are flagged, never removed. Indices disagree by design; see the decision log.
+#> Decision log: 26 info | 29 review | 0 concern
+#> No rows or items were removed or modified.
+```
+
+The indices do not agree, and they are not supposed to. Compare what two
+of them say about the respondents who answered identically throughout:
+
+``` r
+
+nomo_table(careful, "effort")[1:3, c(
+  "row", "long_string", "inter_item_sd", "flagged_by"
+)]
+#> # A tibble: 3 × 4
+#>     row long_string inter_item_sd flagged_by 
+#>   <int>       <dbl>         <dbl> <chr>      
+#> 1     1          24             0 long_string
+#> 2     2          24             0 long_string
+#> 3     3          24             0 long_string
+```
+
+Long-string flags every one of them. Inter-item standard deviation gives
+them a score of zero, the most consistent possible. That is not a
+contradiction. Inter-item standard deviation detects *random* responding
+(Marjanovic et al., 2015), and a respondent who never varies is not
+random. Sorting on it alone would keep exactly the respondents
+long-string exists to find, which is why Curran (2016) recommends using
+these methods in series.
+
+Two further cautions come from the sources. Huang et al. (2012) found
+the indices they recommended identified attentive respondents well and
+random responders poorly, so a case with no flag has not been shown to
+be attentive. And each antonym, synonym, and even-odd value is a
+correlation computed across a handful of pairs or scales; with few of
+them, attentive respondents cross zero by chance, and the decision log
+says so.
+
+Nothing is removed. Deciding what to do with a flagged respondent is a
+research decision, made with the design and the data collection in view.
+
 ## Step 2: investigate factor retention
 
 ``` r
@@ -229,7 +325,7 @@ summary(efa)
 #>  6 b1    F2                       0.783 F1                         0.0141 
 #>  7 b2    F2                       0.693 F1                        -0.0200 
 #>  8 b3    F2                       0.783 F1                        -0.00673
-#>  9 b4    F2                       0.637 F1                        -0.0118 
+#>  9 b4    F2                       0.637 F1                        -0.0119 
 #> 10 b5    F2                       0.332 F1                         0.0286 
 #> # ℹ 2 more variables: communality <dbl>, attention <chr>
 #> 
@@ -294,7 +390,7 @@ item_view
 #>  6 b1    F2                       0.783           0.0141        0.623 KEEP      
 #>  7 b2    F2                       0.693          -0.0200        0.469 KEEP      
 #>  8 b3    F2                       0.783          -0.00673       0.608 KEEP      
-#>  9 b4    F2                       0.637          -0.0118        0.400 REVIEW    
+#>  9 b4    F2                       0.637          -0.0119        0.400 REVIEW    
 #> 10 b5    F2                       0.332           0.0286        0.120 STRONG RE…
 ```
 

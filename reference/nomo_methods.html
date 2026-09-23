@@ -132,7 +132,7 @@ actually used, which is what <code><a href="nomo_report.html">nomo_report()</a><
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># The whole registry</span></span></span>
 <span class="r-in"><span><span class="fu">nomo_methods</span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 80 × 10</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 86 × 10</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    id      stage method lineage role  estimand assumptions implemented_by engine</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> missin… scre… Item … contem… supp… Proport… Descriptiv… nomo_screen()  nomol…</span>
@@ -140,12 +140,12 @@ actually used, which is what <code><a href="nomo_report.html">nomo_report()</a><
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> item_r… scre… Corre… contem… supp… Correla… Depends on… nomo_screen()  nomol…</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> item_t… scre… Fixed… histor… cont… A conve… No simulat… nomo_screen()  nomol…</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> near_z… scre… Near-… contem… supp… Frequen… Heuristic … nomo_screen()  nomol…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> parall… fact… Commo… contem… prim… Number … Reference … nomo_factors() psych </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> map_or… fact… Velic… contem… supp… Factor … Component-… nomo_factors() nomol…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> map_re… fact… Velic… contem… supp… Factor … As for ori… nomo_factors() nomol…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> ekc     fact… Empir… contem… supp… Factor … Derived fo… nomo_factors() EFAto…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> nest    fact… Next … emergi… supp… Sequent… Resampling… nomo_factors() EFAto…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 70 more rows</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> long_s… scre… Long-… contem… supp… Longest… Reads raw … nomo_screen()  nomol…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> inter_… scre… Inter… contem… supp… Within-… Detects ra… nomo_screen()  nomol…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> mahala… scre… Mahal… contem… supp… Multiva… Unaffected… nomo_screen()  nomol…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> even_o… scre… Even-… contem… supp… Within-… Needs at l… nomo_screen()  nomol…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> psycho… scre… Psych… contem… supp… Within-… Needs at l… nomo_screen()  nomol…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 76 more rows</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 1 more variable: references &lt;chr&gt;</span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># What is shown only as historical context, and why</span></span></span>

@@ -36,7 +36,7 @@ computational engine, and references.
 
 methods <- nomo_methods()
 nrow(methods)
-#> [1] 80
+#> [1] 86
 table(methods$stage, methods$lineage)
 #>              
 #>               contemporary emerging historical
@@ -48,7 +48,7 @@ table(methods$stage, methods$lineage)
 #>   network                4        0          1
 #>   reliability            9        0          2
 #>   scores                 4        0          3
-#>   screen                 4        0          1
+#>   screen                10        0          1
 #>   validity               3        0          2
 #>   workflow               5        0          0
 ```

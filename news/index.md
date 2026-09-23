@@ -68,6 +68,34 @@
         never modified, and only the cases the model used are scored.
         Includes the **Scoring a measurement model** article.
 
+- [`nomo_screen()`](https://juhalt.github.io/nomologR/reference/nomo_screen.md)
+  gains `effort = TRUE`, which adds case-level indices of careless or
+  insufficient-effort responding
+  ([\#34](https://github.com/JUhalt/nomologR/issues/34)): long-string,
+  inter-item standard deviation, Mahalanobis distance, even-odd
+  consistency, and psychometric antonym and synonym correlations,
+  following Meade and Craig (2012), Huang et al. (2012), Curran (2016),
+  and Marjanovic et al. (2015). Curran’s published worked examples are
+  reproduced exactly and used as tests. The indices are reported side by
+  side rather than combined, because they detect different failures:
+  inter-item standard deviation detects random responding and gives a
+  respondent who answers every item identically the best possible score,
+  which is exactly the case long-string flags. The decision log reports
+  that disagreement when it occurs. A case is flagged only where a
+  source states a rule, with the source’s own qualification attached;
+  the rest are reported without a flag. Inter-item standard deviation is
+  averaged within scales, as Marjanovic et al. computed it, since one
+  value across every item rates a respondent who is high on one
+  construct and low on another as more erratic than a random responder.
+  Within-person correlations over fewer than three pairs or scales are
+  never reported, because with two every value is exactly +1 or -1.
+  Reverse keying and the response range are declared, never inferred,
+  and recoding happens on an internal copy only. Cases are flagged,
+  never removed, and a screen that does not request these indices is
+  unchanged.
+  [`nomo_table()`](https://juhalt.github.io/nomologR/reference/nomo_table.md)
+  now supports `nomo_screen` objects.
+
 ## nomologR 0.2.0
 
 nomologR 0.2.0 makes the workflow research-backed from historical to

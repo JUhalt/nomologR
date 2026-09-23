@@ -191,11 +191,96 @@ item or a coding decision, not an instruction to remove it.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">scr</span><span class="op">)</span></span></code></pre></div>
 <p><img src="exploratory-workflow_files/figure-html/screen-plot-1.png" class="r-plt" alt="" width="672"></p>
+<div class="section level3">
+<h3 id="careless-responding">Careless responding<a class="anchor" aria-label="anchor" href="#careless-responding"></a>
+</h3>
+<p>The audit above is about items. A second question is about
+respondents: did everyone read the items? The data below is
+<strong>simulated</strong>: four five-point scales of six items, two
+reverse keyed in each, with 15 respondents who gave the same answer
+throughout and 15 who answered at random.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">34</span><span class="op">)</span></span>
+<span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">400</span></span>
+<span><span class="va">factors</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">replicate</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">respond</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">f</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">pmin</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">pmax</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fl">3</span> <span class="op">+</span> <span class="va">f</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span>, sd <span class="op">=</span> <span class="fl">.7</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">responses</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">reverse</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">scales</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="kw">for</span> <span class="op">(</span><span class="va">s</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">items</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"s"</span>, <span class="va">s</span>, <span class="st">"_"</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">6</span><span class="op">)</span></span>
+<span>  <span class="kw">for</span> <span class="op">(</span><span class="va">j</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="fl">6</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="va">r</span> <span class="op">&lt;-</span> <span class="fu">respond</span><span class="op">(</span><span class="va">factors</span><span class="op">[</span>, <span class="va">s</span><span class="op">]</span><span class="op">)</span></span>
+<span>    <span class="kw">if</span> <span class="op">(</span><span class="va">j</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">5</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>      <span class="va">r</span> <span class="op">&lt;-</span> <span class="fl">6</span> <span class="op">-</span> <span class="va">r</span></span>
+<span>      <span class="va">reverse</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">reverse</span>, <span class="va">items</span><span class="op">[</span><span class="va">j</span><span class="op">]</span><span class="op">)</span></span>
+<span>    <span class="op">}</span></span>
+<span>    <span class="va">responses</span><span class="op">[[</span><span class="va">items</span><span class="op">[</span><span class="va">j</span><span class="op">]</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">r</span></span>
+<span>  <span class="op">}</span></span>
+<span>  <span class="va">scales</span><span class="op">[[</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"S"</span>, <span class="va">s</span><span class="op">)</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">items</span></span>
+<span><span class="op">}</span></span>
+<span><span class="va">survey</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">responses</span><span class="op">)</span></span>
+<span><span class="va">survey</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">15</span>, <span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">3</span></span>
+<span><span class="va">survey</span><span class="op">[</span><span class="fl">16</span><span class="op">:</span><span class="fl">30</span>, <span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span>, <span class="fl">15</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">survey</span><span class="op">)</span>, <span class="cn">TRUE</span><span class="op">)</span>, <span class="fl">15</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">survey</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p><code>effort = TRUE</code> adds case-level indices from the
+careless-responding literature. Reverse keying and the response range
+are declared rather than inferred, because a range guessed from the data
+is wrong whenever a category went unused:</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">careful</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_screen.html">nomo_screen</a></span><span class="op">(</span></span>
+<span>  <span class="va">survey</span>,</span>
+<span>  effort <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  scales <span class="op">=</span> <span class="va">scales</span>,</span>
+<span>  reverse <span class="op">=</span> <span class="va">reverse</span>,</span>
+<span>  scale_range <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">5</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">careful</span></span>
+<span><span class="co">#&gt; &lt;nomo_screen&gt;</span></span>
+<span><span class="co">#&gt; Cases: 400 | Candidate items: 24</span></span>
+<span><span class="co">#&gt; Items with missing responses: 0 | Constant: 0 | All missing: 0</span></span>
+<span><span class="co">#&gt; Relationship diagnostics: 24 eligible items | 24 item-rest estimates</span></span>
+<span><span class="co">#&gt; Response concentration flags: 0 | Near-zero variance: 0</span></span>
+<span><span class="co">#&gt; Careless-responding flags: 75 cases (long-string 15 | antonym 27 | synonym 36)</span></span>
+<span><span class="co">#&gt;   Cases are flagged, never removed. Indices disagree by design; see the decision log.</span></span>
+<span><span class="co">#&gt; Decision log: 26 info | 29 review | 0 concern</span></span>
+<span><span class="co">#&gt; No rows or items were removed or modified.</span></span></code></pre></div>
+<p>The indices do not agree, and they are not supposed to. Compare what
+two of them say about the respondents who answered identically
+throughout:</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">careful</span>, <span class="st">"effort"</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>  <span class="st">"row"</span>, <span class="st">"long_string"</span>, <span class="st">"inter_item_sd"</span>, <span class="st">"flagged_by"</span></span>
+<span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 3 × 4</span></span></span>
+<span><span class="co">#&gt;     row long_string inter_item_sd flagged_by </span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>     1          24             0 long_string</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span>     2          24             0 long_string</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span>     3          24             0 long_string</span></span></code></pre></div>
+<p>Long-string flags every one of them. Inter-item standard deviation
+gives them a score of zero, the most consistent possible. That is not a
+contradiction. Inter-item standard deviation detects <em>random</em>
+responding (Marjanovic et al., 2015), and a respondent who never varies
+is not random. Sorting on it alone would keep exactly the respondents
+long-string exists to find, which is why Curran (2016) recommends using
+these methods in series.</p>
+<p>Two further cautions come from the sources. Huang et al. (2012) found
+the indices they recommended identified attentive respondents well and
+random responders poorly, so a case with no flag has not been shown to
+be attentive. And each antonym, synonym, and even-odd value is a
+correlation computed across a handful of pairs or scales; with few of
+them, attentive respondents cross zero by chance, and the decision log
+says so.</p>
+<p>Nothing is removed. Deciding what to do with a flagged respondent is
+a research decision, made with the design and the data collection in
+view.</p>
+</div>
 </div>
 <div class="section level2">
 <h2 id="step-2-investigate-factor-retention">Step 2: investigate factor retention<a class="anchor" aria-label="anchor" href="#step-2-investigate-factor-retention"></a>
 </h2>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fac</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_factors.html">nomo_factors</a></span><span class="op">(</span></span>
 <span>  <span class="va">nomo_demo_continuous</span>,</span>
 <span>  criterion_set <span class="op">=</span> <span class="st">"core"</span>,</span>
@@ -267,7 +352,7 @@ substituting another criterion. Choosing
 <code>missing = "complete"</code> would make EKC available, at the cost
 of analyzing only the cases with no missing items — a trade-off for the
 researcher to make and record.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fac</span>, type <span class="op">=</span> <span class="st">"scree"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="exploratory-workflow_files/figure-html/scree-plot-1.png" class="r-plt" alt="" width="672"></p>
 <div class="section level3">
@@ -287,7 +372,7 @@ can recognize it in published work without relying on it.</p>
 <div class="section level2">
 <h2 id="step-3-hand-the-retention-evidence-into-efa">Step 3: hand the retention evidence into EFA<a class="anchor" aria-label="anchor" href="#step-3-hand-the-retention-evidence-into-efa"></a>
 </h2>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">efa</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_efa.html">nomo_efa</a></span><span class="op">(</span></span>
 <span>  <span class="va">nomo_demo_continuous</span>,</span>
 <span>  factors <span class="op">=</span> <span class="va">fac</span></span>
@@ -310,7 +395,7 @@ can recognize it in published work without relying on it.</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> b1    F2                       0.783 F1                         0.014<span style="text-decoration: underline;">1</span> </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> b2    F2                       0.693 F1                        -<span style="color: #BB0000;">0.020</span><span style="color: #BB0000; text-decoration: underline;">0</span> </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> b3    F2                       0.783 F1                        -<span style="color: #BB0000;">0.006</span><span style="color: #BB0000; text-decoration: underline;">73</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> b4    F2                       0.637 F1                        -<span style="color: #BB0000;">0.011</span><span style="color: #BB0000; text-decoration: underline;">8</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> b4    F2                       0.637 F1                        -<span style="color: #BB0000;">0.011</span><span style="color: #BB0000; text-decoration: underline;">9</span> </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> b5    F2                       0.332 F1                         0.028<span style="text-decoration: underline;">6</span> </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ 2 more variables: communality &lt;dbl&gt;, attention &lt;chr&gt;</span></span></span>
 <span><span class="co">#&gt; </span></span>
@@ -356,7 +441,7 @@ proof.</p>
 <div class="section level2">
 <h2 id="read-the-item-table-as-evidence-not-a-deletion-list">Read the item table as evidence, not a deletion list<a class="anchor" aria-label="anchor" href="#read-the-item-table-as-evidence-not-a-deletion-list"></a>
 </h2>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">item_view</span> <span class="op">&lt;-</span> <span class="va">efa</span><span class="op">$</span><span class="va">item_summary</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
 <span>  <span class="st">"item"</span>, <span class="st">"primary_factor"</span>, <span class="st">"primary_loading"</span>, <span class="st">"secondary_loading"</span>,</span>
 <span>  <span class="st">"communality"</span>, <span class="st">"attention"</span></span>
@@ -373,7 +458,7 @@ proof.</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> b1    F2                       0.783           0.014<span style="text-decoration: underline;">1</span>        0.623 KEEP      </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> b2    F2                       0.693          -<span style="color: #BB0000;">0.020</span><span style="color: #BB0000; text-decoration: underline;">0</span>        0.469 KEEP      </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> b3    F2                       0.783          -<span style="color: #BB0000;">0.006</span><span style="color: #BB0000; text-decoration: underline;">73</span>       0.608 KEEP      </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> b4    F2                       0.637          -<span style="color: #BB0000;">0.011</span><span style="color: #BB0000; text-decoration: underline;">8</span>        0.400 REVIEW    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> b4    F2                       0.637          -<span style="color: #BB0000;">0.011</span><span style="color: #BB0000; text-decoration: underline;">9</span>        0.400 REVIEW    </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> b5    F2                       0.332           0.028<span style="text-decoration: underline;">6</span>        0.120 STRONG RE…</span></span></code></pre></div>
 <p>Compare the table with the known population model:</p>
 <ul>
@@ -408,7 +493,7 @@ factor coefficients and is the primary matrix for interpreting which
 indicators define which factors. The structure matrix contains
 item–factor correlations and also reflects the correlation between
 factors.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">efa</span><span class="op">$</span><span class="va">pattern_matrix</span>, <span class="fl">2</span><span class="op">)</span></span>
 <span><span class="co">#&gt;       F1    F2</span></span>
 <span><span class="co">#&gt; a1  0.81 -0.04</span></span>
@@ -437,7 +522,7 @@ factors.</p>
 <span><span class="co">#&gt;      F1   F2</span></span>
 <span><span class="co">#&gt; F1 1.00 0.44</span></span>
 <span><span class="co">#&gt; F2 0.44 1.00</span></span></code></pre></div>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">efa</span>, type <span class="op">=</span> <span class="st">"pattern"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="exploratory-workflow_files/figure-html/pattern-plot-1.png" class="r-plt" alt="" width="672"></p>
 </div>
@@ -448,7 +533,7 @@ factors.</p>
 unexplained. <code><a href="../reference/nomo_efa.html">nomo_efa()</a></code> therefore returns the reproduced
 correlation matrix, the residual matrix, the off-diagonal RMSR, and
 ranked residual pairs.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">efa</span><span class="op">$</span><span class="va">rmsr</span></span>
 <span><span class="co">#&gt; [1] 0.01768766</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">efa</span><span class="op">$</span><span class="va">residual_pairs</span>, <span class="fl">10</span><span class="op">)</span></span>
@@ -465,7 +550,7 @@ ranked residual pairs.</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> a4    b1      0.026<span style="text-decoration: underline;">4</span>       0.026<span style="text-decoration: underline;">4</span></span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> a3    b4      0.024<span style="text-decoration: underline;">1</span>       0.024<span style="text-decoration: underline;">1</span></span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> a4    b3     -<span style="color: #BB0000;">0.020</span><span style="color: #BB0000; text-decoration: underline;">6</span>       0.020<span style="text-decoration: underline;">6</span></span></span></code></pre></div>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">efa</span>, type <span class="op">=</span> <span class="st">"residuals"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="exploratory-workflow_files/figure-html/residual-plot-1.png" class="r-plt" alt="" width="672"></p>
 <p>Residuals are diagnostic evidence. <code>nomologR</code> does not
@@ -478,7 +563,7 @@ count, or remove indicators behind the user’s back.</p>
 <p>The default is common-factor MINRES extraction with oblimin rotation.
 Researchers may choose another common-factor extraction or rotation, but
 those choices remain visible in the result and decision log.</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">efa_varimax</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_efa.html">nomo_efa</a></span><span class="op">(</span></span>
 <span>  <span class="va">nomo_demo_continuous</span>,</span>
 <span>  factors <span class="op">=</span> <span class="fl">2</span>,</span>
@@ -510,7 +595,7 @@ assumption.</p>
 scores. <code>nomo_demo_ordinal</code> stores the same latent responses
 as five-category ordered factors, so <code>nomologR</code> uses
 polychoric correlations automatically:</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fac_ord</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_factors.html">nomo_factors</a></span><span class="op">(</span><span class="va">nomo_demo_ordinal</span>, seed <span class="op">=</span> <span class="fl">2026</span><span class="op">)</span></span>
 <span><span class="va">fac_ord</span><span class="op">$</span><span class="va">correlation</span></span>
 <span><span class="co">#&gt; [1] "polychoric"</span></span>
@@ -535,7 +620,7 @@ factors, integer storage alone does not tell <code>nomologR</code>
 whether the researcher intends a continuous or ordinal model. Declare
 the modeling level explicitly. This chunk only illustrates the syntax,
 because the teaching data already store ordered factors:</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">efa_declared</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_efa.html">nomo_efa</a></span><span class="op">(</span></span>
 <span>  <span class="va">my_likert_items</span>,</span>
 <span>  factors <span class="op">=</span> <span class="fl">2</span>,</span>
