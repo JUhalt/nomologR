@@ -39,6 +39,14 @@
 #' @param ci_boot Number of ordinary bootstrap resamples when
 #'   `ci = "bootstrap"`. Default is `1000`.
 #' @param ci_seed Optional integer seed for reproducible bootstrap intervals.
+#' @param ci_ncpus Number of worker processes for the bootstrap. The default,
+#'   `1`, runs serially. Values above one use lavaan's `snow` backend, which
+#'   works on Windows, macOS, and Linux. The draws depend on the worker count as
+#'   well as the seed, so a result is reproducible for a given seed *and* worker
+#'   count, and both are recorded. More workers are not always faster: each
+#'   worker must start and load its packages, and in the evaluation recorded in
+#'   the package's issue tracker, eight workers were slower than four. Workers
+#'   must be able to load nomologR, lavaan, and semTools from the library.
 #' @param guidance Guidance settings from [nomo_defaults()]. The configured
 #'   reliability reference is a review prompt, not a pass/fail criterion.
 #'
@@ -112,6 +120,7 @@ nomo_reliability <- function(fit,
                              ci_level = 0.95,
                              ci_boot = 1000L,
                              ci_seed = NULL,
+                             ci_ncpus = 1L,
                              guidance = nomo_defaults()) {
   if (!is.logical(obs.var) || length(obs.var) != 1L || is.na(obs.var)) {
     stop("`obs.var` must be TRUE or FALSE.", call. = FALSE)
@@ -140,6 +149,11 @@ nomo_reliability <- function(fit,
       stop("`ci_seed` must be NULL or one finite integer.", call. = FALSE)
     }
   }
+  if (!is.numeric(ci_ncpus) || length(ci_ncpus) != 1L || !is.finite(ci_ncpus) ||
+        ci_ncpus < 1 || ci_ncpus != round(ci_ncpus)) {
+    stop("`ci_ncpus` must be one whole number of at least 1.", call. = FALSE)
+  }
+  ci_ncpus <- as.integer(ci_ncpus)
 
   reference <- nomo_guidance_value(guidance, "reliability_reference")
   fit_info <- nomo_measurement_fit(fit)
@@ -357,6 +371,7 @@ nomo_reliability <- function(fit,
     min_successful_draws = NA_integer_,
     available = FALSE,
     seed = if (is.null(ci_seed)) NA_integer_ else ci_seed,
+    workers = if (identical(ci, "bootstrap")) ci_ncpus else NA_integer_,
     reason = if (identical(ci, "none")) {
       "Bootstrap confidence intervals were not requested."
     } else {
@@ -374,7 +389,8 @@ nomo_reliability <- function(fit,
       include_alpha = include_alpha,
       level = ci_level,
       R = ci_boot,
-      seed = ci_seed
+      seed = ci_seed,
+      ncpus = ci_ncpus
     )
 
     if (nrow(ci_result$intervals)) {
@@ -561,6 +577,44 @@ nomo_reliability <- function(fit,
     )
   }
 
+  # The draws depend on the worker count as well as the seed, so both belong in
+  # the record a report carries: with only the seed, a reader rerunning the
+  # analysis on a different number of workers would get different intervals and
+  # no way to know why.
+  if (identical(ci, "bootstrap")) {
+    seed_text <- if (is.null(ci_seed)) "no seed" else paste("seed", ci_seed)
+    workers_text <- if (ci_ncpus == 1L) {
+      "serially"
+    } else {
+      sprintf("on %d snow workers", ci_ncpus)
+    }
+    log <- nomo_log_add(
+      log,
+      stage = "reliability",
+      object = "uncertainty",
+      metric = "bootstrap_reproducibility",
+      value = ci_ncpus,
+      reference = "lavaan::bootstrapLavaan(); draws depend on seed and worker count",
+      severity = if (is.null(ci_seed)) "review" else "info",
+      observation = sprintf(
+        "%d bootstrap resamples were drawn with %s, %s.",
+        ci_boot, seed_text, workers_text
+      ),
+      recommendation = if (is.null(ci_seed)) {
+        paste(
+          "No seed was set, so these intervals cannot be reproduced exactly.",
+          "Set `ci_seed` if the intervals will be reported."
+        )
+      } else {
+        paste(
+          "These intervals are reproducible with the same seed and the same",
+          "number of workers. A different worker count draws different",
+          "resamples, so intervals will differ slightly."
+        )
+      }
+    )
+  }
+
   omega_tbl <- evidence[evidence$metric == "omega", c(
     "construct", "block", "metric", "estimate",
     "ci_lower", "ci_upper", "ci_n_success"
@@ -582,6 +636,7 @@ nomo_reliability <- function(fit,
     ci_level = ci_level,
     ci_boot = ci_boot,
     ci_seed = ci_seed,
+    ci_ncpus = ci_ncpus,
     ci_status = ci_status,
     omega_engine = omega_engine,
     alpha_engine = alpha_engine,

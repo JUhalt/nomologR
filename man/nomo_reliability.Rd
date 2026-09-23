@@ -13,6 +13,7 @@ nomo_reliability(
   ci_level = 0.95,
   ci_boot = 1000L,
   ci_seed = NULL,
+  ci_ncpus = 1L,
   guidance = nomo_defaults()
 )
 }
@@ -46,6 +47,15 @@ repeatedly refitting the same CFA with \code{\link[lavaan:bootstrapLavaan]{lavaa
 \code{ci = "bootstrap"}. Default is \code{1000}.}
 
 \item{ci_seed}{Optional integer seed for reproducible bootstrap intervals.}
+
+\item{ci_ncpus}{Number of worker processes for the bootstrap. The default,
+\code{1}, runs serially. Values above one use lavaan's \code{snow} backend, which
+works on Windows, macOS, and Linux. The draws depend on the worker count as
+well as the seed, so a result is reproducible for a given seed \emph{and} worker
+count, and both are recorded. More workers are not always faster: each
+worker must start and load its packages, and in the evaluation recorded in
+the package's issue tracker, eight workers were slower than four. Workers
+must be able to load nomologR, lavaan, and semTools from the library.}
 
 \item{guidance}{Guidance settings from \code{\link[=nomo_defaults]{nomo_defaults()}}. The configured
 reliability reference is a review prompt, not a pass/fail criterion.}

@@ -90,6 +90,21 @@
   outcome biased the estimate by +.10 in the same check that recovered the
   latent value.
 
+- `nomo_reliability()` gains `ci_ncpus`, which runs the bootstrap on several
+  worker processes through lavaan's `snow` backend (#42). The default, `1`, keeps
+  the bootstrap serial and unchanged. `snow` is used everywhere rather than
+  forking, which is unavailable on Windows, so results are comparable across
+  platforms. The draws depend on the worker count as well as the seed, so a
+  result is reproducible for a given seed and worker count: both are recorded in
+  the bootstrap status table and, newly, in the decision log that reaches
+  reports, which previously carried neither. An unseeded bootstrap is flagged
+  for review as not reproducible. Verified against an installed package: the
+  same seed and worker count give identical intervals, and serial and two-worker
+  runs differ by under .01, as the draws should. More workers are not always
+  faster, since each must start and load its packages; in the evaluation
+  recorded on the issue, eight workers were slower than four. Tests use at most
+  two workers, following CRAN policy.
+
 - Added `nomo_apa_table()`, which formats the evidence in a result as an APA 7
   table ready for a thesis, dissertation, or manuscript (#35): standardized
   loadings, factor correlations, and model fit from `nomo_cfa()`; reliability
