@@ -307,7 +307,9 @@ its own (Skrondal & Laake, 2001). None of these is applied automatically.
 
 **Historical practice.** A sequence of undisclosed decisions — dropping items,
 adding residual covariances, trying estimators — reported as if it had been the
-plan all along; unit-weighted sum scores assumed to represent the construct.
+plan all along; unit-weighted sum scores assumed to represent the construct;
+listwise deletion, pairwise deletion, or mean substitution applied without
+asking whether the data meet the assumption each requires.
 
 **Contemporary practice.** Transparent reporting of measurement decisions and
 their justification (Flake et al., 2017; Flake & Fried, 2020), awareness of
@@ -327,8 +329,22 @@ their literature rather than only the software that computed them.
 criteria for the scores it returns, and `nomo_apa_table()` formats evidence as
 APA-style manuscript tables.
 
-**Planned.** Missing-data sensitivity
-([#32](https://github.com/JUhalt/nomologR/issues/32)).
+`nomo_missing()` refits a prespecified measurement model or network under
+listwise deletion and FIML, or under listwise and pairwise deletion for ordered
+indicators, and reports where estimates, reliability, or theory evidence
+differ. Listwise and pairwise deletion require data missing completely at
+random; FIML requires data missing at random, and was unbiased under both in
+Enders and Bandalos's (2001) simulations while the deletion methods were biased
+under MAR. A difference beyond half the reference standard error is flagged,
+following Schafer and Graham's (2002) rule for when bias becomes practically
+important, with the caveat that it estimates bias only if the data are MAR.
+Because MAR cannot in general be tested from the data at hand (Schafer &
+Graham, 2002), agreement between strategies is reported as insensitivity, not
+as evidence that either is unbiased. Mean substitution is explained and not
+offered.
+
+**Planned.** Multiple-imputation integration is a candidate for v0.3 scope
+selection ([#38](https://github.com/JUhalt/nomologR/issues/38)).
 
 # References
 

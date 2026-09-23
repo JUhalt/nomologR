@@ -20,6 +20,9 @@
 #'   paper)`).
 #' * `nomo_compare`: `"comparisons"` (default), `"models"`, `"loadings"`,
 #'   `"evidence"`, `"decision_log"`; see [nomo_compare()].
+#' * `nomo_missing`: `"strategies"` (default), `"estimates"`, `"fit"`,
+#'   `"reliability"`, `"pattern"`, `"variables"`, `"decision_log"`; see
+#'   [nomo_missing()].
 #' * `nomo_hierarchical`: `"indices"` (default), `"subscales"`, `"loadings"`,
 #'   `"notes"`, `"decision_log"`; see [nomo_hierarchical()].
 #' * `nomo_run`: `"stages"` (default), `"requests"`, `"decisions"`,
