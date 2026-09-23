@@ -904,9 +904,10 @@ vignette.
 ### 9. `nomo_report()` — reproducible reporting
 
 [`nomo_report()`](https://juhalt.github.io/nomologR/reference/nomo_report.md)
-creates an archival HTML report from a guided workflow, including
-methods, evidence, researcher decisions, deviations, citations, and
-session information. See the [reproducible reporting
+creates an archival report from a guided workflow, including methods,
+evidence, researcher decisions, deviations, citations, and session
+information: a self-contained HTML file, or a Word document when `file`
+ends in `.docx`. See the [reproducible reporting
 walkthrough](https://juhalt.github.io/nomologR/articles/reproducible-report.html)
 for the documented inputs and limitations.
 
@@ -988,8 +989,9 @@ the development version so far:
   carry the bias that scoring introduces (#62);
 - the reliability bootstrap can run on several workers (#42);
 - [`nomo_apa_table()`](https://juhalt.github.io/nomologR/reference/nomo_apa_table.md)
-  formats manuscript-ready tables (#35), with Word output for reports to
-  follow;
+  formats manuscript-ready tables, and
+  [`nomo_report()`](https://juhalt.github.io/nomologR/reference/nomo_report.md)
+  writes Word documents as well as HTML (#35);
 - [`nomo_compare()`](https://juhalt.github.io/nomologR/reference/nomo_compare.md)
   is fully covered by tests again (#54).
 

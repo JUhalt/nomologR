@@ -656,7 +656,7 @@
 <div class="section level3">
 <h3 id="id_9-nomo_report--reproducible-reporting">9. <code>nomo_report()</code> — reproducible reporting<a class="anchor" aria-label="anchor" href="#id_9-nomo_report--reproducible-reporting"></a>
 </h3>
-<p><code><a href="reference/nomo_report.html">nomo_report()</a></code> creates an archival HTML report from a guided workflow, including methods, evidence, researcher decisions, deviations, citations, and session information. See the <a href="https://juhalt.github.io/nomologR/articles/reproducible-report.html">reproducible reporting walkthrough</a> for the documented inputs and limitations.</p>
+<p><code><a href="reference/nomo_report.html">nomo_report()</a></code> creates an archival report from a guided workflow, including methods, evidence, researcher decisions, deviations, citations, and session information: a self-contained HTML file, or a Word document when <code>file</code> ends in <code>.docx</code>. See the <a href="https://juhalt.github.io/nomologR/articles/reproducible-report.html">reproducible reporting walkthrough</a> for the documented inputs and limitations.</p>
 <p>The report cites the methods the workflow actually used, not every method the package offers. The same information is available directly:</p>
 <div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/nomo_methods.html">nomo_methods</a></span><span class="op">(</span><span class="va">run</span><span class="op">)</span>                     <span class="co"># methods this workflow used</span></span>
@@ -698,7 +698,7 @@
 <code><a href="reference/nomo_network.html">nomo_network()</a></code> discloses relationships estimated between observed variables, which carry the bias that scoring introduces (#62);</li>
 <li>the reliability bootstrap can run on several workers (#42);</li>
 <li>
-<code><a href="reference/nomo_apa_table.html">nomo_apa_table()</a></code> formats manuscript-ready tables (#35), with Word output for reports to follow;</li>
+<code><a href="reference/nomo_apa_table.html">nomo_apa_table()</a></code> formats manuscript-ready tables, and <code><a href="reference/nomo_report.html">nomo_report()</a></code> writes Word documents as well as HTML (#35);</li>
 <li>
 <code><a href="reference/nomo_compare.html">nomo_compare()</a></code> is fully covered by tests again (#54).</li>
 </ul>

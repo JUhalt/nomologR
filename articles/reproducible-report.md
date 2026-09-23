@@ -95,6 +95,19 @@ project record or thesis appendix, or shared with a collaborator without
 a separate figures directory or a network dependency. The `title`
 argument becomes the document title.
 
+For a thesis committee or a collaborator who works in Word, give the
+file a `.docx` extension instead:
+
+``` r
+
+nomo_report(run, file = "construct-validation-report.docx")
+```
+
+The Word document carries the same tables, figures, and interpretation
+contract as the HTML report. Sections that collapse in HTML, such as the
+full evidence trace, are shown expanded, and it uses Word’s default
+styles.
+
 [`nomo_report()`](https://juhalt.github.io/nomologR/reference/nomo_report.md)
 works the same from the console, a script, or a chunk inside your own R
 Markdown or Quarto document, such as a thesis chapter. This article
@@ -327,7 +340,7 @@ stops unless `overwrite = TRUE` is supplied:
 
 nomo_report(run, file = report_file)
 #> Error:
-#> ! Report file already exists: /tmp/RtmpkSjePJ/nomologR-reports-200c7b29e887/construct-validation-report.html. Use `overwrite = TRUE` to replace it.
+#> ! Report file already exists: /tmp/RtmpdYa0N8/nomologR-reports-1fc75331dba8/construct-validation-report.html. Use `overwrite = TRUE` to replace it.
 ```
 
 As elsewhere in `nomologR`, consequential or destructive behavior is not

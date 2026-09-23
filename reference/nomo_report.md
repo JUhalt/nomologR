@@ -31,7 +31,11 @@ nomo_report(
 
 - file:
 
-  Output HTML path.
+  Output path. The extension chooses the format: `.html` or `.htm` for a
+  self-contained HTML report, `.docx` for a Word document. The Word
+  report carries the same tables, figures, and interpretation contract
+  as the HTML one; collapsible sections are shown expanded, and it uses
+  Word's default styles.
 
 - title:
 
