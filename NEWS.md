@@ -128,6 +128,19 @@
   data were seen as exploratory. No cell reads pass or fail. Word output for
   `nomo_report()` follows separately.
 
+- `nomo_report()` now writes Word documents: a `file` ending in `.docx`
+  produces one, alongside the existing HTML report (#35). Pandoc drops raw HTML
+  when it writes Word, and the report template wrote its tables, notes, and its
+  interpretation contract as raw HTML, so a Word report would have lost all of
+  them, including the statement that the report does not turn review references
+  into pass/fail rules. Each part of the template now writes HTML for an HTML
+  report and markdown for a Word one, and the HTML report is unchanged. The Word
+  report was checked against the HTML one: the same 37 data tables with the same
+  header rows in the same order, the interpretation contract, the figures, and
+  no raw HTML or escaped entities in its text. Collapsible sections are shown
+  expanded, and the document uses Word's default styles. Section numbering is
+  used where the installed rmarkdown supports it for Word.
+
 # nomologR 0.2.0
 
 nomologR 0.2.0 makes the workflow research-backed from historical to

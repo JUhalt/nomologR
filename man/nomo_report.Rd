@@ -18,7 +18,11 @@ nomo_report(
 \arguments{
 \item{x}{An object created by \code{\link[=nomo_run]{nomo_run()}}.}
 
-\item{file}{Output HTML path.}
+\item{file}{Output path. The extension chooses the format: \code{.html} or
+\code{.htm} for a self-contained HTML report, \code{.docx} for a Word document. The
+Word report carries the same tables, figures, and interpretation contract
+as the HTML one; collapsible sections are shown expanded, and it uses
+Word's default styles.}
 
 \item{title}{Report title.}
 
