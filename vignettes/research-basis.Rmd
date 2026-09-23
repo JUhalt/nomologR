@@ -644,6 +644,10 @@ Rosseel, Y. (2012). lavaan: An R package for structural equation modeling.
 *Journal of Statistical Software, 48*(2), 1–36.
 https://doi.org/10.18637/jss.v048.i02
 
+Rosseel, Y., & Loh, W. W. (2024). A structural after measurement approach to
+structural equation modeling. *Psychological Methods, 29*(3), 561–588.
+https://doi.org/10.1037/met0000503
+
 Ruscio, J., & Roche, B. (2012). Determining the number of factors to retain in
 an exploratory factor analysis using comparison data of known factorial
 structure. *Psychological Assessment, 24*(2), 282–292.

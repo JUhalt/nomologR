@@ -105,6 +105,31 @@ prediction with a researcher-specified equivalence region (Lakens, Scheel, &
 Isager, 2018).
 }
 
+\section{Relationships estimated between observed variables}{
+
+A hypothesis whose endpoints are latent variables is estimated with their
+measurement error modelled. When an endpoint is an observed variable, that
+error enters unmodelled. If the observed variable is a composite of several
+items, such as a sum, mean, or factor score, the estimated relationship
+carries the discrepancy \code{\link[=nomo_scores]{nomo_scores()}} reports as correlational accuracy,
+which can be substantial and runs in either direction depending on the
+scoring method and the model.
+
+\code{nomo_network()} cannot tell from the model syntax whether an observed
+variable is a composite or a single measured quantity, so it does not guess.
+It classifies each hypothesis by whether its endpoints are latent, and the
+decision log discloses observed endpoints: for review when both ends are
+observed, and for information when one is. A single measured variable, such
+as a criterion recorded without items, is not a composite, and the
+disclosure says so.
+
+Where the observed variables are composites, modelling their items as
+indicators of latent variables removes the discrepancy, and
+\code{lavaan::sam()} estimates the structural relationships after the
+measurement model (Rosseel & Loh, 2024). No correction is applied
+automatically.
+}
+
 \examples{
 model <- nomo_model(list(
   Agency = c("ag1", "ag2", "ag3", "ag4"),
@@ -145,6 +170,10 @@ Messick, S. (1995). Validity of psychological assessment: Validation of
 inferences from persons' responses and performances as scientific inquiry
 into score meaning. \emph{American Psychologist, 50}(9), 741-749.
 \doi{10.1037/0003-066X.50.9.741}
+
+Rosseel, Y., & Loh, W. W. (2024). A structural after measurement approach
+to structural equation modeling. \emph{Psychological Methods, 29}(3), 561-588.
+\doi{10.1037/met0000503}
 
 Schuirmann, D. J. (1987). A comparison of the two one-sided tests procedure
 and the power approach for assessing the equivalence of average

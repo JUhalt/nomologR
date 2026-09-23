@@ -1434,6 +1434,29 @@ nomo_network_validate_data <- function(data, label) {
 #'   `1 - 2 * equivalence_alpha`.
 #' @param guidance Guidance settings returned by `nomo_defaults()`.
 #'
+#' @section Relationships estimated between observed variables:
+#' A hypothesis whose endpoints are latent variables is estimated with their
+#' measurement error modelled. When an endpoint is an observed variable, that
+#' error enters unmodelled. If the observed variable is a composite of several
+#' items, such as a sum, mean, or factor score, the estimated relationship
+#' carries the discrepancy [nomo_scores()] reports as correlational accuracy,
+#' which can be substantial and runs in either direction depending on the
+#' scoring method and the model.
+#'
+#' `nomo_network()` cannot tell from the model syntax whether an observed
+#' variable is a composite or a single measured quantity, so it does not guess.
+#' It classifies each hypothesis by whether its endpoints are latent, and the
+#' decision log discloses observed endpoints: for review when both ends are
+#' observed, and for information when one is. A single measured variable, such
+#' as a criterion recorded without items, is not a composite, and the
+#' disclosure says so.
+#'
+#' Where the observed variables are composites, modelling their items as
+#' indicators of latent variables removes the discrepancy, and
+#' `lavaan::sam()` estimates the structural relationships after the
+#' measurement model (Rosseel & Loh, 2024). No correction is applied
+#' automatically.
+#'
 #' @return A `nomo_network` object retaining the primary fitted SEM, optional
 #'   validation fit, measurement context, relation-level theory evidence,
 #'   replication evidence, and decision log.
@@ -1454,6 +1477,10 @@ nomo_network_validate_data <- function(data, label) {
 #' inferences from persons' responses and performances as scientific inquiry
 #' into score meaning. *American Psychologist, 50*(9), 741-749.
 #' \doi{10.1037/0003-066X.50.9.741}
+#'
+#' Rosseel, Y., & Loh, W. W. (2024). A structural after measurement approach
+#' to structural equation modeling. *Psychological Methods, 29*(3), 561-588.
+#' \doi{10.1037/met0000503}
 #'
 #' Schuirmann, D. J. (1987). A comparison of the two one-sided tests procedure
 #' and the power approach for assessing the equivalence of average
@@ -1700,6 +1727,11 @@ nomo_network <- function(model,
     sample_role = primary_role
   )
 
+  decision_log <- dplyr::bind_rows(
+    decision_log,
+    nomo_network_endpoint_log(hypotheses, primary$fit)
+  )
+
   if (!is.null(validation)) {
     validation_log <- nomo_network_decision_log(
       model_additions = prepared$additions[0, , drop = FALSE],
@@ -1749,4 +1781,92 @@ nomo_network <- function(model,
 
   class(out) <- c("nomo_network", "list")
   out
+}
+
+
+
+# Observed endpoints -----------------------------------------------------------
+#
+# The network cannot tell from its syntax whether an observed variable is a
+# composite of items or a single measured quantity, so it does not guess. It
+# classifies each hypothesis by whether its endpoints are latent, and discloses
+# what an observed endpoint means: its measurement error enters unmodelled, and
+# if it is a composite, the relationship carries the discrepancy nomo_scores()
+# reports as correlational accuracy.
+nomo_network_endpoint_log <- function(hypotheses, fit) {
+  log <- nomo_log_new()
+
+  latent <- tryCatch(
+    as.character(lavaan::lavNames(fit, type = "lv")),
+    error = function(e) character()
+  )
+  table <- tryCatch(as.data.frame(nomo_table(hypotheses)), error = function(e) NULL)
+  if (is.null(table) || !nrow(table) ||
+        !all(c("id", "source", "target") %in% names(table))) {
+    return(log)
+  }
+
+  source_latent <- table$source %in% latent
+  target_latent <- table$target %in% latent
+  both_observed <- !source_latent & !target_latent
+  mixed <- xor(source_latent, target_latent)
+
+  observed_names <- function(rows) {
+    sort(unique(c(
+      table$source[rows & !source_latent],
+      table$target[rows & !target_latent]
+    )))
+  }
+
+  consequence <- paste(
+    "Observed variables enter the network with their measurement error",
+    "unmodelled. If any of them is a composite of several items (a sum, mean,",
+    "or factor score), the estimated relationship carries the discrepancy",
+    "nomo_scores() reports as correlational accuracy, which can be substantial",
+    "and runs in either direction depending on the scoring method and the",
+    "model. A single measured variable, such as a criterion recorded without",
+    "items, is not a composite, and this does not apply to it."
+  )
+  remedy <- paste(
+    "Where these are composites, model their items as indicators of latent",
+    "variables instead, which removes the discrepancy; lavaan::sam() estimates",
+    "the structural relationships after the measurement model (Rosseel & Loh,",
+    "2024)."
+  )
+
+  if (any(both_observed)) {
+    log <- nomo_log_add(
+      log, stage = "network", object = "hypotheses",
+      metric = "observed_endpoints",
+      value = sum(both_observed),
+      reference = "nomo_scores(): correlational accuracy",
+      severity = "review",
+      observation = sprintf(
+        "%s relate%s observed variables to each other: %s.",
+        paste(table$id[both_observed], collapse = ", "),
+        if (sum(both_observed) == 1L) "s" else "",
+        paste(observed_names(both_observed), collapse = ", ")
+      ),
+      recommendation = paste(consequence, remedy)
+    )
+  }
+
+  if (any(mixed)) {
+    log <- nomo_log_add(
+      log, stage = "network", object = "hypotheses",
+      metric = "mixed_endpoints",
+      value = sum(mixed),
+      reference = "nomo_scores(): correlational accuracy",
+      severity = "info",
+      observation = sprintf(
+        "%s relate%s a latent variable to an observed one: %s.",
+        paste(table$id[mixed], collapse = ", "),
+        if (sum(mixed) == 1L) "s" else "",
+        paste(observed_names(mixed), collapse = ", ")
+      ),
+      recommendation = paste(consequence, remedy)
+    )
+  }
+
+  log
 }
