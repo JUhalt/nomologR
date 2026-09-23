@@ -93,6 +93,17 @@ record or thesis appendix, or shared with a collaborator without a separate
 figures directory or a network dependency. The `title` argument becomes the
 document title.
 
+For a thesis committee or a collaborator who works in Word, give the file a
+`.docx` extension instead:
+
+```r
+nomo_report(run, file = "construct-validation-report.docx")
+```
+
+The Word document carries the same tables, figures, and interpretation contract
+as the HTML report. Sections that collapse in HTML, such as the full evidence
+trace, are shown expanded, and it uses Word's default styles.
+
 `nomo_report()` works the same from the console, a script, or a chunk inside
 your own R Markdown or Quarto document, such as a thesis chapter. This article
 renders reports from its own chunks and needs no special setup.
