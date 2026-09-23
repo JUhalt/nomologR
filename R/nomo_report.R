@@ -103,9 +103,12 @@ nomo_report_validate_file <- function(file, overwrite) {
     stop("`file` must be one non-empty character path.", call. = FALSE)
   }
 
-  if (!grepl("\\.html?$", file, ignore.case = TRUE)) {
+  if (!grepl("\\.(html?|docx)$", file, ignore.case = TRUE)) {
     stop(
-      "nomologR currently renders HTML reports; `file` must end in `.html` or `.htm`.",
+      paste(
+        "nomologR renders HTML or Word reports; `file` must end in `.html`,",
+        "`.htm`, or `.docx`."
+      ),
       call. = FALSE
     )
   }
@@ -806,7 +809,11 @@ nomo_report_prepare_template <- function(template, input, title) {
 #' report, and rendering the report does not change the calling document.
 #'
 #' @param x An object created by [nomo_run()].
-#' @param file Output HTML path.
+#' @param file Output path. The extension chooses the format: `.html` or
+#'   `.htm` for a self-contained HTML report, `.docx` for a Word document. The
+#'   Word report carries the same tables, figures, and interpretation contract
+#'   as the HTML one; collapsible sections are shown expanded, and it uses
+#'   Word's default styles.
 #' @param title Report title.
 #' @param include_plots Logical; include a compact set of component plots when
 #'   those plots are available.
@@ -890,7 +897,7 @@ nomo_report <- function(x,
 
   if (!nomo_report_pandoc_available()) {
     stop(
-      "Pandoc is required to render the HTML report but was not found.",
+      "Pandoc is required to render the report but was not found.",
       call. = FALSE
     )
   }
@@ -919,6 +926,7 @@ nomo_report <- function(x,
 
   rendered <- rmarkdown::render(
     input = input,
+    output_format = nomo_report_output_format(file),
     output_file = basename(file),
     output_dir = output_dir,
     params = list(
@@ -938,4 +946,19 @@ nomo_report <- function(x,
   )
 
   invisible(normalizePath(rendered, winslash = "/", mustWork = TRUE))
+}
+
+
+# The template's own YAML describes the HTML report, so an HTML file needs no
+# format here. A Word file gets word_document(), and the template writes
+# markdown instead of raw HTML for it, since pandoc drops raw HTML from .docx.
+nomo_report_output_format <- function(file) {
+  if (!grepl("\\.docx$", file, ignore.case = TRUE)) return(NULL)
+  args <- list(toc = TRUE, fig_width = 8, fig_height = 5.2)
+  # Section numbering for Word arrived in a later rmarkdown than this package
+  # requires, so it is used only where the installed version supports it.
+  if ("number_sections" %in% names(formals(rmarkdown::word_document))) {
+    args$number_sections <- TRUE
+  }
+  do.call(rmarkdown::word_document, args)
 }

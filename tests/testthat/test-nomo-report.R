@@ -1205,3 +1205,86 @@ caller_state <- list(
   expect_true(envir$caller_state$duplicate_label_restored)
   expect_true(file.exists(outer_html))
 })
+
+
+# Word output (#35) ------------------------------------------------------------
+
+test_that("the output format follows the file extension", {
+  expect_null(nomologR:::nomo_report_output_format("report.html"))
+  expect_null(nomologR:::nomo_report_output_format("report.HTM"))
+
+  word <- nomologR:::nomo_report_output_format("report.docx")
+  expect_s3_class(word, "rmarkdown_output_format")
+  expect_identical(word$pandoc$to, "docx")
+})
+
+
+test_that("an unsupported extension names both supported formats", {
+  run <- make_m9_minimal_run()
+  expect_error(nomo_report(run, file = "report.pdf"), "HTML or Word")
+  expect_error(nomo_report(run, file = "report.pdf"), ".docx", fixed = TRUE)
+})
+
+
+test_that("a Word report keeps every table and the interpretation contract", {
+  skip_on_cran()
+  skip_if_not_installed("rmarkdown")
+  skip_if_not_installed("knitr")
+  skip_if_not(rmarkdown::pandoc_available())
+
+  run <- make_m9_report_run()
+  dir <- tempfile("nomo-word-report-")
+  dir.create(dir)
+  on.exit(unlink(dir, recursive = TRUE), add = TRUE)
+
+  docx <- nomo_report(run, file = file.path(dir, "report.docx"),
+                      include_session = FALSE, quiet = TRUE)
+  html <- nomo_report(run, file = file.path(dir, "report.html"),
+                      include_session = FALSE, quiet = TRUE)
+  expect_true(file.exists(docx))
+
+  unz <- file.path(dir, "unz")
+  utils::unzip(docx, exdir = unz)
+  xml <- paste(readLines(file.path(unz, "word", "document.xml"), warn = FALSE,
+                         encoding = "UTF-8"), collapse = "\n")
+  text <- gsub("<[^>]+>", "", xml)
+
+  # Pandoc drops raw HTML when writing Word, so a template that wrote HTML
+  # tables would produce a report with none. Count the data tables in the HTML
+  # report, leaving out the embedded scripts, which contain "<table" strings.
+  body <- paste(readLines(html, warn = FALSE, encoding = "UTF-8"), collapse = "\n")
+  body <- gsub("(?s)<script[^>]*>.*?</script>", "", body, perl = TRUE)
+  n_html <- lengths(regmatches(body, gregexpr("<table", body, fixed = TRUE)))
+  n_word <- lengths(regmatches(xml, gregexpr("<w:tbl>", xml, fixed = TRUE)))
+  expect_gt(n_word, 0L)
+  expect_identical(n_word, n_html)
+
+  # The contract is the report's statement of what it does not do; losing it in
+  # Word would remove the package's core disclaimer from the document.
+  expect_true(grepl("Interpretation contract", text, fixed = TRUE))
+  expect_true(grepl("Methods and citations", text, fixed = TRUE))
+
+  # Nothing HTML-specific reaches the Word text.
+  expect_false(grepl("&amp;amp;", xml, fixed = TRUE))
+  expect_false(grepl("&lt;div", xml, fixed = TRUE))
+  expect_false(grepl("&lt;details", xml, fixed = TRUE))
+})
+
+
+test_that("the HTML report is unchanged by Word support", {
+  skip_on_cran()
+  skip_if_not_installed("rmarkdown")
+  skip_if_not_installed("knitr")
+  skip_if_not(rmarkdown::pandoc_available())
+
+  run <- make_m9_report_run()
+  file <- tempfile(fileext = ".html")
+  on.exit(unlink(file), add = TRUE)
+  nomo_report(run, file = file, include_session = FALSE, quiet = TRUE)
+  html <- paste(readLines(file, warn = FALSE, encoding = "UTF-8"), collapse = "\n")
+
+  expect_match(html, '<div class="table-responsive">', fixed = TRUE)
+  expect_match(html, 'class="nomo-banner"', fixed = TRUE)
+  expect_match(html, "<details>", fixed = TRUE)
+  expect_match(html, "Show full evidence trace", fixed = TRUE)
+})
