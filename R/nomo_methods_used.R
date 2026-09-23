@@ -279,6 +279,23 @@ nomo_methods_used.nomo_scores <- function(x, ...) {
 }
 
 
+# Missing-data sensitivity ----------------------------------------------------
+
+#' @export
+nomo_methods_used.nomo_missing <- function(x, ...) {
+  # Credited by what lavaan estimated, not by what was requested, because
+  # lavaan can substitute a different method for the one asked for.
+  fitted <- x$strategies$lavaan_missing[x$strategies$available]
+  if (!length(fitted)) return(character())
+
+  used <- "missing_sensitivity"
+  if ("listwise" %in% fitted) used <- c(used, "listwise_deletion")
+  if ("pairwise" %in% fitted) used <- c(used, "pairwise_deletion")
+  if (any(fitted %in% c("ml", "ml.x"))) used <- c(used, "fiml")
+  used
+}
+
+
 # Model comparison ------------------------------------------------------------
 
 #' @export

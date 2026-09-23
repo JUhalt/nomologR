@@ -141,6 +141,44 @@
   expanded, and the document uses Word's default styles. Section numbering is
   used where the installed rmarkdown supports it for Word.
 
+- Added `nomo_missing()`, which refits a `nomo_cfa` or `nomo_network` under
+  alternative missing-data strategies and reports whether the cases used, the
+  estimates, fit, reliability, or theory evidence change (#32).
+  - **Strategies compared.** Continuous indicators are compared under
+    listwise deletion and FIML, with FIML as the reference. Ordered
+    indicators, for which lavaan offers no FIML, are compared under listwise
+    and pairwise deletion.
+  - **Assumptions and the flag.** Each strategy is labelled with the
+    mechanism it requires, following Enders and Bandalos (2001). A difference
+    larger than half the reference standard error is flagged for review,
+    following Schafer and Graham's (2002) rule for when bias becomes
+    practically important. The flag says that the difference estimates bias
+    only if the data are missing at random and the model is correct, and how
+    many cases listwise deletion discarded. The count matters because, in
+    checks under MCAR, differences from sampling alone grew with the share of
+    cases discarded.
+  - **Hypotheses.** A hypothesis whose concordance changes between strategies
+    is flagged for review.
+  - **What agreement means.** Whether data are missing at random cannot in
+    general be tested from the data at hand, so agreement is reported as
+    insensitivity to the choice, not as evidence that either strategy is
+    unbiased.
+  - **What lavaan actually did.** Each strategy records what lavaan
+    estimated, not only what was requested. lavaan substitutes its two-stage
+    method when FIML is requested with ULS or GLS, and refuses it for MLM, and
+    both are reported rather than hidden. The data supplied must reproduce the
+    fitted model when refitted with its original strategy, so a comparison
+    cannot silently run on different data.
+  - **Validation.** Tests reproduce lavaan's estimates for each strategy and
+    use simulations with a known factor correlation of .50. Under MAR, FIML is
+    within sampling error of it while listwise deletion is attenuated and
+    flagged. Under MCAR, both are unbiased, and FIML's standard errors are
+    smaller where it keeps cases listwise deletion discards.
+  - **Not offered.** Mean substitution is explained and not implemented.
+  - **Documentation.** The measurement-model article gains a section applying
+    the comparison to `nomo_demo_continuous`, whose missing values are MCAR by
+    construction, and to a simulated MAR sample.
+
 # nomologR 0.2.0
 
 nomologR 0.2.0 makes the workflow research-backed from historical to

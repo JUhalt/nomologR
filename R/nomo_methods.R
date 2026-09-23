@@ -1890,6 +1890,47 @@ nomo_methods_registry <- function() {
       c("enders_bandalos_2001", "schafer_graham_2002")
     ),
     nomo_method_entry(
+      "listwise_deletion", "workflow",
+      "Listwise deletion",
+      "historical", "context",
+      "Parameters estimated from the cases observed on every modeled variable.",
+      paste(
+        "Requires data missing completely at random; under data missing at",
+        "random the complete cases can be unrepresentative. Shown as a",
+        "comparison, not recommended."
+      ),
+      "nomo_missing()", "lavaan",
+      c("enders_bandalos_2001", "schafer_graham_2002")
+    ),
+    nomo_method_entry(
+      "pairwise_deletion", "workflow",
+      "Pairwise deletion",
+      "historical", "context",
+      "Each covariance or correlation estimated from the cases observed on that pair.",
+      paste(
+        "Requires data missing completely at random. The reference strategy",
+        "for ordered indicators, for which lavaan does not offer FIML."
+      ),
+      "nomo_missing()", "lavaan",
+      c("enders_bandalos_2001", "schafer_graham_2002")
+    ),
+    nomo_method_entry(
+      "missing_sensitivity", "workflow",
+      "Missing-data sensitivity comparison",
+      "contemporary", "supporting",
+      paste(
+        "The same prespecified model refitted under alternative missing-data",
+        "strategies, with each estimate's difference from the reference in",
+        "standard-error units."
+      ),
+      paste(
+        "Cannot test whether data are missing at random. A difference estimates",
+        "the bias of listwise deletion only if they are and the model is correct."
+      ),
+      "nomo_missing()", "lavaan",
+      c("enders_bandalos_2001", "schafer_graham_2002")
+    ),
+    nomo_method_entry(
       "reproducible_report", "workflow",
       "Archived reproducible report",
       "contemporary", "primary",

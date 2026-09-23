@@ -47,6 +47,7 @@ reference:
       - nomo_compare
       - summary.nomo_compare
       - plot.nomo_compare
+      - nomo_missing
   - title: "4. Reliability and construct-validity evidence"
     contents:
       - nomo_reliability
