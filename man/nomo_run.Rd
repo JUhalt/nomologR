@@ -22,7 +22,12 @@ object so the same prespecified network can be evaluated across calibration
 and validation samples.}
 
 \item{scales}{A non-empty named list. Each element is a character vector of
-candidate item-column names for one scale/construct.}
+candidate item-column names for one scale/construct. May also be a handoff
+from \code{contentvalidR}'s \code{content_handoff()}, whose carried items and
+construct mapping then define the scales, as described for
+\code{\link[=nomo_screen]{nomo_screen()}}. A handoff from a review with no construct mapping is
+refused, because a guided run needs scales and nomologR does not invent
+them.}
 
 \item{mode}{Presentation mode: \code{"teaching"} or \code{"research"}. Mode changes
 presentation, not statistical behavior.}

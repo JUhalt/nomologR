@@ -6,8 +6,14 @@ nomo_run_fresh <- function(data,
                            guidance,
                            decisions,
                            settings,
-                           call) {
+                           call,
+                           handoff = NULL) {
   roles <- nomo_run_data_roles(data)
+  if (!is.null(handoff)) {
+    nomo_handoff_check_data(
+      handoff, intersect(names(roles$exploratory), names(roles$confirmatory))
+    )
+  }
 
   if (!is.list(guidance)) {
     stop(
@@ -48,11 +54,14 @@ nomo_run_fresh <- function(data,
     ),
     stage_status = nomo_run_stage_status_new(),
     decision_requests = nomo_run_empty_requests(),
-    decision_log = nomo_run_initial_log(scales, roles),
+    decision_log = nomo_run_initial_log(scales, roles, handoff),
     blocked = NULL,
     source_data = data,
     state_version = 2L
   )
+  # Added only when present, so a run without a handoff has exactly the shape
+  # it always had.
+  if (!is.null(handoff)) x$handoff <- handoff
   class(x) <- c("nomo_run", "list")
 
   for (scope in names(scales)) {
@@ -241,7 +250,12 @@ nomo_run_resume <- function(resume,
 #'   object so the same prespecified network can be evaluated across calibration
 #'   and validation samples.
 #' @param scales A non-empty named list. Each element is a character vector of
-#'   candidate item-column names for one scale/construct.
+#'   candidate item-column names for one scale/construct. May also be a handoff
+#'   from `contentvalidR`'s `content_handoff()`, whose carried items and
+#'   construct mapping then define the scales, as described for
+#'   [nomo_screen()]. A handoff from a review with no construct mapping is
+#'   refused, because a guided run needs scales and nomologR does not invent
+#'   them.
 #' @param mode Presentation mode: `"teaching"` or `"research"`. Mode changes
 #'   presentation, not statistical behavior.
 #' @param guidance Guidance settings from [nomo_defaults()].
@@ -362,6 +376,31 @@ nomo_run <- function(data = NULL,
 
   call <- match.call()
 
+  # A contentvalidR handoff defines the scales from content review (#46). A
+  # review with no construct mapping cannot, and the workflow does not invent
+  # one.
+  handoff <- NULL
+  if (nomo_handoff_is(scales)) {
+    handoff <- nomo_handoff_read(scales)
+    if (is.null(handoff$scales)) {
+      stop(
+        sprintf(
+          paste(
+            "This handoff comes from a content review with no construct mapping",
+            "(workflow: %s), so it cannot define the scales a guided run needs,",
+            "and nomologR does not invent construct membership. Assign the",
+            "carried items to scales yourself, for example",
+            "`scales = list(Construct = c(...))`, or screen them with",
+            "`nomo_screen(data, items = handoff)`. Carried items: %s."
+          ),
+          handoff$provenance$workflow, paste(handoff$items, collapse = ", ")
+        ),
+        call. = FALSE
+      )
+    }
+    scales <- handoff$scales
+  }
+
   if (!is.null(resume)) {
     return(
       nomo_run_resume(
@@ -389,6 +428,7 @@ nomo_run <- function(data = NULL,
     guidance = guidance,
     decisions = decisions,
     settings = settings,
-    call = call
+    call = call,
+    handoff = handoff
   )
 }

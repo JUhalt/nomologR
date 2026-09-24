@@ -13,6 +13,8 @@
 #' @param items Optional character vector identifying item columns. If `NULL`,
 #'   all columns are audited and the decision log reminds the user to verify that
 #'   identifiers, demographics, and other non-item columns were not included.
+#'   May also be a handoff from `contentvalidR`'s `content_handoff()`; see
+#'   **Items from content review**.
 #' @param guidance Guidance settings from [nomo_defaults()].
 #' @param effort Logical. If `TRUE`, case-level indices of careless or
 #'   insufficient-effort responding are added. See **Careless responding**.
@@ -72,6 +74,23 @@
 #' N is the number of pairs or scales. With two, every value is exactly +1 or
 #' -1, so at least three are required; with fewer than five the log says the
 #' flags are coarse. Cases are flagged, never removed.
+#'
+#' **Items from content review.** `items` may be the handoff that
+#' `contentvalidR`'s `content_handoff()` produces after content review. Only
+#' items it marks as carried are screened. Every item it held back is listed in
+#' the decision log with its status and recommendation quoted in
+#' `contentvalidR`'s own words, and is never analysed or reinstated here. The log
+#' also records the producing version, workflow, and carry rule, and that item
+#' membership came from content review rather than from these data.
+#'
+#' A carried item that is not a column of `data` is refused, never dropped.
+#' Where the call leaves `scales`, `reverse`, or `scale_range` unset, the
+#' handoff's scales and declared keying fill them. An item is never treated as
+#' forward keyed because keying was undeclared, and a response scale the
+#' handoff did not record is never inferred. A handoff with a schema version
+#' this release does not read is refused, naming both package versions. The
+#' interface is specified in nomologR issue #46, and `contentvalidR` is not
+#' needed to read it.
 #'
 #' @return An object of class `nomo_screen` containing item summaries, response
 #'   distributions, case-level completeness diagnostics, an evidence-guided
@@ -144,6 +163,22 @@ nomo_screen <- function(data,
 
   if (!is.list(guidance)) {
     stop("`guidance` must be a list, typically returned by `nomo_defaults()`.", call. = FALSE)
+  }
+
+  # A contentvalidR handoff supplies the carried items, and, where the call
+  # leaves them unset, its scales and declared keying (#46). Arguments given in
+  # the call are the researcher's and take precedence; the log says so.
+  handoff <- NULL
+  keying_override <- FALSE
+  if (nomo_handoff_is(items)) {
+    handoff <- nomo_handoff_read(items)
+    nomo_handoff_check_data(handoff, names(data))
+    items <- handoff$items
+    if (is.null(scales)) scales <- handoff$scales
+    keying_override <- handoff$keying$declared &&
+      (!is.null(reverse) || !is.null(scale_range))
+    if (is.null(reverse)) reverse <- handoff$keying$reverse
+    if (is.null(scale_range)) scale_range <- handoff$keying$scale_range
   }
 
   used_all_columns <- is.null(items)
@@ -385,7 +420,24 @@ nomo_screen <- function(data,
     effort_log <- nomo_effort_log(effort_result, n_items = length(items))
   }
 
+  handoff_log <- NULL
+  if (!is.null(handoff)) {
+    handoff_log <- nomo_handoff_log(handoff)
+    if (keying_override) {
+      handoff_log <- nomo_log_add(
+        handoff_log, stage = "screen", object = "content_review",
+        metric = "keying_override", severity = "info",
+        observation = paste(
+          "`reverse` or `scale_range` was supplied in the call, so it was used",
+          "in place of the keying declared in the handoff."
+        ),
+        recommendation = "Record why the declared keying was set aside."
+      )
+    }
+  }
+
   decision_log <- dplyr::bind_rows(
+    handoff_log,
     decision_log,
     descriptives$decision_log,
     relationships$decision_log,
@@ -429,6 +481,13 @@ nomo_screen <- function(data,
       ),
       out[tail_names]
     )
+  }
+
+  # Also added only when present, for the same reason.
+  if (!is.null(handoff)) {
+    tail_names <- c("decision_log", "guidance")
+    out <- c(out[setdiff(names(out), tail_names)], list(handoff = handoff),
+             out[tail_names])
   }
 
   class(out) <- c("nomo_screen", "list")

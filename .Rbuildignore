@@ -16,3 +16,4 @@
 ^LICENSE\.md$
 ^CITATION\.cff$
 ^docs$
+^tests/testthat/fixtures/contentvalidR/make-handoff-fixtures\.R$

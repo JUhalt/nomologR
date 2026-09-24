@@ -238,6 +238,64 @@ nomo_report_data_characteristics <- function(x) {
 }
 
 
+# The content review that supplied a run's scales (#46), or NULL when the
+# scales were supplied directly. Status and recommendation are shown exactly as
+# contentvalidR wrote them.
+nomo_report_content_review <- function(x) {
+  h <- x$handoff
+  if (is.null(h)) return(NULL)
+  p <- h$provenance
+  ev <- h$evidence
+
+  keying <- h$keying
+  keying_text <- if (!keying$recorded) {
+    "The handoff predates keying fields, so reverse keying is not declared."
+  } else if (!keying$declared) {
+    "Reverse keying was not declared."
+  } else if (!length(keying$reverse)) {
+    "Keying was declared with no reverse-keyed item among those carried."
+  } else {
+    sprintf(
+      "Declared reverse-keyed item(s): %s%s.",
+      paste(keying$reverse, collapse = ", "),
+      if (is.null(keying$scale_range)) {
+        ", with no response scale recorded"
+      } else {
+        sprintf(", on a %g to %g response scale", keying$scale_range[[1L]],
+                keying$scale_range[[2L]])
+      }
+    )
+  }
+
+  list(
+    summary = paste(
+      sprintf(
+        paste(
+          "Scales and item membership came from content review in %s %s",
+          "(workflow: %s; carry rule: %s; method: %s), not from these data.",
+          "%d of %d reviewed item(s) were carried; only carried items were analysed."
+        ),
+        p$package, p$package_version, p$workflow, p$keep, p$method,
+        sum(ev$carried), nrow(ev)
+      ),
+      keying_text,
+      if (length(p$citation)) {
+        sprintf("Content-review sources: %s.", paste(p$citation, collapse = "; "))
+      }
+    ),
+    items = tibble::tibble(
+      item = as.character(ev$item),
+      scale = as.character(ev$scale),
+      carried = ev$carried,
+      status = as.character(ev$status),
+      recommendation = as.character(ev$recommendation),
+      judges = ev$n_judges,
+      rule = as.character(ev$rule)
+    )
+  )
+}
+
+
 nomo_report_call_history <- function(x) {
   calls <- x$call_history
   if (is.null(calls) || !length(calls)) {
