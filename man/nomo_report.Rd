@@ -12,7 +12,8 @@ nomo_report(
   include_session = TRUE,
   max_table_rows = 50L,
   overwrite = FALSE,
-  quiet = TRUE
+  quiet = TRUE,
+  apa_tables = FALSE
 )
 }
 \arguments{
@@ -37,6 +38,12 @@ The final evidence-trace appendix is not truncated.}
 \item{overwrite}{Logical; replace an existing \code{file}.}
 
 \item{quiet}{Logical passed to \code{\link[rmarkdown:render]{rmarkdown::render()}}.}
+
+\item{apa_tables}{Logical; if \code{TRUE}, append a \emph{Manuscript tables} appendix
+with the \code{\link[=nomo_apa_table]{nomo_apa_table()}} tables for the results the run holds. These
+are the CFA loadings, fit, and factor correlations, reliability, and, when
+present, invariance and the network's hypotheses and fit. They are
+numbered in that order. Default \code{FALSE}, which leaves the report unchanged.}
 }
 \value{
 The normalized report file path, invisibly.

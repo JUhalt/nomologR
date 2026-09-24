@@ -156,6 +156,11 @@ describes how each estimate relates to its prediction without calling any of
 them a pass or a fail. A hypothesis specified after the data were seen is marked
 with a note saying it is exploratory.
 
+To collect them in one place, `nomo_report(run, apa_tables = TRUE)` appends a
+*Manuscript tables* appendix. It holds the tables for every result the run has,
+numbered in the order the report presents them. A table that does not apply,
+such as factor correlations for a one-factor model, is left out.
+
 ## What the report contains
 
 The report mirrors the full guided workflow:

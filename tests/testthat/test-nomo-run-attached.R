@@ -135,6 +135,30 @@ test_that("requested evidence that cannot be computed is recorded, and the run g
 })
 
 
+test_that("the strategies named in settings are the ones compared", {
+  run <- attached_run(list(missing = list(strategies = "fiml", reliability = FALSE)))
+  # lavaan's alias is read as FIML, and the strategy the model was fitted with
+  # is always included.
+  expect_identical(run$results$missing$cfa$strategies$strategy, c("ml", "listwise"))
+})
+
+
+test_that("a missing-data comparison that cannot be computed is recorded, and the run goes on", {
+  local_mocked_bindings(nomo_missing = function(...) stop("simulated comparison failure"))
+  run <- nomo_run(
+    nomo_demo_continuous, scales = attached_scales, mode = "research",
+    decisions = attached_decisions,
+    settings = list(factors = list(seed = 73), missing = list(reliability = FALSE))
+  )
+  expect_identical(run$status, "complete")
+  expect_null(run$results$missing)
+  entry <- run$decision_log[run$decision_log$id == "missing_data_cfa", ]
+  expect_identical(entry$decision, "not computed")
+  expect_identical(entry$scope, "measurement_model")
+  expect_match(entry$observation, "simulated comparison failure", fixed = TRUE)
+})
+
+
 test_that("attached settings can be added before the CFA and are locked after", {
   paused <- nomo_run(nomo_demo_continuous, scales = attached_scales,
                      settings = list(factors = list(seed = 73)))

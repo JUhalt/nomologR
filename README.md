@@ -937,6 +937,10 @@ correlations, CFI, and *p* lose theirs because they cannot exceed 1,
 while TLI, RMSEA, SRMR, and standardized loadings keep theirs because
 they can. No table labels a result as passing or failing.
 
+`nomo_report(run, apa_tables = TRUE)` appends the same tables for every
+result a guided run holds, numbered in order, as a *Manuscript tables*
+appendix.
+
 ## Development path
 
 The detailed release plan lives in
