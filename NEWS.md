@@ -1,5 +1,11 @@
 # nomologR 0.2.1.9000 (development)
 
+- A written stability and deprecation policy, on the package help page (`?nomologR`) and in the README (#74). From 0.3.0, the first CRAN release, the public interface changes only after a deprecation period.
+  - **Covered:** exported functions, documented arguments and defaults, documented fields of returned objects, `nomo_table()` types, and decision-log columns.
+  - **Breaking changes:** any change that breaks the interface, including a changed default that changes results, is deprecated for at least one minor release first.
+  - **Experimental until 1.0.0:** `nomo_missing()`, whose flagging rule may be refined, and the layout of `nomo_apa_table()` tables. Both are marked in their help pages.
+  - **Required by the joint release:** #53 requires this policy for the joint 1.0 release with `contentvalidR`.
+
 - `nomo_screen()` and `nomo_run()` accept a handoff from `contentvalidR`'s `content_handoff()`, so items move from content review to empirical screening with their reasons intact (#46). The interface is schema version 1, agreed with the `contentvalidR` maintainer and documented identically in both packages.
   - **What is analysed.** `nomo_screen(data, items = handoff)` screens only the items content review carried. Every held-back item is listed in the decision log with its status and recommendation quoted in `contentvalidR`'s own words, and is never analysed or reinstated.
   - **Guided runs.** `nomo_run(data, scales = handoff)` takes its scales from the review, and its design log records that item membership came from content review rather than from these data. A review with no construct mapping, such as an expert relevance panel, is refused by `nomo_run()` with the carried items listed, because a guided run needs scales and nomologR does not invent them. It can still be screened.

@@ -1032,6 +1032,29 @@ The complete `v0.1.0` release track is:
 
 `v0.1.0` was the first stable public release.
 
+## Stability
+
+From `v0.3.0`, the first CRAN release, nomologR’s public interface
+changes only after a deprecation period, so code written against one
+release keeps working in the next.
+
+- **What it covers.** The exported functions, their documented arguments
+  and defaults, the documented fields of returned objects,
+  `nomo_table()` types, and decision-log columns.
+- **Deprecation.** A breaking change, including a changed default that
+  changes results, is deprecated for at least one minor release first.
+  The deprecated form keeps working, warns once per session, and is
+  listed in NEWS.
+- **Additions.** New functions, arguments, fields, and log rows can
+  arrive in any release, so address fields by name.
+- **Experimental.** `nomo_missing()` and the layout of
+  `nomo_apa_table()` tables are experimental until 1.0.0.
+
+The full policy is on the package help page, `?nomologR`. The
+`contentvalidR` handoff is versioned by schema. Within a version, fields
+are only added, and anything else is a new version agreed between the
+two packages ([\#46](https://github.com/JUhalt/nomologR/issues/46)).
+
 ## Design principles
 
 - Measurement before structure.
