@@ -551,6 +551,11 @@ nomo_run_apply_cfa_model <- function(x, decision) {
     )
   )
 
+  # Requested scores and missing-data sensitivity are measurement evidence, so
+  # they are shown before the researcher decides whether to proceed (#73).
+  x <- nomo_run_run_scores(x)
+  x <- nomo_run_run_missing(x, "cfa")
+
   x$status <- "paused"
   x$next_stage <- "measurement_review"
   x$blocked <- NULL
