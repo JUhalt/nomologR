@@ -8,6 +8,12 @@ nomo_run_component_logs <- function(x) {
     stage_results <- x$results[[stage]]
     if (is.null(stage_results)) next
 
+    # The instrument-wide careless-responding screen (#73) belongs with the
+    # screening stage, after the per-scale audits.
+    if (identical(stage, "screen") && !is.null(x$results$effort)) {
+      stage_results <- c(stage_results, list(careless_responding = x$results$effort))
+    }
+
     if (!is.list(stage_results) ||
         inherits(stage_results, c(
           "nomo_cfa",

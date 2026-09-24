@@ -45,7 +45,16 @@ one-call run. A structured decision can be written as
 \code{list(network = list(hypotheses = h))}. Pipeline-controlled arguments such
 as component data/model inputs cannot be overridden through \code{settings}.
 When resuming, settings for future stages may be supplied without
-recomputing completed stages.}
+recomputing completed stages.
+
+\code{list(screen = list(effort = TRUE))} adds careless-responding indices (see
+\code{\link[=nomo_screen]{nomo_screen()}}). They describe a respondent across the whole instrument,
+and even-odd consistency cannot be computed within one scale. So they are
+computed once, over every item in the run with the run's scales, and never
+inside the per-scale item audits. \code{reverse}, \code{scale_range},
+\code{pair_magnitude}, and \code{scales} may be given alongside \code{effort}. When the
+scales came from a \code{contentvalidR} handoff that declares keying, its
+keying is used unless \code{reverse} or \code{scale_range} is given here.}
 
 \item{resume}{Optional prior \code{nomo_run} object. When supplied, the existing
 source data, scales, guidance, completed component results, decisions, and

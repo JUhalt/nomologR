@@ -71,6 +71,9 @@ nomo_run_fresh <- function(data,
       items = scales[[scope]],
       scales = scales
     )
+    # Careless-responding indices describe a respondent across the whole
+    # instrument, so they are computed once below, never per scale (#73).
+    extra[nomo_run_effort_arguments()] <- NULL
 
     result <- nomo_run_safe_component(
       fun = nomo_screen,
@@ -88,6 +91,27 @@ nomo_run_fresh <- function(data,
     }
 
     x$results$screen[[scope]] <- result$value
+  }
+
+  effort <- nomo_run_effort_request(settings, scales, handoff)
+  if (!is.null(effort)) {
+    result <- nomo_run_safe_component(
+      fun = nomo_screen,
+      fixed = list(
+        data = roles$exploratory,
+        items = unique(unlist(scales, use.names = FALSE)),
+        guidance = guidance
+      ),
+      extra = effort$arguments,
+      stage = "screen"
+    )
+
+    if (!result$ok) {
+      return(nomo_run_block(x, "screen", "careless_responding", result))
+    }
+
+    x$results$effort <- result$value
+    x$decision_log <- nomo_run_effort_log(x$decision_log, effort, result$value)
   }
 
   x <- nomo_run_set_stage(
@@ -270,6 +294,15 @@ nomo_run_resume <- function(resume,
 #'   as component data/model inputs cannot be overridden through `settings`.
 #'   When resuming, settings for future stages may be supplied without
 #'   recomputing completed stages.
+#'
+#'   `list(screen = list(effort = TRUE))` adds careless-responding indices (see
+#'   [nomo_screen()]). They describe a respondent across the whole instrument,
+#'   and even-odd consistency cannot be computed within one scale. So they are
+#'   computed once, over every item in the run with the run's scales, and never
+#'   inside the per-scale item audits. `reverse`, `scale_range`,
+#'   `pair_magnitude`, and `scales` may be given alongside `effort`. When the
+#'   scales came from a `contentvalidR` handoff that declares keying, its
+#'   keying is used unless `reverse` or `scale_range` is given here.
 #' @param resume Optional prior `nomo_run` object. When supplied, the existing
 #'   source data, scales, guidance, completed component results, decisions, and
 #'   provenance are reused.

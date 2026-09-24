@@ -296,6 +296,64 @@ nomo_report_content_review <- function(x) {
 }
 
 
+# The instrument-wide careless-responding screen of a run (#73): a summary,
+# one row per index with the rule a source states for it (or none), and the
+# log rows the indices wrote.
+nomo_report_effort <- function(screen) {
+  e <- screen$effort
+  limit <- screen$effort_settings$long_string_limit
+  columns <- c(
+    "Long-string" = "long_string",
+    "Long-string, within-scale mean" = "long_string_mean",
+    "Inter-item SD" = "inter_item_sd",
+    "Inter-item SD, within-scale mean" = "inter_item_sd_mean",
+    "Mahalanobis distance" = "mahalanobis",
+    "Even-odd consistency" = "even_odd",
+    "Psychometric antonyms" = "antonym_r",
+    "Psychometric synonyms" = "synonym_r"
+  )
+  finite <- function(column) e[[column]][is.finite(e[[column]])]
+
+  indices <- tibble::tibble(
+    index = names(columns),
+    cases_with_value = vapply(columns, function(column) length(finite(column)),
+                              integer(1), USE.NAMES = FALSE),
+    median = vapply(columns, function(column) {
+      v <- finite(column)
+      if (length(v)) stats::median(v) else NA_real_
+    }, numeric(1), USE.NAMES = FALSE),
+    cases_flagged = c(sum(e$flag_long_string), NA, NA, NA, NA, NA,
+                      sum(e$flag_antonym), sum(e$flag_synonym)),
+    rule = c(
+      sprintf("a run of %d or more, half the items (Curran, 2016)", as.integer(limit)),
+      "none stated", "none stated", "none stated", "none stated", "none stated",
+      "a positive correlation (Curran, 2016)",
+      "a negative correlation (Curran, 2016)"
+    )
+  )
+
+  log <- screen$decision_log
+  log <- log[log$metric %in% c("long_string", "psychometric_antonym",
+                               "psychometric_synonym", "even_odd",
+                               "index_disagreement"), , drop = FALSE]
+
+  list(
+    summary = sprintf(
+      paste(
+        "Computed once across all %d items for %d cases, using %d scale(s).",
+        "%d case(s) were flagged by at least one rule a source states. Cases",
+        "are flagged, never removed, and the indices disagree by design, so",
+        "read them together."
+      ),
+      length(screen$items), nrow(e), length(screen$effort_settings$scales),
+      sum(e$n_flags > 0L)
+    ),
+    indices = indices,
+    log = tibble::as_tibble(log)
+  )
+}
+
+
 nomo_report_call_history <- function(x) {
   calls <- x$call_history
   if (is.null(calls) || !length(calls)) {
