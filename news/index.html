@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">nomologR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.1.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -49,6 +49,25 @@
       <small>Source: <a href="https://github.com/JUhalt/nomologR/blob/master/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.2.1.9000" id="nomologr-0219000-development">nomologR 0.2.1.9000 (development)<a class="anchor" aria-label="anchor" href="#nomologr-0219000-development"></a></h2>
+<ul><li>Test coverage is back to full executable-line coverage after v0.2.1 (<a href="https://github.com/JUhalt/nomologR/issues/72" class="external-link">#72</a>). Reviewing each uncovered line found four defects, now fixed:
+<ul><li>
+<strong>Network fit in <code><a href="../reference/nomo_missing.html">nomo_missing()</a></code>.</strong> For a <code>nomo_network</code>, the fit comparison listed every fit index as missing. A network’s fit evidence is one wide row, while a CFA’s is a long table, and only the long form was read. Every strategy’s chi-square, CFI, TLI, RMSEA, and SRMR now appear.</li>
+<li>
+<strong><code><a href="../reference/nomo_scores.html">nomo_scores()</a></code> with ordered indicators.</strong> The parallel-model test that unit weighting implies was written for continuous indicators. With ordered indicators it was fitted by maximum likelihood against a categorical model, failed, and reported only that the comparison “could not be computed”. It is now not run for ordered indicators, and the note says why.</li>
+<li>
+<strong>RMSEA interval in the network fit table.</strong> The APA fit table for a <code>nomo_network</code> had an “RMSEA [90% CI]” column but printed no interval. The interval is now read from the fit, using the robust, scaled, or plain RMSEA that the evidence reports.</li>
+<li>
+<strong>Long-string with no usable scale.</strong> The mean within-scale long-string returned <code>NaN</code> when no scale had two items. It now returns <code>NA</code>, as the inter-item SD already did.</li>
+</ul></li>
+<li>Lines that no input can reach were removed rather than tested. Examples are the empty-row checks in the careless-responding indices and the guards for fitted models that are always present. The remaining guards are tested against real fitted objects:
+<ul><li>models that did not converge, have several groups, or were fitted from a covariance matrix;</li>
+<li>single-indicator and cross-loaded factors;</li>
+<li>small and degenerate response sets.</li>
+</ul>
+Failures that only lavaan can produce are simulated.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.2.1" id="nomologr-021">nomologR 0.2.1<a class="anchor" aria-label="anchor" href="#nomologr-021"></a></h2>
 <p>nomologR 0.2.1 completes the six workstreams that moved out of v0.2.0 at certification (<a href="https://github.com/JUhalt/nomologR/issues/37" class="external-link">#37</a>). It also carries three workstreams opened during the cycle (<a href="https://github.com/JUhalt/nomologR/issues/54" class="external-link">#54</a>, <a href="https://github.com/JUhalt/nomologR/issues/56" class="external-link">#56</a>, <a href="https://github.com/JUhalt/nomologR/issues/62" class="external-link">#62</a>). Together they cover what happens after a measurement model is established:</p>
