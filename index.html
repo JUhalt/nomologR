@@ -682,6 +682,7 @@
 <span><span class="fu"><a href="reference/nomo_apa_table.html">nomo_apa_table</a></span><span class="op">(</span><span class="va">reliability</span>, number <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/nomo_apa_table.html">nomo_apa_table</a></span><span class="op">(</span><span class="va">network</span>, number <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></code></pre></div>
 <p>Leading zeros follow the statistic rather than its value: reliability, correlations, CFI, and <em>p</em> lose theirs because they cannot exceed 1, while TLI, RMSEA, SRMR, and standardized loadings keep theirs because they can. No table labels a result as passing or failing.</p>
+<p><code>nomo_report(run, apa_tables = TRUE)</code> appends the same tables for every result a guided run holds, numbered in order, as a <em>Manuscript tables</em> appendix.</p>
 </div>
 </div>
 <div class="section level2">

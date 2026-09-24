@@ -79,7 +79,8 @@ session information.</p>
 <span>  include_session <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  max_table_rows <span class="op">=</span> <span class="fl">50L</span>,</span>
 <span>  overwrite <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  quiet <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  quiet <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  apa_tables <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -123,6 +124,14 @@ The final evidence-trace appendix is not truncated.</p></dd>
 
 <dt id="arg-quiet">quiet<a class="anchor" aria-label="anchor" href="#arg-quiet"></a></dt>
 <dd><p>Logical passed to <code><a href="https://pkgs.rstudio.com/rmarkdown/reference/render.html" class="external-link">rmarkdown::render()</a></code>.</p></dd>
+
+
+<dt id="arg-apa-tables">apa_tables<a class="anchor" aria-label="anchor" href="#arg-apa-tables"></a></dt>
+<dd><p>Logical; if <code>TRUE</code>, append a <em>Manuscript tables</em> appendix
+with the <code><a href="nomo_apa_table.html">nomo_apa_table()</a></code> tables for the results the run holds. These
+are the CFA loadings, fit, and factor correlations, reliability, and, when
+present, invariance and the network's hypotheses and fit. They are
+numbered in that order. Default <code>FALSE</code>, which leaves the report unchanged.</p></dd>
 
 </dl></div>
     <div class="section level2">

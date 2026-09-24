@@ -2,6 +2,17 @@
 
 ## nomologR 0.2.1.9000 (development)
 
+- `nomo_report(apa_tables = TRUE)` appends a *Manuscript tables*
+  appendix ([\#73](https://github.com/JUhalt/nomologR/issues/73), last
+  of three parts). It holds the
+  [`nomo_apa_table()`](https://juhalt.github.io/nomologR/reference/nomo_apa_table.md)
+  tables for the results a run holds: CFA loadings, fit, and factor
+  correlations; reliability; and, when present, invariance and the
+  network’s hypotheses and fit. They are numbered in the order the
+  report presents them. A table that does not apply is left out rather
+  than failing the report. The default, `FALSE`, leaves reports
+  unchanged.
+
 - [`nomo_run()`](https://juhalt.github.io/nomologR/reference/nomo_run.md)
   can score the measurement model and compare missing-data strategies,
   and its report shows both

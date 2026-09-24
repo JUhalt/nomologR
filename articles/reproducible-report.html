@@ -437,6 +437,12 @@ hypotheses table describes how each estimate relates to its prediction
 without calling any of them a pass or a fail. A hypothesis specified
 after the data were seen is marked with a note saying it is
 exploratory.</p>
+<p>To collect them in one place,
+<code>nomo_report(run, apa_tables = TRUE)</code> appends a
+<em>Manuscript tables</em> appendix. It holds the tables for every
+result the run has, numbered in the order the report presents them. A
+table that does not apply, such as factor correlations for a one-factor
+model, is left out.</p>
 </div>
 <div class="section level2">
 <h2 id="what-the-report-contains">What the report contains<a class="anchor" aria-label="anchor" href="#what-the-report-contains"></a>
@@ -526,7 +532,7 @@ exists stops unless <code>overwrite = TRUE</code> is supplied:</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/nomo_report.html">nomo_report</a></span><span class="op">(</span><span class="va">run</span>, file <span class="op">=</span> <span class="va">report_file</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #BBBB00; font-weight: bold;">Error</span><span style="font-weight: bold;">:</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BBBB00;">!</span> Report file already exists: /tmp/RtmpyrBh4Z/nomologR-reports-1f1b4fb5d260/construct-validation-report.html. Use `overwrite = TRUE` to replace it.</span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #BBBB00;">!</span> Report file already exists: /tmp/Rtmpnby53v/nomologR-reports-1f3c17b6fa2d/construct-validation-report.html. Use `overwrite = TRUE` to replace it.</span></span></code></pre></div>
 <p>As elsewhere in <code>nomologR</code>, consequential or destructive
 behavior is not silently assumed.</p>
 </div>

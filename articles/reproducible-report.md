@@ -242,6 +242,12 @@ hypotheses table describes how each estimate relates to its prediction
 without calling any of them a pass or a fail. A hypothesis specified
 after the data were seen is marked with a note saying it is exploratory.
 
+To collect them in one place, `nomo_report(run, apa_tables = TRUE)`
+appends a *Manuscript tables* appendix. It holds the tables for every
+result the run has, numbered in the order the report presents them. A
+table that does not apply, such as factor correlations for a one-factor
+model, is left out.
+
 ## What the report contains
 
 The report mirrors the full guided workflow:
@@ -340,7 +346,7 @@ stops unless `overwrite = TRUE` is supplied:
 
 nomo_report(run, file = report_file)
 #> Error:
-#> ! Report file already exists: /tmp/RtmpyrBh4Z/nomologR-reports-1f1b4fb5d260/construct-validation-report.html. Use `overwrite = TRUE` to replace it.
+#> ! Report file already exists: /tmp/Rtmpnby53v/nomologR-reports-1f3c17b6fa2d/construct-validation-report.html. Use `overwrite = TRUE` to replace it.
 ```
 
 As elsewhere in `nomologR`, consequential or destructive behavior is not
