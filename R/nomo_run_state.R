@@ -306,6 +306,13 @@ nomo_run_validate_settings <- function(settings, scales) {
     }
   }
 
+  # Checked here, before any stage runs, since an unreadable value would
+  # otherwise surface only after every per-scale screen had been computed.
+  effort <- settings$screen$effort
+  if (!is.null(effort) && (!is.logical(effort) || length(effort) != 1L || is.na(effort))) {
+    stop("`settings$screen$effort` must be TRUE or FALSE.", call. = FALSE)
+  }
+
   if ("invariance" %in% nm && length(settings$invariance)) {
     group <- settings$invariance$group
     if (is.null(group) ||

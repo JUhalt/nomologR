@@ -323,6 +323,15 @@ if (!length(screen)) {
 
     emit_plot(obj, "evidence")
   }
+
+  if (!is.null(run$results$effort)) {
+    effort_report <- nomologR:::nomo_report_effort(run$results$effort)
+    cat("\n## Careless responding\n\n")
+    emit_note(effort_report$summary)
+    emit_table(effort_report$indices, truncate = FALSE)
+    cat("\n### Careless-responding evidence\n\n")
+    emit_table(effort_report$log, empty = "No careless-responding rows were recorded.")
+  }
 }
 ```
 
