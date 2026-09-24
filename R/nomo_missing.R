@@ -214,7 +214,7 @@ nomo_missing.nomo_network <- function(x, data, strategies = NULL, ...) {
     refit = refit,
     fit_of = function(obj) obj$fit,
     estimates_of = nomo_missing_network_estimates,
-    fit_evidence_of = function(obj) obj$fit_evidence,
+    fit_evidence_of = function(obj) nomo_missing_network_fit(obj$fit_evidence),
     reliability_of = NULL,
     kind = "nomo_network",
     call = match.call()
@@ -322,25 +322,8 @@ nomo_missing_run <- function(x, lavaan_fit, data, ordered, strategies, refit,
     kind = kind
   )
   if (!identical(intended_reference, plan$reference)) {
-    decision_log <- nomo_log_add(
-      decision_log, stage = "missing_data",
-      object = if (identical(kind, "nomo_network")) "network" else "cfa",
-      metric = "reference_substituted", severity = "info",
-      observation = sprintf(
-        "%s could not be fitted, so %s is the reference instead.",
-        nomo_missing_label(intended_reference),
-        nomo_missing_label_inline(plan$reference)
-      ),
-      recommendation = if (identical(nomo_missing_requires(intended_reference), "MAR") &&
-                           identical(nomo_missing_requires(plan$reference), "MCAR")) {
-        paste(
-          "The reference now requires data missing completely at random, a",
-          "stronger assumption than FIML's, so a difference from it no longer",
-          "estimates the bias of the other strategy."
-        )
-      } else {
-        "Differences are measured from this strategy instead."
-      }
+    decision_log <- nomo_missing_reference_log(
+      decision_log, intended_reference, plan$reference, kind
     )
   }
 
@@ -361,6 +344,32 @@ nomo_missing_run <- function(x, lavaan_fit, data, ordered, strategies, refit,
   )
   class(out) <- c("nomo_missing", "list")
   out
+}
+
+
+# Records that the intended reference could not be fitted and which strategy
+# took its place. Whether a difference still estimates bias depends on what the
+# replacement assumes, so the recommendation says which case this is.
+nomo_missing_reference_log <- function(log, intended, actual, kind) {
+  nomo_log_add(
+    log, stage = "missing_data",
+    object = if (identical(kind, "nomo_network")) "network" else "cfa",
+    metric = "reference_substituted", severity = "info",
+    observation = sprintf(
+      "%s could not be fitted, so %s is the reference instead.",
+      nomo_missing_label(intended), nomo_missing_label_inline(actual)
+    ),
+    recommendation = if (identical(nomo_missing_requires(intended), "MAR") &&
+                         identical(nomo_missing_requires(actual), "MCAR")) {
+      paste(
+        "The reference now requires data missing completely at random, a",
+        "stronger assumption than FIML's, so a difference from it no longer",
+        "estimates the bias of the other strategy."
+      )
+    } else {
+      "Differences are measured from this strategy instead."
+    }
+  )
 }
 
 
@@ -602,9 +611,26 @@ nomo_missing_cfa_estimates <- function(obj) {
 }
 
 
+# A network's fit evidence is one wide row (chisq, df, ..., srmr), unlike a
+# nomo_cfa's long metric/value table. Reshaped here so the fit comparison reads
+# both the same way.
+nomo_missing_network_fit <- function(fe) {
+  columns <- c(
+    chi_square = "chisq", df = "df", p_value = "pvalue", CFI = "cfi",
+    TLI = "tli", RMSEA = "rmsea", SRMR = "srmr"
+  )
+  tibble::tibble(
+    metric = names(columns),
+    value = vapply(columns, function(column) {
+      if (column %in% names(fe)) as.numeric(fe[[column]][[1L]]) else NA_real_
+    }, numeric(1), USE.NAMES = FALSE)
+  )
+}
+
+
+# A network always carries its hypotheses' evidence, so there is always a row.
 nomo_missing_network_estimates <- function(obj) {
   h <- obj$hypothesis_evidence
-  if (!is.data.frame(h) || !nrow(h)) return(tibble::tibble())
   tibble::tibble(
     type = "hypothesis",
     parameter = h$id,
@@ -619,7 +645,6 @@ nomo_missing_network_estimates <- function(obj) {
 
 
 nomo_missing_compare <- function(long, reference, strategies) {
-  if (!nrow(long)) return(tibble::tibble())
   ref <- long[long$strategy == reference, c("type", "parameter", "estimate", "se"), drop = FALSE]
   names(ref) <- c("type", "parameter", "reference_estimate", "reference_se")
   if ("concordance" %in% names(long)) {
@@ -845,7 +870,6 @@ nomo_missing_true <- function(x) !is.na(x) & x
 
 nomo_missing_difference_log <- function(log, estimates, strategies, reference,
                                         ref_label, object) {
-  if (!nrow(estimates)) return(log)
   comparisons <- setdiff(unique(estimates$strategy), reference)
   n_cases <- max(strategies$n_used, na.rm = TRUE)
 

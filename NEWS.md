@@ -1,3 +1,17 @@
+# nomologR 0.2.1.9000 (development)
+
+- Test coverage is back to full executable-line coverage after v0.2.1 (#72). Reviewing each uncovered line found four defects, now fixed:
+  - **Network fit in `nomo_missing()`.** For a `nomo_network`, the fit comparison listed every fit index as missing. A network's fit evidence is one wide row, while a CFA's is a long table, and only the long form was read. Every strategy's chi-square, CFI, TLI, RMSEA, and SRMR now appear.
+  - **`nomo_scores()` with ordered indicators.** The parallel-model test that unit weighting implies was written for continuous indicators. With ordered indicators it was fitted by maximum likelihood against a categorical model, failed, and reported only that the comparison "could not be computed". It is now not run for ordered indicators, and the note says why.
+  - **RMSEA interval in the network fit table.** The APA fit table for a `nomo_network` had an "RMSEA [90% CI]" column but printed no interval. The interval is now read from the fit, using the robust, scaled, or plain RMSEA that the evidence reports.
+  - **Long-string with no usable scale.** The mean within-scale long-string returned `NaN` when no scale had two items. It now returns `NA`, as the inter-item SD already did.
+- Lines that no input can reach were removed rather than tested. Examples are the empty-row checks in the careless-responding indices and the guards for fitted models that are always present. The remaining guards are tested against real fitted objects:
+  - models that did not converge, have several groups, or were fitted from a covariance matrix;
+  - single-indicator and cross-loaded factors;
+  - small and degenerate response sets.
+
+  Failures that only lavaan can produce are simulated.
+
 # nomologR 0.2.1
 
 nomologR 0.2.1 completes the six workstreams that moved out of v0.2.0 at

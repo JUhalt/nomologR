@@ -336,9 +336,24 @@ nomo_apa_table.nomo_network <- function(x, type = c("hypotheses", "fit"),
   type <- match.arg(type)
   if (type == "fit") {
     fe <- x$fit_evidence
+    # The network's fit evidence keeps the RMSEA without its interval, so the
+    # interval is read from the fit: the robust, scaled, or plain one, matching
+    # the RMSEA the evidence reports.
+    measures <- tryCatch(lavaan::fitMeasures(x$fit), error = function(e) numeric())
+    variants <- c(".robust", ".scaled", "")
+    reported <- vapply(variants, function(v) {
+      is.finite(nomo_network_fit_measure(measures, paste0("rmsea", v)))
+    }, logical(1))
+    # Without any RMSEA the plain interval is absent too, so the cell is empty.
+    variant <- if (any(reported)) variants[reported][[1L]] else ""
+    ci <- function(bound) {
+      nomo_network_fit_measure(measures, paste0("rmsea.ci.", bound, variant))
+    }
     long <- data.frame(
-      metric = c("chi_square", "df", "p_value", "CFI", "TLI", "RMSEA", "SRMR"),
-      value = c(fe$chisq, fe$df, fe$pvalue, fe$cfi, fe$tli, fe$rmsea, fe$srmr),
+      metric = c("chi_square", "df", "p_value", "CFI", "TLI", "RMSEA",
+                 "RMSEA_CI_lower", "RMSEA_CI_upper", "SRMR"),
+      value = c(fe$chisq, fe$df, fe$pvalue, fe$cfi, fe$tli, fe$rmsea,
+                ci("lower"), ci("upper"), fe$srmr),
       stringsAsFactors = FALSE
     )
     return(nomo_apa_fit_table(

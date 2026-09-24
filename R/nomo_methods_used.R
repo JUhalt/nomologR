@@ -284,9 +284,9 @@ nomo_methods_used.nomo_scores <- function(x, ...) {
 #' @export
 nomo_methods_used.nomo_missing <- function(x, ...) {
   # Credited by what lavaan estimated, not by what was requested, because
-  # lavaan can substitute a different method for the one asked for.
+  # lavaan can substitute a different method for the one asked for. The
+  # original strategy always refits, so at least one strategy was fitted.
   fitted <- x$strategies$lavaan_missing[x$strategies$available]
-  if (!length(fitted)) return(character())
 
   used <- "missing_sensitivity"
   if ("listwise" %in% fitted) used <- c(used, "listwise_deletion")

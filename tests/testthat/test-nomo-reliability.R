@@ -893,6 +893,18 @@ test_that("the bootstrap stays serial by default and records it", {
 })
 
 
+test_that("the printed status names the worker count when there was more than one", {
+  rel <- nomo_reliability(reliability_boot_fit(), ci = "bootstrap",
+                          ci_boot = 20, ci_seed = 2026)
+  expect_false(any(grepl("workers", utils::capture.output(print(rel)), fixed = TRUE)))
+
+  # The print reads the recorded count, so a two-worker status prints it
+  # without running a parallel bootstrap here.
+  rel$ci_status$workers <- 2L
+  expect_output(print(rel), "| 2 workers", fixed = TRUE)
+})
+
+
 test_that("an unseeded bootstrap is flagged as not reproducible", {
   rel <- nomo_reliability(reliability_boot_fit(), ci = "bootstrap", ci_boot = 20)
   entry <- rel$decision_log[rel$decision_log$metric == "bootstrap_reproducibility", ]

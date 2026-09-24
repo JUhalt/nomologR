@@ -327,3 +327,139 @@ test_that("declaring no reverse-keyed items differs from not declaring keying", 
   expect_match(metric(checked), "declared with no reverse-keyed items", fixed = TRUE)
   expect_no_match(metric(checked), "No reverse keying was declared", fixed = TRUE)
 })
+
+
+# Edge cases (#72) -------------------------------------------------------------
+
+test_that("per-scale indices use only scales with at least two items", {
+  resp <- cbind(a1 = c(1, 2, 3), a2 = c(1, 3, 5), b1 = c(2, 2, 2))
+  scales <- list(A = c("a1", "a2"), B = "b1")
+
+  # Only A contributes: runs of (1, 1), (2, 3), (3, 5).
+  expect_equal(nomologR:::nomo_effort_long_string_mean(resp, scales), c(2, 1, 1))
+  expect_equal(
+    nomologR:::nomo_effort_inter_item_sd_mean(resp, scales),
+    c(0, stats::sd(c(2, 3)), stats::sd(c(3, 5)))
+  )
+
+  # A single respondent still gets one value per person.
+  one <- resp[1, , drop = FALSE]
+  expect_equal(nomologR:::nomo_effort_long_string_mean(one, scales), 2)
+  expect_equal(nomologR:::nomo_effort_inter_item_sd_mean(one, scales), 0)
+
+  # With no scale of two items there is no value, never a mean over nothing.
+  single <- list(B = "b1")
+  expect_true(all(is.na(nomologR:::nomo_effort_long_string_mean(resp, single))))
+  expect_true(all(is.na(nomologR:::nomo_effort_inter_item_sd_mean(resp, single))))
+})
+
+
+test_that("a respondent with fewer than two answers has no inter-item SD", {
+  resp <- rbind(c(1, NA, NA), c(1, 2, 3))
+  expect_equal(nomologR:::nomo_effort_inter_item_sd(resp), c(NA, 1))
+})
+
+
+test_that("Mahalanobis distance is refused rather than guessed", {
+  # No more complete cases than items: the covariance cannot be estimated.
+  few <- matrix(c(1, 2, 3, 2, 3, 4, 3, 1, 2), 3, 3)
+  expect_true(all(is.na(nomologR:::nomo_effort_mahalanobis(few))))
+
+  # A singular covariance has no inverse.
+  set.seed(72)
+  x <- stats::rnorm(20)
+  collinear <- cbind(x, 2 * x, stats::rnorm(20))
+  expect_true(all(is.na(nomologR:::nomo_effort_mahalanobis(collinear))))
+})
+
+
+test_that("psychometric pairs need four items, variance, and a pair past the threshold", {
+  set.seed(72)
+  three <- matrix(stats::rnorm(60), 20, 3, dimnames = list(NULL, c("a", "b", "c")))
+  expect_identical(nrow(nomologR:::nomo_effort_pairs(three, "antonym")$pairs), 0L)
+
+  independent <- matrix(stats::rnorm(400), 100, 4, dimnames = list(NULL, letters[1:4]))
+  out <- nomologR:::nomo_effort_pairs(independent, "synonym")
+  expect_identical(nrow(out$pairs), 0L)
+  expect_true(all(is.na(out$values)))
+
+  # A constant item has no correlation; it is never paired, and the pairs among
+  # the other items are still found.
+  f <- stats::rnorm(100)
+  with_constant <- cbind(
+    a1 = f + stats::rnorm(100, sd = .2), a2 = f + stats::rnorm(100, sd = .2),
+    b1 = f + stats::rnorm(100, sd = .2), b2 = f + stats::rnorm(100, sd = .2),
+    c1 = f + stats::rnorm(100, sd = .2), c2 = f + stats::rnorm(100, sd = .2),
+    k = 3
+  )
+  out <- nomologR:::nomo_effort_pairs(with_constant, "synonym")
+  expect_identical(nrow(out$pairs), 3L)
+  expect_false("k" %in% c(out$pairs$first, out$pairs$second))
+
+  # A respondent who answered too few of the paired items gets no value.
+  with_constant[1, c("a1", "b1", "c1")] <- NA
+  out <- nomologR:::nomo_effort_pairs(with_constant, "synonym")
+  expect_true(is.na(out$values[[1L]]))
+  expect_true(is.finite(out$values[[2L]]))
+})
+
+
+test_that("even-odd consistency needs three scales with both halves answered", {
+  set.seed(72)
+  f <- stats::rnorm(50)
+  resp <- cbind(
+    a1 = f + stats::rnorm(50), a2 = f + stats::rnorm(50),
+    b1 = f + stats::rnorm(50), b2 = f + stats::rnorm(50),
+    c1 = f + stats::rnorm(50), c2 = f + stats::rnorm(50)
+  )
+  scales <- list(A = c("a1", "a2"), B = c("b1", "b2"), C = c("c1", "c2"))
+
+  # Two scales missing leave one point; one scale missing leaves two, and a
+  # correlation over two points is always +1 or -1, so neither is reported.
+  resp[1, c("a1", "a2", "b1", "b2")] <- NA
+  resp[2, c("a1", "a2")] <- NA
+  out <- nomologR:::nomo_effort_even_odd(resp, scales)
+  expect_true(is.na(out[[1L]]))
+  expect_true(is.na(out[[2L]]))
+  expect_true(any(is.finite(out[-(1:2)])))
+})
+
+
+test_that("the log says when too few pairs exist, and when enough make a flag firm", {
+  # Items that all correlate positively offer no antonym pairs.
+  few <- nomo_screen(nomo_demo_continuous, effort = TRUE)$decision_log
+  antonym <- few[few$metric == "psychometric_antonym", ]
+  expect_identical(nrow(antonym), 1L)
+  expect_match(antonym$observation, "so the index was not computed", fixed = TRUE)
+  expect_match(antonym$recommendation, "at least three", fixed = TRUE)
+
+  # Six strong synonym pairs: past Meade and Craig's five, so the note is
+  # Curran's, not the caution about few pairs.
+  set.seed(72)
+  n <- 300
+  pairs <- lapply(1:6, function(k) {
+    f <- stats::rnorm(n)
+    cbind(round(3 + f + stats::rnorm(n, sd = .3)), round(3 + f + stats::rnorm(n, sd = .3)))
+  })
+  many <- as.data.frame(do.call(cbind, pairs))
+  names(many) <- paste0("i", seq_len(ncol(many)))
+  log <- nomo_screen(many, effort = TRUE)$decision_log
+  synonym <- log[log$metric == "psychometric_synonym", ]
+  expect_identical(nrow(synonym), 1L)
+  expect_match(synonym$recommendation, "close to certain evidence", fixed = TRUE)
+})
+
+
+test_that("effort arguments are validated, and every screen table is returned", {
+  fx <- effort_data()
+  expect_error(nomo_screen(fx$data, effort = TRUE, scales = "s1_1"),
+               "must be a list of character vectors", fixed = TRUE)
+  expect_error(nomo_screen(fx$data, effort = TRUE, scales = list(A = 1:3)),
+               "must be a list of character vectors", fixed = TRUE)
+  expect_error(nomo_screen(fx$data, effort = TRUE, reverse = 1),
+               "`reverse` must be a character vector", fixed = TRUE)
+
+  out <- nomo_screen(fx$data)
+  expect_identical(nomo_table(out, "distribution"), out$response_distribution)
+  expect_identical(nomo_table(out, "relationships"), out$relationship_summary)
+})

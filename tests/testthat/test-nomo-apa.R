@@ -196,3 +196,65 @@ test_that("unsupported objects and arguments are refused with an explanation", {
   expect_error(nomo_apa_table(apa_cfa(), "loadings", number = 0), "whole number")
   expect_error(nomo_apa_table(apa_cfa(), "nonsense"), "should be one of")
 })
+
+
+# Remaining paths (#72) --------------------------------------------------------
+
+test_that("a one-factor model has no factor-correlation table, and says why", {
+  one <- nomo_cfa("Agency =~ ag1 + ag2 + ag3 + ag4", nomo_demo_network)
+  expect_error(nomo_apa_table(one, "factor_correlations"), "one factor")
+})
+
+
+test_that("a reliability coefficient that was not computed is an empty cell", {
+  rel <- nomo_reliability(apa_cfa(), include_alpha = FALSE)
+  tab <- nomo_apa_table(rel)
+  # Columns: construct, omega, alpha. Omega was computed; alpha was not.
+  expect_false(any(tab$body[[2L]] == nomologR:::nomo_apa_dash))
+  expect_true(all(tab$body[[3L]] == nomologR:::nomo_apa_dash))
+})
+
+
+test_that("the network fit table reports the RMSEA with its interval", {
+  net <- nomo_network(
+    paste(apa_model, "Persistence ~ Agency", sep = "\n"),
+    data = nomo_demo_network,
+    hypotheses = nomo_hypotheses("Agency -> Persistence" = positive())
+  )
+  tab <- nomo_apa_table(net, "fit", number = 2)
+  body <- tab$body
+
+  expect_identical(body$Model, "Nomological network")
+  measures <- lavaan::fitMeasures(net$fit)
+  expect_identical(body[["RMSEA [90% CI]"]], nomologR:::nomo_apa_interval(
+    net$fit_evidence$rmsea, measures[["rmsea.ci.lower"]], measures[["rmsea.ci.upper"]],
+    digits = 3L, bounded = FALSE
+  ))
+  expect_match(body[["RMSEA [90% CI]"]], "[", fixed = TRUE)
+  expect_match(paste(tab$notes$general, collapse = " "), "N* = 800", fixed = TRUE)
+})
+
+
+test_that("probability notes follow the general and specific notes", {
+  tab <- nomologR:::nomo_apa_new(
+    body = data.frame(Stub = "a", Value = "1", stringsAsFactors = FALSE),
+    title = "A Table", stub = "Stub",
+    general = "General note.", specific = "Specific note.",
+    probability = "*p* < .05."
+  )
+  notes <- nomologR:::nomo_apa_notes_text(tab$notes)
+  expect_identical(length(notes), 3L)
+  expect_identical(notes[[3L]], "*p* < .05.")
+})
+
+
+test_that("knitting a table emits its markdown", {
+  skip_if_not_installed("knitr")
+  tab <- nomo_apa_table(apa_cfa(), "loadings", number = 1)
+  out <- knitr::knit_print(tab)
+  expect_s3_class(out, "knit_asis")
+  expect_identical(
+    as.character(out),
+    paste(nomologR:::nomo_apa_markdown(tab), collapse = "\n")
+  )
+})
