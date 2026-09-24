@@ -54,7 +54,22 @@ computed once, over every item in the run with the run's scales, and never
 inside the per-scale item audits. \code{reverse}, \code{scale_range},
 \code{pair_magnitude}, and \code{scales} may be given alongside \code{effort}. When the
 scales came from a \code{contentvalidR} handoff that declares keying, its
-keying is used unless \code{reverse} or \code{scale_range} is given here.}
+keying is used unless \code{reverse} or \code{scale_range} is given here.
+
+Two further requests attach evidence to the measurement model:
+\itemize{
+\item \code{list(scores = list(method = "sum"))} scores it with \code{\link[=nomo_scores]{nomo_scores()}},
+using a method the researcher names; nomologR does not choose one.
+\item \code{list(missing = list())} compares missing-data strategies with
+\code{\link[=nomo_missing]{nomo_missing()}}. \code{strategies} and \code{reliability} may be given. The
+comparison covers the network too when one is requested.
+}
+
+Both run after convergent and discriminant evidence, so they are in view
+when the researcher decides whether to carry the model forward. Neither is
+a stage of its own. Requested evidence that cannot be computed is recorded
+in the design log, and the workflow continues, since no later stage depends
+on it.}
 
 \item{resume}{Optional prior \code{nomo_run} object. When supplied, the existing
 source data, scales, guidance, completed component results, decisions, and
