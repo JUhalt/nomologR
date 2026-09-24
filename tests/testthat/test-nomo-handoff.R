@@ -273,3 +273,82 @@ test_that("an item placed in two scales is noted before it becomes a cross-loadi
   expect_identical(shared$severity, "review")
   expect_match(shared$observation, "TF1 belong to more than one scale", fixed = TRUE)
 })
+
+
+# The report ---------------------------------------------------------------------
+
+test_that("a run from a handoff reports its content review; other runs do not", {
+  h <- handoff_fixture("walkthrough-sort", "0.7.0")
+  run <- nomo_run(handoff_responses(walkthrough_items), scales = h,
+                  settings = list(factors = list(seed = 46)))
+
+  review <- nomologR:::nomo_report_content_review(run)
+  expect_match(review$summary, "content review in contentvalidR 0.7.0", fixed = TRUE)
+  expect_match(review$summary, "10 of 12 reviewed item(s) were carried", fixed = TRUE)
+  expect_match(review$summary, "EF2, TF2, on a 1 to 5 response scale", fixed = TRUE)
+  expect_match(review$summary, "Howard & Melloy (2016)", fixed = TRUE)
+  expect_identical(nrow(review$items), 12L)
+  expect_identical(review$items$recommendation[review$items$item == "EF5"], "Review")
+
+  scales <- list(A = c("EF1", "EF2", "EF3"), B = c("TF1", "TF2", "TF3"))
+  plain <- nomo_run(handoff_responses(walkthrough_items), scales = scales,
+                    settings = list(factors = list(seed = 46)))
+  expect_null(nomologR:::nomo_report_content_review(plain))
+
+  # Each keying state has its own sentence.
+  undeclared <- nomo_run(handoff_responses(walkthrough_items),
+                         scales = handoff_fixture("walkthrough-sort", "0.6.0"),
+                         settings = list(factors = list(seed = 46)))
+  expect_match(nomologR:::nomo_report_content_review(undeclared)$summary,
+               "predates keying fields", fixed = TRUE)
+  run$handoff$keying$declared <- FALSE
+  expect_match(nomologR:::nomo_report_content_review(run)$summary,
+               "Reverse keying was not declared.", fixed = TRUE)
+  run$handoff$keying$declared <- TRUE
+  run$handoff$keying$reverse <- character(0)
+  expect_match(nomologR:::nomo_report_content_review(run)$summary,
+               "no reverse-keyed item", fixed = TRUE)
+  run$handoff$keying$reverse <- "EF2"
+  run$handoff$keying$scale_range <- NULL
+  expect_match(nomologR:::nomo_report_content_review(run)$summary,
+               "with no response scale recorded", fixed = TRUE)
+})
+
+
+test_that("the rendered report opens with the content review", {
+  skip_on_cran()
+  skip_if_not_installed("rmarkdown")
+  skip_if_not_installed("knitr")
+  skip_if_not(rmarkdown::pandoc_available())
+
+  run <- nomo_run(handoff_responses(walkthrough_items),
+                  scales = handoff_fixture("walkthrough-sort", "0.7.0"),
+                  settings = list(factors = list(seed = 46)))
+  file <- nomo_report(run, file = tempfile(fileext = ".html"),
+                      include_plots = FALSE, include_session = FALSE, quiet = TRUE)
+  # Pandoc wraps long lines, so whitespace is collapsed before matching.
+  html <- gsub("[[:space:]]+", " ", paste(readLines(file, warn = FALSE), collapse = " "))
+
+  expect_match(html, 'id="content-review"', fixed = TRUE)
+  expect_match(html, "content review in contentvalidR 0.7.0", fixed = TRUE)
+  expect_match(html, "Howard &amp; Melloy", fixed = TRUE)
+})
+
+
+test_that("the handoff and the keying the screen reports are the same, whatever the version", {
+  # Keying declared with no range: nothing to recode against, and the screen's
+  # own refusal is the backstop when reverse-keyed items would need recoding.
+  h <- handoff_fixture("walkthrough-sort", "0.7.0")
+  h$item_evidence$response_min <- NA_integer_
+  h$item_evidence$response_max <- NA_integer_
+  read <- nomologR:::nomo_handoff_read(h)
+  expect_identical(read$keying$reverse, c("EF2", "TF2"))
+  expect_null(read$keying$scale_range)
+  expect_match(nomologR:::nomo_handoff_log(read)$observation[
+    nomologR:::nomo_handoff_log(read)$metric == "keying"],
+    "without the response scale", fixed = TRUE)
+  expect_error(
+    nomo_screen(handoff_responses(walkthrough_items), items = h, effort = TRUE),
+    "scale_range"
+  )
+})

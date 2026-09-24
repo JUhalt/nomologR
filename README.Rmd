@@ -99,6 +99,20 @@ empirical data are available and follows the measure through dimensionality,
 measurement modeling, reliability, construct-validity evidence, invariance,
 and theory-specified nomological networks.
 
+The two meet at a handoff. `contentvalidR`'s `content_handoff()` records which
+items content review carried forward, why each held-back item was held back,
+and under which rule. `nomo_screen(data, items = handoff)` and
+`nomo_run(data, scales = handoff)` take it directly, so the reasons travel with
+the items:
+
+```r
+run <- nomo_run(responses, scales = handoff)
+```
+
+Only carried items are analysed. Held-back items are reported in
+`contentvalidR`'s own words, and a report from the run opens with the content
+review. Neither package depends on the other.
+
 ## What works now
 
 ### 1. `nomo_screen()` — data and item audit
