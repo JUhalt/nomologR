@@ -354,6 +354,78 @@ nomo_report_effort <- function(screen) {
 }
 
 
+# Scores computed within a run (#73): what they are, Grice's criteria, the
+# parallel-model test a unit weight implies, and the notes.
+nomo_report_scores <- function(scores) {
+  parallel <- scores$parallel_test
+  parallel_text <- if (isTRUE(parallel$available)) {
+    sprintf(
+      paste(
+        "The parallel model that unit weighting assumes was compared with the",
+        "fitted model: chi-square difference %.2f on %s df, %s."
+      ),
+      parallel$chisq_diff, format(parallel$df_diff, trim = TRUE),
+      nomo_compare_format_p(parallel$p_value)
+    )
+  } else if (nzchar(parallel$note)) {
+    parallel$note
+  }
+
+  list(
+    summary = paste(c(
+      sprintf(
+        "%s-weighted scores (method: %s) for %d case(s) and %d factor(s), computed from the fitted measurement model.",
+        if (identical(scores$weighting, "unit")) "Unit" else "Model",
+        scores$method, nrow(scores$scores), nrow(scores$diagnostics)
+      ),
+      parallel_text,
+      "No value here is a pass/fail threshold."
+    ), collapse = " "),
+    diagnostics = scores$diagnostics,
+    notes = scores$notes
+  )
+}
+
+
+# Missing-data sensitivity computed within a run (#73).
+nomo_report_missing <- function(m) {
+  p <- m$pattern
+  strategies <- m$strategies[, c(
+    "label", "lavaan_missing", "requires", "role", "available", "n_used",
+    "converged", "admissible"
+  )]
+  compared <- m$estimates[m$estimates$role == "comparison" &
+                            is.finite(m$estimates$difference_in_se), , drop = FALSE]
+  compared <- compared[order(-abs(compared$difference_in_se)), , drop = FALSE]
+  differences <- tibble::tibble(
+    parameter = compared$parameter,
+    strategy = nomo_missing_label(compared$strategy),
+    estimate = compared$estimate,
+    reference = compared$reference_estimate,
+    difference_in_se = compared$difference_in_se
+  )
+
+  list(
+    summary = sprintf(
+      paste(
+        "%d of %d cases (%.1f%%) are missing at least one modelled variable.",
+        "The reference is %s. Differences are in units of the reference standard",
+        "error; Schafer and Graham (2002) treat a bias beyond about half a",
+        "standard error as practically important. Whether data are missing at",
+        "random cannot be tested from the data at hand."
+      ),
+      p$n_incomplete, p$n_cases, 100 * p$pct_incomplete,
+      nomo_missing_label_inline(m$reference)
+    ),
+    strategies = strategies,
+    differences = differences,
+    fit = m$fit,
+    reliability = m$reliability,
+    log = m$decision_log
+  )
+}
+
+
 nomo_report_call_history <- function(x) {
   calls <- x$call_history
   if (is.null(calls) || !length(calls)) {

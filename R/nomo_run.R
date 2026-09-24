@@ -303,6 +303,20 @@ nomo_run_resume <- function(resume,
 #'   `pair_magnitude`, and `scales` may be given alongside `effort`. When the
 #'   scales came from a `contentvalidR` handoff that declares keying, its
 #'   keying is used unless `reverse` or `scale_range` is given here.
+#'
+#'   Two further requests attach evidence to the measurement model:
+#'
+#'   * `list(scores = list(method = "sum"))` scores it with [nomo_scores()],
+#'     using a method the researcher names; nomologR does not choose one.
+#'   * `list(missing = list())` compares missing-data strategies with
+#'     [nomo_missing()]. `strategies` and `reliability` may be given. The
+#'     comparison covers the network too when one is requested.
+#'
+#'   Both run after convergent and discriminant evidence, so they are in view
+#'   when the researcher decides whether to carry the model forward. Neither is
+#'   a stage of its own. Requested evidence that cannot be computed is recorded
+#'   in the design log, and the workflow continues, since no later stage depends
+#'   on it.
 #' @param resume Optional prior `nomo_run` object. When supplied, the existing
 #'   source data, scales, guidance, completed component results, decisions, and
 #'   provenance are reused.

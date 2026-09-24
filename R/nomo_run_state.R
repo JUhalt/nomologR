@@ -197,8 +197,17 @@ nomo_run_validate_scales <- function(scales, roles) {
 }
 
 
+# Settings for evidence attached to a stage rather than being a stage of its
+# own (#73): scores and missing-data sensitivity follow the CFA, and the latter
+# the network too. They are opt-in and never appear in the stage table, so a
+# run that does not request them has exactly the shape it always had.
+nomo_run_attached_settings <- function() c("scores", "missing")
+
+
 nomo_run_reserved_settings <- function() {
   list(
+    scores = c("fit", "guidance"),
+    missing = c("x", "data"),
     screen = c("data", "items", "guidance"),
     factors = c("data", "items", "guidance"),
     efa = c("data", "items", "factors", "factor_count", "guidance"),
@@ -226,7 +235,7 @@ nomo_run_validate_settings <- function(settings, scales) {
     stop("`settings` must use unique stage names.", call. = FALSE)
   }
 
-  bad <- setdiff(nm, nomo_run_stage_order())
+  bad <- setdiff(nm, c(nomo_run_stage_order(), nomo_run_attached_settings()))
   if (length(bad)) {
     stop(
       sprintf(
@@ -313,6 +322,35 @@ nomo_run_validate_settings <- function(settings, scales) {
     stop("`settings$screen$effort` must be TRUE or FALSE.", call. = FALSE)
   }
 
+  if ("scores" %in% nm && length(settings$scores)) {
+    method <- settings$scores$method
+    methods <- c("sum", "mean", "regression", "bartlett")
+    if (is.null(method) || !is.character(method) || length(method) != 1L ||
+          !method %in% methods) {
+      stop(
+        paste0(
+          "Requested scores need `settings$scores$method`, one of ",
+          paste0("\"", methods, "\"", collapse = ", "),
+          ". nomologR does not choose a scoring method."
+        ),
+        call. = FALSE
+      )
+    }
+  }
+
+  if ("missing" %in% nm && length(settings$missing)) {
+    strategies <- settings$missing$strategies
+    if (!is.null(strategies) && (!is.character(strategies) || !length(strategies) ||
+                                   anyNA(strategies))) {
+      stop("`settings$missing$strategies` must be a character vector.", call. = FALSE)
+    }
+    reliability <- settings$missing$reliability
+    if (!is.null(reliability) &&
+          (!is.logical(reliability) || length(reliability) != 1L || is.na(reliability))) {
+      stop("`settings$missing$reliability` must be TRUE or FALSE.", call. = FALSE)
+    }
+  }
+
   if ("invariance" %in% nm && length(settings$invariance)) {
     group <- settings$invariance$group
     if (is.null(group) ||
@@ -386,11 +424,14 @@ nomo_run_merge_future_settings <- function(x, settings) {
   for (stage in names(settings)) {
     current <- x$settings[[stage]]
     new <- settings[[stage]]
-    stage_status <- x$stage_status$status[
-      x$stage_status$stage == stage
-    ][[1L]]
 
-    locked <- stage_status %in% c("completed", "blocked")
+    # Attached evidence has no stage status; it is locked once computed.
+    locked <- if (stage %in% nomo_run_attached_settings()) {
+      !is.null(x$results[[stage]])
+    } else {
+      x$stage_status$status[x$stage_status$stage == stage][[1L]] %in%
+        c("completed", "blocked")
+    }
     changed <- !identical(current, new)
 
     if (locked && changed) {

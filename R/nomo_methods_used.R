@@ -524,7 +524,9 @@ nomo_methods_used_component <- function(component) {
       inherits(component, "nomo_invariance") ||
       inherits(component, "nomo_network") ||
       inherits(component, "nomo_compare") ||
-      inherits(component, "nomo_partial")) {
+      inherits(component, "nomo_partial") ||
+      inherits(component, "nomo_scores") ||
+      inherits(component, "nomo_missing")) {
     return(nomo_methods_used(component))
   }
 

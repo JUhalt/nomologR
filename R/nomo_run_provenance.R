@@ -4,52 +4,80 @@ nomo_run_component_logs <- function(x) {
   rows <- list()
   cursor <- 0L
 
+  add <- function(component, scope, obj) {
+    log <- obj$decision_log
+    if (is.null(log) || !inherits(log, "data.frame") || !nrow(log)) return(invisible())
+    tab <- tibble::as_tibble(log)
+    tab$pipeline_component <- component
+    tab$pipeline_scope <- scope
+    tab <- tab[, c(
+      "pipeline_component",
+      "pipeline_scope",
+      setdiff(names(tab), c("pipeline_component", "pipeline_scope"))
+    ), drop = FALSE]
+    cursor <<- cursor + 1L
+    rows[[cursor]] <<- tab
+  }
+
   for (stage in nomo_run_stage_order()) {
     stage_results <- x$results[[stage]]
-    if (is.null(stage_results)) next
+    if (!is.null(stage_results)) {
+      if (!is.list(stage_results) ||
+          inherits(stage_results, c(
+            "nomo_cfa",
+            "nomo_reliability",
+            "nomo_validity",
+            "nomo_invariance",
+            "nomo_network"
+          ))) {
+        stage_results <- list(workflow = stage_results)
+      }
 
-    # The instrument-wide careless-responding screen (#73) belongs with the
-    # screening stage, after the per-scale audits.
+      if (is.null(names(stage_results))) {
+        names(stage_results) <- rep("workflow", length(stage_results))
+      }
+
+      for (scope in names(stage_results)) add(stage, scope, stage_results[[scope]])
+    }
+
+    # Evidence attached to a stage (#73) follows it in the log: the
+    # instrument-wide careless-responding screen after the per-scale audits,
+    # scores and the measurement model's missing-data sensitivity after
+    # validity, and the network's after the network.
     if (identical(stage, "screen") && !is.null(x$results$effort)) {
-      stage_results <- c(stage_results, list(careless_responding = x$results$effort))
+      add("screen", "careless_responding", x$results$effort)
     }
-
-    if (!is.list(stage_results) ||
-        inherits(stage_results, c(
-          "nomo_cfa",
-          "nomo_reliability",
-          "nomo_validity",
-          "nomo_invariance",
-          "nomo_network"
-        ))) {
-      stage_results <- list(workflow = stage_results)
+    if (identical(stage, "validity")) {
+      if (!is.null(x$results$scores)) {
+        add("scores", "measurement_model",
+            list(decision_log = nomo_run_scores_log(x$results$scores)))
+      }
+      if (!is.null(x$results$missing$cfa)) {
+        add("missing", "measurement_model", x$results$missing$cfa)
+      }
     }
-
-    if (is.null(names(stage_results))) {
-      names(stage_results) <- rep("workflow", length(stage_results))
-    }
-
-    for (scope in names(stage_results)) {
-      obj <- stage_results[[scope]]
-      log <- obj$decision_log
-      if (is.null(log) || !inherits(log, "data.frame") || !nrow(log)) next
-
-      tab <- tibble::as_tibble(log)
-      tab$pipeline_component <- stage
-      tab$pipeline_scope <- scope
-      tab <- tab[, c(
-        "pipeline_component",
-        "pipeline_scope",
-        setdiff(names(tab), c("pipeline_component", "pipeline_scope"))
-      ), drop = FALSE]
-
-      cursor <- cursor + 1L
-      rows[[cursor]] <- tab
+    if (identical(stage, "network") && !is.null(x$results$missing$network)) {
+      add("missing", "theory_network", x$results$missing$network)
     }
   }
 
   if (!length(rows)) return(tibble::tibble())
   dplyr::bind_rows(rows)
+}
+
+
+# nomo_scores() reports notes rather than a decision log; as log rows they
+# reach the component log and the report's evidence trace like any other.
+nomo_run_scores_log <- function(scores) {
+  log <- nomo_log_new()
+  notes <- scores$notes
+  for (i in seq_len(nrow(notes))) {
+    log <- nomo_log_add(
+      log, stage = "scores", object = "scores", metric = notes$topic[[i]],
+      severity = notes$severity[[i]], observation = notes$note[[i]]
+    )
+  }
+  log
 }
 
 

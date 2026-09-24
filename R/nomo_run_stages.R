@@ -214,6 +214,7 @@ nomo_run_finish_downstream <- function(x) {
 
   x <- nomo_run_run_network(x)
   if (identical(x$status, "blocked")) return(x)
+  x <- nomo_run_run_missing(x, "network")
 
   x$status <- "complete"
   x$next_stage <- NULL

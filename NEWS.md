@@ -1,5 +1,14 @@
 # nomologR 0.2.1.9000 (development)
 
+- `nomo_run()` can score the measurement model and compare missing-data strategies, and its report shows both (#73, second of three parts).
+  - **Scores.** `settings = list(scores = list(method = "sum"))` scores the model with `nomo_scores()`. The researcher must name the method; a request without one is refused, because nomologR does not choose a scoring method.
+  - **Missing-data sensitivity.** `settings = list(missing = list())` compares strategies with `nomo_missing()` for the measurement model, and for the network too when one is requested.
+  - **When they run.** Both run after convergent and discriminant evidence, so they are in view when the researcher decides whether to carry the model forward. Each matches the standalone call.
+  - **Not stages.** Neither is a stage, so the stage table keeps its shape, and a run that requests neither is unchanged.
+  - **If they cannot be computed.** Requested evidence that cannot be computed is recorded in the design log and the run continues, since no later stage depends on it.
+  - **Resuming.** Both can be requested when resuming before the CFA, and are locked once computed.
+  - **Where they appear.** Their evidence joins the component log, their methods are credited to the run, and the report gains "Scores" and "Missing-data sensitivity" sections.
+
 - A written stability and deprecation policy, on the package help page (`?nomologR`) and in the README (#74). From 0.3.0, the first CRAN release, the public interface changes only after a deprecation period.
   - **Covered:** exported functions, documented arguments and defaults, documented fields of returned objects, `nomo_table()` types, and decision-log columns.
   - **Breaking changes:** any change that breaks the interface, including a changed default that changes results, is deprecated for at least one minor release first.

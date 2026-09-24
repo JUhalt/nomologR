@@ -516,6 +516,18 @@ if (!length(val_list)) {
 }
 ```
 
+```{r scores-section, results='asis'}
+if (!is.null(run$results$scores)) {
+  scores_report <- nomologR:::nomo_report_scores(run$results$scores)
+  cat("\n# Scores\n\n")
+  emit_note(scores_report$summary)
+  cat("\n## Score properties (Grice, 2001)\n\n")
+  emit_table(scores_report$diagnostics, truncate = FALSE)
+  cat("\n## Notes\n\n")
+  emit_table(scores_report$notes, empty = "No notes were recorded.", truncate = FALSE)
+}
+```
+
 # Measurement invariance
 
 ```{r invariance, results='asis'}
@@ -590,6 +602,30 @@ if (!length(net_list)) {
 
   emit_plot(net, "effects")
   if (nrow(replication)) emit_plot(net, "replication")
+}
+```
+
+```{r missing-section, results='asis'}
+if (length(run$results$missing)) {
+  cat("\n# Missing-data sensitivity\n\n")
+  targets <- c(cfa = "Measurement model", network = "Nomological network")
+  for (target in intersect(names(targets), names(run$results$missing))) {
+    missing_report <- nomologR:::nomo_report_missing(run$results$missing[[target]])
+    cat("\n## ", targets[[target]], "\n\n", sep = "")
+    emit_note(missing_report$summary)
+    cat("\n### Strategies\n\n")
+    emit_table(missing_report$strategies, truncate = FALSE)
+    cat("\n### Largest differences from the reference\n\n")
+    emit_table(missing_report$differences, empty = "No comparison strategy was fitted.")
+    cat("\n### Fit by strategy\n\n")
+    emit_table(missing_report$fit, truncate = FALSE)
+    if (!is.null(missing_report$reliability) && nrow(missing_report$reliability)) {
+      cat("\n### Reliability by strategy\n\n")
+      emit_table(missing_report$reliability, truncate = FALSE)
+    }
+    cat("\n### Missing-data evidence\n\n")
+    emit_table(missing_report$log, truncate = FALSE)
+  }
 }
 ```
 
