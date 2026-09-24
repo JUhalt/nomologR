@@ -30,7 +30,8 @@ devtools::check()
 ```
 
 6. For substantive computational changes, inspect coverage and include known-answer, simulation, or direct-engine regression tests where appropriate.
-7. Open a pull request and allow the GitHub Actions checks to complete.
+7. A change to the public interface follows the stability and deprecation policy on the package help page, `?nomologR`. A breaking change is deprecated for at least one minor release before it takes effect.
+8. Open a pull request and allow the GitHub Actions checks to complete.
 
 ## Statistical-method contributions
 

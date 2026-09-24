@@ -9,5 +9,45 @@
 #' network. Numerical reference values are prompts for investigation rather than
 #' universal deletion or validity rules.
 #'
+#' @section Stability and deprecation:
+#' From version 0.3.0, the first CRAN release, the public interface changes only
+#' after a deprecation period. Code written against one release keeps working in
+#' the next.
+#'
+#' **What is covered.** The interface is:
+#'
+#' * the exported functions;
+#' * their documented arguments and defaults;
+#' * the documented fields of the objects they return;
+#' * the `type` values [nomo_table()] accepts;
+#' * the columns of decision logs.
+#'
+#' Functions reached only with `:::`, undocumented fields, the wording of
+#' decision-log rows, and the layout of rendered reports are not covered.
+#'
+#' **Deprecation before removal.** A breaking change is deprecated for at least
+#' one minor release before it takes effect. Breaking changes include removing
+#' or renaming any part of the interface, or changing a default in a way that
+#' changes results. While deprecated, the function or argument keeps working,
+#' warns once per session naming its replacement, and is listed in NEWS.
+#'
+#' **What is not breaking.** Any release may add new functions, new arguments
+#' whose defaults leave results unchanged, new fields in returned objects, or
+#' new decision-log rows. Address fields by name, not position.
+#'
+#' **Experimental.** Two parts of the interface are experimental until 1.0.0 and
+#' may change without a deprecation period, with the change described in NEWS:
+#'
+#' * [nomo_missing()]. Its rule for flagging a difference may be refined to
+#'   separate sampling variability from bias.
+#' * The layout of [nomo_apa_table()] tables, which may be adjusted as APA
+#'   style is applied to more tables.
+#'
+#' **The contentvalidR handoff.** The exchange object is versioned by its
+#' producer. Within a schema version, fields are only added, and nomologR
+#' ignores fields it does not know. Anything else is a new schema version,
+#' agreed with `contentvalidR`. nomologR refuses a schema version it does not
+#' read, naming both package versions.
+#'
 #' @keywords internal
 "_PACKAGE"
