@@ -124,7 +124,15 @@ one-call run. A structured decision can be written as
 <code>list(network = list(hypotheses = h))</code>. Pipeline-controlled arguments such
 as component data/model inputs cannot be overridden through <code>settings</code>.
 When resuming, settings for future stages may be supplied without
-recomputing completed stages.</p></dd>
+recomputing completed stages.</p>
+<p><code>list(screen = list(effort = TRUE))</code> adds careless-responding indices (see
+<code><a href="nomo_screen.html">nomo_screen()</a></code>). They describe a respondent across the whole instrument,
+and even-odd consistency cannot be computed within one scale. So they are
+computed once, over every item in the run with the run's scales, and never
+inside the per-scale item audits. <code>reverse</code>, <code>scale_range</code>,
+<code>pair_magnitude</code>, and <code>scales</code> may be given alongside <code>effort</code>. When the
+scales came from a <code>contentvalidR</code> handoff that declares keying, its
+keying is used unless <code>reverse</code> or <code>scale_range</code> is given here.</p></dd>
 
 
 <dt id="arg-resume">resume<a class="anchor" aria-label="anchor" href="#arg-resume"></a></dt>

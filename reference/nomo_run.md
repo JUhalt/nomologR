@@ -68,6 +68,17 @@ nomo_run(
   `settings`. When resuming, settings for future stages may be supplied
   without recomputing completed stages.
 
+  `list(screen = list(effort = TRUE))` adds careless-responding indices
+  (see
+  [`nomo_screen()`](https://juhalt.github.io/nomologR/reference/nomo_screen.md)).
+  They describe a respondent across the whole instrument, and even-odd
+  consistency cannot be computed within one scale. So they are computed
+  once, over every item in the run with the run's scales, and never
+  inside the per-scale item audits. `reverse`, `scale_range`,
+  `pair_magnitude`, and `scales` may be given alongside `effort`. When
+  the scales came from a `contentvalidR` handoff that declares keying,
+  its keying is used unless `reverse` or `scale_range` is given here.
+
 - resume:
 
   Optional prior `nomo_run` object. When supplied, the existing source

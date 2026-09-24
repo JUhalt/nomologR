@@ -25,6 +25,32 @@
     [\#53](https://github.com/JUhalt/nomologR/issues/53) requires this
     policy for the joint 1.0 release with `contentvalidR`.
 
+- [`nomo_run()`](https://juhalt.github.io/nomologR/reference/nomo_run.md)
+  computes careless-responding indices when
+  `settings = list(screen = list(effort = TRUE))` is given
+  ([\#73](https://github.com/JUhalt/nomologR/issues/73), first of three
+  parts).
+
+  - **Once, across the instrument.** The indices describe a respondent
+    across the whole instrument, and several cannot be computed within
+    one scale. Even-odd consistency correlates across at least three
+    scales, and psychometric pairs can span scales. So they are computed
+    once, over every item in the run with the run’s scales, and the
+    per-scale item audits are unchanged. The result matches a standalone
+    `nomo_screen(effort = TRUE)` call exactly.
+  - **Keying.** `reverse`, `scale_range`, `pair_magnitude`, and `scales`
+    can be set alongside `effort`. When the scales came from a
+    `contentvalidR` handoff that declares keying, that keying is used
+    unless the settings give their own, and the design log records which
+    applied.
+  - **Where it appears.** The indices’ log rows join the run’s component
+    log, and the methods are credited to the run. The report gains a
+    “Careless responding” section after the item audits: a summary, one
+    row per index with the rule a source states for it or “none stated”,
+    and the evidence rows.
+  - **Refusals.** An unreadable `effort` value is refused before any
+    stage runs.
+
 - [`nomo_screen()`](https://juhalt.github.io/nomologR/reference/nomo_screen.md)
   and
   [`nomo_run()`](https://juhalt.github.io/nomologR/reference/nomo_run.md)
