@@ -45,6 +45,11 @@ No cell reads PASS or FAIL, and fit indices are not labeled good or poor.
 The rules come from the \emph{Publication Manual of the American Psychological
 Association} (7th ed.), checked against Purdue OWL's APA 7 guides.
 Journal-specific templates are out of scope.
+
+\strong{Experimental layout.} The layout of these tables is experimental until
+nomologR 1.0.0 and may be adjusted as APA style is applied to more tables.
+Any change will be described in NEWS; see \code{?nomologR} for the stability
+policy.
 }
 \references{
 American Psychological Association. (2020). \emph{Publication manual of the

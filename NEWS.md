@@ -1,5 +1,11 @@
 # nomologR 0.2.1.9000 (development)
 
+- A written stability and deprecation policy, on the package help page (`?nomologR`) and in the README (#74). From 0.3.0, the first CRAN release, the public interface changes only after a deprecation period.
+  - **Covered:** exported functions, documented arguments and defaults, documented fields of returned objects, `nomo_table()` types, and decision-log columns.
+  - **Breaking changes:** any change that breaks the interface, including a changed default that changes results, is deprecated for at least one minor release first.
+  - **Experimental until 1.0.0:** `nomo_missing()`, whose flagging rule may be refined, and the layout of `nomo_apa_table()` tables. Both are marked in their help pages.
+  - **Required by the joint release:** #53 requires this policy for the joint 1.0 release with `contentvalidR`.
+
 - `nomo_run()` computes careless-responding indices when `settings = list(screen = list(effort = TRUE))` is given (#73, first of three parts).
   - **Once, across the instrument.** The indices describe a respondent across the whole instrument, and several cannot be computed within one scale. Even-odd consistency correlates across at least three scales, and psychometric pairs can span scales. So they are computed once, over every item in the run with the run's scales, and the per-scale item audits are unchanged. The result matches a standalone `nomo_screen(effort = TRUE)` call exactly.
   - **Keying.** `reverse`, `scale_range`, `pair_magnitude`, and `scales` can be set alongside `effort`. When the scales came from a `contentvalidR` handoff that declares keying, that keying is used unless the settings give their own, and the design log records which applied.

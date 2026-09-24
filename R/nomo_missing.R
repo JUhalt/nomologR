@@ -60,6 +60,11 @@ nomo_missing_half_se <- 0.5
 #' A hypothesis whose concordance with its prediction differs between
 #' strategies is also flagged for review.
 #'
+#' **Experimental.** This function is experimental until nomologR 1.0.0. Its
+#' rule for flagging a difference may be refined to separate sampling
+#' variability from bias. Any change will be described in NEWS; see the package
+#' help page, `?nomologR`, for the stability policy.
+#'
 #' **Not implemented.** Mean substitution is not offered. It understates
 #' variances and distorts covariances. Schafer and Graham (2002) show that even
 #' under MCAR it narrows confidence intervals below their nominal coverage.
