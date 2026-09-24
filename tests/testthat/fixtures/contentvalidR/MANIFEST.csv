@@ -1,0 +1,8 @@
+file,contentvalidR_version,tag,commit_sha,md5,r_version,generated
+handoff-delphi-v0.6.0.rds,0.6.0,v0.6.0,74ffa404e3115b430156e14baa16d9b092438066,c6faa252d1cad5e5d58a23aa1e9b6766,4.6.1,2026-09-23
+handoff-delphi-v0.7.0.rds,0.7.0,v0.7.0,cbb2523b085a5a832345b422eec82e5f92c5ebaf,fa6940cadccd93ebf736be59f9b041c7,4.6.1,2026-09-23
+handoff-expert-krippendorff-v0.6.0.rds,0.6.0,v0.6.0,74ffa404e3115b430156e14baa16d9b092438066,241ca760d91e52ec6b7ae696d4aca400,4.6.1,2026-09-23
+handoff-expert-krippendorff-v0.7.0.rds,0.7.0,v0.7.0,cbb2523b085a5a832345b422eec82e5f92c5ebaf,b241320816e693cefdf4bf3cab586e24,4.6.1,2026-09-23
+handoff-walkthrough-sort-v0.6.0.rds,0.6.0,v0.6.0,74ffa404e3115b430156e14baa16d9b092438066,91b48fa7b55795693b44569dbfc1d34e,4.6.1,2026-09-23
+handoff-walkthrough-sort-v0.7.0.rds,0.7.0,v0.7.0,cbb2523b085a5a832345b422eec82e5f92c5ebaf,480391161e5c8804a7572cbc35d91564,4.6.1,2026-09-23
+make-handoff-fixtures.R,,,,5197f807fc1465748fa1dfa59cd66a10,4.6.1,2026-09-23

@@ -258,6 +258,15 @@ emit_table(stage_status, empty = "No stage-status table is available.")
 emit_table(scales, empty = "No scale definitions are available.")
 ```
 
+```{r content-review, results='asis'}
+content_review <- nomologR:::nomo_report_content_review(run)
+if (!is.null(content_review)) {
+  cat("\n## Content review\n\n")
+  emit_note(content_review$summary)
+  emit_table(content_review$items, truncate = FALSE)
+}
+```
+
 ## Sample/data roles
 
 ```{r}

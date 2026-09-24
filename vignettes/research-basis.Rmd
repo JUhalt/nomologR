@@ -92,10 +92,18 @@ single exclusion rule (Meade & Craig, 2012; Huang et al., 2012; Curran, 2016).
 distributions, unused categories, response concentration, near-zero variance
 (using heuristics described by Kuhn & Johnson, 2013), corrected item–rest and
 inter-item correlations, and descriptive shape statistics. Flags are review
-prompts; no item or case is removed or recoded.
+prompts; no item or case is removed or recoded. With `effort = TRUE` it adds
+the careless-responding indices those sources describe (long-string,
+inter-item standard deviation, Mahalanobis distance, even-odd consistency, and
+psychometric antonyms and synonyms). They are reported side by side because
+they detect different failures, and a case is flagged only where a source
+states a rule.
 
-**Planned.** Insufficient-effort responding indices
-([#34](https://github.com/JUhalt/nomologR/issues/34)).
+Items can arrive from content review: a handoff from `contentvalidR` supplies
+the carried items and their construct mapping. Held-back items are reported in
+that package's own words, and the log records that item membership came from
+content review rather than from these data
+([#46](https://github.com/JUhalt/nomologR/issues/46)).
 
 # 2. Dimensionality — `nomo_factors()`
 

@@ -47,7 +47,7 @@ nomo_run_component_logs <- function(x) {
 }
 
 
-nomo_run_initial_log <- function(scales, roles) {
+nomo_run_initial_log <- function(scales, roles, handoff = NULL) {
   log <- nomo_run_workflow_log_new()
   same_sample <- identical(roles$design, "same_sample")
 
@@ -98,17 +98,29 @@ nomo_run_initial_log <- function(scales, roles) {
     source = "researcher_input"
   )
 
+  if (!is.null(handoff)) {
+    log <- nomo_run_handoff_log(log, handoff)
+  }
+
   for (nm in names(scales)) {
     log <- nomo_run_workflow_log_add(
       log,
       id = paste0("scale_definition:", nm),
       stage = "design",
       scope = nm,
-      observation = sprintf(
-        "Scale `%s` contains %d explicitly supplied candidate item(s).",
-        nm,
-        length(scales[[nm]])
-      ),
+      observation = if (is.null(handoff)) {
+        sprintf(
+          "Scale `%s` contains %d explicitly supplied candidate item(s).",
+          nm,
+          length(scales[[nm]])
+        )
+      } else {
+        sprintf(
+          "Scale `%s` contains %d item(s) carried from content review in %s %s.",
+          nm, length(scales[[nm]]),
+          handoff$provenance$package, handoff$provenance$package_version
+        )
+      },
       reason = paste(
         "Item membership changes construct representation and cannot be chosen",
         "silently by the pipeline."
@@ -119,7 +131,7 @@ nomo_run_initial_log <- function(scales, roles) {
         "restricted to the supplied item set."
       ),
       decision = paste(scales[[nm]], collapse = ", "),
-      source = "researcher_input"
+      source = if (is.null(handoff)) "researcher_input" else "content_review"
     )
   }
 
@@ -266,4 +278,63 @@ nomo_run_settings_table <- function(x) {
       character(1)
     )
   )
+}
+
+
+# The run's design log records where its item membership came from when a
+# contentvalidR handoff defined the scales (#46): the producer and its carry
+# rule, and each item content review held back, quoted in that package's words.
+nomo_run_handoff_log <- function(log, handoff) {
+  p <- handoff$provenance
+  ev <- handoff$evidence
+
+  log <- nomo_run_workflow_log_add(
+    log,
+    id = "content_review",
+    stage = "design",
+    scope = "scales",
+    observation = sprintf(
+      paste(
+        "Scales and item membership come from content review in %s %s",
+        "(workflow: %s; carry rule: %s): %d of %d reviewed item(s) were carried."
+      ),
+      p$package, p$package_version, p$workflow, p$keep,
+      sum(ev$carried), nrow(ev)
+    ),
+    reason = paste(
+      "Content review is where the validity argument starts, so the archive",
+      "records which review supplied the items and under which rule."
+    ),
+    options = paste(
+      "Changing which items are analysed is a researcher decision; start a new",
+      "run with the revised membership and record why."
+    ),
+    consequence = paste(
+      "Held-back items are not analysed, and nomologR neither reinstates nor",
+      "drops an item on the strength of these data."
+    ),
+    decision = paste(handoff$items, collapse = ", "),
+    source = "content_review"
+  )
+
+  held <- ev[!ev$carried, , drop = FALSE]
+  for (i in seq_len(nrow(held))) {
+    log <- nomo_run_workflow_log_add(
+      log,
+      id = paste0("held_back:", held$item[[i]]),
+      stage = "design",
+      scope = if (is.na(held$scale[[i]])) "scales" else as.character(held$scale[[i]]),
+      observation = sprintf(
+        "%s was held back by content review: status \"%s\", recommendation \"%s\".",
+        held$item[[i]], held$status[[i]], held$recommendation[[i]]
+      ),
+      reason = "Only items carried by content review are analysed.",
+      options = "Reinstating it is a researcher decision to record with its rationale.",
+      consequence = "It is not screened, modelled, or scored in this run.",
+      decision = "held back",
+      source = "content_review"
+    )
+  }
+
+  log
 }

@@ -1,0 +1,3 @@
+# Stored producer output and its generator must stay byte-identical to the
+# checksums in their MANIFEST.csv, so git never rewrites their line endings.
+tests/testthat/fixtures/contentvalidR/** -text
