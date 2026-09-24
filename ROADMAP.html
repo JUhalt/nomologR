@@ -46,7 +46,7 @@
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>nomologR Roadmap</h1>
-      <small class="dont-index">Source: <a href="https://github.com/JUhalt/nomologR/blob/v0.2.1/ROADMAP.md" class="external-link"><code>ROADMAP.md</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/JUhalt/nomologR/blob/master/ROADMAP.md" class="external-link"><code>ROADMAP.md</code></a></small>
     </div>
 
 
@@ -207,21 +207,28 @@
 <li><label><input type="checkbox" checked><a href="https://github.com/JUhalt/nomologR/issues/70" class="external-link">#70</a> Release certification and R-universe publication.</label></li>
 </ul><hr></div>
 <div class="section level1">
-<h1 id="v03x--modern-extensions">v0.3.x — Modern Extensions<a class="anchor" aria-label="anchor" href="#v03x--modern-extensions"></a></h1>
-<p><strong>Status:</strong> Scope selection in <a href="https://github.com/JUhalt/nomologR/issues/38" class="external-link">#38</a>; <a href="https://github.com/JUhalt/nomologR/milestone/3" class="external-link">v0.3.0 milestone</a>.</p>
-<p><strong>Committed:</strong> the first CRAN submission (<a href="https://github.com/JUhalt/nomologR/issues/39" class="external-link">#39</a>); see <a href="#distribution--r-universe-now-cran-with-v030">Distribution</a> below.</p>
-<p>Candidate modules (not commitments until selected):</p>
-<ul class="task-list"><li><label><input type="checkbox">ESEM.</label></li>
+<h1 id="v030--first-cran-release">v0.3.0 — First CRAN Release<a class="anchor" aria-label="anchor" href="#v030--first-cran-release"></a></h1>
+<p><strong>Status:</strong> Scope selected on September 23, 2026, in <a href="https://github.com/JUhalt/nomologR/issues/38" class="external-link">#38</a> (<a href="https://github.com/JUhalt/nomologR/milestone/3" class="external-link">v0.3.0 milestone</a>). The scope is deliberately lean: v0.3.0 carries the first CRAN submission, so it selects only what makes that submission complete, stable, and well tested.</p>
+<ul class="task-list"><li><label><input type="checkbox"><a href="https://github.com/JUhalt/nomologR/issues/39" class="external-link">#39</a> First CRAN submission; see <a href="#distribution--r-universe-now-cran-with-v030">Distribution</a> below.</label></li>
+<li><label><input type="checkbox"><a href="https://github.com/JUhalt/nomologR/issues/46" class="external-link">#46</a> A <code>contentvalidR</code> handoff reader. It is tested against stored producer fixtures from contentvalidR 0.6.0 and 0.7.0, and neither package depends on the other.</label></li>
+<li><label><input type="checkbox"><a href="https://github.com/JUhalt/nomologR/issues/72" class="external-link">#72</a> Restore full test coverage after v0.2.1.</label></li>
+<li><label><input type="checkbox"><a href="https://github.com/JUhalt/nomologR/issues/73" class="external-link">#73</a> The guided workflow and report carry scores, careless-responding screens, missing-data sensitivity, and APA tables.</label></li>
+<li><label><input type="checkbox"><a href="https://github.com/JUhalt/nomologR/issues/74" class="external-link">#74</a> A written API-stability and deprecation policy, which the joint 1.0 release requires (<a href="https://github.com/JUhalt/nomologR/issues/53" class="external-link">#53</a>).</label></li>
+<li><label><input type="checkbox"><a href="https://github.com/JUhalt/nomologR/issues/75" class="external-link">#75</a> Release certification and CRAN submission.</label></li>
+</ul></div>
+<div class="section level1">
+<h1 id="v04x--modern-extensions">v0.4.x — Modern Extensions<a class="anchor" aria-label="anchor" href="#v04x--modern-extensions"></a></h1>
+<p><strong>Status:</strong> Deferred from v0.3.0 until after CRAN acceptance, with the reasons recorded in <a href="https://github.com/JUhalt/nomologR/issues/38" class="external-link">#38</a>. None was rejected. Candidates are not commitments until selected.</p>
+<ul class="task-list"><li><label><input type="checkbox">ESEM. lavaan already fits it, so it needs no new dependency, which makes it a natural first candidate.</label></li>
 <li><label><input type="checkbox">Longitudinal invariance.</label></li>
-<li><label><input type="checkbox">Multiple-imputation integration.</label></li>
+<li><label><input type="checkbox">Multiple-imputation integration. <code><a href="reference/nomo_missing.html">nomo_missing()</a></code> covers listwise, FIML, and pairwise sensitivity meanwhile.</label></li>
 <li><label><input type="checkbox">Bootstrap stability summaries.</label></li>
 <li><label><input type="checkbox">CFA/SEM sample-size and power planning.</label></li>
 <li><label><input type="checkbox">Criterion/predictive evidence beyond network outcomes.</label></li>
 <li><label><input type="checkbox">IRT as a complementary item-level framework, and DIF.</label></li>
-<li><label><input type="checkbox">Bayesian CFA/SEM (<code>blavaan</code>) robustness module, posterior predictive checking, and frequentist/Bayesian concordance summaries.</label></li>
+<li><label><input type="checkbox">Bayesian CFA/SEM (<code>blavaan</code>) robustness module, posterior predictive checking, and frequentist/Bayesian concordance summaries; with it, content-validity evidence as informative priors (<a href="https://github.com/JUhalt/nomologR/issues/49" class="external-link">#49</a>).</label></li>
 <li><label><input type="checkbox">Additional equivalence/SESOI functionality beyond v0.1’s researcher-specified negligible regions. No SESOI is invented by the package.</label></li>
 <li><label><input type="checkbox">Model-specific fit diagnostics (<a href="https://github.com/JUhalt/nomologR/issues/23" class="external-link">#23</a>).</label></li>
-<li><label><input type="checkbox">A <code>contentvalidR</code> → <code>nomologR</code> handoff that carries content-validity decisions into the decision log.</label></li>
 </ul><hr></div>
 <div class="section level1">
 <h1 id="distribution--r-universe-now-cran-with-v030">Distribution — R-universe Now, CRAN with v0.3.0<a class="anchor" aria-label="anchor" href="#distribution--r-universe-now-cran-with-v030"></a></h1>
