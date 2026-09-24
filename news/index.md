@@ -2,6 +2,36 @@
 
 ## nomologR 0.2.1.9000 (development)
 
+- [`nomo_run()`](https://juhalt.github.io/nomologR/reference/nomo_run.md)
+  can score the measurement model and compare missing-data strategies,
+  and its report shows both
+  ([\#73](https://github.com/JUhalt/nomologR/issues/73), second of three
+  parts).
+
+  - **Scores.** `settings = list(scores = list(method = "sum"))` scores
+    the model with
+    [`nomo_scores()`](https://juhalt.github.io/nomologR/reference/nomo_scores.md).
+    The researcher must name the method; a request without one is
+    refused, because nomologR does not choose a scoring method.
+  - **Missing-data sensitivity.** `settings = list(missing = list())`
+    compares strategies with
+    [`nomo_missing()`](https://juhalt.github.io/nomologR/reference/nomo_missing.md)
+    for the measurement model, and for the network too when one is
+    requested.
+  - **When they run.** Both run after convergent and discriminant
+    evidence, so they are in view when the researcher decides whether to
+    carry the model forward. Each matches the standalone call.
+  - **Not stages.** Neither is a stage, so the stage table keeps its
+    shape, and a run that requests neither is unchanged.
+  - **If they cannot be computed.** Requested evidence that cannot be
+    computed is recorded in the design log and the run continues, since
+    no later stage depends on it.
+  - **Resuming.** Both can be requested when resuming before the CFA,
+    and are locked once computed.
+  - **Where they appear.** Their evidence joins the component log, their
+    methods are credited to the run, and the report gains “Scores” and
+    “Missing-data sensitivity” sections.
+
 - A written stability and deprecation policy, on the package help page
   ([`?nomologR`](https://juhalt.github.io/nomologR/reference/nomologR-package.md))
   and in the README

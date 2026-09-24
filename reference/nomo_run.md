@@ -79,6 +79,23 @@ nomo_run(
   the scales came from a `contentvalidR` handoff that declares keying,
   its keying is used unless `reverse` or `scale_range` is given here.
 
+  Two further requests attach evidence to the measurement model:
+
+  - `list(scores = list(method = "sum"))` scores it with
+    [`nomo_scores()`](https://juhalt.github.io/nomologR/reference/nomo_scores.md),
+    using a method the researcher names; nomologR does not choose one.
+
+  - `list(missing = list())` compares missing-data strategies with
+    [`nomo_missing()`](https://juhalt.github.io/nomologR/reference/nomo_missing.md).
+    `strategies` and `reliability` may be given. The comparison covers
+    the network too when one is requested.
+
+  Both run after convergent and discriminant evidence, so they are in
+  view when the researcher decides whether to carry the model forward.
+  Neither is a stage of its own. Requested evidence that cannot be
+  computed is recorded in the design log, and the workflow continues,
+  since no later stage depends on it.
+
 - resume:
 
   Optional prior `nomo_run` object. When supplied, the existing source

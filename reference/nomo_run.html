@@ -132,7 +132,17 @@ computed once, over every item in the run with the run's scales, and never
 inside the per-scale item audits. <code>reverse</code>, <code>scale_range</code>,
 <code>pair_magnitude</code>, and <code>scales</code> may be given alongside <code>effort</code>. When the
 scales came from a <code>contentvalidR</code> handoff that declares keying, its
-keying is used unless <code>reverse</code> or <code>scale_range</code> is given here.</p></dd>
+keying is used unless <code>reverse</code> or <code>scale_range</code> is given here.</p>
+<p>Two further requests attach evidence to the measurement model:</p><ul><li><p><code>list(scores = list(method = "sum"))</code> scores it with <code><a href="nomo_scores.html">nomo_scores()</a></code>,
+using a method the researcher names; nomologR does not choose one.</p></li>
+<li><p><code>list(missing = list())</code> compares missing-data strategies with
+<code><a href="nomo_missing.html">nomo_missing()</a></code>. <code>strategies</code> and <code>reliability</code> may be given. The
+comparison covers the network too when one is requested.</p></li>
+</ul><p>Both run after convergent and discriminant evidence, so they are in view
+when the researcher decides whether to carry the model forward. Neither is
+a stage of its own. Requested evidence that cannot be computed is recorded
+in the design log, and the workflow continues, since no later stage depends
+on it.</p></dd>
 
 
 <dt id="arg-resume">resume<a class="anchor" aria-label="anchor" href="#arg-resume"></a></dt>

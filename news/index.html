@@ -52,6 +52,23 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.2.1.9000" id="nomologr-0219000-development">nomologR 0.2.1.9000 (development)<a class="anchor" aria-label="anchor" href="#nomologr-0219000-development"></a></h2>
 <ul><li>
+<p><code><a href="../reference/nomo_run.html">nomo_run()</a></code> can score the measurement model and compare missing-data strategies, and its report shows both (<a href="https://github.com/JUhalt/nomologR/issues/73" class="external-link">#73</a>, second of three parts).</p>
+<ul><li>
+<strong>Scores.</strong> <code>settings = list(scores = list(method = "sum"))</code> scores the model with <code><a href="../reference/nomo_scores.html">nomo_scores()</a></code>. The researcher must name the method; a request without one is refused, because nomologR does not choose a scoring method.</li>
+<li>
+<strong>Missing-data sensitivity.</strong> <code>settings = list(missing = list())</code> compares strategies with <code><a href="../reference/nomo_missing.html">nomo_missing()</a></code> for the measurement model, and for the network too when one is requested.</li>
+<li>
+<strong>When they run.</strong> Both run after convergent and discriminant evidence, so they are in view when the researcher decides whether to carry the model forward. Each matches the standalone call.</li>
+<li>
+<strong>Not stages.</strong> Neither is a stage, so the stage table keeps its shape, and a run that requests neither is unchanged.</li>
+<li>
+<strong>If they cannot be computed.</strong> Requested evidence that cannot be computed is recorded in the design log and the run continues, since no later stage depends on it.</li>
+<li>
+<strong>Resuming.</strong> Both can be requested when resuming before the CFA, and are locked once computed.</li>
+<li>
+<strong>Where they appear.</strong> Their evidence joins the component log, their methods are credited to the run, and the report gains “Scores” and “Missing-data sensitivity” sections.</li>
+</ul></li>
+<li>
 <p>A written stability and deprecation policy, on the package help page (<code><a href="../reference/nomologR-package.html">?nomologR</a></code>) and in the README (<a href="https://github.com/JUhalt/nomologR/issues/74" class="external-link">#74</a>). From 0.3.0, the first CRAN release, the public interface changes only after a deprecation period.</p>
 <ul><li>
 <strong>Covered:</strong> exported functions, documented arguments and defaults, documented fields of returned objects, <code><a href="../reference/nomo_table.html">nomo_table()</a></code> types, and decision-log columns.</li>
