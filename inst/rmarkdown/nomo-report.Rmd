@@ -12,6 +12,7 @@ params:
   report_title: "nomologR reproducible analysis report"
   include_plots: true
   include_session: true
+  apa_tables: false
   max_table_rows: 50
   generated_at: ""
 ---
@@ -734,6 +735,25 @@ release.
 
 ```{r}
 emit_table(nomologR:::nomo_report_citations(), max_rows = Inf)
+```
+
+```{r manuscript-tables, results='asis'}
+if (isTRUE(params$apa_tables)) {
+  apa <- nomologR:::nomo_report_apa_tables(run)
+  cat("\n# Manuscript tables\n\n")
+  if (!length(apa)) {
+    emit_note("This workflow holds no results with an APA table yet.")
+  } else {
+    emit_note(paste(
+      "APA 7 tables for the results in this report, ready to copy into a",
+      "manuscript. They follow the reference-value language of the report:",
+      "no cell reads pass or fail."
+    ))
+    for (tab in apa) {
+      cat("\n", paste(nomologR:::nomo_apa_markdown(tab), collapse = "\n"), "\n\n", sep = "")
+    }
+  }
+}
 ```
 
 # Reproducibility

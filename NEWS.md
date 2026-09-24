@@ -1,5 +1,7 @@
 # nomologR 0.2.1.9000 (development)
 
+- `nomo_report(apa_tables = TRUE)` appends a *Manuscript tables* appendix (#73, last of three parts). It holds the `nomo_apa_table()` tables for the results a run holds: CFA loadings, fit, and factor correlations; reliability; and, when present, invariance and the network's hypotheses and fit. They are numbered in the order the report presents them. A table that does not apply is left out rather than failing the report. The default, `FALSE`, leaves reports unchanged.
+
 - `nomo_run()` can score the measurement model and compare missing-data strategies, and its report shows both (#73, second of three parts).
   - **Scores.** `settings = list(scores = list(method = "sum"))` scores the model with `nomo_scores()`. The researcher must name the method; a request without one is refused, because nomologR does not choose a scoring method.
   - **Missing-data sensitivity.** `settings = list(missing = list())` compares strategies with `nomo_missing()` for the measurement model, and for the network too when one is requested.

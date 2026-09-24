@@ -426,6 +426,33 @@ nomo_report_missing <- function(m) {
 }
 
 
+# The APA tables for the results a run holds (#73), numbered in report order.
+# A table that does not apply, such as factor correlations for a one-factor
+# model, is left out rather than failing the report.
+nomo_report_apa_tables <- function(x) {
+  r <- x$results
+  requests <- list(
+    list(obj = r$cfa, type = "loadings"),
+    list(obj = r$cfa, type = "fit"),
+    list(obj = r$cfa, type = "factor_correlations"),
+    list(obj = r$reliability, type = NULL),
+    list(obj = r$invariance, type = NULL),
+    list(obj = r$network, type = "hypotheses"),
+    list(obj = r$network, type = "fit")
+  )
+  tables <- list()
+  for (req in requests) {
+    if (is.null(req$obj)) next
+    tab <- tryCatch(
+      nomo_apa_table(req$obj, type = req$type, number = length(tables) + 1L),
+      error = function(e) NULL
+    )
+    if (!is.null(tab)) tables[[length(tables) + 1L]] <- tab
+  }
+  tables
+}
+
+
 nomo_report_call_history <- function(x) {
   calls <- x$call_history
   if (is.null(calls) || !length(calls)) {
@@ -1010,6 +1037,11 @@ nomo_report_prepare_template <- function(template, input, title) {
 #'   The final evidence-trace appendix is not truncated.
 #' @param overwrite Logical; replace an existing `file`.
 #' @param quiet Logical passed to [rmarkdown::render()].
+#' @param apa_tables Logical; if `TRUE`, append a *Manuscript tables* appendix
+#'   with the [nomo_apa_table()] tables for the results the run holds. These
+#'   are the CFA loadings, fit, and factor correlations, reliability, and, when
+#'   present, invariance and the network's hypotheses and fit. They are
+#'   numbered in that order. Default `FALSE`, which leaves the report unchanged.
 #'
 #' @return The normalized report file path, invisibly.
 #'
@@ -1044,8 +1076,10 @@ nomo_report <- function(x,
                         include_session = TRUE,
                         max_table_rows = 50L,
                         overwrite = FALSE,
-                        quiet = TRUE) {
+                        quiet = TRUE,
+                        apa_tables = FALSE) {
   nomo_report_validate_run(x)
+  nomo_report_validate_scalar_logical(apa_tables, "apa_tables")
   nomo_report_validate_scalar_logical(include_plots, "include_plots")
   nomo_report_validate_scalar_logical(include_session, "include_session")
   nomo_report_validate_scalar_logical(overwrite, "overwrite")
@@ -1122,6 +1156,7 @@ nomo_report <- function(x,
       report_title = title,
       include_plots = include_plots,
       include_session = include_session,
+      apa_tables = apa_tables,
       max_table_rows = max_table_rows,
       generated_at = format(
         Sys.time(),
