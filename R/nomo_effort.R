@@ -10,13 +10,9 @@
 
 # Longest run of identical consecutive responses. Curran gives the count of
 # sequential matches as bounded by 1 and the length of the assessment.
+# Callers always pass at least one item, so every row has a run.
 nomo_effort_long_string <- function(responses) {
-  apply(responses, 1L, function(row) {
-    if (!length(row)) return(NA_real_)
-    runs <- rle(as.numeric(row))
-    if (!length(runs$lengths)) return(NA_real_)
-    max(runs$lengths)
-  })
+  apply(responses, 1L, function(row) max(rle(as.numeric(row))$lengths))
 }
 
 
@@ -30,6 +26,8 @@ nomo_effort_long_string_mean <- function(responses, scales) {
   }, numeric(nrow(responses)))
 
   if (is.null(dim(per_scale))) per_scale <- matrix(per_scale, nrow = nrow(responses))
+  # No scale with two items gives no value, not the NaN of a mean over nothing.
+  if (all(is.na(per_scale))) return(rep(NA_real_, nrow(responses)))
   rowMeans(per_scale, na.rm = TRUE)
 }
 
@@ -137,13 +135,13 @@ nomo_effort_pairs <- function(responses, direction = c("antonym", "synonym"),
 
   used <- character()
   chosen <- integer()
+  # The first candidate is always free, so at least one pair is chosen.
   for (i in seq_len(nrow(candidates))) {
     pair <- items[candidates[i, ]]
     if (any(pair %in% used)) next
     used <- c(used, pair)
     chosen <- c(chosen, i)
   }
-  if (!length(chosen)) return(out)
 
   candidates <- candidates[chosen, , drop = FALSE]
   values <- values[chosen]
@@ -201,11 +199,11 @@ nomo_effort_even_odd <- function(responses, scales) {
              na.rm = TRUE)
   }, numeric(nrow(responses)))
 
+  # Usable scales have at least two items, so each has an even half.
   even_halves <- vapply(usable, function(items) {
     items <- intersect(items, colnames(responses))
-    even <- items[seq(2L, length(items), by = 2L)]
-    if (!length(even)) return(rep(NA_real_, nrow(responses)))
-    rowMeans(responses[, even, drop = FALSE], na.rm = TRUE)
+    rowMeans(responses[, items[seq(2L, length(items), by = 2L)], drop = FALSE],
+             na.rm = TRUE)
   }, numeric(nrow(responses)))
 
   for (i in seq_len(nrow(responses))) {

@@ -254,6 +254,21 @@ nomo_scores_parallel_test <- function(input) {
     p_value = NA_real_, note = ""
   )
 
+  # The parallel model below is written for continuous indicators: equal
+  # loadings and equal residual variances, fitted by maximum likelihood. With
+  # ordered indicators the researcher's model uses a categorical estimator, and
+  # a continuous parallel model is not a nested alternative to it, so the test
+  # is not run rather than run against the wrong model.
+  if (length(input$ordered)) {
+    empty$note <- paste(
+      "The parallel-model test is implemented here for continuous indicators.",
+      "These indicators are ordered and were fitted with a categorical",
+      "estimator, so the constraints that unit weighting assumes were not",
+      "tested."
+    )
+    return(empty)
+  }
+
   syntax <- nomo_scores_parallel_syntax(input)
   if (is.null(syntax)) {
     empty$note <- paste(
@@ -263,21 +278,12 @@ nomo_scores_parallel_test <- function(input) {
     return(empty)
   }
 
-  call_args <- list(
-    model = syntax,
-    data = tryCatch(as.data.frame(lavaan::lavInspect(input$fit, "data")),
-                    error = function(e) NULL)
-  )
-  if (is.null(call_args$data)) {
-    empty$note <- paste(
-      "The data used by `fit` could not be retrieved, so the constraints that",
-      "unit weighting assumes were not tested."
-    )
-    return(empty)
-  }
-
+  # Unit scoring has already retrieved these data, so they are available here.
   parallel_fit <- tryCatch(
-    suppressWarnings(do.call(lavaan::cfa, call_args)),
+    suppressWarnings(lavaan::cfa(
+      syntax,
+      data = as.data.frame(lavaan::lavInspect(input$fit, "data"))
+    )),
     error = function(e) e
   )
   if (inherits(parallel_fit, "error") ||

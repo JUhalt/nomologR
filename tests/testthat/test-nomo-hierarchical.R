@@ -603,6 +603,7 @@ test_that("print, summary, plot, and nomo_table present the evidence", {
   expect_s3_class(plot(h, type = "loadings"), "ggplot")
 
   expect_equal(nomo_table(h), h$indices)
+  expect_equal(nomo_table(h, "factors"), h$factors)
   expect_equal(nomo_table(h, "subscales"), h$subscales)
   expect_equal(nomo_table(h, "loadings"), h$loadings)
   expect_equal(nomo_table(h, "notes"), h$notes)

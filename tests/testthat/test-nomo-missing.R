@@ -354,3 +354,165 @@ test_that("nomo_missing prints and tabulates its evidence", {
   expect_true(all(c("omega", "alpha") %in% rel$metric))
   expect_true(all(is.na(rel$difference[rel$role == "reference"])))
 })
+
+
+# Remaining paths (#72) --------------------------------------------------------
+
+missing_demo_model <- "A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4 + b5"
+
+
+test_that("a network's fit comparison carries each strategy's fit indices", {
+  skip_on_cran()
+  d <- nomo_demo_network
+  set.seed(32)
+  d$ag2[sample.int(nrow(d), 60)] <- NA
+  net <- nomo_network(
+    "Agency =~ ag1 + ag2 + ag3 + ag4\nPersistence =~ pe1 + pe2 + pe3 + pe4\nPersistence ~ Agency",
+    data = d,
+    hypotheses = nomo_hypotheses("Agency -> Persistence" = positive())
+  )
+  out <- nomo_missing(net, data = d)
+  fit <- nomo_table(out, "fit")
+
+  expect_identical(fit$strategy, c("listwise", "ml"))
+  expect_true(all(is.finite(as.matrix(fit[, c("chi_square", "df", "CFI", "TLI", "RMSEA", "SRMR")]))))
+  # The network was fitted with listwise deletion, so that row is its own fit.
+  expect_equal(fit$chi_square[fit$strategy == "listwise"], net$fit_evidence$chisq)
+  expect_equal(fit$SRMR[fit$strategy == "listwise"], net$fit_evidence$srmr)
+})
+
+
+test_that("data without a modelled variable, or that cannot be refitted, is refused", {
+  fit <- nomo_cfa(missing_demo_model, data = nomo_demo_continuous)
+
+  without_a1 <- nomo_demo_continuous[, setdiff(names(nomo_demo_continuous), "a1")]
+  expect_error(nomo_missing(fit, data = without_a1), "modelled variable(s): a1", fixed = TRUE)
+
+  all_missing <- nomo_demo_continuous
+  all_missing$a1 <- NA_real_
+  # lavaan prints its variable table before refusing; only the refusal matters.
+  expect_error(
+    utils::capture.output(nomo_missing(fit, data = all_missing)),
+    "could not be confirmed", fixed = TRUE
+  )
+})
+
+
+test_that("FIML is credited when it was fitted", {
+  out <- nomo_missing(nomo_cfa(missing_demo_model, data = nomo_demo_continuous),
+                      data = nomo_demo_continuous, reliability = FALSE)
+  expect_true(all(c("missing_sensitivity", "listwise_deletion", "fiml") %in% nomo_methods(out)$id))
+})
+
+
+test_that("lavaan's missing-data aliases are read as the strategy they name", {
+  normalize <- nomologR:::nomo_missing_normalize
+  expect_identical(normalize(NULL), "listwise")
+  expect_identical(normalize(NA_character_), "listwise")
+  expect_identical(normalize(" "), "listwise")
+  expect_identical(normalize("FIML"), "ml")
+  expect_identical(normalize("direct"), "ml")
+  expect_identical(normalize("fiml.x"), "ml.x")
+  expect_identical(normalize("pairwise"), "pairwise")
+})
+
+
+test_that("a substituted reference says whether differences still estimate bias", {
+  new_log <- nomologR:::nomo_log_new()
+
+  # FIML replaced by an MCAR strategy: differences no longer estimate bias.
+  log <- nomologR:::nomo_missing_reference_log(new_log, "ml", "listwise", "nomo_cfa")
+  expect_identical(log$metric, "reference_substituted")
+  expect_identical(log$object, "cfa")
+  expect_match(log$recommendation, "no longer", fixed = TRUE)
+
+  # Pairwise replaced by listwise: both require MCAR, so nothing changes in kind.
+  log <- nomologR:::nomo_missing_reference_log(new_log, "pairwise", "listwise", "nomo_network")
+  expect_identical(log$object, "network")
+  expect_identical(log$recommendation, "Differences are measured from this strategy instead.")
+})
+
+
+test_that("a strategy that did not converge, or is inadmissible, is flagged for review", {
+  out <- nomo_missing(nomo_cfa(missing_demo_model, data = nomo_demo_continuous),
+                      data = nomo_demo_continuous, reliability = FALSE)
+  pattern <- list(summary = out$pattern, variables = out$variables)
+  write_log <- function(strategies) {
+    nomologR:::nomo_missing_log(
+      pattern = pattern, strategies = strategies, estimates = out$estimates,
+      reference = out$reference, ordered = FALSE, kind = "nomo_cfa"
+    )
+  }
+
+  unconverged <- out$strategies
+  unconverged$converged[unconverged$strategy == "listwise"] <- FALSE
+  entry <- write_log(unconverged)
+  entry <- entry[entry$metric == "nonconvergence", ]
+  expect_identical(entry$severity, "review")
+  expect_match(entry$observation, "did not converge", fixed = TRUE)
+
+  inadmissible <- out$strategies
+  inadmissible$admissible[inadmissible$strategy == "listwise"] <- FALSE
+  entry <- write_log(inadmissible)
+  entry <- entry[entry$metric == "inadmissible_solution", ]
+  expect_match(entry$observation, "negative variance", fixed = TRUE)
+})
+
+
+test_that("each difference is attributed only as far as the strategies allow", {
+  out <- nomo_missing(nomo_cfa(missing_demo_model, data = nomo_demo_continuous),
+                      data = nomo_demo_continuous, reliability = FALSE)
+  difference_log <- function(estimates, strategies, reference) {
+    nomologR:::nomo_missing_difference_log(
+      nomologR:::nomo_log_new(), estimates, strategies, reference,
+      nomologR:::nomo_missing_label_inline(reference), "cfa"
+    )
+  }
+  flag_all <- function(e) {
+    comparison <- e$role == "comparison"
+    e$difference_in_se[comparison] <- 2
+    e$beyond_half_se[comparison] <- TRUE
+    e
+  }
+
+  # No comparison with a finite difference: nothing to report.
+  none <- out$estimates
+  none$difference_in_se <- NA_real_
+  expect_identical(nrow(difference_log(none, out$strategies, "ml")), 0L)
+
+  # Strategies that analyse the same number of cases: the sampling caveat is
+  # stated without a count.
+  same_n <- out$strategies
+  same_n$n_used <- 500
+  entry <- difference_log(flag_all(out$estimates), same_n, "ml")
+  expect_match(entry$recommendation, "analyse different cases", fixed = TRUE)
+
+  # A reference that is neither FIML nor pairwise-against-listwise: the
+  # difference shows dependence on the strategy and is attributed to neither.
+  renamed <- flag_all(out$estimates)
+  renamed$strategy[renamed$strategy == "ml"] <- "pairwise"
+  renamed$strategy[renamed$strategy == "listwise"] <- "two.stage"
+  strategies <- out$strategies
+  strategies$strategy <- c("two.stage", "pairwise")
+  entry <- difference_log(renamed, strategies, "pairwise")
+  expect_match(entry$recommendation, "depends on the choice of strategy", fixed = TRUE)
+})
+
+
+test_that("reliability that cannot be computed leaves an empty comparison, not a wrong one", {
+  fit <- nomo_cfa(missing_demo_model, data = nomo_demo_continuous)
+
+  local({
+    local_mocked_bindings(nomo_reliability = function(...) stop("simulated failure"))
+    out <- nomo_missing(fit, data = nomo_demo_continuous)
+    expect_identical(nrow(out$reliability), 0L)
+  })
+
+  local({
+    local_mocked_bindings(
+      nomo_reliability = function(...) list(omega = tibble::tibble(), alpha = tibble::tibble())
+    )
+    out <- nomo_missing(fit, data = nomo_demo_continuous)
+    expect_identical(nrow(out$reliability), 0L)
+  })
+})

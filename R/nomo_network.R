@@ -1813,11 +1813,9 @@ nomo_network_endpoint_log <- function(hypotheses, fit) {
     as.character(lavaan::lavNames(fit, type = "lv")),
     error = function(e) character()
   )
-  table <- tryCatch(as.data.frame(nomo_table(hypotheses)), error = function(e) NULL)
-  if (is.null(table) || !nrow(table) ||
-        !all(c("id", "source", "target") %in% names(table))) {
-    return(log)
-  }
+  # nomo_network() has already validated the hypotheses, so the table has a
+  # row for each, with its source and target.
+  table <- as.data.frame(nomo_table(hypotheses))
 
   source_latent <- table$source %in% latent
   target_latent <- table$target %in% latent
