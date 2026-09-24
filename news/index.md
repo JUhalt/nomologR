@@ -2,9 +2,80 @@
 
 ## nomologR 0.2.1.9000 (development)
 
+- A written stability and deprecation policy, on the package help page
+  ([`?nomologR`](https://juhalt.github.io/nomologR/reference/nomologR-package.md))
+  and in the README
+  ([\#74](https://github.com/JUhalt/nomologR/issues/74)). From 0.3.0,
+  the first CRAN release, the public interface changes only after a
+  deprecation period.
+
+  - **Covered:** exported functions, documented arguments and defaults,
+    documented fields of returned objects,
+    [`nomo_table()`](https://juhalt.github.io/nomologR/reference/nomo_table.md)
+    types, and decision-log columns.
+  - **Breaking changes:** any change that breaks the interface,
+    including a changed default that changes results, is deprecated for
+    at least one minor release first.
+  - **Experimental until 1.0.0:**
+    [`nomo_missing()`](https://juhalt.github.io/nomologR/reference/nomo_missing.md),
+    whose flagging rule may be refined, and the layout of
+    [`nomo_apa_table()`](https://juhalt.github.io/nomologR/reference/nomo_apa_table.md)
+    tables. Both are marked in their help pages.
+  - **Required by the joint release:**
+    [\#53](https://github.com/JUhalt/nomologR/issues/53) requires this
+    policy for the joint 1.0 release with `contentvalidR`.
+
+- [`nomo_screen()`](https://juhalt.github.io/nomologR/reference/nomo_screen.md)
+  and
+  [`nomo_run()`](https://juhalt.github.io/nomologR/reference/nomo_run.md)
+  accept a handoff from `contentvalidR`’s `content_handoff()`, so items
+  move from content review to empirical screening with their reasons
+  intact ([\#46](https://github.com/JUhalt/nomologR/issues/46)). The
+  interface is schema version 1, agreed with the `contentvalidR`
+  maintainer and documented identically in both packages.
+
+  - **What is analysed.** `nomo_screen(data, items = handoff)` screens
+    only the items content review carried. Every held-back item is
+    listed in the decision log with its status and recommendation quoted
+    in `contentvalidR`’s own words, and is never analysed or reinstated.
+  - **Guided runs.** `nomo_run(data, scales = handoff)` takes its scales
+    from the review, and its design log records that item membership
+    came from content review rather than from these data. A review with
+    no construct mapping, such as an expert relevance panel, is refused
+    by
+    [`nomo_run()`](https://juhalt.github.io/nomologR/reference/nomo_run.md)
+    with the carried items listed, because a guided run needs scales and
+    nomologR does not invent them. It can still be screened.
+  - **Keying.** Declared keying and the response scale fill `reverse`
+    and `scale_range` for the careless-responding indices, exactly as
+    agreed. An undeclared item is never treated as forward keyed, a
+    response scale is never inferred from the data, and arguments given
+    in the call take precedence, with a note in the log.
+  - **Refusals.** A carried item missing from the data is refused, never
+    dropped. A handoff with a schema version this release does not read
+    is refused, naming both package versions. Fields this release does
+    not know are ignored, so `contentvalidR` can add fields within a
+    schema version. An object `content_handoff()` could not have
+    produced, such as keying missing for some items but not others, is
+    refused as malformed.
+  - **Report.**
+    [`nomo_report()`](https://juhalt.github.io/nomologR/reference/nomo_report.md)
+    gains a content-review section for runs that came from a handoff, so
+    the archive starts where the validity argument starts. Reports of
+    other runs are unchanged.
+  - **Testing.** `contentvalidR` is not a dependency. The reader is
+    tested against genuine output from `contentvalidR` 0.6.0 and 0.7.0,
+    stored in `tests/testthat/fixtures` with their generator and
+    checksums. The guided-workflow article gains a runnable section
+    built on the example handoff in `inst/extdata`.
+
+- The research-basis article describes the careless-responding indices
+  that shipped in 0.2.1. It had still listed them as planned.
+
 - Test coverage is back to full executable-line coverage after v0.2.1
   ([\#72](https://github.com/JUhalt/nomologR/issues/72)). Reviewing each
   uncovered line found four defects, now fixed:
+
   - **Network fit in
     [`nomo_missing()`](https://juhalt.github.io/nomologR/reference/nomo_missing.md).**
     For a `nomo_network`, the fit comparison listed every fit index as
@@ -25,10 +96,12 @@
   - **Long-string with no usable scale.** The mean within-scale
     long-string returned `NaN` when no scale had two items. It now
     returns `NA`, as the inter-item SD already did.
+
 - Lines that no input can reach were removed rather than tested.
   Examples are the empty-row checks in the careless-responding indices
   and the guards for fitted models that are always present. The
   remaining guards are tested against real fitted objects:
+
   - models that did not converge, have several groups, or were fitted
     from a covariance matrix;
   - single-indicator and cross-loaded factors;

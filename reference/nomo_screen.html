@@ -91,7 +91,9 @@ observations from recommendations.</p>
 <dt id="arg-items">items<a class="anchor" aria-label="anchor" href="#arg-items"></a></dt>
 <dd><p>Optional character vector identifying item columns. If <code>NULL</code>,
 all columns are audited and the decision log reminds the user to verify that
-identifiers, demographics, and other non-item columns were not included.</p></dd>
+identifiers, demographics, and other non-item columns were not included.
+May also be a handoff from <code>contentvalidR</code>'s <code>content_handoff()</code>; see
+<strong>Items from content review</strong>.</p></dd>
 
 
 <dt id="arg-guidance">guidance<a class="anchor" aria-label="anchor" href="#arg-guidance"></a></dt>
@@ -173,6 +175,21 @@ is not thereby shown to be attentive.</p>
 N is the number of pairs or scales. With two, every value is exactly +1 or
 -1, so at least three are required; with fewer than five the log says the
 flags are coarse. Cases are flagged, never removed.</p>
+<p><strong>Items from content review.</strong> <code>items</code> may be the handoff that
+<code>contentvalidR</code>'s <code>content_handoff()</code> produces after content review. Only
+items it marks as carried are screened. Every item it held back is listed in
+the decision log with its status and recommendation quoted in
+<code>contentvalidR</code>'s own words, and is never analysed or reinstated here. The log
+also records the producing version, workflow, and carry rule, and that item
+membership came from content review rather than from these data.</p>
+<p>A carried item that is not a column of <code>data</code> is refused, never dropped.
+Where the call leaves <code>scales</code>, <code>reverse</code>, or <code>scale_range</code> unset, the
+handoff's scales and declared keying fill them. An item is never treated as
+forward keyed because keying was undeclared, and a response scale the
+handoff did not record is never inferred. A handoff with a schema version
+this release does not read is refused, naming both package versions. The
+interface is specified in nomologR issue #46, and <code>contentvalidR</code> is not
+needed to read it.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>

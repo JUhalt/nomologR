@@ -470,9 +470,110 @@ one stays visible in <code>nomo_table(x, "lineage")</code> and in the
 report’s revision-lineage section.</p>
 </div>
 <div class="section level2">
+<h2 id="starting-from-content-review">Starting from content review<a class="anchor" aria-label="anchor" href="#starting-from-content-review"></a>
+</h2>
+<p>Scale development begins before response data exist. The companion
+package <a href="https://github.com/JUhalt/contentvalidR" class="external-link"><code>contentvalidR</code></a>
+handles content review: expert relevance panels, item sorts, and Delphi
+rounds. It ends in a <em>handoff</em>, which records the items carried
+forward, each held-back item with its reasons, and the rule that made
+each decision. <code>nomologR</code> takes the handoff itself, not a
+copied list of item names, so the reasons travel with the items.</p>
+<p>In <code>contentvalidR</code>, a handoff is made from a fitted
+review. The chunk below is shown, not run:</p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu">contentvalidR</span><span class="fu">::</span><span class="fu">sort_validity</span><span class="op">(</span><span class="va">sorts</span><span class="op">)</span></span>
+<span><span class="va">handoff</span> <span class="op">&lt;-</span> <span class="fu">contentvalidR</span><span class="fu">::</span><span class="fu">content_handoff</span><span class="op">(</span></span>
+<span>  <span class="va">fit</span>,</span>
+<span>  reverse_keyed <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"EF2"</span>, <span class="st">"TF2"</span><span class="op">)</span>,</span>
+<span>  response_scale <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">5</span><span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p><code>nomologR</code> does not depend on <code>contentvalidR</code>.
+This package ships the handoff that <code>contentvalidR</code> 0.7.0
+produces for its walkthrough item sort, so the rest of this section runs
+without it:</p>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">handoff</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"content-handoff-walkthrough.rds"</span>, package <span class="op">=</span> <span class="st">"nomologR"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">handoff</span><span class="op">$</span><span class="va">items</span></span>
+<span><span class="co">#&gt;  [1] "EF1" "EF2" "EF3" "EF4" "EF6" "TF1" "TF2" "TF3" "TF4" "TF6"</span></span></code></pre></div>
+<p>Responses to those items, simulated here, with EF2 and TF2 worded in
+reverse:</p>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">46</span><span class="op">)</span></span>
+<span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">400</span></span>
+<span><span class="va">ef</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span></span>
+<span><span class="va">tf</span> <span class="op">&lt;-</span> <span class="fl">0.4</span> <span class="op">*</span> <span class="va">ef</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="fl">0.4</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span></span>
+<span><span class="va">likert</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">f</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">pmin</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">pmax</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fl">3</span> <span class="op">+</span> <span class="fl">0.8</span> <span class="op">*</span> <span class="va">f</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span>, sd <span class="op">=</span> <span class="fl">0.8</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">responses</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"EF"</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">6</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">i</span><span class="op">)</span> <span class="fu">likert</span><span class="op">(</span><span class="va">ef</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"TF"</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">6</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">i</span><span class="op">)</span> <span class="fu">likert</span><span class="op">(</span><span class="va">tf</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">responses</span><span class="op">$</span><span class="va">EF2</span> <span class="op">&lt;-</span> <span class="fl">6</span> <span class="op">-</span> <span class="va">responses</span><span class="op">$</span><span class="va">EF2</span></span>
+<span><span class="va">responses</span><span class="op">$</span><span class="va">TF2</span> <span class="op">&lt;-</span> <span class="fl">6</span> <span class="op">-</span> <span class="va">responses</span><span class="op">$</span><span class="va">TF2</span></span></code></pre></div>
+<p>Passing the handoff as <code>items</code> screens only the carried
+items:</p>
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">screened</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_screen.html">nomo_screen</a></span><span class="op">(</span><span class="va">responses</span>, items <span class="op">=</span> <span class="va">handoff</span>, effort <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">screened</span><span class="op">$</span><span class="va">items</span></span>
+<span><span class="co">#&gt;  [1] "EF1" "EF2" "EF3" "EF4" "EF6" "TF1" "TF2" "TF3" "TF4" "TF6"</span></span>
+<span></span>
+<span><span class="va">review_log</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">screened</span>, <span class="st">"decision_log"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="va">review_log</span><span class="op">$</span><span class="va">observation</span><span class="op">[</span><span class="va">review_log</span><span class="op">$</span><span class="va">object</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"content_review"</span>, <span class="st">"EF5"</span>, <span class="st">"TF5"</span><span class="op">)</span><span class="op">]</span>,</span>
+<span>    sep <span class="op">=</span> <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Items and their construct membership came from content review in contentvalidR 0.7.0 (workflow: item-sort; carry rule: Supported; method: Anderson-Gerbing Psa/Csv with Howard-Melloy exact inference), not from these data.</span></span>
+<span><span class="co">#&gt; 10 of 12 reviewed item(s) were carried and 2 held back. Status counts: Review 2, Supported 10.</span></span>
+<span><span class="co">#&gt; EF5 was held back by content review: status "Review", recommendation "Review".</span></span>
+<span><span class="co">#&gt; TF5 was held back by content review: status "Review", recommendation "Review".</span></span>
+<span><span class="co">#&gt; Content review declared reverse-keyed item(s) EF2, TF2, on a 1 to 5 response scale.</span></span></code></pre></div>
+<p>EF5 and TF5 were held back by the item sort. They are not analysed,
+and nothing here reinstates them. The log quotes their status and
+recommendation in <code>contentvalidR</code>’s own words. The keying
+declared at content review reached the careless-responding indices
+without being retyped. An item is never treated as forward keyed because
+keying was undeclared, and a response scale is never inferred from the
+data.</p>
+<p>Passed as <code>scales</code>, the handoff defines a guided run. Its
+design log records that the item membership came from content review,
+not from these data:</p>
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">run_reviewed</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_run.html">nomo_run</a></span><span class="op">(</span></span>
+<span>  <span class="va">responses</span>,</span>
+<span>  scales <span class="op">=</span> <span class="va">handoff</span>,</span>
+<span>  settings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>factors <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>seed <span class="op">=</span> <span class="fl">46</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">run_reviewed</span><span class="op">$</span><span class="va">scales</span></span>
+<span><span class="co">#&gt; $EF</span></span>
+<span><span class="co">#&gt; [1] "EF1" "EF2" "EF3" "EF4" "EF6"</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $TF</span></span>
+<span><span class="co">#&gt; [1] "TF1" "TF2" "TF3" "TF4" "TF6"</span></span>
+<span></span>
+<span><span class="va">design</span> <span class="op">&lt;-</span> <span class="va">run_reviewed</span><span class="op">$</span><span class="va">decision_log</span></span>
+<span><span class="va">design</span><span class="op">[</span><span class="va">design</span><span class="op">$</span><span class="va">source</span> <span class="op">==</span> <span class="st">"content_review"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"id"</span>, <span class="st">"scope"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 5 × 2</span></span></span>
+<span><span class="co">#&gt;   id                  scope </span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>               <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> content_review      scales</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> held_back:EF5       EF    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> held_back:TF5       TF    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> scale_definition:EF EF    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> scale_definition:TF TF</span></span></code></pre></div>
+<p>A report from this run opens with a content-review section, so the
+archive starts where the validity argument starts.</p>
+<p>Some reviews have no construct mapping, such as an expert relevance
+panel rating a single item set. A handoff from one of those can be
+screened, but a guided run refuses it. The run needs scales, and
+<code>nomologR</code> does not invent construct membership. A handoff
+from a later <code>contentvalidR</code> release, with a schema version
+this release does not read, is refused with both package versions
+named.</p>
+</div>
+<div class="section level2">
 <h2 id="reproducibility-and-provenance">Reproducibility and provenance<a class="anchor" aria-label="anchor" href="#reproducibility-and-provenance"></a>
 </h2>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">run</span>, <span class="st">"decisions"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 10 × 10</span></span></span>
 <span><span class="co">#&gt;    id      stage scope observation reason options consequence decision rationale</span></span>

@@ -34,7 +34,12 @@ nomo_run(
 - scales:
 
   A non-empty named list. Each element is a character vector of
-  candidate item-column names for one scale/construct.
+  candidate item-column names for one scale/construct. May also be a
+  handoff from `contentvalidR`'s `content_handoff()`, whose carried
+  items and construct mapping then define the scales, as described for
+  [`nomo_screen()`](https://juhalt.github.io/nomologR/reference/nomo_screen.md).
+  A handoff from a review with no construct mapping is refused, because
+  a guided run needs scales and nomologR does not invent them.
 
 - mode:
 

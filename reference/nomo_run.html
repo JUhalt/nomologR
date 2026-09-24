@@ -93,7 +93,12 @@ and validation samples.</p></dd>
 
 <dt id="arg-scales">scales<a class="anchor" aria-label="anchor" href="#arg-scales"></a></dt>
 <dd><p>A non-empty named list. Each element is a character vector of
-candidate item-column names for one scale/construct.</p></dd>
+candidate item-column names for one scale/construct. May also be a handoff
+from <code>contentvalidR</code>'s <code>content_handoff()</code>, whose carried items and
+construct mapping then define the scales, as described for
+<code><a href="nomo_screen.html">nomo_screen()</a></code>. A handoff from a review with no construct mapping is
+refused, because a guided run needs scales and nomologR does not invent
+them.</p></dd>
 
 
 <dt id="arg-mode">mode<a class="anchor" aria-label="anchor" href="#arg-mode"></a></dt>

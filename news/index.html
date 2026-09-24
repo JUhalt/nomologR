@@ -51,7 +51,35 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.2.1.9000" id="nomologr-0219000-development">nomologR 0.2.1.9000 (development)<a class="anchor" aria-label="anchor" href="#nomologr-0219000-development"></a></h2>
-<ul><li>Test coverage is back to full executable-line coverage after v0.2.1 (<a href="https://github.com/JUhalt/nomologR/issues/72" class="external-link">#72</a>). Reviewing each uncovered line found four defects, now fixed:
+<ul><li>
+<p>A written stability and deprecation policy, on the package help page (<code><a href="../reference/nomologR-package.html">?nomologR</a></code>) and in the README (<a href="https://github.com/JUhalt/nomologR/issues/74" class="external-link">#74</a>). From 0.3.0, the first CRAN release, the public interface changes only after a deprecation period.</p>
+<ul><li>
+<strong>Covered:</strong> exported functions, documented arguments and defaults, documented fields of returned objects, <code><a href="../reference/nomo_table.html">nomo_table()</a></code> types, and decision-log columns.</li>
+<li>
+<strong>Breaking changes:</strong> any change that breaks the interface, including a changed default that changes results, is deprecated for at least one minor release first.</li>
+<li>
+<strong>Experimental until 1.0.0:</strong> <code><a href="../reference/nomo_missing.html">nomo_missing()</a></code>, whose flagging rule may be refined, and the layout of <code><a href="../reference/nomo_apa_table.html">nomo_apa_table()</a></code> tables. Both are marked in their help pages.</li>
+<li>
+<strong>Required by the joint release:</strong> <a href="https://github.com/JUhalt/nomologR/issues/53" class="external-link">#53</a> requires this policy for the joint 1.0 release with <code>contentvalidR</code>.</li>
+</ul></li>
+<li>
+<p><code><a href="../reference/nomo_screen.html">nomo_screen()</a></code> and <code><a href="../reference/nomo_run.html">nomo_run()</a></code> accept a handoff from <code>contentvalidR</code>’s <code>content_handoff()</code>, so items move from content review to empirical screening with their reasons intact (<a href="https://github.com/JUhalt/nomologR/issues/46" class="external-link">#46</a>). The interface is schema version 1, agreed with the <code>contentvalidR</code> maintainer and documented identically in both packages.</p>
+<ul><li>
+<strong>What is analysed.</strong> <code>nomo_screen(data, items = handoff)</code> screens only the items content review carried. Every held-back item is listed in the decision log with its status and recommendation quoted in <code>contentvalidR</code>’s own words, and is never analysed or reinstated.</li>
+<li>
+<strong>Guided runs.</strong> <code>nomo_run(data, scales = handoff)</code> takes its scales from the review, and its design log records that item membership came from content review rather than from these data. A review with no construct mapping, such as an expert relevance panel, is refused by <code><a href="../reference/nomo_run.html">nomo_run()</a></code> with the carried items listed, because a guided run needs scales and nomologR does not invent them. It can still be screened.</li>
+<li>
+<strong>Keying.</strong> Declared keying and the response scale fill <code>reverse</code> and <code>scale_range</code> for the careless-responding indices, exactly as agreed. An undeclared item is never treated as forward keyed, a response scale is never inferred from the data, and arguments given in the call take precedence, with a note in the log.</li>
+<li>
+<strong>Refusals.</strong> A carried item missing from the data is refused, never dropped. A handoff with a schema version this release does not read is refused, naming both package versions. Fields this release does not know are ignored, so <code>contentvalidR</code> can add fields within a schema version. An object <code>content_handoff()</code> could not have produced, such as keying missing for some items but not others, is refused as malformed.</li>
+<li>
+<strong>Report.</strong> <code><a href="../reference/nomo_report.html">nomo_report()</a></code> gains a content-review section for runs that came from a handoff, so the archive starts where the validity argument starts. Reports of other runs are unchanged.</li>
+<li>
+<strong>Testing.</strong> <code>contentvalidR</code> is not a dependency. The reader is tested against genuine output from <code>contentvalidR</code> 0.6.0 and 0.7.0, stored in <code>tests/testthat/fixtures</code> with their generator and checksums. The guided-workflow article gains a runnable section built on the example handoff in <code>inst/extdata</code>.</li>
+</ul></li>
+<li><p>The research-basis article describes the careless-responding indices that shipped in 0.2.1. It had still listed them as planned.</p></li>
+<li>
+<p>Test coverage is back to full executable-line coverage after v0.2.1 (<a href="https://github.com/JUhalt/nomologR/issues/72" class="external-link">#72</a>). Reviewing each uncovered line found four defects, now fixed:</p>
 <ul><li>
 <strong>Network fit in <code><a href="../reference/nomo_missing.html">nomo_missing()</a></code>.</strong> For a <code>nomo_network</code>, the fit comparison listed every fit index as missing. A network’s fit evidence is one wide row, while a CFA’s is a long table, and only the long form was read. Every strategy’s chi-square, CFI, TLI, RMSEA, and SRMR now appear.</li>
 <li>
@@ -61,12 +89,13 @@
 <li>
 <strong>Long-string with no usable scale.</strong> The mean within-scale long-string returned <code>NaN</code> when no scale had two items. It now returns <code>NA</code>, as the inter-item SD already did.</li>
 </ul></li>
-<li>Lines that no input can reach were removed rather than tested. Examples are the empty-row checks in the careless-responding indices and the guards for fitted models that are always present. The remaining guards are tested against real fitted objects:
+<li>
+<p>Lines that no input can reach were removed rather than tested. Examples are the empty-row checks in the careless-responding indices and the guards for fitted models that are always present. The remaining guards are tested against real fitted objects:</p>
 <ul><li>models that did not converge, have several groups, or were fitted from a covariance matrix;</li>
 <li>single-indicator and cross-loaded factors;</li>
 <li>small and degenerate response sets.</li>
-</ul>
-Failures that only lavaan can produce are simulated.</li>
+</ul><p>Failures that only lavaan can produce are simulated.</p>
+</li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.2.1" id="nomologr-021">nomologR 0.2.1<a class="anchor" aria-label="anchor" href="#nomologr-021"></a></h2>

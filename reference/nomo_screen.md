@@ -32,7 +32,8 @@ nomo_screen(
   Optional character vector identifying item columns. If `NULL`, all
   columns are audited and the decision log reminds the user to verify
   that identifiers, demographics, and other non-item columns were not
-  included.
+  included. May also be a handoff from `contentvalidR`'s
+  `content_handoff()`; see **Items from content review**.
 
 - guidance:
 
@@ -124,6 +125,24 @@ Each respondent's antonym, synonym, and even-odd value is a correlation
 whose N is the number of pairs or scales. With two, every value is
 exactly +1 or -1, so at least three are required; with fewer than five
 the log says the flags are coarse. Cases are flagged, never removed.
+
+**Items from content review.** `items` may be the handoff that
+`contentvalidR`'s `content_handoff()` produces after content review.
+Only items it marks as carried are screened. Every item it held back is
+listed in the decision log with its status and recommendation quoted in
+`contentvalidR`'s own words, and is never analysed or reinstated here.
+The log also records the producing version, workflow, and carry rule,
+and that item membership came from content review rather than from these
+data.
+
+A carried item that is not a column of `data` is refused, never dropped.
+Where the call leaves `scales`, `reverse`, or `scale_range` unset, the
+handoff's scales and declared keying fill them. An item is never treated
+as forward keyed because keying was undeclared, and a response scale the
+handoff did not record is never inferred. A handoff with a schema
+version this release does not read is refused, naming both package
+versions. The interface is specified in nomologR issue \#46, and
+`contentvalidR` is not needed to read it.
 
 ## References
 

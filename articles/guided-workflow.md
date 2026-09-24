@@ -440,6 +440,125 @@ so the full path from the original model to the reported one stays
 visible in `nomo_table(x, "lineage")` and in the report’s
 revision-lineage section.
 
+## Starting from content review
+
+Scale development begins before response data exist. The companion
+package [`contentvalidR`](https://github.com/JUhalt/contentvalidR)
+handles content review: expert relevance panels, item sorts, and Delphi
+rounds. It ends in a *handoff*, which records the items carried forward,
+each held-back item with its reasons, and the rule that made each
+decision. `nomologR` takes the handoff itself, not a copied list of item
+names, so the reasons travel with the items.
+
+In `contentvalidR`, a handoff is made from a fitted review. The chunk
+below is shown, not run:
+
+``` r
+
+fit <- contentvalidR::sort_validity(sorts)
+handoff <- contentvalidR::content_handoff(
+  fit,
+  reverse_keyed = c("EF2", "TF2"),
+  response_scale = c(1, 5)
+)
+```
+
+`nomologR` does not depend on `contentvalidR`. This package ships the
+handoff that `contentvalidR` 0.7.0 produces for its walkthrough item
+sort, so the rest of this section runs without it:
+
+``` r
+
+handoff <- readRDS(
+  system.file("extdata", "content-handoff-walkthrough.rds", package = "nomologR")
+)
+handoff$items
+#>  [1] "EF1" "EF2" "EF3" "EF4" "EF6" "TF1" "TF2" "TF3" "TF4" "TF6"
+```
+
+Responses to those items, simulated here, with EF2 and TF2 worded in
+reverse:
+
+``` r
+
+set.seed(46)
+n <- 400
+ef <- rnorm(n)
+tf <- 0.4 * ef + sqrt(1 - 0.4^2) * rnorm(n)
+likert <- function(f) pmin(5, pmax(1, round(3 + 0.8 * f + rnorm(n, sd = 0.8))))
+responses <- data.frame(
+  sapply(paste0("EF", 1:6), function(i) likert(ef)),
+  sapply(paste0("TF", 1:6), function(i) likert(tf))
+)
+responses$EF2 <- 6 - responses$EF2
+responses$TF2 <- 6 - responses$TF2
+```
+
+Passing the handoff as `items` screens only the carried items:
+
+``` r
+
+screened <- nomo_screen(responses, items = handoff, effort = TRUE)
+screened$items
+#>  [1] "EF1" "EF2" "EF3" "EF4" "EF6" "TF1" "TF2" "TF3" "TF4" "TF6"
+
+review_log <- nomo_table(screened, "decision_log")
+cat(review_log$observation[review_log$object %in% c("content_review", "EF5", "TF5")],
+    sep = "\n")
+#> Items and their construct membership came from content review in contentvalidR 0.7.0 (workflow: item-sort; carry rule: Supported; method: Anderson-Gerbing Psa/Csv with Howard-Melloy exact inference), not from these data.
+#> 10 of 12 reviewed item(s) were carried and 2 held back. Status counts: Review 2, Supported 10.
+#> EF5 was held back by content review: status "Review", recommendation "Review".
+#> TF5 was held back by content review: status "Review", recommendation "Review".
+#> Content review declared reverse-keyed item(s) EF2, TF2, on a 1 to 5 response scale.
+```
+
+EF5 and TF5 were held back by the item sort. They are not analysed, and
+nothing here reinstates them. The log quotes their status and
+recommendation in `contentvalidR`’s own words. The keying declared at
+content review reached the careless-responding indices without being
+retyped. An item is never treated as forward keyed because keying was
+undeclared, and a response scale is never inferred from the data.
+
+Passed as `scales`, the handoff defines a guided run. Its design log
+records that the item membership came from content review, not from
+these data:
+
+``` r
+
+run_reviewed <- nomo_run(
+  responses,
+  scales = handoff,
+  settings = list(factors = list(seed = 46))
+)
+run_reviewed$scales
+#> $EF
+#> [1] "EF1" "EF2" "EF3" "EF4" "EF6"
+#> 
+#> $TF
+#> [1] "TF1" "TF2" "TF3" "TF4" "TF6"
+
+design <- run_reviewed$decision_log
+design[design$source == "content_review", c("id", "scope")]
+#> # A tibble: 5 × 2
+#>   id                  scope 
+#>   <chr>               <chr> 
+#> 1 content_review      scales
+#> 2 held_back:EF5       EF    
+#> 3 held_back:TF5       TF    
+#> 4 scale_definition:EF EF    
+#> 5 scale_definition:TF TF
+```
+
+A report from this run opens with a content-review section, so the
+archive starts where the validity argument starts.
+
+Some reviews have no construct mapping, such as an expert relevance
+panel rating a single item set. A handoff from one of those can be
+screened, but a guided run refuses it. The run needs scales, and
+`nomologR` does not invent construct membership. A handoff from a later
+`contentvalidR` release, with a schema version this release does not
+read, is refused with both package versions named.
+
 ## Reproducibility and provenance
 
 ``` r

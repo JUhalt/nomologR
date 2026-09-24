@@ -215,8 +215,17 @@ missingness, response distributions, unused categories, response
 concentration, near-zero variance (using heuristics described by Kuhn
 &amp; Johnson, 2013), corrected item–rest and inter-item correlations,
 and descriptive shape statistics. Flags are review prompts; no item or
-case is removed or recoded.</p>
-<p><strong>Planned.</strong> Insufficient-effort responding indices (<a href="https://github.com/JUhalt/nomologR/issues/34" class="external-link">#34</a>).</p>
+case is removed or recoded. With <code>effort = TRUE</code> it adds the
+careless-responding indices those sources describe (long-string,
+inter-item standard deviation, Mahalanobis distance, even-odd
+consistency, and psychometric antonyms and synonyms). They are reported
+side by side because they detect different failures, and a case is
+flagged only where a source states a rule.</p>
+<p>Items can arrive from content review: a handoff from
+<code>contentvalidR</code> supplies the carried items and their
+construct mapping. Held-back items are reported in that package’s own
+words, and the log records that item membership came from content review
+rather than from these data (<a href="https://github.com/JUhalt/nomologR/issues/46" class="external-link">#46</a>).</p>
 </div>
 <div class="section level2">
 <h2 id="dimensionality-nomo_factors">2. Dimensionality — <code>nomo_factors()</code><a class="anchor" aria-label="anchor" href="#dimensionality-nomo_factors"></a>

@@ -106,6 +106,21 @@ item-level empirical data are available and follows the measure through
 dimensionality, measurement modeling, reliability, construct-validity
 evidence, invariance, and theory-specified nomological networks.
 
+The two meet at a handoff. `contentvalidR`’s `content_handoff()` records
+which items content review carried forward, why each held-back item was
+held back, and under which rule. `nomo_screen(data, items = handoff)`
+and `nomo_run(data, scales = handoff)` take it directly, so the reasons
+travel with the items:
+
+``` r
+
+run <- nomo_run(responses, scales = handoff)
+```
+
+Only carried items are analysed. Held-back items are reported in
+`contentvalidR`’s own words, and a report from the run opens with the
+content review. Neither package depends on the other.
+
 ## What works now
 
 ### 1. `nomo_screen()` — data and item audit
@@ -1090,6 +1105,34 @@ The complete `v0.1.0` release track is:
 10. v0.1 release hardening and infrastructure — **complete**
 
 `v0.1.0` was the first stable public release.
+
+## Stability
+
+From `v0.3.0`, the first CRAN release, nomologR’s public interface
+changes only after a deprecation period, so code written against one
+release keeps working in the next.
+
+- **What it covers.** The exported functions, their documented arguments
+  and defaults, the documented fields of returned objects,
+  [`nomo_table()`](https://juhalt.github.io/nomologR/reference/nomo_table.md)
+  types, and decision-log columns.
+- **Deprecation.** A breaking change, including a changed default that
+  changes results, is deprecated for at least one minor release first.
+  The deprecated form keeps working, warns once per session, and is
+  listed in NEWS.
+- **Additions.** New functions, arguments, fields, and log rows can
+  arrive in any release, so address fields by name.
+- **Experimental.**
+  [`nomo_missing()`](https://juhalt.github.io/nomologR/reference/nomo_missing.md)
+  and the layout of
+  [`nomo_apa_table()`](https://juhalt.github.io/nomologR/reference/nomo_apa_table.md)
+  tables are experimental until 1.0.0.
+
+The full policy is on the package help page,
+[`?nomologR`](https://juhalt.github.io/nomologR/reference/nomologR-package.md).
+The `contentvalidR` handoff is versioned by schema. Within a version,
+fields are only added, and anything else is a new version agreed between
+the two packages ([\#46](https://github.com/JUhalt/nomologR/issues/46)).
 
 ## Design principles
 
