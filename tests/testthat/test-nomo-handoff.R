@@ -75,9 +75,24 @@ test_that("declared keying maps onto reverse and scale_range as agreed", {
   # "Checked, none reversed" is a different fact from "nobody said".
   raw <- handoff_fixture("walkthrough-sort", "0.7.0")
   raw$item_evidence$keying <- 1L
-  none <- nomologR:::nomo_handoff_read(raw)$keying
+  read <- nomologR:::nomo_handoff_read(raw)
+  none <- read$keying
   expect_true(none$declared)
   expect_identical(none$reverse, character(0))
+  log <- nomologR:::nomo_handoff_log(read)
+  expect_match(log$observation[log$metric == "keying"],
+               "declared keying with no reverse-keyed item", fixed = TRUE)
+})
+
+
+test_that("a handoff without panel statistics is read, since not every review has them", {
+  raw <- handoff_fixture("walkthrough-sort", "0.7.0")
+  raw$panel_statistics <- NULL
+  expect_null(nomologR:::nomo_handoff_read(raw)$panel)
+  expect_s3_class(
+    nomologR:::nomo_handoff_read(handoff_fixture("expert-krippendorff", "0.7.0"))$panel,
+    "tbl_df"
+  )
 })
 
 
@@ -257,6 +272,9 @@ test_that("objects content_handoff() could not have produced are refused as malf
   malformed(h)
 
   h <- base; h$item_statistics <- "not a table"
+  malformed(h)
+
+  h <- base; h$item_evidence <- "not a table"
   malformed(h)
 
   delphi <- handoff_fixture("delphi", "0.7.0")

@@ -91,6 +91,12 @@ test_that("keying set in settings is used and recorded", {
 })
 
 
+test_that("the pair threshold set in settings reaches the screen", {
+  run <- run_effort(list(effort = TRUE, pair_magnitude = 0.5))
+  expect_identical(run$results$effort$effort_settings$pair_magnitude, 0.5)
+})
+
+
 test_that("an unreadable effort setting is refused before any stage runs", {
   expect_error(run_effort(list(effort = "yes")),
                "`settings$screen$effort` must be TRUE or FALSE.", fixed = TRUE)
