@@ -15,6 +15,13 @@
   - **Build.** `.git` and `.gitignore` are excluded from the build. A
     git worktree has a `.git` *file*, and a hidden file in the tarball
     is what CRAN returned `contentvalidR` 0.3.1 for.
+  - **Test time.** Under CRAN conditions the tests took about 15 minutes
+    on a slow Windows machine; they now take about 3. The 117 tests that
+    took 2 seconds or more are skipped on CRAN: simulations, full guided
+    runs, and rendered reports. Two stay on CRAN because they check that
+    nomologR reproduces lavaan’s own estimates, so a lavaan change that
+    alters them is caught there. Continuous integration still runs every
+    test, and coverage is unchanged.
 
 - `nomo_report(apa_tables = TRUE)` appends a *Manuscript tables*
   appendix ([\#73](https://github.com/JUhalt/nomologR/issues/73), last
