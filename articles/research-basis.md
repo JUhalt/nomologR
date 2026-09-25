@@ -372,8 +372,8 @@ around a null relation differ in sign about half the time.
 
 A hypothesis whose endpoints are observed variables, such as sum or
 factor scores, is disclosed in the decision log, because the measurement
-error of a composite enters the relationship unmodelled. The disclosure
-points to modelling the items as indicators, to estimating structural
+error of a composite enters the relationship unmodeled. The disclosure
+points to modeling the items as indicators, to estimating structural
 relationships after the measurement model with
 [`lavaan::sam()`](https://rdrr.io/pkg/lavaan/man/sam.html) (Rosseel &
 Loh, 2024), and, for a linear regression among factor scores, to the one

@@ -142,8 +142,8 @@ equivalence region (Lakens, Scheel, & Isager, 2018).
 ## Relationships estimated between observed variables
 
 A hypothesis whose endpoints are latent variables is estimated with
-their measurement error modelled. When an endpoint is an observed
-variable, that error enters unmodelled. If the observed variable is a
+their measurement error modeled. When an endpoint is an observed
+variable, that error enters unmodeled. If the observed variable is a
 composite of several items, such as a sum, mean, or factor score, the
 estimated relationship carries the discrepancy
 [`nomo_scores()`](https://juhalt.github.io/nomologR/reference/nomo_scores.md)
@@ -158,7 +158,7 @@ when both ends are observed, and for information when one is. A single
 measured variable, such as a criterion recorded without items, is not a
 composite, and the disclosure says so.
 
-Where the observed variables are composites, modelling their items as
+Where the observed variables are composites, modeling their items as
 indicators of latent variables removes the discrepancy, and
 [`lavaan::sam()`](https://rdrr.io/pkg/lavaan/man/sam.html) estimates the
 structural relationships after the measurement model (Rosseel & Loh,

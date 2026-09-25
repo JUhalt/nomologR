@@ -512,7 +512,7 @@ cat(review_log$observation[review_log$object %in% c("content_review", "EF5", "TF
 #> Content review declared reverse-keyed item(s) EF2, TF2, on a 1 to 5 response scale.
 ```
 
-EF5 and TF5 were held back by the item sort. They are not analysed, and
+EF5 and TF5 were held back by the item sort. They are not analyzed, and
 nothing here reinstates them. The log quotes their status and
 recommendation in `contentvalidR`’s own words. The keying declared at
 content review reached the careless-responding indices without being

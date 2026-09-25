@@ -2,6 +2,20 @@
 
 ## nomologR 0.2.1.9000 (development)
 
+- CRAN preparation for the first submission
+  ([\#39](https://github.com/JUhalt/nomologR/issues/39)).
+
+  - **Spelling.** `DESCRIPTION` declares `Language: en-US`, and the
+    package’s text uses American spelling throughout. About 40 British
+    spellings (`analysed`, `modelled`, `behaviour`) are changed in
+    messages, help pages, articles, and NEWS; only wording changes, not
+    code. `spelling::spell_check_package()` now finds nothing, with
+    author names and technical terms listed in `inst/WORDLIST`.
+  - **URLs.** `urlchecker::url_check()` finds all 131 URLs correct.
+  - **Build.** `.git` and `.gitignore` are excluded from the build. A
+    git worktree has a `.git` *file*, and a hidden file in the tarball
+    is what CRAN returned `contentvalidR` 0.3.1 for.
+
 - `nomo_report(apa_tables = TRUE)` appends a *Manuscript tables*
   appendix ([\#73](https://github.com/JUhalt/nomologR/issues/73), last
   of three parts). It holds the
@@ -101,10 +115,10 @@
   interface is schema version 1, agreed with the `contentvalidR`
   maintainer and documented identically in both packages.
 
-  - **What is analysed.** `nomo_screen(data, items = handoff)` screens
+  - **What is analyzed.** `nomo_screen(data, items = handoff)` screens
     only the items content review carried. Every held-back item is
     listed in the decision log with its status and recommendation quoted
-    in `contentvalidR`’s own words, and is never analysed or reinstated.
+    in `contentvalidR`’s own words, and is never analyzed or reinstated.
   - **Guided runs.** `nomo_run(data, scales = handoff)` takes its scales
     from the review, and its design log records that item membership
     came from content review rather than from these data. A review with
@@ -311,7 +325,7 @@ remains R-universe; the first CRAN submission is targeted for v0.3.0
   now discloses relationships estimated between observed variables
   ([\#62](https://github.com/JUhalt/nomologR/issues/62)). When an
   endpoint is observed rather than latent, its measurement error enters
-  unmodelled, and if it is a composite of several items (a sum, mean, or
+  unmodeled, and if it is a composite of several items (a sum, mean, or
   factor score) the relationship carries the discrepancy
   [`nomo_scores()`](https://juhalt.github.io/nomologR/reference/nomo_scores.md)
   reports as correlational accuracy. The network cannot tell a composite
@@ -319,7 +333,7 @@ remains R-universe; the first CRAN submission is targeted for v0.3.0
   each hypothesis by its endpoints and discloses observed ones in the
   decision log, for review when both ends are observed and for
   information when one is, saying plainly that a single measured
-  variable is not a composite. The disclosure points to modelling the
+  variable is not a composite. The disclosure points to modeling the
   items as indicators, to
   [`lavaan::sam()`](https://rdrr.io/pkg/lavaan/man/sam.html) (Rosseel &
   Loh, 2024), and, for a linear regression among factor scores, to the
@@ -413,7 +427,7 @@ remains R-universe; the first CRAN submission is targeted for v0.3.0
     listwise deletion and FIML, with FIML as the reference. Ordered
     indicators, for which lavaan offers no FIML, are compared under
     listwise and pairwise deletion.
-  - **Assumptions and the flag.** Each strategy is labelled with the
+  - **Assumptions and the flag.** Each strategy is labeled with the
     mechanism it requires, following Enders and Bandalos (2001). A
     difference larger than half the reference standard error is flagged
     for review, following Schafer and Graham’s (2002) rule for when bias
@@ -433,7 +447,7 @@ remains R-universe; the first CRAN submission is targeted for v0.3.0
     ULS, lavaan 0.7 runs its two-stage method instead (as it does with
     GLS), while lavaan 0.6-21 refuses. With MLM, FIML is refused. Each
     of these is reported, not hidden, and the tests accept either lavaan
-    behaviour. The data supplied must reproduce the fitted model when
+    behavior. The data supplied must reproduce the fitted model when
     refitted with its original strategy, so a comparison cannot silently
     run on different data.
   - **Validation.** Tests reproduce lavaan’s estimates for each strategy

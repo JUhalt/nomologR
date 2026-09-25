@@ -54,7 +54,7 @@ nomo_missing(x, data, strategies = NULL, ...)
 
 A `nomo_missing` object containing:
 
-- `pattern`: missingness in the modelled variables.
+- `pattern`: missingness in the modeled variables.
 
 - `variables`: missing values per variable.
 
@@ -116,7 +116,7 @@ of that size is flagged for review, with two qualifications:
   ordered indicators, both strategies require MCAR, so a difference
   cannot be attributed to either one.
 
-- The strategies analyse different cases, so part of any difference is
+- The strategies analyze different cases, so part of any difference is
   sampling variability.
 
 A hypothesis whose concordance with its prediction differs between

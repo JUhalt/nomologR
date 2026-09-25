@@ -786,7 +786,7 @@ The flag carries two qualifications:
 
 - The difference estimates listwise deletion’s bias only if the data are
   MAR and the model is correct, because only then is FIML consistent.
-- The two strategies analyse different cases, so part of any difference
+- The two strategies analyze different cases, so part of any difference
   is sampling variability. The more cases listwise deletion discards,
   the larger that part becomes.
 
