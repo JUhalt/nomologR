@@ -43,6 +43,7 @@ test_that("continuous nomo_cfa reproduces direct lavaan estimates", {
 
 
 test_that("robust ML remains an explicit researcher estimator choice", {
+  skip_on_cran()
   model <- '
     visual  =~ x1 + x2 + x3
     textual =~ x4 + x5 + x6
@@ -64,6 +65,7 @@ test_that("robust ML remains an explicit researcher estimator choice", {
 
 
 test_that("declared ordinal indicators use WLSMV by default", {
+  skip_on_cran()
   set.seed(4101)
   n <- 500
   f1 <- rnorm(n)
@@ -177,6 +179,7 @@ test_that("residual helper returns unique ranked pairs", {
 
 
 test_that("modification indices are retained but never acted on automatically", {
+  skip_on_cran()
   model <- '
     visual  =~ x1 + x2 + x3
     textual =~ x4 + x5 + x6
@@ -197,6 +200,7 @@ test_that("modification indices are retained but never acted on automatically", 
 
 
 test_that("CFA presentation methods return stable classes", {
+  skip_on_cran()
   model <- '
     visual  =~ x1 + x2 + x3
     textual =~ x4 + x5 + x6
@@ -388,6 +392,7 @@ test_that("residual helper supports direct and nested lavaan-style objects", {
 
 
 test_that("continuous missing-data handling makes case retention visible", {
+  skip_on_cran()
   model <- '
     visual  =~ x1 + x2 + x3
     textual =~ x4 + x5 + x6
@@ -436,6 +441,7 @@ test_that("continuous missing-data handling makes case retention visible", {
 
 
 test_that("a deliberately misspecified CFA surfaces strain without changing model", {
+  skip_on_cran()
   model <- '
     general =~ x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8 + x9
   '
@@ -469,6 +475,7 @@ test_that("a deliberately misspecified CFA surfaces strain without changing mode
 
 
 test_that("decision log retains warnings, nonconvergence, flags, and MI quarantine", {
+  skip_on_cran()
   fit_evidence <- tibble::tibble(
     metric = c("df", "CFI"),
     value = c(0, .80),
@@ -577,6 +584,7 @@ nomo_test_cfa <- function(modification_indices = TRUE) {
 
 
 test_that("CFA print method exposes the central guardrails", {
+  skip_on_cran()
   out <- nomo_test_cfa()
   txt <- capture.output(print(out))
 
@@ -589,6 +597,7 @@ test_that("CFA print method exposes the central guardrails", {
 
 
 test_that("CFA print method handles engine labels, warnings, and unavailable values", {
+  skip_on_cran()
   out <- nomo_test_cfa(modification_indices = FALSE)
   out$n_used <- NA_real_
   out$estimator <- "WLSMV"
@@ -607,6 +616,7 @@ test_that("CFA print method handles engine labels, warnings, and unavailable val
 
 
 test_that("summary printer covers flagged and diagnostic sections", {
+  skip_on_cran()
   out <- nomo_test_cfa()
   s <- summary(out)
 
@@ -636,6 +646,7 @@ test_that("summary printer covers flagged and diagnostic sections", {
 
 
 test_that("summary printer handles clean optional sections", {
+  skip_on_cran()
   out <- nomo_test_cfa(modification_indices = FALSE)
   s <- summary(out)
   s$n_dropped <- 0
@@ -656,6 +667,7 @@ test_that("summary printer handles clean optional sections", {
 
 
 test_that("all CFA plot views contain interpretable data", {
+  skip_on_cran()
   out <- nomo_test_cfa()
 
   p_load <- plot(out, type = "loadings")
@@ -676,6 +688,7 @@ test_that("all CFA plot views contain interpretable data", {
 
 
 test_that("CFA plot methods fail informatively when evidence is unavailable", {
+  skip_on_cran()
   out <- nomo_test_cfa(modification_indices = FALSE)
 
   no_load <- out
@@ -698,6 +711,7 @@ test_that("CFA plot methods fail informatively when evidence is unavailable", {
 
 
 test_that("residual plot handles an all-zero matrix without infinite scale limits", {
+  skip_on_cran()
   out <- nomo_test_cfa(modification_indices = FALSE)
   nm <- colnames(out$residual_matrix)[1:3]
   out$residual_matrix <- matrix(
@@ -739,6 +753,7 @@ nomo_test_two_factor_data <- function(n = 800L, seed = 4201L,
 
 
 test_that("correctly specified continuous CFA remains well behaved", {
+  skip_on_cran()
   dat <- nomo_test_two_factor_data(n = 900, seed = 4202)
   model <- '
     F1 =~ A1 + A2 + A3 + A4
@@ -765,6 +780,7 @@ test_that("correctly specified continuous CFA remains well behaved", {
 
 
 test_that("omitted cross-loading produces visible strain without automatic refit", {
+  skip_on_cran()
   dat <- nomo_test_two_factor_data(
     n = 1200,
     seed = 4203,
@@ -798,6 +814,7 @@ test_that("omitted cross-loading produces visible strain without automatic refit
 
 
 test_that("omitted correlated residual is localized but not automatically freed", {
+  skip_on_cran()
   dat <- nomo_test_two_factor_data(
     n = 1200,
     seed = 4204,
@@ -848,6 +865,7 @@ test_that("omitted correlated residual is localized but not automatically freed"
 
 
 test_that("gross one-factor misspecification triggers global and local review", {
+  skip_on_cran()
   dat <- nomo_test_two_factor_data(n = 900, seed = 4205)
   model <- 'General =~ A1 + A2 + A3 + A4 + B1 + B2 + B3 + B4'
 
@@ -924,6 +942,7 @@ test_that("ordinal WLSMV wrapper reproduces direct lavaan standardized loadings"
 
 
 test_that("advanced optimizer control makes nonconvergence reproducible and visible", {
+  skip_on_cran()
   model <- '
     visual  =~ x1 + x2 + x3
     textual =~ x4 + x5 + x6
@@ -1000,6 +1019,7 @@ test_that("closeout: CFA accepts nomo_model and rejects non-list guidance", {
 
 
 test_that("closeout: CFA captures residual and modification-index warnings and MI errors", {
+  skip_on_cran()
   skip_if_not(
     exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
   )
@@ -1104,6 +1124,7 @@ test_that("closeout B: CFA loading and factor-correlation helpers fill optional 
 
 
 test_that("closeout B: CFA summary displays engine/requested estimator differences", {
+  skip_on_cran()
   cfa <- make_m9_report_run()$results$cfa
   s <- summary(cfa)
   s$estimator <- "MLR"

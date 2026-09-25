@@ -37,6 +37,7 @@ test_that("teaching datasets have the documented structure", {
 
 
 test_that("continuous teaching data show the documented structure and item flags", {
+  skip_on_cran()
   fac <- nomo_factors(
     nomo_demo_continuous,
     criterion_set = "minimal",

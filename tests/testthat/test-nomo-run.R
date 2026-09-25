@@ -219,6 +219,7 @@ test_that("one-call prespecification consumes decisions in workflow order", {
 
 
 test_that("pipeline-controlled stage settings cannot be overridden", {
+  skip_on_cran()
   dat <- make_m8_full_data(seed = 8502L)
   items <- c("i1", "i2", "i3", "i4")
 
@@ -412,6 +413,7 @@ test_that("multiple scales require named factor-count decisions", {
 
 
 test_that("recipe settings and component log expose reproducibility provenance", {
+  skip_on_cran()
   dat <- make_m8_full_data(seed = 8508L)
 
   run <- nomo_run(
@@ -855,6 +857,7 @@ test_that("future-stage settings can be added without recomputing completed stag
 
 
 test_that("invariance branch is explicit and researcher controlled", {
+  skip_on_cran()
   dat <- make_m8_full_data(n = 360L, seed = 8405L)
 
   run <- nomo_run(
@@ -920,6 +923,7 @@ test_that("network branch uses explicit hypotheses", {
 
 
 test_that("nomo_split roles carry into CFA and network replication", {
+  skip_on_cran()
   dat <- make_m8_full_data(n = 400L, seed = 8407L)
   split <- nomo_split(dat, validation_prop = .40, seed = 2026)
 

@@ -23,6 +23,7 @@ report_apa_run <- local({
 
 
 test_that("the tables follow the results the run holds, numbered in report order", {
+  skip_on_cran()
   tables <- nomologR:::nomo_report_apa_tables(report_apa_run())
 
   expect_identical(vapply(tables, `[[`, integer(1), "number"), seq_along(tables))
@@ -39,6 +40,7 @@ test_that("the tables follow the results the run holds, numbered in report order
 
 
 test_that("a table that does not apply is left out rather than failing the report", {
+  skip_on_cran()
   one <- nomo_run(
     nomo_demo_network, scales = list(Agency = paste0("ag", 1:4)), mode = "research",
     decisions = list(

@@ -213,6 +213,7 @@ test_that("nomo_efa can inherit M2 context while researcher overrides factor cou
 
 
 test_that("factor-count override preserves inherited modeling-type provenance", {
+  skip_on_cran()
   set.seed(8202L)
   n <- 260L
   f <- rnorm(n)

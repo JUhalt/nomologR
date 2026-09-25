@@ -184,6 +184,7 @@ test_that("an empty filter result still returns the expected columns", {
 # Derivation from a real run --------------------------------------------------
 
 test_that("nomo_methods(run) reports the methods the run actually used", {
+  skip_on_cran()
   run <- methods_run()
   used <- nomo_methods(run)
 
@@ -310,6 +311,7 @@ methods_compare_models <- local({
 
 
 test_that("each difference test is credited by lavaan's method, not by name", {
+  skip_on_cran()
   models <- methods_compare_models()
   credit <- function(pair) {
     nomo_methods(nomo_compare(
@@ -336,6 +338,7 @@ test_that("each difference test is credited by lavaan's method, not by name", {
 
 
 test_that("information criteria are credited only where they are defined", {
+  skip_on_cran()
   models <- methods_compare_models()
   ml <- nomo_compare(models$ml[[1]], models$ml[[2]],
                      rationale = "IC regression test.", evidence = FALSE)
@@ -351,6 +354,7 @@ test_that("information criteria are credited only where they are defined", {
 
 
 test_that("every lavaan spelling of FIML is credited", {
+  skip_on_cran()
   model <- "A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4 + b5"
   for (miss in c("ml", "fiml", "direct")) {
     fit <- nomo_cfa(model, data = nomo_demo_continuous, missing = miss)
@@ -365,6 +369,7 @@ test_that("every lavaan spelling of FIML is credited", {
 
 
 test_that("categorical and rotated solutions credit their own methods", {
+  skip_on_cran()
   fo <- nomo_factors(nomo_demo_ordinal, n_iter = 10, seed = 2026)
   expect_true("categorical_correlations" %in% nomo_methods(fo)$id)
 
@@ -394,6 +399,7 @@ test_that("an ordered CFA credits WLSMV, not maximum likelihood", {
 
 
 test_that("bootstrap intervals and ordinal-scale reliability are credited", {
+  skip_on_cran()
   models <- methods_compare_models()
 
   boot <- nomo_reliability(models$ml[[1]], ci = "bootstrap", ci_boot = 20, ci_seed = 2026)
@@ -449,6 +455,7 @@ test_that("invariance credits partial releases and categorical sequences", {
 
 
 test_that("specifications, splits, and replication credit their methods", {
+  skip_on_cran()
   split <- nomo_split(nomo_demo_network, validation_prop = .40, seed = 2026)
   expect_equal(nomo_methods(split)$id, "holdout_split")
 
@@ -476,6 +483,7 @@ test_that("specifications, splits, and replication credit their methods", {
 
 
 test_that("a split, revised workflow credits holdout, lineage, and its comparison", {
+  skip_on_cran()
   split <- nomo_split(nomo_demo_network, validation_prop = .40, seed = 2026)
   scales <- list(Agency = paste0("ag", 1:4))
   run <- nomo_run(

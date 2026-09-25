@@ -145,6 +145,7 @@ test_that("a within-person correlation over two points is never reported", {
 
 
 test_that("even-odd consistency never returns a divergent correction", {
+  skip_on_cran()
   out <- effort_screen()
   finite <- out$effort$even_odd[is.finite(out$effort$even_odd)]
   expect_gt(length(finite), 0L)
@@ -155,6 +156,7 @@ test_that("even-odd consistency never returns a divergent correction", {
 # Behavior on injected cases ---------------------------------------------------
 
 test_that("the indices separate straight-lining, random, and attentive responding", {
+  skip_on_cran()
   fx <- effort_data()
   e <- effort_screen()$effort
   mean_of <- function(x) mean(x[is.finite(x)])
@@ -178,6 +180,7 @@ test_that("the indices separate straight-lining, random, and attentive respondin
 
 
 test_that("the disagreement between long-string and inter-item SD is reported", {
+  skip_on_cran()
   log <- effort_screen()$decision_log
   entry <- log[log$metric == "index_disagreement", ]
 
@@ -188,6 +191,7 @@ test_that("the disagreement between long-string and inter-item SD is reported", 
 
 
 test_that("few pairs are disclosed as making the flags coarse", {
+  skip_on_cran()
   log <- effort_screen()$decision_log
   pairs <- log[log$metric %in% c("psychometric_antonym", "psychometric_synonym"), ]
 
@@ -201,6 +205,7 @@ test_that("few pairs are disclosed as making the flags coarse", {
 # Contract ---------------------------------------------------------------------
 
 test_that("nomo_screen never modifies data or recodes what it returns", {
+  skip_on_cran()
   fx <- effort_data()
   before <- fx$data
   out <- effort_screen()
@@ -212,6 +217,7 @@ test_that("nomo_screen never modifies data or recodes what it returns", {
 
 
 test_that("existing output is unchanged when effort is not requested", {
+  skip_on_cran()
   fx <- effort_data()
   plain <- nomo_screen(fx$data)
 
@@ -252,6 +258,7 @@ test_that("keying and range are never inferred", {
 
 
 test_that("an undeclared keying is disclosed where it would mislead", {
+  skip_on_cran()
   fx <- effort_data()
   out <- nomo_screen(fx$data, effort = TRUE, scales = fx$scales)
   entry <- out$decision_log[out$decision_log$metric == "even_odd", ]
@@ -263,6 +270,7 @@ test_that("an undeclared keying is disclosed where it would mislead", {
 # Crediting --------------------------------------------------------------------
 
 test_that("careless-responding indices are credited only when they were computed", {
+  skip_on_cran()
   fx <- effort_data()
 
   full <- nomo_methods_used(effort_screen())
@@ -285,6 +293,7 @@ test_that("careless-responding indices are credited only when they were computed
 
 
 test_that("the printed screen summarizes careless-responding flags", {
+  skip_on_cran()
   expect_output(print(effort_screen()), "Careless-responding flags")
   expect_output(print(effort_screen()), "never removed")
   expect_false(any(grepl(
@@ -295,6 +304,7 @@ test_that("the printed screen summarizes careless-responding flags", {
 
 
 test_that("nomo_table returns each part of a screen", {
+  skip_on_cran()
   out <- effort_screen()
 
   expect_identical(nomo_table(out, "items"), out$item_summary)
@@ -311,6 +321,7 @@ test_that("nomo_table returns each part of a screen", {
 
 
 test_that("declaring no reverse-keyed items differs from not declaring keying", {
+  skip_on_cran()
   fx <- effort_data()
   metric <- function(out) {
     out$decision_log$recommendation[out$decision_log$metric == "even_odd"]

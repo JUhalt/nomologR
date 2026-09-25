@@ -4,6 +4,7 @@
   - **Spelling.** `DESCRIPTION` declares `Language: en-US`, and the package's text uses American spelling throughout. About 40 British spellings (`analysed`, `modelled`, `behaviour`) are changed in messages, help pages, articles, and NEWS; only wording changes, not code. `spelling::spell_check_package()` now finds nothing, with author names and technical terms listed in `inst/WORDLIST`.
   - **URLs.** `urlchecker::url_check()` finds all 131 URLs correct.
   - **Build.** `.git` and `.gitignore` are excluded from the build. A git worktree has a `.git` *file*, and a hidden file in the tarball is what CRAN returned `contentvalidR` 0.3.1 for.
+  - **Test time.** Under CRAN conditions the tests took about 15 minutes on a slow Windows machine; they now take about 3. The 117 tests that took 2 seconds or more are skipped on CRAN: simulations, full guided runs, and rendered reports. Two stay on CRAN because they check that nomologR reproduces lavaan's own estimates, so a lavaan change that alters them is caught there. Continuous integration still runs every test, and coverage is unchanged.
 
 - `nomo_report(apa_tables = TRUE)` appends a *Manuscript tables* appendix (#73, last of three parts). It holds the `nomo_apa_table()` tables for the results a run holds: CFA loadings, fit, and factor correlations; reliability; and, when present, invariance and the network's hypotheses and fit. They are numbered in the order the report presents them. A table that does not apply is left out rather than failing the report. The default, `FALSE`, leaves reports unchanged.
 

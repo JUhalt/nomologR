@@ -178,6 +178,7 @@ test_that("a review with no construct mapping can be screened", {
 # The guided workflow -----------------------------------------------------------
 
 test_that("nomo_run takes its scales and their provenance from the handoff", {
+  skip_on_cran()
   h <- handoff_fixture("walkthrough-sort", "0.7.0")
   run <- nomo_run(handoff_responses(walkthrough_items), scales = h,
                   settings = list(factors = list(seed = 46)))
@@ -214,6 +215,7 @@ test_that("nomo_run refuses a review with no construct mapping and says what to 
 
 
 test_that("a run without a handoff is unchanged", {
+  skip_on_cran()
   scales <- list(A = c("EF1", "EF2", "EF3"), B = c("TF1", "TF2", "TF3"))
   run <- nomo_run(handoff_responses(walkthrough_items), scales = scales,
                   settings = list(factors = list(seed = 46)))
@@ -296,6 +298,7 @@ test_that("an item placed in two scales is noted before it becomes a cross-loadi
 # The report ---------------------------------------------------------------------
 
 test_that("a run from a handoff reports its content review; other runs do not", {
+  skip_on_cran()
   h <- handoff_fixture("walkthrough-sort", "0.7.0")
   run <- nomo_run(handoff_responses(walkthrough_items), scales = h,
                   settings = list(factors = list(seed = 46)))
