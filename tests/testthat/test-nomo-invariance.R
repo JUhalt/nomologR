@@ -76,6 +76,7 @@ test_that("continuous invariance retains separate configural and metric models",
 
 
 test_that("ordered-polytomous invariance inserts threshold step before metric", {
+  skip_on_cran()
   dat <- make_ordinal_invariance_fixture()
   model <- "F =~ u1 + u2 + u3 + u4"
 
@@ -110,6 +111,7 @@ test_that("ordered-polytomous invariance inserts threshold step before metric", 
 
 
 test_that("ordered default sequence exposes threshold-aware model progression", {
+  skip_on_cran()
   dat <- make_ordinal_invariance_fixture(seed = 6702L)
   model <- "F =~ u1 + u2 + u3 + u4"
 
@@ -150,6 +152,7 @@ test_that("ordered invariance refuses a continuous-style sequence that skips thr
 
 
 test_that("binary and three-category structures receive identification-aware sequences", {
+  skip_on_cran()
   binary <- make_ordinal_invariance_fixture(seed = 6704L)
   for (item in c("u1", "u2", "u3", "u4")) {
     binary[[item]] <- ifelse(binary[[item]] <= 3, 0, 1)
@@ -721,6 +724,7 @@ make_ordered_fixture_c <- function(n = 220L, categories = 5L, seed = 6902L) {
 
 
 test_that("binary indicators use simultaneous strong restrictions", {
+  skip_on_cran()
   dat <- make_ordered_fixture_c(categories = 2L, seed = 6903L)
 
   out <- nomo_invariance(
@@ -743,6 +747,7 @@ test_that("binary indicators use simultaneous strong restrictions", {
 
 
 test_that("three-category indicators fold threshold equality into metric step", {
+  skip_on_cran()
   dat <- make_ordered_fixture_c(categories = 3L, seed = 6904L)
 
   out <- nomo_invariance(
@@ -765,6 +770,7 @@ test_that("three-category indicators fold threshold equality into metric step", 
 
 
 test_that("four-plus category indicators retain separate threshold step", {
+  skip_on_cran()
   dat <- make_ordered_fixture_c(categories = 5L, seed = 6905L)
 
   out <- nomo_invariance(
@@ -894,6 +900,7 @@ test_that("invariance report tables and plots are available", {
 
 
 test_that("invariance print output exposes identification and researcher control", {
+  skip_on_cran()
   dat <- make_ordered_fixture_c(categories = 3L, seed = 6910L)
 
   out <- nomo_invariance(
@@ -1101,6 +1108,7 @@ test_that("localized diagnostics never create partial invariance by themselves",
 
 
 test_that("hardening retains exact category-aware identification notes", {
+  skip_on_cran()
   set.seed(7206L)
   n <- 260L
 
@@ -1187,6 +1195,7 @@ test_that("invariance pretty-constraint helper preserves invalid inputs", {
 
 
 test_that("invariance print and summary cover ordered and partial presentation", {
+  skip_on_cran()
   run <- make_m9_full_report_run()
   inv <- run$results$invariance
 

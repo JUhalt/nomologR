@@ -515,6 +515,7 @@ test_that("component-table helper covers alternate M1 through M5 report views", 
 
 
 test_that("optional M7 and M6 branches are reportable through common helpers", {
+  skip_on_cran()
   run <- make_m9_full_report_run()
   expect_identical(run$status, "complete")
 
@@ -651,6 +652,7 @@ test_that("template preparation rejects missing or duplicate title markers", {
 
 # ---- consolidated from test-nomo-report-render.R ----
 test_that("nomo_report renders a polished self-contained HTML archive when Pandoc is available", {
+  skip_on_cran()
   skip_if_not_installed("rmarkdown")
   skip_if_not_installed("knitr")
   skip_if_not(rmarkdown::pandoc_available())
@@ -710,6 +712,7 @@ test_that("nomo_report renders a polished self-contained HTML archive when Pando
 
 
 test_that("nomo_report can overwrite intentionally", {
+  skip_on_cran()
   skip_if_not_installed("rmarkdown")
   skip_if_not_installed("knitr")
   skip_if_not(rmarkdown::pandoc_available())
@@ -733,6 +736,7 @@ test_that("nomo_report can overwrite intentionally", {
 
 
 test_that("nomo_report creates nested output directories", {
+  skip_on_cran()
   skip_if_not_installed("rmarkdown")
   skip_if_not_installed("knitr")
   skip_if_not(rmarkdown::pandoc_available())
@@ -757,6 +761,7 @@ test_that("nomo_report creates nested output directories", {
 
 
 test_that("full optional-branch report renders invariance and network evidence", {
+  skip_on_cran()
   skip_if_not_installed("rmarkdown")
   skip_if_not_installed("knitr")
   skip_if_not(rmarkdown::pandoc_available())

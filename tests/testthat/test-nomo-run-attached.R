@@ -26,6 +26,7 @@ attached_run <- local({
 
 
 test_that("requested scores and missing-data sensitivity follow the CFA", {
+  skip_on_cran()
   run <- attached_run()
   expect_identical(run$status, "complete")
 
@@ -52,6 +53,7 @@ test_that("requested scores and missing-data sensitivity follow the CFA", {
 
 
 test_that("a run that requests neither is unchanged, and the stage table keeps its shape", {
+  skip_on_cran()
   run <- attached_run(list())
   expect_null(run$results$scores)
   expect_null(run$results$missing)
@@ -121,6 +123,7 @@ test_that("scores need a method the researcher names, and settings are validated
 
 
 test_that("requested evidence that cannot be computed is recorded, and the run goes on", {
+  skip_on_cran()
   local_mocked_bindings(nomo_scores = function(...) stop("simulated scoring failure"))
   run <- nomo_run(
     nomo_demo_continuous, scales = attached_scales, mode = "research",
@@ -136,6 +139,7 @@ test_that("requested evidence that cannot be computed is recorded, and the run g
 
 
 test_that("the strategies named in settings are the ones compared", {
+  skip_on_cran()
   run <- attached_run(list(missing = list(strategies = "fiml", reliability = FALSE)))
   # lavaan's alias is read as FIML, and the strategy the model was fitted with
   # is always included.
@@ -144,6 +148,7 @@ test_that("the strategies named in settings are the ones compared", {
 
 
 test_that("a missing-data comparison that cannot be computed is recorded, and the run goes on", {
+  skip_on_cran()
   local_mocked_bindings(nomo_missing = function(...) stop("simulated comparison failure"))
   run <- nomo_run(
     nomo_demo_continuous, scales = attached_scales, mode = "research",
@@ -160,6 +165,7 @@ test_that("a missing-data comparison that cannot be computed is recorded, and th
 
 
 test_that("attached settings can be added before the CFA and are locked after", {
+  skip_on_cran()
   paused <- nomo_run(nomo_demo_continuous, scales = attached_scales,
                      settings = list(factors = list(seed = 73)))
   expect_identical(paused$next_stage, "efa")
@@ -176,6 +182,7 @@ test_that("attached settings can be added before the CFA and are locked after", 
 
 
 test_that("the report presents scores and missing-data sensitivity", {
+  skip_on_cran()
   run <- attached_run()
   scores <- nomologR:::nomo_report_scores(run$results$scores)
   expect_match(scores$summary, "Unit-weighted scores (method: sum)", fixed = TRUE)

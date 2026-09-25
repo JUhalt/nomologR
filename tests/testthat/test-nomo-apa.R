@@ -61,6 +61,7 @@ apa_cfa <- local({
 
 
 test_that("the loadings table lays out one column per factor", {
+  skip_on_cran()
   tab <- nomo_apa_table(apa_cfa(), "loadings", number = 1)
 
   expect_s3_class(tab, "nomo_apa_table")
@@ -99,6 +100,7 @@ test_that("the fit table applies each index's bound", {
 
 
 test_that("correlation and reliability tables drop the leading zero", {
+  skip_on_cran()
   cors <- nomo_apa_table(apa_cfa(), "factor_correlations")
   expect_match(cors$body[[2L]][[1L]], "^\\.")
 
@@ -109,6 +111,7 @@ test_that("correlation and reliability tables drop the leading zero", {
 
 
 test_that("the invariance table reports changes without a signed zero", {
+  skip_on_cran()
   inv <- nomo_invariance(apa_model, data = nomo_demo_network, group = "group")
   tab <- nomo_apa_table(inv)
 
@@ -119,6 +122,7 @@ test_that("the invariance table reports changes without a signed zero", {
 
 
 test_that("the hypotheses table reports evidence, not whether it was prespecified", {
+  skip_on_cran()
   # A path and a correlation on different pairs, so both are estimable.
   h <- nomo_hypotheses(
     "Agency -> Persistence" = positive(min = .20),
@@ -144,6 +148,7 @@ test_that("the hypotheses table reports evidence, not whether it was prespecifie
 
 
 test_that("a relation the model cannot estimate is shown as an empty cell", {
+  skip_on_cran()
   # A path and a correlation between the same two factors cannot both be
   # estimated, so one of them has no estimate; APA marks that with a dash
   # rather than a zero or a blank that could be misread as a value.
@@ -161,6 +166,7 @@ test_that("a relation the model cannot estimate is shown as an empty cell", {
 
 
 test_that("a post hoc hypothesis is marked with a specific note", {
+  skip_on_cran()
   h <- nomo_hypotheses("Agency -> Persistence" = positive(min = .20))
   net <- nomo_network(apa_model, data = nomo_demo_network, hypotheses = h)
   net$hypothesis_evidence$confirmatory_status <- "post_hoc"
@@ -201,12 +207,14 @@ test_that("unsupported objects and arguments are refused with an explanation", {
 # Remaining paths (#72) --------------------------------------------------------
 
 test_that("a one-factor model has no factor-correlation table, and says why", {
+  skip_on_cran()
   one <- nomo_cfa("Agency =~ ag1 + ag2 + ag3 + ag4", nomo_demo_network)
   expect_error(nomo_apa_table(one, "factor_correlations"), "one factor")
 })
 
 
 test_that("a reliability coefficient that was not computed is an empty cell", {
+  skip_on_cran()
   rel <- nomo_reliability(apa_cfa(), include_alpha = FALSE)
   tab <- nomo_apa_table(rel)
   # Columns: construct, omega, alpha. Omega was computed; alpha was not.
@@ -216,6 +224,7 @@ test_that("a reliability coefficient that was not computed is an empty cell", {
 
 
 test_that("the network fit table reports the RMSEA with its interval", {
+  skip_on_cran()
   net <- nomo_network(
     paste(apa_model, "Persistence ~ Agency", sep = "\n"),
     data = nomo_demo_network,

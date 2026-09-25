@@ -555,6 +555,7 @@ test_that("the reliability refusal points to nomo_hierarchical()", {
 # The caution the documentation makes ------------------------------------------
 
 test_that("a bifactor model fits higher-order data at least as well", {
+  skip_on_cran()
   dat <- hier_sample(hier_higher_population()$sigma, 600, 1101)
   correlated <- nomo_cfa(nomo_model(hier_groups), data = dat)
   higher <- nomo_cfa(nomo_model(hier_groups, "higher_order"), data = dat)
@@ -627,6 +628,7 @@ test_that("the variance decomposition shares sum to one", {
 # Methods registry -------------------------------------------------------------
 
 test_that("nomo_methods() credits hierarchical methods only where used", {
+  skip_on_cran()
   dat <- hier_sample(hier_higher_population()$sigma, 600, 1301)
   correlated <- nomo_cfa(nomo_model(hier_groups), data = dat)
   higher <- nomo_cfa(nomo_model(hier_groups, "higher_order"), data = dat)

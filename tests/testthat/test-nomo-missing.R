@@ -149,6 +149,7 @@ test_that("the log states what each strategy assumes and that MAR is untestable"
 
 
 test_that("agreement is reported without implying that either strategy is unbiased", {
+  skip_on_cran()
   out <- nomo_missing(
     nomo_cfa(
       "A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4 + b5",
@@ -271,6 +272,7 @@ test_that("data that does not reproduce the fitted model is refused", {
 
 
 test_that("strategies can be named with lavaan's aliases, and are validated", {
+  skip_on_cran()
   model <- "A =~ a1 + a2 + a3 + a4 + a5
 B =~ b1 + b2 + b3 + b4 + b5"
   fit <- nomo_cfa(model, data = nomo_demo_continuous)
@@ -434,6 +436,7 @@ test_that("a substituted reference says whether differences still estimate bias"
 
 
 test_that("a strategy that did not converge, or is inadmissible, is flagged for review", {
+  skip_on_cran()
   out <- nomo_missing(nomo_cfa(missing_demo_model, data = nomo_demo_continuous),
                       data = nomo_demo_continuous, reliability = FALSE)
   pattern <- list(summary = out$pattern, variables = out$variables)
@@ -500,6 +503,7 @@ test_that("each difference is attributed only as far as the strategies allow", {
 
 
 test_that("reliability that cannot be computed leaves an empty comparison, not a wrong one", {
+  skip_on_cran()
   fit <- nomo_cfa(missing_demo_model, data = nomo_demo_continuous)
 
   local({

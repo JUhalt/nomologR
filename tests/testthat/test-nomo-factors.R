@@ -18,6 +18,7 @@ test_that("nomo_factors validates core inputs", {
 
 
 test_that("numeric-discrete items remain conservative unless overridden", {
+  skip_on_cran()
   set.seed(1)
   f <- rnorm(250)
   latent <- replicate(5, 0.8 * f + rnorm(250, sd = 0.6))
@@ -56,6 +57,7 @@ test_that("numeric-discrete items remain conservative unless overridden", {
 
 
 test_that("auto correlation selection respects declared indicator type", {
+  skip_on_cran()
   set.seed(2)
   n <- 250
   f <- rnorm(n)
@@ -546,6 +548,7 @@ test_that("concordance presentation falls back and fails informatively", {
 
 
 test_that("summary prints skipped criteria and qualification together", {
+  skip_on_cran()
   out <- nomo_factors(
     make_cov_final_ordinal(),
     criterion_set = "extended",
@@ -980,6 +983,7 @@ test_that("extended criteria document missing-data and short-scale skips", {
 
 
 test_that("all criterion set exposes comparison data and legacy context without legacy voting", {
+  skip_on_cran()
   dat <- make_factor_coverage_data(n = 160L, p = 8L, seed = 9401L)
   guidance <- nomo_defaults()
   guidance$factor_cd_population <- 600L
@@ -1206,6 +1210,7 @@ test_that("EKC is available in the core set for ordinary Pearson data", {
 
 
 test_that("ordinal analyses skip incompatible extended criteria explicitly", {
+  skip_on_cran()
   dat <- make_m2b_ordinal()
 
   out <- nomo_factors(
@@ -1450,6 +1455,7 @@ test_that("internally split criterion families are not forced into one concordan
 
 
 test_that("summary surfaces qualified criteria for non-Pearson workflows", {
+  skip_on_cran()
   dat <- make_m2b_ordinal(n = 320L, seed = 18)
   out <- nomo_factors(
     dat,
@@ -1585,6 +1591,7 @@ test_that("hard data failures precede modeling-type inference", {
 
 
 test_that("ordinal one- and two-factor simulations recover ordinary structure", {
+  skip_on_cran()
   one <- nomo_factors(
     make_closeout_ordinal_one(),
     criterion_set = "core",

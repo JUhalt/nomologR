@@ -264,6 +264,7 @@ test_that("single-factor reliability retains the CFA construct name and alpha av
 # ---- recovered from hygiene consolidation: test-nomo-reliability.R ----
 # ---- consolidated from test-nomo-reliability-uncertainty.R ----
 test_that("bootstrap reliability intervals add uncertainty without changing point estimates", {
+  skip_on_cran()
   set.seed(5401)
   n <- 450
   f <- rnorm(n)
@@ -879,6 +880,7 @@ reliability_boot_fit <- local({
 
 
 test_that("the bootstrap stays serial by default and records it", {
+  skip_on_cran()
   rel <- nomo_reliability(reliability_boot_fit(), ci = "bootstrap",
                           ci_boot = 20, ci_seed = 2026)
 
@@ -894,6 +896,7 @@ test_that("the bootstrap stays serial by default and records it", {
 
 
 test_that("the printed status names the worker count when there was more than one", {
+  skip_on_cran()
   rel <- nomo_reliability(reliability_boot_fit(), ci = "bootstrap",
                           ci_boot = 20, ci_seed = 2026)
   expect_false(any(grepl("workers", utils::capture.output(print(rel)), fixed = TRUE)))
@@ -906,6 +909,7 @@ test_that("the printed status names the worker count when there was more than on
 
 
 test_that("an unseeded bootstrap is flagged as not reproducible", {
+  skip_on_cran()
   rel <- nomo_reliability(reliability_boot_fit(), ci = "bootstrap", ci_boot = 20)
   entry <- rel$decision_log[rel$decision_log$metric == "bootstrap_reproducibility", ]
 

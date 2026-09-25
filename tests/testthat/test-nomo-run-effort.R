@@ -31,6 +31,7 @@ run_effort <- function(screen = list(effort = TRUE), scales = run_effort_data()$
 
 
 test_that("careless responding is computed once across the instrument, not per scale", {
+  skip_on_cran()
   run <- run_effort()
   fx <- run_effort_data()
 
@@ -59,6 +60,7 @@ test_that("careless responding is computed once across the instrument, not per s
 
 
 test_that("a run that does not ask for careless responding is unchanged", {
+  skip_on_cran()
   run <- nomo_run(run_effort_data()$data, scales = run_effort_data()$scales,
                   settings = list(factors = list(seed = 73)))
   expect_null(run$results$effort)
@@ -67,6 +69,7 @@ test_that("a run that does not ask for careless responding is unchanged", {
 
 
 test_that("the careless-responding log reaches the run's component log", {
+  skip_on_cran()
   run <- run_effort()
   component <- nomo_table(run, "component_log")
   effort_rows <- component[component$pipeline_scope == "careless_responding", ]
@@ -77,12 +80,14 @@ test_that("the careless-responding log reaches the run's component log", {
 
 
 test_that("careless-responding methods are credited to the run", {
+  skip_on_cran()
   used <- nomo_methods(run_effort())$id
   expect_true(any(grepl("long_string|inter_item_sd|even_odd", used)))
 })
 
 
 test_that("keying set in settings is used and recorded", {
+  skip_on_cran()
   run <- run_effort(list(effort = TRUE, reverse = "a2", scale_range = c(1, 5)))
   expect_identical(run$results$effort$effort_settings$reverse, "a2")
   entry <- run$decision_log[run$decision_log$id == "careless_responding", ]
@@ -92,6 +97,7 @@ test_that("keying set in settings is used and recorded", {
 
 
 test_that("the pair threshold set in settings reaches the screen", {
+  skip_on_cran()
   run <- run_effort(list(effort = TRUE, pair_magnitude = 0.5))
   expect_identical(run$results$effort$effort_settings$pair_magnitude, 0.5)
 })
@@ -105,6 +111,7 @@ test_that("an unreadable effort setting is refused before any stage runs", {
 
 
 test_that("a handoff's declared keying reaches the run, and settings override it", {
+  skip_on_cran()
   h <- readRDS(test_path("fixtures", "contentvalidR", "handoff-walkthrough-sort-v0.7.0.rds"))
   set.seed(73)
   n <- 300
@@ -144,6 +151,7 @@ test_that("a careless-responding screen that fails blocks the run with its reaso
 
 
 test_that("the report summarizes careless responding after the item audits", {
+  skip_on_cran()
   report <- nomologR:::nomo_report_effort(run_effort()$results$effort)
   expect_match(report$summary, "Computed once across all 12 items for 300 cases, using 3 scale(s).",
                fixed = TRUE)

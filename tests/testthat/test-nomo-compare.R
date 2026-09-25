@@ -16,6 +16,7 @@ lrt_row <- function(...) {
 
 
 test_that("nested ML comparison reproduces lavaan tests, fit changes, and information criteria", {
+  skip_on_cran()
   full <- nomo_cfa(compare_syntax$full, nomo_demo_continuous)
   zero <- nomo_cfa(compare_syntax$zero_b5, nomo_demo_continuous)
 
@@ -54,6 +55,7 @@ test_that("nested ML comparison reproduces lavaan tests, fit changes, and inform
 
 
 test_that("zero-loading evidence is labeled and loadings are aligned side by side", {
+  skip_on_cran()
   full <- nomo_cfa(compare_syntax$full, nomo_demo_continuous)
   zero <- nomo_cfa(compare_syntax$zero_b5, nomo_demo_continuous)
   out <- nomo_compare(full = full, zero_b5 = zero, rationale = "Item b5.", reference = "zero_b5")
@@ -74,6 +76,7 @@ test_that("zero-loading evidence is labeled and loadings are aligned side by sid
 
 
 test_that("models with different observed variables receive descriptive evidence only", {
+  skip_on_cran()
   full <- nomo_cfa(compare_syntax$full, nomo_demo_continuous)
   drop <- nomo_cfa(compare_syntax$drop_b5, nomo_demo_continuous)
   out <- nomo_compare(full = full, drop_b5 = drop, rationale = "Shortened scale.")
@@ -93,6 +96,7 @@ test_that("models with different observed variables receive descriptive evidence
 
 
 test_that("nesting declarations are checked, and non-nested models keep information criteria", {
+  skip_on_cran()
   full <- nomo_cfa(compare_syntax$full, nomo_demo_continuous)
   moved <- nomo_cfa(compare_syntax$a5_on_b, nomo_demo_continuous)
 
@@ -121,6 +125,7 @@ test_that("nesting declarations are checked, and non-nested models keep informat
 
 
 test_that("equivalent parameterizations are identified without a difference test", {
+  skip_on_cran()
   marker <- nomo_cfa(compare_syntax$full, nomo_demo_continuous)
   std_lv <- nomo_cfa(compare_syntax$full, nomo_demo_continuous, std.lv = TRUE)
   out <- nomo_compare(marker = marker, std_lv = std_lv, rationale = "Identification choice.", evidence = FALSE)
@@ -133,6 +138,7 @@ test_that("equivalent parameterizations are identified without a difference test
 
 
 test_that("comparisons refuse incompatible inputs with explanations", {
+  skip_on_cran()
   full <- nomo_cfa(compare_syntax$full, nomo_demo_continuous)
   zero <- nomo_cfa(compare_syntax$zero_b5, nomo_demo_continuous)
 
@@ -161,6 +167,7 @@ test_that("comparisons refuse incompatible inputs with explanations", {
 
 
 test_that("unnamed models are labeled from their expressions", {
+  skip_on_cran()
   full <- nomo_cfa(compare_syntax$full, nomo_demo_continuous)
   zero <- nomo_cfa(compare_syntax$zero_b5, nomo_demo_continuous)
   out <- nomo_compare(full, zero, rationale = "Labels.", evidence = FALSE)
@@ -237,6 +244,7 @@ test_that("WLSMV comparisons use lavaan's categorical difference test without in
 
 
 test_that("comparison presentation methods and tables work", {
+  skip_on_cran()
   full <- nomo_cfa(compare_syntax$full, nomo_demo_continuous)
   zero <- nomo_cfa(compare_syntax$zero_b5, nomo_demo_continuous)
   out <- nomo_compare(full = full, zero_b5 = zero, rationale = "Item b5.")
@@ -283,6 +291,7 @@ test_that("models sharing no observed variables are refused", {
 
 
 test_that("models treating shared indicators differently are refused", {
+  skip_on_cran()
   numeric_items <- as.data.frame(lapply(nomo_demo_ordinal, as.numeric))
   a_items <- paste0("a", 1:5)
   all_items <- c(a_items, paste0("b", 1:5))
@@ -300,6 +309,7 @@ test_that("models treating shared indicators differently are refused", {
 
 
 test_that("the difference-test method is validated and can be chosen", {
+  skip_on_cran()
   full <- nomo_cfa(compare_syntax$full, nomo_demo_continuous, estimator = "MLR")
   zero <- nomo_cfa(compare_syntax$zero_b5, nomo_demo_continuous, estimator = "MLR")
 

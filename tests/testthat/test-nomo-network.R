@@ -1532,6 +1532,7 @@ test_that("closeout: network fit wrapper exposes missing/control arguments befor
 
 
 test_that("closeout: network presentation covers empty evidence and replication branches", {
+  skip_on_cran()
   net <- make_m9_full_report_run()$results$network
 
   if (nrow(net$replication_evidence)) {
