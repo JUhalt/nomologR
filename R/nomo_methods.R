@@ -1350,7 +1350,7 @@ nomo_methods_registry <- function() {
         "exactly as well as correlated factors. It is a constrained version of",
         "the bifactor model, and Murray and Johnson (2013) found the fit",
         "comparison between the two biased in favor of the bifactor model",
-        "whenever complexity is left unmodelled."
+        "whenever complexity is left unmodeled."
       ),
       "nomo_model()", "lavaan",
       c("yung_1999", "reise_2012", "murray_johnson_2013")

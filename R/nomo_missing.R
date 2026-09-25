@@ -54,7 +54,7 @@ nomo_missing_half_se <- 0.5
 #'   and the model is correct, since only then is FIML consistent. With ordered
 #'   indicators, both strategies require MCAR, so a difference cannot be
 #'   attributed to either one.
-#' * The strategies analyse different cases, so part of any difference is
+#' * The strategies analyze different cases, so part of any difference is
 #'   sampling variability.
 #'
 #' A hypothesis whose concordance with its prediction differs between
@@ -88,7 +88,7 @@ nomo_missing_half_se <- 0.5
 #'
 #' @return A `nomo_missing` object containing:
 #'
-#' * `pattern`: missingness in the modelled variables.
+#' * `pattern`: missingness in the modeled variables.
 #' * `variables`: missing values per variable.
 #' * `strategies`: one row per strategy.
 #' * `fit`: fit indices by strategy.
@@ -240,7 +240,7 @@ nomo_missing_run <- function(x, lavaan_fit, data, ordered, strategies, refit,
   if (length(absent)) {
     stop(
       sprintf(
-        "`data` does not contain the modelled variable(s): %s.",
+        "`data` does not contain the modeled variable(s): %s.",
         paste(absent, collapse = ", ")
       ),
       call. = FALSE
@@ -566,7 +566,7 @@ nomo_missing_strategy_table <- function(plan, fits, fit_of, fitted_as, pattern,
     note <- if (failed) {
       obj$message
     } else if (skipped) {
-      "Not fitted: no modelled variable has missing values."
+      "Not fitted: no modeled variable has missing values."
     } else if (!identical(engine, s)) {
       sprintf("lavaan used missing = \"%s\" when \"%s\" was requested.", engine, s)
     } else {
@@ -740,7 +740,7 @@ nomo_missing_log <- function(pattern, strategies, estimates, reference, ordered,
       log, stage = "missing_data", object = object, metric = "no_missing",
       value = 0, severity = "info",
       observation = sprintf(
-        "None of the %d cases is missing a modelled variable.", s$n_cases
+        "None of the %d cases is missing a modeled variable.", s$n_cases
       ),
       recommendation = paste(
         "Every strategy analyses the same cases, so the choice of missing-data",
@@ -755,7 +755,7 @@ nomo_missing_log <- function(pattern, strategies, estimates, reference, ordered,
     reference = "Enders & Bandalos (2001); Schafer & Graham (2002)",
     severity = "info",
     observation = sprintf(
-      "%d of %d cases (%.1f%%) are missing at least one modelled variable, in %d pattern(s).",
+      "%d of %d cases (%.1f%%) are missing at least one modeled variable, in %d pattern(s).",
       s$n_incomplete, s$n_cases, 100 * s$pct_incomplete, s$n_patterns
     ),
     recommendation = paste(
@@ -822,7 +822,7 @@ nomo_missing_log <- function(pattern, strategies, estimates, reference, ordered,
           "Estimates under this strategy are not a sound basis for comparison.",
           "Enders and Bandalos (2001) found nonconvergence under listwise",
           "deletion to rise with the proportion of missing data, as the",
-          "analysed sample shrinks."
+          "analyzed sample shrinks."
         )
       )
     }
@@ -891,7 +891,7 @@ nomo_missing_difference_log <- function(log, estimates, strategies, reference,
       worst$parameter, worst$estimate, worst$reference_estimate, worst$difference_in_se
     )
 
-    # How many fewer cases this strategy analysed than the fullest one. The
+    # How many fewer cases this strategy analyzed than the fullest one. The
     # more cases a strategy discards, the larger the differences that sampling
     # variability alone produces, so the note says how many.
     n_here <- strategies$n_used[strategies$strategy == s]
@@ -905,7 +905,7 @@ nomo_missing_difference_log <- function(log, estimates, strategies, reference,
         label, as.integer(n_cases - n_here), 100 * (n_cases - n_here) / n_cases
       )
     } else {
-      "The strategies analyse different cases, so part of any difference is sampling variability."
+      "The strategies analyze different cases, so part of any difference is sampling variability."
     }
 
     if (any(flagged)) {

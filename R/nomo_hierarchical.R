@@ -49,7 +49,7 @@
 #' that the superior performance "may be a symptom of overfitting", capturing
 #' unwanted noise as well as real trends. Murray and Johnson (2013) compared
 #' these two structures directly and found the comparison itself biased: unless
-#' there was essentially no unmodelled complexity, their simulation favored the
+#' there was essentially no unmodeled complexity, their simulation favored the
 #' bifactor model even when a higher-order model generated the data, and they
 #' concluded that the choice "should not rely on which is better fitting".
 #' Compare the alternatives with
@@ -763,7 +763,7 @@ nomo_hierarchical_notes <- function(input, structure, matrices, computed, obs.va
     "may be a symptom of overfitting: modeling not only the trends in the data",
     "but also unwanted noise. Murray and Johnson (2013) compared these two",
     "structures directly and found the comparison biased in favor of the",
-    "bifactor model: unless there was essentially no unmodelled complexity,",
+    "bifactor model: unless there was essentially no unmodeled complexity,",
     "their simulation favored the bifactor model even when a higher-order",
     "model generated the data. They concluded that which model to adopt",
     "should not rely on which is better fitting. Compare the alternatives with",

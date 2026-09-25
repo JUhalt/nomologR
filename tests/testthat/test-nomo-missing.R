@@ -180,7 +180,7 @@ test_that("data with nothing missing is not refitted and says why", {
                  data = complete, reliability = NA),
     "TRUE or FALSE"
   )
-  expect_match(out$strategies$note[[2L]], "no modelled variable has missing values", fixed = TRUE)
+  expect_match(out$strategies$note[[2L]], "no modeled variable has missing values", fixed = TRUE)
 })
 
 
@@ -382,11 +382,11 @@ test_that("a network's fit comparison carries each strategy's fit indices", {
 })
 
 
-test_that("data without a modelled variable, or that cannot be refitted, is refused", {
+test_that("data without a modeled variable, or that cannot be refitted, is refused", {
   fit <- nomo_cfa(missing_demo_model, data = nomo_demo_continuous)
 
   without_a1 <- nomo_demo_continuous[, setdiff(names(nomo_demo_continuous), "a1")]
-  expect_error(nomo_missing(fit, data = without_a1), "modelled variable(s): a1", fixed = TRUE)
+  expect_error(nomo_missing(fit, data = without_a1), "modeled variable(s): a1", fixed = TRUE)
 
   all_missing <- nomo_demo_continuous
   all_missing$a1 <- NA_real_
@@ -480,12 +480,12 @@ test_that("each difference is attributed only as far as the strategies allow", {
   none$difference_in_se <- NA_real_
   expect_identical(nrow(difference_log(none, out$strategies, "ml")), 0L)
 
-  # Strategies that analyse the same number of cases: the sampling caveat is
+  # Strategies that analyze the same number of cases: the sampling caveat is
   # stated without a count.
   same_n <- out$strategies
   same_n$n_used <- 500
   entry <- difference_log(flag_all(out$estimates), same_n, "ml")
-  expect_match(entry$recommendation, "analyse different cases", fixed = TRUE)
+  expect_match(entry$recommendation, "analyze different cases", fixed = TRUE)
 
   # A reference that is neither FIML nor pairwise-against-listwise: the
   # difference shows dependence on the strategy and is attributed to neither.

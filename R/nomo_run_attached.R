@@ -57,7 +57,7 @@ nomo_run_run_scores <- function(x) {
       ),
       method
     ),
-    reason = "Scoring is a modelling decision, so the method is the researcher's.",
+    reason = "Scoring is a modeling decision, so the method is the researcher's.",
     options = "Read the score properties and notes before using the scores in a later analysis.",
     consequence = "The data were not modified; only cases the model used were scored.",
     decision = paste0("method = \"", method, "\""),

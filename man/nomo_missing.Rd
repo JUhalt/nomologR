@@ -35,7 +35,7 @@ estimates are of interest.}
 \value{
 A \code{nomo_missing} object containing:
 \itemize{
-\item \code{pattern}: missingness in the modelled variables.
+\item \code{pattern}: missingness in the modeled variables.
 \item \code{variables}: missing values per variable.
 \item \code{strategies}: one row per strategy.
 \item \code{fit}: fit indices by strategy.
@@ -95,7 +95,7 @@ flagged for review, with two qualifications:
 and the model is correct, since only then is FIML consistent. With ordered
 indicators, both strategies require MCAR, so a difference cannot be
 attributed to either one.
-\item The strategies analyse different cases, so part of any difference is
+\item The strategies analyze different cases, so part of any difference is
 sampling variability.
 }
 

@@ -108,8 +108,8 @@ Isager, 2018).
 \section{Relationships estimated between observed variables}{
 
 A hypothesis whose endpoints are latent variables is estimated with their
-measurement error modelled. When an endpoint is an observed variable, that
-error enters unmodelled. If the observed variable is a composite of several
+measurement error modeled. When an endpoint is an observed variable, that
+error enters unmodeled. If the observed variable is a composite of several
 items, such as a sum, mean, or factor score, the estimated relationship
 carries the discrepancy \code{\link[=nomo_scores]{nomo_scores()}} reports as correlational accuracy,
 which can be substantial and runs in either direction depending on the
@@ -123,7 +123,7 @@ observed, and for information when one is. A single measured variable, such
 as a criterion recorded without items, is not a composite, and the
 disclosure says so.
 
-Where the observed variables are composites, modelling their items as
+Where the observed variables are composites, modeling their items as
 indicators of latent variables removes the discrepancy, and
 \code{lavaan::sam()} estimates the structural relationships after the
 measurement model (Rosseel & Loh, 2024).
