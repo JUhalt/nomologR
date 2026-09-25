@@ -53,7 +53,7 @@ nomo_handoff_read <- function(x) {
     nomo_handoff_malformed("`carried` must be TRUE or FALSE for every reviewed item")
   }
 
-  # `carried` is the only field that decides what is analysed, and `items` must
+  # `carried` is the only field that decides what is analyzed, and `items` must
   # be exactly the carried items. A disagreement cannot come from the producer.
   carried <- as.character(evidence$item[evidence$carried])
   if (!identical(sort(unique(as.character(x$items))), sort(unique(carried)))) {
@@ -126,7 +126,7 @@ nomo_handoff_require <- function(present, required, what) {
 
 # `scales` is NULL exactly when the review had no construct mapping, and then
 # `scale` is NA for every item; the two always agree in producer output. Only
-# carried items are kept, since held-back items are not analysed.
+# carried items are kept, since held-back items are not analyzed.
 nomo_handoff_scales <- function(scales, evidence, carried) {
   no_mapping <- all(is.na(evidence$scale))
   if (is.null(scales)) {
@@ -221,7 +221,7 @@ nomo_handoff_log <- function(h, stage = "screen") {
       p$package, p$package_version, context
     ),
     recommendation = paste(
-      "Changing which items are analysed, or where they belong, is a researcher",
+      "Changing which items are analyzed, or where they belong, is a researcher",
       "decision to record with its rationale; nomologR does not re-decide it."
     )
   )
@@ -237,7 +237,7 @@ nomo_handoff_log <- function(h, stage = "screen") {
       paste(sprintf("%s %d", names(status_counts), as.integer(status_counts)),
             collapse = ", ")
     ),
-    recommendation = "Only carried items are analysed."
+    recommendation = "Only carried items are analyzed."
   )
 
   held <- ev[!ev$carried, , drop = FALSE]
@@ -251,7 +251,7 @@ nomo_handoff_log <- function(h, stage = "screen") {
         held$item[[i]], held$status[[i]], held$recommendation[[i]]
       ),
       recommendation = paste(
-        "Not analysed here. Reinstating it is a researcher decision to record",
+        "Not analyzed here. Reinstating it is a researcher decision to record",
         "with its rationale."
       )
     )
@@ -297,7 +297,7 @@ nomo_handoff_log <- function(h, stage = "screen") {
       ),
       recommendation = paste(
         "A measurement model written from these scales would make each a",
-        "cross-loading nobody requested. Decide where each belongs before modelling."
+        "cross-loading nobody requested. Decide where each belongs before modeling."
       )
     )
   }

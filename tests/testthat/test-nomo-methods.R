@@ -264,7 +264,7 @@ test_that("a same-sample design is not credited as a holdout", {
 })
 
 
-test_that("historical methods used in the run are labelled as context", {
+test_that("historical methods used in the run are labeled as context", {
   used <- nomo_methods(methods_run())
 
   context <- used[used$role == "context", ]

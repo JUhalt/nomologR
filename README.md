@@ -114,7 +114,7 @@ travel with the items:
 run <- nomo_run(responses, scales = handoff)
 ```
 
-Only carried items are analysed. Held-back items are reported in
+Only carried items are analyzed. Held-back items are reported in
 `contentvalidR`’s own words, and a report from the run opens with the
 content review. Neither package depends on the other.
 

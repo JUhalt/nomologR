@@ -18,3 +18,5 @@
 ^docs$
 ^tests/testthat/fixtures/contentvalidR/make-handoff-fixtures\.R$
 ^\.gitattributes$
+^\.git$
+^\.gitignore$

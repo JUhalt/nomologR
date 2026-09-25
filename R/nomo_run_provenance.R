@@ -340,11 +340,11 @@ nomo_run_handoff_log <- function(log, handoff) {
       "records which review supplied the items and under which rule."
     ),
     options = paste(
-      "Changing which items are analysed is a researcher decision; start a new",
+      "Changing which items are analyzed is a researcher decision; start a new",
       "run with the revised membership and record why."
     ),
     consequence = paste(
-      "Held-back items are not analysed, and nomologR neither reinstates nor",
+      "Held-back items are not analyzed, and nomologR neither reinstates nor",
       "drops an item on the strength of these data."
     ),
     decision = paste(handoff$items, collapse = ", "),
@@ -362,9 +362,9 @@ nomo_run_handoff_log <- function(log, handoff) {
         "%s was held back by content review: status \"%s\", recommendation \"%s\".",
         held$item[[i]], held$status[[i]], held$recommendation[[i]]
       ),
-      reason = "Only items carried by content review are analysed.",
+      reason = "Only items carried by content review are analyzed.",
       options = "Reinstating it is a researcher decision to record with its rationale.",
-      consequence = "It is not screened, modelled, or scored in this run.",
+      consequence = "It is not screened, modeled, or scored in this run.",
       decision = "held back",
       source = "content_review"
     )

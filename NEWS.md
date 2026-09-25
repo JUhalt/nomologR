@@ -1,5 +1,10 @@
 # nomologR 0.2.1.9000 (development)
 
+- CRAN preparation for the first submission (#39).
+  - **Spelling.** `DESCRIPTION` declares `Language: en-US`, and the package's text uses American spelling throughout. About 40 British spellings (`analysed`, `modelled`, `behaviour`) are changed in messages, help pages, articles, and NEWS; only wording changes, not code. `spelling::spell_check_package()` now finds nothing, with author names and technical terms listed in `inst/WORDLIST`.
+  - **URLs.** `urlchecker::url_check()` finds all 131 URLs correct.
+  - **Build.** `.git` and `.gitignore` are excluded from the build. A git worktree has a `.git` *file*, and a hidden file in the tarball is what CRAN returned `contentvalidR` 0.3.1 for.
+
 - `nomo_report(apa_tables = TRUE)` appends a *Manuscript tables* appendix (#73, last of three parts). It holds the `nomo_apa_table()` tables for the results a run holds: CFA loadings, fit, and factor correlations; reliability; and, when present, invariance and the network's hypotheses and fit. They are numbered in the order the report presents them. A table that does not apply is left out rather than failing the report. The default, `FALSE`, leaves reports unchanged.
 
 - `nomo_run()` can score the measurement model and compare missing-data strategies, and its report shows both (#73, second of three parts).
@@ -24,7 +29,7 @@
   - **Refusals.** An unreadable `effort` value is refused before any stage runs.
 
 - `nomo_screen()` and `nomo_run()` accept a handoff from `contentvalidR`'s `content_handoff()`, so items move from content review to empirical screening with their reasons intact (#46). The interface is schema version 1, agreed with the `contentvalidR` maintainer and documented identically in both packages.
-  - **What is analysed.** `nomo_screen(data, items = handoff)` screens only the items content review carried. Every held-back item is listed in the decision log with its status and recommendation quoted in `contentvalidR`'s own words, and is never analysed or reinstated.
+  - **What is analyzed.** `nomo_screen(data, items = handoff)` screens only the items content review carried. Every held-back item is listed in the decision log with its status and recommendation quoted in `contentvalidR`'s own words, and is never analyzed or reinstated.
   - **Guided runs.** `nomo_run(data, scales = handoff)` takes its scales from the review, and its design log records that item membership came from content review rather than from these data. A review with no construct mapping, such as an expert relevance panel, is refused by `nomo_run()` with the carried items listed, because a guided run needs scales and nomologR does not invent them. It can still be screened.
   - **Keying.** Declared keying and the response scale fill `reverse` and `scale_range` for the careless-responding indices, exactly as agreed. An undeclared item is never treated as forward keyed, a response scale is never inferred from the data, and arguments given in the call take precedence, with a note in the log.
   - **Refusals.** A carried item missing from the data is refused, never dropped. A handoff with a schema version this release does not read is refused, naming both package versions. Fields this release does not know are ignored, so `contentvalidR` can add fields within a schema version. An object `content_handoff()` could not have produced, such as keying missing for some items but not others, is refused as malformed.
@@ -143,14 +148,14 @@ remains R-universe; the first CRAN submission is targeted for v0.3.0 (#39).
 
 - `nomo_network()` now discloses relationships estimated between observed
   variables (#62). When an endpoint is observed rather than latent, its
-  measurement error enters unmodelled, and if it is a composite of several items
+  measurement error enters unmodeled, and if it is a composite of several items
   (a sum, mean, or factor score) the relationship carries the discrepancy
   `nomo_scores()` reports as correlational accuracy. The network cannot tell a
   composite from a single measured variable, so it does not guess: it classifies
   each hypothesis by its endpoints and discloses observed ones in the decision
   log, for review when both ends are observed and for information when one is,
   saying plainly that a single measured variable is not a composite. The
-  disclosure points to modelling the items as indicators, to `lavaan::sam()`
+  disclosure points to modeling the items as indicators, to `lavaan::sam()`
   (Rosseel & Loh, 2024), and, for a linear regression among factor scores, to
   the design Skrondal and Laake (2001) proved consistent: regression-method
   scores for the predictors and Bartlett scores for the outcome, each block
@@ -216,7 +221,7 @@ remains R-universe; the first CRAN submission is targeted for v0.3.0 (#39).
     listwise deletion and FIML, with FIML as the reference. Ordered
     indicators, for which lavaan offers no FIML, are compared under listwise
     and pairwise deletion.
-  - **Assumptions and the flag.** Each strategy is labelled with the
+  - **Assumptions and the flag.** Each strategy is labeled with the
     mechanism it requires, following Enders and Bandalos (2001). A difference
     larger than half the reference standard error is flagged for review,
     following Schafer and Graham's (2002) rule for when bias becomes
@@ -235,7 +240,7 @@ remains R-universe; the first CRAN submission is targeted for v0.3.0 (#39).
     estimated, not only what was requested. When FIML is requested with ULS,
     lavaan 0.7 runs its two-stage method instead (as it does with GLS), while
     lavaan 0.6-21 refuses. With MLM, FIML is refused. Each of these is
-    reported, not hidden, and the tests accept either lavaan behaviour. The data supplied must reproduce the
+    reported, not hidden, and the tests accept either lavaan behavior. The data supplied must reproduce the
     fitted model when refitted with its original strategy, so a comparison
     cannot silently run on different data.
   - **Validation.** Tests reproduce lavaan's estimates for each strategy and

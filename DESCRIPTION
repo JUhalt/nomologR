@@ -21,6 +21,7 @@ Description: Provides an evidence-guided workflow for empirical scale developmen
     deletion or binary declarations that a measure is valid.
 License: GPL-3
 Encoding: UTF-8
+Language: en-US
 LazyData: true
 Roxygen: list(markdown = TRUE)
 Depends:

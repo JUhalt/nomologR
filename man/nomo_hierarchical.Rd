@@ -82,7 +82,7 @@ tendency to show superior goodness of fit as a particular concern, and note
 that the superior performance "may be a symptom of overfitting", capturing
 unwanted noise as well as real trends. Murray and Johnson (2013) compared
 these two structures directly and found the comparison itself biased: unless
-there was essentially no unmodelled complexity, their simulation favored the
+there was essentially no unmodeled complexity, their simulation favored the
 bifactor model even when a higher-order model generated the data, and they
 concluded that the choice "should not rely on which is better fitting".
 Compare the alternatives with

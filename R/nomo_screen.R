@@ -79,7 +79,7 @@
 #' `contentvalidR`'s `content_handoff()` produces after content review. Only
 #' items it marks as carried are screened. Every item it held back is listed in
 #' the decision log with its status and recommendation quoted in
-#' `contentvalidR`'s own words, and is never analysed or reinstated here. The log
+#' `contentvalidR`'s own words, and is never analyzed or reinstated here. The log
 #' also records the producing version, workflow, and carry rule, and that item
 #' membership came from content review rather than from these data.
 #'

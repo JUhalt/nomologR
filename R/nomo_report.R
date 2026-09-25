@@ -273,7 +273,7 @@ nomo_report_content_review <- function(x) {
         paste(
           "Scales and item membership came from content review in %s %s",
           "(workflow: %s; carry rule: %s; method: %s), not from these data.",
-          "%d of %d reviewed item(s) were carried; only carried items were analysed."
+          "%d of %d reviewed item(s) were carried; only carried items were analyzed."
         ),
         p$package, p$package_version, p$workflow, p$keep, p$method,
         sum(ev$carried), nrow(ev)
@@ -408,7 +408,7 @@ nomo_report_missing <- function(m) {
   list(
     summary = sprintf(
       paste(
-        "%d of %d cases (%.1f%%) are missing at least one modelled variable.",
+        "%d of %d cases (%.1f%%) are missing at least one modeled variable.",
         "The reference is %s. Differences are in units of the reference standard",
         "error; Schafer and Graham (2002) treat a bias beyond about half a",
         "standard error as practically important. Whether data are missing at",

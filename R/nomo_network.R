@@ -1436,8 +1436,8 @@ nomo_network_validate_data <- function(data, label) {
 #'
 #' @section Relationships estimated between observed variables:
 #' A hypothesis whose endpoints are latent variables is estimated with their
-#' measurement error modelled. When an endpoint is an observed variable, that
-#' error enters unmodelled. If the observed variable is a composite of several
+#' measurement error modeled. When an endpoint is an observed variable, that
+#' error enters unmodeled. If the observed variable is a composite of several
 #' items, such as a sum, mean, or factor score, the estimated relationship
 #' carries the discrepancy [nomo_scores()] reports as correlational accuracy,
 #' which can be substantial and runs in either direction depending on the
@@ -1451,7 +1451,7 @@ nomo_network_validate_data <- function(data, label) {
 #' as a criterion recorded without items, is not a composite, and the
 #' disclosure says so.
 #'
-#' Where the observed variables are composites, modelling their items as
+#' Where the observed variables are composites, modeling their items as
 #' indicators of latent variables removes the discrepancy, and
 #' `lavaan::sam()` estimates the structural relationships after the
 #' measurement model (Rosseel & Loh, 2024).
@@ -1803,7 +1803,7 @@ nomo_network <- function(model,
 # The network cannot tell from its syntax whether an observed variable is a
 # composite of items or a single measured quantity, so it does not guess. It
 # classifies each hypothesis by whether its endpoints are latent, and discloses
-# what an observed endpoint means: its measurement error enters unmodelled, and
+# what an observed endpoint means: its measurement error enters unmodeled, and
 # if it is a composite, the relationship carries the discrepancy nomo_scores()
 # reports as correlational accuracy.
 nomo_network_endpoint_log <- function(hypotheses, fit) {
@@ -1831,7 +1831,7 @@ nomo_network_endpoint_log <- function(hypotheses, fit) {
 
   consequence <- paste(
     "Observed variables enter the network with their measurement error",
-    "unmodelled. If any of them is a composite of several items (a sum, mean,",
+    "unmodeled. If any of them is a composite of several items (a sum, mean,",
     "or factor score), the estimated relationship carries the discrepancy",
     "nomo_scores() reports as correlational accuracy, which can be substantial",
     "and runs in either direction depending on the scoring method and the",

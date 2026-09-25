@@ -358,7 +358,7 @@ cat(review_log$observation[review_log$object %in% c("content_review", "EF5", "TF
     sep = "\n")
 ```
 
-EF5 and TF5 were held back by the item sort. They are not analysed, and nothing
+EF5 and TF5 were held back by the item sort. They are not analyzed, and nothing
 here reinstates them. The log quotes their status and recommendation in
 `contentvalidR`'s own words. The keying declared at content review reached the
 careless-responding indices without being retyped. An item is never treated as
