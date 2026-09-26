@@ -5,8 +5,11 @@
 # Missing-data sensitivity for a network follows the network. Neither is a stage
 # of its own, and neither runs unless requested.
 
+# A request is the setting's presence, not its length. None of `missing`'s
+# arguments is required, so `missing = list()` asks for the comparison with its
+# defaults; `scores` is refused at validation unless it names a method.
 nomo_run_attached_requested <- function(x, name) {
-  length(x$settings[[name]]) > 0L
+  name %in% names(x$settings)
 }
 
 

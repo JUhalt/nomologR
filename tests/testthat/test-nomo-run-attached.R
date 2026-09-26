@@ -111,6 +111,10 @@ test_that("scores need a method the researcher names, and settings are validated
   }
   expect_error(run_with(list(scores = list(sum = TRUE))),
                "nomologR does not choose a scoring method", fixed = TRUE)
+  # An empty request names no method either, so it is refused rather than
+  # falling through to nomo_scores()'s default.
+  expect_error(run_with(list(scores = list())),
+               "nomologR does not choose a scoring method", fixed = TRUE)
   expect_error(run_with(list(scores = list(method = "eap"))),
                "`settings$scores$method`", fixed = TRUE)
   expect_error(run_with(list(missing = list(strategies = 1))),
@@ -119,6 +123,29 @@ test_that("scores need a method the researcher names, and settings are validated
                "`settings$missing$reliability` must be TRUE or FALSE.", fixed = TRUE)
   expect_error(run_with(list(scores = list(method = "sum", fit = 1))),
                "cannot override pipeline-controlled", fixed = TRUE)
+})
+
+
+test_that("an empty missing-data setting requests the comparison with its defaults", {
+  requested <- nomologR:::nomo_run_attached_requested
+  expect_true(requested(list(settings = list(missing = list())), "missing"))
+  expect_false(requested(list(settings = list(factors = list(seed = 1))), "missing"))
+  expect_false(requested(list(settings = list()), "missing"))
+
+  # Added when resuming, the empty request is kept rather than dropped.
+  paused <- list(settings = list(), results = list(), scales = attached_scales)
+  merged <- nomologR:::nomo_run_merge_future_settings(paused, list(missing = list()))
+  expect_true(requested(merged, "missing"))
+})
+
+
+test_that("missing = list() runs the comparison, as documented", {
+  skip_on_cran()
+  run <- attached_run(list(missing = list()))
+  expect_identical(run$status, "complete")
+  expect_s3_class(run$results$missing$cfa, "nomo_missing")
+  expect_identical(run$results$missing$cfa$strategies$strategy, c("listwise", "ml"))
+  expect_true("missing_data_cfa" %in% run$decision_log$id)
 })
 
 
