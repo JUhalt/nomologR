@@ -3,6 +3,7 @@ message: "If you use nomologR in research, please cite the software using this m
 type: software
 title: "nomologR: Guided Scale Development and Construct Validation"
 version: 0.3.0
+date-released: 2026-09-26
 authors:
   - family-names: Uhalt
     given-names: Joshua
