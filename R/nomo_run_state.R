@@ -322,7 +322,7 @@ nomo_run_validate_settings <- function(settings, scales) {
     stop("`settings$screen$effort` must be TRUE or FALSE.", call. = FALSE)
   }
 
-  if ("scores" %in% nm && length(settings$scores)) {
+  if ("scores" %in% nm) {
     method <- settings$scores$method
     methods <- c("sum", "mean", "regression", "bartlett")
     if (is.null(method) || !is.character(method) || length(method) != 1L ||
@@ -338,7 +338,7 @@ nomo_run_validate_settings <- function(settings, scales) {
     }
   }
 
-  if ("missing" %in% nm && length(settings$missing)) {
+  if ("missing" %in% nm) {
     strategies <- settings$missing$strategies
     if (!is.null(strategies) && (!is.character(strategies) || !length(strategies) ||
                                    anyNA(strategies))) {
