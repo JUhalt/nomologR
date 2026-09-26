@@ -235,14 +235,22 @@ nomo_report(
 ## Overwriting is explicit
 
 Existing reports are protected. Rendering to a file that already exists stops
-unless `overwrite = TRUE` is supplied:
+with an error unless `overwrite = TRUE` is supplied. Here the error is caught so
+that its message can be shown:
 
-```{r overwrite, eval = pandoc_ok, error = TRUE}
-nomo_report(run, file = report_file)
+```{r overwrite, eval = pandoc_ok}
+refusal <- tryCatch(
+  nomo_report(run, file = report_file),
+  error = function(e) conditionMessage(e)
+)
+
+# This article writes its reports to a temporary directory, shown here as
+# <report_dir> so that the message reads the same on every computer.
+cat(gsub(dirname(report_file), "<report_dir>", refusal, fixed = TRUE))
 ```
 
-As elsewhere in `nomologR`, consequential or destructive behavior is not
-silently assumed.
+The existing report is left as it was. As elsewhere in `nomologR`,
+consequential or destructive behavior is not silently assumed.
 
 ```{r cleanup, include=FALSE}
 unlink(report_dir, recursive = TRUE)

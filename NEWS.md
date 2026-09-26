@@ -1,3 +1,7 @@
+# nomologR (development version)
+
+- The reproducible-report article's overwrite example shows the refusal message with its temporary directory as `<report_dir>`. It had printed the full temporary path of the computer that built the article, including a user name, and the path changed on every build. The message still comes from `nomo_report()`, and the example still shows that an existing report is refused unless `overwrite = TRUE` is given.
+
 # nomologR 0.3.0
 
 nomologR 0.3.0 is the first release submitted to CRAN (#39), and its scope was
