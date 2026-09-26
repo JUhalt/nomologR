@@ -4,7 +4,7 @@
 [![R-CMD-check](https://github.com/JUhalt/nomologR/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/JUhalt/nomologR/actions/workflows/R-CMD-check.yaml)
 [![test-coverage](https://github.com/JUhalt/nomologR/actions/workflows/test-coverage.yaml/badge.svg)](https://github.com/JUhalt/nomologR/actions/workflows/test-coverage.yaml)
 
-**Current stable release: `0.2.1`.**
+**Current stable release: `0.3.0`.**
 
 `nomologR` is a guided, evidence-based workflow for **empirical scale
 development and construct validation**. It coordinates established R
@@ -15,7 +15,7 @@ explanations, decision logging, and theory-aware guidance.
 
 [Documentation](https://juhalt.github.io/nomologR/) ·
 [Roadmap](https://github.com/JUhalt/nomologR/blob/master/ROADMAP.md) ·
-[v0.3.0 milestone](https://github.com/JUhalt/nomologR/milestone/3) ·
+[v1.0.0 milestone](https://github.com/JUhalt/nomologR/milestone/5) ·
 [Open issues](https://github.com/JUhalt/nomologR/issues)
 
 ## Installation
@@ -40,10 +40,10 @@ pak::pak("JUhalt/nomologR")
 ```
 
 `nomologR` is distributed through R-universe, which builds each GitHub
-release, usually within a few hours. The first CRAN submission is
-targeted for `v0.3.0`
-([\#39](https://github.com/JUhalt/nomologR/issues/39)); until then,
-install from R-universe or GitHub.
+release, usually within a few hours. `v0.3.0` is the first release
+submitted to CRAN
+([\#39](https://github.com/JUhalt/nomologR/issues/39)); until CRAN
+accepts it, install from R-universe or GitHub.
 
 ## Who it is for
 
@@ -946,35 +946,41 @@ appendix.
 The detailed release plan lives in
 [`ROADMAP.md`](https://github.com/JUhalt/nomologR/blob/master/ROADMAP.md).
 
-### Current release: `v0.2.1`
+### Current release: `v0.3.0`
 
-`v0.2.1` completes the v0.2 workflow for what happens after a
-measurement model is established
-([milestone](https://github.com/JUhalt/nomologR/milestone/4)):
+`v0.3.0` is the first release submitted to CRAN
+([\#39](https://github.com/JUhalt/nomologR/issues/39)). Its scope was
+kept deliberately lean for that reason
+([\#38](https://github.com/JUhalt/nomologR/issues/38);
+[milestone](https://github.com/JUhalt/nomologR/milestone/3)):
 
-- reports render from inside R Markdown and Quarto documents (#40);
-- `nomo_scores()` produces sum, mean, regression, or Bartlett scores
-  with Grice’s validity, univocality, and correlational-accuracy
-  diagnostics, and tests the parallel model that unit weighting assumes
-  (#33);
-- `nomo_screen(effort = TRUE)` adds careless-responding indices,
-  reported side by side because they detect different failures (#34);
-- `nomo_hierarchical()` reports factor determinacy and construct
-  replicability (#56);
-- `nomo_network()` discloses relationships estimated between observed
-  variables, which carry the bias that scoring introduces, and names the
-  remedies the literature supports (#62);
-- the reliability bootstrap can run on several workers (#42);
-- `nomo_apa_table()` formats manuscript-ready tables, and
-  `nomo_report()` writes Word documents as well as HTML (#35);
-- `nomo_missing()` shows whether a measurement model or network depends
-  on how missing data were handled (#32);
-- `nomo_compare()` is fully covered by tests again (#54).
+- `nomo_screen()` and `nomo_run()` accept a handoff from
+  `contentvalidR`, so items that passed content review are screened and
+  modeled here, with the reasons for each held-back item quoted in the
+  log ([\#46](https://github.com/JUhalt/nomologR/issues/46));
+- the guided workflow and its report carry careless-responding screens,
+  scores, missing-data sensitivity, and APA tables
+  ([\#73](https://github.com/JUhalt/nomologR/issues/73));
+- a written API-stability and deprecation policy, described under
+  [Stability](#stability) below
+  ([\#74](https://github.com/JUhalt/nomologR/issues/74));
+- full test coverage again, which found four defects, now fixed
+  ([\#72](https://github.com/JUhalt/nomologR/issues/72)).
 
 Certification is recorded in
-[\#70](https://github.com/JUhalt/nomologR/issues/70).
+[\#75](https://github.com/JUhalt/nomologR/issues/75).
 
-### Previous release: `v0.2.0`
+### Previous releases
+
+`v0.2.1` completed the v0.2 workflow for what happens after a
+measurement model is established
+([\#70](https://github.com/JUhalt/nomologR/issues/70)). It added
+`nomo_scores()` (#33), careless-responding indices (#34), factor
+determinacy and construct replicability (#56), disclosure of
+relationships estimated between observed variables (#62), a parallel
+reliability bootstrap (#42), `nomo_apa_table()` and Word reports (#35),
+`nomo_missing()` (#32), and reports rendered from inside R Markdown and
+Quarto documents (#40).
 
 `v0.2.0` made the workflow research-backed from historical to
 contemporary practice and more useful to graduate students and
@@ -988,27 +994,12 @@ lineage with `nomo_revise()` (#28); the methods registry with
 sign changes (#30); bifactor and higher-order models with
 `nomo_hierarchical()` (#29); and release certification (#37).
 
-### Next: `v0.3.0` and `v1.0.0`
-
-`v0.3.0` carries the first CRAN submission
-([\#39](https://github.com/JUhalt/nomologR/issues/39)). Its scope is
-deliberately lean
-([\#38](https://github.com/JUhalt/nomologR/issues/38)):
-
-- a reader for handoffs from `contentvalidR`
-  ([\#46](https://github.com/JUhalt/nomologR/issues/46)), so items that
-  passed content review can be screened and modeled here;
-- the guided workflow and report carrying scores, careless-responding
-  screens, missing-data sensitivity, and APA tables
-  ([\#73](https://github.com/JUhalt/nomologR/issues/73));
-- full test coverage
-  ([\#72](https://github.com/JUhalt/nomologR/issues/72));
-- a written API-stability and deprecation policy
-  ([\#74](https://github.com/JUhalt/nomologR/issues/74)).
+### Next: `v0.4.x` and `v1.0.0`
 
 Larger extensions such as ESEM, IRT/DIF, Bayesian SEM, longitudinal
-invariance, and multiple imputation are deferred until after CRAN
-acceptance, with the reasons recorded in \#38.
+invariance, and multiple imputation were deferred until after CRAN
+acceptance, with the reasons recorded in \#38. They are candidates for
+`v0.4.x`, and none is a commitment until selected.
 
 `v1.0.0` is planned as a joint release with
 [`contentvalidR`](https://github.com/JUhalt/contentvalidR), the

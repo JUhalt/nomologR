@@ -8,19 +8,21 @@
 >
 > **Core principle:** Flag, explain, and document. Never silently delete.
 
-**Current stable release:** [0.2.1](https://github.com/JUhalt/nomologR/releases/tag/v0.2.1)
-(September 23, 2026), GPL-3.0-only — the v0.2 workflow completed: scoring,
-careless-responding screens, missing-data sensitivity, factor-score quality,
-and manuscript-ready output. It follows
+**Current stable release:** [0.3.0](https://github.com/JUhalt/nomologR/releases/tag/v0.3.0)
+(September 26, 2026), GPL-3.0-only — the first release submitted to CRAN. It
+adds the `contentvalidR` handoff reader, carries the v0.2.1 tools into the
+guided workflow and its report, and adds a written stability policy. It
+follows [0.2.1](https://github.com/JUhalt/nomologR/releases/tag/v0.2.1)
+(September 23, 2026) and
 [0.2.0](https://github.com/JUhalt/nomologR/releases/tag/v0.2.0) (September 19,
 2026). The earlier [0.1.0](https://github.com/JUhalt/nomologR/releases/tag/v0.1.0)
 release (September 9, 2026) keeps its original MIT license.
-**Next release:** [v0.3.0](https://github.com/JUhalt/nomologR/milestone/3) —
-the first CRAN submission and the `contentvalidR` handoff reader. Its
-workstreams are complete, and certification is in progress in
-[#75](https://github.com/JUhalt/nomologR/issues/75).
+**Next release:** [v1.0.0](https://github.com/JUhalt/nomologR/milestone/5) —
+the joint release with `contentvalidR`
+([#53](https://github.com/JUhalt/nomologR/issues/53)). Candidates for v0.4.x
+are listed below.
 **Distribution:** [R-universe](https://juhalt.r-universe.dev), which builds each
-GitHub release. The first CRAN submission is targeted for `v0.3.0`
+GitHub release. `v0.3.0` is submitted to CRAN
 ([#39](https://github.com/JUhalt/nomologR/issues/39)).
 
 The complete v0.1 milestone specifications, exit gates, and certification
@@ -174,13 +176,14 @@ workstreams opened during the cycle. Certification is recorded in
 ***
 # v0.3.0 — First CRAN Release
 
-**Status:** Scope selected on September 23, 2026, in
-[#38](https://github.com/JUhalt/nomologR/issues/38)
-([v0.3.0 milestone](https://github.com/JUhalt/nomologR/milestone/3)). The scope
-is deliberately lean: v0.3.0 carries the first CRAN submission, so it selects
-only what makes that submission complete, stable, and well tested. The four
-feature workstreams are complete; certification and the submission are in
-progress.
+**Status:** Released September 26, 2026
+([v0.3.0 milestone](https://github.com/JUhalt/nomologR/milestone/3)), with scope
+selected on September 23, 2026, in
+[#38](https://github.com/JUhalt/nomologR/issues/38). The scope is deliberately
+lean: v0.3.0 carries the first CRAN submission, so it selects only what makes
+that submission complete, stable, and well tested. Certification is recorded in
+[#75](https://github.com/JUhalt/nomologR/issues/75), and the CRAN outcome will
+be recorded in [#39](https://github.com/JUhalt/nomologR/issues/39).
 
 - [ ] [#39](https://github.com/JUhalt/nomologR/issues/39) First CRAN submission; see [Distribution](#distribution--r-universe-now-cran-with-v030) below. Spelling, URLs, build exclusions, and test time under CRAN conditions are done.
 - [x] [#46](https://github.com/JUhalt/nomologR/issues/46) A `contentvalidR` handoff reader. It is tested against stored producer fixtures from contentvalidR 0.6.0 and 0.7.0, and neither package depends on the other.
