@@ -51,6 +51,19 @@ nomologR 1.0.0 and may be adjusted as APA style is applied to more tables.
 Any change will be described in NEWS; see \code{?nomologR} for the stability
 policy.
 }
+\examples{
+model <- '
+  visual  =~ x1 + x2 + x3
+  textual =~ x4 + x5 + x6
+  speed   =~ x7 + x8 + x9
+'
+cfa <- nomo_cfa(model, data = lavaan::HolzingerSwineford1939)
+
+nomo_apa_table(cfa, "loadings", number = 1)
+nomo_apa_table(cfa, "fit", number = 2)
+nomo_apa_table(nomo_reliability(cfa), number = 3)
+
+}
 \references{
 American Psychological Association. (2020). \emph{Publication manual of the
 American Psychological Association} (7th ed.).

@@ -20,3 +20,5 @@
 ^\.gitattributes$
 ^\.git$
 ^\.gitignore$
+^cran-comments\.md$
+^CRAN-SUBMISSION$

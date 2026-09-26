@@ -73,6 +73,25 @@ a rule.
 The supplied data is never modified, and scores are computed only for the
 cases the model used.
 }
+\examples{
+model <- '
+  visual  =~ x1 + x2 + x3
+  textual =~ x4 + x5 + x6
+  speed   =~ x7 + x8 + x9
+'
+cfa <- nomo_cfa(model, data = lavaan::HolzingerSwineford1939)
+
+# A sum score, with the parallel model it assumes fitted and compared
+summed <- nomo_scores(cfa, method = "sum")
+summed
+summed$unit_weighting
+
+# Regression-method factor scores, with Grice's criteria
+refined <- nomo_scores(cfa, method = "regression")
+refined$diagnostics
+head(refined$scores)
+
+}
 \references{
 Gorsuch, R. L. (1983). \emph{Factor analysis} (2nd ed.). Lawrence Erlbaum.
 

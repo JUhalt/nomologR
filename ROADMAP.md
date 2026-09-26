@@ -16,7 +16,9 @@ and manuscript-ready output. It follows
 2026). The earlier [0.1.0](https://github.com/JUhalt/nomologR/releases/tag/v0.1.0)
 release (September 9, 2026) keeps its original MIT license.
 **Next release:** [v0.3.0](https://github.com/JUhalt/nomologR/milestone/3) —
-the first CRAN submission and the `contentvalidR` handoff reader.
+the first CRAN submission and the `contentvalidR` handoff reader. Its
+workstreams are complete, and certification is in progress in
+[#75](https://github.com/JUhalt/nomologR/issues/75).
 **Distribution:** [R-universe](https://juhalt.r-universe.dev), which builds each
 GitHub release. The first CRAN submission is targeted for `v0.3.0`
 ([#39](https://github.com/JUhalt/nomologR/issues/39)).
@@ -176,13 +178,15 @@ workstreams opened during the cycle. Certification is recorded in
 [#38](https://github.com/JUhalt/nomologR/issues/38)
 ([v0.3.0 milestone](https://github.com/JUhalt/nomologR/milestone/3)). The scope
 is deliberately lean: v0.3.0 carries the first CRAN submission, so it selects
-only what makes that submission complete, stable, and well tested.
+only what makes that submission complete, stable, and well tested. The four
+feature workstreams are complete; certification and the submission are in
+progress.
 
-- [ ] [#39](https://github.com/JUhalt/nomologR/issues/39) First CRAN submission; see [Distribution](#distribution--r-universe-now-cran-with-v030) below.
-- [ ] [#46](https://github.com/JUhalt/nomologR/issues/46) A `contentvalidR` handoff reader. It is tested against stored producer fixtures from contentvalidR 0.6.0 and 0.7.0, and neither package depends on the other.
-- [ ] [#72](https://github.com/JUhalt/nomologR/issues/72) Restore full test coverage after v0.2.1.
-- [ ] [#73](https://github.com/JUhalt/nomologR/issues/73) The guided workflow and report carry scores, careless-responding screens, missing-data sensitivity, and APA tables.
-- [ ] [#74](https://github.com/JUhalt/nomologR/issues/74) A written API-stability and deprecation policy, which the joint 1.0 release requires ([#53](https://github.com/JUhalt/nomologR/issues/53)).
+- [ ] [#39](https://github.com/JUhalt/nomologR/issues/39) First CRAN submission; see [Distribution](#distribution--r-universe-now-cran-with-v030) below. Spelling, URLs, build exclusions, and test time under CRAN conditions are done.
+- [x] [#46](https://github.com/JUhalt/nomologR/issues/46) A `contentvalidR` handoff reader. It is tested against stored producer fixtures from contentvalidR 0.6.0 and 0.7.0, and neither package depends on the other.
+- [x] [#72](https://github.com/JUhalt/nomologR/issues/72) Restore full test coverage after v0.2.1. Reviewing each uncovered line found four defects, now fixed.
+- [x] [#73](https://github.com/JUhalt/nomologR/issues/73) The guided workflow and report carry scores, careless-responding screens, missing-data sensitivity, and APA tables.
+- [x] [#74](https://github.com/JUhalt/nomologR/issues/74) A written API-stability and deprecation policy, which the joint 1.0 release requires ([#53](https://github.com/JUhalt/nomologR/issues/53)).
 - [ ] [#75](https://github.com/JUhalt/nomologR/issues/75) Release certification and CRAN submission.
 
 # v0.4.x — Modern Extensions
