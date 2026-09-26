@@ -109,3 +109,65 @@ Skrondal, A., & Laake, P. (2001). Regression among factor scores.
 
 [`nomo_hierarchical()`](https://juhalt.github.io/nomologR/reference/nomo_hierarchical.md)
 for factor determinacy and construct replicability.
+
+## Examples
+
+``` r
+model <- '
+  visual  =~ x1 + x2 + x3
+  textual =~ x4 + x5 + x6
+  speed   =~ x7 + x8 + x9
+'
+cfa <- nomo_cfa(model, data = lavaan::HolzingerSwineford1939)
+
+# A sum score, with the parallel model it assumes fitted and compared
+summed <- nomo_scores(cfa, method = "sum")
+summed
+#> <nomo_scores>
+#> Unit weighting (method: sum) | 3 factor(s) | 301 scored case(s)
+#> 
+#> Score properties (Grice, 2001)
+#> # A tibble: 3 × 5
+#>   factor  n_items validity univocality correlational_accuracy
+#>   <chr>     <int>    <dbl>       <dbl>                  <dbl>
+#> 1 visual        3    0.791       0.372                 -0.162
+#> 2 textual       3    0.941       0.431                 -0.117
+#> 3 speed         3    0.829       0.39                  -0.162
+#> 
+#> Parallel model (what unit weighting assumes): chi-square difference 43.27 on 12 df, p < .001
+#> 
+#> Notes
+#> - [review] The parallel model that unit weighting assumes fits worse than the model you fitted (chi-square difference 43.27 on 12 df, p < .001). The items are not interchangeable in the way adding them assumes. This does not forbid a sum score; it means the choice needs a reason beyond convenience, and that `validity` and `correlational_accuracy` describe what it costs.
+#> - [review] Validity is below .90 for visual, speed. Gorsuch (1983, p. 260) recommended at least .80, and above .90 if the scores are to serve as adequate substitutes for the factors themselves. Reported as his recommendation, not applied as a rule.
+#> - [concern] Correlations among these scores do not reproduce the correlations among the factors: the largest discrepancy is -0.162, for visual. A relationship estimated from these scores carries that much bias, and its direction is a property of the method and the model rather than a constant that can be corrected for. Where the question can be asked of the latent variables, ask it there. For a linear regression among factors, Skrondal and Laake (2001) showed a scoring design that gives consistent coefficients, and scores from one model containing every factor, like these, are not it: the predictors need regression-method scores and the outcome Bartlett scores, each from a measurement model of its own.
+#> - [review] These scores also carry the other factors: the score for textual correlates +0.431 with a factor it does not represent (Grice, 2001). A score that is not univocal cannot be treated as though it measured its own factor alone.
+#> 
+#> No value here is a pass/fail threshold; see nomo_table(x, "diagnostics").
+summed$unit_weighting
+#> # A tibble: 3 × 6
+#>   factor  n_items min_loading max_loading loading_ratio loading_sd
+#>   <chr>     <int>       <dbl>       <dbl>         <dbl>      <dbl>
+#> 1 visual        3       0.424       0.772          1.82    0.174  
+#> 2 textual       3       0.838       0.855          1.02    0.00901
+#> 3 speed         3       0.570       0.723          1.27    0.0775 
+
+# Regression-method factor scores, with Grice's criteria
+refined <- nomo_scores(cfa, method = "regression")
+refined$diagnostics
+#> # A tibble: 3 × 5
+#>   factor  n_items validity univocality correlational_accuracy
+#>   <chr>     <int>    <dbl>       <dbl>                  <dbl>
+#> 1 visual        3    0.849       0.520                 0.123 
+#> 2 textual       3    0.942       0.469                 0.0931
+#> 3 speed         3    0.849       0.504                 0.123 
+head(refined$scores)
+#> # A tibble: 6 × 3
+#>    visual textual   speed
+#>     <dbl>   <dbl>   <dbl>
+#> 1 -0.818  -0.138   0.0615
+#> 2  0.0495 -1.01    0.625 
+#> 3 -0.761  -1.87   -0.841 
+#> 4  0.419   0.0185 -0.271 
+#> 5 -0.416  -0.122   0.194 
+#> 6  0.0233 -1.33    0.709 
+```

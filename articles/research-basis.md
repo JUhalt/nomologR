@@ -341,8 +341,9 @@ evidence without a universal pass/fail rule; score-test diagnostics that
 locate strain but never free parameters; researcher-specified releases
 with required rationales carried forward to more restrictive levels.
 
-**Planned.** Longitudinal invariance is a candidate for v0.3 scope
-selection ([\#38](https://github.com/JUhalt/nomologR/issues/38)).
+**Planned.** Longitudinal invariance is a candidate for v0.4, after the
+first CRAN release; the reasons for deferring it are recorded in
+[\#38](https://github.com/JUhalt/nomologR/issues/38).
 
 ## 8. Nomological network — `nomo_hypotheses()`, `nomo_network()`
 
@@ -416,7 +417,8 @@ computed them.
 fits the parallel model a sum score assumes and reports Grice’s criteria
 for the scores it returns, and
 [`nomo_apa_table()`](https://juhalt.github.io/nomologR/reference/nomo_apa_table.md)
-formats evidence as APA-style manuscript tables.
+formats evidence as manuscript tables following APA style (American
+Psychological Association, 2020).
 
 [`nomo_missing()`](https://juhalt.github.io/nomologR/reference/nomo_missing.md)
 refits a prespecified measurement model or network under listwise
@@ -433,8 +435,9 @@ be tested from the data at hand (Schafer & Graham, 2002), agreement
 between strategies is reported as insensitivity, not as evidence that
 either is unbiased. Mean substitution is explained and not offered.
 
-**Planned.** Multiple-imputation integration is a candidate for v0.3
-scope selection ([\#38](https://github.com/JUhalt/nomologR/issues/38)).
+**Planned.** Multiple-imputation integration is a candidate for v0.4,
+after the first CRAN release; the reasons for deferring it are recorded
+in [\#38](https://github.com/JUhalt/nomologR/issues/38).
 
 ## References
 
@@ -447,6 +450,10 @@ exploratory factor analysis. *The Quantitative Methods for Psychology,
 Akaike, H. (1974). A new look at the statistical model identification.
 *IEEE Transactions on Automatic Control, 19*(6), 716–723.
 <https://doi.org/10.1109/TAC.1974.1100705>
+
+American Psychological Association. (2020). *Publication manual of the
+American Psychological Association* (7th ed.).
+<https://doi.org/10.1037/0000165-000>
 
 Anderson, J. C., & Gerbing, D. W. (1988). Structural equation modeling
 in practice: A review and recommended two-step approach. *Psychological

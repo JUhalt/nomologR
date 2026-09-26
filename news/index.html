@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">nomologR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.1.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -50,7 +50,15 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="0.2.1.9000" id="nomologr-0219000-development">nomologR 0.2.1.9000 (development)<a class="anchor" aria-label="anchor" href="#nomologr-0219000-development"></a></h2>
+<h2 class="pkg-version" data-toc-text="0.3.0" id="nomologr-030">nomologR 0.3.0<a class="anchor" aria-label="anchor" href="#nomologr-030"></a></h2>
+<p>nomologR 0.3.0 is the first release submitted to CRAN (<a href="https://github.com/JUhalt/nomologR/issues/39" class="external-link">#39</a>), and its scope was kept deliberately lean for that reason (<a href="https://github.com/JUhalt/nomologR/issues/38" class="external-link">#38</a>). It does three things:</p>
+<ul><li>
+<strong>Connects content review to empirical validation.</strong> A handoff from <code>contentvalidR</code> now flows into <code><a href="../reference/nomo_screen.html">nomo_screen()</a></code> and <code><a href="../reference/nomo_run.html">nomo_run()</a></code>, and the reasons for each item’s carry decision travel with it (<a href="https://github.com/JUhalt/nomologR/issues/46" class="external-link">#46</a>).</li>
+<li>
+<strong>Folds the v0.2.1 tools into the guided workflow and its report.</strong> These are careless-responding screens, scores, missing-data sensitivity, and manuscript tables (<a href="https://github.com/JUhalt/nomologR/issues/73" class="external-link">#73</a>).</li>
+<li>
+<strong>Starts the public interface’s stability promise.</strong> From this release the interface changes only after a deprecation period, under the policy written on <code><a href="../reference/nomologR-package.html">?nomologR</a></code> (<a href="https://github.com/JUhalt/nomologR/issues/74" class="external-link">#74</a>).</li>
+</ul><p>Test coverage is back to every executable line (<a href="https://github.com/JUhalt/nomologR/issues/72" class="external-link">#72</a>). Reviewing each uncovered line found four defects, now fixed. Certification is recorded in <a href="https://github.com/JUhalt/nomologR/issues/75" class="external-link">#75</a>. Distribution is R-universe until CRAN accepts the submission. The joint 1.0.0 release with <code>contentvalidR</code> is tracked in <a href="https://github.com/JUhalt/nomologR/issues/53" class="external-link">#53</a>.</p>
 <ul><li>
 <p>CRAN preparation for the first submission (<a href="https://github.com/JUhalt/nomologR/issues/39" class="external-link">#39</a>).</p>
 <ul><li>
@@ -61,6 +69,12 @@
 <strong>Build.</strong> <code>.git</code> and <code>.gitignore</code> are excluded from the build. A git worktree has a <code>.git</code> <em>file</em>, and a hidden file in the tarball is what CRAN returned <code>contentvalidR</code> 0.3.1 for.</li>
 <li>
 <strong>Test time.</strong> Under CRAN conditions the tests took about 15 minutes on a slow Windows machine; they now take about 3. The 117 tests that took 2 seconds or more are skipped on CRAN: simulations, full guided runs, and rendered reports. Two stay on CRAN because they check that nomologR reproduces lavaan’s own estimates, so a lavaan change that alters them is caught there. Continuous integration still runs every test, and coverage is unchanged.</li>
+<li>
+<strong>Examples.</strong> <code><a href="../reference/nomo_scores.html">nomo_scores()</a></code> and <code><a href="../reference/nomo_apa_table.html">nomo_apa_table()</a></code> gain runnable examples, so every exported function now has one.</li>
+<li>
+<strong>Description.</strong> The <code>DESCRIPTION</code> cites the two works that frame the package, Cronbach and Meehl (1955) and Flake, Pek, and Hehman (2017), with their DOIs.</li>
+<li>
+<strong>References.</strong> The research-basis article’s reference list gains the APA <em>Publication Manual</em>, which <code><a href="../reference/nomo_apa_table.html">?nomo_apa_table</a></code> already cited. Its “Planned” notes now say that longitudinal invariance and multiple imputation are candidates for v0.4, not v0.3.</li>
 </ul></li>
 <li><p><code>nomo_report(apa_tables = TRUE)</code> appends a <em>Manuscript tables</em> appendix (<a href="https://github.com/JUhalt/nomologR/issues/73" class="external-link">#73</a>, last of three parts). It holds the <code><a href="../reference/nomo_apa_table.html">nomo_apa_table()</a></code> tables for the results a run holds: CFA loadings, fit, and factor correlations; reliability; and, when present, invariance and the network’s hypotheses and fit. They are numbered in the order the report presents them. A table that does not apply is left out rather than failing the report. The default, <code>FALSE</code>, leaves reports unchanged.</p></li>
 <li>

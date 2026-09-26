@@ -1,6 +1,37 @@
 # Changelog
 
-## nomologR 0.2.1.9000 (development)
+## nomologR 0.3.0
+
+nomologR 0.3.0 is the first release submitted to CRAN
+([\#39](https://github.com/JUhalt/nomologR/issues/39)), and its scope
+was kept deliberately lean for that reason
+([\#38](https://github.com/JUhalt/nomologR/issues/38)). It does three
+things:
+
+- **Connects content review to empirical validation.** A handoff from
+  `contentvalidR` now flows into
+  [`nomo_screen()`](https://juhalt.github.io/nomologR/reference/nomo_screen.md)
+  and
+  [`nomo_run()`](https://juhalt.github.io/nomologR/reference/nomo_run.md),
+  and the reasons for each item’s carry decision travel with it
+  ([\#46](https://github.com/JUhalt/nomologR/issues/46)).
+- **Folds the v0.2.1 tools into the guided workflow and its report.**
+  These are careless-responding screens, scores, missing-data
+  sensitivity, and manuscript tables
+  ([\#73](https://github.com/JUhalt/nomologR/issues/73)).
+- **Starts the public interface’s stability promise.** From this release
+  the interface changes only after a deprecation period, under the
+  policy written on
+  [`?nomologR`](https://juhalt.github.io/nomologR/reference/nomologR-package.md)
+  ([\#74](https://github.com/JUhalt/nomologR/issues/74)).
+
+Test coverage is back to every executable line
+([\#72](https://github.com/JUhalt/nomologR/issues/72)). Reviewing each
+uncovered line found four defects, now fixed. Certification is recorded
+in [\#75](https://github.com/JUhalt/nomologR/issues/75). Distribution is
+R-universe until CRAN accepts the submission. The joint 1.0.0 release
+with `contentvalidR` is tracked in
+[\#53](https://github.com/JUhalt/nomologR/issues/53).
 
 - CRAN preparation for the first submission
   ([\#39](https://github.com/JUhalt/nomologR/issues/39)).
@@ -22,6 +53,20 @@
     nomologR reproduces lavaan’s own estimates, so a lavaan change that
     alters them is caught there. Continuous integration still runs every
     test, and coverage is unchanged.
+  - **Examples.**
+    [`nomo_scores()`](https://juhalt.github.io/nomologR/reference/nomo_scores.md)
+    and
+    [`nomo_apa_table()`](https://juhalt.github.io/nomologR/reference/nomo_apa_table.md)
+    gain runnable examples, so every exported function now has one.
+  - **Description.** The `DESCRIPTION` cites the two works that frame
+    the package, Cronbach and Meehl (1955) and Flake, Pek, and Hehman
+    (2017), with their DOIs.
+  - **References.** The research-basis article’s reference list gains
+    the APA *Publication Manual*, which
+    [`?nomo_apa_table`](https://juhalt.github.io/nomologR/reference/nomo_apa_table.md)
+    already cited. Its “Planned” notes now say that longitudinal
+    invariance and multiple imputation are candidates for v0.4, not
+    v0.3.
 
 - `nomo_report(apa_tables = TRUE)` appends a *Manuscript tables*
   appendix ([\#73](https://github.com/JUhalt/nomologR/issues/73), last

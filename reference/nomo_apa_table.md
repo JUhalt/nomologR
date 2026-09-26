@@ -71,3 +71,52 @@ for the stability policy.
 American Psychological Association. (2020). *Publication manual of the
 American Psychological Association* (7th ed.).
 [doi:10.1037/0000165-000](https://doi.org/10.1037/0000165-000)
+
+## Examples
+
+``` r
+model <- '
+  visual  =~ x1 + x2 + x3
+  textual =~ x4 + x5 + x6
+  speed   =~ x7 + x8 + x9
+'
+cfa <- nomo_cfa(model, data = lavaan::HolzingerSwineford1939)
+
+nomo_apa_table(cfa, "loadings", number = 1)
+#> Table 1
+#> Standardized Factor Loadings
+#> ----------------------------
+#> Item  visual  textual  speed
+#> ----------------------------
+#> x1      0.77                
+#> x2      0.42                
+#> x3      0.58                
+#> x4               0.85       
+#> x5               0.86       
+#> x6               0.84       
+#> x7                      0.57
+#> x8                      0.72
+#> x9                      0.67
+#> ----------------------------
+#> Note. Standardized loadings from a confirmatory factor analysis. Estimated with ML; N = 301. Blank cells are loadings fixed to zero by the model.
+nomo_apa_table(cfa, "fit", number = 2)
+#> Table 2
+#> Model Fit
+#> ------------------------------------------------------------------------------
+#> Model                 χ²  df       p   CFI    TLI        RMSEA [90% CI]   SRMR
+#> ------------------------------------------------------------------------------
+#> Measurement model  85.31  24  < .001  .931  0.896  0.092 [0.071, 0.114]  0.065
+#> ------------------------------------------------------------------------------
+#> Note. Estimated with ML; N = 301. CFI = comparative fit index; TLI = Tucker-Lewis index; RMSEA = root mean square error of approximation; SRMR = standardized root mean square residual. Fit indices are reported as evidence, not against fixed cutoffs.
+nomo_apa_table(nomo_reliability(cfa), number = 3)
+#> Table 3
+#> Reliability Estimates
+#> -------------------
+#> Construct    ω    α
+#> -------------------
+#> visual     .61  .63
+#> textual    .89  .88
+#> speed      .69  .69
+#> -------------------
+#> Note. ω = coefficient omega; α = coefficient alpha. Coefficient alpha assumes equal loadings and is reported alongside omega for comparison with published work.
+```
