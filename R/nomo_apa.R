@@ -136,6 +136,18 @@ nomo_apa_new <- function(body, title, stub, general = character(),
 #' American Psychological Association* (7th ed.).
 #' \doi{10.1037/0000165-000}
 #'
+#' @examples
+#' model <- '
+#'   visual  =~ x1 + x2 + x3
+#'   textual =~ x4 + x5 + x6
+#'   speed   =~ x7 + x8 + x9
+#' '
+#' cfa <- nomo_cfa(model, data = lavaan::HolzingerSwineford1939)
+#'
+#' nomo_apa_table(cfa, "loadings", number = 1)
+#' nomo_apa_table(cfa, "fit", number = 2)
+#' nomo_apa_table(nomo_reliability(cfa), number = 3)
+#'
 #' @export
 nomo_apa_table <- function(x, type = NULL, number = NULL, title = NULL, ...) {
   UseMethod("nomo_apa_table")

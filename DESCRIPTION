@@ -1,7 +1,7 @@
 Package: nomologR
 Type: Package
 Title: Guided Scale Development and Construct Validation
-Version: 0.2.1.9000
+Version: 0.3.0
 Authors@R: c(
     person(
       "Joshua", "Uhalt",
@@ -13,12 +13,15 @@ Description: Provides an evidence-guided workflow for empirical scale developmen
     and construct validation, designed for graduate students and researchers.
     The package helps users examine item performance, dimensionality,
     measurement models, reliability, convergent and discriminant evidence,
-    measurement invariance, and theory-specified nomological networks. Methods
-    are documented from historical to contemporary practice with literature
+    measurement invariance, and theory-specified nomological networks in the
+    sense of Cronbach and Meehl (1955) <doi:10.1037/h0040957>. Methods are
+    documented from historical to contemporary practice with literature
     references, and simulated teaching datasets with known population models
-    accompany the examples. It emphasizes transparent diagnostics, reproducible
-    decision logging, and teaching-oriented guidance rather than automatic item
-    deletion or binary declarations that a measure is valid.
+    accompany the examples. Following calls for transparent measurement
+    practice such as Flake, Pek, and Hehman (2017)
+    <doi:10.1177/1948550617693063>, it emphasizes transparent diagnostics,
+    reproducible decision logging, and teaching-oriented guidance rather than
+    automatic item deletion or binary declarations that a measure is valid.
 License: GPL-3
 Encoding: UTF-8
 Language: en-US
