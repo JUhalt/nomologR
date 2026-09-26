@@ -80,7 +80,7 @@
 <li>
 <p><code><a href="../reference/nomo_run.html">nomo_run()</a></code> can score the measurement model and compare missing-data strategies, and its report shows both (<a href="https://github.com/JUhalt/nomologR/issues/73" class="external-link">#73</a>, second of three parts).</p>
 <ul><li>
-<strong>Scores.</strong> <code>settings = list(scores = list(method = "sum"))</code> scores the model with <code><a href="../reference/nomo_scores.html">nomo_scores()</a></code>. The researcher must name the method; a request without one is refused, because nomologR does not choose a scoring method.</li>
+<strong>Scores.</strong> <code>settings = list(scores = list(method = "sum"))</code> scores the model with <code><a href="../reference/nomo_scores.html">nomo_scores()</a></code>. The researcher must name the method; a request without one, including <code>scores = list()</code>, is refused, because nomologR does not choose a scoring method.</li>
 <li>
 <strong>Missing-data sensitivity.</strong> <code>settings = list(missing = list())</code> compares strategies with <code><a href="../reference/nomo_missing.html">nomo_missing()</a></code> for the measurement model, and for the network too when one is requested.</li>
 <li>

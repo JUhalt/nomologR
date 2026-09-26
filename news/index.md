@@ -88,8 +88,9 @@ with `contentvalidR` is tracked in
   - **Scores.** `settings = list(scores = list(method = "sum"))` scores
     the model with
     [`nomo_scores()`](https://juhalt.github.io/nomologR/reference/nomo_scores.md).
-    The researcher must name the method; a request without one is
-    refused, because nomologR does not choose a scoring method.
+    The researcher must name the method; a request without one,
+    including `scores = list()`, is refused, because nomologR does not
+    choose a scoring method.
   - **Missing-data sensitivity.** `settings = list(missing = list())`
     compares strategies with
     [`nomo_missing()`](https://juhalt.github.io/nomologR/reference/nomo_missing.md)
