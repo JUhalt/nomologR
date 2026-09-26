@@ -72,7 +72,7 @@
       <h1>Archiving a nomologR workflow with nomo_report()</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/JUhalt/nomologR/blob/v0.3.0/vignettes/reproducible-report.Rmd" class="external-link"><code>vignettes/reproducible-report.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/JUhalt/nomologR/blob/master/vignettes/reproducible-report.Rmd" class="external-link"><code>vignettes/reproducible-report.Rmd</code></a></small>
       <div class="d-none name"><code>reproducible-report.Rmd</code></div>
     </div>
 
@@ -528,13 +528,21 @@ paused report above:</p>
 <h2 id="overwriting-is-explicit">Overwriting is explicit<a class="anchor" aria-label="anchor" href="#overwriting-is-explicit"></a>
 </h2>
 <p>Existing reports are protected. Rendering to a file that already
-exists stops unless <code>overwrite = TRUE</code> is supplied:</p>
+exists stops with an error unless <code>overwrite = TRUE</code> is
+supplied. Here the error is caught so that its message can be shown:</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/nomo_report.html">nomo_report</a></span><span class="op">(</span><span class="va">run</span>, file <span class="op">=</span> <span class="va">report_file</span><span class="op">)</span></span>
-<span><span class="co">#&gt; <span style="color: #BBBB00; font-weight: bold;">Error</span><span style="font-weight: bold;">:</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BBBB00;">!</span> Report file already exists: /tmp/Rtmp1aEoEt/nomologR-reports-1fe62d4de099/construct-validation-report.html. Use `overwrite = TRUE` to replace it.</span></span></code></pre></div>
-<p>As elsewhere in <code>nomologR</code>, consequential or destructive
-behavior is not silently assumed.</p>
+<code class="sourceCode R"><span><span class="va">refusal</span> <span class="op">&lt;-</span> <span class="kw"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">tryCatch</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="../reference/nomo_report.html">nomo_report</a></span><span class="op">(</span><span class="va">run</span>, file <span class="op">=</span> <span class="va">report_file</span><span class="op">)</span>,</span>
+<span>  error <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">e</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">conditionMessage</a></span><span class="op">(</span><span class="va">e</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># This article writes its reports to a temporary directory, shown here as</span></span>
+<span><span class="co"># &lt;report_dir&gt; so that the message reads the same on every computer.</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">gsub</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/basename.html" class="external-link">dirname</a></span><span class="op">(</span><span class="va">report_file</span><span class="op">)</span>, <span class="st">"&lt;report_dir&gt;"</span>, <span class="va">refusal</span>, fixed <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Report file already exists: &lt;report_dir&gt;/construct-validation-report.html. Use `overwrite = TRUE` to replace it.</span></span></code></pre></div>
+<p>The existing report is left as it was. As elsewhere in
+<code>nomologR</code>, consequential or destructive behavior is not
+silently assumed.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

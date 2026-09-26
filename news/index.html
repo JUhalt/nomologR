@@ -46,9 +46,13 @@
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Changelog</h1>
-      <small>Source: <a href="https://github.com/JUhalt/nomologR/blob/v0.3.0/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
+      <small>Source: <a href="https://github.com/JUhalt/nomologR/blob/master/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="development version" id="nomologr-development-version">nomologR (development version)<a class="anchor" aria-label="anchor" href="#nomologr-development-version"></a></h2>
+<ul><li>The reproducible-report article’s overwrite example shows the refusal message with its temporary directory as <code>&lt;report_dir&gt;</code>. It had printed the full temporary path of the computer that built the article, including a user name, and the path changed on every build. The message still comes from <code><a href="../reference/nomo_report.html">nomo_report()</a></code>, and the example still shows that an existing report is refused unless <code>overwrite = TRUE</code> is given.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.3.0" id="nomologr-030">nomologR 0.3.0<a class="anchor" aria-label="anchor" href="#nomologr-030"></a></h2>
 <p>nomologR 0.3.0 is the first release submitted to CRAN (<a href="https://github.com/JUhalt/nomologR/issues/39" class="external-link">#39</a>), and its scope was kept deliberately lean for that reason (<a href="https://github.com/JUhalt/nomologR/issues/38" class="external-link">#38</a>). It does three things:</p>

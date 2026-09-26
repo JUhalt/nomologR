@@ -340,14 +340,21 @@ nomo_report(
 ## Overwriting is explicit
 
 Existing reports are protected. Rendering to a file that already exists
-stops unless `overwrite = TRUE` is supplied:
+stops with an error unless `overwrite = TRUE` is supplied. Here the
+error is caught so that its message can be shown:
 
 ``` r
 
-nomo_report(run, file = report_file)
-#> Error:
-#> ! Report file already exists: /tmp/Rtmp1aEoEt/nomologR-reports-1fe62d4de099/construct-validation-report.html. Use `overwrite = TRUE` to replace it.
+refusal <- tryCatch(
+  nomo_report(run, file = report_file),
+  error = function(e) conditionMessage(e)
+)
+
+# This article writes its reports to a temporary directory, shown here as
+# <report_dir> so that the message reads the same on every computer.
+cat(gsub(dirname(report_file), "<report_dir>", refusal, fixed = TRUE))
+#> Report file already exists: <report_dir>/construct-validation-report.html. Use `overwrite = TRUE` to replace it.
 ```
 
-As elsewhere in `nomologR`, consequential or destructive behavior is not
-silently assumed.
+The existing report is left as it was. As elsewhere in `nomologR`,
+consequential or destructive behavior is not silently assumed.
