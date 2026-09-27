@@ -111,7 +111,11 @@ print.summary_nomo_screen <- function(x, ...) {
 #' @param x A `nomo_screen` object.
 #' @param y Ignored; included for compatibility with the base `plot()` generic.
 #' @param type Plot type: `"evidence"`, `"item_rest"`, `"interitem"`,
-#'   `"responses"`, or `"missingness"`.
+#'   `"responses"`, or `"missingness"`. `"responses"` draws a bar for each
+#'   response category of a categorical item, and a histogram of observed
+#'   values for a continuous item (`item_type` `"numeric_continuous"`). When the
+#'   selected items mix the two, the categorical items are drawn and the caption
+#'   names the continuous ones, which can be plotted by passing them as `items`.
 #' @param items Optional character vector of candidate items to display.
 #' @param show_values Logical; add numerical labels where useful.
 #' @param ... Additional arguments, currently ignored.
@@ -685,7 +689,18 @@ nomo_screen_plot_interitem <- function(x, items, show_values) {
 }
 
 
+# A continuous item has as many distinct values as respondents, so a bar per
+# value is unreadable; it is shown as a histogram instead (#89). A selection
+# that mixes continuous and categorical items cannot share one axis type, so
+# the category bars are drawn and the caption names the continuous items.
 nomo_screen_plot_responses <- function(x, items, show_values) {
+  types <- x$item_summary$item_type[match(items, x$item_summary$item)]
+  continuous <- items[types %in% "numeric_continuous"]
+  if (length(continuous) == length(items)) {
+    return(nomo_screen_plot_histograms(x, items))
+  }
+  items <- setdiff(items, continuous)
+
   dat <- x$response_distribution[
     x$response_distribution$item %in% items &
       !x$response_distribution$missing,
@@ -755,7 +770,57 @@ nomo_screen_plot_responses <- function(x, items, show_values) {
     )
   }
 
+  if (length(continuous)) {
+    p <- p + ggplot2::labs(caption = paste0(
+      "Continuous items are not shown here: ", paste(continuous, collapse = ", "),
+      ". See plot(x, type = \"responses\", items = c(",
+      paste0("\"", continuous, "\"", collapse = ", "), "))."
+    ))
+  }
+
   p
+}
+
+
+nomo_screen_plot_histograms <- function(x, items, bins = 20L) {
+  dat <- x$response_distribution[
+    x$response_distribution$item %in% items &
+      !x$response_distribution$missing,
+    ,
+    drop = FALSE
+  ]
+
+  if (nrow(dat) == 0L) {
+    stop("No observed responses are available for the selected items.", call. = FALSE)
+  }
+
+  dat$item <- factor(dat$item, levels = items)
+  dat$value <- as.numeric(dat$response)
+
+  ggplot2::ggplot(
+    dat,
+    ggplot2::aes(
+      x = value,
+      weight = n,
+      y = ggplot2::after_stat(density * width)
+    )
+  ) +
+    ggplot2::geom_histogram(bins = bins) +
+    ggplot2::facet_wrap(~item, scales = "free_x") +
+    ggplot2::scale_y_continuous(
+      labels = function(z) paste0(round(100 * z), "%"),
+      expand = ggplot2::expansion(mult = c(0, 0.08))
+    ) +
+    ggplot2::labs(
+      title = "Item response distributions",
+      subtitle = sprintf(
+        "Continuous items: share of observed responses in each of %d equal-width bins.",
+        bins
+      ),
+      x = "Response",
+      y = "Observed proportion"
+    ) +
+    ggplot2::theme_minimal(base_size = 11)
 }
 
 
@@ -834,5 +899,9 @@ utils::globalVariables(c(
   "response_key",
   "proportion_observed",
   "pct_missing",
-  "missingness_label_position"
+  "missingness_label_position",
+  "value",
+  "n",
+  "density",
+  "width"
 ))
