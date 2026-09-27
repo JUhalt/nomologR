@@ -31,6 +31,10 @@ knitr::opts_chunk$set(
 
 run <- params$run
 
+# Item and scale names are the researcher's, so table headings keep them as
+# written rather than turning them into words (#89).
+protected_names <- unique(c(names(run$scales), unlist(run$scales, use.names = FALSE)))
+
 # A Word document cannot carry raw HTML: pandoc drops it when writing .docx,
 # which would lose every table and the interpretation contract. Each emitter
 # below writes HTML for an HTML report and markdown for a Word one, so the HTML
@@ -91,7 +95,10 @@ emit_table <- function(x,
                        max_rows = params$max_table_rows,
                        empty = "No rows are available for this section.",
                        truncate = TRUE) {
-  x <- nomologR:::nomo_report_flatten_table(x)
+  x <- nomologR:::nomo_report_display_table(x, protected = protected_names)
+  # A missing number is shown as a dash too, as a missing text cell is.
+  old <- options(knitr.kable.NA = nomologR:::nomo_report_blank)
+  on.exit(options(old), add = TRUE)
 
   if (!nrow(x)) {
     emit_note(empty)

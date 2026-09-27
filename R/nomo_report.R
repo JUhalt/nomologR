@@ -56,6 +56,84 @@ nomo_report_flatten_table <- function(x) {
 }
 
 
+# Report tables for reading (#89) ----------------------------------------------
+#
+# The report shows the tables the package returns, whose column names are the
+# code's. For reading, a name becomes words ("omega_ci_lower" is "Omega CI
+# lower"), a flag uses the console's wording, a missing or empty cell is an em
+# dash, and TRUE/FALSE is yes/no. Numbers are left for the table writer to
+# round. The console's "-" is not used: pandoc reads markdown inside the HTML
+# table, and a cell holding only "-" becomes a list item that breaks it.
+# Names that are not the package's own are left as they are: any name with a
+# capital letter, such as a factor called F1, a single word with a digit, such
+# as an item called ag1, and whatever the caller protects, such as the run's
+# item and scale names.
+
+nomo_report_label_words <- c(
+  abs = "absolute", ave = "AVE", cfa = "CFA", cfi = "CFI", chisq = "chi-square",
+  ci = "CI", delta = "change in", df = "df", doi = "DOI", efa = "EFA",
+  epc = "EPC", htmt = "HTMT", htmt2 = "HTMT2", id = "ID", interitem = "inter-item",
+  kmo = "KMO", lrt = "LRT", mi = "MI", msa = "MSA", n = "N", pct = "%",
+  prop = "proportion", rmsea = "RMSEA", sd = "SD", se = "SE", srmr = "SRMR",
+  tli = "TLI"
+)
+
+nomo_report_label_overrides <- c(
+  attention = "Flag", severity = "Flag", signal = "Flag",
+  measurement_attention = "Measurement flag",
+  df = "df", p = "p", p_value = "p", pvalue = "p", lrt_p = "LRT p", r = "r", z = "z",
+  chi_square = "Chi-square", score_x2 = "Score chi-square",
+  n_items = "Items", item1 = "Item 1", item2 = "Item 2",
+  cross_loading = "Cross-loading", near_zero_variance = "Near-zero variance",
+  lavaan_missing = "lavaan missing",
+  corrected_item_rest_r = "Corrected item-rest r", item_rest_n = "Item-rest N",
+  omega_ci_n_success = "Omega CI successful draws",
+  alpha_ci_n_success = "Alpha CI successful draws",
+  lhs = "lhs", op = "op", rhs = "rhs",
+  sepc.all = "Standardized EPC (all)", sepc.lv = "Standardized EPC (latent)",
+  sepc.nox = "Standardized EPC (no x)"
+)
+
+nomo_report_flag_columns <- c("attention", "severity", "signal", "measurement_attention")
+
+nomo_report_blank <- "\u2014"
+
+
+nomo_report_column_labels <- function(names, protected = character()) {
+  vapply(names, function(name) {
+    if (name %in% protected || grepl("[A-Z]", name)) return(name)
+    if (name %in% names(nomo_report_label_overrides)) {
+      return(nomo_report_label_overrides[[name]])
+    }
+    words <- strsplit(name, "[._]")[[1L]]
+    if (length(words) == 1L && grepl("[0-9]", name)) return(name)
+    known <- words %in% names(nomo_report_label_words)
+    words[known] <- nomo_report_label_words[words[known]]
+    label <- paste(words, collapse = " ")
+    paste0(toupper(substr(label, 1L, 1L)), substring(label, 2L))
+  }, character(1), USE.NAMES = FALSE)
+}
+
+
+nomo_report_display_table <- function(x, protected = character()) {
+  x <- nomo_report_flatten_table(x)
+  for (name in names(x)) {
+    value <- x[[name]]
+    if (name %in% nomo_report_flag_columns) {
+      value <- nomo_present_flag(value)
+    } else if (is.logical(value)) {
+      value <- ifelse(value, "yes", "no")
+    }
+    if (is.character(value)) {
+      value[is.na(value) | !nzchar(trimws(value))] <- nomo_report_blank
+    }
+    x[[name]] <- value
+  }
+  names(x) <- nomo_report_column_labels(names(x), protected)
+  x
+}
+
+
 nomo_report_validate_run <- function(x) {
   if (!inherits(x, "nomo_run")) {
     stop("`x` must be an object created by `nomo_run()`.", call. = FALSE)
