@@ -90,7 +90,11 @@ inter-item correlations, response-category use, or missingness.</p>
 
 <dt id="arg-type">type<a class="anchor" aria-label="anchor" href="#arg-type"></a></dt>
 <dd><p>Plot type: <code>"evidence"</code>, <code>"item_rest"</code>, <code>"interitem"</code>,
-<code>"responses"</code>, or <code>"missingness"</code>.</p></dd>
+<code>"responses"</code>, or <code>"missingness"</code>. <code>"responses"</code> draws a bar for each
+response category of a categorical item, and a histogram of observed
+values for a continuous item (<code>item_type</code> <code>"numeric_continuous"</code>). When the
+selected items mix the two, the categorical items are drawn and the caption
+names the continuous ones, which can be plotted by passing them as <code>items</code>.</p></dd>
 
 
 <dt id="arg-items">items<a class="anchor" aria-label="anchor" href="#arg-items"></a></dt>

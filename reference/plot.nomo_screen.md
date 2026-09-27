@@ -34,7 +34,12 @@ plot(
 - type:
 
   Plot type: `"evidence"`, `"item_rest"`, `"interitem"`, `"responses"`,
-  or `"missingness"`.
+  or `"missingness"`. `"responses"` draws a bar for each response
+  category of a categorical item, and a histogram of observed values for
+  a continuous item (`item_type` `"numeric_continuous"`). When the
+  selected items mix the two, the categorical items are drawn and the
+  caption names the continuous ones, which can be plotted by passing
+  them as `items`.
 
 - items:
 

@@ -2,6 +2,14 @@
 
 ## nomologR (development version)
 
+- `plot(<nomo_screen>, type = "responses")` draws a histogram for a
+  continuous item
+  ([\#89](https://github.com/JUhalt/nomologR/issues/89)). It drew a bar
+  for every distinct value, which for continuous responses means one bar
+  per respondent: an unreadable plot, with a percentage label on each
+  bar. Categorical items keep their bars. When the selected items mix
+  the two, the categorical items are drawn and the caption names the
+  continuous ones and how to plot them.
 - [`nomo_validity()`](https://juhalt.github.io/nomologR/reference/nomo_validity.md)
   lists each construct pair once in its print, summary, and report
   section, with the latent correlation and HTMT-family values in the
