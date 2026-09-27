@@ -937,6 +937,9 @@ nomo_report_sanitize_citation_text <- function(x) {
     x,
     perl = TRUE
   )
+  # LaTeX markup some packages put in their citations, such as
+  # \texttt{semTools}, keeps only its text.
+  x <- gsub("\\\\[A-Za-z]+\\{([^{}]*)\\}", "\\1", x, perl = TRUE)
   x <- gsub("[[:space:]]+", " ", x, perl = TRUE)
   trimws(x)
 }
@@ -956,13 +959,10 @@ nomo_report_citations <- function(
       ))
     }
 
+    # The reference only. print() adds a "To cite" header and a BibTeX entry,
+    # whose "@Manual{" pandoc reads as a citation key (#89).
     citation_text <- tryCatch(
-      paste(
-        utils::capture.output(
-          print(suppressWarnings(citation_fun(pkg)))
-        ),
-        collapse = " "
-      ),
+      paste(format(suppressWarnings(citation_fun(pkg)), style = "text"), collapse = " "),
       error = function(e) {
         paste0("Citation unavailable: ", conditionMessage(e))
       }

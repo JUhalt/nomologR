@@ -647,11 +647,38 @@ test_that("citation sanitization removes angle-bracket URL artifacts", {
     fixed = TRUE
   )
   expect_match(clean, "https://example.org/path", fixed = TRUE)
+  expect_identical(
+    nomologR:::nomo_report_sanitize_citation_text("_\\texttt{semTools}: Useful tools_"),
+    "_semTools: Useful tools_"
+  )
 
   expect_equal(
     nomologR:::nomo_report_sanitize_citation_text(character()),
     character()
   )
+})
+
+
+test_that("the citations table gives each reference without R's header or BibTeX (#89)", {
+  entries <- c(
+    utils::bibentry("Manual", title = "examplepkg: An Example", author = "Ann Author",
+                    year = "2026", note = "R package version 1.2.3",
+                    url = "https://example.org/examplepkg"),
+    utils::bibentry("Article", title = "An example article", author = "Ann Author",
+                    journal = "Journal of Examples", year = "2025", volume = "4", pages = "1--9")
+  )
+  cites <- nomologR:::nomo_report_citations(
+    packages = "examplepkg",
+    namespace_available = function(pkg) TRUE,
+    citation_fun = function(pkg) entries,
+    version_fun = function(pkg) "1.2.3"
+  )
+  text <- cites$citation[[1L]]
+  expect_match(text, "examplepkg: An Example", fixed = TRUE)
+  expect_match(text, "An example article", fixed = TRUE)
+  expect_match(text, "https://example.org/examplepkg", fixed = TRUE)
+  expect_false(grepl("@Manual|@Article|BibTeX|To cite", text))
+  expect_false(grepl("\n", text, fixed = TRUE))
 })
 
 
