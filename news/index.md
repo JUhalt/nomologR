@@ -43,7 +43,11 @@
   and factor names are left as written. The values are otherwise
   unchanged, and
   [`nomo_table()`](https://juhalt.github.io/nomologR/reference/nomo_table.md)
-  still returns the code’s column names and flag values.
+  still returns the code’s column names and flag values. The citations
+  table gives each package’s reference as text. It had held R’s whole
+  `print(citation())` output, including a BibTeX entry whose `@Manual{`
+  pandoc turned into a stray citation, and LaTeX such as
+  `\texttt{semTools}`.
 - The redesigned console output extends to comparisons, invariance,
   partial releases, hypotheses, networks, splits, and the notes of
   [`nomo_apa_table()`](https://juhalt.github.io/nomologR/reference/nomo_apa_table.md)
