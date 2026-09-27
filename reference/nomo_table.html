@@ -86,7 +86,26 @@ the underlying object: full engine results remain stored in the original
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>Supported objects and <code>type</code> values:</p><ul><li><p><code>nomo_hypotheses</code>: the machine-readable hypothesis table (no <code>type</code>).</p></li>
+    <p>Supported objects and <code>type</code> values. The first value listed is the default.</p><ul><li><p><code>nomo_screen</code>: <code>"items"</code>, <code>"distribution"</code>, <code>"cases"</code>,
+<code>"relationships"</code>, <code>"effort"</code>, <code>"decision_log"</code>; see <code><a href="nomo_screen.html">nomo_screen()</a></code>.</p></li>
+<li><p><code>nomo_factors</code>: <code>"evidence"</code>, <code>"criteria"</code>, <code>"adequacy"</code>,
+<code>"concordance"</code>, <code>"decision_log"</code>; see <code><a href="nomo_factors.html">nomo_factors()</a></code>.</p></li>
+<li><p><code>nomo_efa</code>: <code>"items"</code>, <code>"pattern"</code>, <code>"factor_correlations"</code>,
+<code>"residuals"</code>, <code>"decision_log"</code>. The pattern and factor-correlation
+matrices are returned as tables with the item or factor in the first
+column; see <code><a href="nomo_efa.html">nomo_efa()</a></code>.</p></li>
+<li><p><code>nomo_cfa</code>: <code>"fit"</code>, <code>"loadings"</code>, <code>"factor_correlations"</code>, <code>"heywood"</code>,
+<code>"residuals"</code>, <code>"modification_indices"</code>, <code>"decision_log"</code>; see
+<code><a href="nomo_cfa.html">nomo_cfa()</a></code>.</p></li>
+<li><p><code>nomo_reliability</code>: <code>"coefficients"</code>, <code>"alpha_status"</code>, <code>"ci_status"</code>,
+<code>"decision_log"</code>; see <code><a href="nomo_reliability.html">nomo_reliability()</a></code>.</p></li>
+<li><p><code>nomo_validity</code>: <code>"convergent"</code>, <code>"discriminant"</code>, <code>"htmt_status"</code>,
+<code>"decision_log"</code>. <code>"discriminant"</code> has one row per construct pair, with
+the latent correlation and the HTMT-family values together; see
+<code><a href="nomo_validity.html">nomo_validity()</a></code>.</p></li>
+<li><p><code>nomo_scores</code>: <code>"scores"</code>, <code>"diagnostics"</code>, <code>"unit_weighting"</code>,
+<code>"notes"</code>; see <code><a href="nomo_scores.html">nomo_scores()</a></code>.</p></li>
+<li><p><code>nomo_hypotheses</code>: the machine-readable hypothesis table (no <code>type</code>).</p></li>
 <li><p><code>nomo_network</code>: <code>"hypotheses"</code> (default), <code>"fit"</code>, <code>"measurement"</code>,
 <code>"relations"</code>, <code>"replication"</code>, <code>"decision_log"</code>.</p></li>
 <li><p><code>nomo_invariance</code>: <code>"fit"</code> (default), <code>"categories"</code>, <code>"partial"</code>,

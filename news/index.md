@@ -2,6 +2,20 @@
 
 ## nomologR (development version)
 
+- [`nomo_table()`](https://juhalt.github.io/nomologR/reference/nomo_table.md)
+  works on every measurement-stage result: `nomo_factors`, `nomo_efa`,
+  `nomo_cfa`, `nomo_reliability`, and `nomo_validity`
+  ([\#89](https://github.com/JUhalt/nomologR/issues/89)). They had no
+  method, so the documented way to extract a table failed for five of
+  the package’s main results. Each returns the tables its report section
+  shows.
+  [`nomo_report()`](https://juhalt.github.io/nomologR/reference/nomo_report.md)
+  now gets them through
+  [`nomo_table()`](https://juhalt.github.io/nomologR/reference/nomo_table.md),
+  so the two cannot drift apart.
+  [`?nomo_table`](https://juhalt.github.io/nomologR/reference/nomo_table.md)
+  lists every supported object and type, including `nomo_screen` and
+  `nomo_scores`, which were missing from it.
 - `plot(<nomo_screen>, type = "responses")` draws a histogram for a
   continuous item
   ([\#89](https://github.com/JUhalt/nomologR/issues/89)). It drew a bar

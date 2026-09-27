@@ -28,7 +28,40 @@ A tibble.
 
 ## Details
 
-Supported objects and `type` values:
+Supported objects and `type` values. The first value listed is the
+default.
+
+- `nomo_screen`: `"items"`, `"distribution"`, `"cases"`,
+  `"relationships"`, `"effort"`, `"decision_log"`; see
+  [`nomo_screen()`](https://juhalt.github.io/nomologR/reference/nomo_screen.md).
+
+- `nomo_factors`: `"evidence"`, `"criteria"`, `"adequacy"`,
+  `"concordance"`, `"decision_log"`; see
+  [`nomo_factors()`](https://juhalt.github.io/nomologR/reference/nomo_factors.md).
+
+- `nomo_efa`: `"items"`, `"pattern"`, `"factor_correlations"`,
+  `"residuals"`, `"decision_log"`. The pattern and factor-correlation
+  matrices are returned as tables with the item or factor in the first
+  column; see
+  [`nomo_efa()`](https://juhalt.github.io/nomologR/reference/nomo_efa.md).
+
+- `nomo_cfa`: `"fit"`, `"loadings"`, `"factor_correlations"`,
+  `"heywood"`, `"residuals"`, `"modification_indices"`,
+  `"decision_log"`; see
+  [`nomo_cfa()`](https://juhalt.github.io/nomologR/reference/nomo_cfa.md).
+
+- `nomo_reliability`: `"coefficients"`, `"alpha_status"`, `"ci_status"`,
+  `"decision_log"`; see
+  [`nomo_reliability()`](https://juhalt.github.io/nomologR/reference/nomo_reliability.md).
+
+- `nomo_validity`: `"convergent"`, `"discriminant"`, `"htmt_status"`,
+  `"decision_log"`. `"discriminant"` has one row per construct pair,
+  with the latent correlation and the HTMT-family values together; see
+  [`nomo_validity()`](https://juhalt.github.io/nomologR/reference/nomo_validity.md).
+
+- `nomo_scores`: `"scores"`, `"diagnostics"`, `"unit_weighting"`,
+  `"notes"`; see
+  [`nomo_scores()`](https://juhalt.github.io/nomologR/reference/nomo_scores.md).
 
 - `nomo_hypotheses`: the machine-readable hypothesis table (no `type`).
 
