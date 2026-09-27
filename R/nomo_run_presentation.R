@@ -84,9 +84,16 @@ nomo_run_key_evidence <- function(x) {
   if (!is.null(r$cfa)) {
     fe <- r$cfa$fit_evidence
     fit <- fe[fe$metric %in% c("CFI", "RMSEA", "SRMR") & is.finite(fe$value), , drop = FALSE]
+    problem <- nomo_cfa_df_problem(fe)
+    shown <- if (!is.null(problem)) {
+      paste0("fit not testable (", problem$label, ")")
+    } else if (nrow(fit)) {
+      paste(fit$metric, nomo_present_number(fit$value), collapse = ", ")
+    } else {
+      "fit unavailable"
+    }
     out <- c(out, paste0(
-      "CFA: ",
-      if (nrow(fit)) paste(fit$metric, nomo_present_number(fit$value), collapse = ", ") else "fit unavailable",
+      "CFA: ", shown,
       "; loading flags: ", nomo_present_flag_counts(r$cfa$standardized_loadings$attention)
     ))
   }

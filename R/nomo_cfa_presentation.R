@@ -29,6 +29,35 @@ nomo_cfa_present_facts <- function(x, detail = FALSE) {
 }
 
 
+# Global fit indices test a model only when it has positive degrees of freedom.
+# A just-identified model (df = 0) reproduces the covariances by construction,
+# and a model with negative df is not identified; either way the indices are
+# not evidence of fit. NULL when df is positive or unknown.
+nomo_cfa_df_problem <- function(fit_evidence) {
+  df <- fit_evidence$value[fit_evidence$metric == "df"]
+  if (!length(df) || !is.finite(df[[1L]]) || df[[1L]] > 0) return(NULL)
+  df <- df[[1L]]
+  if (df == 0) {
+    list(
+      label = "just identified",
+      explanation = paste(
+        "The model is just identified (df = 0): it reproduces the observed",
+        "covariances by construction, so its fit indices cannot test it."
+      )
+    )
+  } else {
+    list(
+      label = "not identified",
+      explanation = sprintf(paste(
+        "The model is not identified (df = %s): it has more free parameters",
+        "than the observed covariances can determine, so neither its estimates",
+        "nor its fit can be interpreted."
+      ), format(df, trim = TRUE))
+    )
+  }
+}
+
+
 # The version of a fit index lavaan reported: standard, scaled, or robust.
 nomo_cfa_fit_version <- function(variant) {
   ifelse(grepl("robust", variant), "robust",
@@ -45,7 +74,14 @@ print.nomo_cfa <- function(x, ...) {
     x$fit_evidence$metric %in% c("CFI", "TLI", "RMSEA", "SRMR") &
       is.finite(x$fit_evidence$value), , drop = FALSE
   ]
-  if (nrow(fit)) {
+  problem <- nomo_cfa_df_problem(x$fit_evidence)
+  if (!is.null(problem)) {
+    nomo_present_facts(sprintf(
+      "Fit: not testable (df = %s, %s)",
+      format(x$fit_evidence$value[x$fit_evidence$metric == "df"][[1L]], trim = TRUE),
+      problem$label
+    ))
+  } else if (nrow(fit)) {
     version <- nomo_cfa_fit_version(fit$variant)
     nomo_present_facts(c(
       paste0("Fit: ", fit$metric[[1L]], " ", nomo_present_number(fit$value[[1L]]),
@@ -112,6 +148,8 @@ print.summary_nomo_cfa <- function(x, ...) {
 
   nomo_present_section("Global fit")
   fe <- x$fit_evidence
+  problem <- nomo_cfa_df_problem(fe)
+  if (!is.null(problem)) nomo_present_text(problem$explanation, indent = 2L)
   value <- function(m) {
     v <- fe$value[fe$metric == m]
     if (length(v)) v[[1L]] else NA_real_

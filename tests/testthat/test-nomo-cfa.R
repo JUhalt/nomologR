@@ -1212,3 +1212,30 @@ test_that("closeout C: CFA loading helper returns its stable empty schema when n
     )
   )
 })
+
+
+test_that("a model its fit indices cannot test says so, and keeps its warnings (#89)", {
+  cont <- nomo_demo_continuous
+
+  # One factor with three indicators is just identified: its fit is perfect
+  # by construction, which is not evidence of fit.
+  just <- nomo_cfa("A =~ a1 + a2 + a3", data = cont)
+  expect_output(print(just), "Fit: not testable (df = 0, just identified)", fixed = TRUE)
+  expect_output(print(summary(just)), "The model is just identified (df = 0)", fixed = TRUE)
+  log <- just$decision_log
+  expect_identical(log$severity[log$metric == "degrees_of_freedom"], "review")
+  expect_match(
+    nomologR:::nomo_run_key_evidence(list(results = list(cfa = just))),
+    "CFA: fit not testable (just identified)", fixed = TRUE
+  )
+
+  # Two indicators: lavaan fits it, but it is not identified. Nothing reaches
+  # the console as a loose warning; lavaan's warning stays with the model.
+  expect_no_warning(under <- nomo_cfa("A =~ a1 + a2", data = cont))
+  expect_output(print(under), "Fit: not testable (df = -1, not identified)", fixed = TRUE)
+  expect_true(any(grepl("not identified", under$engine_warnings, fixed = TRUE)))
+  log <- under$decision_log
+  expect_identical(log$severity[log$metric == "degrees_of_freedom"], "concern")
+  expect_match(log$observation[log$metric == "degrees_of_freedom"],
+               "The model is not identified (df = -1)", fixed = TRUE)
+})
