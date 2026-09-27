@@ -508,26 +508,23 @@ print.nomo_screen <- function(x, ...) {
   n_constant <- sum(x$item_summary$constant)
   n_all_missing <- sum(x$item_summary$all_missing)
 
-  cat("<nomo_screen>\n")
-  cat(sprintf("Cases: %d | Candidate items: %d\n", x$n_cases, n_items))
-  cat(sprintf(
-    "Items with missing responses: %d | Constant: %d | All missing: %d\n",
-    n_missing_items,
-    n_constant,
-    n_all_missing
+  nomo_present_header("nomo_screen", "Item and data audit")
+  nomo_present_facts(c(
+    sprintf("Cases: %d", x$n_cases),
+    sprintf("Candidate items: %d", n_items)
+  ))
+  nomo_present_facts(c(
+    sprintf("Items with missing responses: %d", n_missing_items),
+    sprintf("Constant: %d", n_constant),
+    sprintf("All missing: %d", n_all_missing)
   ))
 
   if (!is.null(x$relationship_summary)) {
-    n_relationship_eligible <-
-      sum(x$relationship_summary$relationship_eligible)
-
-    n_item_rest <-
-      sum(!is.na(x$relationship_summary$corrected_item_rest_r))
-
-    cat(sprintf(
-      "Relationship diagnostics: %d eligible items | %d item-rest estimates\n",
-      n_relationship_eligible,
-      n_item_rest
+    nomo_present_facts(c(
+      sprintf("Relationship diagnostics: %d eligible items",
+              sum(x$relationship_summary$relationship_eligible)),
+      sprintf("%d item-rest estimates",
+              sum(!is.na(x$relationship_summary$corrected_item_rest_r)))
     ))
   }
 
@@ -538,48 +535,39 @@ print.nomo_screen <- function(x, ...) {
       "ceiling_concentration"
     )
   )
-  n_nzv <- sum(x$item_summary$near_zero_variance)
-  cat(sprintf(
-    "Response concentration flags: %d | Near-zero variance: %d\n",
-    n_concentration,
-    n_nzv
+  nomo_present_facts(c(
+    sprintf("Response concentration flags: %d", n_concentration),
+    sprintf("Near-zero variance: %d", sum(x$item_summary$near_zero_variance))
   ))
 
   if (!is.null(x$effort) && nrow(x$effort)) {
     e <- x$effort
     flagged <- sum(e$n_flags > 0L)
-    by_rule <- vapply(
-      c(long_string = "flag_long_string", antonym = "flag_antonym",
-        synonym = "flag_synonym"),
-      function(col) sum(e[[col]]),
-      integer(1)
-    )
-    cat(sprintf(
-      "Careless-responding flags: %d case%s (long-string %d | antonym %d | synonym %d)\n",
-      flagged, if (flagged == 1L) "" else "s",
-      by_rule[["long_string"]], by_rule[["antonym"]], by_rule[["synonym"]]
+    nomo_present_facts(c(
+      sprintf("Careless-responding flags: %d case%s", flagged,
+              if (flagged == 1L) "" else "s"),
+      sprintf("long-string %d", sum(e$flag_long_string)),
+      sprintf("antonym %d", sum(e$flag_antonym)),
+      sprintf("synonym %d", sum(e$flag_synonym))
     ))
-    cat("  Cases are flagged, never removed. Indices disagree by design; see the decision log.\n")
+    nomo_present_text(
+      "Cases are flagged, never removed. Indices disagree by design; see the ",
+      "decision log.", indent = 2L
+    )
   }
 
   if (nrow(x$decision_log) > 0L) {
-    severity_counts <- table(
-      factor(
-        x$decision_log$severity,
-        levels = c("info", "review", "concern")
-      )
-    )
-    cat(sprintf(
-      "Decision log: %d info | %d review | %d concern\n",
-      severity_counts[["info"]],
-      severity_counts[["review"]],
-      severity_counts[["concern"]]
+    severity <- factor(x$decision_log$severity, levels = c("info", "review", "concern"))
+    counts <- table(severity)
+    nomo_present_facts(sprintf(
+      "Decision log: %d info, %d review, %d concern",
+      counts[["info"]], counts[["review"]], counts[["concern"]]
     ))
   } else {
-    cat("Decision log: no entries\n")
+    nomo_present_facts("Decision log: no entries")
   }
 
-  cat("No rows or items were removed or modified.\n")
+  nomo_present_text("No rows or items were removed or modified.")
   invisible(x)
 }
 

@@ -180,8 +180,9 @@ nomo_present_table <- function(x, columns, formats = list(), more = NULL,
   numeric_col <- numeric_col[shown]
   if (!length(cells)) return(invisible(NULL))
 
-  widths <- vapply(names(cells), function(nm) {
-    max(nchar(nm), nchar(cells[[nm]]))
+  # By position, so two columns may share a label.
+  widths <- vapply(seq_along(cells), function(i) {
+    max(nchar(names(cells)[[i]]), nchar(cells[[i]]))
   }, integer(1))
   budget <- nomo_present_width() - 1L - indent
   hidden <- character()

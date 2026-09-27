@@ -155,7 +155,7 @@ test_that("presentation methods return stable user-facing objects", {
   expect_s3_class(plot(out, type = "factor_correlations"), "ggplot")
 
   expect_output(print(out), "No items were automatically deleted")
-  expect_output(print(summary(out)), "Item-level structural review")
+  expect_output(print(summary(out)), "Item structure")
 })
 
 # ---- recovered from hygiene consolidation: test-nomo-efa.R ----
@@ -971,8 +971,8 @@ test_that("closeout B: EFA presentation covers researcher, review, unavailable a
   summary_text <- paste(capture.output(print(s)), collapse = "\n")
   expect_match(summary_text, "researcher specified", fixed = TRUE)
   expect_match(summary_text, "KMO unavailable", fixed = TRUE)
-  expect_match(summary_text, "p = 0.123", fixed = TRUE)
-  expect_match(summary_text, "Items requiring review", fixed = TRUE)
+  expect_match(summary_text, "p = .123", fixed = TRUE)
+  expect_match(summary_text, "Flagged items", fixed = TRUE)
   expect_match(summary_text, "Factor correlations", fixed = TRUE)
 
   expect_s3_class(plot(efa, type = "pattern"), "ggplot")
