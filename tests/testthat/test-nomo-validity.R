@@ -246,7 +246,7 @@ test_that("multi-group validity does not silently pool HTMT", {
 
 test_that("validity argument checks are explicit", {
   expect_error(nomo_validity(NULL, ave_obs_var = NA), "ave_obs_var")
-  expect_error(nomo_validity(NULL, htmt = "wrong"), "arg")
+  expect_error(nomo_validity(NULL, htmt = "wrong"), "`htmt` must be one of", fixed = TRUE)
   expect_error(nomo_validity(NULL, htmt_missing = ""), "htmt_missing")
   expect_error(nomo_validity(NULL, htmt_missing = "magic"), "must be one of")
   expect_error(nomo_validity(NULL, fornell_larcker = NA), "fornell_larcker")
