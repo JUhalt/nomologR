@@ -287,16 +287,32 @@ nomo_cfa <- function(model,
     pct_dropped = pct_dropped
   )
 
-  fit_measures_all <- tryCatch(lavaan::fitMeasures(fit), error = function(e) numeric())
+  # Warnings raised while reading results from the fit join the engine
+  # warnings, so they are reported with the model rather than printed loose at
+  # the console. fitMeasures() warns "NaNs produced" when the model has
+  # negative degrees of freedom, which the degrees-of-freedom entry reports.
+  collect_warnings <- function(expr) {
+    withCallingHandlers(expr, warning = function(w) {
+      if (!identical(conditionMessage(w), "NaNs produced")) {
+        engine_warnings <<- unique(c(engine_warnings, conditionMessage(w)))
+      }
+      invokeRestart("muffleWarning")
+    })
+  }
+
+  fit_measures_all <- tryCatch(collect_warnings(lavaan::fitMeasures(fit)),
+                               error = function(e) numeric())
   fit_evidence <- nomo_cfa_fit_evidence(fit_measures_all, guidance = guidance)
 
   parameter_estimates <- tryCatch(
-    tibble::as_tibble(lavaan::parameterEstimates(fit, standardized = TRUE, ci = TRUE)),
+    tibble::as_tibble(collect_warnings(
+      lavaan::parameterEstimates(fit, standardized = TRUE, ci = TRUE)
+    )),
     error = function(e) tibble::tibble()
   )
 
   standardized_solution <- tryCatch(
-    tibble::as_tibble(lavaan::standardizedSolution(fit, type = "std.all")),
+    tibble::as_tibble(collect_warnings(lavaan::standardizedSolution(fit, type = "std.all"))),
     error = function(e) tibble::tibble()
   )
 
@@ -936,11 +952,8 @@ nomo_cfa_decision_log <- function(estimator_label, engine_estimator,
         log, stage = "cfa", object = "model", metric = "degrees_of_freedom",
         value = df_rows$value[[1L]],
         reference = "Global fit evidence requires an overidentified model with positive degrees of freedom",
-        severity = "review",
-        observation = paste(
-          "The model has non-positive degrees of freedom; ordinary global-fit",
-          "indices cannot provide a meaningful test of model restriction."
-        ),
+        severity = if (df_rows$value[[1L]] < 0) "concern" else "review",
+        observation = nomo_cfa_df_problem(fit_evidence)$explanation,
         recommendation = paste(
           "Inspect model identification and whether the specified measurement",
           "model is empirically testable before interpreting global fit."
