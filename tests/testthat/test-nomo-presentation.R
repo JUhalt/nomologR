@@ -834,7 +834,7 @@ test_that("validity summary print covers populated evidence and grouped loading 
 
   txt <- paste(capture.output(print(s)), collapse = "\n")
   expect_match(txt, "Convergent evidence by construct", fixed = TRUE)
-  expect_match(txt, "Construct-separation evidence", fixed = TRUE)
+  expect_match(txt, "Construct separation", fixed = TRUE)
   expect_match(txt, "Loading ranges are omitted", fixed = TRUE)
 })
 

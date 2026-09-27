@@ -342,7 +342,7 @@ test_that("nomo_missing prints and tabulates its evidence", {
   skip_on_cran()
   out <- missing_results()$mar
 
-  expect_output(print(out), "reference: FIML")
+  expect_output(print(out), "Reference: FIML")
   expect_output(print(out), "Largest differences from the reference")
   expect_output(print(out), "cannot be tested")
 

@@ -1,35 +1,52 @@
+# Grice's (2001) three criteria, as one table for print() and summary().
+nomo_scores_present_properties <- function(diagnostics, digits = 3L) {
+  nomo_present_section("Score properties (Grice, 2001)")
+  number <- function(v) nomo_present_number(v, digits)
+  signed <- function(v) nomo_present_signed(v, digits)
+  nomo_present_table(
+    diagnostics,
+    c("Factor" = "factor", "Items" = "n_items", "Validity" = "validity",
+      "Univocality" = "univocality", "Correlational accuracy" = "correlational_accuracy"),
+    formats = list(validity = number, univocality = signed,
+                   correlational_accuracy = signed),
+    more = "nomo_table(x, \"diagnostics\")"
+  )
+}
+
+
 #' @export
 print.nomo_scores <- function(x, digits = 3, ...) {
-  cat("<nomo_scores>\n")
-  cat(sprintf(
-    "%s weighting (method: %s) | %d factor(s) | %d scored case(s)\n",
-    if (identical(x$weighting, "unit")) "Unit" else "Model",
-    x$method, nrow(x$diagnostics), nrow(x$scores)
+  nomo_present_header("nomo_scores", "Scores")
+  nomo_present_facts(c(
+    sprintf("%s weighting (method: %s)",
+            if (identical(x$weighting, "unit")) "Unit" else "Model", x$method),
+    sprintf("%d factor(s)", nrow(x$diagnostics)),
+    sprintf("%d scored case(s)", nrow(x$scores))
   ))
 
-  diag <- x$diagnostics
-  for (nm in c("validity", "univocality", "correlational_accuracy")) {
-    diag[[nm]] <- round(diag[[nm]], digits)
-  }
-  cat("\nScore properties (Grice, 2001)\n")
-  print(diag, n = Inf, width = Inf)
+  nomo_scores_present_properties(x$diagnostics, digits)
 
   if (isTRUE(x$parallel_test$available)) {
-    cat(sprintf(
-      "\nParallel model (what unit weighting assumes): chi-square difference %.2f on %s df, %s\n",
-      x$parallel_test$chisq_diff,
-      format(x$parallel_test$df_diff, trim = TRUE),
-      nomo_compare_format_p(x$parallel_test$p_value)
-    ))
+    nomo_present_section("Parallel model (what unit weighting assumes)")
+    nomo_present_text(
+      sprintf("chi-square difference %s on %s df, %s",
+              nomo_present_number(x$parallel_test$chisq_diff, 2L),
+              format(x$parallel_test$df_diff, trim = TRUE),
+              nomo_present_p_clause(x$parallel_test$p_value)),
+      indent = 2L
+    )
   }
 
   flagged <- x$notes[x$notes$severity %in% c("review", "concern"), , drop = FALSE]
   if (nrow(flagged)) {
-    cat("\nNotes\n")
-    cat(paste0("- [", flagged$severity, "] ", flagged$note), sep = "\n")
+    nomo_present_section("Notes")
+    nomo_present_notes(flagged)
   }
 
-  cat("\nNo value here is a pass/fail threshold; see nomo_table(x, \"diagnostics\").\n")
+  cat("\n")
+  nomo_present_text(
+    "No value here is a pass/fail threshold; see nomo_table(x, \"diagnostics\")."
+  )
   invisible(x)
 }
 
@@ -55,38 +72,32 @@ summary.nomo_scores <- function(object, ...) {
 
 #' @export
 print.summary.nomo_scores <- function(x, digits = 3, ...) {
-  cat("<summary.nomo_scores>\n")
-  cat(sprintf(
-    "%s weighting (method: %s), %d scored case(s)\n",
-    if (identical(x$weighting, "unit")) "Unit" else "Model",
-    x$method, x$n_scored
+  nomo_present_header("nomo_scores", "Scores", summary = TRUE)
+  nomo_present_facts(c(
+    sprintf("%s weighting (method: %s)",
+            if (identical(x$weighting, "unit")) "Unit" else "Model", x$method),
+    sprintf("%d scored case(s)", x$n_scored)
   ))
 
-  cat("\nScore properties\n")
-  for (i in seq_len(nrow(x$diagnostics))) {
-    row <- x$diagnostics[i, ]
-    cat(sprintf(
-      "- %s (%d items): validity %.3f, univocality %+.3f, correlational accuracy %+.3f\n",
-      row$factor, row$n_items, row$validity, row$univocality,
-      row$correlational_accuracy
-    ))
-  }
+  nomo_scores_present_properties(x$diagnostics, digits)
 
   if (nrow(x$unit_weighting)) {
-    cat("\nStandardized loading spread\n")
-    for (i in seq_len(nrow(x$unit_weighting))) {
-      row <- x$unit_weighting[i, ]
-      cat(sprintf(
-        "- %s: %.2f to %.2f (ratio %s)\n",
-        row$factor, row$min_loading, row$max_loading,
-        if (is.finite(row$loading_ratio)) sprintf("%.2f", row$loading_ratio) else "unavailable"
-      ))
-    }
+    nomo_present_section("Standardized loading spread")
+    nomo_present_table(
+      x$unit_weighting,
+      c("Factor" = "factor", "Lowest" = "min_loading", "Highest" = "max_loading",
+        "Ratio" = "loading_ratio"),
+      formats = list(
+        min_loading = function(v) nomo_present_number(v, 2L),
+        max_loading = function(v) nomo_present_number(v, 2L),
+        loading_ratio = function(v) nomo_present_number(v, 2L)
+      )
+    )
   }
 
   if (nrow(x$notes)) {
-    cat("\nNotes\n")
-    cat(paste0("- [", x$notes$severity, "] ", x$notes$note), sep = "\n")
+    nomo_present_section("Notes")
+    nomo_present_notes(x$notes)
   }
 
   invisible(x)

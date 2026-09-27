@@ -532,7 +532,7 @@ test_that("identification and model-choice notes are recorded", {
   dat <- hier_sample(hier_higher_population()$sigma, 600, 1001)
   h <- nomo_hierarchical(nomo_cfa(nomo_model(hier_groups, "higher_order"), data = dat))
 
-  expect_output(print(h), "Higher-order model | general factor: G", fixed = TRUE)
+  expect_output(print(h), "Higher-order model | General factor: G", fixed = TRUE)
   expect_true("identification" %in% h$notes$topic)
   expect_match(h$notes$note[h$notes$topic == "identification"], "just\\s+identified")
   expect_match(h$notes$note[h$notes$topic == "model_choice"], "Reise, 2012")
@@ -591,8 +591,8 @@ test_that("print, summary, plot, and nomo_table present the evidence", {
   h <- nomo_hierarchical(nomo_cfa(nomo_model(hier_groups, "bifactor"), data = dat))
 
   printed <- paste(capture.output(print(h)), collapse = "\n")
-  expect_match(printed, "Bifactor model | general factor: G", fixed = TRUE)
-  expect_match(printed, "omega_hierarchical")
+  expect_match(printed, "Bifactor model | General factor: G", fixed = TRUE)
+  expect_match(printed, "omega hierarchical")
   expect_match(printed, "No index is treated as a pass/fail threshold")
 
   s <- summary(h)

@@ -74,6 +74,15 @@ nomo_present_bullets <- function(items, indent = 2L) {
 }
 
 
+# Notes with a severity: a review or concern note is prefixed with its flag,
+# and an informational note is printed as it is.
+nomo_present_notes <- function(notes) {
+  if (!is.data.frame(notes) || !nrow(notes)) return(invisible(NULL))
+  flag <- nomo_present_flag(notes$severity)
+  nomo_present_bullets(ifelse(nzchar(flag), paste0(flag, ": ", notes$note), notes$note))
+}
+
+
 nomo_present_number <- function(x, digits = 3L) {
   x <- suppressWarnings(as.numeric(x))
   out <- formatC(x, format = "f", digits = digits)
@@ -142,6 +151,13 @@ nomo_present_flag_counts <- function(x) {
   concern <- sum(flags == "concern")
   if (!review && !concern) return("none")
   sprintf("%d review, %d concern", review, concern)
+}
+
+
+# Leave out a column whose values are all the same, such as a block column that
+# only ever says "overall"; it says nothing the heading does not.
+nomo_present_drop_constant <- function(columns, label, values) {
+  if (length(unique(values)) < 2L) columns[names(columns) != label] else columns
 }
 
 

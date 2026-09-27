@@ -111,6 +111,42 @@ test_that("the item audit, factor retention, and EFA read as designed (#89)", {
 })
 
 
+test_that("reliability, validity, scores, and missing-data output read as designed (#89)", {
+  skip_on_cran()
+  cfa <- nomo_cfa(
+    nomo_model(list(A = paste0("a", 1:5), B = paste0("b", 1:5))),
+    data = nomo_demo_continuous
+  )
+  rel <- nomo_reliability(cfa)
+  val <- nomo_validity(cfa)
+  sc <- nomo_scores(cfa, method = "sum")
+  expect_snapshot(print(rel))
+  expect_snapshot(print(summary(rel)))
+  expect_snapshot(print(val))
+  expect_snapshot(print(summary(val)))
+  expect_snapshot(print(sc))
+  expect_snapshot(print(summary(sc)))
+  expect_snapshot(print(nomo_missing(cfa, data = nomo_demo_continuous)))
+})
+
+
+test_that("hierarchical output reads as designed (#89)", {
+  skip_on_cran()
+  set.seed(2026)
+  n <- 500
+  g <- rnorm(n)
+  s <- matrix(rnorm(n * 3), n, 3)
+  dat <- as.data.frame(sapply(1:9, function(i) {
+    .6 * g + .45 * s[, ceiling(i / 3)] + rnorm(n, sd = .65)
+  }))
+  names(dat) <- paste0("x", 1:9)
+  factors <- list(A = c("x1", "x2", "x3"), B = c("x4", "x5", "x6"), C = c("x7", "x8", "x9"))
+  hier <- nomo_hierarchical(nomo_cfa(nomo_model(factors, structure = "bifactor"), data = dat))
+  expect_snapshot(print(hier))
+  expect_snapshot(print(summary(hier)))
+})
+
+
 test_that("a flag without a log row of its own still gives a reason (#89)", {
   s <- summary(nomo_screen(data.frame(a = c(1, 2, 3, 4, 5, 6), b = c(2, 1, 4, 3, 6, 5),
                                       c = c(1, 3, 2, 5, 4, 6))))
