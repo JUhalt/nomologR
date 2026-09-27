@@ -71,7 +71,7 @@ partial <- nomo_partial(
 )
 partial
 #> <nomo_partial> Partial invariance releases
-#> 2 researcher-specified release(s)
+#> 2 researcher-specified releases
 #> 
 #>   - P1 (metric): F =~ x2. Loading difference was theoretically anticipated.
 #>   - P2 (scalar): x3 ~ 1. Intercept difference was prespecified from prior

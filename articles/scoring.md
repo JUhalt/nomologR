@@ -52,7 +52,7 @@ fits that constrained model and compares it with the model you supplied:
 summed <- nomo_scores(fit, method = "sum")
 summed
 #> <nomo_scores> Scores
-#> Unit weighting (method: sum) | 2 factor(s) | 600 scored case(s)
+#> Unit weighting (method: sum) | 2 factors | 600 scored cases
 #> 
 #> Score properties (Grice, 2001)
 #>   Factor       Items  Validity  Univocality  Correlational accuracy

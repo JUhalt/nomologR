@@ -66,7 +66,7 @@ h <- nomo_hypotheses(
 )
 h
 #> <nomo_hypotheses> Theory-specified relations
-#> 3 theory-specified relation(s)
+#> 3 theory-specified relations
 #> 
 #> Every relation is on the standardized scale.
 #>   ID  Relation                      Prediction  Region       Origin

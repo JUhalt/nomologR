@@ -124,7 +124,7 @@ cfa <- nomo_cfa(model, data = lavaan::HolzingerSwineford1939)
 summed <- nomo_scores(cfa, method = "sum")
 summed
 #> <nomo_scores> Scores
-#> Unit weighting (method: sum) | 3 factor(s) | 301 scored case(s)
+#> Unit weighting (method: sum) | 3 factors | 301 scored cases
 #> 
 #> Score properties (Grice, 2001)
 #>   Factor   Items  Validity  Univocality  Correlational accuracy

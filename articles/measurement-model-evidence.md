@@ -550,8 +550,8 @@ summary(b5_comparison)
     ##   b5_loading_zero  -0.029  -0.036  +0.022  +0.042  +44.9  +40.8
     ## 
     ## Interpretation
-    ##   - `b5_loading_zero` is nested within `full` and has 1 more degree(s) of
-    ##     freedom (additional constraints). Chi-Squared Difference Test: chi-square
+    ##   - `b5_loading_zero` is nested within `full` and has 1 more degree of freedom
+    ##     (additional constraints). Chi-Squared Difference Test: chi-square
     ##     difference = 46.91, df = 1, p < .001. A small p-value indicates that the
     ##     extra constraints are not fully consistent with the data; with large
     ##     samples, even small misspecifications produce small p-values. Change in
@@ -583,7 +583,7 @@ summary(b5_comparison)
     ##   A          AVE     0.497            0.497
     ##   B          AVE     0.434            0.521
     ##   B vs A     HTMT2   0.533            0.533
-    ##   - Loading(s) fixed to zero for b5 keep those item(s) in this composite; the
+    ##   - The loading fixed to zero for b5 keeps that item in this composite; the
     ##     coefficient does not describe a shortened scale.
     ## 
     ## No model was selected automatically. Difference tests, changes in fit,

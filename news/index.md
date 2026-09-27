@@ -2,6 +2,12 @@
 
 ## nomologR (development version)
 
+- Counts in printed output agree with their nouns
+  ([\#89](https://github.com/JUhalt/nomologR/issues/89)): “2 factors”,
+  “1 pair”, “1 more degree of freedom”, rather than “2 factor(s)”. This
+  covers the printed counts in scores, reliability, validity,
+  hypotheses, and partial releases, and the notes in comparisons and
+  bifactor models.
 - Plot legends use the display flag wording too
   ([\#89](https://github.com/JUhalt/nomologR/issues/89)). The CFA
   loading and fit plots and the AVE and HTMT plots label their points
