@@ -2,6 +2,18 @@
 
 ## nomologR (development version)
 
+- [`nomo_report()`](https://juhalt.github.io/nomologR/reference/nomo_report.md)
+  tables are easier to read
+  ([\#89](https://github.com/JUhalt/nomologR/issues/89)). Column
+  headings are words, not code names: “Omega CI lower” for
+  `omega_ci_lower`, “Change in CFI” for `delta_cfi`, “Corrected
+  item-rest r” for `corrected_item_rest_r`. Flags use the console’s
+  wording (“review”, “concern”). A missing or empty cell is an em dash
+  rather than `NA` or nothing, and TRUE/FALSE is yes/no. Item, scale,
+  and factor names are left as written. The values are otherwise
+  unchanged, and
+  [`nomo_table()`](https://juhalt.github.io/nomologR/reference/nomo_table.md)
+  still returns the code’s column names and flag values.
 - The redesigned console output extends to comparisons, invariance,
   partial releases, hypotheses, networks, splits, and the notes of
   [`nomo_apa_table()`](https://juhalt.github.io/nomologR/reference/nomo_apa_table.md)

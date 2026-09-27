@@ -51,7 +51,9 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="nomologr-development-version">nomologR (development version)<a class="anchor" aria-label="anchor" href="#nomologr-development-version"></a></h2>
-<ul><li>The redesigned console output extends to comparisons, invariance, partial releases, hypotheses, networks, splits, and the notes of <code><a href="../reference/nomo_apa_table.html">nomo_apa_table()</a></code> (<a href="https://github.com/JUhalt/nomologR/issues/89" class="external-link">#89</a>).
+<ul><li>
+<code><a href="../reference/nomo_report.html">nomo_report()</a></code> tables are easier to read (<a href="https://github.com/JUhalt/nomologR/issues/89" class="external-link">#89</a>). Column headings are words, not code names: “Omega CI lower” for <code>omega_ci_lower</code>, “Change in CFI” for <code>delta_cfi</code>, “Corrected item-rest r” for <code>corrected_item_rest_r</code>. Flags use the console’s wording (“review”, “concern”). A missing or empty cell is an em dash rather than <code>NA</code> or nothing, and TRUE/FALSE is yes/no. Item, scale, and factor names are left as written. The values are otherwise unchanged, and <code><a href="../reference/nomo_table.html">nomo_table()</a></code> still returns the code’s column names and flag values.</li>
+<li>The redesigned console output extends to comparisons, invariance, partial releases, hypotheses, networks, splits, and the notes of <code><a href="../reference/nomo_apa_table.html">nomo_apa_table()</a></code> (<a href="https://github.com/JUhalt/nomologR/issues/89" class="external-link">#89</a>).
 <ul><li>Wide tables are split: model fit apart from information criteria, difference tests apart from changes in fit, and fit by level apart from changes between levels.</li>
 <li>Levels that failed or raised warnings are listed with what went wrong.</li>
 <li>Measurement evidence in a comparison reads one column per model.</li>
