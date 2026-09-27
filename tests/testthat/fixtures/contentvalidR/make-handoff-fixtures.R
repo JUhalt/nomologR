@@ -26,6 +26,10 @@
 # 0.7.0 and earlier compared the I-CVI with a rounded .78, which 7/9 = .778
 # misses.
 #
+# Fit 1b, the walkthrough sort with keying recorded as checked and no item
+# reversed, was added on 2026-09-27 at nomologR's request. It needs a producer
+# that records keying (0.7.0 on), so older producers skip it.
+#
 # The fixtures are genuine producer output, never edited afterwards. One
 # consequence: provenance$created records the day they were generated, so a
 # regenerated file differs in that field (and in its md5) while every
@@ -79,6 +83,14 @@ walkthrough <- if (has_instrument) {
                   response_scale = c(1, 5))
 } else {
   content_handoff(sort_fit)
+}
+
+# 1b. The same sort, with keying recorded as checked and no item reversed.
+#     `reverse_keyed = character(0)` makes `keying` 1 for every item, which is
+#     a different statement from `NA` (nobody said).
+walkthrough_none_reversed <- if (has_instrument) {
+  content_handoff(sort_fit, reverse_keyed = character(0),
+                  response_scale = c(1, 5))
 }
 
 # ---------------------------------------------------------------------------
@@ -147,7 +159,9 @@ expert_nine <- content_handoff(
 fixtures <- list(`walkthrough-sort` = walkthrough,
                  `expert-krippendorff` = expert,
                  delphi = delphi,
-                 `expert-nine` = expert_nine)
+                 `expert-nine` = expert_nine,
+                 `walkthrough-sort-none-reversed` = walkthrough_none_reversed)
+fixtures <- Filter(Negate(is.null), fixtures)
 for (fit in names(fixtures)) {
   path <- file.path(out, sprintf("handoff-%s-v%s.rds", fit, version))
   saveRDS(fixtures[[fit]], path)

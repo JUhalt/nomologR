@@ -1,11 +1,12 @@
 # contentvalidR handoff fixtures
 
-Fifteen handoff objects produced by contentvalidR itself, for testing a reader
+Sixteen handoff objects produced by contentvalidR itself, for testing a reader
 without contentvalidR installed. Each is genuine producer output from a release
 tag, never edited afterwards. `MANIFEST.csv` records each file's tag, the
-commit SHA it was built from, and its md5. The 0.6.0 and 0.7.0 files delivered
-on 2026-09-23 and the 0.8.0 files delivered on 2026-09-26 are unchanged, byte
-for byte.
+commit SHA it was built from, and its md5. The fifteen files delivered on
+2026-09-23, 2026-09-26, and 2026-09-27 are unchanged, byte for byte. The
+sixteenth, `walkthrough-sort-none-reversed` from v0.9.0, was added later on
+2026-09-27 at nomologR's request.
 
 | fit | 0.6.0 | 0.7.0 | 0.8.0 | 0.9.0 | what it exercises |
 | --- | --- | --- | --- | --- | --- |
@@ -13,6 +14,7 @@ for byte.
 | `expert-krippendorff` | yes | yes, keying/scale `NA` | as 0.7.0 | as 0.8.0 | a relevance panel with one `panel_statistics` row (Krippendorff's alpha with a bootstrap interval) |
 | `delphi` | yes | yes, keying/scale `NA` | as 0.7.0 | as 0.8.0 | a three-round Delphi; `round` varies by item |
 | `expert-nine` | — | yes | yes | as 0.8.0 | nine experts, one item per count relevant (9, 8, 7, 6); the one input whose decision depends on the producer |
+| `walkthrough-sort-none-reversed` | — | — | — | yes | the same sort with `reverse_keyed = character(0)` and `response_scale = c(1, 5)`: keying recorded as checked, no item reversed |
 
 **0.9.0 files are identical to their 0.8.0 counterparts** in every field
 except `provenance$package_version` and `provenance$created`: the same schema
@@ -39,6 +41,18 @@ changed what contentvalidR prints, not what it hands off.
   - in `expert-nine` only, one item's decision (below);
   - `provenance$package_version` and `provenance$created`.
 - **No decision changes in the three original fits.**
+
+## Checked, none reversed
+
+`walkthrough-sort-none-reversed` records that someone checked the keying and
+found no reverse-worded item: `keying` is `1` for all twelve items, and the
+response scale is 1 to 5. That is a different statement from `NA`, which
+means nobody said. Apart from `keying` (where `walkthrough-sort` has `-1` for
+EF2 and TF2) and `provenance$created`, the file is identical to
+`handoff-walkthrough-sort-v0.9.0.rds`: the same items, decisions, statistics,
+and settings. It was generated from v0.9.0, the latest released producer.
+A run at v0.7.0 or v0.8.0 would differ from it the way those versions'
+`walkthrough-sort` files differ from the 0.9.0 one.
 
 ## The nine-expert case
 
@@ -80,7 +94,10 @@ gives the steps. A regenerated file differs from these only in
 `provenance$created` (and so in md5). Rerunning it at v0.7.0 on 2026-09-26
 reproduced the three delivered 0.7.0 files exactly apart from that field.
 Because the script now includes `expert-nine`, a run at v0.6.0 would also
-write an `expert-nine-v0.6.0` file; it is not part of this set.
+write an `expert-nine-v0.6.0` file, and a run at v0.7.0 or v0.8.0 a
+`walkthrough-sort-none-reversed` file; neither is part of this set. Rerunning
+the edited script at v0.9.0 reproduced the four earlier 0.9.0 files exactly
+apart from `provenance$created`.
 
 Checked before handoff, in an R process where contentvalidR was not loaded:
 every 0.8.0 file reads back as a `cv_handoff` at schema version 1 with the
