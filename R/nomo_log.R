@@ -26,7 +26,7 @@ nomo_log_add <- function(log,
                          recommendation = "",
                          decision = "",
                          rationale = "") {
-  severity <- match.arg(severity)
+  severity <- nomo_match_arg(severity)
 
   if (!inherits(log, "data.frame")) {
     stop("`log` must be a data frame created by `nomo_log_new()`.", call. = FALSE)

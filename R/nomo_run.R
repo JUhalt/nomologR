@@ -416,7 +416,7 @@ nomo_run <- function(data = NULL,
   settings_missing <- missing(settings)
 
   if (!mode_missing) {
-    mode <- match.arg(mode)
+    mode <- nomo_match_arg(mode)
   } else if (is.null(resume)) {
     mode <- "teaching"
   }
@@ -466,7 +466,7 @@ nomo_run <- function(data = NULL,
     )
   }
 
-  mode <- match.arg(mode)
+  mode <- nomo_match_arg(mode)
 
   nomo_run_fresh(
     data = data,

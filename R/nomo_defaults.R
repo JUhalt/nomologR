@@ -28,7 +28,7 @@
 #' efa <- nomo_efa(nomo_demo_continuous, factors = 2, guidance = stricter)
 #' efa$item_summary[, c("item", "primary_loading", "attention")]
 nomo_defaults <- function(profile = "teaching") {
-  profile <- match.arg(profile, choices = "teaching")
+  profile <- nomo_match_arg(profile, choices = "teaching")
 
   list(
     profile = profile,

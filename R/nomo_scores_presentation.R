@@ -111,7 +111,7 @@ nomo_table.nomo_scores <- function(x,
                                      "notes"
                                    ),
                                    ...) {
-  type <- match.arg(type)
+  type <- nomo_match_arg(type)
   if (type == "scores") return(x$scores)
   if (type == "diagnostics") return(x$diagnostics)
   if (type == "unit_weighting") return(x$unit_weighting)

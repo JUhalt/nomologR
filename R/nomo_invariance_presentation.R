@@ -342,7 +342,7 @@ plot.nomo_invariance <- function(
     x,
     type = c("fit", "change", "local_strain"),
     ...) {
-  type <- match.arg(type)
+  type <- nomo_match_arg(type)
 
   if (type == "fit") {
     pieces <- lapply(

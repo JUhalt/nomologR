@@ -99,6 +99,14 @@ nomo_present_count <- function(n, singular, plural = paste0(singular, "s")) {
 }
 
 
+# Alternatives joined as prose: "a", "a or b", "a, b, or c".
+nomo_present_or <- function(x) {
+  n <- length(x)
+  if (n < 3L) return(paste(x, collapse = " or "))
+  paste0(paste(x[-n], collapse = ", "), ", or ", x[[n]])
+}
+
+
 nomo_present_number <- function(x, digits = 3L) {
   x <- suppressWarnings(as.numeric(x))
   out <- formatC(x, format = "f", digits = digits)

@@ -80,8 +80,8 @@ positive <- function(min = NULL,
                      max = NULL,
                      scale = c("standardized", "unstandardized"),
                      origin = c("a_priori", "post_hoc")) {
-  scale <- match.arg(scale)
-  origin <- match.arg(origin)
+  scale <- nomo_match_arg(scale)
+  origin <- nomo_match_arg(origin)
 
   if (!is.null(min)) {
     min <- nomo_expectation_scalar(min, "min")
@@ -124,8 +124,8 @@ negative <- function(max = NULL,
                      min = NULL,
                      scale = c("standardized", "unstandardized"),
                      origin = c("a_priori", "post_hoc")) {
-  scale <- match.arg(scale)
-  origin <- match.arg(origin)
+  scale <- nomo_match_arg(scale)
+  origin <- nomo_match_arg(origin)
 
   if (!is.null(max)) {
     max <- nomo_expectation_scalar(max, "max")
@@ -167,8 +167,8 @@ negative <- function(max = NULL,
 negligible <- function(within = NULL,
                        scale = c("standardized", "unstandardized"),
                        origin = c("a_priori", "post_hoc")) {
-  scale <- match.arg(scale)
-  origin <- match.arg(origin)
+  scale <- nomo_match_arg(scale)
+  origin <- nomo_match_arg(origin)
 
   if (is.null(within)) {
     return(

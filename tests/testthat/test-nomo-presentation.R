@@ -345,7 +345,7 @@ test_that("validity presentation separates convergent and discriminant questions
 
   expect_s3_class(plot(val, type = "ave"), "ggplot")
   expect_s3_class(plot(val, type = "discriminant"), "ggplot")
-  expect_error(plot(val, type = "loadings"), "arg")
+  expect_error(plot(val, type = "loadings"), "`type` must be one of", fixed = TRUE)
 })
 
 

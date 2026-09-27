@@ -100,7 +100,7 @@ nomo_effort_mahalanobis <- function(responses) {
 # an argument rather than a constant.
 nomo_effort_pairs <- function(responses, direction = c("antonym", "synonym"),
                               min_magnitude = 0.60) {
-  direction <- match.arg(direction)
+  direction <- nomo_match_arg(direction)
   items <- colnames(responses)
   out <- list(
     values = rep(NA_real_, nrow(responses)),

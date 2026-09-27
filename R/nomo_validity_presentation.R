@@ -313,7 +313,7 @@ print.summary_nomo_validity <- function(x, ...) {
 #'   by default and expands only if an empirical value lies outside it.
 #' @export
 plot.nomo_validity <- function(x, type = c("ave", "discriminant"), ...) {
-  type <- match.arg(type)
+  type <- nomo_match_arg(type)
 
   if (type == "ave") {
     dat <- x$ave

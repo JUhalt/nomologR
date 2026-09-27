@@ -338,7 +338,7 @@ nomo_revise <- function(run,
                         decisions = list(),
                         compare = TRUE) {
   nomo_revise_validate_parent(run)
-  origin <- match.arg(origin)
+  origin <- nomo_match_arg(origin)
 
   if (missing(rationale) || !is.character(rationale) || length(rationale) != 1L ||
       is.na(rationale) || !nzchar(trimws(rationale))) {

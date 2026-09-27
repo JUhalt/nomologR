@@ -841,7 +841,7 @@ nomo_table.nomo_screen <- function(x,
                                      "relationships", "effort", "decision_log"
                                    ),
                                    ...) {
-  type <- match.arg(type)
+  type <- nomo_match_arg(type)
   if (type == "items") return(x$item_summary)
   if (type == "distribution") return(x$response_distribution)
   if (type == "cases") return(x$case_summary)

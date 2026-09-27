@@ -200,7 +200,7 @@ test_that("the loadings table is stable", {
 test_that("unsupported objects and arguments are refused with an explanation", {
   expect_error(nomo_apa_table(list()), "No APA table is available")
   expect_error(nomo_apa_table(apa_cfa(), "loadings", number = 0), "whole number")
-  expect_error(nomo_apa_table(apa_cfa(), "nonsense"), "should be one of")
+  expect_error(nomo_apa_table(apa_cfa(), "nonsense"), "`type` must be one of", fixed = TRUE)
 })
 
 

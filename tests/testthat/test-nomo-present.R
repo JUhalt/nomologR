@@ -23,6 +23,22 @@ test_that("a count takes its noun in the right number", {
 })
 
 
+test_that("alternatives read as prose, and a bad choice names its argument (#89)", {
+  or <- nomologR:::nomo_present_or
+  expect_identical(or("a"), "a")
+  expect_identical(or(c("a", "b")), "a or b")
+  expect_identical(or(c("a", "b", "c")), "a, b, or c")
+
+  pick <- function(size = c("small", "large")) nomologR:::nomo_match_arg(size)
+  expect_identical(pick(), "small")
+  expect_identical(pick("lar"), "large")
+  expect_error(pick("medium"), '`size` must be one of "small" or "large", not "medium".',
+               fixed = TRUE)
+  expect_error(nomologR:::nomo_match_arg("x", choices = "teaching"),
+               'must be one of "teaching", not "x".', fixed = TRUE)
+})
+
+
 test_that("every flag vocabulary is shown in one wording", {
   flag <- nomologR:::nomo_present_flag
   expect_identical(flag(c("KEEP", "REVIEW", "STRONG REVIEW")), c("", "review", "concern"))

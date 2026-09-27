@@ -155,7 +155,7 @@ plot.nomo_screen <- function(x,
     stop("`x` must inherit from `nomo_screen`.", call. = FALSE)
   }
 
-  type <- match.arg(type)
+  type <- nomo_match_arg(type)
   items <- nomo_screen_plot_items(x, items)
 
   if (type == "evidence") {

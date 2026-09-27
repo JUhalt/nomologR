@@ -841,8 +841,8 @@ nomo_compare <- function(...,
     )
   }
   rationale <- trimws(rationale)
-  origin <- match.arg(origin)
-  nested <- match.arg(nested)
+  origin <- nomo_match_arg(origin)
+  nested <- nomo_match_arg(nested)
 
   if (!is.character(method) || length(method) != 1L || is.na(method) || !nzchar(trimws(method))) {
     stop("`method` must be one non-empty character value.", call. = FALSE)

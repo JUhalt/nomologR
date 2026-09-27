@@ -218,7 +218,7 @@ plot.nomo_factors <- function(x,
                               ),
                               show_values = TRUE,
                               ...) {
-  type <- match.arg(type)
+  type <- nomo_match_arg(type)
 
   if (!is.logical(show_values) || length(show_values) != 1L || is.na(show_values)) {
     stop("`show_values` must be `TRUE` or `FALSE`.", call. = FALSE)
