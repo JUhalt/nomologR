@@ -563,11 +563,11 @@ test_that("summary print is concise and non-prescriptive", {
 
   s <- summary(nomo_screen(dat))
 
-  expect_output(returned <- print(s), "<summary_nomo_screen>")
+  expect_output(returned <- print(s), "<nomo_screen summary>")
   expect_s3_class(returned, "summary_nomo_screen")
   expect_output(
     print(s),
-    "not an automatic retention/deletion decision"
+    "not decisions to keep or delete an item"
   )
 })
 
@@ -691,7 +691,7 @@ test_that("summary and plotting leave the screening object unchanged", {
 })
 
 
-test_that("summary print exposes the review metrics instead of hiding columns", {
+test_that("summary print says what triggered each flag instead of hiding it (#89)", {
   dat <- data.frame(
     item1 = 1:6,
     item2 = 1:6,
@@ -700,8 +700,9 @@ test_that("summary print exposes the review metrics instead of hiding columns", 
 
   s <- summary(nomo_screen(dat))
 
-  expect_output(print(s), "review_metrics")
-  expect_output(print(s), "corrected_item_rest")
+  # Each flagged item is listed with the decision log's own explanation.
+  expect_output(print(s), "Flagged items")
+  expect_output(print(s), "item-rest correlation")
 })
 
 

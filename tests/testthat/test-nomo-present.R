@@ -95,3 +95,41 @@ test_that("the CFA print and summary read as designed (#89)", {
   expect_snapshot(print(cfa))
   expect_snapshot(print(summary(cfa)))
 })
+
+
+test_that("the item audit, factor retention, and EFA read as designed (#89)", {
+  skip_on_cran()
+  scr <- nomo_screen(nomo_demo_continuous)
+  fac <- nomo_factors(nomo_demo_continuous, seed = 2026)
+  efa <- nomo_efa(nomo_demo_continuous, factors = fac)
+  expect_snapshot(print(scr))
+  expect_snapshot(print(summary(scr)))
+  expect_snapshot(print(fac))
+  expect_snapshot(print(summary(fac)))
+  expect_snapshot(print(efa))
+  expect_snapshot(print(summary(efa)))
+})
+
+
+test_that("a flag without a log row of its own still gives a reason (#89)", {
+  s <- summary(nomo_screen(data.frame(a = c(1, 2, 3, 4, 5, 6), b = c(2, 1, 4, 3, 6, 5),
+                                      c = c(1, 3, 2, 5, 4, 6))))
+  s$item_review$attention[[1L]] <- "review"
+  s$item_review$review_metrics[[1L]] <- "negative_interitem_pairs"
+  s$item_review$attention[[2L]] <- "concern"
+  s$item_review$review_metrics[[2L]] <- ""
+  s$decision_log <- s$decision_log[0, , drop = FALSE]
+  txt <- utils::capture.output(print(s))
+  expect_true(any(grepl("a (review): flagged by negative interitem pairs.", txt, fixed = TRUE)))
+  expect_true(any(grepl("b (concern): see the decision log.", txt, fixed = TRUE)))
+})
+
+
+test_that("factor-retention summaries without rule sensitivity leave that section out (#89)", {
+  s <- summary(nomo_factors(nomo_demo_continuous, criterion_set = "minimal", n_iter = 10,
+                            seed = 1))
+  s$parallel_sensitivity <- NULL
+  txt <- utils::capture.output(print(s))
+  expect_false(any(grepl("rule sensitivity", txt, fixed = TRUE)))
+  expect_true(any(grepl("Retention evidence", txt, fixed = TRUE)))
+})

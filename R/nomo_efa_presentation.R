@@ -8,26 +8,22 @@ print.nomo_efa <- function(x, ...) {
     "researcher specified"
   }
 
-  cat("<nomo_efa>\n")
-  cat(sprintf(
-    "Cases: %d | Items: %d | Factors: %d (%s)\n",
-    x$n_cases, x$n_items, x$n_factors, source_text
+  nomo_present_header("nomo_efa", "Exploratory factor analysis")
+  nomo_present_facts(c(
+    sprintf("Cases: %d", x$n_cases),
+    sprintf("Items: %d", x$n_items),
+    sprintf("Factors: %d (%s)", x$n_factors, source_text)
   ))
-  cat(sprintf(
-    "Correlation: %s | Extraction: %s | Rotation: %s\n",
-    x$correlation, x$fm, x$rotation
+  nomo_present_facts(c(
+    sprintf("Correlation: %s", x$correlation),
+    sprintf("Extraction: %s", x$fm),
+    sprintf("Rotation: %s", x$rotation)
   ))
-  cat(sprintf("Off-diagonal RMSR: %.3f\n", x$rmsr))
-
-  counts <- table(factor(
-    x$item_summary$attention,
-    levels = c("KEEP", "REVIEW", "STRONG REVIEW")
+  nomo_present_facts(c(
+    paste0("Off-diagonal RMSR: ", nomo_present_number(x$rmsr)),
+    paste0("Flags: ", nomo_present_flag_counts(x$item_summary$attention))
   ))
-  cat(sprintf(
-    "Item review: %d KEEP | %d REVIEW | %d STRONG REVIEW\n",
-    counts[["KEEP"]], counts[["REVIEW"]], counts[["STRONG REVIEW"]]
-  ))
-  cat("No items were automatically deleted or refit.\n")
+  nomo_present_text("No items were automatically deleted or refit.")
   invisible(x)
 }
 
@@ -73,70 +69,82 @@ print.summary_nomo_efa <- function(x, ...) {
     "researcher specified"
   }
 
-  cat("nomologR exploratory factor analysis\n")
-  cat(sprintf(
-    "%d cases | %d items | %d factors (%s)\n",
-    x$n_cases, x$n_items, x$n_factors, source_text
+  nomo_present_header("nomo_efa", "Exploratory factor analysis", summary = TRUE)
+  nomo_present_facts(c(
+    sprintf("Cases: %d", x$n_cases),
+    sprintf("Items: %d", x$n_items),
+    sprintf("Factors: %d (%s)", x$n_factors, source_text)
   ))
-  cat(sprintf(
-    "Correlation: %s | Extraction: %s | Rotation: %s\n",
-    x$correlation, x$fm, x$rotation
+  nomo_present_facts(c(
+    sprintf("Correlation: %s", x$correlation),
+    sprintf("Extraction: %s", x$fm),
+    sprintf("Rotation: %s", x$rotation)
+  ))
+  bartlett <- if (isTRUE(x$bartlett$available)) {
+    sprintf("Bartlett chi-square(%s) = %s, %s", format(x$bartlett$df, trim = TRUE),
+            nomo_present_number(x$bartlett$chisq, 2L),
+            nomo_present_p_clause(x$bartlett$p_value))
+  } else {
+    ""
+  }
+  nomo_present_facts(c(
+    paste0("Supporting adequacy: ", if (isTRUE(x$kmo$available)) {
+      paste("KMO", nomo_present_number(x$kmo$overall))
+    } else {
+      "KMO unavailable"
+    }),
+    bartlett
   ))
 
-  if (isTRUE(x$kmo$available)) {
-    cat(sprintf("Supporting adequacy: KMO = %.3f", x$kmo$overall))
+  items <- x$item_summary
+  items$flag <- nomo_present_flag(items$attention)
+  nomo_present_section("Item structure")
+  nomo_present_table(
+    items,
+    c("Item" = "item", "Factor" = "primary_factor", "Loading" = "primary_loading",
+      "Next factor" = "secondary_factor", "Loading" = "secondary_loading",
+      "Communality" = "communality", "Flag" = "flag"),
+    more = "nomo_table(x, \"items\")"
+  )
+
+  flagged <- items[nzchar(items$flag), , drop = FALSE]
+  if (nrow(flagged)) {
+    nomo_present_section("Flagged items")
+    nomo_present_bullets(sprintf("%s (%s): %s", flagged$item, flagged$flag,
+                                 flagged$explanation))
   } else {
-    cat("Supporting adequacy: KMO unavailable")
-  }
-  if (isTRUE(x$bartlett$available)) {
-    cat(sprintf(
-      " | Bartlett chi-square(%g) = %.2f, p %s",
-      x$bartlett$df,
-      x$bartlett$chisq,
-      if (x$bartlett$p_value < .001) "< .001" else {
-        sprintf("= %.3f", x$bartlett$p_value)
-      }
-    ))
-  }
-  cat("\n\n")
-
-  cat("Item-level structural review\n")
-  compact <- x$item_summary[, c(
-    "item", "primary_factor", "primary_loading",
-    "secondary_factor", "secondary_loading",
-    "communality", "attention"
-  )]
-  print(compact, row.names = FALSE)
-
-  flagged <- x$item_summary[x$item_summary$attention != "KEEP", , drop = FALSE]
-  if (nrow(flagged) == 0L) {
-    cat("\nNo configured numeric EFA review flags were triggered.\n")
-  } else {
-    cat("\nItems requiring review\n")
-    print(
-      flagged[, c("item", "attention", "explanation")],
-      row.names = FALSE,
-      width = Inf
-    )
+    nomo_present_text("No item was flagged for review.", indent = 2L)
   }
 
+  nomo_present_section("Factor correlations")
   if (x$n_factors > 1L) {
-    cat("\nFactor correlations\n")
-    print(round(x$factor_correlations, 3))
+    fc <- x$factor_correlations
+    pairs <- which(lower.tri(fc), arr.ind = TRUE)
+    nomo_present_table(
+      data.frame(
+        factor1 = colnames(fc)[pairs[, "col"]],
+        factor2 = rownames(fc)[pairs[, "row"]],
+        r = fc[pairs],
+        stringsAsFactors = FALSE
+      ),
+      c("Factor 1" = "factor1", "Factor 2" = "factor2", "r" = "r")
+    )
   } else {
-    cat("\nFactor correlations: not applicable to a one-factor solution.\n")
+    nomo_present_text("Not applicable to a one-factor solution.", indent = 2L)
   }
 
-  cat(sprintf("\nOff-diagonal RMSR: %.3f\n", x$rmsr))
-  if (nrow(x$largest_residuals)) {
-    cat("\nLargest localized residuals\n")
-    print(x$largest_residuals, row.names = FALSE)
-  }
+  nomo_present_section("Largest residual correlations")
+  nomo_present_text("Off-diagonal RMSR: ", nomo_present_number(x$rmsr), indent = 2L)
+  nomo_present_table(
+    x$largest_residuals,
+    c("Item 1" = "item1", "Item 2" = "item2", "Residual" = "residual"),
+    more = "nomo_table(x, \"residuals\")"
+  )
 
-  cat(
-    "\nInterpretation rule: numerical references trigger inspection, ",
-    "not automatic deletion or hidden refitting.\n",
-    sep = ""
+  cat("\n")
+  nomo_present_text(
+    "Numerical references trigger inspection, not automatic deletion or ",
+    "hidden refitting."
   )
   invisible(x)
 }

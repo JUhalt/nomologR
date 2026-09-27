@@ -10,39 +10,38 @@
 #' @return `x`, invisibly.
 #' @export
 print.nomo_factors <- function(x, ...) {
-  cat("<nomo_factors>\n")
-  cat(sprintf(
-    "Cases: %d | Items: %d | Correlation: %s\n",
-    x$n_cases,
-    x$n_items,
-    x$correlation_method
+  nomo_present_header("nomo_factors", "Factor-retention evidence")
+  nomo_present_facts(c(
+    sprintf("Cases: %d", x$n_cases),
+    sprintf("Items: %d", x$n_items),
+    sprintf("Correlation: %s", x$correlation_method)
   ))
 
   n_available <- sum(x$criterion_status$status == "available")
   n_skipped <- sum(x$criterion_status$status == "skipped")
   n_families <- if (!is.null(x$family_evidence)) nrow(x$family_evidence) else n_available
-  cat(sprintf(
-    "Criterion set: %s | Available methods: %d | Families: %d | Skipped: %d\n",
-    x$criterion_set,
-    n_available,
-    n_families,
-    n_skipped
+  nomo_present_facts(c(
+    sprintf("Criterion set: %s", x$criterion_set),
+    sprintf("Available methods: %d", n_available),
+    sprintf("Families: %d", n_families),
+    sprintf("Skipped: %d", n_skipped)
   ))
 
-  cat(sprintf(
-    "Parallel analysis (%s): %d | MAP TR2/TR4: %d/%d | KMO: %s\n",
-    x$parallel$rule,
-    x$parallel$n_factors,
-    x$map$n_factors_original,
-    x$map$n_factors_revised,
-    if (isTRUE(x$kmo$available)) sprintf("%.3f", x$kmo$overall) else "unavailable"
+  nomo_present_facts(c(
+    sprintf("Parallel analysis (%s): %d", x$parallel$rule, x$parallel$n_factors),
+    sprintf("MAP TR2/TR4: %d/%d", x$map$n_factors_original, x$map$n_factors_revised),
+    paste0("KMO: ", if (isTRUE(x$kmo$available)) {
+      nomo_present_number(x$kmo$overall)
+    } else {
+      "unavailable"
+    })
   ))
 
   if (isTRUE(x$smoothed)) {
-    cat("Correlation matrix: explicitly smoothed after non-PD diagnosis\n")
+    nomo_present_text("Correlation matrix: explicitly smoothed after non-PD diagnosis.")
   }
 
-  cat(x$recommendation, "\n")
+  nomo_present_text(x$recommendation)
   invisible(x)
 }
 
@@ -121,25 +120,30 @@ summary.nomo_factors <- function(object, ...) {
 #' @return `x`, invisibly.
 #' @export
 print.summary_nomo_factors <- function(x, ...) {
-  cat("<summary_nomo_factors>\n")
-  cat(sprintf(
-    "Cases: %d | Items: %d | Correlation: %s | Criteria: %s%s\n",
-    x$n_cases,
-    x$n_items,
-    x$correlation_method,
-    x$criterion_set,
-    if (isTRUE(x$smoothed)) " | SMOOTHED" else ""
+  nomo_present_header("nomo_factors", "Factor-retention evidence", summary = TRUE)
+  nomo_present_facts(c(
+    sprintf("Cases: %d", x$n_cases),
+    sprintf("Items: %d", x$n_items),
+    sprintf("Correlation: %s", x$correlation_method),
+    sprintf("Criteria: %s", x$criterion_set),
+    if (isTRUE(x$smoothed)) "Correlation matrix smoothed" else ""
   ))
 
-  cat("\nParallel-analysis rule sensitivity:\n")
-  print(x$parallel_sensitivity, n = Inf, width = Inf)
-
-  cat("\nRetention evidence:\n")
-  print(
-    x$evidence[c("method", "n_factors", "role")],
-    n = Inf,
-    width = Inf
+  nomo_present_section("Retention evidence")
+  nomo_present_table(
+    x$evidence,
+    c("Method" = "method", "Factors" = "n_factors", "Role" = "role")
   )
+
+  sensitivity <- x$parallel_sensitivity
+  if (is.data.frame(sensitivity) && nrow(sensitivity)) {
+    nomo_present_section("Parallel-analysis rule sensitivity")
+    sensitivity$chosen <- ifelse(sensitivity$selected, "selected", "")
+    nomo_present_table(
+      sensitivity,
+      c("Rule" = "rule", "Factors" = "n_factors", "Used" = "chosen")
+    )
+  }
 
   qualified <- x$criterion_status[
     x$criterion_status$status == "available" &
@@ -148,37 +152,35 @@ print.summary_nomo_factors <- function(x, ...) {
     drop = FALSE
   ]
   if (nrow(qualified) > 0L) {
-    cat("\nCriteria available with qualification:\n")
-    for (i in seq_len(nrow(qualified))) {
-      cat(sprintf(
-        "- %s: %s\n",
-        qualified$method[[i]],
-        qualified$qualification[[i]]
-      ))
-    }
+    nomo_present_section("Criteria available with qualification")
+    nomo_present_bullets(paste0(qualified$method, ": ", qualified$qualification))
   }
 
   skipped <- x$criterion_status[x$criterion_status$status == "skipped", , drop = FALSE]
   if (nrow(skipped) > 0L) {
-    cat("\nCriteria requested but not run:\n")
-    print(skipped[c("method", "reason")], n = Inf, width = Inf)
+    nomo_present_section("Criteria requested but not run")
+    nomo_present_bullets(paste0(skipped$method, ": ", skipped$reason))
   }
 
   if (is.data.frame(x$concordance) && nrow(x$concordance) > 0L) {
-    cat("\nCriterion-family concordance:\n")
-    print(x$concordance[c("n_factors", "n_families", "families")], n = Inf, width = Inf)
+    nomo_present_section("Concordance across criterion families")
+    nomo_present_table(
+      x$concordance,
+      c("Factors" = "n_factors", "Families" = "n_families", "Which" = "families")
+    )
   }
 
-  cat("\nSupporting adequacy evidence:\n")
-  print(x$adequacy[c("metric", "display")], n = Inf, width = Inf)
+  nomo_present_section("Supporting adequacy evidence")
+  nomo_present_bullets(paste0(x$adequacy$metric, ": ", x$adequacy$display))
 
-  cat("\nSynthesis:\n")
-  cat(x$recommendation, "\n")
-  cat(
-    "\nFactor counts are candidates for investigation, not automatic dimensionality verdicts.\n"
-  )
-  cat(
-    "Common-factor eigenvalues come from a reduced common-variance matrix; later values can be negative.\n"
+  nomo_present_section("Synthesis")
+  nomo_present_text(x$recommendation, indent = 2L)
+
+  cat("\n")
+  nomo_present_text(
+    "Factor counts are candidates for investigation, not automatic ",
+    "dimensionality verdicts. Common-factor eigenvalues come from a reduced ",
+    "common-variance matrix; later values can be negative."
   )
 
   invisible(x)

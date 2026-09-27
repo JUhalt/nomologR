@@ -57,45 +57,62 @@ summary.nomo_screen <- function(object, ...) {
 print.summary_nomo_screen <- function(x, ...) {
   overview <- x$overview[1L, , drop = FALSE]
 
-  cat("<summary_nomo_screen>\n")
-  cat(sprintf(
-    "Cases: %d | Items: %d | No review flag: %d | Review: %d | Concern: %d\n",
-    overview$n_cases,
-    overview$n_items,
-    overview$n_no_review_flag,
-    overview$n_review,
-    overview$n_concern
+  nomo_present_header("nomo_screen", "Item and data audit", summary = TRUE)
+  nomo_present_facts(c(
+    sprintf("Cases: %d", overview$n_cases),
+    sprintf("Items: %d", overview$n_items),
+    paste0("Flags: ", nomo_present_flag_counts(x$item_review$attention))
   ))
-  cat(sprintf(
-    paste0(
-      "Missingness flags: %d | Constant: %d | All missing: %d | ",
-      "Relationship eligible: %d\n"
-    ),
-    overview$n_items_with_missing,
-    overview$n_constant,
-    overview$n_all_missing,
-    overview$n_relationship_eligible
+  nomo_present_facts(c(
+    sprintf("Items with missing responses: %d", overview$n_items_with_missing),
+    sprintf("Constant: %d", overview$n_constant),
+    sprintf("All missing: %d", overview$n_all_missing),
+    sprintf("Relationship eligible: %d", overview$n_relationship_eligible)
   ))
 
-  display <- x$item_review[
-    ,
-    c(
-      "item",
-      "item_type",
-      "attention",
-      "pct_missing",
-      "mode_prop",
-      "corrected_item_rest_r",
-      "review_metrics"
-    ),
-    drop = FALSE
-  ]
+  review <- x$item_review
+  review$type <- sub("^numeric_", "", review$item_type)
+  review$flag <- nomo_present_flag(review$attention)
+  percent <- function(v) ifelse(is.finite(v), sprintf("%.1f%%", 100 * v), "-")
+  nomo_present_section("Item review")
+  nomo_present_table(
+    review,
+    c("Item" = "item", "Type" = "type", "Missing" = "pct_missing",
+      "Top share" = "mode_prop", "Item-rest r" = "corrected_item_rest_r",
+      "Flag" = "flag"),
+    formats = list(pct_missing = percent, mode_prop = percent),
+    more = "nomo_table(x, \"items\")"
+  )
+  nomo_present_text(
+    "Top share is the proportion of responses in the most common category.",
+    indent = 2L
+  )
 
-  cat("\nIntegrated item review:\n")
-  print(display, n = nrow(display), width = Inf)
+  flagged <- review[nzchar(review$flag), , drop = FALSE]
+  if (nrow(flagged)) {
+    nomo_present_section("Flagged items")
+    log <- x$decision_log
+    nomo_present_bullets(vapply(seq_len(nrow(flagged)), function(i) {
+      reasons <- log$observation[
+        log$object == flagged$item[[i]] & log$severity %in% c("review", "concern")
+      ]
+      # A flag added from the relationship table, such as negative inter-item
+      # pairs, has no log row of its own; its metric names stand in.
+      if (!length(reasons)) {
+        reasons <- if (nzchar(flagged$review_metrics[[i]])) {
+          paste0("flagged by ", gsub("_", " ", flagged$review_metrics[[i]]), ".")
+        } else {
+          "see the decision log."
+        }
+      }
+      sprintf("%s (%s): %s", flagged$item[[i]], flagged$flag[[i]],
+              paste(reasons, collapse = " "))
+    }, character(1)))
+  }
 
-  cat(
-    "\n`attention` is a review aid, not an automatic retention/deletion decision.\n"
+  cat("\n")
+  nomo_present_text(
+    "Flags are review aids, not decisions to keep or delete an item."
   )
   invisible(x)
 }
