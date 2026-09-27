@@ -308,6 +308,11 @@ review: expert relevance panels, item sorts, and Delphi rounds. It ends in a
 reasons, and the rule that made each decision. `nomologR` takes the handoff
 itself, not a copied list of item names, so the reasons travel with the items.
 
+The joint walkthrough for the two packages,
+[One item set, both stages](https://juhalt.github.io/contentvalidR/articles/one-item-set-both-stages.html),
+follows one item set from content review in `contentvalidR` through this
+workflow.
+
 In `contentvalidR`, a handoff is made from a fitted review. The chunk below is
 shown, not run:
 
