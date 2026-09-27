@@ -548,8 +548,9 @@ nomo_invariance_decision_log <- function(group,
       severity = "info",
       observation = paste(
         sprintf(
-          "%d ordered indicator(s) were modeled using `%s` categorical identification.",
-          length(ordered),
+          "%s %s modeled using `%s` categorical identification.",
+          nomo_present_count(length(ordered), "ordered indicator"),
+          nomo_present_noun(length(ordered), "was", "were"),
           ID.cat
         ),
         sequence_note

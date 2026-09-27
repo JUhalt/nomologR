@@ -388,7 +388,7 @@ test_that("ordered indicators are scored, with the estimand and the untested par
   expect_identical(nrow(out$scores), nrow(nomo_demo_ordinal))
   expect_match(out$notes$note[out$notes$topic == "estimand" &
                                 grepl("ordered", out$notes$note)],
-               "10 indicator(s) are ordered", fixed = TRUE)
+               "10 indicators are ordered", fixed = TRUE)
 
   # The parallel model is written for continuous indicators, so it is not run
   # against a categorical fit, and the reason says so.

@@ -562,8 +562,8 @@ nomo_network_measurement_context <- function(fit,
     notes <- c(
       notes,
       sprintf(
-        "%d loading(s) below the configured absolute review reference",
-        low_loading_n
+        "%s below the configured absolute review reference",
+        nomo_present_count(low_loading_n, "loading")
       )
     )
   }
@@ -1248,8 +1248,9 @@ nomo_network_decision_log <- function(model_additions,
       reference = paste(ordered, collapse = ", "),
       severity = "info",
       observation = sprintf(
-        "%d ordered indicator(s) were declared.",
-        length(ordered)
+        "%s %s declared.",
+        nomo_present_count(length(ordered), "ordered indicator"),
+        nomo_present_noun(length(ordered), "was", "were")
       ),
       recommendation = "Interpret SEM estimates using the categorical-data estimator."
     )

@@ -64,9 +64,9 @@ nomo_run_effort_log <- function(log, effort, screen) {
     observation = sprintf(
       paste(
         "Careless-responding indices were computed once across all %d items,",
-        "using %d scale(s), not within each scale. %s"
+        "using %s, not within each scale. %s"
       ),
-      length(screen$items), length(effort$arguments$scales), keying
+      length(screen$items), nomo_present_count(length(effort$arguments$scales), "scale"), keying
     ),
     reason = paste(
       "The indices describe a respondent across the whole instrument, and",

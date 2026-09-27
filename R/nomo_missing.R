@@ -755,8 +755,8 @@ nomo_missing_log <- function(pattern, strategies, estimates, reference, ordered,
     reference = "Enders & Bandalos (2001); Schafer & Graham (2002)",
     severity = "info",
     observation = sprintf(
-      "%d of %d cases (%.1f%%) are missing at least one modeled variable, in %d pattern(s).",
-      s$n_incomplete, s$n_cases, 100 * s$pct_incomplete, s$n_patterns
+      "%d of %d cases (%.1f%%) are missing at least one modeled variable, in %s.",
+      s$n_incomplete, s$n_cases, 100 * s$pct_incomplete, nomo_present_count(s$n_patterns, "pattern")
     ),
     recommendation = paste(
       "Which strategy is appropriate depends on why the data are missing.",

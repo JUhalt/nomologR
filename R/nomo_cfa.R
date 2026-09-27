@@ -823,7 +823,8 @@ nomo_cfa_decision_log <- function(estimator_label, engine_estimator,
     reference = "Binary/ordinal outcomes should be declared rather than inferred solely from integer storage",
     severity = "info",
     observation = if (length(ordered)) {
-      sprintf("%d indicator(s) were declared ordered.", length(ordered))
+      sprintf("%s %s declared ordered.", nomo_present_count(length(ordered), "indicator"),
+              nomo_present_noun(length(ordered), "was", "were"))
     } else "No indicators were explicitly declared ordered.",
     recommendation = "Confirm the measurement level of all indicators before interpreting the model."
   )
@@ -866,8 +867,9 @@ nomo_cfa_decision_log <- function(estimator_label, engine_estimator,
       severity = if (n_dropped > 0) "review" else "info",
       observation = if (n_dropped > 0) {
         sprintf(
-          "%d of %d input cases were used; %d case(s) were not used by the fitted model.",
-          as.integer(n_used), as.integer(data_n), as.integer(n_dropped)
+          "%d of %d input cases were used; %s %s not used by the fitted model.",
+          as.integer(n_used), as.integer(data_n), nomo_present_count(as.integer(n_dropped), "case"),
+          nomo_present_noun(n_dropped, "was", "were")
         )
       } else {
         sprintf("All %d input cases were used by the fitted model.", as.integer(data_n))
@@ -1006,7 +1008,9 @@ nomo_cfa_decision_log <- function(estimator_label, engine_estimator,
       reference = "Modification indices are post-hoc diagnostics, not respecification instructions",
       severity = "info",
       observation = if (is.null(mi_error)) {
-        sprintf("%d modification-index candidate(s) were retained for inspection.", nrow(modification_indices))
+        sprintf("%s %s retained for inspection.",
+                nomo_present_count(nrow(modification_indices), "modification-index candidate"),
+                nomo_present_noun(nrow(modification_indices), "was", "were"))
       } else paste("Modification indices were unavailable:", mi_error),
       recommendation = paste(
         "Treat large indices as hypotheses about localized strain; require",

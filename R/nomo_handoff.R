@@ -232,8 +232,9 @@ nomo_handoff_log <- function(h, stage = "screen") {
     value = sum(ev$carried),
     severity = "info",
     observation = sprintf(
-      "%d of %d reviewed item(s) were carried and %d held back. Status counts: %s.",
-      sum(ev$carried), nrow(ev), sum(!ev$carried),
+      "%d of %s %s carried and %d held back. Status counts: %s.",
+      sum(ev$carried), nomo_present_count(nrow(ev), "reviewed item"),
+      nomo_present_noun(sum(ev$carried), "was", "were"), sum(!ev$carried),
       paste(sprintf("%s %d", names(status_counts), as.integer(status_counts)),
             collapse = ", ")
     ),
