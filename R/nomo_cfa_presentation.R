@@ -1,53 +1,74 @@
 # Presentation methods for nomo_cfa -----------------------------------------
 
+# Shared by print() and summary(): case use, estimator, and convergence.
+nomo_cfa_present_facts <- function(x, detail = FALSE) {
+  cases <- sprintf(
+    "Cases: %s of %d used",
+    if (is.finite(x$n_used)) format(x$n_used, trim = TRUE) else "unknown",
+    x$data_n
+  )
+  if (isTRUE(detail) && is.finite(x$n_dropped) && x$n_dropped > 0) {
+    cases <- sprintf("%s (%d not used, %.1f%%)", cases, as.integer(x$n_dropped),
+                     100 * x$pct_dropped)
+  }
+  estimator <- paste0(
+    "Estimator: ", if (is.na(x$estimator)) "unknown" else x$estimator,
+    if (!is.na(x$estimator_engine) && !is.na(x$estimator) &&
+        !identical(x$estimator_engine, x$estimator)) {
+      sprintf(" (engine: %s)", x$estimator_engine)
+    } else {
+      ""
+    }
+  )
+  nomo_present_facts(c(
+    cases,
+    estimator,
+    paste0("Converged: ", if (isTRUE(x$converged)) "yes" else "NO"),
+    if (length(x$ordered)) sprintf("Ordered indicators: %d", length(x$ordered)) else ""
+  ))
+}
+
+
+# The version of a fit index lavaan reported: standard, scaled, or robust.
+nomo_cfa_fit_version <- function(variant) {
+  ifelse(grepl("robust", variant), "robust",
+         ifelse(grepl("scaled", variant), "scaled", ""))
+}
+
+
 #' @export
 print.nomo_cfa <- function(x, ...) {
-  cat("<nomo_cfa>\n")
-  cat(sprintf(
-    "Cases: %s used of %d | Estimator: %s",
-    if (is.finite(x$n_used)) format(x$n_used, trim = TRUE) else "unknown",
-    x$data_n,
-    ifelse(is.na(x$estimator), "unknown", x$estimator)
-  ))
-  if (!is.na(x$estimator_engine) && !is.na(x$estimator) &&
-      !identical(x$estimator_engine, x$estimator)) {
-    cat(sprintf(" (engine: %s)", x$estimator_engine))
-  }
-  cat("\n")
-  cat(sprintf(
-    "Converged: %s | Ordered indicators: %d | Heywood flags: %d\n",
-    if (x$converged) "yes" else "NO",
-    length(x$ordered), nrow(x$heywood)
-  ))
+  nomo_present_header("nomo_cfa", "Confirmatory factor analysis")
+  nomo_cfa_present_facts(x)
 
-  fit_show <- x$fit_evidence[
-    x$fit_evidence$metric %in% c("CFI", "TLI", "RMSEA", "SRMR"),
-    c("metric", "value"), drop = FALSE
+  fit <- x$fit_evidence[
+    x$fit_evidence$metric %in% c("CFI", "TLI", "RMSEA", "SRMR") &
+      is.finite(x$fit_evidence$value), , drop = FALSE
   ]
-  available <- is.finite(fit_show$value)
-  if (any(available)) {
-    pieces <- paste0(
-      fit_show$metric[available], "=",
-      formatC(fit_show$value[available], format = "f", digits = 3)
-    )
-    cat("Global fit: ", paste(pieces, collapse = " | "), "\n", sep = "")
-  }
-
-  counts <- table(factor(
-    x$standardized_loadings$attention,
-    levels = c("KEEP", "REVIEW", "STRONG REVIEW")
-  ))
-  cat(sprintf(
-    "Loading review: %d KEEP | %d REVIEW | %d STRONG REVIEW\n",
-    counts[["KEEP"]], counts[["REVIEW"]], counts[["STRONG REVIEW"]]
-  ))
-  if (length(x$engine_warnings)) {
-    cat(sprintf(
-      "Captured engine warnings: %d (inspect `$engine_warnings` / decision log)\n",
-      length(x$engine_warnings)
+  if (nrow(fit)) {
+    version <- nomo_cfa_fit_version(fit$variant)
+    nomo_present_facts(c(
+      paste0("Fit: ", fit$metric[[1L]], " ", nomo_present_number(fit$value[[1L]]),
+             ifelse(nzchar(version[[1L]]), paste0(" (", version[[1L]], ")"), "")),
+      paste0(fit$metric[-1L], " ", nomo_present_number(fit$value[-1L]),
+             ifelse(nzchar(version[-1L]), paste0(" (", version[-1L], ")"), ""))
     ))
   }
-  cat("No parameters were automatically freed and no model was automatically refit.\n")
+
+  nomo_present_facts(c(
+    sprintf("Loadings: %d", nrow(x$standardized_loadings)),
+    paste0("Flags: ", nomo_present_flag_counts(x$standardized_loadings$attention)),
+    if (nrow(x$heywood)) sprintf("Improper-solution signals: %d", nrow(x$heywood)) else "",
+    if (length(x$engine_warnings)) {
+      sprintf("Engine warnings: %d (see the decision log)", length(x$engine_warnings))
+    } else {
+      ""
+    }
+  ))
+  nomo_present_text(
+    "No parameter was freed and no model was refit automatically. ",
+    "summary() shows the evidence."
+  )
   invisible(x)
 }
 
@@ -86,97 +107,127 @@ summary.nomo_cfa <- function(object, ...) {
 
 #' @export
 print.summary_nomo_cfa <- function(x, ...) {
-  cat("nomologR confirmatory factor analysis\n")
-  cat(sprintf(
-    "%s cases used of %d | Estimator: %s",
-    if (is.finite(x$n_used)) format(x$n_used, trim = TRUE) else "unknown",
-    x$data_n,
-    ifelse(is.na(x$estimator), "unknown", x$estimator)
-  ))
-  if (!is.na(x$estimator_engine) && !is.na(x$estimator) &&
-      !identical(x$estimator_engine, x$estimator)) {
-    cat(sprintf(" (engine: %s)", x$estimator_engine))
+  nomo_present_header("nomo_cfa", "Confirmatory factor analysis", summary = TRUE)
+  nomo_cfa_present_facts(x, detail = TRUE)
+
+  nomo_present_section("Global fit")
+  fe <- x$fit_evidence
+  value <- function(m) {
+    v <- fe$value[fe$metric == m]
+    if (length(v)) v[[1L]] else NA_real_
   }
-  cat("\n")
-  cat(sprintf(
-    "Converged: %s | Ordered indicators: %d\n",
-    if (x$converged) "yes" else "NO", length(x$ordered)
-  ))
-  if (is.finite(x$n_dropped) && x$n_dropped > 0) {
-    cat(sprintf(
-      "Case use: %d not used (%.1f%% of input)\n",
-      as.integer(x$n_dropped),
-      100 * x$pct_dropped
-    ))
-  }
-  cat("\n")
-
-  cat("Global fit evidence\n")
-  print(
-    x$fit_evidence[, c("metric", "value", "variant", "reference", "attention")],
-    row.names = FALSE
-  )
-
-  cat("\nStandardized loadings\n")
-  loading_cols <- c(
-    "factor", "item", "loading", "se", "ci_lower", "ci_upper", "attention"
-  )
-  print(x$standardized_loadings[, loading_cols, drop = FALSE], row.names = FALSE)
-
-  flagged <- x$standardized_loadings[
-    x$standardized_loadings$attention != "KEEP", , drop = FALSE
-  ]
-  if (!nrow(flagged)) {
-    cat("\nNo configured standardized-loading review flags were triggered.\n")
-  } else {
-    cat("\nLoading flags requiring inspection\n")
-    print(
-      flagged[, c("factor", "item", "attention", "explanation"), drop = FALSE],
-      row.names = FALSE, width = Inf
+  if (is.finite(value("chi_square"))) {
+    p <- nomo_present_p_clause(value("p_value"))
+    nomo_present_text(
+      sprintf("chi-square(%s) = %s%s", format(value("df"), trim = TRUE),
+              nomo_present_number(value("chi_square"), 2L),
+              if (nzchar(p)) paste0(", ", p) else ""),
+      indent = 2L
     )
+  }
+  indices <- fe[fe$metric %in% c("CFI", "TLI", "RMSEA", "SRMR"), , drop = FALSE]
+  if (nrow(indices)) {
+    indices$interval <- ifelse(
+      indices$metric == "RMSEA",
+      nomo_present_ci(value("RMSEA_CI_lower"), value("RMSEA_CI_upper")),
+      ""
+    )
+    indices$version <- nomo_cfa_fit_version(indices$variant)
+    nomo_present_table(
+      indices,
+      c("Index" = "metric", "Value" = "value", "90% CI" = "interval",
+        "Reference" = "reference", "Version" = "version"),
+      more = "nomo_table(x, \"fit\")"
+    )
+    nomo_present_text(
+      "References are teaching values for review, not cutoffs.", indent = 2L
+    )
+  }
+
+  loadings <- x$standardized_loadings
+  nomo_present_section("Standardized loadings")
+  if (nrow(loadings)) {
+    loadings$interval <- nomo_present_ci(loadings$ci_lower, loadings$ci_upper)
+    loadings$flag <- nomo_present_flag(loadings$attention)
+    nomo_present_table(
+      loadings,
+      c("Factor" = "factor", "Item" = "item", "Loading" = "loading",
+        "SE" = "se", "95% CI" = "interval", "Flag" = "flag"),
+      more = "nomo_table(x, \"loadings\")"
+    )
+    flagged <- loadings[nzchar(loadings$flag), , drop = FALSE]
+    if (nrow(flagged)) {
+      nomo_present_section("Flagged loadings")
+      nomo_present_bullets(sprintf(
+        "%s on %s (%s): %s", flagged$item, flagged$factor, flagged$flag,
+        flagged$explanation
+      ))
+    } else {
+      nomo_present_text("No loading was flagged for review.", indent = 2L)
+    }
+  } else {
+    nomo_present_text("No standardized loadings are available.", indent = 2L)
   }
 
   if (nrow(x$factor_correlations)) {
-    cat("\nFactor correlations\n")
-    print(
-      x$factor_correlations[, c(
-        "factor1", "factor2", "correlation", "ci_lower", "ci_upper"
-      ), drop = FALSE],
-      row.names = FALSE
+    nomo_present_section("Factor correlations")
+    fc <- x$factor_correlations
+    fc$interval <- nomo_present_ci(fc$ci_lower, fc$ci_upper)
+    nomo_present_table(
+      fc,
+      c("Factor 1" = "factor1", "Factor 2" = "factor2", "r" = "correlation",
+        "95% CI" = "interval")
     )
   }
 
+  nomo_present_section("Improper solutions")
   if (nrow(x$heywood)) {
-    cat("\nImproper-solution / Heywood signals\n")
-    print(x$heywood, row.names = FALSE, width = Inf)
+    nomo_present_bullets(sprintf(
+      "%s: %s (%s). %s", x$heywood$object, x$heywood$issue,
+      nomo_present_number(x$heywood$value), x$heywood$explanation
+    ))
   } else {
-    cat("\nNo configured Heywood/improper-solution signal was detected.\n")
+    nomo_present_text(
+      "No improper-solution signal, such as a negative residual variance, ",
+      "was detected.", indent = 2L
+    )
   }
 
   if (nrow(x$largest_residuals)) {
-    cat("\nLargest localized residual correlations\n")
-    print(x$largest_residuals, row.names = FALSE)
+    nomo_present_section("Largest residual correlations")
+    nomo_present_table(
+      x$largest_residuals,
+      c("Item 1" = "item1", "Item 2" = "item2", "Residual" = "residual"),
+      more = "nomo_table(x, \"residuals\")"
+    )
   }
 
   if (nrow(x$top_modification_indices)) {
-    cat("\nTop modification indices - diagnostic only\n")
-    mi_cols <- intersect(
-      c("lhs", "op", "rhs", "mi", "epc", "sepc.all"),
-      names(x$top_modification_indices)
+    nomo_present_section("Modification indices (diagnostic only)")
+    mi <- x$top_modification_indices
+    mi$parameter <- paste(mi$lhs, mi$op, mi$rhs)
+    nomo_present_table(
+      mi,
+      c("Parameter" = "parameter", "MI" = "mi", "EPC" = "epc",
+        "Std. EPC" = "sepc.all"),
+      formats = list(mi = function(v) nomo_present_number(v, 2L)),
+      more = "nomo_table(x, \"modification_indices\")"
     )
-    print(x$top_modification_indices[, mi_cols, drop = FALSE], row.names = FALSE)
-    cat("Modification indices do not authorize automatic respecification.\n")
+    nomo_present_text(
+      "Modification indices locate strain. They do not authorize freeing a ",
+      "parameter, and nomologR never does so automatically.", indent = 2L
+    )
   }
 
   if (length(x$engine_warnings)) {
-    cat("\nCaptured engine warnings\n")
-    for (w in x$engine_warnings) cat("- ", w, "\n", sep = "")
+    nomo_present_section("Engine warnings")
+    nomo_present_bullets(x$engine_warnings)
   }
 
-  cat(
-    "\nInterpretation rule: global fit, local strain, and parameter estimates ",
-    "are evidence to interpret together; no single cutoff establishes model ",
-    "validity.\n", sep = ""
+  cat("\n")
+  nomo_present_text(
+    "Global fit, local strain, and parameter estimates are evidence to ",
+    "interpret together; no single cutoff establishes model validity."
   )
   invisible(x)
 }

@@ -619,9 +619,10 @@ test_that("CFA print method exposes the central guardrails", {
 
   expect_true(any(grepl("<nomo_cfa>", txt, fixed = TRUE)))
   expect_true(any(grepl("Converged: yes", txt, fixed = TRUE)))
-  expect_true(any(grepl("Global fit:", txt, fixed = TRUE)))
-  expect_true(any(grepl("Loading review:", txt, fixed = TRUE)))
-  expect_true(any(grepl("No parameters were automatically freed", txt, fixed = TRUE)))
+  expect_true(any(grepl("Fit: CFI", txt, fixed = TRUE)))
+  expect_true(any(grepl("Flags:", txt, fixed = TRUE)))
+  expect_true(any(grepl("No parameter was freed and no model was refit automatically",
+                        txt, fixed = TRUE)))
 })
 
 
@@ -636,11 +637,11 @@ test_that("CFA print method handles engine labels, warnings, and unavailable val
   out$fit_evidence$value[out$fit_evidence$metric %in% c("CFI", "TLI", "RMSEA", "SRMR")] <- NA_real_
 
   txt <- capture.output(print(out))
-  expect_true(any(grepl("unknown used", txt, fixed = TRUE)))
+  expect_true(any(grepl("Cases: unknown of", txt, fixed = TRUE)))
   expect_true(any(grepl("engine: DWLS", txt, fixed = TRUE)))
   expect_true(any(grepl("Converged: NO", txt, fixed = TRUE)))
-  expect_true(any(grepl("Captured engine warnings: 1", txt, fixed = TRUE)))
-  expect_false(any(grepl("Global fit:", txt, fixed = TRUE)))
+  expect_true(any(grepl("Engine warnings: 1", txt, fixed = TRUE)))
+  expect_false(any(grepl("Fit:", txt, fixed = TRUE)))
 })
 
 
@@ -662,14 +663,21 @@ test_that("summary printer covers flagged and diagnostic sections", {
   )
   s$engine_warnings <- "synthetic engine warning"
 
+  s$ordered <- "x1"
+  s$fit_evidence$variant[s$fit_evidence$metric == "CFI"] <- "cfi.robust"
+
   txt <- capture.output(print(s))
-  expect_true(any(grepl("Case use:", txt, fixed = TRUE)))
-  expect_true(any(grepl("Loading flags requiring inspection", txt, fixed = TRUE)))
+  expect_true(any(grepl("(10 not used,", txt, fixed = TRUE)))
+  expect_true(any(grepl("Ordered indicators: 1", txt, fixed = TRUE)))
+  expect_true(any(grepl("robust", txt, fixed = TRUE)))
+  expect_true(any(grepl("Flagged loadings", txt, fixed = TRUE)))
+  expect_true(any(grepl("synthetic loading review", txt, fixed = TRUE)))
   expect_true(any(grepl("Factor correlations", txt, fixed = TRUE)))
-  expect_true(any(grepl("Improper-solution / Heywood signals", txt, fixed = TRUE)))
-  expect_true(any(grepl("Largest localized residual correlations", txt, fixed = TRUE)))
-  expect_true(any(grepl("Top modification indices - diagnostic only", txt, fixed = TRUE)))
-  expect_true(any(grepl("Captured engine warnings", txt, fixed = TRUE)))
+  expect_true(any(grepl("x1: synthetic_heywood (-0.100). synthetic improper solution",
+                        txt, fixed = TRUE)))
+  expect_true(any(grepl("Largest residual correlations", txt, fixed = TRUE)))
+  expect_true(any(grepl("Modification indices (diagnostic only)", txt, fixed = TRUE)))
+  expect_true(any(grepl("Engine warnings", txt, fixed = TRUE)))
   expect_true(any(grepl("no single cutoff establishes model validity", txt, fixed = TRUE)))
 })
 
@@ -688,10 +696,18 @@ test_that("summary printer handles clean optional sections", {
   s$engine_warnings <- character()
 
   txt <- capture.output(print(s))
-  expect_true(any(grepl("No configured standardized-loading review flags", txt, fixed = TRUE)))
-  expect_true(any(grepl("No configured Heywood/improper-solution signal", txt, fixed = TRUE)))
-  expect_false(any(grepl("Case use:", txt, fixed = TRUE)))
-  expect_false(any(grepl("Top modification indices", txt, fixed = TRUE)))
+  expect_true(any(grepl("No loading was flagged for review.", txt, fixed = TRUE)))
+  expect_true(any(grepl("No improper-solution signal", txt, fixed = TRUE)))
+  expect_false(any(grepl("not used,", txt, fixed = TRUE)))
+  expect_false(any(grepl("Modification indices", txt, fixed = TRUE)))
+
+  # Without a chi-square, fit indices, or loadings, each section says so.
+  s$fit_evidence <- s$fit_evidence[0, , drop = FALSE]
+  s$standardized_loadings <- s$standardized_loadings[0, , drop = FALSE]
+  txt <- capture.output(print(s))
+  expect_false(any(grepl("chi-square", txt, fixed = TRUE)))
+  expect_false(any(grepl("Index", txt, fixed = TRUE)))
+  expect_true(any(grepl("No standardized loadings are available.", txt, fixed = TRUE)))
 })
 
 
