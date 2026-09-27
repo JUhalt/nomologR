@@ -738,6 +738,32 @@ test_that("item-rest plot colors item-rest evidence rather than overall item att
 })
 
 
+test_that("continuous items are drawn as histograms, not a bar per value (#89)", {
+  out <- nomo_screen(nomo_demo_continuous)
+  p <- plot(out, type = "responses")
+  expect_true(inherits(p$layers[[1]]$stat, "StatBin"))
+
+  # Twenty bins per item, and each item's proportions sum to one.
+  built <- ggplot2::ggplot_build(p)$data[[1]]
+  expect_identical(length(unique(built$PANEL)), 10L)
+  expect_true(all(table(built$PANEL) == 20L))
+  expect_equal(as.numeric(tapply(built$y, built$PANEL, sum)), rep(1, 10), tolerance = 1e-8)
+
+  # A mixed selection draws the categorical items and names the others.
+  mixed <- nomo_screen(data.frame(cont = nomo_demo_continuous$a1, disc = rep(1:5, 100)))
+  p_mixed <- plot(mixed, type = "responses")
+  expect_identical(levels(p_mixed$data$item), "disc")
+  expect_match(p_mixed$labels$caption, "Continuous items are not shown here: cont", fixed = TRUE)
+  expect_match(p_mixed$labels$caption, 'items = c("cont")', fixed = TRUE)
+  p_cont <- plot(mixed, type = "responses", items = "cont")
+  expect_true(inherits(p_cont$layers[[1]]$stat, "StatBin"))
+
+  empty <- out
+  empty$response_distribution <- empty$response_distribution[0, , drop = FALSE]
+  expect_error(plot(empty, type = "responses"), "No observed responses", fixed = TRUE)
+})
+
+
 test_that("response plot preserves declared ordered-category order visually", {
   dat <- data.frame(
     ordered_item = ordered(
