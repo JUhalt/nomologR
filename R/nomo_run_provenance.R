@@ -150,8 +150,8 @@ nomo_run_initial_log <- function(scales, roles, handoff = NULL) {
         )
       } else {
         sprintf(
-          "Scale `%s` contains %d item(s) carried from content review in %s %s.",
-          nm, length(scales[[nm]]),
+          "Scale `%s` contains %s carried from content review in %s %s.",
+          nm, nomo_present_count(length(scales[[nm]]), "item"),
           handoff$provenance$package, handoff$provenance$package_version
         )
       },
@@ -330,10 +330,11 @@ nomo_run_handoff_log <- function(log, handoff) {
     observation = sprintf(
       paste(
         "Scales and item membership come from content review in %s %s",
-        "(workflow: %s; carry rule: %s): %d of %d reviewed item(s) were carried."
+        "(workflow: %s; carry rule: %s): %d of %s %s carried."
       ),
       p$package, p$package_version, p$workflow, p$keep,
-      sum(ev$carried), nrow(ev)
+      sum(ev$carried), nomo_present_count(nrow(ev), "reviewed item"),
+      nomo_present_noun(sum(ev$carried), "was", "were")
     ),
     reason = paste(
       "Content review is where the validity argument starts, so the archive",

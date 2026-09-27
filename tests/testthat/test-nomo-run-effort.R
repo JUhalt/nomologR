@@ -54,7 +54,7 @@ test_that("careless responding is computed once across the instrument, not per s
 
   entry <- run$decision_log[run$decision_log$id == "careless_responding", ]
   expect_identical(entry$scope, "instrument")
-  expect_match(entry$observation, "once across all 12 items, using 3 scale(s)", fixed = TRUE)
+  expect_match(entry$observation, "once across all 12 items, using 3 scales", fixed = TRUE)
   expect_match(entry$observation, "No reverse keying was declared", fixed = TRUE)
 })
 
@@ -153,7 +153,7 @@ test_that("a careless-responding screen that fails blocks the run with its reaso
 test_that("the report summarizes careless responding after the item audits", {
   skip_on_cran()
   report <- nomologR:::nomo_report_effort(run_effort()$results$effort)
-  expect_match(report$summary, "Computed once across all 12 items for 300 cases, using 3 scale(s).",
+  expect_match(report$summary, "Computed once across all 12 items for 300 cases, using 3 scales.",
                fixed = TRUE)
   expect_identical(report$indices$index[[1L]], "Long-string")
   expect_gte(report$indices$cases_flagged[[1L]], 10L)

@@ -351,10 +351,11 @@ nomo_report_content_review <- function(x) {
         paste(
           "Scales and item membership came from content review in %s %s",
           "(workflow: %s; carry rule: %s; method: %s), not from these data.",
-          "%d of %d reviewed item(s) were carried; only carried items were analyzed."
+          "%d of %s %s carried; only carried items were analyzed."
         ),
         p$package, p$package_version, p$workflow, p$keep, p$method,
-        sum(ev$carried), nrow(ev)
+        sum(ev$carried), nomo_present_count(nrow(ev), "reviewed item"),
+        nomo_present_noun(sum(ev$carried), "was", "were")
       ),
       keying_text,
       if (length(p$citation)) {
@@ -418,13 +419,15 @@ nomo_report_effort <- function(screen) {
   list(
     summary = sprintf(
       paste(
-        "Computed once across all %d items for %d cases, using %d scale(s).",
-        "%d case(s) were flagged by at least one rule a source states. Cases",
+        "Computed once across all %d items for %d cases, using %s.",
+        "%s %s flagged by at least one rule a source states. Cases",
         "are flagged, never removed, and the indices disagree by design, so",
         "read them together."
       ),
-      length(screen$items), nrow(e), length(screen$effort_settings$scales),
-      sum(e$n_flags > 0L)
+      length(screen$items), nrow(e),
+      nomo_present_count(length(screen$effort_settings$scales), "scale"),
+      nomo_present_count(sum(e$n_flags > 0L), "case"),
+      nomo_present_noun(sum(e$n_flags > 0L), "was", "were")
     ),
     indices = indices,
     log = tibble::as_tibble(log)
@@ -452,9 +455,10 @@ nomo_report_scores <- function(scores) {
   list(
     summary = paste(c(
       sprintf(
-        "%s-weighted scores (method: %s) for %d case(s) and %d factor(s), computed from the fitted measurement model.",
+        "%s-weighted scores (method: %s) for %s and %s, computed from the fitted measurement model.",
         if (identical(scores$weighting, "unit")) "Unit" else "Model",
-        scores$method, nrow(scores$scores), nrow(scores$diagnostics)
+        scores$method, nomo_present_count(nrow(scores$scores), "case"),
+        nomo_present_count(nrow(scores$diagnostics), "factor")
       ),
       parallel_text,
       "No value here is a pass/fail threshold."

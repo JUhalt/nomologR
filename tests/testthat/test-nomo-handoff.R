@@ -153,7 +153,7 @@ test_that("nomo_screen screens only carried items and quotes held-back ones verb
                "status \"Review\", recommendation \"Review\"", fixed = TRUE)
 
   counts <- log[log$metric == "carry_decisions", ]
-  expect_match(counts$observation, "10 of 12 reviewed item(s) were carried and 2 held back",
+  expect_match(counts$observation, "10 of 12 reviewed items were carried and 2 held back",
                fixed = TRUE)
 })
 
@@ -339,7 +339,7 @@ test_that("a run from a handoff reports its content review; other runs do not", 
 
   review <- nomologR:::nomo_report_content_review(run)
   expect_match(review$summary, "content review in contentvalidR 0.7.0", fixed = TRUE)
-  expect_match(review$summary, "10 of 12 reviewed item(s) were carried", fixed = TRUE)
+  expect_match(review$summary, "10 of 12 reviewed items were carried", fixed = TRUE)
   expect_match(review$summary, "EF2, TF2, on a 1 to 5 response scale", fixed = TRUE)
   expect_match(review$summary, "Howard & Melloy (2016)", fixed = TRUE)
   expect_identical(nrow(review$items), 12L)

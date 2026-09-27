@@ -127,12 +127,13 @@ nomo_scores_notes <- function(input, method, diagnostics, unit_weighting,
   if (length(input$ordered)) {
     notes <- add(notes, "estimand", "review", sprintf(
       paste(
-        "%d indicator(s) are ordered. These scores treat the latent-response",
+        "%s %s ordered. These scores treat the latent-response",
         "variables as continuous; they are not the expected-a-posteriori scores",
         "an item-response model would produce, and the difference grows with",
         "fewer categories and more extreme thresholds."
       ),
-      length(input$ordered)
+      nomo_present_count(length(input$ordered), "indicator"),
+      nomo_present_noun(length(input$ordered), "is", "are")
     ))
   }
 
