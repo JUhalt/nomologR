@@ -92,57 +92,64 @@ nomo_reliability_ci_string <- function(est, lo, hi) {
 #' @export
 print.nomo_reliability <- function(x, ...) {
   tab <- nomo_reliability_summary_table(x)
-  cat("<nomo_reliability>\n")
-  cat(sprintf(
-    "Constructs: %d | Primary coefficient: model-based omega | Review reference: %s\n",
-    length(unique(tab$construct)),
-    format(x$guidance$reliability_reference, trim = TRUE)
+  nomo_present_header("nomo_reliability", "Reliability")
+  nomo_present_facts(c(
+    sprintf("Constructs: %d", length(unique(tab$construct))),
+    "Primary coefficient: model-based omega",
+    sprintf("Review reference: %s", format(x$guidance$reliability_reference, trim = TRUE))
   ))
 
   if (nrow(tab)) {
     finite_omega <- tab$omega[is.finite(tab$omega)]
     if (length(finite_omega)) {
-      cat(sprintf(
-        "Omega range: %.3f to %.3f | Construct review signals: %d\n",
-        min(finite_omega), max(finite_omega), sum(tab$signal != "info")
+      nomo_present_facts(c(
+        sprintf("Omega range: %s to %s", nomo_present_number(min(finite_omega)),
+                nomo_present_number(max(finite_omega))),
+        paste0("Flags: ", nomo_present_flag_counts(tab$signal))
       ))
     }
   }
 
   if (isTRUE(x$include_alpha)) {
-    cat(sprintf(
-      "Alpha: %d of %d construct(s) available as a secondary coefficient\n",
+    nomo_present_facts(sprintf(
+      "Alpha: %d of %d construct(s) available as a secondary coefficient",
       sum(x$alpha_status$available), nrow(x$alpha_status)
     ))
   }
 
   if (!is.null(x$ci_status) && identical(x$ci_status$method[[1L]], "bootstrap")) {
-    cat(sprintf(
-      "Uncertainty: %.1f%% percentile bootstrap CI | %d requested draws",
-      100 * x$ci_status$level[[1L]], x$ci_status$requested_draws[[1L]]
-    ))
-    if (is.finite(x$ci_status$min_successful_draws[[1L]])) {
-      cat(sprintf(" | minimum successful draws: %d",
-                  x$ci_status$min_successful_draws[[1L]]))
-    }
     # Absent from status tables created before worker counts were recorded,
     # such as a saved object from an earlier version.
     workers <- if ("workers" %in% names(x$ci_status)) x$ci_status$workers else NULL
-    if (length(workers) && is.finite(workers[[1L]]) && workers[[1L]] > 1L) {
-      cat(sprintf(" | %d workers", workers[[1L]]))
-    }
-    cat("\n")
+    nomo_present_facts(c(
+      sprintf("Uncertainty: %.1f%% percentile bootstrap CI", 100 * x$ci_status$level[[1L]]),
+      sprintf("%d requested draws", x$ci_status$requested_draws[[1L]]),
+      if (is.finite(x$ci_status$min_successful_draws[[1L]])) {
+        sprintf("minimum successful draws: %d", x$ci_status$min_successful_draws[[1L]])
+      } else {
+        ""
+      },
+      if (length(workers) && is.finite(workers[[1L]]) && workers[[1L]] > 1L) {
+        sprintf("%d workers", workers[[1L]])
+      } else {
+        ""
+      }
+    ))
     if (nzchar(x$ci_status$reason[[1L]])) {
-      cat("Bootstrap note: ", x$ci_status$reason[[1L]], "\n", sep = "")
+      nomo_present_text("Bootstrap note: ", x$ci_status$reason[[1L]])
     }
   } else {
-    cat("Uncertainty: point estimates only; use `ci = \"bootstrap\"` for interval estimates.\n")
+    nomo_present_text(
+      "Uncertainty: point estimates only; use `ci = \"bootstrap\"` for interval estimates."
+    )
   }
 
   if (isTRUE(x$model_strain) || isTRUE(x$improper_solution)) {
-    cat("Measurement-model context: REVIEW before treating reliability as stable evidence.\n")
+    nomo_present_text(
+      "Measurement-model context: review before treating reliability as stable evidence."
+    )
   }
-  cat("Reference values guide review; they are not pass/fail reliability rules.\n")
+  nomo_present_text("Reference values guide review; they are not pass/fail reliability rules.")
   invisible(x)
 }
 
@@ -171,32 +178,34 @@ summary.nomo_reliability <- function(object, ...) {
 
 #' @export
 print.summary_nomo_reliability <- function(x, ...) {
-  cat("nomologR reliability evidence\n")
+  nomo_present_header("nomo_reliability", "Reliability", summary = TRUE)
+  nomo_present_section("Coefficients")
   if (nrow(x$table)) {
     show <- x$table
-    display <- tibble::tibble(
-      construct = show$construct,
-      block = show$block,
-      indicator_type = show$indicator_type,
-      omega = mapply(
-        nomo_reliability_ci_string,
-        show$omega, show$omega_ci_lower, show$omega_ci_upper,
-        USE.NAMES = FALSE
-      ),
-      alpha = mapply(
-        nomo_reliability_ci_string,
-        show$alpha, show$alpha_ci_lower, show$alpha_ci_upper,
-        USE.NAMES = FALSE
-      ),
-      omega_scale = show$omega_scale,
-      signal = show$signal
+    show$omega_shown <- mapply(
+      nomo_reliability_ci_string,
+      show$omega, show$omega_ci_lower, show$omega_ci_upper,
+      USE.NAMES = FALSE
     )
-    print(display, row.names = FALSE)
+    show$alpha_shown <- mapply(
+      nomo_reliability_ci_string,
+      show$alpha, show$alpha_ci_lower, show$alpha_ci_upper,
+      USE.NAMES = FALSE
+    )
+    show$scale_shown <- gsub("_", " ", show$omega_scale)
+    show$flag <- nomo_present_flag(show$signal)
+    columns <- nomo_present_drop_constant(
+      c("Construct" = "construct", "Block" = "block",
+        "Indicators" = "indicator_type", "Omega" = "omega_shown",
+        "Alpha" = "alpha_shown", "Omega scale" = "scale_shown", "Flag" = "flag"),
+      "Block", show$block
+    )
+    nomo_present_table(show, columns, more = "nomo_table(x, \"coefficients\")")
     if (any(is.finite(show$omega_ci_lower) & is.finite(show$omega_ci_upper))) {
-      cat("Bracketed values are bootstrap confidence intervals.\n")
+      nomo_present_text("Bracketed values are bootstrap confidence intervals.", indent = 2L)
     }
   } else {
-    cat("No reliability coefficients are available.\n")
+    nomo_present_text("No reliability coefficients are available.", indent = 2L)
   }
 
   unavailable <- x$alpha_status[
@@ -204,31 +213,34 @@ print.summary_nomo_reliability <- function(x, ...) {
     , drop = FALSE
   ]
   if (nrow(unavailable)) {
-    cat("\nSecondary alpha unavailable for:\n")
-    print(
-      unavailable[, c("construct", "indicator_type", "score_scale", "reason"), drop = FALSE],
-      row.names = FALSE, width = Inf
-    )
+    nomo_present_section("Secondary alpha unavailable for")
+    nomo_present_bullets(sprintf(
+      "%s (%s indicators, %s scale): %s", unavailable$construct,
+      unavailable$indicator_type, gsub("_", " ", unavailable$score_scale),
+      unavailable$reason
+    ))
   }
 
+  cat("\n")
   if (!is.null(x$ci_status) &&
       !identical(x$ci_status$method[[1L]], "bootstrap")) {
-    cat(
-      "\nSampling uncertainty was not bootstrapped. ",
-      "For report-ready intervals, rerun with `ci = \"bootstrap\"`.\n",
-      sep = ""
+    nomo_present_text(
+      "Sampling uncertainty was not bootstrapped. For report-ready intervals, ",
+      "rerun with `ci = \"bootstrap\"`."
     )
   }
 
   if (isTRUE(x$model_strain) || isTRUE(x$improper_solution)) {
-    cat("\nMeasurement-model context requires review: reliability is conditional on the fitted CFA.\n")
+    nomo_present_text(
+      "Measurement-model context requires review: reliability is conditional ",
+      "on the fitted CFA."
+    )
   }
 
-  cat(
-    "\nInterpretation rule: omega is primary for the congeneric CFA workflow; ",
-    "alpha is secondary and assumption-dependent. Reliability contributes ",
-    "score-precision evidence, not construct validity.\n",
-    sep = ""
+  nomo_present_text(
+    "Omega is primary for the congeneric CFA workflow; alpha is secondary and ",
+    "assumption-dependent. Reliability contributes score-precision evidence, ",
+    "not construct validity."
   )
   invisible(x)
 }

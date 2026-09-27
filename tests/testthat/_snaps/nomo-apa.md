@@ -17,5 +17,6 @@
       pe3                  0.74
       pe4                  0.69
       -------------------------
-      Note. Standardized loadings from a confirmatory factor analysis. Estimated with ML; N = 800. Blank cells are loadings fixed to zero by the model.
+      Note. Standardized loadings from a confirmatory factor analysis. Estimated
+      with ML; N = 800. Blank cells are loadings fixed to zero by the model.
 

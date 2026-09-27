@@ -162,38 +162,44 @@ nomo_validity_discriminant_table <- function(x) {
 print.nomo_validity <- function(x, ...) {
   convergent <- nomo_validity_convergent_table(x)
   discriminant <- nomo_validity_discriminant_table(x)
-  cat("<nomo_validity>\n")
-  cat(sprintf(
-    "Constructs: %d | AVE review reference: %s | HTMT-family review reference: %s\n",
-    length(unique(x$standardized_loadings$factor)),
-    format(x$ave_reference, trim = TRUE),
-    format(x$htmt_reference, trim = TRUE)
+  nomo_present_header("nomo_validity", "Convergent and discriminant evidence")
+  nomo_present_facts(c(
+    sprintf("Constructs: %d", length(unique(x$standardized_loadings$factor))),
+    sprintf("AVE review reference: %s", format(x$ave_reference, trim = TRUE)),
+    sprintf("HTMT-family review reference: %s", format(x$htmt_reference, trim = TRUE))
   ))
 
   if (nrow(convergent)) {
-    cat(sprintf(
-      "Convergent-evidence review signals: %d of %d construct(s)\n",
-      sum(convergent$signal != "info"), nrow(convergent)
+    nomo_present_facts(sprintf(
+      "Convergent evidence: %s across %d construct(s)",
+      nomo_present_flag_counts(convergent$signal), nrow(convergent)
     ))
   }
   if (nrow(discriminant)) {
-    cat(sprintf(
-      "Construct-separation review signals: %d of %d pair(s)\n",
-      sum(discriminant$signal == "review"), nrow(discriminant)
+    nomo_present_facts(sprintf(
+      "Construct separation: %s across %d pair(s)",
+      nomo_present_flag_counts(discriminant$signal), nrow(discriminant)
     ))
   } else if (any(x$htmt_status$requested & !x$htmt_status$available)) {
-    cat("HTMT-family evidence: requested but unavailable; inspect `$htmt_status`.\n")
+    nomo_present_text(
+      "HTMT-family evidence: requested but unavailable; inspect `$htmt_status`."
+    )
   } else if (!any(x$htmt_status$requested)) {
-    cat("HTMT-family evidence: not requested.\n")
+    nomo_present_text("HTMT-family evidence: not requested.")
   }
 
   if (x$ngroups > 1L || x$nlevels > 1L) {
-    cat("Block-specific loading ranges are not silently pooled; use the fitted CFA and later invariance workflow for group/level comparisons.\n")
+    nomo_present_text(
+      "Block-specific loading ranges are not silently pooled; use the fitted ",
+      "CFA and later invariance workflow for group/level comparisons."
+    )
   }
   if (isTRUE(x$fornell_larcker_requested)) {
-    cat("Fornell-Larcker: legacy/supporting output only.\n")
+    nomo_present_text("Fornell-Larcker: legacy/supporting output only.")
   }
-  cat("No single index is treated as a declaration that a construct is valid or invalid.\n")
+  nomo_present_text(
+    "No single index is treated as a declaration that a construct is valid or invalid."
+  )
   invisible(x)
 }
 
@@ -229,33 +235,48 @@ summary.nomo_validity <- function(object, ...) {
 
 #' @export
 print.summary_nomo_validity <- function(x, ...) {
-  cat("nomologR convergent/discriminant evidence\n")
+  nomo_present_header("nomo_validity", "Convergent and discriminant evidence",
+                      summary = TRUE)
 
-  cat("\nConvergent evidence by construct\n")
+  nomo_present_section("Convergent evidence by construct")
   if (nrow(x$convergent)) {
     show <- x$convergent
-    for (nm in intersect(c("AVE", "min_abs_loading", "median_abs_loading"), names(show))) {
-      show[[nm]] <- round(show[[nm]], 3L)
-    }
-    print(show, row.names = FALSE)
+    show$flag <- nomo_present_flag(show$signal)
+    nomo_present_table(
+      show,
+      nomo_present_drop_constant(c(
+        "Construct" = "construct", "Block" = "block", "AVE" = "AVE",
+        "Min |loading|" = "min_abs_loading", "Median |loading|" = "median_abs_loading",
+        "Loadings flagged" = "n_loading_review", "Flag" = "flag"
+      ), "Block", show$block),
+      more = "nomo_table(x, \"convergent\")"
+    )
     if (x$ngroups > 1L || x$nlevels > 1L) {
-      cat("Loading ranges are omitted here rather than pooled across groups/levels.\n")
+      nomo_present_text(
+        "Loading ranges are omitted here rather than pooled across groups/levels.",
+        indent = 2L
+      )
     }
   } else {
-    cat("No convergent summary is available.\n")
+    nomo_present_text("No convergent summary is available.", indent = 2L)
   }
 
-  cat("\nConstruct-separation evidence\n")
+  nomo_present_section("Construct separation")
   if (nrow(x$discriminant)) {
     show <- x$discriminant
-    for (nm in intersect(c(
-      "latent_r", "latent_r_ci_lower", "latent_r_ci_upper", "HTMT2", "HTMT"
-    ), names(show))) {
-      show[[nm]] <- round(show[[nm]], 3L)
-    }
-    print(show, row.names = FALSE)
+    show$interval <- nomo_present_ci(show$latent_r_ci_lower, show$latent_r_ci_upper)
+    show$flag <- nomo_present_flag(show$signal)
+    nomo_present_table(
+      show,
+      nomo_present_drop_constant(c(
+        "Construct 1" = "construct_1", "Construct 2" = "construct_2",
+        "Block" = "block", "Latent r" = "latent_r", "95% CI" = "interval",
+        "HTMT2" = "HTMT2", "HTMT" = "HTMT", "Flag" = "flag"
+      ), "Block", show$block),
+      more = "nomo_table(x, \"discriminant\")"
+    )
   } else {
-    cat("No pairwise construct-separation summary is available.\n")
+    nomo_present_text("No pairwise construct-separation summary is available.", indent = 2L)
   }
 
   unavailable <- x$htmt_status[
@@ -263,19 +284,21 @@ print.summary_nomo_validity <- function(x, ...) {
     , drop = FALSE
   ]
   if (nrow(unavailable)) {
-    cat("\nUnavailable requested HTMT-family evidence\n")
-    print(unavailable[, c("method", "reason"), drop = FALSE], row.names = FALSE, width = Inf)
+    nomo_present_section("Unavailable requested HTMT-family evidence")
+    nomo_present_bullets(paste0(unavailable$method, ": ", unavailable$reason))
   }
 
+  cat("\n")
   if (isTRUE(x$fornell_larcker_requested)) {
-    cat("\nFornell-Larcker was requested as legacy/supporting information only.\n")
+    nomo_present_text(
+      "Fornell-Larcker was requested as legacy/supporting information only."
+    )
   }
 
-  cat(
-    "\nInterpretation rule: standardized loadings and AVE address convergent evidence; ",
-    "latent correlations and HTMT-family statistics address construct separation. ",
-    "These are complementary questions, not interchangeable pass/fail tests.\n",
-    sep = ""
+  nomo_present_text(
+    "Standardized loadings and AVE address convergent evidence; latent ",
+    "correlations and HTMT-family statistics address construct separation. ",
+    "These are complementary questions, not interchangeable pass/fail tests."
   )
   invisible(x)
 }

@@ -221,7 +221,7 @@ test_that("invariance output preserves syntax and avoids pass-fail declarations"
     "pass", "fail", "invariant", "verdict"
   ) %in% names(out$fit_evidence)))
 
-  expect_output(print(out), "not universal pass/fail")
+  expect_output(print(out), "not pass/fail")
   expect_output(print(summary(out)), "No single")
 })
 
@@ -656,7 +656,7 @@ test_that("invariance presentation covers available plot and summary branches", 
 
   expect_s3_class(plot(out, type = "fit"), "ggplot")
   expect_s3_class(plot(out, type = "change"), "ggplot")
-  expect_output(print(summary(out)), "Fit and change evidence")
+  expect_output(print(summary(out)), "Fit by level")
 
   if (nrow(out$local_strain)) {
     expect_s3_class(plot(out, type = "local_strain"), "ggplot")
@@ -912,9 +912,9 @@ test_that("invariance print output exposes identification and researcher control
     localize = FALSE
   )
 
-  expect_output(print(out), "Indicator treatment")
-  expect_output(print(out), "not automatic pass/fail")
-  expect_output(print(summary(out)), "Identification/sequence note")
+  expect_output(print(out), "Indicators:")
+  expect_output(print(out), "never frees a parameter")
+  expect_output(print(summary(out)), "Identification and sequence")
 })
 
 # ---- consolidated from test-nomo-invariance-hardening.R ----

@@ -87,11 +87,15 @@ nomo_scores_notes <- function(input, method, diagnostics, unit_weighting,
 
   accurate <- is.finite(diagnostics$correlational_accuracy)
   if (any(accurate & abs(diagnostics$correlational_accuracy) >= 0.05)) {
-    worst <- diagnostics[which.max(abs(diagnostics$correlational_accuracy)), ]
+    size <- abs(diagnostics$correlational_accuracy)
+    worst <- which.max(size)
+    # A discrepancy belongs to a pair of factors and both report it, so the note
+    # names the pair; picking one of two tied values would depend on rounding.
+    pair <- diagnostics$factor[accurate & abs(size - size[[worst]]) < 1e-8]
     notes <- add(notes, "correlational_accuracy", "concern", sprintf(
       paste(
         "Correlations among these scores do not reproduce the correlations",
-        "among the factors: the largest discrepancy is %+.3f, for %s. A",
+        "among the factors: the largest discrepancy is %+.3f, between %s. A",
         "relationship estimated from these scores carries that much bias, and",
         "its direction is a property of the method and the model rather than a",
         "constant that can be corrected for. Where the question can be asked of",
@@ -102,7 +106,7 @@ nomo_scores_notes <- function(input, method, diagnostics, unit_weighting,
         "scores and the outcome Bartlett scores, each from a measurement model",
         "of its own."
       ),
-      worst$correlational_accuracy[[1L]], worst$factor[[1L]]
+      diagnostics$correlational_accuracy[[worst]], paste(pair, collapse = " and ")
     ))
   }
 

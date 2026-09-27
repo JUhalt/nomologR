@@ -54,5 +54,6 @@ test_that("print.nomo_split communicates the design tradeoff", {
 
   expect_true(any(grepl("calibration", txt)))
   expect_true(any(grepl("validation", txt)))
-  expect_true(any(grepl("loss of precision", txt)))
+  # The sentence wraps at the console width, so search the joined text.
+  expect_true(grepl("loss of precision", paste(txt, collapse = " ")))
 })

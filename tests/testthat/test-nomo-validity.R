@@ -88,7 +88,7 @@ test_that("each construct pair is one row, with its correlation and HTMT togethe
   }
 
   printed <- utils::capture.output(print(out))
-  expect_true(any(grepl("of 3 pair(s)", printed, fixed = TRUE)))
+  expect_true(any(grepl("across 3 pair(s)", printed, fixed = TRUE)))
 
   p <- plot(out, type = "discriminant")
   expect_identical(levels(p$data$pair), rev(c("F1 vs F2", "F1 vs F3", "F2 vs F3")))

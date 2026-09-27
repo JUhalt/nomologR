@@ -5,17 +5,25 @@ nomo_hierarchical_structure_label <- function(x) {
 }
 
 
+# Index names as readers know them: "omega hierarchical", "ECV", "PUC".
+nomo_hierarchical_index_label <- function(index) {
+  out <- gsub("_", " ", index)
+  out[index %in% c("ecv", "puc")] <- toupper(index[index %in% c("ecv", "puc")])
+  out
+}
+
+
 #' @export
 print.nomo_hierarchical <- function(x, digits = 3, ...) {
-  cat("<nomo_hierarchical>\n")
-  cat(sprintf(
-    "%s model | general factor: %s | group factors: %s\n",
-    nomo_hierarchical_structure_label(x),
-    x$general,
-    paste(names(x$groups), collapse = ", ")
+  number <- function(v) nomo_present_number(v, digits)
+  nomo_present_header("nomo_hierarchical", "Hierarchical model evaluation")
+  nomo_present_facts(c(
+    sprintf("%s model", nomo_hierarchical_structure_label(x)),
+    sprintf("General factor: %s", x$general),
+    sprintf("Group factors: %s", paste(names(x$groups), collapse = ", "))
   ))
-  cat(sprintf(
-    "Estimand: %s\n\n",
+  nomo_present_facts(sprintf(
+    "Estimand: %s",
     if (identical(x$estimand, "latent_response")) {
       "latent-response composite (ordered indicators)"
     } else {
@@ -23,39 +31,45 @@ print.nomo_hierarchical <- function(x, digits = 3, ...) {
     }
   ))
 
-  idx <- x$indices[, c("index", "estimate")]
-  idx$estimate <- round(idx$estimate, digits)
-  cat("Total score\n")
-  print(idx, n = Inf, width = Inf)
+  idx <- x$indices
+  idx$label <- nomo_hierarchical_index_label(idx$index)
+  nomo_present_section("Total score")
+  nomo_present_table(
+    idx, c("Index" = "label", "Estimate" = "estimate"),
+    formats = list(estimate = number)
+  )
 
-  sub <- x$subscales[, c(
-    "subscale", "n_items", "omega_subscale", "omega_hierarchical_subscale"
-  )]
-  sub$omega_subscale <- round(sub$omega_subscale, digits)
-  sub$omega_hierarchical_subscale <- round(sub$omega_hierarchical_subscale, digits)
-  cat("\nSubscales\n")
-  print(sub, n = Inf, width = Inf)
+  nomo_present_section("Subscales")
+  nomo_present_table(
+    x$subscales,
+    c("Subscale" = "subscale", "Items" = "n_items",
+      "Omega subscale" = "omega_subscale",
+      "Omega hierarchical subscale" = "omega_hierarchical_subscale"),
+    formats = list(omega_subscale = number, omega_hierarchical_subscale = number)
+  )
 
   if (!is.null(x$factors) && nrow(x$factors)) {
-    fac <- x$factors[, c(
-      "factor", "role", "factor_determinacy", "min_competing_r",
-      "construct_replicability"
-    )]
-    for (nm in c("factor_determinacy", "min_competing_r",
-                 "construct_replicability")) {
-      fac[[nm]] <- round(fac[[nm]], digits)
-    }
-    cat("\nFactor scores\n")
-    print(fac, n = Inf, width = Inf)
+    nomo_present_section("Factor scores")
+    nomo_present_table(
+      x$factors,
+      c("Factor" = "factor", "Role" = "role",
+        "Determinacy" = "factor_determinacy", "Min competing r" = "min_competing_r",
+        "Replicability H" = "construct_replicability"),
+      formats = list(factor_determinacy = number, min_competing_r = number,
+                     construct_replicability = number)
+    )
   }
 
   flagged <- x$notes[x$notes$severity %in% c("review", "concern"), , drop = FALSE]
   if (nrow(flagged)) {
-    cat("\nNotes\n")
-    cat(paste0("- [", flagged$severity, "] ", flagged$note), sep = "\n")
+    nomo_present_section("Notes")
+    nomo_present_notes(flagged)
   }
 
-  cat("\nNo index is treated as a pass/fail threshold; see nomo_table(x, \"indices\").\n")
+  cat("\n")
+  nomo_present_text(
+    "No index is treated as a pass/fail threshold; see nomo_table(x, \"indices\")."
+  )
   invisible(x)
 }
 
@@ -77,27 +91,30 @@ summary.nomo_hierarchical <- function(object, ...) {
 
 #' @export
 print.summary_nomo_hierarchical <- function(x, ...) {
-  cat(sprintf(
-    "%s model evaluation (general factor: %s)\n\n",
-    if (identical(x$structure, "higher_order")) "Higher-order" else "Bifactor",
-    x$general
+  nomo_present_header("nomo_hierarchical", "Hierarchical model evaluation",
+                      summary = TRUE)
+  nomo_present_facts(c(
+    sprintf("%s model", nomo_hierarchical_structure_label(x)),
+    sprintf("General factor: %s", x$general)
   ))
-  for (i in seq_len(nrow(x$indices))) {
-    cat(sprintf("- %s = %.3f: %s\n",
-                x$indices$index[[i]], x$indices$estimate[[i]],
-                x$indices$interpretation[[i]]))
-  }
-  cat("\nSubscales\n")
-  for (i in seq_len(nrow(x$subscales))) {
-    s <- x$subscales[i, ]
-    cat(sprintf(
-      "- %s (%d items): omega subscale = %.3f, omega hierarchical subscale = %.3f\n",
-      s$subscale, s$n_items, s$omega_subscale, s$omega_hierarchical_subscale
-    ))
-  }
+
+  nomo_present_section("Total score")
+  nomo_present_bullets(sprintf(
+    "%s = %s: %s", nomo_hierarchical_index_label(x$indices$index),
+    nomo_present_number(x$indices$estimate), x$indices$interpretation
+  ))
+
+  nomo_present_section("Subscales")
+  nomo_present_table(
+    x$subscales,
+    c("Subscale" = "subscale", "Items" = "n_items",
+      "Omega subscale" = "omega_subscale",
+      "Omega hierarchical subscale" = "omega_hierarchical_subscale")
+  )
+
   if (nrow(x$notes)) {
-    cat("\nNotes\n")
-    cat(paste0("- [", x$notes$severity, "] ", x$notes$note), sep = "\n")
+    nomo_present_section("Notes")
+    nomo_present_notes(x$notes)
   }
   invisible(x)
 }

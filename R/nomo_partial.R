@@ -115,12 +115,16 @@ nomo_partial <- function(level, syntax, rationale) {
 
 #' @export
 print.nomo_partial <- function(x, ...) {
-  cat("<nomo_partial>\n")
-  cat(sprintf("%d researcher-specified release(s)\n\n", x$n))
-  print(x$releases, n = Inf, width = Inf)
-  cat(
-    "\nNo release was selected automatically by nomologR.\n",
-    sep = ""
-  )
+  nomo_present_header("nomo_partial", "Partial invariance releases")
+  nomo_present_facts(sprintf("%d researcher-specified release(s)", x$n))
+  rel <- x$releases
+  if (nrow(rel)) {
+    cat("\n")
+    nomo_present_bullets(sprintf(
+      "%s (%s): %s. %s", rel$release_id, rel$level, rel$syntax, rel$rationale
+    ))
+  }
+  cat("\n")
+  nomo_present_text("No release was selected automatically by nomologR.")
   invisible(x)
 }
