@@ -480,6 +480,18 @@ nomo_report_run_table <- function(x, type) {
 }
 
 
+# The nomo_table() type each measurement stage's report section leads with.
+nomo_report_table_defaults <- function() {
+  c(
+    factors = "evidence",
+    efa = "items",
+    cfa = "fit",
+    reliability = "coefficients",
+    validity = "convergent"
+  )
+}
+
+
 nomo_report_component_table <- function(obj,
                                         stage,
                                         type = "primary") {
@@ -496,62 +508,11 @@ nomo_report_component_table <- function(obj,
           decision_log = obj$decision_log,
           nomo_report_empty_table()
         )
-      } else if (identical(stage, "factors")) {
-        s <- summary(obj)
-        switch(
-          type,
-          primary = s$evidence,
-          criteria = s$criterion_status,
-          adequacy = s$adequacy,
-          concordance = s$concordance,
-          decision_log = s$decision_log,
-          nomo_report_empty_table()
-        )
-      } else if (identical(stage, "efa")) {
-        switch(
-          type,
-          primary = obj$item_summary,
-          pattern = nomo_report_matrix_table(obj$pattern_matrix, "item"),
-          factor_correlations = nomo_report_matrix_table(
-            obj$factor_correlations,
-            "factor"
-          ),
-          residuals = obj$residual_pairs,
-          decision_log = obj$decision_log,
-          nomo_report_empty_table()
-        )
-      } else if (identical(stage, "cfa")) {
-        switch(
-          type,
-          primary = obj$fit_evidence,
-          loadings = obj$standardized_loadings,
-          factor_correlations = obj$factor_correlations,
-          heywood = obj$heywood,
-          residuals = obj$residual_pairs,
-          modification_indices = obj$top_modification_indices,
-          decision_log = obj$decision_log,
-          nomo_report_empty_table()
-        )
-      } else if (identical(stage, "reliability")) {
-        s <- summary(obj)
-        switch(
-          type,
-          primary = s$table,
-          alpha_status = s$alpha_status,
-          ci_status = s$ci_status,
-          decision_log = s$decision_log,
-          nomo_report_empty_table()
-        )
-      } else if (identical(stage, "validity")) {
-        s <- summary(obj)
-        switch(
-          type,
-          primary = s$convergent,
-          discriminant = s$discriminant,
-          htmt_status = s$htmt_status,
-          decision_log = s$decision_log,
-          nomo_report_empty_table()
-        )
+      } else if (stage %in% names(nomo_report_table_defaults())) {
+        # The same tables nomo_table() returns; a type the object does not
+        # offer is an error, caught below, and gives an empty table.
+        if (identical(type, "primary")) type <- nomo_report_table_defaults()[[stage]]
+        nomo_table(obj, type)
       } else if (identical(stage, "invariance")) {
         switch(
           type,

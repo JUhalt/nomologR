@@ -8,8 +8,27 @@
 #' `nomologR` object.
 #'
 #' @details
-#' Supported objects and `type` values:
+#' Supported objects and `type` values. The first value listed is the default.
 #'
+#' * `nomo_screen`: `"items"`, `"distribution"`, `"cases"`,
+#'   `"relationships"`, `"effort"`, `"decision_log"`; see [nomo_screen()].
+#' * `nomo_factors`: `"evidence"`, `"criteria"`, `"adequacy"`,
+#'   `"concordance"`, `"decision_log"`; see [nomo_factors()].
+#' * `nomo_efa`: `"items"`, `"pattern"`, `"factor_correlations"`,
+#'   `"residuals"`, `"decision_log"`. The pattern and factor-correlation
+#'   matrices are returned as tables with the item or factor in the first
+#'   column; see [nomo_efa()].
+#' * `nomo_cfa`: `"fit"`, `"loadings"`, `"factor_correlations"`, `"heywood"`,
+#'   `"residuals"`, `"modification_indices"`, `"decision_log"`; see
+#'   [nomo_cfa()].
+#' * `nomo_reliability`: `"coefficients"`, `"alpha_status"`, `"ci_status"`,
+#'   `"decision_log"`; see [nomo_reliability()].
+#' * `nomo_validity`: `"convergent"`, `"discriminant"`, `"htmt_status"`,
+#'   `"decision_log"`. `"discriminant"` has one row per construct pair, with
+#'   the latent correlation and the HTMT-family values together; see
+#'   [nomo_validity()].
+#' * `nomo_scores`: `"scores"`, `"diagnostics"`, `"unit_weighting"`,
+#'   `"notes"`; see [nomo_scores()].
 #' * `nomo_hypotheses`: the machine-readable hypothesis table (no `type`).
 #' * `nomo_network`: `"hypotheses"` (default), `"fit"`, `"measurement"`,
 #'   `"relations"`, `"replication"`, `"decision_log"`.
@@ -154,4 +173,99 @@ nomo_table.nomo_compare <- function(
   if (type == "evidence") return(x$evidence)
 
   x$decision_log
+}
+
+
+# The measurement-stage objects expose the tables their report sections show,
+# so nomo_table() and nomo_report() cannot drift apart (#89). A table an object
+# does not hold comes back as an empty tibble.
+
+#' @export
+nomo_table.nomo_factors <- function(
+    x,
+    type = c("evidence", "criteria", "adequacy", "concordance", "decision_log"),
+    ...) {
+  type <- match.arg(type)
+  s <- summary(x)
+  tibble::as_tibble(switch(
+    type,
+    evidence = s$evidence,
+    criteria = s$criterion_status,
+    adequacy = s$adequacy,
+    concordance = s$concordance,
+    decision_log = s$decision_log
+  ))
+}
+
+
+#' @export
+nomo_table.nomo_efa <- function(
+    x,
+    type = c("items", "pattern", "factor_correlations", "residuals", "decision_log"),
+    ...) {
+  type <- match.arg(type)
+  tibble::as_tibble(switch(
+    type,
+    items = x$item_summary,
+    pattern = nomo_report_matrix_table(x$pattern_matrix, "item"),
+    factor_correlations = nomo_report_matrix_table(x$factor_correlations, "factor"),
+    residuals = x$residual_pairs,
+    decision_log = x$decision_log
+  ))
+}
+
+
+#' @export
+nomo_table.nomo_cfa <- function(
+    x,
+    type = c(
+      "fit", "loadings", "factor_correlations", "heywood", "residuals",
+      "modification_indices", "decision_log"
+    ),
+    ...) {
+  type <- match.arg(type)
+  tibble::as_tibble(switch(
+    type,
+    fit = x$fit_evidence,
+    loadings = x$standardized_loadings,
+    factor_correlations = x$factor_correlations,
+    heywood = x$heywood,
+    residuals = x$residual_pairs,
+    modification_indices = x$top_modification_indices,
+    decision_log = x$decision_log
+  ))
+}
+
+
+#' @export
+nomo_table.nomo_reliability <- function(
+    x,
+    type = c("coefficients", "alpha_status", "ci_status", "decision_log"),
+    ...) {
+  type <- match.arg(type)
+  s <- summary(x)
+  tibble::as_tibble(switch(
+    type,
+    coefficients = s$table,
+    alpha_status = s$alpha_status,
+    ci_status = s$ci_status,
+    decision_log = s$decision_log
+  ))
+}
+
+
+#' @export
+nomo_table.nomo_validity <- function(
+    x,
+    type = c("convergent", "discriminant", "htmt_status", "decision_log"),
+    ...) {
+  type <- match.arg(type)
+  s <- summary(x)
+  tibble::as_tibble(switch(
+    type,
+    convergent = s$convergent,
+    discriminant = s$discriminant,
+    htmt_status = s$htmt_status,
+    decision_log = s$decision_log
+  ))
 }
