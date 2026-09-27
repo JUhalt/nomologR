@@ -18,6 +18,45 @@ test_that("invariance local-strain tables add readable constraint labels", {
 })
 
 
+test_that("every measurement-stage result has nomo_table() (#89)", {
+  skip_on_cran()
+  hs <-"visual =~ x1 + x2 + x3\ntextual =~ x4 + x5 + x6\nspeed =~ x7 + x8 + x9"
+  cfa <- nomo_cfa(hs, data = lavaan::HolzingerSwineford1939)
+  fac <- nomo_factors(nomo_demo_continuous, n_iter = 20, seed = 2026)
+  objects <- list(
+    nomo_factors = fac,
+    nomo_efa = nomo_efa(nomo_demo_continuous, factors = fac),
+    nomo_cfa = cfa,
+    nomo_reliability = nomo_reliability(cfa),
+    nomo_validity = nomo_validity(cfa)
+  )
+
+  for (cls in names(objects)) {
+    x <- objects[[cls]]
+    types <- eval(formals(utils::getS3method("nomo_table", cls))$type)
+    # The default is the first type, and every type is a tibble.
+    expect_identical(nomo_table(x), nomo_table(x, types[[1L]]), label = cls)
+    for (type in types) {
+      expect_s3_class(nomo_table(x, type), "tbl_df")
+    }
+    expect_error(nomo_table(x, "not_a_table"), "should be one of", label = cls)
+  }
+
+  # Tables are the object's own evidence, not copies that could differ.
+  expect_identical(nomo_table(cfa, "loadings"), cfa$standardized_loadings)
+  expect_identical(nomo_table(cfa, "modification_indices"), cfa$top_modification_indices)
+  expect_identical(nomo_table(objects$nomo_efa, "residuals"), objects$nomo_efa$residual_pairs)
+  expect_identical(nomo_table(objects$nomo_validity, "discriminant"),
+                   summary(objects$nomo_validity)$discriminant)
+  expect_identical(nomo_table(fac, "criteria"), summary(fac)$criterion_status)
+
+  pattern <- nomo_table(objects$nomo_efa, "pattern")
+  expect_identical(names(pattern)[[1L]], "item")
+  expect_equal(unname(as.matrix(pattern[, -1L])),
+               unname(unclass(objects$nomo_efa$pattern_matrix)))
+})
+
+
 test_that("empty invariance local-strain tables are returned unchanged", {
   empty <- structure(
     list(local_strain = tibble::tibble(), fits = list()),
