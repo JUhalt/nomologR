@@ -96,73 +96,67 @@ nomo_network_theory_plot_data <- function(x) {
 }
 
 
+# Shared by print() and summary(): the hypothesis evidence, and replication.
+nomo_network_present_evidence <- function(evidence, replication) {
+  show <- evidence
+  show$interval <- nomo_present_ci(show$ci_lower, show$ci_upper)
+  show$concordance_shown <- nomo_network_pretty_status(show$concordance)
+  nomo_present_section("Hypothesis evidence")
+  nomo_present_table(
+    show,
+    c("ID" = "id", "Relation" = "relation", "Estimate" = "estimate",
+      "95% CI" = "interval", "Concordance" = "concordance_shown"),
+    more = "nomo_table(x, \"hypotheses\")"
+  )
+
+  if (nrow(replication)) {
+    rep <- replication
+    rep$status_shown <- nomo_network_pretty_status(rep$replication_status)
+    nomo_present_section("Replication evidence")
+    nomo_present_table(
+      rep,
+      c("ID" = "id", "Relation" = "relation", "Primary" = "primary_estimate",
+        "Validation" = "validation_estimate", "Replication" = "status_shown"),
+      more = "nomo_table(x, \"replication\")"
+    )
+  }
+}
+
+
+# Shared facts: sample, convergence, and the relations added from hypotheses.
+nomo_network_present_facts <- function(x) {
+  nomo_present_facts(c(
+    sprintf("%s sample: N = %d", tools::toTitleCase(x$sample_role), x$data_n),
+    if (!is.na(x$validation_n)) sprintf("Validation sample: N = %d", x$validation_n) else "",
+    paste0("Converged: ", if (isTRUE(x$converged)) "yes" else "NO")
+  ))
+}
+
+
 #' @export
 print.nomo_network <- function(x, ...) {
-  cat("<nomo_network>\n")
-  cat(sprintf(
-    "%s sample: N = %d | Converged: %s\n",
-    tools::toTitleCase(x$sample_role),
-    x$data_n,
-    x$converged
-  ))
-
-  if (!is.na(x$validation_n)) {
-    cat(sprintf("Validation sample: N = %d\n", x$validation_n))
-  }
-
-  added <- sum(x$model_relations$added_from_hypothesis)
-  cat(sprintf(
-    "Theory relations: %d | Added transparently to model: %d\n",
-    x$hypotheses$n,
-    added
+  nomo_present_header("nomo_network", "Nomological network")
+  nomo_network_present_facts(x)
+  nomo_present_facts(c(
+    sprintf("Theory relations: %d", x$hypotheses$n),
+    sprintf("Added to the model from hypotheses: %d",
+            sum(x$model_relations$added_from_hypothesis))
   ))
 
   measurement <- x$measurement_context$summary[1L, , drop = FALSE]
-  cat(sprintf(
-    "Measurement context: %s | %s\n\n",
-    toupper(measurement$attention[[1L]]),
+  flag <- nomo_present_flag(measurement$attention[[1L]])
+  nomo_present_text(
+    "Measurement context", if (nzchar(flag)) paste0(" (", flag, ")") else "", ": ",
     measurement$observation[[1L]]
-  ))
-
-  show <- x$hypothesis_evidence[, c(
-    "id",
-    "relation",
-    "prediction",
-    "theoretical_region",
-    "estimate",
-    "ci_lower",
-    "ci_upper",
-    "concordance",
-    "confirmatory_status"
-  ), drop = FALSE]
-
-  show$concordance <- nomo_network_pretty_status(show$concordance)
-  show$confirmatory_status <- nomo_network_pretty_status(
-    show$confirmatory_status
   )
 
-  print(show, n = Inf, width = Inf)
+  nomo_network_present_evidence(x$hypothesis_evidence, x$replication_evidence)
 
-  if (nrow(x$replication_evidence)) {
-    cat("\nReplication evidence\n")
-    rep_show <- x$replication_evidence[, c(
-      "id",
-      "relation",
-      "primary_estimate",
-      "validation_estimate",
-      "replication_status"
-    ), drop = FALSE]
-    rep_show$replication_status <- nomo_network_pretty_status(
-      rep_show$replication_status
-    )
-    print(rep_show, n = Inf, width = Inf)
-  }
-
-  cat(
-    "\nInterpretation rule: theory concordance, uncertainty, measurement ",
-    "quality, and replication are distinct evidence streams. Statistical ",
-    "significance alone is not a validity verdict.\n",
-    sep = ""
+  cat("\n")
+  nomo_present_text(
+    "Theory concordance, uncertainty, measurement quality, and replication are ",
+    "distinct evidence streams. Statistical significance alone is not a ",
+    "validity verdict."
   )
 
   invisible(x)
@@ -210,56 +204,60 @@ summary.nomo_network <- function(object, ...) {
 
 #' @export
 print.summary_nomo_network <- function(x, ...) {
-  cat("nomologR theory-specified network summary\n")
-  cat(sprintf(
-    "%s N: %d | Converged: %s\n",
-    tools::toTitleCase(x$sample_role),
-    x$data_n,
-    x$converged
-  ))
-  if (!is.na(x$validation_n)) {
-    cat(sprintf("Validation N: %d\n", x$validation_n))
-  }
+  nomo_present_header("nomo_network", "Nomological network", summary = TRUE)
+  nomo_network_present_facts(x)
 
-  cat("\nMeasurement context\n")
-  print(x$measurement_context$summary, n = Inf, width = Inf)
+  nomo_present_section("Measurement context")
+  mc <- x$measurement_context$summary[1L, , drop = FALSE]
+  flag <- nomo_present_flag(mc$attention[[1L]])
+  nomo_present_text(paste(c(
+    paste0("Flag: ", if (nzchar(flag)) flag else "none"),
+    sprintf("Constructs: %s", format(mc$latent_constructs, trim = TRUE)),
+    sprintf("Loading flags: %s", format(mc$loading_review_flags, trim = TRUE)),
+    sprintf("Negative variances: %s", format(mc$negative_variance_flags, trim = TRUE)),
+    sprintf("Global-fit flags: %s", format(mc$global_fit_review_flags, trim = TRUE)),
+    sprintf("Engine warnings: %s", format(mc$engine_warning_count, trim = TRUE))
+  ), collapse = " | "), indent = 2L)
+  nomo_present_text(mc$observation, indent = 2L)
 
-  cat("\nModel fit evidence\n")
-  print(x$fit_evidence, n = Inf, width = Inf)
-
-  cat("\nHypothesis evidence\n")
-  h_show <- x$hypothesis_evidence[, c(
-    "id",
-    "relation",
-    "evidence_scope",
-    "estimate",
-    "ci_lower",
-    "ci_upper",
-    "concordance",
-    "measurement_attention",
-    "confirmatory_status"
-  ), drop = FALSE]
-  h_show$concordance <- nomo_network_pretty_status(h_show$concordance)
-  h_show$confirmatory_status <- nomo_network_pretty_status(
-    h_show$confirmatory_status
-  )
-  print(h_show, n = Inf, width = Inf)
-
-  cat("\nConcordance counts\n")
-  count_show <- x$concordance_counts
-  count_show$concordance <- nomo_network_pretty_status(
-    count_show$concordance
-  )
-  print(count_show, n = Inf, width = Inf)
-
-  if (nrow(x$replication_evidence)) {
-    cat("\nReplication evidence\n")
-    rep_show <- x$replication_evidence
-    rep_show$replication_status <- nomo_network_pretty_status(
-      rep_show$replication_status
+  nomo_present_section("Model fit")
+  fit <- x$fit_evidence[1L, , drop = FALSE]
+  if (nrow(fit) && all(c("chisq", "df") %in% names(fit)) && is.finite(fit$chisq)) {
+    p <- nomo_present_p_clause(fit$pvalue)
+    nomo_present_text(
+      sprintf("chi-square(%s) = %s%s", format(fit$df, trim = TRUE),
+              nomo_present_number(fit$chisq, 2L), if (nzchar(p)) paste0(", ", p) else ""),
+      indent = 2L
     )
-    print(rep_show, n = Inf, width = Inf)
   }
+  indices <- intersect(c("cfi", "tli", "rmsea", "srmr"), names(fit))
+  shown <- indices[vapply(indices, function(nm) is.finite(fit[[nm]]), logical(1))]
+  if (length(shown)) {
+    nomo_present_text(paste(
+      toupper(shown), nomo_present_number(unlist(fit[shown])), collapse = " | "
+    ), indent = 2L)
+  }
+
+  nomo_network_present_evidence(x$hypothesis_evidence, x$replication_evidence)
+
+  nomo_present_section("Predictions and context")
+  context <- x$hypothesis_evidence
+  context$scope_shown <- gsub("_", " ", context$evidence_scope)
+  context$measurement_shown <- nomo_present_flag(context$measurement_attention)
+  context$status_shown <- nomo_network_pretty_status(context$confirmatory_status)
+  nomo_present_table(
+    context,
+    c("ID" = "id", "Prediction" = "prediction", "Region" = "theoretical_region",
+      "Evidence scope" = "scope_shown", "Measurement" = "measurement_shown",
+      "Status" = "status_shown"),
+    more = "nomo_table(x, \"hypotheses\")"
+  )
+
+  counts <- x$concordance_counts
+  nomo_present_section("Concordance")
+  nomo_present_text(paste(
+    nomo_network_pretty_status(counts$concordance), counts$n, collapse = " | "
+  ), indent = 2L)
 
   invisible(x)
 }

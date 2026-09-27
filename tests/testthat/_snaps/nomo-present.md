@@ -565,3 +565,251 @@
         - Each omega describes a unit-weighted observed composite, with observed
           covariances in the denominator.
 
+# comparison, invariance, and network output read as designed (#89)
+
+    Code
+      print(cmp)
+    Output
+      <nomo_compare> Measurement-model comparison
+      Models: 2 | Reference: full | Estimator: ML | Cases: 473 | Origin: a-priori
+      Rationale: Is b5 needed?
+      
+      Compared with `full`
+        - no_b5 (nested, more constrained): chi-square difference = 46.91, df = 1, p
+          < .001; CFI change -0.029, RMSEA change +0.022; AIC change +44.9
+      
+      No model was selected automatically. summary() shows interpretations and
+      measurement evidence.
+
+---
+
+    Code
+      print(summary(cmp))
+    Output
+      <nomo_compare summary> Measurement-model comparison
+      Rationale: Is b5 needed?
+      Origin: a-priori | Reference model: full
+      
+      Model fit
+        Model  Parameters  df  Chi-square    CFI    TLI  RMSEA   SRMR
+        full           21  34       75.83  0.973  0.965  0.051  0.052
+        no_b5          20  35      122.75  0.944  0.928  0.073  0.093
+      
+      Information criteria
+        Model      AIC      BIC  Loadings fixed to zero
+        full   11981.0  12068.4                       0
+        no_b5  12025.9  12109.1                       1
+      
+      Difference tests against the reference model
+        Model  Relation                  Check   Method    Chi-sq diff  df       p
+        no_b5  nested, more constrained  nested  standard        46.91   1  < .001
+      
+      Changes in fit (model minus reference)
+        Model     CFI     TLI   RMSEA    SRMR    AIC    BIC
+        no_b5  -0.029  -0.036  +0.022  +0.042  +44.9  +40.8
+      
+      Interpretation
+        - `no_b5` is nested within `full` and has 1 more degree(s) of freedom
+          (additional constraints). Chi-Squared Difference Test: chi-square
+          difference = 46.91, df = 1, p < .001. A small p-value indicates that the
+          extra constraints are not fully consistent with the data; with large
+          samples, even small misspecifications produce small p-values. Change in
+          fit (`no_b5` minus `full`): CFI -0.029, TLI -0.036, RMSEA +0.022, SRMR
+          +0.042. AIC +44.9 and BIC +40.8 (`no_b5` minus `full`); lower values favor
+          a model for these data, and only differences are interpretable. No model
+          is selected automatically; read this evidence with theory and the recorded
+          rationale.
+      
+      Standardized loadings by model
+        Factor  Item   full  no_b5
+        A       a1    0.771  0.771
+        A       a2    0.744  0.744
+        A       a3    0.669  0.669
+        A       a4    0.738  0.738
+        A       a5    0.598  0.598
+        B       b1    0.794  0.795
+        B       b2    0.695  0.699
+        B       b3    0.757  0.757
+        B       b4    0.628  0.624
+        B       b5    0.337  0.000
+      
+      Measurement evidence by model
+        Construct  Metric   full  no_b5
+        A          omega   0.835  0.835
+        B          omega   0.784  0.622
+        A          alpha   0.827  0.827
+        B          alpha   0.771  0.771
+        A          AVE     0.497  0.497
+        B          AVE     0.434  0.521
+        B vs A     HTMT2   0.533  0.533
+        - Loading(s) fixed to zero for b5 keep those item(s) in this composite; the
+          coefficient does not describe a shortened scale.
+      
+      No model was selected automatically. Difference tests, changes in fit,
+      information criteria, and measurement evidence answer different questions;
+      read them together with theory and the recorded rationale.
+
+---
+
+    Code
+      print(inv)
+    Output
+      <nomo_invariance> Measurement invariance
+      Grouping variable: group (2 groups: online, paper) | Indicators: continuous
+      Requested: configural -> metric -> scalar
+      Completed: configural -> metric -> scalar
+      
+        Level         CFI  RMSEA   SRMR  CFI change  RMSEA change   LRT p
+        configural  1.000  0.000  0.002           -             -       -
+        metric      1.000  0.000  0.028      +0.000        +0.000    .146
+        scalar      0.954  0.121  0.065      -0.046        +0.121  < .001
+      Localized equality-constraint diagnostics retained: 12
+      
+      Fit changes and score diagnostics are evidence. They are not pass/fail rules,
+      and nomologR never frees a parameter because of them.
+
+---
+
+    Code
+      print(summary(inv))
+    Output
+      <nomo_invariance summary> Measurement invariance
+      Indicators: continuous | Groups: online, paper
+      Levels completed: configural -> metric -> scalar
+      
+      Identification and sequence
+        Continuous indicators use the conventional configural, metric, scalar, and
+        strict sequence.
+      
+      Fit by level
+        Level       Constraints           Chi-square  df       p    CFI  RMSEA   SRMR
+        configural  none                        0.33   4    .988  1.000  0.000  0.002
+        metric      loadings                    5.71   7    .575  1.000  0.000  0.028
+        scalar      loadings, intercepts       68.93  10  < .001  0.954  0.121  0.065
+      
+      Changes from the preceding level
+        Level   CFI change  RMSEA change  SRMR change  LRT chi-square  df       p
+        metric      +0.000        +0.000       +0.026            5.38   3    .146
+        scalar      -0.046        +0.121       +0.037           63.23   3  < .001
+      
+      Largest equality-constraint score diagnostics (diagnostic only)
+        Level   Constraint                                 Score  df       p
+        metric  Loading: Agency -> ag3 (online vs. paper)   4.92   1    .027
+        metric  Loading: Agency -> ag2 (online vs. paper)   1.03   1    .310
+        metric  Loading: Agency -> ag4 (online vs. paper)   0.69   1    .406
+        metric  Loading: Agency -> ag1 (online vs. paper)   0.03   1    .869
+        scalar  Intercept: ag3 (online vs. paper)          61.12   1  < .001
+        scalar  Intercept: ag1 (online vs. paper)          11.32   1  < .001
+        scalar  Intercept: ag4 (online vs. paper)           5.56   1    .018
+        scalar  Intercept: ag2 (online vs. paper)           0.98   1    .323
+        scalar  Loading: Agency -> ag2 (online vs. paper)   0.55   1    .460
+        scalar  Loading: Agency -> ag1 (online vs. paper)   0.32   1    .574
+      
+      No single delta-CFI, delta-RMSEA, delta-SRMR, chi-square difference, or score
+      diagnostic is treated as a universal invariance rule.
+
+---
+
+    Code
+      print(nomo_partial(level = "scalar", syntax = "ag3 ~ 1", rationale = "Anticipated mode difference."))
+    Output
+      <nomo_partial> Partial invariance releases
+      1 researcher-specified release(s)
+      
+        - P1 (scalar): ag3 ~ 1. Anticipated mode difference.
+      
+      No release was selected automatically by nomologR.
+
+---
+
+    Code
+      print(h)
+    Output
+      <nomo_hypotheses> Theory-specified relations
+      3 theory-specified relation(s)
+      
+      Every relation is on the standardized scale.
+        ID  Relation                       Prediction  Region         Origin
+        H1  Agency -> Persistence          positive    [0.2, +Inf)    a priori
+        H2  Agency <-> SocialDesirability  negligible  [-0.15, 0.15]  a priori
+        H3  Agency -> Performance          positive    (0, +Inf)      a priori
+
+---
+
+    Code
+      print(summary(h))
+    Output
+      <nomo_hypotheses summary> Theory-specified relations
+      Relations: 3 | A priori: 3 | Post hoc: 0
+      Quantitatively confirmable with the supplied specification: 3/3
+      
+      Every relation is on the standardized scale.
+        ID  Relation                       Prediction  Region         Origin
+        H1  Agency -> Persistence          positive    [0.2, +Inf)    a priori
+        H2  Agency <-> SocialDesirability  negligible  [-0.15, 0.15]  a priori
+        H3  Agency -> Performance          positive    (0, +Inf)      a priori
+
+---
+
+    Code
+      print(net)
+    Output
+      <nomo_network> Nomological network
+      Primary sample: N = 800 | Converged: yes
+      Theory relations: 3 | Added to the model from hypotheses: 2
+      Measurement context: no configured measurement-context review signal was
+      triggered
+      
+      Hypothesis evidence
+        ID  Relation                       Estimate  95% CI           Concordance
+        H1  Agency -> Persistence             0.458  [0.389, 0.526]   Concordant
+        H2  Agency <-> SocialDesirability     0.008  [-0.079, 0.095]  Concordant
+        H3  Agency -> Performance             0.389  [0.325, 0.454]   Concordant
+      
+      Theory concordance, uncertainty, measurement quality, and replication are
+      distinct evidence streams. Statistical significance alone is not a validity
+      verdict.
+
+---
+
+    Code
+      print(summary(net))
+    Output
+      <nomo_network summary> Nomological network
+      Primary sample: N = 800 | Converged: yes
+      
+      Measurement context
+        Flag: none | Constructs: 3 | Loading flags: 0 | Negative variances: 0 |
+        Global-fit flags: 0 | Engine warnings: 0
+        no configured measurement-context review signal was triggered
+      
+      Model fit
+        chi-square(51) = 61.62, p = .147
+        CFI 0.997 | TLI 0.996 | RMSEA 0.016 | SRMR 0.020
+      
+      Hypothesis evidence
+        ID  Relation                       Estimate  95% CI           Concordance
+        H1  Agency -> Persistence             0.458  [0.389, 0.526]   Concordant
+        H2  Agency <-> SocialDesirability     0.008  [-0.079, 0.095]  Concordant
+        H3  Agency -> Performance             0.389  [0.325, 0.454]   Concordant
+      
+      Predictions and context
+        ID  Prediction  Region         Evidence scope              Status
+        H1  positive    [0.2, +Inf)    latent structural           A priori
+        H2  negligible  [-0.15, 0.15]  latent association          A priori
+        H3  positive    (0, +Inf)      latent to observed outcome  A priori
+      
+      Concordance
+        Concordant 3
+
+---
+
+    Code
+      print(nomo_split(nomo_demo_network, validation_prop = 0.4, seed = 2026))
+    Output
+      <nomo_split> Calibration and validation split
+      Rows: 800 total | 480 calibration | 320 validation
+      Validation proportion: 0.400 requested | 0.400 realized | Seed: 2026
+      Use splitting only when the gain in independence justifies the loss of
+      precision.
+

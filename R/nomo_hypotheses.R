@@ -407,22 +407,39 @@ nomo_hypotheses <- function(...) {
 }
 
 
+# The hypothesis table as print() and summary() show it. When every relation is
+# on one scale, the scale is stated once rather than repeated in each row.
+nomo_hypotheses_present_table <- function(hypotheses) {
+  show <- hypotheses
+  show$origin_shown <- gsub("_", " ", show$origin)
+  scales <- unique(show$scale)
+  if (length(scales) == 1L) {
+    nomo_present_text(sprintf("Every relation is on the %s scale.", scales))
+  }
+  nomo_present_table(
+    show,
+    nomo_present_drop_constant(
+      c("ID" = "id", "Relation" = "relation", "Prediction" = "prediction",
+        "Region" = "region", "Scale" = "scale", "Origin" = "origin_shown"),
+      "Scale", show$scale
+    ),
+    more = "nomo_table(x)"
+  )
+}
+
+
 #' @export
 print.nomo_hypotheses <- function(x, ...) {
-  cat("<nomo_hypotheses>\n")
-  cat(sprintf("%d theory-specified relation(s)\n\n", x$n))
-
-  show <- x$hypotheses[, c(
-    "id", "relation", "prediction", "region", "scale", "origin"
-  ), drop = FALSE]
-
-  print(show, n = Inf, width = Inf)
+  nomo_present_header("nomo_hypotheses", "Theory-specified relations")
+  nomo_present_facts(sprintf("%d theory-specified relation(s)", x$n))
+  cat("\n")
+  nomo_hypotheses_present_table(x$hypotheses)
 
   if (any(!x$hypotheses$confirmable)) {
-    cat(
-      "\nNote: at least one negligible prediction has no quantitative SESOI ",
-      "region and cannot be confirmed merely because p > .05.\n",
-      sep = ""
+    cat("\n")
+    nomo_present_text(
+      "Note: at least one negligible prediction has no quantitative SESOI ",
+      "region and cannot be confirmed merely because p > .05."
     )
   }
 
@@ -446,14 +463,17 @@ summary.nomo_hypotheses <- function(object, ...) {
 
 #' @export
 print.summary_nomo_hypotheses <- function(x, ...) {
-  cat("nomologR theory specification\n")
-  cat(sprintf("Relations: %d\n", x$n))
-  cat(sprintf("A priori: %d | Post hoc: %d\n", x$a_priori, x$post_hoc))
-  cat(sprintf(
-    "Quantitatively confirmable with the supplied specification: %d/%d\n\n",
-    x$quantitatively_confirmable,
-    x$n
+  nomo_present_header("nomo_hypotheses", "Theory-specified relations", summary = TRUE)
+  nomo_present_facts(c(
+    sprintf("Relations: %d", x$n),
+    sprintf("A priori: %d", x$a_priori),
+    sprintf("Post hoc: %d", x$post_hoc)
   ))
-  print(x$hypotheses, n = Inf, width = Inf)
+  nomo_present_facts(sprintf(
+    "Quantitatively confirmable with the supplied specification: %d/%d",
+    x$quantitatively_confirmable, x$n
+  ))
+  cat("\n")
+  nomo_hypotheses_present_table(x$hypotheses)
   invisible(x)
 }

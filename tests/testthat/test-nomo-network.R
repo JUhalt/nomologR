@@ -842,7 +842,7 @@ test_that("network presentation covers concordance and missing-replication branc
     "No validation sample"
   )
 
-  expect_output(print(summary(out)), "Model fit evidence")
+  expect_output(print(summary(out)), "Model fit")
 })
 
 # ---- consolidated from test-nomo-network-c.R ----
@@ -1700,7 +1700,7 @@ test_that("closeout B: network presentation covers zero-span theory regions and 
   expect_gt(nrow(s$replication_counts), 0L)
 
   txt <- paste(capture.output(print(s)), collapse = "\n")
-  expect_match(txt, "Validation N: 100", fixed = TRUE)
+  expect_match(txt, "Validation sample: N = 100", fixed = TRUE)
   expect_match(txt, "Replication evidence", fixed = TRUE)
 
   expect_s3_class(plot(net, type = "replication"), "ggplot")

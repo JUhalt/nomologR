@@ -161,19 +161,20 @@ nomo_split <- function(data,
 
 #' @export
 print.nomo_split <- function(x, ...) {
-  cat("<nomo_split>\n")
-  cat(sprintf(
-    "Rows: %d total | %d calibration | %d validation\n",
-    x$n_total, x$n_calibration, x$n_validation
+  nomo_present_header("nomo_split", "Calibration and validation split")
+  nomo_present_facts(c(
+    sprintf("Rows: %d total", x$n_total),
+    sprintf("%d calibration", x$n_calibration),
+    sprintf("%d validation", x$n_validation)
   ))
-  cat(sprintf(
-    "Validation proportion: %.3f requested | %.3f realized | Seed: %d\n",
-    x$validation_prop_requested,
-    x$validation_prop_realized,
-    x$seed
+  nomo_present_facts(c(
+    sprintf("Validation proportion: %s requested",
+            nomo_present_number(x$validation_prop_requested)),
+    sprintf("%s realized", nomo_present_number(x$validation_prop_realized)),
+    sprintf("Seed: %d", x$seed)
   ))
-  cat(
-    "Use splitting only when the gain in independence justifies the loss of precision.\n"
+  nomo_present_text(
+    "Use splitting only when the gain in independence justifies the loss of precision."
   )
   invisible(x)
 }

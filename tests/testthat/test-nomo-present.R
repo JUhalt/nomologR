@@ -147,6 +147,57 @@ test_that("hierarchical output reads as designed (#89)", {
 })
 
 
+test_that("comparison, invariance, and network output read as designed (#89)", {
+  skip_on_cran()
+  cont <- nomo_demo_continuous
+  full <- nomo_cfa("A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4 + b5", data = cont)
+  no_b5 <- nomo_cfa("A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4 + 0*b5", data = cont)
+  cmp <- nomo_compare(full = full, no_b5 = no_b5, rationale = "Is b5 needed?")
+  expect_snapshot(print(cmp))
+  expect_snapshot(print(summary(cmp)))
+
+  inv <- nomo_invariance("Agency =~ ag1 + ag2 + ag3 + ag4", data = nomo_demo_network,
+                         group = "group", levels = c("configural", "metric", "scalar"))
+  expect_snapshot(print(inv))
+  expect_snapshot(print(summary(inv)))
+  expect_snapshot(print(nomo_partial(level = "scalar", syntax = "ag3 ~ 1",
+                                     rationale = "Anticipated mode difference.")))
+
+  h <- nomo_hypotheses(
+    "Agency -> Persistence" = positive(min = .20),
+    "Agency <-> SocialDesirability" = negligible(within = c(-.15, .15)),
+    "Agency -> Performance" = positive()
+  )
+  expect_snapshot(print(h))
+  expect_snapshot(print(summary(h)))
+  scales <- list(Agency = paste0("ag", 1:4), Persistence = paste0("pe", 1:4),
+                 SocialDesirability = paste0("sd", 1:3))
+  net <- nomo_network(nomo_model(scales), data = nomo_demo_network, hypotheses = h)
+  expect_snapshot(print(net))
+  expect_snapshot(print(summary(net)))
+  expect_snapshot(print(nomo_split(nomo_demo_network, validation_prop = 0.4, seed = 2026)))
+})
+
+
+test_that("invariance lists the levels to review with what went wrong (#89)", {
+  fit <- tibble::tibble(
+    level = c("configural", "metric", "scalar"),
+    status = c("estimated", "estimated", "failed"),
+    converged = c(TRUE, FALSE, FALSE),
+    warnings = c("", "a lavaan warning", ""),
+    error = c("", "", "model could not be identified")
+  )
+  txt <- utils::capture.output(nomologR:::nomo_invariance_present_problems(fit))
+  expect_true(any(grepl("metric: estimated; did not converge; warnings: a lavaan warning",
+                        txt, fixed = TRUE)))
+  expect_true(any(grepl("scalar: failed; did not converge; model could not be identified",
+                        txt, fixed = TRUE)))
+  fit_ok <- fit[1L, , drop = FALSE]
+  expect_identical(utils::capture.output(nomologR:::nomo_invariance_present_problems(fit_ok)),
+                   character())
+})
+
+
 test_that("a flag without a log row of its own still gives a reason (#89)", {
   s <- summary(nomo_screen(data.frame(a = c(1, 2, 3, 4, 5, 6), b = c(2, 1, 4, 3, 6, 5),
                                       c = c(1, 3, 2, 5, 4, 6))))

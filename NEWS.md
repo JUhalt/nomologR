@@ -1,5 +1,10 @@
 # nomologR (development version)
 
+- The redesigned console output extends to comparisons, invariance, partial releases, hypotheses, networks, splits, and the notes of `nomo_apa_table()` (#89).
+  - Wide tables are split: model fit apart from information criteria, difference tests apart from changes in fit, and fit by level apart from changes between levels.
+  - Levels that failed or raised warnings are listed with what went wrong.
+  - Measurement evidence in a comparison reads one column per model.
+  - A hypothesis table states once that every relation is on the standardized scale, rather than repeating it in each row.
 - The redesigned console output extends to reliability, validity, scores, missing-data sensitivity, and hierarchical models (#89). Tables replace wrapped tibbles. Severity-tagged notes print as `review:` and `concern:` bullets. Index names read as written in the literature ("omega hierarchical", "ECV"). A column that holds one value throughout, such as a block column that always says "overall", is left out.
 - The redesigned console output extends to the item audit, factor retention, and EFA (#89): `print()` and `summary()` for `nomo_screen()`, `nomo_factors()`, and `nomo_efa()`. The screen summary lists each flagged item with the decision log's own explanation rather than internal metric names. The factor-retention summary prints the reason a criterion was not run, and the Bartlett result, in full rather than cut off in a table cell. The EFA summary no longer hides the item flags behind "2 more variables".
 - Plot titles, subtitles, and captions are wrapped to fit the plot (#89). ggplot2 does not wrap them, and ten plots had text long enough to run off the edge at 7 × 5 inches: four CFA plots, three EFA plots, two network plots, and the hierarchical variance plot. The CFA fit plot now draws CFI and TLI, which sit near 1, and RMSEA and SRMR, which sit near 0, in separate panels with their own scales, and a legend with one entry is no longer drawn.
