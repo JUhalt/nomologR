@@ -21,8 +21,27 @@ the underlying object: full engine results remain stored in the original
 \code{nomologR} object.
 }
 \details{
-Supported objects and \code{type} values:
+Supported objects and \code{type} values. The first value listed is the default.
 \itemize{
+\item \code{nomo_screen}: \code{"items"}, \code{"distribution"}, \code{"cases"},
+\code{"relationships"}, \code{"effort"}, \code{"decision_log"}; see \code{\link[=nomo_screen]{nomo_screen()}}.
+\item \code{nomo_factors}: \code{"evidence"}, \code{"criteria"}, \code{"adequacy"},
+\code{"concordance"}, \code{"decision_log"}; see \code{\link[=nomo_factors]{nomo_factors()}}.
+\item \code{nomo_efa}: \code{"items"}, \code{"pattern"}, \code{"factor_correlations"},
+\code{"residuals"}, \code{"decision_log"}. The pattern and factor-correlation
+matrices are returned as tables with the item or factor in the first
+column; see \code{\link[=nomo_efa]{nomo_efa()}}.
+\item \code{nomo_cfa}: \code{"fit"}, \code{"loadings"}, \code{"factor_correlations"}, \code{"heywood"},
+\code{"residuals"}, \code{"modification_indices"}, \code{"decision_log"}; see
+\code{\link[=nomo_cfa]{nomo_cfa()}}.
+\item \code{nomo_reliability}: \code{"coefficients"}, \code{"alpha_status"}, \code{"ci_status"},
+\code{"decision_log"}; see \code{\link[=nomo_reliability]{nomo_reliability()}}.
+\item \code{nomo_validity}: \code{"convergent"}, \code{"discriminant"}, \code{"htmt_status"},
+\code{"decision_log"}. \code{"discriminant"} has one row per construct pair, with
+the latent correlation and the HTMT-family values together; see
+\code{\link[=nomo_validity]{nomo_validity()}}.
+\item \code{nomo_scores}: \code{"scores"}, \code{"diagnostics"}, \code{"unit_weighting"},
+\code{"notes"}; see \code{\link[=nomo_scores]{nomo_scores()}}.
 \item \code{nomo_hypotheses}: the machine-readable hypothesis table (no \code{type}).
 \item \code{nomo_network}: \code{"hypotheses"} (default), \code{"fit"}, \code{"measurement"},
 \code{"relations"}, \code{"replication"}, \code{"decision_log"}.
