@@ -240,6 +240,10 @@ test_that("WLSMV comparisons use lavaan's categorical difference test without in
   expect_false(cmp$ic_available)
   expect_true(is.na(cmp$delta_aic))
   expect_match(cmp$ic_note, "not defined")
+  # The print reports the difference test and leaves out the undefined AIC.
+  txt <- paste(capture.output(print(out)), collapse = " ")
+  expect_match(txt, "chi-square difference", fixed = TRUE)
+  expect_false(grepl("AIC change", txt, fixed = TRUE))
 })
 
 

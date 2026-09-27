@@ -87,6 +87,24 @@ test_that("tables align, drop empty columns, and name what does not fit", {
 })
 
 
+test_that("notes carry their flag, and a column with one value is left out", {
+  notes <- nomologR:::nomo_present_notes
+  expect_identical(capture.output(notes(NULL)), character())
+  expect_identical(capture.output(notes(data.frame(severity = character(), note = character()))),
+                   character())
+  expect_identical(
+    capture.output(notes(data.frame(severity = c("info", "review"),
+                                    note = c("A note.", "Look again.")))),
+    c("  - A note.", "  - review: Look again.")
+  )
+
+  drop <- nomologR:::nomo_present_drop_constant
+  columns <- c(Construct = "construct", Block = "block")
+  expect_identical(drop(columns, "Block", c("overall", "overall")), c(Construct = "construct"))
+  expect_identical(drop(columns, "Block", c("overall", "group")), columns)
+})
+
+
 test_that("the CFA print and summary read as designed (#89)", {
   cfa <- nomo_cfa(
     nomo_model(list(A = paste0("a", 1:5), B = paste0("b", 1:5))),
