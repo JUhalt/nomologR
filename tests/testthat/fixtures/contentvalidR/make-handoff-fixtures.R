@@ -4,17 +4,27 @@
 #
 #   git -C <contentvalidR-repo> worktree add <dir-060> v0.6.0
 #   git -C <contentvalidR-repo> worktree add <dir-070> v0.7.0
+#   git -C <contentvalidR-repo> worktree add <dir-080> v0.8.0
+#   git -C <contentvalidR-repo> worktree add <dir-090> v0.9.0
 #   Rscript make-handoff-fixtures.R <dir-060> <out-dir>
 #   Rscript make-handoff-fixtures.R <dir-070> <out-dir>
+#   Rscript make-handoff-fixtures.R <dir-080> <out-dir>
+#   Rscript make-handoff-fixtures.R <dir-090> <out-dir>
 #
 # Each run loads one contentvalidR source tree with pkgload and writes that
 # version's fixtures as handoff-<fit>-v<version>.rds. Separate processes
 # matter: two versions of a package cannot be loaded into one R session.
 #
 # Every input is written out in this file, so the fixtures do not depend on
-# either tag's example data. That is what makes the 0.6.0 and 0.7.0 fixtures
-# comparable: the same input, run through two producers. It also lets the
-# script run from nomologR's repository, which has none of contentvalidR's data.
+# any tag's example data. That is what makes the fixtures from different
+# versions comparable: the same input, run through each producer. It also lets
+# the script run from nomologR's repository, which has none of contentvalidR's
+# data.
+#
+# Fit 4, the nine-expert panel, was added for 0.8.0. It is the one input whose
+# decisions differ between producers: 0.8.0 applies Lynn's (1986) 7 of 9 where
+# 0.7.0 and earlier compared the I-CVI with a rounded .78, which 7/9 = .778
+# misses.
 #
 # The fixtures are genuine producer output, never edited afterwards. One
 # consequence: provenance$created records the day they were generated, so a
@@ -119,9 +129,25 @@ delphi <- content_handoff(
 )
 
 # ---------------------------------------------------------------------------
+# 4. A nine-expert relevance panel, one item per count of experts rating it
+#    relevant (3 or 4 on the 1-4 scale): N9 nine, N8 eight, N7 seven, N6 six.
+#    N7 is the item whose decision depends on the producer version.
+# ---------------------------------------------------------------------------
+nine <- cbind(
+  N9 = c(4, 4, 4, 4, 3, 4, 4, 4, 4),
+  N8 = c(4, 4, 3, 4, 4, 3, 4, 2, 4),
+  N7 = c(4, 3, 4, 2, 4, 3, 4, 4, 1),
+  N6 = c(3, 4, 2, 4, 1, 3, 4, 2, 3)
+)
+expert_nine <- content_handoff(
+  expert_validity(nine, mode = "relevance", lo = 1, hi = 4, agreement = "none")
+)
+
+# ---------------------------------------------------------------------------
 fixtures <- list(`walkthrough-sort` = walkthrough,
                  `expert-krippendorff` = expert,
-                 delphi = delphi)
+                 delphi = delphi,
+                 `expert-nine` = expert_nine)
 for (fit in names(fixtures)) {
   path <- file.path(out, sprintf("handoff-%s-v%s.rds", fit, version))
   saveRDS(fixtures[[fit]], path)
