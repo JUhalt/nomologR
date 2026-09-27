@@ -157,6 +157,10 @@ emit_plot <- function(obj, type = NULL) {
   ans <- nomologR:::nomo_report_safe_plot(obj, type)
   if (isTRUE(ans$ok)) {
     print(ans$plot)
+    # knitr writes the image without a trailing blank line, so a heading
+    # emitted next would be read as part of the image's paragraph and appear
+    # as literal "## ..." text (#89).
+    cat("\n\n")
   } else {
     emit_note(paste("Plot unavailable:", ans$message))
   }

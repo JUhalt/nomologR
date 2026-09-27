@@ -1,5 +1,6 @@
 # nomologR (development version)
 
+- `nomo_report()` headings are rendered for every scale of a multi-scale run (#89). A heading that followed a plot, which is every scale after the first in the item audit and factor retention, plus "Careless responding", was run into the plot's paragraph. It appeared as literal `## Scale: ...` text in HTML and Word, and the table of contents filed every scale's tables under the first. The report tests had rendered only single-scale runs or had turned plots off; a two-scale report with plots is now tested in both formats.
 - The reproducible-report article's overwrite example shows the refusal message with its temporary directory as `<report_dir>`. It had printed the full temporary path of the computer that built the article, including a user name, and the path changed on every build. The message still comes from `nomo_report()`, and the example still shows that an existing report is refused unless `overwrite = TRUE` is given.
 
 # nomologR 0.3.0
