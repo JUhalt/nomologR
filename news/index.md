@@ -2,6 +2,14 @@
 
 ## nomologR (development version)
 
+- Plot titles, subtitles, and captions are wrapped to fit the plot
+  ([\#89](https://github.com/JUhalt/nomologR/issues/89)). ggplot2 does
+  not wrap them, and ten plots had text long enough to run off the edge
+  at 7 × 5 inches: four CFA plots, three EFA plots, two network plots,
+  and the hierarchical variance plot. The CFA fit plot now draws CFI and
+  TLI, which sit near 1, and RMSEA and SRMR, which sit near 0, in
+  separate panels with their own scales, and a legend with one entry is
+  no longer drawn.
 - Console output begins a redesign for readability
   ([\#89](https://github.com/JUhalt/nomologR/issues/89)), starting with
   [`nomo_cfa()`](https://juhalt.github.io/nomologR/reference/nomo_cfa.md)’s
