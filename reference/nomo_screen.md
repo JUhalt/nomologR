@@ -212,36 +212,28 @@ out$decision_log
 # Simulated scale-development data with known teaching features
 scr <- nomo_screen(nomo_demo_continuous)
 summary(scr)
-#> <summary_nomo_screen>
-#> Cases: 500 | Items: 10 | No review flag: 9 | Review: 1 | Concern: 0
-#> Missingness flags: 2 | Constant: 0 | All missing: 0 | Relationship eligible: 10
+#> <nomo_screen summary> Item and data audit
+#> Cases: 500 | Items: 10 | Flags: 1 review, 0 concern
+#> Items with missing responses: 2 | Constant: 0 | All missing: 0
+#> Relationship eligible: 10
 #> 
-#> Integrated item review:
-#> # A tibble: 10 × 7
-#>    item  item_type          attention pct_missing mode_prop
-#>    <chr> <chr>              <ord>           <dbl>     <dbl>
-#>  1 a1    numeric_continuous none            0        0.01  
-#>  2 a2    numeric_continuous none            0.03     0.0124
-#>  3 a3    numeric_continuous none            0        0.01  
-#>  4 a4    numeric_continuous none            0        0.012 
-#>  5 a5    numeric_continuous none            0        0.016 
-#>  6 b1    numeric_continuous none            0        0.016 
-#>  7 b2    numeric_continuous none            0        0.014 
-#>  8 b3    numeric_continuous none            0.024    0.0102
-#>  9 b4    numeric_continuous none            0        0.012 
-#> 10 b5    numeric_continuous review          0        0.014 
-#>    corrected_item_rest_r review_metrics       
-#>                    <dbl> <chr>                
-#>  1                 0.559 ""                   
-#>  2                 0.580 ""                   
-#>  3                 0.511 ""                   
-#>  4                 0.549 ""                   
-#>  5                 0.588 ""                   
-#>  6                 0.602 ""                   
-#>  7                 0.513 ""                   
-#>  8                 0.571 ""                   
-#>  9                 0.481 ""                   
-#> 10                 0.279 "corrected_item_rest"
+#> Item review
+#>   Item  Type        Missing  Top share  Item-rest r  Flag
+#>   a1    continuous     0.0%       1.0%        0.559
+#>   a2    continuous     3.0%       1.2%        0.580
+#>   a3    continuous     0.0%       1.0%        0.511
+#>   a4    continuous     0.0%       1.2%        0.549
+#>   a5    continuous     0.0%       1.6%        0.588
+#>   b1    continuous     0.0%       1.6%        0.602
+#>   b2    continuous     0.0%       1.4%        0.513
+#>   b3    continuous     2.4%       1.0%        0.571
+#>   b4    continuous     0.0%       1.2%        0.481
+#>   b5    continuous     0.0%       1.4%        0.279  review
+#>   Top share is the proportion of responses in the most common category.
 #> 
-#> `attention` is a review aid, not an automatic retention/deletion decision.
+#> Flagged items
+#>   - b5 (review): `b5` has a corrected item-rest correlation of r = 0.28 (n =
+#>     473), below the teaching reference.
+#> 
+#> Flags are review aids, not decisions to keep or delete an item.
 ```

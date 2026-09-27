@@ -260,23 +260,27 @@ the full population models.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">scr</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_screen.html">nomo_screen</a></span><span class="op">(</span><span class="va">nomo_demo_continuous</span><span class="op">)</span></span>
 <span><span class="va">scr</span></span>
-<span><span class="co">#&gt; &lt;nomo_screen&gt;</span></span>
+<span><span class="co">#&gt; &lt;nomo_screen&gt; Item and data audit</span></span>
 <span><span class="co">#&gt; Cases: 500 | Candidate items: 10</span></span>
 <span><span class="co">#&gt; Items with missing responses: 2 | Constant: 0 | All missing: 0</span></span>
 <span><span class="co">#&gt; Relationship diagnostics: 10 eligible items | 10 item-rest estimates</span></span>
 <span><span class="co">#&gt; Response concentration flags: 0 | Near-zero variance: 0</span></span>
-<span><span class="co">#&gt; Decision log: 3 info | 1 review | 0 concern</span></span>
+<span><span class="co">#&gt; Decision log: 3 info, 1 review, 0 concern</span></span>
 <span><span class="co">#&gt; No rows or items were removed or modified.</span></span></code></pre></div>
 <p>Factor-retention evidence triangulates several criteria rather than
 trusting a single rule:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fac</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_factors.html">nomo_factors</a></span><span class="op">(</span><span class="va">nomo_demo_continuous</span>, seed <span class="op">=</span> <span class="fl">2026</span><span class="op">)</span></span>
 <span><span class="va">fac</span></span>
-<span><span class="co">#&gt; &lt;nomo_factors&gt;</span></span>
+<span><span class="co">#&gt; &lt;nomo_factors&gt; Factor-retention evidence</span></span>
 <span><span class="co">#&gt; Cases: 500 | Items: 10 | Correlation: pearson</span></span>
 <span><span class="co">#&gt; Criterion set: core | Available methods: 3 | Families: 2 | Skipped: 1</span></span>
 <span><span class="co">#&gt; Parallel analysis (percentile): 2 | MAP TR2/TR4: 2/2 | KMO: 0.874</span></span>
-<span><span class="co">#&gt; All 2 available criterion families (3 methods) point to 2 factors. Related methods within a family are grouped before concordance is summarized; this is strong converging evidence for investigating that solution, not proof of dimensionality. 1 requested method was not evaluated; see criterion status for the documented reason.</span></span></code></pre></div>
+<span><span class="co">#&gt; All 2 available criterion families (3 methods) point to 2 factors. Related</span></span>
+<span><span class="co">#&gt; methods within a family are grouped before concordance is summarized; this is</span></span>
+<span><span class="co">#&gt; strong converging evidence for investigating that solution, not proof of</span></span>
+<span><span class="co">#&gt; dimensionality. 1 requested method was not evaluated; see criterion status for</span></span>
+<span><span class="co">#&gt; the documented reason.</span></span></code></pre></div>
 <p>The population model for these data has two factors, and the
 retention evidence points to investigating two. Notice the wording: the
 evidence supports <em>investigating</em> a two-factor solution; it does

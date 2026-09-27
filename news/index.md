@@ -2,6 +2,20 @@
 
 ## nomologR (development version)
 
+- The redesigned console output extends to the item audit, factor
+  retention, and EFA
+  ([\#89](https://github.com/JUhalt/nomologR/issues/89)):
+  [`print()`](https://rdrr.io/r/base/print.html) and
+  [`summary()`](https://rdrr.io/r/base/summary.html) for
+  [`nomo_screen()`](https://juhalt.github.io/nomologR/reference/nomo_screen.md),
+  [`nomo_factors()`](https://juhalt.github.io/nomologR/reference/nomo_factors.md),
+  and
+  [`nomo_efa()`](https://juhalt.github.io/nomologR/reference/nomo_efa.md).
+  The screen summary lists each flagged item with the decision log’s own
+  explanation rather than internal metric names. The factor-retention
+  summary prints the reason a criterion was not run, and the Bartlett
+  result, in full rather than cut off in a table cell. The EFA summary
+  no longer hides the item flags behind “2 more variables”.
 - Plot titles, subtitles, and captions are wrapped to fit the plot
   ([\#89](https://github.com/JUhalt/nomologR/issues/89)). ggplot2 does
   not wrap them, and ten plots had text long enough to run off the edge

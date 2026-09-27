@@ -212,62 +212,55 @@ Kaiser, H. F. (1974). An index of factorial simplicity. *Psychometrika,
 ``` r
 fac <- nomo_factors(nomo_demo_continuous, n_iter = 20, seed = 2026)
 fac
-#> <nomo_factors>
+#> <nomo_factors> Factor-retention evidence
 #> Cases: 500 | Items: 10 | Correlation: pearson
 #> Criterion set: core | Available methods: 3 | Families: 2 | Skipped: 1
 #> Parallel analysis (percentile): 2 | MAP TR2/TR4: 2/2 | KMO: 0.874
-#> All 2 available criterion families (3 methods) point to 2 factors. Related methods within a family are grouped before concordance is summarized; this is strong converging evidence for investigating that solution, not proof of dimensionality. 1 requested method was not evaluated; see criterion status for the documented reason. 
+#> All 2 available criterion families (3 methods) point to 2 factors. Related
+#> methods within a family are grouped before concordance is summarized; this is
+#> strong converging evidence for investigating that solution, not proof of
+#> dimensionality. 1 requested method was not evaluated; see criterion status for
+#> the documented reason.
 summary(fac)
-#> <summary_nomo_factors>
+#> <nomo_factors summary> Factor-retention evidence
 #> Cases: 500 | Items: 10 | Correlation: pearson | Criteria: core
 #> 
-#> Parallel-analysis rule sensitivity:
-#> # A tibble: 3 × 3
-#>   rule       n_factors selected
-#>   <chr>          <int> <lgl>   
-#> 1 percentile         2 TRUE    
-#> 2 mean               2 FALSE   
-#> 3 crawford           2 FALSE   
+#> Retention evidence
+#>   Method              Factors  Role
+#>   Parallel analysis         2  primary
+#>   MAP (original TR2)        2  complementary
+#>   MAP (revised TR4)         2  complementary
 #> 
-#> Retention evidence:
-#> # A tibble: 3 × 3
-#>   method             n_factors role         
-#>   <chr>                  <int> <chr>        
-#> 1 Parallel analysis          2 primary      
-#> 2 MAP (original TR2)         2 complementary
-#> 3 MAP (revised TR4)          2 complementary
+#> Parallel-analysis rule sensitivity
+#>   Rule        Factors  Used
+#>   percentile        2  selected
+#>   mean              2
+#>   crawford          2
 #> 
-#> Criteria requested but not run:
-#> # A tibble: 1 × 2
-#>   method                    
-#>   <chr>                     
-#> 1 Empirical Kaiser criterion
-#>   reason                                                                        
-#>   <chr>                                                                         
-#> 1 EKC needs one common sample size for the analyzed matrix; pairwise missing-da…
+#> Criteria requested but not run
+#>   - Empirical Kaiser criterion: EKC needs one common sample size for the
+#>     analyzed matrix; pairwise missing-data handling produced varying pairwise
+#>     Ns.
 #> 
-#> Criterion-family concordance:
-#> # A tibble: 1 × 3
-#>   n_factors n_families families              
-#>       <int>      <int> <chr>                 
-#> 1         2          2 Parallel analysis; MAP
+#> Concordance across criterion families
+#>   Factors  Families  Which
+#>         2         2  Parallel analysis; MAP
 #> 
-#> Supporting adequacy evidence:
-#> # A tibble: 2 × 2
-#>   metric  
-#>   <chr>   
-#> 1 KMO     
-#> 2 Bartlett
-#>   display                                                                       
-#>   <chr>                                                                         
-#> 1 0.874                                                                         
-#> 2 Bartlett's test was not computed because pairwise missing-data handling does …
+#> Supporting adequacy evidence
+#>   - KMO: 0.874
+#>   - Bartlett: Bartlett's test was not computed because pairwise missing-data
+#>     handling does not provide one common sample size for the full matrix.
 #> 
-#> Synthesis:
-#> All 2 available criterion families (3 methods) point to 2 factors. Related methods within a family are grouped before concordance is summarized; this is strong converging evidence for investigating that solution, not proof of dimensionality. 1 requested method was not evaluated; see criterion status for the documented reason. 
+#> Synthesis
+#>   All 2 available criterion families (3 methods) point to 2 factors. Related
+#>   methods within a family are grouped before concordance is summarized; this
+#>   is strong converging evidence for investigating that solution, not proof of
+#>   dimensionality. 1 requested method was not evaluated; see criterion status
+#>   for the documented reason.
 #> 
-#> Factor counts are candidates for investigation, not automatic dimensionality verdicts.
-#> Common-factor eigenvalues come from a reduced common-variance matrix; later values can be negative.
+#> Factor counts are candidates for investigation, not automatic dimensionality
+#> verdicts. Common-factor eigenvalues come from a reduced common-variance
+#> matrix; later values can be negative.
 
 # \donttest{
 # Ordered five-category items are analyzed with polychoric correlations

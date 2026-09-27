@@ -83,11 +83,11 @@ colSums(is.na(nomo_demo_continuous))
 
 scr <- nomo_screen(nomo_demo_continuous)
 scr
-#> <nomo_screen>
+#> <nomo_screen> Item and data audit
 #> Cases: 500 | Candidate items: 10
 #> Items with missing responses: 2 | Constant: 0 | All missing: 0
 #> Relationship diagnostics: 10 eligible items | 10 item-rest estimates
 #> Response concentration flags: 0 | Near-zero variance: 0
-#> Decision log: 3 info | 1 review | 0 concern
+#> Decision log: 3 info, 1 review, 0 concern
 #> No rows or items were removed or modified.
 ```

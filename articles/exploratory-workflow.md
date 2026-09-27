@@ -61,38 +61,30 @@ when you *do* know what is true.
 
 scr <- nomo_screen(nomo_demo_continuous)
 summary(scr)
-#> <summary_nomo_screen>
-#> Cases: 500 | Items: 10 | No review flag: 9 | Review: 1 | Concern: 0
-#> Missingness flags: 2 | Constant: 0 | All missing: 0 | Relationship eligible: 10
+#> <nomo_screen summary> Item and data audit
+#> Cases: 500 | Items: 10 | Flags: 1 review, 0 concern
+#> Items with missing responses: 2 | Constant: 0 | All missing: 0
+#> Relationship eligible: 10
 #> 
-#> Integrated item review:
-#> # A tibble: 10 × 7
-#>    item  item_type          attention pct_missing mode_prop
-#>    <chr> <chr>              <ord>           <dbl>     <dbl>
-#>  1 a1    numeric_continuous none            0        0.01  
-#>  2 a2    numeric_continuous none            0.03     0.0124
-#>  3 a3    numeric_continuous none            0        0.01  
-#>  4 a4    numeric_continuous none            0        0.012 
-#>  5 a5    numeric_continuous none            0        0.016 
-#>  6 b1    numeric_continuous none            0        0.016 
-#>  7 b2    numeric_continuous none            0        0.014 
-#>  8 b3    numeric_continuous none            0.024    0.0102
-#>  9 b4    numeric_continuous none            0        0.012 
-#> 10 b5    numeric_continuous review          0        0.014 
-#>    corrected_item_rest_r review_metrics       
-#>                    <dbl> <chr>                
-#>  1                 0.559 ""                   
-#>  2                 0.580 ""                   
-#>  3                 0.511 ""                   
-#>  4                 0.549 ""                   
-#>  5                 0.588 ""                   
-#>  6                 0.602 ""                   
-#>  7                 0.513 ""                   
-#>  8                 0.571 ""                   
-#>  9                 0.481 ""                   
-#> 10                 0.279 "corrected_item_rest"
+#> Item review
+#>   Item  Type        Missing  Top share  Item-rest r  Flag
+#>   a1    continuous     0.0%       1.0%        0.559
+#>   a2    continuous     3.0%       1.2%        0.580
+#>   a3    continuous     0.0%       1.0%        0.511
+#>   a4    continuous     0.0%       1.2%        0.549
+#>   a5    continuous     0.0%       1.6%        0.588
+#>   b1    continuous     0.0%       1.6%        0.602
+#>   b2    continuous     0.0%       1.4%        0.513
+#>   b3    continuous     2.4%       1.0%        0.571
+#>   b4    continuous     0.0%       1.2%        0.481
+#>   b5    continuous     0.0%       1.4%        0.279  review
+#>   Top share is the proportion of responses in the most common category.
 #> 
-#> `attention` is a review aid, not an automatic retention/deletion decision.
+#> Flagged items
+#>   - b5 (review): `b5` has a corrected item-rest correlation of r = 0.28 (n =
+#>     473), below the teaching reference.
+#> 
+#> Flags are review aids, not decisions to keep or delete an item.
 ```
 
 The screening object is descriptive and diagnostic. The missing values
@@ -157,14 +149,15 @@ careful <- nomo_screen(
   scale_range = c(1, 5)
 )
 careful
-#> <nomo_screen>
+#> <nomo_screen> Item and data audit
 #> Cases: 400 | Candidate items: 24
 #> Items with missing responses: 0 | Constant: 0 | All missing: 0
 #> Relationship diagnostics: 24 eligible items | 24 item-rest estimates
 #> Response concentration flags: 0 | Near-zero variance: 0
-#> Careless-responding flags: 75 cases (long-string 15 | antonym 27 | synonym 36)
-#>   Cases are flagged, never removed. Indices disagree by design; see the decision log.
-#> Decision log: 26 info | 29 review | 0 concern
+#> Careless-responding flags: 75 cases | long-string 15 | antonym 27 | synonym 36
+#>   Cases are flagged, never removed. Indices disagree by design; see the
+#>   decision log.
+#> Decision log: 26 info, 29 review, 0 concern
 #> No rows or items were removed or modified.
 ```
 
@@ -213,56 +206,45 @@ fac <- nomo_factors(
   seed = 2026
 )
 summary(fac)
-#> <summary_nomo_factors>
+#> <nomo_factors summary> Factor-retention evidence
 #> Cases: 500 | Items: 10 | Correlation: pearson | Criteria: core
 #> 
-#> Parallel-analysis rule sensitivity:
-#> # A tibble: 3 × 3
-#>   rule       n_factors selected
-#>   <chr>          <int> <lgl>   
-#> 1 percentile         2 TRUE    
-#> 2 mean               2 FALSE   
-#> 3 crawford           2 FALSE   
+#> Retention evidence
+#>   Method              Factors  Role
+#>   Parallel analysis         2  primary
+#>   MAP (original TR2)        2  complementary
+#>   MAP (revised TR4)         2  complementary
 #> 
-#> Retention evidence:
-#> # A tibble: 3 × 3
-#>   method             n_factors role         
-#>   <chr>                  <int> <chr>        
-#> 1 Parallel analysis          2 primary      
-#> 2 MAP (original TR2)         2 complementary
-#> 3 MAP (revised TR4)          2 complementary
+#> Parallel-analysis rule sensitivity
+#>   Rule        Factors  Used
+#>   percentile        2  selected
+#>   mean              2
+#>   crawford          2
 #> 
-#> Criteria requested but not run:
-#> # A tibble: 1 × 2
-#>   method                    
-#>   <chr>                     
-#> 1 Empirical Kaiser criterion
-#>   reason                                                                        
-#>   <chr>                                                                         
-#> 1 EKC needs one common sample size for the analyzed matrix; pairwise missing-da…
+#> Criteria requested but not run
+#>   - Empirical Kaiser criterion: EKC needs one common sample size for the
+#>     analyzed matrix; pairwise missing-data handling produced varying pairwise
+#>     Ns.
 #> 
-#> Criterion-family concordance:
-#> # A tibble: 1 × 3
-#>   n_factors n_families families              
-#>       <int>      <int> <chr>                 
-#> 1         2          2 Parallel analysis; MAP
+#> Concordance across criterion families
+#>   Factors  Families  Which
+#>         2         2  Parallel analysis; MAP
 #> 
-#> Supporting adequacy evidence:
-#> # A tibble: 2 × 2
-#>   metric  
-#>   <chr>   
-#> 1 KMO     
-#> 2 Bartlett
-#>   display                                                                       
-#>   <chr>                                                                         
-#> 1 0.874                                                                         
-#> 2 Bartlett's test was not computed because pairwise missing-data handling does …
+#> Supporting adequacy evidence
+#>   - KMO: 0.874
+#>   - Bartlett: Bartlett's test was not computed because pairwise missing-data
+#>     handling does not provide one common sample size for the full matrix.
 #> 
-#> Synthesis:
-#> All 2 available criterion families (3 methods) point to 2 factors. Related methods within a family are grouped before concordance is summarized; this is strong converging evidence for investigating that solution, not proof of dimensionality. 1 requested method was not evaluated; see criterion status for the documented reason. 
+#> Synthesis
+#>   All 2 available criterion families (3 methods) point to 2 factors. Related
+#>   methods within a family are grouped before concordance is summarized; this
+#>   is strong converging evidence for investigating that solution, not proof of
+#>   dimensionality. 1 requested method was not evaluated; see criterion status
+#>   for the documented reason.
 #> 
-#> Factor counts are candidates for investigation, not automatic dimensionality verdicts.
-#> Common-factor eigenvalues come from a reduced common-variance matrix; later values can be negative.
+#> Factor counts are candidates for investigation, not automatic dimensionality
+#> verdicts. Common-factor eigenvalues come from a reduced common-variance
+#> matrix; later values can be negative.
 ```
 
 Parallel analysis is the primary retention evidence, with MAP and the
@@ -308,58 +290,46 @@ efa <- nomo_efa(
   factors = fac
 )
 summary(efa)
-#> nomologR exploratory factor analysis
-#> 500 cases | 10 items | 2 factors (from nomo_factors())
+#> <nomo_efa summary> Exploratory factor analysis
+#> Cases: 500 | Items: 10 | Factors: 2 (from nomo_factors())
 #> Correlation: pearson | Extraction: minres | Rotation: oblimin
-#> Supporting adequacy: KMO = 0.874
+#> Supporting adequacy: KMO 0.874
 #> 
-#> Item-level structural review
-#> # A tibble: 10 × 7
-#>    item  primary_factor primary_loading secondary_factor secondary_loading
-#>    <chr> <chr>                    <dbl> <chr>                        <dbl>
-#>  1 a1    F1                       0.808 F2                        -0.0444 
-#>  2 a2    F1                       0.709 F2                         0.0643 
-#>  3 a3    F1                       0.667 F2                         0.0153 
-#>  4 a4    F1                       0.770 F2                        -0.0377 
-#>  5 a5    F1                       0.414 F2                         0.335  
-#>  6 b1    F2                       0.783 F1                         0.0141 
-#>  7 b2    F2                       0.693 F1                        -0.0200 
-#>  8 b3    F2                       0.783 F1                        -0.00673
-#>  9 b4    F2                       0.637 F1                        -0.0119 
-#> 10 b5    F2                       0.332 F1                         0.0286 
-#> # ℹ 2 more variables: communality <dbl>, attention <chr>
+#> Item structure
+#>   Item  Factor  Loading  Next factor  Loading  Communality  Flag
+#>   a1    F1        0.808  F2            -0.044        0.624
+#>   a2    F1        0.709  F2             0.064        0.547
+#>   a3    F1        0.667  F2             0.015        0.454
+#>   a4    F1        0.770  F2            -0.038        0.569
+#>   a5    F1        0.414  F2             0.335        0.406  review
+#>   b1    F2        0.783  F1             0.014        0.623
+#>   b2    F2        0.693  F1            -0.020        0.469
+#>   b3    F2        0.783  F1            -0.007        0.608
+#>   b4    F2        0.637  F1            -0.012        0.400  review
+#>   b5    F2        0.332  F1             0.029        0.120  concern
 #> 
-#> Items requiring review
-#> # A tibble: 3 × 3
-#>   item  attention    
-#>   <chr> <chr>        
-#> 1 a5    REVIEW       
-#> 2 b4    REVIEW       
-#> 3 b5    STRONG REVIEW
-#>   explanation                                                                   
-#>   <chr>                                                                         
-#> 1 secondary loading |0.34| meets/exceeds the 0.30 cross-loading reference       
-#> 2 communality 0.40 is below the 0.40 teaching reference                         
-#> 3 primary loading |0.33| is below the 0.40 teaching reference; communality 0.12…
+#> Flagged items
+#>   - a5 (review): secondary loading |0.34| meets/exceeds the 0.30 cross-loading
+#>     reference
+#>   - b4 (review): communality 0.40 is below the 0.40 teaching reference
+#>   - b5 (concern): primary loading |0.33| is below the 0.40 teaching reference;
+#>     communality 0.12 is below the 0.40 teaching reference
 #> 
 #> Factor correlations
-#>       F1    F2
-#> F1 1.000 0.439
-#> F2 0.439 1.000
+#>   Factor 1  Factor 2      r
+#>   F1        F2        0.439
 #> 
-#> Off-diagonal RMSR: 0.018
+#> Largest residual correlations
+#>   Off-diagonal RMSR: 0.018
+#>   Item 1  Item 2  Residual
+#>   b4      b5         0.042
+#>   a5      b5        -0.039
+#>   a4      b5         0.038
+#>   a2      a5         0.030
+#>   b2      b5        -0.028
 #> 
-#> Largest localized residuals
-#> # A tibble: 5 × 4
-#>   item1 item2 residual abs_residual
-#>   <chr> <chr>    <dbl>        <dbl>
-#> 1 b4    b5      0.0425       0.0425
-#> 2 a5    b5     -0.0388       0.0388
-#> 3 a4    b5      0.0380       0.0380
-#> 4 a2    a5      0.0295       0.0295
-#> 5 b2    b5     -0.0277       0.0277
-#> 
-#> Interpretation rule: numerical references trigger inspection, not automatic deletion or hidden refitting.
+#> Numerical references trigger inspection, not automatic deletion or hidden
+#> refitting.
 ```
 
 Passing the `nomo_factors` object carries forward the item set, modeling

@@ -150,11 +150,10 @@ practice. *Journal of Black Psychology, 44*(3), 219-246.
 ``` r
 efa <- nomo_efa(nomo_demo_continuous, factors = 2)
 efa
-#> <nomo_efa>
+#> <nomo_efa> Exploratory factor analysis
 #> Cases: 500 | Items: 10 | Factors: 2 (researcher specified)
 #> Correlation: pearson | Extraction: minres | Rotation: oblimin
-#> Off-diagonal RMSR: 0.018
-#> Item review: 7 KEEP | 2 REVIEW | 1 STRONG REVIEW
+#> Off-diagonal RMSR: 0.018 | Flags: 2 review, 1 concern
 #> No items were automatically deleted or refit.
 efa$item_summary[, c("item", "primary_loading", "secondary_loading", "attention")]
 #> # A tibble: 10 × 4
@@ -175,56 +174,44 @@ efa$item_summary[, c("item", "primary_loading", "secondary_loading", "attention"
 fac <- nomo_factors(nomo_demo_continuous, n_iter = 20, seed = 2026)
 efa_from_evidence <- nomo_efa(nomo_demo_continuous, factors = fac)
 summary(efa_from_evidence)
-#> nomologR exploratory factor analysis
-#> 500 cases | 10 items | 2 factors (from nomo_factors())
+#> <nomo_efa summary> Exploratory factor analysis
+#> Cases: 500 | Items: 10 | Factors: 2 (from nomo_factors())
 #> Correlation: pearson | Extraction: minres | Rotation: oblimin
-#> Supporting adequacy: KMO = 0.874
+#> Supporting adequacy: KMO 0.874
 #> 
-#> Item-level structural review
-#> # A tibble: 10 × 7
-#>    item  primary_factor primary_loading secondary_factor secondary_loading
-#>    <chr> <chr>                    <dbl> <chr>                        <dbl>
-#>  1 a1    F1                       0.808 F2                        -0.0444 
-#>  2 a2    F1                       0.709 F2                         0.0643 
-#>  3 a3    F1                       0.667 F2                         0.0153 
-#>  4 a4    F1                       0.770 F2                        -0.0377 
-#>  5 a5    F1                       0.414 F2                         0.335  
-#>  6 b1    F2                       0.783 F1                         0.0141 
-#>  7 b2    F2                       0.693 F1                        -0.0200 
-#>  8 b3    F2                       0.783 F1                        -0.00673
-#>  9 b4    F2                       0.637 F1                        -0.0119 
-#> 10 b5    F2                       0.332 F1                         0.0286 
-#> # ℹ 2 more variables: communality <dbl>, attention <chr>
+#> Item structure
+#>   Item  Factor  Loading  Next factor  Loading  Communality  Flag
+#>   a1    F1        0.808  F2            -0.044        0.624
+#>   a2    F1        0.709  F2             0.064        0.547
+#>   a3    F1        0.667  F2             0.015        0.454
+#>   a4    F1        0.770  F2            -0.038        0.569
+#>   a5    F1        0.414  F2             0.335        0.406  review
+#>   b1    F2        0.783  F1             0.014        0.623
+#>   b2    F2        0.693  F1            -0.020        0.469
+#>   b3    F2        0.783  F1            -0.007        0.608
+#>   b4    F2        0.637  F1            -0.012        0.400  review
+#>   b5    F2        0.332  F1             0.029        0.120  concern
 #> 
-#> Items requiring review
-#> # A tibble: 3 × 3
-#>   item  attention    
-#>   <chr> <chr>        
-#> 1 a5    REVIEW       
-#> 2 b4    REVIEW       
-#> 3 b5    STRONG REVIEW
-#>   explanation                                                                   
-#>   <chr>                                                                         
-#> 1 secondary loading |0.34| meets/exceeds the 0.30 cross-loading reference       
-#> 2 communality 0.40 is below the 0.40 teaching reference                         
-#> 3 primary loading |0.33| is below the 0.40 teaching reference; communality 0.12…
+#> Flagged items
+#>   - a5 (review): secondary loading |0.34| meets/exceeds the 0.30 cross-loading
+#>     reference
+#>   - b4 (review): communality 0.40 is below the 0.40 teaching reference
+#>   - b5 (concern): primary loading |0.33| is below the 0.40 teaching reference;
+#>     communality 0.12 is below the 0.40 teaching reference
 #> 
 #> Factor correlations
-#>       F1    F2
-#> F1 1.000 0.439
-#> F2 0.439 1.000
+#>   Factor 1  Factor 2      r
+#>   F1        F2        0.439
 #> 
-#> Off-diagonal RMSR: 0.018
+#> Largest residual correlations
+#>   Off-diagonal RMSR: 0.018
+#>   Item 1  Item 2  Residual
+#>   b4      b5         0.042
+#>   a5      b5        -0.039
+#>   a4      b5         0.038
+#>   a2      a5         0.030
+#>   b2      b5        -0.028
 #> 
-#> Largest localized residuals
-#> # A tibble: 5 × 4
-#>   item1 item2 residual abs_residual
-#>   <chr> <chr>    <dbl>        <dbl>
-#> 1 b4    b5      0.0425       0.0425
-#> 2 a5    b5     -0.0388       0.0388
-#> 3 a4    b5      0.0380       0.0380
-#> 4 a2    a5      0.0295       0.0295
-#> 5 b2    b5     -0.0277       0.0277
-#> 
-#> Interpretation rule: numerical references trigger inspection, not automatic deletion or hidden refitting.
+#> Numerical references trigger inspection, not automatic deletion or hidden
+#> refitting.
 ```

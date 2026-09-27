@@ -75,12 +75,12 @@ An item audit describes the data without changing it:
 
 scr <- nomo_screen(nomo_demo_continuous)
 scr
-#> <nomo_screen>
+#> <nomo_screen> Item and data audit
 #> Cases: 500 | Candidate items: 10
 #> Items with missing responses: 2 | Constant: 0 | All missing: 0
 #> Relationship diagnostics: 10 eligible items | 10 item-rest estimates
 #> Response concentration flags: 0 | Near-zero variance: 0
-#> Decision log: 3 info | 1 review | 0 concern
+#> Decision log: 3 info, 1 review, 0 concern
 #> No rows or items were removed or modified.
 ```
 
@@ -91,11 +91,15 @@ trusting a single rule:
 
 fac <- nomo_factors(nomo_demo_continuous, seed = 2026)
 fac
-#> <nomo_factors>
+#> <nomo_factors> Factor-retention evidence
 #> Cases: 500 | Items: 10 | Correlation: pearson
 #> Criterion set: core | Available methods: 3 | Families: 2 | Skipped: 1
 #> Parallel analysis (percentile): 2 | MAP TR2/TR4: 2/2 | KMO: 0.874
-#> All 2 available criterion families (3 methods) point to 2 factors. Related methods within a family are grouped before concordance is summarized; this is strong converging evidence for investigating that solution, not proof of dimensionality. 1 requested method was not evaluated; see criterion status for the documented reason.
+#> All 2 available criterion families (3 methods) point to 2 factors. Related
+#> methods within a family are grouped before concordance is summarized; this is
+#> strong converging evidence for investigating that solution, not proof of
+#> dimensionality. 1 requested method was not evaluated; see criterion status for
+#> the documented reason.
 ```
 
 The population model for these data has two factors, and the retention
