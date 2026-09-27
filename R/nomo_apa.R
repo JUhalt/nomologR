@@ -489,8 +489,9 @@ print.nomo_apa_table <- function(x, ...) {
   for (i in seq_len(nrow(body))) cat(line(unlist(body[i, ])), "\n", sep = "")
   cat(rule, "\n", sep = "")
 
+  # Notes wrap to the console, as every other printed text does (#89).
   notes <- nomo_apa_notes_text(x$notes)
-  if (length(notes)) cat(strip(notes), sep = "\n")
+  for (note in strip(notes)) nomo_present_text(note)
   invisible(x)
 }
 

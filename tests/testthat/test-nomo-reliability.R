@@ -404,6 +404,11 @@ test_that("reliability print methods cover point, bootstrap, strain, and empty b
   expect_match(txt2, "minimum successful draws", fixed = TRUE)
   expect_match(txt2, "Bootstrap note", fixed = TRUE)
   expect_match(txt2, "Measurement-model context", fixed = TRUE)
+  # A status without a count of successful draws leaves that part out.
+  boot$ci_status$min_successful_draws <- NA_integer_
+  txt_no_min <- paste(capture.output(print(boot)), collapse = "\n")
+  expect_match(txt_no_min, "20 requested draws", fixed = TRUE)
+  expect_false(grepl("minimum successful draws", txt_no_min, fixed = TRUE))
 
   s <- summary(rel)
   empty <- s

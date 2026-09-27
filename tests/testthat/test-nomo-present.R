@@ -87,6 +87,24 @@ test_that("tables align, drop empty columns, and name what does not fit", {
 })
 
 
+test_that("notes carry their flag, and a column with one value is left out", {
+  notes <- nomologR:::nomo_present_notes
+  expect_identical(capture.output(notes(NULL)), character())
+  expect_identical(capture.output(notes(data.frame(severity = character(), note = character()))),
+                   character())
+  expect_identical(
+    capture.output(notes(data.frame(severity = c("info", "review"),
+                                    note = c("A note.", "Look again.")))),
+    c("  - A note.", "  - review: Look again.")
+  )
+
+  drop <- nomologR:::nomo_present_drop_constant
+  columns <- c(Construct = "construct", Block = "block")
+  expect_identical(drop(columns, "Block", c("overall", "overall")), c(Construct = "construct"))
+  expect_identical(drop(columns, "Block", c("overall", "group")), columns)
+})
+
+
 test_that("the CFA print and summary read as designed (#89)", {
   cfa <- nomo_cfa(
     nomo_model(list(A = paste0("a", 1:5), B = paste0("b", 1:5))),
@@ -108,6 +126,93 @@ test_that("the item audit, factor retention, and EFA read as designed (#89)", {
   expect_snapshot(print(summary(fac)))
   expect_snapshot(print(efa))
   expect_snapshot(print(summary(efa)))
+})
+
+
+test_that("reliability, validity, scores, and missing-data output read as designed (#89)", {
+  skip_on_cran()
+  cfa <- nomo_cfa(
+    nomo_model(list(A = paste0("a", 1:5), B = paste0("b", 1:5))),
+    data = nomo_demo_continuous
+  )
+  rel <- nomo_reliability(cfa)
+  val <- nomo_validity(cfa)
+  sc <- nomo_scores(cfa, method = "sum")
+  expect_snapshot(print(rel))
+  expect_snapshot(print(summary(rel)))
+  expect_snapshot(print(val))
+  expect_snapshot(print(summary(val)))
+  expect_snapshot(print(sc))
+  expect_snapshot(print(summary(sc)))
+  expect_snapshot(print(nomo_missing(cfa, data = nomo_demo_continuous)))
+})
+
+
+test_that("hierarchical output reads as designed (#89)", {
+  skip_on_cran()
+  set.seed(2026)
+  n <- 500
+  g <- rnorm(n)
+  s <- matrix(rnorm(n * 3), n, 3)
+  dat <- as.data.frame(sapply(1:9, function(i) {
+    .6 * g + .45 * s[, ceiling(i / 3)] + rnorm(n, sd = .65)
+  }))
+  names(dat) <- paste0("x", 1:9)
+  factors <- list(A = c("x1", "x2", "x3"), B = c("x4", "x5", "x6"), C = c("x7", "x8", "x9"))
+  hier <- nomo_hierarchical(nomo_cfa(nomo_model(factors, structure = "bifactor"), data = dat))
+  expect_snapshot(print(hier))
+  expect_snapshot(print(summary(hier)))
+})
+
+
+test_that("comparison, invariance, and network output read as designed (#89)", {
+  skip_on_cran()
+  cont <- nomo_demo_continuous
+  full <- nomo_cfa("A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4 + b5", data = cont)
+  no_b5 <- nomo_cfa("A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4 + 0*b5", data = cont)
+  cmp <- nomo_compare(full = full, no_b5 = no_b5, rationale = "Is b5 needed?")
+  expect_snapshot(print(cmp))
+  expect_snapshot(print(summary(cmp)))
+
+  inv <- nomo_invariance("Agency =~ ag1 + ag2 + ag3 + ag4", data = nomo_demo_network,
+                         group = "group", levels = c("configural", "metric", "scalar"))
+  expect_snapshot(print(inv))
+  expect_snapshot(print(summary(inv)))
+  expect_snapshot(print(nomo_partial(level = "scalar", syntax = "ag3 ~ 1",
+                                     rationale = "Anticipated mode difference.")))
+
+  h <- nomo_hypotheses(
+    "Agency -> Persistence" = positive(min = .20),
+    "Agency <-> SocialDesirability" = negligible(within = c(-.15, .15)),
+    "Agency -> Performance" = positive()
+  )
+  expect_snapshot(print(h))
+  expect_snapshot(print(summary(h)))
+  scales <- list(Agency = paste0("ag", 1:4), Persistence = paste0("pe", 1:4),
+                 SocialDesirability = paste0("sd", 1:3))
+  net <- nomo_network(nomo_model(scales), data = nomo_demo_network, hypotheses = h)
+  expect_snapshot(print(net))
+  expect_snapshot(print(summary(net)))
+  expect_snapshot(print(nomo_split(nomo_demo_network, validation_prop = 0.4, seed = 2026)))
+})
+
+
+test_that("invariance lists the levels to review with what went wrong (#89)", {
+  fit <- tibble::tibble(
+    level = c("configural", "metric", "scalar"),
+    status = c("estimated", "estimated", "failed"),
+    converged = c(TRUE, FALSE, FALSE),
+    warnings = c("", "a lavaan warning", ""),
+    error = c("", "", "model could not be identified")
+  )
+  txt <- utils::capture.output(nomologR:::nomo_invariance_present_problems(fit))
+  expect_true(any(grepl("metric: estimated; did not converge; warnings: a lavaan warning",
+                        txt, fixed = TRUE)))
+  expect_true(any(grepl("scalar: failed; did not converge; model could not be identified",
+                        txt, fixed = TRUE)))
+  fit_ok <- fit[1L, , drop = FALSE]
+  expect_identical(utils::capture.output(nomologR:::nomo_invariance_present_problems(fit_ok)),
+                   character())
 })
 
 

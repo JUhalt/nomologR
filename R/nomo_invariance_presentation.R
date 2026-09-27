@@ -154,72 +154,72 @@ nomo_invariance_local_strain_display <- function(x) {
 }
 
 
+# Levels that were not estimated, did not converge, or raised warnings, named
+# with what went wrong; a table column would only say that something did.
+nomo_invariance_present_problems <- function(fit) {
+  bad <- fit[
+    fit$status != "estimated" | !fit$converged | nzchar(fit$warnings) | nzchar(fit$error),
+    , drop = FALSE
+  ]
+  if (!nrow(bad)) return(invisible(NULL))
+  nomo_present_section("Levels to review")
+  nomo_present_bullets(vapply(seq_len(nrow(bad)), function(i) {
+    parts <- c(
+      bad$status[[i]],
+      if (isFALSE(bad$converged[[i]])) "did not converge" else "",
+      bad$error[[i]],
+      if (nzchar(bad$warnings[[i]])) paste("warnings:", bad$warnings[[i]]) else ""
+    )
+    paste0(bad$level[[i]], ": ", paste(parts[nzchar(parts)], collapse = "; "))
+  }, character(1)))
+}
+
+
 #' @export
 print.nomo_invariance <- function(x, ...) {
-  cat("<nomo_invariance>\n")
-  cat(sprintf(
-    "Grouping variable: %s (%d groups: %s)\n",
-    x$group,
-    length(x$groups),
-    paste(x$groups, collapse = ", ")
+  nomo_present_header("nomo_invariance", "Measurement invariance")
+  nomo_present_facts(c(
+    sprintf("Grouping variable: %s (%d groups: %s)", x$group, length(x$groups),
+            paste(x$groups, collapse = ", ")),
+    sprintf("Indicators: %s", x$indicator_type)
   ))
-  cat(sprintf("Indicator treatment: %s\n", x$indicator_type))
 
   if (length(x$ordered)) {
-    cat(sprintf(
-      "Ordered identification: %s | parameterization: %s\n",
-      x$ID.cat,
-      x$parameterization
+    nomo_present_facts(c(
+      sprintf("Ordered identification: %s", x$ID.cat),
+      sprintf("parameterization: %s", x$parameterization)
     ))
   }
 
-  cat(sprintf(
-    "Requested: %s\n",
-    paste(x$requested_levels, collapse = " -> ")
-  ))
-  cat(sprintf(
-    "Completed: %s\n",
-    paste(x$completed_levels, collapse = " -> ")
-  ))
+  nomo_present_facts(sprintf("Requested: %s", paste(x$requested_levels, collapse = " -> ")))
+  nomo_present_facts(sprintf("Completed: %s", paste(x$completed_levels, collapse = " -> ")))
 
   if (!is.null(x$partial) && x$partial$n > 0L) {
-    cat(sprintf(
-      "Researcher-specified partial releases: %d\n",
-      x$partial$n
-    ))
+    nomo_present_facts(sprintf("Researcher-specified partial releases: %d", x$partial$n))
+  }
+
+  signed <- function(v) nomo_present_signed(v)
+  cat("\n")
+  nomo_present_table(
+    x$fit_evidence,
+    c("Level" = "level", "CFI" = "cfi", "RMSEA" = "rmsea", "SRMR" = "srmr",
+      "CFI change" = "delta_cfi", "RMSEA change" = "delta_rmsea",
+      "LRT p" = "lrt_p"),
+    formats = list(delta_cfi = signed, delta_rmsea = signed, lrt_p = nomo_present_p),
+    more = "summary(x)"
+  )
+  nomo_invariance_present_problems(x$fit_evidence)
+
+  if (nrow(x$local_strain)) {
+    nomo_present_text(
+      sprintf("Localized equality-constraint diagnostics retained: %d", nrow(x$local_strain))
+    )
   }
 
   cat("\n")
-  print(
-    x$fit_evidence[, c(
-      "level",
-      "status",
-      "constraints",
-      "partial_requested",
-      "cfi",
-      "rmsea",
-      "srmr",
-      "delta_cfi",
-      "delta_rmsea",
-      "delta_srmr",
-      "lrt_p"
-    ), drop = FALSE],
-    n = Inf,
-    width = Inf
-  )
-
-  if (nrow(x$local_strain)) {
-    cat(sprintf(
-      "\nLocalized equality-constraint diagnostics retained: %d\n",
-      nrow(x$local_strain)
-    ))
-  }
-
-  cat(
-    "\nInterpretation rule: fit changes and score diagnostics are evidence, ",
-    "not universal pass/fail rules, not automatic pass/fail decisions, ",
-    "and not automatic parameter-freeing rules.\n",
-    sep = ""
+  nomo_present_text(
+    "Fit changes and score diagnostics are evidence. They are not pass/fail ",
+    "rules, and nomologR never frees a parameter because of them."
   )
 
   invisible(x)
@@ -261,55 +261,71 @@ summary.nomo_invariance <- function(object, ...) {
 
 #' @export
 print.summary_nomo_invariance <- function(x, ...) {
-  cat("nomologR measurement-invariance summary\n")
-  cat(sprintf("Indicator treatment: %s\n", x$indicator_type))
-  cat(sprintf(
-    "Groups: %s\n",
-    paste(x$groups, collapse = ", ")
+  nomo_present_header("nomo_invariance", "Measurement invariance", summary = TRUE)
+  nomo_present_facts(c(
+    sprintf("Indicators: %s", x$indicator_type),
+    sprintf("Groups: %s", paste(x$groups, collapse = ", "))
   ))
-  cat(sprintf(
-    "Levels completed: %s\n\n",
-    paste(x$completed_levels, collapse = " -> ")
+  nomo_present_facts(sprintf(
+    "Levels completed: %s", paste(x$completed_levels, collapse = " -> ")
   ))
 
-  cat("Identification/sequence note\n")
-  cat(x$identification_note, "\n\n")
+  nomo_present_section("Identification and sequence")
+  nomo_present_text(x$identification_note, indent = 2L)
 
   if (nrow(x$ordered_categories)) {
-    cat("Observed ordered categories\n")
-    print(x$ordered_categories, n = Inf, width = Inf)
-    cat("\n")
+    nomo_present_section("Observed ordered categories")
+    cats <- x$ordered_categories
+    nomo_present_table(cats, stats::setNames(names(cats), gsub("_", " ", names(cats))),
+                       more = "nomo_table(x, \"categories\")")
   }
 
-  cat("Fit and change evidence\n")
-  print(x$fit_evidence, n = Inf, width = Inf)
+  fit <- x$fit_evidence
+  nomo_present_section("Fit by level")
+  nomo_present_table(
+    fit,
+    c("Level" = "level", "Constraints" = "constraints", "Chi-square" = "chisq",
+      "df" = "df", "p" = "pvalue", "CFI" = "cfi", "RMSEA" = "rmsea", "SRMR" = "srmr"),
+    formats = list(chisq = function(v) nomo_present_number(v, 2L),
+                   df = function(v) format(v, trim = TRUE), pvalue = nomo_present_p),
+    more = "nomo_table(x, \"fit\")"
+  )
+  signed <- function(v) nomo_present_signed(v)
+  nomo_present_section("Changes from the preceding level")
+  nomo_present_table(
+    fit[-1L, , drop = FALSE],
+    c("Level" = "level", "CFI change" = "delta_cfi", "RMSEA change" = "delta_rmsea",
+      "SRMR change" = "delta_srmr", "LRT chi-square" = "lrt_chisq", "df" = "lrt_df",
+      "p" = "lrt_p"),
+    formats = list(delta_cfi = signed, delta_rmsea = signed, delta_srmr = signed,
+                   lrt_chisq = function(v) nomo_present_number(v, 2L),
+                   lrt_df = function(v) format(v, trim = TRUE), lrt_p = nomo_present_p),
+    more = "nomo_table(x, \"fit\")"
+  )
+  nomo_invariance_present_problems(fit)
 
   if (!is.null(x$partial) && x$partial$n > 0L) {
-    cat("\nResearcher-specified partial invariance\n")
-    print(x$partial$releases, n = Inf, width = Inf)
+    nomo_present_section("Researcher-specified partial invariance")
+    rel <- x$partial$releases
+    nomo_present_bullets(sprintf(
+      "%s (%s): %s. %s", rel$release_id, rel$level, rel$syntax, rel$rationale
+    ))
   }
 
   if (nrow(x$top_local_strain)) {
-    cat("\nLargest equality-constraint score diagnostics - diagnostic only\n")
-    cols <- intersect(
-      c(
-        "level",
-        "constraint_display",
-        "score_x2",
-        "df",
-        "p_value",
-        "diagnostic_only"
-      ),
-      names(x$top_local_strain)
-    )
-    print(
-      x$top_local_strain[, cols, drop = FALSE],
-      n = Inf,
-      width = Inf
+    nomo_present_section("Largest equality-constraint score diagnostics (diagnostic only)")
+    nomo_present_table(
+      x$top_local_strain,
+      c("Level" = "level", "Constraint" = "constraint_display",
+        "Score" = "score_x2", "df" = "df", "p" = "p_value"),
+      formats = list(score_x2 = function(v) nomo_present_number(v, 2L),
+                     df = function(v) format(v, trim = TRUE), p_value = nomo_present_p),
+      more = "nomo_table(x, \"local_strain\")"
     )
   }
 
-  cat("\n", x$note, "\n", sep = "")
+  cat("\n")
+  nomo_present_text(x$note)
   invisible(x)
 }
 

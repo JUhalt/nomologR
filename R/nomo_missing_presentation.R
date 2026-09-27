@@ -1,23 +1,32 @@
 #' @export
 print.nomo_missing <- function(x, digits = 3, ...) {
-  cat("<nomo_missing>\n")
+  nomo_present_header("nomo_missing", "Missing-data sensitivity")
   p <- x$pattern
-  cat(sprintf(
-    "Missing-data sensitivity for a %s | reference: %s | fitted with: %s\n",
-    x$object, nomo_missing_label(x$reference), nomo_missing_label(x$fitted_as)
+  nomo_present_facts(c(
+    sprintf("Model: %s", x$object),
+    sprintf("Reference: %s", nomo_missing_label(x$reference)),
+    sprintf("Fitted with: %s", nomo_missing_label(x$fitted_as))
   ))
-  cat(sprintf(
-    "%d of %d cases incomplete (%.1f%%) in %d pattern(s); lowest covariance coverage %.3f (%s)\n",
-    p$n_incomplete, p$n_cases, 100 * p$pct_incomplete, p$n_patterns,
-    p$min_coverage, p$min_coverage_variables
+  nomo_present_facts(c(
+    sprintf("Cases: %d of %d incomplete (%.1f%%)", p$n_incomplete, p$n_cases,
+            100 * p$pct_incomplete),
+    sprintf("Patterns: %d", p$n_patterns),
+    sprintf("Lowest covariance coverage: %s (%s)", nomo_present_number(p$min_coverage),
+            p$min_coverage_variables)
   ))
 
-  cat("\nStrategies\n")
-  s <- x$strategies[, c(
-    "label", "lavaan_missing", "requires", "role", "available", "n_used",
-    "converged", "admissible"
-  )]
-  print(s, n = Inf, width = Inf)
+  nomo_present_section("Strategies")
+  nomo_present_table(
+    x$strategies,
+    nomo_present_drop_constant(
+      c("Strategy" = "label", "lavaan" = "lavaan_missing", "Needs" = "requires",
+        "Role" = "role", "Available" = "available", "N" = "n_used",
+        "Converged" = "converged", "Admissible" = "admissible"),
+      "Available", x$strategies$available
+    ),
+    formats = list(n_used = function(v) format(v, trim = TRUE)),
+    more = "nomo_table(x, \"strategies\")"
+  )
 
   if (is.data.frame(x$estimates) && nrow(x$estimates)) {
     compared <- x$estimates[x$estimates$role == "comparison" &
@@ -25,27 +34,35 @@ print.nomo_missing <- function(x, digits = 3, ...) {
     if (nrow(compared)) {
       compared <- compared[order(-abs(compared$difference_in_se)), , drop = FALSE]
       shown <- utils::head(compared, 5L)
-      cat("\nLargest differences from the reference, in reference standard errors\n")
-      view <- tibble::tibble(
-        parameter = shown$parameter,
-        strategy = nomo_missing_label(shown$strategy),
-        estimate = round(shown$estimate, digits),
-        reference = round(shown$reference_estimate, digits),
-        difference_in_se = round(shown$difference_in_se, 2)
+      shown$strategy_label <- nomo_missing_label(shown$strategy)
+      nomo_present_section(
+        "Largest differences from the reference, in reference standard errors"
       )
-      print(view, n = Inf, width = Inf)
+      nomo_present_table(
+        shown,
+        c("Parameter" = "parameter", "Strategy" = "strategy_label",
+          "Estimate" = "estimate", "Reference" = "reference_estimate",
+          "Difference (SE)" = "difference_in_se"),
+        formats = list(
+          estimate = function(v) nomo_present_number(v, digits),
+          reference_estimate = function(v) nomo_present_number(v, digits),
+          difference_in_se = function(v) nomo_present_signed(v, 2L)
+        ),
+        more = "nomo_table(x, \"estimates\")"
+      )
     }
   }
 
   flagged <- x$decision_log[x$decision_log$severity %in% c("review", "concern"), , drop = FALSE]
   if (nrow(flagged)) {
-    cat("\nFor review\n")
-    cat(paste0("- ", flagged$observation), sep = "\n")
+    nomo_present_section("For review")
+    nomo_present_bullets(flagged$observation)
   }
 
-  cat(
-    "\nWhether data are missing at random cannot be tested from these data;",
-    "see nomo_table(x, \"decision_log\").\n"
+  cat("\n")
+  nomo_present_text(
+    "Whether data are missing at random cannot be tested from these data; ",
+    "see nomo_table(x, \"decision_log\")."
   )
   invisible(x)
 }

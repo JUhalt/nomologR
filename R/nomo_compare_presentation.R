@@ -16,44 +16,50 @@ nomo_compare_relation_label <- function(relation) {
 
 #' @export
 print.nomo_compare <- function(x, ...) {
-  cat("<nomo_compare>\n")
-  cat(sprintf(
-    "Models: %d | Reference: %s | Estimator: %s | Cases: %s | Origin: %s\n",
-    nrow(x$models), x$reference, x$estimator,
-    format(x$models$n_used[[1L]], trim = TRUE),
-    gsub("_", "-", x$origin)
+  nomo_present_header("nomo_compare", "Measurement-model comparison")
+  nomo_present_facts(c(
+    sprintf("Models: %d", nrow(x$models)),
+    sprintf("Reference: %s", x$reference),
+    sprintf("Estimator: %s", x$estimator),
+    sprintf("Cases: %s", format(x$models$n_used[[1L]], trim = TRUE)),
+    sprintf("Origin: %s", gsub("_", "-", x$origin))
   ))
-  cat("Rationale: ", x$rationale, "\n", sep = "")
+  nomo_present_text("Rationale: ", x$rationale)
 
   if (nrow(x$comparisons)) {
-    cat(sprintf("\nCompared with `%s`:\n", x$reference))
-    for (i in seq_len(nrow(x$comparisons))) {
+    nomo_present_section(sprintf("Compared with `%s`", x$reference))
+    nomo_present_bullets(vapply(seq_len(nrow(x$comparisons)), function(i) {
       cmp <- x$comparisons[i, , drop = FALSE]
       test <- if (isTRUE(cmp$test_available)) {
         sprintf(
-          "chi-square difference = %.2f, df = %s, %s",
-          cmp$chisq_diff, format(cmp$df_diff, trim = TRUE),
+          "chi-square difference = %s, df = %s, %s",
+          nomo_present_number(cmp$chisq_diff, 2L), format(cmp$df_diff, trim = TRUE),
           nomo_compare_format_p(cmp$p_value)
         )
       } else {
         "no difference test"
       }
       fit <- if (is.finite(cmp$delta_cfi)) {
-        sprintf("dCFI %+.3f, dRMSEA %+.3f", cmp$delta_cfi, cmp$delta_rmsea)
+        sprintf("CFI change %s, RMSEA change %s", nomo_present_signed(cmp$delta_cfi),
+                nomo_present_signed(cmp$delta_rmsea))
       } else {
         "change in fit unavailable"
       }
-      ic <- if (isTRUE(cmp$ic_available)) sprintf("dAIC %+.1f", cmp$delta_aic) else NULL
-      cat(sprintf(
-        "  - %s (%s): %s\n",
-        cmp$model,
-        nomo_compare_relation_label(cmp$relation),
-        paste(c(test, fit, ic), collapse = "; ")
-      ))
-    }
+      ic <- if (isTRUE(cmp$ic_available)) {
+        sprintf("AIC change %s", nomo_present_signed(cmp$delta_aic, 1L))
+      } else {
+        NULL
+      }
+      sprintf("%s (%s): %s", cmp$model, nomo_compare_relation_label(cmp$relation),
+              paste(c(test, fit, ic), collapse = "; "))
+    }, character(1)))
   }
 
-  cat("\nNo model was selected automatically. Use summary() for interpretations and measurement evidence.\n")
+  cat("\n")
+  nomo_present_text(
+    "No model was selected automatically. summary() shows interpretations and ",
+    "measurement evidence."
+  )
   invisible(x)
 }
 
@@ -86,65 +92,98 @@ summary.nomo_compare <- function(object, ...) {
 
 #' @export
 print.summary_nomo_compare <- function(x, ...) {
-  round_cols <- function(tab, cols, digits) {
-    for (nm in intersect(cols, names(tab))) tab[[nm]] <- round(tab[[nm]], digits)
-    tab
-  }
+  nomo_present_header("nomo_compare", "Measurement-model comparison", summary = TRUE)
+  nomo_present_text("Rationale: ", x$rationale)
+  nomo_present_facts(c(
+    sprintf("Origin: %s", gsub("_", "-", x$origin)),
+    sprintf("Reference model: %s", x$reference)
+  ))
 
-  cat("nomologR measurement-model comparison\n")
-  cat("Rationale: ", x$rationale, "\n", sep = "")
-  cat("Origin: ", gsub("_", "-", x$origin), " | Reference model: ", x$reference, "\n", sep = "")
-
-  cat("\nModel fit and information criteria\n")
-  models <- round_cols(x$models, c("cfi", "tli", "rmsea", "srmr"), 3L)
-  models <- round_cols(models, c("chisq", "aic", "bic"), 1L)
-  print(models[, c(
-    "model", "npar", "df", "chisq", "cfi", "tli", "rmsea", "srmr", "aic", "bic",
-    "fixed_zero_loadings"
-  ), drop = FALSE], row.names = FALSE, width = Inf)
+  one_decimal <- function(v) nomo_present_number(v, 1L)
+  nomo_present_section("Model fit")
+  nomo_present_table(
+    x$models,
+    c("Model" = "model", "Parameters" = "npar", "df" = "df", "Chi-square" = "chisq",
+      "CFI" = "cfi", "TLI" = "tli", "RMSEA" = "rmsea", "SRMR" = "srmr"),
+    formats = list(npar = function(v) format(v, trim = TRUE),
+                   df = function(v) format(v, trim = TRUE),
+                   chisq = function(v) nomo_present_number(v, 2L)),
+    more = "nomo_table(x, \"models\")"
+  )
+  nomo_present_section("Information criteria")
+  nomo_present_table(
+    x$models,
+    c("Model" = "model", "AIC" = "aic", "BIC" = "bic",
+      "Loadings fixed to zero" = "fixed_zero_loadings"),
+    formats = list(aic = one_decimal, bic = one_decimal),
+    more = "nomo_table(x, \"models\")"
+  )
 
   if (nrow(x$comparisons)) {
-    cat("\nComparisons with the reference model\n")
-    cmp <- round_cols(x$comparisons, c("chisq_diff"), 2L)
-    cmp <- round_cols(cmp, c("p_value"), 4L)
-    cmp <- round_cols(cmp, c("delta_cfi", "delta_tli", "delta_rmsea", "delta_srmr"), 3L)
-    cmp <- round_cols(cmp, c("delta_aic", "delta_bic"), 1L)
-    print(cmp[, c(
-      "model", "relation", "nesting_check", "method", "chisq_diff", "df_diff",
-      "p_value", "delta_cfi", "delta_rmsea", "delta_srmr", "delta_aic", "delta_bic"
-    ), drop = FALSE], row.names = FALSE, width = Inf)
+    cmp <- x$comparisons
+    cmp$relation_label <- nomo_compare_relation_label(cmp$relation)
+    signed <- function(v) nomo_present_signed(v)
+    nomo_present_section("Difference tests against the reference model")
+    nomo_present_table(
+      cmp,
+      c("Model" = "model", "Relation" = "relation_label", "Check" = "nesting_check",
+        "Method" = "method", "Chi-sq diff" = "chisq_diff", "df" = "df_diff",
+        "p" = "p_value"),
+      formats = list(chisq_diff = function(v) nomo_present_number(v, 2L),
+                     df_diff = function(v) format(v, trim = TRUE),
+                     p_value = nomo_present_p),
+      more = "nomo_table(x, \"comparisons\")"
+    )
+    nomo_present_section("Changes in fit (model minus reference)")
+    nomo_present_table(
+      cmp,
+      c("Model" = "model", "CFI" = "delta_cfi", "TLI" = "delta_tli",
+        "RMSEA" = "delta_rmsea", "SRMR" = "delta_srmr", "AIC" = "delta_aic",
+        "BIC" = "delta_bic"),
+      formats = list(delta_cfi = signed, delta_tli = signed, delta_rmsea = signed,
+                     delta_srmr = signed,
+                     delta_aic = function(v) nomo_present_signed(v, 1L),
+                     delta_bic = function(v) nomo_present_signed(v, 1L)),
+      more = "nomo_table(x, \"comparisons\")"
+    )
 
-    cat("\nInterpretation\n")
-    for (i in seq_len(nrow(x$comparisons))) {
-      cat("- ", x$comparisons$interpretation[[i]], "\n", sep = "")
-    }
+    nomo_present_section("Interpretation")
+    nomo_present_bullets(x$comparisons$interpretation)
   }
 
   if (nrow(x$loadings)) {
-    cat("\nStandardized loadings by model\n")
-    loadings <- x$loadings
-    for (nm in setdiff(names(loadings), c("factor", "item"))) {
-      loadings[[nm]] <- round(loadings[[nm]], 3L)
-    }
-    print(loadings, n = Inf, width = Inf)
+    nomo_present_section("Standardized loadings by model")
+    models <- setdiff(names(x$loadings), c("factor", "item"))
+    nomo_present_table(
+      x$loadings,
+      c("Factor" = "factor", "Item" = "item", stats::setNames(models, models)),
+      more = "nomo_table(x, \"loadings\")"
+    )
   }
 
   if (nrow(x$evidence)) {
-    cat("\nMeasurement evidence by model\n")
-    evidence <- round_cols(x$evidence, "estimate", 3L)
-    print(evidence[, c("model", "construct", "metric", "estimate"), drop = FALSE], n = Inf, width = Inf)
-    notes <- unique(x$evidence$note[nzchar(x$evidence$note)])
-    if (length(notes)) {
-      cat("Notes:\n")
-      for (note in notes) cat("- ", note, "\n", sep = "")
+    nomo_present_section("Measurement evidence by model")
+    ev <- x$evidence
+    wide <- unique(ev[, c("construct", "metric"), drop = FALSE])
+    key <- paste(wide$construct, wide$metric, sep = "\r")
+    models <- unique(ev$model)
+    columns <- c("Construct" = "construct", "Metric" = "metric")
+    for (i in seq_along(models)) {
+      rows <- ev[ev$model == models[[i]], , drop = FALSE]
+      column <- paste0(".model_", i)
+      wide[[column]] <- rows$estimate[match(key, paste(rows$construct, rows$metric, sep = "\r"))]
+      columns <- c(columns, stats::setNames(column, models[[i]]))
     }
+    nomo_present_table(wide, columns, more = "nomo_table(x, \"evidence\")")
+    notes <- unique(ev$note[nzchar(ev$note)])
+    if (length(notes)) nomo_present_bullets(notes)
   }
 
-  cat(
-    "\nNo model was selected automatically. Difference tests, changes in fit, ",
+  cat("\n")
+  nomo_present_text(
+    "No model was selected automatically. Difference tests, changes in fit, ",
     "information criteria, and measurement evidence answer different questions; ",
-    "read them together with theory and the recorded rationale.\n",
-    sep = ""
+    "read them together with theory and the recorded rationale."
   )
   invisible(x)
 }
