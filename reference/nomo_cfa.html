@@ -201,79 +201,65 @@ conditions. <em>Psychological Methods, 17</em>(3), 354-373.
 <span class="r-in"><span><span class="st">'</span></span></span>
 <span class="r-in"><span><span class="va">out</span> <span class="op">&lt;-</span> <span class="fu">nomo_cfa</span><span class="op">(</span><span class="va">model</span>, data <span class="op">=</span> <span class="fu">lavaan</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/lavaan/man/HolzingerSwineford1939.html" class="external-link">HolzingerSwineford1939</a></span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">out</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> nomologR confirmatory factor analysis</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 301 cases used of 301 | Estimator: ML</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Converged: yes | Ordered indicators: 0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;nomo_cfa summary&gt; Confirmatory factor analysis</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Cases: 301 of 301 used | Estimator: ML | Converged: yes</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Global fit evidence</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 9 × 5</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   metric           value variant        reference attention</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> chi_square     8.53<span style="color: #949494;">e</span>+1 chisq              <span style="color: #BB0000;">NA</span>    info     </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> df             2.4 <span style="color: #949494;">e</span>+1 df                 <span style="color: #BB0000;">NA</span>    info     </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> p_value        8.50<span style="color: #949494;">e</span><span style="color: #BB0000;">-9</span> pvalue             <span style="color: #BB0000;">NA</span>    info     </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> CFI            9.31<span style="color: #949494;">e</span><span style="color: #BB0000;">-1</span> cfi                 0.95 review   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> TLI            8.96<span style="color: #949494;">e</span><span style="color: #BB0000;">-1</span> tli                 0.95 review   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">6</span> RMSEA          9.21<span style="color: #949494;">e</span><span style="color: #BB0000;">-2</span> rmsea               0.06 review   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">7</span> RMSEA_CI_lower 7.14<span style="color: #949494;">e</span><span style="color: #BB0000;">-2</span> rmsea.ci.lower     <span style="color: #BB0000;">NA</span>    info     </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">8</span> RMSEA_CI_upper 1.14<span style="color: #949494;">e</span><span style="color: #BB0000;">-1</span> rmsea.ci.upper     <span style="color: #BB0000;">NA</span>    info     </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">9</span> SRMR           6.52<span style="color: #949494;">e</span><span style="color: #BB0000;">-2</span> srmr                0.08 info     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Global fit</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   chi-square(24) = 85.31, p &lt; .001</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Index  Value  90% CI          Reference</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   CFI    0.931                      0.950</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   TLI    0.896                      0.950</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   RMSEA  0.092  [0.071, 0.114]      0.060</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   SRMR   0.065                      0.080</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   References are teaching values for review, not cutoffs.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Standardized loadings</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 9 × 7</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   factor  item  loading     se ci_lower ci_upper attention</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> visual  x1      0.772 0.055<span style="text-decoration: underline;">0</span>    0.664    0.880 KEEP     </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> visual  x2      0.424 0.059<span style="text-decoration: underline;">6</span>    0.307    0.540 REVIEW   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> visual  x3      0.581 0.055<span style="text-decoration: underline;">1</span>    0.473    0.689 KEEP     </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> textual x4      0.852 0.022<span style="text-decoration: underline;">5</span>    0.807    0.896 KEEP     </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> textual x5      0.855 0.022<span style="text-decoration: underline;">3</span>    0.811    0.899 KEEP     </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">6</span> textual x6      0.838 0.023<span style="text-decoration: underline;">4</span>    0.792    0.884 KEEP     </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">7</span> speed   x7      0.570 0.053<span style="text-decoration: underline;">2</span>    0.465    0.674 KEEP     </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">8</span> speed   x8      0.723 0.050<span style="text-decoration: underline;">5</span>    0.624    0.822 KEEP     </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">9</span> speed   x9      0.665 0.051<span style="text-decoration: underline;">1</span>    0.565    0.765 KEEP     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Factor   Item  Loading     SE  95% CI          Flag</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   visual   x1      0.772  0.055  [0.664, 0.880]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   visual   x2      0.424  0.060  [0.307, 0.540]  review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   visual   x3      0.581  0.055  [0.473, 0.689]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   textual  x4      0.852  0.023  [0.807, 0.896]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   textual  x5      0.855  0.022  [0.811, 0.899]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   textual  x6      0.838  0.023  [0.792, 0.884]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   speed    x7      0.570  0.053  [0.465, 0.674]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   speed    x8      0.723  0.051  [0.624, 0.822]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   speed    x9      0.665  0.051  [0.565, 0.765]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Loading flags requiring inspection</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 4</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   factor item  attention</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> visual x2    REVIEW   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   explanation                                                                   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                                                                         </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Absolute standardized loading is below the configured teaching reference of 0…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Flagged loadings</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   - x2 on visual (review): Absolute standardized loading is below the</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     configured teaching reference of 0.5; inspect item content, precision, and</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     model specification.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Factor correlations</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 3 × 5</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   factor1 factor2 correlation ci_lower ci_upper</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> visual  textual       0.459    0.334    0.584</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> visual  speed         0.471    0.328    0.613</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> textual speed         0.283    0.148    0.418</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Factor 1  Factor 2      r  95% CI</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   visual    textual   0.459  [0.334, 0.584]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   visual    speed     0.471  [0.328, 0.613]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   textual   speed     0.283  [0.148, 0.418]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> No configured Heywood/improper-solution signal was detected.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Improper solutions</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   No improper-solution signal, such as a negative residual variance, was</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   detected.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Largest localized residual correlations</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 5 × 4</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   item1 item2 residual abs_residual</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> x7    x2      -<span style="color: #BB0000;">0.189</span>        0.189</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> x5    x3      -<span style="color: #BB0000;">0.151</span>        0.151</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> x9    x1       0.149        0.149</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> x9    x3       0.147        0.147</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> x7    x1      -<span style="color: #BB0000;">0.140</span>        0.140</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Largest residual correlations</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Item 1  Item 2  Residual</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   x7      x2        -0.189</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   x5      x3        -0.151</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   x9      x1         0.149</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   x9      x3         0.147</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   x7      x1        -0.140</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Top modification indices - diagnostic only</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 5 × 6</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   lhs     op    rhs      mi    epc sepc.all</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> visual  =~    x9    36.4   0.577    0.515</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> x7      ~~    x8    34.1   0.536    0.859</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> visual  =~    x7    18.6  -<span style="color: #BB0000;">0.422</span>   -<span style="color: #BB0000;">0.349</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> x8      ~~    x9    14.9  -<span style="color: #BB0000;">0.423</span>   -<span style="color: #BB0000;">0.805</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> textual =~    x3     9.15 -<span style="color: #BB0000;">0.272</span>   -<span style="color: #BB0000;">0.238</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Modification indices do not authorize automatic respecification.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Modification indices (diagnostic only)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Parameter         MI     EPC  Std. EPC</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   visual =~ x9   36.41   0.577     0.515</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   x7 ~~ x8       34.15   0.536     0.859</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   visual =~ x7   18.63  -0.422    -0.349</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   x8 ~~ x9       14.95  -0.423    -0.805</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   textual =~ x3   9.15  -0.272    -0.238</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Modification indices locate strain. They do not authorize freeing a</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   parameter, and nomologR never does so automatically.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Interpretation rule: global fit, local strain, and parameter estimates are evidence to interpret together; no single cutoff establishes model validity.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Global fit, local strain, and parameter estimates are evidence to interpret</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> together; no single cutoff establishes model validity.</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="co"># Declared ordered indicators request WLSMV rather than ML</span></span></span>

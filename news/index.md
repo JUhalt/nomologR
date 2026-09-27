@@ -2,6 +2,21 @@
 
 ## nomologR (development version)
 
+- Console output begins a redesign for readability
+  ([\#89](https://github.com/JUhalt/nomologR/issues/89)), starting with
+  [`nomo_cfa()`](https://juhalt.github.io/nomologR/reference/nomo_cfa.md)’s
+  [`print()`](https://rdrr.io/r/base/print.html) and
+  [`summary()`](https://rdrr.io/r/base/summary.html). Tables are aligned
+  text with the columns that matter and no type rows. A flagged
+  loading’s explanation is printed in full rather than cut off inside a
+  table cell. Numbers have fixed decimals, p-values follow APA style,
+  and prose wraps to the console width. Flags are shown in one wording
+  across the package: nothing for no flag, then “review”, then
+  “concern”. This is display only: returned objects,
+  [`nomo_table()`](https://juhalt.github.io/nomologR/reference/nomo_table.md)
+  types, and decision-log values keep their values.
+  `dev/output-gallery.R` regenerates every print, summary, and plot and
+  reports the remaining presentation faults.
 - [`nomo_cfa()`](https://juhalt.github.io/nomologR/reference/nomo_cfa.md),
   [`nomo_invariance()`](https://juhalt.github.io/nomologR/reference/nomo_invariance.md),
   and

@@ -166,79 +166,65 @@ model <- '
 '
 out <- nomo_cfa(model, data = lavaan::HolzingerSwineford1939)
 summary(out)
-#> nomologR confirmatory factor analysis
-#> 301 cases used of 301 | Estimator: ML
-#> Converged: yes | Ordered indicators: 0
+#> <nomo_cfa summary> Confirmatory factor analysis
+#> Cases: 301 of 301 used | Estimator: ML | Converged: yes
 #> 
-#> Global fit evidence
-#> # A tibble: 9 × 5
-#>   metric           value variant        reference attention
-#>   <chr>            <dbl> <chr>              <dbl> <chr>    
-#> 1 chi_square     8.53e+1 chisq              NA    info     
-#> 2 df             2.4 e+1 df                 NA    info     
-#> 3 p_value        8.50e-9 pvalue             NA    info     
-#> 4 CFI            9.31e-1 cfi                 0.95 review   
-#> 5 TLI            8.96e-1 tli                 0.95 review   
-#> 6 RMSEA          9.21e-2 rmsea               0.06 review   
-#> 7 RMSEA_CI_lower 7.14e-2 rmsea.ci.lower     NA    info     
-#> 8 RMSEA_CI_upper 1.14e-1 rmsea.ci.upper     NA    info     
-#> 9 SRMR           6.52e-2 srmr                0.08 info     
+#> Global fit
+#>   chi-square(24) = 85.31, p < .001
+#>   Index  Value  90% CI          Reference
+#>   CFI    0.931                      0.950
+#>   TLI    0.896                      0.950
+#>   RMSEA  0.092  [0.071, 0.114]      0.060
+#>   SRMR   0.065                      0.080
+#>   References are teaching values for review, not cutoffs.
 #> 
 #> Standardized loadings
-#> # A tibble: 9 × 7
-#>   factor  item  loading     se ci_lower ci_upper attention
-#>   <chr>   <chr>   <dbl>  <dbl>    <dbl>    <dbl> <chr>    
-#> 1 visual  x1      0.772 0.0550    0.664    0.880 KEEP     
-#> 2 visual  x2      0.424 0.0596    0.307    0.540 REVIEW   
-#> 3 visual  x3      0.581 0.0551    0.473    0.689 KEEP     
-#> 4 textual x4      0.852 0.0225    0.807    0.896 KEEP     
-#> 5 textual x5      0.855 0.0223    0.811    0.899 KEEP     
-#> 6 textual x6      0.838 0.0234    0.792    0.884 KEEP     
-#> 7 speed   x7      0.570 0.0532    0.465    0.674 KEEP     
-#> 8 speed   x8      0.723 0.0505    0.624    0.822 KEEP     
-#> 9 speed   x9      0.665 0.0511    0.565    0.765 KEEP     
+#>   Factor   Item  Loading     SE  95% CI          Flag
+#>   visual   x1      0.772  0.055  [0.664, 0.880]
+#>   visual   x2      0.424  0.060  [0.307, 0.540]  review
+#>   visual   x3      0.581  0.055  [0.473, 0.689]
+#>   textual  x4      0.852  0.023  [0.807, 0.896]
+#>   textual  x5      0.855  0.022  [0.811, 0.899]
+#>   textual  x6      0.838  0.023  [0.792, 0.884]
+#>   speed    x7      0.570  0.053  [0.465, 0.674]
+#>   speed    x8      0.723  0.051  [0.624, 0.822]
+#>   speed    x9      0.665  0.051  [0.565, 0.765]
 #> 
-#> Loading flags requiring inspection
-#> # A tibble: 1 × 4
-#>   factor item  attention
-#>   <chr>  <chr> <chr>    
-#> 1 visual x2    REVIEW   
-#>   explanation                                                                   
-#>   <chr>                                                                         
-#> 1 Absolute standardized loading is below the configured teaching reference of 0…
+#> Flagged loadings
+#>   - x2 on visual (review): Absolute standardized loading is below the
+#>     configured teaching reference of 0.5; inspect item content, precision, and
+#>     model specification.
 #> 
 #> Factor correlations
-#> # A tibble: 3 × 5
-#>   factor1 factor2 correlation ci_lower ci_upper
-#>   <chr>   <chr>         <dbl>    <dbl>    <dbl>
-#> 1 visual  textual       0.459    0.334    0.584
-#> 2 visual  speed         0.471    0.328    0.613
-#> 3 textual speed         0.283    0.148    0.418
+#>   Factor 1  Factor 2      r  95% CI
+#>   visual    textual   0.459  [0.334, 0.584]
+#>   visual    speed     0.471  [0.328, 0.613]
+#>   textual   speed     0.283  [0.148, 0.418]
 #> 
-#> No configured Heywood/improper-solution signal was detected.
+#> Improper solutions
+#>   No improper-solution signal, such as a negative residual variance, was
+#>   detected.
 #> 
-#> Largest localized residual correlations
-#> # A tibble: 5 × 4
-#>   item1 item2 residual abs_residual
-#>   <chr> <chr>    <dbl>        <dbl>
-#> 1 x7    x2      -0.189        0.189
-#> 2 x5    x3      -0.151        0.151
-#> 3 x9    x1       0.149        0.149
-#> 4 x9    x3       0.147        0.147
-#> 5 x7    x1      -0.140        0.140
+#> Largest residual correlations
+#>   Item 1  Item 2  Residual
+#>   x7      x2        -0.189
+#>   x5      x3        -0.151
+#>   x9      x1         0.149
+#>   x9      x3         0.147
+#>   x7      x1        -0.140
 #> 
-#> Top modification indices - diagnostic only
-#> # A tibble: 5 × 6
-#>   lhs     op    rhs      mi    epc sepc.all
-#>   <chr>   <chr> <chr> <dbl>  <dbl>    <dbl>
-#> 1 visual  =~    x9    36.4   0.577    0.515
-#> 2 x7      ~~    x8    34.1   0.536    0.859
-#> 3 visual  =~    x7    18.6  -0.422   -0.349
-#> 4 x8      ~~    x9    14.9  -0.423   -0.805
-#> 5 textual =~    x3     9.15 -0.272   -0.238
-#> Modification indices do not authorize automatic respecification.
+#> Modification indices (diagnostic only)
+#>   Parameter         MI     EPC  Std. EPC
+#>   visual =~ x9   36.41   0.577     0.515
+#>   x7 ~~ x8       34.15   0.536     0.859
+#>   visual =~ x7   18.63  -0.422    -0.349
+#>   x8 ~~ x9       14.95  -0.423    -0.805
+#>   textual =~ x3   9.15  -0.272    -0.238
+#>   Modification indices locate strain. They do not authorize freeing a
+#>   parameter, and nomologR never does so automatically.
 #> 
-#> Interpretation rule: global fit, local strain, and parameter estimates are evidence to interpret together; no single cutoff establishes model validity.
+#> Global fit, local strain, and parameter estimates are evidence to interpret
+#> together; no single cutoff establishes model validity.
 
 # \donttest{
 # Declared ordered indicators request WLSMV rather than ML
