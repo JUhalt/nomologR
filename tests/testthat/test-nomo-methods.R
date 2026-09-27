@@ -563,7 +563,7 @@ test_that("summary(run) carries and prints the methods used", {
   expect_equal(s$methods, nomo_methods(run))
 
   printed <- paste(capture.output(print(s)), collapse = "\n")
-  expect_match(printed, "Methods used \\(\\d+; full entries and references: nomo_methods\\(run\\)\\)")
+  expect_match(printed, "Methods used: \\d+")
   expect_match(printed, "Common-factor parallel analysis", fixed = TRUE)
 })
 

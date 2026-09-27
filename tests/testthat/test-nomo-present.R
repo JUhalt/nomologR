@@ -27,6 +27,38 @@ test_that("every flag vocabulary is shown in one wording", {
 })
 
 
+test_that("plot legends use the same flag wording (#89)", {
+  expect_identical(
+    as.character(nomologR:::nomo_present_flag_legend(
+      c("KEEP", "REVIEW", "STRONG REVIEW", "info", "concern")
+    )),
+    c("none", "review", "concern", "none", "concern")
+  )
+
+  skip_on_cran()
+  legend <- function(p, aesthetic) ggplot2::get_guide_data(p, aesthetic)$.label
+  cfa <- nomo_cfa(
+    nomo_model(list(A = paste0("a", 1:5), B = paste0("b", 1:5))),
+    data = nomo_demo_continuous
+  )
+  val <- nomo_validity(cfa)
+
+  cfa$standardized_loadings$attention[1:3] <- c("KEEP", "REVIEW", "STRONG REVIEW")
+  p <- plot(cfa, type = "loadings")
+  expect_identical(p$labels$shape, "Flag")
+  expect_identical(legend(p, "shape"), c("none", "review", "concern"))
+  cfa$fit_evidence$attention <- ifelse(cfa$fit_evidence$metric == "SRMR", "review", "info")
+  expect_identical(legend(plot(cfa, type = "fit"), "shape"), c("none", "review"))
+
+  val$ave$attention <- c("info", "concern")
+  expect_identical(legend(plot(val, type = "ave"), "shape"), c("none", "concern"))
+
+  p <- plot(nomo_screen(nomo_demo_continuous), type = "evidence")
+  expect_identical(p$labels$fill, "Flag")
+  expect_identical(legend(p, "fill"), c("none", "note", "review"))
+})
+
+
 test_that("text, facts, and bullets wrap to the console width", {
   local_reproducible_output(width = 40)
   long <- paste(rep("word", 30), collapse = " ")
@@ -213,6 +245,39 @@ test_that("invariance lists the levels to review with what went wrong (#89)", {
   fit_ok <- fit[1L, , drop = FALSE]
   expect_identical(utils::capture.output(nomologR:::nomo_invariance_present_problems(fit_ok)),
                    character())
+})
+
+
+test_that("guided runs say what they found, and group repeated requests (#89)", {
+  skip_on_cran()
+  scales <- list(Agency = paste0("ag", 1:4), Persistence = paste0("pe", 1:4),
+                 SocialDesirability = paste0("sd", 1:3))
+  factors <- list(criterion_set = "minimal", n_iter = 20, seed = 2026)
+  paused <- nomo_run(nomo_demo_network, scales = scales, settings = list(factors = factors))
+  expect_snapshot(print(paused))
+
+  h <- nomo_hypotheses("Agency -> Persistence" = positive(min = .20))
+  complete <- nomo_run(
+    nomo_demo_network, scales = scales,
+    decisions = list(factor_count = c(Agency = 1, Persistence = 1, SocialDesirability = 1),
+                     cfa_model = nomo_model(scales), measurement_model = "proceed"),
+    settings = list(factors = factors, network = list(hypotheses = h),
+                    invariance = list(group = "group", levels = c("configural", "metric")),
+                    screen = list(effort = TRUE), scores = list(method = "sum"),
+                    missing = list(reliability = FALSE))
+  )
+  expect_snapshot(print(complete))
+  expect_snapshot(print(summary(complete)))
+
+  # Evidence that is unavailable is described as such rather than left out.
+  thin <- complete
+  thin$results$factors$Agency$parallel$n_factors <- NULL
+  thin$results$cfa$fit_evidence$value <- NA_real_
+  thin$results$reliability$evidence$estimate <- NA_real_
+  evidence <- nomologR:::nomo_run_key_evidence(thin)
+  expect_true(any(grepl("Agency -", evidence, fixed = TRUE)))
+  expect_true(any(grepl("CFA: fit unavailable", evidence, fixed = TRUE)))
+  expect_false(any(grepl("Reliability:", evidence, fixed = TRUE)))
 })
 
 

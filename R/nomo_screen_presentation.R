@@ -451,6 +451,11 @@ nomo_screen_evidence_data <- function(x, items) {
 
 nomo_screen_plot_evidence <- function(x, items) {
   dat <- nomo_screen_evidence_data(x, items)
+  # Display wording (#89): an informational signal is a note, not a flag.
+  shown <- function(severity) {
+    severity <- as.character(severity)
+    ifelse(severity == "info", "note", severity)
+  }
 
   ggplot2::ggplot(
     dat,
@@ -469,7 +474,7 @@ nomo_screen_plot_evidence <- function(x, items) {
         label = ifelse(
           severity == "none",
           "",
-          toupper(substr(as.character(severity), 1L, 1L))
+          toupper(substr(shown(severity), 1L, 1L))
         )
       ),
       size = 3
@@ -481,6 +486,7 @@ nomo_screen_plot_evidence <- function(x, items) {
         review = "#E69F00",
         concern = "#D55E00"
       ),
+      labels = shown,
       drop = TRUE
     ) +
     nomo_plot_labs(
@@ -491,7 +497,7 @@ nomo_screen_plot_evidence <- function(x, items) {
       ),
       x = NULL,
       y = NULL,
-      fill = "Attention"
+      fill = "Flag"
     ) +
     ggplot2::theme_minimal(base_size = 11) +
     ggplot2::theme(
@@ -577,7 +583,7 @@ nomo_screen_plot_item_rest <- function(x, items, show_values) {
       ),
       x = NULL,
       y = "Corrected item-rest correlation",
-      fill = "Item-rest"
+      fill = "Flag"
     ) +
     ggplot2::theme_minimal(base_size = 11)
 
