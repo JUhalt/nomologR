@@ -102,6 +102,37 @@ test_that("matrix and list columns are converted to report-ready tables", {
 })
 
 
+test_that("report tables read as words, with the console's flags and a dash for blanks (#89)", {
+  labels <- nomologR:::nomo_report_column_labels
+  expect_identical(
+    labels(c("omega_ci_lower", "delta_cfi", "pct_missing", "p_value", "df", "n_items",
+             "median_interitem_r", "sepc.all", "attention")),
+    c("Omega CI lower", "Change in CFI", "% missing", "p", "df", "Items",
+      "Median inter-item r", "Standardized EPC (all)", "Flag")
+  )
+  # Names that are not the package's own are left as written: a capital letter
+  # (a factor), a single word with a digit (an item), or a protected name.
+  expect_identical(labels(c("F1", "AVE", "ag1", "anxiety"), protected = "anxiety"),
+                   c("F1", "AVE", "ag1", "anxiety"))
+
+  tab <- tibble::tibble(
+    item = c("ag1", "ag2", "ag3"),
+    attention = c("KEEP", "REVIEW", "STRONG REVIEW"),
+    loading = c(.8, NA, .3),
+    note = c("", NA, "low"),
+    converged = c(TRUE, FALSE, NA)
+  )
+  shown <- nomologR:::nomo_report_display_table(tab)
+  dash <- nomologR:::nomo_report_blank
+  expect_identical(names(shown), c("Item", "Flag", "Loading", "Note", "Converged"))
+  expect_identical(shown$Flag, c(dash, "review", "concern"))
+  expect_identical(shown$Note, c(dash, dash, "low"))
+  expect_identical(shown$Converged, c("yes", "no", dash))
+  # Numbers stay numbers, for the table writer to round.
+  expect_identical(shown$Loading, c(.8, NA, .3))
+})
+
+
 test_that("evidence trace keeps recommendations attached to source evidence", {
   run <- make_m9_report_run()
   trace <- nomologR:::nomo_report_evidence_trace(run)
@@ -1319,6 +1350,12 @@ test_that("each scale keeps its heading after the plot before it (#89)", {
   }
   expect_false(grepl("## Scale:", html, fixed = TRUE))
   expect_false(grepl("## Careless", html, fixed = TRUE))
+  # Table headings read as words, and a blank cell is a dash that pandoc does
+  # not take for a list item, which would break the table (#89).
+  expect_true(grepl(">\\s*Corrected item-rest r\\s*<", html))
+  expect_false(grepl("<td[^>]*>\\s*NA\\s*</td>", html))
+  expect_true(grepl(paste0("<td[^>]*>\\s*", nomologR:::nomo_report_blank, "\\s*</td>"), html))
+  expect_false(grepl("<td[^>]*>\\s*<ul>", html))
 
   docx <- nomo_report(run, file = file.path(dir, "report.docx"),
                       include_session = FALSE, quiet = TRUE)

@@ -1,5 +1,6 @@
 # nomologR (development version)
 
+- `nomo_report()` tables are easier to read (#89). Column headings are words, not code names: "Omega CI lower" for `omega_ci_lower`, "Change in CFI" for `delta_cfi`, "Corrected item-rest r" for `corrected_item_rest_r`. Flags use the console's wording ("review", "concern"). A missing or empty cell is an em dash rather than `NA` or nothing, and TRUE/FALSE is yes/no. Item, scale, and factor names are left as written. The values are otherwise unchanged, and `nomo_table()` still returns the code's column names and flag values.
 - The redesigned console output extends to comparisons, invariance, partial releases, hypotheses, networks, splits, and the notes of `nomo_apa_table()` (#89).
   - Wide tables are split: model fit apart from information criteria, difference tests apart from changes in fit, and fit by level apart from changes between levels.
   - Levels that failed or raised warnings are listed with what went wrong.
