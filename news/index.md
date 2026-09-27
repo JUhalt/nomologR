@@ -2,6 +2,18 @@
 
 ## nomologR (development version)
 
+- [`nomo_cfa()`](https://juhalt.github.io/nomologR/reference/nomo_cfa.md),
+  [`nomo_invariance()`](https://juhalt.github.io/nomologR/reference/nomo_invariance.md),
+  and
+  [`nomo_network()`](https://juhalt.github.io/nomologR/reference/nomo_network.md)
+  name any variable the model uses that the data lack, before fitting
+  ([\#89](https://github.com/JUhalt/nomologR/issues/89)): “`model` names
+  variable(s) not found in `data`: agX. Check the spelling against
+  names(data).” A misspelled item had reached lavaan, and the error
+  named lavaan’s internal step (`lavaan->lav_step02_options()`) rather
+  than the item. The more specific argument checks, such as for
+  `ordered`, still come first, and model syntax that lavaan cannot parse
+  is still reported by lavaan.
 - [`nomo_table()`](https://juhalt.github.io/nomologR/reference/nomo_table.md)
   works on every measurement-stage result: `nomo_factors`, `nomo_efa`,
   `nomo_cfa`, `nomo_reliability`, and `nomo_validity`
