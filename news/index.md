@@ -7,7 +7,9 @@
   “1 pair”, “1 more degree of freedom”, rather than “2 factor(s)”. This
   covers the printed counts in scores, reliability, validity,
   hypotheses, and partial releases, and the notes in comparisons and
-  bifactor models.
+  bifactor models. Counted phrases in decision-log observations and
+  report summaries agree too, with their verbs: “1 indicator was
+  declared ordered”, “10 of 12 reviewed items were carried”.
 - Plot legends use the display flag wording too
   ([\#89](https://github.com/JUhalt/nomologR/issues/89)). The CFA
   loading and fit plots and the AVE and HTMT plots label their points

@@ -570,7 +570,7 @@ review_log <- nomo_table(screened, "decision_log")
 cat(review_log$observation[review_log$object %in% c("content_review", "EF5", "TF5")],
     sep = "\n")
 #> Items and their construct membership came from content review in contentvalidR 0.7.0 (workflow: item-sort; carry rule: Supported; method: Anderson-Gerbing Psa/Csv with Howard-Melloy exact inference), not from these data.
-#> 10 of 12 reviewed item(s) were carried and 2 held back. Status counts: Review 2, Supported 10.
+#> 10 of 12 reviewed items were carried and 2 held back. Status counts: Review 2, Supported 10.
 #> EF5 was held back by content review: status "Review", recommendation "Review".
 #> TF5 was held back by content review: status "Review", recommendation "Review".
 #> Content review declared reverse-keyed item(s) EF2, TF2, on a 1 to 5 response scale.
