@@ -2,6 +2,18 @@
 
 ## nomologR (development version)
 
+- The content-review reader is now tested against `contentvalidR` 0.8.0
+  and 0.9.0 output as well as 0.6.0 and 0.7.0
+  ([\#53](https://github.com/JUhalt/nomologR/issues/53)). The added
+  fixtures include a nine-expert panel whose carry decision changed
+  between producers. Seven of nine experts rate item N7 relevant, which
+  is what Lynn (1986) requires. `contentvalidR` 0.7.0 compared the I-CVI
+  with a rounded .78 and held N7 back; 0.8.0 compares counts and carries
+  it. The test confirms that
+  [`nomo_screen()`](https://juhalt.github.io/nomologR/reference/nomo_screen.md)
+  follows the decision the handoff records rather than inferring one
+  from the producer version. The reader needed no change: 0.8.0 and
+  0.9.0 keep schema version 1 with the same fields and columns.
 - The redesigned console output extends to the item audit, factor
   retention, and EFA
   ([\#89](https://github.com/JUhalt/nomologR/issues/89)):
