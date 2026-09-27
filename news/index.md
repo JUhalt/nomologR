@@ -2,6 +2,16 @@
 
 ## nomologR (development version)
 
+- [`nomo_validity()`](https://juhalt.github.io/nomologR/reference/nomo_validity.md)
+  lists each construct pair once in its print, summary, and report
+  section, with the latent correlation and HTMT-family values in the
+  same row ([\#89](https://github.com/JUhalt/nomologR/issues/89)).
+  Latent correlations name a pair in model order and HTMT names it the
+  other way round, so the two never merged. Each pair appeared twice,
+  once with its correlation but a signal of “unavailable” and once with
+  its HTMT values, and the print counted twice as many pairs as there
+  are. Pairs are now shown in model order, including in the HTMT plot.
+  The returned tables and every computed value are unchanged.
 - [`nomo_report()`](https://juhalt.github.io/nomologR/reference/nomo_report.md)
   headings are rendered for every scale of a multi-scale run
   ([\#89](https://github.com/JUhalt/nomologR/issues/89)). A heading that

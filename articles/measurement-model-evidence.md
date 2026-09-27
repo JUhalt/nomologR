@@ -102,11 +102,10 @@ summary(val)
     ## # ℹ 1 more variable: signal <chr>
     ## 
     ## Construct-separation evidence
-    ## # A tibble: 2 × 9
+    ## # A tibble: 1 × 9
     ##   construct_1 construct_2 block   latent_r latent_r_ci_lower latent_r_ci_upper
     ##   <chr>       <chr>       <chr>      <dbl>             <dbl>             <dbl>
-    ## 1 F2          F1          overall   NA                NA                NA    
-    ## 2 F1          F2          overall    0.223             0.127             0.318
+    ## 1 F1          F2          overall    0.223             0.127             0.318
     ## # ℹ 3 more variables: HTMT2 <dbl>, HTMT <dbl>, signal <chr>
     ## 
     ## Interpretation rule: standardized loadings and AVE address convergent evidence; latent correlations and HTMT-family statistics address construct separation. These are complementary questions, not interchangeable pass/fail tests.
@@ -301,11 +300,10 @@ summary(overlap_val)
     ## # ℹ 1 more variable: signal <chr>
     ## 
     ## Construct-separation evidence
-    ## # A tibble: 2 × 9
+    ## # A tibble: 1 × 9
     ##   construct_1 construct_2 block   latent_r latent_r_ci_lower latent_r_ci_upper
     ##   <chr>       <chr>       <chr>      <dbl>             <dbl>             <dbl>
-    ## 1 F2          F1          overall   NA                NA                NA    
-    ## 2 F1          F2          overall    0.933             0.912             0.954
+    ## 1 F1          F2          overall    0.933             0.912             0.954
     ## # ℹ 3 more variables: HTMT2 <dbl>, HTMT <dbl>, signal <chr>
     ## 
     ## Interpretation rule: standardized loadings and AVE address convergent evidence; latent correlations and HTMT-family statistics address construct separation. These are complementary questions, not interchangeable pass/fail tests.
