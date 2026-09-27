@@ -382,6 +382,12 @@ does not mean “delete.” Defensible options for `a5` include retaining it
 because its content is essential, revising its wording, or evaluating a
 model without it — and recording the rationale either way.
 
+These are the values in the returned table.
+[`print()`](https://rdrr.io/r/base/print.html) and
+[`summary()`](https://rdrr.io/r/base/summary.html) show the same flags
+in the package’s display wording: no flag for `KEEP`, “review” for
+`REVIEW`, and “concern” for `STRONG REVIEW`.
+
 ## Pattern versus structure matrices
 
 With oblique rotation, the pattern matrix contains regression-like

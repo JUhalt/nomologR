@@ -302,6 +302,14 @@ for review. Items receive <code>KEEP</code>, <code>REVIEW</code>, or
 live in <code><a href="../reference/nomo_defaults.html">nomo_defaults()</a></code>, and changing them is a visible
 researcher choice.</li>
 <li>
+<strong>One flag wording on screen.</strong> Printed output, plots,
+and reports use one flag wording: “review”, then “concern”, and no flag
+when no reference fired (a plot legend calls that “none”). The returned
+tables keep each analysis’s own values (<code>KEEP</code>,
+<code>REVIEW</code>, and <code>STRONG REVIEW</code> for loadings;
+<code>info</code>, <code>review</code>, and <code>concern</code> for
+evidence), so code that filters on them is unaffected.</li>
+<li>
 <strong>Historical methods are labeled.</strong> Techniques you will
 meet in published work — eigenvalues greater than one, coefficient
 alpha, the Fornell–Larcker comparison — are shown as context where

@@ -118,6 +118,12 @@ the scale “has” two factors.
   references live in
   [`nomo_defaults()`](https://juhalt.github.io/nomologR/reference/nomo_defaults.md),
   and changing them is a visible researcher choice.
+- **One flag wording on screen.** Printed output, plots, and reports use
+  one flag wording: “review”, then “concern”, and no flag when no
+  reference fired (a plot legend calls that “none”). The returned tables
+  keep each analysis’s own values (`KEEP`, `REVIEW`, and `STRONG REVIEW`
+  for loadings; `info`, `review`, and `concern` for evidence), so code
+  that filters on them is unaffected.
 - **Historical methods are labeled.** Techniques you will meet in
   published work — eigenvalues greater than one, coefficient alpha, the
   Fornell–Larcker comparison — are shown as context where useful,
