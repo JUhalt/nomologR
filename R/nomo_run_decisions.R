@@ -80,7 +80,7 @@ nomo_run_factor_requests <- function(x) {
       ),
       options = paste(
         "Inspect the full `nomo_factors` result, compare plausible neighboring",
-        "solutions when appropriate, and supply a positive integer for this scale."
+        "solutions when appropriate, and supply a positive integer for each scale."
       ),
       consequence = paste(
         "No EFA is fitted until an explicit researcher factor-count decision",

@@ -833,7 +833,7 @@
         the researcher.
         Options: Inspect the full `nomo_factors` result, compare plausible
         neighboring solutions when appropriate, and supply a positive integer for
-        this scale.
+        each scale.
         Consequence: No EFA is fitted until an explicit researcher factor-count
         decision is supplied.
         - Agency: Parallel analysis currently suggests 1 factor; the retained
