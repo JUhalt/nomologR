@@ -1,6 +1,7 @@
 # nomologR (development version)
 
 - `plot(<nomo_screen>, type = "responses")` draws a histogram for a continuous item (#89). It drew a bar for every distinct value, which for continuous responses means one bar per respondent: an unreadable plot, with a percentage label on each bar. Categorical items keep their bars. When the selected items mix the two, the categorical items are drawn and the caption names the continuous ones and how to plot them.
+- `nomo_report()` headings are rendered for every scale of a multi-scale run (#89). A heading that followed a plot, which is every scale after the first in the item audit and factor retention, plus "Careless responding", was run into the plot's paragraph. It appeared as literal `## Scale: ...` text in HTML and Word, and the table of contents filed every scale's tables under the first. The report tests had rendered only single-scale runs or had turned plots off; a two-scale report with plots is now tested in both formats.
 - The reproducible-report article's overwrite example shows the refusal message with its temporary directory as `<report_dir>`. It had printed the full temporary path of the computer that built the article, including a user name, and the path changed on every build. The message still comes from `nomo_report()`, and the example still shows that an existing report is refused unless `overwrite = TRUE` is given.
 
 # nomologR 0.3.0

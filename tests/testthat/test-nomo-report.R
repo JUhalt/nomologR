@@ -1276,6 +1276,65 @@ test_that("a Word report keeps every table and the interpretation contract", {
 })
 
 
+test_that("each scale keeps its heading after the plot before it (#89)", {
+  skip_on_cran()
+  skip_if_not_installed("rmarkdown")
+  skip_if_not_installed("knitr")
+  skip_if_not(rmarkdown::pandoc_available())
+
+  # Two scales, paused before EFA: the item audit and factor retention each
+  # draw a plot per scale, and careless responding follows the last one.
+  set.seed(8901L)
+  n <- 240L
+  f <- rnorm(n)
+  g <- .4 * f + sqrt(1 - .4^2) * rnorm(n)
+  dat <- data.frame(
+    a1 = .80 * f + rnorm(n, sd = .60), a2 = .75 * f + rnorm(n, sd = .65),
+    a3 = .70 * f + rnorm(n, sd = .70), b1 = .80 * g + rnorm(n, sd = .60),
+    b2 = .75 * g + rnorm(n, sd = .65), b3 = .70 * g + rnorm(n, sd = .70)
+  )
+  run <- nomo_run(
+    dat,
+    scales = list(Alpha = c("a1", "a2", "a3"), Beta = c("b1", "b2", "b3")),
+    settings = list(
+      factors = list(criterion_set = "minimal", n_iter = 10L, seed = 2026L),
+      screen = list(effort = TRUE)
+    )
+  )
+
+  dir <- tempfile("nomo-headings-")
+  dir.create(dir)
+  on.exit(unlink(dir, recursive = TRUE), add = TRUE)
+
+  html_file <- nomo_report(run, file = file.path(dir, "report.html"),
+                           include_session = FALSE, quiet = TRUE)
+  html <- paste(readLines(html_file, warn = FALSE, encoding = "UTF-8"), collapse = "\n")
+  # Pandoc numbers repeated heading IDs, so the second section's scale
+  # headings carry a "-1" suffix.
+  # grepl() rather than expect_match(), whose failure message would print the
+  # whole self-contained report.
+  for (id in c("scale-alpha", "scale-beta", "scale-alpha-1", "scale-beta-1",
+               "careless-responding")) {
+    expect_true(grepl(sprintf('id="%s"', id), html, fixed = TRUE), label = id)
+  }
+  expect_false(grepl("## Scale:", html, fixed = TRUE))
+  expect_false(grepl("## Careless", html, fixed = TRUE))
+
+  docx <- nomo_report(run, file = file.path(dir, "report.docx"),
+                      include_session = FALSE, quiet = TRUE)
+  unz <- file.path(dir, "unz")
+  utils::unzip(docx, exdir = unz)
+  xml <- paste(readLines(file.path(unz, "word", "document.xml"), warn = FALSE,
+                         encoding = "UTF-8"), collapse = "\n")
+  text <- gsub("<[^>]+>", "", xml)
+  expect_false(grepl("## Scale:", text, fixed = TRUE))
+  paragraphs <- strsplit(xml, "</w:p>", fixed = TRUE)[[1]]
+  beta <- paragraphs[grepl("Scale: Beta", paragraphs, fixed = TRUE)]
+  expect_gt(length(beta), 0L)
+  expect_true(all(grepl('w:val="Heading2"', beta, fixed = TRUE)))
+})
+
+
 test_that("the HTML report is unchanged by Word support", {
   skip_on_cran()
   skip_if_not_installed("rmarkdown")
