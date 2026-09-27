@@ -1,5 +1,6 @@
 # nomologR (development version)
 
+- `plot(<nomo_screen>, type = "responses")` draws a histogram for a continuous item (#89). It drew a bar for every distinct value, which for continuous responses means one bar per respondent: an unreadable plot, with a percentage label on each bar. Categorical items keep their bars. When the selected items mix the two, the categorical items are drawn and the caption names the continuous ones and how to plot them.
 - The reproducible-report article's overwrite example shows the refusal message with its temporary directory as `<report_dir>`. It had printed the full temporary path of the computer that built the article, including a user name, and the path changed on every build. The message still comes from `nomo_report()`, and the example still shows that an existing report is refused unless `overwrite = TRUE` is given.
 
 # nomologR 0.3.0

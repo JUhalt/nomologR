@@ -19,7 +19,11 @@
 \item{y}{Ignored; included for compatibility with the base \code{plot()} generic.}
 
 \item{type}{Plot type: \code{"evidence"}, \code{"item_rest"}, \code{"interitem"},
-\code{"responses"}, or \code{"missingness"}.}
+\code{"responses"}, or \code{"missingness"}. \code{"responses"} draws a bar for each
+response category of a categorical item, and a histogram of observed
+values for a continuous item (\code{item_type} \code{"numeric_continuous"}). When the
+selected items mix the two, the categorical items are drawn and the caption
+names the continuous ones, which can be plotted by passing them as \code{items}.}
 
 \item{items}{Optional character vector of candidate items to display.}
 
