@@ -651,8 +651,10 @@ test_that("teaching and research modes do not change analysis", {
   expect_identical(research$decision_log, teaching$decision_log)
   expect_equal(research$mode, "research")
 
-  expect_output(print(teaching), "Observation:")
-  expect_output(print(research), "Decision requests")
+  expect_output(print(teaching), "Reason:")
+  expect_output(print(research), "Researcher decision required")
+  # Research mode is compact: the request, without the teaching explanation.
+  expect_false(any(grepl("Reason:", utils::capture.output(print(research)), fixed = TRUE)))
 })
 
 
@@ -715,7 +717,7 @@ test_that("nomo_table exposes pipeline state without mutating it", {
   expect_s3_class(nomo_table(out, "component_log"), "data.frame")
   expect_s3_class(nomo_table(out, "scales"), "data.frame")
 
-  expect_output(print(summary(out)), "Stage status")
+  expect_output(print(summary(out)), "Stages")
 })
 
 # ---- consolidated from test-nomo-run-m8b.R ----
@@ -974,8 +976,10 @@ test_that("research and teaching modes retain identical statistical objects", {
   expect_identical(research$decisions, teaching$decisions)
   expect_equal(research$mode, "research")
 
-  expect_output(print(teaching), "Observation:")
-  expect_output(print(research), "Decision requests")
+  expect_output(print(teaching), "Reason:")
+  expect_output(print(research), "Researcher decision required")
+  # Research mode is compact: the request, without the teaching explanation.
+  expect_false(any(grepl("Reason:", utils::capture.output(print(research)), fixed = TRUE)))
 })
 
 

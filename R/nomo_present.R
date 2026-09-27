@@ -48,17 +48,22 @@ nomo_present_facts <- function(parts) {
   parts <- parts[nzchar(parts)]
   if (!length(parts)) return(invisible(NULL))
   width <- nomo_present_width() - 1L
+  # A single part longer than the console, such as a long stage sequence, is
+  # wrapped with a hanging indent.
+  emit <- function(line) {
+    cat(paste0(strwrap(line, width = width, exdent = 2L), "\n"), sep = "")
+  }
   line <- parts[[1L]]
   for (part in parts[-1L]) {
     candidate <- paste(line, part, sep = " | ")
     if (nchar(candidate) > width) {
-      cat(line, "\n", sep = "")
+      emit(line)
       line <- part
     } else {
       line <- candidate
     }
   }
-  cat(line, "\n", sep = "")
+  emit(line)
 }
 
 

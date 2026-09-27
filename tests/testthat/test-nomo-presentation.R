@@ -699,8 +699,8 @@ test_that("guided-run presentation covers research blocked and complete states",
     message = "Synthetic blocked component."
   )
   txt <- paste(capture.output(print(run)), collapse = "\n")
-  expect_match(txt, "mode=research", fixed = TRUE)
-  expect_match(txt, "Decision requests", fixed = TRUE)
+  expect_match(txt, "Mode: research", fixed = TRUE)
+  expect_match(txt, "Researcher decision required", fixed = TRUE)
   expect_match(txt, "Blocked at cfa", fixed = TRUE)
 
   run$status <- "complete"
@@ -737,7 +737,8 @@ test_that("guided-run teaching presentation covers blocked, examples, and comple
   complete$next_stage <- NULL
   complete$decision_requests <- complete$decision_requests[0, , drop = FALSE]
   complete$stage_status$status[] <- "completed"
-  txt3 <- paste(capture.output(print(complete)), collapse = "\n")
+  # Sentences wrap at the console width, so compare with the breaks collapsed.
+  txt3 <- gsub("\\s+", " ", paste(capture.output(print(complete)), collapse = " "))
   expect_match(txt3, "All requested stages are complete", fixed = TRUE)
   expect_match(txt3, "No hidden item deletion", fixed = TRUE)
 })
@@ -766,14 +767,14 @@ test_that("guided-run tables and summary printing cover empty and populated bran
 
   s <- summary(run)
   txt <- paste(capture.output(print(s)), collapse = "\n")
-  expect_match(txt, "Outstanding researcher decisions", fixed = TRUE)
-  expect_match(txt, "Recorded workflow decisions", fixed = TRUE)
+  expect_match(txt, "Researcher decision required", fixed = TRUE)
+  expect_match(txt, "Recorded decisions", fixed = TRUE)
 
   complete <- make_m9_report_run()
   s2 <- summary(complete)
   txt2 <- paste(capture.output(print(s2)), collapse = "\n")
   if (nrow(s2$component_log)) {
-    expect_match(txt2, "Component decision/evidence-log rows retained", fixed = TRUE)
+    expect_match(txt2, "Component decision and evidence-log rows retained", fixed = TRUE)
   }
 })
 
@@ -858,6 +859,7 @@ test_that("guided-run summary covers no outstanding requests or decisions", {
   s <- summary(run)
   txt <- paste(capture.output(print(s)), collapse = "\n")
 
-  expect_false(grepl("Outstanding researcher decisions", txt, fixed = TRUE))
-  expect_false(grepl("Recorded workflow decisions", txt, fixed = TRUE))
+  expect_false(grepl("Researcher decision required", txt, fixed = TRUE))
+  # The section heading, not the method "Recorded decisions and rationales".
+  expect_false(any(capture.output(print(s)) == "Recorded decisions"))
 })

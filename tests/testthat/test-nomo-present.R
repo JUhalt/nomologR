@@ -198,6 +198,39 @@ test_that("invariance lists the levels to review with what went wrong (#89)", {
 })
 
 
+test_that("guided runs say what they found, and group repeated requests (#89)", {
+  skip_on_cran()
+  scales <- list(Agency = paste0("ag", 1:4), Persistence = paste0("pe", 1:4),
+                 SocialDesirability = paste0("sd", 1:3))
+  factors <- list(criterion_set = "minimal", n_iter = 20, seed = 2026)
+  paused <- nomo_run(nomo_demo_network, scales = scales, settings = list(factors = factors))
+  expect_snapshot(print(paused))
+
+  h <- nomo_hypotheses("Agency -> Persistence" = positive(min = .20))
+  complete <- nomo_run(
+    nomo_demo_network, scales = scales,
+    decisions = list(factor_count = c(Agency = 1, Persistence = 1, SocialDesirability = 1),
+                     cfa_model = nomo_model(scales), measurement_model = "proceed"),
+    settings = list(factors = factors, network = list(hypotheses = h),
+                    invariance = list(group = "group", levels = c("configural", "metric")),
+                    screen = list(effort = TRUE), scores = list(method = "sum"),
+                    missing = list(reliability = FALSE))
+  )
+  expect_snapshot(print(complete))
+  expect_snapshot(print(summary(complete)))
+
+  # Evidence that is unavailable is described as such rather than left out.
+  thin <- complete
+  thin$results$factors$Agency$parallel$n_factors <- NULL
+  thin$results$cfa$fit_evidence$value <- NA_real_
+  thin$results$reliability$evidence$estimate <- NA_real_
+  evidence <- nomologR:::nomo_run_key_evidence(thin)
+  expect_true(any(grepl("Agency -", evidence, fixed = TRUE)))
+  expect_true(any(grepl("CFA: fit unavailable", evidence, fixed = TRUE)))
+  expect_false(any(grepl("Reliability:", evidence, fixed = TRUE)))
+})
+
+
 test_that("a flag without a log row of its own still gives a reason (#89)", {
   s <- summary(nomo_screen(data.frame(a = c(1, 2, 3, 4, 5, 6), b = c(2, 1, 4, 3, 6, 5),
                                       c = c(1, 3, 2, 5, 4, 6))))

@@ -26,139 +26,185 @@ nomo_run_decision_table <- function(x) {
 }
 
 
+# Shared by print() and summary(): status, sample, and progress.
+nomo_run_present_facts <- function(x) {
+  completed <- x$stage_status$stage[x$stage_status$status == "completed"]
+  nomo_present_facts(c(
+    sprintf("Status: %s", toupper(x$status)),
+    sprintf("Mode: %s", x$mode),
+    sprintf("Sample design: %s", gsub("_", " ", x$sample_design))
+  ))
+  nomo_present_facts(c(
+    sprintf("Exploratory N = %d", x$sample_n$n[x$sample_n$role == "exploratory"]),
+    sprintf("Confirmatory N = %d", x$sample_n$n[x$sample_n$role == "confirmatory"]),
+    sprintf("Scales: %d", length(x$scales))
+  ))
+  nomo_present_facts(c(
+    sprintf("Completed: %s",
+            if (length(completed)) paste(completed, collapse = " -> ") else "none"),
+    sprintf("Next: %s", if (is.null(x$next_stage)) "none" else x$next_stage)
+  ))
+  lineage <- nomo_run_lineage(x)
+  if (nrow(lineage)) {
+    nomo_present_facts(sprintf(
+      "Revisions: %d (%s); see nomo_table(x, \"lineage\")",
+      nrow(lineage), paste(unique(gsub("_", "-", lineage$origin)), collapse = ", ")
+    ))
+  }
+}
+
+
+# One line per computed component, so a run's print says what it found rather
+# than only that it finished (#89). Each line points at evidence the summary
+# or nomo_table() shows in full.
+nomo_run_key_evidence <- function(x) {
+  r <- x$results
+  out <- character()
+
+  screens <- Filter(Negate(is.null), r$screen)
+  if (length(screens)) {
+    flags <- unlist(lapply(screens, function(s) nomo_screen_item_review(s)$attention))
+    out <- c(out, sprintf("Item audit: %d items; flags: %s", length(flags),
+                          nomo_present_flag_counts(flags)))
+  }
+  factors <- Filter(Negate(is.null), r$factors)
+  if (length(factors)) {
+    suggested <- vapply(factors, function(f) {
+      n <- f$parallel$n_factors
+      if (length(n)) format(n) else "-"
+    }, character(1))
+    out <- c(out, paste0("Parallel analysis suggests: ",
+                         paste(names(suggested), suggested, collapse = ", ")))
+  }
+  efas <- Filter(Negate(is.null), r$efa)
+  if (length(efas)) {
+    flags <- unlist(lapply(efas, function(e) e$item_summary$attention))
+    out <- c(out, paste0("EFA item flags: ", nomo_present_flag_counts(flags)))
+  }
+  if (!is.null(r$cfa)) {
+    fe <- r$cfa$fit_evidence
+    fit <- fe[fe$metric %in% c("CFI", "RMSEA", "SRMR") & is.finite(fe$value), , drop = FALSE]
+    out <- c(out, paste0(
+      "CFA: ",
+      if (nrow(fit)) paste(fit$metric, nomo_present_number(fit$value), collapse = ", ") else "fit unavailable",
+      "; loading flags: ", nomo_present_flag_counts(r$cfa$standardized_loadings$attention)
+    ))
+  }
+  if (!is.null(r$reliability)) {
+    omega <- nomo_reliability_summary_table(r$reliability)$omega
+    omega <- omega[is.finite(omega)]
+    if (length(omega)) {
+      out <- c(out, sprintf("Reliability: omega %s to %s", nomo_present_number(min(omega)),
+                            nomo_present_number(max(omega))))
+    }
+  }
+  if (!is.null(r$validity)) {
+    out <- c(out, sprintf(
+      "Validity: convergent flags %s; separation flags %s",
+      nomo_present_flag_counts(nomo_validity_convergent_table(r$validity)$signal),
+      nomo_present_flag_counts(nomo_validity_discriminant_table(r$validity)$signal)
+    ))
+  }
+  if (!is.null(r$invariance)) {
+    out <- c(out, paste0("Invariance: completed ",
+                         paste(r$invariance$completed_levels, collapse = " -> ")))
+  }
+  if (!is.null(r$network)) {
+    concordance <- table(nomo_network_pretty_status(r$network$hypothesis_evidence$concordance))
+    out <- c(out, sprintf("Network: %d hypotheses (%s)",
+                          nrow(r$network$hypothesis_evidence),
+                          paste(names(concordance), concordance, collapse = ", ")))
+  }
+  if (!is.null(r$effort) && !is.null(r$effort$effort)) {
+    out <- c(out, sprintf("Careless responding: %d case(s) flagged, none removed",
+                          sum(r$effort$effort$n_flags > 0L)))
+  }
+  if (!is.null(r$scores)) {
+    out <- c(out, sprintf("Scores: %s method", r$scores$method))
+  }
+  if (length(r$missing)) {
+    out <- c(out, paste0("Missing-data sensitivity: computed for ",
+                         paste(names(r$missing), collapse = " and ")))
+  }
+  out
+}
+
+
+# Requests that differ only by scope, such as one factor count per scale, share
+# their reason, options, and consequence; they are shown once, with each
+# scope's own observation, instead of once per scale (#89).
+nomo_run_present_requests <- function(requests, compact = FALSE) {
+  key <- paste(requests$stage, requests$reason, requests$options,
+               requests$consequence, requests$example, sep = "\r")
+  for (rows in split(seq_len(nrow(requests)), factor(key, levels = unique(key)))) {
+    r <- requests[rows, , drop = FALSE]
+    nomo_present_section(sprintf(
+      "Researcher decision required: %s (%s)", r$stage[[1L]],
+      paste(r$scope, collapse = ", ")
+    ))
+    if (!compact) {
+      nomo_present_text("Reason: ", r$reason[[1L]], indent = 2L)
+      nomo_present_text("Options: ", r$options[[1L]], indent = 2L)
+      nomo_present_text("Consequence: ", r$consequence[[1L]], indent = 2L)
+    }
+    nomo_present_bullets(paste0(r$scope, ": ", r$observation))
+    if (nzchar(r$example[[1L]])) {
+      nomo_present_text("Example: ", r$example[[1L]], indent = 2L)
+    }
+  }
+}
+
+
 #' @export
 print.nomo_run <- function(x, ...) {
-  completed <- x$stage_status$stage[
-    x$stage_status$status == "completed"
-  ]
-  completed_text <- if (length(completed)) {
-    paste(completed, collapse = " -> ")
-  } else {
-    "none"
-  }
+  research <- identical(x$mode, "research")
+  nomo_present_header("nomo_run", "Guided workflow")
+  nomo_run_present_facts(x)
 
-  lineage <- nomo_run_lineage(x)
-
-  if (identical(x$mode, "research")) {
-    cat(sprintf(
-      "<nomo_run> mode=research | status=%s | design=%s\n",
-      x$status,
-      x$sample_design
-    ))
-    cat(sprintf(
-      "Completed: %s | Next: %s\n",
-      completed_text,
-      if (is.null(x$next_stage)) "none" else x$next_stage
-    ))
-    cat(sprintf(
-      "Scales: %d | Exploratory N: %d | Confirmatory N: %d\n",
-      length(x$scales),
-      x$sample_n$n[x$sample_n$role == "exploratory"],
-      x$sample_n$n[x$sample_n$role == "confirmatory"]
-    ))
-    if (nrow(lineage)) {
-      cat(sprintf(
-        "Revisions: %d (%s) | see `nomo_table(x, \"lineage\")`\n",
-        nrow(lineage),
-        paste(unique(gsub("_", "-", lineage$origin)), collapse = ", ")
-      ))
-    }
-
-    if (nrow(x$decision_requests)) {
-      cat("\nDecision requests\n")
-      print(
-        x$decision_requests[, c(
-          "stage",
-          "scope",
-          "reason",
-          "consequence"
-        ), drop = FALSE],
-        n = Inf,
-        width = Inf
-      )
-    }
-
-    if (identical(x$status, "blocked") && !is.null(x$blocked)) {
-      cat(sprintf(
-        "\nBlocked at %s / %s: %s\n",
-        x$blocked$stage,
-        x$blocked$scope,
-        x$blocked$message
-      ))
-    }
-
-    if (identical(x$status, "complete")) {
-      cat(
-        "\nRequested workflow complete. ",
-        "Use `nomo_table(x, \"recipe\")` for the component map and ",
-        "`nomo_table(x, \"component_log\")` for retained evidence provenance.\n",
-        sep = ""
-      )
-    }
-
-    return(invisible(x))
-  }
-
-  cat("<nomo_run>\n")
-  cat("Guided nomologR workflow | teaching mode\n")
-  cat(sprintf("Status: %s\n", toupper(x$status)))
-  cat(sprintf(
-    "Sample design: %s | Exploratory N = %d | Confirmatory N = %d\n",
-    x$sample_design,
-    x$sample_n$n[x$sample_n$role == "exploratory"],
-    x$sample_n$n[x$sample_n$role == "confirmatory"]
-  ))
-  cat(sprintf("Completed stages: %s\n", completed_text))
-  cat(sprintf(
-    "Next stage: %s\n",
-    if (is.null(x$next_stage)) "none" else x$next_stage
-  ))
-  if (nrow(lineage)) {
-    cat(sprintf(
-      "Revisions: %d (%s); see `nomo_table(x, \"lineage\")`\n",
-      nrow(lineage),
-      paste(unique(gsub("_", "-", lineage$origin)), collapse = ", ")
-    ))
+  evidence <- nomo_run_key_evidence(x)
+  if (length(evidence)) {
+    nomo_present_section("Key evidence")
+    nomo_present_bullets(evidence)
   }
 
   if (nrow(x$decision_requests)) {
-    cat("\nResearcher decision required\n")
-
-    for (i in seq_len(nrow(x$decision_requests))) {
-      row <- x$decision_requests[i, , drop = FALSE]
-      cat(sprintf("\n[%s / %s]\n", row$stage[[1L]], row$scope[[1L]]))
-      cat("Observation: ", row$observation[[1L]], "\n", sep = "")
-      cat("Reason: ", row$reason[[1L]], "\n", sep = "")
-      cat("Options: ", row$options[[1L]], "\n", sep = "")
-      cat("Consequence: ", row$consequence[[1L]], "\n", sep = "")
-      if (nzchar(row$example[[1L]])) {
-        cat("Example: ", row$example[[1L]], "\n", sep = "")
-      }
+    nomo_run_present_requests(x$decision_requests, compact = research)
+    if (!research) {
+      cat("\n")
+      nomo_present_text(
+        "No later stage has been run automatically while this consequential ",
+        "decision is unresolved."
+      )
     }
-
-    cat(
-      "\nNo later stage has been run automatically while this consequential ",
-      "decision is unresolved.\n",
-      sep = ""
-    )
   }
 
   if (identical(x$status, "blocked") && !is.null(x$blocked)) {
-    cat(
-      "\nThe workflow is blocked, not silently skipped.\n",
-      "Inspect the component error above, correct the input/model/settings, and ",
-      "start a new workflow.\n",
-      sep = ""
-    )
+    cat("\n")
+    nomo_present_text(sprintf("Blocked at %s / %s: %s", x$blocked$stage,
+                              x$blocked$scope, x$blocked$message))
+    if (!research) {
+      nomo_present_text(
+        "The workflow is blocked, not silently skipped. Correct the ",
+        "input, model, or settings, and start a new workflow."
+      )
+    }
   }
 
   if (identical(x$status, "complete")) {
-    cat(
-      "\nAll requested stages are complete or explicitly marked not requested.\n",
-      "No hidden item deletion, model respecification, parameter freeing, or ",
-      "validity verdict was performed.\n",
-      sep = ""
-    )
+    cat("\n")
+    if (research) {
+      nomo_present_text(
+        "Requested workflow complete. summary(x) shows the stages and decisions; ",
+        "nomo_table(x, \"recipe\") maps the components."
+      )
+    } else {
+      nomo_present_text(
+        "All requested stages are complete or explicitly marked not requested. ",
+        "No hidden item deletion, model respecification, parameter freeing, or ",
+        "validity verdict was performed. summary(x) shows the stages and ",
+        "decisions, and nomo_report(x) archives the evidence."
+      )
+    }
   }
 
   invisible(x)
@@ -191,54 +237,87 @@ summary.nomo_run <- function(object, ...) {
 
 #' @export
 print.summary_nomo_run <- function(x, ...) {
-  cat("nomologR guided-workflow summary\n")
-  cat(sprintf(
-    "Status: %s | Mode: %s | Sample design: %s\n",
-    x$status,
-    x$mode,
-    x$sample_design
-  ))
-  cat(sprintf(
-    "Next stage: %s\n\n",
-    if (is.null(x$next_stage)) "none" else x$next_stage
+  nomo_present_header("nomo_run", "Guided workflow", summary = TRUE)
+  nomo_present_facts(c(
+    sprintf("Status: %s", toupper(x$status)),
+    sprintf("Mode: %s", x$mode),
+    sprintf("Sample design: %s", gsub("_", " ", x$sample_design)),
+    sprintf("Next: %s", if (is.null(x$next_stage)) "none" else x$next_stage)
   ))
 
-  cat("Stage status\n")
-  print(x$stage_status, n = Inf, width = Inf)
+  stages <- x$stage_status
+  stages$status_shown <- gsub("_", " ", stages$status)
+  nomo_present_section("Stages")
+  nomo_present_table(stages, c("Stage" = "stage", "Status" = "status_shown"))
+  detailed <- stages[nzchar(stages$detail), , drop = FALSE]
+  nomo_present_bullets(paste0(detailed$stage, ": ", detailed$detail))
 
-  cat("\nScale definitions\n")
-  print(x$scales, n = Inf, width = Inf)
+  nomo_present_section("Scales")
+  nomo_present_bullets(sprintf("%s (%d items): %s", x$scales$scale, x$scales$n_items,
+                               x$scales$items))
 
   if (nrow(x$decision_requests)) {
-    cat("\nOutstanding researcher decisions\n")
-    print(x$decision_requests, n = Inf, width = Inf)
+    nomo_run_present_requests(x$decision_requests)
   }
 
   if (nrow(x$decisions)) {
-    cat("\nRecorded workflow decisions\n")
-    print(x$decisions, n = Inf, width = Inf)
+    nomo_present_section("Recorded decisions")
+    d <- x$decisions
+    decision <- gsub("\\s*\n\\s*", "; ", d$decision)
+    rationale <- ifelse(nzchar(d$rationale), paste0(" Rationale: ", d$rationale), "")
+    nomo_present_bullets(sprintf("%s (%s, %s): %s.%s", d$id, d$stage,
+                                 gsub("_", " ", d$source), decision, rationale))
   }
 
-  cat("\nComponent recipe\n")
-  print(x$recipe, n = Inf, width = Inf)
+  nomo_present_section("Component recipe")
+  recipe <- x$recipe
+  recipe$scope_shown <- gsub("_", " ", recipe$scope)
+  recipe$status_shown <- gsub("_", " ", recipe$status)
+  nomo_present_table(
+    recipe,
+    c("Stage" = "stage", "Scope" = "scope_shown", "Function" = "function_name",
+      "Status" = "status_shown"),
+    more = "nomo_table(x, \"recipe\")"
+  )
+  nomo_present_text(
+    "Data roles and researcher control for each step: nomo_table(x, \"recipe\").",
+    indent = 2L
+  )
 
   if (!is.null(x$methods) && nrow(x$methods)) {
-    cat(sprintf(
-      "\nMethods used (%d; full entries and references: nomo_methods(run))\n",
-      nrow(x$methods)
-    ))
-    print(
-      x$methods[, c("stage", "method", "lineage", "role"), drop = FALSE],
-      n = Inf,
-      width = Inf
+    m <- x$methods
+    stage_order <- unique(m$stage)
+    counts <- data.frame(
+      stage = stage_order,
+      n = vapply(stage_order, function(s) sum(m$stage == s), integer(1)),
+      primary = vapply(stage_order, function(s) sum(m$stage == s & m$role == "primary"), integer(1)),
+      historical = vapply(stage_order, function(s) {
+        sum(m$stage == s & m$lineage == "historical")
+      }, integer(1)),
+      stringsAsFactors = FALSE
     )
+    nomo_present_section(sprintf("Methods used: %d", nrow(m)))
+    nomo_present_table(
+      counts,
+      c("Stage" = "stage", "Methods" = "n", "Primary" = "primary",
+        "Historical" = "historical")
+    )
+    primary <- m[m$role == "primary", , drop = FALSE]
+    if (nrow(primary)) {
+      nomo_present_text("Primary methods:", indent = 2L)
+      nomo_present_bullets(vapply(unique(primary$stage), function(s) {
+        paste0(s, ": ", paste(primary$method[primary$stage == s], collapse = "; "))
+      }, character(1)))
+    }
+    nomo_present_text("Full entries and references: nomo_methods(x).", indent = 2L)
   }
 
   if (nrow(x$component_log)) {
-    cat(sprintf(
-      "\nComponent decision/evidence-log rows retained: %d\n",
+    cat("\n")
+    nomo_present_text(sprintf(
+      "Component decision and evidence-log rows retained: %d; see ",
       nrow(x$component_log)
-    ))
+    ), "nomo_table(x, \"component_log\").")
   }
 
   invisible(x)
