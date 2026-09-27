@@ -303,7 +303,7 @@ plot.nomo_validity <- function(x, type = c("ave", "discriminant"), ...) {
       ggplot2::geom_vline(xintercept = ref, linetype = 2) +
       ggplot2::geom_point(size = 3) +
       ggplot2::coord_cartesian(xlim = nomo_plot_x_limits(dat$estimate)) +
-      ggplot2::labs(
+      nomo_plot_labs(
         title = "Convergent evidence: AVE",
         subtitle = paste0(
           "Dashed line = review reference (", format(ref, trim = TRUE),
@@ -347,7 +347,7 @@ plot.nomo_validity <- function(x, type = c("ave", "discriminant"), ...) {
     ggplot2::geom_vline(xintercept = ref, linetype = 2) +
     ggplot2::geom_point(size = 3) +
     ggplot2::coord_cartesian(xlim = nomo_plot_x_limits(dat$estimate)) +
-    ggplot2::labs(
+    nomo_plot_labs(
       title = paste0("Construct separation: ", method),
       subtitle = paste0(
         "Dashed line = review reference (", format(ref, trim = TRUE), ")."

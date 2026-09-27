@@ -64,7 +64,7 @@ test_that("effects plot includes explicit theory-compatible regions", {
 
   p <- plot(out, "effects")
   expect_s3_class(p, "ggplot")
-  expect_match(p$labels$subtitle, "theory-compatible region")
+  expect_match(plot_text(p$labels$subtitle), "theory-compatible region")
   expect_gte(length(p$layers), 4L)
 
   prepared <- nomologR:::nomo_network_theory_plot_data(out)
@@ -100,7 +100,7 @@ test_that("concordance plot is relation-level rather than a count bar", {
   p <- plot(out, "concordance")
 
   expect_s3_class(p, "ggplot")
-  expect_match(p$labels$title, "Relation-level")
+  expect_match(plot_text(p$labels$title), "Relation-level")
   expect_equal(nrow(p$data), 2L)
   expect_false(any(vapply(
     p$layers,
@@ -127,7 +127,7 @@ test_that("network global-fit plot facets metrics onto separate scales", {
   p <- plot(out, "fit")
 
   expect_s3_class(p, "ggplot")
-  expect_match(p$labels$subtitle, "own scale")
+  expect_match(plot_text(p$labels$subtitle), "own scale")
   expect_equal(length(unique(p$data$metric)), 4L)
 })
 
@@ -210,7 +210,7 @@ test_that("invariance fit and change plots remove redundant metric legends", {
     !grepl("[^ -~]", unique(as.character(p_change$data$metric)))
   ))
   expect_match(
-    p_change$labels$caption,
+    plot_text(p_change$labels$caption),
     "For CFI, decreases"
   )
 })
@@ -253,7 +253,7 @@ test_that("local-strain presentation attempts human-readable parameter labels", 
   if (nrow(out$local_strain)) {
     p <- plot(out, "local_strain")
     expect_s3_class(p, "ggplot")
-    expect_match(p$labels$subtitle, "do not authorize")
+    expect_match(plot_text(p$labels$subtitle), "do not authorize")
   }
 })
 
@@ -503,9 +503,9 @@ test_that("M6/M7 plots carry explanatory titles and captions", {
   )
 
   p <- plot(net, type = "effects")
-  expect_true(nzchar(p$labels$title))
-  expect_true(nzchar(p$labels$subtitle))
-  expect_true(nzchar(p$labels$caption))
+  expect_true(nzchar(plot_text(p$labels$title)))
+  expect_true(nzchar(plot_text(p$labels$subtitle)))
+  expect_true(nzchar(plot_text(p$labels$caption)))
 })
 
 # ---- consolidated from test-coverage-sprint-presentation.R ----
@@ -671,7 +671,7 @@ test_that("validity plots cover empty, faceted, and HTMT fallback paths", {
   htmt$htmt_reference <- .85
   p2 <- plot(htmt, type = "discriminant")
   expect_s3_class(p2, "ggplot")
-  expect_match(p2$labels$title, "HTMT", fixed = TRUE)
+  expect_match(plot_text(p2$labels$title), "HTMT", fixed = TRUE)
 
   empty_htmt <- htmt
   empty_htmt$htmt <- tibble::tibble(

@@ -363,7 +363,7 @@ plot.nomo_invariance <- function(
           stats::as.formula("~ metric"),
           scales = "free_y"
         ) +
-        ggplot2::labs(
+        nomo_plot_labs(
           title = "Measurement-invariance fit across levels",
           subtitle = paste(
             "Absolute fit should be read alongside change evidence",
@@ -420,7 +420,7 @@ plot.nomo_invariance <- function(
           stats::as.formula("~ metric"),
           scales = "free_y"
         ) +
-        ggplot2::labs(
+        nomo_plot_labs(
           title = "Change in fit as equality constraints accumulate",
           subtitle = "Zero means no change from the preceding fitted level.",
           x = "Invariance level",
@@ -463,7 +463,7 @@ plot.nomo_invariance <- function(
     )
   ) +
     ggplot2::geom_point(size = 2.8) +
-    ggplot2::labs(
+    nomo_plot_labs(
       title = "Largest equality-constraint score diagnostics",
       subtitle = paste(
         "Higher score statistics localize strain in fitted equality constraints.",

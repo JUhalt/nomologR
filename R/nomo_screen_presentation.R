@@ -466,7 +466,7 @@ nomo_screen_plot_evidence <- function(x, items) {
       ),
       drop = TRUE
     ) +
-    ggplot2::labs(
+    nomo_plot_labs(
       title = "nomologR item evidence map",
       subtitle = paste(
         "Cells summarize diagnostic attention;",
@@ -552,7 +552,7 @@ nomo_screen_plot_item_rest <- function(x, items, show_values) {
       ),
       drop = TRUE
     ) +
-    ggplot2::labs(
+    nomo_plot_labs(
       title = "Corrected item-rest relationships",
       subtitle = paste(
         "Reference lines guide inspection;",
@@ -656,7 +656,7 @@ nomo_screen_plot_interitem <- function(x, items, show_values) {
       na.value = "#eeeeee"
     ) +
     ggplot2::coord_fixed() +
-    ggplot2::labs(
+    nomo_plot_labs(
       title = "Inter-item correlation map",
       subtitle = "Pearson relationships are descriptive screening evidence.",
       x = NULL,
@@ -752,7 +752,7 @@ nomo_screen_plot_responses <- function(x, items, show_values) {
       labels = function(z) paste0(round(100 * z), "%"),
       expand = ggplot2::expansion(mult = c(0, 0.12))
     ) +
-    ggplot2::labs(
+    nomo_plot_labs(
       title = "Item response profiles",
       subtitle = "Declared but unused factor levels remain visible at 0%.",
       x = "Response category",
@@ -771,7 +771,7 @@ nomo_screen_plot_responses <- function(x, items, show_values) {
   }
 
   if (length(continuous)) {
-    p <- p + ggplot2::labs(caption = paste0(
+    p <- p + nomo_plot_labs(caption = paste0(
       "Continuous items are not shown here: ", paste(continuous, collapse = ", "),
       ". See plot(x, type = \"responses\", items = c(",
       paste0("\"", continuous, "\"", collapse = ", "), "))."
@@ -811,7 +811,7 @@ nomo_screen_plot_histograms <- function(x, items, bins = 20L) {
       labels = function(z) paste0(round(100 * z), "%"),
       expand = ggplot2::expansion(mult = c(0, 0.08))
     ) +
-    ggplot2::labs(
+    nomo_plot_labs(
       title = "Item response distributions",
       subtitle = sprintf(
         "Continuous items: share of observed responses in each of %d equal-width bins.",
@@ -860,7 +860,7 @@ nomo_screen_plot_missingness <- function(x, items, show_values) {
       limits = c(0, upper),
       expand = ggplot2::expansion(mult = c(0, 0.02))
     ) +
-    ggplot2::labs(
+    nomo_plot_labs(
       title = "Item missingness",
       subtitle = paste(
         "Missingness is described here without",

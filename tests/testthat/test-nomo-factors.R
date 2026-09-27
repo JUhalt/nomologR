@@ -516,7 +516,7 @@ test_that("presentation covers alternate PA labels and legacy context", {
   legacy$evidence <- dplyr::bind_rows(legacy$evidence, row)
 
   p <- plot(legacy, type = "evidence")
-  expect_match(p$labels$caption, "Legacy criteria are context only")
+  expect_match(plot_text(p$labels$caption), "Legacy criteria are context only")
 
   expect_error(
     plot(out, type = "parallel_rules", show_values = NA),
@@ -1386,11 +1386,11 @@ test_that("M2B presentation distinguishes convergence from voting", {
   p_evidence <- plot(out, type = "evidence")
   expect_identical(p_evidence$labels$x, "Suggested factor count")
   expect_false(any(grepl("(primary)", as.character(p_evidence$data$method_display), fixed = TRUE)))
-  expect_match(p_evidence$labels$caption, "not independent votes")
+  expect_match(plot_text(p_evidence$labels$caption), "not independent votes")
 
   p_concordance <- plot(out, type = "concordance")
   expect_identical(p_concordance$labels$y, "Number of criterion families")
-  expect_match(p_concordance$labels$caption, "not independent votes")
+  expect_match(plot_text(p_concordance$labels$caption), "not independent votes")
 })
 
 
