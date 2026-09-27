@@ -325,7 +325,7 @@
           substitutes for the factors themselves. Reported as his recommendation,
           not applied as a rule.
         - concern: Correlations among these scores do not reproduce the correlations
-          among the factors: the largest discrepancy is -0.097, for B. A
+          among the factors: the largest discrepancy is -0.097, between A and B. A
           relationship estimated from these scores carries that much bias, and its
           direction is a property of the method and the model rather than a constant
           that can be corrected for. Where the question can be asked of the latent
@@ -388,7 +388,7 @@
           substitutes for the factors themselves. Reported as his recommendation,
           not applied as a rule.
         - concern: Correlations among these scores do not reproduce the correlations
-          among the factors: the largest discrepancy is -0.097, for B. A
+          among the factors: the largest discrepancy is -0.097, between A and B. A
           relationship estimated from these scores carries that much bias, and its
           direction is a property of the method and the model rather than a constant
           that can be corrected for. Where the question can be asked of the latent
