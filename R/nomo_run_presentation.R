@@ -110,14 +110,15 @@ nomo_run_key_evidence <- function(x) {
                          paste(r$invariance$completed_levels, collapse = " -> ")))
   }
   if (!is.null(r$network)) {
+    n_hyp <- nrow(r$network$hypothesis_evidence)
     concordance <- table(nomo_network_pretty_status(r$network$hypothesis_evidence$concordance))
-    out <- c(out, sprintf("Network: %d hypotheses (%s)",
-                          nrow(r$network$hypothesis_evidence),
-                          paste(names(concordance), concordance, collapse = ", ")))
+    out <- c(out, sprintf("Network: %d %s; %s", n_hyp, ifelse(n_hyp == 1L, "hypothesis", "hypotheses"),
+                          paste(concordance, tolower(names(concordance)), collapse = ", ")))
   }
   if (!is.null(r$effort) && !is.null(r$effort$effort)) {
-    out <- c(out, sprintf("Careless responding: %d case(s) flagged, none removed",
-                          sum(r$effort$effort$n_flags > 0L)))
+    flagged <- sum(r$effort$effort$n_flags > 0L)
+    out <- c(out, sprintf("Careless responding: %d %s flagged, none removed",
+                          flagged, ifelse(flagged == 1L, "case", "cases")))
   }
   if (!is.null(r$scores)) {
     out <- c(out, sprintf("Scores: %s method", r$scores$method))

@@ -868,8 +868,8 @@
         - Reliability: omega 0.729 to 0.849
         - Validity: convergent flags 1 review, 0 concern; separation flags none
         - Invariance: completed configural -> metric
-        - Network: 1 hypotheses (Concordant 1)
-        - Careless responding: 0 case(s) flagged, none removed
+        - Network: 1 hypothesis; 1 concordant
+        - Careless responding: 0 cases flagged, none removed
         - Scores: sum method
         - Missing-data sensitivity: computed for cfa and network
       
