@@ -95,7 +95,7 @@ nomo_validity <- function(fit,
   if (!is.logical(ave_obs_var) || length(ave_obs_var) != 1L || is.na(ave_obs_var)) {
     stop("`ave_obs_var` must be TRUE or FALSE.", call. = FALSE)
   }
-  htmt <- match.arg(htmt)
+  htmt <- nomo_match_arg(htmt)
   if (!is.character(htmt_missing) || length(htmt_missing) != 1L ||
       is.na(htmt_missing) || !nzchar(trimws(htmt_missing))) {
     stop("`htmt_missing` must be one non-empty character value.", call. = FALSE)

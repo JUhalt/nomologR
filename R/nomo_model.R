@@ -67,7 +67,7 @@
 nomo_model <- function(factors,
                        structure = c("correlated", "higher_order", "bifactor"),
                        general = "G") {
-  structure <- match.arg(structure)
+  structure <- nomo_match_arg(structure)
 
   if (!is.list(factors) || !length(factors)) {
     stop("`factors` must be a non-empty named list.", call. = FALSE)

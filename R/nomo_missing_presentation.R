@@ -76,7 +76,7 @@ nomo_table.nomo_missing <- function(x,
                                       "decision_log"
                                     ),
                                     ...) {
-  type <- match.arg(type)
+  type <- nomo_match_arg(type)
   if (type == "reliability" && is.null(x$reliability)) {
     stop(
       paste(

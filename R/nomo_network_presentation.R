@@ -276,7 +276,7 @@ plot.nomo_network <- function(
     x,
     type = c("effects", "concordance", "fit", "replication"),
     ...) {
-  type <- match.arg(type)
+  type <- nomo_match_arg(type)
 
   if (type == "effects") {
     prepared <- nomo_network_theory_plot_data(x)

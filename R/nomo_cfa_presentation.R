@@ -283,7 +283,7 @@ print.summary_nomo_cfa <- function(x, ...) {
 plot.nomo_cfa <- function(x,
                           type = c("loadings", "fit", "residuals", "modification_indices"),
                           ...) {
-  type <- match.arg(type)
+  type <- nomo_match_arg(type)
 
   if (type == "loadings") {
     dat <- x$standardized_loadings

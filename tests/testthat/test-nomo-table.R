@@ -39,7 +39,7 @@ test_that("every measurement-stage result has nomo_table() (#89)", {
     for (type in types) {
       expect_s3_class(nomo_table(x, type), "tbl_df")
     }
-    expect_error(nomo_table(x, "not_a_table"), "should be one of", label = cls)
+    expect_error(nomo_table(x, "not_a_table"), "`type` must be one of", fixed = TRUE, label = cls)
   }
 
   # Tables are the object's own evidence, not copies that could differ.

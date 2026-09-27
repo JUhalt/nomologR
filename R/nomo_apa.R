@@ -169,7 +169,7 @@ nomo_apa_table.default <- function(x, type = NULL, number = NULL, title = NULL, 
 #' @export
 nomo_apa_table.nomo_cfa <- function(x, type = c("loadings", "fit", "factor_correlations"),
                                     number = NULL, title = NULL, ...) {
-  type <- match.arg(type)
+  type <- nomo_match_arg(type)
   sample_note <- sprintf(
     "Estimated with %s; *N* = %d.", x$estimator, as.integer(x$n_used)
   )
@@ -350,7 +350,7 @@ nomo_apa_table.nomo_invariance <- function(x, type = NULL, number = NULL,
 #' @export
 nomo_apa_table.nomo_network <- function(x, type = c("hypotheses", "fit"),
                                         number = NULL, title = NULL, ...) {
-  type <- match.arg(type)
+  type <- nomo_match_arg(type)
   if (type == "fit") {
     fe <- x$fit_evidence
     # The network's fit evidence keeps the RMSEA without its interval, so the

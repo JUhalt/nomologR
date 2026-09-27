@@ -176,10 +176,10 @@ nomo_factors <- function(data,
     )
   }
 
-  correlation <- match.arg(correlation)
-  missing <- match.arg(missing)
-  criterion_set <- match.arg(criterion_set)
-  parallel_rule <- match.arg(parallel_rule)
+  correlation <- nomo_match_arg(correlation)
+  missing <- nomo_match_arg(missing)
+  criterion_set <- nomo_match_arg(criterion_set)
+  parallel_rule <- nomo_match_arg(parallel_rule)
 
   if (is.null(items)) {
     items <- names(data)

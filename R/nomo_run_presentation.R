@@ -347,7 +347,7 @@ nomo_table.nomo_run <- function(
       "methods"
     ),
     ...) {
-  type <- match.arg(type)
+  type <- nomo_match_arg(type)
 
   if (type == "stages") return(x$stage_status)
   if (type == "requests") return(x$decision_requests)

@@ -264,12 +264,12 @@ nomo_efa <- function(data,
   }
 
   correlation <- if (is.null(correlation)) "auto" else correlation
-  correlation <- match.arg(
+  correlation <- nomo_match_arg(
     correlation,
     choices = c("auto", "pearson", "polychoric", "tetrachoric", "mixed")
   )
   missing <- if (is.null(missing)) "pairwise" else missing
-  missing <- match.arg(missing, choices = c("pairwise", "complete"))
+  missing <- nomo_match_arg(missing, choices = c("pairwise", "complete"))
 
   selected <- data[items]
 

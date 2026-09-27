@@ -134,7 +134,7 @@ nomo_reliability <- function(fit,
     stop("`include_alpha` must be TRUE or FALSE.", call. = FALSE)
   }
 
-  ci <- match.arg(ci)
+  ci <- nomo_match_arg(ci)
   ci_level <- suppressWarnings(as.numeric(ci_level)[1L])
   if (!is.finite(ci_level) || ci_level <= 0 || ci_level >= 1) {
     stop("`ci_level` must be one number strictly between 0 and 1.", call. = FALSE)

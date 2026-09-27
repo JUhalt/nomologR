@@ -263,7 +263,7 @@ nomo_scores_notes <- function(input, method, diagnostics, unit_weighting,
 nomo_scores <- function(fit,
                         method = c("sum", "mean", "regression", "bartlett"),
                         guidance = nomo_defaults()) {
-  method <- match.arg(method)
+  method <- nomo_match_arg(method)
   input <- nomo_scores_input(fit)
 
   scores <- if (method %in% c("sum", "mean")) {

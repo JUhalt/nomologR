@@ -200,7 +200,7 @@ print.summary_nomo_compare <- function(x, ...) {
 #' @return A `ggplot2` object.
 #' @export
 plot.nomo_compare <- function(x, type = c("fit", "loadings"), ...) {
-  type <- match.arg(type)
+  type <- nomo_match_arg(type)
   model_levels <- rev(x$models$model)
 
   if (type == "fit") {

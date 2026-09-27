@@ -132,7 +132,7 @@ print.summary_nomo_hierarchical <- function(x, ...) {
 #' @return A `ggplot` object.
 #' @export
 plot.nomo_hierarchical <- function(x, type = c("variance", "loadings"), ...) {
-  type <- match.arg(type)
+  type <- nomo_match_arg(type)
 
   if (identical(type, "loadings")) {
     dat <- x$loadings
@@ -208,7 +208,7 @@ nomo_table.nomo_hierarchical <- function(
       "indices", "subscales", "factors", "loadings", "notes", "decision_log"
     ),
     ...) {
-  type <- match.arg(type)
+  type <- nomo_match_arg(type)
 
   if (type == "indices") return(x$indices)
   if (type == "factors") return(x$factors)

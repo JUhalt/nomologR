@@ -71,7 +71,7 @@ nomo_run_run_scores <- function(x) {
 
 
 nomo_run_run_missing <- function(x, target = c("cfa", "network")) {
-  target <- match.arg(target)
+  target <- nomo_match_arg(target)
   if (!nomo_run_attached_requested(x, "missing")) return(x)
   fitted <- x$results[[target]]
   if (is.null(fitted)) return(x)

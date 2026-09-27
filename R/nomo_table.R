@@ -95,7 +95,7 @@ nomo_table.nomo_network <- function(
       "decision_log"
     ),
     ...) {
-  type <- match.arg(type)
+  type <- nomo_match_arg(type)
 
   if (type == "hypotheses") {
     keep <- c(
@@ -138,7 +138,7 @@ nomo_table.nomo_invariance <- function(
       "decision_log"
     ),
     ...) {
-  type <- match.arg(type)
+  type <- nomo_match_arg(type)
 
   if (type == "fit") return(x$fit_evidence)
   if (type == "categories") return(x$ordered_categories)
@@ -165,7 +165,7 @@ nomo_table.nomo_compare <- function(
       "decision_log"
     ),
     ...) {
-  type <- match.arg(type)
+  type <- nomo_match_arg(type)
 
   if (type == "comparisons") return(x$comparisons)
   if (type == "models") return(x$models)
@@ -185,7 +185,7 @@ nomo_table.nomo_factors <- function(
     x,
     type = c("evidence", "criteria", "adequacy", "concordance", "decision_log"),
     ...) {
-  type <- match.arg(type)
+  type <- nomo_match_arg(type)
   s <- summary(x)
   tibble::as_tibble(switch(
     type,
@@ -203,7 +203,7 @@ nomo_table.nomo_efa <- function(
     x,
     type = c("items", "pattern", "factor_correlations", "residuals", "decision_log"),
     ...) {
-  type <- match.arg(type)
+  type <- nomo_match_arg(type)
   tibble::as_tibble(switch(
     type,
     items = x$item_summary,
@@ -223,7 +223,7 @@ nomo_table.nomo_cfa <- function(
       "modification_indices", "decision_log"
     ),
     ...) {
-  type <- match.arg(type)
+  type <- nomo_match_arg(type)
   tibble::as_tibble(switch(
     type,
     fit = x$fit_evidence,
@@ -242,7 +242,7 @@ nomo_table.nomo_reliability <- function(
     x,
     type = c("coefficients", "alpha_status", "ci_status", "decision_log"),
     ...) {
-  type <- match.arg(type)
+  type <- nomo_match_arg(type)
   s <- summary(x)
   tibble::as_tibble(switch(
     type,
@@ -259,7 +259,7 @@ nomo_table.nomo_validity <- function(
     x,
     type = c("convergent", "discriminant", "htmt_status", "decision_log"),
     ...) {
-  type <- match.arg(type)
+  type <- nomo_match_arg(type)
   s <- summary(x)
   tibble::as_tibble(switch(
     type,

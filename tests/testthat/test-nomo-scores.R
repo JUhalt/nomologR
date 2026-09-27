@@ -245,7 +245,9 @@ test_that("nomo_scores refuses what it cannot score honestly", {
   fit <- scores_fit()
 
   expect_error(nomo_scores(list()), "nomo_cfa")
-  expect_error(nomo_scores(fit, method = "eap"), "should be one of")
+  expect_error(nomo_scores(fit, method = "eap"),
+               '`method` must be one of "sum", "mean", "regression", or "bartlett", not "eap".',
+               fixed = TRUE)
 
   structural <- lavaan::sem(
     paste(scores_model, "\nF2 ~ F1"),

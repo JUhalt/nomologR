@@ -166,7 +166,7 @@ plot.nomo_efa <- function(x,
                             "factor_correlations"
                           ),
                           ...) {
-  type <- match.arg(type)
+  type <- nomo_match_arg(type)
 
   if (type == "pattern") {
     dat <- as.data.frame(as.table(x$pattern_matrix), stringsAsFactors = FALSE)
