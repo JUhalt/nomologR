@@ -51,23 +51,43 @@ fits that constrained model and compares it with the model you supplied:
 
 summed <- nomo_scores(fit, method = "sum")
 summed
-#> <nomo_scores>
+#> <nomo_scores> Scores
 #> Unit weighting (method: sum) | 2 factor(s) | 600 scored case(s)
 #> 
 #> Score properties (Grice, 2001)
-#> # A tibble: 2 × 5
-#>   factor      n_items validity univocality correlational_accuracy
-#>   <chr>         <int>    <dbl>       <dbl>                  <dbl>
-#> 1 Agency            4    0.909       0.525                 -0.186
-#> 2 Persistence       4    0.746       0.431                 -0.186
+#>   Factor       Items  Validity  Univocality  Correlational accuracy
+#>   Agency           4     0.909       +0.525                  -0.186
+#>   Persistence      4     0.746       +0.431                  -0.186
 #> 
-#> Parallel model (what unit weighting assumes): chi-square difference 30.70 on 12 df, p = .002
+#> Parallel model (what unit weighting assumes)
+#>   chi-square difference 30.70 on 12 df, p = .002
 #> 
 #> Notes
-#> - [review] The parallel model that unit weighting assumes fits worse than the model you fitted (chi-square difference 30.70 on 12 df, p = .002). The items are not interchangeable in the way adding them assumes. This does not forbid a sum score; it means the choice needs a reason beyond convenience, and that `validity` and `correlational_accuracy` describe what it costs.
-#> - [review] Validity is below .90 for Persistence. Gorsuch (1983, p. 260) recommended at least .80, and above .90 if the scores are to serve as adequate substitutes for the factors themselves. Reported as his recommendation, not applied as a rule.
-#> - [concern] Correlations among these scores do not reproduce the correlations among the factors: the largest discrepancy is -0.186, for Agency. A relationship estimated from these scores carries that much bias, and its direction is a property of the method and the model rather than a constant that can be corrected for. Where the question can be asked of the latent variables, ask it there. For a linear regression among factors, Skrondal and Laake (2001) showed a scoring design that gives consistent coefficients, and scores from one model containing every factor, like these, are not it: the predictors need regression-method scores and the outcome Bartlett scores, each from a measurement model of its own.
-#> - [review] These scores also carry the other factors: the score for Agency correlates +0.525 with a factor it does not represent (Grice, 2001). A score that is not univocal cannot be treated as though it measured its own factor alone.
+#>   - review: The parallel model that unit weighting assumes fits worse than the
+#>     model you fitted (chi-square difference 30.70 on 12 df, p = .002). The
+#>     items are not interchangeable in the way adding them assumes. This does
+#>     not forbid a sum score; it means the choice needs a reason beyond
+#>     convenience, and that `validity` and `correlational_accuracy` describe
+#>     what it costs.
+#>   - review: Validity is below .90 for Persistence. Gorsuch (1983, p. 260)
+#>     recommended at least .80, and above .90 if the scores are to serve as
+#>     adequate substitutes for the factors themselves. Reported as his
+#>     recommendation, not applied as a rule.
+#>   - concern: Correlations among these scores do not reproduce the correlations
+#>     among the factors: the largest discrepancy is -0.186, between Agency and
+#>     Persistence. A relationship estimated from these scores carries that much
+#>     bias, and its direction is a property of the method and the model rather
+#>     than a constant that can be corrected for. Where the question can be asked
+#>     of the latent variables, ask it there. For a linear regression among
+#>     factors, Skrondal and Laake (2001) showed a scoring design that gives
+#>     consistent coefficients, and scores from one model containing every
+#>     factor, like these, are not it: the predictors need regression-method
+#>     scores and the outcome Bartlett scores, each from a measurement model of
+#>     its own.
+#>   - review: These scores also carry the other factors: the score for Agency
+#>     correlates +0.525 with a factor it does not represent (Grice, 2001). A
+#>     score that is not univocal cannot be treated as though it measured its own
+#>     factor alone.
 #> 
 #> No value here is a pass/fail threshold; see nomo_table(x, "diagnostics").
 ```

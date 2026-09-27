@@ -70,18 +70,12 @@ partial <- nomo_partial(
   )
 )
 partial
-#> <nomo_partial>
+#> <nomo_partial> Partial invariance releases
 #> 2 researcher-specified release(s)
 #> 
-#> # A tibble: 2 × 4
-#>   release_id level  syntax 
-#>   <chr>      <chr>  <chr>  
-#> 1 P1         metric F =~ x2
-#> 2 P2         scalar x3 ~ 1 
-#>   rationale                                                 
-#>   <chr>                                                     
-#> 1 Loading difference was theoretically anticipated.         
-#> 2 Intercept difference was prespecified from prior evidence.
+#>   - P1 (metric): F =~ x2. Loading difference was theoretically anticipated.
+#>   - P2 (scalar): x3 ~ 1. Intercept difference was prespecified from prior
+#>     evidence.
 #> 
 #> No release was selected automatically by nomologR.
 ```

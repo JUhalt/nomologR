@@ -65,18 +65,12 @@ h <- nomo_hypotheses(
   "Religiosity <-> Spirituality" = positive(min = .20)
 )
 h
-#> <nomo_hypotheses>
+#> <nomo_hypotheses> Theory-specified relations
 #> 3 theory-specified relation(s)
 #> 
-#> # A tibble: 3 × 6
-#>   id    relation                     prediction region      scale       
-#>   <chr> <chr>                        <chr>      <chr>       <chr>       
-#> 1 H1    GSE -> Spirituality          positive   (0, +Inf)   standardized
-#> 2 H2    GSE -> Religiosity           negligible [-0.1, 0.1] standardized
-#> 3 H3    Religiosity <-> Spirituality positive   [0.2, +Inf) standardized
-#>   origin  
-#>   <chr>   
-#> 1 a_priori
-#> 2 a_priori
-#> 3 a_priori
+#> Every relation is on the standardized scale.
+#>   ID  Relation                      Prediction  Region       Origin
+#>   H1  GSE -> Spirituality           positive    (0, +Inf)    a priori
+#>   H2  GSE -> Religiosity            negligible  [-0.1, 0.1]  a priori
+#>   H3  Religiosity <-> Spirituality  positive    [0.2, +Inf)  a priori
 ```

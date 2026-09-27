@@ -198,14 +198,17 @@ cmp <- nomo_compare(
   evidence = FALSE
 )
 cmp
-#> <nomo_compare>
+#> <nomo_compare> Measurement-model comparison
 #> Models: 2 | Reference: full | Estimator: ML | Cases: 473 | Origin: a-priori
-#> Rationale: Evaluate whether the weakly loading item b5 contributes to factor B.
+#> Rationale: Evaluate whether the weakly loading item b5 contributes to factor
+#> B.
 #> 
-#> Compared with `full`:
-#>   - no_b5 (nested, more constrained): chi-square difference = 46.91, df = 1, p < .001; dCFI -0.029, dRMSEA +0.022; dAIC +44.9
+#> Compared with `full`
+#>   - no_b5 (nested, more constrained): chi-square difference = 46.91, df = 1, p
+#>     < .001; CFI change -0.029, RMSEA change +0.022; AIC change +44.9
 #> 
-#> No model was selected automatically. Use summary() for interpretations and measurement evidence.
+#> No model was selected automatically. summary() shows interpretations and
+#> measurement evidence.
 nomo_table(cmp, "comparisons")
 #> # A tibble: 1 × 23
 #>   model reference relation    nested_declared nesting_check nested df_difference
@@ -225,70 +228,69 @@ cmp_evidence <- nomo_compare(
   rationale = "Evaluate whether the weakly loading item b5 contributes to factor B."
 )
 summary(cmp_evidence)
-#> nomologR measurement-model comparison
-#> Rationale: Evaluate whether the weakly loading item b5 contributes to factor B.
+#> <nomo_compare summary> Measurement-model comparison
+#> Rationale: Evaluate whether the weakly loading item b5 contributes to factor
+#> B.
 #> Origin: a-priori | Reference model: full
 #> 
-#> Model fit and information criteria
-#> # A tibble: 2 × 11
-#>   model  npar    df chisq   cfi   tli rmsea  srmr    aic    bic
-#>   <chr> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl>  <dbl>  <dbl>
-#> 1 full     21    34  75.8 0.973 0.965 0.051 0.052 11981  12068.
-#> 2 no_b5    20    35 123.  0.944 0.928 0.073 0.093 12026. 12109.
-#>   fixed_zero_loadings
-#>                 <int>
-#> 1                   0
-#> 2                   1
+#> Model fit
+#>   Model  Parameters  df  Chi-square    CFI    TLI  RMSEA   SRMR
+#>   full           21  34       75.83  0.973  0.965  0.051  0.052
+#>   no_b5          20  35      122.75  0.944  0.928  0.073  0.093
 #> 
-#> Comparisons with the reference model
-#> # A tibble: 1 × 12
-#>   model relation         nesting_check method   chisq_diff df_diff p_value
-#>   <chr> <chr>            <chr>         <chr>         <dbl>   <dbl>   <dbl>
-#> 1 no_b5 more_constrained nested        standard       46.9       1       0
-#>   delta_cfi delta_rmsea delta_srmr delta_aic delta_bic
-#>       <dbl>       <dbl>      <dbl>     <dbl>     <dbl>
-#> 1    -0.029       0.022      0.042      44.9      40.8
+#> Information criteria
+#>   Model      AIC      BIC  Loadings fixed to zero
+#>   full   11981.0  12068.4                       0
+#>   no_b5  12025.9  12109.1                       1
+#> 
+#> Difference tests against the reference model
+#>   Model  Relation                  Check   Method    Chi-sq diff  df       p
+#>   no_b5  nested, more constrained  nested  standard        46.91   1  < .001
+#> 
+#> Changes in fit (model minus reference)
+#>   Model     CFI     TLI   RMSEA    SRMR    AIC    BIC
+#>   no_b5  -0.029  -0.036  +0.022  +0.042  +44.9  +40.8
 #> 
 #> Interpretation
-#> - `no_b5` is nested within `full` and has 1 more degree(s) of freedom (additional constraints). Chi-Squared Difference Test: chi-square difference = 46.91, df = 1, p < .001. A small p-value indicates that the extra constraints are not fully consistent with the data; with large samples, even small misspecifications produce small p-values. Change in fit (`no_b5` minus `full`): CFI -0.029, TLI -0.036, RMSEA +0.022, SRMR +0.042. AIC +44.9 and BIC +40.8 (`no_b5` minus `full`); lower values favor a model for these data, and only differences are interpretable. No model is selected automatically; read this evidence with theory and the recorded rationale.
+#>   - `no_b5` is nested within `full` and has 1 more degree(s) of freedom
+#>     (additional constraints). Chi-Squared Difference Test: chi-square
+#>     difference = 46.91, df = 1, p < .001. A small p-value indicates that the
+#>     extra constraints are not fully consistent with the data; with large
+#>     samples, even small misspecifications produce small p-values. Change in
+#>     fit (`no_b5` minus `full`): CFI -0.029, TLI -0.036, RMSEA +0.022, SRMR
+#>     +0.042. AIC +44.9 and BIC +40.8 (`no_b5` minus `full`); lower values favor
+#>     a model for these data, and only differences are interpretable. No model
+#>     is selected automatically; read this evidence with theory and the recorded
+#>     rationale.
 #> 
 #> Standardized loadings by model
-#> # A tibble: 10 × 4
-#>    factor item   full no_b5
-#>    <chr>  <chr> <dbl> <dbl>
-#>  1 A      a1    0.771 0.771
-#>  2 A      a2    0.744 0.744
-#>  3 A      a3    0.669 0.669
-#>  4 A      a4    0.738 0.738
-#>  5 A      a5    0.598 0.598
-#>  6 B      b1    0.794 0.795
-#>  7 B      b2    0.695 0.699
-#>  8 B      b3    0.757 0.757
-#>  9 B      b4    0.628 0.624
-#> 10 B      b5    0.337 0    
+#>   Factor  Item   full  no_b5
+#>   A       a1    0.771  0.771
+#>   A       a2    0.744  0.744
+#>   A       a3    0.669  0.669
+#>   A       a4    0.738  0.738
+#>   A       a5    0.598  0.598
+#>   B       b1    0.794  0.795
+#>   B       b2    0.695  0.699
+#>   B       b3    0.757  0.757
+#>   B       b4    0.628  0.624
+#>   B       b5    0.337  0.000
 #> 
 #> Measurement evidence by model
-#> # A tibble: 14 × 4
-#>    model construct metric estimate
-#>    <chr> <chr>     <chr>     <dbl>
-#>  1 full  A         omega     0.835
-#>  2 full  B         omega     0.784
-#>  3 full  A         alpha     0.827
-#>  4 full  B         alpha     0.771
-#>  5 full  A         AVE       0.497
-#>  6 full  B         AVE       0.434
-#>  7 full  B vs A    HTMT2     0.533
-#>  8 no_b5 A         omega     0.835
-#>  9 no_b5 B         omega     0.622
-#> 10 no_b5 A         alpha     0.827
-#> 11 no_b5 B         alpha     0.771
-#> 12 no_b5 A         AVE       0.497
-#> 13 no_b5 B         AVE       0.521
-#> 14 no_b5 B vs A    HTMT2     0.533
-#> Notes:
-#> - Loading(s) fixed to zero for b5 keep those item(s) in this composite; the coefficient does not describe a shortened scale.
+#>   Construct  Metric   full  no_b5
+#>   A          omega   0.835  0.835
+#>   B          omega   0.784  0.622
+#>   A          alpha   0.827  0.827
+#>   B          alpha   0.771  0.771
+#>   A          AVE     0.497  0.497
+#>   B          AVE     0.434  0.521
+#>   B vs A     HTMT2   0.533  0.533
+#>   - Loading(s) fixed to zero for b5 keep those item(s) in this composite; the
+#>     coefficient does not describe a shortened scale.
 #> 
-#> No model was selected automatically. Difference tests, changes in fit, information criteria, and measurement evidence answer different questions; read them together with theory and the recorded rationale.
+#> No model was selected automatically. Difference tests, changes in fit,
+#> information criteria, and measurement evidence answer different questions;
+#> read them together with theory and the recorded rationale.
 plot(cmp_evidence, type = "loadings")
 
 # }

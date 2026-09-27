@@ -98,7 +98,8 @@ nomo_apa_table(cfa, "loadings", number = 1)
 #> x8                      0.72
 #> x9                      0.67
 #> ----------------------------
-#> Note. Standardized loadings from a confirmatory factor analysis. Estimated with ML; N = 301. Blank cells are loadings fixed to zero by the model.
+#> Note. Standardized loadings from a confirmatory factor analysis. Estimated
+#> with ML; N = 301. Blank cells are loadings fixed to zero by the model.
 nomo_apa_table(cfa, "fit", number = 2)
 #> Table 2
 #> Model Fit
@@ -107,7 +108,10 @@ nomo_apa_table(cfa, "fit", number = 2)
 #> ------------------------------------------------------------------------------
 #> Measurement model  85.31  24  < .001  .931  0.896  0.092 [0.071, 0.114]  0.065
 #> ------------------------------------------------------------------------------
-#> Note. Estimated with ML; N = 301. CFI = comparative fit index; TLI = Tucker-Lewis index; RMSEA = root mean square error of approximation; SRMR = standardized root mean square residual. Fit indices are reported as evidence, not against fixed cutoffs.
+#> Note. Estimated with ML; N = 301. CFI = comparative fit index; TLI =
+#> Tucker-Lewis index; RMSEA = root mean square error of approximation; SRMR =
+#> standardized root mean square residual. Fit indices are reported as evidence,
+#> not against fixed cutoffs.
 nomo_apa_table(nomo_reliability(cfa), number = 3)
 #> Table 3
 #> Reliability Estimates
@@ -118,5 +122,7 @@ nomo_apa_table(nomo_reliability(cfa), number = 3)
 #> textual    .89  .88
 #> speed      .69  .69
 #> -------------------
-#> Note. ω = coefficient omega; α = coefficient alpha. Coefficient alpha assumes equal loadings and is reported alongside omega for comparison with published work.
+#> Note. ω = coefficient omega; α = coefficient alpha. Coefficient alpha assumes
+#> equal loadings and is reported alongside omega for comparison with published
+#> work.
 ```

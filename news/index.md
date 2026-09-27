@@ -2,6 +2,29 @@
 
 ## nomologR (development version)
 
+- The redesigned console output extends to comparisons, invariance,
+  partial releases, hypotheses, networks, splits, and the notes of
+  [`nomo_apa_table()`](https://juhalt.github.io/nomologR/reference/nomo_apa_table.md)
+  ([\#89](https://github.com/JUhalt/nomologR/issues/89)).
+  - Wide tables are split: model fit apart from information criteria,
+    difference tests apart from changes in fit, and fit by level apart
+    from changes between levels.
+  - Levels that failed or raised warnings are listed with what went
+    wrong.
+  - Measurement evidence in a comparison reads one column per model.
+  - A hypothesis table states once that every relation is on the
+    standardized scale, rather than repeating it in each row.
+- The redesigned console output extends to reliability, validity,
+  scores, missing-data sensitivity, and hierarchical models
+  ([\#89](https://github.com/JUhalt/nomologR/issues/89)). Tables replace
+  wrapped tibbles. Severity-tagged notes print as `review:` and
+  `concern:` bullets. Index names read as written in the literature
+  (“omega hierarchical”, “ECV”). A column that holds one value
+  throughout, such as a block column that always says “overall”, is left
+  out. The note on correlational accuracy names the pair of factors
+  whose score correlation strays furthest from the factor correlation.
+  It had named one of the two, and which one depended on rounding, so it
+  differed between platforms.
 - The content-review reader is now tested against `contentvalidR` 0.8.0
   and 0.9.0 output as well as 0.6.0 and 0.7.0
   ([\#53](https://github.com/JUhalt/nomologR/issues/53)). The added

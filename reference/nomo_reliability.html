@@ -206,19 +206,21 @@ of Cronbach's alpha. <em>Psychometrika, 74</em>(1), 107-120.
 <span class="r-in"><span><span class="va">cfa</span> <span class="op">&lt;-</span> <span class="fu"><a href="nomo_cfa.html">nomo_cfa</a></span><span class="op">(</span><span class="va">model</span>, data <span class="op">=</span> <span class="fu">lavaan</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/lavaan/man/HolzingerSwineford1939.html" class="external-link">HolzingerSwineford1939</a></span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">rel</span> <span class="op">&lt;-</span> <span class="fu">nomo_reliability</span><span class="op">(</span><span class="va">cfa</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">rel</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> nomologR reliability evidence</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 3 × 7</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   construct block   indicator_type omega alpha omega_scale         signal</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>               <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> speed     overall continuous     0.686 0.688 observed_continuous review</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> textual   overall continuous     0.885 0.883 observed_continuous info  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> visual    overall continuous     0.612 0.626 observed_continuous review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;nomo_reliability summary&gt; Reliability</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Sampling uncertainty was not bootstrapped. For report-ready intervals, rerun with `ci = "bootstrap"`.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Coefficients</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Construct  Indicators  Omega  Alpha  Omega scale          Flag</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   speed      continuous  0.686  0.688  observed continuous  review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   textual    continuous  0.885  0.883  observed continuous</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   visual     continuous  0.612  0.626  observed continuous  review</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Measurement-model context requires review: reliability is conditional on the fitted CFA.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Interpretation rule: omega is primary for the congeneric CFA workflow; alpha is secondary and assumption-dependent. Reliability contributes score-precision evidence, not construct validity.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Sampling uncertainty was not bootstrapped. For report-ready intervals, rerun</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> with `ci = "bootstrap"`.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Measurement-model context requires review: reliability is conditional on the</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> fitted CFA.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Omega is primary for the congeneric CFA workflow; alpha is secondary and</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> assumption-dependent. Reliability contributes score-precision evidence, not</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> construct validity.</span>
 <span class="r-in"><span><span class="va">rel</span><span class="op">$</span><span class="va">decision_log</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 9 × 10</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   stage       object metric  value reference severity observation recommendation</span>
@@ -239,18 +241,21 @@ of Cronbach's alpha. <em>Psychometrika, 74</em>(1), 107-120.
 <span class="r-in"><span><span class="co"># (for example 1000) for final reporting.</span></span></span>
 <span class="r-in"><span><span class="va">rel_ci</span> <span class="op">&lt;-</span> <span class="fu">nomo_reliability</span><span class="op">(</span><span class="va">cfa</span>, ci <span class="op">=</span> <span class="st">"bootstrap"</span>, ci_boot <span class="op">=</span> <span class="fl">100</span>, ci_seed <span class="op">=</span> <span class="fl">2026</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">rel_ci</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> nomologR reliability evidence</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 3 × 7</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   construct block   indicator_type omega                alpha omega_scale signal</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> speed     overall continuous     0.686 [0.585, 0.752] 0.68… observed_c… review</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> textual   overall continuous     0.885 [0.859, 0.900] 0.88… observed_c… info  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> visual    overall continuous     0.612 [0.542, 0.686] 0.62… observed_c… review</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Bracketed values are bootstrap confidence intervals.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;nomo_reliability summary&gt; Reliability</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Measurement-model context requires review: reliability is conditional on the fitted CFA.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Coefficients</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Construct  Indicators  Omega                 Alpha</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   speed      continuous  0.686 [0.585, 0.752]  0.688 [0.625, 0.743]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   textual    continuous  0.885 [0.859, 0.900]  0.883 [0.854, 0.898]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   visual     continuous  0.612 [0.542, 0.686]  0.626 [0.554, 0.693]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Not shown for width: Omega scale, Flag. See nomo_table(x, "coefficients").</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Bracketed values are bootstrap confidence intervals.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Interpretation rule: omega is primary for the congeneric CFA workflow; alpha is secondary and assumption-dependent. Reliability contributes score-precision evidence, not construct validity.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Measurement-model context requires review: reliability is conditional on the</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> fitted CFA.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Omega is primary for the congeneric CFA workflow; alpha is secondary and</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> assumption-dependent. Reliability contributes score-precision evidence, not</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> construct validity.</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>

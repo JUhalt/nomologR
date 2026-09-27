@@ -259,24 +259,21 @@ bioavailability. <em>Journal of Pharmacokinetics and Biopharmaceutics, 15</em>(6
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">net</span> <span class="op">&lt;-</span> <span class="fu">nomo_network</span><span class="op">(</span><span class="va">model</span>, data <span class="op">=</span> <span class="va">nomo_demo_network</span>, hypotheses <span class="op">=</span> <span class="va">h</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">net</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;nomo_network&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Primary sample: N = 800 | Converged: TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Theory relations: 3 | Added transparently to model: 2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Measurement context: INFO | no configured measurement-context review signal was triggered</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;nomo_network&gt; Nomological network</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Primary sample: N = 800 | Converged: yes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Theory relations: 3 | Added to the model from hypotheses: 2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Measurement context: no configured measurement-context review signal was</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> triggered</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 3 × 9</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   id    relation                      prediction theoretical_region estimate</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                         <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                 <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> H1    Agency -&gt; Persistence         positive   [0.2, +Inf)         0.458  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> H2    Agency &lt;-&gt; SocialDesirability negligible [-0.15, 0.15]       0.007<span style="text-decoration: underline;">73</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> H3    Agency -&gt; Performance         positive   (0, +Inf)           0.389  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   ci_lower ci_upper concordance confirmatory_status</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>              </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span>   0.389    0.526  Concordant  A priori           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span>  -<span style="color: #BB0000;">0.079</span><span style="color: #BB0000; text-decoration: underline;">4</span>   0.094<span style="text-decoration: underline;">8</span> Concordant  A priori           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span>   0.325    0.454  Concordant  A priori           </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Hypothesis evidence</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ID  Relation                       Estimate  95% CI           Concordance</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   H1  Agency -&gt; Persistence             0.458  [0.389, 0.526]   Concordant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   H2  Agency &lt;-&gt; SocialDesirability     0.008  [-0.079, 0.095]  Concordant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   H3  Agency -&gt; Performance             0.389  [0.325, 0.454]   Concordant</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Interpretation rule: theory concordance, uncertainty, measurement quality, and replication are distinct evidence streams. Statistical significance alone is not a validity verdict.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Theory concordance, uncertainty, measurement quality, and replication are</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> distinct evidence streams. Statistical significance alone is not a validity</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> verdict.</span>
 <span class="r-in"><span><span class="fu"><a href="nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">net</span>, <span class="st">"hypotheses"</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 3 × 17</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   id    relation    prediction theoretical_region scale estimate     se ci_lower</span>

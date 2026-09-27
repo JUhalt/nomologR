@@ -243,42 +243,59 @@ between the higher-order factor model and the hierarchical factor model.
 <span class="r-in"><span><span class="va">bf</span> <span class="op">&lt;-</span> <span class="fu"><a href="nomo_cfa.html">nomo_cfa</a></span><span class="op">(</span><span class="fu"><a href="nomo_model.html">nomo_model</a></span><span class="op">(</span><span class="va">factors</span>, structure <span class="op">=</span> <span class="st">"bifactor"</span><span class="op">)</span>, data <span class="op">=</span> <span class="va">dat</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">h</span> <span class="op">&lt;-</span> <span class="fu">nomo_hierarchical</span><span class="op">(</span><span class="va">bf</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">h</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;nomo_hierarchical&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Bifactor model | general factor: G | group factors: A, B, C</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;nomo_hierarchical&gt; Hierarchical model evaluation</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Bifactor model | General factor: G | Group factors: A, B, C</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Estimand: unit-weighted observed composite</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Total score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 5 × 2</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   index                       estimate</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> omega_total                    0.896</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> omega_hierarchical             0.741</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> omega_hierarchical_relative    0.827</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> ecv                            0.609</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> puc                            0.75 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Index                        Estimate</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   omega total                     0.896</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   omega hierarchical              0.741</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   omega hierarchical relative     0.827</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ECV                             0.609</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   PUC                             0.750</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Subscales</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 3 × 4</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   subscale n_items omega_subscale omega_hierarchical_subscale</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>                       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> A              3          0.798                       0.33 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> B              3          0.791                       0.354</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> C              3          0.799                       0.239</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Subscale  Items  Omega subscale  Omega hierarchical subscale</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   A             3           0.798                        0.330</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   B             3           0.791                        0.354</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   C             3           0.799                        0.239</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Factor scores</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 4 × 5</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   factor role    factor_determinacy min_competing_r construct_replicability</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>                   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> G      general              0.867           0.502                   0.829</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> A      group                0.704          -<span style="color: #BB0000;">0.009</span>                   0.489</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> B      group                0.715           0.023                   0.501</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> C      group                0.641          -<span style="color: #BB0000;">0.178</span>                   0.406</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Factor  Role     Determinacy  Min competing r  Replicability H</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   G       general        0.867            0.502            0.829</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   A       group          0.704           -0.009            0.489</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   B       group          0.715            0.023            0.501</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   C       group          0.641           -0.178            0.406</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Notes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - [review] A bifactor model will usually fit at least as well as correlated-factors or higher-order models of the same items, even when it did not generate the data (Reise, 2012), and a higher-order model is a constrained version of it (Yung, Thissen, &amp; McLeod, 1999). Bonifay, Lane, and Reise (2017) call the bifactor model's tendency to show superior goodness of fit in model comparison studies a particular concern, and say that superior fit may be a symptom of overfitting: modeling not only the trends in the data but also unwanted noise. Murray and Johnson (2013) compared these two structures directly and found the comparison biased in favor of the bifactor model: unless there was essentially no unmodeled complexity, their simulation favored the bifactor model even when a higher-order model generated the data. They concluded that which model to adopt should not rely on which is better fitting. Compare the alternatives with nomo_compare() and choose on substantive grounds, not on fit alone.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - [review] Factor determinacy is at or below .90 for G, A, B, C. Gorsuch (1983, p. 260) recommended using factor score estimates only above that value. This is his recommendation reported as context, not a rule applied here; the score may still be usable for some purposes.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - [review] Two equally valid sets of factor scores could correlate as low as G (0.50), A (-0.01), B (0.02), C (-0.18). Gorsuch (1983, p. 260) suggested this minimum be above .70. A negative value means two researchers scoring the same data could rank people in opposite orders and both be consistent with the model.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - [review] Construct replicability H is below .70 for A, B, C. Hancock and Mueller (2001) proposed .70 as a standard; a factor below it is not well defined by its own indicators and is expected to change across studies. Reported as their standard, not applied as a rule.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   - review: A bifactor model will usually fit at least as well as</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     correlated-factors or higher-order models of the same items, even when it</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     did not generate the data (Reise, 2012), and a higher-order model is a</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     constrained version of it (Yung, Thissen, &amp; McLeod, 1999). Bonifay, Lane,</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     and Reise (2017) call the bifactor model's tendency to show superior</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     goodness of fit in model comparison studies a particular concern, and say</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     that superior fit may be a symptom of overfitting: modeling not only the</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     trends in the data but also unwanted noise. Murray and Johnson (2013)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     compared these two structures directly and found the comparison biased in</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     favor of the bifactor model: unless there was essentially no unmodeled</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     complexity, their simulation favored the bifactor model even when a</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     higher-order model generated the data. They concluded that which model to</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     adopt should not rely on which is better fitting. Compare the alternatives</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     with nomo_compare() and choose on substantive grounds, not on fit alone.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   - review: Factor determinacy is at or below .90 for G, A, B, C. Gorsuch</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     (1983, p. 260) recommended using factor score estimates only above that</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     value. This is his recommendation reported as context, not a rule applied</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     here; the score may still be usable for some purposes.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   - review: Two equally valid sets of factor scores could correlate as low as</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     G (0.50), A (-0.01), B (0.02), C (-0.18). Gorsuch (1983, p. 260) suggested</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     this minimum be above .70. A negative value means two researchers scoring</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     the same data could rank people in opposite orders and both be consistent</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     with the model.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   - review: Construct replicability H is below .70 for A, B, C. Hancock and</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     Mueller (2001) proposed .70 as a standard; a factor below it is not well</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     defined by its own indicators and is expected to change across studies.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     Reported as their standard, not applied as a rule.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> No index is treated as a pass/fail threshold; see nomo_table(x, "indices").</span>
 <span class="r-in"><span><span class="fu"><a href="nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">h</span>, <span class="st">"subscales"</span><span class="op">)</span></span></span>

@@ -179,27 +179,19 @@ inv <- nomo_invariance(
   levels = c("configural", "metric", "scalar")
 )
 inv
-#> <nomo_invariance>
-#> Grouping variable: group (2 groups: online, paper)
-#> Indicator treatment: continuous
+#> <nomo_invariance> Measurement invariance
+#> Grouping variable: group (2 groups: online, paper) | Indicators: continuous
 #> Requested: configural -> metric -> scalar
 #> Completed: configural -> metric -> scalar
 #> 
-#> # A tibble: 3 × 11
-#>   level      status    constraints          partial_requested   cfi rmsea
-#>   <chr>      <chr>     <chr>                <chr>             <dbl> <dbl>
-#> 1 configural estimated none                 ""                1     0    
-#> 2 metric     estimated loadings             ""                1     0    
-#> 3 scalar     estimated loadings, intercepts ""                0.954 0.121
-#>      srmr delta_cfi delta_rmsea delta_srmr     lrt_p
-#>     <dbl>     <dbl>       <dbl>      <dbl>     <dbl>
-#> 1 0.00200   NA           NA        NA      NA       
-#> 2 0.0275     0            0         0.0255  1.46e- 1
-#> 3 0.0647    -0.0462       0.121     0.0371  1.20e-13
-#> 
+#>   Level         CFI  RMSEA   SRMR  CFI change  RMSEA change   LRT p
+#>   configural  1.000  0.000  0.002           -             -       -
+#>   metric      1.000  0.000  0.028      +0.000        +0.000    .146
+#>   scalar      0.954  0.121  0.065      -0.046        +0.121  < .001
 #> Localized equality-constraint diagnostics retained: 12
 #> 
-#> Interpretation rule: fit changes and score diagnostics are evidence, not universal pass/fail rules, not automatic pass/fail decisions, and not automatic parameter-freeing rules.
+#> Fit changes and score diagnostics are evidence. They are not pass/fail rules,
+#> and nomologR never frees a parameter because of them.
 nomo_table(inv, "fit")
 #> # A tibble: 3 × 19
 #>   level     constraints partial_requested status converged  chisq    df   pvalue

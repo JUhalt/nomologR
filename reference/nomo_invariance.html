@@ -213,27 +213,19 @@ outcomes. <em>Psychometrika, 81</em>(4), 1014-1045.
 <span class="r-in"><span>  levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"configural"</span>, <span class="st">"metric"</span>, <span class="st">"scalar"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">inv</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;nomo_invariance&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Grouping variable: group (2 groups: online, paper)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Indicator treatment: continuous</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;nomo_invariance&gt; Measurement invariance</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Grouping variable: group (2 groups: online, paper) | Indicators: continuous</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Requested: configural -&gt; metric -&gt; scalar</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Completed: configural -&gt; metric -&gt; scalar</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 3 × 11</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   level      status    constraints          partial_requested   cfi rmsea</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> configural estimated none                 <span style="color: #949494;">""</span>                1     0    </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> metric     estimated loadings             <span style="color: #949494;">""</span>                1     0    </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> scalar     estimated loadings, intercepts <span style="color: #949494;">""</span>                0.954 0.121</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      srmr delta_cfi delta_rmsea delta_srmr     lrt_p</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> 0.002<span style="text-decoration: underline;">00</span>   <span style="color: #BB0000;">NA</span>           <span style="color: #BB0000;">NA</span>        <span style="color: #BB0000;">NA</span>      <span style="color: #BB0000;">NA</span>   <span style="color: #949494;"> </span>   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> 0.027<span style="text-decoration: underline;">5</span>     0            0         0.025<span style="text-decoration: underline;">5</span>  1.46<span style="color: #949494;">e</span><span style="color: #BB0000;">- 1</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> 0.064<span style="text-decoration: underline;">7</span>    -<span style="color: #BB0000;">0.046</span><span style="color: #BB0000; text-decoration: underline;">2</span>       0.121     0.037<span style="text-decoration: underline;">1</span>  1.20<span style="color: #949494;">e</span><span style="color: #BB0000;">-13</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Level         CFI  RMSEA   SRMR  CFI change  RMSEA change   LRT p</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   configural  1.000  0.000  0.002           -             -       -</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   metric      1.000  0.000  0.028      +0.000        +0.000    .146</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   scalar      0.954  0.121  0.065      -0.046        +0.121  &lt; .001</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Localized equality-constraint diagnostics retained: 12</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Interpretation rule: fit changes and score diagnostics are evidence, not universal pass/fail rules, not automatic pass/fail decisions, and not automatic parameter-freeing rules.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Fit changes and score diagnostics are evidence. They are not pass/fail rules,</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> and nomologR never frees a parameter because of them.</span>
 <span class="r-in"><span><span class="fu"><a href="nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">inv</span>, <span class="st">"fit"</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 3 × 19</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   level     constraints partial_requested status converged  chisq    df   pvalue</span>

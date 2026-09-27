@@ -163,32 +163,26 @@ fit <- nomo_cfa(model, data = nomo_demo_continuous)
 
 sensitivity <- nomo_missing(fit, data = nomo_demo_continuous, reliability = FALSE)
 sensitivity
-#> <nomo_missing>
-#> Missing-data sensitivity for a nomo_cfa | reference: FIML | fitted with: Listwise deletion
-#> 27 of 500 cases incomplete (5.4%) in 3 pattern(s); lowest covariance coverage 0.946 (a2, b3)
+#> <nomo_missing> Missing-data sensitivity
+#> Model: nomo_cfa | Reference: FIML | Fitted with: Listwise deletion
+#> Cases: 27 of 500 incomplete (5.4%) | Patterns: 3
+#> Lowest covariance coverage: 0.946 (a2, b3)
 #> 
 #> Strategies
-#> # A tibble: 2 × 8
-#>   label             lavaan_missing requires role       available n_used
-#>   <chr>             <chr>          <chr>    <chr>      <lgl>      <dbl>
-#> 1 Listwise deletion listwise       MCAR     comparison TRUE         473
-#> 2 FIML              ml             MAR      reference  TRUE         500
-#>   converged admissible
-#>   <lgl>     <lgl>     
-#> 1 TRUE      TRUE      
-#> 2 TRUE      TRUE      
+#>   Strategy           lavaan    Needs  Role          N  Converged  Admissible
+#>   Listwise deletion  listwise  MCAR   comparison  473  yes        yes
+#>   FIML               ml        MAR    reference   500  yes        yes
 #> 
 #> Largest differences from the reference, in reference standard errors
-#> # A tibble: 5 × 5
-#>   parameter strategy          estimate reference difference_in_se
-#>   <chr>     <chr>                <dbl>     <dbl>            <dbl>
-#> 1 A ~~ B    Listwise deletion    0.499     0.48              0.45
-#> 2 B =~ b5   Listwise deletion    0.337     0.353            -0.37
-#> 3 A =~ a5   Listwise deletion    0.598     0.59              0.23
-#> 4 A =~ a3   Listwise deletion    0.669     0.675            -0.21
-#> 5 B =~ b3   Listwise deletion    0.757     0.762            -0.17
+#>   Parameter  Strategy           Estimate  Reference  Difference (SE)
+#>   A ~~ B     Listwise deletion     0.499      0.480            +0.45
+#>   B =~ b5    Listwise deletion     0.337      0.353            -0.37
+#>   A =~ a5    Listwise deletion     0.598      0.590            +0.23
+#>   A =~ a3    Listwise deletion     0.669      0.675            -0.21
+#>   B =~ b3    Listwise deletion     0.757      0.762            -0.17
 #> 
-#> Whether data are missing at random cannot be tested from these data; see nomo_table(x, "decision_log").
+#> Whether data are missing at random cannot be tested from these data; see
+#> nomo_table(x, "decision_log").
 nomo_table(sensitivity, "strategies")
 #> # A tibble: 2 × 12
 #>   strategy label     lavaan_missing requires role  as_fitted available converged

@@ -151,35 +151,34 @@ decision without repeating the same full loading table in several
 places.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">rel</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## nomologR reliability evidence</span></span>
-<span><span class="co">## <span style="color: #949494;"># A tibble: 2 × 7</span></span></span>
-<span><span class="co">##   construct block   indicator_type omega                alpha omega_scale signal</span></span>
-<span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">1</span> F1        overall continuous     0.891 [0.871, 0.908] 0.89… observed_c… info  </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">2</span> F2        overall continuous     0.862 [0.840, 0.881] 0.86… observed_c… info  </span></span>
-<span><span class="co">## Bracketed values are bootstrap confidence intervals.</span></span>
+<pre><code><span><span class="co">## &lt;nomo_reliability summary&gt; Reliability</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Interpretation rule: omega is primary for the congeneric CFA workflow; alpha is secondary and assumption-dependent. Reliability contributes score-precision evidence, not construct validity.</span></span></code></pre>
+<span><span class="co">## Coefficients</span></span>
+<span><span class="co">##   Construct  Indicators  Omega                 Alpha</span></span>
+<span><span class="co">##   F1         continuous  0.891 [0.871, 0.908]  0.890 [0.870, 0.907]</span></span>
+<span><span class="co">##   F2         continuous  0.862 [0.840, 0.881]  0.861 [0.837, 0.881]</span></span>
+<span><span class="co">##   Not shown for width: Omega scale. See nomo_table(x, "coefficients").</span></span>
+<span><span class="co">##   Bracketed values are bootstrap confidence intervals.</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## Omega is primary for the congeneric CFA workflow; alpha is secondary and</span></span>
+<span><span class="co">## assumption-dependent. Reliability contributes score-precision evidence, not</span></span>
+<span><span class="co">## construct validity.</span></span></code></pre>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">val</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## nomologR convergent/discriminant evidence</span></span>
+<pre><code><span><span class="co">## &lt;nomo_validity summary&gt; Convergent and discriminant evidence</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Convergent evidence by construct</span></span>
-<span><span class="co">## <span style="color: #949494;"># A tibble: 2 × 7</span></span></span>
-<span><span class="co">##   construct block     AVE min_abs_loading median_abs_loading n_loading_review</span></span>
-<span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">1</span> F1        overall 0.671           0.793              0.822                0</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">2</span> F2        overall 0.611           0.711              0.795                0</span></span>
-<span><span class="co">## <span style="color: #949494;"># ℹ 1 more variable: signal &lt;chr&gt;</span></span></span>
+<span><span class="co">##   Construct    AVE  Min |loading|  Median |loading|  Loadings flagged</span></span>
+<span><span class="co">##   F1         0.671          0.793             0.822                 0</span></span>
+<span><span class="co">##   F2         0.611          0.711             0.795                 0</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Construct-separation evidence</span></span>
-<span><span class="co">## <span style="color: #949494;"># A tibble: 1 × 9</span></span></span>
-<span><span class="co">##   construct_1 construct_2 block   latent_r latent_r_ci_lower latent_r_ci_upper</span></span>
-<span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">1</span> F1          F2          overall    0.223             0.127             0.318</span></span>
-<span><span class="co">## <span style="color: #949494;"># ℹ 3 more variables: HTMT2 &lt;dbl&gt;, HTMT &lt;dbl&gt;, signal &lt;chr&gt;</span></span></span>
+<span><span class="co">## Construct separation</span></span>
+<span><span class="co">##   Construct 1  Construct 2  Latent r  95% CI          HTMT2   HTMT</span></span>
+<span><span class="co">##   F1           F2              0.223  [0.127, 0.318]  0.221  0.225</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Interpretation rule: standardized loadings and AVE address convergent evidence; latent correlations and HTMT-family statistics address construct separation. These are complementary questions, not interchangeable pass/fail tests.</span></span></code></pre>
+<span><span class="co">## Standardized loadings and AVE address convergent evidence; latent correlations</span></span>
+<span><span class="co">## and HTMT-family statistics address construct separation. These are</span></span>
+<span><span class="co">## complementary questions, not interchangeable pass/fail tests.</span></span></code></pre>
 <p>The figures also avoid duplication. Item-level loading evidence
 belongs to the CFA; reliability gets a coefficient plot; convergent
 validity gets an AVE plot; and construct separation gets an HTMT-family
@@ -246,30 +245,31 @@ that the items strongly represent the construct or that the resulting
 score is precise.</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">weak_rel</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## nomologR reliability evidence</span></span>
-<span><span class="co">## <span style="color: #949494;"># A tibble: 1 × 7</span></span></span>
-<span><span class="co">##   construct block   indicator_type omega alpha omega_scale         signal</span></span>
-<span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>               <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">1</span> Weak      overall continuous     0.369 0.363 observed_continuous review</span></span>
+<pre><code><span><span class="co">## &lt;nomo_reliability summary&gt; Reliability</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Sampling uncertainty was not bootstrapped. For report-ready intervals, rerun with `ci = "bootstrap"`.</span></span>
+<span><span class="co">## Coefficients</span></span>
+<span><span class="co">##   Construct  Indicators  Omega  Alpha  Omega scale          Flag</span></span>
+<span><span class="co">##   Weak       continuous  0.369  0.363  observed continuous  review</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Interpretation rule: omega is primary for the congeneric CFA workflow; alpha is secondary and assumption-dependent. Reliability contributes score-precision evidence, not construct validity.</span></span></code></pre>
+<span><span class="co">## Sampling uncertainty was not bootstrapped. For report-ready intervals, rerun</span></span>
+<span><span class="co">## with `ci = "bootstrap"`.</span></span>
+<span><span class="co">## Omega is primary for the congeneric CFA workflow; alpha is secondary and</span></span>
+<span><span class="co">## assumption-dependent. Reliability contributes score-precision evidence, not</span></span>
+<span><span class="co">## construct validity.</span></span></code></pre>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">weak_val</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## nomologR convergent/discriminant evidence</span></span>
+<pre><code><span><span class="co">## &lt;nomo_validity summary&gt; Convergent and discriminant evidence</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Convergent evidence by construct</span></span>
-<span><span class="co">## <span style="color: #949494;"># A tibble: 1 × 7</span></span></span>
-<span><span class="co">##   construct block     AVE min_abs_loading median_abs_loading n_loading_review</span></span>
-<span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">1</span> Weak      overall 0.114             0.2              0.311                5</span></span>
-<span><span class="co">## <span style="color: #949494;"># ℹ 1 more variable: signal &lt;chr&gt;</span></span></span>
+<span><span class="co">##   Construct    AVE  Min |loading|  Median |loading|  Loadings flagged  Flag</span></span>
+<span><span class="co">##   Weak       0.114          0.200             0.311                 5  review</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Construct-separation evidence</span></span>
-<span><span class="co">## No pairwise construct-separation summary is available.</span></span>
+<span><span class="co">## Construct separation</span></span>
+<span><span class="co">##   No pairwise construct-separation summary is available.</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Interpretation rule: standardized loadings and AVE address convergent evidence; latent correlations and HTMT-family statistics address construct separation. These are complementary questions, not interchangeable pass/fail tests.</span></span></code></pre>
+<span><span class="co">## Standardized loadings and AVE address convergent evidence; latent correlations</span></span>
+<span><span class="co">## and HTMT-family statistics address construct separation. These are</span></span>
+<span><span class="co">## complementary questions, not interchangeable pass/fail tests.</span></span></code></pre>
 <p>This is why <code>nomologR</code> does not collapse measurement
 quality into a single global-fit verdict. Weak standardized loadings,
 low AVE, and weak model-based reliability remain important even when
@@ -306,36 +306,34 @@ empirically.</p>
 <span><span class="va">overlap_val</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_validity.html">nomo_validity</a></span><span class="op">(</span><span class="va">overlap_cfa</span>, htmt <span class="op">=</span> <span class="st">"both"</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">overlap_rel</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## nomologR reliability evidence</span></span>
-<span><span class="co">## <span style="color: #949494;"># A tibble: 2 × 7</span></span></span>
-<span><span class="co">##   construct block   indicator_type omega alpha omega_scale         signal</span></span>
-<span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>               <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">1</span> F1        overall continuous     0.893 0.894 observed_continuous info  </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">2</span> F2        overall continuous     0.896 0.895 observed_continuous info  </span></span>
+<pre><code><span><span class="co">## &lt;nomo_reliability summary&gt; Reliability</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Sampling uncertainty was not bootstrapped. For report-ready intervals, rerun with `ci = "bootstrap"`.</span></span>
+<span><span class="co">## Coefficients</span></span>
+<span><span class="co">##   Construct  Indicators  Omega  Alpha  Omega scale</span></span>
+<span><span class="co">##   F1         continuous  0.893  0.894  observed continuous</span></span>
+<span><span class="co">##   F2         continuous  0.896  0.895  observed continuous</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Interpretation rule: omega is primary for the congeneric CFA workflow; alpha is secondary and assumption-dependent. Reliability contributes score-precision evidence, not construct validity.</span></span></code></pre>
+<span><span class="co">## Sampling uncertainty was not bootstrapped. For report-ready intervals, rerun</span></span>
+<span><span class="co">## with `ci = "bootstrap"`.</span></span>
+<span><span class="co">## Omega is primary for the congeneric CFA workflow; alpha is secondary and</span></span>
+<span><span class="co">## assumption-dependent. Reliability contributes score-precision evidence, not</span></span>
+<span><span class="co">## construct validity.</span></span></code></pre>
 <div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">overlap_val</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## nomologR convergent/discriminant evidence</span></span>
+<pre><code><span><span class="co">## &lt;nomo_validity summary&gt; Convergent and discriminant evidence</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Convergent evidence by construct</span></span>
-<span><span class="co">## <span style="color: #949494;"># A tibble: 2 × 7</span></span></span>
-<span><span class="co">##   construct block     AVE min_abs_loading median_abs_loading n_loading_review</span></span>
-<span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">1</span> F1        overall 0.737           0.837              0.865                0</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">2</span> F2        overall 0.742           0.848              0.851                0</span></span>
-<span><span class="co">## <span style="color: #949494;"># ℹ 1 more variable: signal &lt;chr&gt;</span></span></span>
+<span><span class="co">##   Construct    AVE  Min |loading|  Median |loading|  Loadings flagged</span></span>
+<span><span class="co">##   F1         0.737          0.837             0.865                 0</span></span>
+<span><span class="co">##   F2         0.742          0.848             0.851                 0</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Construct-separation evidence</span></span>
-<span><span class="co">## <span style="color: #949494;"># A tibble: 1 × 9</span></span></span>
-<span><span class="co">##   construct_1 construct_2 block   latent_r latent_r_ci_lower latent_r_ci_upper</span></span>
-<span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">1</span> F1          F2          overall    0.933             0.912             0.954</span></span>
-<span><span class="co">## <span style="color: #949494;"># ℹ 3 more variables: HTMT2 &lt;dbl&gt;, HTMT &lt;dbl&gt;, signal &lt;chr&gt;</span></span></span>
+<span><span class="co">## Construct separation</span></span>
+<span><span class="co">##   Construct 1  Construct 2  Latent r  95% CI          HTMT2   HTMT  Flag</span></span>
+<span><span class="co">##   F1           F2              0.933  [0.912, 0.954]  0.931  0.932  review</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Interpretation rule: standardized loadings and AVE address convergent evidence; latent correlations and HTMT-family statistics address construct separation. These are complementary questions, not interchangeable pass/fail tests.</span></span></code></pre>
+<span><span class="co">## Standardized loadings and AVE address convergent evidence; latent correlations</span></span>
+<span><span class="co">## and HTMT-family statistics address construct separation. These are</span></span>
+<span><span class="co">## complementary questions, not interchangeable pass/fail tests.</span></span></code></pre>
 <p>Here, strong omega and AVE do not erase a high latent correlation or
 HTMT2 value. The package therefore recommends investigating theoretical
 distinctiveness, item content, cross-construct overlap, and the intended
@@ -379,24 +377,26 @@ scale.</p>
 <span>  include_alpha <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">ordinal_rel</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## nomologR reliability evidence</span></span>
-<span><span class="co">## <span style="color: #949494;"># A tibble: 1 × 7</span></span></span>
-<span><span class="co">##   construct block   indicator_type omega alpha omega_scale      signal</span></span>
-<span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">1</span> F         overall ordered        0.829 <span style="color: #BB0000;">NA</span>    observed_ordinal info  </span></span>
+<pre><code><span><span class="co">## &lt;nomo_reliability summary&gt; Reliability</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Secondary alpha unavailable for:</span></span>
-<span><span class="co">## <span style="color: #949494;"># A tibble: 1 × 4</span></span></span>
-<span><span class="co">##   construct indicator_type score_scale     </span></span>
-<span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>           </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">1</span> F         ordered        observed_ordinal</span></span>
-<span><span class="co">##   reason                                                                        </span></span>
-<span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                                                                         </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">1</span> Observed-scale alpha is not computed from an ordered-indicator CFA. Current s…</span></span>
+<span><span class="co">## Coefficients</span></span>
+<span><span class="co">##   Construct  Indicators  Omega  Omega scale</span></span>
+<span><span class="co">##   F          ordered     0.829  observed ordinal</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Sampling uncertainty was not bootstrapped. For report-ready intervals, rerun with `ci = "bootstrap"`.</span></span>
+<span><span class="co">## Secondary alpha unavailable for</span></span>
+<span><span class="co">##   - F (ordered indicators, observed ordinal scale): Observed-scale alpha is</span></span>
+<span><span class="co">##     not computed from an ordered-indicator CFA. Current semTools intentionally</span></span>
+<span><span class="co">##     disallows ord.scale = TRUE with tau-equivalent alpha for ordered</span></span>
+<span><span class="co">##     composites because that is a different scoring analysis from model-based</span></span>
+<span><span class="co">##     ordinal reliability. Use the observed-scale omega estimate as the primary</span></span>
+<span><span class="co">##     reliability evidence; calculate observed-score alpha separately only when</span></span>
+<span><span class="co">##     that estimand is substantively required.</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Interpretation rule: omega is primary for the congeneric CFA workflow; alpha is secondary and assumption-dependent. Reliability contributes score-precision evidence, not construct validity.</span></span></code></pre>
+<span><span class="co">## Sampling uncertainty was not bootstrapped. For report-ready intervals, rerun</span></span>
+<span><span class="co">## with `ci = "bootstrap"`.</span></span>
+<span><span class="co">## Omega is primary for the congeneric CFA workflow; alpha is secondary and</span></span>
+<span><span class="co">## assumption-dependent. Reliability contributes score-precision evidence, not</span></span>
+<span><span class="co">## construct validity.</span></span></code></pre>
 <p>Observed-scale omega is available for the practical ordinal
 composite. Observed-scale alpha is deliberately reported as unavailable
 in this ordered-CFA estimand rather than silently replacing it with a
@@ -490,14 +490,18 @@ post hoc:</p>
 <span>  origin <span class="op">=</span> <span class="st">"post_hoc"</span></span>
 <span><span class="op">)</span></span>
 <span><span class="va">cross_comparison</span></span></code></pre></div>
-<pre><code><span><span class="co">## &lt;nomo_compare&gt;</span></span>
-<span><span class="co">## Models: 2 | Reference: simple_structure | Estimator: ML | Cases: 473 | Origin: post-hoc</span></span>
-<span><span class="co">## Rationale: The largest modification index suggested that a5 also reflects factor B.</span></span>
+<pre><code><span><span class="co">## &lt;nomo_compare&gt; Measurement-model comparison</span></span>
+<span><span class="co">## Models: 2 | Reference: simple_structure | Estimator: ML | Cases: 473</span></span>
+<span><span class="co">## Origin: post-hoc</span></span>
+<span><span class="co">## Rationale: The largest modification index suggested that a5 also reflects</span></span>
+<span><span class="co">## factor B.</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Compared with `simple_structure`:</span></span>
-<span><span class="co">##   - cross_loading (nested, less constrained): chi-square difference = 48.72, df = 1, p &lt; .001; dCFI +0.027, dRMSEA -0.051; dAIC -46.7</span></span>
+<span><span class="co">## Compared with `simple_structure`</span></span>
+<span><span class="co">##   - cross_loading (nested, less constrained): chi-square difference = 48.72,</span></span>
+<span><span class="co">##     df = 1, p &lt; .001; CFI change +0.027, RMSEA change -0.051; AIC change -46.7</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## No model was selected automatically. Use summary() for interpretations and measurement evidence.</span></span></code></pre>
+<span><span class="co">## No model was selected automatically. summary() shows interpretations and</span></span>
+<span><span class="co">## measurement evidence.</span></span></code></pre>
 <p>Estimating the cross-loading reduces misfit (chi-square difference =
 48.7, df = 1, p &lt; .001; CFI changes by +0.027). That is exactly the
 feature built into these simulated data, but with real data the evidence
@@ -528,70 +532,70 @@ and fix its loading to zero:</p>
 <span>  <span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">b5_comparison</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## nomologR measurement-model comparison</span></span>
-<span><span class="co">## Rationale: Evaluate whether the weakly loading item b5 contributes to factor B before deciding whether to keep it.</span></span>
+<pre><code><span><span class="co">## &lt;nomo_compare summary&gt; Measurement-model comparison</span></span>
+<span><span class="co">## Rationale: Evaluate whether the weakly loading item b5 contributes to factor B</span></span>
+<span><span class="co">## before deciding whether to keep it.</span></span>
 <span><span class="co">## Origin: a-priori | Reference model: full</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Model fit and information criteria</span></span>
-<span><span class="co">## <span style="color: #949494;"># A tibble: 2 × 11</span></span></span>
-<span><span class="co">##   model            npar    df chisq   cfi   tli rmsea  srmr    aic    bic</span></span>
-<span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">1</span> full               21    34  75.8 0.973 0.965 0.051 0.052 <span style="text-decoration: underline;">11</span>981  <span style="text-decoration: underline;">12</span>068.</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">2</span> b5_loading_zero    20    35 123.  0.944 0.928 0.073 0.093 <span style="text-decoration: underline;">12</span>026. <span style="text-decoration: underline;">12</span>109.</span></span>
-<span><span class="co">##   fixed_zero_loadings</span></span>
-<span><span class="co">##                 <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">1</span>                   0</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">2</span>                   1</span></span>
+<span><span class="co">## Model fit</span></span>
+<span><span class="co">##   Model            Parameters  df  Chi-square    CFI    TLI  RMSEA   SRMR</span></span>
+<span><span class="co">##   full                     21  34       75.83  0.973  0.965  0.051  0.052</span></span>
+<span><span class="co">##   b5_loading_zero          20  35      122.75  0.944  0.928  0.073  0.093</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Comparisons with the reference model</span></span>
-<span><span class="co">## <span style="color: #949494;"># A tibble: 1 × 12</span></span></span>
-<span><span class="co">##   model           relation         nesting_check method   chisq_diff df_diff</span></span>
-<span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">1</span> b5_loading_zero more_constrained nested        standard       46.9       1</span></span>
-<span><span class="co">##   p_value delta_cfi delta_rmsea delta_srmr delta_aic delta_bic</span></span>
-<span><span class="co">##     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">1</span>       0    -<span style="color: #BB0000;">0.029</span>       0.022      0.042      44.9      40.8</span></span>
+<span><span class="co">## Information criteria</span></span>
+<span><span class="co">##   Model                AIC      BIC  Loadings fixed to zero</span></span>
+<span><span class="co">##   full             11981.0  12068.4                       0</span></span>
+<span><span class="co">##   b5_loading_zero  12025.9  12109.1                       1</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## Difference tests against the reference model</span></span>
+<span><span class="co">##   Model            Relation                  Check   Method    Chi-sq diff  df</span></span>
+<span><span class="co">##   b5_loading_zero  nested, more constrained  nested  standard        46.91   1</span></span>
+<span><span class="co">##   Not shown for width: p. See nomo_table(x, "comparisons").</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## Changes in fit (model minus reference)</span></span>
+<span><span class="co">##   Model               CFI     TLI   RMSEA    SRMR    AIC    BIC</span></span>
+<span><span class="co">##   b5_loading_zero  -0.029  -0.036  +0.022  +0.042  +44.9  +40.8</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Interpretation</span></span>
-<span><span class="co">## - `b5_loading_zero` is nested within `full` and has 1 more degree(s) of freedom (additional constraints). Chi-Squared Difference Test: chi-square difference = 46.91, df = 1, p &lt; .001. A small p-value indicates that the extra constraints are not fully consistent with the data; with large samples, even small misspecifications produce small p-values. Change in fit (`b5_loading_zero` minus `full`): CFI -0.029, TLI -0.036, RMSEA +0.022, SRMR +0.042. AIC +44.9 and BIC +40.8 (`b5_loading_zero` minus `full`); lower values favor a model for these data, and only differences are interpretable. No model is selected automatically; read this evidence with theory and the recorded rationale.</span></span>
+<span><span class="co">##   - `b5_loading_zero` is nested within `full` and has 1 more degree(s) of</span></span>
+<span><span class="co">##     freedom (additional constraints). Chi-Squared Difference Test: chi-square</span></span>
+<span><span class="co">##     difference = 46.91, df = 1, p &lt; .001. A small p-value indicates that the</span></span>
+<span><span class="co">##     extra constraints are not fully consistent with the data; with large</span></span>
+<span><span class="co">##     samples, even small misspecifications produce small p-values. Change in</span></span>
+<span><span class="co">##     fit (`b5_loading_zero` minus `full`): CFI -0.029, TLI -0.036, RMSEA</span></span>
+<span><span class="co">##     +0.022, SRMR +0.042. AIC +44.9 and BIC +40.8 (`b5_loading_zero` minus</span></span>
+<span><span class="co">##     `full`); lower values favor a model for these data, and only differences</span></span>
+<span><span class="co">##     are interpretable. No model is selected automatically; read this evidence</span></span>
+<span><span class="co">##     with theory and the recorded rationale.</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Standardized loadings by model</span></span>
-<span><span class="co">## <span style="color: #949494;"># A tibble: 10 × 4</span></span></span>
-<span><span class="co">##    factor item   full b5_loading_zero</span></span>
-<span><span class="co">##    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 1</span> A      a1    0.771           0.771</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 2</span> A      a2    0.744           0.744</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 3</span> A      a3    0.669           0.669</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 4</span> A      a4    0.738           0.738</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 5</span> A      a5    0.598           0.598</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 6</span> B      b1    0.794           0.795</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 7</span> B      b2    0.695           0.699</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 8</span> B      b3    0.757           0.757</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 9</span> B      b4    0.628           0.624</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">10</span> B      b5    0.337           0    </span></span>
+<span><span class="co">##   Factor  Item   full  b5_loading_zero</span></span>
+<span><span class="co">##   A       a1    0.771            0.771</span></span>
+<span><span class="co">##   A       a2    0.744            0.744</span></span>
+<span><span class="co">##   A       a3    0.669            0.669</span></span>
+<span><span class="co">##   A       a4    0.738            0.738</span></span>
+<span><span class="co">##   A       a5    0.598            0.598</span></span>
+<span><span class="co">##   B       b1    0.794            0.795</span></span>
+<span><span class="co">##   B       b2    0.695            0.699</span></span>
+<span><span class="co">##   B       b3    0.757            0.757</span></span>
+<span><span class="co">##   B       b4    0.628            0.624</span></span>
+<span><span class="co">##   B       b5    0.337            0.000</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Measurement evidence by model</span></span>
-<span><span class="co">## <span style="color: #949494;"># A tibble: 14 × 4</span></span></span>
-<span><span class="co">##    model           construct metric estimate</span></span>
-<span><span class="co">##    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 1</span> full            A         omega     0.835</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 2</span> full            B         omega     0.784</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 3</span> full            A         alpha     0.827</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 4</span> full            B         alpha     0.771</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 5</span> full            A         AVE       0.497</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 6</span> full            B         AVE       0.434</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 7</span> full            B vs A    HTMT2     0.533</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 8</span> b5_loading_zero A         omega     0.835</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 9</span> b5_loading_zero B         omega     0.622</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">10</span> b5_loading_zero A         alpha     0.827</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">11</span> b5_loading_zero B         alpha     0.771</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">12</span> b5_loading_zero A         AVE       0.497</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">13</span> b5_loading_zero B         AVE       0.521</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">14</span> b5_loading_zero B vs A    HTMT2     0.533</span></span>
-<span><span class="co">## Notes:</span></span>
-<span><span class="co">## - Loading(s) fixed to zero for b5 keep those item(s) in this composite; the coefficient does not describe a shortened scale.</span></span>
+<span><span class="co">##   Construct  Metric   full  b5_loading_zero</span></span>
+<span><span class="co">##   A          omega   0.835            0.835</span></span>
+<span><span class="co">##   B          omega   0.784            0.622</span></span>
+<span><span class="co">##   A          alpha   0.827            0.827</span></span>
+<span><span class="co">##   B          alpha   0.771            0.771</span></span>
+<span><span class="co">##   A          AVE     0.497            0.497</span></span>
+<span><span class="co">##   B          AVE     0.434            0.521</span></span>
+<span><span class="co">##   B vs A     HTMT2   0.533            0.533</span></span>
+<span><span class="co">##   - Loading(s) fixed to zero for b5 keep those item(s) in this composite; the</span></span>
+<span><span class="co">##     coefficient does not describe a shortened scale.</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## No model was selected automatically. Difference tests, changes in fit, information criteria, and measurement evidence answer different questions; read them together with theory and the recorded rationale.</span></span></code></pre>
+<span><span class="co">## No model was selected automatically. Difference tests, changes in fit,</span></span>
+<span><span class="co">## information criteria, and measurement evidence answer different questions;</span></span>
+<span><span class="co">## read them together with theory and the recorded rationale.</span></span></code></pre>
 <p>Fixing the loading to zero worsens fit (chi-square difference = 46.9,
 df = 1, p &lt; .001), so <code>b5</code> is statistically related to B.
 Its standardized loading, however, is only 0.34. With 473 cases, even a
@@ -653,32 +657,26 @@ compares listwise deletion with full-information maximum likelihood
 <div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">demo_missing</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_missing.html">nomo_missing</a></span><span class="op">(</span><span class="va">demo_cfa</span>, data <span class="op">=</span> <span class="va">nomo_demo_continuous</span><span class="op">)</span></span>
 <span><span class="va">demo_missing</span></span></code></pre></div>
-<pre><code><span><span class="co">## &lt;nomo_missing&gt;</span></span>
-<span><span class="co">## Missing-data sensitivity for a nomo_cfa | reference: FIML | fitted with: Listwise deletion</span></span>
-<span><span class="co">## 27 of 500 cases incomplete (5.4%) in 3 pattern(s); lowest covariance coverage 0.946 (a2, b3)</span></span>
+<pre><code><span><span class="co">## &lt;nomo_missing&gt; Missing-data sensitivity</span></span>
+<span><span class="co">## Model: nomo_cfa | Reference: FIML | Fitted with: Listwise deletion</span></span>
+<span><span class="co">## Cases: 27 of 500 incomplete (5.4%) | Patterns: 3</span></span>
+<span><span class="co">## Lowest covariance coverage: 0.946 (a2, b3)</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Strategies</span></span>
-<span><span class="co">## <span style="color: #949494;"># A tibble: 2 × 8</span></span></span>
-<span><span class="co">##   label             lavaan_missing requires role       available n_used</span></span>
-<span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">1</span> Listwise deletion listwise       MCAR     comparison TRUE         473</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">2</span> FIML              ml             MAR      reference  TRUE         500</span></span>
-<span><span class="co">##   converged admissible</span></span>
-<span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>     </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">1</span> TRUE      TRUE      </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">2</span> TRUE      TRUE      </span></span>
+<span><span class="co">##   Strategy           lavaan    Needs  Role          N  Converged  Admissible</span></span>
+<span><span class="co">##   Listwise deletion  listwise  MCAR   comparison  473  yes        yes</span></span>
+<span><span class="co">##   FIML               ml        MAR    reference   500  yes        yes</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Largest differences from the reference, in reference standard errors</span></span>
-<span><span class="co">## <span style="color: #949494;"># A tibble: 5 × 5</span></span></span>
-<span><span class="co">##   parameter strategy          estimate reference difference_in_se</span></span>
-<span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">1</span> A ~~ B    Listwise deletion    0.499     0.48              0.45</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">2</span> B =~ b5   Listwise deletion    0.337     0.353            -<span style="color: #BB0000;">0.37</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">3</span> A =~ a5   Listwise deletion    0.598     0.59              0.23</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">4</span> A =~ a3   Listwise deletion    0.669     0.675            -<span style="color: #BB0000;">0.21</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">5</span> B =~ b3   Listwise deletion    0.757     0.762            -<span style="color: #BB0000;">0.17</span></span></span>
+<span><span class="co">##   Parameter  Strategy           Estimate  Reference  Difference (SE)</span></span>
+<span><span class="co">##   A ~~ B     Listwise deletion     0.499      0.480            +0.45</span></span>
+<span><span class="co">##   B =~ b5    Listwise deletion     0.337      0.353            -0.37</span></span>
+<span><span class="co">##   A =~ a5    Listwise deletion     0.598      0.590            +0.23</span></span>
+<span><span class="co">##   A =~ a3    Listwise deletion     0.669      0.675            -0.21</span></span>
+<span><span class="co">##   B =~ b3    Listwise deletion     0.757      0.762            -0.17</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Whether data are missing at random cannot be tested from these data; see nomo_table(x, "decision_log").</span></span></code></pre>
+<span><span class="co">## Whether data are missing at random cannot be tested from these data; see</span></span>
+<span><span class="co">## nomo_table(x, "decision_log").</span></span></code></pre>
 <p>The two strategies make different assumptions. Listwise deletion
 requires data missing completely at random (MCAR). FIML requires the
 weaker condition that data are missing at random (MAR), meaning that

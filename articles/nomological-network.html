@@ -130,22 +130,15 @@ relation.</p>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">h</span></span>
-<span><span class="co">#&gt; &lt;nomo_hypotheses&gt;</span></span>
+<span><span class="co">#&gt; &lt;nomo_hypotheses&gt; Theory-specified relations</span></span>
 <span><span class="co">#&gt; 4 theory-specified relation(s)</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4 × 6</span></span></span>
-<span><span class="co">#&gt;   id    relation                      prediction region        scale       </span></span>
-<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                         <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> H1    Agency -&gt; Persistence         positive   [0.2, +Inf)   standardized</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> H2    Agency &lt;-&gt; SocialDesirability negligible [-0.15, 0.15] standardized</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> H3    Agency -&gt; Performance         positive   (0, +Inf)     standardized</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> H4    Persistence -&gt; Performance    positive   [0.2, +Inf)   standardized</span></span>
-<span><span class="co">#&gt;   origin  </span></span>
-<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> a_priori</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> a_priori</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> a_priori</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> a_priori</span></span></code></pre></div>
+<span><span class="co">#&gt; Every relation is on the standardized scale.</span></span>
+<span><span class="co">#&gt;   ID  Relation                       Prediction  Region         Origin</span></span>
+<span><span class="co">#&gt;   H1  Agency -&gt; Persistence          positive    [0.2, +Inf)    a priori</span></span>
+<span><span class="co">#&gt;   H2  Agency &lt;-&gt; SocialDesirability  negligible  [-0.15, 0.15]  a priori</span></span>
+<span><span class="co">#&gt;   H3  Agency -&gt; Performance          positive    (0, +Inf)      a priori</span></span>
+<span><span class="co">#&gt;   H4  Persistence -&gt; Performance     positive    [0.2, +Inf)    a priori</span></span></code></pre></div>
 <p><code>A -&gt; B</code> means a directed structural path.
 <code>A &lt;-&gt; B</code> means an association without asserting causal
 direction.</p>
@@ -177,26 +170,22 @@ confirmation of negligibility.</p>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">net</span></span>
-<span><span class="co">#&gt; &lt;nomo_network&gt;</span></span>
-<span><span class="co">#&gt; Primary sample: N = 800 | Converged: TRUE</span></span>
-<span><span class="co">#&gt; Theory relations: 4 | Added transparently to model: 3</span></span>
-<span><span class="co">#&gt; Measurement context: INFO | no configured measurement-context review signal was triggered</span></span>
+<span><span class="co">#&gt; &lt;nomo_network&gt; Nomological network</span></span>
+<span><span class="co">#&gt; Primary sample: N = 800 | Converged: yes</span></span>
+<span><span class="co">#&gt; Theory relations: 4 | Added to the model from hypotheses: 3</span></span>
+<span><span class="co">#&gt; Measurement context: no configured measurement-context review signal was</span></span>
+<span><span class="co">#&gt; triggered</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4 × 9</span></span></span>
-<span><span class="co">#&gt;   id    relation                      prediction theoretical_region estimate</span></span>
-<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                         <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                 <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> H1    Agency -&gt; Persistence         positive   [0.2, +Inf)         0.458  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> H2    Agency &lt;-&gt; SocialDesirability negligible [-0.15, 0.15]       0.007<span style="text-decoration: underline;">73</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> H3    Agency -&gt; Performance         positive   (0, +Inf)           0.418  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> H4    Persistence -&gt; Performance    positive   [0.2, +Inf)        -<span style="color: #BB0000;">0.062</span><span style="color: #BB0000; text-decoration: underline;">4</span> </span></span>
-<span><span class="co">#&gt;   ci_lower ci_upper concordance  confirmatory_status</span></span>
-<span><span class="co">#&gt;      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>              </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>   0.389    0.526  Concordant   A priori           </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span>  -<span style="color: #BB0000;">0.079</span><span style="color: #BB0000; text-decoration: underline;">4</span>   0.094<span style="text-decoration: underline;">8</span> Concordant   A priori           </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span>   0.341    0.495  Concordant   A priori           </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span>  -<span style="color: #BB0000;">0.146</span>    0.021<span style="text-decoration: underline;">5</span> Inconsistent A priori           </span></span>
+<span><span class="co">#&gt; Hypothesis evidence</span></span>
+<span><span class="co">#&gt;   ID  Relation                       Estimate  95% CI           Concordance</span></span>
+<span><span class="co">#&gt;   H1  Agency -&gt; Persistence             0.458  [0.389, 0.526]   Concordant</span></span>
+<span><span class="co">#&gt;   H2  Agency &lt;-&gt; SocialDesirability     0.008  [-0.079, 0.095]  Concordant</span></span>
+<span><span class="co">#&gt;   H3  Agency -&gt; Performance             0.418  [0.341, 0.495]   Concordant</span></span>
+<span><span class="co">#&gt;   H4  Persistence -&gt; Performance       -0.062  [-0.146, 0.022]  Inconsistent</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Interpretation rule: theory concordance, uncertainty, measurement quality, and replication are distinct evidence streams. Statistical significance alone is not a validity verdict.</span></span>
+<span><span class="co">#&gt; Theory concordance, uncertainty, measurement quality, and replication are</span></span>
+<span><span class="co">#&gt; distinct evidence streams. Statistical significance alone is not a validity</span></span>
+<span><span class="co">#&gt; verdict.</span></span>
 <span><span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">net</span>, <span class="st">"fit"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 7</span></span></span>
 <span><span class="co">#&gt;   chisq    df pvalue   cfi   tli  rmsea   srmr</span></span>

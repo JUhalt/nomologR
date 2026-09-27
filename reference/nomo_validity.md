@@ -132,27 +132,23 @@ model <- '
 cfa <- nomo_cfa(model, data = lavaan::HolzingerSwineford1939)
 val <- nomo_validity(cfa)
 summary(val)
-#> nomologR convergent/discriminant evidence
+#> <nomo_validity summary> Convergent and discriminant evidence
 #> 
 #> Convergent evidence by construct
-#> # A tibble: 3 × 7
-#>   construct block     AVE min_abs_loading median_abs_loading n_loading_review
-#>   <chr>     <chr>   <dbl>           <dbl>              <dbl>            <int>
-#> 1 visual    overall 0.371           0.424              0.581                1
-#> 2 textual   overall 0.721           0.838              0.852                0
-#> 3 speed     overall 0.424           0.57               0.665                0
-#> # ℹ 1 more variable: signal <chr>
+#>   Construct    AVE  Min |loading|  Median |loading|  Loadings flagged  Flag
+#>   visual     0.371          0.424             0.581                 1  review
+#>   textual    0.721          0.838             0.852                 0
+#>   speed      0.424          0.570             0.665                 0  review
 #> 
-#> Construct-separation evidence
-#> # A tibble: 3 × 9
-#>   construct_1 construct_2 block   latent_r latent_r_ci_lower latent_r_ci_upper
-#>   <chr>       <chr>       <chr>      <dbl>             <dbl>             <dbl>
-#> 1 visual      textual     overall    0.459             0.334             0.584
-#> 2 visual      speed       overall    0.471             0.328             0.613
-#> 3 textual     speed       overall    0.283             0.148             0.418
-#> # ℹ 3 more variables: HTMT2 <dbl>, HTMT <dbl>, signal <chr>
+#> Construct separation
+#>   Construct 1  Construct 2  Latent r  95% CI          HTMT2   HTMT
+#>   visual       textual         0.459  [0.334, 0.584]  0.384  0.424
+#>   visual       speed           0.471  [0.328, 0.613]  0.387  0.467
+#>   textual      speed           0.283  [0.148, 0.418]  0.280  0.290
 #> 
-#> Interpretation rule: standardized loadings and AVE address convergent evidence; latent correlations and HTMT-family statistics address construct separation. These are complementary questions, not interchangeable pass/fail tests.
+#> Standardized loadings and AVE address convergent evidence; latent correlations
+#> and HTMT-family statistics address construct separation. These are
+#> complementary questions, not interchangeable pass/fail tests.
 val$decision_log
 #> # A tibble: 11 × 10
 #>    stage    object   metric  value reference severity observation recommendation

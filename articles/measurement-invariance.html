@@ -140,29 +140,20 @@ the job of the invariance sequence.</p>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">inv</span></span>
-<span><span class="co">#&gt; &lt;nomo_invariance&gt;</span></span>
-<span><span class="co">#&gt; Grouping variable: group (2 groups: online, paper)</span></span>
-<span><span class="co">#&gt; Indicator treatment: continuous</span></span>
+<span><span class="co">#&gt; &lt;nomo_invariance&gt; Measurement invariance</span></span>
+<span><span class="co">#&gt; Grouping variable: group (2 groups: online, paper) | Indicators: continuous</span></span>
 <span><span class="co">#&gt; Requested: configural -&gt; metric -&gt; scalar -&gt; strict</span></span>
 <span><span class="co">#&gt; Completed: configural -&gt; metric -&gt; scalar -&gt; strict</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4 × 11</span></span></span>
-<span><span class="co">#&gt;   level      status    constraints                     partial_requested   cfi</span></span>
-<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                           <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> configural estimated none                            <span style="color: #949494;">""</span>                1    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> metric     estimated loadings                        <span style="color: #949494;">""</span>                1    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> scalar     estimated loadings, intercepts            <span style="color: #949494;">""</span>                0.954</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> strict     estimated loadings, intercepts, residuals <span style="color: #949494;">""</span>                0.954</span></span>
-<span><span class="co">#&gt;   rmsea    srmr delta_cfi delta_rmsea delta_srmr     lrt_p</span></span>
-<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> 0     0.002<span style="text-decoration: underline;">00</span> <span style="color: #BB0000;">NA</span>            <span style="color: #BB0000;">NA</span>        <span style="color: #BB0000;">NA</span>       <span style="color: #BB0000;">NA</span>   <span style="color: #949494;"> </span>   </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> 0     0.027<span style="text-decoration: underline;">5</span>   0             0         0.025<span style="text-decoration: underline;">5</span>   1.46<span style="color: #949494;">e</span><span style="color: #BB0000;">- 1</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> 0.121 0.064<span style="text-decoration: underline;">7</span>  -<span style="color: #BB0000;">0.046</span><span style="color: #BB0000; text-decoration: underline;">2</span>        0.121     0.037<span style="text-decoration: underline;">1</span>   1.20<span style="color: #949494;">e</span><span style="color: #BB0000;">-13</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> 0.102 0.065<span style="text-decoration: underline;">9</span>   0.000<span style="text-decoration: underline;">420</span>     -<span style="color: #BB0000;">0.019</span><span style="color: #BB0000; text-decoration: underline;">3</span>    0.001<span style="text-decoration: underline;">20</span>  4.83<span style="color: #949494;">e</span><span style="color: #BB0000;">- 1</span></span></span>
-<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   Level         CFI  RMSEA   SRMR  CFI change  RMSEA change   LRT p</span></span>
+<span><span class="co">#&gt;   configural  1.000  0.000  0.002           -             -       -</span></span>
+<span><span class="co">#&gt;   metric      1.000  0.000  0.028      +0.000        +0.000    .146</span></span>
+<span><span class="co">#&gt;   scalar      0.954  0.121  0.065      -0.046        +0.121  &lt; .001</span></span>
+<span><span class="co">#&gt;   strict      0.954  0.102  0.066      +0.000        -0.019    .483</span></span>
 <span><span class="co">#&gt; Localized equality-constraint diagnostics retained: 24</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Interpretation rule: fit changes and score diagnostics are evidence, not universal pass/fail rules, not automatic pass/fail decisions, and not automatic parameter-freeing rules.</span></span></code></pre></div>
+<span><span class="co">#&gt; Fit changes and score diagnostics are evidence. They are not pass/fail rules,</span></span>
+<span><span class="co">#&gt; and nomologR never frees a parameter because of them.</span></span></code></pre></div>
 <p>The conventional continuous sequence is:</p>
 <pre class="text"><code><span><span class="va">configural</span> <span class="op">-&gt;</span> <span class="va">metric</span> <span class="op">-&gt;</span> <span class="va">scalar</span> <span class="op">-&gt;</span> <span class="va">strict</span></span></code></pre>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">

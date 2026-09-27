@@ -64,29 +64,20 @@ inv <- nomo_invariance(
 )
 
 inv
-#> <nomo_invariance>
-#> Grouping variable: group (2 groups: online, paper)
-#> Indicator treatment: continuous
+#> <nomo_invariance> Measurement invariance
+#> Grouping variable: group (2 groups: online, paper) | Indicators: continuous
 #> Requested: configural -> metric -> scalar -> strict
 #> Completed: configural -> metric -> scalar -> strict
 #> 
-#> # A tibble: 4 × 11
-#>   level      status    constraints                     partial_requested   cfi
-#>   <chr>      <chr>     <chr>                           <chr>             <dbl>
-#> 1 configural estimated none                            ""                1    
-#> 2 metric     estimated loadings                        ""                1    
-#> 3 scalar     estimated loadings, intercepts            ""                0.954
-#> 4 strict     estimated loadings, intercepts, residuals ""                0.954
-#>   rmsea    srmr delta_cfi delta_rmsea delta_srmr     lrt_p
-#>   <dbl>   <dbl>     <dbl>       <dbl>      <dbl>     <dbl>
-#> 1 0     0.00200 NA            NA        NA       NA       
-#> 2 0     0.0275   0             0         0.0255   1.46e- 1
-#> 3 0.121 0.0647  -0.0462        0.121     0.0371   1.20e-13
-#> 4 0.102 0.0659   0.000420     -0.0193    0.00120  4.83e- 1
-#> 
+#>   Level         CFI  RMSEA   SRMR  CFI change  RMSEA change   LRT p
+#>   configural  1.000  0.000  0.002           -             -       -
+#>   metric      1.000  0.000  0.028      +0.000        +0.000    .146
+#>   scalar      0.954  0.121  0.065      -0.046        +0.121  < .001
+#>   strict      0.954  0.102  0.066      +0.000        -0.019    .483
 #> Localized equality-constraint diagnostics retained: 24
 #> 
-#> Interpretation rule: fit changes and score diagnostics are evidence, not universal pass/fail rules, not automatic pass/fail decisions, and not automatic parameter-freeing rules.
+#> Fit changes and score diagnostics are evidence. They are not pass/fail rules,
+#> and nomologR never frees a parameter because of them.
 ```
 
 The conventional continuous sequence is:

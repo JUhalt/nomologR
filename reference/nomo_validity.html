@@ -176,27 +176,23 @@ and proposed remedies. <em>Journal of the Academy of Marketing Science, 44</em>(
 <span class="r-in"><span><span class="va">cfa</span> <span class="op">&lt;-</span> <span class="fu"><a href="nomo_cfa.html">nomo_cfa</a></span><span class="op">(</span><span class="va">model</span>, data <span class="op">=</span> <span class="fu">lavaan</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/lavaan/man/HolzingerSwineford1939.html" class="external-link">HolzingerSwineford1939</a></span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">val</span> <span class="op">&lt;-</span> <span class="fu">nomo_validity</span><span class="op">(</span><span class="va">cfa</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">val</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> nomologR convergent/discriminant evidence</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;nomo_validity summary&gt; Convergent and discriminant evidence</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Convergent evidence by construct</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 3 × 7</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   construct block     AVE min_abs_loading median_abs_loading n_loading_review</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> visual    overall 0.371           0.424              0.581                1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> textual   overall 0.721           0.838              0.852                0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> speed     overall 0.424           0.57               0.665                0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 1 more variable: signal &lt;chr&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Construct    AVE  Min |loading|  Median |loading|  Loadings flagged  Flag</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   visual     0.371          0.424             0.581                 1  review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   textual    0.721          0.838             0.852                 0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   speed      0.424          0.570             0.665                 0  review</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Construct-separation evidence</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 3 × 9</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   construct_1 construct_2 block   latent_r latent_r_ci_lower latent_r_ci_upper</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> visual      textual     overall    0.459             0.334             0.584</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> visual      speed       overall    0.471             0.328             0.613</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> textual     speed       overall    0.283             0.148             0.418</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 3 more variables: HTMT2 &lt;dbl&gt;, HTMT &lt;dbl&gt;, signal &lt;chr&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Construct separation</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Construct 1  Construct 2  Latent r  95% CI          HTMT2   HTMT</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   visual       textual         0.459  [0.334, 0.584]  0.384  0.424</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   visual       speed           0.471  [0.328, 0.613]  0.387  0.467</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   textual      speed           0.283  [0.148, 0.418]  0.280  0.290</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Interpretation rule: standardized loadings and AVE address convergent evidence; latent correlations and HTMT-family statistics address construct separation. These are complementary questions, not interchangeable pass/fail tests.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Standardized loadings and AVE address convergent evidence; latent correlations</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> and HTMT-family statistics address construct separation. These are</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> complementary questions, not interchangeable pass/fail tests.</span>
 <span class="r-in"><span><span class="va">val</span><span class="op">$</span><span class="va">decision_log</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 11 × 10</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    stage    object   metric  value reference severity observation recommendation</span>

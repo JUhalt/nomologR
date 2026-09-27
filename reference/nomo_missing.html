@@ -194,32 +194,26 @@ missingness before a model is fitted.</p></div>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">sensitivity</span> <span class="op">&lt;-</span> <span class="fu">nomo_missing</span><span class="op">(</span><span class="va">fit</span>, data <span class="op">=</span> <span class="va">nomo_demo_continuous</span>, reliability <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">sensitivity</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;nomo_missing&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Missing-data sensitivity for a nomo_cfa | reference: FIML | fitted with: Listwise deletion</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 27 of 500 cases incomplete (5.4%) in 3 pattern(s); lowest covariance coverage 0.946 (a2, b3)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;nomo_missing&gt; Missing-data sensitivity</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Model: nomo_cfa | Reference: FIML | Fitted with: Listwise deletion</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Cases: 27 of 500 incomplete (5.4%) | Patterns: 3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Lowest covariance coverage: 0.946 (a2, b3)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Strategies</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 2 × 8</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   label             lavaan_missing requires role       available n_used</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Listwise deletion listwise       MCAR     comparison TRUE         473</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> FIML              ml             MAR      reference  TRUE         500</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   converged admissible</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>     </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> TRUE      TRUE      </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> TRUE      TRUE      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Strategy           lavaan    Needs  Role          N  Converged  Admissible</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Listwise deletion  listwise  MCAR   comparison  473  yes        yes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   FIML               ml        MAR    reference   500  yes        yes</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Largest differences from the reference, in reference standard errors</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 5 × 5</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   parameter strategy          estimate reference difference_in_se</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> A ~~ B    Listwise deletion    0.499     0.48              0.45</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> B =~ b5   Listwise deletion    0.337     0.353            -<span style="color: #BB0000;">0.37</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> A =~ a5   Listwise deletion    0.598     0.59              0.23</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> A =~ a3   Listwise deletion    0.669     0.675            -<span style="color: #BB0000;">0.21</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> B =~ b3   Listwise deletion    0.757     0.762            -<span style="color: #BB0000;">0.17</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Parameter  Strategy           Estimate  Reference  Difference (SE)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   A ~~ B     Listwise deletion     0.499      0.480            +0.45</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   B =~ b5    Listwise deletion     0.337      0.353            -0.37</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   A =~ a5    Listwise deletion     0.598      0.590            +0.23</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   A =~ a3    Listwise deletion     0.669      0.675            -0.21</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   B =~ b3    Listwise deletion     0.757      0.762            -0.17</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Whether data are missing at random cannot be tested from these data; see nomo_table(x, "decision_log").</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Whether data are missing at random cannot be tested from these data; see</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> nomo_table(x, "decision_log").</span>
 <span class="r-in"><span><span class="fu"><a href="nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">sensitivity</span>, <span class="st">"strategies"</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 2 × 12</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   strategy label     lavaan_missing requires role  as_fitted available converged</span>

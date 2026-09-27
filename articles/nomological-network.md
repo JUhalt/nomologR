@@ -49,22 +49,15 @@ h <- nomo_hypotheses(
 )
 
 h
-#> <nomo_hypotheses>
+#> <nomo_hypotheses> Theory-specified relations
 #> 4 theory-specified relation(s)
 #> 
-#> # A tibble: 4 × 6
-#>   id    relation                      prediction region        scale       
-#>   <chr> <chr>                         <chr>      <chr>         <chr>       
-#> 1 H1    Agency -> Persistence         positive   [0.2, +Inf)   standardized
-#> 2 H2    Agency <-> SocialDesirability negligible [-0.15, 0.15] standardized
-#> 3 H3    Agency -> Performance         positive   (0, +Inf)     standardized
-#> 4 H4    Persistence -> Performance    positive   [0.2, +Inf)   standardized
-#>   origin  
-#>   <chr>   
-#> 1 a_priori
-#> 2 a_priori
-#> 3 a_priori
-#> 4 a_priori
+#> Every relation is on the standardized scale.
+#>   ID  Relation                       Prediction  Region         Origin
+#>   H1  Agency -> Persistence          positive    [0.2, +Inf)    a priori
+#>   H2  Agency <-> SocialDesirability  negligible  [-0.15, 0.15]  a priori
+#>   H3  Agency -> Performance          positive    (0, +Inf)      a priori
+#>   H4  Persistence -> Performance     positive    [0.2, +Inf)    a priori
 ```
 
 `A -> B` means a directed structural path. `A <-> B` means an
@@ -99,26 +92,22 @@ net <- nomo_network(
 )
 
 net
-#> <nomo_network>
-#> Primary sample: N = 800 | Converged: TRUE
-#> Theory relations: 4 | Added transparently to model: 3
-#> Measurement context: INFO | no configured measurement-context review signal was triggered
+#> <nomo_network> Nomological network
+#> Primary sample: N = 800 | Converged: yes
+#> Theory relations: 4 | Added to the model from hypotheses: 3
+#> Measurement context: no configured measurement-context review signal was
+#> triggered
 #> 
-#> # A tibble: 4 × 9
-#>   id    relation                      prediction theoretical_region estimate
-#>   <chr> <chr>                         <chr>      <chr>                 <dbl>
-#> 1 H1    Agency -> Persistence         positive   [0.2, +Inf)         0.458  
-#> 2 H2    Agency <-> SocialDesirability negligible [-0.15, 0.15]       0.00773
-#> 3 H3    Agency -> Performance         positive   (0, +Inf)           0.418  
-#> 4 H4    Persistence -> Performance    positive   [0.2, +Inf)        -0.0624 
-#>   ci_lower ci_upper concordance  confirmatory_status
-#>      <dbl>    <dbl> <chr>        <chr>              
-#> 1   0.389    0.526  Concordant   A priori           
-#> 2  -0.0794   0.0948 Concordant   A priori           
-#> 3   0.341    0.495  Concordant   A priori           
-#> 4  -0.146    0.0215 Inconsistent A priori           
+#> Hypothesis evidence
+#>   ID  Relation                       Estimate  95% CI           Concordance
+#>   H1  Agency -> Persistence             0.458  [0.389, 0.526]   Concordant
+#>   H2  Agency <-> SocialDesirability     0.008  [-0.079, 0.095]  Concordant
+#>   H3  Agency -> Performance             0.418  [0.341, 0.495]   Concordant
+#>   H4  Persistence -> Performance       -0.062  [-0.146, 0.022]  Inconsistent
 #> 
-#> Interpretation rule: theory concordance, uncertainty, measurement quality, and replication are distinct evidence streams. Statistical significance alone is not a validity verdict.
+#> Theory concordance, uncertainty, measurement quality, and replication are
+#> distinct evidence streams. Statistical significance alone is not a validity
+#> verdict.
 nomo_table(net, "fit")
 #> # A tibble: 1 × 7
 #>   chisq    df pvalue   cfi   tli  rmsea   srmr

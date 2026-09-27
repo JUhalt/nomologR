@@ -174,19 +174,21 @@ model <- '
 cfa <- nomo_cfa(model, data = lavaan::HolzingerSwineford1939)
 rel <- nomo_reliability(cfa)
 summary(rel)
-#> nomologR reliability evidence
-#> # A tibble: 3 × 7
-#>   construct block   indicator_type omega alpha omega_scale         signal
-#>   <chr>     <chr>   <chr>          <chr> <chr> <chr>               <chr> 
-#> 1 speed     overall continuous     0.686 0.688 observed_continuous review
-#> 2 textual   overall continuous     0.885 0.883 observed_continuous info  
-#> 3 visual    overall continuous     0.612 0.626 observed_continuous review
+#> <nomo_reliability summary> Reliability
 #> 
-#> Sampling uncertainty was not bootstrapped. For report-ready intervals, rerun with `ci = "bootstrap"`.
+#> Coefficients
+#>   Construct  Indicators  Omega  Alpha  Omega scale          Flag
+#>   speed      continuous  0.686  0.688  observed continuous  review
+#>   textual    continuous  0.885  0.883  observed continuous
+#>   visual     continuous  0.612  0.626  observed continuous  review
 #> 
-#> Measurement-model context requires review: reliability is conditional on the fitted CFA.
-#> 
-#> Interpretation rule: omega is primary for the congeneric CFA workflow; alpha is secondary and assumption-dependent. Reliability contributes score-precision evidence, not construct validity.
+#> Sampling uncertainty was not bootstrapped. For report-ready intervals, rerun
+#> with `ci = "bootstrap"`.
+#> Measurement-model context requires review: reliability is conditional on the
+#> fitted CFA.
+#> Omega is primary for the congeneric CFA workflow; alpha is secondary and
+#> assumption-dependent. Reliability contributes score-precision evidence, not
+#> construct validity.
 rel$decision_log
 #> # A tibble: 9 × 10
 #>   stage       object metric  value reference severity observation recommendation
@@ -207,17 +209,20 @@ rel$decision_log
 # (for example 1000) for final reporting.
 rel_ci <- nomo_reliability(cfa, ci = "bootstrap", ci_boot = 100, ci_seed = 2026)
 summary(rel_ci)
-#> nomologR reliability evidence
-#> # A tibble: 3 × 7
-#>   construct block   indicator_type omega                alpha omega_scale signal
-#>   <chr>     <chr>   <chr>          <chr>                <chr> <chr>       <chr> 
-#> 1 speed     overall continuous     0.686 [0.585, 0.752] 0.68… observed_c… review
-#> 2 textual   overall continuous     0.885 [0.859, 0.900] 0.88… observed_c… info  
-#> 3 visual    overall continuous     0.612 [0.542, 0.686] 0.62… observed_c… review
-#> Bracketed values are bootstrap confidence intervals.
+#> <nomo_reliability summary> Reliability
 #> 
-#> Measurement-model context requires review: reliability is conditional on the fitted CFA.
+#> Coefficients
+#>   Construct  Indicators  Omega                 Alpha
+#>   speed      continuous  0.686 [0.585, 0.752]  0.688 [0.625, 0.743]
+#>   textual    continuous  0.885 [0.859, 0.900]  0.883 [0.854, 0.898]
+#>   visual     continuous  0.612 [0.542, 0.686]  0.626 [0.554, 0.693]
+#>   Not shown for width: Omega scale, Flag. See nomo_table(x, "coefficients").
+#>   Bracketed values are bootstrap confidence intervals.
 #> 
-#> Interpretation rule: omega is primary for the congeneric CFA workflow; alpha is secondary and assumption-dependent. Reliability contributes score-precision evidence, not construct validity.
+#> Measurement-model context requires review: reliability is conditional on the
+#> fitted CFA.
+#> Omega is primary for the congeneric CFA workflow; alpha is secondary and
+#> assumption-dependent. Reliability contributes score-precision evidence, not
+#> construct validity.
 # }
 ```

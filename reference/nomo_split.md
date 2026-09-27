@@ -66,10 +66,11 @@ capitalization on chance. *Psychological Bulletin, 111*(3), 490-504.
 ``` r
 split <- nomo_split(nomo_demo_continuous, validation_prop = 0.40, seed = 2026)
 split
-#> <nomo_split>
+#> <nomo_split> Calibration and validation split
 #> Rows: 500 total | 300 calibration | 200 validation
 #> Validation proportion: 0.400 requested | 0.400 realized | Seed: 2026
-#> Use splitting only when the gain in independence justifies the loss of precision.
+#> Use splitting only when the gain in independence justifies the loss of
+#> precision.
 nrow(split$calibration)
 #> [1] 300
 nrow(split$validation)

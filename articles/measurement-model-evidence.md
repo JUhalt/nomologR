@@ -76,39 +76,38 @@ places.
 summary(rel)
 ```
 
-    ## nomologR reliability evidence
-    ## # A tibble: 2 × 7
-    ##   construct block   indicator_type omega                alpha omega_scale signal
-    ##   <chr>     <chr>   <chr>          <chr>                <chr> <chr>       <chr> 
-    ## 1 F1        overall continuous     0.891 [0.871, 0.908] 0.89… observed_c… info  
-    ## 2 F2        overall continuous     0.862 [0.840, 0.881] 0.86… observed_c… info  
-    ## Bracketed values are bootstrap confidence intervals.
+    ## <nomo_reliability summary> Reliability
     ## 
-    ## Interpretation rule: omega is primary for the congeneric CFA workflow; alpha is secondary and assumption-dependent. Reliability contributes score-precision evidence, not construct validity.
+    ## Coefficients
+    ##   Construct  Indicators  Omega                 Alpha
+    ##   F1         continuous  0.891 [0.871, 0.908]  0.890 [0.870, 0.907]
+    ##   F2         continuous  0.862 [0.840, 0.881]  0.861 [0.837, 0.881]
+    ##   Not shown for width: Omega scale. See nomo_table(x, "coefficients").
+    ##   Bracketed values are bootstrap confidence intervals.
+    ## 
+    ## Omega is primary for the congeneric CFA workflow; alpha is secondary and
+    ## assumption-dependent. Reliability contributes score-precision evidence, not
+    ## construct validity.
 
 ``` r
 
 summary(val)
 ```
 
-    ## nomologR convergent/discriminant evidence
+    ## <nomo_validity summary> Convergent and discriminant evidence
     ## 
     ## Convergent evidence by construct
-    ## # A tibble: 2 × 7
-    ##   construct block     AVE min_abs_loading median_abs_loading n_loading_review
-    ##   <chr>     <chr>   <dbl>           <dbl>              <dbl>            <int>
-    ## 1 F1        overall 0.671           0.793              0.822                0
-    ## 2 F2        overall 0.611           0.711              0.795                0
-    ## # ℹ 1 more variable: signal <chr>
+    ##   Construct    AVE  Min |loading|  Median |loading|  Loadings flagged
+    ##   F1         0.671          0.793             0.822                 0
+    ##   F2         0.611          0.711             0.795                 0
     ## 
-    ## Construct-separation evidence
-    ## # A tibble: 1 × 9
-    ##   construct_1 construct_2 block   latent_r latent_r_ci_lower latent_r_ci_upper
-    ##   <chr>       <chr>       <chr>      <dbl>             <dbl>             <dbl>
-    ## 1 F1          F2          overall    0.223             0.127             0.318
-    ## # ℹ 3 more variables: HTMT2 <dbl>, HTMT <dbl>, signal <chr>
+    ## Construct separation
+    ##   Construct 1  Construct 2  Latent r  95% CI          HTMT2   HTMT
+    ##   F1           F2              0.223  [0.127, 0.318]  0.221  0.225
     ## 
-    ## Interpretation rule: standardized loadings and AVE address convergent evidence; latent correlations and HTMT-family statistics address construct separation. These are complementary questions, not interchangeable pass/fail tests.
+    ## Standardized loadings and AVE address convergent evidence; latent correlations
+    ## and HTMT-family statistics address construct separation. These are
+    ## complementary questions, not interchangeable pass/fail tests.
 
 The figures also avoid duplication. Item-level loading evidence belongs
 to the CFA; reliability gets a coefficient plot; convergent validity
@@ -202,34 +201,35 @@ represent the construct or that the resulting score is precise.
 summary(weak_rel)
 ```
 
-    ## nomologR reliability evidence
-    ## # A tibble: 1 × 7
-    ##   construct block   indicator_type omega alpha omega_scale         signal
-    ##   <chr>     <chr>   <chr>          <chr> <chr> <chr>               <chr> 
-    ## 1 Weak      overall continuous     0.369 0.363 observed_continuous review
+    ## <nomo_reliability summary> Reliability
     ## 
-    ## Sampling uncertainty was not bootstrapped. For report-ready intervals, rerun with `ci = "bootstrap"`.
+    ## Coefficients
+    ##   Construct  Indicators  Omega  Alpha  Omega scale          Flag
+    ##   Weak       continuous  0.369  0.363  observed continuous  review
     ## 
-    ## Interpretation rule: omega is primary for the congeneric CFA workflow; alpha is secondary and assumption-dependent. Reliability contributes score-precision evidence, not construct validity.
+    ## Sampling uncertainty was not bootstrapped. For report-ready intervals, rerun
+    ## with `ci = "bootstrap"`.
+    ## Omega is primary for the congeneric CFA workflow; alpha is secondary and
+    ## assumption-dependent. Reliability contributes score-precision evidence, not
+    ## construct validity.
 
 ``` r
 
 summary(weak_val)
 ```
 
-    ## nomologR convergent/discriminant evidence
+    ## <nomo_validity summary> Convergent and discriminant evidence
     ## 
     ## Convergent evidence by construct
-    ## # A tibble: 1 × 7
-    ##   construct block     AVE min_abs_loading median_abs_loading n_loading_review
-    ##   <chr>     <chr>   <dbl>           <dbl>              <dbl>            <int>
-    ## 1 Weak      overall 0.114             0.2              0.311                5
-    ## # ℹ 1 more variable: signal <chr>
+    ##   Construct    AVE  Min |loading|  Median |loading|  Loadings flagged  Flag
+    ##   Weak       0.114          0.200             0.311                 5  review
     ## 
-    ## Construct-separation evidence
-    ## No pairwise construct-separation summary is available.
+    ## Construct separation
+    ##   No pairwise construct-separation summary is available.
     ## 
-    ## Interpretation rule: standardized loadings and AVE address convergent evidence; latent correlations and HTMT-family statistics address construct separation. These are complementary questions, not interchangeable pass/fail tests.
+    ## Standardized loadings and AVE address convergent evidence; latent correlations
+    ## and HTMT-family statistics address construct separation. These are
+    ## complementary questions, not interchangeable pass/fail tests.
 
 This is why `nomologR` does not collapse measurement quality into a
 single global-fit verdict. Weak standardized loadings, low AVE, and weak
@@ -273,40 +273,38 @@ overlap_val <- nomo_validity(overlap_cfa, htmt = "both")
 summary(overlap_rel)
 ```
 
-    ## nomologR reliability evidence
-    ## # A tibble: 2 × 7
-    ##   construct block   indicator_type omega alpha omega_scale         signal
-    ##   <chr>     <chr>   <chr>          <chr> <chr> <chr>               <chr> 
-    ## 1 F1        overall continuous     0.893 0.894 observed_continuous info  
-    ## 2 F2        overall continuous     0.896 0.895 observed_continuous info  
+    ## <nomo_reliability summary> Reliability
     ## 
-    ## Sampling uncertainty was not bootstrapped. For report-ready intervals, rerun with `ci = "bootstrap"`.
+    ## Coefficients
+    ##   Construct  Indicators  Omega  Alpha  Omega scale
+    ##   F1         continuous  0.893  0.894  observed continuous
+    ##   F2         continuous  0.896  0.895  observed continuous
     ## 
-    ## Interpretation rule: omega is primary for the congeneric CFA workflow; alpha is secondary and assumption-dependent. Reliability contributes score-precision evidence, not construct validity.
+    ## Sampling uncertainty was not bootstrapped. For report-ready intervals, rerun
+    ## with `ci = "bootstrap"`.
+    ## Omega is primary for the congeneric CFA workflow; alpha is secondary and
+    ## assumption-dependent. Reliability contributes score-precision evidence, not
+    ## construct validity.
 
 ``` r
 
 summary(overlap_val)
 ```
 
-    ## nomologR convergent/discriminant evidence
+    ## <nomo_validity summary> Convergent and discriminant evidence
     ## 
     ## Convergent evidence by construct
-    ## # A tibble: 2 × 7
-    ##   construct block     AVE min_abs_loading median_abs_loading n_loading_review
-    ##   <chr>     <chr>   <dbl>           <dbl>              <dbl>            <int>
-    ## 1 F1        overall 0.737           0.837              0.865                0
-    ## 2 F2        overall 0.742           0.848              0.851                0
-    ## # ℹ 1 more variable: signal <chr>
+    ##   Construct    AVE  Min |loading|  Median |loading|  Loadings flagged
+    ##   F1         0.737          0.837             0.865                 0
+    ##   F2         0.742          0.848             0.851                 0
     ## 
-    ## Construct-separation evidence
-    ## # A tibble: 1 × 9
-    ##   construct_1 construct_2 block   latent_r latent_r_ci_lower latent_r_ci_upper
-    ##   <chr>       <chr>       <chr>      <dbl>             <dbl>             <dbl>
-    ## 1 F1          F2          overall    0.933             0.912             0.954
-    ## # ℹ 3 more variables: HTMT2 <dbl>, HTMT <dbl>, signal <chr>
+    ## Construct separation
+    ##   Construct 1  Construct 2  Latent r  95% CI          HTMT2   HTMT  Flag
+    ##   F1           F2              0.933  [0.912, 0.954]  0.931  0.932  review
     ## 
-    ## Interpretation rule: standardized loadings and AVE address convergent evidence; latent correlations and HTMT-family statistics address construct separation. These are complementary questions, not interchangeable pass/fail tests.
+    ## Standardized loadings and AVE address convergent evidence; latent correlations
+    ## and HTMT-family statistics address construct separation. These are
+    ## complementary questions, not interchangeable pass/fail tests.
 
 Here, strong omega and AVE do not erase a high latent correlation or
 HTMT2 value. The package therefore recommends investigating theoretical
@@ -360,24 +358,26 @@ ordinal_rel <- nomo_reliability(
 summary(ordinal_rel)
 ```
 
-    ## nomologR reliability evidence
-    ## # A tibble: 1 × 7
-    ##   construct block   indicator_type omega alpha omega_scale      signal
-    ##   <chr>     <chr>   <chr>          <chr> <chr> <chr>            <chr> 
-    ## 1 F         overall ordered        0.829 NA    observed_ordinal info  
+    ## <nomo_reliability summary> Reliability
     ## 
-    ## Secondary alpha unavailable for:
-    ## # A tibble: 1 × 4
-    ##   construct indicator_type score_scale     
-    ##   <chr>     <chr>          <chr>           
-    ## 1 F         ordered        observed_ordinal
-    ##   reason                                                                        
-    ##   <chr>                                                                         
-    ## 1 Observed-scale alpha is not computed from an ordered-indicator CFA. Current s…
+    ## Coefficients
+    ##   Construct  Indicators  Omega  Omega scale
+    ##   F          ordered     0.829  observed ordinal
     ## 
-    ## Sampling uncertainty was not bootstrapped. For report-ready intervals, rerun with `ci = "bootstrap"`.
+    ## Secondary alpha unavailable for
+    ##   - F (ordered indicators, observed ordinal scale): Observed-scale alpha is
+    ##     not computed from an ordered-indicator CFA. Current semTools intentionally
+    ##     disallows ord.scale = TRUE with tau-equivalent alpha for ordered
+    ##     composites because that is a different scoring analysis from model-based
+    ##     ordinal reliability. Use the observed-scale omega estimate as the primary
+    ##     reliability evidence; calculate observed-score alpha separately only when
+    ##     that estimand is substantively required.
     ## 
-    ## Interpretation rule: omega is primary for the congeneric CFA workflow; alpha is secondary and assumption-dependent. Reliability contributes score-precision evidence, not construct validity.
+    ## Sampling uncertainty was not bootstrapped. For report-ready intervals, rerun
+    ## with `ci = "bootstrap"`.
+    ## Omega is primary for the congeneric CFA workflow; alpha is secondary and
+    ## assumption-dependent. Reliability contributes score-precision evidence, not
+    ## construct validity.
 
 Observed-scale omega is available for the practical ordinal composite.
 Observed-scale alpha is deliberately reported as unavailable in this
@@ -480,14 +480,18 @@ cross_comparison <- nomo_compare(
 cross_comparison
 ```
 
-    ## <nomo_compare>
-    ## Models: 2 | Reference: simple_structure | Estimator: ML | Cases: 473 | Origin: post-hoc
-    ## Rationale: The largest modification index suggested that a5 also reflects factor B.
+    ## <nomo_compare> Measurement-model comparison
+    ## Models: 2 | Reference: simple_structure | Estimator: ML | Cases: 473
+    ## Origin: post-hoc
+    ## Rationale: The largest modification index suggested that a5 also reflects
+    ## factor B.
     ## 
-    ## Compared with `simple_structure`:
-    ##   - cross_loading (nested, less constrained): chi-square difference = 48.72, df = 1, p < .001; dCFI +0.027, dRMSEA -0.051; dAIC -46.7
+    ## Compared with `simple_structure`
+    ##   - cross_loading (nested, less constrained): chi-square difference = 48.72,
+    ##     df = 1, p < .001; CFI change +0.027, RMSEA change -0.051; AIC change -46.7
     ## 
-    ## No model was selected automatically. Use summary() for interpretations and measurement evidence.
+    ## No model was selected automatically. summary() shows interpretations and
+    ## measurement evidence.
 
 Estimating the cross-loading reduces misfit (chi-square difference =
 48.7, df = 1, p \< .001; CFI changes by +0.027). That is exactly the
@@ -521,70 +525,70 @@ b5_comparison <- nomo_compare(
 summary(b5_comparison)
 ```
 
-    ## nomologR measurement-model comparison
-    ## Rationale: Evaluate whether the weakly loading item b5 contributes to factor B before deciding whether to keep it.
+    ## <nomo_compare summary> Measurement-model comparison
+    ## Rationale: Evaluate whether the weakly loading item b5 contributes to factor B
+    ## before deciding whether to keep it.
     ## Origin: a-priori | Reference model: full
     ## 
-    ## Model fit and information criteria
-    ## # A tibble: 2 × 11
-    ##   model            npar    df chisq   cfi   tli rmsea  srmr    aic    bic
-    ##   <chr>           <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl>  <dbl>  <dbl>
-    ## 1 full               21    34  75.8 0.973 0.965 0.051 0.052 11981  12068.
-    ## 2 b5_loading_zero    20    35 123.  0.944 0.928 0.073 0.093 12026. 12109.
-    ##   fixed_zero_loadings
-    ##                 <int>
-    ## 1                   0
-    ## 2                   1
+    ## Model fit
+    ##   Model            Parameters  df  Chi-square    CFI    TLI  RMSEA   SRMR
+    ##   full                     21  34       75.83  0.973  0.965  0.051  0.052
+    ##   b5_loading_zero          20  35      122.75  0.944  0.928  0.073  0.093
     ## 
-    ## Comparisons with the reference model
-    ## # A tibble: 1 × 12
-    ##   model           relation         nesting_check method   chisq_diff df_diff
-    ##   <chr>           <chr>            <chr>         <chr>         <dbl>   <dbl>
-    ## 1 b5_loading_zero more_constrained nested        standard       46.9       1
-    ##   p_value delta_cfi delta_rmsea delta_srmr delta_aic delta_bic
-    ##     <dbl>     <dbl>       <dbl>      <dbl>     <dbl>     <dbl>
-    ## 1       0    -0.029       0.022      0.042      44.9      40.8
+    ## Information criteria
+    ##   Model                AIC      BIC  Loadings fixed to zero
+    ##   full             11981.0  12068.4                       0
+    ##   b5_loading_zero  12025.9  12109.1                       1
+    ## 
+    ## Difference tests against the reference model
+    ##   Model            Relation                  Check   Method    Chi-sq diff  df
+    ##   b5_loading_zero  nested, more constrained  nested  standard        46.91   1
+    ##   Not shown for width: p. See nomo_table(x, "comparisons").
+    ## 
+    ## Changes in fit (model minus reference)
+    ##   Model               CFI     TLI   RMSEA    SRMR    AIC    BIC
+    ##   b5_loading_zero  -0.029  -0.036  +0.022  +0.042  +44.9  +40.8
     ## 
     ## Interpretation
-    ## - `b5_loading_zero` is nested within `full` and has 1 more degree(s) of freedom (additional constraints). Chi-Squared Difference Test: chi-square difference = 46.91, df = 1, p < .001. A small p-value indicates that the extra constraints are not fully consistent with the data; with large samples, even small misspecifications produce small p-values. Change in fit (`b5_loading_zero` minus `full`): CFI -0.029, TLI -0.036, RMSEA +0.022, SRMR +0.042. AIC +44.9 and BIC +40.8 (`b5_loading_zero` minus `full`); lower values favor a model for these data, and only differences are interpretable. No model is selected automatically; read this evidence with theory and the recorded rationale.
+    ##   - `b5_loading_zero` is nested within `full` and has 1 more degree(s) of
+    ##     freedom (additional constraints). Chi-Squared Difference Test: chi-square
+    ##     difference = 46.91, df = 1, p < .001. A small p-value indicates that the
+    ##     extra constraints are not fully consistent with the data; with large
+    ##     samples, even small misspecifications produce small p-values. Change in
+    ##     fit (`b5_loading_zero` minus `full`): CFI -0.029, TLI -0.036, RMSEA
+    ##     +0.022, SRMR +0.042. AIC +44.9 and BIC +40.8 (`b5_loading_zero` minus
+    ##     `full`); lower values favor a model for these data, and only differences
+    ##     are interpretable. No model is selected automatically; read this evidence
+    ##     with theory and the recorded rationale.
     ## 
     ## Standardized loadings by model
-    ## # A tibble: 10 × 4
-    ##    factor item   full b5_loading_zero
-    ##    <chr>  <chr> <dbl>           <dbl>
-    ##  1 A      a1    0.771           0.771
-    ##  2 A      a2    0.744           0.744
-    ##  3 A      a3    0.669           0.669
-    ##  4 A      a4    0.738           0.738
-    ##  5 A      a5    0.598           0.598
-    ##  6 B      b1    0.794           0.795
-    ##  7 B      b2    0.695           0.699
-    ##  8 B      b3    0.757           0.757
-    ##  9 B      b4    0.628           0.624
-    ## 10 B      b5    0.337           0    
+    ##   Factor  Item   full  b5_loading_zero
+    ##   A       a1    0.771            0.771
+    ##   A       a2    0.744            0.744
+    ##   A       a3    0.669            0.669
+    ##   A       a4    0.738            0.738
+    ##   A       a5    0.598            0.598
+    ##   B       b1    0.794            0.795
+    ##   B       b2    0.695            0.699
+    ##   B       b3    0.757            0.757
+    ##   B       b4    0.628            0.624
+    ##   B       b5    0.337            0.000
     ## 
     ## Measurement evidence by model
-    ## # A tibble: 14 × 4
-    ##    model           construct metric estimate
-    ##    <chr>           <chr>     <chr>     <dbl>
-    ##  1 full            A         omega     0.835
-    ##  2 full            B         omega     0.784
-    ##  3 full            A         alpha     0.827
-    ##  4 full            B         alpha     0.771
-    ##  5 full            A         AVE       0.497
-    ##  6 full            B         AVE       0.434
-    ##  7 full            B vs A    HTMT2     0.533
-    ##  8 b5_loading_zero A         omega     0.835
-    ##  9 b5_loading_zero B         omega     0.622
-    ## 10 b5_loading_zero A         alpha     0.827
-    ## 11 b5_loading_zero B         alpha     0.771
-    ## 12 b5_loading_zero A         AVE       0.497
-    ## 13 b5_loading_zero B         AVE       0.521
-    ## 14 b5_loading_zero B vs A    HTMT2     0.533
-    ## Notes:
-    ## - Loading(s) fixed to zero for b5 keep those item(s) in this composite; the coefficient does not describe a shortened scale.
+    ##   Construct  Metric   full  b5_loading_zero
+    ##   A          omega   0.835            0.835
+    ##   B          omega   0.784            0.622
+    ##   A          alpha   0.827            0.827
+    ##   B          alpha   0.771            0.771
+    ##   A          AVE     0.497            0.497
+    ##   B          AVE     0.434            0.521
+    ##   B vs A     HTMT2   0.533            0.533
+    ##   - Loading(s) fixed to zero for b5 keep those item(s) in this composite; the
+    ##     coefficient does not describe a shortened scale.
     ## 
-    ## No model was selected automatically. Difference tests, changes in fit, information criteria, and measurement evidence answer different questions; read them together with theory and the recorded rationale.
+    ## No model was selected automatically. Difference tests, changes in fit,
+    ## information criteria, and measurement evidence answer different questions;
+    ## read them together with theory and the recorded rationale.
 
 Fixing the loading to zero worsens fit (chi-square difference = 46.9, df
 = 1, p \< .001), so `b5` is statistically related to B. Its standardized
@@ -665,32 +669,26 @@ demo_missing <- nomo_missing(demo_cfa, data = nomo_demo_continuous)
 demo_missing
 ```
 
-    ## <nomo_missing>
-    ## Missing-data sensitivity for a nomo_cfa | reference: FIML | fitted with: Listwise deletion
-    ## 27 of 500 cases incomplete (5.4%) in 3 pattern(s); lowest covariance coverage 0.946 (a2, b3)
+    ## <nomo_missing> Missing-data sensitivity
+    ## Model: nomo_cfa | Reference: FIML | Fitted with: Listwise deletion
+    ## Cases: 27 of 500 incomplete (5.4%) | Patterns: 3
+    ## Lowest covariance coverage: 0.946 (a2, b3)
     ## 
     ## Strategies
-    ## # A tibble: 2 × 8
-    ##   label             lavaan_missing requires role       available n_used
-    ##   <chr>             <chr>          <chr>    <chr>      <lgl>      <dbl>
-    ## 1 Listwise deletion listwise       MCAR     comparison TRUE         473
-    ## 2 FIML              ml             MAR      reference  TRUE         500
-    ##   converged admissible
-    ##   <lgl>     <lgl>     
-    ## 1 TRUE      TRUE      
-    ## 2 TRUE      TRUE      
+    ##   Strategy           lavaan    Needs  Role          N  Converged  Admissible
+    ##   Listwise deletion  listwise  MCAR   comparison  473  yes        yes
+    ##   FIML               ml        MAR    reference   500  yes        yes
     ## 
     ## Largest differences from the reference, in reference standard errors
-    ## # A tibble: 5 × 5
-    ##   parameter strategy          estimate reference difference_in_se
-    ##   <chr>     <chr>                <dbl>     <dbl>            <dbl>
-    ## 1 A ~~ B    Listwise deletion    0.499     0.48              0.45
-    ## 2 B =~ b5   Listwise deletion    0.337     0.353            -0.37
-    ## 3 A =~ a5   Listwise deletion    0.598     0.59              0.23
-    ## 4 A =~ a3   Listwise deletion    0.669     0.675            -0.21
-    ## 5 B =~ b3   Listwise deletion    0.757     0.762            -0.17
+    ##   Parameter  Strategy           Estimate  Reference  Difference (SE)
+    ##   A ~~ B     Listwise deletion     0.499      0.480            +0.45
+    ##   B =~ b5    Listwise deletion     0.337      0.353            -0.37
+    ##   A =~ a5    Listwise deletion     0.598      0.590            +0.23
+    ##   A =~ a3    Listwise deletion     0.669      0.675            -0.21
+    ##   B =~ b3    Listwise deletion     0.757      0.762            -0.17
     ## 
-    ## Whether data are missing at random cannot be tested from these data; see nomo_table(x, "decision_log").
+    ## Whether data are missing at random cannot be tested from these data; see
+    ## nomo_table(x, "decision_log").
 
 The two strategies make different assumptions. Listwise deletion
 requires data missing completely at random (MCAR). FIML requires the

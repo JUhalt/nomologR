@@ -214,42 +214,59 @@ factors <- list(
 bf <- nomo_cfa(nomo_model(factors, structure = "bifactor"), data = dat)
 h <- nomo_hierarchical(bf)
 h
-#> <nomo_hierarchical>
-#> Bifactor model | general factor: G | group factors: A, B, C
+#> <nomo_hierarchical> Hierarchical model evaluation
+#> Bifactor model | General factor: G | Group factors: A, B, C
 #> Estimand: unit-weighted observed composite
 #> 
 #> Total score
-#> # A tibble: 5 × 2
-#>   index                       estimate
-#>   <chr>                          <dbl>
-#> 1 omega_total                    0.896
-#> 2 omega_hierarchical             0.741
-#> 3 omega_hierarchical_relative    0.827
-#> 4 ecv                            0.609
-#> 5 puc                            0.75 
+#>   Index                        Estimate
+#>   omega total                     0.896
+#>   omega hierarchical              0.741
+#>   omega hierarchical relative     0.827
+#>   ECV                             0.609
+#>   PUC                             0.750
 #> 
 #> Subscales
-#> # A tibble: 3 × 4
-#>   subscale n_items omega_subscale omega_hierarchical_subscale
-#>   <chr>      <int>          <dbl>                       <dbl>
-#> 1 A              3          0.798                       0.33 
-#> 2 B              3          0.791                       0.354
-#> 3 C              3          0.799                       0.239
+#>   Subscale  Items  Omega subscale  Omega hierarchical subscale
+#>   A             3           0.798                        0.330
+#>   B             3           0.791                        0.354
+#>   C             3           0.799                        0.239
 #> 
 #> Factor scores
-#> # A tibble: 4 × 5
-#>   factor role    factor_determinacy min_competing_r construct_replicability
-#>   <chr>  <chr>                <dbl>           <dbl>                   <dbl>
-#> 1 G      general              0.867           0.502                   0.829
-#> 2 A      group                0.704          -0.009                   0.489
-#> 3 B      group                0.715           0.023                   0.501
-#> 4 C      group                0.641          -0.178                   0.406
+#>   Factor  Role     Determinacy  Min competing r  Replicability H
+#>   G       general        0.867            0.502            0.829
+#>   A       group          0.704           -0.009            0.489
+#>   B       group          0.715            0.023            0.501
+#>   C       group          0.641           -0.178            0.406
 #> 
 #> Notes
-#> - [review] A bifactor model will usually fit at least as well as correlated-factors or higher-order models of the same items, even when it did not generate the data (Reise, 2012), and a higher-order model is a constrained version of it (Yung, Thissen, & McLeod, 1999). Bonifay, Lane, and Reise (2017) call the bifactor model's tendency to show superior goodness of fit in model comparison studies a particular concern, and say that superior fit may be a symptom of overfitting: modeling not only the trends in the data but also unwanted noise. Murray and Johnson (2013) compared these two structures directly and found the comparison biased in favor of the bifactor model: unless there was essentially no unmodeled complexity, their simulation favored the bifactor model even when a higher-order model generated the data. They concluded that which model to adopt should not rely on which is better fitting. Compare the alternatives with nomo_compare() and choose on substantive grounds, not on fit alone.
-#> - [review] Factor determinacy is at or below .90 for G, A, B, C. Gorsuch (1983, p. 260) recommended using factor score estimates only above that value. This is his recommendation reported as context, not a rule applied here; the score may still be usable for some purposes.
-#> - [review] Two equally valid sets of factor scores could correlate as low as G (0.50), A (-0.01), B (0.02), C (-0.18). Gorsuch (1983, p. 260) suggested this minimum be above .70. A negative value means two researchers scoring the same data could rank people in opposite orders and both be consistent with the model.
-#> - [review] Construct replicability H is below .70 for A, B, C. Hancock and Mueller (2001) proposed .70 as a standard; a factor below it is not well defined by its own indicators and is expected to change across studies. Reported as their standard, not applied as a rule.
+#>   - review: A bifactor model will usually fit at least as well as
+#>     correlated-factors or higher-order models of the same items, even when it
+#>     did not generate the data (Reise, 2012), and a higher-order model is a
+#>     constrained version of it (Yung, Thissen, & McLeod, 1999). Bonifay, Lane,
+#>     and Reise (2017) call the bifactor model's tendency to show superior
+#>     goodness of fit in model comparison studies a particular concern, and say
+#>     that superior fit may be a symptom of overfitting: modeling not only the
+#>     trends in the data but also unwanted noise. Murray and Johnson (2013)
+#>     compared these two structures directly and found the comparison biased in
+#>     favor of the bifactor model: unless there was essentially no unmodeled
+#>     complexity, their simulation favored the bifactor model even when a
+#>     higher-order model generated the data. They concluded that which model to
+#>     adopt should not rely on which is better fitting. Compare the alternatives
+#>     with nomo_compare() and choose on substantive grounds, not on fit alone.
+#>   - review: Factor determinacy is at or below .90 for G, A, B, C. Gorsuch
+#>     (1983, p. 260) recommended using factor score estimates only above that
+#>     value. This is his recommendation reported as context, not a rule applied
+#>     here; the score may still be usable for some purposes.
+#>   - review: Two equally valid sets of factor scores could correlate as low as
+#>     G (0.50), A (-0.01), B (0.02), C (-0.18). Gorsuch (1983, p. 260) suggested
+#>     this minimum be above .70. A negative value means two researchers scoring
+#>     the same data could rank people in opposite orders and both be consistent
+#>     with the model.
+#>   - review: Construct replicability H is below .70 for A, B, C. Hancock and
+#>     Mueller (2001) proposed .70 as a standard; a factor below it is not well
+#>     defined by its own indicators and is expected to change across studies.
+#>     Reported as their standard, not applied as a rule.
 #> 
 #> No index is treated as a pass/fail threshold; see nomo_table(x, "indices").
 nomo_table(h, "subscales")
