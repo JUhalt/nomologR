@@ -2,6 +2,36 @@
 
 ## nomologR (development version)
 
+- Plot legends use the display flag wording too
+  ([\#89](https://github.com/JUhalt/nomologR/issues/89)). The CFA
+  loading and fit plots and the AVE and HTMT plots label their points
+  “none”, “review”, or “concern” under “Flag”. The loading plot had
+  shown the recorded values `KEEP` and `REVIEW` under “Review”, and the
+  validity plots `info` and `review` under “Signal”. The item evidence
+  map calls an informational signal a “note”, which is how the console
+  shows it. Each flag level keeps the same point shape from plot to
+  plot.
+- The redesigned console output extends to the guided workflow:
+  [`print()`](https://rdrr.io/r/base/print.html) and
+  [`summary()`](https://rdrr.io/r/base/summary.html) for
+  [`nomo_run()`](https://juhalt.github.io/nomologR/reference/nomo_run.md)
+  ([\#89](https://github.com/JUhalt/nomologR/issues/89)). The print
+  opens with the run’s status, mode, sample design, and scales, then
+  lists what the run found so far as “Key evidence” (item flags,
+  suggested factors, CFA fit, the omega range, validity and invariance
+  results). A request repeated for several scales, such as a
+  factor-count decision for each of three scales, is shown once with the
+  scales it applies to, rather than once per scale. Research mode leaves
+  out the teaching-mode reason, options, and consequences, and keeps
+  what each scale showed and an example. The summary is about a third of
+  its former length: a stage table, recorded decisions as bullets, the
+  component recipe, and a count of the methods used with the primary
+  method of each stage, pointing to
+  [`nomo_methods()`](https://juhalt.github.io/nomologR/reference/nomo_methods.md)
+  and
+  [`nomo_table()`](https://juhalt.github.io/nomologR/reference/nomo_table.md)
+  for the full entries. The gallery in `dev/output-gallery.R` now
+  reports no presentation faults.
 - [`nomo_report()`](https://juhalt.github.io/nomologR/reference/nomo_report.md)
   tables are easier to read
   ([\#89](https://github.com/JUhalt/nomologR/issues/89)). Column

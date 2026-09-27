@@ -30,37 +30,35 @@ run <- nomo_run(
 )
 
 run
-#> <nomo_run>
-#> Guided nomologR workflow | teaching mode
-#> Status: PAUSED
-#> Sample design: same_sample | Exploratory N = 800 | Confirmatory N = 800
-#> Completed stages: screen -> factors
-#> Next stage: efa
+#> <nomo_run> Guided workflow
+#> Status: PAUSED | Mode: teaching | Sample design: same sample
+#> Exploratory N = 800 | Confirmatory N = 800 | Scales: 3
+#> Completed: screen -> factors | Next: efa
 #> 
-#> Researcher decision required
+#> Key evidence
+#>   - Item audit: 11 items; flags: none
+#>   - Parallel analysis suggests: Agency 1, Persistence 1, SocialDesirability 1
 #> 
-#> [efa / Agency]
-#> Observation: Parallel analysis currently suggests 1 factor; the retained plausible set is 1. The pipeline has not adopted a factor count.
-#> Reason: The EFA factor count changes the fitted model. Retention evidence can inform that choice, but it does not authorize the pipeline to choose for the researcher.
-#> Options: Inspect the full `nomo_factors` result, compare plausible neighboring solutions when appropriate, and supply a positive integer for this scale.
-#> Consequence: No EFA is fitted until an explicit researcher factor-count decision is supplied.
-#> Example: decisions = list(factor_count = c(Agency = <integer>, Persistence = <integer>, SocialDesirability = <integer>))
+#> Researcher decision required: efa (Agency, Persistence, SocialDesirability)
+#>   Reason: The EFA factor count changes the fitted model. Retention evidence
+#>   can inform that choice, but it does not authorize the pipeline to choose for
+#>   the researcher.
+#>   Options: Inspect the full `nomo_factors` result, compare plausible
+#>   neighboring solutions when appropriate, and supply a positive integer for
+#>   each scale.
+#>   Consequence: No EFA is fitted until an explicit researcher factor-count
+#>   decision is supplied.
+#>   - Agency: Parallel analysis currently suggests 1 factor; the retained
+#>     plausible set is 1. The pipeline has not adopted a factor count.
+#>   - Persistence: Parallel analysis currently suggests 1 factor; the retained
+#>     plausible set is 1. The pipeline has not adopted a factor count.
+#>   - SocialDesirability: Parallel analysis currently suggests 1 factor; the
+#>     retained plausible set is 1. The pipeline has not adopted a factor count.
+#>   Example: decisions = list(factor_count = c(Agency = <integer>, Persistence =
+#>   <integer>, SocialDesirability = <integer>))
 #> 
-#> [efa / Persistence]
-#> Observation: Parallel analysis currently suggests 1 factor; the retained plausible set is 1. The pipeline has not adopted a factor count.
-#> Reason: The EFA factor count changes the fitted model. Retention evidence can inform that choice, but it does not authorize the pipeline to choose for the researcher.
-#> Options: Inspect the full `nomo_factors` result, compare plausible neighboring solutions when appropriate, and supply a positive integer for this scale.
-#> Consequence: No EFA is fitted until an explicit researcher factor-count decision is supplied.
-#> Example: decisions = list(factor_count = c(Agency = <integer>, Persistence = <integer>, SocialDesirability = <integer>))
-#> 
-#> [efa / SocialDesirability]
-#> Observation: Parallel analysis currently suggests 1 factor; the retained plausible set is 1. The pipeline has not adopted a factor count.
-#> Reason: The EFA factor count changes the fitted model. Retention evidence can inform that choice, but it does not authorize the pipeline to choose for the researcher.
-#> Options: Inspect the full `nomo_factors` result, compare plausible neighboring solutions when appropriate, and supply a positive integer for this scale.
-#> Consequence: No EFA is fitted until an explicit researcher factor-count decision is supplied.
-#> Example: decisions = list(factor_count = c(Agency = <integer>, Persistence = <integer>, SocialDesirability = <integer>))
-#> 
-#> No later stage has been run automatically while this consequential decision is unresolved.
+#> No later stage has been run automatically while this consequential decision is
+#> unresolved.
 ```
 
 The initial run audits each scale’s items and computes factor-retention
@@ -103,23 +101,32 @@ run <- nomo_run(
 )
 
 run
-#> <nomo_run>
-#> Guided nomologR workflow | teaching mode
-#> Status: PAUSED
-#> Sample design: same_sample | Exploratory N = 800 | Confirmatory N = 800
-#> Completed stages: screen -> factors -> efa
-#> Next stage: cfa
+#> <nomo_run> Guided workflow
+#> Status: PAUSED | Mode: teaching | Sample design: same sample
+#> Exploratory N = 800 | Confirmatory N = 800 | Scales: 3
+#> Completed: screen -> factors -> efa | Next: cfa
 #> 
-#> Researcher decision required
+#> Key evidence
+#>   - Item audit: 11 items; flags: none
+#>   - Parallel analysis suggests: Agency 1, Persistence 1, SocialDesirability 1
+#>   - EFA item flags: none
 #> 
-#> [cfa / measurement_model]
-#> Observation: EFA has completed for every supplied scale. No confirmatory measurement model has been constructed or fitted.
-#> Reason: CFA syntax encodes consequential choices about item retention, factor membership, cross-loadings, and correlated residuals; these cannot be chosen silently.
-#> Options: Inspect the EFA evidence and theory, then supply a prespecified lavaan measurement model (or `nomo_model()` object).
-#> Consequence: The CFA will use the same sample unless a new workflow is started with a holdout/external design. Same-sample confirmation must remain labeled as such.
-#> Example: decisions = list(cfa_model = list(value = model, rationale = "Prespecified measurement model"))
+#> Researcher decision required: cfa (measurement_model)
+#>   Reason: CFA syntax encodes consequential choices about item retention,
+#>   factor membership, cross-loadings, and correlated residuals; these cannot be
+#>   chosen silently.
+#>   Options: Inspect the EFA evidence and theory, then supply a prespecified
+#>   lavaan measurement model (or `nomo_model()` object).
+#>   Consequence: The CFA will use the same sample unless a new workflow is
+#>   started with a holdout/external design. Same-sample confirmation must remain
+#>   labeled as such.
+#>   - measurement_model: EFA has completed for every supplied scale. No
+#>     confirmatory measurement model has been constructed or fitted.
+#>   Example: decisions = list(cfa_model = list(value = model, rationale =
+#>   "Prespecified measurement model"))
 #> 
-#> No later stage has been run automatically while this consequential decision is unresolved.
+#> No later stage has been run automatically while this consequential decision is
+#> unresolved.
 ```
 
 The completed screening and factor-retention objects are reused. EFA is
@@ -142,23 +149,39 @@ run <- nomo_run(
 )
 
 run
-#> <nomo_run>
-#> Guided nomologR workflow | teaching mode
-#> Status: PAUSED
-#> Sample design: same_sample | Exploratory N = 800 | Confirmatory N = 800
-#> Completed stages: screen -> factors -> efa -> cfa -> reliability -> validity
-#> Next stage: measurement_review
+#> <nomo_run> Guided workflow
+#> Status: PAUSED | Mode: teaching | Sample design: same sample
+#> Exploratory N = 800 | Confirmatory N = 800 | Scales: 3
+#> Completed: screen -> factors -> efa -> cfa -> reliability -> validity
+#> Next: measurement_review
 #> 
-#> Researcher decision required
+#> Key evidence
+#>   - Item audit: 11 items; flags: none
+#>   - Parallel analysis suggests: Agency 1, Persistence 1, SocialDesirability 1
+#>   - EFA item flags: none
+#>   - CFA: CFI 0.996, RMSEA 0.020, SRMR 0.021; loading flags: none
+#>   - Reliability: omega 0.729 to 0.849
+#>   - Validity: convergent flags 1 review, 0 concern; separation flags none
 #> 
-#> [measurement_review / measurement_model]
-#> Observation: CFA converged and reliability/validity evidence was computed. Across these components, 0 concern and 1 review log entries are retained.
-#> Reason: Invariance and nomological-network interpretations inherit the measurement model. Continuing downstream is therefore a researcher decision, not a fit-index side effect.
-#> Options: Choose `proceed` to retain this prespecified model for configured downstream branches, or choose `revise` to stop here and continue with `nomo_revise()`, which records a substantively justified revised model and keeps this workflow as its parent.
-#> Consequence: Proceeding does not declare the model valid and does not remove any review flags. Revising triggers no automatic parameter freeing, item deletion, or respecification.
-#> Example: decisions = list(measurement_model = list(value = "proceed", rationale = "Evidence reviewed; model retained for the planned analyses."))
+#> Researcher decision required: measurement_review (measurement_model)
+#>   Reason: Invariance and nomological-network interpretations inherit the
+#>   measurement model. Continuing downstream is therefore a researcher decision,
+#>   not a fit-index side effect.
+#>   Options: Choose `proceed` to retain this prespecified model for configured
+#>   downstream branches, or choose `revise` to stop here and continue with
+#>   `nomo_revise()`, which records a substantively justified revised model and
+#>   keeps this workflow as its parent.
+#>   Consequence: Proceeding does not declare the model valid and does not remove
+#>   any review flags. Revising triggers no automatic parameter freeing, item
+#>   deletion, or respecification.
+#>   - measurement_model: CFA converged and reliability/validity evidence was
+#>     computed. Across these components, 0 concern and 1 review log entries are
+#>     retained.
+#>   Example: decisions = list(measurement_model = list(value = "proceed",
+#>   rationale = "Evidence reviewed; model retained for the planned analyses."))
 #> 
-#> No later stage has been run automatically while this consequential decision is unresolved.
+#> No later stage has been run automatically while this consequential decision is
+#> unresolved.
 ```
 
 [`nomo_run()`](https://juhalt.github.io/nomologR/reference/nomo_run.md)
@@ -249,15 +272,27 @@ run <- nomo_run(
 )
 
 run
-#> <nomo_run>
-#> Guided nomologR workflow | teaching mode
-#> Status: COMPLETE
-#> Sample design: same_sample | Exploratory N = 800 | Confirmatory N = 800
-#> Completed stages: screen -> factors -> efa -> cfa -> reliability -> validity -> invariance -> network
-#> Next stage: none
+#> <nomo_run> Guided workflow
+#> Status: COMPLETE | Mode: teaching | Sample design: same sample
+#> Exploratory N = 800 | Confirmatory N = 800 | Scales: 3
+#> Completed: screen -> factors -> efa -> cfa -> reliability -> validity ->
+#>   invariance -> network
+#> Next: none
 #> 
-#> All requested stages are complete or explicitly marked not requested.
-#> No hidden item deletion, model respecification, parameter freeing, or validity verdict was performed.
+#> Key evidence
+#>   - Item audit: 11 items; flags: none
+#>   - Parallel analysis suggests: Agency 1, Persistence 1, SocialDesirability 1
+#>   - EFA item flags: none
+#>   - CFA: CFI 0.996, RMSEA 0.020, SRMR 0.021; loading flags: none
+#>   - Reliability: omega 0.729 to 0.849
+#>   - Validity: convergent flags 1 review, 0 concern; separation flags none
+#>   - Invariance: completed configural -> metric -> scalar
+#>   - Network: 3 hypotheses; 3 concordant
+#> 
+#> All requested stages are complete or explicitly marked not requested. No
+#> hidden item deletion, model respecification, parameter freeing, or validity
+#> verdict was performed. summary(x) shows the stages and decisions, and
+#> nomo_report(x) archives the evidence.
 nomo_table(run, "stages")
 #> # A tibble: 8 × 3
 #>   stage       status    detail                                                  
@@ -326,11 +361,24 @@ run_prespecified <- nomo_run(
 )
 
 run_prespecified
-#> <nomo_run> mode=research | status=complete | design=same_sample
-#> Completed: screen -> factors -> efa -> cfa -> reliability -> validity -> network | Next: none
-#> Scales: 3 | Exploratory N: 800 | Confirmatory N: 800
+#> <nomo_run> Guided workflow
+#> Status: COMPLETE | Mode: research | Sample design: same sample
+#> Exploratory N = 800 | Confirmatory N = 800 | Scales: 3
+#> Completed: screen -> factors -> efa -> cfa -> reliability -> validity ->
+#>   network
+#> Next: none
 #> 
-#> Requested workflow complete. Use `nomo_table(x, "recipe")` for the component map and `nomo_table(x, "component_log")` for retained evidence provenance.
+#> Key evidence
+#>   - Item audit: 11 items; flags: none
+#>   - Parallel analysis suggests: Agency 1, Persistence 1, SocialDesirability 1
+#>   - EFA item flags: none
+#>   - CFA: CFI 0.996, RMSEA 0.020, SRMR 0.021; loading flags: none
+#>   - Reliability: omega 0.729 to 0.849
+#>   - Validity: convergent flags 1 review, 0 concern; separation flags none
+#>   - Network: 3 hypotheses; 3 concordant
+#> 
+#> Requested workflow complete. summary(x) shows the stages and decisions;
+#> nomo_table(x, "recipe") maps the components.
 ```
 
 This is still not hidden automation: every consequential decision was
@@ -362,24 +410,40 @@ revised <- nomo_revise(
 )
 
 revised
-#> <nomo_run>
-#> Guided nomologR workflow | teaching mode
-#> Status: PAUSED
-#> Sample design: same_sample | Exploratory N = 800 | Confirmatory N = 800
-#> Completed stages: screen -> factors -> efa -> cfa -> reliability -> validity
-#> Next stage: measurement_review
-#> Revisions: 1 (post-hoc); see `nomo_table(x, "lineage")`
+#> <nomo_run> Guided workflow
+#> Status: PAUSED | Mode: teaching | Sample design: same sample
+#> Exploratory N = 800 | Confirmatory N = 800 | Scales: 3
+#> Completed: screen -> factors -> efa -> cfa -> reliability -> validity
+#> Next: measurement_review
+#> Revisions: 1 (post-hoc); see nomo_table(x, "lineage")
 #> 
-#> Researcher decision required
+#> Key evidence
+#>   - Item audit: 11 items; flags: none
+#>   - Parallel analysis suggests: Agency 1, Persistence 1, SocialDesirability 1
+#>   - EFA item flags: none
+#>   - CFA: CFI 0.995, RMSEA 0.021, SRMR 0.021; loading flags: none
+#>   - Reliability: omega 0.729 to 0.848
+#>   - Validity: convergent flags 1 review, 0 concern; separation flags none
 #> 
-#> [measurement_review / measurement_model]
-#> Observation: CFA converged and reliability/validity evidence was computed. Across these components, 0 concern and 1 review log entries are retained.
-#> Reason: Invariance and nomological-network interpretations inherit the measurement model. Continuing downstream is therefore a researcher decision, not a fit-index side effect.
-#> Options: Choose `proceed` to retain this prespecified model for configured downstream branches, or choose `revise` to stop here and continue with `nomo_revise()`, which records a substantively justified revised model and keeps this workflow as its parent.
-#> Consequence: Proceeding does not declare the model valid and does not remove any review flags. Revising triggers no automatic parameter freeing, item deletion, or respecification.
-#> Example: decisions = list(measurement_model = list(value = "proceed", rationale = "Evidence reviewed; model retained for the planned analyses."))
+#> Researcher decision required: measurement_review (measurement_model)
+#>   Reason: Invariance and nomological-network interpretations inherit the
+#>   measurement model. Continuing downstream is therefore a researcher decision,
+#>   not a fit-index side effect.
+#>   Options: Choose `proceed` to retain this prespecified model for configured
+#>   downstream branches, or choose `revise` to stop here and continue with
+#>   `nomo_revise()`, which records a substantively justified revised model and
+#>   keeps this workflow as its parent.
+#>   Consequence: Proceeding does not declare the model valid and does not remove
+#>   any review flags. Revising triggers no automatic parameter freeing, item
+#>   deletion, or respecification.
+#>   - measurement_model: CFA converged and reliability/validity evidence was
+#>     computed. Across these components, 0 concern and 1 review log entries are
+#>     retained.
+#>   Example: decisions = list(measurement_model = list(value = "proceed",
+#>   rationale = "Evidence reviewed; model retained for the planned analyses."))
 #> 
-#> No later stage has been run automatically while this consequential decision is unresolved.
+#> No later stage has been run automatically while this consequential decision is
+#> unresolved.
 ```
 
 The child reruns the staged evidence with the revised model and pauses

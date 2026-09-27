@@ -181,30 +181,33 @@ run <- nomo_run(
   settings = list(factors = list(n_iter = 20, seed = 2026))
 )
 run
-#> <nomo_run>
-#> Guided nomologR workflow | teaching mode
-#> Status: PAUSED
-#> Sample design: same_sample | Exploratory N = 800 | Confirmatory N = 800
-#> Completed stages: screen -> factors
-#> Next stage: efa
+#> <nomo_run> Guided workflow
+#> Status: PAUSED | Mode: teaching | Sample design: same sample
+#> Exploratory N = 800 | Confirmatory N = 800 | Scales: 2
+#> Completed: screen -> factors | Next: efa
 #> 
-#> Researcher decision required
+#> Key evidence
+#>   - Item audit: 8 items; flags: none
+#>   - Parallel analysis suggests: Agency 1, Persistence 1
 #> 
-#> [efa / Agency]
-#> Observation: Parallel analysis currently suggests 1 factor; the retained plausible set is 1. The pipeline has not adopted a factor count.
-#> Reason: The EFA factor count changes the fitted model. Retention evidence can inform that choice, but it does not authorize the pipeline to choose for the researcher.
-#> Options: Inspect the full `nomo_factors` result, compare plausible neighboring solutions when appropriate, and supply a positive integer for this scale.
-#> Consequence: No EFA is fitted until an explicit researcher factor-count decision is supplied.
-#> Example: decisions = list(factor_count = c(Agency = <integer>, Persistence = <integer>))
+#> Researcher decision required: efa (Agency, Persistence)
+#>   Reason: The EFA factor count changes the fitted model. Retention evidence
+#>   can inform that choice, but it does not authorize the pipeline to choose for
+#>   the researcher.
+#>   Options: Inspect the full `nomo_factors` result, compare plausible
+#>   neighboring solutions when appropriate, and supply a positive integer for
+#>   each scale.
+#>   Consequence: No EFA is fitted until an explicit researcher factor-count
+#>   decision is supplied.
+#>   - Agency: Parallel analysis currently suggests 1 factor; the retained
+#>     plausible set is 1. The pipeline has not adopted a factor count.
+#>   - Persistence: Parallel analysis currently suggests 1 factor; the retained
+#>     plausible set is 1. The pipeline has not adopted a factor count.
+#>   Example: decisions = list(factor_count = c(Agency = <integer>, Persistence =
+#>   <integer>))
 #> 
-#> [efa / Persistence]
-#> Observation: Parallel analysis currently suggests 1 factor; the retained plausible set is 1. The pipeline has not adopted a factor count.
-#> Reason: The EFA factor count changes the fitted model. Retention evidence can inform that choice, but it does not authorize the pipeline to choose for the researcher.
-#> Options: Inspect the full `nomo_factors` result, compare plausible neighboring solutions when appropriate, and supply a positive integer for this scale.
-#> Consequence: No EFA is fitted until an explicit researcher factor-count decision is supplied.
-#> Example: decisions = list(factor_count = c(Agency = <integer>, Persistence = <integer>))
-#> 
-#> No later stage has been run automatically while this consequential decision is unresolved.
+#> No later stage has been run automatically while this consequential decision is
+#> unresolved.
 nomo_table(run, "requests")
 #> # A tibble: 2 × 8
 #>   id                  stage scope observation reason options consequence example
