@@ -1,5 +1,28 @@
 # Shared measurement-model helpers --------------------------------------------
 
+# A model that names a variable the data lack would otherwise reach lavaan,
+# whose error names its internal step rather than the argument to fix (#89).
+# The check runs before fitting and names each absent variable. A model lavaan
+# cannot parse is left to lavaan, which explains the syntax error.
+nomo_check_model_variables <- function(model, data, data_arg = "data") {
+  observed <- tryCatch(
+    as.character(lavaan::lavNames(lavaan::lavaanify(model), type = "ov")),
+    error = function(e) character()
+  )
+  absent <- setdiff(observed, names(data))
+  if (length(absent)) {
+    stop(
+      sprintf(
+        "`model` names variable(s) not found in `%s`: %s. Check the spelling against names(%s).",
+        data_arg, paste(absent, collapse = ", "), data_arg
+      ),
+      call. = FALSE
+    )
+  }
+  invisible(TRUE)
+}
+
+
 nomo_measurement_fit <- function(x, arg = "fit", allow_cross_loadings = FALSE) {
   wrapper <- NULL
   source <- "lavaan"
