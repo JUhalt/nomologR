@@ -48,6 +48,16 @@ The JUhalt measurement/design ecosystem should remain intentionally modular:
 `contentvalidR` → `nomologR` → substantive/experimental research  
 `solomonR` is invoked only when the substantive study uses a Solomon four-group design.
 
+### Partners, and a separate project
+
+`nomologR` and `contentvalidR` are partners: one workflow from content review
+to empirical validation, joined by the handoff
+([#46](https://github.com/JUhalt/nomologR/issues/46)). They are kept on the
+same page about the handoff before and after 1.0, release 1.0.0 together
+([#53](https://github.com/JUhalt/nomologR/issues/53)), and move major versions
+together whenever the shared contract changes. `solomonR` is a separate
+project: it takes no part in the handoff or the joint release, and neither
+package depends on it.
 ***
 ## 2. Design Principles
 
