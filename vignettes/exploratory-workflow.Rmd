@@ -243,6 +243,10 @@ validity evidence has approved the item. Likewise, `REVIEW` does not mean
 is essential, revising its wording, or evaluating a model without it — and
 recording the rationale either way.
 
+These are the values in the returned table. `print()` and `summary()` show the
+same flags in the package's display wording: no flag for `KEEP`, "review" for
+`REVIEW`, and "concern" for `STRONG REVIEW`.
+
 # Pattern versus structure matrices
 
 With oblique rotation, the pattern matrix contains regression-like factor
