@@ -104,13 +104,15 @@ test_that("declared keying maps onto reverse and scale_range as agreed", {
   expect_null(unknown$reverse)
   expect_null(unknown$scale_range)
 
-  # "Checked, none reversed" is a different fact from "nobody said".
-  raw <- handoff_fixture("walkthrough-sort", "0.7.0")
-  raw$item_evidence$keying <- 1L
-  read <- nomologR:::nomo_handoff_read(raw)
+  # "Checked, none reversed" is a different fact from "nobody said". This
+  # fixture is the walkthrough sort with every item's keying recorded as 1.
+  read <- nomologR:::nomo_handoff_read(
+    handoff_fixture("walkthrough-sort-none-reversed", "0.9.0")
+  )
   none <- read$keying
   expect_true(none$declared)
   expect_identical(none$reverse, character(0))
+  expect_identical(none$scale_range, c(1, 5))
   log <- nomologR:::nomo_handoff_log(read)
   expect_match(log$observation[log$metric == "keying"],
                "declared keying with no reverse-keyed item", fixed = TRUE)
