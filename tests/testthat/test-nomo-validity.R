@@ -61,6 +61,40 @@ test_that("nomo_validity accepts nomo_cfa and keeps AVE conceptually separate", 
 })
 
 
+test_that("each construct pair is one row, with its correlation and HTMT together (#89)", {
+  cfa <- nomo_cfa(
+    "F1 =~ x1 + x2 + x3\nF2 =~ x4 + x5 + x6\nF3 =~ x7 + x8 + x9",
+    data = lavaan::HolzingerSwineford1939
+  )
+  out <- nomo_validity(cfa)
+  tab <- summary(out)$discriminant
+
+  # Three constructs have three pairs, listed in model order.
+  expect_identical(nrow(tab), 3L)
+  expect_identical(paste(tab$construct_1, tab$construct_2),
+                   c("F1 F2", "F1 F3", "F2 F3"))
+  expect_true(all(is.finite(tab$latent_r)))
+  expect_true(all(is.finite(tab$HTMT2)))
+  expect_true(all(tab$signal %in% c("info", "review")))
+
+  # Reorienting a pair keeps each value with its pair.
+  lat <- out$latent_correlations
+  h2 <- out$htmt2
+  for (i in seq_len(nrow(tab))) {
+    pair <- c(tab$construct_1[[i]], tab$construct_2[[i]])
+    in_pair <- function(d) d$construct_1 %in% pair & d$construct_2 %in% pair
+    expect_equal(tab$latent_r[[i]], lat$correlation[in_pair(lat)])
+    expect_equal(tab$HTMT2[[i]], h2$estimate[in_pair(h2)])
+  }
+
+  printed <- utils::capture.output(print(out))
+  expect_true(any(grepl("of 3 pair(s)", printed, fixed = TRUE)))
+
+  p <- plot(out, type = "discriminant")
+  expect_identical(levels(p$data$pair), rev(c("F1 vs F2", "F1 vs F3", "F2 vs F3")))
+})
+
+
 test_that("weak convergent structure is reviewed without automatic item deletion", {
   set.seed(5202)
   n <- 1000
