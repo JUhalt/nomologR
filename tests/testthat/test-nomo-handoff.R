@@ -1,8 +1,10 @@
 # Fixtures ---------------------------------------------------------------------
 #
-# Genuine contentvalidR output from the v0.6.0 and v0.7.0 tags, stored so the
+# Genuine contentvalidR output from the v0.6.0 to v0.9.0 tags, stored so the
 # reader is tested against the real interface without contentvalidR installed
 # (#46, #53). See fixtures/contentvalidR/README.md and MANIFEST.csv.
+
+handoff_versions <- c("0.6.0", "0.7.0", "0.8.0", "0.9.0")
 
 handoff_fixture <- function(fit, version) {
   readRDS(test_path(
@@ -29,8 +31,10 @@ walkthrough_items <- c(paste0("EF", 1:6), paste0("TF", 1:6))
 # Reading every fixture ---------------------------------------------------------
 
 test_that("every stored handoff is read without contentvalidR", {
-  for (fit in c("walkthrough-sort", "expert-krippendorff", "delphi")) {
-    for (version in c("0.6.0", "0.7.0")) {
+  for (fit in c("walkthrough-sort", "expert-krippendorff", "delphi", "expert-nine")) {
+    # The nine-expert panel was added to the fixtures at 0.7.0.
+    versions <- if (fit == "expert-nine") handoff_versions[-1L] else handoff_versions
+    for (version in versions) {
       raw <- handoff_fixture(fit, version)
       h <- nomologR:::nomo_handoff_read(raw)
 
@@ -40,21 +44,49 @@ test_that("every stored handoff is read without contentvalidR", {
       expect_identical(h$items, raw$item_evidence$item[raw$item_evidence$carried])
       # Keying fields first appear in 0.7.0; before that they are absent, not
       # an error.
-      expect_identical(h$keying$recorded, identical(version, "0.7.0"))
+      expect_identical(h$keying$recorded, version != "0.6.0")
     }
   }
 })
 
 
-test_that("the two producer versions agree on every carry decision", {
+test_that("every producer version agrees on the carry decisions of the original fits", {
+  decision <- c("item", "scale", "carried", "status", "recommendation")
   for (fit in c("walkthrough-sort", "expert-krippendorff", "delphi")) {
-    old <- nomologR:::nomo_handoff_read(handoff_fixture(fit, "0.6.0"))
-    new <- nomologR:::nomo_handoff_read(handoff_fixture(fit, "0.7.0"))
-    expect_identical(old$items, new$items)
-    expect_identical(old$scales, new$scales)
-    shared <- c("item", "scale", "carried", "status", "recommendation", "rule")
-    expect_identical(old$evidence[, shared], new$evidence[, shared])
+    first <- nomologR:::nomo_handoff_read(handoff_fixture(fit, "0.6.0"))
+    for (version in handoff_versions[-1L]) {
+      later <- nomologR:::nomo_handoff_read(handoff_fixture(fit, version))
+      expect_identical(later$items, first$items)
+      expect_identical(later$scales, first$scales)
+      expect_identical(later$evidence[, decision], first$evidence[, decision])
+    }
+    # The rule text is prose the schema leaves free to change; 0.8.0 rewrote
+    # it in counts, citing Lynn (1986). 0.9.0 changed only what is printed.
+    expect_identical(
+      nomologR:::nomo_handoff_read(handoff_fixture(fit, "0.7.0"))$evidence$rule,
+      first$evidence$rule
+    )
+    expect_identical(
+      nomologR:::nomo_handoff_read(handoff_fixture(fit, "0.9.0"))$evidence,
+      nomologR:::nomo_handoff_read(handoff_fixture(fit, "0.8.0"))$evidence
+    )
   }
+})
+
+
+test_that("the screen follows the carry decision the object records, not its producer version", {
+  # Seven of nine experts rate N7 relevant. Lynn (1986) requires seven of nine;
+  # contentvalidR 0.7.0 compared the I-CVI with a rounded .78 and held N7 back,
+  # and 0.8.0 compares counts and carries it.
+  data <- handoff_responses(c("N9", "N8", "N7", "N6"))
+  held_back <- function(version) {
+    out <- nomo_screen(data, items = handoff_fixture("expert-nine", version))
+    log <- out$decision_log
+    list(items = out$items, held = log$object[log$metric == "held_back_item"])
+  }
+  expect_identical(held_back("0.7.0"), list(items = c("N9", "N8"), held = c("N7", "N6")))
+  expect_identical(held_back("0.8.0"), list(items = c("N9", "N8", "N7"), held = "N6"))
+  expect_identical(held_back("0.9.0"), held_back("0.8.0"))
 })
 
 
