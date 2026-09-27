@@ -251,11 +251,13 @@ plot.nomo_cfa <- function(x,
     dat <- x$standardized_loadings
     if (!nrow(dat)) stop("No standardized loadings are available to plot.", call. = FALSE)
     dat$item <- factor(dat$item, levels = rev(unique(dat$item)))
+    dat$flag <- nomo_present_flag_legend(dat$attention)
     ref <- x$guidance$cfa_loading_reference
     return(
-      ggplot2::ggplot(dat, ggplot2::aes(x = loading, y = item, shape = attention)) +
+      ggplot2::ggplot(dat, ggplot2::aes(x = loading, y = item, shape = flag)) +
         ggplot2::geom_vline(xintercept = c(-ref, ref), linetype = 2) +
         ggplot2::geom_point(size = 2.8, na.rm = TRUE) +
+        ggplot2::scale_shape_manual(values = nomo_present_flag_shapes, drop = TRUE) +
         ggplot2::facet_wrap(stats::as.formula("~ factor"), scales = "free_y") +
         nomo_plot_labs(
           title = "CFA standardized loadings",
@@ -263,7 +265,7 @@ plot.nomo_cfa <- function(x,
             "Dashed lines mark the configured absolute loading review reference.",
             "Factor direction remains researcher/model dependent."
           ),
-          x = "Standardized loading", y = NULL, shape = "Review",
+          x = "Standardized loading", y = NULL, shape = "Flag",
           caption = paste(
             "Reference values trigger inspection; they do not automatically",
             "delete indicators or validate the model."
@@ -286,7 +288,8 @@ plot.nomo_cfa <- function(x,
              "Lower values favor fit"),
       levels = c("Higher values favor fit", "Lower values favor fit")
     )
-    p <- ggplot2::ggplot(dat, ggplot2::aes(x = metric, y = value, shape = attention)) +
+    dat$flag <- nomo_present_flag_legend(dat$attention)
+    p <- ggplot2::ggplot(dat, ggplot2::aes(x = metric, y = value, shape = flag)) +
       ggplot2::geom_segment(
         ggplot2::aes(x = metric, xend = metric, y = reference, yend = value),
         na.rm = TRUE
@@ -294,16 +297,17 @@ plot.nomo_cfa <- function(x,
       ggplot2::geom_point(size = 3, na.rm = TRUE) +
       ggplot2::geom_point(ggplot2::aes(y = reference), shape = 4, size = 3, na.rm = TRUE) +
       ggplot2::facet_wrap(stats::as.formula("~ panel"), scales = "free") +
+      ggplot2::scale_shape_manual(values = nomo_present_flag_shapes, drop = TRUE) +
       nomo_plot_labs(
         title = "CFA global fit evidence",
         subtitle = "Points are observed values; x-marks are teaching references.",
-        x = NULL, y = "Fit index", shape = "Review",
+        x = NULL, y = "Fit index", shape = "Flag",
         caption = paste(
           "Cutoffs are reference points, not pass/fail laws.",
           "Interpret global fit with local strain, estimator, sample, and theory."
         )
       ) + ggplot2::theme_minimal()
-    if (length(unique(dat$attention)) == 1L) p <- p + ggplot2::guides(shape = "none")
+    if (length(unique(dat$flag)) == 1L) p <- p + ggplot2::guides(shape = "none")
     return(p)
   }
 
@@ -364,6 +368,6 @@ plot.nomo_cfa <- function(x,
 
 
 utils::globalVariables(c(
-  "loading", "item", "factor", "attention", "metric", "value", "reference",
+  "loading", "item", "factor", "flag", "metric", "value", "reference",
   "item1", "item2", "residual", "label", "mi", "panel"
 ))

@@ -27,6 +27,38 @@ test_that("every flag vocabulary is shown in one wording", {
 })
 
 
+test_that("plot legends use the same flag wording (#89)", {
+  expect_identical(
+    as.character(nomologR:::nomo_present_flag_legend(
+      c("KEEP", "REVIEW", "STRONG REVIEW", "info", "concern")
+    )),
+    c("none", "review", "concern", "none", "concern")
+  )
+
+  skip_on_cran()
+  legend <- function(p, aesthetic) ggplot2::get_guide_data(p, aesthetic)$.label
+  cfa <- nomo_cfa(
+    nomo_model(list(A = paste0("a", 1:5), B = paste0("b", 1:5))),
+    data = nomo_demo_continuous
+  )
+  val <- nomo_validity(cfa)
+
+  cfa$standardized_loadings$attention[1:3] <- c("KEEP", "REVIEW", "STRONG REVIEW")
+  p <- plot(cfa, type = "loadings")
+  expect_identical(p$labels$shape, "Flag")
+  expect_identical(legend(p, "shape"), c("none", "review", "concern"))
+  cfa$fit_evidence$attention <- ifelse(cfa$fit_evidence$metric == "SRMR", "review", "info")
+  expect_identical(legend(plot(cfa, type = "fit"), "shape"), c("none", "review"))
+
+  val$ave$attention <- c("info", "concern")
+  expect_identical(legend(plot(val, type = "ave"), "shape"), c("none", "concern"))
+
+  p <- plot(nomo_screen(nomo_demo_continuous), type = "evidence")
+  expect_identical(p$labels$fill, "Flag")
+  expect_identical(legend(p, "fill"), c("none", "note", "review"))
+})
+
+
 test_that("text, facts, and bullets wrap to the console width", {
   local_reproducible_output(width = 40)
   long <- paste(rep("word", 30), collapse = " ")

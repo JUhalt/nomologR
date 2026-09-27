@@ -159,6 +159,17 @@ nomo_present_flag_counts <- function(x) {
 }
 
 
+# The display flag as a plot legend shows it: "none" stands in for the blank
+# flag, and the levels run in order of severity.
+nomo_present_flag_legend <- function(x) {
+  flag <- nomo_present_flag(x)
+  flag[!nzchar(flag)] <- "none"
+  factor(flag, levels = c("none", "review", "concern"))
+}
+
+nomo_present_flag_shapes <- c(none = 16, review = 17, concern = 15)
+
+
 # Leave out a column whose values are all the same, such as a block column that
 # only ever says "overall"; it says nothing the heading does not.
 nomo_present_drop_constant <- function(columns, label, values) {

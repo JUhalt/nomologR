@@ -321,10 +321,12 @@ plot.nomo_validity <- function(x, type = c("ave", "discriminant"), ...) {
     if (!nrow(dat)) stop("No finite AVE estimates are available to plot.", call. = FALSE)
 
     dat$construct <- factor(dat$construct, levels = rev(unique(dat$construct)))
+    dat$flag <- nomo_present_flag_legend(dat$attention)
     ref <- x$ave_reference
-    p <- ggplot2::ggplot(dat, ggplot2::aes(x = estimate, y = construct, shape = attention)) +
+    p <- ggplot2::ggplot(dat, ggplot2::aes(x = estimate, y = construct, shape = flag)) +
       ggplot2::geom_vline(xintercept = ref, linetype = 2) +
       ggplot2::geom_point(size = 3) +
+      ggplot2::scale_shape_manual(values = nomo_present_flag_shapes, drop = TRUE) +
       ggplot2::coord_cartesian(xlim = nomo_plot_x_limits(dat$estimate)) +
       nomo_plot_labs(
         title = "Convergent evidence: AVE",
@@ -334,12 +336,12 @@ plot.nomo_validity <- function(x, type = c("ave", "discriminant"), ...) {
         ),
         x = "Average variance extracted",
         y = NULL,
-        shape = "Signal",
+        shape = "Flag",
         caption = "AVE is convergent-validity evidence, not reliability."
       ) +
       ggplot2::theme_minimal()
 
-    if (length(unique(dat$attention)) == 1L) p <- p + ggplot2::guides(shape = "none")
+    if (length(unique(dat$flag)) == 1L) p <- p + ggplot2::guides(shape = "none")
     if (length(unique(dat$block)) > 1L) {
       p <- p + ggplot2::facet_wrap(stats::as.formula("~ block"))
     }
@@ -362,13 +364,16 @@ plot.nomo_validity <- function(x, type = c("ave", "discriminant"), ...) {
 
   dat <- nomo_validity_orient_pairs(dat, nomo_validity_construct_order(x))
   dat$pair <- paste(dat$construct_1, dat$construct_2, sep = " vs ")
-  dat$attention <- ifelse(dat$estimate > x$htmt_reference, "review", "info")
+  dat$flag <- nomo_present_flag_legend(
+    ifelse(dat$estimate > x$htmt_reference, "review", "info")
+  )
   dat$pair <- factor(dat$pair, levels = rev(unique(dat$pair)))
   ref <- x$htmt_reference
 
-  p <- ggplot2::ggplot(dat, ggplot2::aes(x = estimate, y = pair, shape = attention)) +
+  p <- ggplot2::ggplot(dat, ggplot2::aes(x = estimate, y = pair, shape = flag)) +
     ggplot2::geom_vline(xintercept = ref, linetype = 2) +
     ggplot2::geom_point(size = 3) +
+    ggplot2::scale_shape_manual(values = nomo_present_flag_shapes, drop = TRUE) +
     ggplot2::coord_cartesian(xlim = nomo_plot_x_limits(dat$estimate)) +
     nomo_plot_labs(
       title = paste0("Construct separation: ", method),
@@ -377,12 +382,12 @@ plot.nomo_validity <- function(x, type = c("ave", "discriminant"), ...) {
       ),
       x = method,
       y = NULL,
-      shape = "Signal",
+      shape = "Flag",
       caption = "Values above the line prompt investigation; they do not mandate merging."
     ) +
     ggplot2::theme_minimal()
 
-  if (length(unique(dat$attention)) == 1L) p <- p + ggplot2::guides(shape = "none")
+  if (length(unique(dat$flag)) == 1L) p <- p + ggplot2::guides(shape = "none")
   if (length(unique(dat$block)) > 1L) {
     p <- p + ggplot2::facet_wrap(stats::as.formula("~ block"))
   }
@@ -390,5 +395,5 @@ plot.nomo_validity <- function(x, type = c("ave", "discriminant"), ...) {
 }
 
 utils::globalVariables(c(
-  "estimate", "construct", "attention", "block", "pair"
+  "estimate", "construct", "flag", "block", "pair"
 ))
