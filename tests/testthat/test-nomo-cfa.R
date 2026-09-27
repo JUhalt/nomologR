@@ -227,6 +227,35 @@ test_that("nomo_cfa validates key inputs", {
 })
 
 
+test_that("a model naming a variable the data lack is refused with its name (#89)", {
+  set.seed(8905)
+  dat <- data.frame(x1 = rnorm(60), x2 = rnorm(60), x3 = rnorm(60),
+                    g = rep(c("a", "b"), 30))
+
+  expect_error(
+    nomo_cfa("F =~ x1 + x2 + xx3", dat),
+    "`model` names variable(s) not found in `data`: xx3. Check the spelling against names(data).",
+    fixed = TRUE
+  )
+  expect_error(nomo_cfa("F =~ x1 + y2 + y3", dat), "not found in `data`: y2, y3.", fixed = TRUE)
+  expect_error(
+    nomo_invariance("F =~ x1 + x2 + xx3", data = dat, group = "g"),
+    "not found in `data`: xx3.", fixed = TRUE
+  )
+
+  h <- nomo_hypotheses("F -> x1" = positive())
+  expect_error(
+    nomo_network("F =~ x1 + x2 + xx3", data = dat, hypotheses = h),
+    "not found in `data`: xx3.", fixed = TRUE
+  )
+  expect_error(
+    nomo_network("F =~ x1 + x2 + x3", data = dat, validation_data = dat[, c("x1", "x2")],
+                 hypotheses = h),
+    "not found in `validation_data`: x3.", fixed = TRUE
+  )
+})
+
+
 test_that("lavaan estimation errors are surfaced as CFA estimation failures", {
   dat <- data.frame(x1 = rnorm(100), x2 = rnorm(100), x3 = rnorm(100))
   expect_error(

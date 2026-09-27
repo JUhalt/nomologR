@@ -216,6 +216,8 @@ nomo_cfa <- function(model,
       call. = FALSE
     )
   }
+  # After the argument checks, so their more specific messages come first.
+  nomo_check_model_variables(model, data)
 
   estimator_source <- if (length(ordered) && is.null(estimator)) {
     "ordered_default"
