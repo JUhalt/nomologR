@@ -374,7 +374,7 @@ test_that("presentation branches communicate point-only and interval workflows",
   expect_s3_class(p, "ggplot")
   expect_true(any(grepl(
     "bootstrap CIs are optional",
-    p$labels$subtitle,
+    plot_text(p$labels$subtitle),
     fixed = TRUE
   )))
 

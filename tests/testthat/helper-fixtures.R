@@ -213,3 +213,8 @@ make_m9_full_report_run <- local({
     cache
   }
 })
+
+
+# Plot titles, subtitles, and captions are wrapped with line breaks (#89), so
+# tests compare their text with the breaks collapsed to single spaces.
+plot_text <- function(x) gsub("\\s+", " ", x)

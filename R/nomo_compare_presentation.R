@@ -196,7 +196,7 @@ plot.nomo_compare <- function(x, type = c("fit", "loadings"), ...) {
         ) +
         ggplot2::geom_point(size = 3) +
         ggplot2::facet_wrap(stats::as.formula("~ metric"), scales = "free_x") +
-        ggplot2::labs(
+        nomo_plot_labs(
           title = "Global fit across compared models",
           subtitle = "Dashed lines = teaching references; they are prompts, not decision rules.",
           x = NULL,
@@ -228,7 +228,7 @@ plot.nomo_compare <- function(x, type = c("fit", "loadings"), ...) {
     ggplot2::geom_point(size = 3, position = ggplot2::position_dodge(width = 0.5)) +
     ggplot2::facet_wrap(stats::as.formula("~ factor"), scales = "free_y") +
     ggplot2::coord_cartesian(xlim = nomo_plot_x_limits(dat$loading)) +
-    ggplot2::labs(
+    nomo_plot_labs(
       title = "Standardized loadings across compared models",
       subtitle = paste0(
         "Dashed line = teaching reference (",

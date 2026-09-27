@@ -190,7 +190,7 @@ plot.nomo_efa <- function(x,
           midpoint = 0,
           limits = c(-max_abs, max_abs)
         ) +
-        ggplot2::labs(
+        nomo_plot_labs(
           title = "EFA pattern matrix",
           subtitle = if (x$oblique) {
             "Oblique solution: pattern coefficients are primary for factor interpretation"
@@ -255,7 +255,7 @@ plot.nomo_efa <- function(x,
         ggplot2::scale_shape_manual(
           values = c(Primary = 16, Secondary = 1)
         ) +
-        ggplot2::labs(
+        nomo_plot_labs(
           title = "Primary and secondary EFA loadings",
           subtitle = paste(
             "Filled circles are primary loadings; open circles are secondary loadings.",
@@ -300,7 +300,7 @@ plot.nomo_efa <- function(x,
           midpoint = 0,
           limits = c(-max_abs, max_abs)
         ) +
-        ggplot2::labs(
+        nomo_plot_labs(
           title = "EFA residual-correlation matrix",
           subtitle = sprintf(
             "Unique off-diagonal pairs only | RMSR = %.3f",
@@ -334,7 +334,7 @@ plot.nomo_efa <- function(x,
         ) +
         ggplot2::xlim(-1, 1) +
         ggplot2::ylim(-1, 1) +
-        ggplot2::labs(
+        nomo_plot_labs(
           title = "EFA factor correlations",
           subtitle = "Interfactor correlations require at least two factors"
         ) +
@@ -373,7 +373,7 @@ plot.nomo_efa <- function(x,
       midpoint = 0,
       limits = c(-1, 1)
     ) +
-    ggplot2::labs(
+    nomo_plot_labs(
       title = "EFA factor correlations",
       subtitle = if (x$oblique) {
         "Unique interfactor correlations from the oblique solution"

@@ -269,7 +269,7 @@ plot.nomo_factors <- function(x,
           values = stats::setNames(c(16, 17), c(observed_label, rule_label))
         ) +
         ggplot2::scale_x_continuous(breaks = d$factor) +
-        ggplot2::labs(
+        nomo_plot_labs(
           title = "Parallel-analysis retention evidence",
           subtitle = sprintf(
             "%d factor%s retained by the %s stopping rule",
@@ -311,7 +311,7 @@ plot.nomo_factors <- function(x,
         breaks = seq.int(0, max(c(1L, d$n_factors)), by = 1),
         expand = ggplot2::expansion(mult = c(0, 0.14))
       ) +
-      ggplot2::labs(
+      nomo_plot_labs(
         title = "Parallel-analysis rule sensitivity",
         subtitle = sprintf("Selected rule: %s", x$parallel$rule),
         caption = "The selected rule is labeled; alternatives are sensitivity evidence, not competing p-values.",
@@ -368,7 +368,7 @@ plot.nomo_factors <- function(x,
           values = c("Common factor" = 16, "Component" = 17)
         ) +
         ggplot2::scale_x_continuous(breaks = d$index) +
-        ggplot2::labs(
+        nomo_plot_labs(
           title = "Observed scree information",
           subtitle = "Use the shape as complementary evidence; do not automate the elbow",
           caption = paste0(
@@ -427,7 +427,7 @@ plot.nomo_factors <- function(x,
         scales = "free_y"
       ) +
       ggplot2::scale_x_continuous(breaks = d$n_factors) +
-      ggplot2::labs(
+      nomo_plot_labs(
         title = "Velicer MAP sensitivity",
         subtitle = sprintf(
           "Original TR2 minimum: %d | Revised TR4 minimum: %d",
@@ -474,7 +474,7 @@ plot.nomo_factors <- function(x,
         breaks = seq.int(0, max(c(1L, d$n_factors)), by = 1),
         expand = ggplot2::expansion(mult = c(0, 0.14))
       ) +
-      ggplot2::labs(
+      nomo_plot_labs(
         title = "Factor-retention evidence by method",
         subtitle = paste0(
           "Agreement strengthens a candidate solution;\n",
@@ -520,7 +520,7 @@ plot.nomo_factors <- function(x,
         breaks = seq.int(0, max(c(1L, d$n_families)), by = 1),
         expand = ggplot2::expansion(mult = c(0, 0.14))
       ) +
-      ggplot2::labs(
+      nomo_plot_labs(
         title = "Retention-evidence concordance by criterion family",
         subtitle = paste0(
           "Related variants such as MAP TR2/TR4 are grouped before concordance is summarized;\n",
@@ -567,7 +567,7 @@ plot.nomo_factors <- function(x,
       linewidth = 0.6
     ) +
     ggplot2::coord_flip() +
-    ggplot2::labs(
+    nomo_plot_labs(
       title = "Item-level KMO / measure of sampling adequacy",
       subtitle = sprintf("Dashed line = overall KMO (%.3f)", x$kmo$overall),
       x = NULL,

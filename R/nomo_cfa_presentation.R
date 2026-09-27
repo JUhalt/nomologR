@@ -257,7 +257,7 @@ plot.nomo_cfa <- function(x,
         ggplot2::geom_vline(xintercept = c(-ref, ref), linetype = 2) +
         ggplot2::geom_point(size = 2.8, na.rm = TRUE) +
         ggplot2::facet_wrap(stats::as.formula("~ factor"), scales = "free_y") +
-        ggplot2::labs(
+        nomo_plot_labs(
           title = "CFA standardized loadings",
           subtitle = paste(
             "Dashed lines mark the configured absolute loading review reference.",
@@ -279,27 +279,32 @@ plot.nomo_cfa <- function(x,
     dat <- dat[is.finite(dat$value), , drop = FALSE]
     if (!nrow(dat)) stop("No global fit evidence is available to plot.", call. = FALSE)
     dat$metric <- factor(dat$metric, levels = c("CFI", "TLI", "RMSEA", "SRMR"))
-    return(
-      ggplot2::ggplot(dat, ggplot2::aes(x = metric, y = value, shape = attention)) +
-        ggplot2::geom_segment(
-          ggplot2::aes(x = metric, xend = metric, y = reference, yend = value),
-          na.rm = TRUE
-        ) +
-        ggplot2::geom_point(size = 3, na.rm = TRUE) +
-        ggplot2::geom_point(ggplot2::aes(y = reference), shape = 4, size = 3, na.rm = TRUE) +
-        ggplot2::labs(
-          title = "CFA global fit evidence",
-          subtitle = paste(
-            "Points are observed values; x-marks are teaching references.",
-            "CFI/TLI favor higher values; RMSEA/SRMR favor lower values."
-          ),
-          x = NULL, y = "Fit index", shape = "Review",
-          caption = paste(
-            "Cutoffs are reference points, not pass/fail laws.",
-            "Interpret global fit with local strain, estimator, sample, and theory."
-          )
-        ) + ggplot2::theme_minimal()
+    # CFI and TLI sit near 1 and RMSEA and SRMR near 0, so one axis squashed
+    # the second pair against zero; each pair gets its own panel and scale (#89).
+    dat$panel <- factor(
+      ifelse(dat$metric %in% c("CFI", "TLI"), "Higher values favor fit",
+             "Lower values favor fit"),
+      levels = c("Higher values favor fit", "Lower values favor fit")
     )
+    p <- ggplot2::ggplot(dat, ggplot2::aes(x = metric, y = value, shape = attention)) +
+      ggplot2::geom_segment(
+        ggplot2::aes(x = metric, xend = metric, y = reference, yend = value),
+        na.rm = TRUE
+      ) +
+      ggplot2::geom_point(size = 3, na.rm = TRUE) +
+      ggplot2::geom_point(ggplot2::aes(y = reference), shape = 4, size = 3, na.rm = TRUE) +
+      ggplot2::facet_wrap(stats::as.formula("~ panel"), scales = "free") +
+      nomo_plot_labs(
+        title = "CFA global fit evidence",
+        subtitle = "Points are observed values; x-marks are teaching references.",
+        x = NULL, y = "Fit index", shape = "Review",
+        caption = paste(
+          "Cutoffs are reference points, not pass/fail laws.",
+          "Interpret global fit with local strain, estimator, sample, and theory."
+        )
+      ) + ggplot2::theme_minimal()
+    if (length(unique(dat$attention)) == 1L) p <- p + ggplot2::guides(shape = "none")
+    return(p)
   }
 
   if (type == "residuals") {
@@ -322,7 +327,7 @@ plot.nomo_cfa <- function(x,
       ggplot2::ggplot(dat, ggplot2::aes(x = item1, y = item2, fill = residual)) +
         ggplot2::geom_tile() +
         ggplot2::scale_fill_gradient2(midpoint = 0, limits = c(-max_abs, max_abs)) +
-        ggplot2::labs(
+        nomo_plot_labs(
           title = "CFA localized residual correlations",
           subtitle = "Unique off-diagonal residual pairs",
           x = NULL, y = NULL, fill = "Residual",
@@ -346,7 +351,7 @@ plot.nomo_cfa <- function(x,
 
   ggplot2::ggplot(dat, ggplot2::aes(x = mi, y = label)) +
     ggplot2::geom_col() +
-    ggplot2::labs(
+    nomo_plot_labs(
       title = "Largest CFA modification indices",
       subtitle = "Post-hoc diagnostic evidence only",
       x = "Modification index", y = NULL,
@@ -360,5 +365,5 @@ plot.nomo_cfa <- function(x,
 
 utils::globalVariables(c(
   "loading", "item", "factor", "attention", "metric", "value", "reference",
-  "item1", "item2", "residual", "label", "mi"
+  "item1", "item2", "residual", "label", "mi", "panel"
 ))

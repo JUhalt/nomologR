@@ -460,7 +460,7 @@ test_that("reliability plot covers errors, one-coefficient guides, CIs, and face
   )
   p2 <- plot(ci)
   expect_s3_class(p2, "ggplot")
-  expect_match(p2$labels$subtitle, "bootstrap CIs", fixed = TRUE)
+  expect_match(plot_text(p2$labels$subtitle), "bootstrap CIs", fixed = TRUE)
   expect_true(length(p2$facet$params$facets) >= 1L)
 })
 
@@ -547,7 +547,7 @@ test_that("reliability plot labels point-estimate subtitle without intervals", {
 
   p <- plot(rel)
   expect_s3_class(p, "ggplot")
-  expect_match(p$labels$subtitle, "bootstrap CIs are optional", fixed = TRUE)
+  expect_match(plot_text(p$labels$subtitle), "bootstrap CIs are optional", fixed = TRUE)
 })
 
 
