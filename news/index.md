@@ -2,6 +2,23 @@
 
 ## nomologR (development version)
 
+- [`nomo_cfa()`](https://juhalt.github.io/nomologR/reference/nomo_cfa.md)
+  says when its fit indices cannot test the model
+  ([\#89](https://github.com/JUhalt/nomologR/issues/89)). A one-factor
+  model with three indicators is just identified (df = 0): it reproduces
+  the covariances by construction, and its print had shown “RMSEA 0.000
+  \| SRMR 0.000” like a well-fitting model. A model with negative
+  degrees of freedom, such as a factor with two indicators, is not
+  identified. The print now reads “Fit: not testable (df = 0, just
+  identified)”, the summary explains why, and the guided run’s key
+  evidence says the same. The decision log’s degrees-of-freedom entry,
+  which was already recorded, now names the case, and a model that is
+  not identified is a concern rather than a review. Warnings that lavaan
+  raises while nomologR reads the results, such as “Could not compute
+  standard errors”, are kept with the model’s engine warnings instead of
+  printing at the console. The “NaNs produced” warnings that
+  [`lavaan::fitMeasures()`](https://rdrr.io/pkg/lavaan/man/fitMeasures.html)
+  raises for negative degrees of freedom are no longer shown.
 - Counts in printed output agree with their nouns
   ([\#89](https://github.com/JUhalt/nomologR/issues/89)): “2 factors”,
   “1 pair”, “1 more degree of freedom”, rather than “2 factor(s)”. This
