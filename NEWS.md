@@ -1,5 +1,6 @@
 # nomologR (development version)
 
+- `nomo_validity()` lists each construct pair once in its print, summary, and report section, with the latent correlation and HTMT-family values in the same row (#89). Latent correlations name a pair in model order and HTMT names it the other way round, so the two never merged. Each pair appeared twice, once with its correlation but a signal of "unavailable" and once with its HTMT values, and the print counted twice as many pairs as there are. Pairs are now shown in model order, including in the HTMT plot. The returned tables and every computed value are unchanged.
 - The reproducible-report article's overwrite example shows the refusal message with its temporary directory as `<report_dir>`. It had printed the full temporary path of the computer that built the article, including a user name, and the path changed on every build. The message still comes from `nomo_report()`, and the example still shows that an existing report is refused unless `overwrite = TRUE` is given.
 
 # nomologR 0.3.0
