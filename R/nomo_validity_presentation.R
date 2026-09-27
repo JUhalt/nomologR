@@ -69,8 +69,39 @@ nomo_validity_convergent_table <- function(x) {
 }
 
 
+# Constructs in the order the model defines them.
+nomo_validity_construct_order <- function(x) {
+  unique(as.character(c(
+    x$standardized_loadings$factor,
+    x$latent_correlations$construct_1,
+    x$latent_correlations$construct_2
+  )))
+}
+
+
+# Latent correlations list a pair in model order (A, B), while the HTMT-family
+# tables come from a matrix's lower triangle (B, A). Both are symmetric, so a
+# pair is put in model order before tables are merged or labeled; otherwise each
+# pair appears twice, once with its correlation and once with its HTMT (#89).
+nomo_validity_orient_pairs <- function(tab, order) {
+  if (!nrow(tab) || !all(c("construct_1", "construct_2") %in% names(tab))) {
+    return(tab)
+  }
+  pos_1 <- match(tab$construct_1, order)
+  pos_2 <- match(tab$construct_2, order)
+  swap <- !is.na(pos_1) & !is.na(pos_2) & pos_1 > pos_2
+  if (any(swap)) {
+    first <- tab$construct_1[swap]
+    tab$construct_1[swap] <- tab$construct_2[swap]
+    tab$construct_2[swap] <- first
+  }
+  tab
+}
+
+
 nomo_validity_discriminant_table <- function(x) {
-  latent <- x$latent_correlations
+  order <- nomo_validity_construct_order(x)
+  latent <- nomo_validity_orient_pairs(x$latent_correlations, order)
   if (nrow(latent)) {
     latent_cols <- intersect(
       c("construct_1", "construct_2", "block", "correlation", "ci_lower", "ci_upper"),
@@ -82,13 +113,13 @@ nomo_validity_discriminant_table <- function(x) {
     names(latent)[names(latent) == "ci_upper"] <- "latent_r_ci_upper"
   }
 
-  h2 <- x$htmt2
+  h2 <- nomo_validity_orient_pairs(x$htmt2, order)
   if (nrow(h2)) {
     h2 <- h2[, c("construct_1", "construct_2", "block", "estimate"), drop = FALSE]
     names(h2)[names(h2) == "estimate"] <- "HTMT2"
   }
 
-  h1 <- x$htmt
+  h1 <- nomo_validity_orient_pairs(x$htmt, order)
   if (nrow(h1)) {
     h1 <- h1[, c("construct_1", "construct_2", "block", "estimate"), drop = FALSE]
     names(h1)[names(h1) == "estimate"] <- "HTMT"
@@ -117,6 +148,9 @@ nomo_validity_discriminant_table <- function(x) {
     !is.finite(primary), "unavailable",
     ifelse(primary > x$htmt_reference, "review", "info")
   )
+  out <- out[order(
+    match(out$construct_1, order), match(out$construct_2, order), out$block
+  ), , drop = FALSE]
 
   tibble::as_tibble(out[, c(
     keys, "latent_r", "latent_r_ci_lower", "latent_r_ci_upper",
@@ -303,6 +337,7 @@ plot.nomo_validity <- function(x, type = c("ave", "discriminant"), ...) {
     )
   }
 
+  dat <- nomo_validity_orient_pairs(dat, nomo_validity_construct_order(x))
   dat$pair <- paste(dat$construct_1, dat$construct_2, sep = " vs ")
   dat$attention <- ifelse(dat$estimate > x$htmt_reference, "review", "info")
   dat$pair <- factor(dat$pair, levels = rev(unique(dat$pair)))
