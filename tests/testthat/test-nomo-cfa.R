@@ -1239,3 +1239,16 @@ test_that("a model its fit indices cannot test says so, and keeps its warnings (
   expect_match(log$observation[log$metric == "degrees_of_freedom"],
                "The model is not identified (df = -1)", fixed = TRUE)
 })
+
+
+test_that("a summary without fit indices says why rather than listing references (#89)", {
+  stuck <- nomo_cfa(nomo_model(list(A = paste0("a", 1:5), B = paste0("b", 1:5))),
+                    data = nomo_demo_continuous, control = list(iter.max = 2))
+  expect_false(stuck$converged)
+  expect_output(print(summary(stuck)), "No fit index is available: the model did not converge.",
+                fixed = TRUE)
+
+  s <- summary(nomo_cfa("A =~ a1 + a2 + a3 + a4", data = nomo_demo_continuous))
+  s$fit_evidence$value <- NA_real_
+  expect_output(print(s), "No fit index is available.", fixed = TRUE)
+})

@@ -164,7 +164,14 @@ print.summary_nomo_cfa <- function(x, ...) {
     )
   }
   indices <- fe[fe$metric %in% c("CFI", "TLI", "RMSEA", "SRMR"), , drop = FALSE]
-  if (nrow(indices)) {
+  if (!any(is.finite(indices$value))) {
+    # Without values the table would list only the references.
+    nomo_present_text(
+      "No fit index is available",
+      if (!isTRUE(x$converged)) ": the model did not converge." else ".",
+      indent = 2L
+    )
+  } else {
     indices$interval <- ifelse(
       indices$metric == "RMSEA",
       nomo_present_ci(value("RMSEA_CI_lower"), value("RMSEA_CI_upper")),
