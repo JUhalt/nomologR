@@ -2,6 +2,17 @@
 
 ## nomologR (development version)
 
+- An invalid choice names the argument it was given for
+  ([\#89](https://github.com/JUhalt/nomologR/issues/89)):
+  `nomo_scores(fit, method = "eap")` now stops with “`method` must be
+  one of”sum”, “mean”, “regression”, or “bartlett”, not “eap”.” instead
+  of base R’s “‘arg’ should be one of …”. This applies to every argument
+  with a fixed set of values, such as `type` in
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html),
+  [`nomo_table()`](https://juhalt.github.io/nomologR/reference/nomo_table.md),
+  and
+  [`nomo_apa_table()`](https://juhalt.github.io/nomologR/reference/nomo_apa_table.md).
+  Partial matching (`type = "load"`) works as before.
 - [`nomo_cfa()`](https://juhalt.github.io/nomologR/reference/nomo_cfa.md)
   says when its fit indices cannot test the model
   ([\#89](https://github.com/JUhalt/nomologR/issues/89)). A one-factor
