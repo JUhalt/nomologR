@@ -88,6 +88,17 @@ nomo_present_notes <- function(notes) {
 }
 
 
+# A noun in the number its count takes, and the count with it: "1 factor",
+# "2 factors", rather than "2 factor(s)".
+nomo_present_noun <- function(n, singular, plural = paste0(singular, "s")) {
+  ifelse(n == 1, singular, plural)
+}
+
+nomo_present_count <- function(n, singular, plural = paste0(singular, "s")) {
+  paste(n, nomo_present_noun(n, singular, plural))
+}
+
+
 nomo_present_number <- function(x, digits = 3L) {
   x <- suppressWarnings(as.numeric(x))
   out <- formatC(x, format = "f", digits = digits)

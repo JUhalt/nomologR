@@ -15,6 +15,14 @@ test_that("numbers, p-values, and intervals follow one format", {
 })
 
 
+test_that("a count takes its noun in the right number", {
+  count <- nomologR:::nomo_present_count
+  expect_identical(count(c(0, 1, 2), "factor"), c("0 factors", "1 factor", "2 factors"))
+  expect_identical(count(1:2, "analysis", "analyses"), c("1 analysis", "2 analyses"))
+  expect_identical(nomologR:::nomo_present_noun(3, "degree"), "degrees")
+})
+
+
 test_that("every flag vocabulary is shown in one wording", {
   flag <- nomologR:::nomo_present_flag
   expect_identical(flag(c("KEEP", "REVIEW", "STRONG REVIEW")), c("", "review", "concern"))

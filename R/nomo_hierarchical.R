@@ -733,10 +733,10 @@ nomo_hierarchical_notes <- function(input, structure, matrices, computed, obs.va
     only_general <- setdiff(structure$items, unlist(structure$groups, use.names = FALSE))
     notes <- add(notes, "structure", "info", sprintf(
       paste(
-        "Bifactor model: %s is measured by all %d items, with %d group",
-        "factor(s) (%s).%s"
+        "Bifactor model: %s is measured by all %d items, with %s",
+        "(%s).%s"
       ),
-      structure$general, length(structure$items), k,
+      structure$general, length(structure$items), nomo_present_count(k, "group factor"),
       paste(names(structure$groups), collapse = ", "),
       if (length(only_general)) {
         sprintf(" Item(s) %s load on the general factor only.", paste(only_general, collapse = ", "))

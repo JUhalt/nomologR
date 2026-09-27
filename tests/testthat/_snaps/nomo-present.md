@@ -242,7 +242,7 @@
       <nomo_reliability> Reliability
       Constructs: 2 | Primary coefficient: model-based omega | Review reference: 0.7
       Omega range: 0.784 to 0.835 | Flags: none
-      Alpha: 2 of 2 construct(s) available as a secondary coefficient
+      Alpha: 2 of 2 constructs available as a secondary coefficient
       Uncertainty: point estimates only; use `ci = "bootstrap"` for interval
       estimates.
       Reference values guide review; they are not pass/fail reliability rules.
@@ -272,8 +272,8 @@
     Output
       <nomo_validity> Convergent and discriminant evidence
       Constructs: 2 | AVE review reference: 0.5 | HTMT-family review reference: 0.85
-      Convergent evidence: 2 review, 0 concern across 2 construct(s)
-      Construct separation: none across 1 pair(s)
+      Convergent evidence: 2 review, 0 concern across 2 constructs
+      Construct separation: none across 1 pair
       No single index is treated as a declaration that a construct is valid or
       invalid.
 
@@ -303,7 +303,7 @@
       print(sc)
     Output
       <nomo_scores> Scores
-      Unit weighting (method: sum) | 2 factor(s) | 473 scored case(s)
+      Unit weighting (method: sum) | 2 factors | 473 scored cases
       
       Score properties (Grice, 2001)
         Factor  Items  Validity  Univocality  Correlational accuracy
@@ -351,7 +351,7 @@
       print(summary(sc))
     Output
       <nomo_scores summary> Scores
-      Unit weighting (method: sum) | 473 scored case(s)
+      Unit weighting (method: sum) | 473 scored cases
       
       Score properties (Grice, 2001)
         Factor  Items  Validity  Univocality  Correlational accuracy
@@ -524,8 +524,8 @@
         C             3           0.799                        0.239
       
       Notes
-        - Bifactor model: G is measured by all 9 items, with 3 group factor(s) (A,
-          B, C).
+        - Bifactor model: G is measured by all 9 items, with 3 group factors (A, B,
+          C).
         - review: A bifactor model will usually fit at least as well as
           correlated-factors or higher-order models of the same items, even when it
           did not generate the data (Reise, 2012), and a higher-order model is a
@@ -609,7 +609,7 @@
         no_b5  -0.029  -0.036  +0.022  +0.042  +44.9  +40.8
       
       Interpretation
-        - `no_b5` is nested within `full` and has 1 more degree(s) of freedom
+        - `no_b5` is nested within `full` and has 1 more degree of freedom
           (additional constraints). Chi-Squared Difference Test: chi-square
           difference = 46.91, df = 1, p < .001. A small p-value indicates that the
           extra constraints are not fully consistent with the data; with large
@@ -642,7 +642,7 @@
         A          AVE     0.497  0.497
         B          AVE     0.434  0.521
         B vs A     HTMT2   0.533  0.533
-        - Loading(s) fixed to zero for b5 keep those item(s) in this composite; the
+        - The loading fixed to zero for b5 keeps that item in this composite; the
           coefficient does not describe a shortened scale.
       
       No model was selected automatically. Difference tests, changes in fit,
@@ -714,7 +714,7 @@
       print(nomo_partial(level = "scalar", syntax = "ag3 ~ 1", rationale = "Anticipated mode difference."))
     Output
       <nomo_partial> Partial invariance releases
-      1 researcher-specified release(s)
+      1 researcher-specified release
       
         - P1 (scalar): ag3 ~ 1. Anticipated mode difference.
       
@@ -726,7 +726,7 @@
       print(h)
     Output
       <nomo_hypotheses> Theory-specified relations
-      3 theory-specified relation(s)
+      3 theory-specified relations
       
       Every relation is on the standardized scale.
         ID  Relation                       Prediction  Region         Origin
