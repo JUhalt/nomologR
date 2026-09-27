@@ -130,7 +130,7 @@ plot.nomo_hierarchical <- function(x, type = c("variance", "loadings"), ...) {
       ggplot2::ggplot(long, ggplot2::aes(x = loading, y = item, shape = source)) +
         ggplot2::geom_vline(xintercept = 0, linetype = 2) +
         ggplot2::geom_point(size = 2.6) +
-        ggplot2::labs(
+        nomo_plot_labs(
           title = "Standardized general and group loadings",
           subtitle = sprintf("%s model, general factor: %s",
                              nomo_hierarchical_structure_label(x), x$general),
@@ -170,7 +170,7 @@ plot.nomo_hierarchical <- function(x, type = c("variance", "loadings"), ...) {
     )) +
     ggplot2::scale_x_continuous(limits = c(0, 1), expand = c(0, 0)) +
     ggplot2::guides(fill = ggplot2::guide_legend(reverse = TRUE)) +
-    ggplot2::labs(
+    nomo_plot_labs(
       title = "Where each composite's variance comes from",
       subtitle = paste(
         "General = omega hierarchical;",

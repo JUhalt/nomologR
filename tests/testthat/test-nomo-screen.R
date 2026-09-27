@@ -754,8 +754,8 @@ test_that("continuous items are drawn as histograms, not a bar per value (#89)",
   mixed <- nomo_screen(data.frame(cont = nomo_demo_continuous$a1, disc = rep(1:5, 100)))
   p_mixed <- plot(mixed, type = "responses")
   expect_identical(levels(p_mixed$data$item), "disc")
-  expect_match(p_mixed$labels$caption, "Continuous items are not shown here: cont", fixed = TRUE)
-  expect_match(p_mixed$labels$caption, 'items = c("cont")', fixed = TRUE)
+  expect_match(plot_text(p_mixed$labels$caption), "Continuous items are not shown here: cont", fixed = TRUE)
+  expect_match(plot_text(p_mixed$labels$caption), 'items = c("cont")', fixed = TRUE)
   p_cont <- plot(mixed, type = "responses", items = "cont")
   expect_true(inherits(p_cont$layers[[1]]$stat, "StatBin"))
 

@@ -336,7 +336,7 @@ plot.nomo_network <- function(
         ggplot2::scale_x_continuous(
           expand = ggplot2::expansion(mult = c(.02, .04))
         ) +
-        ggplot2::labs(
+        nomo_plot_labs(
           title = "Theory-specified nomological effects",
           subtitle = paste(
             "Points are estimates; thin lines are confidence intervals.",
@@ -383,7 +383,7 @@ plot.nomo_network <- function(
       ) +
         ggplot2::geom_point(size = 3.4) +
         ggplot2::scale_x_discrete(drop = FALSE) +
-        ggplot2::labs(
+        nomo_plot_labs(
           title = "Relation-level nomological evidence",
           subtitle = paste(
             "Each theory-specified relation is shown at its current",
@@ -464,7 +464,7 @@ plot.nomo_network <- function(
           breaks = NULL,
           expand = ggplot2::expansion(mult = .25)
         ) +
-        ggplot2::labs(
+        nomo_plot_labs(
           title = "Nomological-network global fit evidence",
           subtitle = paste(
             "Points are observed values; x-marks are configured teaching",
@@ -532,7 +532,7 @@ plot.nomo_network <- function(
       expand = ggplot2::expansion(mult = c(.12, .20))
     ) +
     ggplot2::coord_cartesian(clip = "off") +
-    ggplot2::labs(
+    nomo_plot_labs(
       title = "Primary versus validation nomological effects",
       subtitle = "The dashed identity line represents identical estimates across samples.",
       x = "Primary estimate",

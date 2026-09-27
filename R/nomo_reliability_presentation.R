@@ -314,7 +314,7 @@ plot.nomo_reliability <- function(x, ...) {
       labels = levels_y
     ) +
     ggplot2::coord_cartesian(xlim = xlim) +
-    ggplot2::labs(
+    nomo_plot_labs(
       title = "Reliability evidence",
       subtitle = if (any(is.finite(dat$ci_lower) & is.finite(dat$ci_upper))) {
         paste0(

@@ -1061,8 +1061,8 @@ test_that("network presentation methods return stable ggplot objects", {
   expect_s3_class(p_fit, "ggplot")
   expect_s3_class(p_rep, "ggplot")
 
-  expect_match(p_effects$labels$title, "Theory-specified")
-  expect_match(p_rep$labels$title, "validation")
+  expect_match(plot_text(p_effects$labels$title), "Theory-specified")
+  expect_match(plot_text(p_rep$labels$title), "validation")
 })
 
 # ---- consolidated from test-nomo-network-hardening.R ----

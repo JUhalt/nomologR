@@ -727,6 +727,16 @@ test_that("all CFA plot views contain interpretable data", {
 
   expect_equal(nrow(p_load$data), nrow(out$standardized_loadings))
   expect_true(all(as.character(p_fit$data$metric) %in% c("CFI", "TLI", "RMSEA", "SRMR")))
+  # Indices near 1 and near 0 get their own panels, and a legend with one
+  # entry is not drawn (#89).
+  fit_layout <- ggplot2::ggplot_build(p_fit)$layout$layout
+  expect_identical(nrow(fit_layout), 2L)
+  one_flag <- out
+  one_flag$fit_evidence$attention <- "info"
+  expect_null(ggplot2::get_guide_data(plot(one_flag, type = "fit"), "shape"))
+  two_flags <- one_flag
+  two_flags$fit_evidence$attention[two_flags$fit_evidence$metric == "SRMR"] <- "review"
+  expect_false(is.null(ggplot2::get_guide_data(plot(two_flags, type = "fit"), "shape")))
   expect_equal(nrow(p_res$data), choose(nrow(out$residual_matrix), 2))
   expect_lte(nrow(p_mi$data), 5)
 })

@@ -1057,7 +1057,7 @@ test_that("closeout C: EFA presentation covers nomo_factors handoff and oblique 
   p <- plot(efa, type = "pattern")
   expect_s3_class(p, "ggplot")
   expect_match(
-    p$labels$subtitle,
+    plot_text(p$labels$subtitle),
     "Oblique solution",
     fixed = TRUE
   )
