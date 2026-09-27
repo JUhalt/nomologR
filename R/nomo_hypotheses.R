@@ -431,7 +431,7 @@ nomo_hypotheses_present_table <- function(hypotheses) {
 #' @export
 print.nomo_hypotheses <- function(x, ...) {
   nomo_present_header("nomo_hypotheses", "Theory-specified relations")
-  nomo_present_facts(sprintf("%d theory-specified relation(s)", x$n))
+  nomo_present_facts(nomo_present_count(x$n, "theory-specified relation"))
   cat("\n")
   nomo_hypotheses_present_table(x$hypotheses)
 

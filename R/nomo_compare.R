@@ -465,12 +465,14 @@ nomo_compare_interpretation <- function(row) {
   relation_text <- switch(
     row$relation,
     more_constrained = sprintf(
-      "`%s` is nested within `%s` and has %s more degree(s) of freedom (additional constraints).",
-      row$model, row$reference, format(row$df_difference, trim = TRUE)
+      "`%s` is nested within `%s` and has %s more %s of freedom (additional constraints).",
+      row$model, row$reference, format(row$df_difference, trim = TRUE),
+      nomo_present_noun(row$df_difference, "degree")
     ),
     less_constrained = sprintf(
-      "`%s` has %s fewer degree(s) of freedom than `%s` (it estimates additional parameters), and `%s` is nested within it.",
-      row$model, format(abs(row$df_difference), trim = TRUE), row$reference, row$reference
+      "`%s` has %s fewer %s of freedom than `%s` (it estimates additional parameters), and `%s` is nested within it.",
+      row$model, format(abs(row$df_difference), trim = TRUE),
+      nomo_present_noun(abs(row$df_difference), "degree"), row$reference, row$reference
     ),
     equivalent = sprintf("`%s` and `%s` are equivalent models.", row$model, row$reference),
     non_nested = sprintf("`%s` and `%s` are not nested.", row$model, row$reference),
@@ -547,9 +549,11 @@ nomo_compare_evidence <- function(label, model, guidance) {
   zero_note <- function(construct) {
     items <- zero$item[zero$factor == construct]
     if (!length(items)) return("")
+    one <- length(items) == 1L
     paste0(
-      "Loading(s) fixed to zero for ", paste(items, collapse = ", "),
-      " keep those item(s) in this composite; the coefficient does not describe a shortened scale."
+      ifelse(one, "The loading", "Loadings"), " fixed to zero for ", paste(items, collapse = ", "),
+      ifelse(one, " keeps that item", " keep those items"),
+      " in this composite; the coefficient does not describe a shortened scale."
     )
   }
 

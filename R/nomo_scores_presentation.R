@@ -20,8 +20,8 @@ print.nomo_scores <- function(x, digits = 3, ...) {
   nomo_present_facts(c(
     sprintf("%s weighting (method: %s)",
             if (identical(x$weighting, "unit")) "Unit" else "Model", x$method),
-    sprintf("%d factor(s)", nrow(x$diagnostics)),
-    sprintf("%d scored case(s)", nrow(x$scores))
+    nomo_present_count(nrow(x$diagnostics), "factor"),
+    nomo_present_count(nrow(x$scores), "scored case")
   ))
 
   nomo_scores_present_properties(x$diagnostics, digits)
@@ -76,7 +76,7 @@ print.summary.nomo_scores <- function(x, digits = 3, ...) {
   nomo_present_facts(c(
     sprintf("%s weighting (method: %s)",
             if (identical(x$weighting, "unit")) "Unit" else "Model", x$method),
-    sprintf("%d scored case(s)", x$n_scored)
+    nomo_present_count(x$n_scored, "scored case")
   ))
 
   nomo_scores_present_properties(x$diagnostics, digits)

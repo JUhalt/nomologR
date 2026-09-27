@@ -116,7 +116,7 @@ nomo_partial <- function(level, syntax, rationale) {
 #' @export
 print.nomo_partial <- function(x, ...) {
   nomo_present_header("nomo_partial", "Partial invariance releases")
-  nomo_present_facts(sprintf("%d researcher-specified release(s)", x$n))
+  nomo_present_facts(nomo_present_count(x$n, "researcher-specified release"))
   rel <- x$releases
   if (nrow(rel)) {
     cat("\n")

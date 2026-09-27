@@ -112,8 +112,8 @@ print.nomo_reliability <- function(x, ...) {
 
   if (isTRUE(x$include_alpha)) {
     nomo_present_facts(sprintf(
-      "Alpha: %d of %d construct(s) available as a secondary coefficient",
-      sum(x$alpha_status$available), nrow(x$alpha_status)
+      "Alpha: %d of %s available as a secondary coefficient",
+      sum(x$alpha_status$available), nomo_present_count(nrow(x$alpha_status), "construct")
     ))
   }
 

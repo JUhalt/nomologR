@@ -171,14 +171,14 @@ print.nomo_validity <- function(x, ...) {
 
   if (nrow(convergent)) {
     nomo_present_facts(sprintf(
-      "Convergent evidence: %s across %d construct(s)",
-      nomo_present_flag_counts(convergent$signal), nrow(convergent)
+      "Convergent evidence: %s across %s",
+      nomo_present_flag_counts(convergent$signal), nomo_present_count(nrow(convergent), "construct")
     ))
   }
   if (nrow(discriminant)) {
     nomo_present_facts(sprintf(
-      "Construct separation: %s across %d pair(s)",
-      nomo_present_flag_counts(discriminant$signal), nrow(discriminant)
+      "Construct separation: %s across %s",
+      nomo_present_flag_counts(discriminant$signal), nomo_present_count(nrow(discriminant), "pair")
     ))
   } else if (any(x$htmt_status$requested & !x$htmt_status$available)) {
     nomo_present_text(
