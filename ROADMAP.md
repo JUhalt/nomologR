@@ -212,7 +212,7 @@ release. It carries the 1.0 feature scope selected in
 candidates that follow change nothing but what review finds.
 
 - [x] [#89](https://github.com/JUhalt/nomologR/issues/89) Console output, plots, and report tables redesigned.
-- [x] [#113](https://github.com/JUhalt/nomologR/issues/113) The historical record in `nomo_methods()` and the research-basis timeline (#116, #119); within-scale item-rest correlations (#123); APA tables for validity evidence (#124).
+- [x] [#113](https://github.com/JUhalt/nomologR/issues/113) The historical record in `nomo_methods()` and the research-basis timeline (#116, #119); within-scale item review (#123, #127); APA tables for validity evidence (#124).
 - [x] [#60](https://github.com/JUhalt/nomologR/issues/60) "From content review to empirical screening" and `nomo_demo_walkthrough` (#112); "Teaching with nomologR" (#118).
 - [x] [#114](https://github.com/JUhalt/nomologR/issues/114) Returned fields named in every help page (#115); `nomo_missing(fit)` (#122).
 

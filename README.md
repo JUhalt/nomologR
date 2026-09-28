@@ -978,8 +978,8 @@ is about how the package presents itself and what it teaches:
 - two articles, "Teaching with nomologR" and "From content review to empirical
   screening", with the walkthrough data shared with `contentvalidR`
   ([#60](https://github.com/JUhalt/nomologR/issues/60));
-- APA tables for convergent and discriminant evidence, and within-scale
-  item-rest correlations in the item audit;
+- APA tables for convergent and discriminant evidence, and an item audit that
+  reviews each item within its declared scale;
 - every help page naming the fields of the object it returns
   ([#114](https://github.com/JUhalt/nomologR/issues/114)).
 

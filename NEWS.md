@@ -26,10 +26,12 @@ jointly with `contentvalidR` (#53). With it, the 1.0 feature scope is complete
 **No computed estimate changes.** Compared value by value with 0.3.0 across 22
 analyses spanning every stage, every estimate is identical. What differs:
 
-- With two or more declared scales, `nomo_screen()` adds within-scale item-rest
-  correlations (`scale`, `scale_item_rest_r`, `scale_item_rest_n`) and reviews
-  items on them, so which items are flagged can change. `corrected_item_rest_r`
-  is unchanged.
+- With two or more declared scales, `nomo_screen()` reviews each item within
+  its own scale: its item-rest correlation against the rest of that scale
+  (`scale`, `scale_item_rest_r`, `scale_item_rest_n`), and its negative
+  inter-item correlations only with items of the same scale
+  (`scale_negative_interitem_n`). Which items are flagged can change.
+  `corrected_item_rest_r` and `negative_interitem_n` are unchanged.
 - In a multi-group `nomo_validity()` result, `latent_correlations$block` names
   the groups by label rather than by number.
 - A CFA that is not identified (negative degrees of freedom) is logged as a
