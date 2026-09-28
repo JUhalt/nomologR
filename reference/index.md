@@ -152,3 +152,6 @@ compare package evidence with the known truth.
   : Simulated five-category ordered item data
 - [`nomo_demo_network`](https://juhalt.github.io/nomologR/reference/nomo_demo_network.md)
   : Simulated multi-construct validation study
+- [`nomo_demo_walkthrough`](https://juhalt.github.io/nomologR/reference/nomo_demo_walkthrough.md)
+  [`nomo_demo_walkthrough_items`](https://juhalt.github.io/nomologR/reference/nomo_demo_walkthrough.md)
+  : Shared walkthrough data from content review to empirical screening

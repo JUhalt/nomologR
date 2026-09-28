@@ -16,6 +16,8 @@
   nomologR](https://juhalt.github.io/nomologR/articles/nomological-network.md):
 - [Guided workflow with
   nomo_run()](https://juhalt.github.io/nomologR/articles/guided-workflow.md):
+- [From content review to empirical
+  screening](https://juhalt.github.io/nomologR/articles/content-review.md):
 - [Archiving a nomologR workflow with
   nomo_report()](https://juhalt.github.io/nomologR/articles/reproducible-report.md):
 

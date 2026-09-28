@@ -2,6 +2,40 @@
 
 ## nomologR (development version)
 
+- A new article, “From content review to empirical screening”, carries
+  the items a `contentvalidR` review carried forward through the
+  empirical screen, on the shared teaching data of the joint walkthrough
+  ([\#60](https://github.com/JUhalt/nomologR/issues/60),
+  [\#53](https://github.com/JUhalt/nomologR/issues/53)). It shows the
+  two stages disagreeing, which is the reason the pair exists. `EF4`
+  passes content review and carries almost no common variance. `EF3` is
+  flagged empirically but is the only item covering part of the domain.
+  `TF4` loads on both facets, and `TF6` is not invariant across cohorts.
+  The article builds without `contentvalidR` installed.
+- New teaching data `nomo_demo_walkthrough` and
+  `nomo_demo_walkthrough_items`: 400 simulated responses to twelve Study
+  Persistence items in two cohorts, with each item’s built-in role
+  ([\#60](https://github.com/JUhalt/nomologR/issues/60)). They are
+  `contentvalidR`’s walkthrough files, copied unchanged from its v0.9.0
+  release with their git blob hashes. `contentvalidR`’s generator is in
+  `data-raw/walkthrough/`.
+- The item audit explains a negative item-rest correlation for an item
+  declared reverse-keyed, by a `contentvalidR` handoff or by `reverse`
+  ([\#60](https://github.com/JUhalt/nomologR/issues/60)). It says the
+  sign is what such an item shows before recoding, and gives the
+  item-rest correlation computed on a copy recoded as declared. If the
+  recoded correlation is still negative, it says the keying does not
+  explain it.
+  [`nomo_run()`](https://juhalt.github.io/nomologR/reference/nomo_run.md)
+  passes a handoff’s declared keying to each scale’s audit for this. The
+  data, the returned correlation, and the flag are unchanged; nomologR
+  never recodes data.
+- The measurement-invariance summary lists the ten largest
+  equality-constraint diagnostics across all levels. It had listed the
+  first ten in level order, so the metric level filled the table, and a
+  scalar-level strain such as an intercept never appeared. On
+  `nomo_demo_network`, the known `ag3` intercept (score 61) had been
+  hidden behind a metric loading (score 5).
 - Three edge cases read better
   ([\#89](https://github.com/JUhalt/nomologR/issues/89)). The CFA
   summary of a model that did not converge says “No fit index is

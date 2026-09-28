@@ -2,6 +2,7 @@ pandoc: 3.8.3
 pkgdown: 2.2.1
 pkgdown_sha: ~
 articles:
+  content-review: content-review.html
   exploratory-workflow: exploratory-workflow.html
   guided-workflow: guided-workflow.html
   hierarchical-models: hierarchical-models.html
@@ -12,7 +13,7 @@ articles:
   reproducible-report: reproducible-report.html
   research-basis: research-basis.html
   scoring: scoring.html
-last_built: 2026-09-28T01:52Z
+last_built: 2026-09-28T02:44Z
 urls:
   reference: https://juhalt.github.io/nomologR/reference
   article: https://juhalt.github.io/nomologR/articles
