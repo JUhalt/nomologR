@@ -350,9 +350,10 @@ certification and CRAN submission.
 
 # v1.0.0 — Joint Stable Release with contentvalidR
 
-**Status:** In progress. Scope proposed in
-[\#113](https://github.com/JUhalt/nomologR/issues/113) and awaiting the
-maintainer’s decisions. The joint criteria and plan are in
+**Status:** Feature scope complete (2026-09-28). The scope was set in
+[\#113](https://github.com/JUhalt/nomologR/issues/113), where the
+maintainer delegated the remaining decisions to be made on what the
+literature says. What remains is the release sequence in
 [\#53](https://github.com/JUhalt/nomologR/issues/53).
 
 1.0.0 is the stability promise in
@@ -366,23 +367,38 @@ article “From content review to empirical screening”, on the shared
 walkthrough data.
 
 [\#89](https://github.com/JUhalt/nomologR/issues/89) The presentation
-pass for console output, plots, and reports. Done apart from the
-maintainer’s visual sign-off.
+pass for console output, plots, and reports. The output gallery reports
+no faults across 35 console outputs and 33 plots.
 
 [\#114](https://github.com/JUhalt/nomologR/issues/114) An API audit
-before the freeze: returned fields named in every help page, and
-argument names.
+before the freeze: returned fields named in every help page (#115), and
+[`nomo_missing()`](https://juhalt.github.io/nomologR/reference/nomo_missing.md)
+takes `fit` like the other post-fit functions (#122).
 
 [\#113](https://github.com/JUhalt/nomologR/issues/113) The historical
 record: when each method was introduced, and what replaced each
-historical one, drawn into a timeline in the research-basis article.
+historical one, drawn into a timeline in the research-basis article
+(#116, \#119).
 
 [\#113](https://github.com/JUhalt/nomologR/issues/113) Decisions before
-the freeze: returned flag vocabularies, the item audit’s scales and
-keying, and the two experimental parts of the interface.
+the freeze, made on the literature:
+
+- Both returned flag vocabularies are kept; the display wording is
+  already unified.
+- With two or more declared scales, the item audit reads each item’s
+  item-rest correlation within its own scale (#123).
+- Declared keying stays as coded.
+- [`nomo_missing()`](https://juhalt.github.io/nomologR/reference/nomo_missing.md)’s
+  flag rule and
+  [`nomo_apa_table()`](https://juhalt.github.io/nomologR/reference/nomo_apa_table.md)’s
+  layouts become stable at the release candidate.
+
+[\#113](https://github.com/JUhalt/nomologR/issues/113) APA tables for
+convergent and discriminant evidence (#124).
 
 [\#39](https://github.com/JUhalt/nomologR/issues/39) The CRAN outcome
-for 0.3.0.
+for 0.3.0, which is in CRAN’s queue for new submissions. `contentvalidR`
+0.4.0 was accepted on 2026-09-28, which starts its update interval.
 
 [\#53](https://github.com/JUhalt/nomologR/issues/53) Release candidates,
 fixtures from contentvalidR’s RC, the compatibility table, and a

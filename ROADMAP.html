@@ -221,14 +221,22 @@
 </ul></div>
 <div class="section level1">
 <h1 id="v100--joint-stable-release-with-contentvalidr">v1.0.0 — Joint Stable Release with contentvalidR<a class="anchor" aria-label="anchor" href="#v100--joint-stable-release-with-contentvalidr"></a></h1>
-<p><strong>Status:</strong> In progress. Scope proposed in <a href="https://github.com/JUhalt/nomologR/issues/113" class="external-link">#113</a> and awaiting the maintainer’s decisions. The joint criteria and plan are in <a href="https://github.com/JUhalt/nomologR/issues/53" class="external-link">#53</a>.</p>
+<p><strong>Status:</strong> Feature scope complete (2026-09-28). The scope was set in <a href="https://github.com/JUhalt/nomologR/issues/113" class="external-link">#113</a>, where the maintainer delegated the remaining decisions to be made on what the literature says. What remains is the release sequence in <a href="https://github.com/JUhalt/nomologR/issues/53" class="external-link">#53</a>.</p>
 <p>1.0.0 is the stability promise in <code><a href="reference/nomologR-package.html">?nomologR</a></code>. After it, changes to existing behavior need a deprecation cycle, and additions stay free. So anything that would change existing behavior is decided before the freeze. Anything additive can wait for 1.x.</p>
 <ul class="task-list"><li><label><input type="checkbox" checked><a href="https://github.com/JUhalt/nomologR/issues/60" class="external-link">#60</a> The companion article “From content review to empirical screening”, on the shared walkthrough data.</label></li>
-<li><label><input type="checkbox"><a href="https://github.com/JUhalt/nomologR/issues/89" class="external-link">#89</a> The presentation pass for console output, plots, and reports. Done apart from the maintainer’s visual sign-off.</label></li>
-<li><label><input type="checkbox"><a href="https://github.com/JUhalt/nomologR/issues/114" class="external-link">#114</a> An API audit before the freeze: returned fields named in every help page, and argument names.</label></li>
-<li><label><input type="checkbox"><a href="https://github.com/JUhalt/nomologR/issues/113" class="external-link">#113</a> The historical record: when each method was introduced, and what replaced each historical one, drawn into a timeline in the research-basis article.</label></li>
-<li><label><input type="checkbox"><a href="https://github.com/JUhalt/nomologR/issues/113" class="external-link">#113</a> Decisions before the freeze: returned flag vocabularies, the item audit’s scales and keying, and the two experimental parts of the interface.</label></li>
-<li><label><input type="checkbox"><a href="https://github.com/JUhalt/nomologR/issues/39" class="external-link">#39</a> The CRAN outcome for 0.3.0.</label></li>
+<li><label><input type="checkbox" checked><a href="https://github.com/JUhalt/nomologR/issues/89" class="external-link">#89</a> The presentation pass for console output, plots, and reports. The output gallery reports no faults across 35 console outputs and 33 plots.</label></li>
+<li><label><input type="checkbox" checked><a href="https://github.com/JUhalt/nomologR/issues/114" class="external-link">#114</a> An API audit before the freeze: returned fields named in every help page (#115), and <code><a href="reference/nomo_missing.html">nomo_missing()</a></code> takes <code>fit</code> like the other post-fit functions (#122).</label></li>
+<li><label><input type="checkbox" checked><a href="https://github.com/JUhalt/nomologR/issues/113" class="external-link">#113</a> The historical record: when each method was introduced, and what replaced each historical one, drawn into a timeline in the research-basis article (#116, #119).</label></li>
+<li>
+<label><input type="checkbox" checked><a href="https://github.com/JUhalt/nomologR/issues/113" class="external-link">#113</a> Decisions before the freeze, made on the literature:</label>
+<ul><li>Both returned flag vocabularies are kept; the display wording is already unified.</li>
+<li>With two or more declared scales, the item audit reads each item’s item-rest correlation within its own scale (#123).</li>
+<li>Declared keying stays as coded.</li>
+<li>
+<code><a href="reference/nomo_missing.html">nomo_missing()</a></code>’s flag rule and <code><a href="reference/nomo_apa_table.html">nomo_apa_table()</a></code>’s layouts become stable at the release candidate.</li>
+</ul></li>
+<li><label><input type="checkbox" checked><a href="https://github.com/JUhalt/nomologR/issues/113" class="external-link">#113</a> APA tables for convergent and discriminant evidence (#124).</label></li>
+<li><label><input type="checkbox"><a href="https://github.com/JUhalt/nomologR/issues/39" class="external-link">#39</a> The CRAN outcome for 0.3.0, which is in CRAN’s queue for new submissions. <code>contentvalidR</code> 0.4.0 was accepted on 2026-09-28, which starts its update interval.</label></li>
 <li><label><input type="checkbox"><a href="https://github.com/JUhalt/nomologR/issues/53" class="external-link">#53</a> Release candidates, fixtures from contentvalidR’s RC, the compatibility table, and a same-day release with release notes linking each other. Both packages number a candidate the same way (decided 2026-09-28): DESCRIPTION <code>0.99.0</code> and a git tag <code>v1.0.0-rc.N</code>, as a tag only, with no GitHub release, so R-universe does not publish it. CRAN asks for updates no more often than every one to two months, so the joint submission follows the later of the two packages’ first acceptances by that interval.</label></li>
 </ul></div>
 <div class="section level1">
