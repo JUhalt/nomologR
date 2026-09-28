@@ -966,9 +966,10 @@ The detailed release plan lives in
 
 ### Current release: `v0.9.0`
 
-`v0.9.0` is the last minor release before `v1.0.0`, and with it the 1.0 feature
-scope is complete ([#113](https://github.com/JUhalt/nomologR/issues/113)). It
-is about how the package presents itself and what it teaches:
+`v0.9.0` is the last minor release before `v1.0.0`, whose release candidate is
+planned for 2026-10-17
+([#113](https://github.com/JUhalt/nomologR/issues/113)). It is about how the
+package presents itself and what it teaches:
 
 - redesigned console output, plots, and report tables, with one flag wording
   throughout ([#89](https://github.com/JUhalt/nomologR/issues/89));

@@ -1,8 +1,9 @@
 # nomologR 0.9.0
 
 nomologR 0.9.0 is the last minor release before 1.0.0, the stable release planned
-jointly with `contentvalidR` (#53). With it, the 1.0 feature scope is complete
-(#113). It is about how the package presents itself and what it teaches:
+jointly with `contentvalidR` (#53). It carries the 1.0 scope selected so far
+(#113); what is added before the release candidate on 2026-10-17 is recorded
+there. It is about how the package presents itself and what it teaches:
 
 - **Output that reads well.** Every `print()` and `summary()` is redesigned
   (#89): aligned tables with the columns that matter, explanations in full,

@@ -206,10 +206,9 @@ be recorded in [#39](https://github.com/JUhalt/nomologR/issues/39).
 
 # v0.9.0 — Before 1.0: Presentation, the Historical Record, and Teaching
 
-**Status:** Prepared 2026-09-28, pending the maintainer's approval to tag and
-release. It carries the 1.0 feature scope selected in
-[#113](https://github.com/JUhalt/nomologR/issues/113), so the release
-candidates that follow change nothing but what review finds.
+**Status:** Released 2026-09-28, with the maintainer's approval. It carries the
+1.0 scope selected in [#113](https://github.com/JUhalt/nomologR/issues/113) up
+to that date.
 
 - [x] [#89](https://github.com/JUhalt/nomologR/issues/89) Console output, plots, and report tables redesigned.
 - [x] [#113](https://github.com/JUhalt/nomologR/issues/113) The historical record in `nomo_methods()` and the research-basis timeline (#116, #119); within-scale item review (#123, #127); APA tables for validity evidence (#124).
@@ -218,11 +217,13 @@ candidates that follow change nothing but what review finds.
 
 # v1.0.0 — Joint Stable Release with contentvalidR
 
-**Status:** Feature scope complete (2026-09-28). The scope was set in
+**Status:** Release candidate planned for 2026-10-17, the same day as
+`contentvalidR`'s (decided by the maintainer on 2026-09-28). The scope is set in
 [#113](https://github.com/JUhalt/nomologR/issues/113), where the maintainer
-delegated the remaining decisions to be made on what the literature says. What
-remains is the release sequence in
-[#53](https://github.com/JUhalt/nomologR/issues/53).
+delegated decisions to what the literature says. On 2026-09-28 the maintainer
+asked that the gaps social-science scale developers meet be closed before the
+candidate, starting with reliability-corrected single indicators. The release
+sequence is in [#53](https://github.com/JUhalt/nomologR/issues/53).
 
 1.0.0 is the stability promise in `?nomologR`. After it, changes to existing
 behavior need a deprecation cycle, and additions stay free. So anything that
