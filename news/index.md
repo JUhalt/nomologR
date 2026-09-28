@@ -2,6 +2,18 @@
 
 ## nomologR (development version)
 
+- A new article, “Teaching with nomologR”, collects exercises built on
+  the teaching datasets’ known answers. Students find the weak and
+  cross-loading items, check whether the factor-retention criteria
+  agree, compare alpha with omega, handle ordered categories, and tell a
+  structural path from a correlation (including why a path that is not
+  significant does not show that it is negligible). They also find the
+  non-invariant intercept and see where content review and the empirical
+  screen disagree. Each answer is stated from the population model, not
+  from one run. The article also suggests how to use teaching and
+  research modes, decision logs, reports, and
+  [`nomo_methods()`](https://juhalt.github.io/nomologR/reference/nomo_methods.md)
+  in a course.
 - [`nomo_methods()`](https://juhalt.github.io/nomologR/reference/nomo_methods.md)
   records how practice changed
   ([\#113](https://github.com/JUhalt/nomologR/issues/113)). `introduced`

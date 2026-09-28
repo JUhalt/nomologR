@@ -20,6 +20,8 @@
   screening](https://juhalt.github.io/nomologR/articles/content-review.md):
 - [Archiving a nomologR workflow with
   nomo_report()](https://juhalt.github.io/nomologR/articles/reproducible-report.md):
+- [Teaching with
+  nomologR](https://juhalt.github.io/nomologR/articles/teaching.md):
 
 ### Research basis
 
