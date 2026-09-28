@@ -983,6 +983,6 @@
           rationales
         Full entries and references: nomo_methods(x).
       
-      Component decision and evidence-log rows retained: 97; see nomo_table(x,
+      Component decision and evidence-log rows retained: 94; see nomo_table(x,
       "component_log").
 

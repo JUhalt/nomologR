@@ -931,7 +931,8 @@ nomo_methods_registry <- function() {
       "Correlation of each item with the sum of the remaining items in its set.",
       paste(
         "Depends on which items are in the set, so it changes as the item pool",
-        "changes; descriptive evidence rather than a retention rule."
+        "changes; with two or more declared scales it is computed within each",
+        "item's scale. Descriptive evidence rather than a retention rule."
       ),
       "nomo_screen()", "nomologR",
       c("clark_watson_2019", "nunnally_bernstein_1994")

@@ -76,18 +76,27 @@ print.summary_nomo_screen <- function(x, ...) {
   review$type <- ifelse(review$constant %in% TRUE, "constant",
                         sub("^numeric_", "", review$item_type))
   review$flag <- nomo_present_flag(review$attention)
+  review$item_rest <- nomo_screen_review_item_rest(review)
   percent <- function(v) ifelse(is.finite(v), sprintf("%.1f%%", 100 * v), "-")
   nomo_present_section("Item review")
   nomo_present_table(
     review,
-    c("Item" = "item", "Type" = "type", "Missing" = "pct_missing",
-      "Top share" = "mode_prop", "Item-rest r" = "corrected_item_rest_r",
-      "Flag" = "flag"),
+    c("Item" = "item", "Scale" = "scale", "Type" = "type",
+      "Missing" = "pct_missing", "Top share" = "mode_prop",
+      "Item-rest r" = "item_rest", "Flag" = "flag"),
     formats = list(pct_missing = percent, mode_prop = percent),
     more = "nomo_table(x, \"items\")"
   )
   nomo_present_text(
-    "Top share is the proportion of responses in the most common category.",
+    c(
+      "Top share is the proportion of responses in the most common category.",
+      if (any(!is.na(review[["scale_item_rest_r"]]))) {
+        paste(
+          "Item-rest r is within the item's scale; the pooled value is",
+          "kept as corrected_item_rest_r."
+        )
+      }
+    ),
     indent = 2L
   )
 
@@ -513,11 +522,21 @@ nomo_screen_plot_evidence <- function(x, items) {
 }
 
 
+# The item-rest value a review reads: within the item's scale when two or more
+# scales were declared, otherwise the pooled one.
+nomo_screen_review_item_rest <- function(review) {
+  within <- review[["scale_item_rest_r"]]
+  if (is.null(within)) return(review$corrected_item_rest_r)
+  ifelse(is.na(within), review$corrected_item_rest_r, within)
+}
+
+
 nomo_screen_plot_item_rest <- function(x, items, show_values) {
   review <- nomo_screen_item_review(x)
+  review$item_rest <- nomo_screen_review_item_rest(review)
   dat <- review[
     review$item %in% items &
-      !is.na(review$corrected_item_rest_r),
+      !is.na(review$item_rest),
     ,
     drop = FALSE
   ]
@@ -560,7 +579,7 @@ nomo_screen_plot_item_rest <- function(x, items, show_values) {
     dat,
     ggplot2::aes(
       x = item,
-      y = corrected_item_rest_r,
+      y = item_rest,
       fill = item_rest_attention
     )
   ) +
@@ -591,12 +610,11 @@ nomo_screen_plot_item_rest <- function(x, items, show_values) {
     ggplot2::theme_minimal(base_size = 11)
 
   reference <- x$guidance$item_total_reference
+  has_reference <- is.numeric(reference) &&
+    length(reference) == 1L &&
+    is.finite(reference)
 
-  if (
-    is.numeric(reference) &&
-      length(reference) == 1L &&
-      is.finite(reference)
-  ) {
+  if (has_reference) {
     p <- p + ggplot2::geom_hline(
       yintercept = reference,
       linetype = 2,
@@ -605,13 +623,18 @@ nomo_screen_plot_item_rest <- function(x, items, show_values) {
   }
 
   if (isTRUE(show_values)) {
-    p <- p + ggplot2::geom_text(
-      ggplot2::aes(
-        label = sprintf("%.2f", corrected_item_rest_r)
-      ),
-      hjust = -0.15,
-      size = 3
-    )
+    # The values sit in a column past the longest bar and the reference line.
+    # Beside each bar, a flagged item's value, just under the reference, was
+    # drawn across the line.
+    label_at <- max(c(dat$item_rest, if (has_reference) reference, 0)) + 0.03
+    p <- p +
+      ggplot2::geom_text(
+        ggplot2::aes(label = sprintf("%.2f", item_rest)),
+        y = label_at,
+        hjust = 0,
+        size = 3
+      ) +
+      ggplot2::expand_limits(y = label_at + 0.08)
   }
 
   p
@@ -915,7 +938,7 @@ utils::globalVariables(c(
   "metric_label",
   "item",
   "severity",
-  "corrected_item_rest_r",
+  "item_rest",
   "attention",
   "item_rest_attention",
   "r",
