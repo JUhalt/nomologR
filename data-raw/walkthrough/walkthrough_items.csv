@@ -1,0 +1,13 @@
+"item","facet","stem","role","reverse_worded"
+"EF1","EF","When my coursework gets boring, I keep working on it anyway.","ordinary: the panel places it and it behaves as intended",FALSE
+"EF2","EF","I stop studying once the material stops being interesting.","reverse-worded: behaves as intended once recoded",TRUE
+"EF3","EF","I finish the assignments that count toward my grade.","flagged by an empirical screen and worth keeping anyway",FALSE
+"EF4","EF","I keep to the study schedule I set for myself.","passes content review, then carries almost no common variance",FALSE
+"EF5","EF","I get tense when I fall behind on coursework.","fails content review: the wording pulls judges toward test anxiety",FALSE
+"EF6","EF","I finish assignments even when I would rather do something else.","meets the content criterion by one judge, then behaves well",FALSE
+"TF1","TF","I stay on one task until it is finished.","ordinary: the panel places it and it behaves as intended",FALSE
+"TF2","TF","I switch between tasks while I study.","reverse-worded: behaves as intended once recoded",TRUE
+"TF3","TF","I keep my attention on the task in front of me.","ordinary: the panel places it and it behaves as intended",FALSE
+"TF4","TF","I keep working through a task without taking breaks.","passes content review, then loads on both facets",FALSE
+"TF5","TF","I work hard to stay on top of my reading.","fails content review: a competing facet takes more assignments",FALSE
+"TF6","TF","I put my phone away while I study.","behaves differently in the two cohorts",FALSE

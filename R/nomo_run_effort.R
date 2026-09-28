@@ -11,6 +11,20 @@ nomo_run_effort_arguments <- function() {
 }
 
 
+# The keying the item audits use to explain a negative item-rest correlation:
+# the settings' if given, else a handoff's declared keying, else NULL.
+nomo_run_screen_keying <- function(settings, handoff = NULL) {
+  s <- settings$screen
+  if (!is.null(s$reverse) || !is.null(s$scale_range)) {
+    return(list(reverse = s$reverse, scale_range = s$scale_range))
+  }
+  if (!is.null(handoff) && isTRUE(handoff$keying$declared)) {
+    return(list(reverse = handoff$keying$reverse, scale_range = handoff$keying$scale_range))
+  }
+  NULL
+}
+
+
 # The instrument-wide screen that settings$screen$effort = TRUE requests, or
 # NULL. Keying comes from the settings, or else from a contentvalidR handoff's
 # declared keying; settings are the researcher's and take precedence.
