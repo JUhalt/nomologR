@@ -46,8 +46,8 @@ diagnostic evidence. Diagnostics never trigger automatic release/refitting.}
 \item{ID.fac}{Factor-identification method passed to
 \code{semTools::measEq.syntax()}. \code{"std.lv"} is the default.}
 
-\item{ID.cat}{Ordered-indicator identification method. Wu-Estabrook is the
-default.}
+\item{ID.cat}{Ordered-indicator identification method passed to
+\code{semTools::measEq.syntax()}. Wu-Estabrook is the default.}
 
 \item{parameterization}{Lavaan categorical parameterization. \code{"theta"} is
 the default for ordered indicators.}

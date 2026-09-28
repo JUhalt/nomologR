@@ -41,7 +41,9 @@ The final evidence-trace appendix is not truncated.}
 
 \item{apa_tables}{Logical; if \code{TRUE}, append a \emph{Manuscript tables} appendix
 with the \code{\link[=nomo_apa_table]{nomo_apa_table()}} tables for the results the run holds. These
-are the CFA loadings, fit, and factor correlations, reliability, and, when
+are the CFA loadings and fit; reliability; the validity stage's average
+variance extracted and construct pairs (without a validity stage, the CFA
+factor correlations take the pairs' place, after the fit); and, when
 present, invariance and the network's hypotheses and fit. They are
 numbered in that order. Default \code{FALSE}, which leaves the report unchanged.}
 }
