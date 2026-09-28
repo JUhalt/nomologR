@@ -125,10 +125,18 @@ references are review prompts rather than universal pass/fail cutoffs.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A <code>nomo_validity</code> object containing standardized loading evidence,
-direct <code><a href="https://rdrr.io/pkg/semTools/man/AVE.html" class="external-link">semTools::AVE()</a></code> results, latent correlations, HTMT2/HTMT evidence,
-optional legacy Fornell-Larcker information, model-fit context, research
-references, and a structured decision log.</p>
+    <p>A <code>nomo_validity</code> object. The fields to read are:</p><ul><li><p><code>ave</code>: average variance extracted per construct, as convergent
+evidence.</p></li>
+<li><p><code>latent_correlations</code>: construct correlations with intervals.</p></li>
+<li><p><code>htmt2</code> and <code>htmt</code>: heterotrait-monotrait ratios per pair.</p></li>
+<li><p><code>discriminant</code>: each pair's separation evidence with its reference and
+interpretation.</p></li>
+<li><p><code>htmt_status</code>: which HTMT variants were computed, and why any was not.</p></li>
+<li><p><code>fornell_larcker_pairs</code>: the historical comparison, when requested.</p></li>
+<li><p><code>standardized_loadings</code>, <code>references</code>, and <code>decision_log</code>.</p></li>
+</ul><p>Other fields record the call, the settings used, and intermediate engine
+results. They may change between releases and are not part of the stable
+interface (see <code><a href="nomologR-package.html">?nomologR</a></code>).</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

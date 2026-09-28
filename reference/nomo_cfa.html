@@ -137,10 +137,25 @@ as quarantined diagnostics. They never trigger automatic respecification.</p></d
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A <code>nomo_cfa</code> object containing the unchanged <code>lavaan</code> fit plus
-standardized loadings, factor correlations, fit evidence, residual
-diagnostics, Heywood checks, modification indices, engine warnings, and a
-decision log.</p>
+    <p>A <code>nomo_cfa</code> object. The fields to read are:</p><ul><li><p><code>fit</code>: the unchanged <code>lavaan</code> fit, for anything else <code>lavaan</code> reports.</p></li>
+<li><p><code>model</code>: the model syntax fitted.</p></li>
+<li><p><code>converged</code>, <code>estimator</code>, <code>data_n</code>, <code>n_used</code>, and <code>sample_summary</code>.</p></li>
+<li><p><code>fit_evidence</code>: global fit indices with their teaching references.</p></li>
+<li><p><code>standardized_loadings</code>: one row per loading, with its interval, flag,
+and explanation.</p></li>
+<li><p><code>factor_correlations</code>: latent correlations with intervals.</p></li>
+<li><p><code>heywood</code>: improper-solution signals, if any.</p></li>
+<li><p><code>parameter_estimates</code> and <code>standardized_solution</code>: <code>lavaan</code>'s parameter
+tables, as tibbles.</p></li>
+<li><p><code>residual_matrix</code> and <code>residual_pairs</code>: residual correlations, the pairs
+largest first.</p></li>
+<li><p><code>modification_indices</code> and <code>top_modification_indices</code>: diagnostics
+only; nothing is freed.</p></li>
+<li><p><code>engine_warnings</code>: warnings <code>lavaan</code> raised.</p></li>
+<li><p><code>decision_log</code>.</p></li>
+</ul><p>Other fields record the call, the settings used, and intermediate engine
+results. They may change between releases and are not part of the stable
+interface (see <code><a href="nomologR-package.html">?nomologR</a></code>).</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

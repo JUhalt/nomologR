@@ -2,6 +2,18 @@
 
 ## nomologR (development version)
 
+- Every function’s help page now names the fields of the object it
+  returns ([\#114](https://github.com/JUhalt/nomologR/issues/114)). The
+  stability policy covers “the documented fields of the objects they
+  return”, but the Value sections had described contents in prose
+  without naming fields, so most fields users read, such as
+  `standardized_loadings` and `fit_evidence` on a `nomo_cfa`, were not
+  named in the contract. Each Value section now lists the fields to
+  read, one line each, and says that the remaining fields (the call,
+  settings, and engine intermediates) are not part of the stable
+  interface. This changes documentation only.
+  [`?nomo_efa`](https://juhalt.github.io/nomologR/reference/nomo_efa.md)
+  no longer explains `factor_count` with an internal milestone label.
 - A new article, “From content review to empirical screening”, carries
   the items a `contentvalidR` review carried forward through the
   empirical screen, on the shared teaching data of the joint walkthrough

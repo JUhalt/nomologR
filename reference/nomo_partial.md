@@ -32,7 +32,9 @@ nomo_partial(level, syntax, rationale)
 
 ## Value
 
-A `nomo_partial` object with a report-ready release table.
+A `nomo_partial` object whose `releases` field is one row per release:
+its identifier, level, syntax, and rationale. `n` is the number of
+releases.
 
 ## Details
 

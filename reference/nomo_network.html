@@ -144,9 +144,24 @@ quantitative negligible predictions, the equivalence confidence level is
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A <code>nomo_network</code> object retaining the primary fitted SEM, optional
-validation fit, measurement context, relation-level theory evidence,
-replication evidence, and decision log.</p>
+    <p>A <code>nomo_network</code> object. The fields to read are:</p><ul><li><p><code>hypothesis_evidence</code>: one row per hypothesis, with its prediction,
+estimate, interval, concordance with the prediction, and
+interpretation.</p></li>
+<li><p><code>replication_evidence</code>: the same comparison in <code>validation_data</code>, when
+given.</p></li>
+<li><p><code>fit_evidence</code>: global fit of the fitted model.</p></li>
+<li><p><code>parameter_estimates</code> and <code>standardized_solution</code>: <code>lavaan</code>'s parameter
+tables, as tibbles.</p></li>
+<li><p><code>measurement_context</code>: the measurement model's loadings and fit, which
+qualify the structural evidence.</p></li>
+<li><p><code>model_fitted</code> and <code>model_relations</code>: the syntax fitted and the
+relations added from the hypotheses.</p></li>
+<li><p><code>fit</code>: the <code>lavaan</code> fit, and <code>validation</code>, the validation fit, when
+given.</p></li>
+<li><p><code>converged</code>, <code>engine_warnings</code>, and <code>decision_log</code>.</p></li>
+</ul><p>Other fields record the call, the settings used, and intermediate engine
+results. They may change between releases and are not part of the stable
+interface (see <code><a href="nomologR-package.html">?nomologR</a></code>).</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

@@ -34,9 +34,27 @@ nomo_scores(
 
 ## Value
 
-An object of class `nomo_scores`: the `scores` themselves, a
-`diagnostics` table of Grice's three criteria per factor, the
-`unit_weighting` evidence, `notes`, and the fitted model.
+An object of class `nomo_scores`. The fields to read are:
+
+- `scores`: one column per factor, one row per case used.
+
+- `method` and `weighting`: how the scores were computed.
+
+- `diagnostics`: Grice's validity, univocality, and correlational
+  accuracy per factor.
+
+- `unit_weighting`: the loading evidence on whether unit weights suit
+  the model, and `parallel_test`, the test of the parallel model that
+  unit weighting assumes.
+
+- `score_correlations` and `factor_correlations`: for comparing the two.
+
+- `notes`: what the scores do and do not estimate.
+
+Other fields record the call, the settings used, and intermediate engine
+results. They may change between releases and are not part of the stable
+interface (see
+[`?nomologR`](https://juhalt.github.io/nomologR/reference/nomologR-package.md)).
 
 ## Details
 

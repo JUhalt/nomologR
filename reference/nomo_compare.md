@@ -77,12 +77,28 @@ nomo_compare(
 
 ## Value
 
-A `nomo_compare` object containing `$models` (fit and information
-criteria for each model), `$comparisons` (nesting, difference test,
-changes in fit, and interpretation for each model against the
-reference), `$loadings` (standardized loadings side by side),
-`$evidence` (reliability, AVE, and HTMT2 by model), the fitted
-`nomo_cfa` objects in `$fits`, references, and a decision log.
+A `nomo_compare` object. The fields to read are:
+
+- `models`: fit and information criteria for each model.
+
+- `comparisons`: for each model against the `reference`, the nesting
+  relation, the difference test, changes in fit and information
+  criteria, and an interpretation.
+
+- `loadings`: standardized loadings side by side.
+
+- `evidence`: reliability, AVE, and HTMT2 by model, when
+  `evidence = TRUE`.
+
+- `fits`: the fitted `nomo_cfa` objects, and `engine_warnings`, the
+  warnings `lavaan` raised for each.
+
+- `reference`, `rationale`, `origin`, `references`, and `decision_log`.
+
+Other fields record the call, the settings used, and intermediate engine
+results. They may change between releases and are not part of the stable
+interface (see
+[`?nomologR`](https://juhalt.github.io/nomologR/reference/nomologR-package.md)).
 
 ## Details
 

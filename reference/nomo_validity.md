@@ -69,11 +69,28 @@ nomo_validity(
 
 ## Value
 
-A `nomo_validity` object containing standardized loading evidence,
-direct [`semTools::AVE()`](https://rdrr.io/pkg/semTools/man/AVE.html)
-results, latent correlations, HTMT2/HTMT evidence, optional legacy
-Fornell-Larcker information, model-fit context, research references, and
-a structured decision log.
+A `nomo_validity` object. The fields to read are:
+
+- `ave`: average variance extracted per construct, as convergent
+  evidence.
+
+- `latent_correlations`: construct correlations with intervals.
+
+- `htmt2` and `htmt`: heterotrait-monotrait ratios per pair.
+
+- `discriminant`: each pair's separation evidence with its reference and
+  interpretation.
+
+- `htmt_status`: which HTMT variants were computed, and why any was not.
+
+- `fornell_larcker_pairs`: the historical comparison, when requested.
+
+- `standardized_loadings`, `references`, and `decision_log`.
+
+Other fields record the call, the settings used, and intermediate engine
+results. They may change between releases and are not part of the stable
+interface (see
+[`?nomologR`](https://juhalt.github.io/nomologR/reference/nomologR-package.md)).
 
 ## Details
 

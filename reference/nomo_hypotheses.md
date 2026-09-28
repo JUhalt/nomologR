@@ -27,8 +27,9 @@ nomo_hypotheses(...)
 
 ## Value
 
-A `nomo_hypotheses` object containing a tidy, machine-readable
-hypothesis table.
+A `nomo_hypotheses` object whose `hypotheses` field is one row per
+hypothesis: its relation, prediction, theoretical region, scale, and
+origin. `n` is the number of hypotheses.
 
 ## Details
 

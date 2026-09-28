@@ -90,9 +90,35 @@ nomo_network(
 
 ## Value
 
-A `nomo_network` object retaining the primary fitted SEM, optional
-validation fit, measurement context, relation-level theory evidence,
-replication evidence, and decision log.
+A `nomo_network` object. The fields to read are:
+
+- `hypothesis_evidence`: one row per hypothesis, with its prediction,
+  estimate, interval, concordance with the prediction, and
+  interpretation.
+
+- `replication_evidence`: the same comparison in `validation_data`, when
+  given.
+
+- `fit_evidence`: global fit of the fitted model.
+
+- `parameter_estimates` and `standardized_solution`: `lavaan`'s
+  parameter tables, as tibbles.
+
+- `measurement_context`: the measurement model's loadings and fit, which
+  qualify the structural evidence.
+
+- `model_fitted` and `model_relations`: the syntax fitted and the
+  relations added from the hypotheses.
+
+- `fit`: the `lavaan` fit, and `validation`, the validation fit, when
+  given.
+
+- `converged`, `engine_warnings`, and `decision_log`.
+
+Other fields record the call, the settings used, and intermediate engine
+results. They may change between releases and are not part of the stable
+interface (see
+[`?nomologR`](https://juhalt.github.io/nomologR/reference/nomologR-package.md)).
 
 ## Details
 

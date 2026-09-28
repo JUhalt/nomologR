@@ -83,10 +83,40 @@ nomo_cfa(
 
 ## Value
 
-A `nomo_cfa` object containing the unchanged `lavaan` fit plus
-standardized loadings, factor correlations, fit evidence, residual
-diagnostics, Heywood checks, modification indices, engine warnings, and
-a decision log.
+A `nomo_cfa` object. The fields to read are:
+
+- `fit`: the unchanged `lavaan` fit, for anything else `lavaan` reports.
+
+- `model`: the model syntax fitted.
+
+- `converged`, `estimator`, `data_n`, `n_used`, and `sample_summary`.
+
+- `fit_evidence`: global fit indices with their teaching references.
+
+- `standardized_loadings`: one row per loading, with its interval, flag,
+  and explanation.
+
+- `factor_correlations`: latent correlations with intervals.
+
+- `heywood`: improper-solution signals, if any.
+
+- `parameter_estimates` and `standardized_solution`: `lavaan`'s
+  parameter tables, as tibbles.
+
+- `residual_matrix` and `residual_pairs`: residual correlations, the
+  pairs largest first.
+
+- `modification_indices` and `top_modification_indices`: diagnostics
+  only; nothing is freed.
+
+- `engine_warnings`: warnings `lavaan` raised.
+
+- `decision_log`.
+
+Other fields record the call, the settings used, and intermediate engine
+results. They may change between releases and are not part of the stable
+interface (see
+[`?nomologR`](https://juhalt.github.io/nomologR/reference/nomologR-package.md)).
 
 ## Details
 

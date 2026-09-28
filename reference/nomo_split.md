@@ -40,8 +40,21 @@ nomo_split(
 
 ## Value
 
-A `nomo_split` object containing `calibration`, `validation`, a
-row-level `assignment` table, split sizes, the seed, and a decision log.
+A `nomo_split` object. The fields to read are:
+
+- `calibration` and `validation`: the two samples.
+
+- `assignment`: which sample each row went to.
+
+- `n_total`, `n_calibration`, `n_validation`, and
+  `validation_prop_realized`.
+
+- `seed` and `decision_log`.
+
+Other fields record the call, the settings used, and intermediate engine
+results. They may change between releases and are not part of the stable
+interface (see
+[`?nomologR`](https://juhalt.github.io/nomologR/reference/nomologR-package.md)).
 
 ## Details
 

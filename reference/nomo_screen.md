@@ -71,9 +71,37 @@ nomo_screen(
 
 ## Value
 
-An object of class `nomo_screen` containing item summaries, response
-distributions, case-level completeness diagnostics, an evidence-guided
-decision log, and the guidance settings used.
+An object of class `nomo_screen`. The fields to read are:
+
+- `items`: the items screened, and `n_cases`, the number of rows.
+
+- `item_summary`: one row per item, with its storage, inferred type,
+  missingness, most common response, descriptive statistics, and
+  near-zero-variance indicators.
+
+- `response_distribution`: counts and proportions of each response.
+
+- `case_summary`: missingness per row.
+
+- `relationship_summary`: each item's corrected item-rest correlation
+  and summary of its inter-item correlations.
+
+- `inter_item_correlations`: one row per item pair.
+
+- `decision_log`: the evidence and its explanations (see
+  [`nomo_table()`](https://juhalt.github.io/nomologR/reference/nomo_table.md)).
+
+- `effort`, `effort_pairs`, and `effort_settings`: the
+  careless-responding indices per row, the pairs they used, and their
+  settings, when `effort = TRUE`.
+
+- `handoff`: the content-review handoff read from `items`, when one was
+  supplied.
+
+Other fields record the call, the settings used, and intermediate engine
+results. They may change between releases and are not part of the stable
+interface (see
+[`?nomologR`](https://juhalt.github.io/nomologR/reference/nomologR-package.md)).
 
 ## Details
 

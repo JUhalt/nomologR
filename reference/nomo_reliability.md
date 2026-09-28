@@ -99,9 +99,28 @@ nomo_reliability(
 
 ## Value
 
-A `nomo_reliability` object containing direct `semTools` results, tidy
-reliability evidence, model-fit context, item-type context, literature
-references, and a structured decision log.
+A `nomo_reliability` object. The fields to read are:
+
+- `omega`: model-based omega per construct, with bootstrap intervals
+  when `ci = "bootstrap"`.
+
+- `alpha`: coefficient alpha, reported as secondary.
+
+- `evidence`: both coefficients with their references and
+  interpretations.
+
+- `alpha_status` and `ci_status`: what was computed, and why anything
+  was not.
+
+- `model_strain` and `improper_solution`: whether the measurement model
+  showed strain that qualifies the coefficients.
+
+- `references` and `decision_log`.
+
+Other fields record the call, the settings used, and intermediate engine
+results. They may change between releases and are not part of the stable
+interface (see
+[`?nomologR`](https://juhalt.github.io/nomologR/reference/nomologR-package.md)).
 
 ## Details
 

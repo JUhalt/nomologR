@@ -154,10 +154,20 @@ provenance are reused.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A <code>nomo_run</code> object containing component results, stage status,
-outstanding decision requests, researcher decisions/rationales, stage
-settings, workflow provenance, component decision logs, and source inputs
-required for reproducibility.</p>
+    <p>A <code>nomo_run</code> object. The fields to read are:</p><ul><li><p><code>status</code> and <code>next_stage</code>: where the run is.</p></li>
+<li><p><code>results</code>: each component's result, by stage and then by scale; for
+example <code>results$screen$Agency</code> is a <code>nomo_screen</code> object.</p></li>
+<li><p><code>stage_status</code>: one row per stage.</p></li>
+<li><p><code>decision_requests</code>: the decisions the run is waiting for.</p></li>
+<li><p><code>decision_log</code>: the workflow's decisions, with their rationales and
+sources.</p></li>
+<li><p><code>scales</code>, <code>mode</code>, <code>sample_design</code>, <code>sample_n</code>, <code>decisions</code>, and
+<code>settings</code>.</p></li>
+</ul><p><code><a href="nomo_table.html">nomo_table()</a></code> returns the run's tables, including the component recipe,
+the component decision logs, and the revision lineage. Other fields hold
+the source data and state needed to resume or revise the run. They may
+change between releases and are not part of the stable interface (see
+<code><a href="nomologR-package.html">?nomologR</a></code>).</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

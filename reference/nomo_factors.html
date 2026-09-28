@@ -186,11 +186,20 @@ is explicit, recorded, and performed with <code><a href="https://rdrr.io/pkg/psy
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>An object of class <code>nomo_factors</code> containing the analyzed correlation
-matrix, item modeling types, convenience aliases <code>correlation</code> and
-<code>modeling_types</code>, KMO and Bartlett diagnostics, parallel-analysis results,
-MAP results, criterion availability/status, method- and family-level concordance,
-scree information, a cautious retention synthesis, and a decision log.</p>
+    <p>An object of class <code>nomo_factors</code>. The fields to read are:</p><ul><li><p><code>items</code>, <code>n_cases</code>, and <code>n_items</code>.</p></li>
+<li><p><code>item_types</code>: each item's screened and modeling type.</p></li>
+<li><p><code>correlation_method</code> and <code>correlation_matrix</code>: the correlations analyzed.</p></li>
+<li><p><code>kmo</code> and <code>bartlett</code>: sampling-adequacy evidence.</p></li>
+<li><p><code>parallel</code>, <code>map</code>, and <code>scree</code>: each criterion's result.</p></li>
+<li><p><code>criterion_status</code>: which criteria ran, and why any did not.</p></li>
+<li><p><code>evidence</code>, <code>family_evidence</code>, and <code>family_concordance</code>: the suggested
+factor counts by method and by family of related methods.</p></li>
+<li><p><code>plausible_factors</code> and <code>recommendation</code>: the synthesis, which is
+evidence for a researcher's choice, not a choice.</p></li>
+<li><p><code>decision_log</code>.</p></li>
+</ul><p>Other fields record the call, the settings used, and intermediate engine
+results. They may change between releases and are not part of the stable
+interface (see <code><a href="nomologR-package.html">?nomologR</a></code>).</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

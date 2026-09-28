@@ -103,8 +103,14 @@ Must be strictly between 0 and 1.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A <code>nomo_split</code> object containing <code>calibration</code>, <code>validation</code>, a
-row-level <code>assignment</code> table, split sizes, the seed, and a decision log.</p>
+    <p>A <code>nomo_split</code> object. The fields to read are:</p><ul><li><p><code>calibration</code> and <code>validation</code>: the two samples.</p></li>
+<li><p><code>assignment</code>: which sample each row went to.</p></li>
+<li><p><code>n_total</code>, <code>n_calibration</code>, <code>n_validation</code>, and
+<code>validation_prop_realized</code>.</p></li>
+<li><p><code>seed</code> and <code>decision_log</code>.</p></li>
+</ul><p>Other fields record the call, the settings used, and intermediate engine
+results. They may change between releases and are not part of the stable
+interface (see <code><a href="nomologR-package.html">?nomologR</a></code>).</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
