@@ -87,6 +87,8 @@ nomo_report_label_overrides <- c(
   cross_loading = "Cross-loading", near_zero_variance = "Near-zero variance",
   lavaan_missing = "lavaan missing",
   corrected_item_rest_r = "Corrected item-rest r", item_rest_n = "Item-rest N",
+  scale_item_rest_r = "Within-scale item-rest r",
+  scale_item_rest_n = "Within-scale item-rest N",
   omega_ci_n_success = "Omega CI successful draws",
   alpha_ci_n_success = "Alpha CI successful draws",
   lhs = "lhs", op = "op", rhs = "rhs",

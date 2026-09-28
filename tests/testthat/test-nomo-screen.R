@@ -1132,3 +1132,115 @@ test_that("a negative item-rest correlation the declared keying does not explain
   expect_false(grepl("declared reverse-keyed", z$observation, fixed = TRUE))
   expect_match(z$recommendation, "Inspect intended keying", fixed = TRUE)
 })
+
+
+test_that("declared scales give each item its within-scale item-rest correlation (#113)", {
+  handoff <- readRDS(system.file("extdata", "content-handoff-walkthrough.rds",
+                                 package = "nomologR"))
+  walk <- nomo_demo_walkthrough
+  walk$EF2 <- 6L - walk$EF2
+  walk$TF2 <- 6L - walk$TF2
+
+  out <- nomo_screen(walk, items = handoff)
+  rel <- out$relationship_summary
+  expect_true(all(c("scale", "scale_item_rest_r", "scale_item_rest_n") %in% names(rel)))
+
+  # Each value is the item against the rest of its own scale, the total it
+  # is scored on.
+  ef <- c("EF1", "EF2", "EF3", "EF4", "EF6")
+  tf <- c("TF1", "TF2", "TF3", "TF4", "TF6")
+  rest <- function(item, facet) {
+    stats::cor(walk[[item]], rowSums(walk[setdiff(facet, item)]))
+  }
+  expected <- c(vapply(ef, rest, numeric(1), facet = ef),
+                vapply(tf, rest, numeric(1), facet = tf))
+  expect_equal(rel$scale_item_rest_r, unname(expected[rel$item]))
+  expect_identical(rel$scale, rep(c("EF", "TF"), each = 5L))
+  expect_identical(rel$scale_item_rest_n, rep(400L, 10L))
+  # The pooled value is unchanged: TF4 shares variance with Effort
+  # Regulation, which the pool counts in its favor.
+  expect_gt(rel$corrected_item_rest_r[rel$item == "TF4"],
+            rel$scale_item_rest_r[rel$item == "TF4"])
+
+  # The review reads the within-scale value: only EF4 is below the reference.
+  log <- out$decision_log[out$decision_log$metric == "corrected_item_rest", ]
+  expect_identical(log$object, "EF4")
+  expect_equal(log$value, rel$scale_item_rest_r[rel$item == "EF4"])
+  expect_match(log$observation, "within its scale `EF` of r = 0.23", fixed = TRUE)
+
+  local_reproducible_output(width = 80)
+  printed <- capture.output(print(summary(out)))
+  expect_true(any(grepl("Scale", printed, fixed = TRUE)))
+  expect_true(any(grepl("Item-rest r is within the item's scale", printed, fixed = TRUE)))
+  p <- plot(out, type = "item_rest")
+  expect_equal(p$data$item_rest, rel$scale_item_rest_r[match(p$data$item, rel$item)])
+})
+
+
+test_that("keying notes on a declared scale use the within-scale value (#113)", {
+  handoff <- readRDS(system.file("extdata", "content-handoff-walkthrough.rds",
+                                 package = "nomologR"))
+  # As collected, EF2 and TF2 are not yet recoded.
+  out <- nomo_screen(nomo_demo_walkthrough, items = handoff)
+  log <- out$decision_log[out$decision_log$metric == "corrected_item_rest", ]
+  expect_true(all(c("EF2", "TF2") %in% log$object))
+
+  walk <- nomo_demo_walkthrough
+  walk$EF2 <- 6L - walk$EF2
+  recoded <- nomo_screen(walk, items = handoff)$relationship_summary
+  ef2 <- log$observation[log$object == "EF2"]
+  expect_match(ef2, "within its scale `EF`", fixed = TRUE)
+  expect_match(
+    ef2,
+    sprintf("item-rest correlation is r = %.2f",
+            recoded$scale_item_rest_r[recoded$item == "EF2"]),
+    fixed = TRUE
+  )
+})
+
+
+test_that("one declared scale, or none, leaves the item-rest review pooled (#113)", {
+  walk <- nomo_demo_walkthrough
+  ef <- c("EF1", "EF2", "EF3", "EF4", "EF6")
+  one <- nomo_screen(walk, items = ef, scales = list(EF = ef))
+  none <- nomo_screen(walk, items = ef)
+  expect_true(all(is.na(one$relationship_summary$scale_item_rest_r)))
+  expect_true(all(is.na(one$relationship_summary$scale)))
+  expect_identical(one$decision_log, none$decision_log)
+
+  # Unnamed scales are named by position; an item counts in the first scale
+  # that lists it.
+  two <- nomo_screen(walk, items = c(ef, "TF1", "TF3"),
+                     scales = list(ef, c("EF6", "TF1", "TF3")))
+  rel <- two$relationship_summary
+  expect_identical(rel$scale, c(rep("Scale 1", 5L), "Scale 2", "Scale 2"))
+
+  # `scales` is checked even without the effort indices.
+  expect_error(nomo_screen(walk, items = ef, scales = list(A = "TF1")),
+               "not being screened", fixed = TRUE)
+})
+
+
+test_that("a scale with fewer than three complete cases has no within-scale value", {
+  dat <- data.frame(
+    a1 = c(1, 2, 3, 4, 5, 2), a2 = c(2, 2, 3, 5, 4, 1), a3 = c(1, 3, 3, 4, 5, 2),
+    b1 = c(1, 5, NA, NA, NA, NA), b2 = c(2, 4, NA, NA, NA, 3)
+  )
+  out <- nomo_screen(dat, scales = list(A = c("a1", "a2", "a3"), B = c("b1", "b2")))
+  rel <- out$relationship_summary
+  expect_true(all(is.finite(rel$scale_item_rest_r[rel$scale == "A"])))
+  expect_true(all(is.na(rel$scale_item_rest_r[rel$scale == "B"])))
+  expect_identical(rel$scale_item_rest_n[rel$scale == "B"], c(2L, 2L))
+})
+
+
+test_that("screens saved before within-scale values still summarize and plot", {
+  out <- nomo_screen(nomo_demo_walkthrough, items = c("EF1", "EF3", "EF4", "EF6"))
+  out$relationship_summary$scale_item_rest_r <- NULL
+  local_reproducible_output(width = 80)
+  expect_no_warning(capture.output(print(summary(out))))
+  expect_no_warning(p <- plot(out, type = "item_rest"))
+  expect_equal(p$data$item_rest,
+               out$relationship_summary$corrected_item_rest_r[
+                 match(p$data$item, out$relationship_summary$item)])
+})

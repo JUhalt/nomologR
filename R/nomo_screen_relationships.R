@@ -1,5 +1,6 @@
 nomo_screen_relationships <- function(selected, item_summary, guidance,
-                                      reverse = NULL, scale_range = NULL) {
+                                      reverse = NULL, scale_range = NULL,
+                                      scales = NULL) {
   items <- names(selected)
   summary_index <- match(items, item_summary$item)
 
@@ -40,6 +41,9 @@ nomo_screen_relationships <- function(selected, item_summary, guidance,
     relationship_reason = reasons,
     corrected_item_rest_r = NA_real_,
     item_rest_n = NA_integer_,
+    scale = NA_character_,
+    scale_item_rest_r = NA_real_,
+    scale_item_rest_n = NA_integer_,
     n_interitem_estimable = 0L,
     mean_interitem_r = NA_real_,
     median_interitem_r = NA_real_,
@@ -259,12 +263,24 @@ nomo_screen_relationships <- function(selected, item_summary, guidance,
     }
   }
 
+  # With two or more declared scales, an item's corrected item-rest correlation
+  # is also computed against the rest of its own scale, the total it is scored
+  # on (Nunnally & Bernstein, 1994; Clark & Watson, 2019). The pooled value
+  # stays in `corrected_item_rest_r`; the review uses the within-scale one.
+  sets <- nomo_screen_scale_sets(scales, eligible_items)
+  for (set in names(sets)) {
+    within <- nomo_screen_item_rest(scores, sets[[set]])
+    idx <- match(sets[[set]], relationship_summary$item)
+    relationship_summary$scale[idx] <- set
+    relationship_summary$scale_item_rest_r[idx] <- within$r
+    relationship_summary$scale_item_rest_n[idx] <- within$n
+  }
+
   # Declared keying never recodes the data. When an item is declared
   # reverse-keyed, its item-rest correlation is also computed on an internal
   # copy recoded as declared, so a negative sign can be told apart from a coding
   # error (#60). Only the log's wording uses it; no returned value changes.
-  keyed_r <- nomo_screen_keyed_item_rest(scores[complete_all, , drop = FALSE],
-                                         reverse, scale_range)
+  keyed_r <- nomo_screen_keyed_item_rest(scores, reverse, scale_range, sets)
 
   item_total_reference <- guidance$item_total_reference
 
@@ -283,7 +299,11 @@ nomo_screen_relationships <- function(selected, item_summary, guidance,
       drop = FALSE
     ]
 
-    item_rest_r <- row$corrected_item_rest_r[[1L]]
+    # The within-scale value, when the item's scale was declared.
+    in_scale <- !is.na(row$scale_item_rest_r[[1L]])
+    item_rest_r <- if (in_scale) row$scale_item_rest_r[[1L]] else row$corrected_item_rest_r[[1L]]
+    item_rest_n <- if (in_scale) row$scale_item_rest_n[[1L]] else row$item_rest_n[[1L]]
+    within_text <- if (in_scale) sprintf(" within its scale `%s`", row$scale[[1L]]) else ""
 
     if (is.na(item_rest_r)) {
       next
@@ -307,10 +327,11 @@ nomo_screen_relationships <- function(selected, item_summary, guidance,
         severity = "review",
         observation = paste0(
           sprintf(
-            "`%s` has a negative corrected item-rest correlation (r = %.2f, n = %d).",
+            "`%s` has a negative corrected item-rest correlation%s (r = %.2f, n = %d).",
             item,
+            within_text,
             item_rest_r,
-            row$item_rest_n[[1L]]
+            item_rest_n
           ),
           nomo_screen_keyed_note(item, keyed_r, scale_range)
         ),
@@ -345,10 +366,11 @@ nomo_screen_relationships <- function(selected, item_summary, guidance,
         ),
         severity = "review",
         observation = sprintf(
-          "`%s` has a corrected item-rest correlation of r = %.2f (n = %d), below the teaching reference.",
+          "`%s` has a corrected item-rest correlation%s of r = %.2f (n = %d), below the teaching reference.",
           item,
+          within_text,
           item_rest_r,
-          row$item_rest_n[[1L]]
+          item_rest_n
         ),
         recommendation = paste(
           "Inspect item content, scoring, and anticipated dimensional structure.",
@@ -404,18 +426,62 @@ nomo_screen_relationships <- function(selected, item_summary, guidance,
 # copy recoded as declared: the scale's minimum plus its maximum, minus the
 # response. Empty unless the keying is usable, meaning item names and a
 # two-number response range.
-nomo_screen_keyed_item_rest <- function(scores, reverse, scale_range) {
+nomo_screen_keyed_item_rest <- function(scores, reverse, scale_range, sets = list()) {
   declared <- intersect(if (is.character(reverse)) reverse else character(), names(scores))
   usable <- length(declared) > 0L && is.numeric(scale_range) &&
     length(scale_range) == 2L && all(is.finite(scale_range))
   if (!usable) return(numeric())
   keyed <- scores
   keyed[declared] <- lapply(keyed[declared], function(v) sum(scale_range) - v)
-  out <- vapply(declared, function(item) {
-    rest <- rowSums(keyed[setdiff(names(keyed), item)])
-    suppressWarnings(stats::cor(keyed[[item]], rest))
-  }, numeric(1))
+  # Across all the items, then within each declared scale where that value
+  # exists, matching the value the review reads.
+  out <- nomo_screen_item_rest(keyed, names(keyed))$r[declared]
+  for (items in sets) {
+    within <- nomo_screen_item_rest(keyed, items)$r[intersect(declared, items)]
+    within <- within[is.finite(within)]
+    out[names(within)] <- within
+  }
   out[is.finite(out)]
+}
+
+
+# Corrected item-rest correlations within one set of items, on the cases
+# complete on all of them.
+nomo_screen_item_rest <- function(scores, items) {
+  vals <- scores[items]
+  complete <- stats::complete.cases(vals)
+  if (sum(complete) < 3L) {
+    return(list(r = stats::setNames(rep(NA_real_, length(items)), items),
+                n = as.integer(sum(complete))))
+  }
+  r <- vapply(items, function(item) {
+    rest <- rowSums(vals[complete, setdiff(items, item), drop = FALSE])
+    suppressWarnings(stats::cor(vals[[item]][complete], rest))
+  }, numeric(1))
+  list(r = r, n = as.integer(sum(complete)))
+}
+
+
+# The declared scales restricted to the items screened for relationships. An
+# item counts in the first scale that lists it, and an unnamed scale is named
+# by its position. Empty unless at least two scales remain, since one scale is
+# the pool itself.
+nomo_screen_scale_sets <- function(scales, eligible) {
+  if (!is.list(scales) || !length(scales)) return(list())
+  labels <- names(scales)
+  if (is.null(labels)) labels <- character(length(scales))
+  unnamed <- is.na(labels) | !nzchar(labels)
+  labels[unnamed] <- paste("Scale", which(unnamed))
+  sets <- lapply(scales, function(v) intersect(as.character(unlist(v)), eligible))
+  names(sets) <- labels
+  seen <- character()
+  for (i in seq_along(sets)) {
+    sets[[i]] <- setdiff(sets[[i]], seen)
+    seen <- c(seen, sets[[i]])
+  }
+  sets <- sets[lengths(sets) > 0L]
+  if (length(sets) < 2L) return(list())
+  sets
 }
 
 
