@@ -386,10 +386,12 @@ for 0.3.0.
 
 [\#53](https://github.com/JUhalt/nomologR/issues/53) Release candidates,
 fixtures from contentvalidR’s RC, the compatibility table, and a
-same-day release with release notes linking each other. CRAN asks for
-updates no more often than every one to two months, so the joint
-submission follows the later of the two packages’ first acceptances by
-that interval.
+same-day release with release notes linking each other. Both packages
+number a candidate the same way (decided 2026-09-28): DESCRIPTION
+`0.99.0` and a git tag `v1.0.0-rc.N`, as a tag only, with no GitHub
+release, so R-universe does not publish it. CRAN asks for updates no
+more often than every one to two months, so the joint submission follows
+the later of the two packages’ first acceptances by that interval.
 
 # 1.x — Modern Extensions
 
