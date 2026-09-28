@@ -2,6 +2,17 @@
 
 ## nomologR (development version)
 
+- [`nomo_missing()`](https://juhalt.github.io/nomologR/reference/nomo_missing.md)
+  takes the fitted model as `fit`, as
+  [`nomo_reliability()`](https://juhalt.github.io/nomologR/reference/nomo_reliability.md),
+  [`nomo_validity()`](https://juhalt.github.io/nomologR/reference/nomo_validity.md),
+  [`nomo_scores()`](https://juhalt.github.io/nomologR/reference/nomo_scores.md),
+  and
+  [`nomo_hierarchical()`](https://juhalt.github.io/nomologR/reference/nomo_hierarchical.md)
+  do ([\#114](https://github.com/JUhalt/nomologR/issues/114)). It had
+  been `x`. The function is experimental until 1.0.0, so the name
+  changes without a deprecation period. Calls that pass the model first,
+  without naming it, are unaffected.
 - A guided run or validity result with a single construct no longer
   warns “Unknown or uninitialised column” when printed. With one
   construct there are no pairs, and the pair tables have no columns; the

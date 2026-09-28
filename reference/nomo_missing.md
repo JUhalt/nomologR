@@ -8,18 +8,18 @@ choose a strategy and does not change the model.
 ## Usage
 
 ``` r
-nomo_missing(x, data, strategies = NULL, ...)
+nomo_missing(fit, data, strategies = NULL, ...)
 
 # S3 method for class 'nomo_cfa'
-nomo_missing(x, data, strategies = NULL, reliability = TRUE, ...)
+nomo_missing(fit, data, strategies = NULL, reliability = TRUE, ...)
 
 # S3 method for class 'nomo_network'
-nomo_missing(x, data, strategies = NULL, ...)
+nomo_missing(fit, data, strategies = NULL, ...)
 ```
 
 ## Arguments
 
-- x:
+- fit:
 
   A `nomo_cfa` or `nomo_network` object.
 
