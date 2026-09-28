@@ -1271,3 +1271,75 @@ test_that("screens saved before within-scale values still summarize and plot", {
                out$relationship_summary$corrected_item_rest_r[
                  match(p$data$item, out$relationship_summary$item)])
 })
+
+
+test_that("negative inter-item pairs are reviewed within a declared scale (#113)", {
+  scales <- list(Agency = paste0("ag", 1:4), Persistence = paste0("pe", 1:4),
+                 SocialDesirability = paste0("sd", 1:3))
+  items <- unlist(scales, use.names = FALSE)
+  pooled <- nomo_screen(nomo_demo_network, items = items)
+  declared <- nomo_screen(nomo_demo_network, items = items, scales = scales)
+
+  # Social desirability is uncorrelated with the other constructs in the
+  # population, so its correlations with their items straddle zero.
+  iic <- declared$inter_item_correlations
+  scale_of <- stats::setNames(rep(names(scales), lengths(scales)), items)
+  between <- scale_of[iic$item1] != scale_of[iic$item2]
+  expect_gt(sum(iic$r[between] < 0), 1L)
+  expect_identical(sum(iic$r[!between] < 0), 0L)
+
+  # Pooled, those pairs flag the Agency and Persistence items.
+  expect_true(all(pooled$relationship_summary$negative_interitem_n[1:8] > 0L))
+  expect_true(all(is.na(pooled$relationship_summary$scale_negative_interitem_n)))
+  expect_true(all(summary(pooled)$item_review$attention == "review"))
+  pooled_log <- pooled$decision_log[pooled$decision_log$metric == "negative_pairs", ]
+  expect_identical(pooled_log$severity, "review")
+  expect_match(pooled_log$observation, "correlations are negative.", fixed = TRUE)
+
+  # Declared, they are reported as information and flag nothing.
+  rel <- declared$relationship_summary
+  expect_identical(rel$negative_interitem_n, pooled$relationship_summary$negative_interitem_n)
+  expect_identical(rel$scale_negative_interitem_n, rep(0L, 11L))
+  expect_true(all(summary(declared)$item_review$attention == "none"))
+  log <- declared$decision_log
+  expect_false("negative_pairs" %in% log$metric)
+  info <- log[log$metric == "negative_pairs_between_scales", ]
+  expect_identical(info$severity, "info")
+  expect_equal(info$value, sum(iic$r[between] < 0))
+  expect_match(info$observation, "declared scales are negative.", fixed = TRUE)
+  expect_true(all(plot(declared)$data$severity[
+    plot(declared)$data$metric == "negative_interitem_pairs"] == "none"))
+})
+
+
+test_that("one negative pair within a scale is still reviewed, and says so", {
+  dat <- data.frame(
+    a1 = c(1L, 4L, 1L, 2L, 5L, 3L, 2L, 3L, 3L, 1L),
+    a2 = c(5L, 5L, 2L, 2L, 1L, 5L, 5L, 1L, 1L, 5L),
+    b1 = c(5L, 2L, 2L, 1L, 4L, 1L, 4L, 3L, 2L, 2L),
+    b2 = c(4L, 4L, 4L, 2L, 4L, 1L, 1L, 4L, 1L, 2L)
+  )
+  out <- nomo_screen(dat, scales = list(A = c("a1", "a2"), B = c("b1", "b2")))
+  log <- out$decision_log
+  within <- log[log$metric == "negative_pairs", ]
+  expect_identical(within$observation,
+                   "1 estimable inter-item correlation within a declared scale is negative.")
+  between <- log[log$metric == "negative_pairs_between_scales", ]
+  expect_match(between$observation,
+               "1 correlation between items of different declared scales is negative.",
+               fixed = TRUE)
+  rel <- out$relationship_summary
+  expect_identical(rel$scale_negative_interitem_n[rel$item %in% c("a1", "a2")], c(1L, 1L))
+  expect_identical(rel$scale_negative_interitem_n[rel$item %in% c("b1", "b2")], c(0L, 0L))
+  review <- summary(out)$item_review
+  expect_true(all(grepl("negative_interitem_pairs", review$review_metrics[review$item %in% c("a1", "a2")])))
+  expect_false(any(grepl("negative_interitem_pairs", review$review_metrics[review$item %in% c("b1", "b2")])))
+})
+
+
+test_that("screens saved before within-scale pair counts still review negative pairs", {
+  out <- nomo_screen(nomo_demo_walkthrough, items = paste0("EF", 1:4))
+  out$relationship_summary$scale_negative_interitem_n <- NULL
+  expect_no_warning(review <- summary(out)$item_review)
+  expect_true(all(grepl("negative_interitem_pairs", review$review_metrics[review$item != "EF2"])))
+})

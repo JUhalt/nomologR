@@ -49,7 +49,8 @@ nomo_screen_relationships <- function(selected, item_summary, guidance,
     median_interitem_r = NA_real_,
     min_interitem_r = NA_real_,
     max_interitem_r = NA_real_,
-    negative_interitem_n = 0L
+    negative_interitem_n = 0L,
+    scale_negative_interitem_n = NA_integer_
   )
 
   inter_item_correlations <- tibble::tibble(
@@ -276,6 +277,25 @@ nomo_screen_relationships <- function(selected, item_summary, guidance,
     relationship_summary$scale_item_rest_n[idx] <- within$n
   }
 
+  # Inter-item signs are read the same way. Two items of one scale should
+  # correlate positively, so a negative pair is a keying or wording clue; items
+  # of different constructs need not correlate at all, and a pair near zero is
+  # as often negative as positive. A pair is reviewed when its items share a
+  # scale, or when either has none declared.
+  scale_of <- stats::setNames(
+    rep(as.character(names(sets)), lengths(sets)),
+    as.character(unlist(sets, use.names = FALSE))
+  )
+  pair_scale_1 <- unname(scale_of[inter_item_correlations$item1])
+  pair_scale_2 <- unname(scale_of[inter_item_correlations$item2])
+  reviewed_pair <- is.na(pair_scale_1) | is.na(pair_scale_2) | pair_scale_1 == pair_scale_2
+  negative_pair <- !is.na(inter_item_correlations$r) & inter_item_correlations$r < 0
+  for (item in names(scale_of)) {
+    involved <- inter_item_correlations$item1 == item | inter_item_correlations$item2 == item
+    relationship_summary$scale_negative_interitem_n[relationship_summary$item == item] <-
+      as.integer(sum(negative_pair & involved & reviewed_pair))
+  }
+
   # Declared keying never recodes the data. When an item is declared
   # reverse-keyed, its item-rest correlation is also computed on an internal
   # copy recoded as declared, so a negative sign can be told apart from a coding
@@ -382,11 +402,11 @@ nomo_screen_relationships <- function(selected, item_summary, guidance,
   }
 
   negative_pairs <- inter_item_correlations[
-    !is.na(inter_item_correlations$r) &
-      inter_item_correlations$r < 0,
+    negative_pair & reviewed_pair,
     ,
     drop = FALSE
   ]
+  n_between <- sum(negative_pair & !reviewed_pair)
 
   if (nrow(negative_pairs) > 0L) {
     decision_log <- nomo_log_add(
@@ -401,15 +421,42 @@ nomo_screen_relationships <- function(selected, item_summary, guidance,
       ),
       severity = "review",
       observation = sprintf(
-        "%d estimable inter-item correlation%s are negative.",
+        "%d estimable inter-item correlation%s%s %s negative.",
         nrow(negative_pairs),
-        if (nrow(negative_pairs) == 1L) "" else "s"
+        if (nrow(negative_pairs) == 1L) "" else "s",
+        if (length(sets)) " within a declared scale" else "",
+        if (nrow(negative_pairs) == 1L) "is" else "are"
       ),
       recommendation = paste(
         "Inspect reverse-keying, miscoding, item wording, and whether",
         "the selected pool contains more than one dimension.",
         "Negative pairs are diagnostic clues, not automatic instructions",
         "to reverse or remove items."
+      )
+    )
+  }
+
+  if (n_between > 0L) {
+    decision_log <- nomo_log_add(
+      decision_log,
+      stage = "screen",
+      object = "inter_item_correlations",
+      metric = "negative_pairs_between_scales",
+      value = n_between,
+      reference = "Items of different constructs need not correlate positively",
+      severity = "info",
+      observation = sprintf(
+        paste(
+          "%d correlation%s between items of different declared scales %s",
+          "negative. They are not reviewed as keying clues."
+        ),
+        n_between,
+        if (n_between == 1L) "" else "s",
+        if (n_between == 1L) "is" else "are"
+      ),
+      recommendation = paste(
+        "Read correlations between scales as evidence about how the",
+        "constructs relate, in the measurement model rather than here."
       )
     )
   }
