@@ -2,13 +2,16 @@
 
 ## nomologR (development version)
 
-- Two edge cases read better
+- Three edge cases read better
   ([\#89](https://github.com/JUhalt/nomologR/issues/89)). The CFA
   summary of a model that did not converge says “No fit index is
   available: the model did not converge.” It had listed the reference
   values with nothing beside them. The item-audit summary shows a column
   with one observed value as “constant” rather than “binary”. The
-  returned `item_type` is unchanged.
+  returned `item_type` is unchanged. The missing-data print says why a
+  strategy was not fitted, such as “FIML: Not fitted: no modeled
+  variable has missing values.” for complete data, and shows its N as
+  “-” rather than `NA`.
 - An invalid choice names the argument it was given for
   ([\#89](https://github.com/JUhalt/nomologR/issues/89)):
   `nomo_scores(fit, method = "eap")` now stops with “`method` must be
