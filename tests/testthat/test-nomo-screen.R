@@ -1108,3 +1108,27 @@ test_that("a constant column reads as constant in the summary (#89)", {
   # Display only: the returned type keeps its stored value.
   expect_identical(out$item_summary$item_type[out$item_summary$item == "same"], "binary")
 })
+
+
+test_that("a negative item-rest correlation the declared keying does not explain says so (#60)", {
+  set.seed(60)
+  f <- stats::rnorm(200)
+  data <- data.frame(
+    x = pmin(5, pmax(1, round(3 + f + stats::rnorm(200, sd = .8)))),
+    y = pmin(5, pmax(1, round(3 + f + stats::rnorm(200, sd = .8)))),
+    z = pmin(5, pmax(1, round(3 - f + stats::rnorm(200, sd = .8))))
+  )
+  # Declaring every item reverse-keyed recodes them all, which leaves z
+  # running against the other two.
+  out <- nomo_screen(data, reverse = c("x", "y", "z"), scale_range = c(1, 5))
+  z <- out$decision_log[out$decision_log$object == "z" &
+                          out$decision_log$metric == "corrected_item_rest", ]
+  expect_match(z$observation, "so the keying does not explain the sign", fixed = TRUE)
+
+  # Without usable keying, the entry reads as before.
+  plain <- nomo_screen(data, reverse = "z")
+  z <- plain$decision_log[plain$decision_log$object == "z" &
+                            plain$decision_log$metric == "corrected_item_rest", ]
+  expect_false(grepl("declared reverse-keyed", z$observation, fixed = TRUE))
+  expect_match(z$recommendation, "Inspect intended keying", fixed = TRUE)
+})

@@ -694,16 +694,16 @@
       
       Largest equality-constraint score diagnostics (diagnostic only)
         Level   Constraint                                 Score  df       p
-        metric  Loading: Agency -> ag3 (online vs. paper)   4.92   1    .027
-        metric  Loading: Agency -> ag2 (online vs. paper)   1.03   1    .310
-        metric  Loading: Agency -> ag4 (online vs. paper)   0.69   1    .406
-        metric  Loading: Agency -> ag1 (online vs. paper)   0.03   1    .869
         scalar  Intercept: ag3 (online vs. paper)          61.12   1  < .001
         scalar  Intercept: ag1 (online vs. paper)          11.32   1  < .001
         scalar  Intercept: ag4 (online vs. paper)           5.56   1    .018
+        metric  Loading: Agency -> ag3 (online vs. paper)   4.92   1    .027
+        metric  Loading: Agency -> ag2 (online vs. paper)   1.03   1    .310
         scalar  Intercept: ag2 (online vs. paper)           0.98   1    .323
+        metric  Loading: Agency -> ag4 (online vs. paper)   0.69   1    .406
         scalar  Loading: Agency -> ag2 (online vs. paper)   0.55   1    .460
         scalar  Loading: Agency -> ag1 (online vs. paper)   0.32   1    .574
+        scalar  Loading: Agency -> ag3 (online vs. paper)   0.19   1    .664
       
       No single delta-CFI, delta-RMSEA, delta-SRMR, chi-square difference, or score
       diagnostic is treated as a universal invariance rule.
