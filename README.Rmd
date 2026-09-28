@@ -1024,6 +1024,53 @@ The complete `v0.1.0` release track is:
 
 `v0.1.0` was the first stable public release.
 
+## The handoff from contentvalidR
+
+[`contentvalidR`](https://github.com/JUhalt/contentvalidR) is the partner
+package for content validity. Its `content_handoff()` records which items passed
+content review and why the others were held back, and nomologR reads that record
+so the empirical stage starts from those decisions without retyping anything. A
+handoff brings:
+
+- the items carried forward, and the items held back. Each held-back item's
+  status and recommendation are quoted in the decision log. nomologR never
+  reinstates it; doing so is a researcher decision to record.
+- the scales, which become the run's scales;
+- the declared keying and the response scale, which the keying notes and the
+  careless-responding indices use. The data are never recoded.
+
+Pass the handoff itself, not `h$items`, so everything it records travels with
+the items:
+
+```r
+nomo_screen(responses, items = h)  # screens the carried items
+nomo_run(responses, scales = h)    # runs the empirical stage on the handoff's scales
+```
+
+**How nomologR reads a handoff.**
+
+- Each item's decision comes from `carried`, which says whether it travels, and
+  `status`, which says why.
+- `recommendation` states the same decision in the workflow's own words. Like
+  `rule`, it is prose, so nomologR quotes it and never matches on it.
+- A decision is never re-derived by comparing a statistic with its criterion,
+  or by branching on the version that produced the handoff.
+- A `keying` of `NA` means nobody said, never that an item is forward-worded.
+
+**Versions.** The handoff is schema version 1. Within it, fields are only
+added, and nomologR ignores fields it does not know. A schema version nomologR
+does not read is refused, with both packages' versions named. The reader is
+tested against handoffs from `contentvalidR` 0.6.0 through 0.10.0. They are
+generated from each release tag and stored with their checksums, and neither
+package depends on the other.
+
+For more, see:
+- `vignette("content-review")`, which carries one reviewed item set through
+  the screen;
+- `contentvalidR`'s
+  [handoff guide](https://juhalt.github.io/contentvalidR/articles/handoff-to-empirical-validation.html)
+  and its [joint walkthrough](https://juhalt.github.io/contentvalidR/articles/one-item-set-both-stages.html).
+
 ## Stability
 
 From `v0.3.0`, the first CRAN release, nomologR's public interface changes only

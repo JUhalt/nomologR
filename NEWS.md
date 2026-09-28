@@ -1,3 +1,7 @@
+# nomologR (development version)
+
+- The content-review reader is tested against `contentvalidR` 0.10.0 output too (#53). Its five handoffs are identical to 0.9.0's apart from the producer version and date, and the reader needed no change.
+
 # nomologR 0.9.0
 
 nomologR 0.9.0 is the last minor release before 1.0.0, the stable release planned
