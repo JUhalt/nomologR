@@ -70,11 +70,13 @@ nomo_validity_convergent_table <- function(x) {
 
 
 # Constructs in the order the model defines them.
+# With one construct there are no pairs, and the pair tables have no columns;
+# `[[` returns NULL for a missing column where tibble's `$` warns.
 nomo_validity_construct_order <- function(x) {
   unique(as.character(c(
-    x$standardized_loadings$factor,
-    x$latent_correlations$construct_1,
-    x$latent_correlations$construct_2
+    x$standardized_loadings[["factor"]],
+    x$latent_correlations[["construct_1"]],
+    x$latent_correlations[["construct_2"]]
   )))
 }
 

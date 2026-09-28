@@ -407,3 +407,12 @@ test_that("closeout B: validity handles an empty standardized-loading evidence t
   expect_equal(nrow(out$standardized_loadings), 0L)
   expect_false(any(out$decision_log$metric == "standardized_loading"))
 })
+
+test_that("a single construct has no pairs, and its output raises no warnings", {
+  v <- nomo_validity(nomo_cfa("A =~ a1 + a2 + a3 + a4", data = nomo_demo_continuous))
+  expect_identical(nrow(nomologR:::nomo_validity_discriminant_table(v)), 0L)
+  expect_no_warning(print(v))
+  expect_no_warning(print(summary(v)))
+  expect_no_warning(evidence <- nomologR:::nomo_run_key_evidence(list(results = list(validity = v))))
+  expect_match(evidence, "separation flags none", fixed = TRUE)
+})

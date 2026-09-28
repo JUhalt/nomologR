@@ -1205,7 +1205,9 @@ test_that("invariance print and summary cover ordered and partial presentation",
   shown$parameterization <- "theta"
   shown$partial <- list(
     n = 1L,
+    # Shaped as nomo_partial() returns it, release_id included.
     releases = tibble::tibble(
+      release_id = "R1",
       level = "metric",
       syntax = "WellBeing =~ w2",
       rationale = "Synthetic researcher-specified release."
