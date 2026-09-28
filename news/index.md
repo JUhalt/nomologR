@@ -2,6 +2,27 @@
 
 ## nomologR (development version)
 
+- When two or more scales are declared, through `scales` or a
+  `contentvalidR` handoff, the item audit reads each item’s corrected
+  item-rest correlation within its own scale
+  ([\#113](https://github.com/JUhalt/nomologR/issues/113)). An item is
+  scored on its scale’s total, so the rest of that scale is what it has
+  to agree with (Nunnally & Bernstein, 1994; Clark & Watson, 2019).
+  Pooled across constructs, the items of a distinct scale look weak: in
+  `nomo_demo_network`, the three social-desirability items correlate .15
+  to .17 with the rest of all eleven items and were flagged, and .52 to
+  .57 with the rest of their own scale. The relationship summary gains
+  `scale`, `scale_item_rest_r`, and `scale_item_rest_n`, and
+  `corrected_item_rest_r` keeps the pooled value. The flag, the
+  decision-log entry (which names the scale), the summary table, and the
+  item-rest plot use the within-scale value. A guided run’s per-scale
+  audits were already within-scale; the instrument-wide audit that
+  `settings$screen$effort = TRUE` adds now agrees with them. `scales` is
+  checked when `effort = FALSE` too, since it now matters there.
+- The item-rest plot draws its values in a column past the bars and the
+  reference line ([\#89](https://github.com/JUhalt/nomologR/issues/89)).
+  A flagged item sits just below the reference, so its value, drawn
+  beside the bar, had crossed the dashed line.
 - [`nomo_missing()`](https://juhalt.github.io/nomologR/reference/nomo_missing.md)
   takes the fitted model as `fit`, as
   [`nomo_reliability()`](https://juhalt.github.io/nomologR/reference/nomo_reliability.md),

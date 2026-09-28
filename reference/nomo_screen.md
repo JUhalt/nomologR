@@ -49,7 +49,10 @@ nomo_screen(
 
   Optional named list of character vectors assigning items to scales.
   Needed for even-odd consistency and for the within-scale versions of
-  long-string and inter-item standard deviation.
+  long-string and inter-item standard deviation. With two or more
+  scales, each item's corrected item-rest correlation is also computed
+  against the rest of its own scale, and the item review uses that
+  value. A `contentvalidR` handoff supplies its scales here.
 
 - reverse:
 
@@ -84,7 +87,10 @@ An object of class `nomo_screen`. The fields to read are:
 - `case_summary`: missingness per row.
 
 - `relationship_summary`: each item's corrected item-rest correlation
-  and summary of its inter-item correlations.
+  and summary of its inter-item correlations. With two or more declared
+  scales, `scale`, `scale_item_rest_r`, and `scale_item_rest_n` give
+  each item's scale and its item-rest correlation within that scale;
+  otherwise they are `NA`.
 
 - `inter_item_correlations`: one row per item pair.
 
