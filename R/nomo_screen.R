@@ -20,7 +20,10 @@
 #'   insufficient-effort responding are added. See **Careless responding**.
 #' @param scales Optional named list of character vectors assigning items to
 #'   scales. Needed for even-odd consistency and for the within-scale versions
-#'   of long-string and inter-item standard deviation.
+#'   of long-string and inter-item standard deviation. With two or more scales,
+#'   each item's corrected item-rest correlation is also computed against the
+#'   rest of its own scale, and the item review uses that value. A
+#'   `contentvalidR` handoff supplies its scales here.
 #' @param reverse Optional character vector naming reverse-keyed items. Used
 #'   only to recode an internal copy for the indices that need it; the data is
 #'   never recoded.
@@ -101,7 +104,10 @@
 #'   * `response_distribution`: counts and proportions of each response.
 #'   * `case_summary`: missingness per row.
 #'   * `relationship_summary`: each item's corrected item-rest correlation and
-#'     summary of its inter-item correlations.
+#'     summary of its inter-item correlations. With two or more declared
+#'     scales, `scale`, `scale_item_rest_r`, and `scale_item_rest_n` give each
+#'     item's scale and its item-rest correlation within that scale; otherwise
+#'     they are `NA`.
 #'   * `inter_item_correlations`: one row per item pair.
 #'   * `decision_log`: the evidence and its explanations (see [nomo_table()]).
 #'   * `effort`, `effort_pairs`, and `effort_settings`: the careless-responding
@@ -273,7 +279,8 @@ nomo_screen <- function(data,
     item_summary = item_summary,
     guidance = guidance,
     reverse = reverse,
-    scale_range = scale_range
+    scale_range = scale_range,
+    scales = scales
   )
 
   decision_log <- nomo_log_new()
@@ -782,6 +789,24 @@ nomo_screen_effort_args <- function(effort, selected, items, scales, reverse,
   if (!is.logical(effort) || length(effort) != 1L || is.na(effort)) {
     stop("`effort` must be TRUE or FALSE.", call. = FALSE)
   }
+
+  # `scales` also sets the within-scale item-rest correlations, so it is
+  # checked whether or not the effort indices are requested.
+  if (!is.null(scales)) {
+    if (!is.list(scales) || !length(scales) ||
+          !all(vapply(scales, is.character, logical(1)))) {
+      stop("`scales` must be a list of character vectors of item names.", call. = FALSE)
+    }
+    unknown <- setdiff(unlist(scales, use.names = FALSE), items)
+    if (length(unknown)) {
+      stop(
+        paste0("`scales` names item(s) not being screened: ",
+               paste(unknown, collapse = ", "), "."),
+        call. = FALSE
+      )
+    }
+  }
+
   if (!isTRUE(effort)) {
     return(list(scales = NULL, reverse = NULL, scale_range = NULL))
   }
@@ -801,21 +826,6 @@ nomo_screen_effort_args <- function(effort, selected, items, scales, reverse,
   if (!is.numeric(pair_magnitude) || length(pair_magnitude) != 1L ||
         !is.finite(pair_magnitude) || pair_magnitude <= 0 || pair_magnitude >= 1) {
     stop("`pair_magnitude` must be a single number between 0 and 1.", call. = FALSE)
-  }
-
-  if (!is.null(scales)) {
-    if (!is.list(scales) || !length(scales) ||
-          !all(vapply(scales, is.character, logical(1)))) {
-      stop("`scales` must be a list of character vectors of item names.", call. = FALSE)
-    }
-    unknown <- setdiff(unlist(scales, use.names = FALSE), items)
-    if (length(unknown)) {
-      stop(
-        paste0("`scales` names item(s) not being screened: ",
-               paste(unknown, collapse = ", "), "."),
-        call. = FALSE
-      )
-    }
   }
 
   if (!is.null(reverse)) {

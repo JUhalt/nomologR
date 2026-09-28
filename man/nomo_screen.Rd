@@ -31,7 +31,10 @@ insufficient-effort responding are added. See \strong{Careless responding}.}
 
 \item{scales}{Optional named list of character vectors assigning items to
 scales. Needed for even-odd consistency and for the within-scale versions
-of long-string and inter-item standard deviation.}
+of long-string and inter-item standard deviation. With two or more scales,
+each item's corrected item-rest correlation is also computed against the
+rest of its own scale, and the item review uses that value. A
+\code{contentvalidR} handoff supplies its scales here.}
 
 \item{reverse}{Optional character vector naming reverse-keyed items. Used
 only to recode an internal copy for the indices that need it; the data is
@@ -55,7 +58,10 @@ near-zero-variance indicators.
 \item \code{response_distribution}: counts and proportions of each response.
 \item \code{case_summary}: missingness per row.
 \item \code{relationship_summary}: each item's corrected item-rest correlation and
-summary of its inter-item correlations.
+summary of its inter-item correlations. With two or more declared
+scales, \code{scale}, \code{scale_item_rest_r}, and \code{scale_item_rest_n} give each
+item's scale and its item-rest correlation within that scale; otherwise
+they are \code{NA}.
 \item \code{inter_item_correlations}: one row per item pair.
 \item \code{decision_log}: the evidence and its explanations (see \code{\link[=nomo_table]{nomo_table()}}).
 \item \code{effort}, \code{effort_pairs}, and \code{effort_settings}: the careless-responding
