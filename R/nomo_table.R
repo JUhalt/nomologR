@@ -32,6 +32,8 @@
 #' * `nomo_hypotheses`: the machine-readable hypothesis table (no `type`).
 #' * `nomo_network`: `"hypotheses"` (default), `"fit"`, `"measurement"`,
 #'   `"relations"`, `"replication"`, `"decision_log"`.
+#' * `nomo_retest`: `"icc"` (default), `"reliable_change"`, `"decision_log"`;
+#'   see [nomo_retest()].
 #' * `nomo_invariance`: `"fit"` (default), `"categories"`, `"partial"`,
 #'   `"local_strain"`, `"decision_log"`. The local-strain table keeps lavaan's
 #'   internal `constraint` label and adds a human-readable
@@ -124,6 +126,16 @@ nomo_table.nomo_network <- function(
   }
 
   x$decision_log
+}
+
+
+#' @export
+nomo_table.nomo_retest <- function(
+    x,
+    type = c("icc", "reliable_change", "decision_log"),
+    ...) {
+  type <- nomo_match_arg(type)
+  x[[type]]
 }
 
 

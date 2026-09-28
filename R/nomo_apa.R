@@ -129,8 +129,8 @@ nomo_apa_new <- function(body, title, stub, general = character(),
 #' Any change will be described in NEWS; see `?nomologR` for the stability
 #' policy.
 #'
-#' @param x A result object: `nomo_cfa`, `nomo_reliability`, `nomo_validity`,
-#'   `nomo_invariance`, or `nomo_network`.
+#' @param x A result object: `nomo_cfa`, `nomo_reliability`, `nomo_retest`,
+#'   `nomo_validity`, `nomo_invariance`, or `nomo_network`.
 #' @param type Which table to build. For `nomo_cfa`: `"loadings"`, `"fit"`, or
 #'   `"factor_correlations"`. For `nomo_validity`: `"discriminant"` or
 #'   `"convergent"`. For `nomo_network`: `"hypotheses"` or `"fit"`. Other
@@ -188,8 +188,8 @@ nomo_apa_table.default <- function(x, type = NULL, number = NULL, title = NULL, 
   stop(
     paste0(
       "No APA table is available for an object of class `", class(x)[[1L]],
-      "`. Supported: nomo_cfa, nomo_reliability, nomo_validity, nomo_invariance,",
-      " nomo_network."
+      "`. Supported: nomo_cfa, nomo_reliability, nomo_retest, nomo_validity,",
+      " nomo_invariance, nomo_network."
     ),
     call. = FALSE
   )
@@ -456,6 +456,44 @@ nomo_apa_table.nomo_network <- function(x, type = c("hypotheses", "fit"),
       character()
     },
     number = number, source = "nomo_network"
+  )
+}
+
+
+#' @export
+nomo_apa_table.nomo_retest <- function(x, type = NULL, number = NULL,
+                                       title = NULL, ...) {
+  icc <- x$icc
+  body <- data.frame(
+    Composite = icc$composite,
+    n = as.character(icc$n),
+    agreement = nomo_apa_interval(icc$icc_agreement, icc$agreement_ci_lower,
+                                  icc$agreement_ci_upper, bounded = TRUE),
+    consistency = nomo_apa_interval(icc$icc_consistency, icc$consistency_ci_lower,
+                                    icc$consistency_ci_upper, bounded = TRUE),
+    change = nomo_apa_interval(icc$mean_change, icc$change_ci_lower,
+                               icc$change_ci_upper, bounded = FALSE),
+    SEM = nomo_apa_number(icc$sem, 2L, bounded = FALSE),
+    SDC = nomo_apa_number(icc$sdc, 2L, bounded = FALSE),
+    stringsAsFactors = FALSE
+  )
+  names(body) <- c(
+    "Composite", "*n*", "ICC(A,1) [95% CI]", "ICC(C,1) [95% CI]",
+    "Mean change [95% CI]", "SEM", "SDC"
+  )
+  nomo_apa_new(
+    body = body,
+    title = nomo_apa_or(title, "Test-Retest Reliability"),
+    stub = "Composite",
+    general = paste(
+      "ICC(A,1) = intraclass correlation from a two-way mixed-effects model,",
+      "absolute agreement, single measurement; ICC(C,1) = the same with",
+      "consistency (McGraw & Wong, 1996; Koo & Li, 2016). Mean change is from",
+      "the first to the last occasion. SEM = standard error of measurement;",
+      "SDC = smallest detectable change, 1.96 \u00d7 \u221a2 \u00d7 SEM (Weir, 2005).",
+      if (is.na(x$interval)) "" else sprintf("Interval between occasions: %s.", x$interval)
+    ),
+    number = number, source = "nomo_retest"
   )
 }
 

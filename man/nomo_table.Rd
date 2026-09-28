@@ -45,6 +45,8 @@ the latent correlation and the HTMT-family values together; see
 \item \code{nomo_hypotheses}: the machine-readable hypothesis table (no \code{type}).
 \item \code{nomo_network}: \code{"hypotheses"} (default), \code{"fit"}, \code{"measurement"},
 \code{"relations"}, \code{"replication"}, \code{"decision_log"}.
+\item \code{nomo_retest}: \code{"icc"} (default), \code{"reliable_change"}, \code{"decision_log"};
+see \code{\link[=nomo_retest]{nomo_retest()}}.
 \item \code{nomo_invariance}: \code{"fit"} (default), \code{"categories"}, \code{"partial"},
 \code{"local_strain"}, \code{"decision_log"}. The local-strain table keeps lavaan's
 internal \code{constraint} label and adds a human-readable

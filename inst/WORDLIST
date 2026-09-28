@@ -61,6 +61,7 @@ FIML's
 Fabrigar
 Fava
 Fiske
+Fleiss
 Fokkema
 Fornell
 Frongillo
@@ -88,6 +89,7 @@ Holzinger
 Hu
 Huffcutt
 ISD
+Intraclass
 Isager
 JUhalt
 Jöreskog
@@ -95,6 +97,7 @@ KMO
 Keeney
 Kiers
 Kolenikov
+Koo
 Laake
 Laake's
 Lakens
@@ -170,6 +173,7 @@ Schuirmann
 Schwarz
 Seva
 Shavelson
+Shrout
 Sijtsma
 Simonsohn
 Skrondal
@@ -185,6 +189,8 @@ TLI
 Thissen
 Timmerman
 Toit
+Truax
+Truax's
 ULS
 Vandenberg
 Veldkamp
@@ -233,6 +239,7 @@ handoffs
 heterotrait
 inspectable
 interfactor
+intraclass
 knitr's
 lavaan
 lavaan's
@@ -293,6 +300,7 @@ unobservable
 unquantified
 varimax
 walkthrough
+walkthrough's
 walkthroughs
 workstream
 workstreams

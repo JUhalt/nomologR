@@ -1,5 +1,11 @@
 # nomologR (development version)
 
+- New `nomo_retest()` for test-retest reliability (#129).
+  - **The intraclass correlations.** For scores on two or more occasions, it estimates ICC(A,1), the two-way mixed-effects, absolute-agreement, single-measurement form Koo and Li (2016) recommend for test-retest data, with its 95% interval. Beside it are the consistency form ICC(C,1) (McGraw & Wong, 1996) and the mean change between occasions. A systematic shift is flagged, because ICC(A,1) counts it as disagreement.
+  - **Koo and Li's description.** The reliability is described in Koo and Li's terms (poor, moderate, good, excellent), read from the interval as they ask, and an interval that reaches "poor" is flagged.
+  - **Measurement error.** It reports the standard error of measurement, SD x sqrt(1 - ICC), and the smallest detectable change, 1.96 x sqrt(2) x SEM (Weir, 2005).
+  - **Reliable change.** Each person's reliable change index follows Jacobson and Truax (1991); it exceeds 1.96 exactly when the change exceeds the smallest detectable change.
+  - **Other outputs.** `nomo_table()`, `nomo_apa_table()`, `nomo_methods()`, and the measurement-evidence article cover it.
 - The content-review reader is tested against `contentvalidR` 0.10.0 output too (#53). Its five handoffs are identical to 0.9.0's apart from the producer version and date, and the reader needed no change.
 
 # nomologR 0.9.0
