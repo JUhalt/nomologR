@@ -4,6 +4,7 @@ Achim
 Aert
 Assen
 Augusteijn
+Bagozzi
 Baguley
 Bakker
 Bandalos
@@ -81,6 +82,8 @@ HTMT
 Hau
 Haviland
 Haviland's
+Hayduk
+Heatherton
 Hehman
 Helmes
 Henseler
@@ -98,6 +101,7 @@ Keeney
 Kiers
 Kolenikov
 Koo
+LISREL
 Laake
 Laake's
 Lakens
@@ -131,6 +135,7 @@ Nomological
 Nosek
 Nunnally
 OWL's
+Oberski
 Olkin
 PUC
 Pandoc
@@ -247,6 +252,7 @@ lavaan’s
 listwise
 md
 mis
+misestimating
 misspecification
 misspecified
 monotrait
@@ -265,11 +271,13 @@ nonredundant
 oblimin
 orchestrator
 orthogonalization
+overcorrects
 pandoc
 pkgdown
 polychoric
 pre
 prespecifies
+reliabilities
 replicability
 respecification
 respecified

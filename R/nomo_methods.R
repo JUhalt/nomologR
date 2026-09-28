@@ -45,6 +45,15 @@ nomo_bibliography <- function() {
       "10.1037/0033-2909.103.3.411"
     ),
     nomo_bib_entry(
+      "bagozzi_heatherton_1994", "Bagozzi & Heatherton (1994)",
+      paste(
+        "Bagozzi, R. P., & Heatherton, T. F. (1994). A general approach to",
+        "representing multifaceted personality constructs: Application to state",
+        "self-esteem. Structural Equation Modeling, 1(1), 35-67."
+      ),
+      "10.1080/10705519409539961"
+    ),
+    nomo_bib_entry(
       "bartlett_1950", "Bartlett (1950)",
       paste(
         "Bartlett, M. S. (1950). Tests of significance in factor analysis.",
@@ -105,6 +114,14 @@ nomo_bibliography <- function() {
         "research: A primer. Frontiers in Public Health, 6, 149."
       ),
       "10.3389/fpubh.2018.00149"
+    ),
+    nomo_bib_entry(
+      "bollen_1989", "Bollen (1989)",
+      paste(
+        "Bollen, K. A. (1989). Structural equations with latent variables.",
+        "Wiley."
+      ),
+      "10.1002/9781118619179"
     ),
     nomo_bib_entry(
       "bonifay_2017", "Bonifay, Lane, & Reise (2017)",
@@ -256,6 +273,15 @@ nomo_bibliography <- function() {
       "10.1016/j.jesp.2015.07.006"
     ),
     nomo_bib_entry(
+      "deshon_1998", "DeShon (1998)",
+      paste(
+        "DeShon, R. P. (1998). A cautionary note on measurement error",
+        "corrections in structural equation models. Psychological Methods, 3(4),",
+        "412-423."
+      ),
+      "10.1037/1082-989X.3.4.412"
+    ),
+    nomo_bib_entry(
       "dunn_2014", "Dunn, Baguley, & Brunsden (2014)",
       paste(
         "Dunn, T. J., Baguley, T., & Brunsden, V. (2014). From alpha to omega: A",
@@ -377,6 +403,14 @@ nomo_bibliography <- function() {
         "reliability within latent variable systems. In R. Cudeck, S. du Toit, &",
         "D. Sorbom (Eds.), Structural equation modeling: Present and future",
         "(pp. 195-216). Scientific Software International."
+      ),
+      NA_character_
+    ),
+    nomo_bib_entry(
+      "hayduk_1987", "Hayduk (1987)",
+      paste(
+        "Hayduk, L. A. (1987). Structural equation modeling with LISREL:",
+        "Essentials and advances. Johns Hopkins University Press."
       ),
       NA_character_
     ),
@@ -642,6 +676,15 @@ nomo_bibliography <- function() {
       "Nunnally, J. C., & Bernstein, I. H. (1994). Psychometric theory (3rd ed.). McGraw-Hill."
     ),
     nomo_bib_entry(
+      "oberski_satorra_2013", "Oberski & Satorra (2013)",
+      paste(
+        "Oberski, D. L., & Satorra, A. (2013). Measurement error models with",
+        "uncertainty about the error variance. Structural Equation Modeling,",
+        "20(3), 409-428."
+      ),
+      "10.1080/10705511.2013.797820"
+    ),
+    nomo_bib_entry(
       "putnick_bornstein_2016", "Putnick & Bornstein (2016)",
       paste(
         "Putnick, D. L., & Bornstein, M. H. (2016). Measurement invariance",
@@ -757,6 +800,15 @@ nomo_bibliography <- function() {
       "10.1007/s11336-009-9135-y"
     ),
     nomo_bib_entry(
+      "savalei_2019", "Savalei (2019)",
+      paste(
+        "Savalei, V. (2019). A comparison of several approaches for controlling",
+        "measurement error in small samples. Psychological Methods, 24(3),",
+        "352-370."
+      ),
+      "10.1037/met0000181"
+    ),
+    nomo_bib_entry(
       "schafer_graham_2002", "Schafer & Graham (2002)",
       paste(
         "Schafer, J. L., & Graham, J. W. (2002). Missing data: Our view of the",
@@ -815,6 +867,14 @@ nomo_bibliography <- function() {
         "22(11), 1359-1366."
       ),
       "10.1177/0956797611417632"
+    ),
+    nomo_bib_entry(
+      "spearman_1904", "Spearman (1904)",
+      paste(
+        "Spearman, C. (1904). The proof and measurement of association between",
+        "two things. The American Journal of Psychology, 15(1), 72-101."
+      ),
+      "10.2307/1412159"
     ),
     nomo_bib_entry(
       "svetina_2020", "Svetina, Rutkowski, & Rutkowski (2020)",
@@ -891,6 +951,16 @@ nomo_bibliography <- function() {
         "checklist to avoid p-hacking. Frontiers in Psychology, 7, 1832."
       ),
       "10.3389/fpsyg.2016.01832"
+    ),
+    nomo_bib_entry(
+      "williams_hazer_1986", "Williams & Hazer (1986)",
+      paste(
+        "Williams, L. J., & Hazer, J. T. (1986). Antecedents and consequences of",
+        "satisfaction and commitment in turnover models: A reanalysis using",
+        "latent variable structural equation methods. Journal of Applied",
+        "Psychology, 71(2), 219-231."
+      ),
+      "10.1037/0021-9010.71.2.219"
     ),
     nomo_bib_entry(
       "yung_1999", "Yung, Thissen, & McLeod (1999)",
@@ -1931,6 +2001,28 @@ nomo_methods_registry <- function() {
       c("fokkema_greiff_2017")
     ),
 
+    nomo_method_entry(
+      "single_indicator_reliability", "network",
+      "Single-indicator latent variables with error variance from reliability",
+      "contemporary", "supporting",
+      paste(
+        "Relations of a composite's true score, with its error variance fixed",
+        "at (1 - reliability) times its observed variance."
+      ),
+      paste(
+        "The composite is unidimensional and its reliability captures its",
+        "measurement error; alpha understates reliability when loadings differ,",
+        "which overcorrects. Standard errors treat the reliability as known",
+        "unless its uncertainty is supplied."
+      ),
+      "nomo_network()", "lavaan",
+      c(
+        "spearman_1904", "hayduk_1987", "williams_hazer_1986", "bollen_1989",
+        "bagozzi_heatherton_1994", "deshon_1998", "oberski_satorra_2013",
+        "savalei_2019"
+      )
+    ),
+
     # Stage 9: workflow, provenance, and reporting ---------------------------
     nomo_method_entry(
       "staged_workflow", "workflow",
@@ -2115,6 +2207,7 @@ nomo_methods_history <- function() {
     c("parallel_model_test", "mcneish_wolf_2020", NA),
     c("nomological_network", "cronbach_meehl_1955", "two_step_sem; prediction_provenance"),
     c("two_step_sem", "anderson_gerbing_1988", NA),
+    c("single_indicator_reliability", NA, NA),
     c("equivalence_testing", "schuirmann_1987", NA),
     c("prediction_provenance", "nosek_2018", NA),
     c("listwise_deletion", NA, "fiml; missing_sensitivity"),

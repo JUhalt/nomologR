@@ -99,11 +99,12 @@ nomo_present_count <- function(n, singular, plural = paste0(singular, "s")) {
 }
 
 
-# Alternatives joined as prose: "a", "a or b", "a, b, or c".
-nomo_present_or <- function(x) {
+# Alternatives joined as prose: "a", "a or b", "a, b, or c"; with
+# `word = "and"`, a list: "a and b", "a, b, and c".
+nomo_present_or <- function(x, word = "or") {
   n <- length(x)
-  if (n < 3L) return(paste(x, collapse = " or "))
-  paste0(paste(x[-n], collapse = ", "), ", or ", x[[n]])
+  if (n < 3L) return(paste(x, collapse = paste0(" ", word, " ")))
+  paste0(paste(x[-n], collapse = ", "), ", ", word, " ", x[[n]])
 }
 
 

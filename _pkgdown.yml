@@ -72,6 +72,7 @@ reference:
       - nomo_hypotheses
       - nomo_expectations
       - nomo_network
+      - nomo_single_indicator
       - plot.nomo_network
   - title: Teaching datasets
     desc: >

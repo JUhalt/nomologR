@@ -615,7 +615,8 @@ nomo_network_hypothesis_evidence <- function(hypotheses,
                                              latent,
                                              data,
                                              measurement_context,
-                                             equivalence_alpha = 0.05) {
+                                             equivalence_alpha = 0.05,
+                                             extra_variance = NULL) {
   h <- hypotheses$hypotheses
   rows <- vector("list", nrow(h))
 
@@ -679,6 +680,20 @@ nomo_network_hypothesis_evidence <- function(hypotheses,
     p_value <- if (use_standardized) p_s else p_u
     ci_lower <- if (use_standardized) lo_s else lo_u
     ci_upper <- if (use_standardized) hi_s else hi_u
+
+    # The uncertainty in a single indicator's reliability, added to the
+    # estimate's variance as Oberski and Satorra (2013) derive. The interval
+    # and p-value follow from the larger standard error.
+    added <- if (hyp$id %in% names(extra_variance)) extra_variance[[hyp$id]] else 0
+    if (added > 0 && is.finite(se)) {
+      se <- sqrt(se^2 + added)
+      critical <- stats::qnorm(0.975)
+      ci_lower <- estimate - critical * se
+      ci_upper <- estimate + critical * se
+      p_value <- 2 * stats::pnorm(-abs(estimate / se))
+    } else {
+      added <- 0
+    }
 
     eq_ci <- c(lower = NA_real_, upper = NA_real_)
     if (identical(hyp$prediction, "negligible") &&
@@ -807,6 +822,7 @@ nomo_network_hypothesis_evidence <- function(hypotheses,
       origin = hyp$origin,
       estimate = estimate,
       se = se,
+      se_reliability_added = sqrt(added),
       ci_lower = ci_lower,
       ci_upper = ci_upper,
       p_value = p_value,
@@ -1433,6 +1449,11 @@ nomo_network_validate_data <- function(data, label) {
 #' @param equivalence_alpha One number strictly between 0 and .5. For
 #'   quantitative negligible predictions, the equivalence confidence level is
 #'   `1 - 2 * equivalence_alpha`.
+#' @param single_indicators Optional composites to model as single-indicator
+#'   latent variables: a named list, or a named numeric vector, whose names are
+#'   observed variables that `model` uses and whose values are reliabilities,
+#'   given as one number or as a [nomo_single_indicator()] record. See
+#'   **Single indicators**.
 #' @param guidance Guidance settings returned by `nomo_defaults()`.
 #'
 #' @section Relationships estimated between observed variables:
@@ -1468,6 +1489,34 @@ nomo_network_validate_data <- function(data, label) {
 #' note that corrected ones may require resampling. The result does not extend
 #' to nonlinear models. No correction is applied automatically.
 #'
+#' Where they are composites whose reliability is known, `single_indicators`
+#' corrects them (see **Single indicators**).
+#'
+#' @section Single indicators:
+#' A composite named in `single_indicators` becomes the one indicator of a
+#' latent variable with the composite's name, so the model syntax and the
+#' hypotheses are unchanged. Its error variance is fixed at
+#' \eqn{(1 - \rho)\sigma^2}, the reliability's complement times the
+#' composite's variance in the data being fitted, and the relationships it
+#' enters are corrected for its unreliability (Bollen, 1989; Savalei, 2019).
+#' [nomo_single_indicator()] explains the method's origin and evidence, and
+#' which reliability to use.
+#'
+#' The correction is only as good as the reliability, and Savalei (2019) found
+#' that misestimating it by more than about .05 costs accuracy. So each
+#' hypothesis is refitted with each composite's reliability .05 and .10 lower
+#' and higher, one composite at a time, and `single_indicator_sensitivity`
+#' records the estimates, intervals, and concordance at each. The decision log
+#' flags any hypothesis whose concordance changes across that range.
+#'
+#' When a reliability's standard error is supplied, the standard errors,
+#' intervals, and concordance of the hypotheses add its uncertainty, following
+#' Oberski and Satorra (2013): the variance of an estimate gains its squared
+#' rate of change in the reliability times the reliability's variance. The rate
+#' of change is taken from the refits within .05 of the reliability. Without a
+#' standard error, the log says that the standard errors treat the reliability
+#' as known.
+#'
 #' @return A `nomo_network` object. The fields to read are:
 #'
 #'   * `hypothesis_evidence`: one row per hypothesis, with its prediction,
@@ -1484,6 +1533,12 @@ nomo_network_validate_data <- function(data, label) {
 #'     relations added from the hypotheses.
 #'   * `fit`: the `lavaan` fit, and `validation`, the validation fit, when
 #'     given.
+#'   * `single_indicators`: one row per composite modeled as a single
+#'     indicator, with its reliability, the reliability's standard error,
+#'     coefficient, and source, the composite's variance, and the error
+#'     variance fixed. Empty when `single_indicators` is not used.
+#'   * `single_indicator_sensitivity`: each hypothesis's estimate, interval,
+#'     and concordance with each composite's reliability shifted by up to .10.
 #'   * `converged`, `engine_warnings`, and `decision_log`.
 #'
 #'   Other fields record the call, the settings used, and intermediate engine
@@ -1494,6 +1549,9 @@ nomo_network_validate_data <- function(data, label) {
 #' Anderson, J. C., & Gerbing, D. W. (1988). Structural equation modeling in
 #' practice: A review and recommended two-step approach. *Psychological
 #' Bulletin, 103*(3), 411-423. \doi{10.1037/0033-2909.103.3.411}
+#'
+#' Bollen, K. A. (1989). *Structural equations with latent variables*. Wiley.
+#' \doi{10.1002/9781118619179}
 #'
 #' Cronbach, L. J., & Meehl, P. E. (1955). Construct validity in psychological
 #' tests. *Psychological Bulletin, 52*(4), 281-302. \doi{10.1037/h0040957}
@@ -1507,9 +1565,17 @@ nomo_network_validate_data <- function(data, label) {
 #' into score meaning. *American Psychologist, 50*(9), 741-749.
 #' \doi{10.1037/0003-066X.50.9.741}
 #'
+#' Oberski, D. L., & Satorra, A. (2013). Measurement error models with
+#' uncertainty about the error variance. *Structural Equation Modeling, 20*(3),
+#' 409-428. \doi{10.1080/10705511.2013.797820}
+#'
 #' Rosseel, Y., & Loh, W. W. (2024). A structural after measurement approach
 #' to structural equation modeling. *Psychological Methods, 29*(3), 561-588.
 #' \doi{10.1037/met0000503}
+#'
+#' Savalei, V. (2019). A comparison of several approaches for controlling
+#' measurement error in small samples. *Psychological Methods, 24*(3), 352-370.
+#' \doi{10.1037/met0000181}
 #'
 #' Schuirmann, D. J. (1987). A comparison of the two one-sided tests procedure
 #' and the power approach for assessing the equivalence of average
@@ -1541,6 +1607,19 @@ nomo_network_validate_data <- function(data, label) {
 #' s <- nomo_split(nomo_demo_network, validation_prop = 0.40, seed = 2026)
 #' net_rep <- nomo_network(model, data = s, hypotheses = h)
 #' nomo_table(net_rep, "replication")
+#'
+#' # A composite corrected for its unreliability: the Persistence mean, with
+#' # omega from its own measurement model.
+#' dat <- nomo_demo_network
+#' dat$persistence <- rowMeans(dat[c("pe1", "pe2", "pe3", "pe4")])
+#' rel <- nomo_reliability(nomo_cfa("P =~ pe1 + pe2 + pe3 + pe4", dat))
+#' net_si <- nomo_network(
+#'   "Agency =~ ag1 + ag2 + ag3 + ag4",
+#'   data = dat,
+#'   hypotheses = nomo_hypotheses("Agency -> persistence" = positive()),
+#'   single_indicators = list(persistence = nomo_single_indicator(rel))
+#' )
+#' nomo_table(net_si, "single_indicators")
 #' }
 #' @export
 nomo_network <- function(model,
@@ -1554,6 +1633,7 @@ nomo_network <- function(model,
                          std.lv = TRUE,
                          control = NULL,
                          equivalence_alpha = 0.05,
+                         single_indicators = NULL,
                          guidance = nomo_defaults()) {
   if (inherits(model, "nomo_model")) model <- as.character(model)
 
@@ -1700,6 +1780,14 @@ nomo_network <- function(model,
     nomo_check_model_variables(model, validation_data, "validation_data")
   }
 
+  single <- nomo_network_single_spec(
+    single_indicators = single_indicators,
+    data = primary_data,
+    validation_data = validation_data,
+    ordered = ordered,
+    prepared = prepared
+  )
+
   estimator_requested <- estimator
   estimator_source <- if (length(ordered) && is.null(estimator_requested)) {
     estimator_requested <- "WLSMV"
@@ -1710,41 +1798,67 @@ nomo_network <- function(model,
     "researcher"
   }
 
-  primary <- nomo_network_fit_once(
-    model_fitted = prepared$full_model,
-    model_relations = prepared$additions,
-    hypotheses = hypotheses,
-    data = primary_data,
-    ordered = ordered,
-    estimator_requested = estimator_requested,
-    estimator_source = estimator_source,
-    missing = missing,
-    std.lv = std.lv,
-    control = control,
-    guidance = guidance,
-    equivalence_alpha = equivalence_alpha,
-    sample_role = primary_role
+  # One sample fitted with the composites in `spec` as single indicators; with
+  # none, the model and data are fitted as given.
+  fit_sample <- function(spec, sample_data, sample_role) {
+    applied <- nomo_network_single_apply(prepared$full_model, sample_data, spec)
+    list(
+      result = nomo_network_fit_once(
+        model_fitted = applied$model,
+        model_relations = prepared$additions,
+        hypotheses = hypotheses,
+        data = applied$data,
+        ordered = ordered,
+        estimator_requested = estimator_requested,
+        estimator_source = estimator_source,
+        missing = missing,
+        std.lv = std.lv,
+        control = control,
+        guidance = guidance,
+        equivalence_alpha = equivalence_alpha,
+        sample_role = sample_role
+      ),
+      model = applied$model,
+      data = applied$data,
+      table = applied$table
+    )
+  }
+
+  primary_sample <- fit_sample(single, primary_data, primary_role)
+  primary <- primary_sample$result
+
+  sensitivity <- nomo_network_single_sensitivity(
+    spec = single,
+    base = primary,
+    refit = function(spec) fit_sample(spec, primary_data, primary_role)$result
+  )
+  primary <- nomo_network_single_reevaluate(
+    primary, hypotheses, primary_sample$data, sensitivity$extra, equivalence_alpha
   )
 
   validation <- NULL
   replication_evidence <- tibble::tibble()
 
   if (!is.null(validation_data)) {
-    validation <- nomo_network_fit_once(
-      model_fitted = prepared$full_model,
-      model_relations = prepared$additions,
-      hypotheses = hypotheses,
-      data = validation_data,
-      ordered = ordered,
-      estimator_requested = estimator_requested,
-      estimator_source = estimator_source,
-      missing = missing,
-      std.lv = std.lv,
-      control = control,
-      guidance = guidance,
-      equivalence_alpha = equivalence_alpha,
-      sample_role = "validation"
-    )
+    validation_sample <- fit_sample(single, validation_data, "validation")
+    validation <- validation_sample$result
+
+    # The validation sample's standard errors add the reliabilities'
+    # uncertainty too, from refits of its own.
+    uncertain <- which(is.finite(single$se))
+    if (length(uncertain)) {
+      validation_extra <- nomo_network_single_sensitivity(
+        spec = single,
+        base = validation,
+        refit = function(spec) fit_sample(spec, validation_data, "validation")$result,
+        shifts = c(-0.05, 0.05),
+        perturb = uncertain
+      )$extra
+      validation <- nomo_network_single_reevaluate(
+        validation, hypotheses, validation_sample$data, validation_extra,
+        equivalence_alpha
+      )
+    }
 
     replication_evidence <- nomo_network_replication_evidence(
       primary,
@@ -1766,7 +1880,8 @@ nomo_network <- function(model,
 
   decision_log <- dplyr::bind_rows(
     decision_log,
-    nomo_network_endpoint_log(hypotheses, primary$fit)
+    nomo_network_endpoint_log(hypotheses, primary$fit),
+    nomo_network_single_log(primary_sample$table, sensitivity$table)
   )
 
   if (!is.null(validation)) {
@@ -1787,7 +1902,7 @@ nomo_network <- function(model,
   out <- list(
     call = match.call(),
     model_original = model,
-    model_fitted = prepared$full_model,
+    model_fitted = primary_sample$model,
     model_relations = prepared$additions,
     hypotheses = hypotheses,
     sample_role = primary_role,
@@ -1812,6 +1927,8 @@ nomo_network <- function(model,
     hypothesis_evidence = primary$hypothesis_evidence,
     validation = validation,
     replication_evidence = replication_evidence,
+    single_indicators = primary_sample$table,
+    single_indicator_sensitivity = sensitivity$table,
     decision_log = decision_log,
     guidance = guidance
   )
@@ -1872,7 +1989,10 @@ nomo_network_endpoint_log <- function(hypotheses, fit) {
     "from a measurement model of its own, give consistent estimates of the",
     "regression coefficients; scores from one model containing both, or from",
     "the same method for both, do not, and the standard errors here still treat",
-    "the scores as observed."
+    "the scores as observed. Where they are composites whose reliability is",
+    "known, `single_indicators` models each as a single-indicator latent",
+    "variable with its error variance fixed at (1 - reliability) x variance",
+    "(Bollen, 1989; Savalei, 2019)."
   )
 
   if (any(both_observed)) {

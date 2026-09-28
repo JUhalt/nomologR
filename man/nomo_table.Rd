@@ -44,7 +44,9 @@ the latent correlation and the HTMT-family values together; see
 \code{"notes"}; see \code{\link[=nomo_scores]{nomo_scores()}}.
 \item \code{nomo_hypotheses}: the machine-readable hypothesis table (no \code{type}).
 \item \code{nomo_network}: \code{"hypotheses"} (default), \code{"fit"}, \code{"measurement"},
-\code{"relations"}, \code{"replication"}, \code{"decision_log"}.
+\code{"relations"}, \code{"replication"}, \code{"single_indicators"}, \code{"sensitivity"},
+\code{"decision_log"}. \code{"single_indicators"} and \code{"sensitivity"} describe the
+composites modeled as single indicators; see \code{\link[=nomo_network]{nomo_network()}}.
 \item \code{nomo_retest}: \code{"icc"} (default), \code{"reliable_change"}, \code{"decision_log"};
 see \code{\link[=nomo_retest]{nomo_retest()}}.
 \item \code{nomo_invariance}: \code{"fit"} (default), \code{"categories"}, \code{"partial"},

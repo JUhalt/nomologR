@@ -440,6 +440,29 @@ nomo_apa_table.nomo_network <- function(x, type = c("hypotheses", "fit"),
   names(body) <- c("Hypothesis", "Prediction", "Estimate [95% CI]", "Evidence")
 
   scales <- unique(as.character(he$scale))
+  single <- x[["single_indicators"]]
+  single_note <- if (is.data.frame(single) && nrow(single)) {
+    one <- nrow(single) == 1L
+    sprintf(
+      paste(
+        "%s %s modeled as %s, with %s fixed at",
+        "(1 \u2212 reliability) \u00d7 variance (reliability: %s)."
+      ),
+      nomo_present_or(single$variable, "and"),
+      if (one) "was" else "were",
+      if (one) "a single-indicator latent variable" else "single-indicator latent variables",
+      if (one) "its error variance" else "error variances",
+      paste0(
+        single$variable, " = ",
+        nomo_apa_number(single$reliability, 2L, bounded = TRUE),
+        ifelse(single$coefficient == "unspecified", "",
+               paste0(", ", single$coefficient)),
+        collapse = "; "
+      )
+    )
+  } else {
+    ""
+  }
   nomo_apa_new(
     body = body,
     title = nomo_apa_or(title, "Theory-Specified Relations"),
@@ -448,7 +471,8 @@ nomo_apa_table.nomo_network <- function(x, type = c("hypotheses", "fit"),
       sprintf("Estimates are on the %s scale.", paste(scales, collapse = " and ")),
       "Evidence describes how each estimate relates to the prediction",
       "registered for it; it is evidence about the prediction, not a verdict on",
-      "the measure."
+      "the measure.",
+      single_note
     ),
     specific = if (any(post_hoc)) {
       "Specified after the data were seen, so this relation is exploratory."
