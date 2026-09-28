@@ -192,10 +192,53 @@ with published work.
 
 ``` r
 
-nomo_apa_table(run$results$invariance, number = 4)
+nomo_apa_table(run$results$validity, "convergent", number = 4)
 ```
 
 **Table 4**
+
+*Average Variance Extracted*
+
+| Construct   | *k* | AVE |
+|:------------|:---:|:---:|
+| Agency      |  4  | .59 |
+| Persistence |  4  | .53 |
+
+*Note.* *k* = number of indicators; AVE = average variance extracted
+(Fornell & Larcker, 1981), the average proportion of indicator variance
+the construct explains. The review reference is .50; a value below it
+prompts a look at the loadings and content coverage. AVE is convergent
+evidence and is not a reliability coefficient.
+
+``` r
+
+nomo_apa_table(run$results$validity, "discriminant", number = 5)
+```
+
+**Table 5**
+
+*Construct Correlations and Heterotrait-Monotrait Ratios*
+
+| Constructs              |  *r* \[95% CI\]  | HTMT2 | HTMT |
+|:------------------------|:----------------:|:-----:|:----:|
+| Agency with Persistence | .46 \[.39, .53\] | 0.45  | 0.46 |
+
+*Note.* *r* = latent correlation from the confirmatory factor analysis,
+with its 95% confidence interval; the upper limit shows how high the
+correlation plausibly is (Rönkkö & Cho, 2022). HTMT2 =
+heterotrait-monotrait ratio based on geometric means, suited to
+indicators with unequal loadings (Roemer et al., 2021). HTMT =
+heterotrait-monotrait ratio (Henseler et al., 2015). The review
+reference for the ratios is 0.85. A ratio below it adds evidence that
+the constructs are empirically distinct; it does not by itself establish
+discriminant validity.
+
+``` r
+
+nomo_apa_table(run$results$invariance, number = 6)
+```
+
+**Table 6**
 
 *Measurement Invariance Across Groups*
 
@@ -211,10 +254,10 @@ are reported as evidence and are not compared with fixed cutoffs.
 
 ``` r
 
-nomo_apa_table(run$results$network, number = 5)
+nomo_apa_table(run$results$network, number = 7)
 ```
 
-**Table 5**
+**Table 7**
 
 *Theory-Specified Relations*
 
@@ -242,11 +285,20 @@ hypotheses table describes how each estimate relates to its prediction
 without calling any of them a pass or a fail. A hypothesis specified
 after the data were seen is marked with a note saying it is exploratory.
 
+The discriminant table is not the familiar matrix of correlations with
+the square root of AVE on its diagonal. That Fornell-Larcker comparison
+often misses constructs that are not distinct (Henseler et al., 2015).
+Instead, each pair of constructs gets one row: its latent correlation
+with a confidence interval, whose upper limit shows how high the
+correlation plausibly is (Rönkkö & Cho, 2022), beside the
+heterotrait-monotrait ratios HTMT2 and HTMT. AVE is convergent evidence,
+so it has a table of its own.
+
 To collect them in one place, `nomo_report(run, apa_tables = TRUE)`
 appends a *Manuscript tables* appendix. It holds the tables for every
 result the run has, numbered in the order the report presents them. A
-table that does not apply, such as factor correlations for a one-factor
-model, is left out.
+table that does not apply, such as the construct pairs of a
+one-construct model, is left out.
 
 ## What the report contains
 

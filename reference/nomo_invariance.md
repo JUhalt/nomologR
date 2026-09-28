@@ -77,7 +77,9 @@ nomo_invariance(
 
 - ID.cat:
 
-  Ordered-indicator identification method. Wu-Estabrook is the default.
+  Ordered-indicator identification method passed to
+  [`semTools::measEq.syntax()`](https://rdrr.io/pkg/semTools/man/measEq.syntax.html).
+  Wu-Estabrook is the default.
 
 - parameterization:
 

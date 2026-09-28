@@ -75,14 +75,15 @@ order general, specific, probability.</p>
 
 
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
-<dd><p>A result object: <code>nomo_cfa</code>, <code>nomo_reliability</code>, <code>nomo_invariance</code>,
-or <code>nomo_network</code>.</p></dd>
+<dd><p>A result object: <code>nomo_cfa</code>, <code>nomo_reliability</code>, <code>nomo_validity</code>,
+<code>nomo_invariance</code>, or <code>nomo_network</code>.</p></dd>
 
 
 <dt id="arg-type">type<a class="anchor" aria-label="anchor" href="#arg-type"></a></dt>
 <dd><p>Which table to build. For <code>nomo_cfa</code>: <code>"loadings"</code>, <code>"fit"</code>, or
-<code>"factor_correlations"</code>. For <code>nomo_network</code>: <code>"hypotheses"</code> or <code>"fit"</code>.
-Other objects have one table each.</p></dd>
+<code>"factor_correlations"</code>. For <code>nomo_validity</code>: <code>"discriminant"</code> or
+<code>"convergent"</code>. For <code>nomo_network</code>: <code>"hypotheses"</code> or <code>"fit"</code>. Other
+objects have one table each.</p></dd>
 
 
 <dt id="arg-number">number<a class="anchor" aria-label="anchor" href="#arg-number"></a></dt>
@@ -113,6 +114,15 @@ does in an improper (Heywood) solution. Many published tables print
 standardized loadings without the zero; this follows the rule as written.</p>
 <p><strong>No verdicts.</strong> Table notes keep the package's reference-value language.
 No cell reads PASS or FAIL, and fit indices are not labeled good or poor.</p>
+<p><strong>Discriminant evidence without the Fornell-Larcker matrix.</strong> For a
+<code>nomo_validity</code> result, the <code>"discriminant"</code> table gives each pair of
+constructs one row: the latent correlation with its 95% confidence interval
+(Rönkkö &amp; Cho, 2022), and the heterotrait-monotrait ratios HTMT2 (Roemer et
+al., 2021) and HTMT (Henseler et al., 2015) when they were computed. It does
+not print the correlation matrix with the square root of AVE on its
+diagonal, because that comparison often misses discriminant-validity
+problems (Henseler et al., 2015). AVE is convergent evidence and has its own
+<code>"convergent"</code> table.</p>
 <p>The rules come from the <em>Publication Manual of the American Psychological
 Association</em> (7th ed.), checked against Purdue OWL's APA 7 guides.
 Journal-specific templates are out of scope.</p>
@@ -126,6 +136,20 @@ policy.</p>
     <p>American Psychological Association. (2020). <em>Publication manual of the
 American Psychological Association</em> (7th ed.).
 <a href="https://doi.org/10.1037/0000165-000" class="external-link">doi:10.1037/0000165-000</a></p>
+<p>Fornell, C., &amp; Larcker, D. F. (1981). Evaluating structural equation models
+with unobservable variables and measurement error. <em>Journal of Marketing
+Research, 18</em>(1), 39-50. <a href="https://doi.org/10.2307/3151312" class="external-link">doi:10.2307/3151312</a></p>
+<p>Henseler, J., Ringle, C. M., &amp; Sarstedt, M. (2015). A new criterion for
+assessing discriminant validity in variance-based structural equation
+modeling. <em>Journal of the Academy of Marketing Science, 43</em>(1), 115-135.
+<a href="https://doi.org/10.1007/s11747-014-0403-8" class="external-link">doi:10.1007/s11747-014-0403-8</a></p>
+<p>Roemer, E., Schuberth, F., &amp; Henseler, J. (2021). HTMT2–An improved
+criterion for assessing discriminant validity in structural equation
+modeling. <em>Industrial Management &amp; Data Systems, 121</em>(12), 2637-2650.
+<a href="https://doi.org/10.1108/IMDS-02-2021-0082" class="external-link">doi:10.1108/IMDS-02-2021-0082</a></p>
+<p>Rönkkö, M., &amp; Cho, E. (2022). An updated guideline for assessing
+discriminant validity. <em>Organizational Research Methods, 25</em>(1).
+<a href="https://doi.org/10.1177/1094428120968614" class="external-link">doi:10.1177/1094428120968614</a></p>
     </div>
 
     <div class="section level2">

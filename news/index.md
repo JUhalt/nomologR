@@ -2,6 +2,31 @@
 
 ## nomologR (development version)
 
+- [`nomo_apa_table()`](https://juhalt.github.io/nomologR/reference/nomo_apa_table.md)
+  formats a
+  [`nomo_validity()`](https://juhalt.github.io/nomologR/reference/nomo_validity.md)
+  result ([\#113](https://github.com/JUhalt/nomologR/issues/113)).
+  `type = "discriminant"`, the default, gives each pair of constructs
+  one row: its latent correlation with a 95% confidence interval (Rönkkö
+  & Cho, 2022), beside HTMT2 (Roemer et al., 2021) and HTMT (Henseler et
+  al., 2015) when they were computed. `type = "convergent"` gives each
+  construct’s number of indicators and AVE. The pair table is
+  deliberately not the Fornell-Larcker matrix with the square root of
+  AVE on its diagonal, the comparison that
+  [`nomo_methods()`](https://juhalt.github.io/nomologR/reference/nomo_methods.md)
+  records as historical because it often misses constructs that are not
+  distinct. Correlations and AVE lose their leading zero; the ratios,
+  which can exceed 1, keep it. A multi-group model’s tables add a Group
+  column. `nomo_report(apa_tables = TRUE)` adds both tables after
+  reliability, and the pair table takes the place of the CFA factor
+  correlations, which it repeats.
+- In a multi-group
+  [`nomo_validity()`](https://juhalt.github.io/nomologR/reference/nomo_validity.md)
+  result, `latent_correlations` names its groups (`block`) by their
+  labels, as `ave` does, rather than by number.
+  [`lavaan::standardizedSolution()`](https://rdrr.io/pkg/lavaan/man/standardizedSolution.html)
+  numbers the groups, so the two tables of one result had disagreed, for
+  example “1” and “2” against “Pasteur” and “Grant-White”.
 - When two or more scales are declared, through `scales` or a
   `contentvalidR` handoff, the item audit reads each item’s corrected
   item-rest correlation within its own scale

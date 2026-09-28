@@ -319,8 +319,65 @@ indices are reported as evidence, not against fixed cutoffs.</p>
 Coefficient alpha assumes equal loadings and is reported alongside omega
 for comparison with published work.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/nomo_apa_table.html">nomo_apa_table</a></span><span class="op">(</span><span class="va">run</span><span class="op">$</span><span class="va">results</span><span class="op">$</span><span class="va">invariance</span>, number <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/nomo_apa_table.html">nomo_apa_table</a></span><span class="op">(</span><span class="va">run</span><span class="op">$</span><span class="va">results</span><span class="op">$</span><span class="va">validity</span>, <span class="st">"convergent"</span>, number <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span></code></pre></div>
 <p><strong>Table 4</strong></p>
+<p><em>Average Variance Extracted</em></p>
+<table class="table">
+<thead><tr class="header">
+<th align="left">Construct</th>
+<th align="center"><em>k</em></th>
+<th align="center">AVE</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="left">Agency</td>
+<td align="center">4</td>
+<td align="center">.59</td>
+</tr>
+<tr class="even">
+<td align="left">Persistence</td>
+<td align="center">4</td>
+<td align="center">.53</td>
+</tr>
+</tbody>
+</table>
+<p><em>Note.</em> <em>k</em> = number of indicators; AVE = average
+variance extracted (Fornell &amp; Larcker, 1981), the average proportion
+of indicator variance the construct explains. The review reference is
+.50; a value below it prompts a look at the loadings and content
+coverage. AVE is convergent evidence and is not a reliability
+coefficient.</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/nomo_apa_table.html">nomo_apa_table</a></span><span class="op">(</span><span class="va">run</span><span class="op">$</span><span class="va">results</span><span class="op">$</span><span class="va">validity</span>, <span class="st">"discriminant"</span>, number <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></code></pre></div>
+<p><strong>Table 5</strong></p>
+<p><em>Construct Correlations and Heterotrait-Monotrait Ratios</em></p>
+<table class="table">
+<thead><tr class="header">
+<th align="left">Constructs</th>
+<th align="center">
+<em>r</em> [95% CI]</th>
+<th align="center">HTMT2</th>
+<th align="center">HTMT</th>
+</tr></thead>
+<tbody><tr class="odd">
+<td align="left">Agency with Persistence</td>
+<td align="center">.46 [.39, .53]</td>
+<td align="center">0.45</td>
+<td align="center">0.46</td>
+</tr></tbody>
+</table>
+<p><em>Note.</em> <em>r</em> = latent correlation from the confirmatory
+factor analysis, with its 95% confidence interval; the upper limit shows
+how high the correlation plausibly is (Rönkkö &amp; Cho, 2022). HTMT2 =
+heterotrait-monotrait ratio based on geometric means, suited to
+indicators with unequal loadings (Roemer et al., 2021). HTMT =
+heterotrait-monotrait ratio (Henseler et al., 2015). The review
+reference for the ratios is 0.85. A ratio below it adds evidence that
+the constructs are empirically distinct; it does not by itself establish
+discriminant validity.</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/nomo_apa_table.html">nomo_apa_table</a></span><span class="op">(</span><span class="va">run</span><span class="op">$</span><span class="va">results</span><span class="op">$</span><span class="va">invariance</span>, number <span class="op">=</span> <span class="fl">6</span><span class="op">)</span></span></code></pre></div>
+<p><strong>Table 6</strong></p>
 <p><em>Measurement Invariance Across Groups</em></p>
 <table class="table">
 <colgroup>
@@ -390,9 +447,9 @@ for comparison with published work.</p>
 to the one above it; changes are relative to the preceding model.
 Changes in fit are reported as evidence and are not compared with fixed
 cutoffs.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/nomo_apa_table.html">nomo_apa_table</a></span><span class="op">(</span><span class="va">run</span><span class="op">$</span><span class="va">results</span><span class="op">$</span><span class="va">network</span>, number <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></code></pre></div>
-<p><strong>Table 5</strong></p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/nomo_apa_table.html">nomo_apa_table</a></span><span class="op">(</span><span class="va">run</span><span class="op">$</span><span class="va">results</span><span class="op">$</span><span class="va">network</span>, number <span class="op">=</span> <span class="fl">7</span><span class="op">)</span></span></code></pre></div>
+<p><strong>Table 7</strong></p>
 <p><em>Theory-Specified Relations</em></p>
 <table class="table">
 <colgroup>
@@ -439,12 +496,20 @@ hypotheses table describes how each estimate relates to its prediction
 without calling any of them a pass or a fail. A hypothesis specified
 after the data were seen is marked with a note saying it is
 exploratory.</p>
+<p>The discriminant table is not the familiar matrix of correlations
+with the square root of AVE on its diagonal. That Fornell-Larcker
+comparison often misses constructs that are not distinct (Henseler et
+al., 2015). Instead, each pair of constructs gets one row: its latent
+correlation with a confidence interval, whose upper limit shows how high
+the correlation plausibly is (Rönkkö &amp; Cho, 2022), beside the
+heterotrait-monotrait ratios HTMT2 and HTMT. AVE is convergent evidence,
+so it has a table of its own.</p>
 <p>To collect them in one place,
 <code>nomo_report(run, apa_tables = TRUE)</code> appends a
 <em>Manuscript tables</em> appendix. It holds the tables for every
 result the run has, numbered in the order the report presents them. A
-table that does not apply, such as factor correlations for a one-factor
-model, is left out.</p>
+table that does not apply, such as the construct pairs of a
+one-construct model, is left out.</p>
 </div>
 <div class="section level2">
 <h2 id="what-the-report-contains">What the report contains<a class="anchor" aria-label="anchor" href="#what-the-report-contains"></a>
@@ -479,7 +544,7 @@ severity, and observation that produced it.</p>
 <h2 id="reports-from-incomplete-workflows">Reports from incomplete workflows<a class="anchor" aria-label="anchor" href="#reports-from-incomplete-workflows"></a>
 </h2>
 <p>A report can also be rendered from a paused or blocked workflow:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">paused_run</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_run.html">nomo_run</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">nomo_demo_network</span>,</span>
 <span>  scales <span class="op">=</span> <span class="va">scales</span>,</span>
@@ -498,7 +563,7 @@ severity, and observation that produced it.</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> validity    not_started       <span style="color: #949494;">""</span>                                              </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">7</span> invariance  not_started       <span style="color: #949494;">""</span>                                              </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">8</span> network     not_started       <span style="color: #949494;">""</span></span></span></code></pre></div>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">paused_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_report.html">nomo_report</a></span><span class="op">(</span></span>
 <span>  <span class="va">paused_run</span>,</span>
 <span>  file <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">report_dir</span>, <span class="st">"paused-workflow-audit.html"</span><span class="op">)</span>,</span>
@@ -518,7 +583,7 @@ unresolved.</p>
 <p>The default includes a compact, nonredundant set of plots and full
 <code><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo()</a></code> output. Both can be turned off, as in the
 paused report above:</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/nomo_report.html">nomo_report</a></span><span class="op">(</span></span>
 <span>  <span class="va">run</span>,</span>
 <span>  file <span class="op">=</span> <span class="st">"compact-report.html"</span>,</span>
@@ -532,7 +597,7 @@ paused report above:</p>
 <p>Existing reports are protected. Rendering to a file that already
 exists stops with an error unless <code>overwrite = TRUE</code> is
 supplied. Here the error is caught so that its message can be shown:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">refusal</span> <span class="op">&lt;-</span> <span class="kw"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">tryCatch</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="../reference/nomo_report.html">nomo_report</a></span><span class="op">(</span><span class="va">run</span>, file <span class="op">=</span> <span class="va">report_file</span><span class="op">)</span>,</span>
 <span>  error <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">e</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">conditionMessage</a></span><span class="op">(</span><span class="va">e</span><span class="op">)</span></span>

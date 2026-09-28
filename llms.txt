@@ -996,13 +996,17 @@ Quarto:
 
 nomo_apa_table(cfa, "loadings", number = 1)
 nomo_apa_table(reliability, number = 2)
-nomo_apa_table(network, number = 3)
+nomo_apa_table(validity, "discriminant", number = 3)
+nomo_apa_table(network, number = 4)
 ```
 
 Leading zeros follow the statistic rather than its value: reliability,
 correlations, CFI, and *p* lose theirs because they cannot exceed 1,
 while TLI, RMSEA, SRMR, and standardized loadings keep theirs because
-they can. No table labels a result as passing or failing.
+they can. No table labels a result as passing or failing. The
+discriminant table gives each pair of constructs its latent correlation
+with a confidence interval beside HTMT2 and HTMT, rather than the
+Fornell-Larcker matrix.
 
 `nomo_report(run, apa_tables = TRUE)` appends the same tables for every
 result a guided run holds, numbered in order, as a *Manuscript tables*

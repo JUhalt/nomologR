@@ -70,8 +70,10 @@ nomo_report(
 
   Logical; if `TRUE`, append a *Manuscript tables* appendix with the
   [`nomo_apa_table()`](https://juhalt.github.io/nomologR/reference/nomo_apa_table.md)
-  tables for the results the run holds. These are the CFA loadings, fit,
-  and factor correlations, reliability, and, when present, invariance
+  tables for the results the run holds. These are the CFA loadings and
+  fit; reliability; the validity stage's average variance extracted and
+  construct pairs (without a validity stage, the CFA factor correlations
+  take the pairs' place, after the fit); and, when present, invariance
   and the network's hypotheses and fit. They are numbered in that order.
   Default `FALSE`, which leaves the report unchanged.
 
