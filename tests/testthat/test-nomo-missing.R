@@ -182,6 +182,12 @@ test_that("data with nothing missing is not refitted and says why", {
     "TRUE or FALSE"
   )
   expect_match(out$strategies$note[[2L]], "no modeled variable has missing values", fixed = TRUE)
+
+  # The print says why too, and an unfitted strategy's N is a dash (#89).
+  printed <- capture.output(print(out))
+  expect_true(any(grepl("FIML: Not fitted: no modeled variable has missing values.",
+                        printed, fixed = TRUE)))
+  expect_false(any(grepl("\\bNA\\b", printed)))
 })
 
 
