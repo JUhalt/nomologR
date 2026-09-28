@@ -104,7 +104,7 @@ cites.
 ``` r
 # The whole registry
 nomo_methods()
-#> # A tibble: 90 × 12
+#> # A tibble: 93 × 12
 #>    id      stage method lineage role  estimand assumptions implemented_by engine
 #>    <chr>   <chr> <chr>  <chr>   <chr> <chr>    <chr>       <chr>          <chr> 
 #>  1 missin… scre… Item … contem… supp… Proport… Descriptiv… nomo_screen()  nomol…
@@ -117,7 +117,7 @@ nomo_methods()
 #>  8 mahala… scre… Mahal… contem… supp… Multiva… Unaffected… nomo_screen()  nomol…
 #>  9 even_o… scre… Even-… contem… supp… Within-… Needs at l… nomo_screen()  nomol…
 #> 10 psycho… scre… Psych… contem… supp… Within-… Needs at l… nomo_screen()  nomol…
-#> # ℹ 80 more rows
+#> # ℹ 83 more rows
 #> # ℹ 3 more variables: introduced <int>, contemporary_practice <chr>,
 #> #   references <chr>
 
@@ -172,7 +172,7 @@ old[!is.na(old$contemporary_practice),
 
 # A reference list for one stage
 nomo_methods(stage = "reliability", references = TRUE)[, c("method", "citation")]
-#> # A tibble: 24 × 2
+#> # A tibble: 30 × 2
 #>    method                                         citation                      
 #>    <chr>                                          <chr>                         
 #>  1 Model-based coefficient omega                  Dunn, T. J., Baguley, T., & B…
@@ -185,5 +185,5 @@ nomo_methods(stage = "reliability", references = TRUE)[, c("method", "citation")
 #>  8 Bootstrap confidence intervals for reliability Kelley, K., & Pornprasertmani…
 #>  9 Omega hierarchical                             Reise, S. P. (2012). The redi…
 #> 10 Omega hierarchical                             Reise, S. P., Bonifay, W. E.,…
-#> # ℹ 14 more rows
+#> # ℹ 20 more rows
 ```

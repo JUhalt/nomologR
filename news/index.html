@@ -53,7 +53,19 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="nomologr-development-version">nomologR (development version)<a class="anchor" aria-label="anchor" href="#nomologr-development-version"></a></h2>
+<ul><li>New <code><a href="../reference/nomo_retest.html">nomo_retest()</a></code> for test-retest reliability (<a href="https://github.com/JUhalt/nomologR/issues/129" class="external-link">#129</a>).
 <ul><li>
+<strong>The intraclass correlations.</strong> For scores on two or more occasions, it estimates ICC(A,1), the two-way mixed-effects, absolute-agreement, single-measurement form Koo and Li (2016) recommend for test-retest data, with its 95% interval. Beside it are the consistency form ICC(C,1) (McGraw &amp; Wong, 1996) and the mean change between occasions. A systematic shift is flagged, because ICC(A,1) counts it as disagreement.</li>
+<li>
+<strong>Koo and Li’s description.</strong> The reliability is described in Koo and Li’s terms (poor, moderate, good, excellent), read from the interval as they ask, and an interval that reaches “poor” is flagged.</li>
+<li>
+<strong>Measurement error.</strong> It reports the standard error of measurement, SD x sqrt(1 - ICC), and the smallest detectable change, 1.96 x sqrt(2) x SEM (Weir, 2005).</li>
+<li>
+<strong>Reliable change.</strong> Each person’s reliable change index follows Jacobson and Truax (1991); it exceeds 1.96 exactly when the change exceeds the smallest detectable change.</li>
+<li>
+<strong>Other outputs.</strong> <code><a href="../reference/nomo_table.html">nomo_table()</a></code>, <code><a href="../reference/nomo_apa_table.html">nomo_apa_table()</a></code>, <code><a href="../reference/nomo_methods.html">nomo_methods()</a></code>, and the measurement-evidence article cover it.</li>
+</ul></li>
+<li>
 <code><a href="../reference/nomo_network.html">nomo_network()</a></code> can model an observed composite, such as a scale mean, as a single-indicator latent variable, correcting the relations it enters for its unreliability (<a href="https://github.com/JUhalt/nomologR/issues/129" class="external-link">#129</a>). Name it in <code>single_indicators</code> with its reliability, as a number or a <code><a href="../reference/nomo_single_indicator.html">nomo_single_indicator()</a></code> record. The record can take omega and its bootstrap uncertainty from a <code><a href="../reference/nomo_reliability.html">nomo_reliability()</a></code> result. The composite becomes the one indicator of a latent variable of the same name, with its error variance fixed at (1 - reliability) x its variance, so the model syntax and hypotheses are unchanged. The method goes back to Spearman’s (1904) correction for attenuation and the SEM textbooks (Hayduk, 1987; Bollen, 1989), and Savalei (2019) found it the most accurate option in samples of 30 to 200 when the reliability is close to its true value. So nomologR:
 <ul><li>refits each hypothesis with each reliability .05 and .10 lower and higher, records the result in <code>single_indicator_sensitivity</code>, and flags any hypothesis whose concordance changes across that range;</li>
 <li>adds the reliability’s uncertainty to the standard errors, intervals, and concordance when its standard error is known, as Oberski and Satorra (2013) derive; otherwise the log says the standard errors treat it as known;</li>

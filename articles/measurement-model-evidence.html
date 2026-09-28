@@ -790,6 +790,62 @@ candidate for a later release.</p>
 </div>
 </div>
 <div class="section level2">
+<h2 id="stability-across-occasions">Stability across occasions<a class="anchor" aria-label="anchor" href="#stability-across-occasions"></a>
+</h2>
+<p>Internal consistency describes one administration. When the same
+people answer the measure again, a test-retest reliability describes how
+stable their scores are. <code><a href="../reference/nomo_retest.html">nomo_retest()</a></code> follows Koo and Li’s
+(2016) recommendation for test-retest data: a two-way mixed-effects
+intraclass correlation with absolute agreement, ICC(A,1), with its
+interval. Scores that shift between occasions do not agree, however well
+they rank people. The consistency form, ICC(C,1), is reported beside
+it.</p>
+<div class="sourceCode" id="cb47"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2026</span><span class="op">)</span></span>
+<span><span class="va">true_agency</span> <span class="op">&lt;-</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">150</span><span class="op">)</span></span>
+<span><span class="va">occasions</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  agency_t1 <span class="op">=</span> <span class="fl">3</span> <span class="op">+</span> <span class="va">true_agency</span> <span class="op">+</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">150</span>, sd <span class="op">=</span> <span class="fl">.45</span><span class="op">)</span>,</span>
+<span>  agency_t2 <span class="op">=</span> <span class="fl">3.3</span> <span class="op">+</span> <span class="va">true_agency</span> <span class="op">+</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">150</span>, sd <span class="op">=</span> <span class="fl">.45</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">rt</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_retest.html">nomo_retest</a></span><span class="op">(</span><span class="va">occasions</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>Agency <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"agency_t1"</span>, <span class="st">"agency_t2"</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>                  interval <span class="op">=</span> <span class="st">"two weeks"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">rt</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## &lt;nomo_retest summary&gt; Test-retest reliability</span></span>
+<span><span class="co">## Composites: 1 | Interval: two weeks</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## Reliability across occasions</span></span>
+<span><span class="co">##   Composite    n  ICC(A,1) [95% CI]  Koo &amp; Li    SEM    SDC</span></span>
+<span><span class="co">##   Agency     150  0.84 [0.75, 0.89]  good      0.474  1.313</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## Consistency and change</span></span>
+<span><span class="co">##   Composite  ICC(C,1) [95% CI]  Mean change [95% CI]     SD</span></span>
+<span><span class="co">##   Agency     0.85 [0.80, 0.89]  +0.24 [0.13, 0.34]    1.171</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## Reliable change, first to last occasion</span></span>
+<span><span class="co">##   - Agency: 8 people up, 0 down, 142 within measurement error.</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## Flagged</span></span>
+<span><span class="co">##   - review: `Agency` changed by 0.24 on average from `agency_t1` to</span></span>
+<span><span class="co">##     `agency_t2`, 95% CI [0.13, 0.34]. Scores shifted systematically, as</span></span>
+<span><span class="co">##     practice or real change would make them. ICC(A,1) counts the shift as</span></span>
+<span><span class="co">##     disagreement and ICC(C,1) does not; ICC(C,1) is 0.85 here.</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## ICC(A,1): two-way mixed effects, absolute agreement, single measurement (Koo &amp;</span></span>
+<span><span class="co">## Li, 2016). SEM: standard error of measurement. SDC: smallest detectable</span></span>
+<span><span class="co">## change, 1.96 x sqrt(2) x SEM (Weir, 2005). Reference ranges describe the</span></span>
+<span><span class="co">## interval; they are not a pass or a fail.</span></span></code></pre>
+<p>These scores were simulated to rise by .30 between occasions, and in
+this sample they rose by 0.24. That rise is why ICC(A,1) is below
+ICC(C,1), and the summary flags it.</p>
+<p>Koo and Li read the reliability range from the interval rather than
+the estimate: poor below .50, moderate to .75, good to .90, and
+excellent above. The standard error of measurement, SD × √(1 − ICC),
+gives the smallest detectable change, 1.96 × √2 × SEM (Weir, 2005). A
+person whose score changed by more than that changed reliably, in
+Jacobson and Truax’s (1991) sense, which is not the same as
+meaningfully.</p>
+</div>
+<div class="section level2">
 <h2 id="reading-the-evidence-as-an-argument">Reading the evidence as an argument<a class="anchor" aria-label="anchor" href="#reading-the-evidence-as-an-argument"></a>
 </h2>
 <p>A useful measurement conclusion is rarely “all cutoffs passed.” A
@@ -831,6 +887,10 @@ research shows that older criteria can miss overlap (Henseler, Ringle,
 because it relaxes the original HTMT tau-equivalence assumption (Roemer,
 Schuberth, &amp; Henseler, 2021). Fornell-Larcker output remains
 available only as optional historical/ supporting information.</p>
+<p>Test-retest reliability follows Koo and Li (2016) and the intraclass
+correlations defined by Shrout and Fleiss (1979) and McGraw and Wong
+(1996). Measurement error and reliable change follow Weir (2005) and
+Jacobson and Truax (1991).</p>
 <p>The missing-data comparison follows Enders and Bandalos (2001), whose
 simulations compared FIML with listwise and pairwise deletion under MCAR
 and MAR, and Schafer and Graham (2002), who review the older methods and

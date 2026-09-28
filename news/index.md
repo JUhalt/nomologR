@@ -2,6 +2,32 @@
 
 ## nomologR (development version)
 
+- New
+  [`nomo_retest()`](https://juhalt.github.io/nomologR/reference/nomo_retest.md)
+  for test-retest reliability
+  ([\#129](https://github.com/JUhalt/nomologR/issues/129)).
+  - **The intraclass correlations.** For scores on two or more
+    occasions, it estimates ICC(A,1), the two-way mixed-effects,
+    absolute-agreement, single-measurement form Koo and Li (2016)
+    recommend for test-retest data, with its 95% interval. Beside it are
+    the consistency form ICC(C,1) (McGraw & Wong, 1996) and the mean
+    change between occasions. A systematic shift is flagged, because
+    ICC(A,1) counts it as disagreement.
+  - **Koo and Li’s description.** The reliability is described in Koo
+    and Li’s terms (poor, moderate, good, excellent), read from the
+    interval as they ask, and an interval that reaches “poor” is
+    flagged.
+  - **Measurement error.** It reports the standard error of measurement,
+    SD x sqrt(1 - ICC), and the smallest detectable change, 1.96 x
+    sqrt(2) x SEM (Weir, 2005).
+  - **Reliable change.** Each person’s reliable change index follows
+    Jacobson and Truax (1991); it exceeds 1.96 exactly when the change
+    exceeds the smallest detectable change.
+  - **Other outputs.**
+    [`nomo_table()`](https://juhalt.github.io/nomologR/reference/nomo_table.md),
+    [`nomo_apa_table()`](https://juhalt.github.io/nomologR/reference/nomo_apa_table.md),
+    [`nomo_methods()`](https://juhalt.github.io/nomologR/reference/nomo_methods.md),
+    and the measurement-evidence article cover it.
 - [`nomo_network()`](https://juhalt.github.io/nomologR/reference/nomo_network.md)
   can model an observed composite, such as a scale mean, as a
   single-indicator latent variable, correcting the relations it enters

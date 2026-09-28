@@ -15,8 +15,8 @@ nomo_apa_table(x, type = NULL, number = NULL, title = NULL, ...)
 
 - x:
 
-  A result object: `nomo_cfa`, `nomo_reliability`, `nomo_validity`,
-  `nomo_invariance`, or `nomo_network`.
+  A result object: `nomo_cfa`, `nomo_reliability`, `nomo_retest`,
+  `nomo_validity`, `nomo_invariance`, or `nomo_network`.
 
 - type:
 

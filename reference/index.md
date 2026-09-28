@@ -91,6 +91,8 @@ Confirmatory measurement model
 
 Reliability and construct-validity evidence
 
+- [`nomo_retest()`](https://juhalt.github.io/nomologR/reference/nomo_retest.md)
+  : Test-retest reliability, measurement error, and reliable change
 - [`nomo_reliability()`](https://juhalt.github.io/nomologR/reference/nomo_reliability.md)
   : Model-based reliability evidence
 - [`summary(`*`<nomo_reliability>`*`)`](https://juhalt.github.io/nomologR/reference/summary.nomo_reliability.md)

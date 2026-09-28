@@ -36,7 +36,7 @@ computational engine, and references.
 
 methods <- nomo_methods()
 nrow(methods)
-#> [1] 90
+#> [1] 93
 table(methods$stage, methods$lineage)
 #>              
 #>               contemporary emerging historical
@@ -46,7 +46,7 @@ table(methods$stage, methods$lineage)
 #>   factors                7        1          4
 #>   invariance             6        0          0
 #>   network                5        0          1
-#>   reliability            9        0          2
+#>   reliability           12        0          2
 #>   scores                 4        0          3
 #>   screen                10        0          1
 #>   validity               3        0          2
@@ -98,7 +98,7 @@ result into a reference list:
 ``` r
 
 nomo_methods(stage = "reliability", references = TRUE)[, c("method", "citation")]
-#> # A tibble: 24 × 2
+#> # A tibble: 30 × 2
 #>    method                                         citation                      
 #>    <chr>                                          <chr>                         
 #>  1 Model-based coefficient omega                  Dunn, T. J., Baguley, T., & B…
@@ -111,7 +111,7 @@ nomo_methods(stage = "reliability", references = TRUE)[, c("method", "citation")
 #>  8 Bootstrap confidence intervals for reliability Kelley, K., & Pornprasertmani…
 #>  9 Omega hierarchical                             Reise, S. P. (2012). The redi…
 #> 10 Omega hierarchical                             Reise, S. P., Bonifay, W. E.,…
-#> # ℹ 14 more rows
+#> # ℹ 20 more rows
 ```
 
 This is what the **Methods and citations** section of
@@ -130,7 +130,7 @@ question it answered. The tables below are drawn from
 so they cannot drift from what the package computes.
 
 A method is dated only from the publication that introduced it, and only
-when the registry cites that publication. 44 of the 90 methods are not
+when the registry cites that publication. 47 of the 93 methods are not
 yet dated, because the registry cites a later review or critique instead
 of the original. Adding those originating references is ongoing work.
 

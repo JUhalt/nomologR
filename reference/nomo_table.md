@@ -72,6 +72,10 @@ default.
   see
   [`nomo_network()`](https://juhalt.github.io/nomologR/reference/nomo_network.md).
 
+- `nomo_retest`: `"icc"` (default), `"reliable_change"`,
+  `"decision_log"`; see
+  [`nomo_retest()`](https://juhalt.github.io/nomologR/reference/nomo_retest.md).
+
 - `nomo_invariance`: `"fit"` (default), `"categories"`, `"partial"`,
   `"local_strain"`, `"decision_log"`. The local-strain table keeps
   lavaan's internal `constraint` label and adds a human-readable

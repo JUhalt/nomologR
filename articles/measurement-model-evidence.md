@@ -812,6 +812,67 @@ true value only about 86% of the time. Multiple imputation, which
 Schafer and Graham recommend alongside maximum likelihood, is a
 candidate for a later release.
 
+## Stability across occasions
+
+Internal consistency describes one administration. When the same people
+answer the measure again, a test-retest reliability describes how stable
+their scores are.
+[`nomo_retest()`](https://juhalt.github.io/nomologR/reference/nomo_retest.md)
+follows Koo and Li’s (2016) recommendation for test-retest data: a
+two-way mixed-effects intraclass correlation with absolute agreement,
+ICC(A,1), with its interval. Scores that shift between occasions do not
+agree, however well they rank people. The consistency form, ICC(C,1), is
+reported beside it.
+
+``` r
+
+set.seed(2026)
+true_agency <- stats::rnorm(150)
+occasions <- data.frame(
+  agency_t1 = 3 + true_agency + stats::rnorm(150, sd = .45),
+  agency_t2 = 3.3 + true_agency + stats::rnorm(150, sd = .45)
+)
+rt <- nomo_retest(occasions, list(Agency = c("agency_t1", "agency_t2")),
+                  interval = "two weeks")
+summary(rt)
+```
+
+    ## <nomo_retest summary> Test-retest reliability
+    ## Composites: 1 | Interval: two weeks
+    ## 
+    ## Reliability across occasions
+    ##   Composite    n  ICC(A,1) [95% CI]  Koo & Li    SEM    SDC
+    ##   Agency     150  0.84 [0.75, 0.89]  good      0.474  1.313
+    ## 
+    ## Consistency and change
+    ##   Composite  ICC(C,1) [95% CI]  Mean change [95% CI]     SD
+    ##   Agency     0.85 [0.80, 0.89]  +0.24 [0.13, 0.34]    1.171
+    ## 
+    ## Reliable change, first to last occasion
+    ##   - Agency: 8 people up, 0 down, 142 within measurement error.
+    ## 
+    ## Flagged
+    ##   - review: `Agency` changed by 0.24 on average from `agency_t1` to
+    ##     `agency_t2`, 95% CI [0.13, 0.34]. Scores shifted systematically, as
+    ##     practice or real change would make them. ICC(A,1) counts the shift as
+    ##     disagreement and ICC(C,1) does not; ICC(C,1) is 0.85 here.
+    ## 
+    ## ICC(A,1): two-way mixed effects, absolute agreement, single measurement (Koo &
+    ## Li, 2016). SEM: standard error of measurement. SDC: smallest detectable
+    ## change, 1.96 x sqrt(2) x SEM (Weir, 2005). Reference ranges describe the
+    ## interval; they are not a pass or a fail.
+
+These scores were simulated to rise by .30 between occasions, and in
+this sample they rose by 0.24. That rise is why ICC(A,1) is below
+ICC(C,1), and the summary flags it.
+
+Koo and Li read the reliability range from the interval rather than the
+estimate: poor below .50, moderate to .75, good to .90, and excellent
+above. The standard error of measurement, SD × √(1 − ICC), gives the
+smallest detectable change, 1.96 × √2 × SEM (Weir, 2005). A person whose
+score changed by more than that changed reliably, in Jacobson and
+Truax’s (1991) sense, which is not the same as meaningfully.
+
 ## Reading the evidence as an argument
 
 A useful measurement conclusion is rarely “all cutoffs passed.” A
@@ -849,6 +910,11 @@ Sarstedt, 2015). HTMT2 is emphasized for congeneric measurement because
 it relaxes the original HTMT tau-equivalence assumption (Roemer,
 Schuberth, & Henseler, 2021). Fornell-Larcker output remains available
 only as optional historical/ supporting information.
+
+Test-retest reliability follows Koo and Li (2016) and the intraclass
+correlations defined by Shrout and Fleiss (1979) and McGraw and Wong
+(1996). Measurement error and reliable change follow Weir (2005) and
+Jacobson and Truax (1991).
 
 The missing-data comparison follows Enders and Bandalos (2001), whose
 simulations compared FIML with listwise and pairwise deletion under MCAR
