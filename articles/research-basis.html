@@ -196,6 +196,476 @@ each release, including that the registered author, year, and title
 match the citation.</p>
 </div>
 <div class="section level2">
+<h2 id="how-practice-changed">How practice changed<a class="anchor" aria-label="anchor" href="#how-practice-changed"></a>
+</h2>
+<p>The registry also records when each method entered the literature,
+and, for a historical method, which contemporary methods now address the
+question it answered. The tables below are drawn from
+<code><a href="../reference/nomo_methods.html">nomo_methods()</a></code>, so they cannot drift from what the package
+computes.</p>
+<p>A method is dated only from the publication that introduced it, and
+only when the registry cites that publication. 43 of the 89 methods are
+not yet dated, because the registry cites a later review or critique
+instead of the original. Adding those originating references is ongoing
+work.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">dated</span> <span class="op">&lt;-</span> <span class="va">methods</span><span class="op">[</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">methods</span><span class="op">$</span><span class="va">introduced</span><span class="op">)</span>, , drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span>
+<span><span class="va">dated</span> <span class="op">&lt;-</span> <span class="va">dated</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/order.html" class="external-link">order</a></span><span class="op">(</span><span class="va">dated</span><span class="op">$</span><span class="va">introduced</span>, <span class="va">dated</span><span class="op">$</span><span class="va">stage</span><span class="op">)</span>, , drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span>
+<span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span></span>
+<span>  <span class="va">dated</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"introduced"</span>, <span class="st">"method"</span>, <span class="st">"stage"</span>, <span class="st">"lineage"</span><span class="op">)</span><span class="op">]</span>,</span>
+<span>  col.names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Year"</span>, <span class="st">"Method"</span>, <span class="st">"Stage"</span>, <span class="st">"Lineage"</span><span class="op">)</span>,</span>
+<span>  row.names <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<table style="width:100%;" class="table">
+<colgroup>
+<col width="5%">
+<col width="67%">
+<col width="12%">
+<col width="13%">
+</colgroup>
+<thead><tr class="header">
+<th align="right">Year</th>
+<th align="left">Method</th>
+<th align="left">Stage</th>
+<th align="left">Lineage</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="right">1937</td>
+<td align="left">Bifactor measurement model</td>
+<td align="left">cfa</td>
+<td align="left">contemporary</td>
+</tr>
+<tr class="even">
+<td align="right">1950</td>
+<td align="left">Bartlett’s test of sphericity</td>
+<td align="left">factors</td>
+<td align="left">historical</td>
+</tr>
+<tr class="odd">
+<td align="right">1951</td>
+<td align="left">Coefficient alpha</td>
+<td align="left">reliability</td>
+<td align="left">historical</td>
+</tr>
+<tr class="even">
+<td align="right">1954</td>
+<td align="left">Eigenvalue-greater-than-one rule</td>
+<td align="left">factors</td>
+<td align="left">historical</td>
+</tr>
+<tr class="odd">
+<td align="right">1955</td>
+<td align="left">Nomological network of construct relations</td>
+<td align="left">network</td>
+<td align="left">historical</td>
+</tr>
+<tr class="even">
+<td align="right">1957</td>
+<td align="left">Schmid-Leiman decomposition</td>
+<td align="left">reliability</td>
+<td align="left">historical</td>
+</tr>
+<tr class="odd">
+<td align="right">1958</td>
+<td align="left">Orthogonal (varimax) rotation</td>
+<td align="left">efa</td>
+<td align="left">historical</td>
+</tr>
+<tr class="even">
+<td align="right">1965</td>
+<td align="left">Common-factor parallel analysis</td>
+<td align="left">factors</td>
+<td align="left">contemporary</td>
+</tr>
+<tr class="odd">
+<td align="right">1966</td>
+<td align="left">Scree test</td>
+<td align="left">factors</td>
+<td align="left">historical</td>
+</tr>
+<tr class="even">
+<td align="right">1969</td>
+<td align="left">Maximum-likelihood confirmatory factor analysis</td>
+<td align="left">cfa</td>
+<td align="left">contemporary</td>
+</tr>
+<tr class="odd">
+<td align="right">1969</td>
+<td align="left">Chi-square exact-fit test</td>
+<td align="left">cfa</td>
+<td align="left">historical</td>
+</tr>
+<tr class="even">
+<td align="right">1970</td>
+<td align="left">Kaiser-Meyer-Olkin sampling adequacy</td>
+<td align="left">factors</td>
+<td align="left">historical</td>
+</tr>
+<tr class="odd">
+<td align="right">1971</td>
+<td align="left">Multiple-group confirmatory factor analysis</td>
+<td align="left">invariance</td>
+<td align="left">contemporary</td>
+</tr>
+<tr class="even">
+<td align="right">1974</td>
+<td align="left">Information criteria (AIC, BIC)</td>
+<td align="left">compare</td>
+<td align="left">contemporary</td>
+</tr>
+<tr class="odd">
+<td align="right">1976</td>
+<td align="left">Velicer original minimum average partial (MAP)</td>
+<td align="left">factors</td>
+<td align="left">contemporary</td>
+</tr>
+<tr class="even">
+<td align="right">1980</td>
+<td align="left">Incremental fit indices (CFI, TLI)</td>
+<td align="left">cfa</td>
+<td align="left">contemporary</td>
+</tr>
+<tr class="odd">
+<td align="right">1981</td>
+<td align="left">Standardized loadings and average variance
+extracted</td>
+<td align="left">validity</td>
+<td align="left">historical</td>
+</tr>
+<tr class="even">
+<td align="right">1981</td>
+<td align="left">Fornell-Larcker comparison</td>
+<td align="left">validity</td>
+<td align="left">historical</td>
+</tr>
+<tr class="odd">
+<td align="right">1987</td>
+<td align="left">Equivalence testing against a smallest effect size of
+interest</td>
+<td align="left">network</td>
+<td align="left">contemporary</td>
+</tr>
+<tr class="even">
+<td align="right">1988</td>
+<td align="left">Measurement-then-structure modeling</td>
+<td align="left">network</td>
+<td align="left">contemporary</td>
+</tr>
+<tr class="odd">
+<td align="right">1989</td>
+<td align="left">Partial invariance with documented releases</td>
+<td align="left">invariance</td>
+<td align="left">contemporary</td>
+</tr>
+<tr class="even">
+<td align="right">1992</td>
+<td align="left">RMSEA with confidence interval</td>
+<td align="left">cfa</td>
+<td align="left">contemporary</td>
+</tr>
+<tr class="odd">
+<td align="right">1993</td>
+<td align="left">Configural, metric, scalar, and strict sequence</td>
+<td align="left">invariance</td>
+<td align="left">contemporary</td>
+</tr>
+<tr class="even">
+<td align="right">1999</td>
+<td align="left">Fixed fit-index cutoffs</td>
+<td align="left">cfa</td>
+<td align="left">historical</td>
+</tr>
+<tr class="odd">
+<td align="right">2000</td>
+<td align="left">Scaled-and-shifted difference test</td>
+<td align="left">compare</td>
+<td align="left">contemporary</td>
+</tr>
+<tr class="even">
+<td align="right">2000</td>
+<td align="left">Velicer revised MAP (fourth powers)</td>
+<td align="left">factors</td>
+<td align="left">contemporary</td>
+</tr>
+<tr class="odd">
+<td align="right">2001</td>
+<td align="left">Satorra-Bentler scaled difference test</td>
+<td align="left">compare</td>
+<td align="left">contemporary</td>
+</tr>
+<tr class="even">
+<td align="right">2001</td>
+<td align="left">Construct replicability (H)</td>
+<td align="left">reliability</td>
+<td align="left">contemporary</td>
+</tr>
+<tr class="odd">
+<td align="right">2002</td>
+<td align="left">Change-in-fit indices</td>
+<td align="left">compare</td>
+<td align="left">contemporary</td>
+</tr>
+<tr class="even">
+<td align="right">2007</td>
+<td align="left">Change-in-fit evidence across levels</td>
+<td align="left">invariance</td>
+<td align="left">contemporary</td>
+</tr>
+<tr class="odd">
+<td align="right">2009</td>
+<td align="left">Reliability on the ordered-score scale</td>
+<td align="left">reliability</td>
+<td align="left">contemporary</td>
+</tr>
+<tr class="even">
+<td align="right">2010</td>
+<td align="left">Formal model-nesting check</td>
+<td align="left">compare</td>
+<td align="left">contemporary</td>
+</tr>
+<tr class="odd">
+<td align="right">2011</td>
+<td align="left">Hull method</td>
+<td align="left">factors</td>
+<td align="left">contemporary</td>
+</tr>
+<tr class="even">
+<td align="right">2012</td>
+<td align="left">Comparison data</td>
+<td align="left">factors</td>
+<td align="left">contemporary</td>
+</tr>
+<tr class="odd">
+<td align="right">2012</td>
+<td align="left">Percentage of uncontaminated correlations</td>
+<td align="left">reliability</td>
+<td align="left">contemporary</td>
+</tr>
+<tr class="even">
+<td align="right">2013</td>
+<td align="left">Omega hierarchical subscale</td>
+<td align="left">reliability</td>
+<td align="left">contemporary</td>
+</tr>
+<tr class="odd">
+<td align="right">2015</td>
+<td align="left">Inter-item standard deviation</td>
+<td align="left">screen</td>
+<td align="left">contemporary</td>
+</tr>
+<tr class="even">
+<td align="right">2015</td>
+<td align="left">Heterotrait-monotrait ratio</td>
+<td align="left">validity</td>
+<td align="left">contemporary</td>
+</tr>
+<tr class="odd">
+<td align="right">2016</td>
+<td align="left">Identification-aware sequence for ordered
+indicators</td>
+<td align="left">invariance</td>
+<td align="left">contemporary</td>
+</tr>
+<tr class="even">
+<td align="right">2016</td>
+<td align="left">Bootstrap confidence intervals for reliability</td>
+<td align="left">reliability</td>
+<td align="left">contemporary</td>
+</tr>
+<tr class="odd">
+<td align="right">2017</td>
+<td align="left">Empirical Kaiser criterion</td>
+<td align="left">factors</td>
+<td align="left">contemporary</td>
+</tr>
+<tr class="even">
+<td align="right">2017</td>
+<td align="left">Next Eigenvalue Sufficiency Test (NEST)</td>
+<td align="left">factors</td>
+<td align="left">emerging</td>
+</tr>
+<tr class="odd">
+<td align="right">2018</td>
+<td align="left">A-priori versus post-hoc prediction provenance</td>
+<td align="left">network</td>
+<td align="left">contemporary</td>
+</tr>
+<tr class="even">
+<td align="right">2020</td>
+<td align="left">Test of the constraints unit weighting assumes</td>
+<td align="left">scores</td>
+<td align="left">contemporary</td>
+</tr>
+<tr class="odd">
+<td align="right">2021</td>
+<td align="left">HTMT2</td>
+<td align="left">validity</td>
+<td align="left">contemporary</td>
+</tr>
+<tr class="even">
+<td align="right">2022</td>
+<td align="left">Latent correlations with confidence intervals</td>
+<td align="left">validity</td>
+<td align="left">contemporary</td>
+</tr>
+</tbody>
+</table>
+<p>Read by era, the timeline tells a story of methods shaped by the
+computing of their time and then revisited.</p>
+<ul>
+<li>
+<strong>1930s to 1950s.</strong> The field laid its foundations: the
+bifactor model (Holzinger &amp; Swineford, 1937), coefficient alpha
+(Cronbach, 1951), the nomological network (Cronbach &amp; Meehl, 1955),
+and the Schmid-Leiman transformation (1957). Factor analysis was
+computed by hand, and rules that were easy to apply, such as retaining
+factors with eigenvalues greater than one (Guttman, 1954; Kaiser, 1960),
+became habits.</li>
+<li>
+<strong>1960s to 1980s.</strong> Structural modeling arrived. Horn
+(1965) proposed parallel analysis and Cattell (1966) the scree test.
+Jöreskog made confirmatory factor analysis practical (1969) and extended
+it to several groups (1971). Researchers gained information criteria
+(Akaike, 1974), incremental fit (Bentler &amp; Bonett, 1980), the
+Fornell-Larcker comparison (1981), and the two-step logic of measurement
+before structure (Anderson &amp; Gerbing, 1988).</li>
+<li>
+<strong>1990s and 2000s.</strong> Fit and invariance were
+formalized: an interval for the RMSEA (Browne &amp; Cudeck, 1992), the
+invariance hierarchy (Meredith, 1993), the fit-index cutoffs that became
+conventions (Hu &amp; Bentler, 1999), scaled difference tests (Satorra,
+2000; Satorra &amp; Bentler, 2001), and change-in-fit criteria (Cheung
+&amp; Rensvold, 2002; Chen, 2007).</li>
+<li>
+<strong>2010s to the present.</strong> Many defaults were
+reconsidered: better factor-retention criteria (Hull, comparison data,
+the empirical Kaiser criterion, NEST), bifactor indices (Reise, 2012),
+heterotrait-monotrait ratios (Henseler et al., 2015; Roemer et al.,
+2021), identification for ordered indicators (Wu &amp; Estabrook, 2016),
+the cost of sum scores (McNeish &amp; Wolf, 2020), and latent
+correlations with intervals as discriminant evidence (Rönkkö &amp; Cho,
+2022).</li>
+</ul>
+<p>What took over from each historical method:</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">old</span> <span class="op">&lt;-</span> <span class="va">methods</span><span class="op">[</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">methods</span><span class="op">$</span><span class="va">contemporary_practice</span><span class="op">)</span>, , drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span>
+<span><span class="va">now</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/strsplit.html" class="external-link">strsplit</a></span><span class="op">(</span><span class="va">old</span><span class="op">$</span><span class="va">contemporary_practice</span>, <span class="st">"; "</span>, fixed <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>  <span class="kw">function</span><span class="op">(</span><span class="va">ids</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="va">methods</span><span class="op">$</span><span class="va">method</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/match.html" class="external-link">match</a></span><span class="op">(</span><span class="va">ids</span>, <span class="va">methods</span><span class="op">$</span><span class="va">id</span><span class="op">)</span><span class="op">]</span>, collapse <span class="op">=</span> <span class="st">"; "</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>Year <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">old</span><span class="op">$</span><span class="va">introduced</span><span class="op">)</span>, <span class="st">""</span>, <span class="va">old</span><span class="op">$</span><span class="va">introduced</span><span class="op">)</span>,</span>
+<span>             Historical <span class="op">=</span> <span class="va">old</span><span class="op">$</span><span class="va">method</span>, Now <span class="op">=</span> <span class="va">now</span><span class="op">)</span>,</span>
+<span>  row.names <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<table class="table">
+<colgroup>
+<col width="2%">
+<col width="26%">
+<col width="71%">
+</colgroup>
+<thead><tr class="header">
+<th align="left">Year</th>
+<th align="left">Historical</th>
+<th align="left">Now</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="left"></td>
+<td align="left">Fixed item-total correlation reference (about .30)</td>
+<td align="left">Corrected item-rest correlation</td>
+</tr>
+<tr class="even">
+<td align="left">1954</td>
+<td align="left">Eigenvalue-greater-than-one rule</td>
+<td align="left">Common-factor parallel analysis; Velicer revised MAP
+(fourth powers); Empirical Kaiser criterion</td>
+</tr>
+<tr class="odd">
+<td align="left">1966</td>
+<td align="left">Scree test</td>
+<td align="left">Common-factor parallel analysis</td>
+</tr>
+<tr class="even">
+<td align="left">1958</td>
+<td align="left">Orthogonal (varimax) rotation</td>
+<td align="left">Oblique (oblimin) rotation</td>
+</tr>
+<tr class="odd">
+<td align="left"></td>
+<td align="left">Fixed loading cutoff</td>
+<td align="left">Cross-loading, communality, and residual
+diagnostics</td>
+</tr>
+<tr class="even">
+<td align="left">1969</td>
+<td align="left">Chi-square exact-fit test</td>
+<td align="left">Incremental fit indices (CFI, TLI); RMSEA with
+confidence interval; Standardized root mean square residual; Localized
+residual correlations</td>
+</tr>
+<tr class="odd">
+<td align="left">1999</td>
+<td align="left">Fixed fit-index cutoffs</td>
+<td align="left">Localized residual correlations</td>
+</tr>
+<tr class="even">
+<td align="left"></td>
+<td align="left">Modification indices</td>
+<td align="left">Localized residual correlations; Recorded revision
+lineage</td>
+</tr>
+<tr class="odd">
+<td align="left">1951</td>
+<td align="left">Coefficient alpha</td>
+<td align="left">Model-based coefficient omega</td>
+</tr>
+<tr class="even">
+<td align="left">1957</td>
+<td align="left">Schmid-Leiman decomposition</td>
+<td align="left">Bifactor measurement model</td>
+</tr>
+<tr class="odd">
+<td align="left">1981</td>
+<td align="left">Fornell-Larcker comparison</td>
+<td align="left">HTMT2; Latent correlations with confidence
+intervals</td>
+</tr>
+<tr class="even">
+<td align="left"></td>
+<td align="left">Unit-weighted sum or mean score</td>
+<td align="left">Test of the constraints unit weighting assumes</td>
+</tr>
+<tr class="odd">
+<td align="left">1955</td>
+<td align="left">Nomological network of construct relations</td>
+<td align="left">Measurement-then-structure modeling; A-priori versus
+post-hoc prediction provenance</td>
+</tr>
+<tr class="even">
+<td align="left"></td>
+<td align="left">Listwise deletion</td>
+<td align="left">Full-information maximum likelihood for missing data;
+Missing-data sensitivity comparison</td>
+</tr>
+<tr class="odd">
+<td align="left"></td>
+<td align="left">Pairwise deletion</td>
+<td align="left">Full-information maximum likelihood for missing data;
+Missing-data sensitivity comparison</td>
+</tr>
+</tbody>
+</table>
+<p>“Now” does not mean that the historical method is wrong. It means
+that contemporary work answers the same question differently, usually
+with evidence the historical method could not provide.
+<code>nomologR</code> shows the historical method as labeled context
+where a reader will meet it, and bases its own evidence on the
+contemporary one.</p>
+</div>
+<div class="section level2">
 <h2 id="item-and-data-audit-nomo_screen">1. Item and data audit — <code>nomo_screen()</code><a class="anchor" aria-label="anchor" href="#item-and-data-audit-nomo_screen"></a>
 </h2>
 <p><strong>Historical practice.</strong> Item analysis often meant

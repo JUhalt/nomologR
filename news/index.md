@@ -2,6 +2,21 @@
 
 ## nomologR (development version)
 
+- [`nomo_methods()`](https://juhalt.github.io/nomologR/reference/nomo_methods.md)
+  records how practice changed
+  ([\#113](https://github.com/JUhalt/nomologR/issues/113)). `introduced`
+  is the year a method entered the literature, taken from the
+  publication that introduced it, and given only when the registry cites
+  that publication (46 of 89 methods so far). `contemporary_practice`
+  names, for a historical method, the contemporary methods that now
+  answer its question: parallel analysis for the
+  eigenvalue-greater-than-one rule, omega for coefficient alpha, HTMT2
+  and latent-correlation intervals for the Fornell-Larcker comparison,
+  FIML for listwise deletion. The research-basis article gains a
+  section, “How practice changed”, with a timeline from 1937 to 2022 and
+  a table of what took over from each historical method, both drawn from
+  the registry. The KMO entry now cites Kaiser (1970), which introduced
+  the index.
 - Every function’s help page now names the fields of the object it
   returns ([\#114](https://github.com/JUhalt/nomologR/issues/114)). The
   stability policy covers “the documented fields of the objects they

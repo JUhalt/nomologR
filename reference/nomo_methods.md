@@ -41,8 +41,12 @@ nomo_methods(x = NULL, stage = NULL, lineage = NULL, references = FALSE)
 
 ## Value
 
-A tibble. With `references = FALSE`, one row per method. With
-`references = TRUE`, one row per method-reference pair.
+A tibble with columns `id`, `stage`, `method`, `lineage`, `role`,
+`estimand`, `assumptions`, `implemented_by`, `engine`, `introduced`, and
+`contemporary_practice`. With `references = FALSE` there is one row per
+method, and `references` holds short in-text citations. With
+`references = TRUE` there is one row per method-reference pair, with
+`citation_key`, `citation`, and `doi`.
 
 ## Details
 
@@ -61,6 +65,21 @@ entry carries a `lineage` label:
 
 A lineage label summarizes where a method sits in the literature. It is
 a teaching aid, not a claim that an older method is always wrong.
+
+Two columns record how practice changed:
+
+- `introduced`: the year of the publication that introduced the method.
+  It is given only when the registry cites that publication, and is `NA`
+  when the registry cites only a later review or critique. It is never
+  dated from a secondary source.
+
+- `contemporary_practice`: for a historical method, the registry's
+  contemporary methods that now address the question it answered, such
+  as parallel analysis for the eigenvalue-greater-than-one rule, or
+  omega for coefficient alpha.
+
+[`vignette("research-basis")`](https://juhalt.github.io/nomologR/articles/research-basis.md)
+draws a timeline from these columns.
 
 The `role` column says how `nomologR` uses the method: `"primary"`
 evidence, `"supporting"` evidence, or `"context"`. A `"context"` method
@@ -85,7 +104,7 @@ cites.
 ``` r
 # The whole registry
 nomo_methods()
-#> # A tibble: 89 × 10
+#> # A tibble: 89 × 12
 #>    id      stage method lineage role  estimand assumptions implemented_by engine
 #>    <chr>   <chr> <chr>  <chr>   <chr> <chr>    <chr>       <chr>          <chr> 
 #>  1 missin… scre… Item … contem… supp… Proport… Descriptiv… nomo_screen()  nomol…
@@ -99,7 +118,8 @@ nomo_methods()
 #>  9 even_o… scre… Even-… contem… supp… Within-… Needs at l… nomo_screen()  nomol…
 #> 10 psycho… scre… Psych… contem… supp… Within-… Needs at l… nomo_screen()  nomol…
 #> # ℹ 79 more rows
-#> # ℹ 1 more variable: references <chr>
+#> # ℹ 3 more variables: introduced <int>, contemporary_practice <chr>,
+#> #   references <chr>
 
 # What is shown only as historical context, and why
 nomo_methods(lineage = "historical")[, c("method", "role", "assumptions")]
@@ -126,6 +146,29 @@ nomo_methods(lineage = "historical")[, c("method", "role", "assumptions")]
 #> 18 Nomological network of construct relations           primary    Evidence for…
 #> 19 Listwise deletion                                    context    Requires dat…
 #> 20 Pairwise deletion                                    context    Requires dat…
+
+# How practice changed: historical methods and what now does their work
+old <- nomo_methods(lineage = "historical")
+old[!is.na(old$contemporary_practice),
+    c("introduced", "method", "contemporary_practice")]
+#> # A tibble: 15 × 3
+#>    introduced method                                       contemporary_practice
+#>         <int> <chr>                                        <chr>                
+#>  1         NA Fixed item-total correlation reference (abo… item_rest_correlation
+#>  2       1954 Eigenvalue-greater-than-one rule             parallel_analysis; m…
+#>  3       1966 Scree test                                   parallel_analysis    
+#>  4       1958 Orthogonal (varimax) rotation                oblique_rotation     
+#>  5         NA Fixed loading cutoff                         loading_diagnostics  
+#>  6       1969 Chi-square exact-fit test                    incremental_fit; rms…
+#>  7       1999 Fixed fit-index cutoffs                      local_strain         
+#>  8         NA Modification indices                         local_strain; revisi…
+#>  9       1951 Coefficient alpha                            omega                
+#> 10       1957 Schmid-Leiman decomposition                  bifactor_model       
+#> 11       1981 Fornell-Larcker comparison                   htmt2; latent_correl…
+#> 12         NA Unit-weighted sum or mean score              parallel_model_test  
+#> 13       1955 Nomological network of construct relations   two_step_sem; predic…
+#> 14         NA Listwise deletion                            fiml; missing_sensit…
+#> 15         NA Pairwise deletion                            fiml; missing_sensit…
 
 # A reference list for one stage
 nomo_methods(stage = "reliability", references = TRUE)[, c("method", "citation")]

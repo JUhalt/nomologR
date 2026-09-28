@@ -103,8 +103,12 @@ expanded to one row per method per reference, with full <code>citation</code> an
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A tibble. With <code>references = FALSE</code>, one row per method. With
-<code>references = TRUE</code>, one row per method-reference pair.</p>
+    <p>A tibble with columns <code>id</code>, <code>stage</code>, <code>method</code>, <code>lineage</code>, <code>role</code>,
+<code>estimand</code>, <code>assumptions</code>, <code>implemented_by</code>, <code>engine</code>, <code>introduced</code>, and
+<code>contemporary_practice</code>. With <code>references = FALSE</code> there is one row per
+method, and <code>references</code> holds short in-text citations. With
+<code>references = TRUE</code> there is one row per method-reference pair, with
+<code>citation_key</code>, <code>citation</code>, and <code>doi</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -116,6 +120,15 @@ so they can be recognized and interpreted. They are labeled and qualified.</p></
 <li><p><code>"emerging"</code>: recent proposals with a smaller evidence base.</p></li>
 </ul><p>A lineage label summarizes where a method sits in the literature. It is a
 teaching aid, not a claim that an older method is always wrong.</p>
+<p>Two columns record how practice changed:</p><ul><li><p><code>introduced</code>: the year of the publication that introduced the method.
+It is given only when the registry cites that publication, and is <code>NA</code>
+when the registry cites only a later review or critique. It is never
+dated from a secondary source.</p></li>
+<li><p><code>contemporary_practice</code>: for a historical method, the registry's
+contemporary methods that now address the question it answered, such as
+parallel analysis for the eigenvalue-greater-than-one rule, or omega for
+coefficient alpha.</p></li>
+</ul><p><code><a href="../articles/research-basis.html">vignette("research-basis")</a></code> draws a timeline from these columns.</p>
 <p>The <code>role</code> column says how <code>nomologR</code> uses the method: <code>"primary"</code> evidence,
 <code>"supporting"</code> evidence, or <code>"context"</code>. A <code>"context"</code> method is displayed
 for recognition and is deliberately excluded from any synthesis: the
@@ -133,7 +146,7 @@ actually used, which is what <code><a href="nomo_report.html">nomo_report()</a><
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># The whole registry</span></span></span>
 <span class="r-in"><span><span class="fu">nomo_methods</span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 89 × 10</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 89 × 12</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    id      stage method lineage role  estimand assumptions implemented_by engine</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> missin… scre… Item … contem… supp… Proport… Descriptiv… nomo_screen()  nomol…</span>
@@ -147,7 +160,8 @@ actually used, which is what <code><a href="nomo_report.html">nomo_report()</a><
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> even_o… scre… Even-… contem… supp… Within-… Needs at l… nomo_screen()  nomol…</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> psycho… scre… Psych… contem… supp… Within-… Needs at l… nomo_screen()  nomol…</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 79 more rows</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 1 more variable: references &lt;chr&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 3 more variables: introduced &lt;int&gt;, contemporary_practice &lt;chr&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   references &lt;chr&gt;</span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># What is shown only as historical context, and why</span></span></span>
 <span class="r-in"><span><span class="fu">nomo_methods</span><span class="op">(</span>lineage <span class="op">=</span> <span class="st">"historical"</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"method"</span>, <span class="st">"role"</span>, <span class="st">"assumptions"</span><span class="op">)</span><span class="op">]</span></span></span>
@@ -174,6 +188,29 @@ actually used, which is what <code><a href="nomo_report.html">nomo_report()</a><
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">18</span> Nomological network of construct relations           primary    Evidence for…</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">19</span> Listwise deletion                                    context    Requires dat…</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">20</span> Pairwise deletion                                    context    Requires dat…</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># How practice changed: historical methods and what now does their work</span></span></span>
+<span class="r-in"><span><span class="va">old</span> <span class="op">&lt;-</span> <span class="fu">nomo_methods</span><span class="op">(</span>lineage <span class="op">=</span> <span class="st">"historical"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">old</span><span class="op">[</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">old</span><span class="op">$</span><span class="va">contemporary_practice</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>    <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"introduced"</span>, <span class="st">"method"</span>, <span class="st">"contemporary_practice"</span><span class="op">)</span><span class="op">]</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 15 × 3</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    introduced method                                       contemporary_practice</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                                        <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span>         <span style="color: #BB0000;">NA</span> Fixed item-total correlation reference (abo… item_rest_correlation</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span>       <span style="text-decoration: underline;">1</span>954 Eigenvalue-greater-than-one rule             parallel_analysis; m…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span>       <span style="text-decoration: underline;">1</span>966 Scree test                                   parallel_analysis    </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span>       <span style="text-decoration: underline;">1</span>958 Orthogonal (varimax) rotation                oblique_rotation     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span>         <span style="color: #BB0000;">NA</span> Fixed loading cutoff                         loading_diagnostics  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span>       <span style="text-decoration: underline;">1</span>969 Chi-square exact-fit test                    incremental_fit; rms…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span>       <span style="text-decoration: underline;">1</span>999 Fixed fit-index cutoffs                      local_strain         </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span>         <span style="color: #BB0000;">NA</span> Modification indices                         local_strain; revisi…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span>       <span style="text-decoration: underline;">1</span>951 Coefficient alpha                            omega                </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span>       <span style="text-decoration: underline;">1</span>957 Schmid-Leiman decomposition                  bifactor_model       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">11</span>       <span style="text-decoration: underline;">1</span>981 Fornell-Larcker comparison                   htmt2; latent_correl…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">12</span>         <span style="color: #BB0000;">NA</span> Unit-weighted sum or mean score              parallel_model_test  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">13</span>       <span style="text-decoration: underline;">1</span>955 Nomological network of construct relations   two_step_sem; predic…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">14</span>         <span style="color: #BB0000;">NA</span> Listwise deletion                            fiml; missing_sensit…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">15</span>         <span style="color: #BB0000;">NA</span> Pairwise deletion                            fiml; missing_sensit…</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># A reference list for one stage</span></span></span>
 <span class="r-in"><span><span class="fu">nomo_methods</span><span class="op">(</span>stage <span class="op">=</span> <span class="st">"reliability"</span>, references <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"method"</span>, <span class="st">"citation"</span><span class="op">)</span><span class="op">]</span></span></span>

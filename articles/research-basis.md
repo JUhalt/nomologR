@@ -121,6 +121,150 @@ than every method the package knows about. Every DOI in the registry is
 checked against the DOI registries before each release, including that
 the registered author, year, and title match the citation.
 
+## How practice changed
+
+The registry also records when each method entered the literature, and,
+for a historical method, which contemporary methods now address the
+question it answered. The tables below are drawn from
+[`nomo_methods()`](https://juhalt.github.io/nomologR/reference/nomo_methods.md),
+so they cannot drift from what the package computes.
+
+A method is dated only from the publication that introduced it, and only
+when the registry cites that publication. 43 of the 89 methods are not
+yet dated, because the registry cites a later review or critique instead
+of the original. Adding those originating references is ongoing work.
+
+``` r
+
+dated <- methods[!is.na(methods$introduced), , drop = FALSE]
+dated <- dated[order(dated$introduced, dated$stage), , drop = FALSE]
+knitr::kable(
+  dated[, c("introduced", "method", "stage", "lineage")],
+  col.names = c("Year", "Method", "Stage", "Lineage"),
+  row.names = FALSE
+)
+```
+
+| Year | Method | Stage | Lineage |
+|---:|:---|:---|:---|
+| 1937 | Bifactor measurement model | cfa | contemporary |
+| 1950 | Bartlett’s test of sphericity | factors | historical |
+| 1951 | Coefficient alpha | reliability | historical |
+| 1954 | Eigenvalue-greater-than-one rule | factors | historical |
+| 1955 | Nomological network of construct relations | network | historical |
+| 1957 | Schmid-Leiman decomposition | reliability | historical |
+| 1958 | Orthogonal (varimax) rotation | efa | historical |
+| 1965 | Common-factor parallel analysis | factors | contemporary |
+| 1966 | Scree test | factors | historical |
+| 1969 | Maximum-likelihood confirmatory factor analysis | cfa | contemporary |
+| 1969 | Chi-square exact-fit test | cfa | historical |
+| 1970 | Kaiser-Meyer-Olkin sampling adequacy | factors | historical |
+| 1971 | Multiple-group confirmatory factor analysis | invariance | contemporary |
+| 1974 | Information criteria (AIC, BIC) | compare | contemporary |
+| 1976 | Velicer original minimum average partial (MAP) | factors | contemporary |
+| 1980 | Incremental fit indices (CFI, TLI) | cfa | contemporary |
+| 1981 | Standardized loadings and average variance extracted | validity | historical |
+| 1981 | Fornell-Larcker comparison | validity | historical |
+| 1987 | Equivalence testing against a smallest effect size of interest | network | contemporary |
+| 1988 | Measurement-then-structure modeling | network | contemporary |
+| 1989 | Partial invariance with documented releases | invariance | contemporary |
+| 1992 | RMSEA with confidence interval | cfa | contemporary |
+| 1993 | Configural, metric, scalar, and strict sequence | invariance | contemporary |
+| 1999 | Fixed fit-index cutoffs | cfa | historical |
+| 2000 | Scaled-and-shifted difference test | compare | contemporary |
+| 2000 | Velicer revised MAP (fourth powers) | factors | contemporary |
+| 2001 | Satorra-Bentler scaled difference test | compare | contemporary |
+| 2001 | Construct replicability (H) | reliability | contemporary |
+| 2002 | Change-in-fit indices | compare | contemporary |
+| 2007 | Change-in-fit evidence across levels | invariance | contemporary |
+| 2009 | Reliability on the ordered-score scale | reliability | contemporary |
+| 2010 | Formal model-nesting check | compare | contemporary |
+| 2011 | Hull method | factors | contemporary |
+| 2012 | Comparison data | factors | contemporary |
+| 2012 | Percentage of uncontaminated correlations | reliability | contemporary |
+| 2013 | Omega hierarchical subscale | reliability | contemporary |
+| 2015 | Inter-item standard deviation | screen | contemporary |
+| 2015 | Heterotrait-monotrait ratio | validity | contemporary |
+| 2016 | Identification-aware sequence for ordered indicators | invariance | contemporary |
+| 2016 | Bootstrap confidence intervals for reliability | reliability | contemporary |
+| 2017 | Empirical Kaiser criterion | factors | contemporary |
+| 2017 | Next Eigenvalue Sufficiency Test (NEST) | factors | emerging |
+| 2018 | A-priori versus post-hoc prediction provenance | network | contemporary |
+| 2020 | Test of the constraints unit weighting assumes | scores | contemporary |
+| 2021 | HTMT2 | validity | contemporary |
+| 2022 | Latent correlations with confidence intervals | validity | contemporary |
+
+Read by era, the timeline tells a story of methods shaped by the
+computing of their time and then revisited.
+
+- **1930s to 1950s.** The field laid its foundations: the bifactor model
+  (Holzinger & Swineford, 1937), coefficient alpha (Cronbach, 1951), the
+  nomological network (Cronbach & Meehl, 1955), and the Schmid-Leiman
+  transformation (1957). Factor analysis was computed by hand, and rules
+  that were easy to apply, such as retaining factors with eigenvalues
+  greater than one (Guttman, 1954; Kaiser, 1960), became habits.
+- **1960s to 1980s.** Structural modeling arrived. Horn (1965) proposed
+  parallel analysis and Cattell (1966) the scree test. Jöreskog made
+  confirmatory factor analysis practical (1969) and extended it to
+  several groups (1971). Researchers gained information criteria
+  (Akaike, 1974), incremental fit (Bentler & Bonett, 1980), the
+  Fornell-Larcker comparison (1981), and the two-step logic of
+  measurement before structure (Anderson & Gerbing, 1988).
+- **1990s and 2000s.** Fit and invariance were formalized: an interval
+  for the RMSEA (Browne & Cudeck, 1992), the invariance hierarchy
+  (Meredith, 1993), the fit-index cutoffs that became conventions (Hu &
+  Bentler, 1999), scaled difference tests (Satorra, 2000; Satorra &
+  Bentler, 2001), and change-in-fit criteria (Cheung & Rensvold, 2002;
+  Chen, 2007).
+- **2010s to the present.** Many defaults were reconsidered: better
+  factor-retention criteria (Hull, comparison data, the empirical Kaiser
+  criterion, NEST), bifactor indices (Reise, 2012),
+  heterotrait-monotrait ratios (Henseler et al., 2015; Roemer et al.,
+  2021), identification for ordered indicators (Wu & Estabrook, 2016),
+  the cost of sum scores (McNeish & Wolf, 2020), and latent correlations
+  with intervals as discriminant evidence (Rönkkö & Cho, 2022).
+
+What took over from each historical method:
+
+``` r
+
+old <- methods[!is.na(methods$contemporary_practice), , drop = FALSE]
+now <- vapply(
+  strsplit(old$contemporary_practice, "; ", fixed = TRUE),
+  function(ids) paste(methods$method[match(ids, methods$id)], collapse = "; "),
+  character(1)
+)
+knitr::kable(
+  data.frame(Year = ifelse(is.na(old$introduced), "", old$introduced),
+             Historical = old$method, Now = now),
+  row.names = FALSE
+)
+```
+
+| Year | Historical | Now |
+|:---|:---|:---|
+|  | Fixed item-total correlation reference (about .30) | Corrected item-rest correlation |
+| 1954 | Eigenvalue-greater-than-one rule | Common-factor parallel analysis; Velicer revised MAP (fourth powers); Empirical Kaiser criterion |
+| 1966 | Scree test | Common-factor parallel analysis |
+| 1958 | Orthogonal (varimax) rotation | Oblique (oblimin) rotation |
+|  | Fixed loading cutoff | Cross-loading, communality, and residual diagnostics |
+| 1969 | Chi-square exact-fit test | Incremental fit indices (CFI, TLI); RMSEA with confidence interval; Standardized root mean square residual; Localized residual correlations |
+| 1999 | Fixed fit-index cutoffs | Localized residual correlations |
+|  | Modification indices | Localized residual correlations; Recorded revision lineage |
+| 1951 | Coefficient alpha | Model-based coefficient omega |
+| 1957 | Schmid-Leiman decomposition | Bifactor measurement model |
+| 1981 | Fornell-Larcker comparison | HTMT2; Latent correlations with confidence intervals |
+|  | Unit-weighted sum or mean score | Test of the constraints unit weighting assumes |
+| 1955 | Nomological network of construct relations | Measurement-then-structure modeling; A-priori versus post-hoc prediction provenance |
+|  | Listwise deletion | Full-information maximum likelihood for missing data; Missing-data sensitivity comparison |
+|  | Pairwise deletion | Full-information maximum likelihood for missing data; Missing-data sensitivity comparison |
+
+“Now” does not mean that the historical method is wrong. It means that
+contemporary work answers the same question differently, usually with
+evidence the historical method could not provide. `nomologR` shows the
+historical method as labeled context where a reader will meet it, and
+bases its own evidence on the contemporary one.
+
 ## 1. Item and data audit — `nomo_screen()`
 
 **Historical practice.** Item analysis often meant screening corrected
