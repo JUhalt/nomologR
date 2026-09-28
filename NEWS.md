@@ -1,5 +1,11 @@
 # nomologR (development version)
 
+- `nomo_network()` can model an observed composite, such as a scale mean, as a single-indicator latent variable, correcting the relations it enters for its unreliability (#129). Name it in `single_indicators` with its reliability, as a number or a `nomo_single_indicator()` record. The record can take omega and its bootstrap uncertainty from a `nomo_reliability()` result. The composite becomes the one indicator of a latent variable of the same name, with its error variance fixed at (1 - reliability) x its variance, so the model syntax and hypotheses are unchanged. The method goes back to Spearman's (1904) correction for attenuation and the SEM textbooks (Hayduk, 1987; Bollen, 1989), and Savalei (2019) found it the most accurate option in samples of 30 to 200 when the reliability is close to its true value. So nomologR:
+  - refits each hypothesis with each reliability .05 and .10 lower and higher, records the result in `single_indicator_sensitivity`, and flags any hypothesis whose concordance changes across that range;
+  - adds the reliability's uncertainty to the standard errors, intervals, and concordance when its standard error is known, as Oberski and Satorra (2013) derive; otherwise the log says the standard errors treat it as known;
+  - flags coefficient alpha for review, since it understates reliability when loadings differ and so overcorrects.
+  
+  `hypothesis_evidence` gains `se_reliability_added`, `nomo_table()` gains the `"single_indicators"` and `"sensitivity"` types, and the APA hypotheses table notes the correction. The nomological-network article shows the correction recovering the population path (.45) from the Persistence mean (.41 uncorrected, .46 corrected). The observed-endpoint note in the log now names the option.
 - The content-review reader is tested against `contentvalidR` 0.10.0 output too (#53). Its five handoffs are identical to 0.9.0's apart from the producer version and date, and the reader needed no change.
 
 # nomologR 0.9.0

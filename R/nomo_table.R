@@ -31,7 +31,9 @@
 #'   `"notes"`; see [nomo_scores()].
 #' * `nomo_hypotheses`: the machine-readable hypothesis table (no `type`).
 #' * `nomo_network`: `"hypotheses"` (default), `"fit"`, `"measurement"`,
-#'   `"relations"`, `"replication"`, `"decision_log"`.
+#'   `"relations"`, `"replication"`, `"single_indicators"`, `"sensitivity"`,
+#'   `"decision_log"`. `"single_indicators"` and `"sensitivity"` describe the
+#'   composites modeled as single indicators; see [nomo_network()].
 #' * `nomo_invariance`: `"fit"` (default), `"categories"`, `"partial"`,
 #'   `"local_strain"`, `"decision_log"`. The local-strain table keeps lavaan's
 #'   internal `constraint` label and adds a human-readable
@@ -92,6 +94,8 @@ nomo_table.nomo_network <- function(
       "measurement",
       "relations",
       "replication",
+      "single_indicators",
+      "sensitivity",
       "decision_log"
     ),
     ...) {
@@ -122,6 +126,9 @@ nomo_table.nomo_network <- function(
     }
     return(x$replication_evidence)
   }
+
+  if (type == "single_indicators") return(x[["single_indicators"]])
+  if (type == "sensitivity") return(x[["single_indicator_sensitivity"]])
 
   x$decision_log
 }

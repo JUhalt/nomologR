@@ -476,6 +476,10 @@ nomo_methods_used.nomo_network <- function(x, ...) {
     used <- c(used, "replication_same_model")
   }
 
+  if (is.data.frame(x$single_indicators) && nrow(x$single_indicators)) {
+    used <- c(used, "single_indicator_reliability")
+  }
+
   if (nomo_methods_is_fiml(x$missing)) used <- c(used, "fiml")
 
   used

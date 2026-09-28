@@ -81,7 +81,8 @@ test_that("every DOI is well formed, and only a book may lack one", {
   # here individually rather than allowed as a category.
   expect_equal(
     sort(bib$key[is.na(bib$doi)]),
-    c("gorsuch_1983", "hancock_mueller_2001", "nunnally_bernstein_1994")
+    c("gorsuch_1983", "hancock_mueller_2001", "hayduk_1987",
+      "nunnally_bernstein_1994")
   )
 })
 
