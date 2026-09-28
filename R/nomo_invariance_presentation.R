@@ -251,6 +251,7 @@ summary.nomo_invariance <- function(object, ...) {
     partial = object$partial,
     partial_requested = object$partial_requested,
     top_local_strain = top_local,
+    latent_means = object[["latent_means"]],
     decision_log = object$decision_log,
     note = paste(
       "No single delta-CFI, delta-RMSEA, delta-SRMR, chi-square difference,",
@@ -313,6 +314,26 @@ print.summary_nomo_invariance <- function(x, ...) {
     nomo_present_bullets(sprintf(
       "%s (%s): %s. %s", rel$release_id, rel$level, rel$syntax, rel$rationale
     ))
+  }
+
+  means <- x[["latent_means"]]
+  if (is.data.frame(means) && nrow(means)) {
+    shown <- means
+    shown$interval <- nomo_present_ci(shown$ci_lower, shown$ci_upper, 2L)
+    nomo_present_section(sprintf(
+      "Latent means relative to %s (its latent SD)", shown$reference_group[[1L]]
+    ))
+    nomo_present_table(
+      shown,
+      c("Level" = "level", "Group" = "group", "Factor" = "factor",
+        "Difference" = "estimate", "95% CI" = "interval", "p" = "p_value"),
+      formats = list(estimate = function(v) nomo_present_number(v, 2L),
+                     p_value = nomo_present_p),
+      more = "nomo_table(x, \"latent_means\")"
+    )
+    nomo_present_text(
+      "Comparable only with invariant intercepts, full or partial.", indent = 2L
+    )
   }
 
   if (nrow(x$top_local_strain)) {

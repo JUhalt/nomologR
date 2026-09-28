@@ -37,7 +37,7 @@
 #' * `nomo_retest`: `"icc"` (default), `"reliable_change"`, `"decision_log"`;
 #'   see [nomo_retest()].
 #' * `nomo_invariance`: `"fit"` (default), `"categories"`, `"partial"`,
-#'   `"local_strain"`, `"decision_log"`. The local-strain table keeps lavaan's
+#'   `"local_strain"`, `"latent_means"`, `"decision_log"`. The local-strain table keeps lavaan's
 #'   internal `constraint` label and adds a human-readable
 #'   `constraint_display` column (for example, `Intercept: ag3 (online vs.
 #'   paper)`).
@@ -154,6 +154,7 @@ nomo_table.nomo_invariance <- function(
       "categories",
       "partial",
       "local_strain",
+      "latent_means",
       "decision_log"
     ),
     ...) {
@@ -161,6 +162,7 @@ nomo_table.nomo_invariance <- function(
 
   if (type == "fit") return(x$fit_evidence)
   if (type == "categories") return(x$ordered_categories)
+  if (type == "latent_means") return(x[["latent_means"]])
 
   if (type == "partial") {
     if (is.null(x$partial)) return(tibble::tibble())
