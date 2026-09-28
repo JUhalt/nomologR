@@ -199,6 +199,7 @@ test_that("the loadings table is stable", {
 
 test_that("unsupported objects and arguments are refused with an explanation", {
   expect_error(nomo_apa_table(list()), "No APA table is available")
+  expect_error(nomo_apa_table(list()), "nomo_validity", fixed = TRUE)
   expect_error(nomo_apa_table(apa_cfa(), "loadings", number = 0), "whole number")
   expect_error(nomo_apa_table(apa_cfa(), "nonsense"), "`type` must be one of", fixed = TRUE)
 })
@@ -266,4 +267,111 @@ test_that("knitting a table emits its markdown", {
     as.character(out),
     paste(nomologR:::nomo_apa_markdown(tab), collapse = "\n")
   )
+})
+
+
+# Convergent and discriminant evidence ------------------------------------------
+
+apa_validity <- local({
+  cache <- NULL
+  function() {
+    if (is.null(cache)) {
+      scales <- list(Agency = paste0("ag", 1:4), Persistence = paste0("pe", 1:4),
+                     SocialDesirability = paste0("sd", 1:3))
+      cache <<- nomo_validity(nomo_cfa(nomo_model(scales), nomo_demo_network))
+    }
+    cache
+  }
+})
+
+
+test_that("the discriminant table gives each pair its correlation and ratios", {
+  skip_on_cran()
+  v <- apa_validity()
+  tab <- nomo_apa_table(v)
+  expect_identical(tab$source, "nomo_validity")
+  expect_identical(tab$title, "Construct Correlations and Heterotrait-Monotrait Ratios")
+  expect_identical(names(tab$body), c("Constructs", "*r* [95% CI]", "HTMT2", "HTMT"))
+  expect_identical(tab$body$Constructs[[1L]], "Agency with Persistence")
+
+  lc <- v$latent_correlations[v$latent_correlations$construct_1 == "Agency" &
+                                v$latent_correlations$construct_2 == "Persistence", ]
+  # A correlation cannot exceed 1 and loses its leading zero; a ratio can, and
+  # keeps it.
+  expect_identical(
+    tab$body[["*r* [95% CI]"]][[1L]],
+    nomologR:::nomo_apa_interval(lc$correlation, lc$ci_lower, lc$ci_upper, bounded = TRUE)
+  )
+  expect_true(startsWith(tab$body[["*r* [95% CI]"]][[1L]], "."))
+  expect_true(startsWith(tab$body$HTMT2[[1L]], "0."))
+
+  notes <- paste(tab$notes$general, collapse = " ")
+  expect_match(notes, "Cho, 2022", fixed = TRUE)
+  expect_match(notes, "Roemer et al., 2021", fixed = TRUE)
+  expect_match(notes, "The review reference for the ratios is 0.85.", fixed = TRUE)
+  expect_false(grepl("Fornell", notes, fixed = TRUE))
+})
+
+
+test_that("the discriminant table leaves out ratios that were not computed", {
+  skip_on_cran()
+  none <- nomo_validity(apa_validity()$fit, htmt = "none")
+  tab <- nomo_apa_table(none, "discriminant")
+  expect_identical(names(tab$body), c("Constructs", "*r* [95% CI]"))
+  expect_match(paste(tab$notes$general, collapse = " "),
+               "Heterotrait-monotrait ratios were not computed", fixed = TRUE)
+
+  only2 <- nomo_validity(apa_validity()$fit, htmt = "htmt2")
+  expect_identical(names(nomo_apa_table(only2)$body),
+                   c("Constructs", "*r* [95% CI]", "HTMT2"))
+})
+
+
+test_that("the convergent table counts indicators and writes AVE without a zero", {
+  skip_on_cran()
+  tab <- nomo_apa_table(apa_validity(), "convergent", number = 5)
+  expect_identical(tab$number, 5L)
+  expect_identical(tab$title, "Average Variance Extracted")
+  expect_identical(names(tab$body), c("Construct", "*k*", "AVE"))
+  expect_identical(tab$body$Construct, c("Agency", "Persistence", "SocialDesirability"))
+  expect_identical(tab$body[["*k*"]], c("4", "4", "3"))
+  expect_true(all(startsWith(tab$body$AVE, ".")))
+  expect_match(paste(tab$notes$general, collapse = " "),
+               "The review reference is .50;", fixed = TRUE)
+
+  no_ave <- apa_validity()
+  no_ave$ave$estimate <- NA_real_
+  expect_error(nomo_apa_table(no_ave, "convergent"), "No average variance extracted")
+})
+
+
+test_that("one construct has a convergent table and no pair table", {
+  skip_on_cran()
+  one <- nomo_validity(nomo_cfa("Agency =~ ag1 + ag2 + ag3 + ag4", nomo_demo_network))
+  expect_error(nomo_apa_table(one), "one construct, so there are no construct pairs")
+  expect_identical(nomo_apa_table(one, "convergent")$body$Construct, "Agency")
+})
+
+
+test_that("a multi-group model's tables name the groups the same way", {
+  skip_on_cran()
+  fit <- lavaan::cfa("visual =~ x1 + x2 + x3\ntextual =~ x4 + x5 + x6",
+                     data = lavaan::HolzingerSwineford1939, group = "school")
+  v <- nomo_validity(fit)
+  pairs <- nomo_apa_table(v)
+  convergent <- nomo_apa_table(v, "convergent")
+  expect_identical(names(pairs$body), c("Constructs", "Group", "*r* [95% CI]"))
+  expect_setequal(pairs$body$Group, c("Pasteur", "Grant-White"))
+  expect_setequal(convergent$body$Group, pairs$body$Group)
+  # Each loading is listed once per group; the indicators are counted once.
+  expect_identical(unique(convergent$body[["*k*"]]), "3")
+})
+
+
+test_that("the validity tables are stable", {
+  skip_on_cran()
+  # The pair table's note cites Ronkko with its diacritics, so only its body is
+  # snapshotted; the convergent table is ASCII throughout.
+  expect_snapshot(print(nomo_apa_table(apa_validity(), number = 4)$body))
+  expect_snapshot(print(nomo_apa_table(apa_validity(), "convergent", number = 5)))
 })

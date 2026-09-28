@@ -20,3 +20,33 @@
       Note. Standardized loadings from a confirmatory factor analysis. Estimated
       with ML; N = 800. Blank cells are loadings fixed to zero by the model.
 
+# the validity tables are stable
+
+    Code
+      print(nomo_apa_table(apa_validity(), number = 4)$body)
+    Output
+                                 Constructs    *r* [95% CI] HTMT2 HTMT
+      1             Agency with Persistence  .46 [.39, .53]  0.45 0.46
+      2      Agency with SocialDesirability .01 [-.08, .10]  0.02 0.04
+      3 Persistence with SocialDesirability .00 [-.09, .09]  0.04 0.05
+
+---
+
+    Code
+      print(nomo_apa_table(apa_validity(), "convergent", number = 5))
+    Output
+      Table 5
+      Average Variance Extracted
+      --------------------------
+      Construct           k  AVE
+      --------------------------
+      Agency              4  .59
+      Persistence         4  .53
+      SocialDesirability  3  .47
+      --------------------------
+      Note. k = number of indicators; AVE = average variance extracted (Fornell &
+      Larcker, 1981), the average proportion of indicator variance the construct
+      explains. The review reference is .50; a value below it prompts a look at the
+      loadings and content coverage. AVE is convergent evidence and is not a
+      reliability coefficient.
+

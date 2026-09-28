@@ -29,13 +29,30 @@ test_that("the tables follow the results the run holds, numbered in report order
   expect_identical(vapply(tables, `[[`, integer(1), "number"), seq_along(tables))
   expect_identical(
     vapply(tables, `[[`, character(1), "title"),
-    c("Standardized Factor Loadings", "Model Fit", "Factor Correlations",
-      "Reliability Estimates", "Theory-Specified Relations",
-      "Fit of the Nomological Network Model")
+    c("Standardized Factor Loadings", "Model Fit", "Reliability Estimates",
+      "Average Variance Extracted",
+      "Construct Correlations and Heterotrait-Monotrait Ratios",
+      "Theory-Specified Relations", "Fit of the Nomological Network Model")
   )
   # Each is the table nomo_apa_table() gives for that result.
   expect_identical(tables[[1L]]$body,
                    nomo_apa_table(report_apa_run()$results$cfa, "loadings")$body)
+  expect_identical(tables[[5L]]$body,
+                   nomo_apa_table(report_apa_run()$results$validity)$body)
+})
+
+
+test_that("without a validity stage, the CFA's factor correlations give the pairs", {
+  skip_on_cran()
+  run <- report_apa_run()
+  run$results$validity <- NULL
+  titles <- vapply(nomologR:::nomo_report_apa_tables(run), `[[`, character(1), "title")
+  expect_identical(
+    titles,
+    c("Standardized Factor Loadings", "Model Fit", "Factor Correlations",
+      "Reliability Estimates", "Theory-Specified Relations",
+      "Fit of the Nomological Network Model")
+  )
 })
 
 

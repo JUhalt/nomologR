@@ -110,6 +110,16 @@ nomo_apa_new <- function(body, title, stub, general = character(),
 #' **No verdicts.** Table notes keep the package's reference-value language.
 #' No cell reads PASS or FAIL, and fit indices are not labeled good or poor.
 #'
+#' **Discriminant evidence without the Fornell-Larcker matrix.** For a
+#' `nomo_validity` result, the `"discriminant"` table gives each pair of
+#' constructs one row: the latent correlation with its 95% confidence interval
+#' (Rönkkö & Cho, 2022), and the heterotrait-monotrait ratios HTMT2 (Roemer et
+#' al., 2021) and HTMT (Henseler et al., 2015) when they were computed. It does
+#' not print the correlation matrix with the square root of AVE on its
+#' diagonal, because that comparison often misses discriminant-validity
+#' problems (Henseler et al., 2015). AVE is convergent evidence and has its own
+#' `"convergent"` table.
+#'
 #' The rules come from the *Publication Manual of the American Psychological
 #' Association* (7th ed.), checked against Purdue OWL's APA 7 guides.
 #' Journal-specific templates are out of scope.
@@ -119,11 +129,12 @@ nomo_apa_new <- function(body, title, stub, general = character(),
 #' Any change will be described in NEWS; see `?nomologR` for the stability
 #' policy.
 #'
-#' @param x A result object: `nomo_cfa`, `nomo_reliability`, `nomo_invariance`,
-#'   or `nomo_network`.
+#' @param x A result object: `nomo_cfa`, `nomo_reliability`, `nomo_validity`,
+#'   `nomo_invariance`, or `nomo_network`.
 #' @param type Which table to build. For `nomo_cfa`: `"loadings"`, `"fit"`, or
-#'   `"factor_correlations"`. For `nomo_network`: `"hypotheses"` or `"fit"`.
-#'   Other objects have one table each.
+#'   `"factor_correlations"`. For `nomo_validity`: `"discriminant"` or
+#'   `"convergent"`. For `nomo_network`: `"hypotheses"` or `"fit"`. Other
+#'   objects have one table each.
 #' @param number Optional table number, printed in bold as "Table 1".
 #' @param title Optional title; a descriptive default is supplied.
 #' @param ... Unused.
@@ -135,6 +146,24 @@ nomo_apa_new <- function(body, title, stub, general = character(),
 #' American Psychological Association. (2020). *Publication manual of the
 #' American Psychological Association* (7th ed.).
 #' \doi{10.1037/0000165-000}
+#'
+#' Fornell, C., & Larcker, D. F. (1981). Evaluating structural equation models
+#' with unobservable variables and measurement error. *Journal of Marketing
+#' Research, 18*(1), 39-50. \doi{10.2307/3151312}
+#'
+#' Henseler, J., Ringle, C. M., & Sarstedt, M. (2015). A new criterion for
+#' assessing discriminant validity in variance-based structural equation
+#' modeling. *Journal of the Academy of Marketing Science, 43*(1), 115-135.
+#' \doi{10.1007/s11747-014-0403-8}
+#'
+#' Roemer, E., Schuberth, F., & Henseler, J. (2021). HTMT2--An improved
+#' criterion for assessing discriminant validity in structural equation
+#' modeling. *Industrial Management & Data Systems, 121*(12), 2637-2650.
+#' \doi{10.1108/IMDS-02-2021-0082}
+#'
+#' Rönkkö, M., & Cho, E. (2022). An updated guideline for assessing
+#' discriminant validity. *Organizational Research Methods, 25*(1).
+#' \doi{10.1177/1094428120968614}
 #'
 #' @examples
 #' model <- '
@@ -159,7 +188,8 @@ nomo_apa_table.default <- function(x, type = NULL, number = NULL, title = NULL, 
   stop(
     paste0(
       "No APA table is available for an object of class `", class(x)[[1L]],
-      "`. Supported: nomo_cfa, nomo_reliability, nomo_invariance, nomo_network."
+      "`. Supported: nomo_cfa, nomo_reliability, nomo_validity, nomo_invariance,",
+      " nomo_network."
     ),
     call. = FALSE
   )
@@ -426,6 +456,103 @@ nomo_apa_table.nomo_network <- function(x, type = c("hypotheses", "fit"),
       character()
     },
     number = number, source = "nomo_network"
+  )
+}
+
+
+# Convergent and discriminant evidence. The discriminant table follows current
+# practice rather than the Fornell-Larcker matrix with AVE on its diagonal: each
+# pair's latent correlation with its interval (Ronkko & Cho, 2022) beside the
+# heterotrait-monotrait ratios (Henseler et al., 2015; Roemer et al., 2021).
+# AVE is convergent evidence and has a table of its own.
+#' @export
+nomo_apa_table.nomo_validity <- function(x, type = c("discriminant", "convergent"),
+                                         number = NULL, title = NULL, ...) {
+  type <- nomo_match_arg(type)
+  groups <- function(block) length(unique(as.character(block))) > 1L
+
+  if (type == "convergent") {
+    tab <- nomo_validity_convergent_table(x)
+    if (!nrow(tab) || !any(is.finite(tab$AVE))) {
+      stop("No average variance extracted is available for this model.", call. = FALSE)
+    }
+    # A multi-group model lists each loading once per group, so indicators are
+    # counted by name.
+    loadings <- x$standardized_loadings
+    k <- vapply(as.character(tab$construct), function(construct) {
+      length(unique(loadings$item[loadings$factor == construct]))
+    }, integer(1), USE.NAMES = FALSE)
+    body <- data.frame(
+      Construct = as.character(tab$construct),
+      Group = as.character(tab$block),
+      k = as.character(k),
+      AVE = nomo_apa_number(tab$AVE, 2L, bounded = TRUE),
+      stringsAsFactors = FALSE
+    )
+    if (!groups(tab$block)) body$Group <- NULL
+    names(body)[names(body) == "k"] <- "*k*"
+    return(nomo_apa_new(
+      body = body,
+      title = nomo_apa_or(title, "Average Variance Extracted"),
+      stub = "Construct",
+      general = paste(
+        "*k* = number of indicators; AVE = average variance extracted (Fornell &",
+        "Larcker, 1981), the average proportion of indicator variance the",
+        sprintf("construct explains. The review reference is %s;",
+                nomo_apa_number(x$ave_reference, 2L, bounded = TRUE)),
+        "a value below it prompts a look at the loadings and content coverage.",
+        "AVE is convergent evidence and is not a reliability coefficient."
+      ),
+      number = number, source = "nomo_validity"
+    ))
+  }
+
+  tab <- nomo_validity_discriminant_table(x)
+  if (!nrow(tab)) {
+    stop("The model has one construct, so there are no construct pairs.", call. = FALSE)
+  }
+  body <- data.frame(
+    Constructs = paste(tab$construct_1, "with", tab$construct_2),
+    Group = as.character(tab$block),
+    r = nomo_apa_interval(tab$latent_r, tab$latent_r_ci_lower, tab$latent_r_ci_upper,
+                          bounded = TRUE),
+    # A heterotrait-monotrait ratio can exceed 1, so it keeps its leading zero.
+    HTMT2 = nomo_apa_number(tab$HTMT2, 2L, bounded = FALSE),
+    HTMT = nomo_apa_number(tab$HTMT, 2L, bounded = FALSE),
+    stringsAsFactors = FALSE
+  )
+  if (!groups(tab$block)) body$Group <- NULL
+  ratios <- c(HTMT2 = any(is.finite(tab$HTMT2)), HTMT = any(is.finite(tab$HTMT)))
+  body <- body[, setdiff(names(body), names(ratios)[!ratios]), drop = FALSE]
+  names(body)[names(body) == "r"] <- "*r* [95% CI]"
+
+  defined <- c(
+    HTMT2 = paste(
+      "HTMT2 = heterotrait-monotrait ratio based on geometric means, suited to",
+      "indicators with unequal loadings (Roemer et al., 2021)."
+    ),
+    HTMT = "HTMT = heterotrait-monotrait ratio (Henseler et al., 2015)."
+  )
+  nomo_apa_new(
+    body = body,
+    title = nomo_apa_or(title, "Construct Correlations and Heterotrait-Monotrait Ratios"),
+    stub = "Constructs",
+    general = c(
+      "*r* = latent correlation from the confirmatory factor analysis, with its",
+      "95% confidence interval; the upper limit shows how high the correlation",
+      "plausibly is (R\u00f6nkk\u00f6 & Cho, 2022).",
+      defined[ratios],
+      if (any(ratios)) {
+        sprintf(paste(
+          "The review reference for the ratios is %s. A ratio below it adds",
+          "evidence that the constructs are empirically distinct; it does not",
+          "by itself establish discriminant validity."
+        ), nomo_apa_number(x$htmt_reference, 2L, bounded = FALSE))
+      } else {
+        "Heterotrait-monotrait ratios were not computed for this model."
+      }
+    ),
+    number = number, source = "nomo_validity"
   )
 }
 

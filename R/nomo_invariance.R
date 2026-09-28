@@ -746,8 +746,8 @@ nomo_invariance_decision_log <- function(group,
 #' @param missing Optional lavaan missing-data option.
 #' @param ID.fac Factor-identification method passed to
 #'   `semTools::measEq.syntax()`. `"std.lv"` is the default.
-#' @param ID.cat Ordered-indicator identification method. Wu-Estabrook is the
-#'   default.
+#' @param ID.cat Ordered-indicator identification method passed to
+#'   `semTools::measEq.syntax()`. Wu-Estabrook is the default.
 #' @param parameterization Lavaan categorical parameterization. `"theta"` is
 #'   the default for ordered indicators.
 #' @param guidance Guidance settings from `nomo_defaults()`.

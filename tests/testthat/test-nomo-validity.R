@@ -241,6 +241,9 @@ test_that("multi-group validity does not silently pool HTMT", {
   expect_true(nrow(out$ave) >= 4L)
   expect_true(all(!out$htmt_status$available))
   expect_true(any(grepl("not silently pooled", out$htmt_status$reason)))
+  # Latent correlations name their groups as the AVE table does, not by number.
+  expect_setequal(out$latent_correlations$block, c("Pasteur", "Grant-White"))
+  expect_setequal(out$latent_correlations$block, out$ave$block)
 })
 
 

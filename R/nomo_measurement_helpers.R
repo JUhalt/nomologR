@@ -350,6 +350,11 @@ nomo_validity_latent_correlations <- function(fit) {
 
     if (nrow(rows)) {
       meta_names <- intersect(c("group", "level"), names(rows))
+      # standardizedSolution() numbers the groups. They are named as the AVE
+      # table and the data name them, so the two tables' blocks agree.
+      if ("group" %in% meta_names) {
+        rows$group <- lavaan::lavInspect(fit, "group.label")[rows$group]
+      }
       block <- if (length(meta_names)) {
         apply(rows[meta_names], 1L, function(z) paste(z, collapse = ":"))
       } else rep("overall", nrow(rows))

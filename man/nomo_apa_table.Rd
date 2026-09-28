@@ -7,12 +7,13 @@
 nomo_apa_table(x, type = NULL, number = NULL, title = NULL, ...)
 }
 \arguments{
-\item{x}{A result object: \code{nomo_cfa}, \code{nomo_reliability}, \code{nomo_invariance},
-or \code{nomo_network}.}
+\item{x}{A result object: \code{nomo_cfa}, \code{nomo_reliability}, \code{nomo_validity},
+\code{nomo_invariance}, or \code{nomo_network}.}
 
 \item{type}{Which table to build. For \code{nomo_cfa}: \code{"loadings"}, \code{"fit"}, or
-\code{"factor_correlations"}. For \code{nomo_network}: \code{"hypotheses"} or \code{"fit"}.
-Other objects have one table each.}
+\code{"factor_correlations"}. For \code{nomo_validity}: \code{"discriminant"} or
+\code{"convergent"}. For \code{nomo_network}: \code{"hypotheses"} or \code{"fit"}. Other
+objects have one table each.}
 
 \item{number}{Optional table number, printed in bold as "Table 1".}
 
@@ -42,6 +43,16 @@ standardized loadings without the zero; this follows the rule as written.
 \strong{No verdicts.} Table notes keep the package's reference-value language.
 No cell reads PASS or FAIL, and fit indices are not labeled good or poor.
 
+\strong{Discriminant evidence without the Fornell-Larcker matrix.} For a
+\code{nomo_validity} result, the \code{"discriminant"} table gives each pair of
+constructs one row: the latent correlation with its 95\% confidence interval
+(Rönkkö & Cho, 2022), and the heterotrait-monotrait ratios HTMT2 (Roemer et
+al., 2021) and HTMT (Henseler et al., 2015) when they were computed. It does
+not print the correlation matrix with the square root of AVE on its
+diagonal, because that comparison often misses discriminant-validity
+problems (Henseler et al., 2015). AVE is convergent evidence and has its own
+\code{"convergent"} table.
+
 The rules come from the \emph{Publication Manual of the American Psychological
 Association} (7th ed.), checked against Purdue OWL's APA 7 guides.
 Journal-specific templates are out of scope.
@@ -68,4 +79,22 @@ nomo_apa_table(nomo_reliability(cfa), number = 3)
 American Psychological Association. (2020). \emph{Publication manual of the
 American Psychological Association} (7th ed.).
 \doi{10.1037/0000165-000}
+
+Fornell, C., & Larcker, D. F. (1981). Evaluating structural equation models
+with unobservable variables and measurement error. \emph{Journal of Marketing
+Research, 18}(1), 39-50. \doi{10.2307/3151312}
+
+Henseler, J., Ringle, C. M., & Sarstedt, M. (2015). A new criterion for
+assessing discriminant validity in variance-based structural equation
+modeling. \emph{Journal of the Academy of Marketing Science, 43}(1), 115-135.
+\doi{10.1007/s11747-014-0403-8}
+
+Roemer, E., Schuberth, F., & Henseler, J. (2021). HTMT2--An improved
+criterion for assessing discriminant validity in structural equation
+modeling. \emph{Industrial Management & Data Systems, 121}(12), 2637-2650.
+\doi{10.1108/IMDS-02-2021-0082}
+
+Rönkkö, M., & Cho, E. (2022). An updated guideline for assessing
+discriminant validity. \emph{Organizational Research Methods, 25}(1).
+\doi{10.1177/1094428120968614}
 }

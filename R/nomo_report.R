@@ -513,11 +513,17 @@ nomo_report_missing <- function(m) {
 # model, is left out rather than failing the report.
 nomo_report_apa_tables <- function(x) {
   r <- x$results
+  # The validity stage's pair table gives the same latent correlations with the
+  # heterotrait-monotrait ratios beside them, so it takes the place of the CFA's
+  # factor correlations when the run has one.
+  factor_correlations <- if (is.null(r$validity)) r$cfa
   requests <- list(
     list(obj = r$cfa, type = "loadings"),
     list(obj = r$cfa, type = "fit"),
-    list(obj = r$cfa, type = "factor_correlations"),
+    list(obj = factor_correlations, type = "factor_correlations"),
     list(obj = r$reliability, type = NULL),
+    list(obj = r$validity, type = "convergent"),
+    list(obj = r$validity, type = "discriminant"),
     list(obj = r$invariance, type = NULL),
     list(obj = r$network, type = "hypotheses"),
     list(obj = r$network, type = "fit")
@@ -1082,7 +1088,9 @@ nomo_report_prepare_template <- function(template, input, title) {
 #' @param quiet Logical passed to [rmarkdown::render()].
 #' @param apa_tables Logical; if `TRUE`, append a *Manuscript tables* appendix
 #'   with the [nomo_apa_table()] tables for the results the run holds. These
-#'   are the CFA loadings, fit, and factor correlations, reliability, and, when
+#'   are the CFA loadings and fit; reliability; the validity stage's average
+#'   variance extracted and construct pairs (without a validity stage, the CFA
+#'   factor correlations take the pairs' place, after the fit); and, when
 #'   present, invariance and the network's hypotheses and fit. They are
 #'   numbered in that order. Default `FALSE`, which leaves the report unchanged.
 #'

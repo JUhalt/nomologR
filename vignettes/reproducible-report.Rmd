@@ -134,12 +134,20 @@ nomo_apa_table(run$results$cfa, "fit", number = 2)
 nomo_apa_table(run$results$reliability, number = 3)
 ```
 
+```{r apa-convergent}
+nomo_apa_table(run$results$validity, "convergent", number = 4)
+```
+
+```{r apa-discriminant}
+nomo_apa_table(run$results$validity, "discriminant", number = 5)
+```
+
 ```{r apa-invariance}
-nomo_apa_table(run$results$invariance, number = 4)
+nomo_apa_table(run$results$invariance, number = 6)
 ```
 
 ```{r apa-hypotheses}
-nomo_apa_table(run$results$network, number = 5)
+nomo_apa_table(run$results$network, number = 7)
 ```
 
 Notice the leading zeros. APA 7 drops the zero before a decimal point only for a
@@ -156,10 +164,18 @@ describes how each estimate relates to its prediction without calling any of
 them a pass or a fail. A hypothesis specified after the data were seen is marked
 with a note saying it is exploratory.
 
+The discriminant table is not the familiar matrix of correlations with the
+square root of AVE on its diagonal. That Fornell-Larcker comparison often misses
+constructs that are not distinct (Henseler et al., 2015). Instead, each pair of
+constructs gets one row: its latent correlation with a confidence interval,
+whose upper limit shows how high the correlation plausibly is (Rönkkö & Cho,
+2022), beside the heterotrait-monotrait ratios HTMT2 and HTMT. AVE is
+convergent evidence, so it has a table of its own.
+
 To collect them in one place, `nomo_report(run, apa_tables = TRUE)` appends a
 *Manuscript tables* appendix. It holds the tables for every result the run has,
 numbered in the order the report presents them. A table that does not apply,
-such as factor correlations for a one-factor model, is left out.
+such as the construct pairs of a one-construct model, is left out.
 
 ## What the report contains
 
