@@ -34,6 +34,8 @@
 #'   `"relations"`, `"replication"`, `"single_indicators"`, `"sensitivity"`,
 #'   `"decision_log"`. `"single_indicators"` and `"sensitivity"` describe the
 #'   composites modeled as single indicators; see [nomo_network()].
+#' * `nomo_retest`: `"icc"` (default), `"reliable_change"`, `"decision_log"`;
+#'   see [nomo_retest()].
 #' * `nomo_invariance`: `"fit"` (default), `"categories"`, `"partial"`,
 #'   `"local_strain"`, `"latent_means"`, `"decision_log"`. The local-strain table keeps lavaan's
 #'   internal `constraint` label and adds a human-readable
@@ -131,6 +133,16 @@ nomo_table.nomo_network <- function(
   if (type == "sensitivity") return(x[["single_indicator_sensitivity"]])
 
   x$decision_log
+}
+
+
+#' @export
+nomo_table.nomo_retest <- function(
+    x,
+    type = c("icc", "reliable_change", "decision_log"),
+    ...) {
+  type <- nomo_match_arg(type)
+  x[[type]]
 }
 
 

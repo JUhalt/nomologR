@@ -50,6 +50,7 @@ reference:
       - nomo_missing
   - title: "4. Reliability and construct-validity evidence"
     contents:
+      - nomo_retest
       - nomo_reliability
       - summary.nomo_reliability
       - plot.nomo_reliability

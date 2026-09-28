@@ -477,6 +477,15 @@ nomo_bibliography <- function() {
       "10.1007/s10869-011-9231-8"
     ),
     nomo_bib_entry(
+      "jacobson_truax_1991", "Jacobson & Truax (1991)",
+      paste(
+        "Jacobson, N. S., & Truax, P. (1991). Clinical significance: A",
+        "statistical approach to defining meaningful change in psychotherapy",
+        "research. Journal of Consulting and Clinical Psychology, 59(1), 12-19."
+      ),
+      "10.1037/0022-006X.59.1.12"
+    ),
+    nomo_bib_entry(
       "joreskog_1969", "J\u00f6reskog (1969)",
       paste(
         "J\u00f6reskog, K. G. (1969). A general approach to confirmatory maximum",
@@ -544,6 +553,15 @@ nomo_bibliography <- function() {
       "10.1177/0049124112442138"
     ),
     nomo_bib_entry(
+      "koo_li_2016", "Koo & Li (2016)",
+      paste(
+        "Koo, T. K., & Li, M. Y. (2016). A guideline of selecting and reporting",
+        "intraclass correlation coefficients for reliability research. Journal",
+        "of Chiropractic Medicine, 15(2), 155-163."
+      ),
+      "10.1016/j.jcm.2016.02.012"
+    ),
+    nomo_bib_entry(
       "kuhn_johnson_2013", "Kuhn & Johnson (2013)",
       "Kuhn, M., & Johnson, K. (2013). Applied predictive modeling. Springer.",
       "10.1007/978-1-4614-6849-3"
@@ -594,6 +612,15 @@ nomo_bibliography <- function() {
         "findings. Structural Equation Modeling, 11(3), 320-341."
       ),
       "10.1207/s15328007sem1103_2"
+    ),
+    nomo_bib_entry(
+      "mcgraw_wong_1996", "McGraw & Wong (1996)",
+      paste(
+        "McGraw, K. O., & Wong, S. P. (1996). Forming inferences about some",
+        "intraclass correlation coefficients. Psychological Methods, 1(1),",
+        "30-46."
+      ),
+      "10.1037/1082-989X.1.1.30"
     ),
     nomo_bib_entry(
       "mcneish_2018", "McNeish (2018)",
@@ -826,6 +853,14 @@ nomo_bibliography <- function() {
       "10.1214/aos/1176344136"
     ),
     nomo_bib_entry(
+      "shrout_fleiss_1979", "Shrout & Fleiss (1979)",
+      paste(
+        "Shrout, P. E., & Fleiss, J. L. (1979). Intraclass correlations: Uses in",
+        "assessing rater reliability. Psychological Bulletin, 86(2), 420-428."
+      ),
+      "10.1037/0033-2909.86.2.420"
+    ),
+    nomo_bib_entry(
       "sijtsma_2009", "Sijtsma (2009)",
       paste(
         "Sijtsma, K. (2009). On the use, the misuse, and the very limited",
@@ -907,6 +942,15 @@ nomo_bibliography <- function() {
         "practice. Journal of Black Psychology, 44(3), 219-246."
       ),
       "10.1177/0095798418771807"
+    ),
+    nomo_bib_entry(
+      "weir_2005", "Weir (2005)",
+      paste(
+        "Weir, J. P. (2005). Quantifying test-retest reliability using the",
+        "intraclass correlation coefficient and the SEM. Journal of Strength and",
+        "Conditioning Research, 19(1), 231-240."
+      ),
+      "10.1519/15184.1"
     ),
     nomo_bib_entry(
       "wicherts_2016", "Wicherts et al. (2016)",
@@ -1655,6 +1699,47 @@ nomo_methods_registry <- function() {
       c("schmid_leiman_1957", "yung_1999")
     ),
 
+    nomo_method_entry(
+      "icc_retest", "reliability",
+      "Test-retest intraclass correlation",
+      "contemporary", "primary",
+      paste(
+        "Agreement of scores across occasions: two-way mixed effects, absolute",
+        "agreement, single measurement, with the consistency form beside it."
+      ),
+      paste(
+        "Describes stability over the interval studied, and the construct may",
+        "itself have changed. The reliability range is read from the",
+        "confidence interval."
+      ),
+      "nomo_retest()", "psych",
+      c("shrout_fleiss_1979", "mcgraw_wong_1996", "koo_li_2016")
+    ),
+    nomo_method_entry(
+      "sem_sdc", "reliability",
+      "Standard error of measurement and smallest detectable change",
+      "contemporary", "supporting",
+      paste(
+        "The measurement error of one score, and the smallest change unlikely",
+        "to be measurement error alone at 95%."
+      ),
+      "Assumes measurement error is the same across the score range.",
+      "nomo_retest()", "nomologR",
+      c("nunnally_bernstein_1994", "weir_2005")
+    ),
+    nomo_method_entry(
+      "reliable_change_index", "reliability",
+      "Reliable change index",
+      "contemporary", "supporting",
+      "A person's change divided by the standard error of a difference.",
+      paste(
+        "Says whether a change exceeds measurement error, not whether it is",
+        "meaningful."
+      ),
+      "nomo_retest()", "nomologR",
+      c("jacobson_truax_1991")
+    ),
+
     # Stage 6: convergent and discriminant evidence --------------------------
     nomo_method_entry(
       "standardized_loadings_ave", "validity",
@@ -2112,6 +2197,9 @@ nomo_methods_history <- function() {
     c("orthogonal_rotation", "kaiser_1958", "oblique_rotation"),
     c("loading_reference", NA, "loading_diagnostics"),
     c("item_total_reference", NA, "item_rest_correlation"),
+    c("icc_retest", NA, NA),
+    c("sem_sdc", NA, NA),
+    c("reliable_change_index", NA, NA),
     c("ml_cfa", "joreskog_1969", NA),
     c("chisq_exact_fit", "joreskog_1969", "incremental_fit; rmsea_interval; srmr; local_strain"),
     c("incremental_fit", "bentler_bonett_1980", NA),

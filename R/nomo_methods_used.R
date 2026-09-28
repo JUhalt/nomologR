@@ -454,6 +454,14 @@ nomo_methods_used.nomo_partial <- function(x, ...) {
 }
 
 
+# Test-retest reliability -----------------------------------------------------
+
+#' @export
+nomo_methods_used.nomo_retest <- function(x, ...) {
+  c("icc_retest", "sem_sdc", "reliable_change_index")
+}
+
+
 # Nomological network ---------------------------------------------------------
 
 #' @export
