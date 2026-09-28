@@ -1,0 +1,487 @@
+# Test-retest reliability ---------------------------------------------------------
+
+#' Test-retest reliability, measurement error, and reliable change
+#'
+#' `nomo_retest()` estimates how stable a composite's scores are when the same
+#' people answer the same measure on two or more occasions, how large a
+#' person's measurement error is, and which people changed by more than that
+#' error.
+#'
+#' @details
+#' **Which intraclass correlation.** Shrout and Fleiss (1979) and McGraw and
+#' Wong (1996) define several intraclass correlations, which differ in their
+#' model, type, and definition. For test-retest reliability, Koo and Li (2016)
+#' recommend a two-way mixed-effects model with absolute agreement: the
+#' occasions are not a random sample of occasions, and scores that do not agree
+#' across occasions are not reliable however well they rank people. That is
+#' ICC(A,1) in McGraw and Wong's notation, for a single measurement. The
+#' consistency form, ICC(C,1), ignores a shift in the mean between occasions and
+#' is reported beside it, so the gap between them shows how much of the
+#' disagreement is a systematic change. The mean change from the first to the
+#' last occasion, with its interval, is reported too.
+#'
+#' **Reading the interval.** Koo and Li (2016) describe reliability as poor
+#' below .50, moderate from .50 to .75, good from .75 to .90, and excellent
+#' above .90, and ask that the description come from the 95% confidence
+#' interval rather than the estimate. `koo_li` gives the description of the
+#' interval, such as "good to excellent". These are reference values, not a pass
+#' or a fail, and a reliability depends on the interval between occasions and on
+#' whether the construct itself changed.
+#'
+#' **Measurement error and change.** The standard error of measurement is
+#' \eqn{SD \sqrt{1 - ICC}}{SD * sqrt(1 - ICC)} (Nunnally & Bernstein, 1994),
+#' with ICC(A,1) and the standard deviation pooled over occasions. The smallest
+#' detectable change is \eqn{1.96 \sqrt{2} \, SEM}{1.96 * sqrt(2) * SEM}: a
+#' change in a person's score smaller than that is within measurement error at
+#' 95% (Weir, 2005). Jacobson and Truax's (1991) reliable change index divides a
+#' person's change by \eqn{\sqrt{2} \, SEM}{sqrt(2) * SEM}, so it exceeds 1.96
+#' exactly when the change exceeds the smallest detectable change. A reliable
+#' change is not necessarily a meaningful one.
+#'
+#' @param data A data frame with one row per person.
+#' @param occasions The columns holding the same composite on successive
+#'   occasions: a character vector of two or more column names, or a named list
+#'   of such vectors, one per composite.
+#' @param interval Optional text describing the time between occasions, such as
+#'   `"two weeks"`. It is recorded with the results, because a test-retest
+#'   reliability depends on it.
+#'
+#' @return A `nomo_retest` object. The fields to read are:
+#'
+#'   * `icc`: one row per composite, with the number of complete cases and of
+#'     occasions, ICC(A,1) with its 95% interval and Koo and Li's description
+#'     of that interval (`koo_li`), ICC(C,1) with its interval, the mean change
+#'     from the first to the last occasion with its interval, the pooled
+#'     standard deviation, the standard error of measurement (`sem`), and the
+#'     smallest detectable change (`sdc`).
+#'   * `reliable_change`: one row per person and composite, with the first and
+#'     last scores, the change, the reliable change index (`rci`), and whether
+#'     the change is a reliable increase, a reliable decrease, or neither.
+#'   * `interval` and `decision_log`.
+#'
+#'   Other fields record the call and the columns used. They may change between
+#'   releases and are not part of the stable interface (see `?nomologR`).
+#'
+#' @references
+#' Jacobson, N. S., & Truax, P. (1991). Clinical significance: A statistical
+#' approach to defining meaningful change in psychotherapy research. *Journal
+#' of Consulting and Clinical Psychology, 59*(1), 12-19.
+#' \doi{10.1037/0022-006X.59.1.12}
+#'
+#' Koo, T. K., & Li, M. Y. (2016). A guideline of selecting and reporting
+#' intraclass correlation coefficients for reliability research. *Journal of
+#' Chiropractic Medicine, 15*(2), 155-163. \doi{10.1016/j.jcm.2016.02.012}
+#'
+#' McGraw, K. O., & Wong, S. P. (1996). Forming inferences about some intraclass
+#' correlation coefficients. *Psychological Methods, 1*(1), 30-46.
+#' \doi{10.1037/1082-989X.1.1.30}
+#'
+#' Nunnally, J. C., & Bernstein, I. H. (1994). *Psychometric theory* (3rd ed.).
+#' McGraw-Hill.
+#'
+#' Shrout, P. E., & Fleiss, J. L. (1979). Intraclass correlations: Uses in
+#' assessing rater reliability. *Psychological Bulletin, 86*(2), 420-428.
+#' \doi{10.1037/0033-2909.86.2.420}
+#'
+#' Weir, J. P. (2005). Quantifying test-retest reliability using the intraclass
+#' correlation coefficient and the SEM. *Journal of Strength and Conditioning
+#' Research, 19*(1), 231-240. \doi{10.1519/15184.1}
+#'
+#' @examples
+#' # Agency scores on two occasions, two weeks apart (simulated).
+#' set.seed(2026)
+#' true <- stats::rnorm(150)
+#' scores <- data.frame(
+#'   agency_t1 = 3 + true + stats::rnorm(150, sd = .45),
+#'   agency_t2 = 3.1 + true + stats::rnorm(150, sd = .45)
+#' )
+#' rt <- nomo_retest(scores, c("agency_t1", "agency_t2"), interval = "two weeks")
+#' rt
+#' nomo_table(rt, "reliable_change")
+#' @export
+nomo_retest <- function(data, occasions, interval = NULL) {
+  if (!is.data.frame(data) || !nrow(data)) {
+    stop("`data` must be a non-empty data frame.", call. = FALSE)
+  }
+  if (!is.null(interval) &&
+        (!is.character(interval) || length(interval) != 1L || is.na(interval) ||
+           !nzchar(trimws(interval)))) {
+    stop("`interval` must be NULL or one non-empty character string.", call. = FALSE)
+  }
+
+  sets <- nomo_retest_sets(occasions, data)
+  parts <- lapply(names(sets), function(label) {
+    nomo_retest_one(data, sets[[label]], label)
+  })
+  icc <- dplyr::bind_rows(lapply(parts, `[[`, "icc"))
+  reliable_change <- dplyr::bind_rows(lapply(parts, `[[`, "reliable_change"))
+
+  out <- list(
+    call = match.call(),
+    occasions = sets,
+    interval = if (is.null(interval)) NA_character_ else trimws(interval),
+    icc = icc,
+    reliable_change = reliable_change,
+    decision_log = nomo_retest_log(icc, reliable_change, interval)
+  )
+  class(out) <- c("nomo_retest", "list")
+  out
+}
+
+
+# The composites and their occasion columns, checked against the data.
+nomo_retest_sets <- function(occasions, data) {
+  if (is.character(occasions)) occasions <- list(composite = occasions)
+  labels <- names(occasions)
+  if (!is.list(occasions) || !length(occasions) || is.null(labels) ||
+        any(is.na(labels) | !nzchar(labels)) || anyDuplicated(labels)) {
+    stop(
+      paste(
+        "`occasions` must be a character vector of column names, or a named",
+        "list of them with one entry per composite."
+      ),
+      call. = FALSE
+    )
+  }
+  for (label in labels) {
+    cols <- occasions[[label]]
+    if (!is.character(cols) || length(cols) < 2L || anyNA(cols) ||
+          anyDuplicated(cols)) {
+      stop(
+        sprintf(
+          "`%s` needs two or more distinct columns, one per occasion.", label
+        ),
+        call. = FALSE
+      )
+    }
+    absent <- setdiff(cols, names(data))
+    if (length(absent)) {
+      stop(
+        sprintf(
+          "Occasion column%s not in `data`: %s.",
+          if (length(absent) == 1L) "" else "s", paste(absent, collapse = ", ")
+        ),
+        call. = FALSE
+      )
+    }
+    numeric <- vapply(data[cols], is.numeric, logical(1))
+    if (!all(numeric)) {
+      stop(
+        sprintf(
+          "Occasion scores must be numeric. Not numeric: %s.",
+          paste(cols[!numeric], collapse = ", ")
+        ),
+        call. = FALSE
+      )
+    }
+  }
+  occasions
+}
+
+
+# One composite: the two intraclass correlations, the change between the first
+# and last occasions, measurement error, and each person's reliable change.
+nomo_retest_one <- function(data, cols, label) {
+  x <- data[cols]
+  complete <- stats::complete.cases(x)
+  x <- x[complete, , drop = FALSE]
+  n <- nrow(x)
+  if (n < 3L) {
+    stop(
+      sprintf(
+        "`%s` has %d complete case%s across its occasions; at least 3 are needed.",
+        label, n, if (n == 1L) "" else "s"
+      ),
+      call. = FALSE
+    )
+  }
+  if (all(vapply(x, function(v) stats::var(v) == 0, logical(1)))) {
+    stop(
+      sprintf("`%s` does not vary, so its reliability cannot be estimated.", label),
+      call. = FALSE
+    )
+  }
+
+  fit <- suppressWarnings(suppressMessages(
+    psych::ICC(as.matrix(x), lmer = FALSE)
+  ))
+  results <- fit$results
+  agreement <- results[results$type == "ICC2", , drop = FALSE]
+  consistency <- results[results$type == "ICC3", , drop = FALSE]
+  icc_a <- agreement$ICC[[1L]]
+
+  sd_pooled <- sqrt(mean(vapply(x, stats::var, numeric(1))))
+  sem <- sd_pooled * sqrt(max(0, 1 - icc_a))
+  critical <- stats::qnorm(0.975)
+  sdc <- critical * sqrt(2) * sem
+
+  first <- x[[1L]]
+  last <- x[[length(cols)]]
+  change <- last - first
+  mean_change <- mean(change)
+  half_width <- stats::qt(0.975, n - 1L) * stats::sd(change) / sqrt(n)
+
+  rci <- change / (sqrt(2) * sem)
+  status <- ifelse(
+    rci > critical, "reliable_increase",
+    ifelse(rci < -critical, "reliable_decrease", "no_reliable_change")
+  )
+
+  list(
+    icc = tibble::tibble(
+      composite = label,
+      first = cols[[1L]],
+      last = cols[[length(cols)]],
+      n_occasions = length(cols),
+      n = n,
+      icc_agreement = icc_a,
+      agreement_ci_lower = agreement$`lower bound`[[1L]],
+      agreement_ci_upper = agreement$`upper bound`[[1L]],
+      koo_li = nomo_retest_koo_li(
+        agreement$`lower bound`[[1L]], agreement$`upper bound`[[1L]]
+      ),
+      icc_consistency = consistency$ICC[[1L]],
+      consistency_ci_lower = consistency$`lower bound`[[1L]],
+      consistency_ci_upper = consistency$`upper bound`[[1L]],
+      mean_change = mean_change,
+      change_ci_lower = mean_change - half_width,
+      change_ci_upper = mean_change + half_width,
+      sd = sd_pooled,
+      sem = sem,
+      sdc = sdc
+    ),
+    reliable_change = tibble::tibble(
+      composite = label,
+      row = which(complete),
+      first_score = first,
+      last_score = last,
+      change = change,
+      rci = rci,
+      status = status
+    )
+  )
+}
+
+
+# Koo and Li's (2016) description of an interval: poor below .50, moderate to
+# .75, good to .90, excellent above .90, from its lower to its upper bound.
+nomo_retest_koo_li <- function(lower, upper) {
+  describe <- function(v) {
+    if (v < 0.50) "poor" else if (v < 0.75) "moderate" else if (v <= 0.90) "good" else "excellent"
+  }
+  if (!is.finite(lower) || !is.finite(upper)) return(NA_character_)
+  from <- describe(lower)
+  to <- describe(upper)
+  if (identical(from, to)) from else paste(from, "to", to)
+}
+
+
+nomo_retest_log <- function(icc, reliable_change, interval) {
+  log <- nomo_log_new()
+  number <- function(x) nomo_present_number(x, 2L)
+
+  if (is.null(interval)) {
+    log <- nomo_log_add(
+      log, stage = "retest", object = "occasions",
+      metric = "retest_interval",
+      severity = "info",
+      observation = "The time between occasions was not recorded.",
+      recommendation = paste(
+        "Record it: a test-retest reliability describes stability over that",
+        "interval, and a longer one leaves more room for real change."
+      )
+    )
+  }
+
+  for (k in seq_len(nrow(icc))) {
+    row <- icc[k, , drop = FALSE]
+    label <- row$composite[[1L]]
+    poor_possible <- is.finite(row$agreement_ci_lower) && row$agreement_ci_lower < 0.50
+    log <- nomo_log_add(
+      log, stage = "retest", object = label,
+      metric = "icc_agreement",
+      value = row$icc_agreement[[1L]],
+      reference = paste(
+        "Koo & Li (2016): poor < .50, moderate .50-.75, good .75-.90,",
+        "excellent > .90, read from the 95% interval"
+      ),
+      severity = if (poor_possible) "review" else "info",
+      observation = sprintf(
+        paste(
+          "`%s`: ICC(A,1) = %s, 95%% CI [%s, %s], which Koo and Li (2016)",
+          "would describe as %s (two-way mixed effects, absolute agreement,",
+          "single measurement; n = %d, %d occasions)."
+        ),
+        label, number(row$icc_agreement), number(row$agreement_ci_lower),
+        number(row$agreement_ci_upper), row$koo_li[[1L]], row$n[[1L]],
+        row$n_occasions[[1L]]
+      ),
+      recommendation = paste(
+        if (poor_possible) {
+          "The interval reaches the range described as poor."
+        } else {
+          ""
+        },
+        "Report the model, type, and definition with the estimate and its",
+        "interval (Koo & Li, 2016)."
+      )
+    )
+
+    shifted <- is.finite(row$change_ci_lower) &&
+      (row$change_ci_lower > 0 || row$change_ci_upper < 0)
+    log <- nomo_log_add(
+      log, stage = "retest", object = label,
+      metric = "mean_change",
+      value = row$mean_change[[1L]],
+      reference = "Systematic change between occasions (Weir, 2005)",
+      severity = if (shifted) "review" else "info",
+      observation = sprintf(
+        "`%s` changed by %s on average from `%s` to `%s`, 95%% CI [%s, %s].",
+        label, number(row$mean_change), row$first[[1L]], row$last[[1L]],
+        number(row$change_ci_lower), number(row$change_ci_upper)
+      ),
+      recommendation = if (shifted) {
+        paste(
+          "Scores shifted systematically, as practice or real change would",
+          "make them. ICC(A,1) counts the shift as disagreement and ICC(C,1)",
+          "does not; ICC(C,1) is", number(row$icc_consistency), "here."
+        )
+      } else {
+        "The interval includes no change in the mean between occasions."
+      }
+    )
+
+    rc <- reliable_change[reliable_change$composite == label, , drop = FALSE]
+    log <- nomo_log_add(
+      log, stage = "retest", object = label,
+      metric = "reliable_change",
+      value = row$sdc[[1L]],
+      reference = "Jacobson & Truax (1991); Weir (2005)",
+      severity = "info",
+      observation = sprintf(
+        paste(
+          "The standard error of measurement of `%s` is %s, so a change",
+          "smaller than %s is within measurement error. %d of %d people",
+          "changed reliably: %d up and %d down."
+        ),
+        label, number(row$sem), number(row$sdc),
+        sum(rc$status != "no_reliable_change"), nrow(rc),
+        sum(rc$status == "reliable_increase"), sum(rc$status == "reliable_decrease")
+      ),
+      recommendation = paste(
+        "A reliable change is larger than measurement error; whether it is",
+        "meaningful is a separate question."
+      )
+    )
+  }
+  log
+}
+
+
+#' @export
+print.nomo_retest <- function(x, ...) {
+  nomo_present_header("nomo_retest", "Test-retest reliability")
+  nomo_present_facts(c(
+    sprintf("Composites: %d", nrow(x$icc)),
+    if (is.na(x$interval)) "Interval: not recorded" else paste0("Interval: ", x$interval)
+  ))
+  nomo_retest_present_table(x$icc)
+  nomo_retest_present_change(x$reliable_change)
+  nomo_retest_present_note()
+  invisible(x)
+}
+
+
+#' @export
+summary.nomo_retest <- function(object, ...) {
+  out <- list(
+    icc = object$icc,
+    reliable_change = object$reliable_change,
+    interval = object$interval,
+    decision_log = object$decision_log
+  )
+  class(out) <- c("summary_nomo_retest", "list")
+  out
+}
+
+
+#' @export
+print.summary_nomo_retest <- function(x, ...) {
+  nomo_present_header("nomo_retest", "Test-retest reliability", summary = TRUE)
+  nomo_present_facts(c(
+    sprintf("Composites: %d", nrow(x$icc)),
+    if (is.na(x$interval)) "Interval: not recorded" else paste0("Interval: ", x$interval)
+  ))
+  nomo_retest_present_table(x$icc)
+
+  show <- x$icc
+  show$consistency <- paste(
+    nomo_present_number(show$icc_consistency, 2L),
+    nomo_present_ci(show$consistency_ci_lower, show$consistency_ci_upper, 2L)
+  )
+  show$change <- paste(
+    nomo_present_signed(show$mean_change, 2L),
+    nomo_present_ci(show$change_ci_lower, show$change_ci_upper, 2L)
+  )
+  nomo_present_section("Consistency and change")
+  nomo_present_table(
+    show,
+    c("Composite" = "composite", "ICC(C,1) [95% CI]" = "consistency",
+      "Mean change [95% CI]" = "change", "SD" = "sd")
+  )
+
+  nomo_retest_present_change(x$reliable_change)
+
+  log <- x$decision_log[x$decision_log$severity %in% c("review", "concern"), , drop = FALSE]
+  if (nrow(log)) {
+    nomo_present_section("Flagged")
+    nomo_present_bullets(paste0(
+      log$severity, ": ", log$observation, " ", log$recommendation
+    ))
+  }
+  nomo_retest_present_note()
+  invisible(x)
+}
+
+
+nomo_retest_present_table <- function(icc) {
+  show <- icc
+  show$agreement <- paste(
+    nomo_present_number(show$icc_agreement, 2L),
+    nomo_present_ci(show$agreement_ci_lower, show$agreement_ci_upper, 2L)
+  )
+  nomo_present_section("Reliability across occasions")
+  nomo_present_table(
+    show,
+    c("Composite" = "composite", "n" = "n", "ICC(A,1) [95% CI]" = "agreement",
+      "Koo & Li" = "koo_li", "SEM" = "sem", "SDC" = "sdc"),
+    more = "nomo_table(x, \"icc\")"
+  )
+}
+
+
+nomo_retest_present_change <- function(reliable_change) {
+  composites <- unique(reliable_change$composite)
+  nomo_present_section("Reliable change, first to last occasion")
+  nomo_present_bullets(vapply(composites, function(label) {
+    rc <- reliable_change[reliable_change$composite == label, , drop = FALSE]
+    sprintf(
+      "%s: %s up, %s down, %d within measurement error.",
+      label,
+      nomo_present_count(sum(rc$status == "reliable_increase"), "person", "people"),
+      sum(rc$status == "reliable_decrease"),
+      sum(rc$status == "no_reliable_change")
+    )
+  }, character(1)))
+}
+
+
+nomo_retest_present_note <- function() {
+  cat("\n")
+  nomo_present_text(
+    "ICC(A,1): two-way mixed effects, absolute agreement, single measurement ",
+    "(Koo & Li, 2016). SEM: standard error of measurement. SDC: smallest ",
+    "detectable change, 1.96 x sqrt(2) x SEM (Weir, 2005). Reference ranges ",
+    "describe the interval; they are not a pass or a fail."
+  )
+}

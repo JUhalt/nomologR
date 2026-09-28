@@ -502,6 +502,39 @@ missing, a nominal 95% interval for a mean covers the true value only about 86%
 of the time. Multiple imputation, which Schafer and Graham recommend alongside
 maximum likelihood, is a candidate for a later release.
 
+# Stability across occasions
+
+Internal consistency describes one administration. When the same people answer
+the measure again, a test-retest reliability describes how stable their scores
+are. `nomo_retest()` follows Koo and Li's (2016) recommendation for test-retest
+data: a two-way mixed-effects intraclass correlation with absolute agreement,
+ICC(A,1), with its interval. Scores that shift between occasions do not agree,
+however well they rank people. The consistency form, ICC(C,1), is reported
+beside it.
+
+```{r retest}
+set.seed(2026)
+true_agency <- stats::rnorm(150)
+occasions <- data.frame(
+  agency_t1 = 3 + true_agency + stats::rnorm(150, sd = .45),
+  agency_t2 = 3.3 + true_agency + stats::rnorm(150, sd = .45)
+)
+rt <- nomo_retest(occasions, list(Agency = c("agency_t1", "agency_t2")),
+                  interval = "two weeks")
+summary(rt)
+```
+
+These scores were simulated to rise by .30 between occasions, and in this
+sample they rose by `r sprintf("%.2f", rt$icc$mean_change)`. That rise is why
+ICC(A,1) is below ICC(C,1), and the summary flags it.
+
+Koo and Li read the reliability range from the interval rather than the
+estimate: poor below .50, moderate to .75, good to .90, and excellent above.
+The standard error of measurement, SD × √(1 − ICC), gives the smallest
+detectable change, 1.96 × √2 × SEM (Weir, 2005). A person whose score changed
+by more than that changed reliably, in Jacobson and Truax's (1991) sense, which
+is not the same as meaningfully.
+
 # Reading the evidence as an argument
 
 A useful measurement conclusion is rarely "all cutoffs passed." A stronger conclusion
@@ -531,6 +564,11 @@ is prioritized because simulation research shows that older criteria can miss ov
 because it relaxes the original HTMT tau-equivalence assumption (Roemer, Schuberth, &
 Henseler, 2021). Fornell-Larcker output remains available only as optional historical/
 supporting information.
+
+Test-retest reliability follows Koo and Li (2016) and the intraclass
+correlations defined by Shrout and Fleiss (1979) and McGraw and Wong (1996).
+Measurement error and reliable change follow Weir (2005) and Jacobson and Truax
+(1991).
 
 The missing-data comparison follows Enders and Bandalos (2001), whose
 simulations compared FIML with listwise and pairwise deletion under MCAR and

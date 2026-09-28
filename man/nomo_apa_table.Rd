@@ -7,8 +7,8 @@
 nomo_apa_table(x, type = NULL, number = NULL, title = NULL, ...)
 }
 \arguments{
-\item{x}{A result object: \code{nomo_cfa}, \code{nomo_reliability}, \code{nomo_validity},
-\code{nomo_invariance}, or \code{nomo_network}.}
+\item{x}{A result object: \code{nomo_cfa}, \code{nomo_reliability}, \code{nomo_retest},
+\code{nomo_validity}, \code{nomo_invariance}, or \code{nomo_network}.}
 
 \item{type}{Which table to build. For \code{nomo_cfa}: \code{"loadings"}, \code{"fit"}, or
 \code{"factor_correlations"}. For \code{nomo_validity}: \code{"discriminant"} or
