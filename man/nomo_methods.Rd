@@ -25,8 +25,12 @@ expanded to one row per method per reference, with full \code{citation} and
 \code{doi} columns, suitable for a reference list.}
 }
 \value{
-A tibble. With \code{references = FALSE}, one row per method. With
-\code{references = TRUE}, one row per method-reference pair.
+A tibble with columns \code{id}, \code{stage}, \code{method}, \code{lineage}, \code{role},
+\code{estimand}, \code{assumptions}, \code{implemented_by}, \code{engine}, \code{introduced}, and
+\code{contemporary_practice}. With \code{references = FALSE} there is one row per
+method, and \code{references} holds short in-text citations. With
+\code{references = TRUE} there is one row per method-reference pair, with
+\code{citation_key}, \code{citation}, and \code{doi}.
 }
 \description{
 \code{nomo_methods()} returns a machine-readable registry of the statistical
@@ -49,6 +53,20 @@ so they can be recognized and interpreted. They are labeled and qualified.
 A lineage label summarizes where a method sits in the literature. It is a
 teaching aid, not a claim that an older method is always wrong.
 
+Two columns record how practice changed:
+\itemize{
+\item \code{introduced}: the year of the publication that introduced the method.
+It is given only when the registry cites that publication, and is \code{NA}
+when the registry cites only a later review or critique. It is never
+dated from a secondary source.
+\item \code{contemporary_practice}: for a historical method, the registry's
+contemporary methods that now address the question it answered, such as
+parallel analysis for the eigenvalue-greater-than-one rule, or omega for
+coefficient alpha.
+}
+
+\code{vignette("research-basis")} draws a timeline from these columns.
+
 The \code{role} column says how \code{nomologR} uses the method: \code{"primary"} evidence,
 \code{"supporting"} evidence, or \code{"context"}. A \code{"context"} method is displayed
 for recognition and is deliberately excluded from any synthesis: the
@@ -69,6 +87,11 @@ nomo_methods()
 
 # What is shown only as historical context, and why
 nomo_methods(lineage = "historical")[, c("method", "role", "assumptions")]
+
+# How practice changed: historical methods and what now does their work
+old <- nomo_methods(lineage = "historical")
+old[!is.na(old$contemporary_practice),
+    c("introduced", "method", "contemporary_practice")]
 
 # A reference list for one stage
 nomo_methods(stage = "reliability", references = TRUE)[, c("method", "citation")]

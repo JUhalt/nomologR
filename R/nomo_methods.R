@@ -1133,7 +1133,7 @@ nomo_methods_registry <- function() {
       "Ratio of squared correlations to squared partial correlations, overall and per item.",
       "Supporting adequacy evidence, not an item-retention rule.",
       "nomo_factors()", "psych",
-      c("kaiser_1974")
+      c("kaiser_1970", "kaiser_1974")
     ),
     nomo_method_entry(
       "bartlett", "factors",
@@ -1941,7 +1941,7 @@ nomo_methods_registry <- function() {
     )
   )
 
-  tibble::tibble(
+  registry <- tibble::tibble(
     id = vapply(entries, `[[`, character(1), "id"),
     stage = vapply(entries, `[[`, character(1), "stage"),
     method = vapply(entries, `[[`, character(1), "method"),
@@ -1953,6 +1953,95 @@ nomo_methods_registry <- function() {
     engine = vapply(entries, `[[`, character(1), "engine"),
     citations = I(lapply(entries, `[[`, "citations"))
   )
+  history <- nomo_methods_history()
+  bib <- nomo_bibliography()
+  idx <- match(registry$id, history$id)
+  origin <- history$origin[idx]
+  registry$introduced <- nomo_methods_year(bib$short[match(origin, bib$key)])
+  registry$contemporary_practice <- history$contemporary_practice[idx]
+  registry
+}
+
+
+# History ----------------------------------------------------------------------
+#
+# When each method entered the literature, and what took over from each
+# historical one: the record of how practice changed (design principle 13).
+#
+# `origin` is the citation key of the publication that introduced the method.
+# It is filled in only when the registry cites that publication. When the
+# registry cites only a later review or critique, it is NA, rather than dating
+# the method by a secondary source. `introduced` is then derived from the origin
+# reference's year, so the two cannot disagree.
+#
+# `contemporary_practice` names, for a historical method only, the registry's
+# contemporary methods that now address the question it answered.
+nomo_methods_history <- function() {
+  rows <- list(
+    c("parallel_analysis", "horn_1965", NA),
+    c("map_original", "velicer_1976", NA),
+    c("map_revised", "velicer_2000", NA),
+    c("ekc", "braeken_vanassen_2017", NA),
+    c("nest", "achim_2017", NA),
+    c("hull", "lorenzoseva_2011", NA),
+    c("comparison_data", "ruscio_roche_2012", NA),
+    c("kaiser_guttman", "guttman_1954", "parallel_analysis; map_revised; ekc"),
+    c("scree", "cattell_1966", "parallel_analysis"),
+    c("kmo", "kaiser_1970", NA),
+    c("bartlett", "bartlett_1950", NA),
+    c("inter_item_sd", "marjanovic_2015", NA),
+    c("orthogonal_rotation", "kaiser_1958", "oblique_rotation"),
+    c("loading_reference", NA, "loading_diagnostics"),
+    c("item_total_reference", NA, "item_rest_correlation"),
+    c("ml_cfa", "joreskog_1969", NA),
+    c("chisq_exact_fit", "joreskog_1969", "incremental_fit; rmsea_interval; srmr; local_strain"),
+    c("incremental_fit", "bentler_bonett_1980", NA),
+    c("rmsea_interval", "browne_cudeck_1992", NA),
+    c("fit_cutoffs", "hu_bentler_1999", "local_strain"),
+    c("modification_indices", NA, "local_strain; revision_lineage"),
+    c("bifactor_model", "holzinger_swineford_1937", NA),
+    c("lrt_scaled", "satorra_bentler_2001", NA),
+    c("lrt_scaled_shifted", "satorra_2000", NA),
+    c("nesting_check", "bentler_satorra_2010", NA),
+    c("delta_fit", "cheung_rensvold_2002", NA),
+    c("information_criteria", "akaike_1974", NA),
+    c("alpha", "cronbach_1951", "omega"),
+    c("omega_ordinal_scale", "green_yang_2009", NA),
+    c("reliability_bootstrap_ci", "kelley_pornprasertmanit_2016", NA),
+    c("omega_hierarchical_subscale", "reise_bonifay_2013", NA),
+    c("construct_replicability", "hancock_mueller_2001", NA),
+    c("puc", "reise_2012", NA),
+    c("schmid_leiman", "schmid_leiman_1957", "bifactor_model"),
+    c("standardized_loadings_ave", "fornell_larcker_1981", NA),
+    c("fornell_larcker", "fornell_larcker_1981", "htmt2; latent_correlation_ci"),
+    c("htmt", "henseler_2015", NA),
+    c("htmt2", "roemer_2021", NA),
+    c("latent_correlation_ci", "ronkko_cho_2022", NA),
+    c("multigroup_cfa", "joreskog_1971", NA),
+    c("invariance_hierarchy", "meredith_1993", NA),
+    c("categorical_invariance", "wu_estabrook_2016", NA),
+    c("invariance_delta_fit", "chen_2007", NA),
+    c("partial_invariance", "byrne_1989", NA),
+    c("unit_weighted_score", NA, "parallel_model_test"),
+    c("parallel_model_test", "mcneish_wolf_2020", NA),
+    c("nomological_network", "cronbach_meehl_1955", "two_step_sem; prediction_provenance"),
+    c("two_step_sem", "anderson_gerbing_1988", NA),
+    c("equivalence_testing", "schuirmann_1987", NA),
+    c("prediction_provenance", "nosek_2018", NA),
+    c("listwise_deletion", NA, "fiml; missing_sensitivity"),
+    c("pairwise_deletion", NA, "fiml; missing_sensitivity")
+  )
+  tibble::tibble(
+    id = vapply(rows, `[[`, character(1), 1L),
+    origin = vapply(rows, `[[`, character(1), 2L),
+    contemporary_practice = vapply(rows, `[[`, character(1), 3L)
+  )
+}
+
+
+# The year in a bibliography entry's short citation, such as "Horn (1965)".
+nomo_methods_year <- function(short) {
+  as.integer(sub(".*\\((\\d{4})\\).*", "\\1", short))
 }
 
 
@@ -2006,6 +2095,19 @@ nomo_methods_short_citations <- function(keys, bib) {
 #' A lineage label summarizes where a method sits in the literature. It is a
 #' teaching aid, not a claim that an older method is always wrong.
 #'
+#' Two columns record how practice changed:
+#'
+#' * `introduced`: the year of the publication that introduced the method.
+#'   It is given only when the registry cites that publication, and is `NA`
+#'   when the registry cites only a later review or critique. It is never
+#'   dated from a secondary source.
+#' * `contemporary_practice`: for a historical method, the registry's
+#'   contemporary methods that now address the question it answered, such as
+#'   parallel analysis for the eigenvalue-greater-than-one rule, or omega for
+#'   coefficient alpha.
+#'
+#' `vignette("research-basis")` draws a timeline from these columns.
+#'
 #' The `role` column says how `nomologR` uses the method: `"primary"` evidence,
 #' `"supporting"` evidence, or `"context"`. A `"context"` method is displayed
 #' for recognition and is deliberately excluded from any synthesis: the
@@ -2034,8 +2136,12 @@ nomo_methods_short_citations <- function(keys, bib) {
 #'   expanded to one row per method per reference, with full `citation` and
 #'   `doi` columns, suitable for a reference list.
 #'
-#' @return A tibble. With `references = FALSE`, one row per method. With
-#'   `references = TRUE`, one row per method-reference pair.
+#' @return A tibble with columns `id`, `stage`, `method`, `lineage`, `role`,
+#'   `estimand`, `assumptions`, `implemented_by`, `engine`, `introduced`, and
+#'   `contemporary_practice`. With `references = FALSE` there is one row per
+#'   method, and `references` holds short in-text citations. With
+#'   `references = TRUE` there is one row per method-reference pair, with
+#'   `citation_key`, `citation`, and `doi`.
 #' @export
 #'
 #' @examples
@@ -2044,6 +2150,11 @@ nomo_methods_short_citations <- function(keys, bib) {
 #'
 #' # What is shown only as historical context, and why
 #' nomo_methods(lineage = "historical")[, c("method", "role", "assumptions")]
+#'
+#' # How practice changed: historical methods and what now does their work
+#' old <- nomo_methods(lineage = "historical")
+#' old[!is.na(old$contemporary_practice),
+#'     c("introduced", "method", "contemporary_practice")]
 #'
 #' # A reference list for one stage
 #' nomo_methods(stage = "reliability", references = TRUE)[, c("method", "citation")]
