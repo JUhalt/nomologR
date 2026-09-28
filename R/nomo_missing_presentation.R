@@ -24,9 +24,13 @@ print.nomo_missing <- function(x, digits = 3, ...) {
         "Converged" = "converged", "Admissible" = "admissible"),
       "Available", x$strategies$available
     ),
-    formats = list(n_used = function(v) format(v, trim = TRUE)),
+    formats = list(n_used = function(v) ifelse(is.finite(v), format(v, trim = TRUE), "-")),
     more = "nomo_table(x, \"strategies\")"
   )
+  # Why a strategy was not fitted, such as the reference when nothing is missing.
+  s <- x$strategies
+  unfitted <- s[!(s$available %in% TRUE) & !is.na(s$note) & nzchar(s$note), , drop = FALSE]
+  if (nrow(unfitted)) nomo_present_bullets(paste0(unfitted$label, ": ", unfitted$note))
 
   if (is.data.frame(x$estimates) && nrow(x$estimates)) {
     compared <- x$estimates[x$estimates$role == "comparison" &
