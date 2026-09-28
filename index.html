@@ -107,9 +107,19 @@
 <a href="https://juhalt.github.io/nomologR/articles/nomologR.html">Get started</a> — the workflow at a glance and a suggested learning path.</li>
 <li>
 <a href="https://juhalt.github.io/nomologR/articles/research-basis.html">Research basis</a> — where each method came from, what current literature recommends, and what <code>nomologR</code> implements.</li>
-<li>Walkthroughs that run on simulated teaching data with known answers: <a href="https://juhalt.github.io/nomologR/articles/exploratory-workflow.html">exploratory structure</a>, <a href="https://juhalt.github.io/nomologR/articles/measurement-model-evidence.html">measurement-model evidence</a>, <a href="https://juhalt.github.io/nomologR/articles/hierarchical-models.html">total and subscale scores</a>, <a href="https://juhalt.github.io/nomologR/articles/measurement-invariance.html">measurement invariance</a>, <a href="https://juhalt.github.io/nomologR/articles/nomological-network.html">nomological networks</a>, <a href="https://juhalt.github.io/nomologR/articles/guided-workflow.html">guided workflow</a>, and <a href="https://juhalt.github.io/nomologR/articles/reproducible-report.html">reproducible reports</a>.</li>
+<li>Walkthroughs that run on simulated teaching data with known answers: <a href="https://juhalt.github.io/nomologR/articles/exploratory-workflow.html">exploratory structure</a>, <a href="https://juhalt.github.io/nomologR/articles/measurement-model-evidence.html">measurement-model evidence</a>, <a href="https://juhalt.github.io/nomologR/articles/hierarchical-models.html">total and subscale scores</a>, <a href="https://juhalt.github.io/nomologR/articles/measurement-invariance.html">measurement invariance</a>, <a href="https://juhalt.github.io/nomologR/articles/nomological-network.html">nomological networks</a>, <a href="https://juhalt.github.io/nomologR/articles/guided-workflow.html">guided workflow</a>, <a href="https://juhalt.github.io/nomologR/articles/content-review.html">from content review to empirical screening</a>, and <a href="https://juhalt.github.io/nomologR/articles/reproducible-report.html">reproducible reports</a>.</li>
 </ul>
-<p>The teaching datasets are <code>nomo_demo_continuous</code> (two correlated factors with a cross-loading item, a weak item, and missing data), <code>nomo_demo_ordinal</code> (the same structure as five-category ordered items), and <code>nomo_demo_network</code> (three constructs, an observed outcome, and two groups with a known source of non-invariance):</p>
+<p>The teaching datasets are:</p>
+<ul>
+<li>
+<code>nomo_demo_continuous</code>: two correlated factors, with a cross-loading item, a weak item, and missing data;</li>
+<li>
+<code>nomo_demo_ordinal</code>: the same structure as five-category ordered items;</li>
+<li>
+<code>nomo_demo_network</code>: three constructs, an observed outcome, and two groups with a known source of non-invariance;</li>
+<li>
+<code>nomo_demo_walkthrough</code>: twelve items reviewed by an expert panel in <code>contentvalidR</code>, built so that content review and the empirical screen disagree.</li>
+</ul>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/JUhalt/nomologR" class="external-link">nomologR</a></span><span class="op">)</span></span>
 <span></span>
@@ -126,6 +136,7 @@
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">run</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/nomo_run.html">nomo_run</a></span><span class="op">(</span><span class="va">responses</span>, scales <span class="op">=</span> <span class="va">handoff</span><span class="op">)</span></span></code></pre></div>
 <p>Only carried items are analyzed. Held-back items are reported in <code>contentvalidR</code>’s own words, and a report from the run opens with the content review. Neither package depends on the other.</p>
+<p>The two packages share a walkthrough on the same simulated item set. The content-review half is <code>contentvalidR</code>’s <a href="https://juhalt.github.io/contentvalidR/articles/one-item-set-both-stages.html" class="external-link">One item set, both stages</a>. The empirical half is this package’s <a href="https://juhalt.github.io/nomologR/articles/content-review.html">From content review to empirical screening</a>, which shows items that pass one stage and fail the other.</p>
 </div>
 <div class="section level2">
 <h2 id="what-works-now">What works now<a class="anchor" aria-label="anchor" href="#what-works-now"></a>
@@ -711,11 +722,11 @@
 <p><code>v0.2.0</code> made the workflow research-backed from historical to contemporary practice and more useful to graduate students and researchers. Scope was selected in <a href="https://github.com/JUhalt/nomologR/issues/22" class="external-link">#22</a>. It added learning foundations (#25) with teaching datasets, runnable vignettes, and the research-basis article; readable invariance labels (#31); maintenance (#36); model comparison with <code><a href="reference/nomo_compare.html">nomo_compare()</a></code> (#27); auditable revision lineage with <code><a href="reference/nomo_revise.html">nomo_revise()</a></code> (#28); the methods registry with <code><a href="reference/nomo_methods.html">nomo_methods()</a></code> (#26); interval-based replication-status language for sign changes (#30); bifactor and higher-order models with <code><a href="reference/nomo_hierarchical.html">nomo_hierarchical()</a></code> (#29); and release certification (#37).</p>
 </div>
 <div class="section level3">
-<h3 id="next-v04x-and-v100">Next: <code>v0.4.x</code> and <code>v1.0.0</code>
-<a class="anchor" aria-label="anchor" href="#next-v04x-and-v100"></a>
+<h3 id="next-v100-then-1x">Next: <code>v1.0.0</code>, then <code>1.x</code>
+<a class="anchor" aria-label="anchor" href="#next-v100-then-1x"></a>
 </h3>
-<p>Larger extensions such as ESEM, IRT/DIF, Bayesian SEM, longitudinal invariance, and multiple imputation were deferred until after CRAN acceptance, with the reasons recorded in #38. They are candidates for <code>v0.4.x</code>, and none is a commitment until selected.</p>
-<p><code>v1.0.0</code> is planned as a joint release with <a href="https://github.com/JUhalt/contentvalidR" class="external-link"><code>contentvalidR</code></a>, the package’s content-validity counterpart, so the two show one item set crossing from expert review into empirical evidence (<a href="https://github.com/JUhalt/nomologR/issues/53" class="external-link">#53</a>). A companion article will demonstrate an item that passes content review and then behaves badly empirically, and one the reverse (<a href="https://github.com/JUhalt/nomologR/issues/60" class="external-link">#60</a>).</p>
+<p><code>v1.0.0</code> is planned as a joint release with <a href="https://github.com/JUhalt/contentvalidR" class="external-link"><code>contentvalidR</code></a>, the package’s content-validity counterpart (<a href="https://github.com/JUhalt/nomologR/issues/53" class="external-link">#53</a>). It is the stability promise: after it, existing behavior changes only after a deprecation period. Its scope is set in <a href="https://github.com/JUhalt/nomologR/issues/113" class="external-link">#113</a>. The companion article on the shared item set is done (<a href="https://github.com/JUhalt/nomologR/issues/60" class="external-link">#60</a>).</p>
+<p>Larger extensions, such as ESEM, IRT/DIF, Bayesian SEM, longitudinal invariance, and multiple imputation, are candidates for <code>1.x</code>. They are additive, so they do not need to precede the freeze. None was rejected, and none is a commitment until selected.</p>
 </div>
 <div class="section level3">
 <h3 id="completed-v010">Completed: <code>v0.1.0</code>

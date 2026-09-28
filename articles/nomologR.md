@@ -45,6 +45,7 @@ items, respecifies models, or declares a scale “valid.”
 | 6\. Generalizability | Is the construct measured comparably across groups? | [`nomo_invariance()`](https://juhalt.github.io/nomologR/reference/nomo_invariance.md), [`nomo_partial()`](https://juhalt.github.io/nomologR/reference/nomo_partial.md) | [Measurement invariance](https://juhalt.github.io/nomologR/articles/measurement-invariance.md) |
 | 7\. Nomological network | Does the construct relate to others as theory predicted? | [`nomo_hypotheses()`](https://juhalt.github.io/nomologR/reference/nomo_hypotheses.md), [`nomo_network()`](https://juhalt.github.io/nomologR/reference/nomo_network.md) | [Theory-specified nomological networks](https://juhalt.github.io/nomologR/articles/nomological-network.md) |
 | Guided workflow | How do the stages fit together with explicit decisions? | [`nomo_run()`](https://juhalt.github.io/nomologR/reference/nomo_run.md) | [Guided workflow](https://juhalt.github.io/nomologR/articles/guided-workflow.md) |
+| Starting from content review | What does empirical evidence add to an expert review of the items? | [`nomo_screen()`](https://juhalt.github.io/nomologR/reference/nomo_screen.md) and [`nomo_run()`](https://juhalt.github.io/nomologR/reference/nomo_run.md) with a `contentvalidR` handoff | [From content review to empirical screening](https://juhalt.github.io/nomologR/articles/content-review.md) |
 | Reporting | How do I archive the evidence and decisions? | [`nomo_report()`](https://juhalt.github.io/nomologR/reference/nomo_report.md), [`nomo_table()`](https://juhalt.github.io/nomologR/reference/nomo_table.md) | [Archiving a workflow](https://juhalt.github.io/nomologR/articles/reproducible-report.md) |
 
 ## Teaching datasets
@@ -59,12 +60,14 @@ real data never allow.
 | `nomo_demo_continuous` | Two correlated factors, five candidate items each, 500 cases | A cross-loading item (`a5`), a weak item (`b5`), and a small amount of missing data |
 | `nomo_demo_ordinal` | The same latent responses cut into five ordered categories | Polychoric correlations, WLSMV estimation, and ordinal reliability |
 | `nomo_demo_network` | Three constructs, an observed outcome, two administration groups, 800 cases | Theory-specified predictions, equivalence regions, replication, and a known source of scalar non-invariance |
+| `nomo_demo_walkthrough` | Twelve items an expert panel reviewed in `contentvalidR`, two facets, two cohorts, 400 cases | Items that pass content review and fail empirically, and the reverse; reverse-worded items; a cohort difference |
 
 See
 [`?nomo_demo_continuous`](https://juhalt.github.io/nomologR/reference/nomo_demo_continuous.md),
 [`?nomo_demo_ordinal`](https://juhalt.github.io/nomologR/reference/nomo_demo_ordinal.md),
+[`?nomo_demo_network`](https://juhalt.github.io/nomologR/reference/nomo_demo_network.md),
 and
-[`?nomo_demo_network`](https://juhalt.github.io/nomologR/reference/nomo_demo_network.md)
+[`?nomo_demo_walkthrough`](https://juhalt.github.io/nomologR/reference/nomo_demo_walkthrough.md)
 for the full population models.
 
 ## A first look
@@ -153,7 +156,11 @@ the scale “has” two factors.
 5.  [Guided
     workflow](https://juhalt.github.io/nomologR/articles/guided-workflow.md)
     — the stages combined with explicit decisions.
-6.  [Archiving a
+6.  [From content review to empirical
+    screening](https://juhalt.github.io/nomologR/articles/content-review.md)
+    — the items a `contentvalidR` review carried forward, screened,
+    including where the two stages disagree.
+7.  [Archiving a
     workflow](https://juhalt.github.io/nomologR/articles/reproducible-report.md)
     — a reproducible report.
 
@@ -165,14 +172,14 @@ help page lists its references.
 
 ## Where nomologR is heading
 
-The next release, `v0.2.0`, focuses on making the workflow
-research-backed from historical to contemporary practice and more useful
-to graduate students and researchers: model comparison, auditable model
-revision, bifactor and higher-order models, missing-data sensitivity,
-score guidance, careless-response screening, and manuscript-ready
-tables. See the
+The next release, `v1.0.0`, is planned together with
+[`contentvalidR`](https://github.com/JUhalt/contentvalidR), which covers
+the content-review stage before this package’s. At 1.0.0 both packages’
+interfaces become stable, and the handoff between them becomes a
+supported contract. Larger extensions, such as ESEM, IRT, and
+longitudinal invariance, are candidates for later 1.x releases. See the
 [roadmap](https://github.com/JUhalt/nomologR/blob/master/ROADMAP.md) and
-the [v0.2.0 milestone](https://github.com/JUhalt/nomologR/milestone/2).
+the [v1.0.0 milestone](https://github.com/JUhalt/nomologR/milestone/5).
 
 ## Citing nomologR
 

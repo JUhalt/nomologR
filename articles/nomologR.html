@@ -200,6 +200,16 @@ networks</a></td>
 <td><a href="guided-workflow.html">Guided workflow</a></td>
 </tr>
 <tr class="odd">
+<td>Starting from content review</td>
+<td>What does empirical evidence add to an expert review of the
+items?</td>
+<td>
+<code><a href="../reference/nomo_screen.html">nomo_screen()</a></code> and <code><a href="../reference/nomo_run.html">nomo_run()</a></code> with a
+<code>contentvalidR</code> handoff</td>
+<td><a href="content-review.html">From content review to empirical
+screening</a></td>
+</tr>
+<tr class="even">
 <td>Reporting</td>
 <td>How do I archive the evidence and decisions?</td>
 <td>
@@ -248,11 +258,18 @@ reliability</td>
 <td>Theory-specified predictions, equivalence regions, replication, and
 a known source of scalar non-invariance</td>
 </tr>
+<tr class="even">
+<td><code>nomo_demo_walkthrough</code></td>
+<td>Twelve items an expert panel reviewed in <code>contentvalidR</code>,
+two facets, two cohorts, 400 cases</td>
+<td>Items that pass content review and fail empirically, and the
+reverse; reverse-worded items; a cohort difference</td>
+</tr>
 </tbody>
 </table>
 <p>See <code><a href="../reference/nomo_demo_continuous.html">?nomo_demo_continuous</a></code>,
-<code><a href="../reference/nomo_demo_ordinal.html">?nomo_demo_ordinal</a></code>, and <code><a href="../reference/nomo_demo_network.html">?nomo_demo_network</a></code> for
-the full population models.</p>
+<code><a href="../reference/nomo_demo_ordinal.html">?nomo_demo_ordinal</a></code>, <code><a href="../reference/nomo_demo_network.html">?nomo_demo_network</a></code>, and
+<code><a href="../reference/nomo_demo_walkthrough.html">?nomo_demo_walkthrough</a></code> for the full population models.</p>
 </div>
 <div class="section level2">
 <h2 id="a-first-look">A first look<a class="anchor" aria-label="anchor" href="#a-first-look"></a>
@@ -347,6 +364,10 @@ networks</a> — predictions, equivalence regions, and replication.</li>
 <a href="guided-workflow.html">Guided workflow</a> — the stages
 combined with explicit decisions.</li>
 <li>
+<a href="content-review.html">From content review to empirical
+screening</a> — the items a <code>contentvalidR</code> review carried
+forward, screened, including where the two stages disagree.</li>
+<li>
 <a href="reproducible-report.html">Archiving a workflow</a> — a
 reproducible report.</li>
 </ol>
@@ -358,13 +379,13 @@ function’s help page lists its references.</p>
 <div class="section level2">
 <h2 id="where-nomologr-is-heading">Where nomologR is heading<a class="anchor" aria-label="anchor" href="#where-nomologr-is-heading"></a>
 </h2>
-<p>The next release, <code>v0.2.0</code>, focuses on making the workflow
-research-backed from historical to contemporary practice and more useful
-to graduate students and researchers: model comparison, auditable model
-revision, bifactor and higher-order models, missing-data sensitivity,
-score guidance, careless-response screening, and manuscript-ready
-tables. See the <a href="https://github.com/JUhalt/nomologR/blob/master/ROADMAP.md" class="external-link">roadmap</a>
-and the <a href="https://github.com/JUhalt/nomologR/milestone/2" class="external-link">v0.2.0
+<p>The next release, <code>v1.0.0</code>, is planned together with <a href="https://github.com/JUhalt/contentvalidR" class="external-link"><code>contentvalidR</code></a>,
+which covers the content-review stage before this package’s. At 1.0.0
+both packages’ interfaces become stable, and the handoff between them
+becomes a supported contract. Larger extensions, such as ESEM, IRT, and
+longitudinal invariance, are candidates for later 1.x releases. See the
+<a href="https://github.com/JUhalt/nomologR/blob/master/ROADMAP.md" class="external-link">roadmap</a>
+and the <a href="https://github.com/JUhalt/nomologR/milestone/5" class="external-link">v1.0.0
 milestone</a>.</p>
 </div>
 <div class="section level2">
