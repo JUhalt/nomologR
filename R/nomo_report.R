@@ -89,6 +89,7 @@ nomo_report_label_overrides <- c(
   corrected_item_rest_r = "Corrected item-rest r", item_rest_n = "Item-rest N",
   scale_item_rest_r = "Within-scale item-rest r",
   scale_item_rest_n = "Within-scale item-rest N",
+  scale_negative_interitem_n = "Negative pairs within scale",
   omega_ci_n_success = "Omega CI successful draws",
   alpha_ci_n_success = "Alpha CI successful draws",
   lhs = "lhs", op = "op", rhs = "rhs",

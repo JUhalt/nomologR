@@ -22,8 +22,10 @@
 #'   scales. Needed for even-odd consistency and for the within-scale versions
 #'   of long-string and inter-item standard deviation. With two or more scales,
 #'   each item's corrected item-rest correlation is also computed against the
-#'   rest of its own scale, and the item review uses that value. A
-#'   `contentvalidR` handoff supplies its scales here.
+#'   rest of its own scale, and the item review uses that value. Negative
+#'   inter-item correlations are then reviewed only within a scale, since items
+#'   of different constructs need not correlate positively. A `contentvalidR`
+#'   handoff supplies its scales here.
 #' @param reverse Optional character vector naming reverse-keyed items. Used
 #'   only to recode an internal copy for the indices that need it; the data is
 #'   never recoded.
@@ -106,8 +108,9 @@
 #'   * `relationship_summary`: each item's corrected item-rest correlation and
 #'     summary of its inter-item correlations. With two or more declared
 #'     scales, `scale`, `scale_item_rest_r`, and `scale_item_rest_n` give each
-#'     item's scale and its item-rest correlation within that scale; otherwise
-#'     they are `NA`.
+#'     item's scale and its item-rest correlation within that scale, and
+#'     `scale_negative_interitem_n` counts its negative correlations with items
+#'     of the same scale; otherwise they are `NA`.
 #'   * `inter_item_correlations`: one row per item pair.
 #'   * `decision_log`: the evidence and its explanations (see [nomo_table()]).
 #'   * `effort`, `effort_pairs`, and `effort_settings`: the careless-responding
