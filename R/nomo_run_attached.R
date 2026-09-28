@@ -89,7 +89,7 @@ nomo_run_run_missing <- function(x, target = c("cfa", "network")) {
 
   result <- nomo_run_safe_component(
     fun = nomo_missing,
-    fixed = list(x = fitted, data = data),
+    fixed = list(fit = fitted, data = data),
     extra = extra,
     stage = "missing"
   )

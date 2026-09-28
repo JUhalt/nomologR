@@ -71,7 +71,7 @@ nomo_missing_half_se <- 0.5
 #' Multiple imputation and models for data missing not at random are outside
 #' this function.
 #'
-#' @param x A `nomo_cfa` or `nomo_network` object.
+#' @param fit A `nomo_cfa` or `nomo_network` object.
 #' @param data The data the model was fitted to, including any cases listwise
 #'   deletion removed. For a network fitted to a `nomo_split`, supply the same
 #'   `nomo_split`; the comparison uses its calibration sample. `data` is checked
@@ -121,13 +121,13 @@ nomo_missing_half_se <- 0.5
 #' sensitivity
 #' nomo_table(sensitivity, "strategies")
 #' @export
-nomo_missing <- function(x, data, strategies = NULL, ...) {
+nomo_missing <- function(fit, data, strategies = NULL, ...) {
   UseMethod("nomo_missing")
 }
 
 
 #' @export
-nomo_missing.default <- function(x, data, strategies = NULL, ...) {
+nomo_missing.default <- function(fit, data, strategies = NULL, ...) {
   stop(
     "`nomo_missing()` supports `nomo_cfa` and `nomo_network` objects.",
     call. = FALSE
@@ -137,25 +137,25 @@ nomo_missing.default <- function(x, data, strategies = NULL, ...) {
 
 #' @rdname nomo_missing
 #' @export
-nomo_missing.nomo_cfa <- function(x, data, strategies = NULL, reliability = TRUE,
+nomo_missing.nomo_cfa <- function(fit, data, strategies = NULL, reliability = TRUE,
                                   ...) {
   if (!is.logical(reliability) || length(reliability) != 1L || is.na(reliability)) {
     stop("`reliability` must be TRUE or FALSE.", call. = FALSE)
   }
-  data <- nomo_missing_check_data(data, x$data_n)
-  guidance <- x$guidance
-  ordered <- length(x$ordered) > 0L
+  data <- nomo_missing_check_data(data, fit$data_n)
+  guidance <- fit$guidance
+  ordered <- length(fit$ordered) > 0L
 
   refit <- function(strategy) {
     tryCatch(
       nomo_cfa(
-        x$model,
+        fit$model,
         data = data,
-        ordered = if (ordered) x$ordered else NULL,
-        estimator = if (identical(x$estimator_source, "researcher")) x$estimator else NULL,
+        ordered = if (ordered) fit$ordered else NULL,
+        estimator = if (identical(fit$estimator_source, "researcher")) fit$estimator else NULL,
         missing = strategy,
-        std.lv = x$std.lv,
-        control = x$control,
+        std.lv = fit$std.lv,
+        control = fit$control,
         modification_indices = FALSE,
         guidance = guidance
       ),
@@ -164,8 +164,8 @@ nomo_missing.nomo_cfa <- function(x, data, strategies = NULL, reliability = TRUE
   }
 
   nomo_missing_run(
-    x = x,
-    lavaan_fit = x$fit,
+    x = fit,
+    lavaan_fit = fit$fit,
     data = data,
     ordered = ordered,
     strategies = strategies,
@@ -184,35 +184,35 @@ nomo_missing.nomo_cfa <- function(x, data, strategies = NULL, reliability = TRUE
 
 #' @rdname nomo_missing
 #' @export
-nomo_missing.nomo_network <- function(x, data, strategies = NULL, ...) {
+nomo_missing.nomo_network <- function(fit, data, strategies = NULL, ...) {
   if (inherits(data, "nomo_split")) data <- data$calibration
-  data <- nomo_missing_check_data(data, x$data_n)
-  ordered <- length(x$ordered) > 0L
+  data <- nomo_missing_check_data(data, fit$data_n)
+  ordered <- length(fit$ordered) > 0L
 
   refit <- function(strategy) {
     tryCatch(
       nomo_network_fit_once(
-        model_fitted = x$model_fitted,
-        model_relations = x$model_relations,
-        hypotheses = x$hypotheses,
+        model_fitted = fit$model_fitted,
+        model_relations = fit$model_relations,
+        hypotheses = fit$hypotheses,
         data = data,
-        ordered = x$ordered,
-        estimator_requested = if (is.na(x$estimator)) NULL else x$estimator,
-        estimator_source = x$estimator_source,
+        ordered = fit$ordered,
+        estimator_requested = if (is.na(fit$estimator)) NULL else fit$estimator,
+        estimator_source = fit$estimator_source,
         missing = strategy,
-        std.lv = x$std.lv,
-        control = x$control,
-        guidance = x$guidance,
-        equivalence_alpha = x$equivalence_alpha,
-        sample_role = x$sample_role
+        std.lv = fit$std.lv,
+        control = fit$control,
+        guidance = fit$guidance,
+        equivalence_alpha = fit$equivalence_alpha,
+        sample_role = fit$sample_role
       ),
       error = function(e) nomo_missing_failure(e)
     )
   }
 
   nomo_missing_run(
-    x = x,
-    lavaan_fit = x$fit,
+    x = fit,
+    lavaan_fit = fit$fit,
     data = data,
     ordered = ordered,
     strategies = strategies,
