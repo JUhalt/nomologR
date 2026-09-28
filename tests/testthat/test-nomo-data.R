@@ -120,4 +120,58 @@ test_that("network teaching data localize the known scalar non-invariance", {
 
   expect_gt(nrow(scalar), 0L)
   expect_match(scalar$constraint_display[[1L]], "Intercept: ag3", fixed = TRUE)
+
+  # The summary's "largest" diagnostics are the largest across all levels,
+  # so the scalar intercept leads rather than the metric rows that come first
+  # in the table (#60).
+  top <- summary(inv)$top_local_strain
+  expect_false(is.unsorted(rev(top$score_x2)))
+  expect_match(top$constraint_display[[1L]], "Intercept: ag3", fixed = TRUE)
+})
+
+
+test_that("walkthrough teaching data have the documented structure and features", {
+  expect_identical(dim(nomo_demo_walkthrough), c(400L, 14L))
+  items <- c(paste0("EF", 1:6), paste0("TF", 1:6))
+  expect_identical(names(nomo_demo_walkthrough), c("respondent", "cohort", items))
+  expect_identical(levels(nomo_demo_walkthrough$cohort), c("A", "B"))
+  expect_identical(as.vector(table(nomo_demo_walkthrough$cohort)), c(200L, 200L))
+  expect_true(all(vapply(nomo_demo_walkthrough[items], function(x) {
+    is.integer(x) && all(x %in% 1:5)
+  }, logical(1))))
+  expect_identical(nomo_demo_walkthrough_items$item, items)
+  expect_identical(nomo_demo_walkthrough_items$item[nomo_demo_walkthrough_items$reverse_worded],
+                   c("EF2", "TF2"))
+
+  # The handoff stored with the package is for these items.
+  handoff <- readRDS(system.file("extdata", "content-handoff-walkthrough.rds",
+                                 package = "nomologR"))
+  expect_identical(handoff$item_evidence$item, items)
+
+  walk <- nomo_demo_walkthrough
+  # Answered as written, a reverse-worded item runs against its facet.
+  expect_lt(stats::cor(walk$EF1, walk$EF2), 0)
+  walk$EF2 <- 6L - walk$EF2
+  walk$TF2 <- 6L - walk$TF2
+  expect_gt(stats::cor(walk$EF1, walk$EF2), 0)
+
+  rest <- function(item, facet) {
+    others <- setdiff(facet, item)
+    stats::cor(walk[[item]], rowSums(walk[others]))
+  }
+  ef <- c("EF1", "EF2", "EF3", "EF4", "EF6")
+  # EF4 carries the least common variance of the carried EF items.
+  expect_identical(names(which.min(vapply(ef, rest, numeric(1), facet = ef))), "EF4")
+  # EF3's answers pile up at the top of the scale.
+  expect_identical(names(which.min(vapply(walk[items], stats::sd, numeric(1)))), "EF3")
+  expect_gt(mean(walk$EF3 == 5), .70)
+  # TF6 is answered higher in cohort B; TF1 is not.
+  shift <- function(item) diff(tapply(walk[[item]], walk$cohort, mean))[[1L]]
+  expect_gt(shift("TF6"), .25)
+  expect_lt(abs(shift("TF1")), .20)
+  # TF4 shares more with Effort Regulation than any other TF item does.
+  with_ef <- vapply(c("TF1", "TF2", "TF3", "TF4", "TF6"), function(item) {
+    stats::cor(walk[[item]], rowSums(walk[ef]))
+  }, numeric(1))
+  expect_identical(names(which.max(with_ef)), "TF4")
 })

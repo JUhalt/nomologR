@@ -1,4 +1,5 @@
-nomo_screen_relationships <- function(selected, item_summary, guidance) {
+nomo_screen_relationships <- function(selected, item_summary, guidance,
+                                      reverse = NULL, scale_range = NULL) {
   items <- names(selected)
   summary_index <- match(items, item_summary$item)
 
@@ -258,6 +259,13 @@ nomo_screen_relationships <- function(selected, item_summary, guidance) {
     }
   }
 
+  # Declared keying never recodes the data. When an item is declared
+  # reverse-keyed, its item-rest correlation is also computed on an internal
+  # copy recoded as declared, so a negative sign can be told apart from a coding
+  # error (#60). Only the log's wording uses it; no returned value changes.
+  keyed_r <- nomo_screen_keyed_item_rest(scores[complete_all, , drop = FALSE],
+                                         reverse, scale_range)
+
   item_total_reference <- guidance$item_total_reference
 
   if (
@@ -297,17 +305,29 @@ nomo_screen_relationships <- function(selected, item_summary, guidance) {
           )
         },
         severity = "review",
-        observation = sprintf(
-          "`%s` has a negative corrected item-rest correlation (r = %.2f, n = %d).",
-          item,
-          item_rest_r,
-          row$item_rest_n[[1L]]
+        observation = paste0(
+          sprintf(
+            "`%s` has a negative corrected item-rest correlation (r = %.2f, n = %d).",
+            item,
+            item_rest_r,
+            row$item_rest_n[[1L]]
+          ),
+          nomo_screen_keyed_note(item, keyed_r, scale_range)
         ),
-        recommendation = paste(
-          "Inspect intended keying, reverse-worded item coding, data entry,",
-          "and possible multidimensional structure. Do not reverse-score",
-          "or delete the item automatically from this diagnostic alone."
-        )
+        recommendation = if (item %in% names(keyed_r)) {
+          paste(
+            "Recode the item in the data before modeling it, and record that",
+            "you did; nomologR never recodes data. If the data were already",
+            "recoded, the declared keying and the data disagree, and one of",
+            "them is wrong."
+          )
+        } else {
+          paste(
+            "Inspect intended keying, reverse-worded item coding, data entry,",
+            "and possible multidimensional structure. Do not reverse-score",
+            "or delete the item automatically from this diagnostic alone."
+          )
+        }
       )
     } else if (
       !is.na(item_total_reference) &&
@@ -378,4 +398,43 @@ nomo_screen_relationships <- function(selected, item_summary, guidance) {
     relationship_method = relationship_method,
     decision_log = decision_log
   )
+}
+
+# Corrected item-rest correlations of the items declared reverse-keyed, on a
+# copy recoded as declared: the scale's minimum plus its maximum, minus the
+# response. Empty unless the keying is usable, meaning item names and a
+# two-number response range.
+nomo_screen_keyed_item_rest <- function(scores, reverse, scale_range) {
+  declared <- intersect(if (is.character(reverse)) reverse else character(), names(scores))
+  usable <- length(declared) > 0L && is.numeric(scale_range) &&
+    length(scale_range) == 2L && all(is.finite(scale_range))
+  if (!usable) return(numeric())
+  keyed <- scores
+  keyed[declared] <- lapply(keyed[declared], function(v) sum(scale_range) - v)
+  out <- vapply(declared, function(item) {
+    rest <- rowSums(keyed[setdiff(names(keyed), item)])
+    suppressWarnings(stats::cor(keyed[[item]], rest))
+  }, numeric(1))
+  out[is.finite(out)]
+}
+
+
+# What a negative item-rest correlation means for an item declared
+# reverse-keyed: the expected sign of an item not yet recoded, or, if the
+# recoded correlation is still negative, a sign the keying does not explain.
+nomo_screen_keyed_note <- function(item, keyed_r, scale_range) {
+  if (!item %in% names(keyed_r)) return("")
+  r <- keyed_r[[item]]
+  if (r > 0) {
+    sprintf(paste(
+      " It is declared reverse-keyed, and this is the sign such an item shows",
+      "before it is recoded: recoded on the declared %s to %s scale, its",
+      "item-rest correlation is r = %.2f. The data were not recoded."
+    ), format(min(scale_range)), format(max(scale_range)), r)
+  } else {
+    sprintf(paste(
+      " It is declared reverse-keyed, but recoded as declared its item-rest",
+      "correlation is still r = %.2f, so the keying does not explain the sign."
+    ), r)
+  }
 }

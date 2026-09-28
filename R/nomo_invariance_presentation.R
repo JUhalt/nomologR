@@ -229,8 +229,11 @@ print.nomo_invariance <- function(x, ...) {
 #' @export
 summary.nomo_invariance <- function(object, ...) {
   local_display <- nomo_invariance_local_strain_display(object)
+  # The ten largest across all levels. The diagnostics come in level order, so
+  # the first ten had been the metric level's alone, and a scalar-level strain
+  # (an intercept) never reached the summary.
   top_local <- if (nrow(local_display)) {
-    utils::head(local_display, 10L)
+    utils::head(local_display[order(-local_display$score_x2), , drop = FALSE], 10L)
   } else {
     tibble::tibble()
   }

@@ -407,3 +407,34 @@ test_that("the handoff and the keying the screen reports are the same, whatever 
     "scale_range"
   )
 })
+
+
+test_that("declared keying explains a negative item-rest correlation, without recoding (#60)", {
+  h <- handoff_fixture("walkthrough-sort", "0.7.0")
+  # EF2 and TF2 are declared reverse-keyed; answered as written, they run
+  # against their scales.
+  data <- handoff_responses(walkthrough_items)
+  data$EF2 <- 6 - data$EF2
+  data$TF2 <- 6 - data$TF2
+
+  entry <- function(log, item) {
+    log[log$object == item & log$metric == "corrected_item_rest", , drop = FALSE]
+  }
+  scr <- nomo_screen(data, items = h)
+  ef2 <- entry(scr$decision_log, "EF2")
+  expect_lt(ef2$value, 0)
+  expect_match(ef2$observation, "It is declared reverse-keyed", fixed = TRUE)
+  expect_match(ef2$observation, "recoded on the declared 1 to 5 scale", fixed = TRUE)
+  expect_match(ef2$recommendation, "nomologR never recodes data", fixed = TRUE)
+  # The data and the returned correlation are as supplied.
+  expect_identical(scr$item_summary$item, h$items)
+  expect_lt(scr$relationship_summary$corrected_item_rest_r[
+    scr$relationship_summary$item == "EF2"], 0)
+
+  # The guided run's per-scale audits say the same.
+  run <- nomo_run(data, scales = h)
+  expect_match(entry(run$results$screen$EF$decision_log, "EF2")$observation,
+               "It is declared reverse-keyed", fixed = TRUE)
+  expect_match(entry(run$results$screen$TF$decision_log, "TF2")$observation,
+               "It is declared reverse-keyed", fixed = TRUE)
+})

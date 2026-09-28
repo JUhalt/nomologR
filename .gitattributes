@@ -1,3 +1,6 @@
 # Stored producer output and its generator must stay byte-identical to the
 # checksums in their MANIFEST.csv, so git never rewrites their line endings.
 tests/testthat/fixtures/contentvalidR/** -text
+# The walkthrough data are copied from contentvalidR and compared with its git
+# blob hashes (see data-raw/walkthrough/README.md), so the same rule applies.
+data-raw/walkthrough/** -text
