@@ -73,6 +73,80 @@ method the package knows about. Every DOI in the registry is checked against
 the DOI registries before each release, including that the registered author,
 year, and title match the citation.
 
+# How practice changed
+
+The registry also records when each method entered the literature, and, for a
+historical method, which contemporary methods now address the question it
+answered. The tables below are drawn from `nomo_methods()`, so they cannot drift
+from what the package computes.
+
+A method is dated only from the publication that introduced it, and only when
+the registry cites that publication. `r sum(is.na(methods$introduced))` of the
+`r nrow(methods)` methods are not yet dated, because the registry cites a later
+review or critique instead of the original. Adding those originating references
+is ongoing work.
+
+```{r timeline}
+dated <- methods[!is.na(methods$introduced), , drop = FALSE]
+dated <- dated[order(dated$introduced, dated$stage), , drop = FALSE]
+knitr::kable(
+  dated[, c("introduced", "method", "stage", "lineage")],
+  col.names = c("Year", "Method", "Stage", "Lineage"),
+  row.names = FALSE
+)
+```
+
+Read by era, the timeline tells a story of methods shaped by the computing of
+their time and then revisited.
+
+* **1930s to 1950s.** The field laid its foundations: the bifactor model
+  (Holzinger & Swineford, 1937), coefficient alpha (Cronbach, 1951), the
+  nomological network (Cronbach & Meehl, 1955), and the Schmid-Leiman
+  transformation (1957). Factor analysis was computed by hand, and rules that
+  were easy to apply, such as retaining factors with eigenvalues greater than
+  one (Guttman, 1954; Kaiser, 1960), became habits.
+* **1960s to 1980s.** Structural modeling arrived. Horn (1965) proposed
+  parallel analysis and Cattell (1966) the scree test. Jöreskog made
+  confirmatory factor analysis practical (1969) and extended it to several
+  groups (1971). Researchers gained information criteria (Akaike, 1974),
+  incremental fit (Bentler & Bonett, 1980), the Fornell-Larcker comparison
+  (1981), and the two-step logic of measurement before structure (Anderson &
+  Gerbing, 1988).
+* **1990s and 2000s.** Fit and invariance were formalized: an interval for the
+  RMSEA (Browne & Cudeck, 1992), the invariance hierarchy (Meredith, 1993), the
+  fit-index cutoffs that became conventions (Hu & Bentler, 1999), scaled
+  difference tests (Satorra, 2000; Satorra & Bentler, 2001), and change-in-fit
+  criteria (Cheung & Rensvold, 2002; Chen, 2007).
+* **2010s to the present.** Many defaults were reconsidered: better
+  factor-retention criteria (Hull, comparison data, the empirical Kaiser
+  criterion, NEST), bifactor indices (Reise, 2012), heterotrait-monotrait
+  ratios (Henseler et al., 2015; Roemer et al., 2021), identification for
+  ordered indicators (Wu & Estabrook, 2016), the cost of sum scores (McNeish
+  & Wolf, 2020), and latent correlations with intervals as discriminant
+  evidence (Rönkkö & Cho, 2022).
+
+What took over from each historical method:
+
+```{r what-replaced-what}
+old <- methods[!is.na(methods$contemporary_practice), , drop = FALSE]
+now <- vapply(
+  strsplit(old$contemporary_practice, "; ", fixed = TRUE),
+  function(ids) paste(methods$method[match(ids, methods$id)], collapse = "; "),
+  character(1)
+)
+knitr::kable(
+  data.frame(Year = ifelse(is.na(old$introduced), "", old$introduced),
+             Historical = old$method, Now = now),
+  row.names = FALSE
+)
+```
+
+"Now" does not mean that the historical method is wrong. It means that
+contemporary work answers the same question differently, usually with
+evidence the historical method could not provide. `nomologR` shows the
+historical method as labeled context where a reader will meet it, and bases
+its own evidence on the contemporary one.
+
 # 1. Item and data audit — `nomo_screen()`
 
 **Historical practice.** Item analysis often meant screening corrected

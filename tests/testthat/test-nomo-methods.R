@@ -603,3 +603,49 @@ test_that("run components that are not result objects contribute no methods", {
   expect_identical(nomologR:::nomo_methods_used_component("not a component"), character())
   expect_identical(nomologR:::nomo_methods_used_component(NULL), character())
 })
+
+test_that("the history dates methods only from their originating references", {
+  registry <- nomologR:::nomo_methods_registry()
+  history <- nomologR:::nomo_methods_history()
+  bib <- nomologR:::nomo_bibliography()
+
+  expect_true(all(history$id %in% registry$id))
+  expect_false(anyDuplicated(history$id) > 0L)
+
+  dated <- history[!is.na(history$origin), , drop = FALSE]
+  expect_true(all(dated$origin %in% bib$key))
+  # The origin is a reference the entry already cites, not an outside claim.
+  for (i in seq_len(nrow(dated))) {
+    cites <- registry$citations[[match(dated$id[[i]], registry$id)]]
+    expect_true(dated$origin[[i]] %in% cites, label = dated$id[[i]])
+  }
+
+  # `introduced` is the origin reference's year, and NA without an origin.
+  origin <- history$origin[match(registry$id, history$id)]
+  year <- as.integer(sub(".*\\((\\d{4})\\).*", "\\1", bib$short[match(origin, bib$key)]))
+  expect_identical(registry$introduced, year)
+  expect_identical(is.na(registry$introduced), is.na(origin))
+
+  expect_identical(registry$introduced[registry$id == "parallel_analysis"], 1965L)
+  expect_identical(registry$introduced[registry$id == "alpha"], 1951L)
+  expect_identical(registry$introduced[registry$id == "kmo"], 1970L)
+})
+
+
+test_that("contemporary practice is named only for historical methods, from the registry", {
+  registry <- nomologR:::nomo_methods_registry()
+  named <- registry[!is.na(registry$contemporary_practice), , drop = FALSE]
+
+  expect_true(all(named$lineage == "historical"))
+  ids <- unlist(strsplit(named$contemporary_practice, "; ", fixed = TRUE))
+  expect_true(all(ids %in% registry$id))
+  expect_false(any(registry$lineage[match(ids, registry$id)] == "historical"))
+
+  expect_identical(registry$contemporary_practice[registry$id == "alpha"], "omega")
+  expect_match(registry$contemporary_practice[registry$id == "kaiser_guttman"],
+               "parallel_analysis", fixed = TRUE)
+  # Both columns reach the user.
+  expect_true(all(c("introduced", "contemporary_practice") %in% names(nomo_methods())))
+  expect_true(all(c("introduced", "contemporary_practice") %in%
+                    names(nomo_methods(references = TRUE))))
+})
