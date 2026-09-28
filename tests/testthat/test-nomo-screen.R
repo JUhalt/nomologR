@@ -1097,3 +1097,14 @@ test_that("closeout B: screen evidence aliases floor and ceiling concentration t
   ]
   expect_identical(as.character(row$severity[[1L]]), "review")
 })
+
+
+test_that("a constant column reads as constant in the summary (#89)", {
+  d <- nomo_demo_continuous[, 1:4]
+  d$same <- 3
+  out <- nomo_screen(d)
+  printed <- capture.output(print(summary(out)))
+  expect_true(any(grepl("^\\s+same\\s+constant\\s", printed)))
+  # Display only: the returned type keeps its stored value.
+  expect_identical(out$item_summary$item_type[out$item_summary$item == "same"], "binary")
+})

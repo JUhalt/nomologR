@@ -71,7 +71,10 @@ print.summary_nomo_screen <- function(x, ...) {
   ))
 
   review <- x$item_review
-  review$type <- sub("^numeric_", "", review$item_type)
+  # A column with one observed value is stored as "binary" (two or fewer
+  # values), but on screen it is what it is: constant.
+  review$type <- ifelse(review$constant %in% TRUE, "constant",
+                        sub("^numeric_", "", review$item_type))
   review$flag <- nomo_present_flag(review$attention)
   percent <- function(v) ifelse(is.finite(v), sprintf("%.1f%%", 100 * v), "-")
   nomo_present_section("Item review")
