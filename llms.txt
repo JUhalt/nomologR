@@ -1399,6 +1399,8 @@ Theory-specified nomological network
   : Specify directional or negligible theoretical expectations
 - [`nomo_network()`](https://juhalt.github.io/nomologR/reference/nomo_network.md)
   : Evaluate a theory-specified nomological network
+- [`nomo_single_indicator()`](https://juhalt.github.io/nomologR/reference/nomo_single_indicator.md)
+  : The reliability of a composite modeled as a single indicator
 - [`plot(`*`<nomo_network>`*`)`](https://juhalt.github.io/nomologR/reference/plot.nomo_network.md)
   : Plot nomological-network evidence
 

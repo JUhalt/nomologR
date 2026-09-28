@@ -239,7 +239,80 @@ evidence[, c("id", "relation", "evidence_scope")]
 ```
 
 Observed outcomes keep their observed-variable estimand; `nomologR` does
-not silently insert measurement-error corrections.
+not insert measurement-error corrections on its own. When a composite’s
+reliability is known, you can ask for one.
+
+## A composite corrected for its unreliability
+
+A scale mean carries its items’ measurement error, and the relations it
+enters are attenuated by it. A single-indicator latent variable corrects
+this. The composite becomes the one indicator of a latent variable, and
+its error variance is fixed at (1 − reliability) × its variance. The
+idea goes back to Spearman’s (1904) correction for attenuation. The SEM
+textbooks describe it (Hayduk, 1987; Bollen, 1989), and marketing
+research calls it the “total aggregation” model (Bagozzi & Heatherton,
+1994). Savalei (2019) found that it gave the most accurate estimates in
+samples of 30 to 200, provided the reliability is close to its true
+value.
+
+Here the Persistence mean replaces the Persistence factor. Its
+reliability is omega from its own measurement model:
+
+``` r
+
+dat <- nomo_demo_network
+dat$persistence <- rowMeans(dat[c("pe1", "pe2", "pe3", "pe4")])
+rel <- nomo_reliability(nomo_cfa("Persistence =~ pe1 + pe2 + pe3 + pe4", dat))
+h_si <- nomo_hypotheses("Agency -> persistence" = positive(min = .20))
+
+as_observed <- nomo_network("Agency =~ ag1 + ag2 + ag3 + ag4", dat, h_si)
+corrected <- nomo_network(
+  "Agency =~ ag1 + ag2 + ag3 + ag4", dat, h_si,
+  single_indicators = list(persistence = nomo_single_indicator(rel))
+)
+nomo_table(corrected, "single_indicators")
+#> # A tibble: 1 × 9
+#>   variable    indicator      reliability    se coefficient source     n variance
+#>   <chr>       <chr>                <dbl> <dbl> <chr>       <chr>  <int>    <dbl>
+#> 1 persistence persistence_si       0.816    NA omega       this …   800    0.646
+#> # ℹ 1 more variable: error_variance <dbl>
+```
+
+The population path is .45. The observed composite gives 0.41,
+attenuated by its unreliability. The single indicator gives 0.46, close
+to the latent model’s 0.46.
+
+A correction is only as good as the reliability behind it. So the
+network is refitted with the reliability .05 and .10 lower and higher,
+and the log flags any hypothesis whose evidence changes across that
+range:
+
+``` r
+
+nomo_table(corrected, "sensitivity")
+#> # A tibble: 5 × 8
+#>   variable    shift reliability id    estimate ci_lower ci_upper concordance
+#>   <chr>       <dbl>       <dbl> <chr>    <dbl>    <dbl>    <dbl> <chr>      
+#> 1 persistence -0.1        0.716 H1       0.487    0.414    0.560 concordant 
+#> 2 persistence -0.05       0.766 H1       0.471    0.400    0.542 concordant 
+#> 3 persistence  0          0.816 H1       0.456    0.387    0.525 concordant 
+#> 4 persistence  0.05       0.866 H1       0.443    0.376    0.510 concordant 
+#> 5 persistence  0.1        0.916 H1       0.431    0.365    0.496 concordant
+```
+
+Three choices matter:
+
+- **Omega or alpha.** Coefficient alpha understates reliability when
+  loadings differ, which overcorrects, so it is flagged for review.
+- **Which errors the coefficient sees.** Any coefficient corrects only
+  the error its design can detect. Internal consistency leaves transient
+  error in, for example (DeShon, 1998).
+- **Uncertainty in the reliability.** A reliability is itself an
+  estimate. Standard errors that treat it as known are too small
+  (Oberski & Satorra, 2013). Give its standard error, or pass a
+  bootstrapped
+  [`nomo_reliability()`](https://juhalt.github.io/nomologR/reference/nomo_reliability.md)
+  result, and the intervals include that uncertainty.
 
 ## Measurement context
 
@@ -361,7 +434,9 @@ the measurement model from structural relations (Anderson & Gerbing,
 (Messick, 1995), evaluates negligible predictions with equivalence
 procedures (Schuirmann, 1987; Lakens, Scheel, & Isager, 2018), and
 distinguishes prespecified from post-hoc predictions (Nosek et al.,
-2018). Full references are in
+2018). Single-indicator corrections follow Bollen (1989) and Savalei
+(2019). Their standard errors follow Oberski and Satorra (2013). Full
+references are in
 [`?nomo_network`](https://juhalt.github.io/nomologR/reference/nomo_network.md)
 and the [research
 basis](https://juhalt.github.io/nomologR/articles/research-basis.md)

@@ -22,6 +22,7 @@ nomo_network(
   std.lv = TRUE,
   control = NULL,
   equivalence_alpha = 0.05,
+  single_indicators = NULL,
   guidance = nomo_defaults()
 )
 ```
@@ -83,6 +84,15 @@ nomo_network(
   predictions, the equivalence confidence level is
   `1 - 2 * equivalence_alpha`.
 
+- single_indicators:
+
+  Optional composites to model as single-indicator latent variables: a
+  named list, or a named numeric vector, whose names are observed
+  variables that `model` uses and whose values are reliabilities, given
+  as one number or as a
+  [`nomo_single_indicator()`](https://juhalt.github.io/nomologR/reference/nomo_single_indicator.md)
+  record. See **Single indicators**.
+
 - guidance:
 
   Guidance settings returned by
@@ -112,6 +122,15 @@ A `nomo_network` object. The fields to read are:
 
 - `fit`: the `lavaan` fit, and `validation`, the validation fit, when
   given.
+
+- `single_indicators`: one row per composite modeled as a single
+  indicator, with its reliability, the reliability's standard error,
+  coefficient, and source, the composite's variance, and the error
+  variance fixed. Empty when `single_indicators` is not used.
+
+- `single_indicator_sensitivity`: each hypothesis's estimate, interval,
+  and concordance with each composite's reliability shifted by up to
+  .10.
 
 - `converged`, `engine_warnings`, and `decision_log`.
 
@@ -202,12 +221,46 @@ observed, and Skrondal and Laake note that corrected ones may require
 resampling. The result does not extend to nonlinear models. No
 correction is applied automatically.
 
+Where they are composites whose reliability is known,
+`single_indicators` corrects them (see **Single indicators**).
+
+## Single indicators
+
+A composite named in `single_indicators` becomes the one indicator of a
+latent variable with the composite's name, so the model syntax and the
+hypotheses are unchanged. Its error variance is fixed at \\(1 -
+\rho)\sigma^2\\, the reliability's complement times the composite's
+variance in the data being fitted, and the relationships it enters are
+corrected for its unreliability (Bollen, 1989; Savalei, 2019).
+[`nomo_single_indicator()`](https://juhalt.github.io/nomologR/reference/nomo_single_indicator.md)
+explains the method's origin and evidence, and which reliability to use.
+
+The correction is only as good as the reliability, and Savalei (2019)
+found that misestimating it by more than about .05 costs accuracy. So
+each hypothesis is refitted with each composite's reliability .05 and
+.10 lower and higher, one composite at a time, and
+`single_indicator_sensitivity` records the estimates, intervals, and
+concordance at each. The decision log flags any hypothesis whose
+concordance changes across that range.
+
+When a reliability's standard error is supplied, the standard errors,
+intervals, and concordance of the hypotheses add its uncertainty,
+following Oberski and Satorra (2013): the variance of an estimate gains
+its squared rate of change in the reliability times the reliability's
+variance. The rate of change is taken from the refits within .05 of the
+reliability. Without a standard error, the log says that the standard
+errors treat the reliability as known.
+
 ## References
 
 Anderson, J. C., & Gerbing, D. W. (1988). Structural equation modeling
 in practice: A review and recommended two-step approach. *Psychological
 Bulletin, 103*(3), 411-423.
 [doi:10.1037/0033-2909.103.3.411](https://doi.org/10.1037/0033-2909.103.3.411)
+
+Bollen, K. A. (1989). *Structural equations with latent variables*.
+Wiley.
+[doi:10.1002/9781118619179](https://doi.org/10.1002/9781118619179)
 
 Cronbach, L. J., & Meehl, P. E. (1955). Construct validity in
 psychological tests. *Psychological Bulletin, 52*(4), 281-302.
@@ -223,10 +276,19 @@ inferences from persons' responses and performances as scientific
 inquiry into score meaning. *American Psychologist, 50*(9), 741-749.
 [doi:10.1037/0003-066X.50.9.741](https://doi.org/10.1037/0003-066X.50.9.741)
 
+Oberski, D. L., & Satorra, A. (2013). Measurement error models with
+uncertainty about the error variance. *Structural Equation Modeling,
+20*(3), 409-428.
+[doi:10.1080/10705511.2013.797820](https://doi.org/10.1080/10705511.2013.797820)
+
 Rosseel, Y., & Loh, W. W. (2024). A structural after measurement
 approach to structural equation modeling. *Psychological Methods,
 29*(3), 561-588.
 [doi:10.1037/met0000503](https://doi.org/10.1037/met0000503)
+
+Savalei, V. (2019). A comparison of several approaches for controlling
+measurement error in small samples. *Psychological Methods, 24*(3),
+352-370. [doi:10.1037/met0000181](https://doi.org/10.1037/met0000181)
 
 Schuirmann, D. J. (1987). A comparison of the two one-sided tests
 procedure and the power approach for assessing the equivalence of
@@ -295,5 +357,23 @@ nomo_table(net_rep, "replication")
 #> 3 H3    Agency -… positive             0.400               0.371         -0.0292
 #> # ℹ 4 more variables: primary_concordance <chr>, validation_concordance <chr>,
 #> #   replication_status <chr>, interpretation <chr>
+
+# A composite corrected for its unreliability: the Persistence mean, with
+# omega from its own measurement model.
+dat <- nomo_demo_network
+dat$persistence <- rowMeans(dat[c("pe1", "pe2", "pe3", "pe4")])
+rel <- nomo_reliability(nomo_cfa("P =~ pe1 + pe2 + pe3 + pe4", dat))
+net_si <- nomo_network(
+  "Agency =~ ag1 + ag2 + ag3 + ag4",
+  data = dat,
+  hypotheses = nomo_hypotheses("Agency -> persistence" = positive()),
+  single_indicators = list(persistence = nomo_single_indicator(rel))
+)
+nomo_table(net_si, "single_indicators")
+#> # A tibble: 1 × 9
+#>   variable    indicator      reliability    se coefficient source     n variance
+#>   <chr>       <chr>                <dbl> <dbl> <chr>       <chr>  <int>    <dbl>
+#> 1 persistence persistence_si       0.816    NA omega       this …   800    0.646
+#> # ℹ 1 more variable: error_variance <dbl>
 # }
 ```

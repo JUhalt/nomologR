@@ -66,7 +66,11 @@ default.
 - `nomo_hypotheses`: the machine-readable hypothesis table (no `type`).
 
 - `nomo_network`: `"hypotheses"` (default), `"fit"`, `"measurement"`,
-  `"relations"`, `"replication"`, `"decision_log"`.
+  `"relations"`, `"replication"`, `"single_indicators"`,
+  `"sensitivity"`, `"decision_log"`. `"single_indicators"` and
+  `"sensitivity"` describe the composites modeled as single indicators;
+  see
+  [`nomo_network()`](https://juhalt.github.io/nomologR/reference/nomo_network.md).
 
 - `nomo_invariance`: `"fit"` (default), `"categories"`, `"partial"`,
   `"local_strain"`, `"decision_log"`. The local-strain table keeps

@@ -79,6 +79,7 @@ so the theory object itself can define the structural portion of the network.</p
 <span>  std.lv <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  control <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  equivalence_alpha <span class="op">=</span> <span class="fl">0.05</span>,</span>
+<span>  single_indicators <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  guidance <span class="op">=</span> <span class="fu"><a href="nomo_defaults.html">nomo_defaults</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -139,6 +140,14 @@ quantitative negligible predictions, the equivalence confidence level is
 <code>1 - 2 * equivalence_alpha</code>.</p></dd>
 
 
+<dt id="arg-single-indicators">single_indicators<a class="anchor" aria-label="anchor" href="#arg-single-indicators"></a></dt>
+<dd><p>Optional composites to model as single-indicator
+latent variables: a named list, or a named numeric vector, whose names are
+observed variables that <code>model</code> uses and whose values are reliabilities,
+given as one number or as a <code><a href="nomo_single_indicator.html">nomo_single_indicator()</a></code> record. See
+<strong>Single indicators</strong>.</p></dd>
+
+
 <dt id="arg-guidance">guidance<a class="anchor" aria-label="anchor" href="#arg-guidance"></a></dt>
 <dd><p>Guidance settings returned by <code><a href="nomo_defaults.html">nomo_defaults()</a></code>.</p></dd>
 
@@ -159,6 +168,12 @@ qualify the structural evidence.</p></li>
 relations added from the hypotheses.</p></li>
 <li><p><code>fit</code>: the <code>lavaan</code> fit, and <code>validation</code>, the validation fit, when
 given.</p></li>
+<li><p><code>single_indicators</code>: one row per composite modeled as a single
+indicator, with its reliability, the reliability's standard error,
+coefficient, and source, the composite's variance, and the error
+variance fixed. Empty when <code>single_indicators</code> is not used.</p></li>
+<li><p><code>single_indicator_sensitivity</code>: each hypothesis's estimate, interval,
+and concordance with each composite's reliability shifted by up to .10.</p></li>
 <li><p><code>converged</code>, <code>engine_warnings</code>, and <code>decision_log</code>.</p></li>
 </ul><p>Other fields record the call, the settings used, and intermediate engine
 results. They may change between releases and are not part of the stable
@@ -234,12 +249,42 @@ all the factors from one model, does not, and
 standard errors still treat the scores as observed, and Skrondal and Laake
 note that corrected ones may require resampling. The result does not extend
 to nonlinear models. No correction is applied automatically.</p>
+<p>Where they are composites whose reliability is known, <code>single_indicators</code>
+corrects them (see <strong>Single indicators</strong>).</p>
+    </div>
+    <div class="section level2">
+    <h2 id="single-indicators">Single indicators<a class="anchor" aria-label="anchor" href="#single-indicators"></a></h2>
+
+
+<p>A composite named in <code>single_indicators</code> becomes the one indicator of a
+latent variable with the composite's name, so the model syntax and the
+hypotheses are unchanged. Its error variance is fixed at
+\((1 - \rho)\sigma^2\), the reliability's complement times the
+composite's variance in the data being fitted, and the relationships it
+enters are corrected for its unreliability (Bollen, 1989; Savalei, 2019).
+<code><a href="nomo_single_indicator.html">nomo_single_indicator()</a></code> explains the method's origin and evidence, and
+which reliability to use.</p>
+<p>The correction is only as good as the reliability, and Savalei (2019) found
+that misestimating it by more than about .05 costs accuracy. So each
+hypothesis is refitted with each composite's reliability .05 and .10 lower
+and higher, one composite at a time, and <code>single_indicator_sensitivity</code>
+records the estimates, intervals, and concordance at each. The decision log
+flags any hypothesis whose concordance changes across that range.</p>
+<p>When a reliability's standard error is supplied, the standard errors,
+intervals, and concordance of the hypotheses add its uncertainty, following
+Oberski and Satorra (2013): the variance of an estimate gains its squared
+rate of change in the reliability times the reliability's variance. The rate
+of change is taken from the refits within .05 of the reliability. Without a
+standard error, the log says that the standard errors treat the reliability
+as known.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
     <p>Anderson, J. C., &amp; Gerbing, D. W. (1988). Structural equation modeling in
 practice: A review and recommended two-step approach. <em>Psychological
 Bulletin, 103</em>(3), 411-423. <a href="https://doi.org/10.1037/0033-2909.103.3.411" class="external-link">doi:10.1037/0033-2909.103.3.411</a></p>
+<p>Bollen, K. A. (1989). <em>Structural equations with latent variables</em>. Wiley.
+<a href="https://doi.org/10.1002/9781118619179" class="external-link">doi:10.1002/9781118619179</a></p>
 <p>Cronbach, L. J., &amp; Meehl, P. E. (1955). Construct validity in psychological
 tests. <em>Psychological Bulletin, 52</em>(4), 281-302. <a href="https://doi.org/10.1037/h0040957" class="external-link">doi:10.1037/h0040957</a></p>
 <p>Lakens, D., Scheel, A. M., &amp; Isager, P. M. (2018). Equivalence testing for
@@ -249,9 +294,15 @@ Psychological Science, 1</em>(2), 259-269. <a href="https://doi.org/10.1177/2515
 inferences from persons' responses and performances as scientific inquiry
 into score meaning. <em>American Psychologist, 50</em>(9), 741-749.
 <a href="https://doi.org/10.1037/0003-066X.50.9.741" class="external-link">doi:10.1037/0003-066X.50.9.741</a></p>
+<p>Oberski, D. L., &amp; Satorra, A. (2013). Measurement error models with
+uncertainty about the error variance. <em>Structural Equation Modeling, 20</em>(3),
+409-428. <a href="https://doi.org/10.1080/10705511.2013.797820" class="external-link">doi:10.1080/10705511.2013.797820</a></p>
 <p>Rosseel, Y., &amp; Loh, W. W. (2024). A structural after measurement approach
 to structural equation modeling. <em>Psychological Methods, 29</em>(3), 561-588.
 <a href="https://doi.org/10.1037/met0000503" class="external-link">doi:10.1037/met0000503</a></p>
+<p>Savalei, V. (2019). A comparison of several approaches for controlling
+measurement error in small samples. <em>Psychological Methods, 24</em>(3), 352-370.
+<a href="https://doi.org/10.1037/met0000181" class="external-link">doi:10.1037/met0000181</a></p>
 <p>Schuirmann, D. J. (1987). A comparison of the two one-sided tests procedure
 and the power approach for assessing the equivalence of average
 bioavailability. <em>Journal of Pharmacokinetics and Biopharmaceutics, 15</em>(6),
@@ -316,6 +367,24 @@ bioavailability. <em>Journal of Pharmacokinetics and Biopharmaceutics, 15</em>(6
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> H3    Agency -… positive             0.400               0.371         -<span style="color: #BB0000;">0.029</span><span style="color: #BB0000; text-decoration: underline;">2</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 4 more variables: primary_concordance &lt;chr&gt;, validation_concordance &lt;chr&gt;,</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   replication_status &lt;chr&gt;, interpretation &lt;chr&gt;</span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># A composite corrected for its unreliability: the Persistence mean, with</span></span></span>
+<span class="r-in"><span><span class="co"># omega from its own measurement model.</span></span></span>
+<span class="r-in"><span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="va">nomo_demo_network</span></span></span>
+<span class="r-in"><span><span class="va">dat</span><span class="op">$</span><span class="va">persistence</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">rowMeans</a></span><span class="op">(</span><span class="va">dat</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"pe1"</span>, <span class="st">"pe2"</span>, <span class="st">"pe3"</span>, <span class="st">"pe4"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">rel</span> <span class="op">&lt;-</span> <span class="fu"><a href="nomo_reliability.html">nomo_reliability</a></span><span class="op">(</span><span class="fu"><a href="nomo_cfa.html">nomo_cfa</a></span><span class="op">(</span><span class="st">"P =~ pe1 + pe2 + pe3 + pe4"</span>, <span class="va">dat</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">net_si</span> <span class="op">&lt;-</span> <span class="fu">nomo_network</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="st">"Agency =~ ag1 + ag2 + ag3 + ag4"</span>,</span></span>
+<span class="r-in"><span>  data <span class="op">=</span> <span class="va">dat</span>,</span></span>
+<span class="r-in"><span>  hypotheses <span class="op">=</span> <span class="fu"><a href="nomo_hypotheses.html">nomo_hypotheses</a></span><span class="op">(</span><span class="st">"Agency -&gt; persistence"</span> <span class="op">=</span> <span class="fu"><a href="nomo_expectations.html">positive</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  single_indicators <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>persistence <span class="op">=</span> <span class="fu"><a href="nomo_single_indicator.html">nomo_single_indicator</a></span><span class="op">(</span><span class="va">rel</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">net_si</span>, <span class="st">"single_indicators"</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 9</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   variable    indicator      reliability    se coefficient source     n variance</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> persistence persistence_si       0.816    <span style="color: #BB0000;">NA</span> omega       this …   800    0.646</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 1 more variable: error_variance &lt;dbl&gt;</span></span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
