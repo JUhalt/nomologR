@@ -261,6 +261,38 @@ level is not silently constrained again later.</p>
 search until a model meets a preferred cutoff.</p>
 </div>
 <div class="section level2">
+<h2 id="comparing-the-groups-known-groups-evidence">Comparing the groups: known-groups evidence<a class="anchor" aria-label="anchor" href="#comparing-the-groups-known-groups-evidence"></a>
+</h2>
+<p>Once the intercepts are invariant, fully or partially, the groups can
+be compared on the construct itself (Byrne, Shavelson, &amp; Muthén,
+1989). A difference that theory predicts between groups that differ on
+the construct is known-groups evidence. At each level that holds
+intercepts equal, <code><a href="../reference/nomo_invariance.html">nomo_invariance()</a></code> reports each group’s
+latent means relative to the reference group. The reference group’s mean
+is fixed at 0 and its variance at 1, so each mean is a difference in the
+reference group’s latent standard deviations (Hancock, 2001).</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">full_means</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">inv</span>, <span class="st">"latent_means"</span><span class="op">)</span></span>
+<span><span class="va">partial_means</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">inv_partial</span>, <span class="st">"latent_means"</span><span class="op">)</span></span>
+<span><span class="va">full_means</span><span class="op">[</span><span class="va">full_means</span><span class="op">$</span><span class="va">level</span> <span class="op">==</span> <span class="st">"scalar"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"group"</span>, <span class="st">"factor"</span>, <span class="st">"estimate"</span>, <span class="st">"ci_lower"</span>, <span class="st">"ci_upper"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 5</span></span></span>
+<span><span class="co">#&gt;   group factor estimate ci_lower ci_upper</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> paper Agency    0.444    0.286    0.603</span></span>
+<span><span class="va">partial_means</span><span class="op">[</span><span class="va">partial_means</span><span class="op">$</span><span class="va">level</span> <span class="op">==</span> <span class="st">"scalar"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"group"</span>, <span class="st">"factor"</span>, <span class="st">"estimate"</span>, <span class="st">"ci_lower"</span>, <span class="st">"ci_upper"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 5</span></span></span>
+<span><span class="co">#&gt;   group factor estimate ci_lower ci_upper</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> paper Agency    0.329    0.171    0.487</span></span></code></pre></div>
+<p>The population difference is .25 SD. Holding the biased
+<code>ag3</code> intercept equal inflates it to 0.44, because the model
+reads the item’s extra endorsement on paper as more Agency. With that
+intercept released, the difference is 0.33, 95% CI [0.17, 0.49]. So
+known-groups evidence is only as good as the invariance beneath it: a
+group difference computed before the intercepts are examined can be item
+bias.</p>
+</div>
+<div class="section level2">
 <h2 id="ordered-indicators">Ordered indicators<a class="anchor" aria-label="anchor" href="#ordered-indicators"></a>
 </h2>
 <p>Ordered indicators require identification-aware sequences rather than
@@ -279,7 +311,7 @@ intercepts together.</p>
 <code>nomo_demo_ordinal</code>. The two “forms” are assigned by
 alternating rows purely to demonstrate the ordered workflow; no
 non-invariance was built into these groups.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ordinal_items</span> <span class="op">&lt;-</span> <span class="va">nomo_demo_ordinal</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"a1"</span>, <span class="st">"a2"</span>, <span class="st">"a3"</span>, <span class="st">"a4"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="va">ordinal_items</span><span class="op">$</span><span class="va">form</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"form_1"</span>, <span class="st">"form_2"</span><span class="op">)</span>, length.out <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">ordinal_items</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
@@ -313,7 +345,7 @@ non-invariance was built into these groups.</p>
 <div class="section level2">
 <h2 id="tables-and-figures">Tables and figures<a class="anchor" aria-label="anchor" href="#tables-and-figures"></a>
 </h2>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">inv</span>, type <span class="op">=</span> <span class="st">"fit"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="measurement-invariance_files/figure-html/tables-1.png" class="r-plt" alt="" width="672"></p>
 <p><code><a href="../reference/nomo_table.html">nomo_table()</a></code> returns ordinary tibbles
@@ -335,8 +367,9 @@ context (Chen, 2007; Putnick &amp; Bornstein, 2016), which is why
 <code>nomologR</code> reports several indices without a universal
 cutoff. Ordered-indicator sequences follow Wu and Estabrook (2016) as
 implemented in <code>semTools</code> (see also Svetina et al., 2020).
-Partial invariance follows Byrne, Shavelson, and Muthén (1989). Full
-references are in <code><a href="../reference/nomo_invariance.html">?nomo_invariance</a></code> and the <a href="research-basis.html">research basis</a> article.</p>
+Partial invariance follows Byrne, Shavelson, and Muthén (1989), and
+latent mean comparisons follow Hancock (2001). Full references are in
+<code><a href="../reference/nomo_invariance.html">?nomo_invariance</a></code> and the <a href="research-basis.html">research basis</a> article.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

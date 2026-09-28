@@ -104,7 +104,7 @@ cites.
 ``` r
 # The whole registry
 nomo_methods()
-#> # A tibble: 93 × 12
+#> # A tibble: 94 × 12
 #>    id      stage method lineage role  estimand assumptions implemented_by engine
 #>    <chr>   <chr> <chr>  <chr>   <chr> <chr>    <chr>       <chr>          <chr> 
 #>  1 missin… scre… Item … contem… supp… Proport… Descriptiv… nomo_screen()  nomol…
@@ -117,7 +117,7 @@ nomo_methods()
 #>  8 mahala… scre… Mahal… contem… supp… Multiva… Unaffected… nomo_screen()  nomol…
 #>  9 even_o… scre… Even-… contem… supp… Within-… Needs at l… nomo_screen()  nomol…
 #> 10 psycho… scre… Psych… contem… supp… Within-… Needs at l… nomo_screen()  nomol…
-#> # ℹ 83 more rows
+#> # ℹ 84 more rows
 #> # ℹ 3 more variables: introduced <int>, contemporary_practice <chr>,
 #> #   references <chr>
 

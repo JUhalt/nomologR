@@ -2,6 +2,21 @@
 
 ## nomologR (development version)
 
+- [`nomo_invariance()`](https://juhalt.github.io/nomologR/reference/nomo_invariance.md)
+  reports latent means, which are known-groups evidence in
+  structured-means form
+  ([\#129](https://github.com/JUhalt/nomologR/issues/129)). At each
+  level that holds intercepts equal, `latent_means` gives each group’s
+  latent means relative to the reference group. Under the default
+  `ID.fac = "std.lv"` they are in the reference group’s latent standard
+  deviations (Hancock, 2001), with intervals. The summary shows them,
+  `nomo_table(x, "latent_means")` returns them, and the log says they
+  are comparable only with invariant intercepts, fully or partially
+  (Byrne, Shavelson, & Muthén, 1989). On `nomo_demo_network`, holding
+  the biased `ag3` intercept equal inflates the Agency difference
+  between modes to .44 SD. Releasing it gives .33 \[.17, .49\], which
+  covers the population’s .25. The measurement-invariance article walks
+  through this.
 - New
   [`nomo_retest()`](https://juhalt.github.io/nomologR/reference/nomo_retest.md)
   for test-retest reliability

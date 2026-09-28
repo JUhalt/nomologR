@@ -36,7 +36,7 @@ computational engine, and references.
 
 methods <- nomo_methods()
 nrow(methods)
-#> [1] 93
+#> [1] 94
 table(methods$stage, methods$lineage)
 #>              
 #>               contemporary emerging historical
@@ -44,7 +44,7 @@ table(methods$stage, methods$lineage)
 #>   compare                6        0          0
 #>   efa                    3        0          2
 #>   factors                7        1          4
-#>   invariance             6        0          0
+#>   invariance             7        0          0
 #>   network                5        0          1
 #>   reliability           12        0          2
 #>   scores                 4        0          3
@@ -130,7 +130,7 @@ question it answered. The tables below are drawn from
 so they cannot drift from what the package computes.
 
 A method is dated only from the publication that introduced it, and only
-when the registry cites that publication. 47 of the 93 methods are not
+when the registry cites that publication. 48 of the 94 methods are not
 yet dated, because the registry cites a later review or critique instead
 of the original. Adding those originating references is ongoing work.
 

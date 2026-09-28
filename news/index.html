@@ -53,7 +53,9 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="nomologr-development-version">nomologR (development version)<a class="anchor" aria-label="anchor" href="#nomologr-development-version"></a></h2>
-<ul><li>New <code><a href="../reference/nomo_retest.html">nomo_retest()</a></code> for test-retest reliability (<a href="https://github.com/JUhalt/nomologR/issues/129" class="external-link">#129</a>).
+<ul><li>
+<code><a href="../reference/nomo_invariance.html">nomo_invariance()</a></code> reports latent means, which are known-groups evidence in structured-means form (<a href="https://github.com/JUhalt/nomologR/issues/129" class="external-link">#129</a>). At each level that holds intercepts equal, <code>latent_means</code> gives each group’s latent means relative to the reference group. Under the default <code>ID.fac = "std.lv"</code> they are in the reference group’s latent standard deviations (Hancock, 2001), with intervals. The summary shows them, <code>nomo_table(x, "latent_means")</code> returns them, and the log says they are comparable only with invariant intercepts, fully or partially (Byrne, Shavelson, &amp; Muthén, 1989). On <code>nomo_demo_network</code>, holding the biased <code>ag3</code> intercept equal inflates the Agency difference between modes to .44 SD. Releasing it gives .33 [.17, .49], which covers the population’s .25. The measurement-invariance article walks through this.</li>
+<li>New <code><a href="../reference/nomo_retest.html">nomo_retest()</a></code> for test-retest reliability (<a href="https://github.com/JUhalt/nomologR/issues/129" class="external-link">#129</a>).
 <ul><li>
 <strong>The intraclass correlations.</strong> For scores on two or more occasions, it estimates ICC(A,1), the two-way mixed-effects, absolute-agreement, single-measurement form Koo and Li (2016) recommend for test-retest data, with its 95% interval. Beside it are the consistency form ICC(C,1) (McGraw &amp; Wong, 1996) and the mean change between occasions. A systematic shift is flagged, because ICC(A,1) counts it as disagreement.</li>
 <li>

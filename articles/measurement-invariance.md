@@ -204,6 +204,42 @@ not silently constrained again later.
 `nomologR` records what was released and why. It does not search until a
 model meets a preferred cutoff.
 
+## Comparing the groups: known-groups evidence
+
+Once the intercepts are invariant, fully or partially, the groups can be
+compared on the construct itself (Byrne, Shavelson, & Muthén, 1989). A
+difference that theory predicts between groups that differ on the
+construct is known-groups evidence. At each level that holds intercepts
+equal,
+[`nomo_invariance()`](https://juhalt.github.io/nomologR/reference/nomo_invariance.md)
+reports each group’s latent means relative to the reference group. The
+reference group’s mean is fixed at 0 and its variance at 1, so each mean
+is a difference in the reference group’s latent standard deviations
+(Hancock, 2001).
+
+``` r
+
+full_means <- nomo_table(inv, "latent_means")
+partial_means <- nomo_table(inv_partial, "latent_means")
+full_means[full_means$level == "scalar", c("group", "factor", "estimate", "ci_lower", "ci_upper")]
+#> # A tibble: 1 × 5
+#>   group factor estimate ci_lower ci_upper
+#>   <chr> <chr>     <dbl>    <dbl>    <dbl>
+#> 1 paper Agency    0.444    0.286    0.603
+partial_means[partial_means$level == "scalar", c("group", "factor", "estimate", "ci_lower", "ci_upper")]
+#> # A tibble: 1 × 5
+#>   group factor estimate ci_lower ci_upper
+#>   <chr> <chr>     <dbl>    <dbl>    <dbl>
+#> 1 paper Agency    0.329    0.171    0.487
+```
+
+The population difference is .25 SD. Holding the biased `ag3` intercept
+equal inflates it to 0.44, because the model reads the item’s extra
+endorsement on paper as more Agency. With that intercept released, the
+difference is 0.33, 95% CI \[0.17, 0.49\]. So known-groups evidence is
+only as good as the invariance beneath it: a group difference computed
+before the intercepts are examined can be item bias.
+
 ## Ordered indicators
 
 Ordered indicators require identification-aware sequences rather than
@@ -293,7 +329,8 @@ context (Chen, 2007; Putnick & Bornstein, 2016), which is why `nomologR`
 reports several indices without a universal cutoff. Ordered-indicator
 sequences follow Wu and Estabrook (2016) as implemented in `semTools`
 (see also Svetina et al., 2020). Partial invariance follows Byrne,
-Shavelson, and Muthén (1989). Full references are in
+Shavelson, and Muthén (1989), and latent mean comparisons follow Hancock
+(2001). Full references are in
 [`?nomo_invariance`](https://juhalt.github.io/nomologR/reference/nomo_invariance.md)
 and the [research
 basis](https://juhalt.github.io/nomologR/articles/research-basis.md)

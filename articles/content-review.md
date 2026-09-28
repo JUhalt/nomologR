@@ -346,6 +346,12 @@ summary(inv)
 #>   metric      +0.001        -0.003       +0.007            7.58   8    .475
 #>   scalar      -0.031        +0.010       +0.008           31.92   8  < .001
 #> 
+#> Latent means relative to A (its latent SD)
+#>   Level   Group  Factor  Difference  95% CI            p
+#>   scalar  B      EF           -0.14  [-0.36, 0.08]  .218
+#>   scalar  B      TF            0.22  [-0.00, 0.44]  .054
+#>   Comparable only with invariant intercepts, full or partial.
+#> 
 #> Largest equality-constraint score diagnostics (diagnostic only)
 #>   Level   Constraint                    Score  df       p
 #>   scalar  Intercept: TF6 (A vs. B)      24.30   1  < .001
