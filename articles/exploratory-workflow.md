@@ -157,7 +157,7 @@ careful
 #> Careless-responding flags: 75 cases | long-string 15 | antonym 27 | synonym 36
 #>   Cases are flagged, never removed. Indices disagree by design; see the
 #>   decision log.
-#> Decision log: 26 info, 16 review, 0 concern
+#> Decision log: 27 info, 16 review, 0 concern
 #> No rows or items were removed or modified.
 ```
 

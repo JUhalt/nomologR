@@ -112,8 +112,10 @@ insufficient-effort responding are added. See <strong>Careless responding</stron
 scales. Needed for even-odd consistency and for the within-scale versions
 of long-string and inter-item standard deviation. With two or more scales,
 each item's corrected item-rest correlation is also computed against the
-rest of its own scale, and the item review uses that value. A
-<code>contentvalidR</code> handoff supplies its scales here.</p></dd>
+rest of its own scale, and the item review uses that value. Negative
+inter-item correlations are then reviewed only within a scale, since items
+of different constructs need not correlate positively. A <code>contentvalidR</code>
+handoff supplies its scales here.</p></dd>
 
 
 <dt id="arg-reverse">reverse<a class="anchor" aria-label="anchor" href="#arg-reverse"></a></dt>
@@ -145,8 +147,9 @@ near-zero-variance indicators.</p></li>
 <li><p><code>relationship_summary</code>: each item's corrected item-rest correlation and
 summary of its inter-item correlations. With two or more declared
 scales, <code>scale</code>, <code>scale_item_rest_r</code>, and <code>scale_item_rest_n</code> give each
-item's scale and its item-rest correlation within that scale; otherwise
-they are <code>NA</code>.</p></li>
+item's scale and its item-rest correlation within that scale, and
+<code>scale_negative_interitem_n</code> counts its negative correlations with items
+of the same scale; otherwise they are <code>NA</code>.</p></li>
 <li><p><code>inter_item_correlations</code>: one row per item pair.</p></li>
 <li><p><code>decision_log</code>: the evidence and its explanations (see <code><a href="nomo_table.html">nomo_table()</a></code>).</p></li>
 <li><p><code>effort</code>, <code>effort_pairs</code>, and <code>effort_settings</code>: the careless-responding

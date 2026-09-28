@@ -2,6 +2,22 @@
 
 ## nomologR (development version)
 
+- With two or more declared scales, the item audit reviews negative
+  inter-item correlations only within a scale
+  ([\#113](https://github.com/JUhalt/nomologR/issues/113)), as it does
+  item-rest correlations. Two items of one scale should correlate
+  positively, so a negative pair there is a keying or wording clue.
+  Items of different constructs need not correlate at all, and a
+  correlation near zero is negative about half the time. In
+  `nomo_demo_network`, social desirability is uncorrelated with the
+  other two constructs by design, and its near-zero negative
+  correlations with their items had flagged all eight Agency and
+  Persistence items. `relationship_summary` gains
+  `scale_negative_interitem_n`. `negative_interitem_n` and
+  `inter_item_correlations` are unchanged. Negative correlations between
+  scales are logged as information (`negative_pairs_between_scales`).
+  The log entry for negative pairs now agrees in number: “1 estimable
+  inter-item correlation is negative”.
 - [`nomo_apa_table()`](https://juhalt.github.io/nomologR/reference/nomo_apa_table.md)
   formats a
   [`nomo_validity()`](https://juhalt.github.io/nomologR/reference/nomo_validity.md)
@@ -70,10 +86,11 @@
   agree, compare alpha with omega, handle ordered categories, and tell a
   structural path from a correlation (including why a path that is not
   significant does not show that it is negligible). They also find the
-  non-invariant intercept and see where content review and the empirical
-  screen disagree. Each answer is stated from the population model, not
-  from one run. The article also suggests how to use teaching and
-  research modes, decision logs, reports, and
+  non-invariant intercept, see where content review and the empirical
+  screen disagree, and see why an item-total correlation depends on
+  which total it is computed against. Each answer is stated from the
+  population model, not from one run. The article also suggests how to
+  use teaching and research modes, decision logs, reports, and
   [`nomo_methods()`](https://juhalt.github.io/nomologR/reference/nomo_methods.md)
   in a course.
 - [`nomo_methods()`](https://juhalt.github.io/nomologR/reference/nomo_methods.md)

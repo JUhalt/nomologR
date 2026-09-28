@@ -286,6 +286,45 @@ including <code>TF4</code>, which loads on both facets, and
 <code>TF6</code>, which differs by cohort.</p>
 </details>
 </div>
+<div class="section level2">
+<h2 id="an-item-total-correlation-against-which-total">8. An item-total correlation against which total?<a class="anchor" aria-label="anchor" href="#an-item-total-correlation-against-which-total"></a>
+</h2>
+<p><code>nomo_demo_network</code> measures three constructs. Screen all
+eleven items as one pool, then again with the three scales declared.
+Which items are flagged each time, and why?</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">scales</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>Agency <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"ag"</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">)</span>, Persistence <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"pe"</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">)</span>,</span>
+<span>               SocialDesirability <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"sd"</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">3</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">items</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="va">scales</span>, use.names <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="fu"><a href="../reference/nomo_screen.html">nomo_screen</a></span><span class="op">(</span><span class="va">nomo_demo_network</span>, items <span class="op">=</span> <span class="va">items</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="fu"><a href="../reference/nomo_screen.html">nomo_screen</a></span><span class="op">(</span><span class="va">nomo_demo_network</span>, items <span class="op">=</span> <span class="va">items</span>, scales <span class="op">=</span> <span class="va">scales</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<details><summary>
+What the data were built to show
+</summary><p>In the population, social desirability is uncorrelated with Agency,
+and so with Persistence too, which depends on Agency. Screened as one
+pool, every item is flagged:</p>
+<ul>
+<li>The three social-desirability items have low item-rest correlations.
+Each is correlated with the sum of the other ten items, and eight of
+those ten measure something unrelated to it.</li>
+<li>The Agency and Persistence items have negative inter-item
+correlations, all of them with social-desirability items. Correlations
+around zero are negative about half the time.</li>
+</ul>
+<p>With the scales declared, each item is correlated with the rest of
+its own scale, the total it is scored on (Nunnally &amp; Bernstein,
+1994; Clark &amp; Watson, 2019), and negative correlations are reviewed
+only within a scale. Nothing is flagged. The decision log still reports
+the negative correlations between scales, as information: between
+constructs they are evidence about how the constructs relate, not about
+keying.</p>
+<p>The pooled value is not wrong. It answers a different question:
+whether the item belongs to a single pool. That question is useful
+before any scales are defined, although factor analysis answers it
+better. Ask students which question their own item-total correlations
+answer.</p>
+</details>
+</div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
 </div>

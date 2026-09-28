@@ -52,7 +52,9 @@ nomo_screen(
   long-string and inter-item standard deviation. With two or more
   scales, each item's corrected item-rest correlation is also computed
   against the rest of its own scale, and the item review uses that
-  value. A `contentvalidR` handoff supplies its scales here.
+  value. Negative inter-item correlations are then reviewed only within
+  a scale, since items of different constructs need not correlate
+  positively. A `contentvalidR` handoff supplies its scales here.
 
 - reverse:
 
@@ -89,8 +91,9 @@ An object of class `nomo_screen`. The fields to read are:
 - `relationship_summary`: each item's corrected item-rest correlation
   and summary of its inter-item correlations. With two or more declared
   scales, `scale`, `scale_item_rest_r`, and `scale_item_rest_n` give
-  each item's scale and its item-rest correlation within that scale;
-  otherwise they are `NA`.
+  each item's scale and its item-rest correlation within that scale, and
+  `scale_negative_interitem_n` counts its negative correlations with
+  items of the same scale; otherwise they are `NA`.
 
 - `inter_item_correlations`: one row per item pair.
 
