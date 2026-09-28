@@ -419,6 +419,9 @@ nomo_methods_used.nomo_validity <- function(x, ...) {
 #' @export
 nomo_methods_used.nomo_invariance <- function(x, ...) {
   used <- c("multigroup_cfa")
+  if (is.data.frame(x[["latent_means"]]) && nrow(x[["latent_means"]])) {
+    used <- c(used, "latent_mean_comparison")
+  }
 
   ordered_used <- length(x$ordered) > 0L
   if (ordered_used) {

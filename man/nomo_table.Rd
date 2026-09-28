@@ -53,7 +53,7 @@ see \code{\link[=nomo_retest]{nomo_retest()}}.
 \code{"loadings"}, \code{"reliability"}, \code{"correlations"}, \code{"decision_log"}; see
 \code{\link[=nomo_method_variance]{nomo_method_variance()}}.
 \item \code{nomo_invariance}: \code{"fit"} (default), \code{"categories"}, \code{"partial"},
-\code{"local_strain"}, \code{"decision_log"}. The local-strain table keeps lavaan's
+\code{"local_strain"}, \code{"latent_means"}, \code{"decision_log"}. The local-strain table keeps lavaan's
 internal \code{constraint} label and adds a human-readable
 \code{constraint_display} column (for example, \verb{Intercept: ag3 (online vs. paper)}).
 \item \code{nomo_compare}: \code{"comparisons"} (default), \code{"models"}, \code{"loadings"},

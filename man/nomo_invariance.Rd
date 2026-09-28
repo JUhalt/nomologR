@@ -63,6 +63,9 @@ level before, the likelihood-ratio test, and any warning or error.
 \item \code{local_strain}: score diagnostics for each equality constraint, which
 localize strain without releasing anything.
 \item \code{partial}: the researcher-specified releases, when given.
+\item \code{latent_means}: at each level that holds intercepts equal, each group's
+latent means relative to the reference group, in the reference group's
+latent standard deviations, with their intervals. See \strong{Latent means}.
 \item \code{fits}: the fitted \code{lavaan} model at each level.
 \item \code{syntax_text}: the model syntax at each level.
 \item \code{engine_warnings}: warnings \code{lavaan} raised at each level.
@@ -98,6 +101,22 @@ When \code{localize = TRUE}, univariate score tests for equality constraints are
 retained as diagnostic evidence. They are explicitly not used to modify the
 fitted model.
 }
+\section{Latent means}{
+
+Once intercepts are invariant, fully or with researcher-specified partial
+releases, groups can be compared on the construct itself (Byrne, Shavelson,
+& Muthén, 1989). This is the structured-means form of known-groups evidence:
+a difference theory predicts between groups that differ on the construct.
+At each level that holds intercepts equal, \code{latent_means} gives each group's
+latent means relative to the reference group, the first group, which the
+default \code{ID.fac = "std.lv"} fixes at a mean of 0 and a variance of 1. Each
+mean is then a difference in the reference group's latent standard
+deviations, the effect size Hancock (2001) describes. Under another
+identification the table is empty. Where the intercepts are not invariant,
+the means are not comparable until the non-invariant intercepts are
+released with \code{\link[=nomo_partial]{nomo_partial()}} (Vandenberg & Lance, 2000).
+}
+
 \examples{
 inv <- nomo_invariance(
   "Agency =~ ag1 + ag2 + ag3 + ag4",
@@ -132,6 +151,11 @@ Historical foundations:
 
 Jöreskog, K. G. (1971). Simultaneous factor analysis in several
 populations. \emph{Psychometrika, 36}(4), 409-426. \doi{10.1007/BF02291366}
+
+Hancock, G. R. (2001). Effect size, power, and sample size determination
+for structured means modeling and MIMIC approaches to between-groups
+hypothesis testing of means on a single latent construct. \emph{Psychometrika,
+66}(3), 373-388. \doi{10.1007/BF02294440}
 
 Meredith, W. (1993). Measurement invariance, factor analysis and factorial
 invariance. \emph{Psychometrika, 58}(4), 525-543. \doi{10.1007/BF02294825}

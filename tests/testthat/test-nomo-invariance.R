@@ -1776,3 +1776,64 @@ test_that("closeout C: invariance fit failures are retained as evidence instead 
   )
   expect_length(out$fit_measures$configural, 0L)
 })
+
+
+test_that("latent means compare the groups once intercepts are invariant (#129)", {
+  skip_on_cran()
+  model <- "Agency =~ ag1 + ag2 + ag3 + ag4"
+  full <- nomo_invariance(model, data = nomo_demo_network, group = "group",
+                          levels = c("configural", "metric", "scalar"))
+  release <- nomo_partial(level = "scalar", syntax = "ag3 ~ 1",
+                          rationale = "The ag3 intercept differs by mode.")
+  partial <- nomo_invariance(model, data = nomo_demo_network, group = "group",
+                             levels = c("configural", "metric", "scalar"),
+                             partial = release)
+
+  means <- nomo_table(partial, "latent_means")
+  expect_identical(means$level, "scalar")
+  expect_identical(means$group, "paper")
+  expect_identical(means$reference_group, "online")
+  expect_identical(means$factor, "Agency")
+  # In the population, Agency is .25 SD higher on paper, and the ag3 intercept
+  # .50 higher. Held equal, that intercept inflates the latent difference;
+  # released, the interval covers the population value.
+  expect_gt(full$latent_means$estimate, means$estimate)
+  expect_lt(means$ci_lower, .25)
+  expect_gt(means$ci_upper, .25)
+  expect_equal(means$ci_upper - means$ci_lower, 2 * stats::qnorm(.975) * means$se,
+               tolerance = 1e-6)
+
+  log <- partial$decision_log[partial$decision_log$metric == "latent_means", ]
+  expect_identical(log$severity, "info")
+  expect_match(log$observation, "Agency in paper 0.", fixed = TRUE)
+  expect_match(log$recommendation, "known-groups evidence", fixed = TRUE)
+  expect_true("latent_mean_comparison" %in% nomo_methods(partial)$id)
+
+  local_reproducible_output(width = 80)
+  printed <- capture.output(print(summary(partial)))
+  expect_match(printed, "Latent means relative to online (its latent SD)",
+               fixed = TRUE, all = FALSE)
+})
+
+
+test_that("latent means need intercepts held equal and std.lv identification", {
+  skip_on_cran()
+  model <- "Agency =~ ag1 + ag2 + ag3 + ag4"
+  metric <- nomo_invariance(model, data = nomo_demo_network, group = "group",
+                            levels = c("configural", "metric"))
+  expect_identical(nrow(metric$latent_means), 0L)
+  expect_false("latent_means" %in% metric$decision_log$metric)
+  expect_false("latent_mean_comparison" %in% nomo_methods(metric)$id)
+
+  marker <- nomo_invariance(model, data = nomo_demo_network, group = "group",
+                            levels = c("configural", "metric", "scalar"),
+                            ID.fac = "UL")
+  expect_identical(nrow(marker$latent_means), 0L)
+
+  # Results saved before latent means still summarize and tabulate.
+  old <- metric
+  old$latent_means <- NULL
+  local_reproducible_output(width = 80)
+  expect_no_warning(capture.output(print(summary(old))))
+  expect_null(nomo_table(old, "latent_means"))
+})

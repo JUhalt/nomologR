@@ -692,6 +692,11 @@
         metric      +0.000        +0.000       +0.026            5.38   3    .146
         scalar      -0.046        +0.121       +0.037           63.23   3  < .001
       
+      Latent means relative to online (its latent SD)
+        Level   Group  Factor  Difference  95% CI             p
+        scalar  paper  Agency        0.44  [0.29, 0.60]  < .001
+        Comparable only with invariant intercepts, full or partial.
+      
       Largest equality-constraint score diagnostics (diagnostic only)
         Level   Constraint                                 Score  df       p
         scalar  Intercept: ag3 (online vs. paper)          61.12   1  < .001
