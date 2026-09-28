@@ -833,8 +833,8 @@ nomo_report_methods <- function(x) {
 
   nomo_report_flatten_table(
     methods[, c(
-      "stage", "method", "lineage", "role", "estimand", "implemented_by",
-      "engine", "references"
+      "stage", "method", "lineage", "introduced", "role", "estimand",
+      "implemented_by", "engine", "references"
     ), drop = FALSE]
   )
 }

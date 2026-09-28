@@ -579,9 +579,12 @@ test_that("the report methods table describes only what the run used", {
   tbl <- nomo_report_methods(run)
 
   expect_gt(nrow(tbl), 0L)
-  expect_true(all(c("stage", "method", "lineage", "role") %in% names(tbl)))
+  expect_true(all(c("stage", "method", "lineage", "introduced", "role") %in% names(tbl)))
   expect_false(any(grepl("Hull method", tbl$method)))
   expect_true(any(grepl("parallel analysis", tbl$method, ignore.case = TRUE)))
+  # The report carries the historical record: when each method was introduced.
+  expect_identical(tbl$introduced[grepl("parallel analysis", tbl$method, ignore.case = TRUE)][[1L]],
+                   1965L)
 })
 
 
