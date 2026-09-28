@@ -16,8 +16,17 @@
 #' @param seed Integer seed used to make the split reproducible.
 #' @param guidance Guidance settings from [nomo_defaults()].
 #'
-#' @return A `nomo_split` object containing `calibration`, `validation`, a
-#'   row-level `assignment` table, split sizes, the seed, and a decision log.
+#' @return A `nomo_split` object. The fields to read are:
+#'
+#'   * `calibration` and `validation`: the two samples.
+#'   * `assignment`: which sample each row went to.
+#'   * `n_total`, `n_calibration`, `n_validation`, and
+#'     `validation_prop_realized`.
+#'   * `seed` and `decision_log`.
+#'
+#'   Other fields record the call, the settings used, and intermediate engine
+#'   results. They may change between releases and are not part of the stable
+#'   interface (see `?nomologR`).
 #'
 #' @references
 #' Fokkema, M., & Greiff, S. (2017). How performing PCA and CFA on the same

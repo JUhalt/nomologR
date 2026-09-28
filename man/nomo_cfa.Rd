@@ -50,10 +50,29 @@ as quarantined diagnostics. They never trigger automatic respecification.}
 \item{guidance}{Guidance settings from \code{\link[=nomo_defaults]{nomo_defaults()}}.}
 }
 \value{
-A \code{nomo_cfa} object containing the unchanged \code{lavaan} fit plus
-standardized loadings, factor correlations, fit evidence, residual
-diagnostics, Heywood checks, modification indices, engine warnings, and a
-decision log.
+A \code{nomo_cfa} object. The fields to read are:
+\itemize{
+\item \code{fit}: the unchanged \code{lavaan} fit, for anything else \code{lavaan} reports.
+\item \code{model}: the model syntax fitted.
+\item \code{converged}, \code{estimator}, \code{data_n}, \code{n_used}, and \code{sample_summary}.
+\item \code{fit_evidence}: global fit indices with their teaching references.
+\item \code{standardized_loadings}: one row per loading, with its interval, flag,
+and explanation.
+\item \code{factor_correlations}: latent correlations with intervals.
+\item \code{heywood}: improper-solution signals, if any.
+\item \code{parameter_estimates} and \code{standardized_solution}: \code{lavaan}'s parameter
+tables, as tibbles.
+\item \code{residual_matrix} and \code{residual_pairs}: residual correlations, the pairs
+largest first.
+\item \code{modification_indices} and \code{top_modification_indices}: diagnostics
+only; nothing is freed.
+\item \code{engine_warnings}: warnings \code{lavaan} raised.
+\item \code{decision_log}.
+}
+
+Other fields record the call, the settings used, and intermediate engine
+results. They may change between releases and are not part of the stable
+interface (see \code{?nomologR}).
 }
 \description{
 \code{nomo_cfa()} fits a researcher-specified confirmatory factor model with

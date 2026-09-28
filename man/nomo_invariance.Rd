@@ -55,9 +55,23 @@ the default for ordered indicators.}
 \item{guidance}{Guidance settings from \code{nomo_defaults()}.}
 }
 \value{
-A \code{nomo_invariance} object containing generated syntax objects/text,
-fitted models, fit/change evidence, category information, partial-invariance
-provenance, score diagnostics, and a decision log.
+A \code{nomo_invariance} object. The fields to read are:
+\itemize{
+\item \code{groups}, \code{requested_levels}, and \code{completed_levels}.
+\item \code{fit_evidence}: one row per level, with its fit, its change from the
+level before, the likelihood-ratio test, and any warning or error.
+\item \code{local_strain}: score diagnostics for each equality constraint, which
+localize strain without releasing anything.
+\item \code{partial}: the researcher-specified releases, when given.
+\item \code{fits}: the fitted \code{lavaan} model at each level.
+\item \code{syntax_text}: the model syntax at each level.
+\item \code{engine_warnings}: warnings \code{lavaan} raised at each level.
+\item \code{indicator_type}, \code{identification_note}, and \code{decision_log}.
+}
+
+Other fields record the call, the settings used, and intermediate engine
+results. They may change between releases and are not part of the stable
+interface (see \code{?nomologR}).
 }
 \description{
 \code{nomo_invariance()} evaluates increasingly constrained multi-group CFA models

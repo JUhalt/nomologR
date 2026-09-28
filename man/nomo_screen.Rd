@@ -46,9 +46,28 @@ suggests .60 while saying there is no firm basis for it, so it is an
 argument rather than a constant.}
 }
 \value{
-An object of class \code{nomo_screen} containing item summaries, response
-distributions, case-level completeness diagnostics, an evidence-guided
-decision log, and the guidance settings used.
+An object of class \code{nomo_screen}. The fields to read are:
+\itemize{
+\item \code{items}: the items screened, and \code{n_cases}, the number of rows.
+\item \code{item_summary}: one row per item, with its storage, inferred type,
+missingness, most common response, descriptive statistics, and
+near-zero-variance indicators.
+\item \code{response_distribution}: counts and proportions of each response.
+\item \code{case_summary}: missingness per row.
+\item \code{relationship_summary}: each item's corrected item-rest correlation and
+summary of its inter-item correlations.
+\item \code{inter_item_correlations}: one row per item pair.
+\item \code{decision_log}: the evidence and its explanations (see \code{\link[=nomo_table]{nomo_table()}}).
+\item \code{effort}, \code{effort_pairs}, and \code{effort_settings}: the careless-responding
+indices per row, the pairs they used, and their settings, when
+\code{effort = TRUE}.
+\item \code{handoff}: the content-review handoff read from \code{items}, when one was
+supplied.
+}
+
+Other fields record the call, the settings used, and intermediate engine
+results. They may change between releases and are not part of the stable
+interface (see \code{?nomologR}).
 }
 \description{
 \code{nomo_screen()} performs a conservative audit of candidate item data before

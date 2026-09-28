@@ -44,12 +44,22 @@ reliability (\code{\link[=nomo_reliability]{nomo_reliability()}}) and convergent
 \item{guidance}{Guidance settings from \code{\link[=nomo_defaults]{nomo_defaults()}}.}
 }
 \value{
-A \code{nomo_compare} object containing \verb{$models} (fit and information
-criteria for each model), \verb{$comparisons} (nesting, difference test, changes
-in fit, and interpretation for each model against the reference),
-\verb{$loadings} (standardized loadings side by side), \verb{$evidence}
-(reliability, AVE, and HTMT2 by model), the fitted \code{nomo_cfa} objects in
-\verb{$fits}, references, and a decision log.
+A \code{nomo_compare} object. The fields to read are:
+\itemize{
+\item \code{models}: fit and information criteria for each model.
+\item \code{comparisons}: for each model against the \code{reference}, the nesting
+relation, the difference test, changes in fit and information criteria,
+and an interpretation.
+\item \code{loadings}: standardized loadings side by side.
+\item \code{evidence}: reliability, AVE, and HTMT2 by model, when \code{evidence = TRUE}.
+\item \code{fits}: the fitted \code{nomo_cfa} objects, and \code{engine_warnings}, the
+warnings \code{lavaan} raised for each.
+\item \code{reference}, \code{rationale}, \code{origin}, \code{references}, and \code{decision_log}.
+}
+
+Other fields record the call, the settings used, and intermediate engine
+results. They may change between releases and are not part of the stable
+interface (see \code{?nomologR}).
 }
 \description{
 \code{nomo_compare()} places two or more fitted \code{\link[=nomo_cfa]{nomo_cfa()}} models side by side

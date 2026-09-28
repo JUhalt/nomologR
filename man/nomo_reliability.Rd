@@ -61,9 +61,23 @@ must be able to load nomologR, lavaan, and semTools from the library.}
 reliability reference is a review prompt, not a pass/fail criterion.}
 }
 \value{
-A \code{nomo_reliability} object containing direct \code{semTools} results,
-tidy reliability evidence, model-fit context, item-type context, literature
-references, and a structured decision log.
+A \code{nomo_reliability} object. The fields to read are:
+\itemize{
+\item \code{omega}: model-based omega per construct, with bootstrap intervals when
+\code{ci = "bootstrap"}.
+\item \code{alpha}: coefficient alpha, reported as secondary.
+\item \code{evidence}: both coefficients with their references and
+interpretations.
+\item \code{alpha_status} and \code{ci_status}: what was computed, and why anything was
+not.
+\item \code{model_strain} and \code{improper_solution}: whether the measurement model
+showed strain that qualifies the coefficients.
+\item \code{references} and \code{decision_log}.
+}
+
+Other fields record the call, the settings used, and intermediate engine
+results. They may change between releases and are not part of the stable
+interface (see \code{?nomologR}).
 }
 \description{
 \code{nomo_reliability()} estimates score reliability from a fitted first-order

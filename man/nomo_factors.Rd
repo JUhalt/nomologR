@@ -76,11 +76,24 @@ is explicit, recorded, and performed with \code{\link[psych:cor.smooth]{psych::c
 \item{guidance}{Guidance settings from \code{\link[=nomo_defaults]{nomo_defaults()}}.}
 }
 \value{
-An object of class \code{nomo_factors} containing the analyzed correlation
-matrix, item modeling types, convenience aliases \code{correlation} and
-\code{modeling_types}, KMO and Bartlett diagnostics, parallel-analysis results,
-MAP results, criterion availability/status, method- and family-level concordance,
-scree information, a cautious retention synthesis, and a decision log.
+An object of class \code{nomo_factors}. The fields to read are:
+\itemize{
+\item \code{items}, \code{n_cases}, and \code{n_items}.
+\item \code{item_types}: each item's screened and modeling type.
+\item \code{correlation_method} and \code{correlation_matrix}: the correlations analyzed.
+\item \code{kmo} and \code{bartlett}: sampling-adequacy evidence.
+\item \code{parallel}, \code{map}, and \code{scree}: each criterion's result.
+\item \code{criterion_status}: which criteria ran, and why any did not.
+\item \code{evidence}, \code{family_evidence}, and \code{family_concordance}: the suggested
+factor counts by method and by family of related methods.
+\item \code{plausible_factors} and \code{recommendation}: the synthesis, which is
+evidence for a researcher's choice, not a choice.
+\item \code{decision_log}.
+}
+
+Other fields record the call, the settings used, and intermediate engine
+results. They may change between releases and are not part of the stable
+interface (see \code{?nomologR}).
 }
 \description{
 \code{nomo_factors()} combines multiple pieces of factor-retention evidence rather

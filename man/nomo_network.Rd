@@ -53,9 +53,28 @@ quantitative negligible predictions, the equivalence confidence level is
 \item{guidance}{Guidance settings returned by \code{nomo_defaults()}.}
 }
 \value{
-A \code{nomo_network} object retaining the primary fitted SEM, optional
-validation fit, measurement context, relation-level theory evidence,
-replication evidence, and decision log.
+A \code{nomo_network} object. The fields to read are:
+\itemize{
+\item \code{hypothesis_evidence}: one row per hypothesis, with its prediction,
+estimate, interval, concordance with the prediction, and
+interpretation.
+\item \code{replication_evidence}: the same comparison in \code{validation_data}, when
+given.
+\item \code{fit_evidence}: global fit of the fitted model.
+\item \code{parameter_estimates} and \code{standardized_solution}: \code{lavaan}'s parameter
+tables, as tibbles.
+\item \code{measurement_context}: the measurement model's loadings and fit, which
+qualify the structural evidence.
+\item \code{model_fitted} and \code{model_relations}: the syntax fitted and the
+relations added from the hypotheses.
+\item \code{fit}: the \code{lavaan} fit, and \code{validation}, the validation fit, when
+given.
+\item \code{converged}, \code{engine_warnings}, and \code{decision_log}.
+}
+
+Other fields record the call, the settings used, and intermediate engine
+results. They may change between releases and are not part of the stable
+interface (see \code{?nomologR}).
 }
 \description{
 \code{nomo_network()} combines a researcher-specified measurement/SEM model with a

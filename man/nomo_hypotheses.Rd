@@ -11,8 +11,9 @@ nomo_hypotheses(...)
 or \code{\link[=negligible]{negligible()}}. Names must specify relations using \verb{->} or \verb{<->}.}
 }
 \value{
-A \code{nomo_hypotheses} object containing a tidy, machine-readable
-hypothesis table.
+A \code{nomo_hypotheses} object whose \code{hypotheses} field is one row per
+hypothesis: its relation, prediction, theoretical region, scale, and
+origin. \code{n} is the number of hypotheses.
 }
 \description{
 \code{nomo_hypotheses()} converts named theoretical predictions into a

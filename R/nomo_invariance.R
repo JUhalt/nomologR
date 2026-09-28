@@ -752,9 +752,22 @@ nomo_invariance_decision_log <- function(group,
 #'   the default for ordered indicators.
 #' @param guidance Guidance settings from `nomo_defaults()`.
 #'
-#' @return A `nomo_invariance` object containing generated syntax objects/text,
-#'   fitted models, fit/change evidence, category information, partial-invariance
-#'   provenance, score diagnostics, and a decision log.
+#' @return A `nomo_invariance` object. The fields to read are:
+#'
+#'   * `groups`, `requested_levels`, and `completed_levels`.
+#'   * `fit_evidence`: one row per level, with its fit, its change from the
+#'     level before, the likelihood-ratio test, and any warning or error.
+#'   * `local_strain`: score diagnostics for each equality constraint, which
+#'     localize strain without releasing anything.
+#'   * `partial`: the researcher-specified releases, when given.
+#'   * `fits`: the fitted `lavaan` model at each level.
+#'   * `syntax_text`: the model syntax at each level.
+#'   * `engine_warnings`: warnings `lavaan` raised at each level.
+#'   * `indicator_type`, `identification_note`, and `decision_log`.
+#'
+#'   Other fields record the call, the settings used, and intermediate engine
+#'   results. They may change between releases and are not part of the stable
+#'   interface (see `?nomologR`).
 #'
 #' @references
 #' Historical foundations:

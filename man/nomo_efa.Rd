@@ -30,10 +30,10 @@ Otherwise all columns are used when \code{items = NULL}.}
 parallel-analysis factor count is used unless \code{factor_count} is supplied.}
 
 \item{factor_count}{Optional positive integer. This may be supplied only when
-\code{factors} is a \code{nomo_factors} object. It preserves the M2 item/modeling/
-correlation/missingness context while recording a researcher-selected EFA
-factor count instead of pretending the primary parallel-analysis suggestion
-was adopted.}
+\code{factors} is a \code{nomo_factors} object. It keeps that result's items,
+modeling types, correlations, and missing-data handling while recording a
+researcher-selected factor count, rather than implying that the
+parallel-analysis suggestion was adopted.}
 
 \item{rotation}{Rotation passed to \code{\link[psych:fa]{psych::fa()}}. The default is \code{"oblimin"}.
 Orthogonal rotations are allowed but are recorded as a researcher choice.}
@@ -66,10 +66,23 @@ used explicitly and the intervention is recorded.}
 \item{guidance}{Guidance settings from \code{\link[=nomo_defaults]{nomo_defaults()}}.}
 }
 \value{
-An object of class \code{nomo_efa} containing the fitted EFA, tidy pattern
-and structure matrices, factor correlations, item diagnostics,
-communalities/uniquenesses, residual diagnostics, adequacy information,
-and a decision log.
+An object of class \code{nomo_efa}. The fields to read are:
+\itemize{
+\item \code{items}, \code{n_factors}, and \code{factor_source}, which records whether the
+count was the researcher's or taken from a \code{nomo_factors} result.
+\item \code{correlation_method} and \code{correlation_matrix}: the correlations analyzed.
+\item \code{pattern_matrix}, \code{structure_matrix}, and \code{factor_correlations}.
+\item \code{communalities}, \code{uniquenesses}, and \code{complexity}.
+\item \code{item_summary}: one row per item, with its primary and secondary
+loadings, communality, flags, and the explanation of any flag.
+\item \code{residual_matrix}, \code{residual_pairs}, and \code{rmsr}: local misfit.
+\item \code{sample_adequacy}: sample size, KMO, and Bartlett's test.
+\item \code{decision_log}.
+}
+
+Other fields record the call, the settings used, and intermediate engine
+results. They may change between releases and are not part of the stable
+interface (see \code{?nomologR}).
 }
 \description{
 \code{nomo_efa()} estimates a common-factor exploratory factor analysis while
