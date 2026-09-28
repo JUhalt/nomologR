@@ -770,6 +770,30 @@
 </div>
 </div>
 <div class="section level2">
+<h2 id="the-handoff-from-contentvalidr">The handoff from contentvalidR<a class="anchor" aria-label="anchor" href="#the-handoff-from-contentvalidr"></a>
+</h2>
+<p><a href="https://github.com/JUhalt/contentvalidR" class="external-link"><code>contentvalidR</code></a> is the partner package for content validity. Its <code>content_handoff()</code> records which items passed content review and why the others were held back, and nomologR reads that record so the empirical stage starts from those decisions without retyping anything. A handoff brings:</p>
+<ul>
+<li>the items carried forward, and the items held back. Each held-back item’s status and recommendation are quoted in the decision log. nomologR never reinstates it; doing so is a researcher decision to record.</li>
+<li>the scales, which become the run’s scales;</li>
+<li>the declared keying and the response scale, which the keying notes and the careless-responding indices use. The data are never recoded.</li>
+</ul>
+<p>Pass the handoff itself, not <code>h$items</code>, so everything it records travels with the items:</p>
+<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="reference/nomo_screen.html">nomo_screen</a></span><span class="op">(</span><span class="va">responses</span>, items <span class="op">=</span> <span class="va">h</span><span class="op">)</span>  <span class="co"># screens the carried items</span></span>
+<span><span class="fu"><a href="reference/nomo_run.html">nomo_run</a></span><span class="op">(</span><span class="va">responses</span>, scales <span class="op">=</span> <span class="va">h</span><span class="op">)</span>    <span class="co"># runs the empirical stage on the handoff's scales</span></span></code></pre></div>
+<p><strong>How nomologR reads a handoff.</strong></p>
+<ul>
+<li>Each item’s decision comes from <code>carried</code>, which says whether it travels, and <code>status</code>, which says why.</li>
+<li>
+<code>recommendation</code> states the same decision in the workflow’s own words. Like <code>rule</code>, it is prose, so nomologR quotes it and never matches on it.</li>
+<li>A decision is never re-derived by comparing a statistic with its criterion, or by branching on the version that produced the handoff.</li>
+<li>A <code>keying</code> of <code>NA</code> means nobody said, never that an item is forward-worded.</li>
+</ul>
+<p><strong>Versions.</strong> The handoff is schema version 1. Within it, fields are only added, and nomologR ignores fields it does not know. A schema version nomologR does not read is refused, with both packages’ versions named. The reader is tested against handoffs from <code>contentvalidR</code> 0.6.0 through 0.10.0. They are generated from each release tag and stored with their checksums, and neither package depends on the other.</p>
+<p>For more, see: - <code><a href="articles/content-review.html">vignette("content-review")</a></code>, which carries one reviewed item set through the screen; - <code>contentvalidR</code>’s <a href="https://juhalt.github.io/contentvalidR/articles/handoff-to-empirical-validation.html" class="external-link">handoff guide</a> and its <a href="https://juhalt.github.io/contentvalidR/articles/one-item-set-both-stages.html" class="external-link">joint walkthrough</a>.</p>
+</div>
+<div class="section level2">
 <h2 id="stability">Stability<a class="anchor" aria-label="anchor" href="#stability"></a>
 </h2>
 <p>From <code>v0.3.0</code>, the first CRAN release, nomologR’s public interface changes only after a deprecation period, so code written against one release keeps working in the next.</p>
