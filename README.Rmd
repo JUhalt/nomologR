@@ -73,13 +73,19 @@ practice, with literature references in every analysis function's help page.
   [measurement invariance](https://juhalt.github.io/nomologR/articles/measurement-invariance.html),
   [nomological networks](https://juhalt.github.io/nomologR/articles/nomological-network.html),
   [guided workflow](https://juhalt.github.io/nomologR/articles/guided-workflow.html),
+  [from content review to empirical screening](https://juhalt.github.io/nomologR/articles/content-review.html),
   and [reproducible reports](https://juhalt.github.io/nomologR/articles/reproducible-report.html).
 
-The teaching datasets are `nomo_demo_continuous` (two correlated factors with a
-cross-loading item, a weak item, and missing data), `nomo_demo_ordinal` (the same
-structure as five-category ordered items), and `nomo_demo_network` (three
-constructs, an observed outcome, and two groups with a known source of
-non-invariance):
+The teaching datasets are:
+
+- `nomo_demo_continuous`: two correlated factors, with a cross-loading item, a
+  weak item, and missing data;
+- `nomo_demo_ordinal`: the same structure as five-category ordered items;
+- `nomo_demo_network`: three constructs, an observed outcome, and two groups
+  with a known source of non-invariance;
+- `nomo_demo_walkthrough`: twelve items reviewed by an expert panel in
+  `contentvalidR`, built so that content review and the empirical screen
+  disagree.
 
 ```r
 library(nomologR)
@@ -112,6 +118,13 @@ run <- nomo_run(responses, scales = handoff)
 Only carried items are analyzed. Held-back items are reported in
 `contentvalidR`'s own words, and a report from the run opens with the content
 review. Neither package depends on the other.
+
+The two packages share a walkthrough on the same simulated item set. The
+content-review half is `contentvalidR`'s
+[One item set, both stages](https://juhalt.github.io/contentvalidR/articles/one-item-set-both-stages.html).
+The empirical half is this package's
+[From content review to empirical screening](https://juhalt.github.io/nomologR/articles/content-review.html),
+which shows items that pass one stage and fail the other.
 
 ## What works now
 
@@ -954,21 +967,21 @@ interval-based replication-status language for sign changes (#30); bifactor
 and higher-order models with `nomo_hierarchical()` (#29); and release
 certification (#37).
 
-### Next: `v0.4.x` and `v1.0.0`
-
-Larger extensions such as ESEM, IRT/DIF, Bayesian SEM, longitudinal invariance,
-and multiple imputation were deferred until after CRAN acceptance, with the
-reasons recorded in #38. They are candidates for `v0.4.x`, and none is a
-commitment until selected.
+### Next: `v1.0.0`, then `1.x`
 
 `v1.0.0` is planned as a joint release with
 [`contentvalidR`](https://github.com/JUhalt/contentvalidR), the package's
-content-validity counterpart, so the two show one item set crossing from expert
-review into empirical evidence
-([#53](https://github.com/JUhalt/nomologR/issues/53)). A companion article will
-demonstrate an item that passes content review and then behaves badly
-empirically, and one the reverse
+content-validity counterpart
+([#53](https://github.com/JUhalt/nomologR/issues/53)). It is the stability
+promise: after it, existing behavior changes only after a deprecation period.
+Its scope is set in [#113](https://github.com/JUhalt/nomologR/issues/113). The
+companion article on the shared item set is done
 ([#60](https://github.com/JUhalt/nomologR/issues/60)).
+
+Larger extensions, such as ESEM, IRT/DIF, Bayesian SEM, longitudinal invariance,
+and multiple imputation, are candidates for `1.x`. They are additive, so they
+do not need to precede the freeze. None was rejected, and none is a commitment
+until selected.
 
 ### Completed: `v0.1.0`
 

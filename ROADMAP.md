@@ -19,8 +19,10 @@ follows [0.2.1](https://github.com/JUhalt/nomologR/releases/tag/v0.2.1)
 release (September 9, 2026) keeps its original MIT license.
 **Next release:** [v1.0.0](https://github.com/JUhalt/nomologR/milestone/5) —
 the joint release with `contentvalidR`
-([#53](https://github.com/JUhalt/nomologR/issues/53)). Candidates for v0.4.x
-are listed below.
+([#53](https://github.com/JUhalt/nomologR/issues/53)), scoped in
+[#113](https://github.com/JUhalt/nomologR/issues/113). See
+[v1.0.0](#v100--joint-stable-release-with-contentvalidr) below; candidates for
+1.x follow it.
 **Distribution:** [R-universe](https://juhalt.r-universe.dev), which builds each
 GitHub release. `v0.3.0` is submitted to CRAN
 ([#39](https://github.com/JUhalt/nomologR/issues/39)).
@@ -195,18 +197,53 @@ that submission complete, stable, and well tested. Certification is recorded in
 [#75](https://github.com/JUhalt/nomologR/issues/75), and the CRAN outcome will
 be recorded in [#39](https://github.com/JUhalt/nomologR/issues/39).
 
-- [ ] [#39](https://github.com/JUhalt/nomologR/issues/39) First CRAN submission; see [Distribution](#distribution--r-universe-now-cran-with-v030) below. Spelling, URLs, build exclusions, and test time under CRAN conditions are done.
+- [ ] [#39](https://github.com/JUhalt/nomologR/issues/39) First CRAN submission; see [Distribution](#distribution--r-universe-and-cran-from-v030) below. Spelling, URLs, build exclusions, and test time under CRAN conditions are done.
 - [x] [#46](https://github.com/JUhalt/nomologR/issues/46) A `contentvalidR` handoff reader. It is tested against stored producer fixtures from contentvalidR 0.6.0 and 0.7.0, and neither package depends on the other.
 - [x] [#72](https://github.com/JUhalt/nomologR/issues/72) Restore full test coverage after v0.2.1. Reviewing each uncovered line found four defects, now fixed.
 - [x] [#73](https://github.com/JUhalt/nomologR/issues/73) The guided workflow and report carry scores, careless-responding screens, missing-data sensitivity, and APA tables.
 - [x] [#74](https://github.com/JUhalt/nomologR/issues/74) A written API-stability and deprecation policy, which the joint 1.0 release requires ([#53](https://github.com/JUhalt/nomologR/issues/53)).
 - [ ] [#75](https://github.com/JUhalt/nomologR/issues/75) Release certification and CRAN submission.
 
-# v0.4.x — Modern Extensions
+# v1.0.0 — Joint Stable Release with contentvalidR
 
-**Status:** Deferred from v0.3.0 until after CRAN acceptance, with the reasons
-recorded in [#38](https://github.com/JUhalt/nomologR/issues/38). None was
-rejected. Candidates are not commitments until selected.
+**Status:** In progress. Scope proposed in
+[#113](https://github.com/JUhalt/nomologR/issues/113) and awaiting the
+maintainer's decisions. The joint criteria and plan are in
+[#53](https://github.com/JUhalt/nomologR/issues/53).
+
+1.0.0 is the stability promise in `?nomologR`. After it, changes to existing
+behavior need a deprecation cycle, and additions stay free. So anything that
+would change existing behavior is decided before the freeze. Anything additive
+can wait for 1.x.
+
+- [x] [#60](https://github.com/JUhalt/nomologR/issues/60) The companion article
+  "From content review to empirical screening", on the shared walkthrough
+  data.
+- [ ] [#89](https://github.com/JUhalt/nomologR/issues/89) The presentation pass
+  for console output, plots, and reports. Done apart from the maintainer's
+  visual sign-off.
+- [ ] [#114](https://github.com/JUhalt/nomologR/issues/114) An API audit before
+  the freeze: returned fields named in every help page, and argument names.
+- [ ] [#113](https://github.com/JUhalt/nomologR/issues/113) The historical
+  record: when each method was introduced, and what replaced each historical
+  one, drawn into a timeline in the research-basis article.
+- [ ] [#113](https://github.com/JUhalt/nomologR/issues/113) Decisions before
+  the freeze: returned flag vocabularies, the item audit's scales and keying,
+  and the two experimental parts of the interface.
+- [ ] [#39](https://github.com/JUhalt/nomologR/issues/39) The CRAN outcome for
+  0.3.0.
+- [ ] [#53](https://github.com/JUhalt/nomologR/issues/53) Release candidates,
+  fixtures from contentvalidR's RC, the compatibility table, and a same-day
+  release with release notes linking each other. CRAN asks for updates no more
+  often than every one to two months, so the joint submission follows the
+  later of the two packages' first acceptances by that interval.
+
+# 1.x — Modern Extensions
+
+**Status:** Candidates for releases after 1.0.0, all additive. They were
+deferred from v0.3.0 ([#38](https://github.com/JUhalt/nomologR/issues/38)) and
+again from 1.0.0 ([#113](https://github.com/JUhalt/nomologR/issues/113)). None
+was rejected. Candidates are not commitments until selected.
 
 - [ ] ESEM. lavaan already fits it, so it needs no new dependency, which makes it a natural first candidate.
 - [ ] Longitudinal invariance.
@@ -220,7 +257,7 @@ rejected. Candidates are not commitments until selected.
 - [ ] Model-specific fit diagnostics ([#23](https://github.com/JUhalt/nomologR/issues/23)).
 
 ***
-# Distribution — R-universe Now, CRAN with v0.3.0
+# Distribution — R-universe, and CRAN from v0.3.0
 
 - Stable releases are published as GitHub releases. [R-universe](https://juhalt.r-universe.dev) builds each release, usually within a few hours.
 - `v0.2.0` certification ([#37](https://github.com/JUhalt/nomologR/issues/37)) includes a CRAN-readiness gate: `R CMD check --as-cran` clean on win-builder, the macOS builder, and R-hub; long-running tests skipped on CRAN; fast examples and vignettes.
