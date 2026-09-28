@@ -321,10 +321,23 @@ nomo_run_resume <- function(resume,
 #'   source data, scales, guidance, completed component results, decisions, and
 #'   provenance are reused.
 #'
-#' @return A `nomo_run` object containing component results, stage status,
-#'   outstanding decision requests, researcher decisions/rationales, stage
-#'   settings, workflow provenance, component decision logs, and source inputs
-#'   required for reproducibility.
+#' @return A `nomo_run` object. The fields to read are:
+#'
+#'   * `status` and `next_stage`: where the run is.
+#'   * `results`: each component's result, by stage and then by scale; for
+#'     example `results$screen$Agency` is a `nomo_screen` object.
+#'   * `stage_status`: one row per stage.
+#'   * `decision_requests`: the decisions the run is waiting for.
+#'   * `decision_log`: the workflow's decisions, with their rationales and
+#'     sources.
+#'   * `scales`, `mode`, `sample_design`, `sample_n`, `decisions`, and
+#'     `settings`.
+#'
+#'   [nomo_table()] returns the run's tables, including the component recipe,
+#'   the component decision logs, and the revision lineage. Other fields hold
+#'   the source data and state needed to resume or revise the run. They may
+#'   change between releases and are not part of the stable interface (see
+#'   `?nomologR`).
 #'
 #' @references
 #' Boateng, G. O., Neilands, T. B., Frongillo, E. A., Melgar-Quiñonez, H. R.,

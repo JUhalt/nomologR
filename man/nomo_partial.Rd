@@ -19,7 +19,9 @@ the corresponding equality constraints.}
 A single rationale may be recycled across multiple releases.}
 }
 \value{
-A \code{nomo_partial} object with a report-ready release table.
+A \code{nomo_partial} object whose \code{releases} field is one row per
+release: its identifier, level, syntax, and rationale. \code{n} is the number
+of releases.
 }
 \description{
 \code{nomo_partial()} records equality constraints that the researcher has decided

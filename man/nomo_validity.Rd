@@ -40,10 +40,22 @@ used as the primary discriminant-validity criterion.}
 references are review prompts rather than universal pass/fail cutoffs.}
 }
 \value{
-A \code{nomo_validity} object containing standardized loading evidence,
-direct \code{semTools::AVE()} results, latent correlations, HTMT2/HTMT evidence,
-optional legacy Fornell-Larcker information, model-fit context, research
-references, and a structured decision log.
+A \code{nomo_validity} object. The fields to read are:
+\itemize{
+\item \code{ave}: average variance extracted per construct, as convergent
+evidence.
+\item \code{latent_correlations}: construct correlations with intervals.
+\item \code{htmt2} and \code{htmt}: heterotrait-monotrait ratios per pair.
+\item \code{discriminant}: each pair's separation evidence with its reference and
+interpretation.
+\item \code{htmt_status}: which HTMT variants were computed, and why any was not.
+\item \code{fornell_larcker_pairs}: the historical comparison, when requested.
+\item \code{standardized_loadings}, \code{references}, and \code{decision_log}.
+}
+
+Other fields record the call, the settings used, and intermediate engine
+results. They may change between releases and are not part of the stable
+interface (see \code{?nomologR}).
 }
 \description{
 \code{nomo_validity()} summarizes several complementary forms of measurement

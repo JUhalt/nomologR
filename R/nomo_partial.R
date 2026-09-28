@@ -23,7 +23,9 @@
 #' @param rationale Character vector documenting why each release was chosen.
 #'   A single rationale may be recycled across multiple releases.
 #'
-#' @return A `nomo_partial` object with a report-ready release table.
+#' @return A `nomo_partial` object whose `releases` field is one row per
+#'   release: its identifier, level, syntax, and rationale. `n` is the number
+#'   of releases.
 #'
 #' @references
 #' Byrne, B. M., Shavelson, R. J., & Muthén, B. (1989). Testing for the
