@@ -610,12 +610,11 @@ nomo_screen_plot_item_rest <- function(x, items, show_values) {
     ggplot2::theme_minimal(base_size = 11)
 
   reference <- x$guidance$item_total_reference
+  has_reference <- is.numeric(reference) &&
+    length(reference) == 1L &&
+    is.finite(reference)
 
-  if (
-    is.numeric(reference) &&
-      length(reference) == 1L &&
-      is.finite(reference)
-  ) {
+  if (has_reference) {
     p <- p + ggplot2::geom_hline(
       yintercept = reference,
       linetype = 2,
@@ -624,13 +623,18 @@ nomo_screen_plot_item_rest <- function(x, items, show_values) {
   }
 
   if (isTRUE(show_values)) {
-    p <- p + ggplot2::geom_text(
-      ggplot2::aes(
-        label = sprintf("%.2f", item_rest)
-      ),
-      hjust = -0.15,
-      size = 3
-    )
+    # The values sit in a column past the longest bar and the reference line.
+    # Beside each bar, a flagged item's value, just under the reference, was
+    # drawn across the line.
+    label_at <- max(c(dat$item_rest, if (has_reference) reference, 0)) + 0.03
+    p <- p +
+      ggplot2::geom_text(
+        ggplot2::aes(label = sprintf("%.2f", item_rest)),
+        y = label_at,
+        hjust = 0,
+        size = 3
+      ) +
+      ggplot2::expand_limits(y = label_at + 0.08)
   }
 
   p

@@ -1177,6 +1177,33 @@ test_that("declared scales give each item its within-scale item-rest correlation
 })
 
 
+test_that("item-rest values are drawn clear of the bars and the reference line", {
+  handoff <- readRDS(system.file("extdata", "content-handoff-walkthrough.rds",
+                                 package = "nomologR"))
+  out <- nomo_screen(nomo_demo_walkthrough, items = handoff)
+  label_y <- function(p) {
+    text <- vapply(p$layers, function(l) inherits(l$geom, "GeomText"), logical(1))
+    p$layers[[which(text)]]$aes_params$y
+  }
+  values <- out$relationship_summary$scale_item_rest_r
+  expect_gt(label_y(plot(out, type = "item_rest")),
+            max(values, out$guidance$item_total_reference))
+
+  # A reference past every bar moves the column past the line.
+  out$guidance$item_total_reference <- 0.90
+  expect_gt(label_y(plot(out, type = "item_rest")), 0.90)
+
+  # Without a reference line, the column sits just past the longest bar.
+  out$guidance$item_total_reference <- NA_real_
+  p <- plot(out, type = "item_rest")
+  expect_false(any(vapply(p$layers, function(l) {
+    inherits(l$geom, "GeomHline") && identical(l$aes_params$linetype, 2)
+  }, logical(1))))
+  expect_gt(label_y(p), max(values))
+  expect_lt(label_y(p), 0.90)
+})
+
+
 test_that("keying notes on a declared scale use the within-scale value (#113)", {
   handoff <- readRDS(system.file("extdata", "content-handoff-walkthrough.rds",
                                  package = "nomologR"))
