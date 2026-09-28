@@ -273,6 +273,9 @@ test_that("data that does not reproduce the fitted model is refused", {
   expect_error(nomo_missing(fit, data = altered), "does not reproduce the fitted model")
 
   expect_error(nomo_missing(fit, data = "not data"), "non-empty data frame")
+  # The fitted model is `fit`, as in nomo_reliability() and nomo_validity() (#114).
+  expect_error(nomo_missing(fit = fit, data = "not data"), "non-empty data frame")
+  expect_identical(names(formals(nomo_missing))[[1L]], "fit")
   expect_error(nomo_missing(list(), data = nomo_demo_continuous), "supports `nomo_cfa`")
 })
 

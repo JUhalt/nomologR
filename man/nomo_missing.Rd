@@ -6,14 +6,14 @@
 \alias{nomo_missing.nomo_network}
 \title{Missing-data sensitivity: does a result depend on how missing data were handled?}
 \usage{
-nomo_missing(x, data, strategies = NULL, ...)
+nomo_missing(fit, data, strategies = NULL, ...)
 
-\method{nomo_missing}{nomo_cfa}(x, data, strategies = NULL, reliability = TRUE, ...)
+\method{nomo_missing}{nomo_cfa}(fit, data, strategies = NULL, reliability = TRUE, ...)
 
-\method{nomo_missing}{nomo_network}(x, data, strategies = NULL, ...)
+\method{nomo_missing}{nomo_network}(fit, data, strategies = NULL, ...)
 }
 \arguments{
-\item{x}{A \code{nomo_cfa} or \code{nomo_network} object.}
+\item{fit}{A \code{nomo_cfa} or \code{nomo_network} object.}
 
 \item{data}{The data the model was fitted to, including any cases listwise
 deletion removed. For a network fitted to a \code{nomo_split}, supply the same
