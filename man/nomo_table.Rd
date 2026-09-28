@@ -48,7 +48,7 @@ the latent correlation and the HTMT-family values together; see
 \code{"decision_log"}. \code{"single_indicators"} and \code{"sensitivity"} describe the
 composites modeled as single indicators; see \code{\link[=nomo_network]{nomo_network()}}.
 \item \code{nomo_invariance}: \code{"fit"} (default), \code{"categories"}, \code{"partial"},
-\code{"local_strain"}, \code{"decision_log"}. The local-strain table keeps lavaan's
+\code{"local_strain"}, \code{"latent_means"}, \code{"decision_log"}. The local-strain table keeps lavaan's
 internal \code{constraint} label and adds a human-readable
 \code{constraint_display} column (for example, \verb{Intercept: ag3 (online vs. paper)}).
 \item \code{nomo_compare}: \code{"comparisons"} (default), \code{"models"}, \code{"loadings"},

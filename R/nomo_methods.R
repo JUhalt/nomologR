@@ -397,6 +397,16 @@ nomo_bibliography <- function() {
       "10.1007/BF02289162"
     ),
     nomo_bib_entry(
+      "hancock_2001", "Hancock (2001)",
+      paste(
+        "Hancock, G. R. (2001). Effect size, power, and sample size determination",
+        "for structured means modeling and MIMIC approaches to between-groups",
+        "hypothesis testing of means on a single latent construct.",
+        "Psychometrika, 66(3), 373-388."
+      ),
+      "10.1007/BF02294440"
+    ),
+    nomo_bib_entry(
       "hancock_mueller_2001", "Hancock & Mueller (2001)",
       paste(
         "Hancock, G. R., & Mueller, R. O. (2001). Rethinking construct",
@@ -1764,6 +1774,22 @@ nomo_methods_registry <- function() {
       c("byrne_1989")
     ),
 
+    nomo_method_entry(
+      "latent_mean_comparison", "invariance",
+      "Latent mean comparison between groups",
+      "contemporary", "supporting",
+      paste(
+        "Groups' latent means relative to a reference group, in its latent",
+        "standard deviations: structured-means known-groups evidence."
+      ),
+      paste(
+        "Comparable only when intercepts are invariant, fully or partially;",
+        "the reference group is identified with a mean of 0 and a variance of 1."
+      ),
+      "nomo_invariance()", "lavaan",
+      c("byrne_1989", "hancock_2001", "vandenberg_lance_2000")
+    ),
+
     # Stage 8: nomological network -------------------------------------------
     nomo_method_entry(
       "unit_weighted_score", "scores",
@@ -2118,6 +2144,7 @@ nomo_methods_history <- function() {
     c("unit_weighted_score", NA, "parallel_model_test"),
     c("parallel_model_test", "mcneish_wolf_2020", NA),
     c("nomological_network", "cronbach_meehl_1955", "two_step_sem; prediction_provenance"),
+    c("latent_mean_comparison", NA, NA),
     c("two_step_sem", "anderson_gerbing_1988", NA),
     c("single_indicator_reliability", NA, NA),
     c("equivalence_testing", "schuirmann_1987", NA),

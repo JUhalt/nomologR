@@ -744,6 +744,20 @@ nomo_invariance_decision_log <- function(group,
 #'   diagnostic evidence. Diagnostics never trigger automatic release/refitting.
 #' @param estimator Optional lavaan estimator. Ordered models default to WLSMV.
 #' @param missing Optional lavaan missing-data option.
+#' @section Latent means:
+#' Once intercepts are invariant, fully or with researcher-specified partial
+#' releases, groups can be compared on the construct itself (Byrne, Shavelson,
+#' & Muthén, 1989). This is the structured-means form of known-groups evidence:
+#' a difference theory predicts between groups that differ on the construct.
+#' At each level that holds intercepts equal, `latent_means` gives each group's
+#' latent means relative to the reference group, the first group, which the
+#' default `ID.fac = "std.lv"` fixes at a mean of 0 and a variance of 1. Each
+#' mean is then a difference in the reference group's latent standard
+#' deviations, the effect size Hancock (2001) describes. Under another
+#' identification the table is empty. Where the intercepts are not invariant,
+#' the means are not comparable until the non-invariant intercepts are
+#' released with [nomo_partial()] (Vandenberg & Lance, 2000).
+#'
 #' @param ID.fac Factor-identification method passed to
 #'   `semTools::measEq.syntax()`. `"std.lv"` is the default.
 #' @param ID.cat Ordered-indicator identification method passed to
@@ -760,6 +774,9 @@ nomo_invariance_decision_log <- function(group,
 #'   * `local_strain`: score diagnostics for each equality constraint, which
 #'     localize strain without releasing anything.
 #'   * `partial`: the researcher-specified releases, when given.
+#'   * `latent_means`: at each level that holds intercepts equal, each group's
+#'     latent means relative to the reference group, in the reference group's
+#'     latent standard deviations, with their intervals. See **Latent means**.
 #'   * `fits`: the fitted `lavaan` model at each level.
 #'   * `syntax_text`: the model syntax at each level.
 #'   * `engine_warnings`: warnings `lavaan` raised at each level.
@@ -774,6 +791,11 @@ nomo_invariance_decision_log <- function(group,
 #'
 #' Jöreskog, K. G. (1971). Simultaneous factor analysis in several
 #' populations. *Psychometrika, 36*(4), 409-426. \doi{10.1007/BF02291366}
+#'
+#' Hancock, G. R. (2001). Effect size, power, and sample size determination
+#' for structured means modeling and MIMIC approaches to between-groups
+#' hypothesis testing of means on a single latent construct. *Psychometrika,
+#' 66*(3), 373-388. \doi{10.1007/BF02294440}
 #'
 #' Meredith, W. (1993). Measurement invariance, factor analysis and factorial
 #' invariance. *Psychometrika, 58*(4), 525-543. \doi{10.1007/BF02294825}
@@ -1183,6 +1205,17 @@ nomo_invariance <- function(model,
     score_diagnostics = score_diagnostics
   )
 
+  latent_means <- nomo_invariance_latent_means(
+    fits = fits,
+    constraints = constraints,
+    fit_evidence = fit_evidence,
+    ID.fac = ID.fac
+  )
+  decision_log <- dplyr::bind_rows(
+    decision_log,
+    nomo_invariance_latent_means_log(latent_means)
+  )
+
   out <- list(
     call = match.call(),
     model = model,
@@ -1220,6 +1253,7 @@ nomo_invariance <- function(model,
     fits = fits,
     fit_measures = fit_measures,
     fit_evidence = fit_evidence,
+    latent_means = latent_means,
     engine_warnings = engine_warnings,
     comparison_warnings = comparison_warnings,
     decision_log = decision_log,
@@ -1228,4 +1262,86 @@ nomo_invariance <- function(model,
 
   class(out) <- c("nomo_invariance", "list")
   out
+}
+
+
+# Latent means ----------------------------------------------------------------------
+#
+# The structured-means comparison of groups on the construct: at each level
+# whose intercepts are held equal, fully or with the researcher's partial
+# releases, the groups' latent means can be compared (Byrne, Shavelson, &
+# Muthén, 1989). Under std.lv identification the reference group's latent means
+# are 0 and its variances 1, so each mean is a difference in the reference
+# group's latent standard deviations, the effect size Hancock (2001) describes.
+nomo_invariance_latent_means <- function(fits, constraints, fit_evidence, ID.fac) {
+  out <- tibble::tibble(
+    level = character(),
+    group = character(),
+    reference_group = character(),
+    factor = character(),
+    estimate = numeric(),
+    se = numeric(),
+    ci_lower = numeric(),
+    ci_upper = numeric(),
+    p_value = numeric()
+  )
+  if (!identical(tolower(ID.fac), "std.lv")) return(out)
+
+  converged <- fit_evidence$level[fit_evidence$converged %in% TRUE]
+  rows <- lapply(converged, function(level) {
+    if (!"intercepts" %in% constraints[[level]]) return(NULL)
+    fit <- fits[[level]]
+    pe <- lavaan::parameterEstimates(fit, ci = TRUE)
+    latent <- lavaan::lavNames(fit, type = "lv")
+    means <- pe[pe$op == "~1" & pe$lhs %in% latent & pe$group > 1L, , drop = FALSE]
+    labels <- lavaan::lavInspect(fit, "group.label")
+    tibble::tibble(
+      level = level,
+      group = labels[means$group],
+      reference_group = labels[[1L]],
+      factor = means$lhs,
+      estimate = means$est,
+      se = means$se,
+      ci_lower = means$ci.lower,
+      ci_upper = means$ci.upper,
+      p_value = means$pvalue
+    )
+  })
+  dplyr::bind_rows(out, rows)
+}
+
+
+nomo_invariance_latent_means_log <- function(latent_means) {
+  log <- nomo_log_new()
+  if (!nrow(latent_means)) return(log)
+  # The most constrained level with latent means, the one a comparison would
+  # usually be reported from.
+  level <- latent_means$level[[nrow(latent_means)]]
+  rows <- latent_means[latent_means$level == level, , drop = FALSE]
+  number <- function(x) nomo_present_number(x, 2L)
+  nomo_log_add(
+    log, stage = "invariance", object = "latent_means",
+    metric = "latent_means",
+    value = nrow(rows),
+    reference = paste(
+      "Latent means are comparable only with invariant intercepts, fully or",
+      "partially (Byrne, Shavelson, & Muth\u00e9n, 1989)"
+    ),
+    severity = "info",
+    observation = sprintf(
+      "At the %s level, latent means relative to %s, in its latent standard deviations: %s.",
+      level, rows$reference_group[[1L]],
+      paste0(
+        rows$factor, " in ", rows$group, " ", number(rows$estimate), " [",
+        number(rows$ci_lower), ", ", number(rows$ci_upper), "]",
+        collapse = "; "
+      )
+    ),
+    recommendation = paste(
+      "As known-groups evidence, compare each difference with the one theory",
+      "predicts (Hancock, 2001). If the intercepts are not invariant, release",
+      "those the local-strain table points to with nomo_partial() before",
+      "interpreting the means (Vandenberg & Lance, 2000)."
+    )
+  )
 }
