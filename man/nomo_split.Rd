@@ -22,8 +22,18 @@ Must be strictly between 0 and 1.}
 \item{guidance}{Guidance settings from \code{\link[=nomo_defaults]{nomo_defaults()}}.}
 }
 \value{
-A \code{nomo_split} object containing \code{calibration}, \code{validation}, a
-row-level \code{assignment} table, split sizes, the seed, and a decision log.
+A \code{nomo_split} object. The fields to read are:
+\itemize{
+\item \code{calibration} and \code{validation}: the two samples.
+\item \code{assignment}: which sample each row went to.
+\item \code{n_total}, \code{n_calibration}, \code{n_validation}, and
+\code{validation_prop_realized}.
+\item \code{seed} and \code{decision_log}.
+}
+
+Other fields record the call, the settings used, and intermediate engine
+results. They may change between releases and are not part of the stable
+interface (see \code{?nomologR}).
 }
 \description{
 \code{nomo_split()} creates an explicit random split for workflows in which EFA

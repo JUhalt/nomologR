@@ -62,11 +62,23 @@
 #'   is explicit, recorded, and performed with [psych::cor.smooth()].
 #' @param guidance Guidance settings from [nomo_defaults()].
 #'
-#' @return An object of class `nomo_factors` containing the analyzed correlation
-#'   matrix, item modeling types, convenience aliases `correlation` and
-#'   `modeling_types`, KMO and Bartlett diagnostics, parallel-analysis results,
-#'   MAP results, criterion availability/status, method- and family-level concordance,
-#'   scree information, a cautious retention synthesis, and a decision log.
+#' @return An object of class `nomo_factors`. The fields to read are:
+#'
+#'   * `items`, `n_cases`, and `n_items`.
+#'   * `item_types`: each item's screened and modeling type.
+#'   * `correlation_method` and `correlation_matrix`: the correlations analyzed.
+#'   * `kmo` and `bartlett`: sampling-adequacy evidence.
+#'   * `parallel`, `map`, and `scree`: each criterion's result.
+#'   * `criterion_status`: which criteria ran, and why any did not.
+#'   * `evidence`, `family_evidence`, and `family_concordance`: the suggested
+#'     factor counts by method and by family of related methods.
+#'   * `plausible_factors` and `recommendation`: the synthesis, which is
+#'     evidence for a researcher's choice, not a choice.
+#'   * `decision_log`.
+#'
+#'   Other fields record the call, the settings used, and intermediate engine
+#'   results. They may change between releases and are not part of the stable
+#'   interface (see `?nomologR`).
 #'
 #' @references
 #' Historical retention rules shown as context:

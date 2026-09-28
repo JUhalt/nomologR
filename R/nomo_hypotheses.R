@@ -305,8 +305,9 @@ nomo_expectation_region_label <- function(expectation) {
 #' @param ... Named [nomo_expectations] created by [positive()], [negative()],
 #'   or [negligible()]. Names must specify relations using `->` or `<->`.
 #'
-#' @return A `nomo_hypotheses` object containing a tidy, machine-readable
-#'   hypothesis table.
+#' @return A `nomo_hypotheses` object whose `hypotheses` field is one row per
+#'   hypothesis: its relation, prediction, theoretical region, scale, and
+#'   origin. `n` is the number of hypotheses.
 #'
 #' @references
 #' Cronbach, L. J., & Meehl, P. E. (1955). Construct validity in psychological

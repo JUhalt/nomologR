@@ -20,9 +20,22 @@ Single-group, single-level, with no regressions among latent variables.}
 \item{guidance}{A \code{nomo_guidance} object from \code{\link[=nomo_defaults]{nomo_defaults()}}.}
 }
 \value{
-An object of class \code{nomo_scores}: the \code{scores} themselves, a
-\code{diagnostics} table of Grice's three criteria per factor, the
-\code{unit_weighting} evidence, \code{notes}, and the fitted model.
+An object of class \code{nomo_scores}. The fields to read are:
+\itemize{
+\item \code{scores}: one column per factor, one row per case used.
+\item \code{method} and \code{weighting}: how the scores were computed.
+\item \code{diagnostics}: Grice's validity, univocality, and correlational
+accuracy per factor.
+\item \code{unit_weighting}: the loading evidence on whether unit weights suit
+the model, and \code{parallel_test}, the test of the parallel model that unit
+weighting assumes.
+\item \code{score_correlations} and \code{factor_correlations}: for comparing the two.
+\item \code{notes}: what the scores do and do not estimate.
+}
+
+Other fields record the call, the settings used, and intermediate engine
+results. They may change between releases and are not part of the stable
+interface (see \code{?nomologR}).
 }
 \description{
 Computes scores from a fitted measurement model and reports what those

@@ -76,10 +76,24 @@ source data, scales, guidance, completed component results, decisions, and
 provenance are reused.}
 }
 \value{
-A \code{nomo_run} object containing component results, stage status,
-outstanding decision requests, researcher decisions/rationales, stage
-settings, workflow provenance, component decision logs, and source inputs
-required for reproducibility.
+A \code{nomo_run} object. The fields to read are:
+\itemize{
+\item \code{status} and \code{next_stage}: where the run is.
+\item \code{results}: each component's result, by stage and then by scale; for
+example \code{results$screen$Agency} is a \code{nomo_screen} object.
+\item \code{stage_status}: one row per stage.
+\item \code{decision_requests}: the decisions the run is waiting for.
+\item \code{decision_log}: the workflow's decisions, with their rationales and
+sources.
+\item \code{scales}, \code{mode}, \code{sample_design}, \code{sample_n}, \code{decisions}, and
+\code{settings}.
+}
+
+\code{\link[=nomo_table]{nomo_table()}} returns the run's tables, including the component recipe,
+the component decision logs, and the revision lineage. Other fields hold
+the source data and state needed to resume or revise the run. They may
+change between releases and are not part of the stable interface (see
+\code{?nomologR}).
 }
 \description{
 \code{nomo_run()} coordinates the package's staged evidence workflow while

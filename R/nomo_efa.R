@@ -19,10 +19,10 @@
 #'   `nomo_factors` object. For a `nomo_factors` object, the selected
 #'   parallel-analysis factor count is used unless `factor_count` is supplied.
 #' @param factor_count Optional positive integer. This may be supplied only when
-#'   `factors` is a `nomo_factors` object. It preserves the M2 item/modeling/
-#'   correlation/missingness context while recording a researcher-selected EFA
-#'   factor count instead of pretending the primary parallel-analysis suggestion
-#'   was adopted.
+#'   `factors` is a `nomo_factors` object. It keeps that result's items,
+#'   modeling types, correlations, and missing-data handling while recording a
+#'   researcher-selected factor count, rather than implying that the
+#'   parallel-analysis suggestion was adopted.
 #' @param rotation Rotation passed to [psych::fa()]. The default is `"oblimin"`.
 #'   Orthogonal rotations are allowed but are recorded as a researcher choice.
 #' @param fm Common-factor extraction method passed to [psych::fa()]. The
@@ -47,10 +47,22 @@
 #'   used explicitly and the intervention is recorded.
 #' @param guidance Guidance settings from [nomo_defaults()].
 #'
-#' @return An object of class `nomo_efa` containing the fitted EFA, tidy pattern
-#'   and structure matrices, factor correlations, item diagnostics,
-#'   communalities/uniquenesses, residual diagnostics, adequacy information,
-#'   and a decision log.
+#' @return An object of class `nomo_efa`. The fields to read are:
+#'
+#'   * `items`, `n_factors`, and `factor_source`, which records whether the
+#'     count was the researcher's or taken from a `nomo_factors` result.
+#'   * `correlation_method` and `correlation_matrix`: the correlations analyzed.
+#'   * `pattern_matrix`, `structure_matrix`, and `factor_correlations`.
+#'   * `communalities`, `uniquenesses`, and `complexity`.
+#'   * `item_summary`: one row per item, with its primary and secondary
+#'     loadings, communality, flags, and the explanation of any flag.
+#'   * `residual_matrix`, `residual_pairs`, and `rmsr`: local misfit.
+#'   * `sample_adequacy`: sample size, KMO, and Bartlett's test.
+#'   * `decision_log`.
+#'
+#'   Other fields record the call, the settings used, and intermediate engine
+#'   results. They may change between releases and are not part of the stable
+#'   interface (see `?nomologR`).
 #'
 #' @references
 #' Browne, M. W. (2001). An overview of analytic rotation in exploratory factor
