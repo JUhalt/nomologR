@@ -80,6 +80,7 @@ reference:
       - nomo_demo_continuous
       - nomo_demo_ordinal
       - nomo_demo_network
+      - nomo_demo_walkthrough
 
 articles:
   - title: Learning path
@@ -92,6 +93,7 @@ articles:
       - scoring
       - nomological-network
       - guided-workflow
+      - content-review
       - reproducible-report
   - title: Research basis
     navbar: Research basis

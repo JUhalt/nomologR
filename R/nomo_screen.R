@@ -271,7 +271,9 @@ nomo_screen <- function(data,
   relationships <- nomo_screen_relationships(
     selected = selected,
     item_summary = item_summary,
-    guidance = guidance
+    guidance = guidance,
+    reverse = reverse,
+    scale_range = scale_range
   )
 
   decision_log <- nomo_log_new()

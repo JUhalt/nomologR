@@ -1,0 +1,221 @@
+---
+title: "From content review to empirical screening"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{From content review to empirical screening}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+library(nomologR)
+
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  message = FALSE,
+  warning = FALSE
+)
+
+# A corrected item-rest correlation from a screen, for the prose.
+item_rest <- function(screen, item) {
+  r <- screen$relationship_summary$corrected_item_rest_r
+  sprintf("%.2f", r[screen$relationship_summary$item == item])
+}
+```
+
+Content review and an empirical screen answer different questions. An expert
+panel judges whether an item represents the construct as it was defined. Response
+data show how the item behaves: whether it varies, what it shares with the other
+items, and whether it works the same way in different groups. Neither answer
+contains the other, and an item can pass one and fail the other.
+
+This article takes one item set across that boundary. A content review sorted
+twelve items and carried ten of them forward. Here those ten are screened on
+400 simulated responses. The content-review half, meaning how the panel's sort
+was analyzed and how the handoff was made, is the joint walkthrough in
+`contentvalidR`,
+[One item set, both stages](https://juhalt.github.io/contentvalidR/articles/one-item-set-both-stages.html).
+Both articles use the same data. The data are simulated from a model that is
+documented in `?nomo_demo_walkthrough`, so every claim below can be checked
+against the truth.
+
+## What content review decided
+
+`contentvalidR` records its decisions in a *handoff*. This package stores the
+handoff for these items, so the article runs without `contentvalidR` installed:
+
+```{r handoff}
+handoff <- readRDS(
+  system.file("extdata", "content-handoff-walkthrough.rds", package = "nomologR")
+)
+handoff$item_evidence[, c("item", "scale", "status", "carried", "keying")]
+```
+
+The panel carried ten items. It held back `EF5` and `TF5`, whose sorts did not
+meet the criterion. It placed the carried items in two facets:
+
+* Effort Regulation (`EF`), keeping going when the work is dull or hard;
+* Task Focus (`TF`), staying on the task rather than switching away.
+
+Keying `-1` marks `EF2` and `TF2` as reverse-worded: a high answer means *less*
+persistence.
+
+## The responses, and what each item was built to do
+
+```{r roles}
+nomo_demo_walkthrough_items[, c("item", "role")]
+```
+
+A real study does not come with a `role` column. Here it is known because the
+data were simulated to contain specific problems, and it is the answer key for
+what follows.
+
+## Screening the data as they arrive
+
+`nomo_run()` takes the handoff whole: its carried items and facets become the
+run's scales, and each facet is screened on its own.
+
+```{r raw-run}
+run <- nomo_run(nomo_demo_walkthrough, scales = handoff)
+run
+```
+
+Every item is flagged. The Effort Regulation audit shows why:
+
+```{r raw-ef}
+summary(run$results$screen$EF)
+```
+
+`EF2` correlates negatively with the rest of its facet. The audit says what that
+most likely means: the item is declared reverse-keyed, and recoded as declared
+its correlation would be positive. The negative sign is a coding matter, not
+evidence against the item.
+
+Left as answered, the item also makes the rest of the facet look bad. Every other EF
+item's correlation with the rest of the scale includes `EF2` running the wrong
+way, so all of them fall below the teaching reference. A screen of data that are
+not yet recoded cannot say much about any item in the facet.
+
+`nomologR` never recodes data. Recoding is the researcher's step, and it belongs
+in the analysis code where it can be seen.
+
+## Recoding as content review declared
+
+```{r recode}
+walk <- nomo_demo_walkthrough
+reversed <- handoff$item_evidence$item[handoff$item_evidence$keying %in% -1]
+walk[reversed] <- 6L - walk[reversed]
+```
+
+The responses are now recoded, so the run should not treat any item as still
+needing it. `reverse = character(0)` says so, in place of the handoff's keying:
+
+```{r recoded-run}
+run <- nomo_run(
+  walk,
+  scales = handoff,
+  settings = list(screen = list(reverse = character(0), scale_range = c(1, 5)))
+)
+ef <- run$results$screen$EF
+summary(ef)
+```
+
+Recoded, `EF2` correlates `r item_rest(ef, "EF2")` with the rest of its facet,
+and one EF item remains flagged: `EF4`, at `r item_rest(ef, "EF4")`. Eighteen of
+twenty judges placed `EF4` in Effort Regulation, and they were right about its
+wording. Keeping to a self-set study schedule reads as effort. In the responses,
+though, it shares almost nothing with the other items. This is what content
+review cannot see.
+
+`EF3` is not flagged here (`r item_rest(ef, "EF3")`), but its distribution stands
+out: the "Top share" column shows most answers in a single category. Almost
+everyone finishes the assignments that count toward their grade. The next
+stage shows what that costs.
+
+## The measurement model
+
+An exploratory factor analysis of the ten recoded items, with the two facets the
+panel defined:
+
+```{r efa}
+efa <- nomo_efa(walk[handoff$items], factors = 2)
+summary(efa)
+```
+
+Three items stand apart:
+
+* `EF4` has almost no common variance, as the screen suggested.
+* `EF3` loads weakly as well. Its answers are piled at the top of the scale,
+  and a variable that barely varies cannot correlate strongly with anything.
+* `TF4` loads on both factors. Working through a task without taking breaks is
+  effort as much as focus. The panel saw one facet, and the data see two.
+
+A confirmatory model with the panel's structure locates the same strain:
+
+```{r cfa}
+cfa <- nomo_cfa(nomo_model(handoff$scales), data = walk)
+cfa
+head(nomo_table(cfa, "modification_indices"), 3)
+```
+
+The largest modification index asks for `TF4` to load on Effort Regulation too.
+It is the same item the exploratory analysis flagged, found from the other
+direction. As always in this package, the index locates strain; it does not free
+the parameter.
+
+## Two cohorts
+
+The respondents came from two cohorts. Before comparing their means, check that
+the items measure the same thing in both:
+
+```{r invariance}
+inv <- nomo_invariance(
+  nomo_model(handoff$scales),
+  data = walk,
+  group = "cohort",
+  levels = c("configural", "metric", "scalar")
+)
+summary(inv)
+```
+
+Equal loadings hold; equal intercepts cost fit. The largest score diagnostic
+is `TF6`'s intercept. Putting a phone away while studying is a specific
+behavior, and the two cohorts faced different classroom rules about phones. An
+item can be content-valid and still not comparable across groups. Whether to
+release that intercept (see `nomo_partial()`) is a researcher decision, and it
+needs a rationale such as that one.
+
+## Where the two stages disagree
+
+| Item | Content review | Empirical evidence | What it teaches |
+|---|---|---|---|
+| `EF4` | Carried: 18 of 20 judges | Almost no common variance | Evidence against the item that no panel could see. Revise it, or drop it with a rationale. |
+| `EF3` | Carried: 18 of 20 judges | Weak loading, from answers piled at the ceiling | The screen is not the final word. `EF3` is the only item about finishing required work; dropping it narrows the domain the panel defined. |
+| `TF4` | Carried: 16 of 20 judges | Loads on both facets | A question about content. Revise the wording, or model the cross-loading with a rationale. |
+| `TF6` | Carried: 18 of 20 judges | Intercept differs by cohort | Explain the difference before comparing cohort means. |
+| `EF2`, `TF2` | Carried; reverse-worded | Negative until recoded | Coding, not evidence. |
+| `EF5`, `TF5` | Held back | Not screened | They remain in `nomo_demo_walkthrough`, so you can see what keeping them would have done. |
+
+Neither stage overrules the other. `EF4` is the case for not trusting a panel
+alone, and `EF3` is the case for not trusting a screen alone.
+
+## What each stage establishes
+
+Content review establishes whether items represent the construct as it was
+defined: whether the domain is covered, and whether each item belongs where it
+was written to belong. It cannot see how an item varies, what it shares with the
+others, or how it behaves in different groups.
+
+An empirical screen establishes how the responses behave. It cannot see whether
+the domain is covered. A screen would happily keep a scale of ten well-behaved
+items that all measured one corner of the construct.
+
+`nomologR` keeps both in the record. A report from a run that started from a
+handoff opens with the content review, quoting the panel's decisions in
+`contentvalidR`'s words, and each empirical flag carries its own explanation.
+Neither is presented as a verdict on the other:
+
+```{r report, eval=FALSE}
+nomo_report(run, file = "walkthrough-report.html")
+```

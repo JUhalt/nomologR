@@ -74,6 +74,13 @@ nomo_run_fresh <- function(data,
     # Careless-responding indices describe a respondent across the whole
     # instrument, so they are computed once below, never per scale (#73).
     extra[nomo_run_effort_arguments()] <- NULL
+    # Declared keying lets the item audit say whether a negative item-rest
+    # correlation is an item not yet recoded (#60). The data are never recoded.
+    keying <- nomo_run_screen_keying(settings, handoff)
+    if (!is.null(keying)) {
+      extra$reverse <- intersect(keying$reverse, scales[[scope]])
+      extra$scale_range <- keying$scale_range
+    }
 
     result <- nomo_run_safe_component(
       fun = nomo_screen,
