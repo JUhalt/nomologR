@@ -95,6 +95,7 @@ articles:
       - guided-workflow
       - content-review
       - reproducible-report
+      - teaching
   - title: Research basis
     navbar: Research basis
     contents:
