@@ -2,6 +2,11 @@
 
 ## nomologR (development version)
 
+- A guided run or validity result with a single construct no longer
+  warns “Unknown or uninitialised column” when printed. With one
+  construct there are no pairs, and the pair tables have no columns; the
+  ordering and key-evidence code read them with `$`, which warns on a
+  tibble.
 - A new article, “Teaching with nomologR”, collects exercises built on
   the teaching datasets’ known answers. Students find the weak and
   cross-loading items, check whether the factor-retention criteria
