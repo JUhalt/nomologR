@@ -2,6 +2,13 @@
 
 ## nomologR (development version)
 
+- Two edge cases read better
+  ([\#89](https://github.com/JUhalt/nomologR/issues/89)). The CFA
+  summary of a model that did not converge says “No fit index is
+  available: the model did not converge.” It had listed the reference
+  values with nothing beside them. The item-audit summary shows a column
+  with one observed value as “constant” rather than “binary”. The
+  returned `item_type` is unchanged.
 - An invalid choice names the argument it was given for
   ([\#89](https://github.com/JUhalt/nomologR/issues/89)):
   `nomo_scores(fit, method = "eap")` now stops with “`method` must be
