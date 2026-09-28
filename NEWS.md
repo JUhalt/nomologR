@@ -1,5 +1,11 @@
 # nomologR (development version)
 
+- New `nomo_method_variance()` for common method variance, following Williams, Hartman, and Cavazotte's (2010) comprehensive CFA marker technique (#129). Given a measurement model and the indicators of a marker variable, it runs the three phases the authors specify:
+  - **Model comparisons.** It fits the CFA, Baseline, Method-C, Method-U, and Method-R models, and compares them to test whether marker-based method variance is present, whether its effects are equal, and whether it biases the substantive correlations.
+  - **Reliability decomposition.** It splits each factor's reliability into substantive and method parts.
+  - **Sensitivity.** It fits the Method-S(.05) and Method-S(.01) models, with the method loadings at the upper ends of their intervals.
+  
+  The log explains what the marker must be: theoretically unrelated to the constructs, and tapping the biases the measurement context invites. It also says what the technique cannot do. With a nonideal marker it can find method variance that is absent, and it does not recover substantive correlations accurately (Richardson, Simmering, & Sturman, 2009). The measurement-evidence article works an example.
 - New `nomo_retest()` for test-retest reliability (#129).
   - **The intraclass correlations.** For scores on two or more occasions, it estimates ICC(A,1), the two-way mixed-effects, absolute-agreement, single-measurement form Koo and Li (2016) recommend for test-retest data, with its 95% interval. Beside it are the consistency form ICC(C,1) (McGraw & Wong, 1996) and the mean change between occasions. A systematic shift is flagged, because ICC(A,1) counts it as disagreement.
   - **Koo and Li's description.** The reliability is described in Koo and Li's terms (poor, moderate, good, excellent), read from the interval as they ask, and an interval that reaches "poor" is flagged.

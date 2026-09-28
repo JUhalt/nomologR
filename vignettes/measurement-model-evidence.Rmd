@@ -535,6 +535,62 @@ detectable change, 1.96 × √2 × SEM (Weir, 2005). A person whose score change
 by more than that changed reliably, in Jacobson and Truax's (1991) sense, which
 is not the same as meaningfully.
 
+# Method variance from a marker variable
+
+When every measure comes from the same self-report, some of what the items share
+may be the method rather than the constructs (Podsakoff, MacKenzie, Lee, &
+Podsakoff, 2003). A marker variable is a measure theoretically unrelated to the
+constructs that taps the biases the measurement context invites, such as social
+desirability or common scale anchors. What it shares with them is taken to be
+method variance (Lindell & Whitney, 2001; Williams, Hartman, & Cavazotte, 2010).
+
+`nomo_method_variance()` follows Williams et al.'s (2010) comprehensive CFA
+marker technique:
+
+- **Model comparisons** test whether the marker carries method variance, whether
+  its effects are equal across items, and whether it biases the substantive
+  correlations.
+- **A reliability decomposition** says how much of each factor's reliability the
+  method accounts for.
+- **Sensitivity models** fix the method loadings at the upper ends of their
+  intervals.
+
+Here, two constructs and a three-item marker are simulated sharing a method
+factor that loads .30 on every item:
+
+```{r method-variance}
+population <- "
+  A =~ 0.7*a1 + 0.7*a2 + 0.6*a3 + 0.6*a4
+  B =~ 0.7*b1 + 0.6*b2 + 0.6*b3 + 0.5*b4
+  M =~ 0.7*m1 + 0.7*m2 + 0.6*m3
+  CMV =~ 0.3*a1 + 0.3*a2 + 0.3*a3 + 0.3*a4 + 0.3*b1 + 0.3*b2 + 0.3*b3 +
+         0.3*b4 + 0.3*m1 + 0.3*m2 + 0.3*m3
+  A ~~ 0.4*B
+  A ~~ 0*M
+  B ~~ 0*M
+  CMV ~~ 0*A + 0*B + 0*M
+"
+set.seed(2010)
+survey <- lavaan::simulateData(population, sample.nobs = 600, standardized = TRUE)
+mv <- nomo_method_variance(
+  "A =~ a1 + a2 + a3 + a4\nB =~ b1 + b2 + b3 + b4",
+  data = survey, marker = c("m1", "m2", "m3")
+)
+mv
+```
+
+The marker detects the method variance, and the effects are consistent with
+being equal, so Method-C is retained. The correlation between A and B barely
+moves, and the sensitivity models do not change it.
+
+The technique has a limit worth teaching. In simulations it did not find method
+variance that was absent when the marker was ideal. With a nonideal marker it
+sometimes did, and with either kind it did not recover the substantive
+correlations accurately (Richardson, Simmering, & Sturman, 2009). The results
+describe the method variance this marker captures. They are not corrected
+estimates, and a marker chosen only because it is unrelated, such as a
+demographic, may capture no method variance at all.
+
 # Reading the evidence as an argument
 
 A useful measurement conclusion is rarely "all cutoffs passed." A stronger conclusion
@@ -564,6 +620,11 @@ is prioritized because simulation research shows that older criteria can miss ov
 because it relaxes the original HTMT tau-equivalence assumption (Roemer, Schuberth, &
 Henseler, 2021). Fornell-Larcker output remains available only as optional historical/
 supporting information.
+
+Method variance follows Williams, Hartman, and Cavazotte's (2010) comprehensive
+CFA marker technique, building on Lindell and Whitney (2001), with the limits
+Richardson, Simmering, and Sturman (2009) and Podsakoff, MacKenzie, and
+Podsakoff (2012) describe.
 
 Test-retest reliability follows Koo and Li (2016) and the intraclass
 correlations defined by Shrout and Fleiss (1979) and McGraw and Wong (1996).
