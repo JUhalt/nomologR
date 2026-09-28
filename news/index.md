@@ -1,6 +1,85 @@
 # Changelog
 
-## nomologR (development version)
+## nomologR 0.9.0
+
+nomologR 0.9.0 is the last minor release before 1.0.0, the stable
+release planned jointly with `contentvalidR`
+([\#53](https://github.com/JUhalt/nomologR/issues/53)). It carries the
+1.0 scope selected so far
+([\#113](https://github.com/JUhalt/nomologR/issues/113)); what is added
+before the release candidate on 2026-10-17 is recorded there. It is
+about how the package presents itself and what it teaches:
+
+- **Output that reads well.** Every
+  [`print()`](https://rdrr.io/r/base/print.html) and
+  [`summary()`](https://rdrr.io/r/base/summary.html) is redesigned
+  ([\#89](https://github.com/JUhalt/nomologR/issues/89)): aligned tables
+  with the columns that matter, explanations in full, APA-style numbers,
+  and one flag wording (“review”, “concern”) in the console, plots, and
+  reports.
+- **A record of how practice changed.**
+  [`nomo_methods()`](https://juhalt.github.io/nomologR/reference/nomo_methods.md)
+  gives the year each method entered the literature and, for a
+  historical method, the contemporary methods that took over its
+  question. The research-basis article draws them into a timeline.
+- **Teaching, and the bridge from content review.** “Teaching with
+  nomologR” collects exercises whose answers are known from the
+  population model. “From content review to empirical screening” carries
+  a `contentvalidR` review’s items through the screen, on the joint
+  walkthrough’s data, now shipped as `nomo_demo_walkthrough`
+  ([\#60](https://github.com/JUhalt/nomologR/issues/60)).
+- **Manuscript tables for validity evidence.**
+  [`nomo_apa_table()`](https://juhalt.github.io/nomologR/reference/nomo_apa_table.md)
+  formats
+  [`nomo_validity()`](https://juhalt.github.io/nomologR/reference/nomo_validity.md)
+  results: each construct pair’s latent correlation with its interval
+  beside HTMT2, and a table of AVE.
+- **The 1.0 contract.** Every help page names the fields of the object
+  it returns ([\#114](https://github.com/JUhalt/nomologR/issues/114)).
+
+**No computed estimate changes.** Compared value by value with 0.3.0
+across 22 analyses spanning every stage, every estimate is identical.
+What differs:
+
+- With two or more declared scales,
+  [`nomo_screen()`](https://juhalt.github.io/nomologR/reference/nomo_screen.md)
+  reviews each item within its own scale: its item-rest correlation
+  against the rest of that scale (`scale`, `scale_item_rest_r`,
+  `scale_item_rest_n`), and its negative inter-item correlations only
+  with items of the same scale (`scale_negative_interitem_n`). Which
+  items are flagged can change. `corrected_item_rest_r` and
+  `negative_interitem_n` are unchanged.
+- In a multi-group
+  [`nomo_validity()`](https://juhalt.github.io/nomologR/reference/nomo_validity.md)
+  result, `latent_correlations$block` names the groups by label rather
+  than by number.
+- A CFA that is not identified (negative degrees of freedom) is logged
+  as a concern rather than a review.
+- Wording: counts agree with their nouns, some decision-log observations
+  read differently, and the invariance summary lists the largest
+  diagnostics rather than the first.
+
+**Breaking changes.**
+
+- [`nomo_missing()`](https://juhalt.github.io/nomologR/reference/nomo_missing.md)
+  takes the fitted model as `fit` rather than `x`
+  ([\#114](https://github.com/JUhalt/nomologR/issues/114)). Calls that
+  pass the model first without naming it are unaffected. The function
+  was marked experimental, so there is no deprecation period.
+- [`nomo_screen()`](https://juhalt.github.io/nomologR/reference/nomo_screen.md)
+  checks `scales` when `effort = FALSE` too, since the within-scale
+  correlations use it. A `scales` that names items not being screened
+  now stops with an error instead of being ignored.
+- `nomo_report(apa_tables = TRUE)` adds the validity tables, and when
+  the run has a validity stage, its construct-pair table takes the place
+  of the CFA factor correlations.
+- An invalid choice stops with a message that names the argument, such
+  as “`method` must be one of …”, instead of base R’s “‘arg’ should be
+  one of”. Only code that matches the old message text would notice.
+
+nomologR 0.3.0 is still in CRAN’s queue for new submissions
+([\#39](https://github.com/JUhalt/nomologR/issues/39)); until CRAN
+accepts it, install from R-universe or GitHub.
 
 - With two or more declared scales, the item audit reviews negative
   inter-item correlations only within a scale

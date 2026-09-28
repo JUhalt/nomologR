@@ -3,7 +3,7 @@
 [![R-CMD-check](https://github.com/JUhalt/nomologR/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/JUhalt/nomologR/actions/workflows/R-CMD-check.yaml)
 [![test-coverage](https://github.com/JUhalt/nomologR/actions/workflows/test-coverage.yaml/badge.svg)](https://github.com/JUhalt/nomologR/actions/workflows/test-coverage.yaml)
 
-**Current stable release: `0.3.0`.**
+**Current stable release: `0.9.0`.**
 
 `nomologR` is a guided, evidence-based workflow for **empirical scale
 development and construct validation**. It coordinates established R
@@ -1017,7 +1017,33 @@ appendix.
 The detailed release plan lives in
 [`ROADMAP.md`](https://github.com/JUhalt/nomologR/blob/master/ROADMAP.md).
 
-### Current release: `v0.3.0`
+### Current release: `v0.9.0`
+
+`v0.9.0` is the last minor release before `v1.0.0`, whose release
+candidate is planned for 2026-10-17
+([\#113](https://github.com/JUhalt/nomologR/issues/113)). It is about
+how the package presents itself and what it teaches:
+
+- redesigned console output, plots, and report tables, with one flag
+  wording throughout
+  ([\#89](https://github.com/JUhalt/nomologR/issues/89));
+- the historical record in
+  [`nomo_methods()`](https://juhalt.github.io/nomologR/reference/nomo_methods.md):
+  when each method was introduced, and what took over from each
+  historical one, drawn into a timeline in the research-basis article;
+- two articles, “Teaching with nomologR” and “From content review to
+  empirical screening”, with the walkthrough data shared with
+  `contentvalidR`
+  ([\#60](https://github.com/JUhalt/nomologR/issues/60));
+- APA tables for convergent and discriminant evidence, and an item audit
+  that reviews each item within its declared scale;
+- every help page naming the fields of the object it returns
+  ([\#114](https://github.com/JUhalt/nomologR/issues/114)).
+
+No computed estimate changed from `v0.3.0`; NEWS lists the changes to
+returned columns, wording, and arguments.
+
+### Previous releases
 
 `v0.3.0` is the first release submitted to CRAN
 ([\#39](https://github.com/JUhalt/nomologR/issues/39)). Its scope was
@@ -1043,8 +1069,6 @@ kept deliberately lean for that reason
 
 Certification is recorded in
 [\#75](https://github.com/JUhalt/nomologR/issues/75).
-
-### Previous releases
 
 `v0.2.1` completed the v0.2 workflow for what happens after a
 measurement model is established

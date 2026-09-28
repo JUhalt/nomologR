@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="index.html">nomologR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -71,7 +71,7 @@
 <div class="page-header"><h1 id="nomologr">nomologR<a class="anchor" aria-label="anchor" href="#nomologr"></a>
 </h1></div>
 <p><a href="https://github.com/JUhalt/nomologR/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/JUhalt/nomologR/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check"></a> <a href="https://github.com/JUhalt/nomologR/actions/workflows/test-coverage.yaml" class="external-link"><img src="https://github.com/JUhalt/nomologR/actions/workflows/test-coverage.yaml/badge.svg" alt="test-coverage"></a></p>
-<p><strong>Current stable release: <code>0.3.0</code>.</strong></p>
+<p><strong>Current stable release: <code>0.9.0</code>.</strong></p>
 <p><code>nomologR</code> is a guided, evidence-based workflow for <strong>empirical scale development and construct validation</strong>. It coordinates established R engines while adding transparent diagnostics, literature-linked explanations, decision logging, and theory-aware guidance.</p>
 <blockquote>
 <p><strong>Core rule:</strong> Flag, explain, and document. Never silently delete.</p>
@@ -704,8 +704,21 @@
 </h2>
 <p>The detailed release plan lives in <a href="https://github.com/JUhalt/nomologR/blob/master/ROADMAP.md" class="external-link"><code>ROADMAP.md</code></a>.</p>
 <div class="section level3">
-<h3 id="current-release-v030">Current release: <code>v0.3.0</code>
-<a class="anchor" aria-label="anchor" href="#current-release-v030"></a>
+<h3 id="current-release-v090">Current release: <code>v0.9.0</code>
+<a class="anchor" aria-label="anchor" href="#current-release-v090"></a>
+</h3>
+<p><code>v0.9.0</code> is the last minor release before <code>v1.0.0</code>, whose release candidate is planned for 2026-10-17 (<a href="https://github.com/JUhalt/nomologR/issues/113" class="external-link">#113</a>). It is about how the package presents itself and what it teaches:</p>
+<ul>
+<li>redesigned console output, plots, and report tables, with one flag wording throughout (<a href="https://github.com/JUhalt/nomologR/issues/89" class="external-link">#89</a>);</li>
+<li>the historical record in <code><a href="reference/nomo_methods.html">nomo_methods()</a></code>: when each method was introduced, and what took over from each historical one, drawn into a timeline in the research-basis article;</li>
+<li>two articles, “Teaching with nomologR” and “From content review to empirical screening”, with the walkthrough data shared with <code>contentvalidR</code> (<a href="https://github.com/JUhalt/nomologR/issues/60" class="external-link">#60</a>);</li>
+<li>APA tables for convergent and discriminant evidence, and an item audit that reviews each item within its declared scale;</li>
+<li>every help page naming the fields of the object it returns (<a href="https://github.com/JUhalt/nomologR/issues/114" class="external-link">#114</a>).</li>
+</ul>
+<p>No computed estimate changed from <code>v0.3.0</code>; NEWS lists the changes to returned columns, wording, and arguments.</p>
+</div>
+<div class="section level3">
+<h3 id="previous-releases">Previous releases<a class="anchor" aria-label="anchor" href="#previous-releases"></a>
 </h3>
 <p><code>v0.3.0</code> is the first release submitted to CRAN (<a href="https://github.com/JUhalt/nomologR/issues/39" class="external-link">#39</a>). Its scope was kept deliberately lean for that reason (<a href="https://github.com/JUhalt/nomologR/issues/38" class="external-link">#38</a>; <a href="https://github.com/JUhalt/nomologR/milestone/3" class="external-link">milestone</a>):</p>
 <ul>
@@ -716,10 +729,6 @@
 <li>full test coverage again, which found four defects, now fixed (<a href="https://github.com/JUhalt/nomologR/issues/72" class="external-link">#72</a>).</li>
 </ul>
 <p>Certification is recorded in <a href="https://github.com/JUhalt/nomologR/issues/75" class="external-link">#75</a>.</p>
-</div>
-<div class="section level3">
-<h3 id="previous-releases">Previous releases<a class="anchor" aria-label="anchor" href="#previous-releases"></a>
-</h3>
 <p><code>v0.2.1</code> completed the v0.2 workflow for what happens after a measurement model is established (<a href="https://github.com/JUhalt/nomologR/issues/70" class="external-link">#70</a>). It added <code><a href="reference/nomo_scores.html">nomo_scores()</a></code> (#33), careless-responding indices (#34), factor determinacy and construct replicability (#56), disclosure of relationships estimated between observed variables (#62), a parallel reliability bootstrap (#42), <code><a href="reference/nomo_apa_table.html">nomo_apa_table()</a></code> and Word reports (#35), <code><a href="reference/nomo_missing.html">nomo_missing()</a></code> (#32), and reports rendered from inside R Markdown and Quarto documents (#40).</p>
 <p><code>v0.2.0</code> made the workflow research-backed from historical to contemporary practice and more useful to graduate students and researchers. Scope was selected in <a href="https://github.com/JUhalt/nomologR/issues/22" class="external-link">#22</a>. It added learning foundations (#25) with teaching datasets, runnable vignettes, and the research-basis article; readable invariance labels (#31); maintenance (#36); model comparison with <code><a href="reference/nomo_compare.html">nomo_compare()</a></code> (#27); auditable revision lineage with <code><a href="reference/nomo_revise.html">nomo_revise()</a></code> (#28); the methods registry with <code><a href="reference/nomo_methods.html">nomo_methods()</a></code> (#26); interval-based replication-status language for sign changes (#30); bifactor and higher-order models with <code><a href="reference/nomo_hierarchical.html">nomo_hierarchical()</a></code> (#29); and release certification (#37).</p>
 </div>

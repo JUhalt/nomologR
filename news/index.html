@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">nomologR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -52,7 +52,32 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="development version" id="nomologr-development-version">nomologR (development version)<a class="anchor" aria-label="anchor" href="#nomologr-development-version"></a></h2>
+<h2 class="pkg-version" data-toc-text="0.9.0" id="nomologr-090">nomologR 0.9.0<a class="anchor" aria-label="anchor" href="#nomologr-090"></a></h2>
+<p>nomologR 0.9.0 is the last minor release before 1.0.0, the stable release planned jointly with <code>contentvalidR</code> (<a href="https://github.com/JUhalt/nomologR/issues/53" class="external-link">#53</a>). It carries the 1.0 scope selected so far (<a href="https://github.com/JUhalt/nomologR/issues/113" class="external-link">#113</a>); what is added before the release candidate on 2026-10-17 is recorded there. It is about how the package presents itself and what it teaches:</p>
+<ul><li>
+<strong>Output that reads well.</strong> Every <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> is redesigned (<a href="https://github.com/JUhalt/nomologR/issues/89" class="external-link">#89</a>): aligned tables with the columns that matter, explanations in full, APA-style numbers, and one flag wording (“review”, “concern”) in the console, plots, and reports.</li>
+<li>
+<strong>A record of how practice changed.</strong> <code><a href="../reference/nomo_methods.html">nomo_methods()</a></code> gives the year each method entered the literature and, for a historical method, the contemporary methods that took over its question. The research-basis article draws them into a timeline.</li>
+<li>
+<strong>Teaching, and the bridge from content review.</strong> “Teaching with nomologR” collects exercises whose answers are known from the population model. “From content review to empirical screening” carries a <code>contentvalidR</code> review’s items through the screen, on the joint walkthrough’s data, now shipped as <code>nomo_demo_walkthrough</code> (<a href="https://github.com/JUhalt/nomologR/issues/60" class="external-link">#60</a>).</li>
+<li>
+<strong>Manuscript tables for validity evidence.</strong> <code><a href="../reference/nomo_apa_table.html">nomo_apa_table()</a></code> formats <code><a href="../reference/nomo_validity.html">nomo_validity()</a></code> results: each construct pair’s latent correlation with its interval beside HTMT2, and a table of AVE.</li>
+<li>
+<strong>The 1.0 contract.</strong> Every help page names the fields of the object it returns (<a href="https://github.com/JUhalt/nomologR/issues/114" class="external-link">#114</a>).</li>
+</ul><p><strong>No computed estimate changes.</strong> Compared value by value with 0.3.0 across 22 analyses spanning every stage, every estimate is identical. What differs:</p>
+<ul><li>With two or more declared scales, <code><a href="../reference/nomo_screen.html">nomo_screen()</a></code> reviews each item within its own scale: its item-rest correlation against the rest of that scale (<code>scale</code>, <code>scale_item_rest_r</code>, <code>scale_item_rest_n</code>), and its negative inter-item correlations only with items of the same scale (<code>scale_negative_interitem_n</code>). Which items are flagged can change. <code>corrected_item_rest_r</code> and <code>negative_interitem_n</code> are unchanged.</li>
+<li>In a multi-group <code><a href="../reference/nomo_validity.html">nomo_validity()</a></code> result, <code>latent_correlations$block</code> names the groups by label rather than by number.</li>
+<li>A CFA that is not identified (negative degrees of freedom) is logged as a concern rather than a review.</li>
+<li>Wording: counts agree with their nouns, some decision-log observations read differently, and the invariance summary lists the largest diagnostics rather than the first.</li>
+</ul><p><strong>Breaking changes.</strong></p>
+<ul><li>
+<code><a href="../reference/nomo_missing.html">nomo_missing()</a></code> takes the fitted model as <code>fit</code> rather than <code>x</code> (<a href="https://github.com/JUhalt/nomologR/issues/114" class="external-link">#114</a>). Calls that pass the model first without naming it are unaffected. The function was marked experimental, so there is no deprecation period.</li>
+<li>
+<code><a href="../reference/nomo_screen.html">nomo_screen()</a></code> checks <code>scales</code> when <code>effort = FALSE</code> too, since the within-scale correlations use it. A <code>scales</code> that names items not being screened now stops with an error instead of being ignored.</li>
+<li>
+<code>nomo_report(apa_tables = TRUE)</code> adds the validity tables, and when the run has a validity stage, its construct-pair table takes the place of the CFA factor correlations.</li>
+<li>An invalid choice stops with a message that names the argument, such as “<code>method</code> must be one of …”, instead of base R’s “‘arg’ should be one of”. Only code that matches the old message text would notice.</li>
+</ul><p>nomologR 0.3.0 is still in CRAN’s queue for new submissions (<a href="https://github.com/JUhalt/nomologR/issues/39" class="external-link">#39</a>); until CRAN accepts it, install from R-universe or GitHub.</p>
 <ul><li>With two or more declared scales, the item audit reviews negative inter-item correlations only within a scale (<a href="https://github.com/JUhalt/nomologR/issues/113" class="external-link">#113</a>), as it does item-rest correlations. Two items of one scale should correlate positively, so a negative pair there is a keying or wording clue. Items of different constructs need not correlate at all, and a correlation near zero is negative about half the time. In <code>nomo_demo_network</code>, social desirability is uncorrelated with the other two constructs by design, and its near-zero negative correlations with their items had flagged all eight Agency and Persistence items. <code>relationship_summary</code> gains <code>scale_negative_interitem_n</code>. <code>negative_interitem_n</code> and <code>inter_item_correlations</code> are unchanged. Negative correlations between scales are logged as information (<code>negative_pairs_between_scales</code>). The log entry for negative pairs now agrees in number: “1 estimable inter-item correlation is negative”.</li>
 <li>
 <code><a href="../reference/nomo_apa_table.html">nomo_apa_table()</a></code> formats a <code><a href="../reference/nomo_validity.html">nomo_validity()</a></code> result (<a href="https://github.com/JUhalt/nomologR/issues/113" class="external-link">#113</a>). <code>type = "discriminant"</code>, the default, gives each pair of constructs one row: its latent correlation with a 95% confidence interval (Rönkkö &amp; Cho, 2022), beside HTMT2 (Roemer et al., 2021) and HTMT (Henseler et al., 2015) when they were computed. <code>type = "convergent"</code> gives each construct’s number of indicators and AVE. The pair table is deliberately not the Fornell-Larcker matrix with the square root of AVE on its diagonal, the comparison that <code><a href="../reference/nomo_methods.html">nomo_methods()</a></code> records as historical because it often misses constructs that are not distinct. Correlations and AVE lose their leading zero; the ratios, which can exceed 1, keep it. A multi-group model’s tables add a Group column. <code>nomo_report(apa_tables = TRUE)</code> adds both tables after reliability, and the pair table takes the place of the CFA factor correlations, which it repeats.</li>
