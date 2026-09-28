@@ -28,7 +28,10 @@
   section, “How practice changed”, with a timeline from 1937 to 2022 and
   a table of what took over from each historical method, both drawn from
   the registry. The KMO entry now cites Kaiser (1970), which introduced
-  the index.
+  the index. The methods table in
+  [`nomo_report()`](https://juhalt.github.io/nomologR/reference/nomo_report.md)
+  shows the year each method was introduced, so an archived report
+  carries the same record.
 - Every function’s help page now names the fields of the object it
   returns ([\#114](https://github.com/JUhalt/nomologR/issues/114)). The
   stability policy covers “the documented fields of the objects they
