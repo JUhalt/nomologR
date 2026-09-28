@@ -44,14 +44,10 @@ warns once per session naming its replacement, and is listed in NEWS.
 whose defaults leave results unchanged, new fields in returned objects, or
 new decision-log rows. Address fields by name, not position.
 
-\strong{Experimental.} Two parts of the interface are experimental until 1.0.0 and
-may change without a deprecation period, with the change described in NEWS:
-\itemize{
-\item \code{\link[=nomo_missing]{nomo_missing()}}. Its rule for flagging a difference may be refined to
-separate sampling variability from bias.
-\item The layout of \code{\link[=nomo_apa_table]{nomo_apa_table()}} tables, which may be adjusted as APA
-style is applied to more tables.
-}
+\strong{APA formatting.} The \code{type} values of \code{\link[=nomo_apa_table]{nomo_apa_table()}} and the structure
+of the object it returns are covered. The formatting of a table, meaning its
+headings, number formats, and notes, may still be corrected where it departs
+from APA style, with the correction described in NEWS.
 
 \strong{The contentvalidR handoff.} The exchange object is versioned by its
 producer. Within a schema version, fields are only added, and nomologR

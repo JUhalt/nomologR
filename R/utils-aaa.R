@@ -35,13 +35,10 @@
 #' whose defaults leave results unchanged, new fields in returned objects, or
 #' new decision-log rows. Address fields by name, not position.
 #'
-#' **Experimental.** Two parts of the interface are experimental until 1.0.0 and
-#' may change without a deprecation period, with the change described in NEWS:
-#'
-#' * [nomo_missing()]. Its rule for flagging a difference may be refined to
-#'   separate sampling variability from bias.
-#' * The layout of [nomo_apa_table()] tables, which may be adjusted as APA
-#'   style is applied to more tables.
+#' **APA formatting.** The `type` values of [nomo_apa_table()] and the structure
+#' of the object it returns are covered. The formatting of a table, meaning its
+#' headings, number formats, and notes, may still be corrected where it departs
+#' from APA style, with the correction described in NEWS.
 #'
 #' **The contentvalidR handoff.** The exchange object is versioned by its
 #' producer. Within a schema version, fields are only added, and nomologR

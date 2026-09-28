@@ -57,10 +57,10 @@ The rules come from the \emph{Publication Manual of the American Psychological
 Association} (7th ed.), checked against Purdue OWL's APA 7 guides.
 Journal-specific templates are out of scope.
 
-\strong{Experimental layout.} The layout of these tables is experimental until
-nomologR 1.0.0 and may be adjusted as APA style is applied to more tables.
-Any change will be described in NEWS; see \code{?nomologR} for the stability
-policy.
+\strong{Stability.} The \code{type} values and the structure of the returned object
+follow the stability policy in \code{?nomologR}. Formatting may still be
+corrected where it departs from APA style, with the correction described in
+NEWS.
 }
 \examples{
 model <- '
