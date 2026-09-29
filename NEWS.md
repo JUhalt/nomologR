@@ -33,6 +33,12 @@
   - flags coefficient alpha for review, since it understates reliability when loadings differ and so overcorrects.
   
   `hypothesis_evidence` gains `se_reliability_added`, `nomo_table()` gains the `"single_indicators"` and `"sensitivity"` types, and the APA hypotheses table notes the correction. The nomological-network article shows the correction recovering the population path (.45) from the Persistence mean (.41 uncorrected, .46 corrected). The observed-endpoint note in the log now names the option.
+- The output gallery in `dev/output-gallery.R` (#89) now covers the features added for 1.0 (#129): ESEM, method variance, test-retest reliability, power, latent means, longitudinal invariance, and single indicators. Reading their output as a user would led to these display changes. Computed values, decision-log text, and `nomo_table()` output are unchanged.
+  - **Invariance.** A summary with a strict level had lost RMSEA and SRMR at 80 columns, pushed out by the cumulative "Constraints" column. The fit table now leaves that column out, and a line beneath it says what each level adds: "Held equal: loadings from metric; intercepts from scalar; residuals from strict." Across occasions, the latent-change column is headed "Change". The fit and change plots angle the level names, which ran together with four levels.
+  - **Method variance.** Each comparison says what it asks, such as "Method variance present?". The correlations are headed by the models' names, such as "Method-C" and "Method-S(.05)", rather than "Retained" and "S(.05)". The method loading's p-value is headed "Method p". The print and summary list the decision log's flagged entries, as `nomo_esem()`'s do.
+  - **Test-retest reliability.** The print lists the flagged entries too. SEM, SDC, and SD have two decimals, like the intervals beside them.
+  - **Alignment.** Percentages are right-aligned like the numbers beside them, in the method-variance tables and in `nomo_power_simulate()`'s print. So are the reliability and its standard error in the network summary's single-indicator table.
+  - **Monte Carlo power.** Convergence, improper solutions, and the biases are percentages with one decimal, as the bias references are, so 499 converged replications of 500 no longer round to 100%. The note says what "Max bias" and "Max SE bias" are.
 - The content-review reader is tested against `contentvalidR` 0.10.0 and 0.10.1 output too (#53). Their handoffs are identical to 0.9.0's apart from the producer version and date, and the reader needed no change.
 
 # nomologR 0.9.0
