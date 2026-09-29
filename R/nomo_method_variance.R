@@ -682,7 +682,8 @@ print.nomo_method_variance <- function(x, ...) {
   ))
   nomo_method_variance_present_comparisons(x$comparisons)
   nomo_method_variance_present_reliability(x$reliability)
-  nomo_method_variance_present_correlations(x$correlations)
+  nomo_method_variance_present_correlations(x$correlations, x$retained)
+  nomo_present_flagged(x$decision_log)
   nomo_method_variance_present_note()
   invisible(x)
 }
@@ -717,29 +718,35 @@ print.summary_nomo_method_variance <- function(x, ...) {
   )
   nomo_method_variance_present_comparisons(x$comparisons)
 
-  loadings <- x$method_loadings
-  loadings$share <- sprintf("%.1f%%", 100 * loadings$method_variance)
   nomo_present_section(sprintf("Loadings in %s (completely standardized)", x$retained))
   nomo_present_table(
-    loadings,
+    x$method_loadings,
     c("Factor" = "factor", "Item" = "item", "Substantive" = "substantive_loading",
-      "Method" = "method_loading", "Method variance" = "share", "p" = "p_value"),
-    formats = list(p_value = nomo_present_p),
+      "Method" = "method_loading", "Method p" = "p_value",
+      "Method variance" = "method_variance"),
+    formats = list(p_value = nomo_present_p, method_variance = nomo_present_percent),
     more = "nomo_table(x, \"loadings\")"
   )
   nomo_method_variance_present_reliability(x$reliability)
-  nomo_method_variance_present_correlations(x$correlations)
+  nomo_method_variance_present_correlations(x$correlations, x$retained)
+  nomo_present_flagged(x$decision_log, recommendation = TRUE)
   nomo_method_variance_present_note()
   invisible(x)
 }
 
 
+# The comparisons in the order they are made, each with the question it
+# answers, so the table can be read without the documentation.
 nomo_method_variance_present_comparisons <- function(comparisons) {
+  shown <- comparisons
+  shown$question_shown <- c(
+    "Method variance present?", "Method effects equal?", "Correlations biased?"
+  )[seq_len(nrow(shown))]
   nomo_present_section("Model comparisons")
   nomo_present_table(
-    comparisons,
-    c("Comparison" = "comparison", "Chi-square diff." = "chisq_diff",
-      "df" = "df_diff", "p" = "p_value"),
+    shown,
+    c("Comparison" = "comparison", "Question" = "question_shown",
+      "Chi-sq diff" = "chisq_diff", "df" = "df_diff", "p" = "p_value"),
     formats = list(chisq_diff = function(v) nomo_present_number(v, 2L),
                    df_diff = function(v) format(v, trim = TRUE),
                    p_value = nomo_present_p),
@@ -749,28 +756,30 @@ nomo_method_variance_present_comparisons <- function(comparisons) {
 
 
 nomo_method_variance_present_reliability <- function(reliability) {
-  shown <- reliability
-  shown$share <- sprintf("%.1f%%", 100 * shown$method_share)
   nomo_present_section("Reliability decomposition")
   nomo_present_table(
-    shown,
+    reliability,
     c("Factor" = "factor", "Total" = "reliability_total",
       "Substantive" = "reliability_substantive", "Method" = "reliability_method",
-      "Method share" = "share"),
+      "Method share" = "method_share"),
+    formats = list(method_share = nomo_present_percent),
     more = "nomo_table(x, \"reliability\")"
   )
 }
 
 
-nomo_method_variance_present_correlations <- function(correlations) {
+# The models are named as in the models table, the retained one by its name.
+nomo_method_variance_present_correlations <- function(correlations, retained) {
   if (!nrow(correlations)) return(invisible(NULL))
   shown <- correlations
   shown$pair <- paste(shown$factor1, "with", shown$factor2)
   nomo_present_section("Substantive correlations")
   nomo_present_table(
     shown,
-    c("Factors" = "pair", "CFA" = "cfa", "Baseline" = "baseline",
-      "Retained" = "retained", "S(.05)" = "method_s_05", "S(.01)" = "method_s_01"),
+    stats::setNames(
+      c("pair", "cfa", "baseline", "retained", "method_s_05", "method_s_01"),
+      c("Factors", "CFA", "Baseline", retained, "Method-S(.05)", "Method-S(.01)")
+    ),
     more = "nomo_table(x, \"correlations\")"
   )
 }

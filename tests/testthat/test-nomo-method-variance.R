@@ -182,11 +182,23 @@ test_that("the results print and summarize within 80 columns", {
   printed <- capture.output(print(mv))
   expect_match(printed, "Retained: Method-C", fixed = TRUE, all = FALSE)
   expect_match(printed, "Baseline vs. Method-C", fixed = TRUE, all = FALSE)
+  # Each comparison says what it asks, the correlations are headed by the
+  # models' own names, and the flagged log entries are listed (#89).
+  expect_match(printed, "Baseline vs. Method-C  Method variance present?", fixed = TRUE,
+               all = FALSE)
+  expect_match(printed, "Baseline  Method-C  Method-S(.05)  Method-S(.01)", fixed = TRUE,
+               all = FALSE)
+  expect_match(printed, "review: Marker-based method variance is present", fixed = TRUE,
+               all = FALSE)
   expect_false(any(nchar(printed) > 80L))
   summarized <- capture.output(print(summary(mv)))
   expect_match(summarized, "Loadings in Method-C (completely standardized)",
                fixed = TRUE, all = FALSE)
   expect_match(summarized, "Method-S(.01)", fixed = TRUE, all = FALSE)
+  # Percentages are right-aligned with the numbers beside them.
+  expect_match(summarized, "Method p  Method variance$", all = FALSE)
+  expect_match(summarized, "^  A +0\\.[0-9]{3} +0\\.[0-9]{3} +0\\.[0-9]{3} +[0-9.]+%$",
+               all = FALSE)
   expect_false(any(nchar(summarized) > 80L))
 })
 
