@@ -61,6 +61,12 @@ intervals cover the population values, and how often each parameter is
 detected. This is Muthén and Muthén's (2002) Monte Carlo approach.
 }
 \details{
+\strong{Experimental.} This function is experimental and remains so after
+nomologR 1.0.0. The metric of its estimates and its summaries may be refined
+during 1.x, without a deprecation period, as it is extended beyond complete
+continuous data. Any change will be described in NEWS; see the package help
+page, \code{?nomologR}, for the stability policy.
+
 Data are generated from \code{population}, a lavaan model whose parameters carry
 their population values (for example \code{A =~ 0.7*a1}), with
 \code{lavaan::simulateData()}. With \code{standardized = TRUE}, the default, the

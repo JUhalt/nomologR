@@ -43,6 +43,14 @@
 #' * The layout of [nomo_apa_table()] tables, which may be adjusted as APA
 #'   style is applied to more tables.
 #'
+#' Two functions remain experimental after 1.0.0. They may change during 1.x
+#' without a deprecation period, with each change described in NEWS:
+#'
+#' * [nomo_method_variance()]. Its output may be reorganized as the marker
+#'   technique is extended beyond continuous indicators.
+#' * [nomo_power_simulate()]. The metric of its estimates and its summaries may
+#'   be refined as it is extended beyond complete continuous data.
+#'
 #' **The contentvalidR handoff.** The exchange object is versioned by its
 #' producer. Within a schema version, fields are only added, and nomologR
 #' ignores fields it does not know. Anything else is a new schema version,

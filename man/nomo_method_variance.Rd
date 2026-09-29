@@ -75,6 +75,12 @@ reliability it accounts for. It follows the comprehensive CFA marker
 technique of Williams, Hartman, and Cavazotte (2010).
 }
 \details{
+\strong{Experimental.} This function is experimental and remains so after
+nomologR 1.0.0. Its output may be reorganized during 1.x, without a
+deprecation period, as the marker technique is extended beyond continuous
+indicators. Any change will be described in NEWS; see the package help page,
+\code{?nomologR}, for the stability policy.
+
 \strong{The marker.} A marker variable is theoretically unrelated to the
 substantive variables, so what it shares with them is taken to be method
 variance (Lindell & Whitney, 2001). Williams et al. (2010) expand the

@@ -196,6 +196,12 @@ nomo_power_model_df <- function(model) {
 #' detected. This is Muthén and Muthén's (2002) Monte Carlo approach.
 #'
 #' @details
+#' **Experimental.** This function is experimental and remains so after
+#' nomologR 1.0.0. The metric of its estimates and its summaries may be refined
+#' during 1.x, without a deprecation period, as it is extended beyond complete
+#' continuous data. Any change will be described in NEWS; see the package help
+#' page, `?nomologR`, for the stability policy.
+#'
 #' Data are generated from `population`, a lavaan model whose parameters carry
 #' their population values (for example `A =~ 0.7*a1`), with
 #' `lavaan::simulateData()`. With `standardized = TRUE`, the default, the

@@ -53,6 +53,15 @@ separate sampling variability from bias.
 style is applied to more tables.
 }
 
+Two functions remain experimental after 1.0.0. They may change during 1.x
+without a deprecation period, with each change described in NEWS:
+\itemize{
+\item \code{\link[=nomo_method_variance]{nomo_method_variance()}}. Its output may be reorganized as the marker
+technique is extended beyond continuous indicators.
+\item \code{\link[=nomo_power_simulate]{nomo_power_simulate()}}. The metric of its estimates and its summaries may
+be refined as it is extended beyond complete continuous data.
+}
+
 \strong{The contentvalidR handoff.} The exchange object is versioned by its
 producer. Within a schema version, fields are only added, and nomologR
 ignores fields it does not know. Anything else is a new schema version,
