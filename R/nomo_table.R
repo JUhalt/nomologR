@@ -36,6 +36,9 @@
 #'   composites modeled as single indicators; see [nomo_network()].
 #' * `nomo_retest`: `"icc"` (default), `"reliable_change"`, `"decision_log"`;
 #'   see [nomo_retest()].
+#' * `nomo_method_variance`: `"comparisons"` (default), `"models"`,
+#'   `"loadings"`, `"reliability"`, `"correlations"`, `"decision_log"`; see
+#'   [nomo_method_variance()].
 #' * `nomo_invariance`: `"fit"` (default), `"categories"`, `"partial"`,
 #'   `"local_strain"`, `"latent_means"`, `"decision_log"`. The local-strain table keeps lavaan's
 #'   internal `constraint` label and adds a human-readable
@@ -142,6 +145,18 @@ nomo_table.nomo_retest <- function(
     type = c("icc", "reliable_change", "decision_log"),
     ...) {
   type <- nomo_match_arg(type)
+  x[[type]]
+}
+
+
+#' @export
+nomo_table.nomo_method_variance <- function(
+    x,
+    type = c("comparisons", "models", "loadings", "reliability", "correlations",
+             "decision_log"),
+    ...) {
+  type <- nomo_match_arg(type)
+  if (type == "loadings") return(x$method_loadings)
   x[[type]]
 }
 

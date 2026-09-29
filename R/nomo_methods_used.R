@@ -462,6 +462,14 @@ nomo_methods_used.nomo_retest <- function(x, ...) {
 }
 
 
+# Method variance ---------------------------------------------------------------
+
+#' @export
+nomo_methods_used.nomo_method_variance <- function(x, ...) {
+  c("cfa_marker_technique", "ml_cfa")
+}
+
+
 # Nomological network ---------------------------------------------------------
 
 #' @export
