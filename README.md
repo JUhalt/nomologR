@@ -265,8 +265,8 @@ It should never say:
 Under `correlation = "auto"`, continuous, binary, ordinal, and genuinely
 mixed item sets are routed to Pearson, tetrachoric, polychoric, or mixed
 correlations as appropriate. The selected method and modeling
-assumptions are also exposed through the convenience fields
-`fac$correlation` and `fac$modeling_types`.
+assumptions are also exposed through the fields `fac$correlation_method`
+and `fac$item_types`.
 
 When EKC is used with a non-Pearson correlation matrix, `nomologR` keeps
 the criterion available but surfaces an explicit qualification that its
@@ -321,7 +321,7 @@ fac_factor <- nomo_factors(
   )
 )
 
-fac_factor$modeling_types
+fac_factor$item_types
 fac_factor$decision_log
 ```
 
