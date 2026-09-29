@@ -70,6 +70,8 @@ Confirmatory measurement model
 - [`nomo_method_variance()`](https://juhalt.github.io/nomologR/reference/nomo_method_variance.md)
   : Method variance from a marker variable: the comprehensive CFA marker
   technique
+- [`nomo_esem()`](https://juhalt.github.io/nomologR/reference/nomo_esem.md)
+  : Exploratory structural equation modeling beside its CFA
 - [`nomo_model()`](https://juhalt.github.io/nomologR/reference/nomo_model.md)
   : Build confirmatory factor-analysis syntax
 - [`nomo_split()`](https://juhalt.github.io/nomologR/reference/nomo_split.md)

@@ -3,6 +3,33 @@
 ## nomologR (development version)
 
 - New
+  [`nomo_esem()`](https://juhalt.github.io/nomologR/reference/nomo_esem.md)
+  fits a measurement model as exploratory structural equation modeling
+  (ESEM) beside its CFA
+  ([\#129](https://github.com/JUhalt/nomologR/issues/129)). Every item
+  may load on every factor, so the cross-loadings a CFA fixes at zero
+  are estimated, and the model still gives fit and standard errors
+  (Asparouhov & Muthén, 2009).
+  - **Rotation.** By default it uses the target rotation Marsh, Morin,
+    Parker, and Kaur (2014) recommend for an a priori structure (Browne,
+    2001): each item’s own loading is free and its cross-loadings are
+    rotated towards zero. Geomin is available too.
+  - **The comparison.** It reports both models’ fit, their factor
+    correlations and the change between them, and their likelihood-ratio
+    test. The ESEM is flagged for review when it fits better on TLI and
+    RMSEA, which penalize its extra parameters; lower ESEM factor
+    correlations then show that the CFA’s zero cross-loadings are
+    inflating them. Cross-loadings at or above
+    `efa_crossloading_reference` and main loadings below
+    `efa_loading_reference` are flagged as evidence about items, not
+    instructions.
+  - **Other outputs.** [`print()`](https://rdrr.io/r/base/print.html),
+    [`summary()`](https://rdrr.io/r/base/summary.html),
+    [`nomo_table()`](https://juhalt.github.io/nomologR/reference/nomo_table.md),
+    [`nomo_methods()`](https://juhalt.github.io/nomologR/reference/nomo_methods.md),
+    and a section in the measurement-evidence article, where ESEM finds
+    both features built into `nomo_demo_continuous`.
+- New
   [`nomo_method_variance()`](https://juhalt.github.io/nomologR/reference/nomo_method_variance.md)
   for common method variance, following Williams, Hartman, and
   Cavazotte’s (2010) comprehensive CFA marker technique

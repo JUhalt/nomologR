@@ -1,0 +1,151 @@
+# Exploratory structural equation modeling beside its CFA
+
+`nomo_esem()` fits a measurement model as exploratory structural
+equation modeling (ESEM), in which every item may load on every factor,
+and fits the same factors as an independent-clusters CFA, in which each
+item loads on one factor only. It compares their fit, their factor
+correlations, and the cross-loadings the CFA fixes at zero.
+
+## Usage
+
+``` r
+nomo_esem(
+  model,
+  data,
+  rotation = c("target", "geomin"),
+  ordered = NULL,
+  estimator = NULL,
+  missing = NULL,
+  guidance = nomo_defaults()
+)
+```
+
+## Arguments
+
+- model:
+
+  A measurement model in which each indicator loads on one factor: a
+  lavaan model string or a
+  [`nomo_model()`](https://juhalt.github.io/nomologR/reference/nomo_model.md)
+  object. It defines the factors, the items, and the target.
+
+- data:
+
+  A data frame with the indicators.
+
+- rotation:
+
+  `"target"` (default) or `"geomin"`.
+
+- ordered:
+
+  Optional character vector of ordered indicators.
+
+- estimator, missing:
+
+  Optional lavaan `estimator` and `missing` options.
+
+- guidance:
+
+  Guidance settings from
+  [`nomo_defaults()`](https://juhalt.github.io/nomologR/reference/nomo_defaults.md);
+  its `efa_loading_reference` and `efa_crossloading_reference` are used.
+
+## Value
+
+A `nomo_esem` object. The fields to read are:
+
+- `loadings`: each item's standardized loading on each factor in the
+  ESEM, whether it is the item's main loading or a cross-loading, its
+  standard error and p-value, and the CFA's loading for main loadings.
+
+- `factor_correlations`: each pair of factors' correlation in the ESEM
+  and the CFA, and their difference.
+
+- `fit`: both models' chi-square, degrees of freedom, CFI, TLI, RMSEA,
+  SRMR, AIC, and BIC.
+
+- `comparison`: the likelihood-ratio test of the CFA against the ESEM.
+
+- `esem_fit`, `cfa_fit`, and `decision_log`.
+
+Other fields record the call and the settings used. They may change
+between releases and are not part of the stable interface (see
+[`?nomologR`](https://juhalt.github.io/nomologR/reference/nomologR-package.md)).
+
+## Details
+
+**Why ESEM.** A CFA fixes every cross-loading at zero. When items in
+fact have small cross-loadings, as items of related constructs usually
+do, the constraint pushes that shared variance into the factor
+correlations, which are then inflated, and into misfit (Asparouhov &
+Muthén, 2009). ESEM estimates the cross-loadings instead, within a
+structural equation model, so fit, standard errors, and further
+structure remain available (Marsh, Morin, Parker, & Kaur, 2014).
+
+**Rotation.** With an a priori structure, Marsh et al. (2014) recommend
+target rotation: each item's loading on its intended factor is free, and
+its cross-loadings are targeted towards zero without being fixed there.
+This is Browne's (2001) partially specified target rotation, `"target"`
+here, built from `model`. Geomin rotation (`"geomin"`), which uses no
+target, is available for a more exploratory reading. The solution
+depends on the rotation, as any exploratory factor solution does.
+
+**Reading the comparison.** Marsh et al. (2014) suggest preferring ESEM
+when it fits better and its factor correlations are lower, which shows
+that the CFA's zero cross-loadings distort the structure; otherwise the
+CFA is the more parsimonious account. Fit is compared on TLI and RMSEA,
+which penalize the ESEM's extra parameters, so the CFA can fit better on
+them. The CFA is nested in the ESEM, and their likelihood-ratio test is
+reported too, but in large samples it rejects trivial misfit. The
+decision log also flags cross-loadings at or above the guidance's
+cross-loading reference and main loadings below its loading reference.
+
+## References
+
+Asparouhov, T., & Muthén, B. (2009). Exploratory structural equation
+modeling. *Structural Equation Modeling, 16*(3), 397-438.
+[doi:10.1080/10705510903008204](https://doi.org/10.1080/10705510903008204)
+
+Browne, M. W. (2001). An overview of analytic rotation in exploratory
+factor analysis. *Multivariate Behavioral Research, 36*(1), 111-150.
+[doi:10.1207/S15327906MBR3601_05](https://doi.org/10.1207/S15327906MBR3601_05)
+
+Marsh, H. W., Morin, A. J. S., Parker, P. D., & Kaur, G. (2014).
+Exploratory structural equation modeling: An integration of the best
+features of exploratory and confirmatory factor analysis. *Annual Review
+of Clinical Psychology, 10*, 85-110.
+[doi:10.1146/annurev-clinpsy-032813-153700](https://doi.org/10.1146/annurev-clinpsy-032813-153700)
+
+## Examples
+
+``` r
+# \donttest{
+model <- nomo_model(list(
+  Agency = paste0("ag", 1:4),
+  Persistence = paste0("pe", 1:4)
+))
+es <- nomo_esem(model, nomo_demo_network)
+es
+#> <nomo_esem> ESEM beside its CFA
+#> Rotation: target | N = 800 | Factors: 2
+#> 
+#> Fit
+#>   Model  Chi-square  df    CFI    TLI  RMSEA   SRMR
+#>   ESEM        14.93  13  0.999  0.998  0.014  0.010
+#>   CFA         18.52  19  1.000  1.000  0.000  0.015
+#>   CFA vs. ESEM: chi-square difference 3.58 on 6 df, p = .733.
+#> 
+#> Factor correlations
+#>   Factors                   ESEM    CFA  Difference
+#>   Agency with Persistence  0.455  0.457      -0.003
+#> 
+#> Cross-loadings are estimated, not fixed at zero (Asparouhov & Muthén, 2009).
+#> The comparison is evidence for choosing a model, not a verdict.
+nomo_table(es, "factor_correlations")
+#> # A tibble: 1 × 5
+#>   factor_1 factor_2     esem   cfa difference
+#>   <chr>    <chr>       <dbl> <dbl>      <dbl>
+#> 1 Agency   Persistence 0.455 0.457   -0.00281
+# }
+```

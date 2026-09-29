@@ -53,7 +53,15 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="nomologr-development-version">nomologR (development version)<a class="anchor" aria-label="anchor" href="#nomologr-development-version"></a></h2>
-<ul><li>New <code><a href="../reference/nomo_method_variance.html">nomo_method_variance()</a></code> for common method variance, following Williams, Hartman, and Cavazotte’s (2010) comprehensive CFA marker technique (<a href="https://github.com/JUhalt/nomologR/issues/129" class="external-link">#129</a>). Given a measurement model and the indicators of a marker variable, it runs the three phases the authors specify:
+<ul><li>New <code><a href="../reference/nomo_esem.html">nomo_esem()</a></code> fits a measurement model as exploratory structural equation modeling (ESEM) beside its CFA (<a href="https://github.com/JUhalt/nomologR/issues/129" class="external-link">#129</a>). Every item may load on every factor, so the cross-loadings a CFA fixes at zero are estimated, and the model still gives fit and standard errors (Asparouhov &amp; Muthén, 2009).
+<ul><li>
+<strong>Rotation.</strong> By default it uses the target rotation Marsh, Morin, Parker, and Kaur (2014) recommend for an a priori structure (Browne, 2001): each item’s own loading is free and its cross-loadings are rotated towards zero. Geomin is available too.</li>
+<li>
+<strong>The comparison.</strong> It reports both models’ fit, their factor correlations and the change between them, and their likelihood-ratio test. The ESEM is flagged for review when it fits better on TLI and RMSEA, which penalize its extra parameters; lower ESEM factor correlations then show that the CFA’s zero cross-loadings are inflating them. Cross-loadings at or above <code>efa_crossloading_reference</code> and main loadings below <code>efa_loading_reference</code> are flagged as evidence about items, not instructions.</li>
+<li>
+<strong>Other outputs.</strong> <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>, <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>, <code><a href="../reference/nomo_table.html">nomo_table()</a></code>, <code><a href="../reference/nomo_methods.html">nomo_methods()</a></code>, and a section in the measurement-evidence article, where ESEM finds both features built into <code>nomo_demo_continuous</code>.</li>
+</ul></li>
+<li>New <code><a href="../reference/nomo_method_variance.html">nomo_method_variance()</a></code> for common method variance, following Williams, Hartman, and Cavazotte’s (2010) comprehensive CFA marker technique (<a href="https://github.com/JUhalt/nomologR/issues/129" class="external-link">#129</a>). Given a measurement model and the indicators of a marker variable, it runs the three phases the authors specify:
 <ul><li>
 <strong>Model comparisons.</strong> It fits the CFA, Baseline, Method-C, Method-U, and Method-R models, and compares them to test whether marker-based method variance is present, whether its effects are equal, and whether it biases the substantive correlations.</li>
 <li>

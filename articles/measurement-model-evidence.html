@@ -646,6 +646,72 @@ blur: whether an item is statistically related to its factor, whether it
 is a strong indicator, and how the score’s reliability changes without
 it. None of them alone decides whether the item stays.</p>
 </div>
+<div class="section level3">
+<h3 id="every-cross-loading-at-once-esem">Every cross-loading at once: ESEM<a class="anchor" aria-label="anchor" href="#every-cross-loading-at-once-esem"></a>
+</h3>
+<p>The comparison above freed one cross-loading because the results
+pointed to it. Exploratory structural equation modeling (ESEM) estimates
+all of them, in a model that still gives fit and standard errors
+(Asparouhov &amp; Muthén, 2009). With an a priori structure, Marsh,
+Morin, Parker, and Kaur (2014) recommend target rotation: each item
+loads freely on its own factor, and its cross-loadings are rotated
+towards zero without being fixed there. <code><a href="../reference/nomo_esem.html">nomo_esem()</a></code> fits
+the ESEM beside the CFA of the same model:</p>
+<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">esem</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_esem.html">nomo_esem</a></span><span class="op">(</span><span class="va">demo_model</span>, data <span class="op">=</span> <span class="va">nomo_demo_continuous</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">esem</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## &lt;nomo_esem summary&gt; ESEM beside its CFA</span></span>
+<span><span class="co">## Rotation: target | N = 473</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## Fit</span></span>
+<span><span class="co">##   Model  Chi-square  df    CFI    TLI  RMSEA   SRMR</span></span>
+<span><span class="co">##   ESEM        20.60  26  1.000  1.006  0.000  0.015</span></span>
+<span><span class="co">##   CFA         75.83  34  0.973  0.965  0.051  0.052</span></span>
+<span><span class="co">##   CFA vs. ESEM: chi-square difference 55.24 on 8 df, p &lt; .001.</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## ESEM loadings (standardized), with the CFA's main loading</span></span>
+<span><span class="co">##   Item      A       B    CFA</span></span>
+<span><span class="co">##   a1    0.836  -0.102  0.771</span></span>
+<span><span class="co">##   a2    0.725   0.023  0.744</span></span>
+<span><span class="co">##   a3    0.675  -0.015  0.669</span></span>
+<span><span class="co">##   a4    0.781  -0.070  0.738</span></span>
+<span><span class="co">##   a5    0.432   0.315  0.598</span></span>
+<span><span class="co">##   b1    0.037   0.771  0.794</span></span>
+<span><span class="co">##   b2    0.007   0.691  0.695</span></span>
+<span><span class="co">##   b3    0.003   0.764  0.757</span></span>
+<span><span class="co">##   b4    0.005   0.626  0.628</span></span>
+<span><span class="co">##   b5    0.057   0.300  0.337</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## Factor correlations</span></span>
+<span><span class="co">##   Factors    ESEM    CFA  Difference</span></span>
+<span><span class="co">##   A with B  0.478  0.499      -0.021</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## Flagged</span></span>
+<span><span class="co">##   - review: ESEM: TLI 1.006, RMSEA 0.000. CFA: TLI 0.965, RMSEA 0.051. Fixing</span></span>
+<span><span class="co">##     the cross-loadings at zero costs chi-square 55.24 on 8 df, p &lt; .001. The</span></span>
+<span><span class="co">##     largest change in a factor correlation, ESEM minus CFA, is -0.02. ESEM</span></span>
+<span><span class="co">##     fits better even on indices that penalize its extra parameters. Where its</span></span>
+<span><span class="co">##     factor correlations are lower, the CFA's zero cross-loadings are inflating</span></span>
+<span><span class="co">##     them; Marsh et al. (2014) then prefer the ESEM, or a CFA with the</span></span>
+<span><span class="co">##     cross-loadings the items' content supports.</span></span>
+<span><span class="co">##   - review: Cross-loadings at or above 0.3: a5 on B 0.32. Read the item's</span></span>
+<span><span class="co">##     content for both factors. A cross-loading is evidence about the item, not</span></span>
+<span><span class="co">##     an instruction to remove it.</span></span>
+<span><span class="co">##   - review: Main loadings below 0.4: b5 on B 0.30. Inspect the item's content</span></span>
+<span><span class="co">##     and its cross-loadings together.</span></span></code></pre>
+<p>The ESEM fits better even on TLI and RMSEA, which penalize its extra
+parameters (TLI 1.006 vs. 0.965, RMSEA 0.000 vs. 0.051). Without being
+told where to look, its loadings show both features built into these
+data: <code>a5</code> cross-loads on B, and <code>b5</code> is weak. The
+factor correlation barely moves (0.48 vs. 0.50), so here the zero
+cross-loadings cost the CFA fit without distorting the relation between
+the factors. When items of related constructs share many small
+cross-loadings, the CFA pushes them into the factor correlations
+instead, and a lower ESEM correlation is the evidence Marsh et
+al. (2014) weigh in preferring it. The solution depends on the rotation,
+and whether <code>a5</code> belongs to both constructs is still a
+question about its content.</p>
+</div>
 </div>
 <div class="section level2">
 <h2 id="does-a-result-depend-on-how-missing-data-were-handled">Does a result depend on how missing data were handled?<a class="anchor" aria-label="anchor" href="#does-a-result-depend-on-how-missing-data-were-handled"></a>
@@ -656,7 +722,7 @@ analyses only the cases observed on every item.
 strategies and reports what changes. For continuous indicators it
 compares listwise deletion with full-information maximum likelihood
 (FIML), which uses every observed response:</p>
-<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">demo_missing</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_missing.html">nomo_missing</a></span><span class="op">(</span><span class="va">demo_cfa</span>, data <span class="op">=</span> <span class="va">nomo_demo_continuous</span><span class="op">)</span></span>
 <span><span class="va">demo_missing</span></span></code></pre></div>
 <pre><code><span><span class="co">## &lt;nomo_missing&gt; Missing-data sensitivity</span></span>
@@ -694,7 +760,7 @@ estimate moves by as much as half a standard error. That is the size
 Schafer and Graham (2002) treat as practically important for bias,
 because beyond it confidence intervals noticeably lose coverage.
 Reliability barely moves either:</p>
-<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">demo_missing</span>, <span class="st">"reliability"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 8 × 8</span></span></span>
 <span><span class="co">##   construct block   metric strategy role  estimate reference_estimate difference</span></span>
@@ -714,7 +780,7 @@ Reliability barely moves either:</p>
 at random. In this simulation the population factor correlation is .50.
 Most cases with high scores on factor A are missing every B item, so
 whether B is missing depends on the observed A items:</p>
-<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">32</span><span class="op">)</span></span>
 <span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">4000</span></span>
 <span><span class="va">f</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span> <span class="op">*</span> <span class="fl">2</span><span class="op">)</span>, <span class="va">n</span>, <span class="fl">2</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/r/base/matmult.html" class="external-link">%*%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/chol.html" class="external-link">chol</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">.5</span>, <span class="fl">.5</span>, <span class="fl">1</span><span class="op">)</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
@@ -750,7 +816,7 @@ population value, within sampling error. Listwise deletion’s, 0.411, is
 scorers on A, and that restricted range attenuates the correlation. The
 decision log flags the difference and says what it can and cannot
 mean:</p>
-<div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb47"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">mar_log</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">mar_missing</span>, <span class="st">"decision_log"</span><span class="op">)</span></span>
 <span><span class="va">mar_log</span><span class="op">$</span><span class="va">recommendation</span><span class="op">[</span><span class="va">mar_log</span><span class="op">$</span><span class="va">metric</span> <span class="op">==</span> <span class="st">"estimate_difference"</span><span class="op">]</span></span></code></pre></div>
 <pre><code><span><span class="co">## [1] "If the data are MAR and the model is correct, FIML is consistent and this difference estimates the bias listwise deletion introduces; Schafer and Graham (2002) treat a bias of this size as practically important. Listwise deletion analyses 1789 fewer cases than the fullest strategy (44.7%), and the more cases a strategy discards, the larger the differences that sampling variability alone produces. Report which strategy the results rest on and why."</span></span></code></pre>
@@ -800,7 +866,7 @@ intraclass correlation with absolute agreement, ICC(A,1), with its
 interval. Scores that shift between occasions do not agree, however well
 they rank people. The consistency form, ICC(C,1), is reported beside
 it.</p>
-<div class="sourceCode" id="cb47"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb49"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2026</span><span class="op">)</span></span>
 <span><span class="va">true_agency</span> <span class="op">&lt;-</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">150</span><span class="op">)</span></span>
 <span><span class="va">occasions</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
@@ -872,7 +938,7 @@ upper ends of their intervals.</li>
 </ul>
 <p>Here, two constructs and a three-item marker are simulated sharing a
 method factor that loads .30 on every item:</p>
-<div class="sourceCode" id="cb49"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb51"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">population</span> <span class="op">&lt;-</span> <span class="st">"</span></span>
 <span><span class="st">  A =~ 0.7*a1 + 0.7*a2 + 0.6*a3 + 0.6*a4</span></span>
 <span><span class="st">  B =~ 0.7*b1 + 0.6*b2 + 0.6*b3 + 0.5*b4</span></span>
@@ -896,18 +962,18 @@ method factor that loads .30 on every item:</p>
 <span><span class="co">## </span></span>
 <span><span class="co">## Model comparisons</span></span>
 <span><span class="co">##   Comparison             Chi-square diff.  df       p</span></span>
-<span><span class="co">##   Baseline vs. Method-C             11.84   1  &lt; .001</span></span>
-<span><span class="co">##   Method-C vs. Method-U              2.79   7    .904</span></span>
-<span><span class="co">##   Method-C vs. Method-R              0.07   1    .791</span></span>
+<span><span class="co">##   Baseline vs. Method-C             11.89   1  &lt; .001</span></span>
+<span><span class="co">##   Method-C vs. Method-U              2.78   7    .905</span></span>
+<span><span class="co">##   Method-C vs. Method-R              0.07   1    .790</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Reliability decomposition</span></span>
 <span><span class="co">##   Factor  Total  Substantive  Method  Method share</span></span>
-<span><span class="co">##   A       0.811        0.795   0.017  2.0%</span></span>
-<span><span class="co">##   B       0.776        0.759   0.016  2.1%</span></span>
+<span><span class="co">##   A       0.804        0.788   0.017  2.1%</span></span>
+<span><span class="co">##   B       0.784        0.767   0.016  2.1%</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Substantive correlations</span></span>
 <span><span class="co">##   Factors     CFA  Baseline  Retained  S(.05)  S(.01)</span></span>
-<span><span class="co">##   A with B  0.436     0.436     0.424   0.424   0.425</span></span>
+<span><span class="co">##   A with B  0.434     0.434     0.422   0.422   0.423</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Comprehensive CFA marker technique (Williams, Hartman, &amp; Cavazotte, 2010). The</span></span>
 <span><span class="co">## results describe the method variance this marker captures; they are not</span></span>
@@ -967,6 +1033,9 @@ research shows that older criteria can miss overlap (Henseler, Ringle,
 because it relaxes the original HTMT tau-equivalence assumption (Roemer,
 Schuberth, &amp; Henseler, 2021). Fornell-Larcker output remains
 available only as optional historical/ supporting information.</p>
+<p>ESEM follows Asparouhov and Muthén (2009), with the target rotation
+Marsh et al. (2014) recommend for an a priori structure (Browne,
+2001).</p>
 <p>Method variance follows Williams, Hartman, and Cavazotte’s (2010)
 comprehensive CFA marker technique, building on Lindell and Whitney
 (2001), with the limits Richardson, Simmering, and Sturman (2009) and

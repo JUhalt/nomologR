@@ -653,6 +653,76 @@ whether an item is statistically related to its factor, whether it is a
 strong indicator, and how the score’s reliability changes without it.
 None of them alone decides whether the item stays.
 
+### Every cross-loading at once: ESEM
+
+The comparison above freed one cross-loading because the results pointed
+to it. Exploratory structural equation modeling (ESEM) estimates all of
+them, in a model that still gives fit and standard errors (Asparouhov &
+Muthén, 2009). With an a priori structure, Marsh, Morin, Parker, and
+Kaur (2014) recommend target rotation: each item loads freely on its own
+factor, and its cross-loadings are rotated towards zero without being
+fixed there.
+[`nomo_esem()`](https://juhalt.github.io/nomologR/reference/nomo_esem.md)
+fits the ESEM beside the CFA of the same model:
+
+``` r
+
+esem <- nomo_esem(demo_model, data = nomo_demo_continuous)
+summary(esem)
+```
+
+    ## <nomo_esem summary> ESEM beside its CFA
+    ## Rotation: target | N = 473
+    ## 
+    ## Fit
+    ##   Model  Chi-square  df    CFI    TLI  RMSEA   SRMR
+    ##   ESEM        20.60  26  1.000  1.006  0.000  0.015
+    ##   CFA         75.83  34  0.973  0.965  0.051  0.052
+    ##   CFA vs. ESEM: chi-square difference 55.24 on 8 df, p < .001.
+    ## 
+    ## ESEM loadings (standardized), with the CFA's main loading
+    ##   Item      A       B    CFA
+    ##   a1    0.836  -0.102  0.771
+    ##   a2    0.725   0.023  0.744
+    ##   a3    0.675  -0.015  0.669
+    ##   a4    0.781  -0.070  0.738
+    ##   a5    0.432   0.315  0.598
+    ##   b1    0.037   0.771  0.794
+    ##   b2    0.007   0.691  0.695
+    ##   b3    0.003   0.764  0.757
+    ##   b4    0.005   0.626  0.628
+    ##   b5    0.057   0.300  0.337
+    ## 
+    ## Factor correlations
+    ##   Factors    ESEM    CFA  Difference
+    ##   A with B  0.478  0.499      -0.021
+    ## 
+    ## Flagged
+    ##   - review: ESEM: TLI 1.006, RMSEA 0.000. CFA: TLI 0.965, RMSEA 0.051. Fixing
+    ##     the cross-loadings at zero costs chi-square 55.24 on 8 df, p < .001. The
+    ##     largest change in a factor correlation, ESEM minus CFA, is -0.02. ESEM
+    ##     fits better even on indices that penalize its extra parameters. Where its
+    ##     factor correlations are lower, the CFA's zero cross-loadings are inflating
+    ##     them; Marsh et al. (2014) then prefer the ESEM, or a CFA with the
+    ##     cross-loadings the items' content supports.
+    ##   - review: Cross-loadings at or above 0.3: a5 on B 0.32. Read the item's
+    ##     content for both factors. A cross-loading is evidence about the item, not
+    ##     an instruction to remove it.
+    ##   - review: Main loadings below 0.4: b5 on B 0.30. Inspect the item's content
+    ##     and its cross-loadings together.
+
+The ESEM fits better even on TLI and RMSEA, which penalize its extra
+parameters (TLI 1.006 vs. 0.965, RMSEA 0.000 vs. 0.051). Without being
+told where to look, its loadings show both features built into these
+data: `a5` cross-loads on B, and `b5` is weak. The factor correlation
+barely moves (0.48 vs. 0.50), so here the zero cross-loadings cost the
+CFA fit without distorting the relation between the factors. When items
+of related constructs share many small cross-loadings, the CFA pushes
+them into the factor correlations instead, and a lower ESEM correlation
+is the evidence Marsh et al. (2014) weigh in preferring it. The solution
+depends on the rotation, and whether `a5` belongs to both constructs is
+still a question about its content.
+
 ## Does a result depend on how missing data were handled?
 
 `demo_cfa` used lavaan’s default, listwise deletion, which analyses only
@@ -924,18 +994,18 @@ mv
     ## 
     ## Model comparisons
     ##   Comparison             Chi-square diff.  df       p
-    ##   Baseline vs. Method-C             11.84   1  < .001
-    ##   Method-C vs. Method-U              2.79   7    .904
-    ##   Method-C vs. Method-R              0.07   1    .791
+    ##   Baseline vs. Method-C             11.89   1  < .001
+    ##   Method-C vs. Method-U              2.78   7    .905
+    ##   Method-C vs. Method-R              0.07   1    .790
     ## 
     ## Reliability decomposition
     ##   Factor  Total  Substantive  Method  Method share
-    ##   A       0.811        0.795   0.017  2.0%
-    ##   B       0.776        0.759   0.016  2.1%
+    ##   A       0.804        0.788   0.017  2.1%
+    ##   B       0.784        0.767   0.016  2.1%
     ## 
     ## Substantive correlations
     ##   Factors     CFA  Baseline  Retained  S(.05)  S(.01)
-    ##   A with B  0.436     0.436     0.424   0.424   0.425
+    ##   A with B  0.434     0.434     0.422   0.422   0.423
     ## 
     ## Comprehensive CFA marker technique (Williams, Hartman, & Cavazotte, 2010). The
     ## results describe the method variance this marker captures; they are not
@@ -991,6 +1061,9 @@ Sarstedt, 2015). HTMT2 is emphasized for congeneric measurement because
 it relaxes the original HTMT tau-equivalence assumption (Roemer,
 Schuberth, & Henseler, 2021). Fornell-Larcker output remains available
 only as optional historical/ supporting information.
+
+ESEM follows Asparouhov and Muthén (2009), with the target rotation
+Marsh et al. (2014) recommend for an a priori structure (Browne, 2001).
 
 Method variance follows Williams, Hartman, and Cavazotte’s (2010)
 comprehensive CFA marker technique, building on Lindell and Whitney

@@ -36,11 +36,11 @@ computational engine, and references.
 
 methods <- nomo_methods()
 nrow(methods)
-#> [1] 95
+#> [1] 96
 table(methods$stage, methods$lineage)
 #>              
 #>               contemporary emerging historical
-#>   cfa                   11        0          3
+#>   cfa                   12        0          3
 #>   compare                6        0          0
 #>   efa                    3        0          2
 #>   factors                7        1          4
@@ -130,7 +130,7 @@ question it answered. The tables below are drawn from
 so they cannot drift from what the package computes.
 
 A method is dated only from the publication that introduced it, and only
-when the registry cites that publication. 48 of the 95 methods are not
+when the registry cites that publication. 48 of the 96 methods are not
 yet dated, because the registry cites a later review or critique instead
 of the original. Adding those originating references is ongoing work.
 
@@ -177,6 +177,7 @@ knitr::kable(
 | 2001 | Construct replicability (H) | reliability | contemporary |
 | 2002 | Change-in-fit indices | compare | contemporary |
 | 2007 | Change-in-fit evidence across levels | invariance | contemporary |
+| 2009 | Exploratory structural equation modeling beside its CFA | cfa | contemporary |
 | 2009 | Reliability on the ordered-score scale | reliability | contemporary |
 | 2010 | Comprehensive CFA marker technique for method variance | cfa | contemporary |
 | 2010 | Formal model-nesting check | compare | contemporary |
