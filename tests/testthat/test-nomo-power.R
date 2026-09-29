@@ -112,6 +112,11 @@ test_that("a Monte Carlo study reports recovery and power at each sample size", 
   local_reproducible_output(width = 80)
   printed <- capture.output(print(pw))
   expect_match(printed, "Replications: 12 per N", fixed = TRUE, all = FALSE)
+  # Convergence, improper solutions, and biases are right-aligned percentages,
+  # as the references for bias are (#89).
+  expect_match(printed, "^ +60 +[0-9.]+% +[0-9.]+% +[0-9.]+ +[0-9.]+% +[0-9.]+% ", all = FALSE)
+  expect_match(printed, "Max bias and Max SE bias are the largest absolute relative biases",
+               fixed = TRUE, all = FALSE)
   expect_false(any(nchar(printed) > 80L))
 })
 

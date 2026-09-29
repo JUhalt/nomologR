@@ -546,22 +546,22 @@ print.nomo_power <- function(x, ...) {
     sprintf("Focus: %s", paste(x$focus, collapse = ", "))
   ))
   summary <- x$summary
-  summary$converged_shown <- sprintf("%.0f%%", 100 * summary$converged)
-  summary$improper_shown <- ifelse(is.finite(summary$improper),
-                                   sprintf("%.0f%%", 100 * summary$improper), "-")
   summary$coverage <- paste(nomo_present_number(summary$min_coverage, 2L),
                             nomo_present_number(summary$max_coverage, 2L), sep = "-")
   summary$meets <- ifelse(summary$meets_references, "yes", "no")
+  # Convergence, improper solutions, and biases are percentages, as the
+  # references for bias are; power and coverage are proportions.
   nomo_present_section("By sample size")
   nomo_present_table(
     summary,
-    c("N" = "n", "Converged" = "converged_shown", "Improper" = "improper_shown",
+    c("N" = "n", "Converged" = "converged", "Improper" = "improper",
       "Min power" = "min_power", "Max bias" = "max_abs_bias",
       "Max SE bias" = "max_abs_se_bias", "Coverage" = "coverage",
       "Meets" = "meets"),
-    formats = list(min_power = function(v) nomo_present_number(v, 2L),
-                   max_abs_bias = function(v) nomo_present_number(v, 2L),
-                   max_abs_se_bias = function(v) nomo_present_number(v, 2L)),
+    formats = list(converged = nomo_present_percent, improper = nomo_present_percent,
+                   min_power = function(v) nomo_present_number(v, 2L),
+                   max_abs_bias = nomo_present_percent,
+                   max_abs_se_bias = nomo_present_percent),
     more = "x$parameters"
   )
   nomo_present_text(
@@ -574,10 +574,11 @@ print.nomo_power <- function(x, ...) {
   )
   cat("\n")
   nomo_present_text(
-    "Biases are absolute and relative. References (Muth\u00e9n & ",
-    "Muth\u00e9n, 2002): parameter and SE bias within 10%, SE bias within 5% ",
-    "for the focus parameters, coverage .91-.98, and power .80 for the focus ",
-    "parameters. They are guides for choosing N, not rules."
+    "Max bias and Max SE bias are the largest absolute relative biases across ",
+    "the parameters. References (Muth\u00e9n & Muth\u00e9n, 2002): parameter ",
+    "and SE bias within 10%, SE bias within 5% for the focus parameters, ",
+    "coverage 0.91-0.98, and power 0.80 for the focus parameters. They are ",
+    "guides for choosing N, not rules."
   )
   invisible(x)
 }
