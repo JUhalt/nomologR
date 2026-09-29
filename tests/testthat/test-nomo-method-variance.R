@@ -172,6 +172,10 @@ test_that("arguments and data are checked", {
   expect_error(nomo_method_variance(model, dat, c("m1", "m2"), marker_name = "A"),
                "already a factor or column")
   expect_error(nomo_method_variance(model, dat, "m1"), "two or more distinct columns")
+  expect_error(
+    nomo_method_variance(nomo_model(list(A = c("a1", "a2"))), dat, "m1"),
+    "two or more distinct columns"
+  )
   expect_error(nomo_method_variance(model, dat, c("a1", "m1")), "cannot also be substantive")
   expect_error(nomo_method_variance(model, dat, c("m1", "m9")), "Columns not in `data`: m9.",
                fixed = TRUE)

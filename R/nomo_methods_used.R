@@ -462,6 +462,14 @@ nomo_methods_used.nomo_retest <- function(x, ...) {
 }
 
 
+# Power -----------------------------------------------------------------------
+
+#' @export
+nomo_methods_used.nomo_power <- function(x, ...) {
+  if (identical(x$type, "rmsea")) "rmsea_power" else "monte_carlo_power"
+}
+
+
 # ESEM --------------------------------------------------------------------------
 
 #' @export
