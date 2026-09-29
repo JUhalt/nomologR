@@ -35,7 +35,8 @@ nonzero population value.}
 \item{seed}{Optional integer seed, for a reproducible simulation. The
 session's random-number state is restored afterwards.}
 
-\item{standardized}{Passed to \code{lavaan::simulateData()}. Default \code{TRUE}.}
+\item{standardized}{Passed to \code{lavaan::simulateData()}. Default \code{TRUE},
+which gives the observed variables unit variance.}
 }
 \value{
 A \code{nomo_power} object. The fields to read are \code{parameters} (for
@@ -45,7 +46,12 @@ error bias, coverage, and power), \code{summary} (for each sample size: the
 proportions that converged and that were improper, the smallest power in
 \code{focus}, the largest absolute biases, the coverage range, and
 \code{meets_references}), \code{n_required} (the smallest simulated sample size that
-meets the references, or \code{NA}), \code{focus}, \code{reps}, and \code{alpha}.
+meets the references, or \code{NA}), \code{focus}, \code{reps}, \code{alpha}, and \code{seed} (the
+seed given, or \code{NA} without one).
+
+Other fields record the call, the population and analysis models, and the
+kind of power analysis. They may change between releases and are not part
+of the stable interface (see \code{?nomologR}).
 }
 \description{
 \code{nomo_power_simulate()} estimates, for each sample size, how often a planned
@@ -57,11 +63,22 @@ detected. This is Muthén and Muthén's (2002) Monte Carlo approach.
 \details{
 Data are generated from \code{population}, a lavaan model whose parameters carry
 their population values (for example \code{A =~ 0.7*a1}), with
-\code{lavaan::simulateData()}. With \code{standardized = TRUE}, the default, loadings
-and regressions are in a standardized metric and the residual variances are
-set so the observed variables have unit variance. The \code{analysis} model, which
-by default is \code{population} without its values, is fitted to each data set
-with \code{lavaan::sem(std.lv = TRUE)}.
+\code{lavaan::simulateData()}. With \code{standardized = TRUE}, the default, the
+residual variances of the observed variables are set so that each has unit
+variance. The \code{analysis} model, which by default is \code{population} without its
+values, is fitted to each data set with \code{lavaan::sem(std.lv = TRUE)}.
+
+\strong{The metric.} Each estimate is the analysis model's unstandardized
+estimate, and it is compared with the population value as written. Both are
+in the metric that \code{std.lv = TRUE} sets: an exogenous factor has variance 1,
+and an endogenous factor has residual variance 1. With the default
+\code{standardized = TRUE}, loadings on exogenous factors are therefore
+standardized, and covariances between exogenous factors are correlations. A
+latent regression is not standardized. In \code{B ~ 0.4*A}, B's total variance
+is 1.16, its residual variance of 1 plus 0.16 from A, so the completely
+standardized coefficient is 0.4 divided by the square root of 1.16, or .37,
+and B's indicators have standardized loadings 1.08 times their values. Bias,
+coverage, and power are for the values as written.
 
 Muthén and Muthén (2002) suggest choosing the sample size at which three
 conditions hold, and power for the parameter of interest is close to .80:

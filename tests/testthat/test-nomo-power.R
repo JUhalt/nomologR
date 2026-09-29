@@ -95,6 +95,10 @@ test_that("a Monte Carlo study reports recovery and power at each sample size", 
   expect_gt(ab$power[[2L]], ab$power[[1L]])
   expect_identical(pw$summary$converged, c(1, 1))
   expect_true("monte_carlo_power" %in% nomo_methods(pw)$id)
+  # The seed and the call are recorded, so the study can be rerun.
+  expect_identical(pw$seed, 11L)
+  expect_true(is.call(pw$call))
+  expect_identical(pw$call$seed, 11)
 
   # The same seed gives the same study, and the session's random state is kept.
   set.seed(99)
@@ -144,6 +148,7 @@ test_that("the simulation handles zero values, missing parameters, and failed fi
   expect_false(exists(".Random.seed", envir = .GlobalEnv))
   unseeded <- nomo_power_simulate(pw_population, n = 30, reps = 2)
   expect_identical(unseeded$reps, 2L)
+  expect_identical(unseeded$seed, NA_integer_)
 })
 
 
