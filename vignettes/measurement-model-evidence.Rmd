@@ -624,6 +624,7 @@ correlations accurately (Richardson, Simmering, & Sturman, 2009). The results
 describe the method variance this marker captures. They are not corrected
 estimates, and a marker chosen only because it is unrelated, such as a
 demographic, may capture no method variance at all.
+
 # Planning the sample size
 
 Two questions about sample size have different answers. The first is whether

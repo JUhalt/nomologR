@@ -652,6 +652,7 @@ first CRAN submission is targeted for v0.3.0 (#39).
   until their scope is accepted; no analytical behavior changes in this update.
 - Opened development toward `v0.2.0`.
 - `v0.1.0` remains the current stable public release.
+
 # nomologR 0.1.0
 
 ## First stable public release
@@ -677,6 +678,7 @@ first CRAN submission is targeted for v0.3.0 (#39).
   R CMD check at 0 errors / 0 warnings / 0 notes, executable-line coverage at
   100%, and an empty `covr::zero_coverage()` result.
 - Finalized `v0.1.0` as the first stable public release after release-readiness review and certification.
+
 ## Milestone 8 closeout — guided workflow and decision provenance
 
 - Replaced the `nomo_run()` development stub with a resumable guided workflow

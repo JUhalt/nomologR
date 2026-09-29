@@ -109,6 +109,7 @@ in [`dev/roadmap-v0.1-record.md`](dev/roadmap-v0.1-record.md).
 
 ***
 <a id="v02x--robustness--broader-measurement-models"></a>
+
 # v0.2.0 — Research-Backed, Usable Measurement Workflows
 
 **Status:** Released September 19, 2026. Scope selected in [#22](https://github.com/JUhalt/nomologR/issues/22). Every Core workstream shipped; six Planned workstreams moved to [v0.2.1](https://github.com/JUhalt/nomologR/milestone/4) at certification, each with its reason recorded on the issue.
