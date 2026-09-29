@@ -84,10 +84,11 @@ default.
   `"loadings"`, `"reliability"`, `"correlations"`, `"decision_log"`; see
   [`nomo_method_variance()`](https://juhalt.github.io/nomologR/reference/nomo_method_variance.md).
 
-- `nomo_invariance`: `"fit"` (default), `"categories"`, `"partial"`,
-  `"local_strain"`, `"latent_means"`, `"decision_log"`. The local-strain
-  table keeps lavaan's internal `constraint` label and adds a
-  human-readable `constraint_display` column (for example,
+- `nomo_invariance` and `nomo_invariance_longitudinal`: `"fit"`
+  (default), `"categories"`, `"partial"`, `"local_strain"`,
+  `"latent_means"`, `"decision_log"`. The local-strain table keeps
+  lavaan's internal `constraint` label and adds a human-readable
+  `constraint_display` column (for example,
   `Intercept: ag3 (online vs. paper)`).
 
 - `nomo_compare`: `"comparisons"` (default), `"models"`, `"loadings"`,

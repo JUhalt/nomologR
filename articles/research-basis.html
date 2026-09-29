@@ -120,7 +120,7 @@ computational engine, and references.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">methods</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_methods.html">nomo_methods</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">methods</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 98</span></span>
+<span><span class="co">#&gt; [1] 99</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">methods</span><span class="op">$</span><span class="va">stage</span>, <span class="va">methods</span><span class="op">$</span><span class="va">lineage</span><span class="op">)</span></span>
 <span><span class="co">#&gt;              </span></span>
 <span><span class="co">#&gt;               contemporary emerging historical</span></span>
@@ -128,7 +128,7 @@ computational engine, and references.</p>
 <span><span class="co">#&gt;   compare                6        0          0</span></span>
 <span><span class="co">#&gt;   efa                    3        0          2</span></span>
 <span><span class="co">#&gt;   factors                7        1          4</span></span>
-<span><span class="co">#&gt;   invariance             7        0          0</span></span>
+<span><span class="co">#&gt;   invariance             8        0          0</span></span>
 <span><span class="co">#&gt;   network                5        0          1</span></span>
 <span><span class="co">#&gt;   reliability           12        0          2</span></span>
 <span><span class="co">#&gt;   scores                 4        0          3</span></span>
@@ -205,7 +205,7 @@ question it answered. The tables below are drawn from
 <code><a href="../reference/nomo_methods.html">nomo_methods()</a></code>, so they cannot drift from what the package
 computes.</p>
 <p>A method is dated only from the publication that introduced it, and
-only when the registry cites that publication. 49 of the 98 methods are
+only when the registry cites that publication. 50 of the 99 methods are
 not yet dated, because the registry cites a later review or critique
 instead of the original. Adding those originating references is ongoing
 work.</p>
@@ -878,8 +878,9 @@ correlations with uncertainty; the Fornell–Larcker table only on
 explicit request, labeled legacy/supporting.</p>
 </div>
 <div class="section level2">
-<h2 id="measurement-invariance-nomo_invariance-nomo_partial">7. Measurement invariance — <code>nomo_invariance()</code>,
-<code>nomo_partial()</code><a class="anchor" aria-label="anchor" href="#measurement-invariance-nomo_invariance-nomo_partial"></a>
+<h2 id="measurement-invariance-nomo_invariance-nomo_invariance_longitudinal-nomo_partial">7. Measurement invariance — <code>nomo_invariance()</code>,
+<code>nomo_invariance_longitudinal()</code>,
+<code>nomo_partial()</code><a class="anchor" aria-label="anchor" href="#measurement-invariance-nomo_invariance-nomo_invariance_longitudinal-nomo_partial"></a>
 </h2>
 <p><strong>Historical practice.</strong> Multiple-group factor analysis
 (Jöreskog, 1971) and the configural–metric–scalar–strict hierarchy
@@ -892,16 +893,20 @@ interpreted with sample size and model context (Chen, 2007; Putnick
 &amp; Bornstein, 2016); identification-aware sequences for
 ordered-categorical indicators (Wu &amp; Estabrook, 2016; Svetina et
 al., 2020); partial invariance based on substantively justified,
-transparently reported releases (Byrne et al., 1989).</p>
+transparently reported releases (Byrne et al., 1989). Across occasions,
+the same items are modeled at each occasion with each item’s unique
+factors correlated over time, so that change in a score can be read as
+change in the construct (Widaman, Ferrer, &amp; Conger, 2010), with
+identification conditions for ordered items over time (Liu et al.,
+2017).</p>
 <p><strong>What nomologR does.</strong> Category-aware sequences for
 continuous, binary, three-category, and four-or-more-category
 indicators; fit and change evidence without a universal pass/fail rule;
 score-test diagnostics that locate strain but never free parameters;
 researcher-specified releases with required rationales carried forward
-to more restrictive levels.</p>
-<p><strong>Planned.</strong> Longitudinal invariance is a candidate for
-a 1.x release after 1.0.0. The reasons for deferring it are recorded in
-<a href="https://github.com/JUhalt/nomologR/issues/38" class="external-link">#38</a> and <a href="https://github.com/JUhalt/nomologR/issues/113" class="external-link">#113</a>.</p>
+to more restrictive levels. The same sequence runs across occasions,
+with each item’s unique factors correlated over time, releases named by
+item, and latent change reported once intercepts are invariant.</p>
 </div>
 <div class="section level2">
 <h2 id="nomological-network-nomo_hypotheses-nomo_network">8. Nomological network — <code>nomo_hypotheses()</code>,

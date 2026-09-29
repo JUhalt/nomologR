@@ -343,9 +343,107 @@ non-invariance was built into these groups.</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> strict     thresholds, loadings, intercepts, residuals 1     0       0.001<span style="text-decoration: underline;">93</span></span></span></code></pre></div>
 </div>
 <div class="section level2">
+<h2 id="across-occasions-longitudinal-invariance">Across occasions: longitudinal invariance<a class="anchor" aria-label="anchor" href="#across-occasions-longitudinal-invariance"></a>
+</h2>
+<p>The same question arises when the same people answer the same items
+more than once. A change in scores is a change in the construct only if
+the items relate to it in the same way on each occasion. An item whose
+meaning drifts, through practice or an intervention, otherwise shows up
+as change (Widaman, Ferrer, &amp; Conger, 2010).
+<code><a href="../reference/nomo_invariance_longitudinal.html">nomo_invariance_longitudinal()</a></code> applies the same sequence
+across occasions instead of groups.</p>
+<p><code>nomo_demo_longitudinal</code> has four Wellbeing items answered
+on three occasions. The latent mean rises by .30 and then .50 of the
+first occasion’s standard deviation, and the intercept of
+<code>w3</code> also rises by .40 after the first occasion: a drift the
+analysis should find. The model is written for one occasion, in the
+items’ own names, and <code>columns</code> says how an item and an
+occasion name a column; the default <code>"{item}_{occasion}"</code>
+matches <code>w1_t1</code> to <code>w4_t3</code>. Each item’s residuals
+are correlated across occasions, because what an item measures besides
+the construct is usually stable too.</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">long</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_invariance_longitudinal.html">nomo_invariance_longitudinal</a></span><span class="op">(</span></span>
+<span>  <span class="st">"Wellbeing =~ w1 + w2 + w3 + w4"</span>,</span>
+<span>  data <span class="op">=</span> <span class="va">nomo_demo_longitudinal</span>,</span>
+<span>  occasions <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"t1"</span>, <span class="st">"t2"</span>, <span class="st">"t3"</span><span class="op">)</span>,</span>
+<span>  levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"configural"</span>, <span class="st">"metric"</span>, <span class="st">"scalar"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">long</span><span class="op">)</span></span>
+<span><span class="co">#&gt; &lt;nomo_invariance_longitudinal summary&gt; Measurement invariance across occasions</span></span>
+<span><span class="co">#&gt; Indicators: continuous | Occasions: t1, t2, t3</span></span>
+<span><span class="co">#&gt; Levels completed: configural -&gt; metric -&gt; scalar</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Identification and sequence</span></span>
+<span><span class="co">#&gt;   Continuous indicators use the conventional configural, metric, scalar, and</span></span>
+<span><span class="co">#&gt;   strict sequence.</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Fit by level</span></span>
+<span><span class="co">#&gt;   Level       Constraints           Chi-square  df       p    CFI  RMSEA   SRMR</span></span>
+<span><span class="co">#&gt;   configural  none                       32.78  39    .748  1.000  0.000  0.020</span></span>
+<span><span class="co">#&gt;   metric      loadings                   48.13  45    .347  0.999  0.012  0.030</span></span>
+<span><span class="co">#&gt;   scalar      loadings, intercepts      137.20  51  &lt; .001  0.963  0.058  0.045</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Changes from the preceding level</span></span>
+<span><span class="co">#&gt;   Level   CFI change  RMSEA change  SRMR change  LRT chi-square  df       p</span></span>
+<span><span class="co">#&gt;   metric      -0.001        +0.012       +0.010           15.35   6    .018</span></span>
+<span><span class="co">#&gt;   scalar      -0.036        +0.046       +0.015           89.07   6  &lt; .001</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Latent change from t1 (its latent SD)</span></span>
+<span><span class="co">#&gt;   Level   Occasion  Factor     Difference  95% CI             p</span></span>
+<span><span class="co">#&gt;   scalar  t2        Wellbeing        0.41  [0.31, 0.51]  &lt; .001</span></span>
+<span><span class="co">#&gt;   scalar  t3        Wellbeing        0.66  [0.54, 0.78]  &lt; .001</span></span>
+<span><span class="co">#&gt;   Comparable only with invariant intercepts, full or partial.</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Largest equality-constraint score diagnostics (diagnostic only)</span></span>
+<span><span class="co">#&gt;   Level   Constraint                            Score  df       p</span></span>
+<span><span class="co">#&gt;   scalar  Intercept: w3 (t1 vs. t3)             22.93   1  &lt; .001</span></span>
+<span><span class="co">#&gt;   scalar  Intercept: w3 (t1 vs. t2)             10.85   1  &lt; .001</span></span>
+<span><span class="co">#&gt;   scalar  Intercept: w4 (t1 vs. t3)              7.97   1    .005</span></span>
+<span><span class="co">#&gt;   scalar  Intercept: w1 (t1 vs. t3)              5.47   1    .019</span></span>
+<span><span class="co">#&gt;   metric  Loading: Wellbeing -&gt; w4 (t1 vs. t3)   4.23   1    .040</span></span>
+<span><span class="co">#&gt;   metric  Loading: Wellbeing -&gt; w3 (t1 vs. t3)   4.13   1    .042</span></span>
+<span><span class="co">#&gt;   metric  Loading: Wellbeing -&gt; w1 (t1 vs. t2)   3.52   1    .061</span></span>
+<span><span class="co">#&gt;   metric  Loading: Wellbeing -&gt; w4 (t1 vs. t2)   3.21   1    .073</span></span>
+<span><span class="co">#&gt;   scalar  Intercept: w2 (t1 vs. t2)              2.85   1    .091</span></span>
+<span><span class="co">#&gt;   scalar  Loading: Wellbeing -&gt; w1 (t1 vs. t2)   2.76   1    .097</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; No single delta-CFI, delta-RMSEA, delta-SRMR, chi-square difference, or score</span></span>
+<span><span class="co">#&gt; diagnostic is treated as a universal invariance rule.</span></span></code></pre></div>
+<p>Fit holds up with the loadings equal and drops once the intercepts
+are too (CFI change -0.036), and the largest score diagnostics point to
+the <code>w3</code> intercept. Held equal, that intercept inflates the
+latent change at <code>t3</code> to 0.66 standard deviations. Releasing
+it is a documented decision, as across groups:</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">long_partial</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_invariance_longitudinal.html">nomo_invariance_longitudinal</a></span><span class="op">(</span></span>
+<span>  <span class="st">"Wellbeing =~ w1 + w2 + w3 + w4"</span>,</span>
+<span>  data <span class="op">=</span> <span class="va">nomo_demo_longitudinal</span>,</span>
+<span>  occasions <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"t1"</span>, <span class="st">"t2"</span>, <span class="st">"t3"</span><span class="op">)</span>,</span>
+<span>  levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"configural"</span>, <span class="st">"metric"</span>, <span class="st">"scalar"</span><span class="op">)</span>,</span>
+<span>  partial <span class="op">=</span> <span class="fu"><a href="../reference/nomo_partial.html">nomo_partial</a></span><span class="op">(</span></span>
+<span>    level <span class="op">=</span> <span class="st">"scalar"</span>,</span>
+<span>    syntax <span class="op">=</span> <span class="st">"w3 ~ 1"</span>,</span>
+<span>    rationale <span class="op">=</span> <span class="st">"The score diagnostics point to the w3 intercept."</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">long_partial</span>, <span class="st">"latent_means"</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"occasion"</span>, <span class="st">"estimate"</span>, <span class="st">"ci_lower"</span>, <span class="st">"ci_upper"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 2 × 4</span></span></span>
+<span><span class="co">#&gt;   occasion estimate ci_lower ci_upper</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> t2          0.321    0.222    0.421</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> t3          0.549    0.430    0.669</span></span></code></pre></div>
+<p>The release names the item as in the one-occasion model and frees its
+intercept on every occasion. The change is then carried by the other
+three items, and its intervals cover the population’s .30 and .50. With
+real data the release still needs a reason beyond the diagnostics: here,
+something about <code>w3</code> that could have changed its meaning
+between occasions.</p>
+</div>
+<div class="section level2">
 <h2 id="tables-and-figures">Tables and figures<a class="anchor" aria-label="anchor" href="#tables-and-figures"></a>
 </h2>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">inv</span>, type <span class="op">=</span> <span class="st">"fit"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="measurement-invariance_files/figure-html/tables-1.png" class="r-plt" alt="" width="672"></p>
 <p><code><a href="../reference/nomo_table.html">nomo_table()</a></code> returns ordinary tibbles
@@ -368,8 +466,11 @@ context (Chen, 2007; Putnick &amp; Bornstein, 2016), which is why
 cutoff. Ordered-indicator sequences follow Wu and Estabrook (2016) as
 implemented in <code>semTools</code> (see also Svetina et al., 2020).
 Partial invariance follows Byrne, Shavelson, and Muthén (1989), and
-latent mean comparisons follow Hancock (2001). Full references are in
-<code><a href="../reference/nomo_invariance.html">?nomo_invariance</a></code> and the <a href="research-basis.html">research basis</a> article.</p>
+latent mean comparisons follow Hancock (2001). Invariance across
+occasions follows Widaman, Ferrer, and Conger (2010), with Liu et
+al. (2017) for ordered items. Full references are in
+<code><a href="../reference/nomo_invariance.html">?nomo_invariance</a></code>,
+<code><a href="../reference/nomo_invariance_longitudinal.html">?nomo_invariance_longitudinal</a></code>, and the <a href="research-basis.html">research basis</a> article.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

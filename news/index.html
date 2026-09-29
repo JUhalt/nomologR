@@ -53,7 +53,20 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="nomologr-development-version">nomologR (development version)<a class="anchor" aria-label="anchor" href="#nomologr-development-version"></a></h2>
-<ul><li>Sample-size planning (<a href="https://github.com/JUhalt/nomologR/issues/129" class="external-link">#129</a>).
+<ul><li>New <code><a href="../reference/nomo_invariance_longitudinal.html">nomo_invariance_longitudinal()</a></code> for measurement invariance across occasions (<a href="https://github.com/JUhalt/nomologR/issues/129" class="external-link">#129</a>). It asks whether the same items mean the same thing each time the same people answer them, so that a change in scores can be read as a change in the construct (Widaman, Ferrer, &amp; Conger, 2010).
+<ul><li>
+<strong>The model.</strong> The model is written for one occasion, in the items’ own names. <code>columns</code> (default <code>"{item}_{occasion}"</code>) maps each item and occasion to a column. Each item’s unique factors are correlated across occasions, over all lags or up to <code>auto</code>.</li>
+<li>
+<strong>The sequence.</strong> The configural, metric, scalar, and strict levels, the ordered-item sequences and identification (with Liu et al., 2017, for Millsap and Tein’s conditions over time), researcher-specified partial releases, and score diagnostics are those of <code><a href="../reference/nomo_invariance.html">nomo_invariance()</a></code>, applied across occasions through semTools’ longitudinal arguments. A release names the item as in the one-occasion model, such as <code>"w3 ~ 1"</code>, and the diagnostics are labeled by item and occasions, such as <code>Intercept: w3 (t1 vs. t3)</code>.</li>
+<li>
+<strong>Latent change.</strong> Once intercepts are invariant, fully or partially, <code>latent_means</code> gives each later occasion’s latent mean in the first occasion’s latent standard deviations, with intervals.</li>
+<li>
+<strong>Other outputs.</strong> The result is also a <code>nomo_invariance</code> object, so <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>, <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>, <code><a href="../reference/nomo_table.html">nomo_table()</a></code>, <code><a href="../reference/nomo_apa_table.html">nomo_apa_table()</a></code>, and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> work as they do across groups. <code><a href="../reference/nomo_methods.html">nomo_methods()</a></code> gains <code>longitudinal_invariance</code>.</li>
+</ul></li>
+<li>New teaching dataset <code>nomo_demo_longitudinal</code>: four Wellbeing items answered on three occasions, with a latent mean rising .30 and then .50 SD and the <code>w3</code> intercept drifting .40 after the first occasion. In the measurement-invariance article, holding that intercept equal inflates the change at the third occasion to .66 SD. Releasing it gives .55 [.43, .67], which covers the population’s .50.</li>
+<li>
+<code><a href="../reference/nomo_invariance.html">nomo_invariance()</a></code>’s option checks and level fitting are now shared with <code><a href="../reference/nomo_invariance_longitudinal.html">nomo_invariance_longitudinal()</a></code>. Its results are unchanged.</li>
+<li>Sample-size planning (<a href="https://github.com/JUhalt/nomologR/issues/129" class="external-link">#129</a>).
 <ul><li>
 <code><a href="../reference/nomo_power_rmsea.html">nomo_power_rmsea()</a></code> gives the power of MacCallum, Browne, and Sugawara’s (1996) RMSEA tests of close, not-close, and exact fit, or the smallest N reaching a target power. It reproduces their sample sizes (for example, 132 for close fit and 178 for not-close fit at 100 df). The degrees of freedom come from a model string, <code><a href="../reference/nomo_model.html">nomo_model()</a></code>, <code><a href="../reference/nomo_cfa.html">nomo_cfa()</a></code>, or lavaan fit.</li>
 <li>

@@ -127,6 +127,8 @@ Measurement invariance
   : Evaluate measurement invariance across groups
 - [`nomo_partial()`](https://juhalt.github.io/nomologR/reference/nomo_partial.md)
   : Specify researcher-controlled partial-invariance releases
+- [`nomo_invariance_longitudinal()`](https://juhalt.github.io/nomologR/reference/nomo_invariance_longitudinal.md)
+  : Evaluate measurement invariance across occasions
 - [`plot(`*`<nomo_invariance>`*`)`](https://juhalt.github.io/nomologR/reference/plot.nomo_invariance.md)
   : Plot measurement-invariance evidence
 
@@ -165,6 +167,8 @@ compare package evidence with the known truth.
   : Simulated five-category ordered item data
 - [`nomo_demo_network`](https://juhalt.github.io/nomologR/reference/nomo_demo_network.md)
   : Simulated multi-construct validation study
+- [`nomo_demo_longitudinal`](https://juhalt.github.io/nomologR/reference/nomo_demo_longitudinal.md)
+  : Simulated repeated measures of one construct
 - [`nomo_demo_walkthrough`](https://juhalt.github.io/nomologR/reference/nomo_demo_walkthrough.md)
   [`nomo_demo_walkthrough_items`](https://juhalt.github.io/nomologR/reference/nomo_demo_walkthrough.md)
   : Shared walkthrough data from content review to empirical screening

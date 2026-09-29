@@ -889,6 +889,11 @@ Localized score diagnostics can identify where equality constraints are
 strained, but `nomologR` never searches until it finds a
 partial-invariance solution that “passes.”
 
+[`nomo_invariance_longitudinal()`](https://juhalt.github.io/nomologR/reference/nomo_invariance_longitudinal.md)
+runs the same sequence across occasions for repeated measures, with each
+item’s residuals correlated over time and latent change reported once
+intercepts are invariant.
+
 The full walkthroughs are in the **“Nomological network”** and
 **“Measurement invariance”** vignettes.
 
@@ -1388,6 +1393,8 @@ Measurement invariance
   : Evaluate measurement invariance across groups
 - [`nomo_partial()`](https://juhalt.github.io/nomologR/reference/nomo_partial.md)
   : Specify researcher-controlled partial-invariance releases
+- [`nomo_invariance_longitudinal()`](https://juhalt.github.io/nomologR/reference/nomo_invariance_longitudinal.md)
+  : Evaluate measurement invariance across occasions
 - [`plot(`*`<nomo_invariance>`*`)`](https://juhalt.github.io/nomologR/reference/plot.nomo_invariance.md)
   : Plot measurement-invariance evidence
 
@@ -1426,6 +1433,8 @@ compare package evidence with the known truth.
   : Simulated five-category ordered item data
 - [`nomo_demo_network`](https://juhalt.github.io/nomologR/reference/nomo_demo_network.md)
   : Simulated multi-construct validation study
+- [`nomo_demo_longitudinal`](https://juhalt.github.io/nomologR/reference/nomo_demo_longitudinal.md)
+  : Simulated repeated measures of one construct
 - [`nomo_demo_walkthrough`](https://juhalt.github.io/nomologR/reference/nomo_demo_walkthrough.md)
   [`nomo_demo_walkthrough_items`](https://juhalt.github.io/nomologR/reference/nomo_demo_walkthrough.md)
   : Shared walkthrough data from content review to empirical screening

@@ -36,7 +36,7 @@ computational engine, and references.
 
 methods <- nomo_methods()
 nrow(methods)
-#> [1] 98
+#> [1] 99
 table(methods$stage, methods$lineage)
 #>              
 #>               contemporary emerging historical
@@ -44,7 +44,7 @@ table(methods$stage, methods$lineage)
 #>   compare                6        0          0
 #>   efa                    3        0          2
 #>   factors                7        1          4
-#>   invariance             7        0          0
+#>   invariance             8        0          0
 #>   network                5        0          1
 #>   reliability           12        0          2
 #>   scores                 4        0          3
@@ -130,7 +130,7 @@ question it answered. The tables below are drawn from
 so they cannot drift from what the package computes.
 
 A method is dated only from the publication that introduced it, and only
-when the registry cites that publication. 49 of the 98 methods are not
+when the registry cites that publication. 50 of the 99 methods are not
 yet dated, because the registry cites a later review or critique instead
 of the original. Adding those originating references is ongoing work.
 
@@ -467,7 +467,7 @@ evidence with original HTMT for comparison; latent correlations with
 uncertainty; the Fornell–Larcker table only on explicit request, labeled
 legacy/supporting.
 
-## 7. Measurement invariance — `nomo_invariance()`, `nomo_partial()`
+## 7. Measurement invariance — `nomo_invariance()`, `nomo_invariance_longitudinal()`, `nomo_partial()`
 
 **Historical practice.** Multiple-group factor analysis (Jöreskog, 1971)
 and the configural–metric–scalar–strict hierarchy (Meredith, 1993;
@@ -480,18 +480,20 @@ with sample size and model context (Chen, 2007; Putnick & Bornstein,
 2016); identification-aware sequences for ordered-categorical indicators
 (Wu & Estabrook, 2016; Svetina et al., 2020); partial invariance based
 on substantively justified, transparently reported releases (Byrne et
-al., 1989).
+al., 1989). Across occasions, the same items are modeled at each
+occasion with each item’s unique factors correlated over time, so that
+change in a score can be read as change in the construct (Widaman,
+Ferrer, & Conger, 2010), with identification conditions for ordered
+items over time (Liu et al., 2017).
 
 **What nomologR does.** Category-aware sequences for continuous, binary,
 three-category, and four-or-more-category indicators; fit and change
 evidence without a universal pass/fail rule; score-test diagnostics that
 locate strain but never free parameters; researcher-specified releases
-with required rationales carried forward to more restrictive levels.
-
-**Planned.** Longitudinal invariance is a candidate for a 1.x release
-after 1.0.0. The reasons for deferring it are recorded in
-[\#38](https://github.com/JUhalt/nomologR/issues/38) and
-[\#113](https://github.com/JUhalt/nomologR/issues/113).
+with required rationales carried forward to more restrictive levels. The
+same sequence runs across occasions, with each item’s unique factors
+correlated over time, releases named by item, and latent change reported
+once intercepts are invariant.
 
 ## 8. Nomological network — `nomo_hypotheses()`, `nomo_network()`
 

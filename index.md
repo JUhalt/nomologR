@@ -889,6 +889,11 @@ Localized score diagnostics can identify where equality constraints are
 strained, but `nomologR` never searches until it finds a
 partial-invariance solution that “passes.”
 
+[`nomo_invariance_longitudinal()`](https://juhalt.github.io/nomologR/reference/nomo_invariance_longitudinal.md)
+runs the same sequence across occasions for repeated measures, with each
+item’s residuals correlated over time and latent change reported once
+intercepts are invariant.
+
 The full walkthroughs are in the **“Nomological network”** and
 **“Measurement invariance”** vignettes.
 

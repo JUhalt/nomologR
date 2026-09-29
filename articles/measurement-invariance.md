@@ -301,6 +301,111 @@ fit_ord[, c("level", "constraints", "cfi", "rmsea", "delta_cfi")]
 #> 5 strict     thresholds, loadings, intercepts, residuals 1     0       0.00193
 ```
 
+## Across occasions: longitudinal invariance
+
+The same question arises when the same people answer the same items more
+than once. A change in scores is a change in the construct only if the
+items relate to it in the same way on each occasion. An item whose
+meaning drifts, through practice or an intervention, otherwise shows up
+as change (Widaman, Ferrer, & Conger, 2010).
+[`nomo_invariance_longitudinal()`](https://juhalt.github.io/nomologR/reference/nomo_invariance_longitudinal.md)
+applies the same sequence across occasions instead of groups.
+
+`nomo_demo_longitudinal` has four Wellbeing items answered on three
+occasions. The latent mean rises by .30 and then .50 of the first
+occasion’s standard deviation, and the intercept of `w3` also rises by
+.40 after the first occasion: a drift the analysis should find. The
+model is written for one occasion, in the items’ own names, and
+`columns` says how an item and an occasion name a column; the default
+`"{item}_{occasion}"` matches `w1_t1` to `w4_t3`. Each item’s residuals
+are correlated across occasions, because what an item measures besides
+the construct is usually stable too.
+
+``` r
+
+long <- nomo_invariance_longitudinal(
+  "Wellbeing =~ w1 + w2 + w3 + w4",
+  data = nomo_demo_longitudinal,
+  occasions = c("t1", "t2", "t3"),
+  levels = c("configural", "metric", "scalar")
+)
+summary(long)
+#> <nomo_invariance_longitudinal summary> Measurement invariance across occasions
+#> Indicators: continuous | Occasions: t1, t2, t3
+#> Levels completed: configural -> metric -> scalar
+#> 
+#> Identification and sequence
+#>   Continuous indicators use the conventional configural, metric, scalar, and
+#>   strict sequence.
+#> 
+#> Fit by level
+#>   Level       Constraints           Chi-square  df       p    CFI  RMSEA   SRMR
+#>   configural  none                       32.78  39    .748  1.000  0.000  0.020
+#>   metric      loadings                   48.13  45    .347  0.999  0.012  0.030
+#>   scalar      loadings, intercepts      137.20  51  < .001  0.963  0.058  0.045
+#> 
+#> Changes from the preceding level
+#>   Level   CFI change  RMSEA change  SRMR change  LRT chi-square  df       p
+#>   metric      -0.001        +0.012       +0.010           15.35   6    .018
+#>   scalar      -0.036        +0.046       +0.015           89.07   6  < .001
+#> 
+#> Latent change from t1 (its latent SD)
+#>   Level   Occasion  Factor     Difference  95% CI             p
+#>   scalar  t2        Wellbeing        0.41  [0.31, 0.51]  < .001
+#>   scalar  t3        Wellbeing        0.66  [0.54, 0.78]  < .001
+#>   Comparable only with invariant intercepts, full or partial.
+#> 
+#> Largest equality-constraint score diagnostics (diagnostic only)
+#>   Level   Constraint                            Score  df       p
+#>   scalar  Intercept: w3 (t1 vs. t3)             22.93   1  < .001
+#>   scalar  Intercept: w3 (t1 vs. t2)             10.85   1  < .001
+#>   scalar  Intercept: w4 (t1 vs. t3)              7.97   1    .005
+#>   scalar  Intercept: w1 (t1 vs. t3)              5.47   1    .019
+#>   metric  Loading: Wellbeing -> w4 (t1 vs. t3)   4.23   1    .040
+#>   metric  Loading: Wellbeing -> w3 (t1 vs. t3)   4.13   1    .042
+#>   metric  Loading: Wellbeing -> w1 (t1 vs. t2)   3.52   1    .061
+#>   metric  Loading: Wellbeing -> w4 (t1 vs. t2)   3.21   1    .073
+#>   scalar  Intercept: w2 (t1 vs. t2)              2.85   1    .091
+#>   scalar  Loading: Wellbeing -> w1 (t1 vs. t2)   2.76   1    .097
+#> 
+#> No single delta-CFI, delta-RMSEA, delta-SRMR, chi-square difference, or score
+#> diagnostic is treated as a universal invariance rule.
+```
+
+Fit holds up with the loadings equal and drops once the intercepts are
+too (CFI change -0.036), and the largest score diagnostics point to the
+`w3` intercept. Held equal, that intercept inflates the latent change at
+`t3` to 0.66 standard deviations. Releasing it is a documented decision,
+as across groups:
+
+``` r
+
+long_partial <- nomo_invariance_longitudinal(
+  "Wellbeing =~ w1 + w2 + w3 + w4",
+  data = nomo_demo_longitudinal,
+  occasions = c("t1", "t2", "t3"),
+  levels = c("configural", "metric", "scalar"),
+  partial = nomo_partial(
+    level = "scalar",
+    syntax = "w3 ~ 1",
+    rationale = "The score diagnostics point to the w3 intercept."
+  )
+)
+nomo_table(long_partial, "latent_means")[, c("occasion", "estimate", "ci_lower", "ci_upper")]
+#> # A tibble: 2 × 4
+#>   occasion estimate ci_lower ci_upper
+#>   <chr>       <dbl>    <dbl>    <dbl>
+#> 1 t2          0.321    0.222    0.421
+#> 2 t3          0.549    0.430    0.669
+```
+
+The release names the item as in the one-occasion model and frees its
+intercept on every occasion. The change is then carried by the other
+three items, and its intervals cover the population’s .30 and .50. With
+real data the release still needs a reason beyond the diagnostics: here,
+something about `w3` that could have changed its meaning between
+occasions.
+
 ## Tables and figures
 
 ``` r
@@ -330,8 +435,10 @@ reports several indices without a universal cutoff. Ordered-indicator
 sequences follow Wu and Estabrook (2016) as implemented in `semTools`
 (see also Svetina et al., 2020). Partial invariance follows Byrne,
 Shavelson, and Muthén (1989), and latent mean comparisons follow Hancock
-(2001). Full references are in
-[`?nomo_invariance`](https://juhalt.github.io/nomologR/reference/nomo_invariance.md)
+(2001). Invariance across occasions follows Widaman, Ferrer, and Conger
+(2010), with Liu et al. (2017) for ordered items. Full references are in
+[`?nomo_invariance`](https://juhalt.github.io/nomologR/reference/nomo_invariance.md),
+[`?nomo_invariance_longitudinal`](https://juhalt.github.io/nomologR/reference/nomo_invariance_longitudinal.md),
 and the [research
 basis](https://juhalt.github.io/nomologR/articles/research-basis.md)
 article.
