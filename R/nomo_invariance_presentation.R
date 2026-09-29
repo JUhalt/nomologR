@@ -180,6 +180,24 @@ nomo_invariance_local_strain_display <- function(x) {
 }
 
 
+# What each level holds equal beyond the level before it, as a line under the
+# fit table. A column of the cumulative constraints was too wide for the
+# console once a strict level held loadings, intercepts, and residuals equal,
+# and it pushed RMSEA and SRMR out of the table.
+nomo_invariance_present_constraints <- function(fit) {
+  held <- lapply(strsplit(fit$constraints, ", ", fixed = TRUE), setdiff, "none")
+  added <- vapply(seq_along(held), function(i) {
+    new <- setdiff(held[[i]], if (i > 1L) held[[i - 1L]])
+    if (!length(new)) return("")
+    paste(nomo_present_or(new, "and"), "from", fit$level[[i]])
+  }, character(1))
+  added <- added[nzchar(added)]
+  if (length(added)) {
+    nomo_present_text("Held equal: ", paste(added, collapse = "; "), ".", indent = 2L)
+  }
+}
+
+
 # Levels that were not estimated, did not converge, or raised warnings, named
 # with what went wrong; a table column would only say that something did.
 nomo_invariance_present_problems <- function(fit) {
@@ -327,12 +345,13 @@ print.summary_nomo_invariance <- function(x, ...) {
   nomo_present_section("Fit by level")
   nomo_present_table(
     fit,
-    c("Level" = "level", "Constraints" = "constraints", "Chi-square" = "chisq",
-      "df" = "df", "p" = "pvalue", "CFI" = "cfi", "RMSEA" = "rmsea", "SRMR" = "srmr"),
+    c("Level" = "level", "Chi-square" = "chisq", "df" = "df", "p" = "pvalue",
+      "CFI" = "cfi", "RMSEA" = "rmsea", "SRMR" = "srmr"),
     formats = list(chisq = function(v) nomo_present_number(v, 2L),
                    df = function(v) format(v, trim = TRUE), pvalue = nomo_present_p),
     more = "nomo_table(x, \"fit\")"
   )
+  nomo_invariance_present_constraints(fit)
   signed <- function(v) nomo_present_signed(v)
   nomo_present_section("Changes from the preceding level")
   nomo_present_table(
@@ -364,10 +383,14 @@ print.summary_nomo_invariance <- function(x, ...) {
     } else {
       sprintf("Latent means relative to %s (its latent SD)", shown$reference_group[[1L]])
     })
+    columns <- c("Level" = "level", "Group" = "group", "Occasion" = "occasion",
+                 "Factor" = "factor", "Difference" = "estimate", "95% CI" = "interval",
+                 "p" = "p_value")
+    # Across occasions the difference is a change from the first occasion.
+    if (across_occasions) names(columns)[columns == "estimate"] <- "Change"
     nomo_present_table(
       shown,
-      c("Level" = "level", "Group" = "group", "Occasion" = "occasion", "Factor" = "factor",
-        "Difference" = "estimate", "95% CI" = "interval", "p" = "p_value"),
+      columns,
       formats = list(estimate = function(v) nomo_present_number(v, 2L),
                      p_value = nomo_present_p),
       more = "nomo_table(x, \"latent_means\")"
@@ -392,6 +415,14 @@ print.summary_nomo_invariance <- function(x, ...) {
   cat("\n")
   nomo_present_text(x$note)
   invisible(x)
+}
+
+
+# The level names along the x-axis of each facet, angled: three facets share a
+# 7-inch plot, so four or more level names such as "configural" and "metric"
+# ran into each other when set horizontally.
+nomo_invariance_level_axis <- function() {
+  ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 35, hjust = 1))
 }
 
 
@@ -454,7 +485,8 @@ plot.nomo_invariance <- function(
           y = "Fit index",
           caption = "No single fit index determines invariance."
         ) +
-        ggplot2::theme_minimal()
+        ggplot2::theme_minimal() +
+        nomo_invariance_level_axis()
     )
   }
 
@@ -512,7 +544,8 @@ plot.nomo_invariance <- function(
             "\nInterpret magnitude contextually; no universal cutoff is imposed."
           )
         ) +
-        ggplot2::theme_minimal()
+        ggplot2::theme_minimal() +
+        nomo_invariance_level_axis()
     )
   }
 

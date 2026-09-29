@@ -149,6 +149,13 @@ test_that("the results print and summarize within 80 columns", {
   expect_match(summarized[[1L]], "<nomo_invariance_longitudinal summary>")
   expect_true(any(grepl("Latent change from t1", summarized)))
   expect_true(any(grepl("Intercept: w3 (t1 vs. t3)", summarized, fixed = TRUE)))
+  # With a strict level, the fit table still has room for RMSEA and SRMR, and
+  # the constraints each level adds are named beneath it (#89).
+  expect_true(any(grepl("^  Level +Chi-square +df +p +CFI +RMSEA +SRMR$", summarized)))
+  expect_false(any(grepl("Not shown for width", summarized, fixed = TRUE)))
+  expect_true(any(grepl("Held equal: loadings from metric; intercepts from scalar;",
+                        summarized, fixed = TRUE)))
+  expect_true(any(grepl("^  Level +Occasion +Factor +Change ", summarized)))
 })
 
 

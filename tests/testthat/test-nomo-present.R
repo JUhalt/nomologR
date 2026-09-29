@@ -180,6 +180,27 @@ test_that("flagged log entries and percentages are shown one way (#89)", {
 })
 
 
+test_that("invariance summaries say what each level holds equal (#89)", {
+  held <- function(level, constraints) {
+    capture.output(nomologR:::nomo_invariance_present_constraints(
+      tibble::tibble(level = level, constraints = constraints)
+    ))
+  }
+  local_reproducible_output(width = 80)
+  expect_identical(
+    held(c("configural", "metric", "scalar", "strict"),
+         c("none", "loadings", "loadings, intercepts", "loadings, intercepts, residuals")),
+    c("  Held equal: loadings from metric; intercepts from scalar; residuals from",
+      "  strict.")
+  )
+  expect_identical(
+    held(c("configural", "strong"), c("none", "thresholds, loadings, intercepts")),
+    "  Held equal: thresholds, loadings, and intercepts from strong."
+  )
+  expect_identical(held("configural", "none"), character())
+})
+
+
 test_that("the CFA print and summary read as designed (#89)", {
   cfa <- nomo_cfa(
     nomo_model(list(A = paste0("a", 1:5), B = paste0("b", 1:5))),
