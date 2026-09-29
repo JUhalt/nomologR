@@ -13,8 +13,9 @@ retest_data <- function(n = 150, shift = .1, error = .45, seed = 2026) {
 
 test_that("the agreement and consistency ICCs are McGraw and Wong's A,1 and C,1", {
   dat <- retest_data()
-  rt <- nomo_retest(dat, c("agency_t1", "agency_t2"), interval = "two weeks")
+  rt <- nomo_retest(dat, scores = c("agency_t1", "agency_t2"), interval = "two weeks")
   expect_s3_class(rt, "nomo_retest")
+  expect_identical(rt$scores, list(composite = c("agency_t1", "agency_t2")))
   icc <- rt$icc
   expect_identical(icc$composite, "composite")
   expect_identical(icc$n, 150L)
@@ -77,10 +78,11 @@ test_that("several composites, missing responses, and three occasions are handle
   dat$other_t1 <- dat$agency_t1 + stats::rnorm(150, sd = 2)
   dat$other_t2 <- dat$agency_t2 + stats::rnorm(150, sd = 2)
   dat$agency_t2[1:10] <- NA
-  rt <- nomo_retest(dat, list(
+  rt <- nomo_retest(dat, scores = list(
     Agency = c("agency_t1", "agency_t2", "agency_t3"),
     Other = c("other_t1", "other_t2")
   ))
+  expect_identical(names(rt$scores), c("Agency", "Other"))
   expect_identical(rt$icc$composite, c("Agency", "Other"))
   expect_identical(rt$icc$n, c(140L, 150L))
   expect_identical(rt$icc$last, c("agency_t3", "other_t2"))
@@ -113,20 +115,23 @@ test_that("a systematic shift between occasions is flagged, and its absence note
 })
 
 
-test_that("occasions and data are checked", {
+test_that("scores and data are checked", {
   dat <- retest_data()
   expect_error(nomo_retest(list(), "a"), "non-empty data frame")
   expect_error(nomo_retest(dat[0, ], c("agency_t1", "agency_t2")), "non-empty data frame")
   expect_error(nomo_retest(dat, "agency_t1"), "two or more distinct columns")
   expect_error(nomo_retest(dat, c("agency_t1", "agency_t1")), "two or more distinct columns")
-  expect_error(nomo_retest(dat, list(c("agency_t1", "agency_t2"))), "named")
+  expect_error(nomo_retest(dat, list(c("agency_t1", "agency_t2"))),
+               "`scores` must be a character vector of column names, or a named", fixed = TRUE)
   expect_error(nomo_retest(dat, list()), "named")
-  expect_error(nomo_retest(dat, c("agency_t1", "nope")), "Occasion column not in `data`: nope.",
+  expect_error(nomo_retest(dat, c("agency_t1", "nope")), "`scores` column not in `data`: nope.",
                fixed = TRUE)
-  expect_error(nomo_retest(dat, c("agency_t1", "nope", "nada")), "Occasion columns not in")
+  expect_error(nomo_retest(dat, c("agency_t1", "nope", "nada")), "`scores` columns not in",
+               fixed = TRUE)
   words <- dat
   words$agency_t2 <- as.character(words$agency_t2)
-  expect_error(nomo_retest(words, c("agency_t1", "agency_t2")), "Not numeric: agency_t2")
+  expect_error(nomo_retest(words, c("agency_t1", "agency_t2")),
+               "`scores` columns must be numeric. Not numeric: agency_t2", fixed = TRUE)
   expect_error(nomo_retest(dat, c("agency_t1", "agency_t2"), interval = ""), "`interval` must be")
 
   few <- dat[1:2, ]

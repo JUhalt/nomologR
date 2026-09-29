@@ -549,11 +549,11 @@ beside it.
 ```{r retest}
 set.seed(2026)
 true_agency <- stats::rnorm(150)
-occasions <- data.frame(
+panel <- data.frame(
   agency_t1 = 3 + true_agency + stats::rnorm(150, sd = .45),
   agency_t2 = 3.3 + true_agency + stats::rnorm(150, sd = .45)
 )
-rt <- nomo_retest(occasions, list(Agency = c("agency_t1", "agency_t2")),
+rt <- nomo_retest(panel, scores = list(Agency = c("agency_t1", "agency_t2")),
                   interval = "two weeks")
 summary(rt)
 ```
