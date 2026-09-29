@@ -42,6 +42,7 @@ reference:
       - nomo_method_variance
       - nomo_power_rmsea
       - nomo_power_simulate
+      - nomo_esem
       - nomo_model
       - nomo_split
       - nomo_cfa
