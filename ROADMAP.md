@@ -261,7 +261,7 @@ can wait for 1.x.
   - [x] Latent means as known-groups evidence (#133).
   - [x] Common method variance: the comprehensive CFA marker technique (#134).
   - [x] ESEM beside its CFA (#136).
-  - [ ] Sample-size planning: RMSEA power and Monte Carlo power (#135).
+  - [x] Sample-size planning: RMSEA power and Monte Carlo power (#135).
   - [ ] Longitudinal measurement invariance and latent change (#137).
   - [x] A scope note: every analysis assumes reflective measurement.
 - [ ] [#39](https://github.com/JUhalt/nomologR/issues/39) The CRAN outcome for
