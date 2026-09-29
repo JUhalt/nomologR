@@ -33,7 +33,7 @@
   - flags coefficient alpha for review, since it understates reliability when loadings differ and so overcorrects.
   
   `hypothesis_evidence` gains `se_reliability_added`, `nomo_table()` gains the `"single_indicators"` and `"sensitivity"` types, and the APA hypotheses table notes the correction. The nomological-network article shows the correction recovering the population path (.45) from the Persistence mean (.41 uncorrected, .46 corrected). The observed-endpoint note in the log now names the option.
-- The content-review reader is tested against `contentvalidR` 0.10.0 output too (#53). Its five handoffs are identical to 0.9.0's apart from the producer version and date, and the reader needed no change.
+- The content-review reader is tested against `contentvalidR` 0.10.0 and 0.10.1 output too (#53). Their handoffs are identical to 0.9.0's apart from the producer version and date, and the reader needed no change.
 
 # nomologR 0.9.0
 

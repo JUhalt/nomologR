@@ -1,19 +1,20 @@
 # contentvalidR handoff fixtures
 
-Twenty-one handoff objects produced by contentvalidR itself, for testing a
+Twenty-six handoff objects produced by contentvalidR itself, for testing a
 reader without contentvalidR installed. Each is genuine producer output from a
 release tag, never edited afterwards. `MANIFEST.csv` records each file's tag,
-the commit SHA it was built from, and its md5. The sixteen files delivered
-before are unchanged, byte for byte. The five 0.10.0 files were generated on
-2026-09-28 from the `v0.10.0` tag (aff485a) with the same script.
+the commit SHA it was built from, and its md5. The twenty-one files delivered
+before are unchanged, byte for byte. The five 0.10.0 files come from the
+`v0.10.0` tag (aff485a), and the five 0.10.1 files from the `v0.10.1` tag
+(4c13be0), both generated on 2026-09-28 with the same script.
 
-| fit | 0.6.0 | 0.7.0 | 0.8.0 | 0.9.0 | 0.10.0 | what it exercises |
-| --- | --- | --- | --- | --- | --- | --- |
-| `walkthrough-sort` | plain | `keying` + `response_min/max` set | as 0.7.0 | as 0.8.0 | as 0.9.0 | the walkthrough item sort: 12 items, 10 carried, 2 held back; EF2 and TF2 reverse-worded (`keying = -1`), scale 1-5 |
-| `expert-krippendorff` | yes | yes, keying/scale `NA` | as 0.7.0 | as 0.8.0 | as 0.9.0 | a relevance panel with one `panel_statistics` row (Krippendorff's alpha with a bootstrap interval) |
-| `delphi` | yes | yes, keying/scale `NA` | as 0.7.0 | as 0.8.0 | as 0.9.0 | a three-round Delphi; `round` varies by item |
-| `expert-nine` | — | yes | yes | as 0.8.0 | as 0.9.0 | nine experts, one item per count relevant (9, 8, 7, 6); the one input whose decision depends on the producer |
-| `walkthrough-sort-none-reversed` | — | — | — | yes | as 0.9.0 | the same sort with `reverse_keyed = character(0)` and `response_scale = c(1, 5)`: keying recorded as checked, no item reversed |
+| fit | 0.6.0 | 0.7.0 | 0.8.0 | 0.9.0 | 0.10.0 | 0.10.1 | what it exercises |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `walkthrough-sort` | plain | `keying` + `response_min/max` set | as 0.7.0 | as 0.8.0 | as 0.9.0 | as 0.10.0 | the walkthrough item sort: 12 items, 10 carried, 2 held back; EF2 and TF2 reverse-worded (`keying = -1`), scale 1-5 |
+| `expert-krippendorff` | yes | yes, keying/scale `NA` | as 0.7.0 | as 0.8.0 | as 0.9.0 | as 0.10.0 | a relevance panel with one `panel_statistics` row (Krippendorff's alpha with a bootstrap interval) |
+| `delphi` | yes | yes, keying/scale `NA` | as 0.7.0 | as 0.8.0 | as 0.9.0 | as 0.10.0 | a three-round Delphi; `round` varies by item |
+| `expert-nine` | — | yes | yes | as 0.8.0 | as 0.9.0 | as 0.10.0 | nine experts, one item per count relevant (9, 8, 7, 6); the one input whose decision depends on the producer |
+| `walkthrough-sort-none-reversed` | — | — | — | yes | as 0.9.0 | as 0.10.0 | the same sort with `reverse_keyed = character(0)` and `response_scale = c(1, 5)`: keying recorded as checked, no item reversed |
 
 **0.9.0 files are identical to their 0.8.0 counterparts** in every field
 except `provenance$package_version` and `provenance$created`: the same schema
@@ -25,6 +26,10 @@ except `provenance$package_version` and `provenance$created`, checked in an R
 process without contentvalidR loaded. 0.10.0 added figures and documentation;
 the one handoff change in it, the reworded `citation` for
 `stability = "percent_change"`, reaches none of these fits.
+
+**0.10.1 files are identical to their 0.10.0 counterparts** in the same
+way: every field but `provenance$package_version` and `provenance$created`.
+0.10.1 changed documentation only.
 
 ## What a reader should find
 
