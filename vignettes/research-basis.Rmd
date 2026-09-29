@@ -695,17 +695,27 @@ Fornell, C., & Larcker, D. F. (1981). Evaluating structural equation models
 with unobservable variables and measurement error. *Journal of Marketing
 Research, 18*(1), 39–50. https://doi.org/10.2307/3151312
 
+Gorsuch, R. L. (1983). *Factor analysis* (2nd ed.). Lawrence Erlbaum.
+
 Green, S. B., & Yang, Y. (2009). Reliability of summed item scores using
 structural equation modeling: An alternative to coefficient alpha.
 *Psychometrika, 74*(1), 155–167. https://doi.org/10.1007/s11336-008-9099-3
-
-Gorsuch, R. L. (1983). *Factor analysis* (2nd ed.). Lawrence Erlbaum.
 
 Grice, J. W. (2001). Computing and evaluating factor scores. *Psychological
 Methods, 6*(4), 430–450. https://doi.org/10.1037/1082-989X.6.4.430
 
 Guttman, L. (1954). Some necessary conditions for common-factor analysis.
 *Psychometrika, 19*(2), 149–161. https://doi.org/10.1007/BF02289162
+
+Hancock, G. R. (2001). Effect size, power, and sample size determination for
+structured means modeling and MIMIC approaches to between-groups hypothesis
+testing of means on a single latent construct. *Psychometrika, 66*(3),
+373–388. https://doi.org/10.1007/BF02294440
+
+Hancock, G. R., & Mueller, R. O. (2001). Rethinking construct reliability within
+latent variable systems. In R. Cudeck, S. du Toit, & D. Sörbom (Eds.),
+*Structural equation modeling: Present and future* (pp. 195–216). Scientific
+Software International.
 
 Hayduk, L. A. (1987). *Structural equation modeling with LISREL: Essentials and
 advances*. Johns Hopkins University Press.
@@ -718,11 +728,6 @@ https://doi.org/10.1007/s11747-014-0403-8
 Hinkin, T. R. (1998). A brief tutorial on the development of measures for use
 in survey questionnaires. *Organizational Research Methods, 1*(1), 104–121.
 https://doi.org/10.1177/109442819800100106
-
-Hancock, G. R., & Mueller, R. O. (2001). Rethinking construct reliability within
-latent variable systems. In R. Cudeck, S. du Toit, & D. Sörbom (Eds.),
-*Structural equation modeling: Present and future* (pp. 195–216). Scientific
-Software International.
 
 Holzinger, K. J., & Swineford, F. (1937). The bi-factor method.
 *Psychometrika, 2*(1), 41–54. https://doi.org/10.1007/BF02287965
@@ -856,10 +861,6 @@ inferences from persons' responses and performances as scientific inquiry into
 score meaning. *American Psychologist, 50*(9), 741–749.
 https://doi.org/10.1037/0003-066X.50.9.741
 
-Nosek, B. A., Ebersole, C. R., DeHaven, A. C., & Mellor, D. T. (2018). The
-preregistration revolution. *Proceedings of the National Academy of Sciences,
-115*(11), 2600–2606. https://doi.org/10.1073/pnas.1708274114
-
 Murray, A. L., & Johnson, W. (2013). The limitations of model fit in comparing
 the bi-factor versus higher-order models of human cognitive ability structure.
 *Intelligence, 41*(5), 407–422. https://doi.org/10.1016/j.intell.2013.06.004
@@ -867,6 +868,10 @@ the bi-factor versus higher-order models of human cognitive ability structure.
 Muthén, L. K., & Muthén, B. O. (2002). How to use a Monte Carlo study to
 decide on sample size and determine power. *Structural Equation Modeling,
 9*(4), 599–620. https://doi.org/10.1207/S15328007SEM0904_8
+
+Nosek, B. A., Ebersole, C. R., DeHaven, A. C., & Mellor, D. T. (2018). The
+preregistration revolution. *Proceedings of the National Academy of Sciences,
+115*(11), 2600–2606. https://doi.org/10.1073/pnas.1708274114
 
 Nunnally, J. C., & Bernstein, I. H. (1994). *Psychometric theory* (3rd ed.).
 McGraw-Hill.
