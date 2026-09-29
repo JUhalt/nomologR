@@ -993,10 +993,10 @@ item bias, which is why the means are reported level by level.
 #### Across occasions
 
 `nomo_invariance_longitudinal()` runs the same sequence across occasions
-for repeated measures, with each item’s residuals correlated over time and
-latent change reported once intercepts are invariant. The model is written
-for one occasion, and `columns` (default `"{item}_{occasion}"`) names each
-item’s column on each occasion:
+for repeated measures, with each item’s residuals correlated over time
+and latent change reported once intercepts are invariant, fully or
+partially. The model is written for one occasion, and `columns` (default
+`"{item}_{occasion}"`) names each item’s column on each occasion:
 
 ``` r
 long <- nomo_invariance_longitudinal(
@@ -1007,8 +1007,32 @@ long <- nomo_invariance_longitudinal(
 )
 
 summary(long)
-nomo_table(long, "latent_means")  # change in first-occasion SDs
 ```
+
+In these data the `w3` intercept drifts upward after the first occasion,
+and the score diagnostics in the summary point to it. Held equal, it
+inflates the latent change, so the change is read after releasing it, a
+documented decision as across groups:
+
+``` r
+long_partial <- nomo_invariance_longitudinal(
+  "Wellbeing =~ w1 + w2 + w3 + w4",
+  data = nomo_demo_longitudinal,
+  occasions = c("t1", "t2", "t3"),
+  levels = c("configural", "metric", "scalar"),
+  partial = nomo_partial(
+    level = "scalar",
+    syntax = "w3 ~ 1",
+    rationale = "The score diagnostics point to the w3 intercept."
+  )
+)
+
+nomo_table(long_partial, "latent_means")  # change in first-occasion SDs
+```
+
+The release frees the `w3` intercept on every occasion, so the change is
+carried by the other three items. With real data it still needs a reason
+beyond the diagnostics.
 
 The full walkthroughs are in the **“Nomological network”** and
 **“Measurement invariance”** vignettes.
