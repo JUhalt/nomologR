@@ -144,9 +144,66 @@ nomo_demo_network <- data.frame(
 )
 
 
+# nomo_demo_longitudinal --------------------------------------------------------
+#
+# One construct, Wellbeing, measured by the same four items on three occasions
+# (t1, t2, t3), for longitudinal-invariance teaching.
+#
+# Measurement model at every occasion (standardized at t1):
+#   Wellbeing =~ w1 .80, w2 .75, w3 .70, w4 .65
+# The loadings are equal across occasions.
+#
+# Latent structure: Wellbeing has variance 1 at every occasion, means 0, .30,
+# and .50 (in t1 standard deviations), and correlations .60 between adjacent
+# occasions and .45 between t1 and t3.
+#
+# Occasion features:
+#   * each item's unique factor correlates .20 with its own unique factor on the
+#     other occasions (the autocorrelated residuals of repeated items);
+#   * the w3 intercept is .40 higher at t2 and t3 than at t1, a known source of
+#     longitudinal scalar non-invariance.
+
+set.seed(20260928L)
+
+mvn <- function(n, mu, sigma) {
+  z <- matrix(stats::rnorm(n * length(mu)), n, length(mu)) %*% chol(sigma)
+  sweep(z, 2L, mu, "+")
+}
+
+n_longitudinal <- 500L
+occasions <- c("t1", "t2", "t3")
+wellbeing_r <- matrix(
+  c(1, .60, .45,
+    .60, 1, .60,
+    .45, .60, 1),
+  3L, 3L
+)
+wellbeing <- mvn(n_longitudinal, c(0, .30, .50), wellbeing_r)
+unique_r <- matrix(.20, 3L, 3L)
+diag(unique_r) <- 1
+wellbeing_loadings <- c(w1 = .80, w2 = .75, w3 = .70, w4 = .65)
+drift <- c(t1 = 0, t2 = .40, t3 = .40)
+
+longitudinal_scores <- list()
+for (item in names(wellbeing_loadings)) {
+  loading <- wellbeing_loadings[[item]]
+  unique <- mvn(n_longitudinal, c(0, 0, 0), (1 - loading^2) * unique_r)
+  for (t in seq_along(occasions)) {
+    shift <- if (item == "w3") drift[[t]] else 0
+    longitudinal_scores[[paste0(item, "_", occasions[[t]])]] <-
+      loading * wellbeing[, t] + unique[, t] + shift
+  }
+}
+longitudinal_scores <- longitudinal_scores[
+  paste0(rep(names(wellbeing_loadings), times = 3L), "_", rep(occasions, each = 4L))
+]
+nomo_demo_longitudinal <- as.data.frame(lapply(longitudinal_scores, rating_metric))
+
+
 # Save --------------------------------------------------------------------------
 
 dir.create("data", showWarnings = FALSE)
 save(nomo_demo_continuous, file = "data/nomo_demo_continuous.rda", compress = "bzip2", version = 2)
 save(nomo_demo_ordinal, file = "data/nomo_demo_ordinal.rda", compress = "bzip2", version = 2)
 save(nomo_demo_network, file = "data/nomo_demo_network.rda", compress = "bzip2", version = 2)
+save(nomo_demo_longitudinal, file = "data/nomo_demo_longitudinal.rda", compress = "bzip2", version = 2)

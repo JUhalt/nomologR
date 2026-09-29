@@ -67,6 +67,7 @@ reference:
     contents:
       - nomo_invariance
       - nomo_partial
+      - nomo_invariance_longitudinal
       - plot.nomo_invariance
   - title: "6. Scoring"
     contents:
@@ -86,6 +87,7 @@ reference:
       - nomo_demo_continuous
       - nomo_demo_ordinal
       - nomo_demo_network
+      - nomo_demo_longitudinal
       - nomo_demo_walkthrough
 
 articles:

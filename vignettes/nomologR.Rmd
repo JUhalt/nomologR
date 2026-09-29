@@ -82,7 +82,7 @@ and its content can still be reviewed with `contentvalidR`.
 | 3. Exploratory structure | What does a requested factor solution look like? | `nomo_efa()` | [From item audit to exploratory structure](exploratory-workflow.html) |
 | 4. Confirmatory measurement model | Does a prespecified model reproduce the data, and where is there strain? | `nomo_model()`, `nomo_split()`, `nomo_cfa()` | [From CFA to a defensible measurement model](measurement-model-evidence.html) |
 | 5. Reliability and construct-validity evidence | How precise are scores, and are constructs distinguishable? | `nomo_reliability()`, `nomo_validity()` | [From CFA to a defensible measurement model](measurement-model-evidence.html) |
-| 6. Generalizability | Is the construct measured comparably across groups? | `nomo_invariance()`, `nomo_partial()` | [Measurement invariance](measurement-invariance.html) |
+| 6. Generalizability | Is the construct measured comparably across groups and occasions? | `nomo_invariance()`, `nomo_invariance_longitudinal()`, `nomo_partial()` | [Measurement invariance](measurement-invariance.html) |
 | 7. Nomological network | Does the construct relate to others as theory predicted? | `nomo_hypotheses()`, `nomo_network()` | [Theory-specified nomological networks](nomological-network.html) |
 | Guided workflow | How do the stages fit together with explicit decisions? | `nomo_run()` | [Guided workflow](guided-workflow.html) |
 | Starting from content review | What does empirical evidence add to an expert review of the items? | `nomo_screen()` and `nomo_run()` with a `contentvalidR` handoff | [From content review to empirical screening](content-review.html) |

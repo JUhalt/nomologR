@@ -253,7 +253,7 @@ can wait for 1.x.
     at the release candidate.
 - [x] [#113](https://github.com/JUhalt/nomologR/issues/113) APA tables for
   convergent and discriminant evidence (#124).
-- [ ] [#129](https://github.com/JUhalt/nomologR/issues/129) The gap review:
+- [x] [#129](https://github.com/JUhalt/nomologR/issues/129) The gap review:
   what social-science scale developers need before 1.0, each method taken from
   its literature. All are additive.
   - [x] Reliability-corrected single indicators for observed composites (#131).
@@ -262,7 +262,7 @@ can wait for 1.x.
   - [x] Common method variance: the comprehensive CFA marker technique (#134).
   - [x] ESEM beside its CFA (#136).
   - [x] Sample-size planning: RMSEA power and Monte Carlo power (#135).
-  - [ ] Longitudinal measurement invariance and latent change (#137).
+  - [x] Longitudinal measurement invariance and latent change (#137).
   - [x] A scope note: every analysis assumes reflective measurement.
 - [ ] [#39](https://github.com/JUhalt/nomologR/issues/39) The CRAN outcome for
   0.3.0, which is in CRAN's queue for new submissions. `contentvalidR` 0.4.0
