@@ -1225,6 +1225,11 @@ release keeps working in the next.
   and the layout of
   [`nomo_apa_table()`](https://juhalt.github.io/nomologR/reference/nomo_apa_table.md)
   tables are experimental until 1.0.0.
+  [`nomo_method_variance()`](https://juhalt.github.io/nomologR/reference/nomo_method_variance.md)
+  and
+  [`nomo_power_simulate()`](https://juhalt.github.io/nomologR/reference/nomo_power_simulate.md)
+  remain experimental after 1.0.0 and may change during 1.x without a
+  deprecation period, with changes listed in NEWS.
 
 The full policy is on the package help page,
 [`?nomologR`](https://juhalt.github.io/nomologR/reference/nomologR-package.md).

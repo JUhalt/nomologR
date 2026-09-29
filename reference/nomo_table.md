@@ -76,8 +76,8 @@ default.
   `"decision_log"`; see
   [`nomo_retest()`](https://juhalt.github.io/nomologR/reference/nomo_retest.md).
 
-- `nomo_esem`: `"loadings"` (default), `"factor_correlations"`, `"fit"`,
-  `"comparison"`, `"decision_log"`; see
+- `nomo_esem`: `"loadings"` (default), `"factor_correlations"`,
+  `"models"`, `"comparisons"`, `"decision_log"`; see
   [`nomo_esem()`](https://juhalt.github.io/nomologR/reference/nomo_esem.md).
 
 - `nomo_method_variance`: `"comparisons"` (default), `"models"`,

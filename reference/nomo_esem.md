@@ -59,15 +59,20 @@ A `nomo_esem` object. The fields to read are:
   ESEM, whether it is the item's main loading or a cross-loading, its
   standard error and p-value, and the CFA's loading for main loadings.
 
-- `factor_correlations`: each pair of factors' correlation in the ESEM
-  and the CFA, and their difference.
+- `factor_correlations`: each pair of factors' correlation (`factor1`,
+  `factor2`) in the ESEM and the CFA, and their difference.
 
-- `fit`: both models' chi-square, degrees of freedom, CFI, TLI, RMSEA,
-  SRMR, AIC, and BIC.
+- `models`: both models' chi-square, degrees of freedom, p-value, CFI,
+  TLI, RMSEA, SRMR, AIC, and BIC. With a robust estimator, the
+  chi-square is scaled and the indices are robust, as in
+  [`nomo_cfa()`](https://juhalt.github.io/nomologR/reference/nomo_cfa.md).
 
-- `comparison`: the likelihood-ratio test of the CFA against the ESEM.
+- `comparisons`: the likelihood-ratio test of the CFA against the ESEM,
+  with `chisq_diff`, `df_diff`, and `p_value`.
 
-- `esem_fit`, `cfa_fit`, and `decision_log`.
+- `fits`: the fitted `lavaan` models, named `ESEM` and `CFA`.
+
+- `decision_log`.
 
 Other fields record the call and the settings used. They may change
 between releases and are not part of the stable interface (see
@@ -144,8 +149,8 @@ es
 #> The comparison is evidence for choosing a model, not a verdict.
 nomo_table(es, "factor_correlations")
 #> # A tibble: 1 × 5
-#>   factor_1 factor_2     esem   cfa difference
-#>   <chr>    <chr>       <dbl> <dbl>      <dbl>
-#> 1 Agency   Persistence 0.455 0.457   -0.00281
+#>   factor1 factor2      esem   cfa difference
+#>   <chr>   <chr>       <dbl> <dbl>      <dbl>
+#> 1 Agency  Persistence 0.455 0.457   -0.00281
 # }
 ```

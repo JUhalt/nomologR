@@ -55,30 +55,44 @@ nomo_method_variance(
 
 A `nomo_method_variance` object. The fields to read are:
 
-- `models`: each model's chi-square, degrees of freedom, CFI, RMSEA, and
-  SRMR.
+- `models`: each model's chi-square, degrees of freedom, p-value
+  (`pvalue`), CFI, TLI, RMSEA, and SRMR. With a robust estimator, the
+  chi-square is scaled and the indices are robust, as in
+  [`nomo_cfa()`](https://juhalt.github.io/nomologR/reference/nomo_cfa.md).
 
 - `comparisons`: the three model comparisons, with their chi-square
-  differences and p-values.
+  differences (`chisq_diff`), degrees of freedom (`df_diff`), and
+  `p_value`.
 
 - `retained`: `"Method-C"` or `"Method-U"`.
 
 - `method_loadings`: each substantive indicator's standardized
   substantive and method loadings in the retained model, the share of
   its variance the marker accounts for, and the method loading's
-  p-value.
+  `p_value`.
 
 - `reliability`: each substantive factor's Baseline reliability, its
   substantive and method parts, and `method_share`.
 
-- `correlations`: each pair of substantive factors' correlation in the
-  CFA, Baseline, retained, Method-S(.05), and Method-S(.01) models, with
-  p-values in the retained and sensitivity models.
+- `correlations`: each pair of substantive factors (`factor1`,
+  `factor2`) and their correlation in the CFA, Baseline, retained,
+  Method-S(.05), and Method-S(.01) models, with p-values in the retained
+  and sensitivity models (`retained_p_value`, `method_s_05_p_value`,
+  `method_s_01_p_value`).
 
-- `marker_correlations`: the marker's correlations with the substantive
-  factors in the CFA model.
+- `marker_correlations`: the marker's correlation with each substantive
+  factor in the CFA model; `factor1` is the substantive factor and
+  `factor2` the marker.
 
 - `fits` and `decision_log`.
+
+A table with one p-value for a test or an estimate names it `p_value`,
+as the rest of the package does. `correlations` has one for each model,
+so each is named `<model>_p_value`. In `models`, `pvalue` is the p-value
+of each model's chi-square test, named as in the fit tables of
+[`nomo_esem()`](https://juhalt.github.io/nomologR/reference/nomo_esem.md)
+and
+[`nomo_invariance()`](https://juhalt.github.io/nomologR/reference/nomo_invariance.md).
 
 Other fields record the call, the settings used, and the syntax fitted.
 They may change between releases and are not part of the stable
@@ -86,6 +100,14 @@ interface (see
 [`?nomologR`](https://juhalt.github.io/nomologR/reference/nomologR-package.md)).
 
 ## Details
+
+**Experimental.** This function is experimental and remains so after
+nomologR 1.0.0. Its output may be reorganized during 1.x, without a
+deprecation period, as the marker technique is extended beyond
+continuous indicators. Any change will be described in NEWS; see the
+package help page,
+[`?nomologR`](https://juhalt.github.io/nomologR/reference/nomologR-package.md),
+for the stability policy.
 
 **The marker.** A marker variable is theoretically unrelated to the
 substantive variables, so what it shares with them is taken to be method
@@ -202,18 +224,18 @@ mv
 #> 
 #> Model comparisons
 #>   Comparison             Chi-square diff.  df       p
-#>   Baseline vs. Method-C             11.84   1  < .001
-#>   Method-C vs. Method-U              2.79   7    .904
-#>   Method-C vs. Method-R              0.07   1    .791
+#>   Baseline vs. Method-C             11.89   1  < .001
+#>   Method-C vs. Method-U              2.78   7    .905
+#>   Method-C vs. Method-R              0.07   1    .790
 #> 
 #> Reliability decomposition
 #>   Factor  Total  Substantive  Method  Method share
-#>   A       0.811        0.795   0.017  2.0%
-#>   B       0.776        0.759   0.016  2.1%
+#>   A       0.804        0.788   0.017  2.1%
+#>   B       0.784        0.767   0.016  2.1%
 #> 
 #> Substantive correlations
 #>   Factors     CFA  Baseline  Retained  S(.05)  S(.01)
-#>   A with B  0.436     0.436     0.424   0.424   0.425
+#>   A with B  0.434     0.434     0.422   0.422   0.423
 #> 
 #> Comprehensive CFA marker technique (Williams, Hartman, & Cavazotte, 2010). The
 #> results describe the method variance this marker captures; they are not
@@ -222,8 +244,8 @@ nomo_table(mv, "reliability")
 #> # A tibble: 2 × 5
 #>   factor reliability_total reliability_substantive reliability_method
 #>   <chr>              <dbl>                   <dbl>              <dbl>
-#> 1 A                  0.811                   0.795             0.0165
-#> 2 B                  0.776                   0.759             0.0162
+#> 1 A                  0.804                   0.788             0.0166
+#> 2 B                  0.784                   0.767             0.0162
 #> # ℹ 1 more variable: method_share <dbl>
 # }
 ```

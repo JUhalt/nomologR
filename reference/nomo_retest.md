@@ -8,7 +8,7 @@ that error.
 ## Usage
 
 ``` r
-nomo_retest(data, occasions, interval = NULL)
+nomo_retest(data, scores, interval = NULL)
 ```
 
 ## Arguments
@@ -17,11 +17,11 @@ nomo_retest(data, occasions, interval = NULL)
 
   A data frame with one row per person.
 
-- occasions:
+- scores:
 
-  The columns holding the same composite on successive occasions: a
-  character vector of two or more column names, or a named list of such
-  vectors, one per composite.
+  The columns holding the same composite on successive occasions, in
+  order: a character vector of two or more column names, or a named list
+  of such vectors, one per composite.
 
 - interval:
 
@@ -47,8 +47,8 @@ A `nomo_retest` object. The fields to read are:
 
 - `interval` and `decision_log`.
 
-Other fields record the call and the columns used. They may change
-between releases and are not part of the stable interface (see
+Other fields record the call and the columns used (`scores`). They may
+change between releases and are not part of the stable interface (see
 [`?nomologR`](https://juhalt.github.io/nomologR/reference/nomologR-package.md)).
 
 ## Details
@@ -119,11 +119,12 @@ Conditioning Research, 19*(1), 231-240.
 # Agency scores on two occasions, two weeks apart (simulated).
 set.seed(2026)
 true <- stats::rnorm(150)
-scores <- data.frame(
+panel <- data.frame(
   agency_t1 = 3 + true + stats::rnorm(150, sd = .45),
   agency_t2 = 3.1 + true + stats::rnorm(150, sd = .45)
 )
-rt <- nomo_retest(scores, c("agency_t1", "agency_t2"), interval = "two weeks")
+rt <- nomo_retest(panel, scores = c("agency_t1", "agency_t2"),
+                  interval = "two weeks")
 rt
 #> <nomo_retest> Test-retest reliability
 #> Composites: 1 | Interval: two weeks

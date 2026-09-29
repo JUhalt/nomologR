@@ -63,7 +63,13 @@
     2013), parameter and standard-error bias, coverage, and power. It
     also gives the smallest simulated N meeting their references: biases
     within 10%, coverage .91 to .98, and power .80 for the focus
-    parameters.
+    parameters. The result records the `seed` and the call. Estimates
+    are in the metric `lavaan::sem(std.lv = TRUE)` sets, so a latent
+    regression is not a standardized coefficient; the help page shows
+    how the two differ.
+    [`nomo_power_simulate()`](https://juhalt.github.io/nomologR/reference/nomo_power_simulate.md)
+    is experimental: it may change during 1.x without a deprecation
+    period.
 - New
   [`nomo_esem()`](https://juhalt.github.io/nomologR/reference/nomo_esem.md)
   fits a measurement model as exploratory structural equation modeling
@@ -76,19 +82,23 @@
     Parker, and Kaur (2014) recommend for an a priori structure (Browne,
     2001): each item’s own loading is free and its cross-loadings are
     rotated towards zero. Geomin is available too.
-  - **The comparison.** It reports both models’ fit, their factor
-    correlations and the change between them, and their likelihood-ratio
-    test. The ESEM is flagged for review when it fits better on TLI and
-    RMSEA, which penalize its extra parameters; lower ESEM factor
-    correlations then show that the CFA’s zero cross-loadings are
-    inflating them. Cross-loadings at or above
-    `efa_crossloading_reference` and main loadings below
-    `efa_loading_reference` are flagged as evidence about items, not
-    instructions.
+  - **The comparison.** It reports both models’ fit (`models`), their
+    factor correlations and the change between them
+    (`factor_correlations`), and their likelihood-ratio test
+    (`comparisons`); the two lavaan fits are in `fits`. The ESEM is
+    flagged for review when it fits better on TLI and RMSEA, which
+    penalize its extra parameters; lower ESEM factor correlations then
+    show that the CFA’s zero cross-loadings are inflating them.
+    Cross-loadings at or above `efa_crossloading_reference` and main
+    loadings below `efa_loading_reference` are flagged as evidence about
+    items, not instructions.
   - **Other outputs.** [`print()`](https://rdrr.io/r/base/print.html),
     [`summary()`](https://rdrr.io/r/base/summary.html),
     [`nomo_table()`](https://juhalt.github.io/nomologR/reference/nomo_table.md),
-    [`nomo_methods()`](https://juhalt.github.io/nomologR/reference/nomo_methods.md),
+    [`nomo_methods()`](https://juhalt.github.io/nomologR/reference/nomo_methods.md)
+    (which credits WLSMV for ordered indicators and FIML when it was
+    requested, as for
+    [`nomo_cfa()`](https://juhalt.github.io/nomologR/reference/nomo_cfa.md)),
     and a section in the measurement-evidence article, where ESEM finds
     both features built into `nomo_demo_continuous`.
 - New
@@ -99,13 +109,19 @@
   measurement model and the indicators of a marker variable, it runs the
   three phases the authors specify:
   - **Model comparisons.** It fits the CFA, Baseline, Method-C,
-    Method-U, and Method-R models, and compares them to test whether
+    Method-U, and Method-R models (`models`, with the scaled chi-square
+    and robust indices under a robust estimator, as
+    [`nomo_cfa()`](https://juhalt.github.io/nomologR/reference/nomo_cfa.md)
+    reports them), and compares them (`comparisons`) to test whether
     marker-based method variance is present, whether its effects are
     equal, and whether it biases the substantive correlations.
   - **Reliability decomposition.** It splits each factor’s reliability
-    into substantive and method parts.
+    into substantive and method parts (`reliability`).
   - **Sensitivity.** It fits the Method-S(.05) and Method-S(.01) models,
     with the method loadings at the upper ends of their intervals.
+    `correlations` gives each pair of factors’ correlation in every
+    model, with p-values named `retained_p_value`,
+    `method_s_05_p_value`, and `method_s_01_p_value`.
 
   The log explains what the marker must be: theoretically unrelated to
   the constructs, and tapping the biases the measurement context
@@ -113,6 +129,9 @@
   marker it can find method variance that is absent, and it does not
   recover substantive correlations accurately (Richardson, Simmering, &
   Sturman, 2009). The measurement-evidence article works an example.
+  [`nomo_method_variance()`](https://juhalt.github.io/nomologR/reference/nomo_method_variance.md)
+  is experimental: its output may change during 1.x without a
+  deprecation period.
 - [`nomo_invariance()`](https://juhalt.github.io/nomologR/reference/nomo_invariance.md)
   reports latent means, which are known-groups evidence in
   structured-means form
@@ -132,8 +151,9 @@
   [`nomo_retest()`](https://juhalt.github.io/nomologR/reference/nomo_retest.md)
   for test-retest reliability
   ([\#129](https://github.com/JUhalt/nomologR/issues/129)).
-  - **The intraclass correlations.** For scores on two or more
-    occasions, it estimates ICC(A,1), the two-way mixed-effects,
+  - **The intraclass correlations.** For `scores`, the columns holding a
+    composite on two or more occasions (or a named list of them, one per
+    composite), it estimates ICC(A,1), the two-way mixed-effects,
     absolute-agreement, single-measurement form Koo and Li (2016)
     recommend for test-retest data, with its 95% interval. Beside it are
     the consistency form ICC(C,1) (McGraw & Wong, 1996) and the mean

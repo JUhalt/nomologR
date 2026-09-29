@@ -62,6 +62,10 @@ A `nomo_power` object. The fields to read are `test`, `df`,
 sample sizes and their power), and `n_required` (the smallest sample
 size reaching `target_power`, or `NA` if none up to one million does).
 
+Other fields record the kind of power analysis. They may change between
+releases and are not part of the stable interface (see
+[`?nomologR`](https://juhalt.github.io/nomologR/reference/nomologR-package.md)).
+
 ## Details
 
 MacCallum et al. (1996) framed the power of a covariance structure

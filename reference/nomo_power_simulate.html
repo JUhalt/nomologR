@@ -120,7 +120,8 @@ session's random-number state is restored afterwards.</p></dd>
 
 
 <dt id="arg-standardized">standardized<a class="anchor" aria-label="anchor" href="#arg-standardized"></a></dt>
-<dd><p>Passed to <code><a href="https://rdrr.io/pkg/lavaan/man/simulateData.html" class="external-link">lavaan::simulateData()</a></code>. Default <code>TRUE</code>.</p></dd>
+<dd><p>Passed to <code><a href="https://rdrr.io/pkg/lavaan/man/simulateData.html" class="external-link">lavaan::simulateData()</a></code>. Default <code>TRUE</code>,
+which gives the observed variables unit variance.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -132,17 +133,36 @@ error bias, coverage, and power), <code>summary</code> (for each sample size: th
 proportions that converged and that were improper, the smallest power in
 <code>focus</code>, the largest absolute biases, the coverage range, and
 <code>meets_references</code>), <code>n_required</code> (the smallest simulated sample size that
-meets the references, or <code>NA</code>), <code>focus</code>, <code>reps</code>, and <code>alpha</code>.</p>
+meets the references, or <code>NA</code>), <code>focus</code>, <code>reps</code>, <code>alpha</code>, and <code>seed</code> (the
+seed given, or <code>NA</code> without one).</p>
+<p>Other fields record the call, the population and analysis models, and the
+kind of power analysis. They may change between releases and are not part
+of the stable interface (see <code><a href="nomologR-package.html">?nomologR</a></code>).</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>Data are generated from <code>population</code>, a lavaan model whose parameters carry
+    <p><strong>Experimental.</strong> This function is experimental and remains so after
+nomologR 1.0.0. The metric of its estimates and its summaries may be refined
+during 1.x, without a deprecation period, as it is extended beyond complete
+continuous data. Any change will be described in NEWS; see the package help
+page, <code><a href="nomologR-package.html">?nomologR</a></code>, for the stability policy.</p>
+<p>Data are generated from <code>population</code>, a lavaan model whose parameters carry
 their population values (for example <code>A =~ 0.7*a1</code>), with
-<code><a href="https://rdrr.io/pkg/lavaan/man/simulateData.html" class="external-link">lavaan::simulateData()</a></code>. With <code>standardized = TRUE</code>, the default, loadings
-and regressions are in a standardized metric and the residual variances are
-set so the observed variables have unit variance. The <code>analysis</code> model, which
-by default is <code>population</code> without its values, is fitted to each data set
-with <code>lavaan::sem(std.lv = TRUE)</code>.</p>
+<code><a href="https://rdrr.io/pkg/lavaan/man/simulateData.html" class="external-link">lavaan::simulateData()</a></code>. With <code>standardized = TRUE</code>, the default, the
+residual variances of the observed variables are set so that each has unit
+variance. The <code>analysis</code> model, which by default is <code>population</code> without its
+values, is fitted to each data set with <code>lavaan::sem(std.lv = TRUE)</code>.</p>
+<p><strong>The metric.</strong> Each estimate is the analysis model's unstandardized
+estimate, and it is compared with the population value as written. Both are
+in the metric that <code>std.lv = TRUE</code> sets: an exogenous factor has variance 1,
+and an endogenous factor has residual variance 1. With the default
+<code>standardized = TRUE</code>, loadings on exogenous factors are therefore
+standardized, and covariances between exogenous factors are correlations. A
+latent regression is not standardized. In <code>B ~ 0.4*A</code>, B's total variance
+is 1.16, its residual variance of 1 plus 0.16 from A, so the completely
+standardized coefficient is 0.4 divided by the square root of 1.16, or .37,
+and B's indicators have standardized loadings 1.08 times their values. Bias,
+coverage, and power are for the values as written.</p>
 <p>Muthén and Muthén (2002) suggest choosing the sample size at which three
 conditions hold, and power for the parameter of interest is close to .80:</p><ul><li><p>parameter and standard error biases are within 10% for every parameter;</p></li>
 <li><p>the standard error bias of the parameter whose power is assessed is within
@@ -186,8 +206,8 @@ bias, and solution propriety. <em>Educational and Psychological Measurement,
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> By sample size</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     N  Converged  Improper  Min power  Max bias  Max SE bias  Coverage   Meets</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   100  100%       0%             0.64      0.02         0.12  0.91-0.98  no</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   200  100%       0%             0.93      0.04         0.14  0.91-0.94  no</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   100  100%       0%             0.64      0.03         0.13  0.90-0.99  no</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   200  100%       0%             0.91      0.04         0.14  0.90-0.95  no</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   No simulated N meets the references; try larger ones.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Biases are absolute and relative. References (Muthén &amp; Muthén, 2002):</span>

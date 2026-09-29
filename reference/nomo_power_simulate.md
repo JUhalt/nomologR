@@ -61,7 +61,7 @@ nomo_power_simulate(
 
   Passed to
   [`lavaan::simulateData()`](https://rdrr.io/pkg/lavaan/man/simulateData.html).
-  Default `TRUE`.
+  Default `TRUE`, which gives the observed variables unit variance.
 
 ## Value
 
@@ -72,18 +72,44 @@ error bias, coverage, and power), `summary` (for each sample size: the
 proportions that converged and that were improper, the smallest power in
 `focus`, the largest absolute biases, the coverage range, and
 `meets_references`), `n_required` (the smallest simulated sample size
-that meets the references, or `NA`), `focus`, `reps`, and `alpha`.
+that meets the references, or `NA`), `focus`, `reps`, `alpha`, and
+`seed` (the seed given, or `NA` without one).
+
+Other fields record the call, the population and analysis models, and
+the kind of power analysis. They may change between releases and are not
+part of the stable interface (see
+[`?nomologR`](https://juhalt.github.io/nomologR/reference/nomologR-package.md)).
 
 ## Details
+
+**Experimental.** This function is experimental and remains so after
+nomologR 1.0.0. The metric of its estimates and its summaries may be
+refined during 1.x, without a deprecation period, as it is extended
+beyond complete continuous data. Any change will be described in NEWS;
+see the package help page,
+[`?nomologR`](https://juhalt.github.io/nomologR/reference/nomologR-package.md),
+for the stability policy.
 
 Data are generated from `population`, a lavaan model whose parameters
 carry their population values (for example `A =~ 0.7*a1`), with
 [`lavaan::simulateData()`](https://rdrr.io/pkg/lavaan/man/simulateData.html).
-With `standardized = TRUE`, the default, loadings and regressions are in
-a standardized metric and the residual variances are set so the observed
-variables have unit variance. The `analysis` model, which by default is
-`population` without its values, is fitted to each data set with
-`lavaan::sem(std.lv = TRUE)`.
+With `standardized = TRUE`, the default, the residual variances of the
+observed variables are set so that each has unit variance. The
+`analysis` model, which by default is `population` without its values,
+is fitted to each data set with `lavaan::sem(std.lv = TRUE)`.
+
+**The metric.** Each estimate is the analysis model's unstandardized
+estimate, and it is compared with the population value as written. Both
+are in the metric that `std.lv = TRUE` sets: an exogenous factor has
+variance 1, and an endogenous factor has residual variance 1. With the
+default `standardized = TRUE`, loadings on exogenous factors are
+therefore standardized, and covariances between exogenous factors are
+correlations. A latent regression is not standardized. In `B ~ 0.4*A`,
+B's total variance is 1.16, its residual variance of 1 plus 0.16 from A,
+so the completely standardized coefficient is 0.4 divided by the square
+root of 1.16, or .37, and B's indicators have standardized loadings 1.08
+times their values. Bias, coverage, and power are for the values as
+written.
 
 Muthén and Muthén (2002) suggest choosing the sample size at which three
 conditions hold, and power for the parameter of interest is close to
@@ -139,8 +165,8 @@ pw
 #> 
 #> By sample size
 #>     N  Converged  Improper  Min power  Max bias  Max SE bias  Coverage   Meets
-#>   100  100%       0%             0.64      0.02         0.12  0.91-0.98  no
-#>   200  100%       0%             0.93      0.04         0.14  0.91-0.94  no
+#>   100  100%       0%             0.64      0.03         0.13  0.90-0.99  no
+#>   200  100%       0%             0.91      0.04         0.14  0.90-0.95  no
 #>   No simulated N meets the references; try larger ones.
 #> 
 #> Biases are absolute and relative. References (Muthén & Muthén, 2002):
