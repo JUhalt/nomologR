@@ -482,17 +482,30 @@ nomo_methods_used.nomo_power <- function(x, ...) {
 
 # ESEM --------------------------------------------------------------------------
 
+# Credited as nomo_cfa() is: the estimator follows the indicators, and FIML
+# only when it was requested.
 #' @export
 nomo_methods_used.nomo_esem <- function(x, ...) {
-  c("esem", "ml_cfa")
+  used <- "esem"
+  if (length(x$ordered) > 0L) {
+    used <- c(used, "wlsmv_cfa", "categorical_correlations")
+  } else {
+    used <- c(used, "ml_cfa")
+  }
+  if (nomo_methods_is_fiml(x$missing)) used <- c(used, "fiml")
+  used
 }
 
 
 # Method variance ---------------------------------------------------------------
 
+# nomo_method_variance() has no ordered option, so its models are always
+# maximum-likelihood CFAs.
 #' @export
 nomo_methods_used.nomo_method_variance <- function(x, ...) {
-  c("cfa_marker_technique", "ml_cfa")
+  used <- c("cfa_marker_technique", "ml_cfa")
+  if (nomo_methods_is_fiml(x$missing)) used <- c(used, "fiml")
+  used
 }
 
 

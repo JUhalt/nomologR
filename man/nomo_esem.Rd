@@ -36,12 +36,15 @@ A \code{nomo_esem} object. The fields to read are:
 \item \code{loadings}: each item's standardized loading on each factor in the
 ESEM, whether it is the item's main loading or a cross-loading, its
 standard error and p-value, and the CFA's loading for main loadings.
-\item \code{factor_correlations}: each pair of factors' correlation in the ESEM and
-the CFA, and their difference.
-\item \code{fit}: both models' chi-square, degrees of freedom, CFI, TLI, RMSEA,
-SRMR, AIC, and BIC.
-\item \code{comparison}: the likelihood-ratio test of the CFA against the ESEM.
-\item \code{esem_fit}, \code{cfa_fit}, and \code{decision_log}.
+\item \code{factor_correlations}: each pair of factors' correlation (\code{factor1},
+\code{factor2}) in the ESEM and the CFA, and their difference.
+\item \code{models}: both models' chi-square, degrees of freedom, p-value, CFI,
+TLI, RMSEA, SRMR, AIC, and BIC. With a robust estimator, the chi-square
+is scaled and the indices are robust, as in \code{\link[=nomo_cfa]{nomo_cfa()}}.
+\item \code{comparisons}: the likelihood-ratio test of the CFA against the ESEM,
+with \code{chisq_diff}, \code{df_diff}, and \code{p_value}.
+\item \code{fits}: the fitted \code{lavaan} models, named \code{ESEM} and \code{CFA}.
+\item \code{decision_log}.
 }
 
 Other fields record the call and the settings used. They may change
