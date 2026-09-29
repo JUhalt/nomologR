@@ -312,6 +312,17 @@ Simmering, & Sturman, 2009); other sources of method variance may remain
 the technique and reports its results as evidence about the marker's method
 variance, not as corrected estimates.
 
+**Sample size.** Historically, sample size was set by rules of thumb, such as a
+minimum N or a number of cases per indicator or parameter. The sample a model
+needs varies widely with its loadings, factors, and indicators, from 30 to 460
+cases in Wolf, Harrington, Clark, and Miller's (2013) simulations, so no single
+rule fits. Contemporary practice computes power for a planned analysis: for the
+RMSEA tests of close, not-close, and exact fit from the model's degrees of
+freedom (MacCallum, Browne, & Sugawara, 1996), and for the parameters
+themselves by Monte Carlo simulation from a population model, checking bias,
+coverage, and power together (Muthén & Muthén, 2002).
+`nomo_power_rmsea()` and `nomo_power_simulate()` implement both.
+
 **Planned.** Model-specific fit cutoffs remain a research proposal
 ([#23](https://github.com/JUhalt/nomologR/issues/23)).
 
@@ -795,6 +806,10 @@ Lorenzo-Seva, U., Timmerman, M. E., & Kiers, H. A. L. (2011). The Hull method
 for selecting the number of common factors. *Multivariate Behavioral Research,
 46*(2), 340–364. https://doi.org/10.1080/00273171.2011.564527
 
+MacCallum, R. C., Browne, M. W., & Sugawara, H. M. (1996). Power analysis and
+determination of sample size for covariance structure modeling. *Psychological
+Methods, 1*(2), 130–149. https://doi.org/10.1037/1082-989X.1.2.130
+
 MacCallum, R. C., Roznowski, M., & Necowitz, L. B. (1992). Model modifications
 in covariance structure analysis: The problem of capitalization on chance.
 *Psychological Bulletin, 111*(3), 490–504.
@@ -848,6 +863,10 @@ preregistration revolution. *Proceedings of the National Academy of Sciences,
 Murray, A. L., & Johnson, W. (2013). The limitations of model fit in comparing
 the bi-factor versus higher-order models of human cognitive ability structure.
 *Intelligence, 41*(5), 407–422. https://doi.org/10.1016/j.intell.2013.06.004
+
+Muthén, L. K., & Muthén, B. O. (2002). How to use a Monte Carlo study to
+decide on sample size and determine power. *Structural Equation Modeling,
+9*(4), 599–620. https://doi.org/10.1207/S15328007SEM0904_8
 
 Nunnally, J. C., & Bernstein, I. H. (1994). *Psychometric theory* (3rd ed.).
 McGraw-Hill.
@@ -1022,6 +1041,11 @@ Williams, L. J., & Hazer, J. T. (1986). Antecedents and consequences of
 satisfaction and commitment in turnover models: A reanalysis using latent
 variable structural equation methods. *Journal of Applied Psychology, 71*(2),
 219–231. https://doi.org/10.1037/0021-9010.71.2.219
+
+Wolf, E. J., Harrington, K. M., Clark, S. L., & Miller, M. W. (2013). Sample
+size requirements for structural equation models: An evaluation of power,
+bias, and solution propriety. *Educational and Psychological Measurement,
+73*(6), 913–934. https://doi.org/10.1177/0013164413495237
 
 Wu, H., & Estabrook, R. (2016). Identification of confirmatory factor analysis
 models of different levels of invariance for ordered categorical outcomes.
