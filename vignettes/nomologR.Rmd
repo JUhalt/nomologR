@@ -50,6 +50,29 @@ At each step, `nomologR` tries to help answer one question:
 The package flags, explains, and documents. It never silently deletes items,
 respecifies models, or declares a scale "valid."
 
+# What nomologR assumes about the items
+
+Every analysis in `nomologR` assumes *reflective* measurement: the construct
+causes the responses, so its items are interchangeable manifestations of it and
+should correlate with one another. That assumption is what makes factor
+loadings, internal consistency, AVE, HTMT, and measurement invariance
+meaningful, and what makes a weakly loading item worth reviewing (Bollen &
+Lennox, 1991).
+
+Some measures are built the other way. In a *formative* measure, the indicators
+define the construct, as income, education, and occupation define
+socioeconomic status. They need not correlate, and dropping one changes what
+is measured (Diamantopoulos & Winklhofer, 2001). The tools here do not apply
+to such a measure, and applying them misleads: low internal consistency is
+expected, and deleting a "weak" indicator removes part of the construct.
+Decide which model a measure follows before choosing tools; Jarvis,
+MacKenzie, and Podsakoff (2003) and MacKenzie, Podsakoff, and Jarvis (2005)
+give criteria. Whether formative latent variables are meaningful at all is
+still debated (Howell, Breivik, & Wilcox, 2007; Edwards, 2011; Bollen &
+Diamantopoulos, 2017), and `nomologR` does not fit them. A formative index can
+still enter a nomological network as an observed variable in `nomo_network()`,
+and its content can still be reviewed with `contentvalidR`.
+
 # The workflow at a glance
 
 | Stage | Question it answers | Functions | Walkthrough |
@@ -155,8 +178,8 @@ The next release, `v1.0.0`, is planned together with
 [`contentvalidR`](https://github.com/JUhalt/contentvalidR), which covers the
 content-review stage before this package's. At 1.0.0 both packages' interfaces
 become stable, and the handoff between them becomes a supported contract.
-Larger extensions, such as ESEM, IRT, and longitudinal invariance, are
-candidates for later 1.x releases. See the
+Larger extensions, such as IRT, multiple imputation, and formative models,
+are candidates for later 1.x releases. See the
 [roadmap](https://github.com/JUhalt/nomologR/blob/master/ROADMAP.md) and the
 [v1.0.0 milestone](https://github.com/JUhalt/nomologR/milestone/5).
 
