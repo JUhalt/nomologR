@@ -351,8 +351,9 @@ three-category, and four-or-more-category indicators; fit and change evidence
 without a universal pass/fail rule; score-test diagnostics that locate strain
 but never free parameters; researcher-specified releases with required
 rationales carried forward to more restrictive levels. The same sequence runs
-across occasions, with autocorrelated unique factors, releases named by item,
-and latent change reported once intercepts are invariant.
+across occasions, with each item's unique factors correlated over time,
+releases named by item, and latent change reported once intercepts are
+invariant.
 
 # 8. Nomological network — `nomo_hypotheses()`, `nomo_network()`
 

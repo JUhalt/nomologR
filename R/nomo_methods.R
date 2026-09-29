@@ -621,6 +621,15 @@ nomo_bibliography <- function() {
       "10.1037/0033-2909.111.3.490"
     ),
     nomo_bib_entry(
+      "maccallum_1996", "MacCallum, Browne, & Sugawara (1996)",
+      paste(
+        "MacCallum, R. C., Browne, M. W., & Sugawara, H. M. (1996). Power",
+        "analysis and determination of sample size for covariance structure",
+        "modeling. Psychological Methods, 1(2), 130-149."
+      ),
+      "10.1037/1082-989X.1.2.130"
+    ),
+    nomo_bib_entry(
       "marjanovic_2015", "Marjanovic, Holden, Struthers, Cribbie, & Greenglass (2015)",
       paste(
         "Marjanovic, Z., Holden, R., Struthers, W., Cribbie, R., & Greenglass, E.",
@@ -708,6 +717,15 @@ nomo_bibliography <- function() {
         "ability structure. Intelligence, 41(5), 407-422."
       ),
       "10.1016/j.intell.2013.06.004"
+    ),
+    nomo_bib_entry(
+      "muthen_2002", "Muth\u00e9n & Muth\u00e9n (2002)",
+      paste(
+        "Muth\u00e9n, L. K., & Muth\u00e9n, B. O. (2002). How to use a Monte",
+        "Carlo study to decide on sample size and determine power. Structural",
+        "Equation Modeling, 9(4), 599-620."
+      ),
+      "10.1207/S15328007SEM0904_8"
     ),
     nomo_bib_entry(
       "nosek_2018", "Nosek et al. (2018)",
@@ -1056,6 +1074,16 @@ nomo_bibliography <- function() {
         "Psychology, 71(2), 219-231."
       ),
       "10.1037/0021-9010.71.2.219"
+    ),
+    nomo_bib_entry(
+      "wolf_2013", "Wolf, Harrington, Clark, & Miller (2013)",
+      paste(
+        "Wolf, E. J., Harrington, K. M., Clark, S. L., & Miller, M. W. (2013).",
+        "Sample size requirements for structural equation models: An evaluation",
+        "of power, bias, and solution propriety. Educational and Psychological",
+        "Measurement, 73(6), 913-934."
+      ),
+      "10.1177/0013164413495237"
     ),
     nomo_bib_entry(
       "yung_1999", "Yung, Thissen, & McLeod (1999)",
@@ -1637,6 +1665,38 @@ nomo_methods_registry <- function() {
       c("akaike_1974", "schwarz_1978", "raftery_1995", "burnham_anderson_2004")
     ),
 
+    nomo_method_entry(
+      "rmsea_power", "cfa",
+      "Power of the RMSEA tests of close, not-close, and exact fit",
+      "contemporary", "supporting",
+      paste(
+        "The probability that a model's overall fit test rejects its null",
+        "RMSEA when the alternative holds, and the sample size that makes it",
+        "likely."
+      ),
+      paste(
+        "Concerns the overall fit test, not any one parameter; depends heavily",
+        "on the model's degrees of freedom."
+      ),
+      "nomo_power_rmsea()", "nomologR",
+      c("maccallum_1996")
+    ),
+    nomo_method_entry(
+      "monte_carlo_power", "cfa",
+      "Monte Carlo power and sample size for a planned model",
+      "contemporary", "supporting",
+      paste(
+        "How often a planned model converges, gives proper solutions, recovers",
+        "its parameters without bias, covers them, and detects them, at each",
+        "sample size."
+      ),
+      paste(
+        "Only as good as the population model assumed; the references for",
+        "bias, coverage, and power guide the choice of N rather than decide it."
+      ),
+      "nomo_power_simulate()", "lavaan",
+      c("muthen_2002", "wolf_2013")
+    ),
     nomo_method_entry(
       "cfa_marker_technique", "cfa",
       "Comprehensive CFA marker technique for method variance",
@@ -2341,6 +2401,8 @@ nomo_methods_history <- function() {
     c("sem_sdc", NA, NA),
     c("reliable_change_index", NA, NA),
     c("ml_cfa", "joreskog_1969", NA),
+    c("rmsea_power", "maccallum_1996", NA),
+    c("monte_carlo_power", NA, NA),
     c("cfa_marker_technique", "williams_2010", NA),
     c("esem", "asparouhov_muthen_2009", NA),
     c("chisq_exact_fit", "joreskog_1969", "incremental_fit; rmsea_interval; srmr; local_strain"),
