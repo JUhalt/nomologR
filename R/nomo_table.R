@@ -36,6 +36,8 @@
 #'   composites modeled as single indicators; see [nomo_network()].
 #' * `nomo_retest`: `"icc"` (default), `"reliable_change"`, `"decision_log"`;
 #'   see [nomo_retest()].
+#' * `nomo_esem`: `"loadings"` (default), `"factor_correlations"`,
+#'   `"fit"`, `"comparison"`, `"decision_log"`; see [nomo_esem()].
 #' * `nomo_method_variance`: `"comparisons"` (default), `"models"`,
 #'   `"loadings"`, `"reliability"`, `"correlations"`, `"decision_log"`; see
 #'   [nomo_method_variance()].
@@ -144,6 +146,16 @@ nomo_table.nomo_network <- function(
 nomo_table.nomo_retest <- function(
     x,
     type = c("icc", "reliable_change", "decision_log"),
+    ...) {
+  type <- nomo_match_arg(type)
+  x[[type]]
+}
+
+
+#' @export
+nomo_table.nomo_esem <- function(
+    x,
+    type = c("loadings", "factor_correlations", "fit", "comparison", "decision_log"),
     ...) {
   type <- nomo_match_arg(type)
   x[[type]]

@@ -45,6 +45,14 @@ nomo_bibliography <- function() {
       "10.1037/0033-2909.103.3.411"
     ),
     nomo_bib_entry(
+      "asparouhov_muthen_2009", "Asparouhov & Muth\u00e9n (2009)",
+      paste(
+        "Asparouhov, T., & Muth\u00e9n, B. (2009). Exploratory structural",
+        "equation modeling. Structural Equation Modeling, 16(3), 397-438."
+      ),
+      "10.1080/10705510903008204"
+    ),
+    nomo_bib_entry(
       "bagozzi_heatherton_1994", "Bagozzi & Heatherton (1994)",
       paste(
         "Bagozzi, R. P., & Heatherton, T. F. (1994). A general approach to",
@@ -631,6 +639,16 @@ nomo_bibliography <- function() {
         "findings. Structural Equation Modeling, 11(3), 320-341."
       ),
       "10.1207/s15328007sem1103_2"
+    ),
+    nomo_bib_entry(
+      "marsh_2014", "Marsh, Morin, Parker, & Kaur (2014)",
+      paste(
+        "Marsh, H. W., Morin, A. J. S., Parker, P. D., & Kaur, G. (2014).",
+        "Exploratory structural equation modeling: An integration of the best",
+        "features of exploratory and confirmatory factor analysis. Annual Review",
+        "of Clinical Psychology, 10, 85-110."
+      ),
+      "10.1146/annurev-clinpsy-032813-153700"
     ),
     nomo_bib_entry(
       "mcgraw_wong_1996", "McGraw & Wong (1996)",
@@ -1638,6 +1656,23 @@ nomo_methods_registry <- function() {
       c("williams_2010", "lindell_whitney_2001", "podsakoff_2003",
         "podsakoff_2012", "richardson_2009")
     ),
+    nomo_method_entry(
+      "esem", "cfa",
+      "Exploratory structural equation modeling beside its CFA",
+      "contemporary", "supporting",
+      paste(
+        "Cross-loadings estimated rather than fixed at zero, with target",
+        "rotation towards the a priori structure, and the factor correlations",
+        "and fit compared with the independent-clusters CFA."
+      ),
+      paste(
+        "The solution depends on the rotation; cross-loadings are evidence",
+        "about items, and the CFA remains the more parsimonious account when",
+        "ESEM does not fit better on indices that penalize complexity."
+      ),
+      "nomo_esem()", "lavaan",
+      c("asparouhov_muthen_2009", "marsh_2014", "browne_2001")
+    ),
 
     # Stage 5: reliability ----------------------------------------------------
     nomo_method_entry(
@@ -2307,6 +2342,7 @@ nomo_methods_history <- function() {
     c("reliable_change_index", NA, NA),
     c("ml_cfa", "joreskog_1969", NA),
     c("cfa_marker_technique", "williams_2010", NA),
+    c("esem", "asparouhov_muthen_2009", NA),
     c("chisq_exact_fit", "joreskog_1969", "incremental_fit; rmsea_interval; srmr; local_strain"),
     c("incremental_fit", "bentler_bonett_1980", NA),
     c("rmsea_interval", "browne_cudeck_1992", NA),

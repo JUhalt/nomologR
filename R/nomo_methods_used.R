@@ -472,6 +472,14 @@ nomo_methods_used.nomo_retest <- function(x, ...) {
 }
 
 
+# ESEM --------------------------------------------------------------------------
+
+#' @export
+nomo_methods_used.nomo_esem <- function(x, ...) {
+  c("esem", "ml_cfa")
+}
+
+
 # Method variance ---------------------------------------------------------------
 
 #' @export
