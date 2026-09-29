@@ -50,12 +50,15 @@
 #'   * `loadings`: each item's standardized loading on each factor in the
 #'     ESEM, whether it is the item's main loading or a cross-loading, its
 #'     standard error and p-value, and the CFA's loading for main loadings.
-#'   * `factor_correlations`: each pair of factors' correlation in the ESEM and
-#'     the CFA, and their difference.
-#'   * `fit`: both models' chi-square, degrees of freedom, CFI, TLI, RMSEA,
-#'     SRMR, AIC, and BIC.
-#'   * `comparison`: the likelihood-ratio test of the CFA against the ESEM.
-#'   * `esem_fit`, `cfa_fit`, and `decision_log`.
+#'   * `factor_correlations`: each pair of factors' correlation (`factor1`,
+#'     `factor2`) in the ESEM and the CFA, and their difference.
+#'   * `models`: both models' chi-square, degrees of freedom, p-value, CFI,
+#'     TLI, RMSEA, SRMR, AIC, and BIC. With a robust estimator, the chi-square
+#'     is scaled and the indices are robust, as in [nomo_cfa()].
+#'   * `comparisons`: the likelihood-ratio test of the CFA against the ESEM,
+#'     with `chisq_diff`, `df_diff`, and `p_value`.
+#'   * `fits`: the fitted `lavaan` models, named `ESEM` and `CFA`.
+#'   * `decision_log`.
 #'
 #'   Other fields record the call and the settings used. They may change
 #'   between releases and are not part of the stable interface (see
@@ -190,14 +193,14 @@ nomo_esem <- function(model,
 
   pairs <- nomo_method_variance_pairs(factors)
   esem_r <- vapply(seq_len(nrow(pairs)), function(i) {
-    value(std_esem, pairs$factor_1[[i]], "~~", pairs$factor_2[[i]], "est.std")
+    value(std_esem, pairs$factor1[[i]], "~~", pairs$factor2[[i]], "est.std")
   }, numeric(1))
   cfa_r <- vapply(seq_len(nrow(pairs)), function(i) {
-    value(std_cfa, pairs$factor_1[[i]], "~~", pairs$factor_2[[i]], "est.std")
+    value(std_cfa, pairs$factor1[[i]], "~~", pairs$factor2[[i]], "est.std")
   }, numeric(1))
   factor_correlations <- tibble::tibble(
-    factor_1 = pairs$factor_1,
-    factor_2 = pairs$factor_2,
+    factor1 = pairs$factor1,
+    factor2 = pairs$factor2,
     esem = esem_r,
     cfa = cfa_r,
     difference = esem_r - cfa_r
@@ -219,12 +222,12 @@ nomo_esem <- function(model,
       bic = get("bic")
     )
   }
-  fit <- dplyr::bind_rows(fit_row(esem_fit, "ESEM"), fit_row(cfa_fit, "CFA"))
+  models <- dplyr::bind_rows(fit_row(esem_fit, "ESEM"), fit_row(cfa_fit, "CFA"))
 
   test <- suppressWarnings(lavaan::lavTestLRT(esem_fit, cfa_fit))
-  comparison <- tibble::tibble(
-    delta_chisq = test[["Chisq diff"]][[2L]],
-    delta_df = as.integer(test[["Df diff"]][[2L]]),
+  comparisons <- tibble::tibble(
+    chisq_diff = test[["Chisq diff"]][[2L]],
+    df_diff = as.integer(test[["Df diff"]][[2L]]),
     p_value = test[["Pr(>Chisq)"]][[2L]]
   )
 
@@ -233,14 +236,16 @@ nomo_esem <- function(model,
     model = model,
     esem_syntax = esem_syntax,
     rotation = rotation,
+    ordered = if (is.null(ordered)) character() else ordered,
+    estimator = if (is.null(estimator)) NA_character_ else estimator,
+    missing = if (is.null(missing)) NA_character_ else missing,
     n = as.integer(lavaan::lavInspect(esem_fit, "ntotal")),
     loadings = loadings,
     factor_correlations = factor_correlations,
-    fit = fit,
-    comparison = comparison,
-    esem_fit = esem_fit,
-    cfa_fit = cfa_fit,
-    decision_log = nomo_esem_log(loadings, factor_correlations, fit, comparison,
+    models = models,
+    comparisons = comparisons,
+    fits = list(ESEM = esem_fit, CFA = cfa_fit),
+    decision_log = nomo_esem_log(loadings, factor_correlations, models, comparisons,
                                  rotation, guidance),
     guidance = guidance
   )
@@ -249,7 +254,7 @@ nomo_esem <- function(model,
 }
 
 
-nomo_esem_log <- function(loadings, factor_correlations, fit, comparison, rotation,
+nomo_esem_log <- function(loadings, factor_correlations, models, comparisons, rotation,
                           guidance) {
   log <- nomo_log_new()
   number <- function(x) nomo_present_number(x, 2L)
@@ -274,8 +279,8 @@ nomo_esem_log <- function(loadings, factor_correlations, fit, comparison, rotati
 
   # TLI and RMSEA penalize the ESEM's extra parameters, so the CFA can fit
   # better on them; the chi-square test rejects trivial misfit in large samples.
-  esem <- fit[fit$model == "ESEM", , drop = FALSE]
-  cfa <- fit[fit$model == "CFA", , drop = FALSE]
+  esem <- models[models$model == "ESEM", , drop = FALSE]
+  cfa <- models[models$model == "CFA", , drop = FALSE]
   favoured <- isTRUE(esem$tli > cfa$tli && esem$rmsea < cfa$rmsea)
   largest <- factor_correlations$difference[which.max(abs(factor_correlations$difference))]
   log <- nomo_log_add(
@@ -292,8 +297,8 @@ nomo_esem_log <- function(loadings, factor_correlations, fit, comparison, rotati
       ),
       nomo_present_number(esem$tli, 3L), nomo_present_number(esem$rmsea, 3L),
       nomo_present_number(cfa$tli, 3L), nomo_present_number(cfa$rmsea, 3L),
-      number(comparison$delta_chisq), comparison$delta_df,
-      nomo_present_p_text(comparison$p_value), nomo_present_signed(largest, 2L)
+      number(comparisons$chisq_diff), comparisons$df_diff,
+      nomo_present_p_text(comparisons$p_value), nomo_present_signed(largest, 2L)
     ),
     recommendation = if (favoured) {
       paste(
@@ -357,7 +362,7 @@ print.nomo_esem <- function(x, ...) {
     sprintf("N = %d", as.integer(x$n)),
     sprintf("Factors: %d", length(unique(x$loadings$factor)))
   ))
-  nomo_esem_present_fit(x$fit, x$comparison)
+  nomo_esem_present_fit(x$models, x$comparisons)
   nomo_esem_present_correlations(x$factor_correlations)
   flagged <- x$decision_log[x$decision_log$severity %in% c("review", "concern"), , drop = FALSE]
   if (nrow(flagged)) {
@@ -375,8 +380,8 @@ print.nomo_esem <- function(x, ...) {
 
 #' @export
 summary.nomo_esem <- function(object, ...) {
-  out <- object[c("rotation", "n", "loadings", "factor_correlations", "fit",
-                  "comparison", "decision_log")]
+  out <- object[c("rotation", "n", "loadings", "factor_correlations", "models",
+                  "comparisons", "decision_log")]
   class(out) <- c("summary_nomo_esem", "list")
   out
 }
@@ -389,7 +394,7 @@ print.summary_nomo_esem <- function(x, ...) {
     sprintf("Rotation: %s", x$rotation),
     sprintf("N = %d", as.integer(x$n))
   ))
-  nomo_esem_present_fit(x$fit, x$comparison)
+  nomo_esem_present_fit(x$models, x$comparisons)
 
   factors <- unique(x$loadings$factor)
   items <- unique(x$loadings$item)
@@ -418,21 +423,21 @@ print.summary_nomo_esem <- function(x, ...) {
 }
 
 
-nomo_esem_present_fit <- function(fit, comparison) {
+nomo_esem_present_fit <- function(models, comparisons) {
   nomo_present_section("Fit")
   nomo_present_table(
-    fit,
+    models,
     c("Model" = "model", "Chi-square" = "chisq", "df" = "df", "CFI" = "cfi",
       "TLI" = "tli", "RMSEA" = "rmsea", "SRMR" = "srmr"),
     formats = list(chisq = function(v) nomo_present_number(v, 2L),
                    df = function(v) format(v, trim = TRUE)),
-    more = "nomo_table(x, \"fit\")"
+    more = "nomo_table(x, \"models\")"
   )
   nomo_present_text(
     sprintf(
       "CFA vs. ESEM: chi-square difference %s on %d df, p %s.",
-      nomo_present_number(comparison$delta_chisq, 2L), comparison$delta_df,
-      nomo_present_p_text(comparison$p_value)
+      nomo_present_number(comparisons$chisq_diff, 2L), comparisons$df_diff,
+      nomo_present_p_text(comparisons$p_value)
     ),
     indent = 2L
   )
@@ -441,7 +446,7 @@ nomo_esem_present_fit <- function(fit, comparison) {
 
 nomo_esem_present_correlations <- function(correlations) {
   shown <- correlations
-  shown$pair <- paste(shown$factor_1, "with", shown$factor_2)
+  shown$pair <- paste(shown$factor1, "with", shown$factor2)
   nomo_present_section("Factor correlations")
   nomo_present_table(
     shown,

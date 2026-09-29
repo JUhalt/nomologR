@@ -9,6 +9,12 @@
 #' technique of Williams, Hartman, and Cavazotte (2010).
 #'
 #' @details
+#' **Experimental.** This function is experimental and remains so after
+#' nomologR 1.0.0. Its output may be reorganized during 1.x, without a
+#' deprecation period, as the marker technique is extended beyond continuous
+#' indicators. Any change will be described in NEWS; see the package help page,
+#' `?nomologR`, for the stability policy.
+#'
 #' **The marker.** A marker variable is theoretically unrelated to the
 #' substantive variables, so what it shares with them is taken to be method
 #' variance (Lindell & Whitney, 2001). Williams et al. (2010) expand the
@@ -73,22 +79,33 @@
 #'
 #' @return A `nomo_method_variance` object. The fields to read are:
 #'
-#'   * `models`: each model's chi-square, degrees of freedom, CFI, RMSEA, and
-#'     SRMR.
+#'   * `models`: each model's chi-square, degrees of freedom, p-value
+#'     (`pvalue`), CFI, TLI, RMSEA, and SRMR. With a robust estimator, the
+#'     chi-square is scaled and the indices are robust, as in [nomo_cfa()].
 #'   * `comparisons`: the three model comparisons, with their chi-square
-#'     differences and p-values.
+#'     differences (`chisq_diff`), degrees of freedom (`df_diff`), and
+#'     `p_value`.
 #'   * `retained`: `"Method-C"` or `"Method-U"`.
 #'   * `method_loadings`: each substantive indicator's standardized substantive
 #'     and method loadings in the retained model, the share of its variance the
-#'     marker accounts for, and the method loading's p-value.
+#'     marker accounts for, and the method loading's `p_value`.
 #'   * `reliability`: each substantive factor's Baseline reliability, its
 #'     substantive and method parts, and `method_share`.
-#'   * `correlations`: each pair of substantive factors' correlation in the
-#'     CFA, Baseline, retained, Method-S(.05), and Method-S(.01) models, with
-#'     p-values in the retained and sensitivity models.
-#'   * `marker_correlations`: the marker's correlations with the substantive
-#'     factors in the CFA model.
+#'   * `correlations`: each pair of substantive factors (`factor1`, `factor2`)
+#'     and their correlation in the CFA, Baseline, retained, Method-S(.05), and
+#'     Method-S(.01) models, with p-values in the retained and sensitivity
+#'     models (`retained_p_value`, `method_s_05_p_value`,
+#'     `method_s_01_p_value`).
+#'   * `marker_correlations`: the marker's correlation with each substantive
+#'     factor in the CFA model; `factor1` is the substantive factor and
+#'     `factor2` the marker.
 #'   * `fits` and `decision_log`.
+#'
+#'   A table with one p-value for a test or an estimate names it `p_value`, as
+#'   the rest of the package does. `correlations` has one for each model, so
+#'   each is named `<model>_p_value`. In `models`, `pvalue` is the p-value of
+#'   each model's chi-square test, named as in the fit tables of [nomo_esem()]
+#'   and [nomo_invariance()].
 #'
 #'   Other fields record the call, the settings used, and the syntax fitted.
 #'   They may change between releases and are not part of the stable interface
@@ -210,8 +227,8 @@ nomo_method_variance <- function(model,
     tibble::tibble(
       comparison = label,
       question = question,
-      delta_chisq = test[["Chisq diff"]][[2L]],
-      delta_df = as.integer(test[["Df diff"]][[2L]]),
+      chisq_diff = test[["Chisq diff"]][[2L]],
+      df_diff = as.integer(test[["Df diff"]][[2L]]),
       p_value = test[["Pr(>Chisq)"]][[2L]]
     )
   }
@@ -227,12 +244,12 @@ nomo_method_variance <- function(model,
   pe_base <- lavaan::parameterEstimates(baseline, standardized = TRUE)
   pairs <- nomo_method_variance_pairs(structure$factors)
   fixed_r <- vapply(seq_len(nrow(pairs)), function(i) {
-    nomo_method_variance_value(pe_base, pairs$factor_1[[i]], "~~", pairs$factor_2[[i]], "est")
+    nomo_method_variance_value(pe_base, pairs$factor1[[i]], "~~", pairs$factor2[[i]], "est")
   }, numeric(1))
   method_r_lines <- c(
     retained_lines,
     if (nrow(pairs)) {
-      paste0(pairs$factor_1, " ~~ ", number(fixed_r), "*", pairs$factor_2)
+      paste0(pairs$factor1, " ~~ ", number(fixed_r), "*", pairs$factor2)
     }
   )
   bias <- if (nrow(pairs)) {
@@ -244,7 +261,7 @@ nomo_method_variance <- function(model,
     tibble::tibble(
       comparison = paste(retained_label, "vs. Method-R"),
       question = "Does the method variance bias the substantive correlations?",
-      delta_chisq = NA_real_, delta_df = NA_integer_, p_value = NA_real_
+      chisq_diff = NA_real_, df_diff = NA_integer_, p_value = NA_real_
     )
   }
   comparisons <- dplyr::bind_rows(presence, equality, bias)
@@ -266,15 +283,20 @@ nomo_method_variance <- function(model,
     if (!is.null(method_r)) list(`Method-R` = method_r),
     sensitivity
   )
+  # Scaled or robust fit where the estimator provides it, as nomo_cfa() and
+  # nomo_esem() report it.
   models <- dplyr::bind_rows(lapply(names(fits), function(label) {
-    measures <- lavaan::fitMeasures(fits[[label]], c("chisq", "df", "cfi", "rmsea", "srmr"))
+    m <- suppressWarnings(lavaan::fitMeasures(fits[[label]]))
+    get <- function(...) nomo_cfa_first_measure(m, c(...))$value
     tibble::tibble(
       model = label,
-      chisq = unname(measures[["chisq"]]),
-      df = as.integer(measures[["df"]]),
-      cfi = unname(measures[["cfi"]]),
-      rmsea = unname(measures[["rmsea"]]),
-      srmr = unname(measures[["srmr"]])
+      chisq = get("chisq.scaled", "chisq"),
+      df = as.integer(get("df.scaled", "df")),
+      pvalue = get("pvalue.scaled", "pvalue"),
+      cfi = get("cfi.robust", "cfi.scaled", "cfi"),
+      tli = get("tli.robust", "tli.scaled", "tli"),
+      rmsea = get("rmsea.robust", "rmsea.scaled", "rmsea"),
+      srmr = get("srmr")
     )
   }))
 
@@ -288,7 +310,7 @@ nomo_method_variance <- function(model,
     method_loading = vapply(items, function(item) {
       nomo_method_variance_value(pe_ret, marker_name, "=~", item, "std.all")
     }, numeric(1), USE.NAMES = FALSE),
-    method_p_value = vapply(items, function(item) {
+    p_value = vapply(items, function(item) {
       nomo_method_variance_value(pe_ret, marker_name, "=~", item, "pvalue")
     }, numeric(1), USE.NAMES = FALSE)
   )
@@ -303,7 +325,8 @@ nomo_method_variance <- function(model,
   )
   pe_cfa_std <- lavaan::parameterEstimates(cfa, standardized = TRUE)
   marker_correlations <- tibble::tibble(
-    factor = structure$factors,
+    factor1 = structure$factors,
+    factor2 = marker_name,
     correlation = vapply(structure$factors, function(f) {
       nomo_method_variance_value(pe_cfa_std, f, "~~", marker_name, "std.all")
     }, numeric(1), USE.NAMES = FALSE)
@@ -315,6 +338,8 @@ nomo_method_variance <- function(model,
     marker = marker,
     marker_name = marker_name,
     alpha = alpha,
+    estimator = if (is.null(estimator)) NA_character_ else estimator,
+    missing = if (is.null(missing)) NA_character_ else missing,
     n = lavaan::lavInspect(cfa, "nobs"),
     models = models,
     comparisons = comparisons,
@@ -429,10 +454,10 @@ nomo_method_variance_value <- function(pe, lhs, op, rhs, column) {
 
 nomo_method_variance_pairs <- function(factors) {
   if (length(factors) < 2L) {
-    return(tibble::tibble(factor_1 = character(), factor_2 = character()))
+    return(tibble::tibble(factor1 = character(), factor2 = character()))
   }
   combos <- utils::combn(factors, 2L)
-  tibble::tibble(factor_1 = combos[1L, ], factor_2 = combos[2L, ])
+  tibble::tibble(factor1 = combos[1L, ], factor2 = combos[2L, ])
 }
 
 
@@ -466,34 +491,36 @@ nomo_method_variance_reliability <- function(structure, pe_base, pe_ret, marker_
 }
 
 
+# A table with one p-value calls it `p_value`, as the rest of the package does;
+# this one has a p-value for each model, so each is `<model>_p_value`.
 nomo_method_variance_correlations <- function(pairs, fits, retained_label, sensitivity) {
   if (!nrow(pairs)) {
     return(tibble::tibble(
-      factor_1 = character(), factor_2 = character(), cfa = numeric(),
-      baseline = numeric(), retained = numeric(), retained_p = numeric(),
-      method_s_05 = numeric(), method_s_05_p = numeric(),
-      method_s_01 = numeric(), method_s_01_p = numeric()
+      factor1 = character(), factor2 = character(), cfa = numeric(),
+      baseline = numeric(), retained = numeric(), retained_p_value = numeric(),
+      method_s_05 = numeric(), method_s_05_p_value = numeric(),
+      method_s_01 = numeric(), method_s_01_p_value = numeric()
     ))
   }
   estimates <- lapply(fits, lavaan::parameterEstimates, standardized = TRUE)
   get <- function(label, column) {
     vapply(seq_len(nrow(pairs)), function(i) {
       nomo_method_variance_value(
-        estimates[[label]], pairs$factor_1[[i]], "~~", pairs$factor_2[[i]], column
+        estimates[[label]], pairs$factor1[[i]], "~~", pairs$factor2[[i]], column
       )
     }, numeric(1))
   }
   tibble::tibble(
-    factor_1 = pairs$factor_1,
-    factor_2 = pairs$factor_2,
+    factor1 = pairs$factor1,
+    factor2 = pairs$factor2,
     cfa = get("CFA", "std.all"),
     baseline = get("Baseline", "std.all"),
     retained = get(retained_label, "std.all"),
-    retained_p = get(retained_label, "pvalue"),
+    retained_p_value = get(retained_label, "pvalue"),
     method_s_05 = get("Method-S(.05)", "std.all"),
-    method_s_05_p = get("Method-S(.05)", "pvalue"),
+    method_s_05_p_value = get("Method-S(.05)", "pvalue"),
     method_s_01 = get("Method-S(.01)", "std.all"),
-    method_s_01_p = get("Method-S(.01)", "pvalue")
+    method_s_01_p_value = get("Method-S(.01)", "pvalue")
   )
 }
 
@@ -505,7 +532,7 @@ nomo_method_variance_log <- function(marker, comparisons, retained, reliability,
   test_text <- function(row) {
     sprintf(
       "chi-square difference %s on %d df, p %s",
-      number(row$delta_chisq), row$delta_df, nomo_present_p_text(row$p_value)
+      number(row$chisq_diff), row$df_diff, nomo_present_p_text(row$p_value)
     )
   }
 
@@ -597,9 +624,9 @@ nomo_method_variance_log <- function(marker, comparisons, retained, reliability,
       }
     )
 
-    significant <- correlations$retained_p < alpha
-    changed <- (significant != (correlations$method_s_05_p < alpha) |
-                  significant != (correlations$method_s_01_p < alpha)) %in% TRUE
+    significant <- correlations$retained_p_value < alpha
+    changed <- (significant != (correlations$method_s_05_p_value < alpha) |
+                  significant != (correlations$method_s_01_p_value < alpha)) %in% TRUE
     log <- nomo_log_add(
       log, stage = "method_variance", object = "sensitivity",
       metric = "method_variance_sensitivity",
@@ -609,7 +636,7 @@ nomo_method_variance_log <- function(marker, comparisons, retained, reliability,
       observation = if (any(changed)) {
         sprintf(
           "With larger method loadings, the significance of %s changes.",
-          paste(correlations$factor_1[changed], correlations$factor_2[changed],
+          paste(correlations$factor1[changed], correlations$factor2[changed],
                 sep = " with ", collapse = "; ")
         )
       } else {
@@ -683,7 +710,7 @@ print.summary_nomo_method_variance <- function(x, ...) {
   nomo_present_table(
     x$models,
     c("Model" = "model", "Chi-square" = "chisq", "df" = "df", "CFI" = "cfi",
-      "RMSEA" = "rmsea", "SRMR" = "srmr"),
+      "TLI" = "tli", "RMSEA" = "rmsea", "SRMR" = "srmr"),
     formats = list(chisq = function(v) nomo_present_number(v, 2L),
                    df = function(v) format(v, trim = TRUE)),
     more = "nomo_table(x, \"models\")"
@@ -696,8 +723,8 @@ print.summary_nomo_method_variance <- function(x, ...) {
   nomo_present_table(
     loadings,
     c("Factor" = "factor", "Item" = "item", "Substantive" = "substantive_loading",
-      "Method" = "method_loading", "Method variance" = "share", "p" = "method_p_value"),
-    formats = list(method_p_value = nomo_present_p),
+      "Method" = "method_loading", "Method variance" = "share", "p" = "p_value"),
+    formats = list(p_value = nomo_present_p),
     more = "nomo_table(x, \"loadings\")"
   )
   nomo_method_variance_present_reliability(x$reliability)
@@ -711,10 +738,10 @@ nomo_method_variance_present_comparisons <- function(comparisons) {
   nomo_present_section("Model comparisons")
   nomo_present_table(
     comparisons,
-    c("Comparison" = "comparison", "Chi-square diff." = "delta_chisq",
-      "df" = "delta_df", "p" = "p_value"),
-    formats = list(delta_chisq = function(v) nomo_present_number(v, 2L),
-                   delta_df = function(v) format(v, trim = TRUE),
+    c("Comparison" = "comparison", "Chi-square diff." = "chisq_diff",
+      "df" = "df_diff", "p" = "p_value"),
+    formats = list(chisq_diff = function(v) nomo_present_number(v, 2L),
+                   df_diff = function(v) format(v, trim = TRUE),
                    p_value = nomo_present_p),
     more = "nomo_table(x, \"comparisons\")"
   )
@@ -738,7 +765,7 @@ nomo_method_variance_present_reliability <- function(reliability) {
 nomo_method_variance_present_correlations <- function(correlations) {
   if (!nrow(correlations)) return(invisible(NULL))
   shown <- correlations
-  shown$pair <- paste(shown$factor_1, "with", shown$factor_2)
+  shown$pair <- paste(shown$factor1, "with", shown$factor2)
   nomo_present_section("Substantive correlations")
   nomo_present_table(
     shown,

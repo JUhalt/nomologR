@@ -36,10 +36,14 @@ test_that("equal method effects are detected and Method-C is retained", {
   expect_s3_class(mv, "nomo_method_variance")
   expect_identical(mv$models$model, c("CFA", "Baseline", "Method-C", "Method-U", "Method-R",
                                       "Method-S(.05)", "Method-S(.01)"))
+  expect_identical(names(mv$models),
+                   c("model", "chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr"))
+  expect_equal(mv$models$tli[[1L]], unname(lavaan::fitMeasures(mv$fits$CFA, "tli")))
   cmp <- mv$comparisons
   expect_identical(cmp$comparison, c("Baseline vs. Method-C", "Method-C vs. Method-U",
                                      "Method-C vs. Method-R"))
-  expect_identical(cmp$delta_df, c(1L, 7L, 1L))
+  expect_identical(names(cmp), c("comparison", "question", "chisq_diff", "df_diff", "p_value"))
+  expect_identical(cmp$df_diff, c(1L, 7L, 1L))
   expect_lt(cmp$p_value[[1L]], .05)
   expect_gt(cmp$p_value[[2L]], .05)
   expect_identical(mv$retained, "Method-C")
@@ -65,14 +69,23 @@ test_that("equal method effects are detected and Method-C is retained", {
   loadings <- nomo_table(mv, "loadings")
   expect_identical(loadings$item, c(paste0("a", 1:4), paste0("b", 1:4)))
   expect_equal(loadings$method_variance, loadings$method_loading^2)
+  expect_true(all(loadings$p_value >= 0 & loadings$p_value <= 1))
 
   cor <- nomo_table(mv, "correlations")
-  expect_identical(c(cor$factor_1, cor$factor_2), c("A", "B"))
+  expect_identical(c(cor$factor1, cor$factor2), c("A", "B"))
+  expect_identical(
+    grep("p_value", names(cor), value = TRUE),
+    c("retained_p_value", "method_s_05_p_value", "method_s_01_p_value")
+  )
   expect_equal(cor$baseline, cor$cfa, tolerance = .01)
-  expect_identical(nrow(mv$marker_correlations), 2L)
+  expect_identical(mv$marker_correlations$factor1, c("A", "B"))
+  expect_identical(mv$marker_correlations$factor2, c("Marker", "Marker"))
   expect_identical(nomo_table(mv), mv$comparisons)
   expect_identical(nomo_table(mv, "reliability"), mv$reliability)
   expect_true("cfa_marker_technique" %in% nomo_methods(mv)$id)
+  expect_identical(mv$estimator, NA_character_)
+  expect_identical(mv$missing, NA_character_)
+  expect_identical(nomo_methods_used(mv), c("cfa_marker_technique", "ml_cfa"))
 
   log <- mv$decision_log
   expect_identical(log$severity[log$metric == "method_variance_presence"], "review")
@@ -133,7 +146,7 @@ test_that("a one-factor model has no correlations to bias", {
 })
 
 
-test_that("a robust estimator and FIML are passed to lavaan", {
+test_that("a robust estimator and FIML are passed to lavaan, and fit is reported scaled", {
   skip_on_cran()
   dat <- mv_data(mv_population())
   dat$a1[1:20] <- NA
@@ -142,6 +155,23 @@ test_that("a robust estimator and FIML are passed to lavaan", {
   expect_identical(lavaan::lavInspect(mv$fits$`Method-C`, "options")$estimator, "ML")
   expect_identical(lavaan::lavInspect(mv$fits$`Method-C`, "options")$missing, "ml")
   expect_identical(lavaan::lavInspect(mv$fits$`Method-C`, "options")$se, "robust.huber.white")
+  expect_identical(mv$estimator, "MLR")
+  expect_identical(mv$missing, "fiml")
+  expect_identical(nomo_methods_used(mv), c("cfa_marker_technique", "ml_cfa", "fiml"))
+
+  # The models table reports the scaled chi-square and the robust indices, as
+  # nomo_cfa() does, rather than the ML statistics.
+  measures <- lavaan::fitMeasures(
+    mv$fits$`Method-C`,
+    c("chisq", "chisq.scaled", "pvalue.scaled", "cfi.robust", "tli.robust", "rmsea.robust")
+  )
+  row <- mv$models[mv$models$model == "Method-C", ]
+  expect_equal(row$chisq, unname(measures[["chisq.scaled"]]))
+  expect_false(isTRUE(all.equal(row$chisq, unname(measures[["chisq"]]))))
+  expect_equal(row$pvalue, unname(measures[["pvalue.scaled"]]))
+  expect_equal(row$cfi, unname(measures[["cfi.robust"]]))
+  expect_equal(row$tli, unname(measures[["tli.robust"]]))
+  expect_equal(row$rmsea, unname(measures[["rmsea.robust"]]))
 })
 
 
@@ -197,14 +227,15 @@ test_that("arguments and data are checked", {
 test_that("a biased correlation, and one whose significance the sensitivity changes, are flagged", {
   comparisons <- tibble::tibble(
     comparison = c("Baseline vs. Method-C", "Method-C vs. Method-U", "Method-U vs. Method-R"),
-    question = "q", delta_chisq = c(20, 30, 9), delta_df = c(1L, 7L, 1L),
+    question = "q", chisq_diff = c(20, 30, 9), df_diff = c(1L, 7L, 1L),
     p_value = c(.00001, .0001, .003)
   )
   correlations <- tibble::tibble(
-    factor_1 = c("A", "A"), factor_2 = c("B", "C"),
+    factor1 = c("A", "A"), factor2 = c("B", "C"),
     cfa = .4, baseline = .4, retained = c(.3, .1),
-    retained_p = c(.001, .04), method_s_05 = c(.3, .08), method_s_05_p = c(.001, .06),
-    method_s_01 = c(.3, .07), method_s_01_p = c(.001, .09)
+    retained_p_value = c(.001, .04), method_s_05 = c(.3, .08),
+    method_s_05_p_value = c(.001, .06), method_s_01 = c(.3, .07),
+    method_s_01_p_value = c(.001, .09)
   )
   reliability <- tibble::tibble(factor = "A", reliability_total = .8,
                                 reliability_substantive = .7, reliability_method = .1,
