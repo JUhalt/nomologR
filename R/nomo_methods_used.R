@@ -499,8 +499,8 @@ nomo_methods_used.nomo_esem <- function(x, ...) {
 
 # Method variance ---------------------------------------------------------------
 
-# nomo_method_variance() has no ordered option, so its models are always
-# maximum-likelihood CFAs.
+# nomo_method_variance() has no ordered option, so its models are CFAs of
+# continuous indicators, credited as nomo_cfa() credits them.
 #' @export
 nomo_methods_used.nomo_method_variance <- function(x, ...) {
   used <- c("cfa_marker_technique", "ml_cfa")

@@ -133,7 +133,9 @@ nomo_retest <- function(data, scores, interval = NULL) {
 
 # The composites and their occasion columns, checked against the data.
 nomo_retest_sets <- function(scores, data) {
-  if (is.character(scores)) scores <- list(composite = scores)
+  # A plain vector is one composite; its errors name the argument itself.
+  single <- is.character(scores)
+  if (single) scores <- list(composite = scores)
   labels <- names(scores)
   if (!is.list(scores) || !length(scores) || is.null(labels) ||
         any(is.na(labels) | !nzchar(labels)) || anyDuplicated(labels)) {
@@ -151,7 +153,8 @@ nomo_retest_sets <- function(scores, data) {
           anyDuplicated(cols)) {
       stop(
         sprintf(
-          "`%s` needs two or more distinct columns, one per occasion.", label
+          "`%s` needs two or more distinct columns, one per occasion.",
+          if (single) "scores" else label
         ),
         call. = FALSE
       )

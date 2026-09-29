@@ -119,7 +119,9 @@ test_that("scores and data are checked", {
   dat <- retest_data()
   expect_error(nomo_retest(list(), "a"), "non-empty data frame")
   expect_error(nomo_retest(dat[0, ], c("agency_t1", "agency_t2")), "non-empty data frame")
-  expect_error(nomo_retest(dat, "agency_t1"), "two or more distinct columns")
+  expect_error(nomo_retest(dat, "agency_t1"), "`scores` needs two or more distinct columns")
+  expect_error(nomo_retest(dat, list(Agency = "agency_t1")),
+               "`Agency` needs two or more distinct columns")
   expect_error(nomo_retest(dat, c("agency_t1", "agency_t1")), "two or more distinct columns")
   expect_error(nomo_retest(dat, list(c("agency_t1", "agency_t2"))),
                "`scores` must be a character vector of column names, or a named", fixed = TRUE)
