@@ -585,6 +585,16 @@ nomo_bibliography <- function() {
       "10.1037/0021-9010.86.1.114"
     ),
     nomo_bib_entry(
+      "liu_2017", "Liu et al. (2017)",
+      paste(
+        "Liu, Y., Millsap, R. E., West, S. G., Tein, J.-Y., Tanaka, R., &",
+        "Grimm, K. J. (2017). Testing measurement invariance in longitudinal",
+        "data with ordered-categorical measures. Psychological Methods, 22(3),",
+        "486-506."
+      ),
+      "10.1037/met0000075"
+    ),
+    nomo_bib_entry(
       "lorenzoseva_2011", "Lorenzo-Seva, Timmerman, & Kiers (2011)",
       paste(
         "Lorenzo-Seva, U., Timmerman, M. E., & Kiers, H. A. L. (2011). The Hull",
@@ -999,6 +1009,16 @@ nomo_bibliography <- function() {
         "checklist to avoid p-hacking. Frontiers in Psychology, 7, 1832."
       ),
       "10.3389/fpsyg.2016.01832"
+    ),
+    nomo_bib_entry(
+      "widaman_2010", "Widaman, Ferrer, & Conger (2010)",
+      paste(
+        "Widaman, K. F., Ferrer, E., & Conger, R. D. (2010). Factorial",
+        "invariance within longitudinal structural equation models: Measuring",
+        "the same construct across time. Child Development Perspectives, 4(1),",
+        "10-18."
+      ),
+      "10.1111/j.1750-8606.2009.00110.x"
     ),
     nomo_bib_entry(
       "williams_2010", "Williams, Hartman, & Cavazotte (2010)",
@@ -1941,6 +1961,24 @@ nomo_methods_registry <- function() {
       "nomo_invariance()", "lavaan",
       c("byrne_1989", "hancock_2001", "vandenberg_lance_2000")
     ),
+    nomo_method_entry(
+      "longitudinal_invariance", "invariance",
+      "Longitudinal measurement invariance and latent change",
+      "contemporary", "primary",
+      paste(
+        "Equality of the same items' loadings, intercepts or thresholds, and",
+        "residual variances across occasions, with each item's unique factors",
+        "correlated over time, and the latent change once intercepts are",
+        "invariant."
+      ),
+      paste(
+        "The same items at every occasion; latent change is comparable only with",
+        "invariant intercepts, fully or partially, and is expressed in the first",
+        "occasion's latent standard deviations."
+      ),
+      "nomo_invariance_longitudinal()", "lavaan",
+      c("widaman_2010", "liu_2017", "meredith_1993")
+    ),
 
     # Stage 8: nomological network -------------------------------------------
     nomo_method_entry(
@@ -2301,6 +2339,7 @@ nomo_methods_history <- function() {
     c("parallel_model_test", "mcneish_wolf_2020", NA),
     c("nomological_network", "cronbach_meehl_1955", "two_step_sem; prediction_provenance"),
     c("latent_mean_comparison", NA, NA),
+    c("longitudinal_invariance", NA, NA),
     c("two_step_sem", "anderson_gerbing_1988", NA),
     c("single_indicator_reliability", NA, NA),
     c("equivalence_testing", "schuirmann_1987", NA),

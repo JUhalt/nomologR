@@ -362,12 +362,27 @@ nomo_apa_table.nomo_invariance <- function(x, type = NULL, number = NULL,
     "Model", "\u03c7\u00b2", "*df*", "CFI", "RMSEA", "SRMR",
     "\u0394CFI", "\u0394RMSEA", "\u0394\u03c7\u00b2 (\u0394*df*)", "*p*"
   )
+  across_occasions <- identical(x$design, "occasions")
   nomo_apa_new(
     body = body,
-    title = nomo_apa_or(title, "Measurement Invariance Across Groups"),
+    title = nomo_apa_or(
+      title,
+      if (across_occasions) {
+        "Measurement Invariance Across Occasions"
+      } else {
+        "Measurement Invariance Across Groups"
+      }
+    ),
     stub = "Model",
     general = paste(
-      sprintf("Grouping variable: %s.", x$group),
+      if (across_occasions) {
+        sprintf(
+          "Occasions: %s. Each item's residuals are correlated across occasions.",
+          paste(x$occasions, collapse = ", ")
+        )
+      } else {
+        sprintf("Grouping variable: %s.", x$group)
+      },
       "Each model adds constraints to the one above it; changes are relative to",
       "the preceding model. Changes in fit are reported as evidence and are not",
       "compared with fixed cutoffs."

@@ -39,7 +39,8 @@
 #' * `nomo_method_variance`: `"comparisons"` (default), `"models"`,
 #'   `"loadings"`, `"reliability"`, `"correlations"`, `"decision_log"`; see
 #'   [nomo_method_variance()].
-#' * `nomo_invariance`: `"fit"` (default), `"categories"`, `"partial"`,
+#' * `nomo_invariance` and `nomo_invariance_longitudinal`: `"fit"` (default),
+#'   `"categories"`, `"partial"`,
 #'   `"local_strain"`, `"latent_means"`, `"decision_log"`. The local-strain table keeps lavaan's
 #'   internal `constraint` label and adds a human-readable
 #'   `constraint_display` column (for example, `Intercept: ag3 (online vs.

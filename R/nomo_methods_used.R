@@ -446,6 +446,16 @@ nomo_methods_used.nomo_invariance <- function(x, ...) {
 }
 
 
+# Across occasions the model is one longitudinal CFA, and the latent means are
+# latent change rather than a comparison of groups.
+#' @export
+nomo_methods_used.nomo_invariance_longitudinal <- function(x, ...) {
+  used <- NextMethod()
+  used[used == "multigroup_cfa"] <- "longitudinal_invariance"
+  setdiff(used, "latent_mean_comparison")
+}
+
+
 # nomo_partial() specifies researcher releases; it fits nothing, so the
 # multiple-group model is credited to the nomo_invariance() fit that uses it.
 #' @export
