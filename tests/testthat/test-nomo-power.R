@@ -14,6 +14,12 @@ test_that("RMSEA power reproduces MacCallum, Browne, and Sugawara's sample sizes
   expect_gte(req$power$power, .80)
   expect_lt(nomo_power_rmsea(df = 20, n = req$n_required - 1L)$power$power, .80)
 
+  local_reproducible_output(width = 80)
+  printed <- capture.output(print(close))
+  expect_true(any(grepl("Smallest N for power 0.8: ", printed, fixed = TRUE)))
+  expect_true(any(grepl("Power by sample size", printed, fixed = TRUE)))
+  expect_true(all(nchar(printed) <= 80))
+
   exact <- nomo_power_rmsea(df = 20, test = "exact")
   expect_identical(c(exact$rmsea_null, exact$rmsea_alt), c(0, .05))
   expect_true("rmsea_power" %in% nomo_methods(exact)$id)
