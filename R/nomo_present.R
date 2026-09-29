@@ -88,6 +88,29 @@ nomo_present_notes <- function(notes) {
 }
 
 
+# A decision log's review and concern entries under a "Flagged" heading: each
+# observation, followed by its recommendation when `recommendation = TRUE`, as a
+# summary gives it. Nothing is printed when nothing is flagged.
+nomo_present_flagged <- function(log, recommendation = FALSE) {
+  flagged <- log[log$severity %in% c("review", "concern"), , drop = FALSE]
+  if (!nrow(flagged)) return(invisible(NULL))
+  text <- flagged$observation
+  if (isTRUE(recommendation)) text <- paste(text, flagged$recommendation)
+  nomo_present_section("Flagged")
+  nomo_present_bullets(paste0(nomo_present_flag(flagged$severity), ": ", text))
+}
+
+
+# A proportion as a percentage with one decimal, so that 499 of 500 reads as
+# 99.8% rather than rounding to 100%; "-" when it is not available.
+nomo_present_percent <- function(x) {
+  x <- suppressWarnings(as.numeric(x))
+  out <- sprintf("%.1f%%", 100 * x)
+  out[!is.finite(x)] <- "-"
+  out
+}
+
+
 # A noun in the number its count takes, and the count with it: "1 factor",
 # "2 factors", rather than "2 factor(s)".
 nomo_present_noun <- function(n, singular, plural = paste0(singular, "s")) {

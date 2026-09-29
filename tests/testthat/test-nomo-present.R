@@ -161,6 +161,25 @@ test_that("notes carry their flag, and a column with one value is left out", {
 })
 
 
+test_that("flagged log entries and percentages are shown one way (#89)", {
+  flagged <- nomologR:::nomo_present_flagged
+  log <- tibble::tibble(
+    severity = c("info", "review", "concern"),
+    observation = c("Fine.", "Look again.", "A problem."),
+    recommendation = c("", "Check it.", "Fix it.")
+  )
+  expect_identical(capture.output(flagged(log[1L, ])), character())
+  expect_identical(capture.output(flagged(log)),
+                   c("", "Flagged", "  - review: Look again.", "  - concern: A problem."))
+  expect_identical(capture.output(flagged(log, recommendation = TRUE))[3:4],
+                   c("  - review: Look again. Check it.", "  - concern: A problem. Fix it."))
+
+  # One decimal, so a single failure in 500 is not rounded away.
+  expect_identical(nomologR:::nomo_present_percent(c(0.998, 0.0432, NA)),
+                   c("99.8%", "4.3%", "-"))
+})
+
+
 test_that("the CFA print and summary read as designed (#89)", {
   cfa <- nomo_cfa(
     nomo_model(list(A = paste0("a", 1:5), B = paste0("b", 1:5))),
