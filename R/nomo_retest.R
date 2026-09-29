@@ -39,9 +39,9 @@
 #' change is not necessarily a meaningful one.
 #'
 #' @param data A data frame with one row per person.
-#' @param occasions The columns holding the same composite on successive
-#'   occasions: a character vector of two or more column names, or a named list
-#'   of such vectors, one per composite.
+#' @param scores The columns holding the same composite on successive
+#'   occasions, in order: a character vector of two or more column names, or a
+#'   named list of such vectors, one per composite.
 #' @param interval Optional text describing the time between occasions, such as
 #'   `"two weeks"`. It is recorded with the results, because a test-retest
 #'   reliability depends on it.
@@ -59,8 +59,9 @@
 #'     the change is a reliable increase, a reliable decrease, or neither.
 #'   * `interval` and `decision_log`.
 #'
-#'   Other fields record the call and the columns used. They may change between
-#'   releases and are not part of the stable interface (see `?nomologR`).
+#'   Other fields record the call and the columns used (`scores`). They may
+#'   change between releases and are not part of the stable interface (see
+#'   `?nomologR`).
 #'
 #' @references
 #' Jacobson, N. S., & Truax, P. (1991). Clinical significance: A statistical
@@ -91,15 +92,16 @@
 #' # Agency scores on two occasions, two weeks apart (simulated).
 #' set.seed(2026)
 #' true <- stats::rnorm(150)
-#' scores <- data.frame(
+#' panel <- data.frame(
 #'   agency_t1 = 3 + true + stats::rnorm(150, sd = .45),
 #'   agency_t2 = 3.1 + true + stats::rnorm(150, sd = .45)
 #' )
-#' rt <- nomo_retest(scores, c("agency_t1", "agency_t2"), interval = "two weeks")
+#' rt <- nomo_retest(panel, scores = c("agency_t1", "agency_t2"),
+#'                   interval = "two weeks")
 #' rt
 #' nomo_table(rt, "reliable_change")
 #' @export
-nomo_retest <- function(data, occasions, interval = NULL) {
+nomo_retest <- function(data, scores, interval = NULL) {
   if (!is.data.frame(data) || !nrow(data)) {
     stop("`data` must be a non-empty data frame.", call. = FALSE)
   }
@@ -109,7 +111,7 @@ nomo_retest <- function(data, occasions, interval = NULL) {
     stop("`interval` must be NULL or one non-empty character string.", call. = FALSE)
   }
 
-  sets <- nomo_retest_sets(occasions, data)
+  sets <- nomo_retest_sets(scores, data)
   parts <- lapply(names(sets), function(label) {
     nomo_retest_one(data, sets[[label]], label)
   })
@@ -118,7 +120,7 @@ nomo_retest <- function(data, occasions, interval = NULL) {
 
   out <- list(
     call = match.call(),
-    occasions = sets,
+    scores = sets,
     interval = if (is.null(interval)) NA_character_ else trimws(interval),
     icc = icc,
     reliable_change = reliable_change,
@@ -130,26 +132,29 @@ nomo_retest <- function(data, occasions, interval = NULL) {
 
 
 # The composites and their occasion columns, checked against the data.
-nomo_retest_sets <- function(occasions, data) {
-  if (is.character(occasions)) occasions <- list(composite = occasions)
-  labels <- names(occasions)
-  if (!is.list(occasions) || !length(occasions) || is.null(labels) ||
+nomo_retest_sets <- function(scores, data) {
+  # A plain vector is one composite; its errors name the argument itself.
+  single <- is.character(scores)
+  if (single) scores <- list(composite = scores)
+  labels <- names(scores)
+  if (!is.list(scores) || !length(scores) || is.null(labels) ||
         any(is.na(labels) | !nzchar(labels)) || anyDuplicated(labels)) {
     stop(
       paste(
-        "`occasions` must be a character vector of column names, or a named",
+        "`scores` must be a character vector of column names, or a named",
         "list of them with one entry per composite."
       ),
       call. = FALSE
     )
   }
   for (label in labels) {
-    cols <- occasions[[label]]
+    cols <- scores[[label]]
     if (!is.character(cols) || length(cols) < 2L || anyNA(cols) ||
           anyDuplicated(cols)) {
       stop(
         sprintf(
-          "`%s` needs two or more distinct columns, one per occasion.", label
+          "`%s` needs two or more distinct columns, one per occasion.",
+          if (single) "scores" else label
         ),
         call. = FALSE
       )
@@ -158,7 +163,7 @@ nomo_retest_sets <- function(occasions, data) {
     if (length(absent)) {
       stop(
         sprintf(
-          "Occasion column%s not in `data`: %s.",
+          "`scores` column%s not in `data`: %s.",
           if (length(absent) == 1L) "" else "s", paste(absent, collapse = ", ")
         ),
         call. = FALSE
@@ -168,14 +173,14 @@ nomo_retest_sets <- function(occasions, data) {
     if (!all(numeric)) {
       stop(
         sprintf(
-          "Occasion scores must be numeric. Not numeric: %s.",
+          "`scores` columns must be numeric. Not numeric: %s.",
           paste(cols[!numeric], collapse = ", ")
         ),
         call. = FALSE
       )
     }
   }
-  occasions
+  scores
 }
 
 

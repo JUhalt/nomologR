@@ -4,14 +4,14 @@
 \alias{nomo_retest}
 \title{Test-retest reliability, measurement error, and reliable change}
 \usage{
-nomo_retest(data, occasions, interval = NULL)
+nomo_retest(data, scores, interval = NULL)
 }
 \arguments{
 \item{data}{A data frame with one row per person.}
 
-\item{occasions}{The columns holding the same composite on successive
-occasions: a character vector of two or more column names, or a named list
-of such vectors, one per composite.}
+\item{scores}{The columns holding the same composite on successive
+occasions, in order: a character vector of two or more column names, or a
+named list of such vectors, one per composite.}
 
 \item{interval}{Optional text describing the time between occasions, such as
 \code{"two weeks"}. It is recorded with the results, because a test-retest
@@ -32,8 +32,9 @@ the change is a reliable increase, a reliable decrease, or neither.
 \item \code{interval} and \code{decision_log}.
 }
 
-Other fields record the call and the columns used. They may change between
-releases and are not part of the stable interface (see \code{?nomologR}).
+Other fields record the call and the columns used (\code{scores}). They may
+change between releases and are not part of the stable interface (see
+\code{?nomologR}).
 }
 \description{
 \code{nomo_retest()} estimates how stable a composite's scores are when the same
@@ -76,11 +77,12 @@ change is not necessarily a meaningful one.
 # Agency scores on two occasions, two weeks apart (simulated).
 set.seed(2026)
 true <- stats::rnorm(150)
-scores <- data.frame(
+panel <- data.frame(
   agency_t1 = 3 + true + stats::rnorm(150, sd = .45),
   agency_t2 = 3.1 + true + stats::rnorm(150, sd = .45)
 )
-rt <- nomo_retest(scores, c("agency_t1", "agency_t2"), interval = "two weeks")
+rt <- nomo_retest(panel, scores = c("agency_t1", "agency_t2"),
+                  interval = "two weeks")
 rt
 nomo_table(rt, "reliable_change")
 }

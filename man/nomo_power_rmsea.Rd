@@ -38,6 +38,9 @@ A \code{nomo_power} object. The fields to read are \code{test}, \code{df},
 \code{rmsea_null}, \code{rmsea_alt}, \code{alpha}, \code{target_power}, \code{power} (a table of
 sample sizes and their power), and \code{n_required} (the smallest sample size
 reaching \code{target_power}, or \code{NA} if none up to one million does).
+
+Other fields record the kind of power analysis. They may change between
+releases and are not part of the stable interface (see \code{?nomologR}).
 }
 \description{
 \code{nomo_power_rmsea()} gives the power of MacCallum, Browne, and Sugawara's

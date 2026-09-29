@@ -49,15 +49,23 @@ test_that("ESEM recovers cross-loadings the CFA inflates the correlation with", 
   # The CFA forces the cross-loadings into the factor correlation.
   fc <- es$factor_correlations
   expect_identical(nrow(fc), 1L)
+  expect_identical(c(fc$factor1, fc$factor2), c("A", "B"))
   expect_lt(fc$esem, fc$cfa)
   expect_equal(fc$difference, fc$esem - fc$cfa)
 
   # The CFA is nested in the ESEM: its extra df are the fixed cross-loadings
   # less the rotation's m(m - 1) constraints.
-  expect_identical(es$fit$model, c("ESEM", "CFA"))
-  expect_identical(es$comparison$delta_df, es$fit$df[[2L]] - es$fit$df[[1L]])
-  expect_identical(es$comparison$delta_df, 8L - 2L)
-  expect_lt(es$comparison$p_value, .001)
+  expect_identical(es$models$model, c("ESEM", "CFA"))
+  expect_identical(names(es$comparisons), c("chisq_diff", "df_diff", "p_value"))
+  expect_identical(es$comparisons$df_diff, es$models$df[[2L]] - es$models$df[[1L]])
+  expect_identical(es$comparisons$df_diff, 8L - 2L)
+  expect_lt(es$comparisons$p_value, .001)
+  expect_identical(names(es$fits), c("ESEM", "CFA"))
+  expect_s4_class(es$fits$ESEM, "lavaan")
+  expect_equal(es$models$chisq[[2L]], unname(lavaan::fitMeasures(es$fits$CFA, "chisq")))
+  expect_identical(es$ordered, character())
+  expect_identical(es$estimator, NA_character_)
+  expect_identical(es$missing, NA_character_)
 
   log <- es$decision_log
   expect_identical(
@@ -73,7 +81,9 @@ test_that("ESEM recovers cross-loadings the CFA inflates the correlation with", 
   expect_true("esem" %in% nomo_methods(es)$id)
   expect_identical(nomo_table(es), es$loadings)
   expect_identical(nomo_table(es, "factor_correlations"), es$factor_correlations)
-  expect_identical(nomo_table(es, "comparison"), es$comparison)
+  expect_identical(nomo_table(es, "models"), es$models)
+  expect_identical(nomo_table(es, "comparisons"), es$comparisons)
+  expect_error(nomo_table(es, "fit"), "`type` must be one of")
 })
 
 
@@ -102,18 +112,30 @@ test_that("a nomo_model, a robust estimator, FIML, and ordered items are passed 
   d$a1[1:20] <- NA
   model <- nomo_model(list(A = paste0("a", 1:4), B = paste0("b", 1:4)))
   es <- nomo_esem(model, d, estimator = "MLR", missing = "fiml")
-  expect_identical(lavaan::lavInspect(es$esem_fit, "options")$estimator, "ML")
-  expect_identical(lavaan::lavInspect(es$cfa_fit, "options")$missing, "ml")
-  expect_true("yuan.bentler.mplus" %in% lavaan::lavInspect(es$esem_fit, "options")$test)
-  expect_true(is.finite(es$comparison$p_value))
+  expect_identical(lavaan::lavInspect(es$fits$ESEM, "options")$estimator, "ML")
+  expect_identical(lavaan::lavInspect(es$fits$CFA, "options")$missing, "ml")
+  expect_true("yuan.bentler.mplus" %in% lavaan::lavInspect(es$fits$ESEM, "options")$test)
+  expect_true(is.finite(es$comparisons$p_value))
+  # The models table reports the scaled chi-square, as nomo_cfa() does.
+  expect_equal(es$models$chisq[[1L]],
+               unname(lavaan::fitMeasures(es$fits$ESEM, "chisq.scaled")))
+  expect_identical(es$estimator, "MLR")
+  expect_identical(es$missing, "fiml")
+  expect_identical(nomo_methods_used(es), c("esem", "ml_cfa", "fiml"))
 
   cut_items <- d
   for (v in names(cut_items)) cut_items[[v]] <- as.integer(cut(cut_items[[v]], c(-Inf, -1, 0, 1, Inf)))
   cut_items <- stats::na.omit(cut_items)
   es_ord <- nomo_esem(esem_model, cut_items, ordered = names(cut_items))
-  expect_identical(lavaan::lavInspect(es_ord$esem_fit, "options")$estimator, "DWLS")
+  expect_identical(lavaan::lavInspect(es_ord$fits$ESEM, "options")$estimator, "DWLS")
   expect_true(all(is.finite(es_ord$loadings$loading)))
-  expect_true(is.finite(es_ord$fit$cfi[[1L]]))
+  expect_true(is.finite(es_ord$models$cfi[[1L]]))
+  expect_identical(es_ord$ordered, names(cut_items))
+  # Ordered indicators are credited with WLSMV and polychoric correlations,
+  # not maximum likelihood.
+  expect_identical(nomo_methods_used(es_ord),
+                   c("esem", "wlsmv_cfa", "categorical_correlations"))
+  expect_true("wlsmv_cfa" %in% nomo_methods(es_ord)$id)
 })
 
 

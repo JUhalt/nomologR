@@ -1337,8 +1337,9 @@ release keeps working in the next.
   arrive in any release, so address fields by name.
 - **Experimental.** `nomo_missing()` and the layout of
   `nomo_apa_table()` tables are experimental until 1.0.0.
-  `nomo_method_variance()` and `nomo_power_simulate()` are experimental
-  and stay so after 1.0.0.
+  `nomo_method_variance()` and `nomo_power_simulate()` remain
+  experimental after 1.0.0 and may change during 1.x without a
+  deprecation period, with changes listed in NEWS.
 
 The full policy is on the package help page, `?nomologR`. The
 `contentvalidR` handoff is versioned by schema. Within a version, fields

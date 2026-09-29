@@ -34,23 +34,34 @@ tests.}
 \value{
 A \code{nomo_method_variance} object. The fields to read are:
 \itemize{
-\item \code{models}: each model's chi-square, degrees of freedom, CFI, RMSEA, and
-SRMR.
+\item \code{models}: each model's chi-square, degrees of freedom, p-value
+(\code{pvalue}), CFI, TLI, RMSEA, and SRMR. With a robust estimator, the
+chi-square is scaled and the indices are robust, as in \code{\link[=nomo_cfa]{nomo_cfa()}}.
 \item \code{comparisons}: the three model comparisons, with their chi-square
-differences and p-values.
+differences (\code{chisq_diff}), degrees of freedom (\code{df_diff}), and
+\code{p_value}.
 \item \code{retained}: \code{"Method-C"} or \code{"Method-U"}.
 \item \code{method_loadings}: each substantive indicator's standardized substantive
 and method loadings in the retained model, the share of its variance the
-marker accounts for, and the method loading's p-value.
+marker accounts for, and the method loading's \code{p_value}.
 \item \code{reliability}: each substantive factor's Baseline reliability, its
 substantive and method parts, and \code{method_share}.
-\item \code{correlations}: each pair of substantive factors' correlation in the
-CFA, Baseline, retained, Method-S(.05), and Method-S(.01) models, with
-p-values in the retained and sensitivity models.
-\item \code{marker_correlations}: the marker's correlations with the substantive
-factors in the CFA model.
+\item \code{correlations}: each pair of substantive factors (\code{factor1}, \code{factor2})
+and their correlation in the CFA, Baseline, retained, Method-S(.05), and
+Method-S(.01) models, with p-values in the retained and sensitivity
+models (\code{retained_p_value}, \code{method_s_05_p_value},
+\code{method_s_01_p_value}).
+\item \code{marker_correlations}: the marker's correlation with each substantive
+factor in the CFA model; \code{factor1} is the substantive factor and
+\code{factor2} the marker.
 \item \code{fits} and \code{decision_log}.
 }
+
+A table with one p-value for a test or an estimate names it \code{p_value}, as
+the rest of the package does. \code{correlations} has one for each model, so
+each is named \verb{<model>_p_value}. In \code{models}, \code{pvalue} is the p-value of
+each model's chi-square test, named as in the fit tables of \code{\link[=nomo_esem]{nomo_esem()}}
+and \code{\link[=nomo_invariance]{nomo_invariance()}}.
 
 Other fields record the call, the settings used, and the syntax fitted.
 They may change between releases and are not part of the stable interface
@@ -64,6 +75,12 @@ reliability it accounts for. It follows the comprehensive CFA marker
 technique of Williams, Hartman, and Cavazotte (2010).
 }
 \details{
+\strong{Experimental.} This function is experimental and remains so after
+nomologR 1.0.0. Its output may be reorganized during 1.x, without a
+deprecation period, as the marker technique is extended beyond continuous
+indicators. Any change will be described in NEWS; see the package help page,
+\code{?nomologR}, for the stability policy.
+
 \strong{The marker.} A marker variable is theoretically unrelated to the
 substantive variables, so what it shares with them is taken to be method
 variance (Lindell & Whitney, 2001). Williams et al. (2010) expand the
