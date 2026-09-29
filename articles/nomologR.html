@@ -119,6 +119,32 @@ investigate next?</strong></p>
 items, respecifies models, or declares a scale “valid.”</p>
 </div>
 <div class="section level2">
+<h2 id="what-nomologr-assumes-about-the-items">What nomologR assumes about the items<a class="anchor" aria-label="anchor" href="#what-nomologr-assumes-about-the-items"></a>
+</h2>
+<p>Every analysis in <code>nomologR</code> assumes <em>reflective</em>
+measurement: the construct causes the responses, so its items are
+interchangeable manifestations of it and should correlate with one
+another. That assumption is what makes factor loadings, internal
+consistency, AVE, HTMT, and measurement invariance meaningful, and what
+makes a weakly loading item worth reviewing (Bollen &amp; Lennox,
+1991).</p>
+<p>Some measures are built the other way. In a <em>formative</em>
+measure, the indicators define the construct, as income, education, and
+occupation define socioeconomic status. They need not correlate, and
+dropping one changes what is measured (Diamantopoulos &amp; Winklhofer,
+2001). The tools here do not apply to such a measure, and applying them
+misleads: low internal consistency is expected, and deleting a “weak”
+indicator removes part of the construct. Decide which model a measure
+follows before choosing tools; Jarvis, MacKenzie, and Podsakoff (2003)
+and MacKenzie, Podsakoff, and Jarvis (2005) give criteria. Whether
+formative latent variables are meaningful at all is still debated
+(Howell, Breivik, &amp; Wilcox, 2007; Edwards, 2011; Bollen &amp;
+Diamantopoulos, 2017), and <code>nomologR</code> does not fit them. A
+formative index can still enter a nomological network as an observed
+variable in <code><a href="../reference/nomo_network.html">nomo_network()</a></code>, and its content can still be
+reviewed with <code>contentvalidR</code>.</p>
+</div>
+<div class="section level2">
 <h2 id="the-workflow-at-a-glance">The workflow at a glance<a class="anchor" aria-label="anchor" href="#the-workflow-at-a-glance"></a>
 </h2>
 <table class="table">
@@ -386,9 +412,9 @@ function’s help page lists its references.</p>
 <p>The next release, <code>v1.0.0</code>, is planned together with <a href="https://github.com/JUhalt/contentvalidR" class="external-link"><code>contentvalidR</code></a>,
 which covers the content-review stage before this package’s. At 1.0.0
 both packages’ interfaces become stable, and the handoff between them
-becomes a supported contract. Larger extensions, such as ESEM, IRT, and
-longitudinal invariance, are candidates for later 1.x releases. See the
-<a href="https://github.com/JUhalt/nomologR/blob/master/ROADMAP.md" class="external-link">roadmap</a>
+becomes a supported contract. Larger extensions, such as IRT, multiple
+imputation, and formative models, are candidates for later 1.x releases.
+See the <a href="https://github.com/JUhalt/nomologR/blob/master/ROADMAP.md" class="external-link">roadmap</a>
 and the <a href="https://github.com/JUhalt/nomologR/milestone/5" class="external-link">v1.0.0
 milestone</a>.</p>
 </div>

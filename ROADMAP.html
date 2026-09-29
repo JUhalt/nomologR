@@ -244,22 +244,34 @@
 <code><a href="reference/nomo_missing.html">nomo_missing()</a></code>’s flag rule and <code><a href="reference/nomo_apa_table.html">nomo_apa_table()</a></code>’s layouts become stable at the release candidate.</li>
 </ul></li>
 <li><label><input type="checkbox" checked><a href="https://github.com/JUhalt/nomologR/issues/113" class="external-link">#113</a> APA tables for convergent and discriminant evidence (#124).</label></li>
+<li>
+<label><input type="checkbox" checked><a href="https://github.com/JUhalt/nomologR/issues/129" class="external-link">#129</a> The gap review: what social-science scale developers need before 1.0, each method taken from its literature. All are additive.</label>
+<ul class="task-list"><li><label><input type="checkbox" checked>Reliability-corrected single indicators for observed composites (#131).</label></li>
+<li><label><input type="checkbox" checked>Test-retest reliability, measurement error, and reliable change (#132).</label></li>
+<li><label><input type="checkbox" checked>Latent means as known-groups evidence (#133).</label></li>
+<li><label><input type="checkbox" checked>Common method variance: the comprehensive CFA marker technique (#134).</label></li>
+<li><label><input type="checkbox" checked>ESEM beside its CFA (#136).</label></li>
+<li><label><input type="checkbox" checked>Sample-size planning: RMSEA power and Monte Carlo power (#135).</label></li>
+<li><label><input type="checkbox" checked>Longitudinal measurement invariance and latent change (#137).</label></li>
+<li><label><input type="checkbox" checked>A scope note: every analysis assumes reflective measurement.</label></li>
+</ul></li>
 <li><label><input type="checkbox"><a href="https://github.com/JUhalt/nomologR/issues/39" class="external-link">#39</a> The CRAN outcome for 0.3.0, which is in CRAN’s queue for new submissions. <code>contentvalidR</code> 0.4.0 was accepted on 2026-09-28, which starts its update interval.</label></li>
 <li><label><input type="checkbox"><a href="https://github.com/JUhalt/nomologR/issues/53" class="external-link">#53</a> Release candidates, fixtures from contentvalidR’s RC, the compatibility table, and a same-day release with release notes linking each other. Both packages number a candidate the same way (decided 2026-09-28): DESCRIPTION <code>0.99.0</code> and a git tag <code>v1.0.0-rc.N</code>, as a tag only, with no GitHub release, so R-universe does not publish it. CRAN asks for updates no more often than every one to two months, so the joint submission follows the later of the two packages’ first acceptances by that interval.</label></li>
 </ul></div>
 <div class="section level1">
 <h1 id="id_1x--modern-extensions">1.x — Modern Extensions<a class="anchor" aria-label="anchor" href="#id_1x--modern-extensions"></a></h1>
-<p><strong>Status:</strong> Candidates for releases after 1.0.0, all additive. They were deferred from v0.3.0 (<a href="https://github.com/JUhalt/nomologR/issues/38" class="external-link">#38</a>) and again from 1.0.0 (<a href="https://github.com/JUhalt/nomologR/issues/113" class="external-link">#113</a>). None was rejected. Candidates are not commitments until selected.</p>
-<ul class="task-list"><li><label><input type="checkbox">ESEM. lavaan already fits it, so it needs no new dependency, which makes it a natural first candidate.</label></li>
-<li><label><input type="checkbox">Longitudinal invariance.</label></li>
-<li><label><input type="checkbox">Multiple-imputation integration. <code><a href="reference/nomo_missing.html">nomo_missing()</a></code> covers listwise, FIML, and pairwise sensitivity meanwhile.</label></li>
+<p><strong>Status:</strong> Candidates for releases after 1.0.0, all additive. They were deferred from v0.3.0 (<a href="https://github.com/JUhalt/nomologR/issues/38" class="external-link">#38</a>) and again from 1.0.0 (<a href="https://github.com/JUhalt/nomologR/issues/113" class="external-link">#113</a>). None was rejected. Candidates are not commitments until selected. ESEM, longitudinal invariance, and sample-size planning moved into 1.0.0 with the gap review (<a href="https://github.com/JUhalt/nomologR/issues/129" class="external-link">#129</a>), which also added formative models, measurement invariance by alignment, latent interactions, and multitrait-multimethod models to this list.</p>
+<ul class="task-list"><li><label><input type="checkbox">Multiple-imputation integration. <code><a href="reference/nomo_missing.html">nomo_missing()</a></code> covers listwise, FIML, and pairwise sensitivity meanwhile.</label></li>
 <li><label><input type="checkbox">Bootstrap stability summaries.</label></li>
-<li><label><input type="checkbox">CFA/SEM sample-size and power planning.</label></li>
 <li><label><input type="checkbox">Criterion/predictive evidence beyond network outcomes.</label></li>
 <li><label><input type="checkbox">IRT as a complementary item-level framework, and DIF.</label></li>
 <li><label><input type="checkbox">Bayesian CFA/SEM (<code>blavaan</code>) robustness module, posterior predictive checking, and frequentist/Bayesian concordance summaries; with it, content-validity evidence as informative priors (<a href="https://github.com/JUhalt/nomologR/issues/49" class="external-link">#49</a>).</label></li>
 <li><label><input type="checkbox">Additional equivalence/SESOI functionality beyond v0.1’s researcher-specified negligible regions. No SESOI is invented by the package.</label></li>
 <li><label><input type="checkbox">Model-specific fit diagnostics (<a href="https://github.com/JUhalt/nomologR/issues/23" class="external-link">#23</a>).</label></li>
+<li><label><input type="checkbox">Formative (causal-indicator) measurement models. Until then, the scope note in Get started says why the reflective tools do not apply to them.</label></li>
+<li><label><input type="checkbox">Measurement invariance across many groups by alignment.</label></li>
+<li><label><input type="checkbox">Latent interactions.</label></li>
+<li><label><input type="checkbox">Multitrait-multimethod models.</label></li>
 </ul><hr></div>
 <div class="section level1">
 <h1 id="distribution--r-universe-and-cran-from-v030">Distribution — R-universe, and CRAN from v0.3.0<a class="anchor" aria-label="anchor" href="#distribution--r-universe-and-cran-from-v030"></a></h1>

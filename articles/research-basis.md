@@ -24,6 +24,23 @@ How to read the labels:
 Full references appear at the end of this article and in each function’s
 help page.
 
+## Scope: reflective measurement
+
+Every method below assumes reflective (effect) indicators, which the
+construct causes and which should therefore covary (Bollen & Lennox,
+1991). Formative (causal) indicators define their construct instead.
+They need not covary, and removing one changes the construct
+(Diamantopoulos & Winklhofer, 2001), so internal consistency,
+loadings-based item review, and the validity indices here do not apply
+to them. Treating one model as the other biases structural estimates,
+and Jarvis, MacKenzie, and Podsakoff (2003) and MacKenzie, Podsakoff,
+and Jarvis (2005) give criteria for choosing between them. The formative
+model itself remains contested (Howell, Breivik, & Wilcox, 2007;
+Edwards, 2011; Bollen & Diamantopoulos, 2017). `nomologR` does not fit
+formative latent variables; a formative index can enter
+[`nomo_network()`](https://juhalt.github.io/nomologR/reference/nomo_network.md)
+as an observed variable.
+
 ## The methods registry
 
 The same mapping is available as data.
@@ -402,6 +419,50 @@ changed, the researcher’s rationale, and whether the change was
 prespecified or post hoc, compares the parent and revised models, and
 recommends confirming a post-hoc revision in independent data.
 
+**Cross-loadings.** Historically, a confirmatory model fixed every
+cross-loading at zero, and items with small cross-loadings were deleted
+or their misfit tolerated. The constraint pushes the variance those
+loadings carry into the factor correlations, which are then inflated
+(Asparouhov & Muthén, 2009). Exploratory structural equation modeling
+estimates the cross-loadings within a model that still gives fit and
+standard errors, and with an a priori structure, target rotation keeps
+the hypothesized pattern without fixing the cross-loadings (Browne,
+2001; Marsh, Morin, Parker, & Kaur, 2014).
+[`nomo_esem()`](https://juhalt.github.io/nomologR/reference/nomo_esem.md)
+fits ESEM beside the CFA and compares them on fit indices that penalize
+ESEM’s extra parameters and on the factor correlations.
+
+**Method variance.** Historically, common method variance was dismissed
+with Harman’s single-factor test, which cannot detect what it is used to
+rule out (Podsakoff, MacKenzie, Lee, & Podsakoff, 2003), or removed from
+observed correlations with a marker variable’s partial correlation
+(Lindell & Whitney, 2001). Williams, Hartman, and Cavazotte’s (2010)
+comprehensive CFA marker technique models the marker’s method factor,
+tests whether it biases the substantive correlations, and decomposes
+each factor’s reliability. With a marker that does not tap the relevant
+biases it can find method variance that is absent, and it does not
+recover the substantive correlations accurately (Richardson, Simmering,
+& Sturman, 2009); other sources of method variance may remain
+(Podsakoff, MacKenzie, & Podsakoff, 2012).
+[`nomo_method_variance()`](https://juhalt.github.io/nomologR/reference/nomo_method_variance.md)
+implements the technique and reports its results as evidence about the
+marker’s method variance, not as corrected estimates.
+
+**Sample size.** Historically, sample size was set by rules of thumb,
+such as a minimum N or a number of cases per indicator or parameter. The
+sample a model needs varies widely with its loadings, factors, and
+indicators, from 30 to 460 cases in Wolf, Harrington, Clark, and
+Miller’s (2013) simulations, so no single rule fits. Contemporary
+practice computes power for a planned analysis: for the RMSEA tests of
+close, not-close, and exact fit from the model’s degrees of freedom
+(MacCallum, Browne, & Sugawara, 1996), and for the parameters themselves
+by Monte Carlo simulation from a population model, checking bias,
+coverage, and power together (Muthén & Muthén, 2002).
+[`nomo_power_rmsea()`](https://juhalt.github.io/nomologR/reference/nomo_power_rmsea.md)
+and
+[`nomo_power_simulate()`](https://juhalt.github.io/nomologR/reference/nomo_power_simulate.md)
+implement both.
+
 **Planned.** Model-specific fit cutoffs remain a research proposal
 ([\#23](https://github.com/JUhalt/nomologR/issues/23)).
 
@@ -446,6 +507,19 @@ thresholds, and
 compares the structures; see [Total and subscale
 scores](https://juhalt.github.io/nomologR/articles/hierarchical-models.md).
 
+**Stability over time.** Historically, test-retest reliability was a
+Pearson correlation between occasions, which ignores systematic change
+(Weir, 2005), or an intraclass correlation whose form went unreported.
+The forms answer different questions (Shrout & Fleiss, 1979; McGraw &
+Wong, 1996), and for test-retest data Koo and Li (2016) recommend the
+two-way, absolute-agreement, single-measurement form, interpreted from
+its confidence interval. The standard error of measurement and the
+smallest detectable change put the reliability on the score’s scale
+(Weir, 2005), and the reliable change index asks whether one person’s
+change exceeds measurement error (Jacobson & Truax, 1991).
+[`nomo_retest()`](https://juhalt.github.io/nomologR/reference/nomo_retest.md)
+reports all of these.
+
 ## 6. Convergent and discriminant evidence — `nomo_validity()`
 
 **Historical practice.** Multitrait–multimethod correlation matrices
@@ -480,20 +554,24 @@ with sample size and model context (Chen, 2007; Putnick & Bornstein,
 2016); identification-aware sequences for ordered-categorical indicators
 (Wu & Estabrook, 2016; Svetina et al., 2020); partial invariance based
 on substantively justified, transparently reported releases (Byrne et
-al., 1989). Across occasions, the same items are modeled at each
-occasion with each item’s unique factors correlated over time, so that
-change in a score can be read as change in the construct (Widaman,
-Ferrer, & Conger, 2010), with identification conditions for ordered
-items over time (Liu et al., 2017).
+al., 1989); and, once intercepts are invariant, latent mean differences
+between groups expressed in the reference group’s latent standard
+deviations, as known-groups evidence (Hancock, 2001). Across occasions,
+the same items are modeled at each occasion with each item’s unique
+factors correlated over time, so that change in a score can be read as
+change in the construct (Widaman, Ferrer, & Conger, 2010), with
+identification conditions for ordered items over time (Liu et al.,
+2017).
 
 **What nomologR does.** Category-aware sequences for continuous, binary,
 three-category, and four-or-more-category indicators; fit and change
 evidence without a universal pass/fail rule; score-test diagnostics that
 locate strain but never free parameters; researcher-specified releases
-with required rationales carried forward to more restrictive levels. The
-same sequence runs across occasions, with each item’s unique factors
-correlated over time, releases named by item, and latent change reported
-once intercepts are invariant.
+with required rationales carried forward to more restrictive levels; and
+latent means compared with the reference group at every level that holds
+intercepts equal. The same sequence runs across occasions, with each
+item’s unique factors correlated over time, releases named by item, and
+latent change reported once intercepts are invariant.
 
 ## 8. Nomological network — `nomo_hypotheses()`, `nomo_network()`
 
@@ -532,6 +610,20 @@ scoring design shown to give consistent coefficients: regression-method
 scores for the predictors and Bartlett scores for the outcome, each
 block scored from a measurement model of its own (Skrondal & Laake,
 2001). None of these is applied automatically.
+
+**Observed composites.** A composite’s measurement error attenuates the
+relations it enters (Spearman, 1904). Single-indicator modeling corrects
+this by making the composite the one indicator of a latent variable with
+its error variance fixed at (1 − reliability) × its variance (Williams &
+Hazer, 1986; Hayduk, 1987; Bollen, 1989). The correction is only as good
+as the reliability and the error it captures (DeShon, 1998); with an
+accurate reliability, Savalei (2019) found it the most accurate option
+in small samples.
+[`nomo_network()`](https://juhalt.github.io/nomologR/reference/nomo_network.md)
+applies it only when the researcher names the composite and its
+reliability, refits with the reliability .05 and .10 lower and higher,
+and adds the reliability’s uncertainty to the standard errors when it is
+known (Oberski & Satorra, 2013).
 
 ## 9. Workflow, scores, and reporting — `nomo_run()`, `nomo_report()`
 
@@ -611,19 +703,23 @@ in practice: A review and recommended two-step approach. *Psychological
 Bulletin, 103*(3), 411–423.
 <https://doi.org/10.1037/0033-2909.103.3.411>
 
+Asparouhov, T., & Muthén, B. (2009). Exploratory structural equation
+modeling. *Structural Equation Modeling, 16*(3), 397–438.
+<https://doi.org/10.1080/10705510903008204>
+
 Bartlett, M. S. (1950). Tests of significance in factor analysis.
 *British Journal of Statistical Psychology, 3*(2), 77–85.
 <https://doi.org/10.1111/j.2044-8317.1950.tb00285.x>
-
-Bell, S. M., Chalmers, R. P., & Flora, D. B. (2024). The impact of
-measurement model misspecification on coefficient omega estimates of
-composite reliability. *Educational and Psychological Measurement,
-84*(1), 5–39. <https://doi.org/10.1177/00131644231155804>
 
 Beauducel, A. (2011). Indeterminacy of factor score estimates in
 slightly misspecified confirmatory factor models. *Journal of Modern
 Applied Statistical Methods, 10*(2), 583–598.
 <https://doi.org/10.22237/jmasm/1320120900>
+
+Bell, S. M., Chalmers, R. P., & Flora, D. B. (2024). The impact of
+measurement model misspecification on coefficient omega estimates of
+composite reliability. *Educational and Psychological Measurement,
+84*(1), 5–39. <https://doi.org/10.1177/00131644231155804>
 
 Bentler, P. M. (1990). Comparative fit indexes in structural models.
 *Psychological Bulletin, 107*(2), 238–246.
@@ -642,14 +738,25 @@ R., & Young, S. L. (2018). Best practices for developing and validating
 scales for health, social, and behavioral research: A primer. *Frontiers
 in Public Health, 6*, 149. <https://doi.org/10.3389/fpubh.2018.00149>
 
-Braeken, J., & van Assen, M. A. L. M. (2017). An empirical Kaiser
-criterion. *Psychological Methods, 22*(3), 450–466.
-<https://doi.org/10.1037/met0000074>
+Bollen, K. A. (1989). *Structural equations with latent variables*.
+Wiley. <https://doi.org/10.1002/9781118619179>
+
+Bollen, K. A., & Diamantopoulos, A. (2017). In defense of
+causal-formative indicators: A minority report. *Psychological Methods,
+22*(3), 581–596. <https://doi.org/10.1037/met0000056>
+
+Bollen, K., & Lennox, R. (1991). Conventional wisdom on measurement: A
+structural equation perspective. *Psychological Bulletin, 110*(2),
+305–314. <https://doi.org/10.1037/0033-2909.110.2.305>
 
 Bonifay, W., Lane, S. P., & Reise, S. P. (2017). Three concerns with
 applying a bifactor model as a structure of psychopathology. *Clinical
 Psychological Science, 5*(1), 184–186.
 <https://doi.org/10.1177/2167702616657069>
+
+Braeken, J., & van Assen, M. A. L. M. (2017). An empirical Kaiser
+criterion. *Psychological Methods, 22*(3), 450–466.
+<https://doi.org/10.1037/met0000074>
 
 Browne, M. W. (2001). An overview of analytic rotation in exploratory
 factor analysis. *Multivariate Behavioral Research, 36*(1), 111–150.
@@ -719,10 +826,23 @@ Curran, P. G. (2016). Methods for the detection of carelessly invalid
 responses in survey data. *Journal of Experimental Social Psychology,
 66*, 4–19. <https://doi.org/10.1016/j.jesp.2015.07.006>
 
+DeShon, R. P. (1998). A cautionary note on measurement error corrections
+in structural equation models. *Psychological Methods, 3*(4), 412–423.
+<https://doi.org/10.1037/1082-989X.3.4.412>
+
+Diamantopoulos, A., & Winklhofer, H. M. (2001). Index construction with
+formative indicators: An alternative to scale development. *Journal of
+Marketing Research, 38*(2), 269–277.
+<https://doi.org/10.1509/jmkr.38.2.269.18845>
+
 Dunn, T. J., Baguley, T., & Brunsden, V. (2014). From alpha to omega: A
 practical solution to the pervasive problem of internal consistency
 estimation. *British Journal of Psychology, 105*(3), 399–412.
 <https://doi.org/10.1111/bjop.12046>
+
+Edwards, J. R. (2011). The fallacy of formative measurement.
+*Organizational Research Methods, 14*(2), 370–388.
+<https://doi.org/10.1177/1094428110378369>
 
 Enders, C. K., & Bandalos, D. L. (2001). The relative performance of
 full information maximum likelihood estimation for missing data in
@@ -763,12 +883,12 @@ Fornell, C., & Larcker, D. F. (1981). Evaluating structural equation
 models with unobservable variables and measurement error. *Journal of
 Marketing Research, 18*(1), 39–50. <https://doi.org/10.2307/3151312>
 
+Gorsuch, R. L. (1983). *Factor analysis* (2nd ed.). Lawrence Erlbaum.
+
 Green, S. B., & Yang, Y. (2009). Reliability of summed item scores using
 structural equation modeling: An alternative to coefficient alpha.
 *Psychometrika, 74*(1), 155–167.
 <https://doi.org/10.1007/s11336-008-9099-3>
-
-Gorsuch, R. L. (1983). *Factor analysis* (2nd ed.). Lawrence Erlbaum.
 
 Grice, J. W. (2001). Computing and evaluating factor scores.
 *Psychological Methods, 6*(4), 430–450.
@@ -777,6 +897,19 @@ Grice, J. W. (2001). Computing and evaluating factor scores.
 Guttman, L. (1954). Some necessary conditions for common-factor
 analysis. *Psychometrika, 19*(2), 149–161.
 <https://doi.org/10.1007/BF02289162>
+
+Hancock, G. R. (2001). Effect size, power, and sample size determination
+for structured means modeling and MIMIC approaches to between-groups
+hypothesis testing of means on a single latent construct.
+*Psychometrika, 66*(3), 373–388. <https://doi.org/10.1007/BF02294440>
+
+Hancock, G. R., & Mueller, R. O. (2001). Rethinking construct
+reliability within latent variable systems. In R. Cudeck, S. du Toit, &
+D. Sörbom (Eds.), *Structural equation modeling: Present and future*
+(pp. 195–216). Scientific Software International.
+
+Hayduk, L. A. (1987). *Structural equation modeling with LISREL:
+Essentials and advances*. Johns Hopkins University Press.
 
 Henseler, J., Ringle, C. M., & Sarstedt, M. (2015). A new criterion for
 assessing discriminant validity in variance-based structural equation
@@ -787,17 +920,16 @@ Hinkin, T. R. (1998). A brief tutorial on the development of measures
 for use in survey questionnaires. *Organizational Research Methods,
 1*(1), 104–121. <https://doi.org/10.1177/109442819800100106>
 
-Hancock, G. R., & Mueller, R. O. (2001). Rethinking construct
-reliability within latent variable systems. In R. Cudeck, S. du Toit, &
-D. Sörbom (Eds.), *Structural equation modeling: Present and future*
-(pp. 195–216). Scientific Software International.
-
 Holzinger, K. J., & Swineford, F. (1937). The bi-factor method.
 *Psychometrika, 2*(1), 41–54. <https://doi.org/10.1007/BF02287965>
 
 Horn, J. L. (1965). A rationale and test for the number of factors in
 factor analysis. *Psychometrika, 30*(2), 179–185.
 <https://doi.org/10.1007/BF02289447>
+
+Howell, R. D., Breivik, E., & Wilcox, J. B. (2007). Reconsidering
+formative measurement. *Psychological Methods, 12*(2), 205–218.
+<https://doi.org/10.1037/1082-989X.12.2.205>
 
 Hu, L., & Bentler, P. M. (1999). Cutoff criteria for fit indexes in
 covariance structure analysis: Conventional criteria versus new
@@ -808,6 +940,16 @@ Huang, J. L., Curran, P. G., Keeney, J., Poposki, E. M., & DeShon, R. P.
 (2012). Detecting and deterring insufficient effort responding to
 surveys. *Journal of Business and Psychology, 27*(1), 99–114.
 <https://doi.org/10.1007/s10869-011-9231-8>
+
+Jacobson, N. S., & Truax, P. (1991). Clinical significance: A
+statistical approach to defining meaningful change in psychotherapy
+research. *Journal of Consulting and Clinical Psychology, 59*(1), 12–19.
+<https://doi.org/10.1037/0022-006X.59.1.12>
+
+Jarvis, C. B., MacKenzie, S. B., & Podsakoff, P. M. (2003). A critical
+review of construct indicators and measurement model misspecification in
+marketing and consumer research. *Journal of Consumer Research, 30*(2),
+199–218. <https://doi.org/10.1086/376806>
 
 Jöreskog, K. G. (1969). A general approach to confirmatory maximum
 likelihood factor analysis. *Psychometrika, 34*(2), 183–202.
@@ -840,6 +982,11 @@ Kolenikov, S., & Bollen, K. A. (2012). Testing negative error variances:
 Is a Heywood case a symptom of misspecification? *Sociological Methods &
 Research, 41*(1), 124–167. <https://doi.org/10.1177/0049124112442138>
 
+Koo, T. K., & Li, M. Y. (2016). A guideline of selecting and reporting
+intraclass correlation coefficients for reliability research. *Journal
+of Chiropractic Medicine, 15*(2), 155–163.
+<https://doi.org/10.1016/j.jcm.2016.02.012>
+
 Kuhn, M., & Johnson, K. (2013). *Applied predictive modeling*. Springer.
 <https://doi.org/10.1007/978-1-4614-6849-3>
 
@@ -848,15 +995,35 @@ for psychological research: A tutorial. *Advances in Methods and
 Practices in Psychological Science, 1*(2), 259–269.
 <https://doi.org/10.1177/2515245918770963>
 
+Lindell, M. K., & Whitney, D. J. (2001). Accounting for common method
+variance in cross-sectional research designs. *Journal of Applied
+Psychology, 86*(1), 114–121.
+<https://doi.org/10.1037/0021-9010.86.1.114>
+
+Liu, Y., Millsap, R. E., West, S. G., Tein, J.-Y., Tanaka, R., & Grimm,
+K. J. (2017). Testing measurement invariance in longitudinal data with
+ordered-categorical measures. *Psychological Methods, 22*(3), 486–506.
+<https://doi.org/10.1037/met0000075>
+
 Lorenzo-Seva, U., Timmerman, M. E., & Kiers, H. A. L. (2011). The Hull
 method for selecting the number of common factors. *Multivariate
 Behavioral Research, 46*(2), 340–364.
 <https://doi.org/10.1080/00273171.2011.564527>
 
+MacCallum, R. C., Browne, M. W., & Sugawara, H. M. (1996). Power
+analysis and determination of sample size for covariance structure
+modeling. *Psychological Methods, 1*(2), 130–149.
+<https://doi.org/10.1037/1082-989X.1.2.130>
+
 MacCallum, R. C., Roznowski, M., & Necowitz, L. B. (1992). Model
 modifications in covariance structure analysis: The problem of
 capitalization on chance. *Psychological Bulletin, 111*(3), 490–504.
 <https://doi.org/10.1037/0033-2909.111.3.490>
+
+MacKenzie, S. B., Podsakoff, P. M., & Jarvis, C. B. (2005). The problem
+of measurement model misspecification in behavioral and organizational
+research and some recommended solutions. *Journal of Applied Psychology,
+90*(4), 710–730. <https://doi.org/10.1037/0021-9010.90.4.710>
 
 Marjanovic, Z., Holden, R., Struthers, W., Cribbie, R., & Greenglass, E.
 (2015). The inter-item standard deviation (ISD): An index that
@@ -869,6 +1036,12 @@ Comment on hypothesis-testing approaches to setting cutoff values for
 fit indexes and dangers in overgeneralizing Hu and Bentler’s (1999)
 findings. *Structural Equation Modeling, 11*(3), 320–341.
 <https://doi.org/10.1207/s15328007sem1103_2>
+
+Marsh, H. W., Morin, A. J. S., Parker, P. D., & Kaur, G. (2014).
+Exploratory structural equation modeling: An integration of the best
+features of exploratory and confirmatory factor analysis. *Annual Review
+of Clinical Psychology, 10*, 85–110.
+<https://doi.org/10.1146/annurev-clinpsy-032813-153700>
 
 McNeish, D. (2018). Thanks coefficient alpha, we’ll take it from here.
 *Psychological Methods, 23*(3), 412–433.
@@ -895,17 +1068,36 @@ inferences from persons’ responses and performances as scientific
 inquiry into score meaning. *American Psychologist, 50*(9), 741–749.
 <https://doi.org/10.1037/0003-066X.50.9.741>
 
-Nosek, B. A., Ebersole, C. R., DeHaven, A. C., & Mellor, D. T. (2018).
-The preregistration revolution. *Proceedings of the National Academy of
-Sciences, 115*(11), 2600–2606. <https://doi.org/10.1073/pnas.1708274114>
-
 Murray, A. L., & Johnson, W. (2013). The limitations of model fit in
 comparing the bi-factor versus higher-order models of human cognitive
 ability structure. *Intelligence, 41*(5), 407–422.
 <https://doi.org/10.1016/j.intell.2013.06.004>
 
+Muthén, L. K., & Muthén, B. O. (2002). How to use a Monte Carlo study to
+decide on sample size and determine power. *Structural Equation
+Modeling, 9*(4), 599–620. <https://doi.org/10.1207/S15328007SEM0904_8>
+
+Nosek, B. A., Ebersole, C. R., DeHaven, A. C., & Mellor, D. T. (2018).
+The preregistration revolution. *Proceedings of the National Academy of
+Sciences, 115*(11), 2600–2606. <https://doi.org/10.1073/pnas.1708274114>
+
 Nunnally, J. C., & Bernstein, I. H. (1994). *Psychometric theory* (3rd
 ed.). McGraw-Hill.
+
+Oberski, D. L., & Satorra, A. (2013). Measurement error models with
+uncertainty about the error variance. *Structural Equation Modeling,
+20*(3), 409–428. <https://doi.org/10.1080/10705511.2013.797820>
+
+Podsakoff, P. M., MacKenzie, S. B., Lee, J.-Y., & Podsakoff, N. P.
+(2003). Common method biases in behavioral research: A critical review
+of the literature and recommended remedies. *Journal of Applied
+Psychology, 88*(5), 879–903.
+<https://doi.org/10.1037/0021-9010.88.5.879>
+
+Podsakoff, P. M., MacKenzie, S. B., & Podsakoff, N. P. (2012). Sources
+of method bias in social science research and recommendations on how to
+control it. *Annual Review of Psychology, 63*, 539–569.
+<https://doi.org/10.1146/annurev-psych-120710-100452>
 
 Putnick, D. L., & Bornstein, M. H. (2016). Measurement invariance
 conventions and reporting: The state of the art and future directions
@@ -930,6 +1122,12 @@ categorical variables be treated as continuous? A comparison of robust
 continuous and categorical SEM estimation methods under suboptimal
 conditions. *Psychological Methods, 17*(3), 354–373.
 <https://doi.org/10.1037/a0029315>
+
+Richardson, H. A., Simmering, M. J., & Sturman, M. C. (2009). A tale of
+three perspectives: Examining post hoc statistical techniques for
+detection and correction of common method variance. *Organizational
+Research Methods, 12*(4), 762–800.
+<https://doi.org/10.1177/1094428109332834>
 
 Rodriguez, A., Reise, S. P., & Haviland, M. G. (2016). Evaluating
 bifactor models: Calculating and interpreting statistical indices.
@@ -971,6 +1169,10 @@ Satorra, A., & Bentler, P. M. (2010). Ensuring positiveness of the
 scaled difference chi-square test statistic. *Psychometrika, 75*(2),
 243–248. <https://doi.org/10.1007/s11336-009-9135-y>
 
+Savalei, V. (2019). A comparison of several approaches for controlling
+measurement error in small samples. *Psychological Methods, 24*(3),
+352–370. <https://doi.org/10.1037/met0000181>
+
 Schafer, J. L., & Graham, J. W. (2002). Missing data: Our view of the
 state of the art. *Psychological Methods, 7*(2), 147–177.
 <https://doi.org/10.1037/1082-989X.7.2.147>
@@ -987,6 +1189,10 @@ Biopharmaceutics, 15*(6), 657–680. <https://doi.org/10.1007/BF01068419>
 Schwarz, G. (1978). Estimating the dimension of a model. *The Annals of
 Statistics, 6*(2), 461–464. <https://doi.org/10.1214/aos/1176344136>
 
+Shrout, P. E., & Fleiss, J. L. (1979). Intraclass correlations: Uses in
+assessing rater reliability. *Psychological Bulletin, 86*(2), 420–428.
+<https://doi.org/10.1037/0033-2909.86.2.420>
+
 Sijtsma, K. (2009). On the use, the misuse, and the very limited
 usefulness of Cronbach’s alpha. *Psychometrika, 74*(1), 107–120.
 <https://doi.org/10.1007/s11336-008-9101-0>
@@ -998,6 +1204,10 @@ allows presenting anything as significant. *Psychological Science,
 
 Skrondal, A., & Laake, P. (2001). Regression among factor scores.
 *Psychometrika, 66*(4), 563–575. <https://doi.org/10.1007/BF02296196>
+
+Spearman, C. (1904). The proof and measurement of association between
+two things. *The American Journal of Psychology, 15*(1), 72–101.
+<https://doi.org/10.2307/1412159>
 
 Svetina, D., Rutkowski, L., & Rutkowski, D. (2020). Multiple-group
 invariance with categorical outcomes using updated guidelines: An
@@ -1030,11 +1240,37 @@ Watkins, M. W. (2018). Exploratory factor analysis: A guide to best
 practice. *Journal of Black Psychology, 44*(3), 219–246.
 <https://doi.org/10.1177/0095798418771807>
 
+Weir, J. P. (2005). Quantifying test-retest reliability using the
+intraclass correlation coefficient and the SEM. *Journal of Strength and
+Conditioning Research, 19*(1), 231–240.
+<https://doi.org/10.1519/15184.1>
+
 Wicherts, J. M., Veldkamp, C. L. S., Augusteijn, H. E. M., Bakker, M.,
 van Aert, R. C. M., & van Assen, M. A. L. M. (2016). Degrees of freedom
 in planning, running, analyzing, and reporting psychological studies: A
 checklist to avoid p-hacking. *Frontiers in Psychology, 7*, 1832.
 <https://doi.org/10.3389/fpsyg.2016.01832>
+
+Widaman, K. F., Ferrer, E., & Conger, R. D. (2010). Factorial invariance
+within longitudinal structural equation models: Measuring the same
+construct across time. *Child Development Perspectives, 4*(1), 10–18.
+<https://doi.org/10.1111/j.1750-8606.2009.00110.x>
+
+Williams, L. J., Hartman, N., & Cavazotte, F. (2010). Method variance
+and marker variables: A review and comprehensive CFA marker technique.
+*Organizational Research Methods, 13*(3), 477–514.
+<https://doi.org/10.1177/1094428110366036>
+
+Williams, L. J., & Hazer, J. T. (1986). Antecedents and consequences of
+satisfaction and commitment in turnover models: A reanalysis using
+latent variable structural equation methods. *Journal of Applied
+Psychology, 71*(2), 219–231.
+<https://doi.org/10.1037/0021-9010.71.2.219>
+
+Wolf, E. J., Harrington, K. M., Clark, S. L., & Miller, M. W. (2013).
+Sample size requirements for structural equation models: An evaluation
+of power, bias, and solution propriety. *Educational and Psychological
+Measurement, 73*(6), 913–934. <https://doi.org/10.1177/0013164413495237>
 
 Wu, H., & Estabrook, R. (2016). Identification of confirmatory factor
 analysis models of different levels of invariance for ordered
