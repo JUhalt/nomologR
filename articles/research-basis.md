@@ -36,11 +36,11 @@ computational engine, and references.
 
 methods <- nomo_methods()
 nrow(methods)
-#> [1] 96
+#> [1] 98
 table(methods$stage, methods$lineage)
 #>              
 #>               contemporary emerging historical
-#>   cfa                   12        0          3
+#>   cfa                   14        0          3
 #>   compare                6        0          0
 #>   efa                    3        0          2
 #>   factors                7        1          4
@@ -130,7 +130,7 @@ question it answered. The tables below are drawn from
 so they cannot drift from what the package computes.
 
 A method is dated only from the publication that introduced it, and only
-when the registry cites that publication. 48 of the 96 methods are not
+when the registry cites that publication. 49 of the 98 methods are not
 yet dated, because the registry cites a later review or critique instead
 of the original. Adding those originating references is ongoing work.
 
@@ -170,6 +170,7 @@ knitr::kable(
 | 1989 | Partial invariance with documented releases | invariance | contemporary |
 | 1992 | RMSEA with confidence interval | cfa | contemporary |
 | 1993 | Configural, metric, scalar, and strict sequence | invariance | contemporary |
+| 1996 | Power of the RMSEA tests of close, not-close, and exact fit | cfa | contemporary |
 | 1999 | Fixed fit-index cutoffs | cfa | historical |
 | 2000 | Scaled-and-shifted difference test | compare | contemporary |
 | 2000 | Velicer revised MAP (fourth powers) | factors | contemporary |

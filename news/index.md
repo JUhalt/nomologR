@@ -2,6 +2,25 @@
 
 ## nomologR (development version)
 
+- Sample-size planning
+  ([\#129](https://github.com/JUhalt/nomologR/issues/129)).
+  - [`nomo_power_rmsea()`](https://juhalt.github.io/nomologR/reference/nomo_power_rmsea.md)
+    gives the power of MacCallum, Browne, and Sugawara’s (1996) RMSEA
+    tests of close, not-close, and exact fit, or the smallest N reaching
+    a target power. It reproduces their sample sizes (for example, 132
+    for close fit and 178 for not-close fit at 100 df). The degrees of
+    freedom come from a model string,
+    [`nomo_model()`](https://juhalt.github.io/nomologR/reference/nomo_model.md),
+    [`nomo_cfa()`](https://juhalt.github.io/nomologR/reference/nomo_cfa.md),
+    or lavaan fit.
+  - [`nomo_power_simulate()`](https://juhalt.github.io/nomologR/reference/nomo_power_simulate.md)
+    is Muthén and Muthén’s (2002) Monte Carlo approach. It generates
+    data from a population model with values, fits the analysis model at
+    each N, and reports convergence, improper solutions (Wolf et al.,
+    2013), parameter and standard-error bias, coverage, and power. It
+    also gives the smallest simulated N meeting their references: biases
+    within 10%, coverage .91 to .98, and power .80 for the focus
+    parameters.
 - New
   [`nomo_esem()`](https://juhalt.github.io/nomologR/reference/nomo_esem.md)
   fits a measurement model as exploratory structural equation modeling

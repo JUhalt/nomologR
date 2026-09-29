@@ -1331,6 +1331,10 @@ Confirmatory measurement model
 - [`nomo_method_variance()`](https://juhalt.github.io/nomologR/reference/nomo_method_variance.md)
   : Method variance from a marker variable: the comprehensive CFA marker
   technique
+- [`nomo_power_rmsea()`](https://juhalt.github.io/nomologR/reference/nomo_power_rmsea.md)
+  : Power of the RMSEA tests of model fit
+- [`nomo_power_simulate()`](https://juhalt.github.io/nomologR/reference/nomo_power_simulate.md)
+  : Monte Carlo power and sample size for a planned model
 - [`nomo_esem()`](https://juhalt.github.io/nomologR/reference/nomo_esem.md)
   : Exploratory structural equation modeling beside its CFA
 - [`nomo_model()`](https://juhalt.github.io/nomologR/reference/nomo_model.md)

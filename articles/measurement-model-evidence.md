@@ -1022,7 +1022,51 @@ recover the substantive correlations accurately (Richardson, Simmering,
 & Sturman, 2009). The results describe the method variance this marker
 captures. They are not corrected estimates, and a marker chosen only
 because it is unrelated, such as a demographic, may capture no method
-variance at all.
+variance at all. \# Planning the sample size
+
+Two questions about sample size have different answers. The first is
+whether the overall fit test can tell good fit from mediocre. MacCallum,
+Browne, and Sugawara (1996) answered it with power for tests of RMSEA,
+which depends mostly on the model’s degrees of freedom:
+
+``` r
+
+nomo_power_rmsea(nomo_model(list(A = paste0("a", 1:4), B = paste0("b", 1:4))))
+```
+
+    ## <nomo_power> Power of the test of close fit
+    ## df: 19 | RMSEA: null 0.05, alternative 0.08 | alpha: 0.05
+    ##   Smallest N for power 0.8: 453.
+    ## 
+    ## Power by sample size
+    ##     N  Power
+    ##   453  0.801
+    ## 
+    ## MacCallum, Browne, & Sugawara (1996). This is power for the overall fit test,
+    ## not for any one parameter; nomo_power_simulate() gives that.
+
+The second is whether the parameters you care about will be estimated
+well enough, and detected. Muthén and Muthén (2002) answered it by
+simulation: generate data from the model you expect, fit the model you
+will use, and see how the estimates behave at each sample size. They
+suggest the N at which parameter and standard-error biases stay within
+10%, coverage stays between .91 and .98, and power for the key parameter
+reaches .80.
+
+``` r
+
+population <- "
+  A =~ 0.7*a1 + 0.7*a2 + 0.6*a3 + 0.5*a4
+  B =~ 0.7*b1 + 0.6*b2 + 0.6*b3 + 0.5*b4
+  A ~~ 0.3*B
+"
+nomo_power_simulate(population, n = c(100, 150, 200, 300), reps = 500,
+                    focus = "A~~B", seed = 2026)
+```
+
+Wolf, Harrington, Clark, and Miller (2013) found that the N a model
+needs ranges widely with its structure, so no rule of thumb, such as 200
+cases or ten per parameter, replaces the simulation.
 
 ## Reading the evidence as an argument
 
