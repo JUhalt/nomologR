@@ -1193,7 +1193,7 @@ nomo_run(responses, scales = h)    # runs the empirical stage on the handoff's s
 only added, and nomologR ignores fields it does not know. A schema
 version nomologR does not read is refused, with both packages’ versions
 named. The reader is tested against handoffs from `contentvalidR` 0.6.0
-through 0.10.0. They are generated from each release tag and stored with
+through 0.10.1. They are generated from each release tag and stored with
 their checksums, and neither package depends on the other.
 
 For more, see: -
