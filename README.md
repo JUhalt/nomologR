@@ -1045,10 +1045,10 @@ deprecation period. Its scope is set in
 article on the shared item set is done
 ([\#60](https://github.com/JUhalt/nomologR/issues/60)).
 
-Larger extensions, such as ESEM, IRT/DIF, Bayesian SEM, longitudinal
-invariance, and multiple imputation, are candidates for `1.x`. They are
-additive, so they do not need to precede the freeze. None was rejected,
-and none is a commitment until selected.
+Larger extensions, such as IRT/DIF, Bayesian SEM, multiple imputation, and
+formative models, are candidates for `1.x`. They are additive, so they do
+not need to precede the freeze. None was rejected, and none is a
+commitment until selected.
 
 ### Completed: `v0.1.0`
 

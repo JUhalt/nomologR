@@ -178,8 +178,8 @@ The next release, `v1.0.0`, is planned together with
 [`contentvalidR`](https://github.com/JUhalt/contentvalidR), which covers the
 content-review stage before this package's. At 1.0.0 both packages' interfaces
 become stable, and the handoff between them becomes a supported contract.
-Larger extensions, such as ESEM, IRT, and longitudinal invariance, are
-candidates for later 1.x releases. See the
+Larger extensions, such as IRT, multiple imputation, and formative models,
+are candidates for later 1.x releases. See the
 [roadmap](https://github.com/JUhalt/nomologR/blob/master/ROADMAP.md) and the
 [v1.0.0 milestone](https://github.com/JUhalt/nomologR/milestone/5).
 

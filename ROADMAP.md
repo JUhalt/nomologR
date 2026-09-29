@@ -253,6 +253,17 @@ can wait for 1.x.
     at the release candidate.
 - [x] [#113](https://github.com/JUhalt/nomologR/issues/113) APA tables for
   convergent and discriminant evidence (#124).
+- [ ] [#129](https://github.com/JUhalt/nomologR/issues/129) The gap review:
+  what social-science scale developers need before 1.0, each method taken from
+  its literature. All are additive.
+  - [x] Reliability-corrected single indicators for observed composites (#131).
+  - [x] Test-retest reliability, measurement error, and reliable change (#132).
+  - [x] Latent means as known-groups evidence (#133).
+  - [x] Common method variance: the comprehensive CFA marker technique (#134).
+  - [x] ESEM beside its CFA (#136).
+  - [ ] Sample-size planning: RMSEA power and Monte Carlo power (#135).
+  - [ ] Longitudinal measurement invariance and latent change (#137).
+  - [x] A scope note: every analysis assumes reflective measurement.
 - [ ] [#39](https://github.com/JUhalt/nomologR/issues/39) The CRAN outcome for
   0.3.0, which is in CRAN's queue for new submissions. `contentvalidR` 0.4.0
   was accepted on 2026-09-28, which starts its update interval.
@@ -270,18 +281,24 @@ can wait for 1.x.
 **Status:** Candidates for releases after 1.0.0, all additive. They were
 deferred from v0.3.0 ([#38](https://github.com/JUhalt/nomologR/issues/38)) and
 again from 1.0.0 ([#113](https://github.com/JUhalt/nomologR/issues/113)). None
-was rejected. Candidates are not commitments until selected.
+was rejected. Candidates are not commitments until selected. ESEM,
+longitudinal invariance, and sample-size planning moved into 1.0.0 with the gap
+review ([#129](https://github.com/JUhalt/nomologR/issues/129)), which also
+added formative models, measurement invariance by alignment, latent
+interactions, and multitrait-multimethod models to this list.
 
-- [ ] ESEM. lavaan already fits it, so it needs no new dependency, which makes it a natural first candidate.
-- [ ] Longitudinal invariance.
 - [ ] Multiple-imputation integration. `nomo_missing()` covers listwise, FIML, and pairwise sensitivity meanwhile.
 - [ ] Bootstrap stability summaries.
-- [ ] CFA/SEM sample-size and power planning.
 - [ ] Criterion/predictive evidence beyond network outcomes.
 - [ ] IRT as a complementary item-level framework, and DIF.
 - [ ] Bayesian CFA/SEM (`blavaan`) robustness module, posterior predictive checking, and frequentist/Bayesian concordance summaries; with it, content-validity evidence as informative priors ([#49](https://github.com/JUhalt/nomologR/issues/49)).
 - [ ] Additional equivalence/SESOI functionality beyond v0.1's researcher-specified negligible regions. No SESOI is invented by the package.
 - [ ] Model-specific fit diagnostics ([#23](https://github.com/JUhalt/nomologR/issues/23)).
+- [ ] Formative (causal-indicator) measurement models. Until then, the scope
+  note in Get started says why the reflective tools do not apply to them.
+- [ ] Measurement invariance across many groups by alignment.
+- [ ] Latent interactions.
+- [ ] Multitrait-multimethod models.
 
 ***
 # Distribution — R-universe, and CRAN from v0.3.0
