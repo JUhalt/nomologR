@@ -2,6 +2,28 @@
 
 ## nomologR (development version)
 
+- New
+  [`nomo_method_variance()`](https://juhalt.github.io/nomologR/reference/nomo_method_variance.md)
+  for common method variance, following Williams, Hartman, and
+  Cavazotte’s (2010) comprehensive CFA marker technique
+  ([\#129](https://github.com/JUhalt/nomologR/issues/129)). Given a
+  measurement model and the indicators of a marker variable, it runs the
+  three phases the authors specify:
+  - **Model comparisons.** It fits the CFA, Baseline, Method-C,
+    Method-U, and Method-R models, and compares them to test whether
+    marker-based method variance is present, whether its effects are
+    equal, and whether it biases the substantive correlations.
+  - **Reliability decomposition.** It splits each factor’s reliability
+    into substantive and method parts.
+  - **Sensitivity.** It fits the Method-S(.05) and Method-S(.01) models,
+    with the method loadings at the upper ends of their intervals.
+
+  The log explains what the marker must be: theoretically unrelated to
+  the constructs, and tapping the biases the measurement context
+  invites. It also says what the technique cannot do. With a nonideal
+  marker it can find method variance that is absent, and it does not
+  recover substantive correlations accurately (Richardson, Simmering, &
+  Sturman, 2009). The measurement-evidence article works an example.
 - [`nomo_invariance()`](https://juhalt.github.io/nomologR/reference/nomo_invariance.md)
   reports latent means, which are known-groups evidence in
   structured-means form

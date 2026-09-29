@@ -1,0 +1,229 @@
+# Method variance from a marker variable: the comprehensive CFA marker technique
+
+`nomo_method_variance()` tests whether a marker variable carries method
+variance into a measurement model's indicators, whether that variance
+biases the correlations among the substantive factors, and how much of
+each factor's reliability it accounts for. It follows the comprehensive
+CFA marker technique of Williams, Hartman, and Cavazotte (2010).
+
+## Usage
+
+``` r
+nomo_method_variance(
+  model,
+  data,
+  marker,
+  alpha = 0.05,
+  estimator = NULL,
+  missing = NULL,
+  marker_name = "Marker"
+)
+```
+
+## Arguments
+
+- model:
+
+  A lavaan measurement model for the substantive factors, as a string or
+  a
+  [`nomo_model()`](https://juhalt.github.io/nomologR/reference/nomo_model.md)
+  object. Indicators load on one factor each.
+
+- data:
+
+  A data frame holding the substantive and marker indicators.
+
+- marker:
+
+  The marker variable's indicators: two or more numeric column names
+  that `model` does not use.
+
+- alpha:
+
+  Significance level for the model comparisons. Default `.05`.
+
+- estimator, missing:
+
+  Optional lavaan `estimator` and `missing` options. With a robust
+  estimator, the comparisons use lavaan's scaled difference tests.
+
+- marker_name:
+
+  Name given to the marker factor. Default `"Marker"`.
+
+## Value
+
+A `nomo_method_variance` object. The fields to read are:
+
+- `models`: each model's chi-square, degrees of freedom, CFI, RMSEA, and
+  SRMR.
+
+- `comparisons`: the three model comparisons, with their chi-square
+  differences and p-values.
+
+- `retained`: `"Method-C"` or `"Method-U"`.
+
+- `method_loadings`: each substantive indicator's standardized
+  substantive and method loadings in the retained model, the share of
+  its variance the marker accounts for, and the method loading's
+  p-value.
+
+- `reliability`: each substantive factor's Baseline reliability, its
+  substantive and method parts, and `method_share`.
+
+- `correlations`: each pair of substantive factors' correlation in the
+  CFA, Baseline, retained, Method-S(.05), and Method-S(.01) models, with
+  p-values in the retained and sensitivity models.
+
+- `marker_correlations`: the marker's correlations with the substantive
+  factors in the CFA model.
+
+- `fits` and `decision_log`.
+
+Other fields record the call, the settings used, and the syntax fitted.
+They may change between releases and are not part of the stable
+interface (see
+[`?nomologR`](https://juhalt.github.io/nomologR/reference/nomologR-package.md)).
+
+## Details
+
+**The marker.** A marker variable is theoretically unrelated to the
+substantive variables, so what it shares with them is taken to be method
+variance (Lindell & Whitney, 2001). Williams et al. (2010) expand the
+definition: a marker should also tap one or more of the biases present
+in the measurement context, such as social desirability, transient mood,
+or common scale anchors (Podsakoff et al., 2003). A marker chosen only
+because it is unrelated, such as a demographic, may capture no method
+variance at all. The marker is measured by two or more indicators, three
+or more by the authors' recommendation.
+
+**Phase I: model comparisons.** Five models are fitted with
+`lavaan::cfa(std.lv = TRUE)`:
+
+1.  *CFA*: the substantive factors and the marker factor, all
+    correlated, with no method loadings. It supplies the marker
+    indicators' loadings and error variances.
+
+2.  *Baseline*: those loadings and error variances fixed at their CFA
+    values, so the marker factor keeps its meaning, and the marker made
+    orthogonal to the substantive factors.
+
+3.  *Method-C*: Baseline plus a loading from the marker on every
+    substantive indicator, constrained equal.
+
+4.  *Method-U*: the same loadings, free to differ.
+
+5.  *Method-R*: the retained method model with the substantive factor
+    correlations fixed at their Baseline values.
+
+Baseline versus Method-C tests whether marker-based method variance is
+present. Method-C versus Method-U tests whether its effects are equal,
+and decides which method model is retained. The retained model versus
+Method-R tests whether the method variance biases the substantive
+correlations. Each comparison is a likelihood-ratio test at `alpha`.
+
+**Phase II: reliability decomposition.** From the completely
+standardized estimates, each substantive factor's reliability in the
+Baseline model is decomposed, using the retained method model, into a
+substantive part and a method part (Williams et al., 2010, equations
+1-3). `method_share` is the method part as a proportion of the Baseline
+reliability.
+
+**Phase III: sensitivity.** Because the method loadings are estimates,
+the retained model is refitted with them fixed at the upper ends of
+their 95% and 99% confidence intervals (Method-S(.05) and
+Method-S(.01)), and the substantive correlations are compared across the
+models.
+
+**What the technique cannot do.** It requires the marker to be
+orthogonal to the substantive factors. In simulations, with an ideal
+marker it did not find method variance that was absent. With a nonideal
+marker it sometimes did, and with either kind it did not recover the
+substantive correlations accurately (Richardson, Simmering, & Sturman,
+2009). The results are evidence about the method variance the chosen
+marker captures, not corrected estimates, and other sources of method
+variance may remain (Podsakoff, MacKenzie, & Podsakoff, 2012).
+
+## References
+
+Lindell, M. K., & Whitney, D. J. (2001). Accounting for common method
+variance in cross-sectional research designs. *Journal of Applied
+Psychology, 86*(1), 114-121.
+[doi:10.1037/0021-9010.86.1.114](https://doi.org/10.1037/0021-9010.86.1.114)
+
+Podsakoff, P. M., MacKenzie, S. B., Lee, J.-Y., & Podsakoff, N. P.
+(2003). Common method biases in behavioral research: A critical review
+of the literature and recommended remedies. *Journal of Applied
+Psychology, 88*(5), 879-903.
+[doi:10.1037/0021-9010.88.5.879](https://doi.org/10.1037/0021-9010.88.5.879)
+
+Podsakoff, P. M., MacKenzie, S. B., & Podsakoff, N. P. (2012). Sources
+of method bias in social science research and recommendations on how to
+control it. *Annual Review of Psychology, 63*, 539-569.
+[doi:10.1146/annurev-psych-120710-100452](https://doi.org/10.1146/annurev-psych-120710-100452)
+
+Richardson, H. A., Simmering, M. J., & Sturman, M. C. (2009). A tale of
+three perspectives: Examining post hoc statistical techniques for
+detection and correction of common method variance. *Organizational
+Research Methods, 12*(4), 762-800.
+[doi:10.1177/1094428109332834](https://doi.org/10.1177/1094428109332834)
+
+Williams, L. J., Hartman, N., & Cavazotte, F. (2010). Method variance
+and marker variables: A review and comprehensive CFA marker technique.
+*Organizational Research Methods, 13*(3), 477-514.
+[doi:10.1177/1094428110366036](https://doi.org/10.1177/1094428110366036)
+
+## Examples
+
+``` r
+# \donttest{
+# Two substantive factors and a marker, all sharing a method factor
+# (simulated).
+population <- "
+  A =~ 0.7*a1 + 0.7*a2 + 0.6*a3 + 0.6*a4
+  B =~ 0.7*b1 + 0.6*b2 + 0.6*b3 + 0.5*b4
+  M =~ 0.7*m1 + 0.7*m2 + 0.6*m3
+  CMV =~ 0.3*a1 + 0.3*a2 + 0.3*a3 + 0.3*a4 + 0.3*b1 + 0.3*b2 + 0.3*b3 +
+         0.3*b4 + 0.3*m1 + 0.3*m2 + 0.3*m3
+  A ~~ 0.4*B
+  A ~~ 0*M
+  B ~~ 0*M
+  CMV ~~ 0*A + 0*B + 0*M
+"
+set.seed(2010)
+dat <- lavaan::simulateData(population, sample.nobs = 600, standardized = TRUE)
+mv <- nomo_method_variance(
+  "A =~ a1 + a2 + a3 + a4\nB =~ b1 + b2 + b3 + b4",
+  data = dat, marker = c("m1", "m2", "m3")
+)
+mv
+#> <nomo_method_variance> Marker-based method variance
+#> Marker: m1, m2, m3 | N = 600 | Retained: Method-C
+#> 
+#> Model comparisons
+#>   Comparison             Chi-square diff.  df       p
+#>   Baseline vs. Method-C             11.84   1  < .001
+#>   Method-C vs. Method-U              2.79   7    .904
+#>   Method-C vs. Method-R              0.07   1    .791
+#> 
+#> Reliability decomposition
+#>   Factor  Total  Substantive  Method  Method share
+#>   A       0.811        0.795   0.017  2.0%
+#>   B       0.776        0.759   0.016  2.1%
+#> 
+#> Substantive correlations
+#>   Factors     CFA  Baseline  Retained  S(.05)  S(.01)
+#>   A with B  0.436     0.436     0.424   0.424   0.425
+#> 
+#> Comprehensive CFA marker technique (Williams, Hartman, & Cavazotte, 2010). The
+#> results describe the method variance this marker captures; they are not
+#> corrected estimates, and other sources of method variance may remain.
+nomo_table(mv, "reliability")
+#> # A tibble: 2 × 5
+#>   factor reliability_total reliability_substantive reliability_method
+#>   <chr>              <dbl>                   <dbl>              <dbl>
+#> 1 A                  0.811                   0.795             0.0165
+#> 2 B                  0.776                   0.759             0.0162
+#> # ℹ 1 more variable: method_share <dbl>
+# }
+```

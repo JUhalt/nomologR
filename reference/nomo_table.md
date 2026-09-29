@@ -76,6 +76,10 @@ default.
   `"decision_log"`; see
   [`nomo_retest()`](https://juhalt.github.io/nomologR/reference/nomo_retest.md).
 
+- `nomo_method_variance`: `"comparisons"` (default), `"models"`,
+  `"loadings"`, `"reliability"`, `"correlations"`, `"decision_log"`; see
+  [`nomo_method_variance()`](https://juhalt.github.io/nomologR/reference/nomo_method_variance.md).
+
 - `nomo_invariance`: `"fit"` (default), `"categories"`, `"partial"`,
   `"local_strain"`, `"latent_means"`, `"decision_log"`. The local-strain
   table keeps lavaan's internal `constraint` label and adds a
