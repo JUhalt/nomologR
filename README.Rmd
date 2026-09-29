@@ -1121,7 +1121,7 @@ The current development source is licensed under the **GNU General Public
 License, version 3 only (SPDX: GPL-3.0-only)**. See [LICENSE.md](https://github.com/JUhalt/nomologR/blob/master/LICENSE.md) and
 the preserved attribution in [inst/NOTICE](https://github.com/JUhalt/nomologR/blob/master/inst/NOTICE).
 
-Previously published releases, including `0.1.0`, retain their original MIT
-license. Stable installation currently retrieves that release; the next
-published release will carry GPL version 3 only. This source transition does
-not relabel existing tags or release artifacts.
+Releases from `0.2.0` on, including the current stable release, carry GPL
+version 3 only, as the `License: GPL-3` field in `DESCRIPTION` records. The
+published `0.1.0` release retains its original MIT license; the change of
+license does not relabel existing tags or release artifacts.
