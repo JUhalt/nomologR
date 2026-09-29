@@ -907,12 +907,13 @@ records the reliability, here omega from the composite’s own measurement
 model:
 
 ``` r
-dat$persistence <- rowMeans(dat[c("pe1", "pe2", "pe3", "pe4")])
-rel <- nomo_reliability(nomo_cfa("Persistence =~ pe1 + pe2 + pe3 + pe4", dat))
+net_data <- nomo_demo_network
+net_data$persistence <- rowMeans(net_data[c("pe1", "pe2", "pe3", "pe4")])
+rel <- nomo_reliability(nomo_cfa("Persistence =~ pe1 + pe2 + pe3 + pe4", net_data))
 
 net_si <- nomo_network(
   "Agency =~ ag1 + ag2 + ag3 + ag4",
-  data = dat,
+  data = net_data,
   hypotheses = nomo_hypotheses("Agency -> persistence" = positive(min = .20)),
   single_indicators = list(persistence = nomo_single_indicator(rel))
 )
