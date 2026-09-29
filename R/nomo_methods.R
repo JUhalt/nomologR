@@ -576,6 +576,15 @@ nomo_bibliography <- function() {
       "10.1177/2515245918770963"
     ),
     nomo_bib_entry(
+      "lindell_whitney_2001", "Lindell & Whitney (2001)",
+      paste(
+        "Lindell, M. K., & Whitney, D. J. (2001). Accounting for common method",
+        "variance in cross-sectional research designs. Journal of Applied",
+        "Psychology, 86(1), 114-121."
+      ),
+      "10.1037/0021-9010.86.1.114"
+    ),
+    nomo_bib_entry(
       "lorenzoseva_2011", "Lorenzo-Seva, Timmerman, & Kiers (2011)",
       paste(
         "Lorenzo-Seva, U., Timmerman, M. E., & Kiers, H. A. L. (2011). The Hull",
@@ -713,6 +722,25 @@ nomo_bibliography <- function() {
       "10.1080/10705511.2013.797820"
     ),
     nomo_bib_entry(
+      "podsakoff_2003", "Podsakoff, MacKenzie, Lee, & Podsakoff (2003)",
+      paste(
+        "Podsakoff, P. M., MacKenzie, S. B., Lee, J.-Y., & Podsakoff, N. P.",
+        "(2003). Common method biases in behavioral research: A critical review",
+        "of the literature and recommended remedies. Journal of Applied",
+        "Psychology, 88(5), 879-903."
+      ),
+      "10.1037/0021-9010.88.5.879"
+    ),
+    nomo_bib_entry(
+      "podsakoff_2012", "Podsakoff, MacKenzie, & Podsakoff (2012)",
+      paste(
+        "Podsakoff, P. M., MacKenzie, S. B., & Podsakoff, N. P. (2012). Sources",
+        "of method bias in social science research and recommendations on how",
+        "to control it. Annual Review of Psychology, 63, 539-569."
+      ),
+      "10.1146/annurev-psych-120710-100452"
+    ),
+    nomo_bib_entry(
       "putnick_bornstein_2016", "Putnick & Bornstein (2016)",
       paste(
         "Putnick, D. L., & Bornstein, M. H. (2016). Measurement invariance",
@@ -756,6 +784,16 @@ nomo_bibliography <- function() {
         "conditions. Psychological Methods, 17(3), 354-373."
       ),
       "10.1037/a0029315"
+    ),
+    nomo_bib_entry(
+      "richardson_2009", "Richardson, Simmering, & Sturman (2009)",
+      paste(
+        "Richardson, H. A., Simmering, M. J., & Sturman, M. C. (2009). A tale",
+        "of three perspectives: Examining post hoc statistical techniques for",
+        "detection and correction of common method variance. Organizational",
+        "Research Methods, 12(4), 762-800."
+      ),
+      "10.1177/1094428109332834"
     ),
     nomo_bib_entry(
       "rodriguez_2016", "Rodriguez, Reise, & Haviland (2016)",
@@ -979,6 +1017,15 @@ nomo_bibliography <- function() {
         "checklist to avoid p-hacking. Frontiers in Psychology, 7, 1832."
       ),
       "10.3389/fpsyg.2016.01832"
+    ),
+    nomo_bib_entry(
+      "williams_2010", "Williams, Hartman, & Cavazotte (2010)",
+      paste(
+        "Williams, L. J., Hartman, N., & Cavazotte, F. (2010). Method variance",
+        "and marker variables: A review and comprehensive CFA marker technique.",
+        "Organizational Research Methods, 13(3), 477-514."
+      ),
+      "10.1177/1094428110366036"
     ),
     nomo_bib_entry(
       "williams_hazer_1986", "Williams & Hazer (1986)",
@@ -1611,6 +1658,25 @@ nomo_methods_registry <- function() {
       ),
       "nomo_power_simulate()", "lavaan",
       c("muthen_2002", "wolf_2013")
+    ),
+    nomo_method_entry(
+      "cfa_marker_technique", "cfa",
+      "Comprehensive CFA marker technique for method variance",
+      "contemporary", "supporting",
+      paste(
+        "Method variance a marker variable carries into a measurement model's",
+        "indicators, whether it biases the substantive correlations, and its",
+        "share of each factor's reliability."
+      ),
+      paste(
+        "Assumes the marker is theoretically unrelated to, and orthogonal to,",
+        "the substantive factors and taps biases in the measurement context;",
+        "with a nonideal marker it can detect method variance that is absent,",
+        "and it does not recover substantive correlations accurately."
+      ),
+      "nomo_method_variance()", "lavaan",
+      c("williams_2010", "lindell_whitney_2001", "podsakoff_2003",
+        "podsakoff_2012", "richardson_2009")
     ),
 
     # Stage 5: reliability ----------------------------------------------------
@@ -2264,6 +2330,7 @@ nomo_methods_history <- function() {
     c("ml_cfa", "joreskog_1969", NA),
     c("rmsea_power", "maccallum_1996", NA),
     c("monte_carlo_power", NA, NA),
+    c("cfa_marker_technique", "williams_2010", NA),
     c("chisq_exact_fit", "joreskog_1969", "incremental_fit; rmsea_interval; srmr; local_strain"),
     c("incremental_fit", "bentler_bonett_1980", NA),
     c("rmsea_interval", "browne_cudeck_1992", NA),

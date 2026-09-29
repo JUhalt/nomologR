@@ -39,6 +39,7 @@ reference:
       - plot.nomo_efa
   - title: "3. Confirmatory measurement model"
     contents:
+      - nomo_method_variance
       - nomo_power_rmsea
       - nomo_power_simulate
       - nomo_model
