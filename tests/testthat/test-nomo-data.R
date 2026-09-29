@@ -33,6 +33,13 @@ test_that("teaching datasets have the documented structure", {
   expect_identical(levels(nomo_demo_network$group), c("online", "paper"))
   expect_identical(as.vector(table(nomo_demo_network$group)), c(400L, 400L))
   expect_false(anyNA(nomo_demo_network))
+
+  expect_identical(dim(nomo_demo_longitudinal), c(500L, 12L))
+  expect_identical(
+    names(nomo_demo_longitudinal),
+    paste0(rep(paste0("w", 1:4), 3L), "_", rep(c("t1", "t2", "t3"), each = 4L))
+  )
+  expect_false(anyNA(nomo_demo_longitudinal))
 })
 
 
@@ -127,6 +134,29 @@ test_that("network teaching data localize the known scalar non-invariance", {
   top <- summary(inv)$top_local_strain
   expect_false(is.unsorted(rev(top$score_x2)))
   expect_match(top$constraint_display[[1L]], "Intercept: ag3", fixed = TRUE)
+})
+
+
+test_that("longitudinal teaching data localize the drifting intercept and recover the change", {
+  skip_on_cran()
+  release <- nomo_partial(
+    level = "scalar", syntax = "w3 ~ 1",
+    rationale = "The documented drift in the w3 intercept."
+  )
+  long <- nomo_invariance_longitudinal(
+    "Wellbeing =~ w1 + w2 + w3 + w4",
+    data = nomo_demo_longitudinal,
+    occasions = c("t1", "t2", "t3"),
+    levels = c("configural", "metric", "scalar"),
+    partial = release
+  )
+  expect_gt(long$fit_evidence$lrt_p[long$fit_evidence$level == "scalar"], .05)
+  means <- long$latent_means
+  expect_equal(means$estimate, c(.30, .50), tolerance = .10)
+
+  loadings <- lavaan::standardizedSolution(long$fits$configural)
+  t1 <- loadings[loadings$op == "=~" & loadings$lhs == "Wellbeing_t1", "est.std"]
+  expect_equal(t1, c(.80, .75, .70, .65), tolerance = .10)
 })
 
 
