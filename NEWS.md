@@ -1,5 +1,9 @@
 # nomologR (development version)
 
+- New `nomo_esem()` fits a measurement model as exploratory structural equation modeling (ESEM) beside its CFA (#129). Every item may load on every factor, so the cross-loadings a CFA fixes at zero are estimated, and the model still gives fit and standard errors (Asparouhov & Muthén, 2009).
+  - **Rotation.** By default it uses the target rotation Marsh, Morin, Parker, and Kaur (2014) recommend for an a priori structure (Browne, 2001): each item's own loading is free and its cross-loadings are rotated towards zero. Geomin is available too.
+  - **The comparison.** It reports both models' fit, their factor correlations and the change between them, and their likelihood-ratio test. The ESEM is flagged for review when it fits better on TLI and RMSEA, which penalize its extra parameters; lower ESEM factor correlations then show that the CFA's zero cross-loadings are inflating them. Cross-loadings at or above `efa_crossloading_reference` and main loadings below `efa_loading_reference` are flagged as evidence about items, not instructions.
+  - **Other outputs.** `print()`, `summary()`, `nomo_table()`, `nomo_methods()`, and a section in the measurement-evidence article, where ESEM finds both features built into `nomo_demo_continuous`.
 - New `nomo_method_variance()` for common method variance, following Williams, Hartman, and Cavazotte's (2010) comprehensive CFA marker technique (#129). Given a measurement model and the indicators of a marker variable, it runs the three phases the authors specify:
   - **Model comparisons.** It fits the CFA, Baseline, Method-C, Method-U, and Method-R models, and compares them to test whether marker-based method variance is present, whether its effects are equal, and whether it biases the substantive correlations.
   - **Reliability decomposition.** It splits each factor's reliability into substantive and method parts.

@@ -385,6 +385,40 @@ an item is statistically related to its factor, whether it is a strong
 indicator, and how the score's reliability changes without it. None of them
 alone decides whether the item stays.
 
+## Every cross-loading at once: ESEM
+
+The comparison above freed one cross-loading because the results pointed to it.
+Exploratory structural equation modeling (ESEM) estimates all of them, in a
+model that still gives fit and standard errors (Asparouhov & Muthén, 2009).
+With an a priori structure, Marsh, Morin, Parker, and Kaur (2014) recommend
+target rotation: each item loads freely on its own factor, and its
+cross-loadings are rotated towards zero without being fixed there.
+`nomo_esem()` fits the ESEM beside the CFA of the same model:
+
+```{r esem}
+esem <- nomo_esem(demo_model, data = nomo_demo_continuous)
+summary(esem)
+```
+
+```{r esem-values, include=FALSE}
+ef <- esem$fit
+ec <- esem$factor_correlations
+```
+
+The ESEM fits better even on TLI and RMSEA, which penalize its extra
+parameters (TLI `r sprintf("%.3f", ef$tli[[1]])` vs.
+`r sprintf("%.3f", ef$tli[[2]])`, RMSEA `r sprintf("%.3f", ef$rmsea[[1]])` vs.
+`r sprintf("%.3f", ef$rmsea[[2]])`). Without being told where to look, its
+loadings show both features built into these data: `a5` cross-loads on B, and
+`b5` is weak. The factor correlation barely moves
+(`r sprintf("%.2f", ec$esem)` vs. `r sprintf("%.2f", ec$cfa)`), so here the
+zero cross-loadings cost the CFA fit without distorting the relation between
+the factors. When items of related constructs share many small cross-loadings,
+the CFA pushes them into the factor correlations instead, and a lower ESEM
+correlation is the evidence Marsh et al. (2014) weigh in preferring it. The
+solution depends on the rotation, and whether `a5` belongs to both constructs
+is still a question about its content.
+
 # Does a result depend on how missing data were handled?
 
 `demo_cfa` used lavaan's default, listwise deletion, which analyses only the
@@ -620,6 +654,9 @@ is prioritized because simulation research shows that older criteria can miss ov
 because it relaxes the original HTMT tau-equivalence assumption (Roemer, Schuberth, &
 Henseler, 2021). Fornell-Larcker output remains available only as optional historical/
 supporting information.
+
+ESEM follows Asparouhov and Muthén (2009), with the target rotation Marsh et
+al. (2014) recommend for an a priori structure (Browne, 2001).
 
 Method variance follows Williams, Hartman, and Cavazotte's (2010) comprehensive
 CFA marker technique, building on Lindell and Whitney (2001), with the limits

@@ -49,6 +49,8 @@ the latent correlation and the HTMT-family values together; see
 composites modeled as single indicators; see \code{\link[=nomo_network]{nomo_network()}}.
 \item \code{nomo_retest}: \code{"icc"} (default), \code{"reliable_change"}, \code{"decision_log"};
 see \code{\link[=nomo_retest]{nomo_retest()}}.
+\item \code{nomo_esem}: \code{"loadings"} (default), \code{"factor_correlations"},
+\code{"fit"}, \code{"comparison"}, \code{"decision_log"}; see \code{\link[=nomo_esem]{nomo_esem()}}.
 \item \code{nomo_method_variance}: \code{"comparisons"} (default), \code{"models"},
 \code{"loadings"}, \code{"reliability"}, \code{"correlations"}, \code{"decision_log"}; see
 \code{\link[=nomo_method_variance]{nomo_method_variance()}}.
