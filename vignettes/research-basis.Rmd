@@ -786,6 +786,11 @@ Lindell, M. K., & Whitney, D. J. (2001). Accounting for common method variance
 in cross-sectional research designs. *Journal of Applied Psychology, 86*(1),
 114–121. https://doi.org/10.1037/0021-9010.86.1.114
 
+Liu, Y., Millsap, R. E., West, S. G., Tein, J.-Y., Tanaka, R., & Grimm, K. J.
+(2017). Testing measurement invariance in longitudinal data with
+ordered-categorical measures. *Psychological Methods, 22*(3), 486–506.
+https://doi.org/10.1037/met0000075
+
 Lorenzo-Seva, U., Timmerman, M. E., & Kiers, H. A. L. (2011). The Hull method
 for selecting the number of common factors. *Multivariate Behavioral Research,
 46*(2), 340–364. https://doi.org/10.1080/00273171.2011.564527
@@ -1003,6 +1008,11 @@ Aert, R. C. M., & van Assen, M. A. L. M. (2016). Degrees of freedom in
 planning, running, analyzing, and reporting psychological studies: A checklist
 to avoid p-hacking. *Frontiers in Psychology, 7*, 1832.
 https://doi.org/10.3389/fpsyg.2016.01832
+
+Widaman, K. F., Ferrer, E., & Conger, R. D. (2010). Factorial invariance
+within longitudinal structural equation models: Measuring the same construct
+across time. *Child Development Perspectives, 4*(1), 10–18.
+https://doi.org/10.1111/j.1750-8606.2009.00110.x
 
 Williams, L. J., Hartman, N., & Cavazotte, F. (2010). Method variance and marker
 variables: A review and comprehensive CFA marker technique. *Organizational
