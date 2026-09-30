@@ -91,7 +91,10 @@ The teaching datasets are:
   groups with a known source of non-invariance;
 - `nomo_demo_walkthrough`: twelve items reviewed by an expert panel in
   `contentvalidR`, built so that content review and the empirical screen
-  disagree.
+  disagree;
+- `nomo_demo_longitudinal`: four items answered by the same people on
+  three occasions, with a rising latent mean and one item whose
+  intercept drifts after the first occasion.
 
 ``` r
 library(nomologR)
@@ -265,8 +268,8 @@ It should never say:
 Under `correlation = "auto"`, continuous, binary, ordinal, and genuinely
 mixed item sets are routed to Pearson, tetrachoric, polychoric, or mixed
 correlations as appropriate. The selected method and modeling
-assumptions are also exposed through the convenience fields
-`fac$correlation` and `fac$modeling_types`.
+assumptions are also exposed through the fields `fac$correlation_method`
+and `fac$item_types`.
 
 When EKC is used with a non-Pearson correlation matrix, `nomologR` keeps
 the criterion available but surfaces an explicit qualification that its
@@ -321,7 +324,7 @@ fac_factor <- nomo_factors(
   )
 )
 
-fac_factor$modeling_types
+fac_factor$item_types
 fac_factor$decision_log
 ```
 
@@ -597,6 +600,75 @@ To test whether an item is needed, fix its loading to zero instead of
 dropping the column: models with different observed variables describe
 different data, so they receive descriptive evidence only.
 
+#### Every cross-loading at once: ESEM
+
+`nomo_esem()` fits the same factors as exploratory structural equation
+modeling (ESEM) beside the CFA. Every item may load on every factor, so
+the cross-loadings a CFA fixes at zero are estimated, and fit and
+standard errors remain available (Asparouhov & Muthén, 2009). By default
+the rotation targets the prespecified structure, as Marsh, Morin,
+Parker, and Kaur (2014) recommend:
+
+``` r
+esem <- nomo_esem(model, data = dat2)
+summary(esem)
+nomo_table(esem, "factor_correlations")  # ESEM and CFA side by side
+```
+
+The two models are compared on TLI and RMSEA, which penalize the ESEM’s
+extra parameters, and by their likelihood-ratio test. Lower ESEM factor
+correlations show that the CFA’s zero cross-loadings are inflating them.
+Flagged cross-loadings are evidence about items, not instructions.
+
+#### Method variance from a marker variable
+
+`nomo_method_variance()` follows Williams, Hartman, and Cavazotte’s
+(2010) comprehensive CFA marker technique. The marker should be
+theoretically unrelated to the constructs and tap the biases of the
+measurement context. Given its indicators, the function tests whether
+marker-based method variance is present, whether its effects are equal,
+and whether it biases the substantive correlations. It then splits each
+factor’s reliability into substantive and method parts, and refits with
+the method loadings at the upper ends of their intervals:
+
+``` r
+mv <- nomo_method_variance(model, data = dat_marker, marker = c("m1", "m2", "m3"))
+mv
+nomo_table(mv, "reliability")
+```
+
+The results describe the method variance this marker captures; they are
+not corrected estimates. With a nonideal marker the technique can find
+method variance that is absent (Richardson, Simmering, & Sturman, 2009).
+`nomo_method_variance()` is experimental and stays so after 1.0.0.
+
+#### Planning the sample size
+
+`nomo_power_rmsea()` gives the power of MacCallum, Browne, and
+Sugawara’s (1996) RMSEA tests of close, not-close, and exact fit, or the
+smallest N that reaches a target power. It depends mostly on the model’s
+degrees of freedom. `nomo_power_simulate()` answers a different
+question, following Muthén and Muthén (2002): it generates data from a
+population model, fits the analysis model at each N, and reports
+convergence, bias, coverage, and power for the parameters that matter.
+
+``` r
+nomo_power_rmsea(model)                     # test of close fit; N for power .80
+nomo_power_rmsea(model, n = c(100, 200, 400), test = "not_close")
+
+population <- "
+  F1 =~ 0.7*A1 + 0.7*A2 + 0.6*A3 + 0.5*A4
+  F2 =~ 0.7*B1 + 0.6*B2 + 0.6*B3 + 0.5*B4
+  F1 ~~ 0.3*F2
+"
+nomo_power_simulate(population, n = c(100, 200, 300), focus = "F1~~F2",
+                    seed = 2026)
+```
+
+The N a model needs ranges widely with its structure, so no rule of
+thumb replaces the simulation (Wolf, Harrington, Clark, & Miller, 2013).
+`nomo_power_simulate()` is experimental and stays so after 1.0.0.
+
 ### 5. `nomo_reliability()` + `nomo_validity()` — measurement evidence beyond model fit
 
 Milestone 5 completes the confirmatory measurement-model layer by
@@ -646,6 +718,31 @@ plot(rel_ci)
 Bootstrap intervals are optional because they require repeated CFA
 refitting. Point estimates remain the original reliability estimates;
 the bootstrap adds uncertainty rather than substituting a new estimand.
+
+#### Stability across occasions
+
+When the same people answer the measure again, `nomo_retest()` estimates
+each composite’s test-retest reliability as ICC(A,1), the two-way
+mixed-effects, absolute-agreement form Koo and Li (2016) recommend, and
+describes its interval in their terms. The consistency form, ICC(C,1),
+and the mean change are reported beside it, because a systematic shift
+counts as disagreement:
+
+``` r
+rt <- nomo_retest(
+  dat_retest,
+  scores = list(Agency = c("agency_t1", "agency_t2")),
+  interval = "two weeks"
+)
+
+summary(rt)
+nomo_table(rt, "reliable_change")
+```
+
+It also reports the standard error of measurement, the smallest
+detectable change (Weir, 2005), and each person’s reliable change index
+(Jacobson & Truax, 1991). A reliable change is not necessarily a
+meaningful one.
 
 #### Convergent evidence is not reliability
 
@@ -799,6 +896,38 @@ When a validation sample is supplied, the exact same prespecified fitted
 model is used again. The package does not respecify the validation model
 from the primary-sample results.
 
+#### Observed composites as single indicators
+
+A scale mean carries the measurement error of its items, which
+attenuates the relations it enters. Named in `single_indicators`, a
+composite becomes the one indicator of a latent variable whose error
+variance is fixed at (1 − reliability) × its variance, the idea behind
+Spearman’s (1904) correction for attenuation. `nomo_single_indicator()`
+records the reliability, here omega from the composite’s own measurement
+model:
+
+``` r
+net_data <- nomo_demo_network
+net_data$persistence <- rowMeans(net_data[c("pe1", "pe2", "pe3", "pe4")])
+rel <- nomo_reliability(nomo_cfa("Persistence =~ pe1 + pe2 + pe3 + pe4", net_data))
+
+net_si <- nomo_network(
+  "Agency =~ ag1 + ag2 + ag3 + ag4",
+  data = net_data,
+  hypotheses = nomo_hypotheses("Agency -> persistence" = positive(min = .20)),
+  single_indicators = list(persistence = nomo_single_indicator(rel))
+)
+
+nomo_table(net_si, "single_indicators")
+nomo_table(net_si, "sensitivity")
+```
+
+A correction is only as good as its reliability, so the network is
+refitted with the reliability .05 and .10 lower and higher, and a
+hypothesis whose concordance changes across that range is flagged. When
+the reliability’s standard error is known, its uncertainty is added to
+the standard errors (Oberski & Satorra, 2013).
+
 ### 7. `nomo_invariance()` — identification-aware generalizability evidence
 
 Milestone 7 evaluates equality constraints without treating one
@@ -846,9 +975,65 @@ Localized score diagnostics can identify where equality constraints are
 strained, but `nomologR` never searches until it finds a
 partial-invariance solution that “passes.”
 
+#### Latent means as known-groups evidence
+
+At each level that holds intercepts equal, `nomo_invariance()` also
+reports each group’s latent means relative to the reference group, in
+the reference group’s latent standard deviations, with intervals
+(Hancock, 2001). A difference that theory predicts is known-groups
+evidence, but only once the intercepts are invariant, fully or
+partially:
+
+``` r
+nomo_table(inv_partial, "latent_means")
+```
+
+A group difference computed before the intercepts are examined can be
+item bias, which is why the means are reported level by level.
+
+#### Across occasions
+
 `nomo_invariance_longitudinal()` runs the same sequence across occasions
-for repeated measures, with each item’s residuals correlated over time and
-latent change reported once intercepts are invariant.
+for repeated measures, with each item’s residuals correlated over time
+and latent change reported once intercepts are invariant, fully or
+partially. The model is written for one occasion, and `columns` (default
+`"{item}_{occasion}"`) names each item’s column on each occasion:
+
+``` r
+long <- nomo_invariance_longitudinal(
+  "Wellbeing =~ w1 + w2 + w3 + w4",
+  data = nomo_demo_longitudinal,
+  occasions = c("t1", "t2", "t3"),
+  levels = c("configural", "metric", "scalar")
+)
+
+summary(long)
+```
+
+In these data the `w3` intercept drifts upward after the first occasion,
+and the score diagnostics in the summary point to it. Held equal, it
+inflates the latent change, so the change is read after releasing it, a
+documented decision as across groups:
+
+``` r
+long_partial <- nomo_invariance_longitudinal(
+  "Wellbeing =~ w1 + w2 + w3 + w4",
+  data = nomo_demo_longitudinal,
+  occasions = c("t1", "t2", "t3"),
+  levels = c("configural", "metric", "scalar"),
+  partial = nomo_partial(
+    level = "scalar",
+    syntax = "w3 ~ 1",
+    rationale = "The score diagnostics point to the w3 intercept."
+  )
+)
+
+nomo_table(long_partial, "latent_means")  # change in first-occasion SDs
+```
+
+The release frees the `w3` intercept on every occasion, so the change is
+carried by the other three items. With real data it still needs a reason
+beyond the diagnostics.
 
 The full walkthroughs are in the **“Nomological network”** and
 **“Measurement invariance”** vignettes.
@@ -1049,6 +1234,23 @@ deprecation period. Its scope is set in
 article on the shared item set is done
 ([\#60](https://github.com/JUhalt/nomologR/issues/60)).
 
+`v1.0.0` contains everything in `v0.9.0` and closes the gaps
+social-science scale developers meet most often, each method taken from
+its literature ([\#129](https://github.com/JUhalt/nomologR/issues/129)):
+ESEM beside its CFA (`nomo_esem()`); measurement invariance across
+occasions, with latent change (`nomo_invariance_longitudinal()` and the
+`nomo_demo_longitudinal` teaching data); latent means as known-groups
+evidence in `nomo_invariance()`; test-retest reliability, measurement
+error, and reliable change (`nomo_retest()`); reliability-corrected
+single indicators for observed composites (`nomo_single_indicator()` and
+`nomo_network(single_indicators = )`); common method variance by the
+comprehensive CFA marker technique (`nomo_method_variance()`); and
+sample-size planning by RMSEA power and Monte Carlo simulation
+(`nomo_power_rmsea()`, `nomo_power_simulate()`). All are additive.
+`nomo_method_variance()` and `nomo_power_simulate()` stay experimental
+after 1.0.0; the rest fall under the stability promise. The feature
+freeze is on 2026-10-13, before the release candidate on 2026-10-17.
+
 Larger extensions, such as IRT/DIF, Bayesian SEM, multiple imputation, and
 formative models, are candidates for `1.x`. They are additive, so they do
 not need to precede the freeze. None was rejected, and none is a
@@ -1171,7 +1373,8 @@ Public License, version 3 only (SPDX: GPL-3.0-only)**. See
 and the preserved attribution in
 [inst/NOTICE](https://github.com/JUhalt/nomologR/blob/master/inst/NOTICE).
 
-Previously published releases, including `0.1.0`, retain their original
-MIT license. Stable installation currently retrieves that release; the
-next published release will carry GPL version 3 only. This source
-transition does not relabel existing tags or release artifacts.
+Releases from `0.2.0` on, including the current stable release, carry
+GPL version 3 only, as the `License: GPL-3` field in `DESCRIPTION`
+records. The published `0.1.0` release retains its original MIT license;
+the change of license does not relabel existing tags or release
+artifacts.

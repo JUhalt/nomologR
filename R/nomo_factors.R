@@ -148,7 +148,7 @@
 #' \donttest{
 #' # Ordered five-category items are analyzed with polychoric correlations
 #' fac_ord <- nomo_factors(nomo_demo_ordinal, n_iter = 20, seed = 2026)
-#' fac_ord$correlation
+#' fac_ord$correlation_method
 #' }
 #'
 #' @export

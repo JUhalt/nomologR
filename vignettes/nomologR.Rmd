@@ -77,13 +77,14 @@ and its content can still be reviewed with `contentvalidR`.
 
 | Stage | Question it answers | Functions | Walkthrough |
 |---|---|---|---|
+| Planning the sample | How many cases does the planned model need? | `nomo_power_rmsea()`, `nomo_power_simulate()` | [From CFA to a defensible measurement model](measurement-model-evidence.html) |
 | 1. Item and data audit | What do the items and responses look like? | `nomo_screen()` | [From item audit to exploratory structure](exploratory-workflow.html) |
 | 2. Dimensionality | How many latent dimensions deserve investigation? | `nomo_factors()` | [From item audit to exploratory structure](exploratory-workflow.html) |
 | 3. Exploratory structure | What does a requested factor solution look like? | `nomo_efa()` | [From item audit to exploratory structure](exploratory-workflow.html) |
-| 4. Confirmatory measurement model | Does a prespecified model reproduce the data, and where is there strain? | `nomo_model()`, `nomo_split()`, `nomo_cfa()` | [From CFA to a defensible measurement model](measurement-model-evidence.html) |
-| 5. Reliability and construct-validity evidence | How precise are scores, and are constructs distinguishable? | `nomo_reliability()`, `nomo_validity()` | [From CFA to a defensible measurement model](measurement-model-evidence.html) |
-| 6. Generalizability | Is the construct measured comparably across groups and occasions? | `nomo_invariance()`, `nomo_invariance_longitudinal()`, `nomo_partial()` | [Measurement invariance](measurement-invariance.html) |
-| 7. Nomological network | Does the construct relate to others as theory predicted? | `nomo_hypotheses()`, `nomo_network()` | [Theory-specified nomological networks](nomological-network.html) |
+| 4. Confirmatory measurement model | Does a prespecified model reproduce the data, and where is there strain, such as cross-loadings or shared method? | `nomo_model()`, `nomo_split()`, `nomo_cfa()`, `nomo_esem()`, `nomo_method_variance()` | [From CFA to a defensible measurement model](measurement-model-evidence.html) |
+| 5. Reliability and construct-validity evidence | How precise and how stable are scores, and are constructs distinguishable? | `nomo_reliability()`, `nomo_retest()`, `nomo_validity()` | [From CFA to a defensible measurement model](measurement-model-evidence.html) |
+| 6. Generalizability | Is the construct measured comparably across groups and occasions, and do their latent means differ? | `nomo_invariance()`, `nomo_invariance_longitudinal()`, `nomo_partial()` | [Measurement invariance](measurement-invariance.html) |
+| 7. Nomological network | Does the construct relate to others as theory predicted? | `nomo_hypotheses()`, `nomo_network()`, `nomo_single_indicator()` | [Theory-specified nomological networks](nomological-network.html) |
 | Guided workflow | How do the stages fit together with explicit decisions? | `nomo_run()` | [Guided workflow](guided-workflow.html) |
 | Starting from content review | What does empirical evidence add to an expert review of the items? | `nomo_screen()` and `nomo_run()` with a `contentvalidR` handoff | [From content review to empirical screening](content-review.html) |
 | Reporting | How do I archive the evidence and decisions? | `nomo_report()`, `nomo_table()` | [Archiving a workflow](reproducible-report.html) |
@@ -101,9 +102,11 @@ allow.
 | `nomo_demo_ordinal` | The same latent responses cut into five ordered categories | Polychoric correlations, WLSMV estimation, and ordinal reliability |
 | `nomo_demo_network` | Three constructs, an observed outcome, two administration groups, 800 cases | Theory-specified predictions, equivalence regions, replication, and a known source of scalar non-invariance |
 | `nomo_demo_walkthrough` | Twelve items an expert panel reviewed in `contentvalidR`, two facets, two cohorts, 400 cases | Items that pass content review and fail empirically, and the reverse; reverse-worded items; a cohort difference |
+| `nomo_demo_longitudinal` | Four Wellbeing items answered by the same people on three occasions, 500 cases | Longitudinal invariance, item residuals correlated across occasions, latent change, and a known intercept drift in `w3` |
 
-See `?nomo_demo_continuous`, `?nomo_demo_ordinal`, `?nomo_demo_network`, and
-`?nomo_demo_walkthrough` for the full population models.
+See `?nomo_demo_continuous`, `?nomo_demo_ordinal`, `?nomo_demo_network`,
+`?nomo_demo_walkthrough`, and `?nomo_demo_longitudinal` for the full population
+models.
 
 # A first look
 
@@ -156,11 +159,15 @@ two factors.
 1. [From item audit to exploratory structure](exploratory-workflow.html) —
    screening, factor retention, and EFA.
 2. [From CFA to a defensible measurement model](measurement-model-evidence.html)
-   — confirmatory fit, reliability, and convergent and discriminant evidence.
+   — confirmatory fit, reliability, and convergent and discriminant evidence;
+   then ESEM beside the CFA, test-retest reliability, method variance from a
+   marker variable, and sample-size planning.
 3. [Measurement invariance](measurement-invariance.html) — comparability across
-   groups, localized strain, and researcher-controlled partial invariance.
+   groups, localized strain, researcher-controlled partial invariance, latent
+   means as known-groups evidence, and invariance across occasions.
 4. [Theory-specified nomological networks](nomological-network.html) —
-   predictions, equivalence regions, and replication.
+   predictions, equivalence regions, replication, and observed composites
+   corrected for their unreliability.
 5. [Guided workflow](guided-workflow.html) — the stages combined with explicit
    decisions.
 6. [From content review to empirical screening](content-review.html) — the

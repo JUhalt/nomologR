@@ -40,6 +40,7 @@
   - **Alignment.** Percentages are right-aligned like the numbers beside them, in the method-variance tables and in `nomo_power_simulate()`'s print. So are the reliability and its standard error in the network summary's single-indicator table.
   - **Power.** In `nomo_power_simulate()`'s print, convergence, improper solutions, and the biases are percentages with one decimal, as the bias references are, so 499 converged replications of 500 no longer round to 100%. The note says what "Max bias" and "Max SE bias" are. `nomo_power_rmsea()`'s print gives power to two decimals, as `nomo_power_simulate()`'s does, and its target as "0.80" rather than "0.8"; the smallest N is a line of its own under the header.
 - The content-review reader is tested against `contentvalidR` 0.10.0 and 0.10.1 output too (#53). Their handoffs are identical to 0.9.0's apart from the producer version and date, and the reader needed no change.
+- Documentation for 1.0 (#129, #138). Get started and the research-basis article say that every analysis assumes reflective measurement, why the tools do not apply to formative measures, and where the criteria for choosing between the two are. The research-basis article places each method added in #129 between historical and contemporary practice, and gains the McGraw and Wong (1996) entry its test-retest paragraph cites. The README walks through the new functions stage by stage, lists `nomo_demo_longitudinal`, says what 1.0.0 contains, and notes that `nomo_method_variance()` and `nomo_power_simulate()` stay experimental after 1.0.0; its license note now says that releases from 0.2.0 on are GPL-3. Get started adds the new functions and dataset to its workflow and dataset tables and its learning path, and the package description names the new methods. ROADMAP lists the gap review in the 1.0.0 scope, names 0.9.0 as the current release, and records the feature freeze on 2026-10-13. The README and the exploratory-workflow article read the documented `correlation_method` and `item_types` of `nomo_factors()` rather than their undocumented aliases, and headings that pandoc had rendered as text in NEWS and the measurement-evidence article are fixed.
 
 # nomologR 0.9.0
 
@@ -658,6 +659,7 @@ first CRAN submission is targeted for v0.3.0 (#39).
   until their scope is accepted; no analytical behavior changes in this update.
 - Opened development toward `v0.2.0`.
 - `v0.1.0` remains the current stable public release.
+
 # nomologR 0.1.0
 
 ## First stable public release
@@ -683,6 +685,7 @@ first CRAN submission is targeted for v0.3.0 (#39).
   R CMD check at 0 errors / 0 warnings / 0 notes, executable-line coverage at
   100%, and an empty `covr::zero_coverage()` result.
 - Finalized `v0.1.0` as the first stable public release after release-readiness review and certification.
+
 ## Milestone 8 closeout — guided workflow and decision provenance
 
 - Replaced the `nomo_run()` development stub with a resumable guided workflow
