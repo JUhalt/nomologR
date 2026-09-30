@@ -230,6 +230,7 @@ nomo_screen_item_review <- function(x) {
     by = "item"
   )
 
+  negative_n <- nomo_screen_review_negative_n(out)
   attention <- character(nrow(out))
   review_count <- integer(nrow(out))
   concern_count <- integer(nrow(out))
@@ -256,8 +257,8 @@ nomo_screen_item_review <- function(x) {
     )
 
     if (
-      !is.na(out$negative_interitem_n[[i]]) &&
-        out$negative_interitem_n[[i]] > 0L
+      !is.na(negative_n[[i]]) &&
+        negative_n[[i]] > 0L
     ) {
       review_count[[i]] <- review_count[[i]] + 1L
       metrics <- c(metrics, "negative_interitem_pairs")
@@ -409,13 +410,14 @@ nomo_screen_evidence_data <- function(x, items) {
 
   review <- nomo_screen_item_review(x)
   review <- review[review$item %in% items, , drop = FALSE]
+  negative_n <- nomo_screen_review_negative_n(review)
 
   for (i in seq_len(nrow(review))) {
     item <- review$item[[i]]
 
     if (
-      !is.na(review$negative_interitem_n[[i]]) &&
-        review$negative_interitem_n[[i]] > 0L
+      !is.na(negative_n[[i]]) &&
+        negative_n[[i]] > 0L
     ) {
       grid$severity[
         grid$item == item &
@@ -528,6 +530,15 @@ nomo_screen_review_item_rest <- function(review) {
   within <- review[["scale_item_rest_r"]]
   if (is.null(within)) return(review$corrected_item_rest_r)
   ifelse(is.na(within), review$corrected_item_rest_r, within)
+}
+
+
+# Likewise the count of negative inter-item pairs: those within the item's
+# scale when scales were declared, otherwise all of them.
+nomo_screen_review_negative_n <- function(review) {
+  within <- review[["scale_negative_interitem_n"]]
+  if (is.null(within)) return(review$negative_interitem_n)
+  ifelse(is.na(within), review$negative_interitem_n, within)
 }
 
 

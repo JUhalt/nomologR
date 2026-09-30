@@ -419,6 +419,9 @@ nomo_methods_used.nomo_validity <- function(x, ...) {
 #' @export
 nomo_methods_used.nomo_invariance <- function(x, ...) {
   used <- c("multigroup_cfa")
+  if (is.data.frame(x[["latent_means"]]) && nrow(x[["latent_means"]])) {
+    used <- c(used, "latent_mean_comparison")
+  }
 
   ordered_used <- length(x$ordered) > 0L
   if (ordered_used) {
@@ -443,11 +446,66 @@ nomo_methods_used.nomo_invariance <- function(x, ...) {
 }
 
 
+# Across occasions the model is one longitudinal CFA, and the latent means are
+# latent change rather than a comparison of groups.
+#' @export
+nomo_methods_used.nomo_invariance_longitudinal <- function(x, ...) {
+  used <- NextMethod()
+  used[used == "multigroup_cfa"] <- "longitudinal_invariance"
+  setdiff(used, "latent_mean_comparison")
+}
+
+
 # nomo_partial() specifies researcher releases; it fits nothing, so the
 # multiple-group model is credited to the nomo_invariance() fit that uses it.
 #' @export
 nomo_methods_used.nomo_partial <- function(x, ...) {
   "partial_invariance"
+}
+
+
+# Test-retest reliability -----------------------------------------------------
+
+#' @export
+nomo_methods_used.nomo_retest <- function(x, ...) {
+  c("icc_retest", "sem_sdc", "reliable_change_index")
+}
+
+
+# Power -----------------------------------------------------------------------
+
+#' @export
+nomo_methods_used.nomo_power <- function(x, ...) {
+  if (identical(x$type, "rmsea")) "rmsea_power" else "monte_carlo_power"
+}
+
+
+# ESEM --------------------------------------------------------------------------
+
+# Credited as nomo_cfa() is: the estimator follows the indicators, and FIML
+# only when it was requested.
+#' @export
+nomo_methods_used.nomo_esem <- function(x, ...) {
+  used <- "esem"
+  if (length(x$ordered) > 0L) {
+    used <- c(used, "wlsmv_cfa", "categorical_correlations")
+  } else {
+    used <- c(used, "ml_cfa")
+  }
+  if (nomo_methods_is_fiml(x$missing)) used <- c(used, "fiml")
+  used
+}
+
+
+# Method variance ---------------------------------------------------------------
+
+# nomo_method_variance() has no ordered option, so its models are CFAs of
+# continuous indicators, credited as nomo_cfa() credits them.
+#' @export
+nomo_methods_used.nomo_method_variance <- function(x, ...) {
+  used <- c("cfa_marker_technique", "ml_cfa")
+  if (nomo_methods_is_fiml(x$missing)) used <- c(used, "fiml")
+  used
 }
 
 
@@ -474,6 +532,10 @@ nomo_methods_used.nomo_network <- function(x, ...) {
 
   if (is.data.frame(x$replication_evidence) && nrow(x$replication_evidence)) {
     used <- c(used, "replication_same_model")
+  }
+
+  if (is.data.frame(x$single_indicators) && nrow(x$single_indicators)) {
+    used <- c(used, "single_indicator_reliability")
   }
 
   if (nomo_methods_is_fiml(x$missing)) used <- c(used, "fiml")

@@ -10,9 +10,9 @@
 #' universal deletion or validity rules.
 #'
 #' @section Stability and deprecation:
-#' From version 0.3.0, the first CRAN release, the public interface changes only
-#' after a deprecation period. Code written against one release keeps working in
-#' the next.
+#' From version 0.3.0, the first release submitted to CRAN, the public interface
+#' changes only after a deprecation period. Code written against one release
+#' keeps working in the next.
 #'
 #' **What is covered.** The interface is:
 #'
@@ -39,6 +39,15 @@
 #' of the object it returns are covered. The formatting of a table, meaning its
 #' headings, number formats, and notes, may still be corrected where it departs
 #' from APA style, with the correction described in NEWS.
+#'
+#' **Experimental.** Two functions remain experimental after 1.0.0. They may
+#' change during 1.x without a deprecation period, with each change described in
+#' NEWS:
+#'
+#' * [nomo_method_variance()]. Its output may be reorganized as the marker
+#'   technique is extended beyond continuous indicators.
+#' * [nomo_power_simulate()]. The metric of its estimates and its summaries may
+#'   be refined as it is extended beyond complete continuous data.
 #'
 #' **The contentvalidR handoff.** The exchange object is versioned by its
 #' producer. Within a schema version, fields are only added, and nomologR

@@ -177,7 +177,63 @@ evidence[, c("id", "relation", "evidence_scope")]
 ```
 
 Observed outcomes keep their observed-variable estimand; `nomologR` does not
-silently insert measurement-error corrections.
+insert measurement-error corrections on its own. When a composite's reliability
+is known, you can ask for one.
+
+# A composite corrected for its unreliability
+
+A scale mean carries its items' measurement error, and the relations it enters
+are attenuated by it. A single-indicator latent variable corrects this. The
+composite becomes the one indicator of a latent variable, and its error variance
+is fixed at (1 − reliability) × its variance. The idea goes back to Spearman's
+(1904) correction for attenuation. The SEM textbooks describe it (Hayduk, 1987;
+Bollen, 1989), and marketing research calls it the "total aggregation" model
+(Bagozzi & Heatherton, 1994). Savalei (2019) found that it gave the most
+accurate estimates in samples of 30 to 200, provided the reliability is close to
+its true value.
+
+Here the Persistence mean replaces the Persistence factor. Its reliability is
+omega from its own measurement model:
+
+```{r single-indicator}
+dat <- nomo_demo_network
+dat$persistence <- rowMeans(dat[c("pe1", "pe2", "pe3", "pe4")])
+rel <- nomo_reliability(nomo_cfa("Persistence =~ pe1 + pe2 + pe3 + pe4", dat))
+h_si <- nomo_hypotheses("Agency -> persistence" = positive(min = .20))
+
+as_observed <- nomo_network("Agency =~ ag1 + ag2 + ag3 + ag4", dat, h_si)
+corrected <- nomo_network(
+  "Agency =~ ag1 + ag2 + ag3 + ag4", dat, h_si,
+  single_indicators = list(persistence = nomo_single_indicator(rel))
+)
+nomo_table(corrected, "single_indicators")
+```
+
+The population path is .45. The observed composite gives
+`r fmt(as_observed$hypothesis_evidence$estimate)`, attenuated by its
+unreliability. The single indicator gives
+`r fmt(corrected$hypothesis_evidence$estimate)`, close to the latent model's
+`r fmt(ev("H1", "estimate"))`.
+
+A correction is only as good as the reliability behind it. So the network is
+refitted with the reliability .05 and .10 lower and higher, and the log flags
+any hypothesis whose evidence changes across that range:
+
+```{r single-indicator-sensitivity}
+nomo_table(corrected, "sensitivity")
+```
+
+Three choices matter:
+
+- **Omega or alpha.** Coefficient alpha understates reliability when loadings
+  differ, which overcorrects, so it is flagged for review.
+- **Which errors the coefficient sees.** Any coefficient corrects only the error
+  its design can detect. Internal consistency leaves transient error in, for
+  example (DeShon, 1998).
+- **Uncertainty in the reliability.** A reliability is itself an estimate.
+  Standard errors that treat it as known are too small (Oberski & Satorra,
+  2013). Give its standard error, or pass a bootstrapped `nomo_reliability()`
+  result, and the intervals include that uncertainty.
 
 # Measurement context
 
@@ -290,5 +346,6 @@ from structural relations (Anderson & Gerbing, 1988), treats validity as an
 argument about score interpretation (Messick, 1995), evaluates negligible
 predictions with equivalence procedures (Schuirmann, 1987; Lakens, Scheel, &
 Isager, 2018), and distinguishes prespecified from post-hoc predictions (Nosek
-et al., 2018). Full references are in `?nomo_network` and the
+et al., 2018). Single-indicator corrections follow Bollen (1989) and Savalei
+(2019). Their standard errors follow Oberski and Satorra (2013). Full references are in `?nomo_network` and the
 [research basis](research-basis.html) article.

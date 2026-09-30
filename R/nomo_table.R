@@ -31,9 +31,19 @@
 #'   `"notes"`; see [nomo_scores()].
 #' * `nomo_hypotheses`: the machine-readable hypothesis table (no `type`).
 #' * `nomo_network`: `"hypotheses"` (default), `"fit"`, `"measurement"`,
-#'   `"relations"`, `"replication"`, `"decision_log"`.
-#' * `nomo_invariance`: `"fit"` (default), `"categories"`, `"partial"`,
-#'   `"local_strain"`, `"decision_log"`. The local-strain table keeps lavaan's
+#'   `"relations"`, `"replication"`, `"single_indicators"`, `"sensitivity"`,
+#'   `"decision_log"`. `"single_indicators"` and `"sensitivity"` describe the
+#'   composites modeled as single indicators; see [nomo_network()].
+#' * `nomo_retest`: `"icc"` (default), `"reliable_change"`, `"decision_log"`;
+#'   see [nomo_retest()].
+#' * `nomo_esem`: `"loadings"` (default), `"factor_correlations"`,
+#'   `"models"`, `"comparisons"`, `"decision_log"`; see [nomo_esem()].
+#' * `nomo_method_variance`: `"comparisons"` (default), `"models"`,
+#'   `"loadings"`, `"reliability"`, `"correlations"`, `"decision_log"`; see
+#'   [nomo_method_variance()].
+#' * `nomo_invariance` and `nomo_invariance_longitudinal`: `"fit"` (default),
+#'   `"categories"`, `"partial"`,
+#'   `"local_strain"`, `"latent_means"`, `"decision_log"`. The local-strain table keeps lavaan's
 #'   internal `constraint` label and adds a human-readable
 #'   `constraint_display` column (for example, `Intercept: ag3 (online vs.
 #'   paper)`).
@@ -92,6 +102,8 @@ nomo_table.nomo_network <- function(
       "measurement",
       "relations",
       "replication",
+      "single_indicators",
+      "sensitivity",
       "decision_log"
     ),
     ...) {
@@ -123,7 +135,42 @@ nomo_table.nomo_network <- function(
     return(x$replication_evidence)
   }
 
+  if (type == "single_indicators") return(x[["single_indicators"]])
+  if (type == "sensitivity") return(x[["single_indicator_sensitivity"]])
+
   x$decision_log
+}
+
+
+#' @export
+nomo_table.nomo_retest <- function(
+    x,
+    type = c("icc", "reliable_change", "decision_log"),
+    ...) {
+  type <- nomo_match_arg(type)
+  x[[type]]
+}
+
+
+#' @export
+nomo_table.nomo_esem <- function(
+    x,
+    type = c("loadings", "factor_correlations", "models", "comparisons", "decision_log"),
+    ...) {
+  type <- nomo_match_arg(type)
+  x[[type]]
+}
+
+
+#' @export
+nomo_table.nomo_method_variance <- function(
+    x,
+    type = c("comparisons", "models", "loadings", "reliability", "correlations",
+             "decision_log"),
+    ...) {
+  type <- nomo_match_arg(type)
+  if (type == "loadings") return(x$method_loadings)
+  x[[type]]
 }
 
 
@@ -135,6 +182,7 @@ nomo_table.nomo_invariance <- function(
       "categories",
       "partial",
       "local_strain",
+      "latent_means",
       "decision_log"
     ),
     ...) {
@@ -142,6 +190,7 @@ nomo_table.nomo_invariance <- function(
 
   if (type == "fit") return(x$fit_evidence)
   if (type == "categories") return(x$ordered_categories)
+  if (type == "latent_means") return(x[["latent_means"]])
 
   if (type == "partial") {
     if (is.null(x$partial)) return(tibble::tibble())

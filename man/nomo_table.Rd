@@ -44,9 +44,19 @@ the latent correlation and the HTMT-family values together; see
 \code{"notes"}; see \code{\link[=nomo_scores]{nomo_scores()}}.
 \item \code{nomo_hypotheses}: the machine-readable hypothesis table (no \code{type}).
 \item \code{nomo_network}: \code{"hypotheses"} (default), \code{"fit"}, \code{"measurement"},
-\code{"relations"}, \code{"replication"}, \code{"decision_log"}.
-\item \code{nomo_invariance}: \code{"fit"} (default), \code{"categories"}, \code{"partial"},
-\code{"local_strain"}, \code{"decision_log"}. The local-strain table keeps lavaan's
+\code{"relations"}, \code{"replication"}, \code{"single_indicators"}, \code{"sensitivity"},
+\code{"decision_log"}. \code{"single_indicators"} and \code{"sensitivity"} describe the
+composites modeled as single indicators; see \code{\link[=nomo_network]{nomo_network()}}.
+\item \code{nomo_retest}: \code{"icc"} (default), \code{"reliable_change"}, \code{"decision_log"};
+see \code{\link[=nomo_retest]{nomo_retest()}}.
+\item \code{nomo_esem}: \code{"loadings"} (default), \code{"factor_correlations"},
+\code{"models"}, \code{"comparisons"}, \code{"decision_log"}; see \code{\link[=nomo_esem]{nomo_esem()}}.
+\item \code{nomo_method_variance}: \code{"comparisons"} (default), \code{"models"},
+\code{"loadings"}, \code{"reliability"}, \code{"correlations"}, \code{"decision_log"}; see
+\code{\link[=nomo_method_variance]{nomo_method_variance()}}.
+\item \code{nomo_invariance} and \code{nomo_invariance_longitudinal}: \code{"fit"} (default),
+\code{"categories"}, \code{"partial"},
+\code{"local_strain"}, \code{"latent_means"}, \code{"decision_log"}. The local-strain table keeps lavaan's
 internal \code{constraint} label and adds a human-readable
 \code{constraint_display} column (for example, \verb{Intercept: ag3 (online vs. paper)}).
 \item \code{nomo_compare}: \code{"comparisons"} (default), \code{"models"}, \code{"loadings"},

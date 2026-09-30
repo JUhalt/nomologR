@@ -1,13 +1,111 @@
 # nomologR (development version)
 
-- The two experimental parts of the interface are now covered by the stability policy (#113). `nomo_missing()`'s flagging rule rests on Schafer and Graham (2002, p. 157): a bias beyond about half a standard error is practically important, because it degrades interval coverage. Separating sampling variability from bias would be new output, added alongside the rule. `nomo_apa_table()`'s `type` values and returned structure are covered. A table's formatting (headings, number formats, notes) may still be corrected where it departs from APA style, with the correction described in NEWS.
+- New `nomo_invariance_longitudinal()` for measurement invariance across occasions (#129). It asks whether the same items mean the same thing each time the same people answer them, so that a change in scores can be read as a change in the construct (Widaman, Ferrer, & Conger, 2010).
+  - **The model.** The model is written for one occasion, in the items' own names. `columns` (default `"{item}_{occasion}"`) maps each item and occasion to a column. Each item's unique factors are correlated across occasions, over all lags or up to `auto`.
+  - **The sequence.** The configural, metric, scalar, and strict levels, the ordered-item sequences and identification (with Liu et al., 2017, for Millsap and Tein's conditions over time), researcher-specified partial releases, and score diagnostics are those of `nomo_invariance()`, applied across occasions through semTools' longitudinal arguments. A release names the item as in the one-occasion model, such as `"w3 ~ 1"`, and the diagnostics are labeled by item and occasions, such as `Intercept: w3 (t1 vs. t3)`.
+  - **Latent change.** Once intercepts are invariant, fully or partially, `latent_means` gives each later occasion's latent mean in the first occasion's latent standard deviations, with intervals.
+  - **Other outputs.** The result is also a `nomo_invariance` object, so `print()`, `summary()`, `nomo_table()`, `nomo_apa_table()`, and `plot()` work as they do across groups. `nomo_methods()` gains `longitudinal_invariance`.
+- New teaching dataset `nomo_demo_longitudinal`: four Wellbeing items answered on three occasions, with a latent mean rising .30 and then .50 SD and the `w3` intercept drifting .40 after the first occasion. In the measurement-invariance article, holding that intercept equal inflates the change at the third occasion to .66 SD. Releasing it gives .55 [.43, .67], which covers the population's .50.
+- `nomo_invariance()`'s option checks and level fitting are now shared with `nomo_invariance_longitudinal()`. Its results are unchanged.
+- Sample-size planning (#129).
+  - `nomo_power_rmsea()` gives the power of MacCallum, Browne, and Sugawara's (1996) RMSEA tests of close, not-close, and exact fit, or the smallest N reaching a target power. It reproduces their sample sizes (for example, 132 for close fit and 178 for not-close fit at 100 df). The degrees of freedom come from a model string, `nomo_model()`, `nomo_cfa()`, or lavaan fit.
+  - `nomo_power_simulate()` is Muthén and Muthén's (2002) Monte Carlo approach. It generates data from a population model with values, fits the analysis model at each N, and reports convergence, improper solutions (Wolf et al., 2013), parameter and standard-error bias, coverage, and power. It also gives the smallest simulated N meeting their references: biases within 10%, coverage .91 to .98, and power .80 for the focus parameters. The result records the `seed` and the call. Estimates are in the metric `lavaan::sem(std.lv = TRUE)` sets, so a latent regression is not a standardized coefficient; the help page shows how the two differ. `nomo_power_simulate()` is experimental: it may change during 1.x without a deprecation period.
+- New `nomo_esem()` fits a measurement model as exploratory structural equation modeling (ESEM) beside its CFA (#129). Every item may load on every factor, so the cross-loadings a CFA fixes at zero are estimated, and the model still gives fit and standard errors (Asparouhov & Muthén, 2009).
+  - **Rotation.** By default it uses the target rotation Marsh, Morin, Parker, and Kaur (2014) recommend for an a priori structure (Browne, 2001): each item's own loading is free and its cross-loadings are rotated towards zero. Geomin is available too.
+  - **The comparison.** It reports both models' fit (`models`), their factor correlations and the change between them (`factor_correlations`), and their likelihood-ratio test (`comparisons`); the two lavaan fits are in `fits`. The ESEM is flagged for review when it fits better on TLI and RMSEA, which penalize its extra parameters; lower ESEM factor correlations then show that the CFA's zero cross-loadings are inflating them. Cross-loadings at or above `efa_crossloading_reference` and main loadings below `efa_loading_reference` are flagged as evidence about items, not instructions.
+  - **Other outputs.** `print()`, `summary()`, `nomo_table()`, `nomo_methods()` (which credits WLSMV for ordered indicators and FIML when it was requested, as for `nomo_cfa()`), and a section in the measurement-evidence article, where ESEM finds both features built into `nomo_demo_continuous`.
+- New `nomo_method_variance()` for common method variance, following Williams, Hartman, and Cavazotte's (2010) comprehensive CFA marker technique (#129). Given a measurement model and the indicators of a marker variable, it runs the three phases the authors specify:
+  - **Model comparisons.** It fits the CFA, Baseline, Method-C, Method-U, and Method-R models (`models`, with the scaled chi-square and robust indices under a robust estimator, as `nomo_cfa()` reports them), and compares them (`comparisons`) to test whether marker-based method variance is present, whether its effects are equal, and whether it biases the substantive correlations.
+  - **Reliability decomposition.** It splits each factor's reliability into substantive and method parts (`reliability`).
+  - **Sensitivity.** It fits the Method-S(.05) and Method-S(.01) models, with the method loadings at the upper ends of their intervals. `correlations` gives each pair of factors' correlation in every model, with p-values named `retained_p_value`, `method_s_05_p_value`, and `method_s_01_p_value`.
+  
+  The log explains what the marker must be: theoretically unrelated to the constructs, and tapping the biases the measurement context invites. It also says what the technique cannot do. With a nonideal marker it can find method variance that is absent, and it does not recover substantive correlations accurately (Richardson, Simmering, & Sturman, 2009). The measurement-evidence article works an example. `nomo_method_variance()` is experimental: its output may change during 1.x without a deprecation period.
+- `nomo_invariance()` reports latent means, which are known-groups evidence in structured-means form (#129). At each level that holds intercepts equal, `latent_means` gives each group's latent means relative to the reference group. Under the default `ID.fac = "std.lv"` they are in the reference group's latent standard deviations (Hancock, 2001), with intervals. The summary shows them, `nomo_table(x, "latent_means")` returns them, and the log says they are comparable only with invariant intercepts, fully or partially (Byrne, Shavelson, & Muthén, 1989). On `nomo_demo_network`, holding the biased `ag3` intercept equal inflates the Agency difference between modes to .44 SD. Releasing it gives .33 [.17, .49], which covers the population's .25. The measurement-invariance article walks through this.
+- New `nomo_retest()` for test-retest reliability (#129).
+  - **The intraclass correlations.** For `scores`, the columns holding a composite on two or more occasions (or a named list of them, one per composite), it estimates ICC(A,1), the two-way mixed-effects, absolute-agreement, single-measurement form Koo and Li (2016) recommend for test-retest data, with its 95% interval. Beside it are the consistency form ICC(C,1) (McGraw & Wong, 1996) and the mean change between occasions. A systematic shift is flagged, because ICC(A,1) counts it as disagreement.
+  - **Koo and Li's description.** The reliability is described in Koo and Li's terms (poor, moderate, good, excellent), read from the interval as they ask, and an interval that reaches "poor" is flagged.
+  - **Measurement error.** It reports the standard error of measurement, SD x sqrt(1 - ICC), and the smallest detectable change, 1.96 x sqrt(2) x SEM (Weir, 2005).
+  - **Reliable change.** Each person's reliable change index follows Jacobson and Truax (1991); it exceeds 1.96 exactly when the change exceeds the smallest detectable change.
+  - **Other outputs.** `nomo_table()`, `nomo_apa_table()`, `nomo_methods()`, and the measurement-evidence article cover it.
+- `nomo_network()` can model an observed composite, such as a scale mean, as a single-indicator latent variable, correcting the relations it enters for its unreliability (#129). Name it in `single_indicators` with its reliability, as a number or a `nomo_single_indicator()` record. The record can take omega and its bootstrap uncertainty from a `nomo_reliability()` result. The composite becomes the one indicator of a latent variable of the same name, with its error variance fixed at (1 - reliability) x its variance, so the model syntax and hypotheses are unchanged. The method goes back to Spearman's (1904) correction for attenuation and the SEM textbooks (Hayduk, 1987; Bollen, 1989), and Savalei (2019) found it the most accurate option in samples of 30 to 200 when the reliability is close to its true value. So nomologR:
+  - refits each hypothesis with each reliability .05 and .10 lower and higher, records the result in `single_indicator_sensitivity`, and flags any hypothesis whose concordance changes across that range;
+  - adds the reliability's uncertainty to the standard errors, intervals, and concordance when its standard error is known, as Oberski and Satorra (2013) derive; otherwise the log says the standard errors treat it as known;
+  - flags coefficient alpha for review, since it understates reliability when loadings differ and so overcorrects.
+  
+  `hypothesis_evidence` gains `se_reliability_added`, `nomo_table()` gains the `"single_indicators"` and `"sensitivity"` types, and the APA hypotheses table notes the correction. The nomological-network article shows the correction recovering the population path (.45) from the Persistence mean (.41 uncorrected, .46 corrected). The observed-endpoint note in the log now names the option.
+- The content-review reader is tested against `contentvalidR` 0.10.0 and 0.10.1 output too (#53). Their handoffs are identical to 0.9.0's apart from the producer version and date, and the reader needed no change.
+- Documentation for 1.0 (#129, #138). Get started and the research-basis article say that every analysis assumes reflective measurement, why the tools do not apply to formative measures, and where the criteria for choosing between the two are. The research-basis article places each method added in #129 between historical and contemporary practice, and gains the McGraw and Wong (1996) entry its test-retest paragraph cites. The README walks through the new functions stage by stage, lists `nomo_demo_longitudinal`, says what 1.0.0 contains, and notes that `nomo_method_variance()` and `nomo_power_simulate()` stay experimental after 1.0.0; its license note now says that releases from 0.2.0 on are GPL-3. Get started adds the new functions and dataset to its workflow and dataset tables and its learning path, and the package description names the new methods. ROADMAP lists the gap review in the 1.0.0 scope, names 0.9.0 as the current release, and records the feature freeze on 2026-10-13. The README and the exploratory-workflow article read the documented `correlation_method` and `item_types` of `nomo_factors()` rather than their undocumented aliases, and headings that pandoc had rendered as text in NEWS and the measurement-evidence article are fixed.
+- `nomo_missing()` and `nomo_apa_table()` leave the experimental list and are covered by the stability policy (#113). `nomo_missing()`'s flagging rule rests on Schafer and Graham (2002, p. 157): a bias beyond about half a standard error is practically important, because it degrades interval coverage. Separating sampling variability from bias would be new output, added alongside the rule. `nomo_apa_table()`'s `type` values and returned structure are covered. A table's formatting (headings, number formats, notes) may still be corrected where it departs from APA style, with the correction described in NEWS.
+
+# nomologR 0.9.0
+
+nomologR 0.9.0 is the last minor release before 1.0.0, the stable release planned
+jointly with `contentvalidR` (#53). It carries the 1.0 scope selected so far
+(#113); what is added before the release candidate on 2026-10-17 is recorded
+there. It is about how the package presents itself and what it teaches:
+
+- **Output that reads well.** Every `print()` and `summary()` is redesigned
+  (#89): aligned tables with the columns that matter, explanations in full,
+  APA-style numbers, and one flag wording ("review", "concern") in the console,
+  plots, and reports.
+- **A record of how practice changed.** `nomo_methods()` gives the year each
+  method entered the literature and, for a historical method, the contemporary
+  methods that took over its question. The research-basis article draws them
+  into a timeline.
+- **Teaching, and the bridge from content review.** "Teaching with nomologR"
+  collects exercises whose answers are known from the population model. "From
+  content review to empirical screening" carries a `contentvalidR` review's
+  items through the screen, on the joint walkthrough's data, now shipped as
+  `nomo_demo_walkthrough` (#60).
+- **Manuscript tables for validity evidence.** `nomo_apa_table()` formats
+  `nomo_validity()` results: each construct pair's latent correlation with its
+  interval beside HTMT2, and a table of AVE.
+- **The 1.0 contract.** Every help page names the fields of the object it
+  returns (#114).
+
+**No computed estimate changes.** Compared value by value with 0.3.0 across 22
+analyses spanning every stage, every estimate is identical. What differs:
+
+- With two or more declared scales, `nomo_screen()` reviews each item within
+  its own scale: its item-rest correlation against the rest of that scale
+  (`scale`, `scale_item_rest_r`, `scale_item_rest_n`), and its negative
+  inter-item correlations only with items of the same scale
+  (`scale_negative_interitem_n`). Which items are flagged can change.
+  `corrected_item_rest_r` and `negative_interitem_n` are unchanged.
+- In a multi-group `nomo_validity()` result, `latent_correlations$block` names
+  the groups by label rather than by number.
+- A CFA that is not identified (negative degrees of freedom) is logged as a
+  concern rather than a review.
+- Wording: counts agree with their nouns, some decision-log observations read
+  differently, and the invariance summary lists the largest diagnostics rather
+  than the first.
+
+**Breaking changes.**
+
+- `nomo_missing()` takes the fitted model as `fit` rather than `x` (#114). Calls
+  that pass the model first without naming it are unaffected. The function was
+  marked experimental, so there is no deprecation period.
+- `nomo_screen()` checks `scales` when `effort = FALSE` too, since the
+  within-scale correlations use it. A `scales` that names items not being
+  screened now stops with an error instead of being ignored.
+- `nomo_report(apa_tables = TRUE)` adds the validity tables, and when the run
+  has a validity stage, its construct-pair table takes the place of the CFA
+  factor correlations.
+- An invalid choice stops with a message that names the argument, such as
+  "`method` must be one of ...", instead of base R's "'arg' should be one of".
+  Only code that matches the old message text would notice.
+
+nomologR 0.3.0 is still in CRAN's queue for new submissions (#39); until CRAN
+accepts it, install from R-universe or GitHub.
+
+- With two or more declared scales, the item audit reviews negative inter-item correlations only within a scale (#113), as it does item-rest correlations. Two items of one scale should correlate positively, so a negative pair there is a keying or wording clue. Items of different constructs need not correlate at all, and a correlation near zero is negative about half the time. In `nomo_demo_network`, social desirability is uncorrelated with the other two constructs by design, and its near-zero negative correlations with their items had flagged all eight Agency and Persistence items. `relationship_summary` gains `scale_negative_interitem_n`. `negative_interitem_n` and `inter_item_correlations` are unchanged. Negative correlations between scales are logged as information (`negative_pairs_between_scales`). The log entry for negative pairs now agrees in number: "1 estimable inter-item correlation is negative".
 - `nomo_apa_table()` formats a `nomo_validity()` result (#113). `type = "discriminant"`, the default, gives each pair of constructs one row: its latent correlation with a 95% confidence interval (Rönkkö & Cho, 2022), beside HTMT2 (Roemer et al., 2021) and HTMT (Henseler et al., 2015) when they were computed. `type = "convergent"` gives each construct's number of indicators and AVE. The pair table is deliberately not the Fornell-Larcker matrix with the square root of AVE on its diagonal, the comparison that `nomo_methods()` records as historical because it often misses constructs that are not distinct. Correlations and AVE lose their leading zero; the ratios, which can exceed 1, keep it. A multi-group model's tables add a Group column. `nomo_report(apa_tables = TRUE)` adds both tables after reliability, and the pair table takes the place of the CFA factor correlations, which it repeats.
 - In a multi-group `nomo_validity()` result, `latent_correlations` names its groups (`block`) by their labels, as `ave` does, rather than by number. `lavaan::standardizedSolution()` numbers the groups, so the two tables of one result had disagreed, for example "1" and "2" against "Pasteur" and "Grant-White".
 - When two or more scales are declared, through `scales` or a `contentvalidR` handoff, the item audit reads each item's corrected item-rest correlation within its own scale (#113). An item is scored on its scale's total, so the rest of that scale is what it has to agree with (Nunnally & Bernstein, 1994; Clark & Watson, 2019). Pooled across constructs, the items of a distinct scale look weak: in `nomo_demo_network`, the three social-desirability items correlate .15 to .17 with the rest of all eleven items and were flagged, and .52 to .57 with the rest of their own scale. The relationship summary gains `scale`, `scale_item_rest_r`, and `scale_item_rest_n`, and `corrected_item_rest_r` keeps the pooled value. The flag, the decision-log entry (which names the scale), the summary table, and the item-rest plot use the within-scale value. A guided run's per-scale audits were already within-scale; the instrument-wide audit that `settings$screen$effort = TRUE` adds now agrees with them. `scales` is checked when `effort = FALSE` too, since it now matters there.
 - The item-rest plot draws its values in a column past the bars and the reference line (#89). A flagged item sits just below the reference, so its value, drawn beside the bar, had crossed the dashed line.
 - `nomo_missing()` takes the fitted model as `fit`, as `nomo_reliability()`, `nomo_validity()`, `nomo_scores()`, and `nomo_hierarchical()` do (#114). It had been `x`. The function is experimental until 1.0.0, so the name changes without a deprecation period. Calls that pass the model first, without naming it, are unaffected.
 - A guided run or validity result with a single construct no longer warns "Unknown or uninitialised column" when printed. With one construct there are no pairs, and the pair tables have no columns; the ordering and key-evidence code read them with `$`, which warns on a tibble.
-- A new article, "Teaching with nomologR", collects exercises built on the teaching datasets' known answers. Students find the weak and cross-loading items, check whether the factor-retention criteria agree, compare alpha with omega, handle ordered categories, and tell a structural path from a correlation (including why a path that is not significant does not show that it is negligible). They also find the non-invariant intercept and see where content review and the empirical screen disagree. Each answer is stated from the population model, not from one run. The article also suggests how to use teaching and research modes, decision logs, reports, and `nomo_methods()` in a course.
+- A new article, "Teaching with nomologR", collects exercises built on the teaching datasets' known answers. Students find the weak and cross-loading items, check whether the factor-retention criteria agree, compare alpha with omega, handle ordered categories, and tell a structural path from a correlation (including why a path that is not significant does not show that it is negligible). They also find the non-invariant intercept, see where content review and the empirical screen disagree, and see why an item-total correlation depends on which total it is computed against. Each answer is stated from the population model, not from one run. The article also suggests how to use teaching and research modes, decision logs, reports, and `nomo_methods()` in a course.
 - `nomo_methods()` records how practice changed (#113). `introduced` is the year a method entered the literature, taken from the publication that introduced it, and given only when the registry cites that publication (46 of 89 methods so far). `contemporary_practice` names, for a historical method, the contemporary methods that now answer its question: parallel analysis for the eigenvalue-greater-than-one rule, omega for coefficient alpha, HTMT2 and latent-correlation intervals for the Fornell-Larcker comparison, FIML for listwise deletion. The research-basis article gains a section, "How practice changed", with a timeline from 1937 to 2022 and a table of what took over from each historical method, both drawn from the registry. The KMO entry now cites Kaiser (1970), which introduced the index. The methods table in `nomo_report()` shows the year each method was introduced, so an archived report carries the same record.
 - Every function's help page now names the fields of the object it returns (#114). The stability policy covers "the documented fields of the objects they return", but the Value sections had described contents in prose without naming fields, so most fields users read, such as `standardized_loadings` and `fit_evidence` on a `nomo_cfa`, were not named in the contract. Each Value section now lists the fields to read, one line each, and says that the remaining fields (the call, settings, and engine intermediates) are not part of the stable interface. This changes documentation only. `?nomo_efa` no longer explains `factor_count` with an internal milestone label.
 - A new article, "From content review to empirical screening", carries the items a `contentvalidR` review carried forward through the empirical screen, on the shared teaching data of the joint walkthrough (#60, #53). It shows the two stages disagreeing, which is the reason the pair exists. `EF4` passes content review and carries almost no common variance. `EF3` is flagged empirically but is the only item covering part of the domain. `TF4` loads on both facets, and `TF6` is not invariant across cohorts. The article builds without `contentvalidR` installed.
@@ -556,6 +654,7 @@ first CRAN submission is targeted for v0.3.0 (#39).
   until their scope is accepted; no analytical behavior changes in this update.
 - Opened development toward `v0.2.0`.
 - `v0.1.0` remains the current stable public release.
+
 # nomologR 0.1.0
 
 ## First stable public release
@@ -581,6 +680,7 @@ first CRAN submission is targeted for v0.3.0 (#39).
   R CMD check at 0 errors / 0 warnings / 0 notes, executable-line coverage at
   100%, and an empty `covr::zero_coverage()` result.
 - Finalized `v0.1.0` as the first stable public release after release-readiness review and certification.
+
 ## Milestone 8 closeout — guided workflow and decision provenance
 
 - Replaced the `nomo_run()` development stub with a resumable guided workflow

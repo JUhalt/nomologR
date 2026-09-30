@@ -212,3 +212,44 @@ work. `vignette("content-review")` works through the full example, including
 `TF4`, which loads on both facets, and `TF6`, which differs by cohort.
 
 </details>
+
+## 8. An item-total correlation against which total?
+
+`nomo_demo_network` measures three constructs. Screen all eleven items as one
+pool, then again with the three scales declared. Which items are flagged each
+time, and why?
+
+```{r}
+scales <- list(Agency = paste0("ag", 1:4), Persistence = paste0("pe", 1:4),
+               SocialDesirability = paste0("sd", 1:3))
+items <- unlist(scales, use.names = FALSE)
+summary(nomo_screen(nomo_demo_network, items = items))
+summary(nomo_screen(nomo_demo_network, items = items, scales = scales))
+```
+
+<details><summary>What the data were built to show</summary>
+
+In the population, social desirability is uncorrelated with Agency, and so with
+Persistence too, which depends on Agency. Screened as one pool, every item is
+flagged:
+
+* The three social-desirability items have low item-rest correlations. Each is
+  correlated with the sum of the other ten items, and eight of those ten
+  measure something unrelated to it.
+* The Agency and Persistence items have negative inter-item correlations, all
+  of them with social-desirability items. Correlations around zero are negative
+  about half the time.
+
+With the scales declared, each item is correlated with the rest of its own
+scale, the total it is scored on (Nunnally & Bernstein, 1994; Clark & Watson,
+2019), and negative correlations are reviewed only within a scale. Nothing is
+flagged. The decision log still reports the negative correlations between
+scales, as information: between constructs they are evidence about how the
+constructs relate, not about keying.
+
+The pooled value is not wrong. It answers a different question: whether the
+item belongs to a single pool. That question is useful before any scales are
+defined, although factor analysis answers it better. Ask students which question
+their own item-total correlations answer.
+
+</details>

@@ -503,18 +503,24 @@ nomo_invariance_decision_log <- function(group,
                                          sequence_note,
                                          partial = NULL,
                                          localize = TRUE,
-                                         score_diagnostics = NULL) {
+                                         score_diagnostics = NULL,
+                                         design = "groups") {
   log <- nomo_log_new()
+  across_occasions <- identical(design, "occasions")
 
   log <- nomo_log_add(
     log,
     stage = "invariance",
     object = group,
-    metric = "grouping_variable",
+    metric = if (across_occasions) "occasions" else "grouping_variable",
     reference = paste(groups, collapse = ", "),
     severity = "info",
     observation = sprintf(
-      "Measurement invariance was evaluated across %d observed groups.",
+      if (across_occasions) {
+        "Measurement invariance was evaluated across %d occasions of the same measures."
+      } else {
+        "Measurement invariance was evaluated across %d observed groups."
+      },
       length(groups)
     ),
     recommendation = paste(
@@ -706,6 +712,313 @@ nomo_invariance_decision_log <- function(group,
 }
 
 
+# Checks and normalizes the options nomo_invariance() and
+# nomo_invariance_longitudinal() share, and chooses the invariance sequence.
+nomo_invariance_prepare <- function(data,
+                                    ordered,
+                                    levels,
+                                    partial,
+                                    localize,
+                                    estimator,
+                                    missing,
+                                    ID.fac,
+                                    ID.cat,
+                                    parameterization,
+                                    guidance) {
+  if (is.null(ordered)) {
+    ordered <- character()
+  } else {
+    if (!is.character(ordered) || anyNA(ordered) ||
+        any(!nzchar(trimws(ordered)))) {
+      stop("`ordered` must be NULL or a character vector of indicator names.", call. = FALSE)
+    }
+    ordered <- unique(trimws(ordered))
+    missing_ordered <- setdiff(ordered, names(data))
+    if (length(missing_ordered)) {
+      stop(
+        sprintf(
+          "Ordered indicator(s) not found in `data`: %s.",
+          paste(missing_ordered, collapse = ", ")
+        ),
+        call. = FALSE
+      )
+    }
+  }
+
+  if (!is.logical(localize) || length(localize) != 1L || is.na(localize)) {
+    stop("`localize` must be TRUE or FALSE.", call. = FALSE)
+  }
+
+  category_table <- nomo_invariance_ordered_categories(data, ordered)
+  nomo_invariance_validate_ordered_categories(category_table)
+
+  sequence_info <- nomo_invariance_sequences(
+    ordered = ordered,
+    category_table = category_table
+  )
+  levels <- nomo_invariance_validate_levels(
+    levels = levels,
+    sequence = sequence_info$sequence
+  )
+  nomo_invariance_validate_partial(partial, sequence_info$sequence)
+
+  if (!is.null(estimator)) {
+    if (!is.character(estimator) || length(estimator) != 1L ||
+        is.na(estimator) || !nzchar(trimws(estimator))) {
+      stop("`estimator` must be NULL or one non-empty character value.", call. = FALSE)
+    }
+    estimator <- toupper(trimws(estimator))
+  }
+
+  if (!is.null(missing)) {
+    if (!is.character(missing) || length(missing) != 1L ||
+        is.na(missing) || !nzchar(trimws(missing))) {
+      stop("`missing` must be NULL or one non-empty character value.", call. = FALSE)
+    }
+    missing <- trimws(missing)
+  }
+
+  if (!is.character(ID.fac) || length(ID.fac) != 1L ||
+      is.na(ID.fac) || !nzchar(trimws(ID.fac))) {
+    stop("`ID.fac` must be one non-empty character value.", call. = FALSE)
+  }
+  ID.fac <- trimws(ID.fac)
+
+  if (!is.character(ID.cat) || length(ID.cat) != 1L ||
+      is.na(ID.cat) || !nzchar(trimws(ID.cat))) {
+    stop("`ID.cat` must be one non-empty character value.", call. = FALSE)
+  }
+  ID.cat <- trimws(ID.cat)
+
+  if (!is.character(parameterization) || length(parameterization) != 1L ||
+      is.na(parameterization) || !nzchar(trimws(parameterization))) {
+    stop("`parameterization` must be one non-empty character value.", call. = FALSE)
+  }
+  parameterization <- tolower(trimws(parameterization))
+
+  if (!is.list(guidance)) {
+    stop("`guidance` must be a list returned by `nomo_defaults()`.", call. = FALSE)
+  }
+
+  if (length(ordered) &&
+      !identical(tolower(ID.fac), "std.lv") &&
+      grepl("^wu", tolower(ID.cat))) {
+    stop(
+      "Wu-Estabrook categorical identification should use `ID.fac = \"std.lv\"`.",
+      call. = FALSE
+    )
+  }
+
+  if (length(ordered) && !is.null(estimator) && grepl("^ML", estimator)) {
+    stop(
+      paste0(
+        "ML-family estimators are not supported here with declared ordered ",
+        "indicators. Leave `estimator = NULL` for WLSMV or select a ",
+        "categorical-data estimator supported by lavaan."
+      ),
+      call. = FALSE
+    )
+  }
+
+  if (length(ordered) && !is.null(missing) &&
+      tolower(missing) %in% c("ml", "fiml", "ml.x", "fiml.x")) {
+    stop(
+      "FIML is not supported by lavaan for declared ordered indicators.",
+      call. = FALSE
+    )
+  }
+  estimator_requested <- estimator
+  estimator_source <- if (length(ordered) && is.null(estimator_requested)) {
+    estimator_requested <- "WLSMV"
+    "ordered_default"
+  } else if (is.null(estimator_requested)) {
+    "lavaan_default"
+  } else {
+    "researcher"
+  }
+
+  list(
+    ordered = ordered,
+    category_table = category_table,
+    sequence_info = sequence_info,
+    levels = levels,
+    missing = missing,
+    ID.fac = ID.fac,
+    ID.cat = ID.cat,
+    parameterization = parameterization,
+    estimator_requested = estimator_requested,
+    estimator_source = estimator_source
+  )
+}
+
+
+# Fits each requested level in turn and stops at the first that fails or does
+# not converge. `syntax_base` and `fit_base` hold the measEq.syntax() and lavaan
+# arguments every level shares; `equal` and `release` name the measEq.syntax()
+# arguments that carry a level's equality constraints and partial releases:
+# group.equal and group.partial across groups, long.equal and long.partial
+# across occasions.
+nomo_invariance_fit_levels <- function(levels,
+                                       constraints,
+                                       partial,
+                                       sequence_info,
+                                       syntax_base,
+                                       fit_base,
+                                       equal,
+                                       release,
+                                       localize) {
+  syntax <- list()
+  syntax_text <- list()
+  fits <- list()
+  fit_measures <- list()
+  engine_warnings <- list()
+  comparison_warnings <- list()
+  evidence_rows <- list()
+  score_diagnostics <- list()
+
+  previous_level <- NULL
+
+  for (level in levels) {
+    equality <- constraints[[level]]
+
+    partial_for_level <- nomo_invariance_partial_for_level(
+      partial = partial,
+      level = level,
+      sequence = sequence_info$sequence
+    )
+
+    syntax_args <- syntax_base
+    syntax_args[[equal]] <- if (length(equality)) equality else ""
+    syntax_args[[release]] <- if (length(partial_for_level)) partial_for_level else ""
+
+    syn <- tryCatch(
+      do.call(semTools::measEq.syntax, syntax_args),
+      error = function(e) {
+        stop(
+          sprintf(
+            "Could not generate %s invariance syntax: %s",
+            level,
+            conditionMessage(e)
+          ),
+          call. = FALSE
+        )
+      }
+    )
+
+    syntax[[level]] <- syn
+    syntax_text[[level]] <- as.character(syn)
+
+    warnings <- character()
+    fit_error <- NULL
+
+    fit_args <- c(list(model = syntax_text[[level]]), fit_base)
+
+    fit <- tryCatch(
+      withCallingHandlers(
+        do.call(lavaan::cfa, fit_args),
+        warning = function(w) {
+          warnings <<- unique(c(warnings, conditionMessage(w)))
+          invokeRestart("muffleWarning")
+        }
+      ),
+      error = function(e) {
+        fit_error <<- conditionMessage(e)
+        NULL
+      }
+    )
+
+    fits[[level]] <- fit
+    engine_warnings[[level]] <- warnings
+
+    row <- nomo_invariance_fit_row(
+      level = level,
+      constraints = equality,
+      fit = fit,
+      warnings = warnings,
+      error = fit_error,
+      partial_requested = partial_for_level
+    )
+
+    if (!is.null(fit)) {
+      fit_measures[[level]] <- tryCatch(
+        lavaan::fitMeasures(fit),
+        error = function(e) numeric()
+      )
+    } else {
+      fit_measures[[level]] <- numeric()
+    }
+
+    if (!is.null(previous_level) &&
+        !is.null(fit) &&
+        isTRUE(row$converged[[1L]]) &&
+        !is.null(fits[[previous_level]]) &&
+        isTRUE(evidence_rows[[previous_level]]$converged[[1L]])) {
+      comp <- nomo_invariance_add_comparison(
+        current_row = row,
+        previous_row = evidence_rows[[previous_level]],
+        previous_fit = fits[[previous_level]],
+        current_fit = fit
+      )
+      row <- comp$row
+      comparison_warnings[[level]] <- comp$warnings
+    } else {
+      comparison_warnings[[level]] <- character()
+    }
+
+    evidence_rows[[level]] <- row
+
+    if (isTRUE(localize) && !is.null(fit) && isTRUE(row$converged[[1L]])) {
+      score_diagnostics[[level]] <- nomo_invariance_score_test(fit, level)
+    } else {
+      score_diagnostics[[level]] <- list(
+        table = tibble::tibble(),
+        raw = NULL,
+        warning = character(),
+        error = NULL
+      )
+    }
+
+    if (is.null(fit) || !isTRUE(row$converged[[1L]])) {
+      break
+    }
+
+    previous_level <- level
+  }
+
+  list(
+    syntax = syntax,
+    syntax_text = syntax_text,
+    fits = fits,
+    fit_measures = fit_measures,
+    engine_warnings = engine_warnings,
+    comparison_warnings = comparison_warnings,
+    score_diagnostics = score_diagnostics,
+    fit_evidence = dplyr::bind_rows(evidence_rows)
+  )
+}
+
+
+# The measEq.syntax() and lavaan arguments shared by every level.
+nomo_invariance_engine_args <- function(syntax_base,
+                                        fit_base,
+                                        ordered,
+                                        parameterization,
+                                        ID.cat,
+                                        estimator,
+                                        missing) {
+  if (length(ordered)) {
+    syntax_base$ordered <- ordered
+    syntax_base$parameterization <- parameterization
+    syntax_base$ID.cat <- ID.cat
+    fit_base$ordered <- ordered
+    fit_base$parameterization <- parameterization
+  }
+  if (!is.null(estimator)) fit_base$estimator <- estimator
+  if (!is.null(missing)) fit_base$missing <- missing
+  list(syntax = syntax_base, fit = fit_base)
+}
+
+
 #' Evaluate measurement invariance across groups
 #'
 #' `nomo_invariance()` evaluates increasingly constrained multi-group CFA models
@@ -744,6 +1057,20 @@ nomo_invariance_decision_log <- function(group,
 #'   diagnostic evidence. Diagnostics never trigger automatic release/refitting.
 #' @param estimator Optional lavaan estimator. Ordered models default to WLSMV.
 #' @param missing Optional lavaan missing-data option.
+#' @section Latent means:
+#' Once intercepts are invariant, fully or with researcher-specified partial
+#' releases, groups can be compared on the construct itself (Byrne, Shavelson,
+#' & Muthén, 1989). This is the structured-means form of known-groups evidence:
+#' a difference theory predicts between groups that differ on the construct.
+#' At each level that holds intercepts equal, `latent_means` gives each group's
+#' latent means relative to the reference group, the first group, which the
+#' default `ID.fac = "std.lv"` fixes at a mean of 0 and a variance of 1. Each
+#' mean is then a difference in the reference group's latent standard
+#' deviations, the effect size Hancock (2001) describes. Under another
+#' identification the table is empty. Where the intercepts are not invariant,
+#' the means are not comparable until the non-invariant intercepts are
+#' released with [nomo_partial()] (Vandenberg & Lance, 2000).
+#'
 #' @param ID.fac Factor-identification method passed to
 #'   `semTools::measEq.syntax()`. `"std.lv"` is the default.
 #' @param ID.cat Ordered-indicator identification method passed to
@@ -760,6 +1087,9 @@ nomo_invariance_decision_log <- function(group,
 #'   * `local_strain`: score diagnostics for each equality constraint, which
 #'     localize strain without releasing anything.
 #'   * `partial`: the researcher-specified releases, when given.
+#'   * `latent_means`: at each level that holds intercepts equal, each group's
+#'     latent means relative to the reference group, in the reference group's
+#'     latent standard deviations, with their intervals. See **Latent means**.
 #'   * `fits`: the fitted `lavaan` model at each level.
 #'   * `syntax_text`: the model syntax at each level.
 #'   * `engine_warnings`: warnings `lavaan` raised at each level.
@@ -774,6 +1104,11 @@ nomo_invariance_decision_log <- function(group,
 #'
 #' Jöreskog, K. G. (1971). Simultaneous factor analysis in several
 #' populations. *Psychometrika, 36*(4), 409-426. \doi{10.1007/BF02291366}
+#'
+#' Hancock, G. R. (2001). Effect size, power, and sample size determination
+#' for structured means modeling and MIMIC approaches to between-groups
+#' hypothesis testing of means on a single latent construct. *Psychometrika,
+#' 66*(3), 373-388. \doi{10.1007/BF02294440}
 #'
 #' Meredith, W. (1993). Measurement invariance, factor analysis and factorial
 #' invariance. *Psychometrika, 58*(4), 525-543. \doi{10.1007/BF02294825}
@@ -887,131 +1222,33 @@ nomo_invariance <- function(model,
     stop("Measurement invariance requires at least two observed groups.", call. = FALSE)
   }
 
-  if (is.null(ordered)) {
-    ordered <- character()
-  } else {
-    if (!is.character(ordered) || anyNA(ordered) ||
-        any(!nzchar(trimws(ordered)))) {
-      stop("`ordered` must be NULL or a character vector of indicator names.", call. = FALSE)
-    }
-    ordered <- unique(trimws(ordered))
-    missing_ordered <- setdiff(ordered, names(data))
-    if (length(missing_ordered)) {
-      stop(
-        sprintf(
-          "Ordered indicator(s) not found in `data`: %s.",
-          paste(missing_ordered, collapse = ", ")
-        ),
-        call. = FALSE
-      )
-    }
-  }
-
-  if (!is.logical(localize) || length(localize) != 1L || is.na(localize)) {
-    stop("`localize` must be TRUE or FALSE.", call. = FALSE)
-  }
-
-  category_table <- nomo_invariance_ordered_categories(data, ordered)
-  nomo_invariance_validate_ordered_categories(category_table)
-
-  sequence_info <- nomo_invariance_sequences(
+  prepared <- nomo_invariance_prepare(
+    data = data,
     ordered = ordered,
-    category_table = category_table
-  )
-  levels <- nomo_invariance_validate_levels(
     levels = levels,
-    sequence = sequence_info$sequence
+    partial = partial,
+    localize = localize,
+    estimator = estimator,
+    missing = missing,
+    ID.fac = ID.fac,
+    ID.cat = ID.cat,
+    parameterization = parameterization,
+    guidance = guidance
   )
-  nomo_invariance_validate_partial(partial, sequence_info$sequence)
-
-  if (!is.null(estimator)) {
-    if (!is.character(estimator) || length(estimator) != 1L ||
-        is.na(estimator) || !nzchar(trimws(estimator))) {
-      stop("`estimator` must be NULL or one non-empty character value.", call. = FALSE)
-    }
-    estimator <- toupper(trimws(estimator))
-  }
-
-  if (!is.null(missing)) {
-    if (!is.character(missing) || length(missing) != 1L ||
-        is.na(missing) || !nzchar(trimws(missing))) {
-      stop("`missing` must be NULL or one non-empty character value.", call. = FALSE)
-    }
-    missing <- trimws(missing)
-  }
-
-  if (!is.character(ID.fac) || length(ID.fac) != 1L ||
-      is.na(ID.fac) || !nzchar(trimws(ID.fac))) {
-    stop("`ID.fac` must be one non-empty character value.", call. = FALSE)
-  }
-  ID.fac <- trimws(ID.fac)
-
-  if (!is.character(ID.cat) || length(ID.cat) != 1L ||
-      is.na(ID.cat) || !nzchar(trimws(ID.cat))) {
-    stop("`ID.cat` must be one non-empty character value.", call. = FALSE)
-  }
-  ID.cat <- trimws(ID.cat)
-
-  if (!is.character(parameterization) || length(parameterization) != 1L ||
-      is.na(parameterization) || !nzchar(trimws(parameterization))) {
-    stop("`parameterization` must be one non-empty character value.", call. = FALSE)
-  }
-  parameterization <- tolower(trimws(parameterization))
-
-  if (!is.list(guidance)) {
-    stop("`guidance` must be a list returned by `nomo_defaults()`.", call. = FALSE)
-  }
-
-  if (length(ordered) &&
-      !identical(tolower(ID.fac), "std.lv") &&
-      grepl("^wu", tolower(ID.cat))) {
-    stop(
-      "Wu-Estabrook categorical identification should use `ID.fac = \"std.lv\"`.",
-      call. = FALSE
-    )
-  }
-
-  if (length(ordered) && !is.null(estimator) && grepl("^ML", estimator)) {
-    stop(
-      paste0(
-        "ML-family estimators are not supported here with declared ordered ",
-        "indicators. Leave `estimator = NULL` for WLSMV or select a ",
-        "categorical-data estimator supported by lavaan."
-      ),
-      call. = FALSE
-    )
-  }
-
-  if (length(ordered) && !is.null(missing) &&
-      tolower(missing) %in% c("ml", "fiml", "ml.x", "fiml.x")) {
-    stop(
-      "FIML is not supported by lavaan for declared ordered indicators.",
-      call. = FALSE
-    )
-  }
+  ordered <- prepared$ordered
+  category_table <- prepared$category_table
+  sequence_info <- prepared$sequence_info
+  levels <- prepared$levels
+  missing <- prepared$missing
+  ID.fac <- prepared$ID.fac
+  ID.cat <- prepared$ID.cat
+  parameterization <- prepared$parameterization
+  estimator_requested <- prepared$estimator_requested
+  estimator_source <- prepared$estimator_source
   # After the argument checks, so their more specific messages come first.
   nomo_check_model_variables(model, data)
 
-  estimator_requested <- estimator
-  estimator_source <- if (length(ordered) && is.null(estimator_requested)) {
-    estimator_requested <- "WLSMV"
-    "ordered_default"
-  } else if (is.null(estimator_requested)) {
-    "lavaan_default"
-  } else {
-    "researcher"
-  }
-
   constraints <- sequence_info$constraints
-
-  syntax <- list()
-  syntax_text <- list()
-  fits <- list()
-  fit_measures <- list()
-  engine_warnings <- list()
-  comparison_warnings <- list()
-  evidence_rows <- list()
-  score_diagnostics <- list()
 
   partial_requested <- nomo_invariance_partial_cumulative(
     partial = partial,
@@ -1019,143 +1256,41 @@ nomo_invariance <- function(model,
     sequence = sequence_info$sequence
   )
 
-  previous_level <- NULL
-
-  for (level in levels) {
-    equality <- constraints[[level]]
-
-    partial_for_level <- nomo_invariance_partial_for_level(
-      partial = partial,
-      level = level,
-      sequence = sequence_info$sequence
-    )
-
-    syntax_args <- list(
+  engine <- nomo_invariance_engine_args(
+    syntax_base = list(
       configural.model = model,
       data = data,
       group = group,
-      group.equal = if (length(equality)) equality else "",
-      group.partial = if (length(partial_for_level)) partial_for_level else "",
       ID.fac = ID.fac,
       meanstructure = TRUE,
       return.fit = FALSE
-    )
-
-    if (length(ordered)) {
-      syntax_args$ordered <- ordered
-      syntax_args$parameterization <- parameterization
-      syntax_args$ID.cat <- ID.cat
-    }
-
-    syn <- tryCatch(
-      do.call(semTools::measEq.syntax, syntax_args),
-      error = function(e) {
-        stop(
-          sprintf(
-            "Could not generate %s invariance syntax: %s",
-            level,
-            conditionMessage(e)
-          ),
-          call. = FALSE
-        )
-      }
-    )
-
-    syntax[[level]] <- syn
-    syntax_text[[level]] <- as.character(syn)
-
-    warnings <- character()
-    fit_error <- NULL
-
-    fit_args <- list(
-      model = syntax_text[[level]],
-      data = data,
-      group = group
-    )
-
-    if (length(ordered)) {
-      fit_args$ordered <- ordered
-      fit_args$parameterization <- parameterization
-    }
-
-    if (!is.null(estimator_requested)) {
-      fit_args$estimator <- estimator_requested
-    }
-    if (!is.null(missing)) fit_args$missing <- missing
-
-    fit <- tryCatch(
-      withCallingHandlers(
-        do.call(lavaan::cfa, fit_args),
-        warning = function(w) {
-          warnings <<- unique(c(warnings, conditionMessage(w)))
-          invokeRestart("muffleWarning")
-        }
-      ),
-      error = function(e) {
-        fit_error <<- conditionMessage(e)
-        NULL
-      }
-    )
-
-    fits[[level]] <- fit
-    engine_warnings[[level]] <- warnings
-
-    row <- nomo_invariance_fit_row(
-      level = level,
-      constraints = equality,
-      fit = fit,
-      warnings = warnings,
-      error = fit_error,
-      partial_requested = partial_for_level
-    )
-
-    if (!is.null(fit)) {
-      fit_measures[[level]] <- tryCatch(
-        lavaan::fitMeasures(fit),
-        error = function(e) numeric()
-      )
-    } else {
-      fit_measures[[level]] <- numeric()
-    }
-
-    if (!is.null(previous_level) &&
-        !is.null(fit) &&
-        isTRUE(row$converged[[1L]]) &&
-        !is.null(fits[[previous_level]]) &&
-        isTRUE(evidence_rows[[previous_level]]$converged[[1L]])) {
-      comp <- nomo_invariance_add_comparison(
-        current_row = row,
-        previous_row = evidence_rows[[previous_level]],
-        previous_fit = fits[[previous_level]],
-        current_fit = fit
-      )
-      row <- comp$row
-      comparison_warnings[[level]] <- comp$warnings
-    } else {
-      comparison_warnings[[level]] <- character()
-    }
-
-    evidence_rows[[level]] <- row
-
-    if (isTRUE(localize) && !is.null(fit) && isTRUE(row$converged[[1L]])) {
-      score_diagnostics[[level]] <- nomo_invariance_score_test(fit, level)
-    } else {
-      score_diagnostics[[level]] <- list(
-        table = tibble::tibble(),
-        raw = NULL,
-        warning = character(),
-        error = NULL
-      )
-    }
-
-    if (is.null(fit) || !isTRUE(row$converged[[1L]])) {
-      break
-    }
-
-    previous_level <- level
-  }
-
-  fit_evidence <- dplyr::bind_rows(evidence_rows)
+    ),
+    fit_base = list(data = data, group = group),
+    ordered = ordered,
+    parameterization = parameterization,
+    ID.cat = ID.cat,
+    estimator = estimator_requested,
+    missing = missing
+  )
+  run <- nomo_invariance_fit_levels(
+    levels = levels,
+    constraints = constraints,
+    partial = partial,
+    sequence_info = sequence_info,
+    syntax_base = engine$syntax,
+    fit_base = engine$fit,
+    equal = "group.equal",
+    release = "group.partial",
+    localize = localize
+  )
+  syntax <- run$syntax
+  syntax_text <- run$syntax_text
+  fits <- run$fits
+  fit_measures <- run$fit_measures
+  engine_warnings <- run$engine_warnings
+  comparison_warnings <- run$comparison_warnings
+  score_diagnostics <- run$score_diagnostics
+  fit_evidence <- run$fit_evidence
 
   local_strain <- dplyr::bind_rows(
     lapply(score_diagnostics, function(x) x$table)
@@ -1181,6 +1316,17 @@ nomo_invariance <- function(model,
     partial = partial,
     localize = localize,
     score_diagnostics = score_diagnostics
+  )
+
+  latent_means <- nomo_invariance_latent_means(
+    fits = fits,
+    constraints = constraints,
+    fit_evidence = fit_evidence,
+    ID.fac = ID.fac
+  )
+  decision_log <- dplyr::bind_rows(
+    decision_log,
+    nomo_invariance_latent_means_log(latent_means)
   )
 
   out <- list(
@@ -1220,6 +1366,7 @@ nomo_invariance <- function(model,
     fits = fits,
     fit_measures = fit_measures,
     fit_evidence = fit_evidence,
+    latent_means = latent_means,
     engine_warnings = engine_warnings,
     comparison_warnings = comparison_warnings,
     decision_log = decision_log,
@@ -1228,4 +1375,86 @@ nomo_invariance <- function(model,
 
   class(out) <- c("nomo_invariance", "list")
   out
+}
+
+
+# Latent means ----------------------------------------------------------------------
+#
+# The structured-means comparison of groups on the construct: at each level
+# whose intercepts are held equal, fully or with the researcher's partial
+# releases, the groups' latent means can be compared (Byrne, Shavelson, &
+# Muthén, 1989). Under std.lv identification the reference group's latent means
+# are 0 and its variances 1, so each mean is a difference in the reference
+# group's latent standard deviations, the effect size Hancock (2001) describes.
+nomo_invariance_latent_means <- function(fits, constraints, fit_evidence, ID.fac) {
+  out <- tibble::tibble(
+    level = character(),
+    group = character(),
+    reference_group = character(),
+    factor = character(),
+    estimate = numeric(),
+    se = numeric(),
+    ci_lower = numeric(),
+    ci_upper = numeric(),
+    p_value = numeric()
+  )
+  if (!identical(tolower(ID.fac), "std.lv")) return(out)
+
+  converged <- fit_evidence$level[fit_evidence$converged %in% TRUE]
+  rows <- lapply(converged, function(level) {
+    if (!"intercepts" %in% constraints[[level]]) return(NULL)
+    fit <- fits[[level]]
+    pe <- lavaan::parameterEstimates(fit, ci = TRUE)
+    latent <- lavaan::lavNames(fit, type = "lv")
+    means <- pe[pe$op == "~1" & pe$lhs %in% latent & pe$group > 1L, , drop = FALSE]
+    labels <- lavaan::lavInspect(fit, "group.label")
+    tibble::tibble(
+      level = level,
+      group = labels[means$group],
+      reference_group = labels[[1L]],
+      factor = means$lhs,
+      estimate = means$est,
+      se = means$se,
+      ci_lower = means$ci.lower,
+      ci_upper = means$ci.upper,
+      p_value = means$pvalue
+    )
+  })
+  dplyr::bind_rows(out, rows)
+}
+
+
+nomo_invariance_latent_means_log <- function(latent_means) {
+  log <- nomo_log_new()
+  if (!nrow(latent_means)) return(log)
+  # The most constrained level with latent means, the one a comparison would
+  # usually be reported from.
+  level <- latent_means$level[[nrow(latent_means)]]
+  rows <- latent_means[latent_means$level == level, , drop = FALSE]
+  number <- function(x) nomo_present_number(x, 2L)
+  nomo_log_add(
+    log, stage = "invariance", object = "latent_means",
+    metric = "latent_means",
+    value = nrow(rows),
+    reference = paste(
+      "Latent means are comparable only with invariant intercepts, fully or",
+      "partially (Byrne, Shavelson, & Muth\u00e9n, 1989)"
+    ),
+    severity = "info",
+    observation = sprintf(
+      "At the %s level, latent means relative to %s, in its latent standard deviations: %s.",
+      level, rows$reference_group[[1L]],
+      paste0(
+        rows$factor, " in ", rows$group, " ", number(rows$estimate), " [",
+        number(rows$ci_lower), ", ", number(rows$ci_upper), "]",
+        collapse = "; "
+      )
+    ),
+    recommendation = paste(
+      "As known-groups evidence, compare each difference with the one theory",
+      "predicts (Hancock, 2001). If the intercepts are not invariant, release",
+      "those the local-strain table points to with nomo_partial() before",
+      "interpreting the means (Vandenberg & Lance, 2000)."
+    )
+  )
 }

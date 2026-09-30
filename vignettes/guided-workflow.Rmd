@@ -326,7 +326,7 @@ handoff <- contentvalidR::content_handoff(
 ```
 
 `nomologR` does not depend on `contentvalidR`. This package ships the handoff
-that `contentvalidR` 0.7.0 produces for its walkthrough item sort, so the rest of
+that `contentvalidR` produced for its walkthrough item sort, so the rest of
 this section runs without it:
 
 ```{r handoff}
@@ -335,6 +335,9 @@ handoff <- readRDS(
 )
 handoff$items
 ```
+
+Its provenance records the release that made it, `contentvalidR`
+`r handoff$provenance$package_version`.
 
 Responses to those items, simulated here, with EF2 and TF2 worded in reverse:
 

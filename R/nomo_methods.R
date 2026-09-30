@@ -45,6 +45,23 @@ nomo_bibliography <- function() {
       "10.1037/0033-2909.103.3.411"
     ),
     nomo_bib_entry(
+      "asparouhov_muthen_2009", "Asparouhov & Muth\u00e9n (2009)",
+      paste(
+        "Asparouhov, T., & Muth\u00e9n, B. (2009). Exploratory structural",
+        "equation modeling. Structural Equation Modeling, 16(3), 397-438."
+      ),
+      "10.1080/10705510903008204"
+    ),
+    nomo_bib_entry(
+      "bagozzi_heatherton_1994", "Bagozzi & Heatherton (1994)",
+      paste(
+        "Bagozzi, R. P., & Heatherton, T. F. (1994). A general approach to",
+        "representing multifaceted personality constructs: Application to state",
+        "self-esteem. Structural Equation Modeling, 1(1), 35-67."
+      ),
+      "10.1080/10705519409539961"
+    ),
+    nomo_bib_entry(
       "bartlett_1950", "Bartlett (1950)",
       paste(
         "Bartlett, M. S. (1950). Tests of significance in factor analysis.",
@@ -105,6 +122,14 @@ nomo_bibliography <- function() {
         "research: A primer. Frontiers in Public Health, 6, 149."
       ),
       "10.3389/fpubh.2018.00149"
+    ),
+    nomo_bib_entry(
+      "bollen_1989", "Bollen (1989)",
+      paste(
+        "Bollen, K. A. (1989). Structural equations with latent variables.",
+        "Wiley."
+      ),
+      "10.1002/9781118619179"
     ),
     nomo_bib_entry(
       "bonifay_2017", "Bonifay, Lane, & Reise (2017)",
@@ -256,6 +281,15 @@ nomo_bibliography <- function() {
       "10.1016/j.jesp.2015.07.006"
     ),
     nomo_bib_entry(
+      "deshon_1998", "DeShon (1998)",
+      paste(
+        "DeShon, R. P. (1998). A cautionary note on measurement error",
+        "corrections in structural equation models. Psychological Methods, 3(4),",
+        "412-423."
+      ),
+      "10.1037/1082-989X.3.4.412"
+    ),
+    nomo_bib_entry(
       "dunn_2014", "Dunn, Baguley, & Brunsden (2014)",
       paste(
         "Dunn, T. J., Baguley, T., & Brunsden, V. (2014). From alpha to omega: A",
@@ -371,12 +405,30 @@ nomo_bibliography <- function() {
       "10.1007/BF02289162"
     ),
     nomo_bib_entry(
+      "hancock_2001", "Hancock (2001)",
+      paste(
+        "Hancock, G. R. (2001). Effect size, power, and sample size determination",
+        "for structured means modeling and MIMIC approaches to between-groups",
+        "hypothesis testing of means on a single latent construct.",
+        "Psychometrika, 66(3), 373-388."
+      ),
+      "10.1007/BF02294440"
+    ),
+    nomo_bib_entry(
       "hancock_mueller_2001", "Hancock & Mueller (2001)",
       paste(
         "Hancock, G. R., & Mueller, R. O. (2001). Rethinking construct",
         "reliability within latent variable systems. In R. Cudeck, S. du Toit, &",
         "D. Sorbom (Eds.), Structural equation modeling: Present and future",
         "(pp. 195-216). Scientific Software International."
+      ),
+      NA_character_
+    ),
+    nomo_bib_entry(
+      "hayduk_1987", "Hayduk (1987)",
+      paste(
+        "Hayduk, L. A. (1987). Structural equation modeling with LISREL:",
+        "Essentials and advances. Johns Hopkins University Press."
       ),
       NA_character_
     ),
@@ -431,6 +483,15 @@ nomo_bibliography <- function() {
         "Journal of Business and Psychology, 27(1), 99-114."
       ),
       "10.1007/s10869-011-9231-8"
+    ),
+    nomo_bib_entry(
+      "jacobson_truax_1991", "Jacobson & Truax (1991)",
+      paste(
+        "Jacobson, N. S., & Truax, P. (1991). Clinical significance: A",
+        "statistical approach to defining meaningful change in psychotherapy",
+        "research. Journal of Consulting and Clinical Psychology, 59(1), 12-19."
+      ),
+      "10.1037/0022-006X.59.1.12"
     ),
     nomo_bib_entry(
       "joreskog_1969", "J\u00f6reskog (1969)",
@@ -500,6 +561,15 @@ nomo_bibliography <- function() {
       "10.1177/0049124112442138"
     ),
     nomo_bib_entry(
+      "koo_li_2016", "Koo & Li (2016)",
+      paste(
+        "Koo, T. K., & Li, M. Y. (2016). A guideline of selecting and reporting",
+        "intraclass correlation coefficients for reliability research. Journal",
+        "of Chiropractic Medicine, 15(2), 155-163."
+      ),
+      "10.1016/j.jcm.2016.02.012"
+    ),
+    nomo_bib_entry(
       "kuhn_johnson_2013", "Kuhn & Johnson (2013)",
       "Kuhn, M., & Johnson, K. (2013). Applied predictive modeling. Springer.",
       "10.1007/978-1-4614-6849-3"
@@ -512,6 +582,25 @@ nomo_bibliography <- function() {
         "Practices in Psychological Science, 1(2), 259-269."
       ),
       "10.1177/2515245918770963"
+    ),
+    nomo_bib_entry(
+      "lindell_whitney_2001", "Lindell & Whitney (2001)",
+      paste(
+        "Lindell, M. K., & Whitney, D. J. (2001). Accounting for common method",
+        "variance in cross-sectional research designs. Journal of Applied",
+        "Psychology, 86(1), 114-121."
+      ),
+      "10.1037/0021-9010.86.1.114"
+    ),
+    nomo_bib_entry(
+      "liu_2017", "Liu et al. (2017)",
+      paste(
+        "Liu, Y., Millsap, R. E., West, S. G., Tein, J.-Y., Tanaka, R., &",
+        "Grimm, K. J. (2017). Testing measurement invariance in longitudinal",
+        "data with ordered-categorical measures. Psychological Methods, 22(3),",
+        "486-506."
+      ),
+      "10.1037/met0000075"
     ),
     nomo_bib_entry(
       "lorenzoseva_2011", "Lorenzo-Seva, Timmerman, & Kiers (2011)",
@@ -532,6 +621,15 @@ nomo_bibliography <- function() {
       "10.1037/0033-2909.111.3.490"
     ),
     nomo_bib_entry(
+      "maccallum_1996", "MacCallum, Browne, & Sugawara (1996)",
+      paste(
+        "MacCallum, R. C., Browne, M. W., & Sugawara, H. M. (1996). Power",
+        "analysis and determination of sample size for covariance structure",
+        "modeling. Psychological Methods, 1(2), 130-149."
+      ),
+      "10.1037/1082-989X.1.2.130"
+    ),
+    nomo_bib_entry(
       "marjanovic_2015", "Marjanovic, Holden, Struthers, Cribbie, & Greenglass (2015)",
       paste(
         "Marjanovic, Z., Holden, R., Struthers, W., Cribbie, R., & Greenglass, E.",
@@ -550,6 +648,25 @@ nomo_bibliography <- function() {
         "findings. Structural Equation Modeling, 11(3), 320-341."
       ),
       "10.1207/s15328007sem1103_2"
+    ),
+    nomo_bib_entry(
+      "marsh_2014", "Marsh, Morin, Parker, & Kaur (2014)",
+      paste(
+        "Marsh, H. W., Morin, A. J. S., Parker, P. D., & Kaur, G. (2014).",
+        "Exploratory structural equation modeling: An integration of the best",
+        "features of exploratory and confirmatory factor analysis. Annual Review",
+        "of Clinical Psychology, 10, 85-110."
+      ),
+      "10.1146/annurev-clinpsy-032813-153700"
+    ),
+    nomo_bib_entry(
+      "mcgraw_wong_1996", "McGraw & Wong (1996)",
+      paste(
+        "McGraw, K. O., & Wong, S. P. (1996). Forming inferences about some",
+        "intraclass correlation coefficients. Psychological Methods, 1(1),",
+        "30-46."
+      ),
+      "10.1037/1082-989X.1.1.30"
     ),
     nomo_bib_entry(
       "mcneish_2018", "McNeish (2018)",
@@ -602,6 +719,15 @@ nomo_bibliography <- function() {
       "10.1016/j.intell.2013.06.004"
     ),
     nomo_bib_entry(
+      "muthen_2002", "Muth\u00e9n & Muth\u00e9n (2002)",
+      paste(
+        "Muth\u00e9n, L. K., & Muth\u00e9n, B. O. (2002). How to use a Monte",
+        "Carlo study to decide on sample size and determine power. Structural",
+        "Equation Modeling, 9(4), 599-620."
+      ),
+      "10.1207/S15328007SEM0904_8"
+    ),
+    nomo_bib_entry(
       "nosek_2018", "Nosek et al. (2018)",
       paste(
         "Nosek, B. A., Ebersole, C. R., DeHaven, A. C., & Mellor, D. T. (2018).",
@@ -613,6 +739,34 @@ nomo_bibliography <- function() {
     nomo_bib_entry(
       "nunnally_bernstein_1994", "Nunnally & Bernstein (1994)",
       "Nunnally, J. C., & Bernstein, I. H. (1994). Psychometric theory (3rd ed.). McGraw-Hill."
+    ),
+    nomo_bib_entry(
+      "oberski_satorra_2013", "Oberski & Satorra (2013)",
+      paste(
+        "Oberski, D. L., & Satorra, A. (2013). Measurement error models with",
+        "uncertainty about the error variance. Structural Equation Modeling,",
+        "20(3), 409-428."
+      ),
+      "10.1080/10705511.2013.797820"
+    ),
+    nomo_bib_entry(
+      "podsakoff_2003", "Podsakoff, MacKenzie, Lee, & Podsakoff (2003)",
+      paste(
+        "Podsakoff, P. M., MacKenzie, S. B., Lee, J.-Y., & Podsakoff, N. P.",
+        "(2003). Common method biases in behavioral research: A critical review",
+        "of the literature and recommended remedies. Journal of Applied",
+        "Psychology, 88(5), 879-903."
+      ),
+      "10.1037/0021-9010.88.5.879"
+    ),
+    nomo_bib_entry(
+      "podsakoff_2012", "Podsakoff, MacKenzie, & Podsakoff (2012)",
+      paste(
+        "Podsakoff, P. M., MacKenzie, S. B., & Podsakoff, N. P. (2012). Sources",
+        "of method bias in social science research and recommendations on how",
+        "to control it. Annual Review of Psychology, 63, 539-569."
+      ),
+      "10.1146/annurev-psych-120710-100452"
     ),
     nomo_bib_entry(
       "putnick_bornstein_2016", "Putnick & Bornstein (2016)",
@@ -658,6 +812,16 @@ nomo_bibliography <- function() {
         "conditions. Psychological Methods, 17(3), 354-373."
       ),
       "10.1037/a0029315"
+    ),
+    nomo_bib_entry(
+      "richardson_2009", "Richardson, Simmering, & Sturman (2009)",
+      paste(
+        "Richardson, H. A., Simmering, M. J., & Sturman, M. C. (2009). A tale",
+        "of three perspectives: Examining post hoc statistical techniques for",
+        "detection and correction of common method variance. Organizational",
+        "Research Methods, 12(4), 762-800."
+      ),
+      "10.1177/1094428109332834"
     ),
     nomo_bib_entry(
       "rodriguez_2016", "Rodriguez, Reise, & Haviland (2016)",
@@ -730,6 +894,15 @@ nomo_bibliography <- function() {
       "10.1007/s11336-009-9135-y"
     ),
     nomo_bib_entry(
+      "savalei_2019", "Savalei (2019)",
+      paste(
+        "Savalei, V. (2019). A comparison of several approaches for controlling",
+        "measurement error in small samples. Psychological Methods, 24(3),",
+        "352-370."
+      ),
+      "10.1037/met0000181"
+    ),
+    nomo_bib_entry(
       "schafer_graham_2002", "Schafer & Graham (2002)",
       paste(
         "Schafer, J. L., & Graham, J. W. (2002). Missing data: Our view of the",
@@ -764,6 +937,14 @@ nomo_bibliography <- function() {
       "10.1214/aos/1176344136"
     ),
     nomo_bib_entry(
+      "shrout_fleiss_1979", "Shrout & Fleiss (1979)",
+      paste(
+        "Shrout, P. E., & Fleiss, J. L. (1979). Intraclass correlations: Uses in",
+        "assessing rater reliability. Psychological Bulletin, 86(2), 420-428."
+      ),
+      "10.1037/0033-2909.86.2.420"
+    ),
+    nomo_bib_entry(
       "sijtsma_2009", "Sijtsma (2009)",
       paste(
         "Sijtsma, K. (2009). On the use, the misuse, and the very limited",
@@ -780,6 +961,14 @@ nomo_bibliography <- function() {
         "22(11), 1359-1366."
       ),
       "10.1177/0956797611417632"
+    ),
+    nomo_bib_entry(
+      "spearman_1904", "Spearman (1904)",
+      paste(
+        "Spearman, C. (1904). The proof and measurement of association between",
+        "two things. The American Journal of Psychology, 15(1), 72-101."
+      ),
+      "10.2307/1412159"
     ),
     nomo_bib_entry(
       "svetina_2020", "Svetina, Rutkowski, & Rutkowski (2020)",
@@ -839,6 +1028,15 @@ nomo_bibliography <- function() {
       "10.1177/0095798418771807"
     ),
     nomo_bib_entry(
+      "weir_2005", "Weir (2005)",
+      paste(
+        "Weir, J. P. (2005). Quantifying test-retest reliability using the",
+        "intraclass correlation coefficient and the SEM. Journal of Strength and",
+        "Conditioning Research, 19(1), 231-240."
+      ),
+      "10.1519/15184.1"
+    ),
+    nomo_bib_entry(
       "wicherts_2016", "Wicherts et al. (2016)",
       paste(
         "Wicherts, J. M., Veldkamp, C. L. S., Augusteijn, H. E. M., Bakker, M.,",
@@ -847,6 +1045,45 @@ nomo_bibliography <- function() {
         "checklist to avoid p-hacking. Frontiers in Psychology, 7, 1832."
       ),
       "10.3389/fpsyg.2016.01832"
+    ),
+    nomo_bib_entry(
+      "widaman_2010", "Widaman, Ferrer, & Conger (2010)",
+      paste(
+        "Widaman, K. F., Ferrer, E., & Conger, R. D. (2010). Factorial",
+        "invariance within longitudinal structural equation models: Measuring",
+        "the same construct across time. Child Development Perspectives, 4(1),",
+        "10-18."
+      ),
+      "10.1111/j.1750-8606.2009.00110.x"
+    ),
+    nomo_bib_entry(
+      "williams_2010", "Williams, Hartman, & Cavazotte (2010)",
+      paste(
+        "Williams, L. J., Hartman, N., & Cavazotte, F. (2010). Method variance",
+        "and marker variables: A review and comprehensive CFA marker technique.",
+        "Organizational Research Methods, 13(3), 477-514."
+      ),
+      "10.1177/1094428110366036"
+    ),
+    nomo_bib_entry(
+      "williams_hazer_1986", "Williams & Hazer (1986)",
+      paste(
+        "Williams, L. J., & Hazer, J. T. (1986). Antecedents and consequences of",
+        "satisfaction and commitment in turnover models: A reanalysis using",
+        "latent variable structural equation methods. Journal of Applied",
+        "Psychology, 71(2), 219-231."
+      ),
+      "10.1037/0021-9010.71.2.219"
+    ),
+    nomo_bib_entry(
+      "wolf_2013", "Wolf, Harrington, Clark, & Miller (2013)",
+      paste(
+        "Wolf, E. J., Harrington, K. M., Clark, S. L., & Miller, M. W. (2013).",
+        "Sample size requirements for structural equation models: An evaluation",
+        "of power, bias, and solution propriety. Educational and Psychological",
+        "Measurement, 73(6), 913-934."
+      ),
+      "10.1177/0013164413495237"
     ),
     nomo_bib_entry(
       "yung_1999", "Yung, Thissen, & McLeod (1999)",
@@ -1428,6 +1665,75 @@ nomo_methods_registry <- function() {
       c("akaike_1974", "schwarz_1978", "raftery_1995", "burnham_anderson_2004")
     ),
 
+    nomo_method_entry(
+      "rmsea_power", "cfa",
+      "Power of the RMSEA tests of close, not-close, and exact fit",
+      "contemporary", "supporting",
+      paste(
+        "The probability that a model's overall fit test rejects its null",
+        "RMSEA when the alternative holds, and the sample size that makes it",
+        "likely."
+      ),
+      paste(
+        "Concerns the overall fit test, not any one parameter; depends heavily",
+        "on the model's degrees of freedom."
+      ),
+      "nomo_power_rmsea()", "nomologR",
+      c("maccallum_1996")
+    ),
+    nomo_method_entry(
+      "monte_carlo_power", "cfa",
+      "Monte Carlo power and sample size for a planned model",
+      "contemporary", "supporting",
+      paste(
+        "How often a planned model converges, gives proper solutions, recovers",
+        "its parameters without bias, covers them, and detects them, at each",
+        "sample size."
+      ),
+      paste(
+        "Only as good as the population model assumed; the references for",
+        "bias, coverage, and power guide the choice of N rather than decide it."
+      ),
+      "nomo_power_simulate()", "lavaan",
+      c("muthen_2002", "wolf_2013")
+    ),
+    nomo_method_entry(
+      "cfa_marker_technique", "cfa",
+      "Comprehensive CFA marker technique for method variance",
+      "contemporary", "supporting",
+      paste(
+        "Method variance a marker variable carries into a measurement model's",
+        "indicators, whether it biases the substantive correlations, and its",
+        "share of each factor's reliability."
+      ),
+      paste(
+        "Assumes the marker is theoretically unrelated to, and orthogonal to,",
+        "the substantive factors and taps biases in the measurement context;",
+        "with a nonideal marker it can detect method variance that is absent,",
+        "and it does not recover substantive correlations accurately."
+      ),
+      "nomo_method_variance()", "lavaan",
+      c("williams_2010", "lindell_whitney_2001", "podsakoff_2003",
+        "podsakoff_2012", "richardson_2009")
+    ),
+    nomo_method_entry(
+      "esem", "cfa",
+      "Exploratory structural equation modeling beside its CFA",
+      "contemporary", "supporting",
+      paste(
+        "Cross-loadings estimated rather than fixed at zero, with target",
+        "rotation towards the a priori structure, and the factor correlations",
+        "and fit compared with the independent-clusters CFA."
+      ),
+      paste(
+        "The solution depends on the rotation; cross-loadings are evidence",
+        "about items, and the CFA remains the more parsimonious account when",
+        "ESEM does not fit better on indices that penalize complexity."
+      ),
+      "nomo_esem()", "lavaan",
+      c("asparouhov_muthen_2009", "marsh_2014", "browne_2001")
+    ),
+
     # Stage 5: reliability ----------------------------------------------------
     nomo_method_entry(
       "omega", "reliability",
@@ -1575,6 +1881,47 @@ nomo_methods_registry <- function() {
       c("schmid_leiman_1957", "yung_1999")
     ),
 
+    nomo_method_entry(
+      "icc_retest", "reliability",
+      "Test-retest intraclass correlation",
+      "contemporary", "primary",
+      paste(
+        "Agreement of scores across occasions: two-way mixed effects, absolute",
+        "agreement, single measurement, with the consistency form beside it."
+      ),
+      paste(
+        "Describes stability over the interval studied, and the construct may",
+        "itself have changed. The reliability range is read from the",
+        "confidence interval."
+      ),
+      "nomo_retest()", "psych",
+      c("shrout_fleiss_1979", "mcgraw_wong_1996", "koo_li_2016")
+    ),
+    nomo_method_entry(
+      "sem_sdc", "reliability",
+      "Standard error of measurement and smallest detectable change",
+      "contemporary", "supporting",
+      paste(
+        "The measurement error of one score, and the smallest change unlikely",
+        "to be measurement error alone at 95%."
+      ),
+      "Assumes measurement error is the same across the score range.",
+      "nomo_retest()", "nomologR",
+      c("nunnally_bernstein_1994", "weir_2005")
+    ),
+    nomo_method_entry(
+      "reliable_change_index", "reliability",
+      "Reliable change index",
+      "contemporary", "supporting",
+      "A person's change divided by the standard error of a difference.",
+      paste(
+        "Says whether a change exceeds measurement error, not whether it is",
+        "meaningful."
+      ),
+      "nomo_retest()", "nomologR",
+      c("jacobson_truax_1991")
+    ),
+
     # Stage 6: convergent and discriminant evidence --------------------------
     nomo_method_entry(
       "standardized_loadings_ave", "validity",
@@ -1692,6 +2039,40 @@ nomo_methods_registry <- function() {
       ),
       "nomo_partial()", "lavaan",
       c("byrne_1989")
+    ),
+
+    nomo_method_entry(
+      "latent_mean_comparison", "invariance",
+      "Latent mean comparison between groups",
+      "contemporary", "supporting",
+      paste(
+        "Groups' latent means relative to a reference group, in its latent",
+        "standard deviations: structured-means known-groups evidence."
+      ),
+      paste(
+        "Comparable only when intercepts are invariant, fully or partially;",
+        "the reference group is identified with a mean of 0 and a variance of 1."
+      ),
+      "nomo_invariance()", "lavaan",
+      c("byrne_1989", "hancock_2001", "vandenberg_lance_2000")
+    ),
+    nomo_method_entry(
+      "longitudinal_invariance", "invariance",
+      "Longitudinal measurement invariance and latent change",
+      "contemporary", "primary",
+      paste(
+        "Equality of the same items' loadings, intercepts or thresholds, and",
+        "residual variances across occasions, with each item's unique factors",
+        "correlated over time, and the latent change once intercepts are",
+        "invariant."
+      ),
+      paste(
+        "The same items at every occasion; latent change is comparable only with",
+        "invariant intercepts, fully or partially, and is expressed in the first",
+        "occasion's latent standard deviations."
+      ),
+      "nomo_invariance_longitudinal()", "lavaan",
+      c("widaman_2010", "liu_2017", "meredith_1993")
     ),
 
     # Stage 8: nomological network -------------------------------------------
@@ -1846,6 +2227,28 @@ nomo_methods_registry <- function() {
       c("fokkema_greiff_2017")
     ),
 
+    nomo_method_entry(
+      "single_indicator_reliability", "network",
+      "Single-indicator latent variables with error variance from reliability",
+      "contemporary", "supporting",
+      paste(
+        "Relations of a composite's true score, with its error variance fixed",
+        "at (1 - reliability) times its observed variance."
+      ),
+      paste(
+        "The composite is unidimensional and its reliability captures its",
+        "measurement error; alpha understates reliability when loadings differ,",
+        "which overcorrects. Standard errors treat the reliability as known",
+        "unless its uncertainty is supplied."
+      ),
+      "nomo_network()", "lavaan",
+      c(
+        "spearman_1904", "hayduk_1987", "williams_hazer_1986", "bollen_1989",
+        "bagozzi_heatherton_1994", "deshon_1998", "oberski_satorra_2013",
+        "savalei_2019"
+      )
+    ),
+
     # Stage 9: workflow, provenance, and reporting ---------------------------
     nomo_method_entry(
       "staged_workflow", "workflow",
@@ -1994,7 +2397,14 @@ nomo_methods_history <- function() {
     c("orthogonal_rotation", "kaiser_1958", "oblique_rotation"),
     c("loading_reference", NA, "loading_diagnostics"),
     c("item_total_reference", NA, "item_rest_correlation"),
+    c("icc_retest", NA, NA),
+    c("sem_sdc", NA, NA),
+    c("reliable_change_index", NA, NA),
     c("ml_cfa", "joreskog_1969", NA),
+    c("rmsea_power", "maccallum_1996", NA),
+    c("monte_carlo_power", NA, NA),
+    c("cfa_marker_technique", "williams_2010", NA),
+    c("esem", "asparouhov_muthen_2009", NA),
     c("chisq_exact_fit", "joreskog_1969", "incremental_fit; rmsea_interval; srmr; local_strain"),
     c("incremental_fit", "bentler_bonett_1980", NA),
     c("rmsea_interval", "browne_cudeck_1992", NA),
@@ -2026,7 +2436,10 @@ nomo_methods_history <- function() {
     c("unit_weighted_score", NA, "parallel_model_test"),
     c("parallel_model_test", "mcneish_wolf_2020", NA),
     c("nomological_network", "cronbach_meehl_1955", "two_step_sem; prediction_provenance"),
+    c("latent_mean_comparison", NA, NA),
+    c("longitudinal_invariance", NA, NA),
     c("two_step_sem", "anderson_gerbing_1988", NA),
+    c("single_indicator_reliability", NA, NA),
     c("equivalence_testing", "schuirmann_1987", NA),
     c("prediction_provenance", "nosek_2018", NA),
     c("listwise_deletion", NA, "fiml; missing_sensitivity"),

@@ -1,10 +1,17 @@
 # Fixtures ---------------------------------------------------------------------
 #
-# Genuine contentvalidR output from the v0.6.0 to v0.9.0 tags, stored so the
+# Genuine contentvalidR output from the v0.6.0 to v0.10.1 tags, stored so the
 # reader is tested against the real interface without contentvalidR installed
 # (#46, #53). See fixtures/contentvalidR/README.md and MANIFEST.csv.
 
-handoff_versions <- c("0.6.0", "0.7.0", "0.8.0", "0.9.0")
+handoff_versions <- c("0.6.0", "0.7.0", "0.8.0", "0.9.0", "0.10.0", "0.10.1")
+
+# Every stored version after `version`, so a version added to the end of
+# handoff_versions joins each comparison with an earlier baseline.
+handoff_versions_after <- function(version) {
+  stopifnot(version %in% handoff_versions)
+  handoff_versions[seq_along(handoff_versions) > match(version, handoff_versions)]
+}
 
 handoff_fixture <- function(fit, version) {
   readRDS(test_path(
@@ -61,15 +68,18 @@ test_that("every producer version agrees on the carry decisions of the original 
       expect_identical(later$evidence[, decision], first$evidence[, decision])
     }
     # The rule text is prose the schema leaves free to change; 0.8.0 rewrote
-    # it in counts, citing Lynn (1986). 0.9.0 changed only what is printed.
+    # it in counts, citing Lynn (1986). 0.9.0, 0.10.0, and 0.10.1 changed only
+    # what is printed, and every later version must hand off the same evidence.
     expect_identical(
       nomologR:::nomo_handoff_read(handoff_fixture(fit, "0.7.0"))$evidence$rule,
       first$evidence$rule
     )
-    expect_identical(
-      nomologR:::nomo_handoff_read(handoff_fixture(fit, "0.9.0"))$evidence,
-      nomologR:::nomo_handoff_read(handoff_fixture(fit, "0.8.0"))$evidence
-    )
+    for (version in handoff_versions_after("0.8.0")) {
+      expect_identical(
+        nomologR:::nomo_handoff_read(handoff_fixture(fit, version))$evidence,
+        nomologR:::nomo_handoff_read(handoff_fixture(fit, "0.8.0"))$evidence
+      )
+    }
   }
 })
 
@@ -86,7 +96,9 @@ test_that("the screen follows the carry decision the object records, not its pro
   }
   expect_identical(held_back("0.7.0"), list(items = c("N9", "N8"), held = c("N7", "N6")))
   expect_identical(held_back("0.8.0"), list(items = c("N9", "N8", "N7"), held = "N6"))
-  expect_identical(held_back("0.9.0"), held_back("0.8.0"))
+  for (version in handoff_versions_after("0.8.0")) {
+    expect_identical(held_back(version), held_back("0.8.0"))
+  }
 })
 
 
@@ -109,6 +121,14 @@ test_that("declared keying maps onto reverse and scale_range as agreed", {
   read <- nomologR:::nomo_handoff_read(
     handoff_fixture("walkthrough-sort-none-reversed", "0.9.0")
   )
+  for (version in handoff_versions_after("0.9.0")) {
+    expect_identical(
+      nomologR:::nomo_handoff_read(
+        handoff_fixture("walkthrough-sort-none-reversed", version)
+      )$keying,
+      read$keying
+    )
+  }
   none <- read$keying
   expect_true(none$declared)
   expect_identical(none$reverse, character(0))

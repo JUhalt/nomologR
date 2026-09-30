@@ -16,10 +16,24 @@ nomo_invariance_metric_label <- function(x) {
 }
 
 
-nomo_invariance_parameter_label <- function(pt, row, group_labels) {
+# Across occasions, `occasion_map` translates each occasion's column and factor
+# names back to the item or factor in the one-occasion model, and the occasion
+# takes the place of the group.
+nomo_invariance_parameter_label <- function(pt, row, group_labels, occasion_map = NULL) {
   lhs <- as.character(pt$lhs[[row]])
   op <- as.character(pt$op[[row]])
   rhs <- as.character(pt$rhs[[row]])
+  occasion <- NULL
+  if (!is.null(occasion_map)) {
+    k <- match(if (identical(op, "=~")) rhs else lhs, occasion_map$name)
+    occasion <- if (is.na(k)) "" else occasion_map$occasion[[k]]
+    generic <- function(name) {
+      k <- match(name, occasion_map$name)
+      if (is.na(k)) name else occasion_map$generic[[k]]
+    }
+    lhs <- generic(lhs)
+    rhs <- generic(rhs)
+  }
 
   base <- if (identical(op, "=~")) {
     paste0("Loading: ", lhs, " -> ", rhs)
@@ -34,6 +48,7 @@ nomo_invariance_parameter_label <- function(pt, row, group_labels) {
   } else {
     paste(lhs, op, rhs)
   }
+  if (!is.null(occasion)) return(list(base = base, group = occasion))
 
   group_id <- suppressWarnings(as.integer(pt$group[[row]]))
   group_name <- if (
@@ -52,7 +67,7 @@ nomo_invariance_parameter_label <- function(pt, row, group_labels) {
 }
 
 
-nomo_invariance_pretty_constraint <- function(constraint, fit) {
+nomo_invariance_pretty_constraint <- function(constraint, fit, occasion_map = NULL) {
   if (is.null(fit) ||
       !is.character(constraint) ||
       length(constraint) != 1L ||
@@ -99,12 +114,14 @@ nomo_invariance_pretty_constraint <- function(constraint, fit) {
   a <- nomo_invariance_parameter_label(
     pt,
     left[[1L]],
-    group_labels
+    group_labels,
+    occasion_map
   )
   b <- nomo_invariance_parameter_label(
     pt,
     right[[1L]],
-    group_labels
+    group_labels,
+    occasion_map
   )
 
   if (identical(a$base, b$base)) {
@@ -136,6 +153,14 @@ nomo_invariance_pretty_constraint <- function(constraint, fit) {
 nomo_invariance_local_strain_display <- function(x) {
   dat <- x$local_strain
   if (!nrow(dat)) return(dat)
+  occasion_map <- if (identical(x$design, "occasions")) {
+    named <- c(x$long_items, x$long_factors)
+    tibble::tibble(
+      name = unname(unlist(named)),
+      generic = rep(names(named), lengths(named)),
+      occasion = rep(x$occasions, length(named))
+    )
+  }
 
   dat$constraint_display <- vapply(
     seq_len(nrow(dat)),
@@ -144,7 +169,8 @@ nomo_invariance_local_strain_display <- function(x) {
       fit <- x$fits[[level]]
       nomo_invariance_pretty_constraint(
         dat$constraint[[i]],
-        fit
+        fit,
+        occasion_map
       )
     },
     character(1)
@@ -177,12 +203,15 @@ nomo_invariance_present_problems <- function(fit) {
 
 #' @export
 print.nomo_invariance <- function(x, ...) {
-  nomo_present_header("nomo_invariance", "Measurement invariance")
-  nomo_present_facts(c(
-    sprintf("Grouping variable: %s (%d groups: %s)", x$group, length(x$groups),
-            paste(x$groups, collapse = ", ")),
-    sprintf("Indicators: %s", x$indicator_type)
-  ))
+  if (identical(x$design, "occasions")) {
+    nomo_present_header("nomo_invariance_longitudinal", "Measurement invariance across occasions")
+    across <- sprintf("Occasions: %s", paste(x$occasions, collapse = ", "))
+  } else {
+    nomo_present_header("nomo_invariance", "Measurement invariance")
+    across <- sprintf("Grouping variable: %s (%d groups: %s)", x$group, length(x$groups),
+                      paste(x$groups, collapse = ", "))
+  }
+  nomo_present_facts(c(across, sprintf("Indicators: %s", x$indicator_type)))
 
   if (length(x$ordered)) {
     nomo_present_facts(c(
@@ -239,6 +268,7 @@ summary.nomo_invariance <- function(object, ...) {
   }
 
   out <- list(
+    design = object$design,
     group = object$group,
     groups = object$groups,
     indicator_type = object$indicator_type,
@@ -251,6 +281,7 @@ summary.nomo_invariance <- function(object, ...) {
     partial = object$partial,
     partial_requested = object$partial_requested,
     top_local_strain = top_local,
+    latent_means = object[["latent_means"]],
     decision_log = object$decision_log,
     note = paste(
       "No single delta-CFI, delta-RMSEA, delta-SRMR, chi-square difference,",
@@ -264,10 +295,19 @@ summary.nomo_invariance <- function(object, ...) {
 
 #' @export
 print.summary_nomo_invariance <- function(x, ...) {
-  nomo_present_header("nomo_invariance", "Measurement invariance", summary = TRUE)
+  across_occasions <- identical(x$design, "occasions")
+  if (across_occasions) {
+    nomo_present_header(
+      "nomo_invariance_longitudinal", "Measurement invariance across occasions",
+      summary = TRUE
+    )
+  } else {
+    nomo_present_header("nomo_invariance", "Measurement invariance", summary = TRUE)
+  }
   nomo_present_facts(c(
     sprintf("Indicators: %s", x$indicator_type),
-    sprintf("Groups: %s", paste(x$groups, collapse = ", "))
+    sprintf(if (across_occasions) "Occasions: %s" else "Groups: %s",
+            paste(x$groups, collapse = ", "))
   ))
   nomo_present_facts(sprintf(
     "Levels completed: %s", paste(x$completed_levels, collapse = " -> ")
@@ -313,6 +353,28 @@ print.summary_nomo_invariance <- function(x, ...) {
     nomo_present_bullets(sprintf(
       "%s (%s): %s. %s", rel$release_id, rel$level, rel$syntax, rel$rationale
     ))
+  }
+
+  means <- x[["latent_means"]]
+  if (is.data.frame(means) && nrow(means)) {
+    shown <- means
+    shown$interval <- nomo_present_ci(shown$ci_lower, shown$ci_upper, 2L)
+    nomo_present_section(if (across_occasions) {
+      sprintf("Latent change from %s (its latent SD)", shown$reference_occasion[[1L]])
+    } else {
+      sprintf("Latent means relative to %s (its latent SD)", shown$reference_group[[1L]])
+    })
+    nomo_present_table(
+      shown,
+      c("Level" = "level", "Group" = "group", "Occasion" = "occasion", "Factor" = "factor",
+        "Difference" = "estimate", "95% CI" = "interval", "p" = "p_value"),
+      formats = list(estimate = function(v) nomo_present_number(v, 2L),
+                     p_value = nomo_present_p),
+      more = "nomo_table(x, \"latent_means\")"
+    )
+    nomo_present_text(
+      "Comparable only with invariant intercepts, full or partial.", indent = 2L
+    )
   }
 
   if (nrow(x$top_local_strain)) {

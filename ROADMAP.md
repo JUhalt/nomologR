@@ -8,12 +8,16 @@
 >
 > **Core principle:** Flag, explain, and document. Never silently delete.
 
-**Current stable release:** [0.3.0](https://github.com/JUhalt/nomologR/releases/tag/v0.3.0)
-(September 26, 2026), GPL-3.0-only — the first release submitted to CRAN. It
-adds the `contentvalidR` handoff reader, carries the v0.2.1 tools into the
-guided workflow and its report, and adds a written stability policy. It
-follows [0.2.1](https://github.com/JUhalt/nomologR/releases/tag/v0.2.1)
-(September 23, 2026) and
+**Current stable release:** [0.9.0](https://github.com/JUhalt/nomologR/releases/tag/v0.9.0)
+(September 28, 2026), GPL-3.0-only — the last minor release before 1.0.0. It
+redesigns console output, plots, and report tables, records in
+`nomo_methods()` how practice changed, adds the teaching and content-review
+articles and APA tables for validity evidence, and names the returned fields
+in every help page. It follows
+[0.3.0](https://github.com/JUhalt/nomologR/releases/tag/v0.3.0) (September 26,
+2026), the first release submitted to CRAN, which is still in CRAN's queue for
+new submissions; [0.2.1](https://github.com/JUhalt/nomologR/releases/tag/v0.2.1)
+(September 23, 2026); and
 [0.2.0](https://github.com/JUhalt/nomologR/releases/tag/v0.2.0) (September 19,
 2026). The earlier [0.1.0](https://github.com/JUhalt/nomologR/releases/tag/v0.1.0)
 release (September 9, 2026) keeps its original MIT license.
@@ -109,6 +113,7 @@ in [`dev/roadmap-v0.1-record.md`](dev/roadmap-v0.1-record.md).
 
 ***
 <a id="v02x--robustness--broader-measurement-models"></a>
+
 # v0.2.0 — Research-Backed, Usable Measurement Workflows
 
 **Status:** Released September 19, 2026. Scope selected in [#22](https://github.com/JUhalt/nomologR/issues/22). Every Core workstream shipped; six Planned workstreams moved to [v0.2.1](https://github.com/JUhalt/nomologR/milestone/4) at certification, each with its reason recorded on the issue.
@@ -204,13 +209,27 @@ be recorded in [#39](https://github.com/JUhalt/nomologR/issues/39).
 - [x] [#74](https://github.com/JUhalt/nomologR/issues/74) A written API-stability and deprecation policy, which the joint 1.0 release requires ([#53](https://github.com/JUhalt/nomologR/issues/53)).
 - [ ] [#75](https://github.com/JUhalt/nomologR/issues/75) Release certification and CRAN submission.
 
+# v0.9.0 — Before 1.0: Presentation, the Historical Record, and Teaching
+
+**Status:** Released 2026-09-28, with the maintainer's approval. It carries the
+1.0 scope selected in [#113](https://github.com/JUhalt/nomologR/issues/113) up
+to that date.
+
+- [x] [#89](https://github.com/JUhalt/nomologR/issues/89) Console output, plots, and report tables redesigned.
+- [x] [#113](https://github.com/JUhalt/nomologR/issues/113) The historical record in `nomo_methods()` and the research-basis timeline (#116, #119); within-scale item review (#123, #127); APA tables for validity evidence (#124).
+- [x] [#60](https://github.com/JUhalt/nomologR/issues/60) "From content review to empirical screening" and `nomo_demo_walkthrough` (#112); "Teaching with nomologR" (#118).
+- [x] [#114](https://github.com/JUhalt/nomologR/issues/114) Returned fields named in every help page (#115); `nomo_missing(fit)` (#122).
+
 # v1.0.0 — Joint Stable Release with contentvalidR
 
-**Status:** Feature scope complete (2026-09-28). The scope was set in
+**Status:** Release candidate planned for 2026-10-17, the same day as
+`contentvalidR`'s (decided by the maintainer on 2026-09-28), after a feature
+freeze on 2026-10-13. The scope is set in
 [#113](https://github.com/JUhalt/nomologR/issues/113), where the maintainer
-delegated the remaining decisions to be made on what the literature says. What
-remains is the release sequence in
-[#53](https://github.com/JUhalt/nomologR/issues/53).
+delegated decisions to what the literature says. On 2026-09-28 the maintainer
+asked that the gaps social-science scale developers meet be closed before the
+candidate, starting with reliability-corrected single indicators. The release
+sequence is in [#53](https://github.com/JUhalt/nomologR/issues/53).
 
 1.0.0 is the stability promise in `?nomologR`. After it, changes to existing
 behavior need a deprecation cycle, and additions stay free. So anything that
@@ -240,6 +259,17 @@ can wait for 1.x.
     at the release candidate.
 - [x] [#113](https://github.com/JUhalt/nomologR/issues/113) APA tables for
   convergent and discriminant evidence (#124).
+- [x] [#129](https://github.com/JUhalt/nomologR/issues/129) The gap review:
+  what social-science scale developers need before 1.0, each method taken from
+  its literature. All are additive.
+  - [x] Reliability-corrected single indicators for observed composites (#131).
+  - [x] Test-retest reliability, measurement error, and reliable change (#132).
+  - [x] Latent means as known-groups evidence (#133).
+  - [x] Common method variance: the comprehensive CFA marker technique (#134).
+  - [x] ESEM beside its CFA (#136).
+  - [x] Sample-size planning: RMSEA power and Monte Carlo power (#135).
+  - [x] Longitudinal measurement invariance and latent change (#137).
+  - [x] A scope note: every analysis assumes reflective measurement.
 - [ ] [#39](https://github.com/JUhalt/nomologR/issues/39) The CRAN outcome for
   0.3.0, which is in CRAN's queue for new submissions. `contentvalidR` 0.4.0
   was accepted on 2026-09-28, which starts its update interval.
@@ -257,18 +287,24 @@ can wait for 1.x.
 **Status:** Candidates for releases after 1.0.0, all additive. They were
 deferred from v0.3.0 ([#38](https://github.com/JUhalt/nomologR/issues/38)) and
 again from 1.0.0 ([#113](https://github.com/JUhalt/nomologR/issues/113)). None
-was rejected. Candidates are not commitments until selected.
+was rejected. Candidates are not commitments until selected. ESEM,
+longitudinal invariance, and sample-size planning moved into 1.0.0 with the gap
+review ([#129](https://github.com/JUhalt/nomologR/issues/129)), which also
+added formative models, measurement invariance by alignment, latent
+interactions, and multitrait-multimethod models to this list.
 
-- [ ] ESEM. lavaan already fits it, so it needs no new dependency, which makes it a natural first candidate.
-- [ ] Longitudinal invariance.
 - [ ] Multiple-imputation integration. `nomo_missing()` covers listwise, FIML, and pairwise sensitivity meanwhile.
 - [ ] Bootstrap stability summaries.
-- [ ] CFA/SEM sample-size and power planning.
 - [ ] Criterion/predictive evidence beyond network outcomes.
 - [ ] IRT as a complementary item-level framework, and DIF.
 - [ ] Bayesian CFA/SEM (`blavaan`) robustness module, posterior predictive checking, and frequentist/Bayesian concordance summaries; with it, content-validity evidence as informative priors ([#49](https://github.com/JUhalt/nomologR/issues/49)).
 - [ ] Additional equivalence/SESOI functionality beyond v0.1's researcher-specified negligible regions. No SESOI is invented by the package.
 - [ ] Model-specific fit diagnostics ([#23](https://github.com/JUhalt/nomologR/issues/23)).
+- [ ] Formative (causal-indicator) measurement models. Until then, the scope
+  note in Get started says why the reflective tools do not apply to them.
+- [ ] Measurement invariance across many groups by alignment.
+- [ ] Latent interactions.
+- [ ] Multitrait-multimethod models.
 
 ***
 # Distribution — R-universe, and CRAN from v0.3.0

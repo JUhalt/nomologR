@@ -39,6 +39,10 @@ reference:
       - plot.nomo_efa
   - title: "3. Confirmatory measurement model"
     contents:
+      - nomo_method_variance
+      - nomo_power_rmsea
+      - nomo_power_simulate
+      - nomo_esem
       - nomo_model
       - nomo_split
       - nomo_cfa
@@ -50,6 +54,7 @@ reference:
       - nomo_missing
   - title: "4. Reliability and construct-validity evidence"
     contents:
+      - nomo_retest
       - nomo_reliability
       - summary.nomo_reliability
       - plot.nomo_reliability
@@ -62,6 +67,7 @@ reference:
     contents:
       - nomo_invariance
       - nomo_partial
+      - nomo_invariance_longitudinal
       - plot.nomo_invariance
   - title: "6. Scoring"
     contents:
@@ -71,6 +77,7 @@ reference:
       - nomo_hypotheses
       - nomo_expectations
       - nomo_network
+      - nomo_single_indicator
       - plot.nomo_network
   - title: Teaching datasets
     desc: >
@@ -80,6 +87,7 @@ reference:
       - nomo_demo_continuous
       - nomo_demo_ordinal
       - nomo_demo_network
+      - nomo_demo_longitudinal
       - nomo_demo_walkthrough
 
 articles:

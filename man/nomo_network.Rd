@@ -16,6 +16,7 @@ nomo_network(
   std.lv = TRUE,
   control = NULL,
   equivalence_alpha = 0.05,
+  single_indicators = NULL,
   guidance = nomo_defaults()
 )
 }
@@ -50,6 +51,12 @@ declared and \code{estimator = NULL}, WLSMV is requested.}
 quantitative negligible predictions, the equivalence confidence level is
 \code{1 - 2 * equivalence_alpha}.}
 
+\item{single_indicators}{Optional composites to model as single-indicator
+latent variables: a named list, or a named numeric vector, whose names are
+observed variables that \code{model} uses and whose values are reliabilities,
+given as one number or as a \code{\link[=nomo_single_indicator]{nomo_single_indicator()}} record. See
+\strong{Single indicators}.}
+
 \item{guidance}{Guidance settings returned by \code{nomo_defaults()}.}
 }
 \value{
@@ -69,6 +76,12 @@ qualify the structural evidence.
 relations added from the hypotheses.
 \item \code{fit}: the \code{lavaan} fit, and \code{validation}, the validation fit, when
 given.
+\item \code{single_indicators}: one row per composite modeled as a single
+indicator, with its reliability, the reliability's standard error,
+coefficient, and source, the composite's variance, and the error
+variance fixed. Empty when \code{single_indicators} is not used.
+\item \code{single_indicator_sensitivity}: each hypothesis's estimate, interval,
+and concordance with each composite's reliability shifted by up to .10.
 \item \code{converged}, \code{engine_warnings}, and \code{decision_log}.
 }
 
@@ -157,6 +170,36 @@ all the factors from one model, does not, and
 standard errors still treat the scores as observed, and Skrondal and Laake
 note that corrected ones may require resampling. The result does not extend
 to nonlinear models. No correction is applied automatically.
+
+Where they are composites whose reliability is known, \code{single_indicators}
+corrects them (see \strong{Single indicators}).
+}
+
+\section{Single indicators}{
+
+A composite named in \code{single_indicators} becomes the one indicator of a
+latent variable with the composite's name, so the model syntax and the
+hypotheses are unchanged. Its error variance is fixed at
+\eqn{(1 - \rho)\sigma^2}, the reliability's complement times the
+composite's variance in the data being fitted, and the relationships it
+enters are corrected for its unreliability (Bollen, 1989; Savalei, 2019).
+\code{\link[=nomo_single_indicator]{nomo_single_indicator()}} explains the method's origin and evidence, and
+which reliability to use.
+
+The correction is only as good as the reliability, and Savalei (2019) found
+that misestimating it by more than about .05 costs accuracy. So each
+hypothesis is refitted with each composite's reliability .05 and .10 lower
+and higher, one composite at a time, and \code{single_indicator_sensitivity}
+records the estimates, intervals, and concordance at each. The decision log
+flags any hypothesis whose concordance changes across that range.
+
+When a reliability's standard error is supplied, the standard errors,
+intervals, and concordance of the hypotheses add its uncertainty, following
+Oberski and Satorra (2013): the variance of an estimate gains its squared
+rate of change in the reliability times the reliability's variance. The rate
+of change is taken from the refits within .05 of the reliability. Without a
+standard error, the log says that the standard errors treat the reliability
+as known.
 }
 
 \examples{
@@ -181,12 +224,28 @@ nomo_table(net, "hypotheses")
 s <- nomo_split(nomo_demo_network, validation_prop = 0.40, seed = 2026)
 net_rep <- nomo_network(model, data = s, hypotheses = h)
 nomo_table(net_rep, "replication")
+
+# A composite corrected for its unreliability: the Persistence mean, with
+# omega from its own measurement model.
+dat <- nomo_demo_network
+dat$persistence <- rowMeans(dat[c("pe1", "pe2", "pe3", "pe4")])
+rel <- nomo_reliability(nomo_cfa("P =~ pe1 + pe2 + pe3 + pe4", dat))
+net_si <- nomo_network(
+  "Agency =~ ag1 + ag2 + ag3 + ag4",
+  data = dat,
+  hypotheses = nomo_hypotheses("Agency -> persistence" = positive()),
+  single_indicators = list(persistence = nomo_single_indicator(rel))
+)
+nomo_table(net_si, "single_indicators")
 }
 }
 \references{
 Anderson, J. C., & Gerbing, D. W. (1988). Structural equation modeling in
 practice: A review and recommended two-step approach. \emph{Psychological
 Bulletin, 103}(3), 411-423. \doi{10.1037/0033-2909.103.3.411}
+
+Bollen, K. A. (1989). \emph{Structural equations with latent variables}. Wiley.
+\doi{10.1002/9781118619179}
 
 Cronbach, L. J., & Meehl, P. E. (1955). Construct validity in psychological
 tests. \emph{Psychological Bulletin, 52}(4), 281-302. \doi{10.1037/h0040957}
@@ -200,9 +259,17 @@ inferences from persons' responses and performances as scientific inquiry
 into score meaning. \emph{American Psychologist, 50}(9), 741-749.
 \doi{10.1037/0003-066X.50.9.741}
 
+Oberski, D. L., & Satorra, A. (2013). Measurement error models with
+uncertainty about the error variance. \emph{Structural Equation Modeling, 20}(3),
+409-428. \doi{10.1080/10705511.2013.797820}
+
 Rosseel, Y., & Loh, W. W. (2024). A structural after measurement approach
 to structural equation modeling. \emph{Psychological Methods, 29}(3), 561-588.
 \doi{10.1037/met0000503}
+
+Savalei, V. (2019). A comparison of several approaches for controlling
+measurement error in small samples. \emph{Psychological Methods, 24}(3), 352-370.
+\doi{10.1037/met0000181}
 
 Schuirmann, D. J. (1987). A comparison of the two one-sided tests procedure
 and the power approach for assessing the equivalence of average

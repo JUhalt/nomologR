@@ -123,6 +123,71 @@ nomo_network_present_evidence <- function(evidence, replication) {
 }
 
 
+
+# Single indicators, for print() and summary(): the reliability behind each
+# composite modeled as a single indicator, and how the evidence moves with it.
+nomo_network_present_single <- function(single, sensitivity, detail = FALSE) {
+  if (!is.data.frame(single) || !nrow(single)) return(invisible(NULL))
+  if (!isTRUE(detail)) {
+    nomo_present_facts(paste0(
+      "Single indicator: ", single$variable, " (reliability ",
+      nomo_present_number(single$reliability, 3L), ", ", single$coefficient, ")"
+    ))
+    return(invisible(NULL))
+  }
+
+  show <- single
+  show$reliability_shown <- nomo_present_number(show$reliability, 3L)
+  show$se_shown <- ifelse(is.finite(show$se), nomo_present_number(show$se, 3L), "-")
+  nomo_present_section("Single indicators")
+  nomo_present_table(
+    show,
+    c("Composite" = "variable", "Reliability" = "reliability_shown",
+      "Coefficient" = "coefficient", "SE" = "se_shown", "Variance" = "variance",
+      "Error variance" = "error_variance"),
+    more = "nomo_table(x, \"single_indicators\")"
+  )
+
+  wide <- nomo_network_sensitivity_wide(sensitivity)
+  nomo_present_section("Sensitivity to the reliability")
+  nomo_present_table(
+    wide,
+    c("Composite" = "variable", "ID" = "id", "-.10" = "minus_10",
+      "-.05" = "minus_05", "Given" = "given", "+.05" = "plus_05",
+      "+.10" = "plus_10", "Concordance" = "concordance"),
+    more = "nomo_table(x, \"sensitivity\")"
+  )
+  nomo_present_text(
+    "Estimates with each composite's reliability shifted by the amount shown, ",
+    "one composite at a time.",
+    indent = 2L
+  )
+}
+
+
+# The sensitivity table with one row per composite and hypothesis, and the
+# estimate at each shift of the reliability in its own column.
+nomo_network_sensitivity_wide <- function(sensitivity) {
+  keys <- unique(as.data.frame(sensitivity)[c("variable", "id")])
+  columns <- c(minus_10 = -0.10, minus_05 = -0.05, given = 0, plus_05 = 0.05,
+               plus_10 = 0.10)
+  for (column in names(columns)) {
+    keys[[column]] <- vapply(seq_len(nrow(keys)), function(i) {
+      hit <- sensitivity$variable == keys$variable[[i]] &
+        sensitivity$id == keys$id[[i]] &
+        abs(sensitivity$shift - columns[[column]]) < 1e-9
+      if (any(hit)) sensitivity$estimate[hit][[1L]] else NA_real_
+    }, numeric(1))
+  }
+  keys$concordance <- vapply(seq_len(nrow(keys)), function(i) {
+    seen <- sensitivity$concordance[
+      sensitivity$variable == keys$variable[[i]] & sensitivity$id == keys$id[[i]]
+    ]
+    if (length(unique(seen)) > 1L) "changes" else "unchanged"
+  }, character(1))
+  keys
+}
+
 # Shared facts: sample, convergence, and the relations added from hypotheses.
 nomo_network_present_facts <- function(x) {
   nomo_present_facts(c(
@@ -142,6 +207,9 @@ print.nomo_network <- function(x, ...) {
     sprintf("Added to the model from hypotheses: %d",
             sum(x$model_relations$added_from_hypothesis))
   ))
+  nomo_network_present_single(
+    x[["single_indicators"]], x[["single_indicator_sensitivity"]]
+  )
 
   measurement <- x$measurement_context$summary[1L, , drop = FALSE]
   flag <- nomo_present_flag(measurement$attention[[1L]])
@@ -194,6 +262,8 @@ summary.nomo_network <- function(object, ...) {
     replication_evidence = object$replication_evidence,
     replication_counts = replication_counts,
     model_relations = object$model_relations,
+    single_indicators = object[["single_indicators"]],
+    single_indicator_sensitivity = object[["single_indicator_sensitivity"]],
     decision_log = object$decision_log
   )
 
@@ -239,6 +309,9 @@ print.summary_nomo_network <- function(x, ...) {
   }
 
   nomo_network_present_evidence(x$hypothesis_evidence, x$replication_evidence)
+  nomo_network_present_single(
+    x[["single_indicators"]], x[["single_indicator_sensitivity"]], detail = TRUE
+  )
 
   nomo_present_section("Predictions and context")
   context <- x$hypothesis_evidence

@@ -129,8 +129,8 @@ nomo_apa_new <- function(body, title, stub, general = character(),
 #' corrected where it departs from APA style, with the correction described in
 #' NEWS.
 #'
-#' @param x A result object: `nomo_cfa`, `nomo_reliability`, `nomo_validity`,
-#'   `nomo_invariance`, or `nomo_network`.
+#' @param x A result object: `nomo_cfa`, `nomo_reliability`, `nomo_retest`,
+#'   `nomo_validity`, `nomo_invariance`, or `nomo_network`.
 #' @param type Which table to build. For `nomo_cfa`: `"loadings"`, `"fit"`, or
 #'   `"factor_correlations"`. For `nomo_validity`: `"discriminant"` or
 #'   `"convergent"`. For `nomo_network`: `"hypotheses"` or `"fit"`. Other
@@ -188,8 +188,8 @@ nomo_apa_table.default <- function(x, type = NULL, number = NULL, title = NULL, 
   stop(
     paste0(
       "No APA table is available for an object of class `", class(x)[[1L]],
-      "`. Supported: nomo_cfa, nomo_reliability, nomo_validity, nomo_invariance,",
-      " nomo_network."
+      "`. Supported: nomo_cfa, nomo_reliability, nomo_retest, nomo_validity,",
+      " nomo_invariance, nomo_network."
     ),
     call. = FALSE
   )
@@ -362,12 +362,27 @@ nomo_apa_table.nomo_invariance <- function(x, type = NULL, number = NULL,
     "Model", "\u03c7\u00b2", "*df*", "CFI", "RMSEA", "SRMR",
     "\u0394CFI", "\u0394RMSEA", "\u0394\u03c7\u00b2 (\u0394*df*)", "*p*"
   )
+  across_occasions <- identical(x$design, "occasions")
   nomo_apa_new(
     body = body,
-    title = nomo_apa_or(title, "Measurement Invariance Across Groups"),
+    title = nomo_apa_or(
+      title,
+      if (across_occasions) {
+        "Measurement Invariance Across Occasions"
+      } else {
+        "Measurement Invariance Across Groups"
+      }
+    ),
     stub = "Model",
     general = paste(
-      sprintf("Grouping variable: %s.", x$group),
+      if (across_occasions) {
+        sprintf(
+          "Occasions: %s. Each item's residuals are correlated across occasions.",
+          paste(x$occasions, collapse = ", ")
+        )
+      } else {
+        sprintf("Grouping variable: %s.", x$group)
+      },
       "Each model adds constraints to the one above it; changes are relative to",
       "the preceding model. Changes in fit are reported as evidence and are not",
       "compared with fixed cutoffs."
@@ -440,6 +455,29 @@ nomo_apa_table.nomo_network <- function(x, type = c("hypotheses", "fit"),
   names(body) <- c("Hypothesis", "Prediction", "Estimate [95% CI]", "Evidence")
 
   scales <- unique(as.character(he$scale))
+  single <- x[["single_indicators"]]
+  single_note <- if (is.data.frame(single) && nrow(single)) {
+    one <- nrow(single) == 1L
+    sprintf(
+      paste(
+        "%s %s modeled as %s, with %s fixed at",
+        "(1 \u2212 reliability) \u00d7 variance (reliability: %s)."
+      ),
+      nomo_present_or(single$variable, "and"),
+      if (one) "was" else "were",
+      if (one) "a single-indicator latent variable" else "single-indicator latent variables",
+      if (one) "its error variance" else "error variances",
+      paste0(
+        single$variable, " = ",
+        nomo_apa_number(single$reliability, 2L, bounded = TRUE),
+        ifelse(single$coefficient == "unspecified", "",
+               paste0(", ", single$coefficient)),
+        collapse = "; "
+      )
+    )
+  } else {
+    ""
+  }
   nomo_apa_new(
     body = body,
     title = nomo_apa_or(title, "Theory-Specified Relations"),
@@ -448,7 +486,8 @@ nomo_apa_table.nomo_network <- function(x, type = c("hypotheses", "fit"),
       sprintf("Estimates are on the %s scale.", paste(scales, collapse = " and ")),
       "Evidence describes how each estimate relates to the prediction",
       "registered for it; it is evidence about the prediction, not a verdict on",
-      "the measure."
+      "the measure.",
+      single_note
     ),
     specific = if (any(post_hoc)) {
       "Specified after the data were seen, so this relation is exploratory."
@@ -456,6 +495,44 @@ nomo_apa_table.nomo_network <- function(x, type = c("hypotheses", "fit"),
       character()
     },
     number = number, source = "nomo_network"
+  )
+}
+
+
+#' @export
+nomo_apa_table.nomo_retest <- function(x, type = NULL, number = NULL,
+                                       title = NULL, ...) {
+  icc <- x$icc
+  body <- data.frame(
+    Composite = icc$composite,
+    n = as.character(icc$n),
+    agreement = nomo_apa_interval(icc$icc_agreement, icc$agreement_ci_lower,
+                                  icc$agreement_ci_upper, bounded = TRUE),
+    consistency = nomo_apa_interval(icc$icc_consistency, icc$consistency_ci_lower,
+                                    icc$consistency_ci_upper, bounded = TRUE),
+    change = nomo_apa_interval(icc$mean_change, icc$change_ci_lower,
+                               icc$change_ci_upper, bounded = FALSE),
+    SEM = nomo_apa_number(icc$sem, 2L, bounded = FALSE),
+    SDC = nomo_apa_number(icc$sdc, 2L, bounded = FALSE),
+    stringsAsFactors = FALSE
+  )
+  names(body) <- c(
+    "Composite", "*n*", "ICC(A,1) [95% CI]", "ICC(C,1) [95% CI]",
+    "Mean change [95% CI]", "SEM", "SDC"
+  )
+  nomo_apa_new(
+    body = body,
+    title = nomo_apa_or(title, "Test-Retest Reliability"),
+    stub = "Composite",
+    general = paste(
+      "ICC(A,1) = intraclass correlation from a two-way mixed-effects model,",
+      "absolute agreement, single measurement; ICC(C,1) = the same with",
+      "consistency (McGraw & Wong, 1996; Koo & Li, 2016). Mean change is from",
+      "the first to the last occasion. SEM = standard error of measurement;",
+      "SDC = smallest detectable change, 1.96 \u00d7 \u221a2 \u00d7 SEM (Weir, 2005).",
+      if (is.na(x$interval)) "" else sprintf("Interval between occasions: %s.", x$interval)
+    ),
+    number = number, source = "nomo_retest"
   )
 }
 

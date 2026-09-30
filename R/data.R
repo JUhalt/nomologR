@@ -139,6 +139,40 @@
 #' table(nomo_demo_network$group)
 "nomo_demo_network"
 
+
+#' Simulated repeated measures of one construct
+#'
+#' A simulated dataset for longitudinal measurement invariance: the same four
+#' Wellbeing items answered by the same people on three occasions.
+#'
+#' @format A data frame with 500 rows and 12 columns, `w1_t1` to `w4_t3`: items
+#'   `w1` to `w4` at occasions `t1`, `t2`, and `t3`. Population standardized
+#'   loadings at `t1` are .80, .75, .70, and .65, and the loadings are equal
+#'   across occasions.
+#'
+#' @details
+#' Wellbeing has a latent variance of 1 at every occasion. Its mean rises from
+#' 0 at `t1` to .30 at `t2` and .50 at `t3`, in `t1` standard deviations, and
+#' it correlates .60 between adjacent occasions and .45 between `t1` and `t3`.
+#'
+#' Longitudinal teaching features: each item's unique factor correlates .20
+#' with the same item's unique factor on the other occasions, and the intercept
+#' of `w3` is .40 higher at `t2` and `t3` than at `t1`. The `w3` intercept is
+#' therefore a known source of scalar non-invariance over time, and holding it
+#' equal inflates the apparent change in Wellbeing. Indicators are on a
+#' continuous rating metric (population mean 4 at `t1`) and rounded to two
+#' decimals.
+#'
+#' @source Simulated with a fixed seed by `data-raw/nomo_demo.R` in the package
+#'   source repository.
+#'
+#' @seealso [nomo_invariance_longitudinal()]
+#'
+#' @examples
+#' str(nomo_demo_longitudinal)
+#' colMeans(nomo_demo_longitudinal[c("w3_t1", "w3_t2", "w3_t3")])
+"nomo_demo_longitudinal"
+
 #' Shared walkthrough data from content review to empirical screening
 #'
 #' Simulated responses of 400 students to twelve candidate items for a two-facet

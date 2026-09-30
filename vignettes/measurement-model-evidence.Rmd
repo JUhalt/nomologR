@@ -385,6 +385,40 @@ an item is statistically related to its factor, whether it is a strong
 indicator, and how the score's reliability changes without it. None of them
 alone decides whether the item stays.
 
+## Every cross-loading at once: ESEM
+
+The comparison above freed one cross-loading because the results pointed to it.
+Exploratory structural equation modeling (ESEM) estimates all of them, in a
+model that still gives fit and standard errors (Asparouhov & Muthén, 2009).
+With an a priori structure, Marsh, Morin, Parker, and Kaur (2014) recommend
+target rotation: each item loads freely on its own factor, and its
+cross-loadings are rotated towards zero without being fixed there.
+`nomo_esem()` fits the ESEM beside the CFA of the same model:
+
+```{r esem}
+esem <- nomo_esem(demo_model, data = nomo_demo_continuous)
+summary(esem)
+```
+
+```{r esem-values, include=FALSE}
+ef <- esem$models
+ec <- esem$factor_correlations
+```
+
+The ESEM fits better even on TLI and RMSEA, which penalize its extra
+parameters (TLI `r sprintf("%.3f", ef$tli[[1]])` vs.
+`r sprintf("%.3f", ef$tli[[2]])`, RMSEA `r sprintf("%.3f", ef$rmsea[[1]])` vs.
+`r sprintf("%.3f", ef$rmsea[[2]])`). Without being told where to look, its
+loadings show both features built into these data: `a5` cross-loads on B, and
+`b5` is weak. The factor correlation barely moves
+(`r sprintf("%.2f", ec$esem)` vs. `r sprintf("%.2f", ec$cfa)`), so here the
+zero cross-loadings cost the CFA fit without distorting the relation between
+the factors. When items of related constructs share many small cross-loadings,
+the CFA pushes them into the factor correlations instead, and a lower ESEM
+correlation is the evidence Marsh et al. (2014) weigh in preferring it. The
+solution depends on the rotation, and whether `a5` belongs to both constructs
+is still a question about its content.
+
 # Does a result depend on how missing data were handled?
 
 `demo_cfa` used lavaan's default, listwise deletion, which analyses only the
@@ -502,6 +536,127 @@ missing, a nominal 95% interval for a mean covers the true value only about 86%
 of the time. Multiple imputation, which Schafer and Graham recommend alongside
 maximum likelihood, is a candidate for a later release.
 
+# Stability across occasions
+
+Internal consistency describes one administration. When the same people answer
+the measure again, a test-retest reliability describes how stable their scores
+are. `nomo_retest()` follows Koo and Li's (2016) recommendation for test-retest
+data: a two-way mixed-effects intraclass correlation with absolute agreement,
+ICC(A,1), with its interval. Scores that shift between occasions do not agree,
+however well they rank people. The consistency form, ICC(C,1), is reported
+beside it.
+
+```{r retest}
+set.seed(2026)
+true_agency <- stats::rnorm(150)
+panel <- data.frame(
+  agency_t1 = 3 + true_agency + stats::rnorm(150, sd = .45),
+  agency_t2 = 3.3 + true_agency + stats::rnorm(150, sd = .45)
+)
+rt <- nomo_retest(panel, scores = list(Agency = c("agency_t1", "agency_t2")),
+                  interval = "two weeks")
+summary(rt)
+```
+
+These scores were simulated to rise by .30 between occasions, and in this
+sample they rose by `r sprintf("%.2f", rt$icc$mean_change)`. That rise is why
+ICC(A,1) is below ICC(C,1), and the summary flags it.
+
+Koo and Li read the reliability range from the interval rather than the
+estimate: poor below .50, moderate to .75, good to .90, and excellent above.
+The standard error of measurement, SD × √(1 − ICC), gives the smallest
+detectable change, 1.96 × √2 × SEM (Weir, 2005). A person whose score changed
+by more than that changed reliably, in Jacobson and Truax's (1991) sense, which
+is not the same as meaningfully.
+
+# Method variance from a marker variable
+
+When every measure comes from the same self-report, some of what the items share
+may be the method rather than the constructs (Podsakoff, MacKenzie, Lee, &
+Podsakoff, 2003). A marker variable is a measure theoretically unrelated to the
+constructs that taps the biases the measurement context invites, such as social
+desirability or common scale anchors. What it shares with them is taken to be
+method variance (Lindell & Whitney, 2001; Williams, Hartman, & Cavazotte, 2010).
+
+`nomo_method_variance()` follows Williams et al.'s (2010) comprehensive CFA
+marker technique:
+
+- **Model comparisons** test whether the marker carries method variance, whether
+  its effects are equal across items, and whether it biases the substantive
+  correlations.
+- **A reliability decomposition** says how much of each factor's reliability the
+  method accounts for.
+- **Sensitivity models** fix the method loadings at the upper ends of their
+  intervals.
+
+Here, two constructs and a three-item marker are simulated sharing a method
+factor that loads .30 on every item:
+
+```{r method-variance}
+population <- "
+  A =~ 0.7*a1 + 0.7*a2 + 0.6*a3 + 0.6*a4
+  B =~ 0.7*b1 + 0.6*b2 + 0.6*b3 + 0.5*b4
+  M =~ 0.7*m1 + 0.7*m2 + 0.6*m3
+  CMV =~ 0.3*a1 + 0.3*a2 + 0.3*a3 + 0.3*a4 + 0.3*b1 + 0.3*b2 + 0.3*b3 +
+         0.3*b4 + 0.3*m1 + 0.3*m2 + 0.3*m3
+  A ~~ 0.4*B
+  A ~~ 0*M
+  B ~~ 0*M
+  CMV ~~ 0*A + 0*B + 0*M
+"
+set.seed(2010)
+survey <- lavaan::simulateData(population, sample.nobs = 600, standardized = TRUE)
+mv <- nomo_method_variance(
+  "A =~ a1 + a2 + a3 + a4\nB =~ b1 + b2 + b3 + b4",
+  data = survey, marker = c("m1", "m2", "m3")
+)
+mv
+```
+
+The marker detects the method variance, and the effects are consistent with
+being equal, so Method-C is retained. The correlation between A and B barely
+moves, and the sensitivity models do not change it.
+
+The technique has a limit worth teaching. In simulations it did not find method
+variance that was absent when the marker was ideal. With a nonideal marker it
+sometimes did, and with either kind it did not recover the substantive
+correlations accurately (Richardson, Simmering, & Sturman, 2009). The results
+describe the method variance this marker captures. They are not corrected
+estimates, and a marker chosen only because it is unrelated, such as a
+demographic, may capture no method variance at all.
+
+# Planning the sample size
+
+Two questions about sample size have different answers. The first is whether
+the overall fit test can tell good fit from mediocre. MacCallum, Browne, and
+Sugawara (1996) answered it with power for tests of RMSEA, which depends mostly
+on the model's degrees of freedom:
+
+```{r power-rmsea}
+nomo_power_rmsea(nomo_model(list(A = paste0("a", 1:4), B = paste0("b", 1:4))))
+```
+
+The second is whether the parameters you care about will be estimated well
+enough, and detected. Muthén and Muthén (2002) answered it by simulation:
+generate data from the model you expect, fit the model you will use, and see
+how the estimates behave at each sample size. They suggest the N at which
+parameter and standard-error biases stay within 10%, coverage stays between
+.91 and .98, and power for the key parameter reaches .80.
+
+```{r power-simulate, eval = FALSE}
+population <- "
+  A =~ 0.7*a1 + 0.7*a2 + 0.6*a3 + 0.5*a4
+  B =~ 0.7*b1 + 0.6*b2 + 0.6*b3 + 0.5*b4
+  A ~~ 0.3*B
+"
+nomo_power_simulate(population, n = c(100, 150, 200, 300), reps = 500,
+                    focus = "A~~B", seed = 2026)
+```
+
+Wolf, Harrington, Clark, and Miller (2013) found that the N a model needs
+ranges widely with its structure, so no rule of thumb, such as 200 cases or ten
+per parameter, replaces the simulation.
+
 # Reading the evidence as an argument
 
 A useful measurement conclusion is rarely "all cutoffs passed." A stronger conclusion
@@ -531,6 +686,19 @@ is prioritized because simulation research shows that older criteria can miss ov
 because it relaxes the original HTMT tau-equivalence assumption (Roemer, Schuberth, &
 Henseler, 2021). Fornell-Larcker output remains available only as optional historical/
 supporting information.
+
+ESEM follows Asparouhov and Muthén (2009), with the target rotation Marsh et
+al. (2014) recommend for an a priori structure (Browne, 2001).
+
+Method variance follows Williams, Hartman, and Cavazotte's (2010) comprehensive
+CFA marker technique, building on Lindell and Whitney (2001), with the limits
+Richardson, Simmering, and Sturman (2009) and Podsakoff, MacKenzie, and
+Podsakoff (2012) describe.
+
+Test-retest reliability follows Koo and Li (2016) and the intraclass
+correlations defined by Shrout and Fleiss (1979) and McGraw and Wong (1996).
+Measurement error and reliable change follow Weir (2005) and Jacobson and Truax
+(1991).
 
 The missing-data comparison follows Enders and Bandalos (2001), whose
 simulations compared FIML with listwise and pairwise deletion under MCAR and
