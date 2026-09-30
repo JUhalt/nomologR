@@ -124,10 +124,10 @@ nomo_apa_new <- function(body, title, stub, general = character(),
 #' Association* (7th ed.), checked against Purdue OWL's APA 7 guides.
 #' Journal-specific templates are out of scope.
 #'
-#' **Experimental layout.** The layout of these tables is experimental until
-#' nomologR 1.0.0 and may be adjusted as APA style is applied to more tables.
-#' Any change will be described in NEWS; see `?nomologR` for the stability
-#' policy.
+#' **Stability.** The `type` values and the structure of the returned object
+#' follow the stability policy in `?nomologR`. Formatting may still be
+#' corrected where it departs from APA style, with the correction described in
+#' NEWS.
 #'
 #' @param x A result object: `nomo_cfa`, `nomo_reliability`, `nomo_retest`,
 #'   `nomo_validity`, `nomo_invariance`, or `nomo_network`.

@@ -1322,9 +1322,9 @@ For more, see:
 
 ## Stability
 
-From `v0.3.0`, the first CRAN release, nomologR’s public interface
-changes only after a deprecation period, so code written against one
-release keeps working in the next.
+From `v0.3.0`, the first release submitted to CRAN, nomologR’s public
+interface changes only after a deprecation period, so code written
+against one release keeps working in the next.
 
 - **What it covers.** The exported functions, their documented arguments
   and defaults, the documented fields of returned objects,
@@ -1335,11 +1335,12 @@ release keeps working in the next.
   listed in NEWS.
 - **Additions.** New functions, arguments, fields, and log rows can
   arrive in any release, so address fields by name.
-- **Experimental.** `nomo_missing()` and the layout of
-  `nomo_apa_table()` tables are experimental until 1.0.0.
-  `nomo_method_variance()` and `nomo_power_simulate()` remain
-  experimental after 1.0.0 and may change during 1.x without a
-  deprecation period, with changes listed in NEWS.
+- **APA formatting.** `nomo_apa_table()`'s types and returned structure are
+  covered; a table's formatting may still be corrected toward APA style.
+- **Experimental.** `nomo_method_variance()` and
+  `nomo_power_simulate()` remain experimental after 1.0.0 and may
+  change during 1.x without a deprecation period, with changes listed
+  in NEWS.
 
 The full policy is on the package help page, `?nomologR`. The
 `contentvalidR` handoff is versioned by schema. Within a version, fields
