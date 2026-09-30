@@ -194,6 +194,11 @@ test_that("the results print and summarize within 80 columns", {
                all = FALSE)
   expect_match(printed, "review: Marker-based method variance is present", fixed = TRUE,
                all = FALSE)
+  # The closing note defines the models the tables name.
+  note <- paste(printed, collapse = " ")
+  expect_match(note, "Method-C: Baseline plus equal marker loadings", fixed = TRUE)
+  expect_match(note, "Method-S(.01): the method loadings fixed at the upper ends",
+               fixed = TRUE)
   expect_false(any(nchar(printed) > 80L))
   summarized <- capture.output(print(summary(mv)))
   expect_match(summarized, "Loadings in Method-C (completely standardized)",

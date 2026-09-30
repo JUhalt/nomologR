@@ -803,11 +803,19 @@ nomo_method_variance_present_correlations <- function(correlations, retained) {
 }
 
 
+# The models are defined here, as nomo_retest()'s note defines its
+# abbreviations, since the tables name them only.
 nomo_method_variance_present_note <- function() {
   cat("\n")
   nomo_present_text(
     "Comprehensive CFA marker technique (Williams, Hartman, & Cavazotte, 2010). ",
-    "The results describe the method variance this marker captures; they are ",
-    "not corrected estimates, and other sources of method variance may remain."
+    "Baseline: the marker uncorrelated with the substantive factors. Method-C: ",
+    "Baseline plus equal marker loadings on every substantive item; Method-U: ",
+    "those loadings free to differ. Method-R: the retained model with the ",
+    "substantive correlations fixed at their Baseline values. Method-S(.05), ",
+    "Method-S(.01): the method loadings fixed at the upper ends of their 95% ",
+    "and 99% intervals. The results describe the method variance this marker ",
+    "captures; they are not corrected estimates, and other sources of method ",
+    "variance may remain."
   )
 }
