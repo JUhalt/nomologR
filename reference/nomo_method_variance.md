@@ -223,29 +223,38 @@ mv
 #> Marker: m1, m2, m3 | N = 600 | Retained: Method-C
 #> 
 #> Model comparisons
-#>   Comparison             Chi-square diff.  df       p
-#>   Baseline vs. Method-C             11.84   1  < .001
-#>   Method-C vs. Method-U              2.79   7    .904
-#>   Method-C vs. Method-R              0.07   1    .791
+#>   Comparison             Question                  Chi-sq diff  df       p
+#>   Baseline vs. Method-C  Method variance present?        11.89   1  < .001
+#>   Method-C vs. Method-U  Method effects equal?            2.78   7    .905
+#>   Method-C vs. Method-R  Correlations biased?             0.07   1    .790
 #> 
 #> Reliability decomposition
 #>   Factor  Total  Substantive  Method  Method share
-#>   A       0.811        0.795   0.017  2.0%
-#>   B       0.776        0.759   0.016  2.1%
+#>   A       0.804        0.788   0.017          2.1%
+#>   B       0.784        0.767   0.016          2.1%
 #> 
 #> Substantive correlations
-#>   Factors     CFA  Baseline  Retained  S(.05)  S(.01)
-#>   A with B  0.436     0.436     0.424   0.424   0.425
+#>   Factors     CFA  Baseline  Method-C  Method-S(.05)  Method-S(.01)
+#>   A with B  0.434     0.434     0.422          0.422          0.423
 #> 
-#> Comprehensive CFA marker technique (Williams, Hartman, & Cavazotte, 2010). The
+#> Flagged
+#>   - review: Marker-based method variance is present (chi-square difference
+#>     11.89 on 1 df, p < .001).
+#> 
+#> Comprehensive CFA marker technique (Williams, Hartman, & Cavazotte, 2010).
+#> Baseline: the marker uncorrelated with the substantive factors. Method-C:
+#> Baseline plus equal marker loadings on every substantive item; Method-U: those
+#> loadings free to differ. Method-R: the retained model with the substantive
+#> correlations fixed at their Baseline values. Method-S(.05), Method-S(.01): the
+#> method loadings fixed at the upper ends of their 95% and 99% intervals. The
 #> results describe the method variance this marker captures; they are not
 #> corrected estimates, and other sources of method variance may remain.
 nomo_table(mv, "reliability")
 #> # A tibble: 2 × 5
 #>   factor reliability_total reliability_substantive reliability_method
 #>   <chr>              <dbl>                   <dbl>              <dbl>
-#> 1 A                  0.811                   0.795             0.0165
-#> 2 B                  0.776                   0.759             0.0162
+#> 1 A                  0.804                   0.788             0.0166
+#> 2 B                  0.784                   0.767             0.0162
 #> # ℹ 1 more variable: method_share <dbl>
 # }
 ```

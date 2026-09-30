@@ -165,13 +165,13 @@ pw
 #> 
 #> By sample size
 #>     N  Converged  Improper  Min power  Max bias  Max SE bias  Coverage   Meets
-#>   100  100%       0%             0.64      0.02         0.12  0.91-0.98  no
-#>   200  100%       0%             0.93      0.04         0.14  0.91-0.94  no
+#>   100     100.0%      0.0%       0.64      2.9%        13.2%  0.90-0.99  no
+#>   200     100.0%      0.0%       0.91      3.9%        14.3%  0.90-0.95  no
 #>   No simulated N meets the references; try larger ones.
 #> 
-#> Biases are absolute and relative. References (Muthén & Muthén, 2002):
-#> parameter and SE bias within 10%, SE bias within 5% for the focus parameters,
-#> coverage .91-.98, and power .80 for the focus parameters. They are guides for
-#> choosing N, not rules.
+#> Max bias and Max SE bias are the largest absolute relative biases across the
+#> parameters. References (Muthén & Muthén, 2002): parameter and SE bias within
+#> 10%, SE bias within 5% for the focus parameters, coverage 0.91-0.98, and power
+#> 0.80 for the focus parameters. They are guides for choosing N, not rules.
 # }
 ```

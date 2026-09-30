@@ -130,8 +130,8 @@ rt
 #> Composites: 1 | Interval: two weeks
 #> 
 #> Reliability across occasions
-#>   Composite    n  ICC(A,1) [95% CI]  Koo & Li    SEM    SDC
-#>   composite  150  0.85 [0.80, 0.89]  good      0.449  1.244
+#>   Composite    n  ICC(A,1) [95% CI]  Koo & Li   SEM   SDC
+#>   composite  150  0.85 [0.80, 0.89]  good      0.45  1.24
 #> 
 #> Reliable change, first to last occasion
 #>   - composite: 6 people up, 2 down, 142 within measurement error.

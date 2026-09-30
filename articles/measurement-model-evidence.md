@@ -911,12 +911,12 @@ summary(rt)
     ## Composites: 1 | Interval: two weeks
     ## 
     ## Reliability across occasions
-    ##   Composite    n  ICC(A,1) [95% CI]  Koo & Li    SEM    SDC
-    ##   Agency     150  0.84 [0.75, 0.89]  good      0.474  1.313
+    ##   Composite    n  ICC(A,1) [95% CI]  Koo & Li   SEM   SDC
+    ##   Agency     150  0.84 [0.75, 0.89]  good      0.47  1.31
     ## 
     ## Consistency and change
-    ##   Composite  ICC(C,1) [95% CI]  Mean change [95% CI]     SD
-    ##   Agency     0.85 [0.80, 0.89]  +0.24 [0.13, 0.34]    1.171
+    ##   Composite  ICC(C,1) [95% CI]  Mean change [95% CI]    SD
+    ##   Agency     0.85 [0.80, 0.89]  +0.24 [0.13, 0.34]    1.17
     ## 
     ## Reliable change, first to last occasion
     ##   - Agency: 8 people up, 0 down, 142 within measurement error.
@@ -993,21 +993,30 @@ mv
     ## Marker: m1, m2, m3 | N = 600 | Retained: Method-C
     ## 
     ## Model comparisons
-    ##   Comparison             Chi-square diff.  df       p
-    ##   Baseline vs. Method-C             11.84   1  < .001
-    ##   Method-C vs. Method-U              2.79   7    .904
-    ##   Method-C vs. Method-R              0.07   1    .791
+    ##   Comparison             Question                  Chi-sq diff  df       p
+    ##   Baseline vs. Method-C  Method variance present?        11.89   1  < .001
+    ##   Method-C vs. Method-U  Method effects equal?            2.78   7    .905
+    ##   Method-C vs. Method-R  Correlations biased?             0.07   1    .790
     ## 
     ## Reliability decomposition
     ##   Factor  Total  Substantive  Method  Method share
-    ##   A       0.811        0.795   0.017  2.0%
-    ##   B       0.776        0.759   0.016  2.1%
+    ##   A       0.804        0.788   0.017          2.1%
+    ##   B       0.784        0.767   0.016          2.1%
     ## 
     ## Substantive correlations
-    ##   Factors     CFA  Baseline  Retained  S(.05)  S(.01)
-    ##   A with B  0.436     0.436     0.424   0.424   0.425
+    ##   Factors     CFA  Baseline  Method-C  Method-S(.05)  Method-S(.01)
+    ##   A with B  0.434     0.434     0.422          0.422          0.423
     ## 
-    ## Comprehensive CFA marker technique (Williams, Hartman, & Cavazotte, 2010). The
+    ## Flagged
+    ##   - review: Marker-based method variance is present (chi-square difference
+    ##     11.89 on 1 df, p < .001).
+    ## 
+    ## Comprehensive CFA marker technique (Williams, Hartman, & Cavazotte, 2010).
+    ## Baseline: the marker uncorrelated with the substantive factors. Method-C:
+    ## Baseline plus equal marker loadings on every substantive item; Method-U: those
+    ## loadings free to differ. Method-R: the retained model with the substantive
+    ## correlations fixed at their Baseline values. Method-S(.05), Method-S(.01): the
+    ## method loadings fixed at the upper ends of their 95% and 99% intervals. The
     ## results describe the method variance this marker captures; they are not
     ## corrected estimates, and other sources of method variance may remain.
 
@@ -1038,11 +1047,11 @@ nomo_power_rmsea(nomo_model(list(A = paste0("a", 1:4), B = paste0("b", 1:4))))
 
     ## <nomo_power> Power of the test of close fit
     ## df: 19 | RMSEA: null 0.05, alternative 0.08 | alpha: 0.05
-    ##   Smallest N for power 0.8: 453.
+    ## Smallest N for power 0.80: 453
     ## 
     ## Power by sample size
     ##     N  Power
-    ##   453  0.801
+    ##   453   0.80
     ## 
     ## MacCallum, Browne, & Sugawara (1996). This is power for the overall fit test,
     ## not for any one parameter; nomo_power_simulate() gives that.

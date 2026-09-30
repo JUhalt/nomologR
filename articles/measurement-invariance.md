@@ -339,10 +339,11 @@ summary(long)
 #>   strict sequence.
 #> 
 #> Fit by level
-#>   Level       Constraints           Chi-square  df       p    CFI  RMSEA   SRMR
-#>   configural  none                       32.78  39    .748  1.000  0.000  0.020
-#>   metric      loadings                   48.13  45    .347  0.999  0.012  0.030
-#>   scalar      loadings, intercepts      137.20  51  < .001  0.963  0.058  0.045
+#>   Level       Chi-square  df       p    CFI  RMSEA   SRMR
+#>   configural       32.78  39    .748  1.000  0.000  0.020
+#>   metric           48.13  45    .347  0.999  0.012  0.030
+#>   scalar          137.20  51  < .001  0.963  0.058  0.045
+#>   Held equal: loadings from metric; intercepts from scalar.
 #> 
 #> Changes from the preceding level
 #>   Level   CFI change  RMSEA change  SRMR change  LRT chi-square  df       p
@@ -350,9 +351,9 @@ summary(long)
 #>   scalar      -0.036        +0.046       +0.015           89.07   6  < .001
 #> 
 #> Latent change from t1 (its latent SD)
-#>   Level   Occasion  Factor     Difference  95% CI             p
-#>   scalar  t2        Wellbeing        0.41  [0.31, 0.51]  < .001
-#>   scalar  t3        Wellbeing        0.66  [0.54, 0.78]  < .001
+#>   Level   Occasion  Factor     Change  95% CI             p
+#>   scalar  t2        Wellbeing    0.41  [0.31, 0.51]  < .001
+#>   scalar  t3        Wellbeing    0.66  [0.54, 0.78]  < .001
 #>   Comparable only with invariant intercepts, full or partial.
 #> 
 #> Largest equality-constraint score diagnostics (diagnostic only)

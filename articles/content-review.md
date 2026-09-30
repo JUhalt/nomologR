@@ -336,10 +336,11 @@ summary(inv)
 #>   strict sequence.
 #> 
 #> Fit by level
-#>   Level       Constraints           Chi-square  df       p    CFI  RMSEA   SRMR
-#>   configural  none                      114.09  68  < .001  0.941  0.058  0.057
-#>   metric      loadings                  121.68  76  < .001  0.941  0.055  0.064
-#>   scalar      loadings, intercepts      153.60  84  < .001  0.911  0.064  0.071
+#>   Level       Chi-square  df       p    CFI  RMSEA   SRMR
+#>   configural      114.09  68  < .001  0.941  0.058  0.057
+#>   metric          121.68  76  < .001  0.941  0.055  0.064
+#>   scalar          153.60  84  < .001  0.911  0.064  0.071
+#>   Held equal: loadings from metric; intercepts from scalar.
 #> 
 #> Changes from the preceding level
 #>   Level   CFI change  RMSEA change  SRMR change  LRT chi-square  df       p

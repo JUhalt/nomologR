@@ -108,24 +108,24 @@ model <- nomo_model(list(A = paste0("a", 1:4), B = paste0("b", 1:4)))
 nomo_power_rmsea(model)
 #> <nomo_power> Power of the test of close fit
 #> df: 19 | RMSEA: null 0.05, alternative 0.08 | alpha: 0.05
-#>   Smallest N for power 0.8: 453.
+#> Smallest N for power 0.80: 453
 #> 
 #> Power by sample size
 #>     N  Power
-#>   453  0.801
+#>   453   0.80
 #> 
 #> MacCallum, Browne, & Sugawara (1996). This is power for the overall fit test,
 #> not for any one parameter; nomo_power_simulate() gives that.
 nomo_power_rmsea(model, n = c(100, 200, 400), test = "not_close")
 #> <nomo_power> Power of the test of not-close fit
 #> df: 19 | RMSEA: null 0.05, alternative 0.01 | alpha: 0.05
-#>   Smallest N for power 0.8: 490.
+#> Smallest N for power 0.80: 490
 #> 
 #> Power by sample size
 #>     N  Power
-#>   100  0.144
-#>   200  0.302
-#>   400  0.674
+#>   100   0.14
+#>   200   0.30
+#>   400   0.67
 #> 
 #> MacCallum, Browne, & Sugawara (1996). This is power for the overall fit test,
 #> not for any one parameter; nomo_power_simulate() gives that.

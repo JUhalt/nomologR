@@ -207,6 +207,58 @@
   shows the correction recovering the population path (.45) from the
   Persistence mean (.41 uncorrected, .46 corrected). The
   observed-endpoint note in the log now names the option.
+- The output gallery in `dev/output-gallery.R`
+  ([\#89](https://github.com/JUhalt/nomologR/issues/89)) now covers the
+  features added for 1.0
+  ([\#129](https://github.com/JUhalt/nomologR/issues/129)): ESEM, method
+  variance, test-retest reliability, power, latent means, longitudinal
+  invariance, and single indicators. Reading their output as a user
+  would led to these display changes. Computed values, decision-log
+  text, and
+  [`nomo_table()`](https://juhalt.github.io/nomologR/reference/nomo_table.md)
+  output are unchanged.
+  - **Invariance.** A summary with a strict level had lost RMSEA and
+    SRMR at 80 columns, pushed out by the cumulative “Constraints”
+    column. The fit table now leaves that column out, and a line beneath
+    it says what each level adds: “Held equal: loadings from metric;
+    intercepts from scalar; residuals from strict.” A
+    researcher-specified release is named beside its level, as in
+    “intercepts from scalar, except ag3 ~ 1”, so the line does not say
+    that the released intercept is held equal. Across occasions, the
+    latent-change column is headed “Change”. The fit and change plots
+    angle the level names, which ran together with four levels. The
+    local-strain plot gives each level its own panel, with the score
+    axis from zero: in one panel, close scores at two levels had been
+    drawn on one spot, hiding one of the levels.
+  - **Method variance.** Each comparison says what it asks, such as
+    “Method variance present?”, in a short form of the question
+    `comparisons` stores. The closing note defines the Baseline,
+    Method-C, Method-U, Method-R, and Method-S models. The correlations
+    are headed by the models’ names, such as “Method-C” and
+    “Method-S(.05)”, rather than “Retained” and “S(.05)”. The method
+    loading’s p-value is headed “Method p”. The print and summary list
+    the decision log’s flagged entries, as
+    [`nomo_esem()`](https://juhalt.github.io/nomologR/reference/nomo_esem.md)’s
+    do.
+  - **Test-retest reliability.** The print lists the flagged entries
+    too. SEM, SDC, and SD have two decimals, like the intervals beside
+    them.
+  - **Alignment.** Percentages are right-aligned like the numbers beside
+    them, in the method-variance tables and in
+    [`nomo_power_simulate()`](https://juhalt.github.io/nomologR/reference/nomo_power_simulate.md)’s
+    print. So are the reliability and its standard error in the network
+    summary’s single-indicator table.
+  - **Power.** In
+    [`nomo_power_simulate()`](https://juhalt.github.io/nomologR/reference/nomo_power_simulate.md)’s
+    print, convergence, improper solutions, and the biases are
+    percentages with one decimal, as the bias references are, so 499
+    converged replications of 500 no longer round to 100%. The note says
+    what “Max bias” and “Max SE bias” are.
+    [`nomo_power_rmsea()`](https://juhalt.github.io/nomologR/reference/nomo_power_rmsea.md)’s
+    print gives power to two decimals, as
+    [`nomo_power_simulate()`](https://juhalt.github.io/nomologR/reference/nomo_power_simulate.md)’s
+    does, and its target as “0.80” rather than “0.8”; the smallest N is
+    a line of its own under the header.
 - The content-review reader is tested against `contentvalidR` 0.10.0 and
   0.10.1 output too
   ([\#53](https://github.com/JUhalt/nomologR/issues/53)). Their handoffs
