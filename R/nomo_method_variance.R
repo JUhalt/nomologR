@@ -232,10 +232,11 @@ nomo_method_variance <- function(model,
       p_value = test[["Pr(>Chisq)"]][[2L]]
     )
   }
+  questions <- nomo_method_variance_questions
   presence <- compare(baseline, method_c, "Baseline vs. Method-C",
-                      "Is marker-based method variance present?")
+                      questions[["presence", "question"]])
   equality <- compare(method_c, method_u, "Method-C vs. Method-U",
-                      "Are the method effects equal?")
+                      questions[["equality", "question"]])
   unequal <- equality$p_value < alpha
   retained_label <- if (unequal) "Method-U" else "Method-C"
   retained <- if (unequal) method_u else method_c
@@ -255,12 +256,12 @@ nomo_method_variance <- function(model,
   bias <- if (nrow(pairs)) {
     method_r <- fit(method_r_lines, "Method-R")
     compare(method_r, retained, paste(retained_label, "vs. Method-R"),
-            "Does the method variance bias the substantive correlations?")
+            questions[["bias", "question"]])
   } else {
     method_r <- NULL
     tibble::tibble(
       comparison = paste(retained_label, "vs. Method-R"),
-      question = "Does the method variance bias the substantive correlations?",
+      question = questions[["bias", "question"]],
       chisq_diff = NA_real_, df_diff = NA_integer_, p_value = NA_real_
     )
   }
@@ -444,6 +445,22 @@ nomo_method_variance_fit <- function(lines, data, estimator, missing, label) {
     }
   )
 }
+
+
+# The question each comparison answers: in full, as `comparisons` stores it,
+# and in short, as print() and summary() show it within 80 columns. The two
+# are written here only, and the display finds the short form by the stored
+# question rather than by the row's position.
+nomo_method_variance_questions <- data.frame(
+  question = c(
+    "Is marker-based method variance present?",
+    "Are the method effects equal?",
+    "Does the method variance bias the substantive correlations?"
+  ),
+  short = c("Method variance present?", "Method effects equal?", "Correlations biased?"),
+  row.names = c("presence", "equality", "bias"),
+  stringsAsFactors = FALSE
+)
 
 
 nomo_method_variance_value <- function(pe, lhs, op, rhs, column) {
@@ -736,12 +753,13 @@ print.summary_nomo_method_variance <- function(x, ...) {
 
 
 # The comparisons in the order they are made, each with the question it
-# answers, so the table can be read without the documentation.
+# answers, so the table can be read without the documentation. A question
+# without a short form is shown as stored.
 nomo_method_variance_present_comparisons <- function(comparisons) {
   shown <- comparisons
-  shown$question_shown <- c(
-    "Method variance present?", "Method effects equal?", "Correlations biased?"
-  )[seq_len(nrow(shown))]
+  questions <- nomo_method_variance_questions
+  short <- questions$short[match(shown$question, questions$question)]
+  shown$question_shown <- ifelse(is.na(short), shown$question, short)
   nomo_present_section("Model comparisons")
   nomo_present_table(
     shown,
