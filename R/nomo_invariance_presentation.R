@@ -567,16 +567,25 @@ plot.nomo_invariance <- function(
     dat$constraint_display,
     levels = rev(unique(dat$constraint_display))
   )
+  dat$level <- factor(
+    dat$level,
+    levels = unique(c(x$completed_levels, as.character(dat$level)))
+  )
 
+  # One panel per level, the constraints sharing rows across them. With one
+  # shape per level in a single panel, a level's point sat on another's when
+  # their scores were close, as an item's scalar and strict intercepts across
+  # occasions often are, and the level beneath could not be seen.
   ggplot2::ggplot(
     dat,
     ggplot2::aes(
       x = score_x2,
-      y = constraint_display,
-      shape = level
+      y = constraint_display
     )
   ) +
     ggplot2::geom_point(size = 2.8) +
+    ggplot2::facet_wrap(stats::as.formula("~ level"), nrow = 1L) +
+    ggplot2::expand_limits(x = 0) +
     nomo_plot_labs(
       title = "Largest equality-constraint score diagnostics",
       subtitle = paste(
@@ -585,7 +594,6 @@ plot.nomo_invariance <- function(
       ),
       x = "Score-test chi-square",
       y = NULL,
-      shape = "Level",
       caption = paste(
         "Any constraint release must be explicitly researcher specified",
         "\nand documented with a rationale."
