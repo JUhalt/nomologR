@@ -16,8 +16,11 @@ test_that("RMSEA power reproduces MacCallum, Browne, and Sugawara's sample sizes
 
   local_reproducible_output(width = 80)
   printed <- capture.output(print(close))
-  expect_true(any(grepl("Smallest N for power 0.8: ", printed, fixed = TRUE)))
+  # The smallest N is a line of its own under the header, and power has two
+  # decimals, as in nomo_power_simulate()'s print (#89).
+  expect_identical(printed[[3L]], sprintf("Smallest N for power 0.80: %d", req$n_required))
   expect_true(any(grepl("Power by sample size", printed, fixed = TRUE)))
+  expect_true(any(grepl("^  100 +0[.][0-9]{2}$", printed)))
   expect_true(all(nchar(printed) <= 80))
 
   exact <- nomo_power_rmsea(df = 20, test = "exact")
@@ -47,7 +50,8 @@ test_that("the search reports small, unreachable, and immediate targets", {
   expect_true(is.na(never$n_required))
   expect_identical(nrow(never$power), 0L)
   local_reproducible_output(width = 80)
-  expect_match(capture.output(print(never)), "No N up to one million", fixed = TRUE,
+  expect_match(capture.output(print(never)),
+               "Smallest N for power 0.80: none up to one million", fixed = TRUE,
                all = FALSE)
   # A target below alpha is met by the smallest sample.
   expect_identical(nomo_power_rmsea(df = 10, power = .01)$n_required, 2L)

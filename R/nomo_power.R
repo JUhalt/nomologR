@@ -519,17 +519,16 @@ print.nomo_power <- function(x, ...) {
       sprintf("RMSEA: null %s, alternative %s", format(x$rmsea_null), format(x$rmsea_alt)),
       sprintf("alpha: %s", format(x$alpha))
     ))
-    nomo_present_text(
-      if (is.na(x$n_required)) {
-        sprintf("No N up to one million reaches power %s.", format(x$target_power))
-      } else {
-        sprintf("Smallest N for power %s: %d.", format(x$target_power), x$n_required)
-      },
-      indent = 2L
-    )
+    # Power has two decimals, as in nomo_power_simulate()'s print, and so has
+    # the target unless it was given more precisely.
+    nomo_present_facts(sprintf(
+      "Smallest N for power %s: %s", format(x$target_power, nsmall = 2L),
+      if (is.na(x$n_required)) "none up to one million" else x$n_required
+    ))
     if (nrow(x$power)) {
       nomo_present_section("Power by sample size")
-      nomo_present_table(x$power, c("N" = "n", "Power" = "power"))
+      nomo_present_table(x$power, c("N" = "n", "Power" = "power"),
+                         formats = list(power = function(v) nomo_present_number(v, 2L)))
     }
     cat("\n")
     nomo_present_text(
