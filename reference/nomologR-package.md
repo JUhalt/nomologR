@@ -13,9 +13,9 @@ investigation rather than universal deletion or validity rules.
 
 ## Stability and deprecation
 
-From version 0.3.0, the first CRAN release, the public interface changes
-only after a deprecation period. Code written against one release keeps
-working in the next.
+From version 0.3.0, the first release submitted to CRAN, the public
+interface changes only after a deprecation period. Code written against
+one release keeps working in the next.
 
 **What is covered.** The interface is:
 
@@ -45,20 +45,16 @@ listed in NEWS.
 arguments whose defaults leave results unchanged, new fields in returned
 objects, or new decision-log rows. Address fields by name, not position.
 
-**Experimental.** Two parts of the interface are experimental until
-1.0.0 and may change without a deprecation period, with the change
+**APA formatting.** The `type` values of
+[`nomo_apa_table()`](https://juhalt.github.io/nomologR/reference/nomo_apa_table.md)
+and the structure of the object it returns are covered. The formatting
+of a table, meaning its headings, number formats, and notes, may still
+be corrected where it departs from APA style, with the correction
+described in NEWS.
+
+**Experimental.** Two functions remain experimental after 1.0.0. They
+may change during 1.x without a deprecation period, with each change
 described in NEWS:
-
-- [`nomo_missing()`](https://juhalt.github.io/nomologR/reference/nomo_missing.md).
-  Its rule for flagging a difference may be refined to separate sampling
-  variability from bias.
-
-- The layout of
-  [`nomo_apa_table()`](https://juhalt.github.io/nomologR/reference/nomo_apa_table.md)
-  tables, which may be adjusted as APA style is applied to more tables.
-
-Two functions remain experimental after 1.0.0. They may change during
-1.x without a deprecation period, with each change described in NEWS:
 
 - [`nomo_method_variance()`](https://juhalt.github.io/nomologR/reference/nomo_method_variance.md).
   Its output may be reorganized as the marker technique is extended

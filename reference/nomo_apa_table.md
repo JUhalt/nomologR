@@ -71,11 +71,11 @@ The rules come from the *Publication Manual of the American
 Psychological Association* (7th ed.), checked against Purdue OWL's APA 7
 guides. Journal-specific templates are out of scope.
 
-**Experimental layout.** The layout of these tables is experimental
-until nomologR 1.0.0 and may be adjusted as APA style is applied to more
-tables. Any change will be described in NEWS; see
-[`?nomologR`](https://juhalt.github.io/nomologR/reference/nomologR-package.md)
-for the stability policy.
+**Stability.** The `type` values and the structure of the returned
+object follow the stability policy in
+[`?nomologR`](https://juhalt.github.io/nomologR/reference/nomologR-package.md).
+Formatting may still be corrected where it departs from APA style, with
+the correction described in NEWS.
 
 ## References
 

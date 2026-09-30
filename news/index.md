@@ -2,49 +2,23 @@
 
 ## nomologR (development version)
 
-- New
-  [`nomo_invariance_longitudinal()`](https://juhalt.github.io/nomologR/reference/nomo_invariance_longitudinal.md)
-  for measurement invariance across occasions
-  ([\#129](https://github.com/JUhalt/nomologR/issues/129)). It asks
-  whether the same items mean the same thing each time the same people
-  answer them, so that a change in scores can be read as a change in the
-  construct (Widaman, Ferrer, & Conger, 2010).
-  - **The model.** The model is written for one occasion, in the items’
-    own names. `columns` (default `"{item}_{occasion}"`) maps each item
-    and occasion to a column. Each item’s unique factors are correlated
-    across occasions, over all lags or up to `auto`.
-  - **The sequence.** The configural, metric, scalar, and strict levels,
-    the ordered-item sequences and identification (with Liu et al.,
-    2017, for Millsap and Tein’s conditions over time),
-    researcher-specified partial releases, and score diagnostics are
-    those of
-    [`nomo_invariance()`](https://juhalt.github.io/nomologR/reference/nomo_invariance.md),
-    applied across occasions through semTools’ longitudinal arguments. A
-    release names the item as in the one-occasion model, such as
-    `"w3 ~ 1"`, and the diagnostics are labeled by item and occasions,
-    such as `Intercept: w3 (t1 vs. t3)`.
-  - **Latent change.** Once intercepts are invariant, fully or
-    partially, `latent_means` gives each later occasion’s latent mean in
-    the first occasion’s latent standard deviations, with intervals.
-  - **Other outputs.** The result is also a `nomo_invariance` object, so
-    [`print()`](https://rdrr.io/r/base/print.html),
-    [`summary()`](https://rdrr.io/r/base/summary.html),
-    [`nomo_table()`](https://juhalt.github.io/nomologR/reference/nomo_table.md),
-    [`nomo_apa_table()`](https://juhalt.github.io/nomologR/reference/nomo_apa_table.md),
-    and [`plot()`](https://rdrr.io/r/graphics/plot.default.html) work as
-    they do across groups.
-    [`nomo_methods()`](https://juhalt.github.io/nomologR/reference/nomo_methods.md)
-    gains `longitudinal_invariance`.
-- New teaching dataset `nomo_demo_longitudinal`: four Wellbeing items
-  answered on three occasions, with a latent mean rising .30 and then
-  .50 SD and the `w3` intercept drifting .40 after the first occasion.
-  In the measurement-invariance article, holding that intercept equal
-  inflates the change at the third occasion to .66 SD. Releasing it
-  gives .55 \[.43, .67\], which covers the population’s .50.
-- [`nomo_invariance()`](https://juhalt.github.io/nomologR/reference/nomo_invariance.md)’s
-  option checks and level fitting are now shared with
-  [`nomo_invariance_longitudinal()`](https://juhalt.github.io/nomologR/reference/nomo_invariance_longitudinal.md).
-  Its results are unchanged.
+These changes lead to 1.0.0, the stable release planned jointly with
+`contentvalidR` ([\#53](https://github.com/JUhalt/nomologR/issues/53));
+its first release candidate, `v1.0.0-rc.1` (version 0.99.0), is planned
+for 2026-10-17. The gap review
+([\#129](https://github.com/JUhalt/nomologR/issues/129)) added the
+methods social-science scale developers were missing, each taken from
+its literature, and the 1.0 contract is now settled: the stability
+policy covers every exported function and documented field except
+[`nomo_method_variance()`](https://juhalt.github.io/nomologR/reference/nomo_method_variance.md)
+and
+[`nomo_power_simulate()`](https://juhalt.github.io/nomologR/reference/nomo_power_simulate.md),
+which stay experimental into 1.x. Apart from that policy and changes to
+how output is displayed, every change is an addition: new functions,
+arguments, fields, and a dataset.
+
+### New methods ([\#129](https://github.com/JUhalt/nomologR/issues/129))
+
 - Sample-size planning
   ([\#129](https://github.com/JUhalt/nomologR/issues/129)).
   - [`nomo_power_rmsea()`](https://juhalt.github.io/nomologR/reference/nomo_power_rmsea.md)
@@ -132,21 +106,6 @@
   [`nomo_method_variance()`](https://juhalt.github.io/nomologR/reference/nomo_method_variance.md)
   is experimental: its output may change during 1.x without a
   deprecation period.
-- [`nomo_invariance()`](https://juhalt.github.io/nomologR/reference/nomo_invariance.md)
-  reports latent means, which are known-groups evidence in
-  structured-means form
-  ([\#129](https://github.com/JUhalt/nomologR/issues/129)). At each
-  level that holds intercepts equal, `latent_means` gives each group’s
-  latent means relative to the reference group. Under the default
-  `ID.fac = "std.lv"` they are in the reference group’s latent standard
-  deviations (Hancock, 2001), with intervals. The summary shows them,
-  `nomo_table(x, "latent_means")` returns them, and the log says they
-  are comparable only with invariant intercepts, fully or partially
-  (Byrne, Shavelson, & Muthén, 1989). On `nomo_demo_network`, holding
-  the biased `ag3` intercept equal inflates the Agency difference
-  between modes to .44 SD. Releasing it gives .33 \[.17, .49\], which
-  covers the population’s .25. The measurement-invariance article walks
-  through this.
 - New
   [`nomo_retest()`](https://juhalt.github.io/nomologR/reference/nomo_retest.md)
   for test-retest reliability
@@ -207,6 +166,70 @@
   shows the correction recovering the population path (.45) from the
   Persistence mean (.41 uncorrected, .46 corrected). The
   observed-endpoint note in the log now names the option.
+
+### Invariance across groups and occasions ([\#129](https://github.com/JUhalt/nomologR/issues/129))
+
+- [`nomo_invariance()`](https://juhalt.github.io/nomologR/reference/nomo_invariance.md)
+  reports latent means, which are known-groups evidence in
+  structured-means form
+  ([\#129](https://github.com/JUhalt/nomologR/issues/129)). At each
+  level that holds intercepts equal, `latent_means` gives each group’s
+  latent means relative to the reference group. Under the default
+  `ID.fac = "std.lv"` they are in the reference group’s latent standard
+  deviations (Hancock, 2001), with intervals. The summary shows them,
+  `nomo_table(x, "latent_means")` returns them, and the log says they
+  are comparable only with invariant intercepts, fully or partially
+  (Byrne, Shavelson, & Muthén, 1989). On `nomo_demo_network`, holding
+  the biased `ag3` intercept equal inflates the Agency difference
+  between modes to .44 SD. Releasing it gives .33 \[.17, .49\], which
+  covers the population’s .25. The measurement-invariance article walks
+  through this.
+- New
+  [`nomo_invariance_longitudinal()`](https://juhalt.github.io/nomologR/reference/nomo_invariance_longitudinal.md)
+  for measurement invariance across occasions
+  ([\#129](https://github.com/JUhalt/nomologR/issues/129)). It asks
+  whether the same items mean the same thing each time the same people
+  answer them, so that a change in scores can be read as a change in the
+  construct (Widaman, Ferrer, & Conger, 2010).
+  - **The model.** The model is written for one occasion, in the items’
+    own names. `columns` (default `"{item}_{occasion}"`) maps each item
+    and occasion to a column. Each item’s unique factors are correlated
+    across occasions, over all lags or up to `auto`.
+  - **The sequence.** The configural, metric, scalar, and strict levels,
+    the ordered-item sequences and identification (with Liu et al.,
+    2017, for Millsap and Tein’s conditions over time),
+    researcher-specified partial releases, and score diagnostics are
+    those of
+    [`nomo_invariance()`](https://juhalt.github.io/nomologR/reference/nomo_invariance.md),
+    applied across occasions through semTools’ longitudinal arguments. A
+    release names the item as in the one-occasion model, such as
+    `"w3 ~ 1"`, and the diagnostics are labeled by item and occasions,
+    such as `Intercept: w3 (t1 vs. t3)`.
+  - **Latent change.** Once intercepts are invariant, fully or
+    partially, `latent_means` gives each later occasion’s latent mean in
+    the first occasion’s latent standard deviations, with intervals.
+  - **Other outputs.** The result is also a `nomo_invariance` object, so
+    [`print()`](https://rdrr.io/r/base/print.html),
+    [`summary()`](https://rdrr.io/r/base/summary.html),
+    [`nomo_table()`](https://juhalt.github.io/nomologR/reference/nomo_table.md),
+    [`nomo_apa_table()`](https://juhalt.github.io/nomologR/reference/nomo_apa_table.md),
+    and [`plot()`](https://rdrr.io/r/graphics/plot.default.html) work as
+    they do across groups.
+    [`nomo_methods()`](https://juhalt.github.io/nomologR/reference/nomo_methods.md)
+    gains `longitudinal_invariance`.
+- New teaching dataset `nomo_demo_longitudinal`: four Wellbeing items
+  answered on three occasions, with a latent mean rising .30 and then
+  .50 SD and the `w3` intercept drifting .40 after the first occasion.
+  In the measurement-invariance article, holding that intercept equal
+  inflates the change at the third occasion to .66 SD. Releasing it
+  gives .55 \[.43, .67\], which covers the population’s .50.
+- [`nomo_invariance()`](https://juhalt.github.io/nomologR/reference/nomo_invariance.md)’s
+  option checks and level fitting are now shared with
+  [`nomo_invariance_longitudinal()`](https://juhalt.github.io/nomologR/reference/nomo_invariance_longitudinal.md).
+  Its results are unchanged.
+
+### Presentation ([\#89](https://github.com/JUhalt/nomologR/issues/89))
+
 - The output gallery in `dev/output-gallery.R`
   ([\#89](https://github.com/JUhalt/nomologR/issues/89)) now covers the
   features added for 1.0
@@ -223,7 +246,7 @@
     it says what each level adds: “Held equal: loadings from metric;
     intercepts from scalar; residuals from strict.” A
     researcher-specified release is named beside its level, as in
-    “intercepts from scalar, except ag3 ~ 1”, so the line does not say
+    “intercepts from scalar, except `ag3 ~ 1`”, so the line does not say
     that the released intercept is held equal. Across occasions, the
     latent-change column is headed “Change”. The fit and change plots
     angle the level names, which ran together with four levels. The
@@ -259,11 +282,34 @@
     [`nomo_power_simulate()`](https://juhalt.github.io/nomologR/reference/nomo_power_simulate.md)’s
     does, and its target as “0.80” rather than “0.8”; the smallest N is
     a line of its own under the header.
+
+### The 1.0 contract ([\#113](https://github.com/JUhalt/nomologR/issues/113))
+
+- [`nomo_missing()`](https://juhalt.github.io/nomologR/reference/nomo_missing.md)
+  and
+  [`nomo_apa_table()`](https://juhalt.github.io/nomologR/reference/nomo_apa_table.md)
+  leave the experimental list and are covered by the stability policy
+  ([\#113](https://github.com/JUhalt/nomologR/issues/113)).
+  [`nomo_missing()`](https://juhalt.github.io/nomologR/reference/nomo_missing.md)’s
+  flagging rule rests on Schafer and Graham (2002, p. 157): a bias
+  beyond about half a standard error is practically important, because
+  it degrades interval coverage. Separating sampling variability from
+  bias would be new output, added alongside the rule.
+  [`nomo_apa_table()`](https://juhalt.github.io/nomologR/reference/nomo_apa_table.md)’s
+  `type` values and returned structure are covered. A table’s formatting
+  (headings, number formats, notes) may still be corrected where it
+  departs from APA style, with the correction described in NEWS.
+
+### The contentvalidR handoff ([\#53](https://github.com/JUhalt/nomologR/issues/53))
+
 - The content-review reader is tested against `contentvalidR` 0.10.0 and
   0.10.1 output too
   ([\#53](https://github.com/JUhalt/nomologR/issues/53)). Their handoffs
   are identical to 0.9.0’s apart from the producer version and date, and
   the reader needed no change.
+
+### Documentation ([\#129](https://github.com/JUhalt/nomologR/issues/129), [\#138](https://github.com/JUhalt/nomologR/issues/138))
+
 - Documentation for 1.0
   ([\#129](https://github.com/JUhalt/nomologR/issues/129),
   [\#138](https://github.com/JUhalt/nomologR/issues/138)). Get started

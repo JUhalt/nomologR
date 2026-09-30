@@ -909,7 +909,7 @@
 <div class="section level2">
 <h2 id="stability">Stability<a class="anchor" aria-label="anchor" href="#stability"></a>
 </h2>
-<p>From <code>v0.3.0</code>, the first CRAN release, nomologR’s public interface changes only after a deprecation period, so code written against one release keeps working in the next.</p>
+<p>From <code>v0.3.0</code>, the first release submitted to CRAN, nomologR’s public interface changes only after a deprecation period, so code written against one release keeps working in the next.</p>
 <ul>
 <li>
 <strong>What it covers.</strong> The exported functions, their documented arguments and defaults, the documented fields of returned objects, <code><a href="reference/nomo_table.html">nomo_table()</a></code> types, and decision-log columns.</li>
@@ -918,7 +918,9 @@
 <li>
 <strong>Additions.</strong> New functions, arguments, fields, and log rows can arrive in any release, so address fields by name.</li>
 <li>
-<strong>Experimental.</strong> <code><a href="reference/nomo_missing.html">nomo_missing()</a></code> and the layout of <code><a href="reference/nomo_apa_table.html">nomo_apa_table()</a></code> tables are experimental until 1.0.0. <code><a href="reference/nomo_method_variance.html">nomo_method_variance()</a></code> and <code><a href="reference/nomo_power_simulate.html">nomo_power_simulate()</a></code> remain experimental after 1.0.0 and may change during 1.x without a deprecation period, with changes listed in NEWS.</li>
+<strong>APA formatting.</strong> <code><a href="reference/nomo_apa_table.html">nomo_apa_table()</a></code>’s types and returned structure are covered; a table’s formatting may still be corrected toward APA style.</li>
+<li>
+<strong>Experimental.</strong> <code><a href="reference/nomo_method_variance.html">nomo_method_variance()</a></code> and <code><a href="reference/nomo_power_simulate.html">nomo_power_simulate()</a></code> remain experimental after 1.0.0 and may change during 1.x without a deprecation period, with changes listed in NEWS.</li>
 </ul>
 <p>The full policy is on the package help page, <code><a href="reference/nomologR-package.html">?nomologR</a></code>. The <code>contentvalidR</code> handoff is versioned by schema. Within a version, fields are only added, and anything else is a new version agreed between the two packages (<a href="https://github.com/JUhalt/nomologR/issues/46" class="external-link">#46</a>).</p>
 </div>

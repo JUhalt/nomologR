@@ -74,9 +74,9 @@ universal deletion or validity rules.</p>
     <h2 id="stability-and-deprecation">Stability and deprecation<a class="anchor" aria-label="anchor" href="#stability-and-deprecation"></a></h2>
 
 
-<p>From version 0.3.0, the first CRAN release, the public interface changes only
-after a deprecation period. Code written against one release keeps working in
-the next.</p>
+<p>From version 0.3.0, the first release submitted to CRAN, the public interface
+changes only after a deprecation period. Code written against one release
+keeps working in the next.</p>
 <p><strong>What is covered.</strong> The interface is:</p><ul><li><p>the exported functions;</p></li>
 <li><p>their documented arguments and defaults;</p></li>
 <li><p>the documented fields of the objects they return;</p></li>
@@ -92,13 +92,13 @@ warns once per session naming its replacement, and is listed in NEWS.</p>
 <p><strong>What is not breaking.</strong> Any release may add new functions, new arguments
 whose defaults leave results unchanged, new fields in returned objects, or
 new decision-log rows. Address fields by name, not position.</p>
-<p><strong>Experimental.</strong> Two parts of the interface are experimental until 1.0.0 and
-may change without a deprecation period, with the change described in NEWS:</p><ul><li><p><code><a href="nomo_missing.html">nomo_missing()</a></code>. Its rule for flagging a difference may be refined to
-separate sampling variability from bias.</p></li>
-<li><p>The layout of <code><a href="nomo_apa_table.html">nomo_apa_table()</a></code> tables, which may be adjusted as APA
-style is applied to more tables.</p></li>
-</ul><p>Two functions remain experimental after 1.0.0. They may change during 1.x
-without a deprecation period, with each change described in NEWS:</p><ul><li><p><code><a href="nomo_method_variance.html">nomo_method_variance()</a></code>. Its output may be reorganized as the marker
+<p><strong>APA formatting.</strong> The <code>type</code> values of <code><a href="nomo_apa_table.html">nomo_apa_table()</a></code> and the structure
+of the object it returns are covered. The formatting of a table, meaning its
+headings, number formats, and notes, may still be corrected where it departs
+from APA style, with the correction described in NEWS.</p>
+<p><strong>Experimental.</strong> Two functions remain experimental after 1.0.0. They may
+change during 1.x without a deprecation period, with each change described in
+NEWS:</p><ul><li><p><code><a href="nomo_method_variance.html">nomo_method_variance()</a></code>. Its output may be reorganized as the marker
 technique is extended beyond continuous indicators.</p></li>
 <li><p><code><a href="nomo_power_simulate.html">nomo_power_simulate()</a></code>. The metric of its estimates and its summaries may
 be refined as it is extended beyond complete continuous data.</p></li>

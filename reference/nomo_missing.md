@@ -122,12 +122,10 @@ of that size is flagged for review, with two qualifications:
 A hypothesis whose concordance with its prediction differs between
 strategies is also flagged for review.
 
-**Experimental.** This function is experimental until nomologR 1.0.0.
-Its rule for flagging a difference may be refined to separate sampling
-variability from bias. Any change will be described in NEWS; see the
-package help page,
-[`?nomologR`](https://juhalt.github.io/nomologR/reference/nomologR-package.md),
-for the stability policy.
+**The flagging rule** follows Schafer and Graham (2002, p. 157): a bias
+beyond about half a standard error is practically important, because it
+degrades interval coverage. Separating sampling variability from bias
+would be new output, added alongside this rule rather than replacing it.
 
 **Not implemented.** Mean substitution is not offered. It understates
 variances and distorts covariances. Schafer and Graham (2002) show that

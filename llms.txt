@@ -1436,9 +1436,9 @@ walkthrough](https://juhalt.github.io/contentvalidR/articles/one-item-set-both-s
 
 ## Stability
 
-From `v0.3.0`, the first CRAN release, nomologR’s public interface
-changes only after a deprecation period, so code written against one
-release keeps working in the next.
+From `v0.3.0`, the first release submitted to CRAN, nomologR’s public
+interface changes only after a deprecation period, so code written
+against one release keeps working in the next.
 
 - **What it covers.** The exported functions, their documented arguments
   and defaults, the documented fields of returned objects,
@@ -1450,11 +1450,11 @@ release keeps working in the next.
   listed in NEWS.
 - **Additions.** New functions, arguments, fields, and log rows can
   arrive in any release, so address fields by name.
+- **APA formatting.**
+  [`nomo_apa_table()`](https://juhalt.github.io/nomologR/reference/nomo_apa_table.md)’s
+  types and returned structure are covered; a table’s formatting may
+  still be corrected toward APA style.
 - **Experimental.**
-  [`nomo_missing()`](https://juhalt.github.io/nomologR/reference/nomo_missing.md)
-  and the layout of
-  [`nomo_apa_table()`](https://juhalt.github.io/nomologR/reference/nomo_apa_table.md)
-  tables are experimental until 1.0.0.
   [`nomo_method_variance()`](https://juhalt.github.io/nomologR/reference/nomo_method_variance.md)
   and
   [`nomo_power_simulate()`](https://juhalt.github.io/nomologR/reference/nomo_power_simulate.md)
