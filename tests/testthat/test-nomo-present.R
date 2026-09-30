@@ -198,6 +198,19 @@ test_that("invariance summaries say what each level holds equal (#89)", {
     "  Held equal: thresholds, loadings, and intercepts from strong."
   )
   expect_identical(held("configural", "none"), character())
+
+  # A researcher-specified release is named at the level it is first made; the
+  # releases carry over to later levels as fitted.
+  expect_identical(
+    capture.output(nomologR:::nomo_invariance_present_constraints(tibble::tibble(
+      level = c("configural", "metric", "scalar", "strict"),
+      constraints = c("none", "loadings", "loadings, intercepts",
+                      "loadings, intercepts, residuals"),
+      partial_requested = c("", "", "ag3 ~ 1; ag2 ~ 1", "ag3 ~ 1; ag2 ~ 1")
+    ))),
+    c("  Held equal: loadings from metric; intercepts from scalar, except ag3 ~ 1 and",
+      "  ag2 ~ 1; residuals from strict.")
+  )
 })
 
 

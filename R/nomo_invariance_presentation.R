@@ -184,12 +184,23 @@ nomo_invariance_local_strain_display <- function(x) {
 # fit table. A column of the cumulative constraints was too wide for the
 # console once a strict level held loadings, intercepts, and residuals equal,
 # and it pushed RMSEA and SRMR out of the table.
+#
+# A researcher-specified release is named beside the level it is first made
+# at, as in "intercepts from scalar, except ag3 ~ 1": without it, the line said
+# that the released intercept was held equal too.
 nomo_invariance_present_constraints <- function(fit) {
   held <- lapply(strsplit(fit$constraints, ", ", fixed = TRUE), setdiff, "none")
+  released <- fit[["partial_requested"]]
+  if (is.null(released)) released <- rep("", nrow(fit))
+  released <- strsplit(released, "; ", fixed = TRUE)
   added <- vapply(seq_along(held), function(i) {
     new <- setdiff(held[[i]], if (i > 1L) held[[i - 1L]])
     if (!length(new)) return("")
-    paste(nomo_present_or(new, "and"), "from", fit$level[[i]])
+    freed <- setdiff(released[[i]], c("", if (i > 1L) released[[i - 1L]]))
+    paste0(
+      paste(nomo_present_or(new, "and"), "from", fit$level[[i]]),
+      if (length(freed)) paste(", except", nomo_present_or(freed, "and"))
+    )
   }, character(1))
   added <- added[nzchar(added)]
   if (length(added)) {

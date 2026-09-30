@@ -100,6 +100,11 @@ test_that("releasing the w3 intercept recovers the population change", {
   expect_true(means$ci_lower[[2L]] < .50 && .50 < means$ci_upper[[2L]])
   expect_true("researcher_requested_release" %in% long$decision_log$metric)
   expect_true("partial_invariance" %in% nomo_methods_used(long))
+  # The summary does not say that the released intercept is held equal (#89).
+  local_reproducible_output(width = 80)
+  expect_match(capture.output(print(summary(long))),
+               "Held equal: loadings from metric; intercepts from scalar, except w3 ~ 1.",
+               fixed = TRUE, all = FALSE)
 })
 
 
