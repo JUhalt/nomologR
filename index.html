@@ -11,8 +11,8 @@
 <script src="deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Guided Scale Development and Construct Validation">
-<meta name="description" content="Provides an evidence-guided workflow for empirical scale development and construct validation, designed for graduate students and researchers. The package helps users examine item performance, dimensionality, measurement models, reliability, convergent and discriminant evidence, measurement invariance, and theory-specified nomological networks in the sense of Cronbach and Meehl (1955) &lt;doi:10.1037/h0040957&gt;. Methods are documented from historical to contemporary practice with literature references, and simulated teaching datasets with known population models accompany the examples. Following calls for transparent measurement practice such as Flake, Pek, and Hehman (2017) &lt;doi:10.1177/1948550617693063&gt;, it emphasizes transparent diagnostics, reproducible decision logging, and teaching-oriented guidance rather than automatic item deletion or binary declarations that a measure is valid.">
-<meta property="og:description" content="Provides an evidence-guided workflow for empirical scale development and construct validation, designed for graduate students and researchers. The package helps users examine item performance, dimensionality, measurement models, reliability, convergent and discriminant evidence, measurement invariance, and theory-specified nomological networks in the sense of Cronbach and Meehl (1955) &lt;doi:10.1037/h0040957&gt;. Methods are documented from historical to contemporary practice with literature references, and simulated teaching datasets with known population models accompany the examples. Following calls for transparent measurement practice such as Flake, Pek, and Hehman (2017) &lt;doi:10.1177/1948550617693063&gt;, it emphasizes transparent diagnostics, reproducible decision logging, and teaching-oriented guidance rather than automatic item deletion or binary declarations that a measure is valid.">
+<meta name="description" content="Provides an evidence-guided workflow for empirical scale development and construct validation, designed for graduate students and researchers. The package helps users examine item performance, dimensionality, measurement models, reliability, convergent and discriminant evidence, measurement invariance, and theory-specified nomological networks in the sense of Cronbach and Meehl (1955) &lt;doi:10.1037/h0040957&gt;. It also covers exploratory structural equation modeling, longitudinal measurement invariance, test-retest reliability, common method variance, and power analysis for sample-size planning. Methods are documented from historical to contemporary practice with literature references, and simulated teaching datasets with known population models accompany the examples. Following calls for transparent measurement practice such as Flake, Pek, and Hehman (2017) &lt;doi:10.1177/1948550617693063&gt;, it emphasizes transparent diagnostics, reproducible decision logging, and teaching-oriented guidance rather than automatic item deletion or binary declarations that a measure is valid.">
+<meta property="og:description" content="Provides an evidence-guided workflow for empirical scale development and construct validation, designed for graduate students and researchers. The package helps users examine item performance, dimensionality, measurement models, reliability, convergent and discriminant evidence, measurement invariance, and theory-specified nomological networks in the sense of Cronbach and Meehl (1955) &lt;doi:10.1037/h0040957&gt;. It also covers exploratory structural equation modeling, longitudinal measurement invariance, test-retest reliability, common method variance, and power analysis for sample-size planning. Methods are documented from historical to contemporary practice with literature references, and simulated teaching datasets with known population models accompany the examples. Following calls for transparent measurement practice such as Flake, Pek, and Hehman (2017) &lt;doi:10.1177/1948550617693063&gt;, it emphasizes transparent diagnostics, reproducible decision logging, and teaching-oriented guidance rather than automatic item deletion or binary declarations that a measure is valid.">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -119,7 +119,9 @@
 <li>
 <code>nomo_demo_network</code>: three constructs, an observed outcome, and two groups with a known source of non-invariance;</li>
 <li>
-<code>nomo_demo_walkthrough</code>: twelve items reviewed by an expert panel in <code>contentvalidR</code>, built so that content review and the empirical screen disagree.</li>
+<code>nomo_demo_walkthrough</code>: twelve items reviewed by an expert panel in <code>contentvalidR</code>, built so that content review and the empirical screen disagree;</li>
+<li>
+<code>nomo_demo_longitudinal</code>: four items answered by the same people on three occasions, with a rising latent mean and one item whose intercept drifts after the first occasion.</li>
 </ul>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/JUhalt/nomologR" class="external-link">nomologR</a></span><span class="op">)</span></span>
@@ -245,7 +247,7 @@
 <div class="section level4">
 <h4 id="correlation-choice-is-explicit">Correlation choice is explicit<a class="anchor" aria-label="anchor" href="#correlation-choice-is-explicit"></a>
 </h4>
-<p>Under <code>correlation = "auto"</code>, continuous, binary, ordinal, and genuinely mixed item sets are routed to Pearson, tetrachoric, polychoric, or mixed correlations as appropriate. The selected method and modeling assumptions are also exposed through the convenience fields <code>fac$correlation</code> and <code>fac$modeling_types</code>.</p>
+<p>Under <code>correlation = "auto"</code>, continuous, binary, ordinal, and genuinely mixed item sets are routed to Pearson, tetrachoric, polychoric, or mixed correlations as appropriate. The selected method and modeling assumptions are also exposed through the fields <code>fac$correlation_method</code> and <code>fac$item_types</code>.</p>
 <p>When EKC is used with a non-Pearson correlation matrix, <code>nomologR</code> keeps the criterion available but surfaces an explicit qualification that its reference series is approximate under that correlation model.</p>
 <p>Numeric-discrete storage is deliberately <strong>not</strong> treated as proof of ordinal measurement. For numeric Likert items, make the modeling choice explicitly:</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
@@ -285,7 +287,7 @@
 <span>  <span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">fac_factor</span><span class="op">$</span><span class="va">modeling_types</span></span>
+<span><span class="va">fac_factor</span><span class="op">$</span><span class="va">item_types</span></span>
 <span><span class="va">fac_factor</span><span class="op">$</span><span class="va">decision_log</span></span></code></pre></div>
 <p>The control is deliberately bounded by storage-safety checks:</p>
 <ul>
@@ -475,12 +477,49 @@
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">cmp</span><span class="op">)</span></span></code></pre></div>
 <p>To test whether an item is needed, fix its loading to zero instead of dropping the column: models with different observed variables describe different data, so they receive descriptive evidence only.</p>
 </div>
+<div class="section level4">
+<h4 id="every-cross-loading-at-once-esem">Every cross-loading at once: ESEM<a class="anchor" aria-label="anchor" href="#every-cross-loading-at-once-esem"></a>
+</h4>
+<p><code><a href="reference/nomo_esem.html">nomo_esem()</a></code> fits the same factors as exploratory structural equation modeling (ESEM) beside the CFA. Every item may load on every factor, so the cross-loadings a CFA fixes at zero are estimated, and fit and standard errors remain available (Asparouhov &amp; Muthén, 2009). By default the rotation targets the prespecified structure, as Marsh, Morin, Parker, and Kaur (2014) recommend:</p>
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">esem</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/nomo_esem.html">nomo_esem</a></span><span class="op">(</span><span class="va">model</span>, data <span class="op">=</span> <span class="va">dat2</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">esem</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">esem</span>, <span class="st">"factor_correlations"</span><span class="op">)</span>  <span class="co"># ESEM and CFA side by side</span></span></code></pre></div>
+<p>The two models are compared on TLI and RMSEA, which penalize the ESEM’s extra parameters, and by their likelihood-ratio test. Lower ESEM factor correlations show that the CFA’s zero cross-loadings are inflating them. Flagged cross-loadings are evidence about items, not instructions.</p>
+</div>
+<div class="section level4">
+<h4 id="method-variance-from-a-marker-variable">Method variance from a marker variable<a class="anchor" aria-label="anchor" href="#method-variance-from-a-marker-variable"></a>
+</h4>
+<p><code><a href="reference/nomo_method_variance.html">nomo_method_variance()</a></code> follows Williams, Hartman, and Cavazotte’s (2010) comprehensive CFA marker technique. The marker should be theoretically unrelated to the constructs and tap the biases of the measurement context. Given its indicators, the function tests whether marker-based method variance is present, whether its effects are equal, and whether it biases the substantive correlations. It then splits each factor’s reliability into substantive and method parts, and refits with the method loadings at the upper ends of their intervals:</p>
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">mv</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/nomo_method_variance.html">nomo_method_variance</a></span><span class="op">(</span><span class="va">model</span>, data <span class="op">=</span> <span class="va">dat_marker</span>, marker <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"m1"</span>, <span class="st">"m2"</span>, <span class="st">"m3"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">mv</span></span>
+<span><span class="fu"><a href="reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">mv</span>, <span class="st">"reliability"</span><span class="op">)</span></span></code></pre></div>
+<p>The results describe the method variance this marker captures; they are not corrected estimates. With a nonideal marker the technique can find method variance that is absent (Richardson, Simmering, &amp; Sturman, 2009). <code><a href="reference/nomo_method_variance.html">nomo_method_variance()</a></code> is experimental and stays so after 1.0.0.</p>
+</div>
+<div class="section level4">
+<h4 id="planning-the-sample-size">Planning the sample size<a class="anchor" aria-label="anchor" href="#planning-the-sample-size"></a>
+</h4>
+<p><code><a href="reference/nomo_power_rmsea.html">nomo_power_rmsea()</a></code> gives the power of MacCallum, Browne, and Sugawara’s (1996) RMSEA tests of close, not-close, and exact fit, or the smallest N that reaches a target power. It depends mostly on the model’s degrees of freedom. <code><a href="reference/nomo_power_simulate.html">nomo_power_simulate()</a></code> answers a different question, following Muthén and Muthén (2002): it generates data from a population model, fits the analysis model at each N, and reports convergence, bias, coverage, and power for the parameters that matter.</p>
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="reference/nomo_power_rmsea.html">nomo_power_rmsea</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span>                     <span class="co"># test of close fit; N for power .80</span></span>
+<span><span class="fu"><a href="reference/nomo_power_rmsea.html">nomo_power_rmsea</a></span><span class="op">(</span><span class="va">model</span>, n <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">100</span>, <span class="fl">200</span>, <span class="fl">400</span><span class="op">)</span>, test <span class="op">=</span> <span class="st">"not_close"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">population</span> <span class="op">&lt;-</span> <span class="st">"</span></span>
+<span><span class="st">  F1 =~ 0.7*A1 + 0.7*A2 + 0.6*A3 + 0.5*A4</span></span>
+<span><span class="st">  F2 =~ 0.7*B1 + 0.6*B2 + 0.6*B3 + 0.5*B4</span></span>
+<span><span class="st">  F1 ~~ 0.3*F2</span></span>
+<span><span class="st">"</span></span>
+<span><span class="fu"><a href="reference/nomo_power_simulate.html">nomo_power_simulate</a></span><span class="op">(</span><span class="va">population</span>, n <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">100</span>, <span class="fl">200</span>, <span class="fl">300</span><span class="op">)</span>, focus <span class="op">=</span> <span class="st">"F1~~F2"</span>,</span>
+<span>                    seed <span class="op">=</span> <span class="fl">2026</span><span class="op">)</span></span></code></pre></div>
+<p>The N a model needs ranges widely with its structure, so no rule of thumb replaces the simulation (Wolf, Harrington, Clark, &amp; Miller, 2013). <code><a href="reference/nomo_power_simulate.html">nomo_power_simulate()</a></code> is experimental and stays so after 1.0.0.</p>
+</div>
 </div>
 <div class="section level3">
 <h3 id="id_5-nomo_reliability--nomo_validity--measurement-evidence-beyond-model-fit">5. <code>nomo_reliability()</code> + <code>nomo_validity()</code> — measurement evidence beyond model fit<a class="anchor" aria-label="anchor" href="#id_5-nomo_reliability--nomo_validity--measurement-evidence-beyond-model-fit"></a>
 </h3>
 <p>Milestone 5 completes the confirmatory measurement-model layer by separating <strong>score reliability</strong>, <strong>convergent evidence</strong>, and <strong>construct-separation evidence</strong> rather than collapsing them into one validity verdict.</p>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rel</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/nomo_reliability.html">nomo_reliability</a></span><span class="op">(</span><span class="va">cfa</span><span class="op">)</span></span>
 <span><span class="va">val</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/nomo_validity.html">nomo_validity</a></span><span class="op">(</span><span class="va">cfa</span>, htmt <span class="op">=</span> <span class="st">"both"</span><span class="op">)</span></span>
 <span></span>
@@ -496,7 +535,7 @@
 <p><code><a href="reference/nomo_reliability.html">nomo_reliability()</a></code> uses current <code><a href="https://rdrr.io/pkg/semTools/man/compRelSEM.html" class="external-link">semTools::compRelSEM()</a></code> infrastructure. Model-based omega/composite reliability is primary for the congeneric CFA workflow. Coefficient alpha is retained as a familiar secondary statistic and is explicitly qualified by its stronger assumptions.</p>
 <p>For ordered indicators, the requested score scale remains visible. Observed ordinal-score omega is supported; observed-scale alpha is not silently replaced with a different latent-response or numeric-score estimand.</p>
 <p>Sampling uncertainty can be requested explicitly:</p>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rel_ci</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/nomo_reliability.html">nomo_reliability</a></span><span class="op">(</span></span>
 <span>  <span class="va">cfa</span>,</span>
 <span>  ci <span class="op">=</span> <span class="st">"bootstrap"</span>,</span>
@@ -507,6 +546,21 @@
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">rel_ci</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">rel_ci</span><span class="op">)</span></span></code></pre></div>
 <p>Bootstrap intervals are optional because they require repeated CFA refitting. Point estimates remain the original reliability estimates; the bootstrap adds uncertainty rather than substituting a new estimand.</p>
+</div>
+<div class="section level4">
+<h4 id="stability-across-occasions">Stability across occasions<a class="anchor" aria-label="anchor" href="#stability-across-occasions"></a>
+</h4>
+<p>When the same people answer the measure again, <code><a href="reference/nomo_retest.html">nomo_retest()</a></code> estimates each composite’s test-retest reliability as ICC(A,1), the two-way mixed-effects, absolute-agreement form Koo and Li (2016) recommend, and describes its interval in their terms. The consistency form, ICC(C,1), and the mean change are reported beside it, because a systematic shift counts as disagreement:</p>
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">rt</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/nomo_retest.html">nomo_retest</a></span><span class="op">(</span></span>
+<span>  <span class="va">dat_retest</span>,</span>
+<span>  scores <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>Agency <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"agency_t1"</span>, <span class="st">"agency_t2"</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  interval <span class="op">=</span> <span class="st">"two weeks"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">rt</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">rt</span>, <span class="st">"reliable_change"</span><span class="op">)</span></span></code></pre></div>
+<p>It also reports the standard error of measurement, the smallest detectable change (Weir, 2005), and each person’s reliable change index (Jacobson &amp; Truax, 1991). A reliable change is not necessarily a meaningful one.</p>
 </div>
 <div class="section level4">
 <h4 id="convergent-evidence-is-not-reliability">Convergent evidence is not reliability<a class="anchor" aria-label="anchor" href="#convergent-evidence-is-not-reliability"></a>
@@ -524,7 +578,7 @@
 <li>original HTMT as a comparison;</li>
 <li>optional Fornell-Larcker output as legacy/supporting evidence.</li>
 </ul>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">val</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/nomo_validity.html">nomo_validity</a></span><span class="op">(</span></span>
 <span>  <span class="va">cfa</span>,</span>
 <span>  htmt <span class="op">=</span> <span class="st">"both"</span>,</span>
@@ -549,7 +603,7 @@
 <h4 id="total-and-subscale-scores">Total and subscale scores<a class="anchor" aria-label="anchor" href="#total-and-subscale-scores"></a>
 </h4>
 <p>When a scale reports a total score and subscale scores, <code><a href="reference/nomo_model.html">nomo_model()</a></code> writes higher-order and bifactor structures, and <code><a href="reference/nomo_hierarchical.html">nomo_hierarchical()</a></code> reports how much of each score reflects the general factor:</p>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">subscales</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  Focus <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"x"</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">)</span>,</span>
 <span>  Drive <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"x"</span>, <span class="fl">5</span><span class="op">:</span><span class="fl">8</span><span class="op">)</span>,</span>
@@ -569,7 +623,7 @@
 <code>nomo_scores()</code> — scoring is a modeling decision<a class="anchor" aria-label="anchor" href="#nomo_scores--scoring-is-a-modeling-decision"></a>
 </h3>
 <p>Once a measurement model is established, <code><a href="reference/nomo_scores.html">nomo_scores()</a></code> produces sum, mean, regression, or Bartlett scores and reports what they are and are not.</p>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">scored</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/nomo_scores.html">nomo_scores</a></span><span class="op">(</span><span class="va">fit</span>, method <span class="op">=</span> <span class="st">"sum"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">scored</span>, <span class="st">"diagnostics"</span><span class="op">)</span></span></code></pre></div>
 <p>Adding items is not arithmetic: it assumes a parallel model, with equal unstandardized loadings and equal residual variances, so for unit-weighted scores that constrained model is fitted and compared with the model you supplied. Every method reports Grice’s three criteria — validity, univocality, and correlational accuracy.</p>
@@ -580,7 +634,7 @@
 <h3 id="id_6-nomo_hypotheses--nomo_network--theory-specified-before-evidence">6. <code>nomo_hypotheses()</code> + <code>nomo_network()</code> — theory specified before evidence<a class="anchor" aria-label="anchor" href="#id_6-nomo_hypotheses--nomo_network--theory-specified-before-evidence"></a>
 </h3>
 <p>Milestone 6 makes the nomological network an explicit theory test rather than a post-hoc collection of correlations. Predictions are machine-readable before the model is interpreted:</p>
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">h</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/nomo_hypotheses.html">nomo_hypotheses</a></span><span class="op">(</span></span>
 <span>  <span class="st">"A -&gt; B"</span> <span class="op">=</span> <span class="fu"><a href="reference/nomo_expectations.html">positive</a></span><span class="op">(</span>min <span class="op">=</span> <span class="fl">.20</span><span class="op">)</span>,</span>
 <span>  <span class="st">"A &lt;-&gt; C"</span> <span class="op">=</span> <span class="fu"><a href="reference/nomo_expectations.html">negligible</a></span><span class="op">(</span>within <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">.15</span>, <span class="fl">.15</span><span class="op">)</span><span class="op">)</span>,</span>
@@ -602,12 +656,32 @@
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">net</span>, type <span class="op">=</span> <span class="st">"replication"</span><span class="op">)</span></span></code></pre></div>
 <p><code><a href="reference/nomo_network.html">nomo_network()</a></code> keeps theory concordance, uncertainty, measurement context, a-priori/post-hoc provenance, and replication separate. A non-significant p-value never establishes negligibility; quantified negligible predictions require a researcher-specified equivalence region.</p>
 <p>When a validation sample is supplied, the exact same prespecified fitted model is used again. The package does not respecify the validation model from the primary-sample results.</p>
+<div class="section level4">
+<h4 id="observed-composites-as-single-indicators">Observed composites as single indicators<a class="anchor" aria-label="anchor" href="#observed-composites-as-single-indicators"></a>
+</h4>
+<p>A scale mean carries the measurement error of its items, which attenuates the relations it enters. Named in <code>single_indicators</code>, a composite becomes the one indicator of a latent variable whose error variance is fixed at (1 − reliability) × its variance, the idea behind Spearman’s (1904) correction for attenuation. <code><a href="reference/nomo_single_indicator.html">nomo_single_indicator()</a></code> records the reliability, here omega from the composite’s own measurement model:</p>
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">net_data</span> <span class="op">&lt;-</span> <span class="va">nomo_demo_network</span></span>
+<span><span class="va">net_data</span><span class="op">$</span><span class="va">persistence</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">rowMeans</a></span><span class="op">(</span><span class="va">net_data</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"pe1"</span>, <span class="st">"pe2"</span>, <span class="st">"pe3"</span>, <span class="st">"pe4"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="va">rel</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/nomo_reliability.html">nomo_reliability</a></span><span class="op">(</span><span class="fu"><a href="reference/nomo_cfa.html">nomo_cfa</a></span><span class="op">(</span><span class="st">"Persistence =~ pe1 + pe2 + pe3 + pe4"</span>, <span class="va">net_data</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">net_si</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/nomo_network.html">nomo_network</a></span><span class="op">(</span></span>
+<span>  <span class="st">"Agency =~ ag1 + ag2 + ag3 + ag4"</span>,</span>
+<span>  data <span class="op">=</span> <span class="va">net_data</span>,</span>
+<span>  hypotheses <span class="op">=</span> <span class="fu"><a href="reference/nomo_hypotheses.html">nomo_hypotheses</a></span><span class="op">(</span><span class="st">"Agency -&gt; persistence"</span> <span class="op">=</span> <span class="fu"><a href="reference/nomo_expectations.html">positive</a></span><span class="op">(</span>min <span class="op">=</span> <span class="fl">.20</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  single_indicators <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>persistence <span class="op">=</span> <span class="fu"><a href="reference/nomo_single_indicator.html">nomo_single_indicator</a></span><span class="op">(</span><span class="va">rel</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">net_si</span>, <span class="st">"single_indicators"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">net_si</span>, <span class="st">"sensitivity"</span><span class="op">)</span></span></code></pre></div>
+<p>A correction is only as good as its reliability, so the network is refitted with the reliability .05 and .10 lower and higher, and a hypothesis whose concordance changes across that range is flagged. When the reliability’s standard error is known, its uncertainty is added to the standard errors (Oberski &amp; Satorra, 2013).</p>
+</div>
 </div>
 <div class="section level3">
 <h3 id="id_7-nomo_invariance--identification-aware-generalizability-evidence">7. <code>nomo_invariance()</code> — identification-aware generalizability evidence<a class="anchor" aria-label="anchor" href="#id_7-nomo_invariance--identification-aware-generalizability-evidence"></a>
 </h3>
 <p>Milestone 7 evaluates equality constraints without treating one fit-change cutoff as a universal law:</p>
-<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">inv</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/nomo_invariance.html">nomo_invariance</a></span><span class="op">(</span></span>
 <span>  <span class="va">model</span>,</span>
 <span>  data <span class="op">=</span> <span class="va">dat</span>,</span>
@@ -622,7 +696,7 @@
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">inv</span>, type <span class="op">=</span> <span class="st">"local_strain"</span><span class="op">)</span></span></code></pre></div>
 <p>Continuous and ordered indicators use identification-appropriate sequences. For categorical models, binary, three-category, and 4+ category structures are handled differently where identification requires it.</p>
 <p>Partial invariance remains an explicit researcher decision:</p>
-<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">release</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/nomo_partial.html">nomo_partial</a></span><span class="op">(</span></span>
 <span>  level <span class="op">=</span> <span class="st">"metric"</span>,</span>
 <span>  syntax <span class="op">=</span> <span class="st">"F =~ x2"</span>,</span>
@@ -637,14 +711,51 @@
 <span>  partial <span class="op">=</span> <span class="va">release</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p>Localized score diagnostics can identify where equality constraints are strained, but <code>nomologR</code> never searches until it finds a partial-invariance solution that “passes.”</p>
-<p><code><a href="reference/nomo_invariance_longitudinal.html">nomo_invariance_longitudinal()</a></code> runs the same sequence across occasions for repeated measures, with each item’s residuals correlated over time and latent change reported once intercepts are invariant.</p>
+<div class="section level4">
+<h4 id="latent-means-as-known-groups-evidence">Latent means as known-groups evidence<a class="anchor" aria-label="anchor" href="#latent-means-as-known-groups-evidence"></a>
+</h4>
+<p>At each level that holds intercepts equal, <code><a href="reference/nomo_invariance.html">nomo_invariance()</a></code> also reports each group’s latent means relative to the reference group, in the reference group’s latent standard deviations, with intervals (Hancock, 2001). A difference that theory predicts is known-groups evidence, but only once the intercepts are invariant, fully or partially:</p>
+<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">inv_partial</span>, <span class="st">"latent_means"</span><span class="op">)</span></span></code></pre></div>
+<p>A group difference computed before the intercepts are examined can be item bias, which is why the means are reported level by level.</p>
+</div>
+<div class="section level4">
+<h4 id="across-occasions">Across occasions<a class="anchor" aria-label="anchor" href="#across-occasions"></a>
+</h4>
+<p><code><a href="reference/nomo_invariance_longitudinal.html">nomo_invariance_longitudinal()</a></code> runs the same sequence across occasions for repeated measures, with each item’s residuals correlated over time and latent change reported once intercepts are invariant, fully or partially. The model is written for one occasion, and <code>columns</code> (default <code>"{item}_{occasion}"</code>) names each item’s column on each occasion:</p>
+<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">long</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/nomo_invariance_longitudinal.html">nomo_invariance_longitudinal</a></span><span class="op">(</span></span>
+<span>  <span class="st">"Wellbeing =~ w1 + w2 + w3 + w4"</span>,</span>
+<span>  data <span class="op">=</span> <span class="va">nomo_demo_longitudinal</span>,</span>
+<span>  occasions <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"t1"</span>, <span class="st">"t2"</span>, <span class="st">"t3"</span><span class="op">)</span>,</span>
+<span>  levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"configural"</span>, <span class="st">"metric"</span>, <span class="st">"scalar"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">long</span><span class="op">)</span></span></code></pre></div>
+<p>In these data the <code>w3</code> intercept drifts upward after the first occasion, and the score diagnostics in the summary point to it. Held equal, it inflates the latent change, so the change is read after releasing it, a documented decision as across groups:</p>
+<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">long_partial</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/nomo_invariance_longitudinal.html">nomo_invariance_longitudinal</a></span><span class="op">(</span></span>
+<span>  <span class="st">"Wellbeing =~ w1 + w2 + w3 + w4"</span>,</span>
+<span>  data <span class="op">=</span> <span class="va">nomo_demo_longitudinal</span>,</span>
+<span>  occasions <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"t1"</span>, <span class="st">"t2"</span>, <span class="st">"t3"</span><span class="op">)</span>,</span>
+<span>  levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"configural"</span>, <span class="st">"metric"</span>, <span class="st">"scalar"</span><span class="op">)</span>,</span>
+<span>  partial <span class="op">=</span> <span class="fu"><a href="reference/nomo_partial.html">nomo_partial</a></span><span class="op">(</span></span>
+<span>    level <span class="op">=</span> <span class="st">"scalar"</span>,</span>
+<span>    syntax <span class="op">=</span> <span class="st">"w3 ~ 1"</span>,</span>
+<span>    rationale <span class="op">=</span> <span class="st">"The score diagnostics point to the w3 intercept."</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">long_partial</span>, <span class="st">"latent_means"</span><span class="op">)</span>  <span class="co"># change in first-occasion SDs</span></span></code></pre></div>
+<p>The release frees the <code>w3</code> intercept on every occasion, so the change is carried by the other three items. With real data it still needs a reason beyond the diagnostics.</p>
 <p>The full walkthroughs are in the <strong>“Nomological network”</strong> and <strong>“Measurement invariance”</strong> vignettes.</p>
+</div>
 </div>
 <div class="section level3">
 <h3 id="id_8-nomo_run--guided-orchestration-without-hidden-decisions">8. <code>nomo_run()</code> — guided orchestration without hidden decisions<a class="anchor" aria-label="anchor" href="#id_8-nomo_run--guided-orchestration-without-hidden-decisions"></a>
 </h3>
 <p>Milestone 8 connects the package components into a resumable workflow while keeping consequential choices explicit.</p>
-<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">run</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/nomo_run.html">nomo_run</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">dat</span>,</span>
 <span>  scales <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>WellBeing <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"w1"</span>, <span class="st">"w2"</span>, <span class="st">"w3"</span>, <span class="st">"w4"</span><span class="op">)</span><span class="op">)</span></span>
@@ -668,7 +779,7 @@
 <p>Teaching mode presents consequential pauses as <strong>Observation / Reason / Options / Consequence</strong>. Research mode provides a compact view of the same underlying analysis.</p>
 <p><code><a href="reference/nomo_run.html">nomo_run()</a></code> never silently deletes items, creates a CFA model from EFA, frees invariance constraints, respecifies a model, or declares a construct valid/invalid.</p>
 <p>If the measurement evidence prompts a change, <code><a href="reference/nomo_revise.html">nomo_revise()</a></code> creates a child workflow that keeps the parent as its documented ancestor:</p>
-<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">revised</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/nomo_revise.html">nomo_revise</a></span><span class="op">(</span></span>
 <span>  <span class="va">run</span>,</span>
 <span>  cfa_model <span class="op">=</span> <span class="st">"WellBeing =~ w1 + w2 + w3 + w4\nw1 ~~ w2"</span>,</span>
@@ -685,13 +796,13 @@
 </h3>
 <p><code><a href="reference/nomo_report.html">nomo_report()</a></code> creates an archival report from a guided workflow, including methods, evidence, researcher decisions, deviations, citations, and session information: a self-contained HTML file, or a Word document when <code>file</code> ends in <code>.docx</code>. See the <a href="https://juhalt.github.io/nomologR/articles/reproducible-report.html">reproducible reporting walkthrough</a> for the documented inputs and limitations.</p>
 <p>The report cites the methods the workflow actually used, not every method the package offers. The same information is available directly:</p>
-<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/nomo_methods.html">nomo_methods</a></span><span class="op">(</span><span class="va">run</span><span class="op">)</span>                     <span class="co"># methods this workflow used</span></span>
 <span><span class="fu"><a href="reference/nomo_methods.html">nomo_methods</a></span><span class="op">(</span>lineage <span class="op">=</span> <span class="st">"historical"</span><span class="op">)</span>  <span class="co"># shown for recognition, and why</span></span>
 <span><span class="fu"><a href="reference/nomo_methods.html">nomo_methods</a></span><span class="op">(</span><span class="va">run</span>, references <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>  <span class="co"># a reference list with DOIs</span></span></code></pre></div>
 <p>Each method records its stage, whether it is historical, contemporary, or emerging practice, how the package uses it, its estimand and assumptions, and DOI-verified references. The <a href="https://juhalt.github.io/nomologR/articles/research-basis.html">research basis</a> article explains the lineage labels.</p>
 <p>For a thesis or manuscript, <code><a href="reference/nomo_apa_table.html">nomo_apa_table()</a></code> formats a result as an APA 7 table — a bold number, an italic title, no vertical rules, and notes below — that knits directly into R Markdown or Quarto:</p>
-<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb42"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/nomo_apa_table.html">nomo_apa_table</a></span><span class="op">(</span><span class="va">cfa</span>, <span class="st">"loadings"</span>, number <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/nomo_apa_table.html">nomo_apa_table</a></span><span class="op">(</span><span class="va">reliability</span>, number <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/nomo_apa_table.html">nomo_apa_table</a></span><span class="op">(</span><span class="va">validity</span>, <span class="st">"discriminant"</span>, number <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
@@ -738,6 +849,7 @@
 <a class="anchor" aria-label="anchor" href="#next-v100-then-1x"></a>
 </h3>
 <p><code>v1.0.0</code> is planned as a joint release with <a href="https://github.com/JUhalt/contentvalidR" class="external-link"><code>contentvalidR</code></a>, the package’s content-validity counterpart (<a href="https://github.com/JUhalt/nomologR/issues/53" class="external-link">#53</a>). It is the stability promise: after it, existing behavior changes only after a deprecation period. Its scope is set in <a href="https://github.com/JUhalt/nomologR/issues/113" class="external-link">#113</a>. The companion article on the shared item set is done (<a href="https://github.com/JUhalt/nomologR/issues/60" class="external-link">#60</a>).</p>
+<p><code>v1.0.0</code> contains everything in <code>v0.9.0</code> and closes the gaps social-science scale developers meet most often, each method taken from its literature (<a href="https://github.com/JUhalt/nomologR/issues/129" class="external-link">#129</a>): ESEM beside its CFA (<code><a href="reference/nomo_esem.html">nomo_esem()</a></code>); measurement invariance across occasions, with latent change (<code><a href="reference/nomo_invariance_longitudinal.html">nomo_invariance_longitudinal()</a></code> and the <code>nomo_demo_longitudinal</code> teaching data); latent means as known-groups evidence in <code><a href="reference/nomo_invariance.html">nomo_invariance()</a></code>; test-retest reliability, measurement error, and reliable change (<code><a href="reference/nomo_retest.html">nomo_retest()</a></code>); reliability-corrected single indicators for observed composites (<code><a href="reference/nomo_single_indicator.html">nomo_single_indicator()</a></code> and <code>nomo_network(single_indicators = )</code>); common method variance by the comprehensive CFA marker technique (<code><a href="reference/nomo_method_variance.html">nomo_method_variance()</a></code>); and sample-size planning by RMSEA power and Monte Carlo simulation (<code><a href="reference/nomo_power_rmsea.html">nomo_power_rmsea()</a></code>, <code><a href="reference/nomo_power_simulate.html">nomo_power_simulate()</a></code>). All are additive. <code><a href="reference/nomo_method_variance.html">nomo_method_variance()</a></code> and <code><a href="reference/nomo_power_simulate.html">nomo_power_simulate()</a></code> stay experimental after 1.0.0; the rest fall under the stability promise. The feature freeze is on 2026-10-13, before the release candidate on 2026-10-17.</p>
 <p>Larger extensions, such as IRT/DIF, Bayesian SEM, multiple imputation, and formative models, are candidates for <code>1.x</code>. They are additive, so they do not need to precede the freeze. None was rejected, and none is a commitment until selected.</p>
 </div>
 <div class="section level3">
@@ -780,7 +892,7 @@
 <li>the declared keying and the response scale, which the keying notes and the careless-responding indices use. The data are never recoded.</li>
 </ul>
 <p>Pass the handoff itself, not <code>h$items</code>, so everything it records travels with the items:</p>
-<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/nomo_screen.html">nomo_screen</a></span><span class="op">(</span><span class="va">responses</span>, items <span class="op">=</span> <span class="va">h</span><span class="op">)</span>  <span class="co"># screens the carried items</span></span>
 <span><span class="fu"><a href="reference/nomo_run.html">nomo_run</a></span><span class="op">(</span><span class="va">responses</span>, scales <span class="op">=</span> <span class="va">h</span><span class="op">)</span>    <span class="co"># runs the empirical stage on the handoff's scales</span></span></code></pre></div>
 <p><strong>How nomologR reads a handoff.</strong></p>
@@ -833,7 +945,7 @@
 <h2 id="license">License<a class="anchor" aria-label="anchor" href="#license"></a>
 </h2>
 <p>The current development source is licensed under the <strong>GNU General Public License, version 3 only (SPDX: GPL-3.0-only)</strong>. See <a href="https://github.com/JUhalt/nomologR/blob/master/LICENSE.md" class="external-link">LICENSE.md</a> and the preserved attribution in <a href="https://github.com/JUhalt/nomologR/blob/master/inst/NOTICE" class="external-link">inst/NOTICE</a>.</p>
-<p>Previously published releases, including <code>0.1.0</code>, retain their original MIT license. Stable installation currently retrieves that release; the next published release will carry GPL version 3 only. This source transition does not relabel existing tags or release artifacts.</p>
+<p>Releases from <code>0.2.0</code> on, including the current stable release, carry GPL version 3 only, as the <code>License: GPL-3</code> field in <code>DESCRIPTION</code> records. The published <code>0.1.0</code> release retains its original MIT license; the change of license does not relabel existing tags or release artifacts.</p>
 </div>
 </div>
   </main><aside class="col-md-3"><div class="links">

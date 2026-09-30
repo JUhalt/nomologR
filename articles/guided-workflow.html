@@ -558,15 +558,17 @@ review. The chunk below is shown, not run:</p>
 <span>  response_scale <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">5</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p><code>nomologR</code> does not depend on <code>contentvalidR</code>.
-This package ships the handoff that <code>contentvalidR</code> 0.7.0
-produces for its walkthrough item sort, so the rest of this section runs
-without it:</p>
+This package ships the handoff that <code>contentvalidR</code> produced
+for its walkthrough item sort, so the rest of this section runs without
+it:</p>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">handoff</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"content-handoff-walkthrough.rds"</span>, package <span class="op">=</span> <span class="st">"nomologR"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span><span class="va">handoff</span><span class="op">$</span><span class="va">items</span></span>
 <span><span class="co">#&gt;  [1] "EF1" "EF2" "EF3" "EF4" "EF6" "TF1" "TF2" "TF3" "TF4" "TF6"</span></span></code></pre></div>
+<p>Its provenance records the release that made it,
+<code>contentvalidR</code> 0.7.0.</p>
 <p>Responses to those items, simulated here, with EF2 and TF2 worded in
 reverse:</p>
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">

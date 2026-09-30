@@ -162,50 +162,63 @@ reviewed with <code>contentvalidR</code>.</p>
 </tr></thead>
 <tbody>
 <tr class="odd">
+<td>Planning the sample</td>
+<td>How many cases does the planned model need?</td>
+<td>
+<code><a href="../reference/nomo_power_rmsea.html">nomo_power_rmsea()</a></code>,
+<code><a href="../reference/nomo_power_simulate.html">nomo_power_simulate()</a></code>
+</td>
+<td><a href="measurement-model-evidence.html">From CFA to a defensible
+measurement model</a></td>
+</tr>
+<tr class="even">
 <td>1. Item and data audit</td>
 <td>What do the items and responses look like?</td>
 <td><code><a href="../reference/nomo_screen.html">nomo_screen()</a></code></td>
 <td><a href="exploratory-workflow.html">From item audit to exploratory
 structure</a></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>2. Dimensionality</td>
 <td>How many latent dimensions deserve investigation?</td>
 <td><code><a href="../reference/nomo_factors.html">nomo_factors()</a></code></td>
 <td><a href="exploratory-workflow.html">From item audit to exploratory
 structure</a></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>3. Exploratory structure</td>
 <td>What does a requested factor solution look like?</td>
 <td><code><a href="../reference/nomo_efa.html">nomo_efa()</a></code></td>
 <td><a href="exploratory-workflow.html">From item audit to exploratory
 structure</a></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>4. Confirmatory measurement model</td>
 <td>Does a prespecified model reproduce the data, and where is there
-strain?</td>
+strain, such as cross-loadings or shared method?</td>
 <td>
 <code><a href="../reference/nomo_model.html">nomo_model()</a></code>, <code><a href="../reference/nomo_split.html">nomo_split()</a></code>,
-<code><a href="../reference/nomo_cfa.html">nomo_cfa()</a></code>
+<code><a href="../reference/nomo_cfa.html">nomo_cfa()</a></code>, <code><a href="../reference/nomo_esem.html">nomo_esem()</a></code>,
+<code><a href="../reference/nomo_method_variance.html">nomo_method_variance()</a></code>
+</td>
+<td><a href="measurement-model-evidence.html">From CFA to a defensible
+measurement model</a></td>
+</tr>
+<tr class="even">
+<td>5. Reliability and construct-validity evidence</td>
+<td>How precise and how stable are scores, and are constructs
+distinguishable?</td>
+<td>
+<code><a href="../reference/nomo_reliability.html">nomo_reliability()</a></code>, <code><a href="../reference/nomo_retest.html">nomo_retest()</a></code>,
+<code><a href="../reference/nomo_validity.html">nomo_validity()</a></code>
 </td>
 <td><a href="measurement-model-evidence.html">From CFA to a defensible
 measurement model</a></td>
 </tr>
 <tr class="odd">
-<td>5. Reliability and construct-validity evidence</td>
-<td>How precise are scores, and are constructs distinguishable?</td>
-<td>
-<code><a href="../reference/nomo_reliability.html">nomo_reliability()</a></code>, <code><a href="../reference/nomo_validity.html">nomo_validity()</a></code>
-</td>
-<td><a href="measurement-model-evidence.html">From CFA to a defensible
-measurement model</a></td>
-</tr>
-<tr class="even">
 <td>6. Generalizability</td>
-<td>Is the construct measured comparably across groups and
-occasions?</td>
+<td>Is the construct measured comparably across groups and occasions,
+and do their latent means differ?</td>
 <td>
 <code><a href="../reference/nomo_invariance.html">nomo_invariance()</a></code>,
 <code><a href="../reference/nomo_invariance_longitudinal.html">nomo_invariance_longitudinal()</a></code>,
@@ -214,22 +227,23 @@ occasions?</td>
 <td><a href="measurement-invariance.html">Measurement
 invariance</a></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>7. Nomological network</td>
 <td>Does the construct relate to others as theory predicted?</td>
 <td>
-<code><a href="../reference/nomo_hypotheses.html">nomo_hypotheses()</a></code>, <code><a href="../reference/nomo_network.html">nomo_network()</a></code>
+<code><a href="../reference/nomo_hypotheses.html">nomo_hypotheses()</a></code>, <code><a href="../reference/nomo_network.html">nomo_network()</a></code>,
+<code><a href="../reference/nomo_single_indicator.html">nomo_single_indicator()</a></code>
 </td>
 <td><a href="nomological-network.html">Theory-specified nomological
 networks</a></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>Guided workflow</td>
 <td>How do the stages fit together with explicit decisions?</td>
 <td><code><a href="../reference/nomo_run.html">nomo_run()</a></code></td>
 <td><a href="guided-workflow.html">Guided workflow</a></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>Starting from content review</td>
 <td>What does empirical evidence add to an expert review of the
 items?</td>
@@ -239,7 +253,7 @@ items?</td>
 <td><a href="content-review.html">From content review to empirical
 screening</a></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>Reporting</td>
 <td>How do I archive the evidence and decisions?</td>
 <td>
@@ -295,11 +309,20 @@ two facets, two cohorts, 400 cases</td>
 <td>Items that pass content review and fail empirically, and the
 reverse; reverse-worded items; a cohort difference</td>
 </tr>
+<tr class="odd">
+<td><code>nomo_demo_longitudinal</code></td>
+<td>Four Wellbeing items answered by the same people on three occasions,
+500 cases</td>
+<td>Longitudinal invariance, item residuals correlated across occasions,
+latent change, and a known intercept drift in <code>w3</code>
+</td>
+</tr>
 </tbody>
 </table>
 <p>See <code><a href="../reference/nomo_demo_continuous.html">?nomo_demo_continuous</a></code>,
-<code><a href="../reference/nomo_demo_ordinal.html">?nomo_demo_ordinal</a></code>, <code><a href="../reference/nomo_demo_network.html">?nomo_demo_network</a></code>, and
-<code><a href="../reference/nomo_demo_walkthrough.html">?nomo_demo_walkthrough</a></code> for the full population models.</p>
+<code><a href="../reference/nomo_demo_ordinal.html">?nomo_demo_ordinal</a></code>, <code><a href="../reference/nomo_demo_network.html">?nomo_demo_network</a></code>,
+<code><a href="../reference/nomo_demo_walkthrough.html">?nomo_demo_walkthrough</a></code>, and
+<code><a href="../reference/nomo_demo_longitudinal.html">?nomo_demo_longitudinal</a></code> for the full population models.</p>
 </div>
 <div class="section level2">
 <h2 id="a-first-look">A first look<a class="anchor" aria-label="anchor" href="#a-first-look"></a>
@@ -382,14 +405,18 @@ structure</a> — screening, factor retention, and EFA.</li>
 <li>
 <a href="measurement-model-evidence.html">From CFA to a defensible
 measurement model</a> — confirmatory fit, reliability, and convergent
-and discriminant evidence.</li>
+and discriminant evidence; then ESEM beside the CFA, test-retest
+reliability, method variance from a marker variable, and sample-size
+planning.</li>
 <li>
 <a href="measurement-invariance.html">Measurement invariance</a> —
-comparability across groups, localized strain, and researcher-controlled
-partial invariance.</li>
+comparability across groups, localized strain, researcher-controlled
+partial invariance, latent means as known-groups evidence, and
+invariance across occasions.</li>
 <li>
 <a href="nomological-network.html">Theory-specified nomological
-networks</a> — predictions, equivalence regions, and replication.</li>
+networks</a> — predictions, equivalence regions, replication, and
+observed composites corrected for their unreliability.</li>
 <li>
 <a href="guided-workflow.html">Guided workflow</a> — the stages
 combined with explicit decisions.</li>

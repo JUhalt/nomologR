@@ -573,7 +573,7 @@ as five-category ordered factors, so <code>nomologR</code> uses
 polychoric correlations automatically:</p>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fac_ord</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_factors.html">nomo_factors</a></span><span class="op">(</span><span class="va">nomo_demo_ordinal</span>, seed <span class="op">=</span> <span class="fl">2026</span><span class="op">)</span></span>
-<span><span class="va">fac_ord</span><span class="op">$</span><span class="va">correlation</span></span>
+<span><span class="va">fac_ord</span><span class="op">$</span><span class="va">correlation_method</span></span>
 <span><span class="co">#&gt; [1] "polychoric"</span></span>
 <span></span>
 <span><span class="va">efa_ord</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_efa.html">nomo_efa</a></span><span class="op">(</span><span class="va">nomo_demo_ordinal</span>, factors <span class="op">=</span> <span class="va">fac_ord</span><span class="op">)</span></span>

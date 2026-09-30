@@ -518,7 +518,7 @@ correlations automatically:
 ``` r
 
 fac_ord <- nomo_factors(nomo_demo_ordinal, seed = 2026)
-fac_ord$correlation
+fac_ord$correlation_method
 #> [1] "polychoric"
 
 efa_ord <- nomo_efa(nomo_demo_ordinal, factors = fac_ord)

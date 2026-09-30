@@ -994,18 +994,18 @@ mv
     ## 
     ## Model comparisons
     ##   Comparison             Chi-square diff.  df       p
-    ##   Baseline vs. Method-C             11.89   1  < .001
-    ##   Method-C vs. Method-U              2.78   7    .905
-    ##   Method-C vs. Method-R              0.07   1    .790
+    ##   Baseline vs. Method-C             11.84   1  < .001
+    ##   Method-C vs. Method-U              2.79   7    .904
+    ##   Method-C vs. Method-R              0.07   1    .791
     ## 
     ## Reliability decomposition
     ##   Factor  Total  Substantive  Method  Method share
-    ##   A       0.804        0.788   0.017  2.1%
-    ##   B       0.784        0.767   0.016  2.1%
+    ##   A       0.811        0.795   0.017  2.0%
+    ##   B       0.776        0.759   0.016  2.1%
     ## 
     ## Substantive correlations
     ##   Factors     CFA  Baseline  Retained  S(.05)  S(.01)
-    ##   A with B  0.434     0.434     0.422   0.422   0.423
+    ##   A with B  0.436     0.436     0.424   0.424   0.425
     ## 
     ## Comprehensive CFA marker technique (Williams, Hartman, & Cavazotte, 2010). The
     ## results describe the method variance this marker captures; they are not
@@ -1022,7 +1022,9 @@ recover the substantive correlations accurately (Richardson, Simmering,
 & Sturman, 2009). The results describe the method variance this marker
 captures. They are not corrected estimates, and a marker chosen only
 because it is unrelated, such as a demographic, may capture no method
-variance at all. \# Planning the sample size
+variance at all.
+
+## Planning the sample size
 
 Two questions about sample size have different answers. The first is
 whether the overall fit test can tell good fit from mediocre. MacCallum,

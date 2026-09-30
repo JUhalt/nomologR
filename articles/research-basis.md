@@ -1043,6 +1043,10 @@ features of exploratory and confirmatory factor analysis. *Annual Review
 of Clinical Psychology, 10*, 85–110.
 <https://doi.org/10.1146/annurev-clinpsy-032813-153700>
 
+McGraw, K. O., & Wong, S. P. (1996). Forming inferences about some
+intraclass correlation coefficients. *Psychological Methods, 1*(1),
+30–46. <https://doi.org/10.1037/1082-989X.1.1.30>
+
 McNeish, D. (2018). Thanks coefficient alpha, we’ll take it from here.
 *Psychological Methods, 23*(3), 412–433.
 <https://doi.org/10.1037/met0000144>

@@ -17,13 +17,18 @@
 > delete.
 
 **Current stable release:**
+[0.9.0](https://github.com/JUhalt/nomologR/releases/tag/v0.9.0)
+(September 28, 2026), GPL-3.0-only — the last minor release before
+1.0.0. It redesigns console output, plots, and report tables, records in
+[`nomo_methods()`](https://juhalt.github.io/nomologR/reference/nomo_methods.md)
+how practice changed, adds the teaching and content-review articles and
+APA tables for validity evidence, and names the returned fields in every
+help page. It follows
 [0.3.0](https://github.com/JUhalt/nomologR/releases/tag/v0.3.0)
-(September 26, 2026), GPL-3.0-only — the first release submitted to
-CRAN. It adds the `contentvalidR` handoff reader, carries the v0.2.1
-tools into the guided workflow and its report, and adds a written
-stability policy. It follows
+(September 26, 2026), the first release submitted to CRAN, which is
+still in CRAN’s queue for new submissions;
 [0.2.1](https://github.com/JUhalt/nomologR/releases/tag/v0.2.1)
-(September 23, 2026) and
+(September 23, 2026); and
 [0.2.0](https://github.com/JUhalt/nomologR/releases/tag/v0.2.0)
 (September 19, 2026). The earlier
 [0.1.0](https://github.com/JUhalt/nomologR/releases/tag/v0.1.0) release
@@ -135,7 +140,7 @@ milestone are in
 
 ------------------------------------------------------------------------
 
-\# v0.2.0 — Research-Backed, Usable Measurement Workflows
+# v0.2.0 — Research-Backed, Usable Measurement Workflows
 
 **Status:** Released September 19, 2026. Scope selected in
 [\#22](https://github.com/JUhalt/nomologR/issues/22). Every Core
@@ -373,9 +378,10 @@ named in every help page (#115); `nomo_missing(fit)` (#122).
 # v1.0.0 — Joint Stable Release with contentvalidR
 
 **Status:** Release candidate planned for 2026-10-17, the same day as
-`contentvalidR`’s (decided by the maintainer on 2026-09-28). The scope
-is set in [\#113](https://github.com/JUhalt/nomologR/issues/113), where
-the maintainer delegated decisions to what the literature says. On
+`contentvalidR`’s (decided by the maintainer on 2026-09-28), after a
+feature freeze on 2026-10-13. The scope is set in
+[\#113](https://github.com/JUhalt/nomologR/issues/113), where the
+maintainer delegated decisions to what the literature says. On
 2026-09-28 the maintainer asked that the gaps social-science scale
 developers meet be closed before the candidate, starting with
 reliability-corrected single indicators. The release sequence is in

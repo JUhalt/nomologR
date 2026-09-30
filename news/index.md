@@ -212,6 +212,33 @@
   ([\#53](https://github.com/JUhalt/nomologR/issues/53)). Their handoffs
   are identical to 0.9.0’s apart from the producer version and date, and
   the reader needed no change.
+- Documentation for 1.0
+  ([\#129](https://github.com/JUhalt/nomologR/issues/129),
+  [\#138](https://github.com/JUhalt/nomologR/issues/138)). Get started
+  and the research-basis article say that every analysis assumes
+  reflective measurement, why the tools do not apply to formative
+  measures, and where the criteria for choosing between the two are. The
+  research-basis article places each method added in
+  [\#129](https://github.com/JUhalt/nomologR/issues/129) between
+  historical and contemporary practice, and gains the McGraw and
+  Wong (1996) entry its test-retest paragraph cites. The README walks
+  through the new functions stage by stage, lists
+  `nomo_demo_longitudinal`, says what 1.0.0 contains, and notes that
+  [`nomo_method_variance()`](https://juhalt.github.io/nomologR/reference/nomo_method_variance.md)
+  and
+  [`nomo_power_simulate()`](https://juhalt.github.io/nomologR/reference/nomo_power_simulate.md)
+  stay experimental after 1.0.0; its license note now says that releases
+  from 0.2.0 on are GPL-3. Get started adds the new functions and
+  dataset to its workflow and dataset tables and its learning path, and
+  the package description names the new methods. ROADMAP lists the gap
+  review in the 1.0.0 scope, names 0.9.0 as the current release, and
+  records the feature freeze on 2026-10-13. The README and the
+  exploratory-workflow article read the documented `correlation_method`
+  and `item_types` of
+  [`nomo_factors()`](https://juhalt.github.io/nomologR/reference/nomo_factors.md)
+  rather than their undocumented aliases, and headings that pandoc had
+  rendered as text in NEWS and the measurement-evidence article are
+  fixed.
 
 ## nomologR 0.9.0
 
@@ -1528,7 +1555,9 @@ targeted for v0.3.0
   remain proposals until their scope is accepted; no analytical behavior
   changes in this update.
 - Opened development toward `v0.2.0`.
-- `v0.1.0` remains the current stable public release. \# nomologR 0.1.0
+- `v0.1.0` remains the current stable public release.
+
+## nomologR 0.1.0
 
 ### First stable public release
 
@@ -1547,28 +1576,24 @@ targeted for v0.3.0
   as the archival reporting layer for guided
   [`nomo_run()`](https://juhalt.github.io/nomologR/reference/nomo_run.md)
   workflows.
-
 - Added self-contained HTML reporting across item screening, factor
   retention, EFA, CFA, reliability, convergent/discriminant evidence,
   invariance, and theory-specified nomological networks.
-
 - Added researcher inputs, data characteristics, decision provenance,
   deviations/post-hoc decisions, methods/citations, reproducibility
   information, and a full evidence trace linking recommendations back to
   their source evidence.
-
 - Added report-render regression tests covering the core workflow and
   optional invariance/network branches.
-
 - Completed pre-v0.1 engineering hardening with the full test suite
   passing, R CMD check at 0 errors / 0 warnings / 0 notes,
   executable-line coverage at 100%, and an empty
   [`covr::zero_coverage()`](http://covr.r-lib.org/reference/zero_coverage.md)
   result.
-
 - Finalized `v0.1.0` as the first stable public release after
-  release-readiness review and certification. \## Milestone 8 closeout —
-  guided workflow and decision provenance
+  release-readiness review and certification.
+
+### Milestone 8 closeout — guided workflow and decision provenance
 
 - Replaced the
   [`nomo_run()`](https://juhalt.github.io/nomologR/reference/nomo_run.md)
@@ -1576,30 +1601,22 @@ targeted for v0.3.0
   factor-retention evidence, EFA, CFA, reliability,
   convergent/discriminant evidence, optional invariance, and optional
   theory-specified nomological-network analysis.
-
 - Added explicit researcher handoffs for EFA factor count, CFA model
   specification, and downstream continuation after measurement evidence.
-
 - Preserved completed component results across resume calls;
   future-stage settings can be added without silently recomputing
   completed work.
-
 - Added teaching and research presentation modes that change
   presentation, not statistical behavior.
-
 - Added `nomo_split`-aware sample roles and exact-model network
   replication.
-
 - Added stage maps, decision/rationale provenance, component evidence
   logs, reproducibility recipes, and the guided-workflow vignette.
-
 - Optional invariance/network branches remain researcher configured; no
   automatic parameter freeing, respecification, item deletion, or
   one-number validity score is introduced.
-
 - M8 closeout coverage reached **94.07% package-wide** and **93.16%**
   for `R/nomo_run.R`; the full test suite and R CMD check were clean.
-
 - Milestone 8 is complete. Milestone 9 was subsequently completed in
   this development version; see the closeout above.
 

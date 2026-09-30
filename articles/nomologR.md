@@ -62,13 +62,14 @@ and its content can still be reviewed with `contentvalidR`.
 
 | Stage | Question it answers | Functions | Walkthrough |
 |----|----|----|----|
+| Planning the sample | How many cases does the planned model need? | [`nomo_power_rmsea()`](https://juhalt.github.io/nomologR/reference/nomo_power_rmsea.md), [`nomo_power_simulate()`](https://juhalt.github.io/nomologR/reference/nomo_power_simulate.md) | [From CFA to a defensible measurement model](https://juhalt.github.io/nomologR/articles/measurement-model-evidence.md) |
 | 1\. Item and data audit | What do the items and responses look like? | [`nomo_screen()`](https://juhalt.github.io/nomologR/reference/nomo_screen.md) | [From item audit to exploratory structure](https://juhalt.github.io/nomologR/articles/exploratory-workflow.md) |
 | 2\. Dimensionality | How many latent dimensions deserve investigation? | [`nomo_factors()`](https://juhalt.github.io/nomologR/reference/nomo_factors.md) | [From item audit to exploratory structure](https://juhalt.github.io/nomologR/articles/exploratory-workflow.md) |
 | 3\. Exploratory structure | What does a requested factor solution look like? | [`nomo_efa()`](https://juhalt.github.io/nomologR/reference/nomo_efa.md) | [From item audit to exploratory structure](https://juhalt.github.io/nomologR/articles/exploratory-workflow.md) |
-| 4\. Confirmatory measurement model | Does a prespecified model reproduce the data, and where is there strain? | [`nomo_model()`](https://juhalt.github.io/nomologR/reference/nomo_model.md), [`nomo_split()`](https://juhalt.github.io/nomologR/reference/nomo_split.md), [`nomo_cfa()`](https://juhalt.github.io/nomologR/reference/nomo_cfa.md) | [From CFA to a defensible measurement model](https://juhalt.github.io/nomologR/articles/measurement-model-evidence.md) |
-| 5\. Reliability and construct-validity evidence | How precise are scores, and are constructs distinguishable? | [`nomo_reliability()`](https://juhalt.github.io/nomologR/reference/nomo_reliability.md), [`nomo_validity()`](https://juhalt.github.io/nomologR/reference/nomo_validity.md) | [From CFA to a defensible measurement model](https://juhalt.github.io/nomologR/articles/measurement-model-evidence.md) |
-| 6\. Generalizability | Is the construct measured comparably across groups and occasions? | [`nomo_invariance()`](https://juhalt.github.io/nomologR/reference/nomo_invariance.md), [`nomo_invariance_longitudinal()`](https://juhalt.github.io/nomologR/reference/nomo_invariance_longitudinal.md), [`nomo_partial()`](https://juhalt.github.io/nomologR/reference/nomo_partial.md) | [Measurement invariance](https://juhalt.github.io/nomologR/articles/measurement-invariance.md) |
-| 7\. Nomological network | Does the construct relate to others as theory predicted? | [`nomo_hypotheses()`](https://juhalt.github.io/nomologR/reference/nomo_hypotheses.md), [`nomo_network()`](https://juhalt.github.io/nomologR/reference/nomo_network.md) | [Theory-specified nomological networks](https://juhalt.github.io/nomologR/articles/nomological-network.md) |
+| 4\. Confirmatory measurement model | Does a prespecified model reproduce the data, and where is there strain, such as cross-loadings or shared method? | [`nomo_model()`](https://juhalt.github.io/nomologR/reference/nomo_model.md), [`nomo_split()`](https://juhalt.github.io/nomologR/reference/nomo_split.md), [`nomo_cfa()`](https://juhalt.github.io/nomologR/reference/nomo_cfa.md), [`nomo_esem()`](https://juhalt.github.io/nomologR/reference/nomo_esem.md), [`nomo_method_variance()`](https://juhalt.github.io/nomologR/reference/nomo_method_variance.md) | [From CFA to a defensible measurement model](https://juhalt.github.io/nomologR/articles/measurement-model-evidence.md) |
+| 5\. Reliability and construct-validity evidence | How precise and how stable are scores, and are constructs distinguishable? | [`nomo_reliability()`](https://juhalt.github.io/nomologR/reference/nomo_reliability.md), [`nomo_retest()`](https://juhalt.github.io/nomologR/reference/nomo_retest.md), [`nomo_validity()`](https://juhalt.github.io/nomologR/reference/nomo_validity.md) | [From CFA to a defensible measurement model](https://juhalt.github.io/nomologR/articles/measurement-model-evidence.md) |
+| 6\. Generalizability | Is the construct measured comparably across groups and occasions, and do their latent means differ? | [`nomo_invariance()`](https://juhalt.github.io/nomologR/reference/nomo_invariance.md), [`nomo_invariance_longitudinal()`](https://juhalt.github.io/nomologR/reference/nomo_invariance_longitudinal.md), [`nomo_partial()`](https://juhalt.github.io/nomologR/reference/nomo_partial.md) | [Measurement invariance](https://juhalt.github.io/nomologR/articles/measurement-invariance.md) |
+| 7\. Nomological network | Does the construct relate to others as theory predicted? | [`nomo_hypotheses()`](https://juhalt.github.io/nomologR/reference/nomo_hypotheses.md), [`nomo_network()`](https://juhalt.github.io/nomologR/reference/nomo_network.md), [`nomo_single_indicator()`](https://juhalt.github.io/nomologR/reference/nomo_single_indicator.md) | [Theory-specified nomological networks](https://juhalt.github.io/nomologR/articles/nomological-network.md) |
 | Guided workflow | How do the stages fit together with explicit decisions? | [`nomo_run()`](https://juhalt.github.io/nomologR/reference/nomo_run.md) | [Guided workflow](https://juhalt.github.io/nomologR/articles/guided-workflow.md) |
 | Starting from content review | What does empirical evidence add to an expert review of the items? | [`nomo_screen()`](https://juhalt.github.io/nomologR/reference/nomo_screen.md) and [`nomo_run()`](https://juhalt.github.io/nomologR/reference/nomo_run.md) with a `contentvalidR` handoff | [From content review to empirical screening](https://juhalt.github.io/nomologR/articles/content-review.md) |
 | Reporting | How do I archive the evidence and decisions? | [`nomo_report()`](https://juhalt.github.io/nomologR/reference/nomo_report.md), [`nomo_table()`](https://juhalt.github.io/nomologR/reference/nomo_table.md) | [Archiving a workflow](https://juhalt.github.io/nomologR/articles/reproducible-report.md) |
@@ -86,13 +87,15 @@ real data never allow.
 | `nomo_demo_ordinal` | The same latent responses cut into five ordered categories | Polychoric correlations, WLSMV estimation, and ordinal reliability |
 | `nomo_demo_network` | Three constructs, an observed outcome, two administration groups, 800 cases | Theory-specified predictions, equivalence regions, replication, and a known source of scalar non-invariance |
 | `nomo_demo_walkthrough` | Twelve items an expert panel reviewed in `contentvalidR`, two facets, two cohorts, 400 cases | Items that pass content review and fail empirically, and the reverse; reverse-worded items; a cohort difference |
+| `nomo_demo_longitudinal` | Four Wellbeing items answered by the same people on three occasions, 500 cases | Longitudinal invariance, item residuals correlated across occasions, latent change, and a known intercept drift in `w3` |
 
 See
 [`?nomo_demo_continuous`](https://juhalt.github.io/nomologR/reference/nomo_demo_continuous.md),
 [`?nomo_demo_ordinal`](https://juhalt.github.io/nomologR/reference/nomo_demo_ordinal.md),
 [`?nomo_demo_network`](https://juhalt.github.io/nomologR/reference/nomo_demo_network.md),
+[`?nomo_demo_walkthrough`](https://juhalt.github.io/nomologR/reference/nomo_demo_walkthrough.md),
 and
-[`?nomo_demo_walkthrough`](https://juhalt.github.io/nomologR/reference/nomo_demo_walkthrough.md)
+[`?nomo_demo_longitudinal`](https://juhalt.github.io/nomologR/reference/nomo_demo_longitudinal.md)
 for the full population models.
 
 ## A first look
@@ -170,14 +173,17 @@ the scale “has” two factors.
 2.  [From CFA to a defensible measurement
     model](https://juhalt.github.io/nomologR/articles/measurement-model-evidence.md)
     — confirmatory fit, reliability, and convergent and discriminant
-    evidence.
+    evidence; then ESEM beside the CFA, test-retest reliability, method
+    variance from a marker variable, and sample-size planning.
 3.  [Measurement
     invariance](https://juhalt.github.io/nomologR/articles/measurement-invariance.md)
-    — comparability across groups, localized strain, and
-    researcher-controlled partial invariance.
+    — comparability across groups, localized strain,
+    researcher-controlled partial invariance, latent means as
+    known-groups evidence, and invariance across occasions.
 4.  [Theory-specified nomological
     networks](https://juhalt.github.io/nomologR/articles/nomological-network.md)
-    — predictions, equivalence regions, and replication.
+    — predictions, equivalence regions, replication, and observed
+    composites corrected for their unreliability.
 5.  [Guided
     workflow](https://juhalt.github.io/nomologR/articles/guided-workflow.md)
     — the stages combined with explicit decisions.
