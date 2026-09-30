@@ -14,7 +14,10 @@ Description: Provides an evidence-guided workflow for empirical scale developmen
     The package helps users examine item performance, dimensionality,
     measurement models, reliability, convergent and discriminant evidence,
     measurement invariance, and theory-specified nomological networks in the
-    sense of Cronbach and Meehl (1955) <doi:10.1037/h0040957>. Methods are
+    sense of Cronbach and Meehl (1955) <doi:10.1037/h0040957>. It also covers
+    exploratory structural equation modeling, longitudinal measurement
+    invariance, test-retest reliability, common method variance, and power
+    analysis for sample-size planning. Methods are
     documented from historical to contemporary practice with literature
     references, and simulated teaching datasets with known population models
     accompany the examples. Following calls for transparent measurement
