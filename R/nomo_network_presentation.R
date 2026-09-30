@@ -136,14 +136,14 @@ nomo_network_present_single <- function(single, sensitivity, detail = FALSE) {
     return(invisible(NULL))
   }
 
-  show <- single
-  show$reliability_shown <- nomo_present_number(show$reliability, 3L)
-  show$se_shown <- ifelse(is.finite(show$se), nomo_present_number(show$se, 3L), "-")
+  # Numbers stay numeric, so they are right-aligned like the variances; a
+  # missing standard error is shown as "-", and the column is left out when
+  # no composite has one.
   nomo_present_section("Single indicators")
   nomo_present_table(
-    show,
-    c("Composite" = "variable", "Reliability" = "reliability_shown",
-      "Coefficient" = "coefficient", "SE" = "se_shown", "Variance" = "variance",
+    single,
+    c("Composite" = "variable", "Coefficient" = "coefficient",
+      "Reliability" = "reliability", "SE" = "se", "Variance" = "variance",
       "Error variance" = "error_variance"),
     more = "nomo_table(x, \"single_indicators\")"
   )

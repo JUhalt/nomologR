@@ -43,6 +43,10 @@ test_that("equal method effects are detected and Method-C is retained", {
   expect_identical(cmp$comparison, c("Baseline vs. Method-C", "Method-C vs. Method-U",
                                      "Method-C vs. Method-R"))
   expect_identical(names(cmp), c("comparison", "question", "chisq_diff", "df_diff", "p_value"))
+  expect_identical(cmp$question, c(
+    "Is marker-based method variance present?", "Are the method effects equal?",
+    "Does the method variance bias the substantive correlations?"
+  ))
   expect_identical(cmp$df_diff, c(1L, 7L, 1L))
   expect_lt(cmp$p_value[[1L]], .05)
   expect_gt(cmp$p_value[[2L]], .05)
@@ -182,12 +186,48 @@ test_that("the results print and summarize within 80 columns", {
   printed <- capture.output(print(mv))
   expect_match(printed, "Retained: Method-C", fixed = TRUE, all = FALSE)
   expect_match(printed, "Baseline vs. Method-C", fixed = TRUE, all = FALSE)
+  # Each comparison says what it asks, the correlations are headed by the
+  # models' own names, and the flagged log entries are listed (#89).
+  expect_match(printed, "Baseline vs. Method-C  Method variance present?", fixed = TRUE,
+               all = FALSE)
+  expect_match(printed, "Baseline  Method-C  Method-S(.05)  Method-S(.01)", fixed = TRUE,
+               all = FALSE)
+  expect_match(printed, "review: Marker-based method variance is present", fixed = TRUE,
+               all = FALSE)
+  # The closing note defines the models the tables name.
+  note <- paste(printed, collapse = " ")
+  expect_match(note, "Method-C: Baseline plus equal marker loadings", fixed = TRUE)
+  expect_match(note, "Method-S(.01): the method loadings fixed at the upper ends",
+               fixed = TRUE)
   expect_false(any(nchar(printed) > 80L))
   summarized <- capture.output(print(summary(mv)))
   expect_match(summarized, "Loadings in Method-C (completely standardized)",
                fixed = TRUE, all = FALSE)
   expect_match(summarized, "Method-S(.01)", fixed = TRUE, all = FALSE)
+  # Percentages are right-aligned with the numbers beside them.
+  expect_match(summarized, "Method p  Method variance$", all = FALSE)
+  expect_match(summarized, "^  A +0\\.[0-9]{3} +0\\.[0-9]{3} +0\\.[0-9]{3} +[0-9.]+%$",
+               all = FALSE)
   expect_false(any(nchar(summarized) > 80L))
+})
+
+
+test_that("each comparison's short question comes from its stored question (#89)", {
+  questions <- nomologR:::nomo_method_variance_questions
+  # Out of order, and one question with no short form, which is shown as stored.
+  comparisons <- tibble::tibble(
+    comparison = c("Method-C vs. Method-R", "Baseline vs. Method-C", "Other"),
+    question = c(questions[["bias", "question"]], questions[["presence", "question"]],
+                 "Asked?"),
+    chisq_diff = c(1, 2, 3), df_diff = 1L, p_value = .5
+  )
+  local_reproducible_output(width = 80)
+  shown <- capture.output(nomologR:::nomo_method_variance_present_comparisons(comparisons))
+  expect_match(shown, "Method-C vs. Method-R  Correlations biased?", fixed = TRUE,
+               all = FALSE)
+  expect_match(shown, "Baseline vs. Method-C  Method variance present?", fixed = TRUE,
+               all = FALSE)
+  expect_match(shown, "Other                  Asked?", fixed = TRUE, all = FALSE)
 })
 
 

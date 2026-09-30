@@ -364,11 +364,7 @@ print.nomo_esem <- function(x, ...) {
   ))
   nomo_esem_present_fit(x$models, x$comparisons)
   nomo_esem_present_correlations(x$factor_correlations)
-  flagged <- x$decision_log[x$decision_log$severity %in% c("review", "concern"), , drop = FALSE]
-  if (nrow(flagged)) {
-    nomo_present_section("Flagged")
-    nomo_present_bullets(paste0(flagged$severity, ": ", flagged$observation))
-  }
+  nomo_present_flagged(x$decision_log)
   cat("\n")
   nomo_present_text(
     "Cross-loadings are estimated, not fixed at zero (Asparouhov & Muth\u00e9n, ",
@@ -412,13 +408,7 @@ print.summary_nomo_esem <- function(x, ...) {
     more = "nomo_table(x, \"loadings\")"
   )
   nomo_esem_present_correlations(x$factor_correlations)
-  flagged <- x$decision_log[x$decision_log$severity %in% c("review", "concern"), , drop = FALSE]
-  if (nrow(flagged)) {
-    nomo_present_section("Flagged")
-    nomo_present_bullets(paste0(
-      flagged$severity, ": ", flagged$observation, " ", flagged$recommendation
-    ))
-  }
+  nomo_present_flagged(x$decision_log, recommendation = TRUE)
   invisible(x)
 }
 

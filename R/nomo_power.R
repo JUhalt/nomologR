@@ -519,17 +519,16 @@ print.nomo_power <- function(x, ...) {
       sprintf("RMSEA: null %s, alternative %s", format(x$rmsea_null), format(x$rmsea_alt)),
       sprintf("alpha: %s", format(x$alpha))
     ))
-    nomo_present_text(
-      if (is.na(x$n_required)) {
-        sprintf("No N up to one million reaches power %s.", format(x$target_power))
-      } else {
-        sprintf("Smallest N for power %s: %d.", format(x$target_power), x$n_required)
-      },
-      indent = 2L
-    )
+    # Power has two decimals, as in nomo_power_simulate()'s print, and so has
+    # the target unless it was given more precisely.
+    nomo_present_facts(sprintf(
+      "Smallest N for power %s: %s", format(x$target_power, nsmall = 2L),
+      if (is.na(x$n_required)) "none up to one million" else x$n_required
+    ))
     if (nrow(x$power)) {
       nomo_present_section("Power by sample size")
-      nomo_present_table(x$power, c("N" = "n", "Power" = "power"))
+      nomo_present_table(x$power, c("N" = "n", "Power" = "power"),
+                         formats = list(power = function(v) nomo_present_number(v, 2L)))
     }
     cat("\n")
     nomo_present_text(
@@ -546,22 +545,22 @@ print.nomo_power <- function(x, ...) {
     sprintf("Focus: %s", paste(x$focus, collapse = ", "))
   ))
   summary <- x$summary
-  summary$converged_shown <- sprintf("%.0f%%", 100 * summary$converged)
-  summary$improper_shown <- ifelse(is.finite(summary$improper),
-                                   sprintf("%.0f%%", 100 * summary$improper), "-")
   summary$coverage <- paste(nomo_present_number(summary$min_coverage, 2L),
                             nomo_present_number(summary$max_coverage, 2L), sep = "-")
   summary$meets <- ifelse(summary$meets_references, "yes", "no")
+  # Convergence, improper solutions, and biases are percentages, as the
+  # references for bias are; power and coverage are proportions.
   nomo_present_section("By sample size")
   nomo_present_table(
     summary,
-    c("N" = "n", "Converged" = "converged_shown", "Improper" = "improper_shown",
+    c("N" = "n", "Converged" = "converged", "Improper" = "improper",
       "Min power" = "min_power", "Max bias" = "max_abs_bias",
       "Max SE bias" = "max_abs_se_bias", "Coverage" = "coverage",
       "Meets" = "meets"),
-    formats = list(min_power = function(v) nomo_present_number(v, 2L),
-                   max_abs_bias = function(v) nomo_present_number(v, 2L),
-                   max_abs_se_bias = function(v) nomo_present_number(v, 2L)),
+    formats = list(converged = nomo_present_percent, improper = nomo_present_percent,
+                   min_power = function(v) nomo_present_number(v, 2L),
+                   max_abs_bias = nomo_present_percent,
+                   max_abs_se_bias = nomo_present_percent),
     more = "x$parameters"
   )
   nomo_present_text(
@@ -574,10 +573,11 @@ print.nomo_power <- function(x, ...) {
   )
   cat("\n")
   nomo_present_text(
-    "Biases are absolute and relative. References (Muth\u00e9n & ",
-    "Muth\u00e9n, 2002): parameter and SE bias within 10%, SE bias within 5% ",
-    "for the focus parameters, coverage .91-.98, and power .80 for the focus ",
-    "parameters. They are guides for choosing N, not rules."
+    "Max bias and Max SE bias are the largest absolute relative biases across ",
+    "the parameters. References (Muth\u00e9n & Muth\u00e9n, 2002): parameter ",
+    "and SE bias within 10%, SE bias within 5% for the focus parameters, ",
+    "coverage 0.91-0.98, and power 0.80 for the focus parameters. They are ",
+    "guides for choosing N, not rules."
   )
   invisible(x)
 }

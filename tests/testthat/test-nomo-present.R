@@ -161,6 +161,59 @@ test_that("notes carry their flag, and a column with one value is left out", {
 })
 
 
+test_that("flagged log entries and percentages are shown one way (#89)", {
+  flagged <- nomologR:::nomo_present_flagged
+  log <- tibble::tibble(
+    severity = c("info", "review", "concern"),
+    observation = c("Fine.", "Look again.", "A problem."),
+    recommendation = c("", "Check it.", "Fix it.")
+  )
+  expect_identical(capture.output(flagged(log[1L, ])), character())
+  expect_identical(capture.output(flagged(log)),
+                   c("", "Flagged", "  - review: Look again.", "  - concern: A problem."))
+  expect_identical(capture.output(flagged(log, recommendation = TRUE))[3:4],
+                   c("  - review: Look again. Check it.", "  - concern: A problem. Fix it."))
+
+  # One decimal, so a single failure in 500 is not rounded away.
+  expect_identical(nomologR:::nomo_present_percent(c(0.998, 0.0432, NA)),
+                   c("99.8%", "4.3%", "-"))
+})
+
+
+test_that("invariance summaries say what each level holds equal (#89)", {
+  held <- function(level, constraints) {
+    capture.output(nomologR:::nomo_invariance_present_constraints(
+      tibble::tibble(level = level, constraints = constraints)
+    ))
+  }
+  local_reproducible_output(width = 80)
+  expect_identical(
+    held(c("configural", "metric", "scalar", "strict"),
+         c("none", "loadings", "loadings, intercepts", "loadings, intercepts, residuals")),
+    c("  Held equal: loadings from metric; intercepts from scalar; residuals from",
+      "  strict.")
+  )
+  expect_identical(
+    held(c("configural", "strong"), c("none", "thresholds, loadings, intercepts")),
+    "  Held equal: thresholds, loadings, and intercepts from strong."
+  )
+  expect_identical(held("configural", "none"), character())
+
+  # A researcher-specified release is named at the level it is first made; the
+  # releases carry over to later levels as fitted.
+  expect_identical(
+    capture.output(nomologR:::nomo_invariance_present_constraints(tibble::tibble(
+      level = c("configural", "metric", "scalar", "strict"),
+      constraints = c("none", "loadings", "loadings, intercepts",
+                      "loadings, intercepts, residuals"),
+      partial_requested = c("", "", "ag3 ~ 1; ag2 ~ 1", "ag3 ~ 1; ag2 ~ 1")
+    ))),
+    c("  Held equal: loadings from metric; intercepts from scalar, except ag3 ~ 1 and",
+      "  ag2 ~ 1; residuals from strict.")
+  )
+})
+
+
 test_that("the CFA print and summary read as designed (#89)", {
   cfa <- nomo_cfa(
     nomo_model(list(A = paste0("a", 1:5), B = paste0("b", 1:5))),

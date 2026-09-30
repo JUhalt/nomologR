@@ -319,6 +319,11 @@ test_that("single indicators are shown in print, summary, tables, and the APA no
   summarized <- capture.output(print(summary(net)))
   expect_true(any(grepl("Sensitivity to the reliability", summarized, fixed = TRUE)))
   expect_true(any(grepl("Composite    ID   -.10", summarized, fixed = TRUE)))
+  # Reliabilities and standard errors are right-aligned numbers; a missing
+  # standard error is shown as "-" (#89).
+  expect_true(any(grepl("^  Composite +Coefficient +Reliability +SE +Variance +Error variance$",
+                        summarized)))
+  expect_true(any(grepl("^  sd_score +unspecified +0\\.620 +- +[0-9.]+ +[0-9.]+$", summarized)))
   expect_false(any(nchar(summarized) > 80L))
 
   expect_identical(nomo_table(net, "single_indicators"), net$single_indicators)

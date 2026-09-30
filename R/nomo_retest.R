@@ -392,6 +392,7 @@ print.nomo_retest <- function(x, ...) {
   ))
   nomo_retest_present_table(x$icc)
   nomo_retest_present_change(x$reliable_change)
+  nomo_present_flagged(x$decision_log)
   nomo_retest_present_note()
   invisible(x)
 }
@@ -432,18 +433,12 @@ print.summary_nomo_retest <- function(x, ...) {
   nomo_present_table(
     show,
     c("Composite" = "composite", "ICC(C,1) [95% CI]" = "consistency",
-      "Mean change [95% CI]" = "change", "SD" = "sd")
+      "Mean change [95% CI]" = "change", "SD" = "sd"),
+    formats = list(sd = function(v) nomo_present_number(v, 2L))
   )
 
   nomo_retest_present_change(x$reliable_change)
-
-  log <- x$decision_log[x$decision_log$severity %in% c("review", "concern"), , drop = FALSE]
-  if (nrow(log)) {
-    nomo_present_section("Flagged")
-    nomo_present_bullets(paste0(
-      log$severity, ": ", log$observation, " ", log$recommendation
-    ))
-  }
+  nomo_present_flagged(x$decision_log, recommendation = TRUE)
   nomo_retest_present_note()
   invisible(x)
 }
@@ -460,6 +455,9 @@ nomo_retest_present_table <- function(icc) {
     show,
     c("Composite" = "composite", "n" = "n", "ICC(A,1) [95% CI]" = "agreement",
       "Koo & Li" = "koo_li", "SEM" = "sem", "SDC" = "sdc"),
+    # Two decimals throughout, as the intervals and the decision log give them.
+    formats = list(sem = function(v) nomo_present_number(v, 2L),
+                   sdc = function(v) nomo_present_number(v, 2L)),
     more = "nomo_table(x, \"icc\")"
   )
 }

@@ -201,6 +201,9 @@ test_that("invariance fit and change plots remove redundant metric legends", {
 
   expect_null(p_fit$labels$shape)
   expect_null(p_change$labels$shape)
+  # Level names are angled so four or more fit under each facet (#89).
+  expect_identical(p_fit$theme$axis.text.x$angle, 35)
+  expect_identical(p_change$theme$axis.text.x$angle, 35)
 
   expect_true(all(
     unique(as.character(p_change$data$metric)) %in%

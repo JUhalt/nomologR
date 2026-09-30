@@ -7,8 +7,8 @@ social-science scale developers were missing, each taken from its literature,
 and the 1.0 contract is now settled: the stability policy covers every exported
 function and documented field except `nomo_method_variance()` and
 `nomo_power_simulate()`, which stay experimental into 1.x. Apart from that
-policy, every change is an addition: new functions, arguments, fields, and a
-dataset.
+policy and changes to how output is displayed, every change is an addition:
+new functions, arguments, fields, and a dataset.
 
 ## New methods (#129)
 
@@ -48,6 +48,15 @@ dataset.
   - **Other outputs.** The result is also a `nomo_invariance` object, so `print()`, `summary()`, `nomo_table()`, `nomo_apa_table()`, and `plot()` work as they do across groups. `nomo_methods()` gains `longitudinal_invariance`.
 - New teaching dataset `nomo_demo_longitudinal`: four Wellbeing items answered on three occasions, with a latent mean rising .30 and then .50 SD and the `w3` intercept drifting .40 after the first occasion. In the measurement-invariance article, holding that intercept equal inflates the change at the third occasion to .66 SD. Releasing it gives .55 [.43, .67], which covers the population's .50.
 - `nomo_invariance()`'s option checks and level fitting are now shared with `nomo_invariance_longitudinal()`. Its results are unchanged.
+
+## Presentation (#89)
+
+- The output gallery in `dev/output-gallery.R` (#89) now covers the features added for 1.0 (#129): ESEM, method variance, test-retest reliability, power, latent means, longitudinal invariance, and single indicators. Reading their output as a user would led to these display changes. Computed values, decision-log text, and `nomo_table()` output are unchanged.
+  - **Invariance.** A summary with a strict level had lost RMSEA and SRMR at 80 columns, pushed out by the cumulative "Constraints" column. The fit table now leaves that column out, and a line beneath it says what each level adds: "Held equal: loadings from metric; intercepts from scalar; residuals from strict." A researcher-specified release is named beside its level, as in "intercepts from scalar, except ag3 ~ 1", so the line does not say that the released intercept is held equal. Across occasions, the latent-change column is headed "Change". The fit and change plots angle the level names, which ran together with four levels. The local-strain plot gives each level its own panel, with the score axis from zero: in one panel, close scores at two levels had been drawn on one spot, hiding one of the levels.
+  - **Method variance.** Each comparison says what it asks, such as "Method variance present?", in a short form of the question `comparisons` stores. The closing note defines the Baseline, Method-C, Method-U, Method-R, and Method-S models. The correlations are headed by the models' names, such as "Method-C" and "Method-S(.05)", rather than "Retained" and "S(.05)". The method loading's p-value is headed "Method p". The print and summary list the decision log's flagged entries, as `nomo_esem()`'s do.
+  - **Test-retest reliability.** The print lists the flagged entries too. SEM, SDC, and SD have two decimals, like the intervals beside them.
+  - **Alignment.** Percentages are right-aligned like the numbers beside them, in the method-variance tables and in `nomo_power_simulate()`'s print. So are the reliability and its standard error in the network summary's single-indicator table.
+  - **Power.** In `nomo_power_simulate()`'s print, convergence, improper solutions, and the biases are percentages with one decimal, as the bias references are, so 499 converged replications of 500 no longer round to 100%. The note says what "Max bias" and "Max SE bias" are. `nomo_power_rmsea()`'s print gives power to two decimals, as `nomo_power_simulate()`'s does, and its target as "0.80" rather than "0.8"; the smallest N is a line of its own under the header.
 
 ## The 1.0 contract (#113)
 

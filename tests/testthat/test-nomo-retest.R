@@ -153,6 +153,10 @@ test_that("the results print, summarize, report methods, and form an APA table",
   expect_match(printed, "Interval: two weeks", fixed = TRUE, all = FALSE)
   expect_match(printed, "ICC(A,1) [95% CI]", fixed = TRUE, all = FALSE)
   expect_match(printed, "composite: ", fixed = TRUE, all = FALSE)
+  # The shift is flagged in the print too, and the table keeps two decimals (#89).
+  expect_match(printed, "Flagged", fixed = TRUE, all = FALSE)
+  expect_match(printed, "^  composite +[0-9]+ +0\\.[0-9]{2} \\[.*\\] +[a-z ]+ +[0-9]+\\.[0-9]{2} +[0-9]+\\.[0-9]{2}$",
+               all = FALSE)
   expect_false(any(nchar(printed) > 80L))
 
   summarized <- capture.output(print(summary(rt)))
