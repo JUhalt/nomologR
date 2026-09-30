@@ -65,6 +65,16 @@ test_that("the drifting w3 intercept shows up at the scalar level", {
   expect_identical(apa$title, "Measurement Invariance Across Occasions")
   expect_match(apa$notes$general, "Occasions: t1, t2, t3", fixed = TRUE)
   expect_s3_class(plot(long), "ggplot")
+
+  # Each level has its own panel, so close scores at two levels, such as the
+  # w1 intercept's at scalar and strict, are not drawn on one spot; and the
+  # score axis starts at zero (#89).
+  strain_plot <- plot(long, type = "local_strain")
+  expect_s3_class(strain_plot$facet, "FacetWrap")
+  expect_identical(levels(droplevels(strain_plot$data$level)),
+                   c("metric", "scalar", "strict"))
+  expect_null(strain_plot$labels$shape)
+  expect_identical(ggplot2::layer_scales(strain_plot)$x$range$range[[1L]], 0)
 })
 
 
@@ -90,6 +100,11 @@ test_that("releasing the w3 intercept recovers the population change", {
   expect_true(means$ci_lower[[2L]] < .50 && .50 < means$ci_upper[[2L]])
   expect_true("researcher_requested_release" %in% long$decision_log$metric)
   expect_true("partial_invariance" %in% nomo_methods_used(long))
+  # The summary does not say that the released intercept is held equal (#89).
+  local_reproducible_output(width = 80)
+  expect_match(capture.output(print(summary(long))),
+               "Held equal: loadings from metric; intercepts from scalar, except w3 ~ 1.",
+               fixed = TRUE, all = FALSE)
 })
 
 
@@ -149,6 +164,13 @@ test_that("the results print and summarize within 80 columns", {
   expect_match(summarized[[1L]], "<nomo_invariance_longitudinal summary>")
   expect_true(any(grepl("Latent change from t1", summarized)))
   expect_true(any(grepl("Intercept: w3 (t1 vs. t3)", summarized, fixed = TRUE)))
+  # With a strict level, the fit table still has room for RMSEA and SRMR, and
+  # the constraints each level adds are named beneath it (#89).
+  expect_true(any(grepl("^  Level +Chi-square +df +p +CFI +RMSEA +SRMR$", summarized)))
+  expect_false(any(grepl("Not shown for width", summarized, fixed = TRUE)))
+  expect_true(any(grepl("Held equal: loadings from metric; intercepts from scalar;",
+                        summarized, fixed = TRUE)))
+  expect_true(any(grepl("^  Level +Occasion +Factor +Change ", summarized)))
 })
 
 

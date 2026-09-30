@@ -682,10 +682,11 @@
         strict sequence.
       
       Fit by level
-        Level       Constraints           Chi-square  df       p    CFI  RMSEA   SRMR
-        configural  none                        0.33   4    .988  1.000  0.000  0.002
-        metric      loadings                    5.71   7    .575  1.000  0.000  0.028
-        scalar      loadings, intercepts       68.93  10  < .001  0.954  0.121  0.065
+        Level       Chi-square  df       p    CFI  RMSEA   SRMR
+        configural        0.33   4    .988  1.000  0.000  0.002
+        metric            5.71   7    .575  1.000  0.000  0.028
+        scalar           68.93  10  < .001  0.954  0.121  0.065
+        Held equal: loadings from metric; intercepts from scalar.
       
       Changes from the preceding level
         Level   CFI change  RMSEA change  SRMR change  LRT chi-square  df       p

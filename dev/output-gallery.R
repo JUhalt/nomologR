@@ -100,6 +100,77 @@ run_done <- nomo_run(
   )
 )
 
+# Gap-review features (#129): ESEM, marker-based method variance, test-retest
+# reliability, power, latent means, longitudinal invariance, and single
+# indicators.
+esem <- nomo_esem(nomo_model(ab), data = cont)
+
+mv_population <- "
+  A =~ 0.7*a1 + 0.7*a2 + 0.6*a3 + 0.6*a4
+  B =~ 0.7*b1 + 0.6*b2 + 0.6*b3 + 0.5*b4
+  M =~ 0.7*m1 + 0.7*m2 + 0.6*m3
+  CMV =~ 0.3*a1 + 0.3*a2 + 0.3*a3 + 0.3*a4 + 0.3*b1 + 0.3*b2 + 0.3*b3 +
+         0.3*b4 + 0.3*m1 + 0.3*m2 + 0.3*m3
+  A ~~ 0.4*B
+  A ~~ 0*M
+  B ~~ 0*M
+  CMV ~~ 0*A + 0*B + 0*M
+"
+set.seed(2010)
+survey <- lavaan::simulateData(mv_population, sample.nobs = 600, standardized = TRUE)
+mv <- nomo_method_variance("A =~ a1 + a2 + a3 + a4\nB =~ b1 + b2 + b3 + b4",
+                           data = survey, marker = c("m1", "m2", "m3"))
+
+set.seed(2026)
+true_agency <- stats::rnorm(150)
+true_persistence <- stats::rnorm(150)
+panel <- data.frame(
+  agency_t1 = 3 + true_agency + stats::rnorm(150, sd = .45),
+  agency_t2 = 3.3 + true_agency + stats::rnorm(150, sd = .45),
+  persistence_t1 = 3 + true_persistence + stats::rnorm(150, sd = .6),
+  persistence_t2 = 3 + true_persistence + stats::rnorm(150, sd = .6)
+)
+rt_one <- nomo_retest(panel, scores = c("agency_t1", "agency_t2"))
+rt_two <- nomo_retest(panel, scores = list(
+  Agency = c("agency_t1", "agency_t2"),
+  Persistence = c("persistence_t1", "persistence_t2")
+), interval = "two weeks")
+
+pw_rmsea <- nomo_power_rmsea(nomo_model(ab), n = c(100, 200, 400))
+pw_never <- nomo_power_rmsea(df = 1, rmsea_null = .05, rmsea_alt = .05001)
+pw_population <- "
+  A =~ 0.7*a1 + 0.7*a2 + 0.6*a3 + 0.5*a4
+  B =~ 0.7*b1 + 0.6*b2 + 0.6*b3 + 0.5*b4
+  A ~~ 0.3*B
+"
+pw_sim <- nomo_power_simulate(pw_population, n = c(100, 200), reps = 50,
+                              focus = "A~~B", seed = 2026)
+
+inv_partial <- nomo_invariance("Agency =~ ag1 + ag2 + ag3 + ag4", data = nomo_demo_network,
+                               group = "group", levels = c("configural", "metric", "scalar"),
+                               partial = part)
+long <- nomo_invariance_longitudinal("Wellbeing =~ w1 + w2 + w3 + w4",
+                                     data = nomo_demo_longitudinal,
+                                     occasions = c("t1", "t2", "t3"))
+long_partial <- nomo_invariance_longitudinal(
+  "Wellbeing =~ w1 + w2 + w3 + w4", data = nomo_demo_longitudinal,
+  occasions = c("t1", "t2", "t3"), levels = c("configural", "metric", "scalar"),
+  partial = nomo_partial(level = "scalar", syntax = "w3 ~ 1",
+                         rationale = "The score diagnostics point to the w3 intercept.")
+)
+
+si_data <- nomo_demo_network
+si_data$persistence <- rowMeans(si_data[c("pe1", "pe2", "pe3", "pe4")])
+si_rel <- nomo_reliability(nomo_cfa("Persistence =~ pe1 + pe2 + pe3 + pe4", si_data))
+si <- nomo_single_indicator(si_rel)
+si_published <- nomo_single_indicator(.85, se = .02, coefficient = "alpha",
+                                      source = "Test manual, Table 4")
+net_si <- nomo_network(
+  "Agency =~ ag1 + ag2 + ag3 + ag4", si_data,
+  nomo_hypotheses("Agency -> persistence" = positive(min = .20)),
+  single_indicators = list(persistence = si)
+)
+
 # Console output -----------------------------------------------------------------
 show("screen print", print(scr))
 show("screen summary", print(summary(scr)))
@@ -137,16 +208,43 @@ show("run paused summary", print(summary(run_paused)))
 show("run complete print", print(run_done))
 show("run complete summary", print(summary(run_done)))
 show("run research print", print(nomo_run(resume = run_done, mode = "research")))
+show("esem print", print(esem))
+show("esem summary", print(summary(esem)))
+show("method variance print", print(mv))
+show("method variance summary", print(summary(mv)))
+show("retest one print", print(rt_one))
+show("retest one summary", print(summary(rt_one)))
+show("retest two print", print(rt_two))
+show("retest two summary", print(summary(rt_two)))
+show("power rmsea print", print(pw_rmsea))
+show("power rmsea unreachable print", print(pw_never))
+show("power simulate print", print(pw_sim))
+show("invariance partial print", print(inv_partial))
+show("invariance partial summary", print(summary(inv_partial)))
+show("longitudinal print", print(long))
+show("longitudinal summary", print(summary(long)))
+show("longitudinal partial print", print(long_partial))
+show("longitudinal partial summary", print(summary(long_partial)))
+show("single indicator print", print(si))
+show("single indicator published print", print(si_published))
+show("network single indicator print", print(net_si))
+show("network single indicator summary", print(summary(net_si)))
 
 # Plots --------------------------------------------------------------------------
 plot_text <- list()
 objects <- list(
   nomo_screen = scr, nomo_factors = fac, nomo_efa = efa, nomo_cfa = cfa,
   nomo_reliability = rel, nomo_validity = val, nomo_compare = cmp,
-  nomo_invariance = inv, nomo_network = net, nomo_hierarchical = hier
+  nomo_invariance = inv, nomo_invariance_longitudinal = long, nomo_network = net,
+  nomo_hierarchical = hier
 )
 for (cls in names(objects)) {
-  method <- utils::getS3method("plot", cls)
+  # A subclass, such as nomo_invariance_longitudinal, uses its parent's method.
+  method <- NULL
+  for (k in class(objects[[cls]])) {
+    method <- utils::getS3method("plot", k, optional = TRUE)
+    if (!is.null(method)) break
+  }
   types <- eval(formals(method)$type)
   if (!is.character(types)) types <- "default"
   for (type in types) {

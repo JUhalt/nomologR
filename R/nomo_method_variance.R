@@ -232,10 +232,11 @@ nomo_method_variance <- function(model,
       p_value = test[["Pr(>Chisq)"]][[2L]]
     )
   }
+  questions <- nomo_method_variance_questions
   presence <- compare(baseline, method_c, "Baseline vs. Method-C",
-                      "Is marker-based method variance present?")
+                      questions[["presence", "question"]])
   equality <- compare(method_c, method_u, "Method-C vs. Method-U",
-                      "Are the method effects equal?")
+                      questions[["equality", "question"]])
   unequal <- equality$p_value < alpha
   retained_label <- if (unequal) "Method-U" else "Method-C"
   retained <- if (unequal) method_u else method_c
@@ -255,12 +256,12 @@ nomo_method_variance <- function(model,
   bias <- if (nrow(pairs)) {
     method_r <- fit(method_r_lines, "Method-R")
     compare(method_r, retained, paste(retained_label, "vs. Method-R"),
-            "Does the method variance bias the substantive correlations?")
+            questions[["bias", "question"]])
   } else {
     method_r <- NULL
     tibble::tibble(
       comparison = paste(retained_label, "vs. Method-R"),
-      question = "Does the method variance bias the substantive correlations?",
+      question = questions[["bias", "question"]],
       chisq_diff = NA_real_, df_diff = NA_integer_, p_value = NA_real_
     )
   }
@@ -444,6 +445,22 @@ nomo_method_variance_fit <- function(lines, data, estimator, missing, label) {
     }
   )
 }
+
+
+# The question each comparison answers: in full, as `comparisons` stores it,
+# and in short, as print() and summary() show it within 80 columns. The two
+# are written here only, and the display finds the short form by the stored
+# question rather than by the row's position.
+nomo_method_variance_questions <- data.frame(
+  question = c(
+    "Is marker-based method variance present?",
+    "Are the method effects equal?",
+    "Does the method variance bias the substantive correlations?"
+  ),
+  short = c("Method variance present?", "Method effects equal?", "Correlations biased?"),
+  row.names = c("presence", "equality", "bias"),
+  stringsAsFactors = FALSE
+)
 
 
 nomo_method_variance_value <- function(pe, lhs, op, rhs, column) {
@@ -682,7 +699,8 @@ print.nomo_method_variance <- function(x, ...) {
   ))
   nomo_method_variance_present_comparisons(x$comparisons)
   nomo_method_variance_present_reliability(x$reliability)
-  nomo_method_variance_present_correlations(x$correlations)
+  nomo_method_variance_present_correlations(x$correlations, x$retained)
+  nomo_present_flagged(x$decision_log)
   nomo_method_variance_present_note()
   invisible(x)
 }
@@ -717,29 +735,36 @@ print.summary_nomo_method_variance <- function(x, ...) {
   )
   nomo_method_variance_present_comparisons(x$comparisons)
 
-  loadings <- x$method_loadings
-  loadings$share <- sprintf("%.1f%%", 100 * loadings$method_variance)
   nomo_present_section(sprintf("Loadings in %s (completely standardized)", x$retained))
   nomo_present_table(
-    loadings,
+    x$method_loadings,
     c("Factor" = "factor", "Item" = "item", "Substantive" = "substantive_loading",
-      "Method" = "method_loading", "Method variance" = "share", "p" = "p_value"),
-    formats = list(p_value = nomo_present_p),
+      "Method" = "method_loading", "Method p" = "p_value",
+      "Method variance" = "method_variance"),
+    formats = list(p_value = nomo_present_p, method_variance = nomo_present_percent),
     more = "nomo_table(x, \"loadings\")"
   )
   nomo_method_variance_present_reliability(x$reliability)
-  nomo_method_variance_present_correlations(x$correlations)
+  nomo_method_variance_present_correlations(x$correlations, x$retained)
+  nomo_present_flagged(x$decision_log, recommendation = TRUE)
   nomo_method_variance_present_note()
   invisible(x)
 }
 
 
+# The comparisons in the order they are made, each with the question it
+# answers, so the table can be read without the documentation. A question
+# without a short form is shown as stored.
 nomo_method_variance_present_comparisons <- function(comparisons) {
+  shown <- comparisons
+  questions <- nomo_method_variance_questions
+  short <- questions$short[match(shown$question, questions$question)]
+  shown$question_shown <- ifelse(is.na(short), shown$question, short)
   nomo_present_section("Model comparisons")
   nomo_present_table(
-    comparisons,
-    c("Comparison" = "comparison", "Chi-square diff." = "chisq_diff",
-      "df" = "df_diff", "p" = "p_value"),
+    shown,
+    c("Comparison" = "comparison", "Question" = "question_shown",
+      "Chi-sq diff" = "chisq_diff", "df" = "df_diff", "p" = "p_value"),
     formats = list(chisq_diff = function(v) nomo_present_number(v, 2L),
                    df_diff = function(v) format(v, trim = TRUE),
                    p_value = nomo_present_p),
@@ -749,38 +774,48 @@ nomo_method_variance_present_comparisons <- function(comparisons) {
 
 
 nomo_method_variance_present_reliability <- function(reliability) {
-  shown <- reliability
-  shown$share <- sprintf("%.1f%%", 100 * shown$method_share)
   nomo_present_section("Reliability decomposition")
   nomo_present_table(
-    shown,
+    reliability,
     c("Factor" = "factor", "Total" = "reliability_total",
       "Substantive" = "reliability_substantive", "Method" = "reliability_method",
-      "Method share" = "share"),
+      "Method share" = "method_share"),
+    formats = list(method_share = nomo_present_percent),
     more = "nomo_table(x, \"reliability\")"
   )
 }
 
 
-nomo_method_variance_present_correlations <- function(correlations) {
+# The models are named as in the models table, the retained one by its name.
+nomo_method_variance_present_correlations <- function(correlations, retained) {
   if (!nrow(correlations)) return(invisible(NULL))
   shown <- correlations
   shown$pair <- paste(shown$factor1, "with", shown$factor2)
   nomo_present_section("Substantive correlations")
   nomo_present_table(
     shown,
-    c("Factors" = "pair", "CFA" = "cfa", "Baseline" = "baseline",
-      "Retained" = "retained", "S(.05)" = "method_s_05", "S(.01)" = "method_s_01"),
+    stats::setNames(
+      c("pair", "cfa", "baseline", "retained", "method_s_05", "method_s_01"),
+      c("Factors", "CFA", "Baseline", retained, "Method-S(.05)", "Method-S(.01)")
+    ),
     more = "nomo_table(x, \"correlations\")"
   )
 }
 
 
+# The models are defined here, as nomo_retest()'s note defines its
+# abbreviations, since the tables name them only.
 nomo_method_variance_present_note <- function() {
   cat("\n")
   nomo_present_text(
     "Comprehensive CFA marker technique (Williams, Hartman, & Cavazotte, 2010). ",
-    "The results describe the method variance this marker captures; they are ",
-    "not corrected estimates, and other sources of method variance may remain."
+    "Baseline: the marker uncorrelated with the substantive factors. Method-C: ",
+    "Baseline plus equal marker loadings on every substantive item; Method-U: ",
+    "those loadings free to differ. Method-R: the retained model with the ",
+    "substantive correlations fixed at their Baseline values. Method-S(.05), ",
+    "Method-S(.01): the method loadings fixed at the upper ends of their 95% ",
+    "and 99% intervals. The results describe the method variance this marker ",
+    "captures; they are not corrected estimates, and other sources of method ",
+    "variance may remain."
   )
 }
