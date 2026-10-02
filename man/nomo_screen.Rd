@@ -69,7 +69,8 @@ of the same scale; otherwise they are \code{NA}.
 \item \code{decision_log}: the evidence and its explanations (see \code{\link[=nomo_table]{nomo_table()}}).
 \item \code{effort}, \code{effort_pairs}, and \code{effort_settings}: the careless-responding
 indices per row, the pairs they used, and their settings, when
-\code{effort = TRUE}.
+\code{effort = TRUE}. The settings include \code{long_string_rule_applied}, which
+is \code{FALSE} when too few items were screened for the long-string rule.
 \item \code{handoff}: the content-review handoff read from \code{items}, when one was
 supplied.
 }
@@ -127,10 +128,22 @@ without a flag. Huang et al. found the indices they recommended identified
 attentive respondents well and random responders poorly, so an unflagged case
 is not thereby shown to be attentive.
 
+The long-string rule is applied only when at least
+\code{guidance$long_string_min_items} items are screened (20 in
+\code{\link[=nomo_defaults]{nomo_defaults()}}). Half the length of a shorter item set is a run of a few
+responses, which attentive respondents give often: with two items every case
+reaches it. On a shorter set each case's longest run is still reported in
+\code{long_string}, no case is flagged on it, and the decision log states the
+number of items and the share of cases that reached half the length.
+
 Each respondent's antonym, synonym, and even-odd value is a correlation whose
 N is the number of pairs or scales. With two, every value is exactly +1 or
 -1, so at least three are required; with fewer than five the log says the
-flags are coarse. Cases are flagged, never removed.
+flags are coarse. The same holds for each respondent: one who answered fewer
+than three of the pairs, or both halves of fewer than three scales, has no
+value. Even-odd consistency is Spearman-Brown corrected, and the correction
+has no meaning below -1, so the value is bounded there: it lies between -1
+and 1. Cases are flagged, never removed.
 
 \strong{Items from content review.} \code{items} may be the handoff that
 \code{contentvalidR}'s \code{content_handoff()} produces after content review. Only

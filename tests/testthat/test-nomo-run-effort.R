@@ -156,12 +156,26 @@ test_that("the report summarizes careless responding after the item audits", {
   expect_match(report$summary, "Computed once across all 12 items for 300 cases, using 3 scales.",
                fixed = TRUE)
   expect_identical(report$indices$index[[1L]], "Long-string")
-  expect_gte(report$indices$cases_flagged[[1L]], 10L)
+  # Twelve items are fewer than the long-string rule is applied to (#145), so
+  # the report says so instead of counting flags.
+  expect_true(is.na(report$indices$cases_flagged[[1L]]))
+  expect_identical(report$indices$rule[[1L]], "not applied: fewer than 20 items")
   expect_true(is.na(report$indices$cases_flagged[[3L]]))
-  expect_match(report$indices$rule[[1L]], "a run of 6 or more, half the items", fixed = TRUE)
   expect_true(all(report$log$metric %in% c("long_string", "psychometric_antonym",
                                            "psychometric_synonym", "even_odd",
                                            "index_disagreement")))
+
+  # The minimum is a guidance setting, and the run's guidance reaches the
+  # instrument-wide screen: lowered to twelve items, the rule and its count of
+  # the ten straight-liners return.
+  lower <- nomo_defaults()
+  lower$long_string_min_items <- 12L
+  moved <- nomo_run(run_effort_data()$data, scales = run_effort_data()$scales,
+                    guidance = lower,
+                    settings = list(screen = list(effort = TRUE), factors = list(seed = 73)))
+  report <- nomologR:::nomo_report_effort(moved$results$effort)
+  expect_gte(report$indices$cases_flagged[[1L]], 10L)
+  expect_match(report$indices$rule[[1L]], "a run of 6 or more, half the items", fixed = TRUE)
 })
 
 

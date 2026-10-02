@@ -3,6 +3,8 @@ test_that("nomo_defaults returns stable teaching guidance", {
 
   expect_identical(x$profile, "teaching")
   expect_equal(x$item_total_reference, 0.30)
+  # The fewest screened items at which long-string becomes a flag (#145).
+  expect_identical(x$long_string_min_items, 20L)
   expect_equal(x$efa_loading_reference, 0.40)
   expect_equal(x$fit_reference$cfi, 0.95)
   expect_false(x$auto_delete)

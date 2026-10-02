@@ -75,10 +75,22 @@
 #' attentive respondents well and random responders poorly, so an unflagged case
 #' is not thereby shown to be attentive.
 #'
+#' The long-string rule is applied only when at least
+#' `guidance$long_string_min_items` items are screened (20 in
+#' [nomo_defaults()]). Half the length of a shorter item set is a run of a few
+#' responses, which attentive respondents give often: with two items every case
+#' reaches it. On a shorter set each case's longest run is still reported in
+#' `long_string`, no case is flagged on it, and the decision log states the
+#' number of items and the share of cases that reached half the length.
+#'
 #' Each respondent's antonym, synonym, and even-odd value is a correlation whose
 #' N is the number of pairs or scales. With two, every value is exactly +1 or
 #' -1, so at least three are required; with fewer than five the log says the
-#' flags are coarse. Cases are flagged, never removed.
+#' flags are coarse. The same holds for each respondent: one who answered fewer
+#' than three of the pairs, or both halves of fewer than three scales, has no
+#' value. Even-odd consistency is Spearman-Brown corrected, and the correction
+#' has no meaning below -1, so the value is bounded there: it lies between -1
+#' and 1. Cases are flagged, never removed.
 #'
 #' **Items from content review.** `items` may be the handoff that
 #' `contentvalidR`'s `content_handoff()` produces after content review. Only
@@ -115,7 +127,8 @@
 #'   * `decision_log`: the evidence and its explanations (see [nomo_table()]).
 #'   * `effort`, `effort_pairs`, and `effort_settings`: the careless-responding
 #'     indices per row, the pairs they used, and their settings, when
-#'     `effort = TRUE`.
+#'     `effort = TRUE`. The settings include `long_string_rule_applied`, which
+#'     is `FALSE` when too few items were screened for the long-string rule.
 #'   * `handoff`: the content-review handoff read from `items`, when one was
 #'     supplied.
 #'
@@ -245,6 +258,7 @@ nomo_screen <- function(data,
     reverse = reverse, scale_range = scale_range,
     pair_magnitude = pair_magnitude
   )
+  long_string_min_items <- if (isTRUE(effort)) nomo_screen_long_string_min(guidance)
 
   item_summary <- dplyr::bind_rows(
     lapply(items, function(item) {
@@ -445,7 +459,8 @@ nomo_screen <- function(data,
       scales = effort_args$scales,
       reverse = effort_args$reverse,
       scale_range = effort_args$scale_range,
-      pair_magnitude = pair_magnitude
+      pair_magnitude = pair_magnitude,
+      long_string_min_items = long_string_min_items
     )
     effort_log <- nomo_effort_log(effort_result, n_items = length(items))
   }
@@ -506,7 +521,9 @@ nomo_screen <- function(data,
           reverse = effort_args$reverse,
           scale_range = effort_args$scale_range,
           pair_magnitude = pair_magnitude,
-          long_string_limit = effort_result$long_string_limit
+          long_string_limit = effort_result$long_string_limit,
+          long_string_min_items = effort_result$long_string_min_items,
+          long_string_rule_applied = effort_result$long_string_rule_applied
         )
       ),
       out[tail_names]
@@ -573,10 +590,18 @@ print.nomo_screen <- function(x, ...) {
   if (!is.null(x$effort) && nrow(x$effort)) {
     e <- x$effort
     flagged <- sum(e$n_flags > 0L)
+    # On a short item set the long-string rule is not applied, and a count of
+    # zero would read as a finding about the sample. A screen saved before the
+    # setting existed applied the rule.
+    long_applied <- !isFALSE(x$effort_settings$long_string_rule_applied)
     nomo_present_facts(c(
       sprintf("Careless-responding flags: %d case%s", flagged,
               if (flagged == 1L) "" else "s"),
-      sprintf("long-string %d", sum(e$flag_long_string)),
+      if (long_applied) {
+        sprintf("long-string %d", sum(e$flag_long_string))
+      } else {
+        "long-string not applied"
+      },
       sprintf("antonym %d", sum(e$flag_antonym)),
       sprintf("synonym %d", sum(e$flag_synonym))
     ))
@@ -864,6 +889,24 @@ nomo_screen_effort_args <- function(effort, selected, items, scales, reverse,
   }
 
   list(scales = scales, reverse = reverse, scale_range = scale_range)
+}
+
+
+# The fewest screened items at which the long-string rule becomes a flag. A
+# guidance list without the setting, such as one built before it existed, gets
+# the default; a setting that is not a number of items is refused, because a
+# silent fallback would change which cases are flagged.
+nomo_screen_long_string_min <- function(guidance) {
+  value <- guidance$long_string_min_items
+  if (is.null(value)) return(nomo_defaults()$long_string_min_items)
+  if (!is.numeric(value) || length(value) != 1L || !is.finite(value) ||
+        value < 1 || value != round(value)) {
+    stop(
+      "`guidance$long_string_min_items` must be a single whole number of items.",
+      call. = FALSE
+    )
+  }
+  as.integer(value)
 }
 
 
