@@ -302,10 +302,13 @@ nomo_expectation_region_label <- function(expectation) {
 #' The function records theory; it does not inspect data, fit a model, or infer
 #' predictions from statistical significance.
 #'
-#' A pair of variables carries one relation. Hypotheses that give the same two
-#' variables both a directed path and an association, or directed paths in both
-#' directions, are refused: [nomo_network()] estimates one parameter for a
-#' pair, and a reciprocal pair is not identified in the model it fits.
+#' A pair of variables carries a directed path or an association, not both.
+#' Hypotheses that give the same two variables both are refused, because the
+#' two cannot be estimated side by side. Directed paths in both directions are
+#' accepted here, because whether a reciprocal pair is identified depends on
+#' the model. [nomo_network()] evaluates both when `model` itself writes the
+#' two paths, as a model of reciprocal effects identified by instruments does,
+#' and stops rather than add one of them.
 #'
 #' @param ... Named [nomo_expectations] created by [positive()], [negative()],
 #'   or [negligible()]. Names must specify relations using `->` or `<->`.
@@ -377,37 +380,31 @@ nomo_hypotheses <- function(...) {
     )
   }
 
-  # A pair of variables carries one relation. The same relation given twice is
-  # refused above, so a pair that still appears twice has a directed path
-  # beside an association, or directed paths both ways.
+  # A pair of variables carries a directed path or an association, not both.
+  # Directed paths in both directions are not refused here: whether a
+  # reciprocal pair is identified depends on the model, which only
+  # nomo_network() sees. It evaluates a pair the model writes and refuses to
+  # add one.
   pairs <- vapply(
     parsed,
     function(p) paste(sort(c(p$source, p$target)), collapse = "<->"),
     character(1)
   )
-  if (anyDuplicated(pairs)) {
-    clash <- which(pairs == pairs[[anyDuplicated(pairs)]])[1:2]
-    reciprocal <- all(
-      vapply(parsed[clash], `[[`, character(1), "relation_type") == "directed"
-    )
+  association <- vapply(parsed, `[[`, character(1), "relation_type") ==
+    "association"
+  clash <- which(!association & pairs %in% pairs[association])
+  if (length(clash)) {
+    partner <- which(association & pairs == pairs[[clash[[1L]]]])
+    both <- sort(c(clash[[1L]], partner[[1L]]))
     stop(
       sprintf(
-        "Hypotheses `%s` and `%s` %s",
-        labels[[clash[[1L]]]],
-        labels[[clash[[2L]]]],
-        if (reciprocal) {
-          paste(
-            "specify directed paths in both directions between the same two",
-            "variables. A reciprocal pair is not identified in the model",
-            "`nomo_network()` fits; keep one direction."
-          )
-        } else {
-          paste(
-            "give the same two variables both a directed path and an",
-            "association. A pair of variables can carry one or the other; keep",
-            "the relation the theory predicts."
-          )
-        }
+        paste(
+          "Hypotheses `%s` and `%s` give the same two variables both a",
+          "directed path and an association. A pair of variables can carry one",
+          "or the other; keep the relation the theory predicts."
+        ),
+        labels[[both[[1L]]]],
+        labels[[both[[2L]]]]
       ),
       call. = FALSE
     )

@@ -94,7 +94,7 @@ test_that("nomo_hypotheses refuses malformed or duplicate logical relations", {
 })
 
 
-test_that("nomo_hypotheses refuses two relations for one pair of variables (#145)", {
+test_that("nomo_hypotheses refuses a path beside an association for one pair (#145)", {
   expect_error(
     nomo_hypotheses(
       "A -> B" = positive(),
@@ -104,13 +104,35 @@ test_that("nomo_hypotheses refuses two relations for one pair of variables (#145
     "Hypotheses `A -> B` and `B <-> A` give the same two variables both a directed path and an association",
     fixed = TRUE
   )
+  # The pair is named in the order it was written, whichever relation is first.
+  expect_error(
+    nomo_hypotheses(
+      "C <-> D" = positive(),
+      "A <-> B" = positive(),
+      "B -> A" = positive()
+    ),
+    "Hypotheses `A <-> B` and `B -> A` give the same two variables both",
+    fixed = TRUE
+  )
+
+  # Directed paths in both directions are a reciprocal pair, which a model can
+  # identify. They are accepted here and left to nomo_network(), which sees
+  # the model.
+  reciprocal <- nomo_hypotheses(
+    "A -> B" = positive(),
+    "B -> A" = positive()
+  )
+  expect_equal(reciprocal$n, 2L)
+  expect_identical(reciprocal$hypotheses$relation_type, c("directed", "directed"))
+
+  # An association beside them is still refused.
   expect_error(
     nomo_hypotheses(
       "A -> B" = positive(),
       "B -> A" = positive(),
       "A <-> B" = positive()
     ),
-    "Hypotheses `A -> B` and `B -> A` specify directed paths in both directions",
+    "Hypotheses `A -> B` and `A <-> B` give the same two variables both",
     fixed = TRUE
   )
 
