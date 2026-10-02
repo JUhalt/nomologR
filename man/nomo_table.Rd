@@ -42,6 +42,8 @@ the latent correlation and the HTMT-family values together; see
 \code{\link[=nomo_validity]{nomo_validity()}}.
 \item \code{nomo_scores}: \code{"scores"}, \code{"diagnostics"}, \code{"unit_weighting"},
 \code{"notes"}; see \code{\link[=nomo_scores]{nomo_scores()}}.
+\item \code{nomo_power}: \code{"power"} from \code{\link[=nomo_power_rmsea]{nomo_power_rmsea()}}; \code{"summary"} (default)
+and \code{"parameters"} from \code{\link[=nomo_power_simulate]{nomo_power_simulate()}}.
 \item \code{nomo_hypotheses}: the machine-readable hypothesis table (no \code{type}).
 \item \code{nomo_network}: \code{"hypotheses"} (default), \code{"fit"}, \code{"measurement"},
 \code{"relations"}, \code{"replication"}, \code{"single_indicators"}, \code{"sensitivity"},
