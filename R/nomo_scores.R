@@ -313,10 +313,28 @@ nomo_scores_parallel_test <- function(input) {
 
   # A model that already holds the loadings and the residual variances equal
   # gains no constraint, and a difference on no degrees of freedom is no test.
-  added <- unname(
-    lavaan::fitMeasures(parallel_fit, "df") - lavaan::fitMeasures(input$fit, "df")
+  # lavaan gives no degrees of freedom for a fit without a test statistic
+  # (test = "none"), and then there is no comparison to make either: that is a
+  # comparison not computed, not a model that is already parallel.
+  added <- tryCatch(
+    unname(
+      lavaan::fitMeasures(parallel_fit, "df") - lavaan::fitMeasures(input$fit, "df")
+    ),
+    error = function(e) e
   )
-  if (!isTRUE(added > 0)) {
+  if (inherits(added, "error") || !isTRUE(is.finite(added))) {
+    empty$note <- paste(
+      "The comparison between the fitted model and the parallel model could",
+      "not be computed, so unit weighting was not tested.",
+      if (inherits(added, "error")) {
+        sprintf("lavaan reported: %s.", nomo_scores_condition(added))
+      } else {
+        "lavaan did not report the degrees of freedom of the two models."
+      }
+    )
+    return(empty)
+  }
+  if (added <= 0) {
     empty$note <- paste(
       "The model you fitted already holds the loadings and the residual",
       "variances equal within each factor, so the parallel model adds no",
@@ -386,8 +404,10 @@ nomo_scores_parallel_test <- function(input) {
 }
 
 
+# lavaan's message on one line, without a closing full stop, since the notes
+# that quote it add their own.
 nomo_scores_condition <- function(condition) {
-  trimws(gsub("[[:space:]]+", " ", conditionMessage(condition)))
+  sub("[.]+$", "", trimws(gsub("[[:space:]]+", " ", conditionMessage(condition))))
 }
 
 

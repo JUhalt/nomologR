@@ -591,6 +591,42 @@ test_that("a fit that is already parallel, or cannot be, has no test and says wh
 })
 
 
+test_that("a fit without a test statistic is scored, with the comparison not computed", {
+  dat <- scores_sample(scores_population()$sigma)
+
+  # lavaan gives no fit measures for test = "none", the refit keeps the
+  # option, and the two models cannot be compared. The scores are returned.
+  fit <- lavaan::cfa(scores_model, data = dat, std.lv = TRUE, test = "none")
+  out <- nomo_scores(fit, method = "sum")
+  expect_equal(out$scores$F1, rowSums(dat[, paste0("x", 1:4)]))
+  expect_false(out$parallel_test$available)
+  expect_true(is.na(out$parallel_test$chisq_diff))
+  expect_match(out$parallel_test$note, "could not be computed", fixed = TRUE)
+  expect_match(out$parallel_test$note, "lavaan reported: ", fixed = TRUE)
+  expect_false(grepl("already holds", out$parallel_test$note, fixed = TRUE))
+  expect_false(grepl("..", out$parallel_test$note, fixed = TRUE))
+  expect_false("parallel_model_test" %in% nomo_methods_used(out))
+  expect_true(any(out$notes$severity == "review" &
+                    grepl("could not be computed", out$notes$note, fixed = TRUE)))
+
+  # Degrees of freedom left missing without an error are no comparison either,
+  # and not a sign that the fitted model is already parallel.
+  fit_measures <- lavaan::fitMeasures
+  testthat::local_mocked_bindings(
+    fitMeasures = function(object, fit.measures = "all", ...) {
+      if (identical(fit.measures, "df")) return(c(df = NA_real_))
+      fit_measures(object, fit.measures, ...)
+    },
+    .package = "lavaan"
+  )
+  out <- nomo_scores(scores_fit(), method = "sum")
+  expect_false(out$parallel_test$available)
+  expect_match(out$parallel_test$note,
+               "did not report the degrees of freedom", fixed = TRUE)
+  expect_false(grepl("already holds", out$parallel_test$note, fixed = TRUE))
+})
+
+
 test_that("a negative difference is reported as no test, not as support for a sum score", {
   fit <- scores_fit()
   difference <- function(value, p) {
