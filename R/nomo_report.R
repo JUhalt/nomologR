@@ -1076,7 +1076,9 @@ nomo_report_prepare_template <- function(template, input, title) {
 #' report, and rendering the report does not change the calling document.
 #'
 #' @param x An object created by [nomo_run()].
-#' @param file Output path. The extension chooses the format: `.html` or
+#' @param file Output path. Required: `nomo_report()` has no default path, so
+#'   it writes a report only where you ask, and stops with an error when `file`
+#'   is not given. The extension chooses the format: `.html` or
 #'   `.htm` for a self-contained HTML report, `.docx` for a Word document. The
 #'   Word report carries the same tables, figures, and interpretation contract
 #'   as the HTML one; collapsible sections are shown expanded, and it uses
@@ -1124,7 +1126,7 @@ nomo_report_prepare_template <- function(template, input, title) {
 #'
 #' @export
 nomo_report <- function(x,
-                        file = "nomologR-report.html",
+                        file,
                         title = "nomologR reproducible analysis report",
                         include_plots = TRUE,
                         include_session = TRUE,
@@ -1138,6 +1140,18 @@ nomo_report <- function(x,
   nomo_report_validate_scalar_logical(include_session, "include_session")
   nomo_report_validate_scalar_logical(overwrite, "overwrite")
   nomo_report_validate_scalar_logical(quiet, "quiet")
+  # No default path: a report is written only where the caller asks, never to
+  # the working directory by default (CRAN policy on the user's file space).
+  if (missing(file)) {
+    stop(
+      paste(
+        "`file` is required: nomo_report() has no default path, so it writes",
+        "only where you ask. Give the path of the report, for example",
+        "`file = \"report.html\"`, or `file = \"report.docx\"` for Word."
+      ),
+      call. = FALSE
+    )
+  }
   nomo_report_validate_file(file, overwrite)
 
   if (!is.character(title) ||
