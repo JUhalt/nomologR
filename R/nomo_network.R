@@ -72,10 +72,12 @@ nomo_network_compose_model <- function(model, lines) {
 }
 
 
-# A pair of variables carries one relation. An association cannot be estimated
-# beside a directed path between the same two variables, and a path added in
-# the direction opposite to one the model has gives a reciprocal pair that is
-# not identified without further restrictions.
+# An association cannot be estimated beside a directed path between the same
+# two variables. A path added in the direction opposite to another gives a
+# reciprocal pair, which is not identified without further restrictions, so
+# none is added. A reciprocal pair the researcher wrote in `model` is fitted
+# as written: it can be identified, by instruments for example, and only the
+# researcher's model says whether it is.
 nomo_network_check_pairs <- function(partable, h, added) {
   regressions <- partable[partable$op == "~", , drop = FALSE]
 
@@ -101,15 +103,25 @@ nomo_network_check_pairs <- function(partable, h, added) {
     }
 
     if (added[[i]] && reverse) {
+      # The opposite path is in the researcher's model unless another
+      # hypothesis adds it.
+      other <- added & h$relation_type == "directed" &
+        h$source == target & h$target == source
+      opposite <- if (any(other)) {
+        "another hypothesis adds"
+      } else {
+        "the model already has"
+      }
       stop(
         sprintf(
           paste(
-            "Hypothesis `%s` would add a path opposite to one the model already",
-            "has between `%s` and `%s`. A reciprocal pair is not identified",
-            "without further restrictions, so `nomo_network()` does not add one.",
-            "Keep one direction."
+            "Hypothesis `%s` would add a path opposite to one %s between `%s`",
+            "and `%s`. A reciprocal pair is not identified without further",
+            "restrictions, so `nomo_network()` does not add one. Keep one",
+            "direction, or write both paths in `model` together with what",
+            "identifies them."
           ),
-          h$relation[[i]], source, target
+          h$relation[[i]], opposite, source, target
         ),
         call. = FALSE
       )
@@ -760,10 +772,15 @@ nomo_network_hypothesis_evidence <- function(hypotheses,
   measurement_attention <- measurement_context$summary$attention[[1L]]
   measurement_observation <- measurement_context$summary$observation[[1L]]
 
-  # Variables the fitted model predicts. A covariance involving one of them is
+  # Variables the fitted model predicts: an outcome of a directed path, and an
+  # indicator of a factor, which the loading predicts (a first-order factor
+  # under a higher-order one included). A covariance involving one of them is
   # a covariance of its residual. A fit without a parameter table has none.
-  regressions <- as.data.frame(parameter_estimates)
-  predicted <- unique(as.character(regressions$lhs[regressions$op == "~"]))
+  fitted <- as.data.frame(parameter_estimates)
+  predicted <- unique(as.character(c(
+    fitted$lhs[fitted$op == "~"],
+    fitted$rhs[fitted$op == "=~"]
+  )))
 
   for (i in seq_len(nrow(h))) {
     hyp <- as.list(h[i, , drop = FALSE])
@@ -912,21 +929,24 @@ nomo_network_hypothesis_evidence <- function(hypotheses,
 
     base_interpretation <- classified$interpretation
 
-    residual_of <- if (identical(hyp$relation_type, "association")) {
+    # A relation without an estimate is not labeled: nothing was estimated,
+    # as a residual or otherwise, and it keeps its ordinary scope.
+    labeled <- identical(hyp$relation_type, "association") && is.finite(estimate)
+    residual_of <- if (labeled) {
       intersect(c(hyp$source, hyp$target), predicted)
     } else {
       character()
     }
 
-    if (length(residual_of) && is.finite(estimate)) {
+    if (length(residual_of)) {
       base_interpretation <- paste(
         base_interpretation,
         sprintf(
           paste(
-            "The fitted model also predicts %s from other variables, so this",
-            "estimate is a residual association: the association that remains",
-            "after those predictors, not the overall association between `%s`",
-            "and `%s`."
+            "The fitted model also predicts %s from other variables, by a",
+            "directed path or a factor loading, so this estimate is a residual",
+            "association: the association that remains after those predictors,",
+            "not the overall association between `%s` and `%s`."
           ),
           paste0("`", residual_of, "`", collapse = " and "),
           hyp$source, hyp$target
@@ -1587,19 +1607,24 @@ nomo_network_validate_data <- function(data, label) {
 #' model and which were added.
 #'
 #' When the fitted model also predicts an endpoint of an association, `A ~~ B`
-#' is a covariance between residuals. The estimate is then the association
-#' that remains after those predictors, a residual association, and it can
-#' differ from the overall association in size and in sign. Such a hypothesis
-#' has `evidence_scope` `"residual_association"`, its interpretation says so,
-#' and the decision log flags it for review. If the theory concerns the
-#' overall association, evaluate it in a model without the directed paths into
-#' those variables.
+#' is a covariance between residuals. The model predicts a variable when a
+#' directed path points to it, and when it is an indicator of a factor, which
+#' includes a factor that loads on a higher-order factor. The estimate is then
+#' the association that remains after those predictors, a residual
+#' association, and it can differ from the overall association in size and in
+#' sign. Such a hypothesis has `evidence_scope` `"residual_association"`, its
+#' interpretation says so, and the decision log flags it for review. If the
+#' theory concerns the overall association, evaluate it in a model that does
+#' not predict those variables.
 #'
-#' A pair of variables carries one relation. `nomo_network()` stops when an
-#' association hypothesis names two variables that the model to be fitted
-#' joins with a directed path, and when a hypothesis would add a path opposite
-#' to one already in the model, because a reciprocal pair is not identified
-#' without further restrictions.
+#' A pair of variables carries a directed path or an association, not both:
+#' `nomo_network()` stops when an association hypothesis names two variables
+#' that the model to be fitted joins with a directed path. It also stops when
+#' a hypothesis would add a path opposite to another, because a reciprocal
+#' pair is not identified without further restrictions. A reciprocal pair
+#' that `model` itself writes is fitted as written, and hypotheses about
+#' either direction are evaluated; whether that model is identified, by
+#' instruments for example, is for the researcher to establish.
 #'
 #' For quantitative `negligible(within = ...)` predictions, `nomo_network()`
 #' evaluates the smallest effect size of interest (SESOI), the region the
@@ -1657,8 +1682,9 @@ nomo_network_validate_data <- function(data, label) {
 #' `"latent_to_observed_outcome"`, `"observed_to_latent"`, and
 #' `"observed_structural"`. For an association: `"latent_association"`,
 #' `"latent_observed_association"`, `"observed_association"`, and
-#' `"residual_association"` when the fitted model predicts an endpoint,
-#' whatever the endpoints are.
+#' `"residual_association"` when the fitted model predicts an endpoint, by a
+#' directed path or a factor loading, whatever the endpoints are. A relation
+#' without an estimate keeps the scope its endpoints give it.
 #'
 #' @section Replication status:
 #' With a validation sample, `replication_status` in `replication_evidence`
@@ -1729,8 +1755,16 @@ nomo_network_validate_data <- function(data, label) {
 #' @param ordered Optional character vector naming ordered indicators. A
 #'   variable of the fitted model stored as an ordered factor, in `data` or in
 #'   `validation_data`, is treated as declared whether or not it is named
-#'   here, because lavaan fits it as ordered-categorical either way. The
-#'   decision log lists the columns found this way for review.
+#'   here, because lavaan fits such a column as ordered-categorical either
+#'   way. The decision log lists the columns found this way for review. A
+#'   column that is an ordered factor in only one of the two samples is
+#'   declared ordered in both, so both are fitted with the same estimator;
+#'   the sample that stores it as numbers is then fitted with a
+#'   categorical-data estimator, and its estimates differ from a fit that
+#'   treats the column as continuous. An exogenous covariate is the
+#'   exception: lavaan does not model a covariate as ordered-categorical, so
+#'   one stored as an ordered factor is refused. Supply it as a numeric
+#'   column or as dummy-coded columns.
 #' @param estimator Optional lavaan estimator. When ordered indicators are
 #'   declared and `estimator = NULL`, WLSMV is requested.
 #' @param missing Optional lavaan missing-data option.
@@ -2057,10 +2091,40 @@ nomo_network <- function(model,
   # not `ordered` names it, so such columns of the fitted model are treated as
   # declared, in either sample (#145).
   ordered_named <- ordered
+  ordered_detected <- character()
   for (sample_data in list(primary_data, validation_data)) {
-    ordered <- nomo_ordered_indicators(prepared$full_model, sample_data, ordered)$ordered
+    ordered_detected <- union(
+      ordered_detected,
+      nomo_ordered_indicators(prepared$full_model, sample_data, ordered_named)$detected
+    )
   }
-  ordered_detected <- setdiff(ordered, ordered_named)
+
+  # That holds for the variables lavaan models, not for an exogenous covariate.
+  # lavaan conditions on a covariate: beside ordered outcomes it uses the codes
+  # of an ordered factor as numbers, and with continuous outcomes only, its
+  # estimation fails (lavaan 0.7.2). Declaring the covariate would record an
+  # ordered-categorical model that was not fitted, so it is refused and the
+  # researcher chooses its coding.
+  covariates <- lavaan::lavNames(
+    suppressWarnings(nomo_network_model_table(prepared$full_model, fixed.x = TRUE)),
+    "ov.x"
+  )
+  ordered_covariates <- intersect(ordered_detected, covariates)
+  if (length(ordered_covariates)) {
+    stop(
+      sprintf(
+        paste(
+          "Exogenous covariate(s) stored as ordered factors: %s. lavaan does not",
+          "model an exogenous covariate as ordered-categorical, so these columns",
+          "cannot be treated as declared in `ordered`. Supply each as a numeric",
+          "column or as dummy-coded columns."
+        ),
+        paste(ordered_covariates, collapse = ", ")
+      ),
+      call. = FALSE
+    )
+  }
+  ordered <- c(ordered_named, ordered_detected)
   detected_note <- if (length(ordered_detected)) {
     sprintf(
       " Stored as ordered factors and treated as declared: %s.",
@@ -2265,8 +2329,10 @@ nomo_network <- function(model,
 # interpretation says so, and the log asks for review.
 nomo_network_residual_log <- function(hypothesis_evidence) {
   log <- nomo_log_new()
+  # Only a relation that has an estimate is said to be estimated.
   residual <- hypothesis_evidence[
-    hypothesis_evidence$evidence_scope == "residual_association",
+    hypothesis_evidence$evidence_scope == "residual_association" &
+      is.finite(hypothesis_evidence$estimate),
     ,
     drop = FALSE
   ]
@@ -2283,17 +2349,18 @@ nomo_network_residual_log <- function(hypothesis_evidence) {
       observation = sprintf(
         paste(
           "`%s` is estimated as a residual association, because the fitted",
-          "model predicts at least one of its endpoints from other variables.",
-          "The estimate is the association that remains after those",
-          "predictors, not the overall association between the two variables."
+          "model predicts at least one of its endpoints from other variables,",
+          "by a directed path or a factor loading. The estimate is the",
+          "association that remains after those predictors, not the overall",
+          "association between the two variables."
         ),
         residual$relation[[i]]
       ),
       recommendation = paste(
         "Read the prediction against a residual association, which can differ",
         "from the overall association in size and in sign. If the theory",
-        "concerns the overall association, evaluate it in a model without the",
-        "directed paths into these variables."
+        "concerns the overall association, evaluate it in a model that does",
+        "not predict these variables."
       )
     )
   }

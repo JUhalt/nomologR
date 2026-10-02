@@ -40,8 +40,16 @@ directed paths first, then the associations the model still lacks.}
 \item{ordered}{Optional character vector naming ordered indicators. A
 variable of the fitted model stored as an ordered factor, in \code{data} or in
 \code{validation_data}, is treated as declared whether or not it is named
-here, because lavaan fits it as ordered-categorical either way. The
-decision log lists the columns found this way for review.}
+here, because lavaan fits such a column as ordered-categorical either
+way. The decision log lists the columns found this way for review. A
+column that is an ordered factor in only one of the two samples is
+declared ordered in both, so both are fitted with the same estimator;
+the sample that stores it as numbers is then fitted with a
+categorical-data estimator, and its estimates differ from a fit that
+treats the column as continuous. An exogenous covariate is the
+exception: lavaan does not model a covariate as ordered-categorical, so
+one stored as an ordered factor is refused. Supply it as a numeric
+column or as dummy-coded columns.}
 
 \item{estimator}{Optional lavaan estimator. When ordered indicators are
 declared and \code{estimator = NULL}, WLSMV is requested.}
@@ -114,19 +122,24 @@ factors. \code{model_relations} records which relations were already in the
 model and which were added.
 
 When the fitted model also predicts an endpoint of an association, \code{A ~~ B}
-is a covariance between residuals. The estimate is then the association
-that remains after those predictors, a residual association, and it can
-differ from the overall association in size and in sign. Such a hypothesis
-has \code{evidence_scope} \code{"residual_association"}, its interpretation says so,
-and the decision log flags it for review. If the theory concerns the
-overall association, evaluate it in a model without the directed paths into
-those variables.
+is a covariance between residuals. The model predicts a variable when a
+directed path points to it, and when it is an indicator of a factor, which
+includes a factor that loads on a higher-order factor. The estimate is then
+the association that remains after those predictors, a residual
+association, and it can differ from the overall association in size and in
+sign. Such a hypothesis has \code{evidence_scope} \code{"residual_association"}, its
+interpretation says so, and the decision log flags it for review. If the
+theory concerns the overall association, evaluate it in a model that does
+not predict those variables.
 
-A pair of variables carries one relation. \code{nomo_network()} stops when an
-association hypothesis names two variables that the model to be fitted
-joins with a directed path, and when a hypothesis would add a path opposite
-to one already in the model, because a reciprocal pair is not identified
-without further restrictions.
+A pair of variables carries a directed path or an association, not both:
+\code{nomo_network()} stops when an association hypothesis names two variables
+that the model to be fitted joins with a directed path. It also stops when
+a hypothesis would add a path opposite to another, because a reciprocal
+pair is not identified without further restrictions. A reciprocal pair
+that \code{model} itself writes is fitted as written, and hypotheses about
+either direction are evaluated; whether that model is identified, by
+instruments for example, is for the researcher to establish.
 
 For quantitative \code{negligible(within = ...)} predictions, \code{nomo_network()}
 evaluates the smallest effect size of interest (SESOI), the region the
@@ -188,8 +201,9 @@ estimate is. For a directed path: \code{"latent_structural"} (factor to factor),
 \code{"latent_to_observed_outcome"}, \code{"observed_to_latent"}, and
 \code{"observed_structural"}. For an association: \code{"latent_association"},
 \code{"latent_observed_association"}, \code{"observed_association"}, and
-\code{"residual_association"} when the fitted model predicts an endpoint,
-whatever the endpoints are.
+\code{"residual_association"} when the fitted model predicts an endpoint, by a
+directed path or a factor loading, whatever the endpoints are. A relation
+without an estimate keeps the scope its endpoints give it.
 }
 
 \section{Replication status}{
