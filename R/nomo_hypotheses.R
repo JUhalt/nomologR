@@ -302,6 +302,11 @@ nomo_expectation_region_label <- function(expectation) {
 #' The function records theory; it does not inspect data, fit a model, or infer
 #' predictions from statistical significance.
 #'
+#' A pair of variables carries one relation. Hypotheses that give the same two
+#' variables both a directed path and an association, or directed paths in both
+#' directions, are refused: [nomo_network()] estimates one parameter for a
+#' pair, and a reciprocal pair is not identified in the model it fits.
+#'
 #' @param ... Named [nomo_expectations] created by [positive()], [negative()],
 #'   or [negligible()]. Names must specify relations using `->` or `<->`.
 #'
@@ -367,6 +372,42 @@ nomo_hypotheses <- function(...) {
       paste0(
         "The same logical relation was specified more than once. ",
         "For associations, `A <-> B` and `B <-> A` are the same relation."
+      ),
+      call. = FALSE
+    )
+  }
+
+  # A pair of variables carries one relation. The same relation given twice is
+  # refused above, so a pair that still appears twice has a directed path
+  # beside an association, or directed paths both ways.
+  pairs <- vapply(
+    parsed,
+    function(p) paste(sort(c(p$source, p$target)), collapse = "<->"),
+    character(1)
+  )
+  if (anyDuplicated(pairs)) {
+    clash <- which(pairs == pairs[[anyDuplicated(pairs)]])[1:2]
+    reciprocal <- all(
+      vapply(parsed[clash], `[[`, character(1), "relation_type") == "directed"
+    )
+    stop(
+      sprintf(
+        "Hypotheses `%s` and `%s` %s",
+        labels[[clash[[1L]]]],
+        labels[[clash[[2L]]]],
+        if (reciprocal) {
+          paste(
+            "specify directed paths in both directions between the same two",
+            "variables. A reciprocal pair is not identified in the model",
+            "`nomo_network()` fits; keep one direction."
+          )
+        } else {
+          paste(
+            "give the same two variables both a directed path and an",
+            "association. A pair of variables can carry one or the other; keep",
+            "the relation the theory predicts."
+          )
+        }
       ),
       call. = FALSE
     )
@@ -439,8 +480,9 @@ print.nomo_hypotheses <- function(x, ...) {
   if (any(!x$hypotheses$confirmable)) {
     cat("\n")
     nomo_present_text(
-      "Note: at least one negligible prediction has no quantitative SESOI ",
-      "region and cannot be confirmed merely because p > .05."
+      "Note: at least one negligible prediction has no quantitative smallest ",
+      "effect size of interest (SESOI) region and cannot be confirmed merely ",
+      "because p > .05."
     )
   }
 

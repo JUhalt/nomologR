@@ -94,6 +94,36 @@ test_that("nomo_hypotheses refuses malformed or duplicate logical relations", {
 })
 
 
+test_that("nomo_hypotheses refuses two relations for one pair of variables (#145)", {
+  expect_error(
+    nomo_hypotheses(
+      "A -> B" = positive(),
+      "C -> D" = positive(),
+      "B <-> A" = positive()
+    ),
+    "Hypotheses `A -> B` and `B <-> A` give the same two variables both a directed path and an association",
+    fixed = TRUE
+  )
+  expect_error(
+    nomo_hypotheses(
+      "A -> B" = positive(),
+      "B -> A" = positive(),
+      "A <-> B" = positive()
+    ),
+    "Hypotheses `A -> B` and `B -> A` specify directed paths in both directions",
+    fixed = TRUE
+  )
+
+  # Relations that share one variable are separate pairs.
+  shared <- nomo_hypotheses(
+    "A -> B" = positive(),
+    "A <-> C" = positive(),
+    "C -> B" = positive()
+  )
+  expect_equal(shared$n, 3L)
+})
+
+
 test_that("hypothesis print and summary methods are stable", {
   h <- nomo_hypotheses(
     "A -> B" = positive(),
@@ -102,6 +132,10 @@ test_that("hypothesis print and summary methods are stable", {
 
   expect_output(print(h), "theory-specified")
   expect_output(print(h), "cannot be confirmed")
+
+  # The abbreviation is spelled out where a reader first meets it (#145).
+  printed <- gsub("\\s+", " ", paste(capture.output(print(h)), collapse = " "))
+  expect_match(printed, "smallest effect size of interest (SESOI) region", fixed = TRUE)
 
   s <- summary(h)
   expect_s3_class(s, "summary_nomo_hypotheses")

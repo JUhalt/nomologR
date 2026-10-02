@@ -24,6 +24,11 @@ associations/covariances.
 \details{
 The function records theory; it does not inspect data, fit a model, or infer
 predictions from statistical significance.
+
+A pair of variables carries one relation. Hypotheses that give the same two
+variables both a directed path and an association, or directed paths in both
+directions, are refused: \code{\link[=nomo_network]{nomo_network()}} estimates one parameter for a
+pair, and a reciprocal pair is not identified in the model it fits.
 }
 \examples{
 h <- nomo_hypotheses(
