@@ -23,6 +23,47 @@ nomo_check_model_variables <- function(model, data, data_arg = "data") {
 }
 
 
+# A model indicator stored as an ordered factor is categorical to lavaan
+# whether or not `ordered` names it. Such columns are treated as declared, so
+# what the result records is what was fitted (#145). `detected` holds the
+# columns added here, for the decision log.
+nomo_ordered_indicators <- function(model, data, ordered = character()) {
+  ordered <- as.character(ordered)
+  indicators <- tryCatch(
+    as.character(lavaan::lavNames(lavaan::lavaanify(model), type = "ov")),
+    error = function(e) character()
+  )
+  present <- intersect(indicators, names(data))
+  stored <- present[vapply(data[present], is.ordered, logical(1))]
+  detected <- setdiff(stored, ordered)
+  list(ordered = c(ordered, detected), detected = detected)
+}
+
+
+nomo_ordered_detected_log <- function(log, detected, stage) {
+  if (!length(detected)) return(log)
+  nomo_log_add(
+    log, stage = stage, object = paste(detected, collapse = ", "),
+    metric = "ordered_detected",
+    value = length(detected),
+    reference = "Ordered factors are modeled as ordered-categorical indicators",
+    severity = "review",
+    observation = sprintf(
+      "%s stored as %s and not named in `ordered`: %s. %s modeled as ordered, as lavaan fits %s.",
+      nomo_present_count(length(detected), "indicator is", "indicators are"),
+      nomo_present_noun(length(detected), "an ordered factor", "ordered factors"),
+      paste(detected, collapse = ", "),
+      nomo_present_noun(length(detected), "It is", "They are"),
+      nomo_present_noun(length(detected), "it", "them")
+    ),
+    recommendation = paste(
+      "Name these columns in `ordered` to make the choice explicit, or convert",
+      "them to numeric to model them as continuous."
+    )
+  )
+}
+
+
 nomo_measurement_fit <- function(x, arg = "fit", allow_cross_loadings = FALSE) {
   wrapper <- NULL
   source <- "lavaan"
