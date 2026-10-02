@@ -38,12 +38,17 @@ inter-item correlations are then reviewed only within a scale, since items
 of different constructs need not correlate positively. A \code{contentvalidR}
 handoff supplies its scales here.}
 
-\item{reverse}{Optional character vector naming reverse-keyed items. Used
-only to recode an internal copy for the indices that need it; the data is
-never recoded.}
+\item{reverse}{Optional character vector naming reverse-keyed items, each of
+which must be an item being screened. Used only to recode an internal copy:
+for the careless-responding indices that need it, and to say whether a
+declared item's negative item-rest correlation is the sign expected before
+recoding. The data is never recoded.}
 
-\item{scale_range}{Numeric \code{c(min, max)} of the response scale. Required
-whenever \code{reverse} is supplied, and never inferred from the data.}
+\item{scale_range}{Numeric \code{c(min, max)} of the response scale, with \code{min}
+below \code{max}. It is needed to use \code{reverse} and is never inferred from the
+data. With \code{effort = TRUE}, naming reverse-keyed items without it is
+refused. With \code{effort = FALSE} the audit runs, and the decision log
+records that the declared keying was not used.}
 
 \item{pair_magnitude}{Minimum absolute between-person correlation for an
 item pair to count as a psychometric antonym or synonym. Curran (2016)

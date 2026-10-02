@@ -26,11 +26,16 @@
 #'   inter-item correlations are then reviewed only within a scale, since items
 #'   of different constructs need not correlate positively. A `contentvalidR`
 #'   handoff supplies its scales here.
-#' @param reverse Optional character vector naming reverse-keyed items. Used
-#'   only to recode an internal copy for the indices that need it; the data is
-#'   never recoded.
-#' @param scale_range Numeric `c(min, max)` of the response scale. Required
-#'   whenever `reverse` is supplied, and never inferred from the data.
+#' @param reverse Optional character vector naming reverse-keyed items, each of
+#'   which must be an item being screened. Used only to recode an internal copy:
+#'   for the careless-responding indices that need it, and to say whether a
+#'   declared item's negative item-rest correlation is the sign expected before
+#'   recoding. The data is never recoded.
+#' @param scale_range Numeric `c(min, max)` of the response scale, with `min`
+#'   below `max`. It is needed to use `reverse` and is never inferred from the
+#'   data. With `effort = TRUE`, naming reverse-keyed items without it is
+#'   refused. With `effort = FALSE` the audit runs, and the decision log
+#'   records that the declared keying was not used.
 #' @param pair_magnitude Minimum absolute between-person correlation for an
 #'   item pair to count as a psychometric antonym or synonym. Curran (2016)
 #'   suggests .60 while saying there is no firm basis for it, so it is an
@@ -316,6 +321,36 @@ nomo_screen <- function(data,
       recommendation = paste(
         "Verify that identifiers, demographics, grouping variables, and other",
         "non-item columns are not being interpreted as scale items."
+      )
+    )
+  }
+
+  # Declared keying is used only on a copy recoded against the response scale,
+  # and the scale is never inferred. This is reached only without the effort
+  # indices, which refuse the same call. Nothing is computed from the keying
+  # here, so the audit proceeds and says the keying went unused, rather than
+  # leaving its explanation silently absent.
+  if (length(reverse) && is.null(scale_range)) {
+    decision_log <- nomo_log_add(
+      decision_log,
+      stage = "screen",
+      object = "item_keying",
+      metric = "keying_not_used",
+      value = length(reverse),
+      reference = "The response scale is never inferred from the data",
+      severity = "info",
+      observation = sprintf(
+        paste(
+          "Reverse-keyed item(s) %s were declared without `scale_range`, so the",
+          "declared keying was not used: a negative item-rest correlation of",
+          "such an item is reported without the keying explanation."
+        ),
+        paste(reverse, collapse = ", ")
+      ),
+      recommendation = paste(
+        "Supply `scale_range = c(min, max)` to have a declared item's negative",
+        "item-rest correlation checked against its recoded value. With",
+        "`effort = TRUE` the range is required."
       )
     )
   }
@@ -835,6 +870,31 @@ nomo_screen_effort_args <- function(effort, selected, items, scales, reverse,
     }
   }
 
+  # `reverse` and `scale_range` also explain a negative item-rest correlation
+  # in the item audit, so they too are checked whether or not the effort
+  # indices are requested. Unchecked, a misspelled item or a reversed range
+  # was a silent no-op: the explanation never appeared and nothing said why.
+  if (!is.null(reverse)) {
+    if (!is.character(reverse)) {
+      stop("`reverse` must be a character vector of item names.", call. = FALSE)
+    }
+    unknown <- setdiff(reverse, items)
+    if (length(unknown)) {
+      stop(
+        paste0("`reverse` names item(s) not being screened: ",
+               paste(unknown, collapse = ", "), "."),
+        call. = FALSE
+      )
+    }
+  }
+
+  if (!is.null(scale_range)) {
+    if (!is.numeric(scale_range) || length(scale_range) != 2L ||
+          !all(is.finite(scale_range)) || scale_range[[1L]] >= scale_range[[2L]]) {
+      stop("`scale_range` must be `c(min, max)` with min below max.", call. = FALSE)
+    }
+  }
+
   if (!isTRUE(effort)) {
     return(list(scales = NULL, reverse = NULL, scale_range = NULL))
   }
@@ -856,36 +916,19 @@ nomo_screen_effort_args <- function(effort, selected, items, scales, reverse,
     stop("`pair_magnitude` must be a single number between 0 and 1.", call. = FALSE)
   }
 
-  if (!is.null(reverse)) {
-    if (!is.character(reverse)) {
-      stop("`reverse` must be a character vector of item names.", call. = FALSE)
-    }
-    unknown <- setdiff(reverse, items)
-    if (length(unknown)) {
-      stop(
-        paste0("`reverse` names item(s) not being screened: ",
-               paste(unknown, collapse = ", "), "."),
-        call. = FALSE
-      )
-    }
-    if (length(reverse) && is.null(scale_range)) {
-      stop(
-        paste(
-          "Recoding reverse-keyed items needs the response scale's minimum and",
-          "maximum, supplied as `scale_range = c(min, max)`. It is not inferred",
-          "from the data, because an unused category would make the inferred",
-          "range wrong and every recoded response with it."
-        ),
-        call. = FALSE
-      )
-    }
-  }
-
-  if (!is.null(scale_range)) {
-    if (!is.numeric(scale_range) || length(scale_range) != 2L ||
-          anyNA(scale_range) || scale_range[[1L]] >= scale_range[[2L]]) {
-      stop("`scale_range` must be `c(min, max)` with min below max.", call. = FALSE)
-    }
+  # The indices are computed on recoded responses, so reverse-keyed items with
+  # no range are refused. Without the indices nothing is computed from the
+  # keying, and the screen logs that it went unused (see nomo_screen()).
+  if (length(reverse) && is.null(scale_range)) {
+    stop(
+      paste(
+        "Recoding reverse-keyed items needs the response scale's minimum and",
+        "maximum, supplied as `scale_range = c(min, max)`. It is not inferred",
+        "from the data, because an unused category would make the inferred",
+        "range wrong and every recoded response with it."
+      ),
+      call. = FALSE
+    )
   }
 
   list(scales = scales, reverse = reverse, scale_range = scale_range)

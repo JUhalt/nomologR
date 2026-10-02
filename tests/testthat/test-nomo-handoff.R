@@ -426,6 +426,12 @@ test_that("the handoff and the keying the screen reports are the same, whatever 
     nomo_screen(handoff_responses(walkthrough_items), items = h, effort = TRUE),
     "scale_range"
   )
+  # The item audit recodes nothing, so it still runs, and says the declared
+  # keying went unused (#145).
+  audit <- nomo_screen(handoff_responses(walkthrough_items), items = h)
+  unused <- audit$decision_log[audit$decision_log$metric == "keying_not_used", ]
+  expect_match(unused$observation, "Reverse-keyed item(s) EF2, TF2 were declared without",
+               fixed = TRUE)
 })
 
 
