@@ -641,6 +641,12 @@ test_that("each semTools return shape keeps one row per construct and block", {
   multilevel <- nomo_reliability_tidy(levels, "AVE", c("FW", "FB"))
   expect_identical(multilevel$construct, c("FW", "FB"))
   expect_identical(multilevel$block, c("within", "cluster"))
+
+  # The AVE table drops the metric column, and stays empty for a shape it
+  # cannot read.
+  ave <- nomo_validity_ave_tidy(c(A = NA, B = .5))
+  expect_identical(names(ave), c("construct", "block", "estimate"))
+  expect_identical(nrow(nomo_validity_ave_tidy("not supported")), 0L)
 })
 
 
