@@ -795,20 +795,23 @@
 <h3 id="id_9-nomo_report--reproducible-reporting">9. <code>nomo_report()</code> — reproducible reporting<a class="anchor" aria-label="anchor" href="#id_9-nomo_report--reproducible-reporting"></a>
 </h3>
 <p><code><a href="reference/nomo_report.html">nomo_report()</a></code> creates an archival report from a guided workflow, including methods, evidence, researcher decisions, deviations, citations, and session information: a self-contained HTML file, or a Word document when <code>file</code> ends in <code>.docx</code>. See the <a href="https://juhalt.github.io/nomologR/articles/reproducible-report.html">reproducible reporting walkthrough</a> for the documented inputs and limitations.</p>
-<p>The report cites the methods the workflow actually used, not every method the package offers. The same information is available directly:</p>
+<p><code>file</code> is required. <code><a href="reference/nomo_report.html">nomo_report()</a></code> has no default path, so a report is written only where you ask:</p>
 <div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="reference/nomo_report.html">nomo_report</a></span><span class="op">(</span><span class="va">run</span>, file <span class="op">=</span> <span class="st">"construct-validation-report.html"</span><span class="op">)</span></span></code></pre></div>
+<p>The report cites the methods the workflow actually used, not every method the package offers. The same information is available directly:</p>
+<div class="sourceCode" id="cb42"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/nomo_methods.html">nomo_methods</a></span><span class="op">(</span><span class="va">run</span><span class="op">)</span>                     <span class="co"># methods this workflow used</span></span>
 <span><span class="fu"><a href="reference/nomo_methods.html">nomo_methods</a></span><span class="op">(</span>lineage <span class="op">=</span> <span class="st">"historical"</span><span class="op">)</span>  <span class="co"># shown for recognition, and why</span></span>
 <span><span class="fu"><a href="reference/nomo_methods.html">nomo_methods</a></span><span class="op">(</span><span class="va">run</span>, references <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>  <span class="co"># a reference list with DOIs</span></span></code></pre></div>
 <p>Each method records its stage, whether it is historical, contemporary, or emerging practice, how the package uses it, its estimand and assumptions, and DOI-verified references. The <a href="https://juhalt.github.io/nomologR/articles/research-basis.html">research basis</a> article explains the lineage labels.</p>
 <p>For a thesis or manuscript, <code><a href="reference/nomo_apa_table.html">nomo_apa_table()</a></code> formats a result as an APA 7 table — a bold number, an italic title, no vertical rules, and notes below — that knits directly into R Markdown or Quarto:</p>
-<div class="sourceCode" id="cb42"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/nomo_apa_table.html">nomo_apa_table</a></span><span class="op">(</span><span class="va">cfa</span>, <span class="st">"loadings"</span>, number <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/nomo_apa_table.html">nomo_apa_table</a></span><span class="op">(</span><span class="va">reliability</span>, number <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/nomo_apa_table.html">nomo_apa_table</a></span><span class="op">(</span><span class="va">validity</span>, <span class="st">"discriminant"</span>, number <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/nomo_apa_table.html">nomo_apa_table</a></span><span class="op">(</span><span class="va">network</span>, number <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span></code></pre></div>
 <p>Leading zeros follow the statistic rather than its value: reliability, correlations, CFI, and <em>p</em> lose theirs because they cannot exceed 1, while TLI, RMSEA, SRMR, and standardized loadings keep theirs because they can. No table labels a result as passing or failing. The discriminant table gives each pair of constructs its latent correlation with a confidence interval beside HTMT2 and HTMT, rather than the Fornell-Larcker matrix.</p>
-<p><code>nomo_report(run, apa_tables = TRUE)</code> appends the same tables for every result a guided run holds, numbered in order, as a <em>Manuscript tables</em> appendix.</p>
+<p><code>nomo_report(run, file = "report.html", apa_tables = TRUE)</code> appends the same tables for every result a guided run holds, numbered in order, as a <em>Manuscript tables</em> appendix.</p>
 </div>
 </div>
 <div class="section level2">
@@ -892,7 +895,7 @@
 <li>the declared keying and the response scale, which the keying notes and the careless-responding indices use. The data are never recoded.</li>
 </ul>
 <p>Pass the handoff itself, not <code>h$items</code>, so everything it records travels with the items:</p>
-<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/nomo_screen.html">nomo_screen</a></span><span class="op">(</span><span class="va">responses</span>, items <span class="op">=</span> <span class="va">h</span><span class="op">)</span>  <span class="co"># screens the carried items</span></span>
 <span><span class="fu"><a href="reference/nomo_run.html">nomo_run</a></span><span class="op">(</span><span class="va">responses</span>, scales <span class="op">=</span> <span class="va">h</span><span class="op">)</span>    <span class="co"># runs the empirical stage on the handoff's scales</span></span></code></pre></div>
 <p><strong>How nomologR reads a handoff.</strong></p>

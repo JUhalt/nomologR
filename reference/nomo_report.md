@@ -12,7 +12,7 @@ an evidence trace, and session information.
 ``` r
 nomo_report(
   x,
-  file = "nomologR-report.html",
+  file,
   title = "nomologR reproducible analysis report",
   include_plots = TRUE,
   include_session = TRUE,
@@ -32,11 +32,13 @@ nomo_report(
 
 - file:
 
-  Output path. The extension chooses the format: `.html` or `.htm` for a
-  self-contained HTML report, `.docx` for a Word document. The Word
-  report carries the same tables, figures, and interpretation contract
-  as the HTML one; collapsible sections are shown expanded, and it uses
-  Word's default styles.
+  Output path. Required: `nomo_report()` has no default path, so it
+  writes a report only where you ask, and stops with an error when
+  `file` is not given. The extension chooses the format: `.html` or
+  `.htm` for a self-contained HTML report, `.docx` for a Word document.
+  The Word report carries the same tables, figures, and interpretation
+  contract as the HTML one; collapsible sections are shown expanded, and
+  it uses Word's default styles.
 
 - title:
 

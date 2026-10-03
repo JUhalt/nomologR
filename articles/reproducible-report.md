@@ -95,6 +95,12 @@ project record or thesis appendix, or shared with a collaborator without
 a separate figures directory or a network dependency. The `title`
 argument becomes the document title.
 
+`file` is required.
+[`nomo_report()`](https://juhalt.github.io/nomologR/reference/nomo_report.md)
+has no default path, so a report is written only where you ask, and a
+call without `file` stops with an error that says so. This article
+writes its reports to a temporary directory.
+
 For a thesis committee or a collaborator who works in Word, give the
 file a `.docx` extension instead:
 
@@ -294,11 +300,12 @@ correlation plausibly is (Rönkkö & Cho, 2022), beside the
 heterotrait-monotrait ratios HTMT2 and HTMT. AVE is convergent evidence,
 so it has a table of its own.
 
-To collect them in one place, `nomo_report(run, apa_tables = TRUE)`
-appends a *Manuscript tables* appendix. It holds the tables for every
-result the run has, numbered in the order the report presents them. A
-table that does not apply, such as the construct pairs of a
-one-construct model, is left out.
+To collect them in one place,
+`nomo_report(run, file = "report.html", apa_tables = TRUE)` appends a
+*Manuscript tables* appendix. It holds the tables for every result the
+run has, numbered in the order the report presents them. A table that
+does not apply, such as the construct pairs of a one-construct model, is
+left out.
 
 ## What the report contains
 
