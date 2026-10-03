@@ -36,12 +36,14 @@ selected items. Allowed values are \code{"continuous"}, \code{"ordinal"}, and
 so researchers can intentionally model otherwise ambiguous storage (for
 example, an unordered factor whose levels already encode a substantive
 order). Overrides do not reorder or relabel categories, and the supplied
-data are not modified. Ordinal and binary items are scored by the rank of
-their observed values, in numeric order or a factor's level order, so
-codes such as 0/25/50/75/100 or 1/3/5, and factor levels nobody chose,
-are analyzed as consecutive categories. Polychoric correlations model at
-most 8 categories; an ordinal item with more is refused with the
-alternatives. For example, \code{c(item1 = "ordinal", item2 = "ordinal")}.}
+data are not modified. Polychoric and mixed correlations score ordinal
+items by the rank of their observed values, in numeric order or a factor's
+level order, so codes such as 0/25/50/75/100 or 1/3/5, and factor levels
+nobody chose, are analyzed as consecutive categories. Pearson correlations
+use the values as coded (a factor's level positions). Binary items are
+coded 0/1. Polychoric correlations model at most 8 categories; an ordinal
+item with more is refused with the alternatives. For example,
+\code{c(item1 = "ordinal", item2 = "ordinal")}.}
 
 \item{missing}{Missing-data handling for correlation estimation. \code{"pairwise"}
 uses pairwise-complete observations; \code{"complete"} restricts the analysis to

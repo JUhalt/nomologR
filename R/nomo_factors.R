@@ -46,12 +46,14 @@
 #'   so researchers can intentionally model otherwise ambiguous storage (for
 #'   example, an unordered factor whose levels already encode a substantive
 #'   order). Overrides do not reorder or relabel categories, and the supplied
-#'   data are not modified. Ordinal and binary items are scored by the rank of
-#'   their observed values, in numeric order or a factor's level order, so
-#'   codes such as 0/25/50/75/100 or 1/3/5, and factor levels nobody chose,
-#'   are analyzed as consecutive categories. Polychoric correlations model at
-#'   most 8 categories; an ordinal item with more is refused with the
-#'   alternatives. For example, `c(item1 = "ordinal", item2 = "ordinal")`.
+#'   data are not modified. Polychoric and mixed correlations score ordinal
+#'   items by the rank of their observed values, in numeric order or a factor's
+#'   level order, so codes such as 0/25/50/75/100 or 1/3/5, and factor levels
+#'   nobody chose, are analyzed as consecutive categories. Pearson correlations
+#'   use the values as coded (a factor's level positions). Binary items are
+#'   coded 0/1. Polychoric correlations model at most 8 categories; an ordinal
+#'   item with more is refused with the alternatives. For example,
+#'   `c(item1 = "ordinal", item2 = "ordinal")`.
 #' @param missing Missing-data handling for correlation estimation. `"pairwise"`
 #'   uses pairwise-complete observations; `"complete"` restricts the analysis to
 #'   cases complete on all selected items.
@@ -726,10 +728,14 @@ nomo_factors_numeric_data <- function(selected, item_types) {
       return(as.numeric(x))
     }
 
+    # An ordinal item keeps its codes (a factor's level positions) here, so a
+    # Pearson correlation uses the values supplied; nomo_factors_correlation()
+    # ranks them for polychoric and mixed correlations.
     if (type == "ordinal") {
-      return(nomo_factors_rank_codes(x))
+      return(as.numeric(x))
     }
 
+    # A binary item is coded 0/1, which leaves a Pearson correlation unchanged.
     if (type == "binary") {
       return(nomo_factors_rank_codes(x) - 1)
     }
@@ -743,16 +749,24 @@ nomo_factors_numeric_data <- function(selected, item_types) {
 }
 
 
-# Ordinal and binary items are scored by the rank of their observed values, in
-# numeric order or a factor's level order (#145, factors-4). psych counts the
+# Polychoric and mixed correlations score ordinal items by the rank of their
+# observed values, in numeric order or a factor's level order, and binary items
+# are coded 0/1 for every correlation (#145, factors-4). psych counts the
 # categories of an item from its lowest to its highest code, so a 5-point item
 # coded 0/25/50/75/100, or a factor with a level nobody chose, would otherwise
 # be refused or read as having categories it does not have. Ranking keeps the
-# order and changes nothing for items coded 1, 2, 3, ...
+# order and changes nothing for items coded 1, 2, 3, ... A Pearson correlation
+# uses the values as coded, since their spacing is part of what it measures.
 nomo_factors_rank_codes <- function(x) {
   codes <- if (is.factor(x)) as.integer(x) else as.numeric(x)
   observed <- sort(unique(codes[!is.na(codes)]))
   as.numeric(match(codes, observed))
+}
+
+nomo_factors_rank_ordinal <- function(x, model_types) {
+  ordinal <- which(model_types == "ordinal")
+  x[ordinal] <- lapply(x[ordinal], nomo_factors_rank_codes)
+  x
 }
 
 
@@ -850,6 +864,9 @@ nomo_factors_correlation <- function(x, model_types, method, use) {
     "complete.obs"
   }
   nomo_factors_check_categories(x, model_types, method)
+  if (method != "pearson") {
+    x <- nomo_factors_rank_ordinal(x, model_types)
+  }
 
   result <- tryCatch(
     {

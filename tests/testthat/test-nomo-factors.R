@@ -2322,6 +2322,26 @@ test_that("ordinal and binary codes are ranked, and too many categories are name
   expect_equal(spaced$correlation_matrix, base$correlation_matrix)
   expect_equal(odd$correlation_matrix, base$correlation_matrix)
 
+  # Pearson correlations use the values as coded: unequal spacing is part of
+  # what they measure (review of #145, factors-4).
+  unequal <- as.data.frame(lapply(codes, function(v) c(1, 2, 4, 5, 6)[v]))
+  pearson <- nomo_factors(unequal, types = types, correlation = "pearson", n_iter = 10, seed = 1)
+  expect_equal(pearson$correlation_matrix, stats::cor(unequal), ignore_attr = TRUE)
+  efa <- nomo_efa(unequal, factors = 1, types = types, correlation = "pearson")
+  expect_equal(efa$correlation_matrix, stats::cor(unequal), ignore_attr = TRUE)
+  expect_false(isTRUE(all.equal(stats::cor(unequal), stats::cor(codes))))
+  # A factor's level positions are its codes for Pearson, unused levels kept.
+  gapped <- data.frame(
+    g1 = factor(c(1, 2, 4, 4, 1, 2), levels = 1:4),
+    g2 = factor(c(1, 4, 2, 4, 2, 1), levels = 1:4)
+  )
+  gapped_types <- tibble::tibble(item = c("g1", "g2"), model_type = "ordinal")
+  expect_identical(nomologR:::nomo_factors_numeric_data(gapped, gapped_types)$g1,
+                   c(1, 2, 4, 4, 1, 2))
+  expect_identical(nomologR:::nomo_factors_rank_ordinal(
+    nomologR:::nomo_factors_numeric_data(gapped, gapped_types), c("ordinal", "ordinal")
+  )$g1, c(1, 2, 3, 3, 1, 2))
+
   # A binary factor with a level nobody chose.
   set.seed(9412)
   latent <- stats::rnorm(200)
