@@ -99,3 +99,27 @@ test_that("nomo_table generic covers hypothesis and unsupported-object behavior"
     ignore.case = TRUE
   )
 })
+
+
+# The documented surface (#145) -------------------------------------------------
+#
+# The `type` values nomo_table() accepts are covered by the stability policy,
+# so ?nomo_table must list exactly what each method accepts.
+
+test_that("?nomo_table lists every type each method accepts, and no other (#145)", {
+  items <- nomo_test_rd_items(nomo_test_rd_text("nomo_table", "\\details"))
+  # A bullet names its classes before the first colon.
+  heads <- sub("}:.*$", "}", items)
+  ns <- asNamespace("nomologR")
+
+  for (method in ls(ns, pattern = "^nomo_table\\.nomo_")) {
+    cls <- sub("^nomo_table\\.", "", method)
+    item <- items[grepl(paste0("\\code{", cls, "}"), heads, fixed = TRUE)]
+    expect_identical(length(item), 1L, label = cls)
+
+    accepted <- eval(formals(get(method, envir = ns))$type)
+    documented <- regmatches(item, gregexpr('\\\\code\\{"[a-z_]+"\\}', item))[[1L]]
+    documented <- unique(gsub('^\\\\code\\{"|"\\}$', "", documented))
+    expect_setequal(documented, as.character(accepted))
+  }
+})
