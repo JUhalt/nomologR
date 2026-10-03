@@ -285,13 +285,18 @@ print.summary_nomo_factors <- function(x, ...) {
 
 # The abbreviations a factor-retention summary shows, each defined once
 # (guide point 23): MAP and KMO always, the others when their criterion was
-# requested.
+# requested. TR4 is defined only when revised MAP was requested (#145,
+# factors-7).
 nomo_factors_key <- function(status) {
   requested <- if (is.data.frame(status)) status$criterion else character()
   entries <- c(
     MAP = paste(
       "Minimum average partial criterion (Velicer). TR2, the original, averages",
-      "squared partial correlations; TR4, the revised, averages fourth powers."
+      if ("map_revised" %in% requested) {
+        "squared partial correlations; TR4, the revised, averages fourth powers."
+      } else {
+        "squared partial correlations."
+      }
     ),
     KMO = "Kaiser-Meyer-Olkin measure of sampling adequacy.",
     EKC = "Empirical Kaiser criterion.",
@@ -311,7 +316,8 @@ nomo_factors_key <- function(status) {
 #'   eigenvalues with the selected parallel-analysis reference;
 #'   `"parallel_rules"` compares PA factor counts under mean, percentile, and
 #'   Crawford rules; `"scree"` displays component and common-factor eigenvalues;
-#'   `"map"` displays original TR2 and revised TR4 MAP curves; `"evidence"`
+#'   `"map"` displays the original TR2 MAP curve, and the revised TR4 curve when
+#'   the criterion set includes revised MAP; `"evidence"`
 #'   compares available retention criteria; `"concordance"` groups related
 #'   variants into criterion families before showing support for each factor
 #'   count; and `"kmo"` displays
@@ -509,6 +515,9 @@ plot.nomo_factors <- function(x,
 
   if (type == "map") {
     d <- x$map$table
+    # Revised MAP is drawn only when the criterion set asked for it, as print()
+    # shows it (#145, factors-7).
+    revised <- nomo_factors_ran(x, "map_revised")
     long <- dplyr::bind_rows(
       tibble::tibble(
         n_factors = d$n_factors,
@@ -516,16 +525,18 @@ plot.nomo_factors <- function(x,
         value = d$map_original,
         minimum = d$minimum_original
       ),
-      tibble::tibble(
-        n_factors = d$n_factors,
-        criterion = "Revised MAP (TR4)",
-        value = d$map_revised,
-        minimum = d$minimum_revised
-      )
+      if (revised) {
+        tibble::tibble(
+          n_factors = d$n_factors,
+          criterion = "Revised MAP (TR4)",
+          value = d$map_revised,
+          minimum = d$minimum_revised
+        )
+      }
     )
     long$criterion <- factor(
       long$criterion,
-      levels = c("Original MAP (TR2)", "Revised MAP (TR4)")
+      levels = c("Original MAP (TR2)", if (revised) "Revised MAP (TR4)")
     )
 
     p <- ggplot2::ggplot(
@@ -550,18 +561,33 @@ plot.nomo_factors <- function(x,
       ) +
       ggplot2::scale_x_continuous(breaks = d$n_factors) +
       nomo_plot_labs(
-        title = "Velicer's minimum average partial (MAP) criteria",
-        subtitle = sprintf(
-          "Original TR2 minimum: %d | Revised TR4 minimum: %d",
-          x$map$n_factors_original,
-          x$map$n_factors_revised
-        ),
-        caption = paste(
-          "TR2 averages the squared partial correlations and TR4 their fourth powers.",
-          "The highlighted minimum is the count each variant suggests; smaller values",
-          "are preferred. The two have different scales, so the panels use separate",
-          "y-axes."
-        ),
+        title = if (revised) {
+          "Velicer's minimum average partial (MAP) criteria"
+        } else {
+          "Velicer's minimum average partial (MAP) criterion"
+        },
+        subtitle = if (revised) {
+          sprintf(
+            "Original TR2 minimum: %d | Revised TR4 minimum: %d",
+            x$map$n_factors_original,
+            x$map$n_factors_revised
+          )
+        } else {
+          sprintf("Original TR2 minimum: %d", x$map$n_factors_original)
+        },
+        caption = if (revised) {
+          paste(
+            "TR2 averages the squared partial correlations and TR4 their fourth powers.",
+            "The highlighted minimum is the count each variant suggests; smaller values",
+            "are preferred. The two have different scales, so the panels use separate",
+            "y-axes."
+          )
+        } else {
+          paste(
+            "TR2 averages the squared partial correlations. The highlighted minimum is",
+            "the count it suggests; smaller values are preferred."
+          )
+        },
         x = "Partialled components / candidate factor count",
         y = "MAP criterion value"
       ) +
@@ -577,19 +603,25 @@ plot.nomo_factors <- function(x,
     display <- d$method
     d$method_display <- factor(display, levels = rev(display))
 
+    # TR4 is defined only when revised MAP ran (#145, factors-7). The parts
+    # are joined with collapse, so a part left out leaves no double space.
     abbreviations <- c(
-      "MAP = minimum average partial (TR2, original; TR4, revised)",
+      if (any(d$criterion == "map_revised")) {
+        "MAP = minimum average partial (TR2, original; TR4, revised)"
+      } else {
+        "MAP = minimum average partial (TR2, original)"
+      },
       if (any(d$criterion == "nest")) "NEST = next eigenvalue sufficiency test",
       if (any(d$criterion == "hull")) "CAF = common part accounted for"
     )
-    evidence_caption <- paste(
+    evidence_caption <- paste(c(
       "Parallel analysis is primary; the other methods are complementary or extended",
       "evidence.",
       if (any(d$role == "legacy")) "Legacy criteria are context only.",
       "Related variants are grouped by family in concordance; methods are not",
       "independent votes.",
       paste0(paste(abbreviations, collapse = "; "), ".")
-    )
+    ), collapse = " ")
 
     p <- ggplot2::ggplot(
       d,
