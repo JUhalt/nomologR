@@ -346,6 +346,14 @@ test_that("guided runs say what they found, and group repeated requests (#89)", 
   expect_snapshot(print(complete))
   expect_snapshot(print(summary(complete)))
 
+  # The closing hint is a call that runs as written: nomo_report() has no
+  # default path, so the hint names `file`.
+  expect_match(
+    paste(utils::capture.output(print(complete)), collapse = " "),
+    "nomo_report(x, file = \"report.html\") archives the evidence.",
+    fixed = TRUE
+  )
+
   # Evidence that is unavailable is described as such rather than left out.
   thin <- complete
   thin$results$factors$Agency$parallel$n_factors <- NULL
