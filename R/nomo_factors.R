@@ -1519,7 +1519,8 @@ nomo_factors_log <- function(item_types,
       ),
       recommendation = paste(
         "Use KMO as supporting evidence about shared-factor structure and",
-        "inspect item-level MSA values; do not use it to choose factor count."
+        "inspect each item's measure of sampling adequacy; do not use it to",
+        "choose the factor count."
       )
     )
   } else {
@@ -1580,7 +1581,7 @@ nomo_factors_log <- function(item_types,
     metric = "parallel_analysis",
     value = pa$n_factors,
     reference = sprintf(
-      "Common-factor PA using the selected %s rule; the %s also retained as sensitivity evidence",
+      "Common-factor parallel analysis using the selected %s rule; the %s also retained as sensitivity evidence",
       pa$rule,
       nomo_factors_percentile(pa$quantile)
     ),
@@ -1604,20 +1605,22 @@ nomo_factors_log <- function(item_types,
     object = "retention",
     metric = "parallel_rule_sensitivity",
     value = pa_unique,
-    reference = "Agreement across PA decision rules strengthens rule robustness",
+    reference = "Agreement across parallel-analysis decision rules strengthens rule robustness",
     severity = if (pa_unique == 1L) "info" else "review",
     observation = paste0(
       "The parallel-analysis rules suggest ",
       nomo_present_or(
-        sprintf("%d (%s)", pa$sensitivity$n_factors, pa$sensitivity$rule), "and"
+        sprintf("%d (%s)", pa$sensitivity$n_factors,
+                sub("^crawford$", "Crawford", pa$sensitivity$rule)),
+        "and"
       ),
       "."
     ),
     recommendation = if (pa_unique == 1L) {
-      "The selected PA count is insensitive to the three reported decision rules."
+      "The selected parallel-analysis count is insensitive to the three reported decision rules."
     } else {
       paste(
-        "Treat the PA count as rule-sensitive and compare the competing",
+        "Treat the parallel-analysis count as rule-sensitive and compare the competing",
         "factor solutions rather than hiding the analytical choice."
       )
     }

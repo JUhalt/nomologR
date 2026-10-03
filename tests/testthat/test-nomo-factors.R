@@ -2639,6 +2639,8 @@ test_that("the summary lists the decision log's flags, each with its reference (
   expect_match(summarized, "^  - Concern: Overall KMO = ", all = FALSE)
   # The synthesis is not repeated as a flag.
   expect_false(any(grepl("Concern: All|Review: All|Review: Parallel analysis suggests", summarized)))
+  # Every abbreviation the summary shows is in its key.
+  expect_false(any(grepl("\\bPA\\b|\\bMSA\\b", summarized)))
 
   # A review-level KMO names the review reference.
   review <- nomo_factors(noise, n_iter = 10, seed = 9491)
@@ -2646,7 +2648,7 @@ test_that("the summary lists the decision log's flags, each with its reference (
   expect_match(review$decision_log$observation[review$decision_log$metric == "kmo"],
                "below the .60 review reference.", fixed = TRUE)
   expect_match(review$decision_log$observation[review$decision_log$metric == "parallel_rule_sensitivity"],
-               "^The parallel-analysis rules suggest [0-9]+ \\(percentile\\), [0-9]+ \\(mean\\), and [0-9]+ \\(crawford\\)\\.$")
+               "^The parallel-analysis rules suggest [0-9]+ \\(percentile\\), [0-9]+ \\(mean\\), and [0-9]+ \\(Crawford\\)\\.$")
 
   # An object without a decision log has no flags.
   expect_identical(nrow(nomologR:::nomo_factors_flag_rows(NULL)), 0L)
