@@ -384,6 +384,7 @@ nomo_report_content_review <- function(x) {
 nomo_report_effort <- function(screen) {
   e <- screen$effort
   limit <- screen$effort_settings$long_string_limit
+  long_applied <- !isFALSE(screen$effort_settings$long_string_rule_applied)
   columns <- c(
     "Long-string" = "long_string",
     "Long-string, within-scale mean" = "long_string_mean",
@@ -404,10 +405,19 @@ nomo_report_effort <- function(screen) {
       v <- finite(column)
       if (length(v)) stats::median(v) else NA_real_
     }, numeric(1), USE.NAMES = FALSE),
-    cases_flagged = c(sum(e$flag_long_string), NA, NA, NA, NA, NA,
+    # The long-string rule is not applied to a short item set, which then has
+    # no count of flagged cases, like an index with no stated rule. A screen
+    # saved before the setting existed applied the rule.
+    cases_flagged = c(if (long_applied) sum(e$flag_long_string) else NA,
+                      NA, NA, NA, NA, NA,
                       sum(e$flag_antonym), sum(e$flag_synonym)),
     rule = c(
-      sprintf("a run of %d or more, half the items (Curran, 2016)", as.integer(limit)),
+      if (long_applied) {
+        sprintf("a run of %d or more, half the items (Curran, 2016)", as.integer(limit))
+      } else {
+        sprintf("not applied: fewer than %d items",
+                as.integer(screen$effort_settings$long_string_min_items))
+      },
       "none stated", "none stated", "none stated", "none stated", "none stated",
       "a positive correlation (Curran, 2016)",
       "a negative correlation (Curran, 2016)"

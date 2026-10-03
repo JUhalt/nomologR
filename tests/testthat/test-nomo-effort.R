@@ -144,12 +144,69 @@ test_that("a within-person correlation over two points is never reported", {
 })
 
 
-test_that("even-odd consistency never returns a divergent correction", {
-  skip_on_cran()
-  out <- effort_screen()
+test_that("a respondent with two usable pairs has no antonym value (#145)", {
+  # Three pairs are selected, so the index is computed. A respondent who left
+  # one pair member unanswered has two usable pairs, and a correlation over two
+  # points is exactly +1 or -1: a flag by arithmetic.
+  set.seed(145)
+  n <- 200
+  f <- replicate(3, stats::rnorm(n))
+  noisy <- function(v) v + stats::rnorm(n, sd = .2)
+  resp <- cbind(
+    x1 = noisy(f[, 1]), x2 = noisy(-f[, 1]),
+    y1 = noisy(f[, 2]), y2 = noisy(-f[, 2]),
+    z1 = noisy(f[, 3]), z2 = noisy(-f[, 3])
+  )
+  resp[1:50, "z1"] <- NA
+
+  out <- nomologR:::nomo_effort_pairs(resp, "antonym")
+  expect_identical(nrow(out$pairs), 3L)
+  expect_true(all(is.na(out$values[1:50])))
+  expect_true(all(is.finite(out$values[51:n])))
+
+  screened <- nomo_screen(as.data.frame(resp), effort = TRUE)
+  expect_true(all(is.na(screened$effort$antonym_r[1:50])))
+  expect_false(any(screened$effort$flag_antonym[1:50]))
+})
+
+
+test_that("even-odd consistency is bounded at -1 (#145)", {
+  # Four scales of two items, so each scale's odd half is its first item and
+  # its even half its second. The within-person correlations are 1, -.2, -.4,
+  # and -1. Spearman-Brown gives 1 and -.5 for the first two. For the third it
+  # gives -1.33, a value with no meaning, and at -1 it divides by zero; both
+  # are -1, as careless::evenodd() reports them.
+  resp <- rbind(
+    c(1, 1, 2, 2, 3, 3, 4, 4),
+    c(1, 4, 2, 1, 3, 2, 4, 3),
+    c(1, 3, 2, 2, 3, 4, 4, 1),
+    c(1, 4, 2, 3, 3, 2, 4, 1)
+  )
+  colnames(resp) <- c("a1", "a2", "b1", "b2", "c1", "c2", "d1", "d2")
+  scales <- list(A = c("a1", "a2"), B = c("b1", "b2"), C = c("c1", "c2"),
+                 D = c("d1", "d2"))
+  expect_equal(nomologR:::nomo_effort_even_odd(resp, scales), c(1, -0.5, -1, -1))
+
+  # Three short scales, where the unbounded correction reached -100 and beyond.
+  set.seed(4)
+  n <- 300
+  f <- replicate(3, stats::rnorm(n))
+  cols <- list()
+  scales <- list()
+  for (k in 1:3) {
+    names_k <- paste0("s", k, "_", 1:4)
+    for (j in 1:4) {
+      cols[[names_k[j]]] <- pmin(5, pmax(1, round(3 + f[, k] + stats::rnorm(n, sd = .8))))
+    }
+    scales[[paste0("S", k)]] <- names_k
+  }
+  out <- nomo_screen(as.data.frame(cols), effort = TRUE, scales = scales)
   finite <- out$effort$even_odd[is.finite(out$effort$even_odd)]
   expect_gt(length(finite), 0L)
-  expect_true(all(abs(finite) < 100))
+  expect_true(all(finite >= -1 & finite <= 1))
+  expect_true(any(finite == -1))
+  entry <- out$decision_log[out$decision_log$metric == "even_odd", ]
+  expect_match(entry$recommendation, "bounded at -1", fixed = TRUE)
 })
 
 
@@ -187,6 +244,151 @@ test_that("the disagreement between long-string and inter-item SD is reported", 
   expect_identical(nrow(entry), 1L)
   expect_identical(entry$value[[1L]], 15)
   expect_match(entry$recommendation, "best possible score", fixed = TRUE)
+})
+
+
+# The long-string rule on short item sets (#145) -------------------------------
+
+# One factor, five-point items, attentive respondents, and five who gave the
+# same answer throughout.
+short_effort_data <- function(n_items, n = 300) {
+  set.seed(145)
+  f <- stats::rnorm(n)
+  dat <- as.data.frame(lapply(seq_len(n_items), function(i) {
+    pmin(5, pmax(1, round(3 + f + stats::rnorm(n, sd = .8))))
+  }))
+  names(dat) <- paste0("i", seq_len(n_items))
+  dat[1:5, ] <- 4
+  dat
+}
+
+
+test_that("long-string is reported but not flagged on a short item set", {
+  dat <- short_effort_data(6)
+  out <- nomo_screen(dat, effort = TRUE)
+  e <- out$effort
+
+  # The run length is still there, including for the straight-liners.
+  expect_true(all(e$long_string[1:5] == 6))
+  reached <- sum(e$long_string >= 3)
+  expect_gt(reached, 50L)
+
+  # Half of six items is a run of three, which many attentive respondents
+  # give, so nobody is flagged on it.
+  expect_false(any(e$flag_long_string))
+  expect_false(any(grepl("long_string", e$flagged_by, fixed = TRUE)))
+  expect_identical(out$effort_settings$long_string_limit, 3)
+  expect_identical(out$effort_settings$long_string_min_items, 20L)
+  expect_false(out$effort_settings$long_string_rule_applied)
+
+  # The log states the item count and the share that reached half the length.
+  entry <- out$decision_log[out$decision_log$metric == "long_string", ]
+  expect_identical(nrow(entry), 1L)
+  expect_identical(entry$severity, "info")
+  expect_true(is.na(entry$value))
+  expect_match(entry$observation, "With 6 items screened, fewer than the 20", fixed = TRUE)
+  expect_match(entry$observation, "no case was flagged on long-string", fixed = TRUE)
+  expect_match(
+    entry$observation,
+    sprintf("%d of 300 cases (%.1f%%) gave the same response to at least 3 consecutive items",
+            reached, 100 * reached / 300),
+    fixed = TRUE
+  )
+  expect_match(entry$reference, "flagged here only with 20 or more items", fixed = TRUE)
+  expect_match(entry$recommendation, "long_string_min_items", fixed = TRUE)
+
+  # With no long-string flag there is no disagreement to report, and the
+  # printed count does not read as a finding about the sample.
+  expect_false("index_disagreement" %in% out$decision_log$metric)
+  printed <- paste(utils::capture.output(print(out)), collapse = " ")
+  expect_match(printed, "long-string not applied", fixed = TRUE)
+
+  # One and two items made the rule a tautology: every case reached a run of 1.
+  for (k in 1:2) {
+    tiny <- nomo_screen(short_effort_data(k), effort = TRUE)
+    expect_false(any(tiny$effort$flag_long_string))
+    expect_identical(sum(tiny$effort$n_flags), 0L)
+    tiny_entry <- tiny$decision_log[tiny$decision_log$metric == "long_string", ]
+    expect_match(
+      tiny_entry$observation,
+      sprintf("With %d item%s screened", k, if (k == 1L) "" else "s"),
+      fixed = TRUE
+    )
+    expect_match(tiny_entry$observation, "at least 1 consecutive item,", fixed = TRUE)
+  }
+})
+
+
+test_that("long-string is flagged from the minimum item count in the guidance", {
+  # Twenty items is the default minimum, so the rule applies.
+  out <- nomo_screen(short_effort_data(20), effort = TRUE)
+  expect_true(out$effort_settings$long_string_rule_applied)
+  expect_true(all(out$effort$flag_long_string[1:5]))
+  flagged <- sum(out$effort$flag_long_string)
+  entry <- out$decision_log[out$decision_log$metric == "long_string", ]
+  expect_identical(entry$value, as.numeric(flagged))
+  expect_identical(entry$severity, "review")
+  expect_match(
+    entry$observation,
+    sprintf("%d of 300 cases (%.1f%%) gave the same response to at least 10 consecutive items, half of the 20 items screened.",
+            flagged, 100 * flagged / 300),
+    fixed = TRUE
+  )
+  expect_match(paste(utils::capture.output(print(out)), collapse = " "),
+               sprintf("long-string %d", flagged), fixed = TRUE)
+
+  # Nineteen is one short.
+  expect_false(nomo_screen(short_effort_data(19), effort = TRUE)$effort_settings$long_string_rule_applied)
+
+  # The minimum is a guidance setting, so a researcher can move it.
+  lower <- nomo_defaults()
+  lower$long_string_min_items <- 6
+  moved <- nomo_screen(short_effort_data(6), effort = TRUE, guidance = lower)
+  expect_true(moved$effort_settings$long_string_rule_applied)
+  expect_identical(moved$effort_settings$long_string_min_items, 6L)
+  expect_true(all(moved$effort$flag_long_string[1:5]))
+  expect_identical(sum(moved$effort$flag_long_string), sum(moved$effort$long_string >= 3))
+
+  # A guidance list without the setting gets the default; a setting that is
+  # not a number of items is refused, never replaced silently.
+  bare <- nomo_defaults()
+  bare$long_string_min_items <- NULL
+  expect_identical(
+    nomo_screen(short_effort_data(6), effort = TRUE, guidance = bare)$effort_settings$long_string_min_items,
+    20L
+  )
+  for (bad in list("ten", c(10, 20), NA_real_, 0, 10.5, Inf)) {
+    wrong <- nomo_defaults()
+    wrong$long_string_min_items <- bad
+    expect_error(nomo_screen(short_effort_data(6), effort = TRUE, guidance = wrong),
+                 "`guidance$long_string_min_items` must be a single whole number",
+                 fixed = TRUE)
+  }
+  # It is read only when the indices are requested.
+  expect_no_error(nomo_screen(short_effort_data(6), guidance = wrong))
+})
+
+
+test_that("the report states when the long-string rule was not applied", {
+  applied <- nomologR:::nomo_report_effort(nomo_screen(short_effort_data(20), effort = TRUE))
+  expect_match(applied$indices$rule[[1L]], "a run of 10 or more, half the items", fixed = TRUE)
+  expect_gte(applied$indices$cases_flagged[[1L]], 5L)
+
+  short <- nomo_screen(short_effort_data(6), effort = TRUE)
+  skipped <- nomologR:::nomo_report_effort(short)
+  expect_identical(skipped$indices$rule[[1L]], "not applied: fewer than 20 items")
+  expect_true(is.na(skipped$indices$cases_flagged[[1L]]))
+  expect_true(is.integer(skipped$indices$cases_flagged))
+  expect_true("long_string" %in% skipped$log$metric)
+
+  # A screen saved before the setting existed applied the rule.
+  old <- nomo_screen(short_effort_data(20), effort = TRUE)
+  old$effort_settings$long_string_rule_applied <- NULL
+  old$effort_settings$long_string_min_items <- NULL
+  expect_match(nomologR:::nomo_report_effort(old)$indices$rule[[1L]],
+               "a run of 10 or more", fixed = TRUE)
+  expect_match(paste(utils::capture.output(print(old)), collapse = " "),
+               "long-string [0-9]+")
 })
 
 
