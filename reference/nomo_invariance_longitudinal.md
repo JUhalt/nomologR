@@ -55,7 +55,13 @@ nomo_invariance_longitudinal(
 
 - ordered:
 
-  Optional names of ordered items, as in `model`.
+  Optional names of ordered items, as in `model`. Items whose columns
+  are stored as ordered factors are modeled as ordered whether or not
+  they are named here: the result's `ordered_detected` lists them, the
+  decision log lists them for review, and the rules for ordered
+  indicators in
+  [`nomo_invariance()`](https://juhalt.github.io/nomologR/reference/nomo_invariance.md)
+  apply.
 
 - levels:
 
@@ -66,7 +72,7 @@ nomo_invariance_longitudinal(
 
   Optional researcher-specified releases from
   [`nomo_partial()`](https://juhalt.github.io/nomologR/reference/nomo_partial.md),
-  naming items as in `model`.
+  naming items and factors as in `model`.
 
 - localize:
 
@@ -96,9 +102,13 @@ nomo_invariance_longitudinal(
 
 - ID.cat:
 
-  Ordered-indicator identification method passed to
+  Ordered-indicator identification passed to
   [`semTools::measEq.syntax()`](https://rdrr.io/pkg/semTools/man/measEq.syntax.html).
-  Wu-Estabrook is the default.
+  Only Wu and Estabrook's (2016) identification is supported, as
+  `"Wu.Estabrook.2016"` (the default) or a semTools alias for it
+  (`"Wu.2016"`, `"Wu.Estabrook"`, `"Wu"`): the level sequences and their
+  notes are built for it, and under semTools' other choices the levels
+  would not constrain what their names say.
 
 - parameterization:
 
@@ -158,17 +168,22 @@ releases, and score diagnostics are those of
 [`nomo_invariance()`](https://juhalt.github.io/nomologR/reference/nomo_invariance.md),
 applied across occasions instead of groups. A partial release names the
 item as in `model`, and frees that parameter across all occasions:
-`"w3 ~ 1"` releases the intercept of `w3`. For ordered items, Wu and
-Estabrook's (2016) identification is the default; `ID.cat = "millsap"`,
-with `ID.fac = "UL"`, applies Millsap and Tein's (2004) conditions,
-which Liu et al. (2017) extend to repeated measures.
+`"w3 ~ 1"` releases the intercept of `w3`. A release naming a column,
+such as `"w3_t2 ~ 1"`, is an error, as is any release that frees no
+parameter. Ordered items follow Wu and Estabrook's (2016)
+identification, the only `ID.cat` supported; Liu et al. (2017) discuss
+testing invariance over time with ordered-categorical measures. An item
+whose columns are stored as ordered factors is modeled as ordered on
+every occasion, whether or not `ordered` names it.
 
 **Latent change.** Once intercepts are invariant, fully or partially,
 the construct's mean can be compared across occasions. Under the default
 `ID.fac = "std.lv"` the first occasion's latent mean is 0 and its
 variance 1, so `latent_means` gives each later occasion's latent mean as
 a change in the first occasion's latent standard deviations, with its
-interval.
+interval. With every intercept of a factor's items released, its later
+means are fixed at 0 rather than estimated; the decision log says so,
+and they are left out.
 
 ## References
 
@@ -176,11 +191,6 @@ Liu, Y., Millsap, R. E., West, S. G., Tein, J.-Y., Tanaka, R., & Grimm,
 K. J. (2017). Testing measurement invariance in longitudinal data with
 ordered-categorical measures. *Psychological Methods, 22*(3), 486-506.
 [doi:10.1037/met0000075](https://doi.org/10.1037/met0000075)
-
-Millsap, R. E., & Tein, J.-Y. (2004). Assessing factorial invariance in
-ordered-categorical measures. *Multivariate Behavioral Research, 39*(3),
-479-515.
-[doi:10.1207/S15327906MBR3903_4](https://doi.org/10.1207/S15327906MBR3903_4)
 
 Widaman, K. F., Ferrer, E., & Conger, R. D. (2010). Factorial invariance
 within longitudinal structural equation models: Measuring the same

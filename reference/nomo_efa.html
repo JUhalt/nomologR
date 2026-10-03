@@ -118,8 +118,12 @@ Orthogonal rotations are allowed but are recorded as a researcher choice.</p></d
 <dt id="arg-fm">fm<a class="anchor" aria-label="anchor" href="#arg-fm"></a></dt>
 <dd><p>Common-factor extraction method passed to <code><a href="https://rdrr.io/pkg/psych/man/fa.html" class="external-link">psych::fa()</a></code>. The
 default is <code>"minres"</code>. Supported values are <code>"minres"</code>, <code>"uls"</code>, <code>"ols"</code>,
-<code>"wls"</code>, <code>"gls"</code>, <code>"pa"</code>, <code>"ml"</code>, <code>"minchi"</code>, <code>"minrank"</code>, <code>"alpha"</code>,
-and <code>"old.min"</code>.</p></dd>
+<code>"wls"</code>, <code>"gls"</code>, <code>"pa"</code>, <code>"ml"</code>, <code>"minchi"</code>, <code>"alpha"</code>, and
+<code>"old.min"</code>. <code>"alpha"</code> needs at least two factors, because
+<code><a href="https://rdrr.io/pkg/psych/man/fa.html" class="external-link">psych::fa()</a></code> cannot fit a one-factor alpha solution. For <code>"minchi"</code>,
+the number of cases observed for each item pair is passed to
+<code><a href="https://rdrr.io/pkg/psych/man/fa.html" class="external-link">psych::fa()</a></code>, which weights the residuals by it. <code>"minrank"</code> is not
+supported, because <code><a href="https://rdrr.io/pkg/psych/man/fa.html" class="external-link">psych::fa()</a></code> needs the <code>Rcsdp</code> package for it.</p></dd>
 
 
 <dt id="arg-correlation">correlation<a class="anchor" aria-label="anchor" href="#arg-correlation"></a></dt>
@@ -158,13 +162,21 @@ used explicitly and the intervention is recorded.</p></dd>
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>An object of class <code>nomo_efa</code>. The fields to read are:</p><ul><li><p><code>items</code>, <code>n_factors</code>, and <code>factor_source</code>, which records whether the
 count was the researcher's or taken from a <code>nomo_factors</code> result.</p></li>
+<li><p><code>n_cases</code>: the number of rows analyzed (every row under
+<code>missing = "pairwise"</code>, including rows with no item data; the complete
+rows under <code>missing = "complete"</code>).</p></li>
+<li><p><code>min_pairwise_n</code>: the smallest number of cases observed jointly on any
+item pair, the effective sample size under pairwise deletion. It equals
+<code>n_cases</code> when no item value is missing or <code>missing = "complete"</code>.</p></li>
 <li><p><code>correlation_method</code> and <code>correlation_matrix</code>: the correlations analyzed.</p></li>
 <li><p><code>pattern_matrix</code>, <code>structure_matrix</code>, and <code>factor_correlations</code>.</p></li>
 <li><p><code>communalities</code>, <code>uniquenesses</code>, and <code>complexity</code>.</p></li>
 <li><p><code>item_summary</code>: one row per item, with its primary and secondary
 loadings, communality, flags, and the explanation of any flag.</p></li>
 <li><p><code>residual_matrix</code>, <code>residual_pairs</code>, and <code>rmsr</code>: local misfit.</p></li>
-<li><p><code>sample_adequacy</code>: sample size, KMO, and Bartlett's test.</p></li>
+<li><p><code>sample_adequacy</code>: <code>n_cases</code>, <code>min_pairwise_n</code>, <code>n_items</code>,
+<code>cases_per_item</code> (<code>min_pairwise_n</code> divided by <code>n_items</code>), <code>kmo</code>, and
+<code>bartlett</code>.</p></li>
 <li><p><code>decision_log</code>.</p></li>
 </ul><p>Other fields record the call, the settings used, and intermediate engine
 results. They may change between releases and are not part of the stable
@@ -206,7 +218,8 @@ practice. <em>Journal of Black Psychology, 44</em>(3), 219-246.
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">efa</span> <span class="op">&lt;-</span> <span class="fu">nomo_efa</span><span class="op">(</span><span class="va">nomo_demo_continuous</span>, factors <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">efa</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;nomo_efa&gt; Exploratory factor analysis</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Cases: 500 | Items: 10 | Factors: 2 (researcher specified)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Cases: 500 (minimum pairwise N: 473) | Items: 10</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Factors: 2 (researcher specified)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Correlation: pearson | Extraction: minres | Rotation: oblimin</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Off-diagonal RMSR: 0.018 | Flags: 2 review, 1 concern</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> No items were automatically deleted or refit.</span>
@@ -230,7 +243,8 @@ practice. <em>Journal of Black Psychology, 44</em>(3), 219-246.
 <span class="r-in"><span><span class="va">efa_from_evidence</span> <span class="op">&lt;-</span> <span class="fu">nomo_efa</span><span class="op">(</span><span class="va">nomo_demo_continuous</span>, factors <span class="op">=</span> <span class="va">fac</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">efa_from_evidence</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;nomo_efa summary&gt; Exploratory factor analysis</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Cases: 500 | Items: 10 | Factors: 2 (from nomo_factors())</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Cases: 500 (minimum pairwise N: 473) | Items: 10</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Factors: 2 (from nomo_factors())</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Correlation: pearson | Extraction: minres | Rotation: oblimin</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Supporting adequacy: KMO 0.874</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>

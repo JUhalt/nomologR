@@ -105,7 +105,7 @@ default.
   [`nomo_missing()`](https://juhalt.github.io/nomologR/reference/nomo_missing.md).
 
 - `nomo_hierarchical`: `"indices"` (default), `"subscales"`,
-  `"loadings"`, `"notes"`, `"decision_log"`; see
+  `"factors"`, `"loadings"`, `"notes"`, `"decision_log"`; see
   [`nomo_hierarchical()`](https://juhalt.github.io/nomologR/reference/nomo_hierarchical.md).
 
 - `nomo_run`: `"stages"` (default), `"requests"`, `"decisions"`,

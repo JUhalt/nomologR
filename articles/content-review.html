@@ -243,13 +243,17 @@ seen.</p>
 <span><span class="va">walk</span><span class="op">[</span><span class="va">reversed</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">6L</span> <span class="op">-</span> <span class="va">walk</span><span class="op">[</span><span class="va">reversed</span><span class="op">]</span></span></code></pre></div>
 <p>The responses are now recoded, so the run should not treat any item
 as still needing it. <code>reverse = character(0)</code> says so, in
-place of the handoff’s keying:</p>
+place of the reverse-keyed items the handoff declared. It replaces only
+that part of the handoff’s keying: the response scale still comes from
+the handoff, and the run’s decision log records the change.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">run</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_run.html">nomo_run</a></span><span class="op">(</span></span>
 <span>  <span class="va">walk</span>,</span>
 <span>  scales <span class="op">=</span> <span class="va">handoff</span>,</span>
-<span>  settings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>screen <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>reverse <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>, scale_range <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">5</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span>  settings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>screen <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>reverse <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
+<span><span class="va">run</span><span class="op">$</span><span class="va">decision_log</span><span class="op">$</span><span class="va">observation</span><span class="op">[</span><span class="va">run</span><span class="op">$</span><span class="va">decision_log</span><span class="op">$</span><span class="va">id</span> <span class="op">==</span> <span class="st">"keying"</span><span class="op">]</span></span>
+<span><span class="co">#&gt; [1] "`settings$screen$reverse` (none) was used in place of the reverse-keyed item(s) the content-review handoff declared (EF2, TF2)."</span></span>
 <span><span class="va">ef</span> <span class="op">&lt;-</span> <span class="va">run</span><span class="op">$</span><span class="va">results</span><span class="op">$</span><span class="va">screen</span><span class="op">$</span><span class="va">EF</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">ef</span><span class="op">)</span></span>
 <span><span class="co">#&gt; &lt;nomo_screen summary&gt; Item and data audit</span></span>

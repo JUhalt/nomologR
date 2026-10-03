@@ -3,13 +3,19 @@
 such as a scale mean or sum, so that nomo_network() can model the
 composite as a single-indicator latent variable. The composite's error
 variance is fixed at \((1 - \rho)\sigma^2\), where \(\rho\) is its
-reliability and \(\sigma^2\) its observed variance, so the relationships
-it enters are corrected for its unreliability."><meta property="og:description" content="nomo_single_indicator() records the reliability of an observed composite,
+reliability and \(\sigma^2\) its variance as the model analyzes it, so the
+relationships it enters are corrected for its unreliability. The variance
+is computed on the cases the model analyzes (the complete cases, under
+listwise deletion) and with the estimator's denominator, so the fitted
+model's reliability for the composite is the one supplied."><meta property="og:description" content="nomo_single_indicator() records the reliability of an observed composite,
 such as a scale mean or sum, so that nomo_network() can model the
 composite as a single-indicator latent variable. The composite's error
 variance is fixed at \((1 - \rho)\sigma^2\), where \(\rho\) is its
-reliability and \(\sigma^2\) its observed variance, so the relationships
-it enters are corrected for its unreliability."></head><body>
+reliability and \(\sigma^2\) its variance as the model analyzes it, so the
+relationships it enters are corrected for its unreliability. The variance
+is computed on the cases the model analyzes (the complete cases, under
+listwise deletion) and with the estimator's denominator, so the fitted
+model's reliability for the composite is the one supplied."></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -67,8 +73,11 @@ it enters are corrected for its unreliability."></head><body>
 such as a scale mean or sum, so that <code><a href="nomo_network.html">nomo_network()</a></code> can model the
 composite as a single-indicator latent variable. The composite's error
 variance is fixed at \((1 - \rho)\sigma^2\), where \(\rho\) is its
-reliability and \(\sigma^2\) its observed variance, so the relationships
-it enters are corrected for its unreliability.</p>
+reliability and \(\sigma^2\) its variance as the model analyzes it, so the
+relationships it enters are corrected for its unreliability. The variance
+is computed on the cases the model analyzes (the complete cases, under
+listwise deletion) and with the estimator's denominator, so the fitted
+model's reliability for the composite is the one supplied.</p>
     </div>
 
     <div class="section level2">

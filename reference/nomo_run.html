@@ -132,9 +132,19 @@ recomputing completed stages.</p>
 and even-odd consistency cannot be computed within one scale. So they are
 computed once, over every item in the run with the run's scales, and never
 inside the per-scale item audits. <code>reverse</code>, <code>scale_range</code>,
-<code>pair_magnitude</code>, and <code>scales</code> may be given alongside <code>effort</code>. When the
-scales came from a <code>contentvalidR</code> handoff that declares keying, its
-keying is used unless <code>reverse</code> or <code>scale_range</code> is given here.</p>
+<code>pair_magnitude</code>, and <code>scales</code> may be given alongside <code>effort</code>. <code>reverse</code>
+and <code>scale_range</code> also reach the per-scale item audits, with or without
+<code>effort</code>, and <code>reverse</code> must name items in the run's scales. When the
+scales came from a <code>contentvalidR</code> handoff, each of <code>reverse</code> and
+<code>scale_range</code> is taken from its declared keying unless given here, as in
+<code><a href="nomo_screen.html">nomo_screen()</a></code>; giving one replaces only that one. The decision log
+records a declared value replaced, or a response scale the handoff did not
+record supplied here.</p>
+<p>The invariance and network stages refit the measurement model with the
+CFA stage's <code>ordered</code>, <code>estimator</code>, and <code>missing</code> from <code>settings$cfa</code>,
+unless <code>settings$invariance</code> or <code>settings$network</code> names its own (<code>NULL</code>
+for the default). The decision log records what was inherited and any
+value that differs from the CFA's.</p>
 <p>Two further requests attach evidence to the measurement model:</p><ul><li><p><code>list(scores = list(method = "sum"))</code> scores it with <code><a href="nomo_scores.html">nomo_scores()</a></code>,
 using a method the researcher names; nomologR does not choose one.</p></li>
 <li><p><code>list(missing = list())</code> compares missing-data strategies with
@@ -160,8 +170,15 @@ provenance are reused.</p></dd>
 example <code>results$screen$Agency</code> is a <code>nomo_screen</code> object.</p></li>
 <li><p><code>stage_status</code>: one row per stage.</p></li>
 <li><p><code>decision_requests</code>: the decisions the run is waiting for.</p></li>
-<li><p><code>decision_log</code>: the workflow's decisions, with their rationales and
-sources.</p></li>
+<li><p><code>decision_log</code>: the workflow's own log, one row per design choice,
+decision, or recorded event, with the columns <code>id</code>, <code>stage</code>, <code>scope</code>,
+<code>observation</code>, <code>reason</code>, <code>options</code>, <code>consequence</code>, <code>decision</code>,
+<code>rationale</code>, and <code>source</code>. <code>source</code> is <code>"researcher_input"</code> (given in
+the call, such as the scales or a setting), <code>"researcher_decision"</code>
+(a decision at a pause, or a revision), <code>"content_review"</code> (from a
+<code>contentvalidR</code> handoff), or <code>"pipeline"</code> (recorded by the workflow).
+These columns differ from those of the components' decision logs, which
+<code>nomo_table(x, "component_log")</code> returns with their own columns.</p></li>
 <li><p><code>scales</code>, <code>mode</code>, <code>sample_design</code>, <code>sample_n</code>, <code>decisions</code>, and
 <code>settings</code>.</p></li>
 </ul><p><code><a href="nomo_table.html">nomo_table()</a></code> returns the run's tables, including the component recipe,

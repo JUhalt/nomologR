@@ -113,10 +113,25 @@ Reise, and Haviland (2016).</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A <code>nomo_hierarchical</code> object with the detected <code>structure</code>, the
-<code>general</code> factor, the <code>groups</code> and their items, an <code>indices</code> table, a
-<code>subscales</code> table, an item-level <code>loadings</code> table, identification and
-estimand notes, and a <code>decision_log</code>.</p>
+    <p>A <code>nomo_hierarchical</code> object. The fields to read are:</p><ul><li><p><code>structure</code>: <code>"bifactor"</code> or <code>"higher_order"</code>, as detected.</p></li>
+<li><p><code>general</code> and <code>groups</code>: the general (or second-order) factor, and each
+group factor with its items.</p></li>
+<li><p><code>estimand</code>: <code>"observed_composite"</code> with continuous indicators and
+<code>"latent_response"</code> with ordered ones (see <strong>Estimands</strong>).</p></li>
+<li><p><code>indices</code>: omega total, omega hierarchical, the share of omega total
+that is general, ECV, and PUC, each with its estimand and
+interpretation.</p></li>
+<li><p><code>subscales</code>: omega subscale and omega hierarchical subscale for each
+group factor.</p></li>
+<li><p><code>factors</code>: for the general factor and each group factor, factor
+determinacy, its square, the minimum correlation between competing sets
+of factor scores, and construct replicability H (see <strong>Factor scores</strong>).</p></li>
+<li><p><code>loadings</code>: each item's standardized general and group loadings,
+communality, and share of common variance that is general.</p></li>
+<li><p><code>notes</code> and <code>decision_log</code>.</p></li>
+</ul><p>Other fields record the call, the settings used, and the fitted model.
+They may change between releases and are not part of the stable interface
+(see <code><a href="nomologR-package.html">?nomologR</a></code>).</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -136,8 +151,10 @@ unit-weighted composite that a set of sources explains. With continuous
 indicators the composite is the observed sum score. With ordered indicators
 the indices describe the <em>latent-response</em> composite, an upper bound on the
 reliability of the observed ordinal sum score; the observed ordinal-scale
-version is not provided. ECV and PUC describe the item set and do not depend
-on the denominator.</p>
+version is not provided. They are computed on the latent responses'
+correlation scale, so they are the same whether the model was fitted with
+lavaan's delta or theta parameterization. ECV and PUC describe the item set
+and do not depend on the denominator.</p>
 <p><strong>No verdicts.</strong> The indices are reported with plain-language
 interpretation, but no value is treated as a pass/fail threshold. Reise
 (2012) notes that no benchmark value of ECV establishes when a general factor

@@ -881,35 +881,37 @@ it.</p>
 <span><span class="co">## </span></span>
 <span><span class="co">## Reliability across occasions</span></span>
 <span><span class="co">##   Composite    n  ICC(A,1) [95% CI]  Koo &amp; Li   SEM   SDC</span></span>
-<span><span class="co">##   Agency     150  0.84 [0.75, 0.89]  good      0.47  1.31</span></span>
+<span><span class="co">##   Agency     150  0.84 [0.75, 0.89]  good      0.45  1.25</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Consistency and change</span></span>
 <span><span class="co">##   Composite  ICC(C,1) [95% CI]  Mean change [95% CI]    SD</span></span>
 <span><span class="co">##   Agency     0.85 [0.80, 0.89]  +0.24 [0.13, 0.34]    1.17</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Reliable change, first to last occasion</span></span>
-<span><span class="co">##   - Agency: 8 people up, 0 down, 142 within measurement error.</span></span>
+<span><span class="co">##   - Agency: 10 people up, 1 down, 139 within measurement error.</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Flagged</span></span>
 <span><span class="co">##   - review: `Agency` changed by 0.24 on average from `agency_t1` to</span></span>
 <span><span class="co">##     `agency_t2`, 95% CI [0.13, 0.34]. Scores shifted systematically, as</span></span>
 <span><span class="co">##     practice or real change would make them. ICC(A,1) counts the shift as</span></span>
-<span><span class="co">##     disagreement and ICC(C,1) does not; ICC(C,1) is 0.85 here.</span></span>
+<span><span class="co">##     disagreement and ICC(C,1) does not; ICC(C,1) is 0.85 here. The SEM leaves</span></span>
+<span><span class="co">##     the shift out, so the shift counts toward each person's change when</span></span>
+<span><span class="co">##     reliable change is classified.</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## ICC(A,1): two-way mixed effects, absolute agreement, single measurement (Koo &amp;</span></span>
-<span><span class="co">## Li, 2016). SEM: standard error of measurement. SDC: smallest detectable</span></span>
-<span><span class="co">## change, 1.96 x sqrt(2) x SEM (Weir, 2005). Reference ranges describe the</span></span>
-<span><span class="co">## interval; they are not a pass or a fail.</span></span></code></pre>
+<span><span class="co">## Li, 2016). SEM: standard error of measurement, sqrt(MS error). SDC: smallest</span></span>
+<span><span class="co">## detectable change, 1.96 x sqrt(2) x SEM (Weir, 2005). Reference ranges</span></span>
+<span><span class="co">## describe the interval; they are not a pass or a fail.</span></span></code></pre>
 <p>These scores were simulated to rise by .30 between occasions, and in
 this sample they rose by 0.24. That rise is why ICC(A,1) is below
 ICC(C,1), and the summary flags it.</p>
 <p>Koo and Li read the reliability range from the interval rather than
 the estimate: poor below .50, moderate to .75, good to .90, and
-excellent above. The standard error of measurement, SD × √(1 − ICC),
-gives the smallest detectable change, 1.96 × √2 × SEM (Weir, 2005). A
-person whose score changed by more than that changed reliably, in
-Jacobson and Truax’s (1991) sense, which is not the same as
-meaningfully.</p>
+excellent above. The standard error of measurement, the square root of
+the residual mean square, leaves that rise out and gives the smallest
+detectable change, 1.96 × √2 × SEM (Weir, 2005). A person whose score
+changed by more than that changed reliably, in Jacobson and Truax’s
+(1991) sense, which is not the same as meaningfully.</p>
 </div>
 <div class="section level2">
 <h2 id="method-variance-from-a-marker-variable">Method variance from a marker variable<a class="anchor" aria-label="anchor" href="#method-variance-from-a-marker-variable"></a>

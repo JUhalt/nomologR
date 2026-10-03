@@ -62,8 +62,15 @@ nomo_efa(
   Common-factor extraction method passed to
   [`psych::fa()`](https://rdrr.io/pkg/psych/man/fa.html). The default is
   `"minres"`. Supported values are `"minres"`, `"uls"`, `"ols"`,
-  `"wls"`, `"gls"`, `"pa"`, `"ml"`, `"minchi"`, `"minrank"`, `"alpha"`,
-  and `"old.min"`.
+  `"wls"`, `"gls"`, `"pa"`, `"ml"`, `"minchi"`, `"alpha"`, and
+  `"old.min"`. `"alpha"` needs at least two factors, because
+  [`psych::fa()`](https://rdrr.io/pkg/psych/man/fa.html) cannot fit a
+  one-factor alpha solution. For `"minchi"`, the number of cases
+  observed for each item pair is passed to
+  [`psych::fa()`](https://rdrr.io/pkg/psych/man/fa.html), which weights
+  the residuals by it. `"minrank"` is not supported, because
+  [`psych::fa()`](https://rdrr.io/pkg/psych/man/fa.html) needs the
+  `Rcsdp` package for it.
 
 - correlation:
 
@@ -107,6 +114,15 @@ An object of class `nomo_efa`. The fields to read are:
 - `items`, `n_factors`, and `factor_source`, which records whether the
   count was the researcher's or taken from a `nomo_factors` result.
 
+- `n_cases`: the number of rows analyzed (every row under
+  `missing = "pairwise"`, including rows with no item data; the complete
+  rows under `missing = "complete"`).
+
+- `min_pairwise_n`: the smallest number of cases observed jointly on any
+  item pair, the effective sample size under pairwise deletion. It
+  equals `n_cases` when no item value is missing or
+  `missing = "complete"`.
+
 - `correlation_method` and `correlation_matrix`: the correlations
   analyzed.
 
@@ -119,7 +135,9 @@ An object of class `nomo_efa`. The fields to read are:
 
 - `residual_matrix`, `residual_pairs`, and `rmsr`: local misfit.
 
-- `sample_adequacy`: sample size, KMO, and Bartlett's test.
+- `sample_adequacy`: `n_cases`, `min_pairwise_n`, `n_items`,
+  `cases_per_item` (`min_pairwise_n` divided by `n_items`), `kmo`, and
+  `bartlett`.
 
 - `decision_log`.
 
@@ -172,7 +190,8 @@ practice. *Journal of Black Psychology, 44*(3), 219-246.
 efa <- nomo_efa(nomo_demo_continuous, factors = 2)
 efa
 #> <nomo_efa> Exploratory factor analysis
-#> Cases: 500 | Items: 10 | Factors: 2 (researcher specified)
+#> Cases: 500 (minimum pairwise N: 473) | Items: 10
+#> Factors: 2 (researcher specified)
 #> Correlation: pearson | Extraction: minres | Rotation: oblimin
 #> Off-diagonal RMSR: 0.018 | Flags: 2 review, 1 concern
 #> No items were automatically deleted or refit.
@@ -196,7 +215,8 @@ fac <- nomo_factors(nomo_demo_continuous, n_iter = 20, seed = 2026)
 efa_from_evidence <- nomo_efa(nomo_demo_continuous, factors = fac)
 summary(efa_from_evidence)
 #> <nomo_efa summary> Exploratory factor analysis
-#> Cases: 500 | Items: 10 | Factors: 2 (from nomo_factors())
+#> Cases: 500 (minimum pairwise N: 473) | Items: 10
+#> Factors: 2 (from nomo_factors())
 #> Correlation: pearson | Extraction: minres | Rotation: oblimin
 #> Supporting adequacy: KMO 0.874
 #> 

@@ -45,14 +45,15 @@ nomo_validity(
 
 - htmt_missing:
 
-  Missing-data option passed to
+  Missing-data handling for the correlations behind HTMT and HTMT2,
+  passed to
   [`semTools::htmt()`](https://rdrr.io/pkg/semTools/man/htmt.html). The
-  default `"default"` delegates the unrestricted-correlation
-  missing-data handling to
-  [`lavaan::lavCor()`](https://rdrr.io/pkg/lavaan/man/lavCor.html)
-  rather than silently imposing listwise deletion. Other supported
-  values are `"listwise"`, `"pairwise"`, `"direct"`, `"ml"`, and
-  `"fiml"`.
+  default, `"default"`, follows the fitted model, so HTMT rests on the
+  same cases as the CFA: `"fiml"` when the CFA used full-information
+  maximum likelihood, `"pairwise"` when it used pairwise deletion, and
+  `"listwise"` otherwise. Other supported values are `"listwise"`,
+  `"pairwise"`, `"direct"`, `"ml"`, and `"fiml"`. The handling used and
+  the number of cases appear in `htmt_status` and the decision log.
 
 - fornell_larcker:
 
@@ -72,7 +73,9 @@ nomo_validity(
 A `nomo_validity` object. The fields to read are:
 
 - `ave`: average variance extracted per construct, as convergent
-  evidence.
+  evidence. AVE is not defined for a factor with a cross-loaded
+  indicator; its row has an `NA` estimate and the attention
+  `"unavailable"`.
 
 - `latent_correlations`: construct correlations with intervals.
 
@@ -82,6 +85,10 @@ A `nomo_validity` object. The fields to read are:
   interpretation.
 
 - `htmt_status`: which HTMT variants were computed, and why any was not.
+  For a computed variant, `missing` is the missing-data handling used
+  and `n` the number of cases: the complete cases under listwise
+  deletion, the smallest pairwise count under pairwise deletion, and
+  every case with an indicator observed otherwise.
 
 - `fornell_larcker_pairs`: the historical comparison, when requested.
 
@@ -167,19 +174,20 @@ summary(val)
 #> and HTMT-family statistics address construct separation. These are
 #> complementary questions, not interchangeable pass/fail tests.
 val$decision_log
-#> # A tibble: 11 × 10
-#>    stage    object   metric  value reference severity observation recommendation
-#>    <chr>    <chr>    <chr>   <dbl> <chr>     <chr>    <chr>       <chr>         
-#>  1 validity measure… evide… NA     Fornell … info     Convergent… Interpret num…
-#>  2 validity x2       stand…  0.424 configur… review   Absolute s… Inspect item …
-#>  3 validity visual   AVE     0.371 configur… review   AVE is bel… Inspect stand…
-#>  4 validity textual  AVE     0.721 configur… info     AVE is at … Carry AVE for…
-#>  5 validity speed    AVE     0.424 configur… review   AVE is bel… Inspect stand…
-#>  6 validity textual… HTMT2   0.280 configur… info     HTMT2 does… Interpret thi…
-#>  7 validity visual … HTMT2   0.387 configur… info     HTMT2 does… Interpret thi…
-#>  8 validity visual … HTMT2   0.384 configur… info     HTMT2 does… Interpret thi…
-#>  9 validity textual… HTMT    0.290 configur… info     HTMT does … Interpret thi…
-#> 10 validity visual … HTMT    0.467 configur… info     HTMT does … Interpret thi…
-#> 11 validity visual … HTMT    0.424 configur… info     HTMT does … Interpret thi…
+#> # A tibble: 12 × 10
+#>    stage    object  metric   value reference severity observation recommendation
+#>    <chr>    <chr>   <chr>    <dbl> <chr>     <chr>    <chr>       <chr>         
+#>  1 validity measur… evide…  NA     Fornell … info     "Convergen… Interpret num…
+#>  2 validity x2      stand…   0.424 configur… review   "Absolute … Inspect item …
+#>  3 validity visual  AVE      0.371 configur… review   "AVE is be… Inspect stand…
+#>  4 validity textual AVE      0.721 configur… info     "AVE is at… Carry AVE for…
+#>  5 validity speed   AVE      0.424 configur… review   "AVE is be… Inspect stand…
+#>  6 validity textua… HTMT2    0.280 configur… info     "HTMT2 doe… Interpret thi…
+#>  7 validity visual… HTMT2    0.387 configur… info     "HTMT2 doe… Interpret thi…
+#>  8 validity visual… HTMT2    0.384 configur… info     "HTMT2 doe… Interpret thi…
+#>  9 validity textua… HTMT     0.290 configur… info     "HTMT does… Interpret thi…
+#> 10 validity visual… HTMT     0.467 configur… info     "HTMT does… Interpret thi…
+#> 11 validity visual… HTMT     0.424 configur… info     "HTMT does… Interpret thi…
+#> 12 validity measur… htmt_… 301     semTools… info     "HTMT-fami… No action nee…
 #> # ℹ 2 more variables: decision <chr>, rationale <chr>
 ```

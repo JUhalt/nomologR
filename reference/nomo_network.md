@@ -527,7 +527,7 @@ nomo_table(net_si, "single_indicators")
 #> # A tibble: 1 × 9
 #>   variable    indicator      reliability    se coefficient source     n variance
 #>   <chr>       <chr>                <dbl> <dbl> <chr>       <chr>  <int>    <dbl>
-#> 1 persistence persistence_si       0.816    NA omega       this …   800    0.646
+#> 1 persistence persistence_si       0.816    NA omega       this …   800    0.645
 #> # ℹ 1 more variable: error_variance <dbl>
 # }
 ```

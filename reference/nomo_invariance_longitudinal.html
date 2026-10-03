@@ -112,7 +112,11 @@ reference for latent change.</p></dd>
 
 
 <dt id="arg-ordered">ordered<a class="anchor" aria-label="anchor" href="#arg-ordered"></a></dt>
-<dd><p>Optional names of ordered items, as in <code>model</code>.</p></dd>
+<dd><p>Optional names of ordered items, as in <code>model</code>. Items whose
+columns are stored as ordered factors are modeled as ordered whether or
+not they are named here: the result's <code>ordered_detected</code> lists them, the
+decision log lists them for review, and the rules for ordered indicators
+in <code><a href="nomo_invariance.html">nomo_invariance()</a></code> apply.</p></dd>
 
 
 <dt id="arg-levels">levels<a class="anchor" aria-label="anchor" href="#arg-levels"></a></dt>
@@ -122,7 +126,7 @@ the indicator category structure.</p></dd>
 
 <dt id="arg-partial">partial<a class="anchor" aria-label="anchor" href="#arg-partial"></a></dt>
 <dd><p>Optional researcher-specified releases from <code><a href="nomo_partial.html">nomo_partial()</a></code>,
-naming items as in <code>model</code>.</p></dd>
+naming items and factors as in <code>model</code>.</p></dd>
 
 
 <dt id="arg-localize">localize<a class="anchor" aria-label="anchor" href="#arg-localize"></a></dt>
@@ -150,8 +154,12 @@ occasions only.</p></dd>
 
 
 <dt id="arg-id-cat">ID.cat<a class="anchor" aria-label="anchor" href="#arg-id-cat"></a></dt>
-<dd><p>Ordered-indicator identification method passed to
-<code><a href="https://rdrr.io/pkg/semTools/man/measEq.syntax.html" class="external-link">semTools::measEq.syntax()</a></code>. Wu-Estabrook is the default.</p></dd>
+<dd><p>Ordered-indicator identification passed to
+<code><a href="https://rdrr.io/pkg/semTools/man/measEq.syntax.html" class="external-link">semTools::measEq.syntax()</a></code>. Only Wu and Estabrook's (2016) identification
+is supported, as <code>"Wu.Estabrook.2016"</code> (the default) or a semTools alias
+for it (<code>"Wu.2016"</code>, <code>"Wu.Estabrook"</code>, <code>"Wu"</code>): the level sequences and
+their notes are built for it, and under semTools' other choices the levels
+would not constrain what their names say.</p></dd>
 
 
 <dt id="arg-parameterization">parameterization<a class="anchor" aria-label="anchor" href="#arg-parameterization"></a></dt>
@@ -198,15 +206,19 @@ span.</p>
 releases, and score diagnostics are those of <code><a href="nomo_invariance.html">nomo_invariance()</a></code>, applied
 across occasions instead of groups. A partial release names the item as in
 <code>model</code>, and frees that parameter across all occasions: <code>"w3 ~ 1"</code> releases
-the intercept of <code>w3</code>. For ordered items, Wu and Estabrook's (2016)
-identification is the default; <code>ID.cat = "millsap"</code>, with <code>ID.fac = "UL"</code>,
-applies Millsap and Tein's (2004) conditions, which Liu et al. (2017) extend
-to repeated measures.</p>
+the intercept of <code>w3</code>. A release naming a column, such as <code>"w3_t2 ~ 1"</code>, is
+an error, as is any release that frees no parameter. Ordered items follow
+Wu and Estabrook's (2016) identification, the only <code>ID.cat</code> supported; Liu
+et al. (2017) discuss testing invariance over time with ordered-categorical
+measures. An item whose columns are stored as ordered factors is modeled as
+ordered on every occasion, whether or not <code>ordered</code> names it.</p>
 <p><strong>Latent change.</strong> Once intercepts are invariant, fully or partially, the
 construct's mean can be compared across occasions. Under the default
 <code>ID.fac = "std.lv"</code> the first occasion's latent mean is 0 and its variance
 1, so <code>latent_means</code> gives each later occasion's latent mean as a change in
-the first occasion's latent standard deviations, with its interval.</p>
+the first occasion's latent standard deviations, with its interval. With
+every intercept of a factor's items released, its later means are fixed at
+0 rather than estimated; the decision log says so, and they are left out.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
@@ -214,9 +226,6 @@ the first occasion's latent standard deviations, with its interval.</p>
 (2017). Testing measurement invariance in longitudinal data with
 ordered-categorical measures. <em>Psychological Methods, 22</em>(3), 486-506.
 <a href="https://doi.org/10.1037/met0000075" class="external-link">doi:10.1037/met0000075</a></p>
-<p>Millsap, R. E., &amp; Tein, J.-Y. (2004). Assessing factorial invariance in
-ordered-categorical measures. <em>Multivariate Behavioral Research, 39</em>(3),
-479-515. <a href="https://doi.org/10.1207/S15327906MBR3903_4" class="external-link">doi:10.1207/S15327906MBR3903_4</a></p>
 <p>Widaman, K. F., Ferrer, E., &amp; Conger, R. D. (2010). Factorial invariance
 within longitudinal structural equation models: Measuring the same construct
 across time. <em>Child Development Perspectives, 4</em>(1), 10-18.

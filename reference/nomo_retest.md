@@ -37,8 +37,9 @@ A `nomo_retest` object. The fields to read are:
   occasions, ICC(A,1) with its 95% interval and Koo and Li's description
   of that interval (`koo_li`), ICC(C,1) with its interval, the mean
   change from the first to the last occasion with its interval, the
-  pooled standard deviation, the standard error of measurement (`sem`),
-  and the smallest detectable change (`sdc`).
+  pooled standard deviation, the standard error of measurement (`sem`,
+  the square root of the residual mean square), and the smallest
+  detectable change (`sdc`).
 
 - `reliable_change`: one row per person and composite, with the first
   and last scores, the change, the reliable change index (`rci`), and
@@ -75,14 +76,21 @@ pass or a fail, and a reliability depends on the interval between
 occasions and on whether the construct itself changed.
 
 **Measurement error and change.** The standard error of measurement is
-\\SD \sqrt{1 - ICC}\\ (Nunnally & Bernstein, 1994), with ICC(A,1) and
-the standard deviation pooled over occasions. The smallest detectable
-change is \\1.96 \sqrt{2} \\ SEM\\: a change in a person's score smaller
-than that is within measurement error at 95% (Weir, 2005). Jacobson and
-Truax's (1991) reliable change index divides a person's change by
-\\\sqrt{2} \\ SEM\\, so it exceeds 1.96 exactly when the change exceeds
-the smallest detectable change. A reliable change is not necessarily a
-meaningful one.
+\\\sqrt{MS_E}\\, the square root of the residual mean square of the
+two-way model (Weir, 2005): how far a person's scores spread across
+occasions once the shift in the mean between occasions is removed. It
+does not depend on which ICC is chosen. When the occasions do not differ
+in mean, it is close to \\SD \sqrt{1 - ICC}\\ (Nunnally & Bernstein,
+1994), with ICC(A,1) and the standard deviation pooled over occasions;
+when they do, that form counts the shift as measurement error and
+overstates it. The smallest detectable change is \\1.96 \sqrt{2} \\
+SEM\\: a change in a person's score smaller than that is within
+measurement error at 95% (Weir, 2005). Jacobson and Truax's (1991)
+reliable change index divides a person's change by \\\sqrt{2} \\ SEM\\,
+so it exceeds 1.96 exactly when the change exceeds the smallest
+detectable change. The change compared includes any shift in the mean,
+so a shift that everyone shares can make many changes reliable. A
+reliable change is not necessarily a meaningful one.
 
 ## References
 
@@ -131,28 +139,28 @@ rt
 #> 
 #> Reliability across occasions
 #>   Composite    n  ICC(A,1) [95% CI]  Koo & Li   SEM   SDC
-#>   composite  150  0.85 [0.80, 0.89]  good      0.45  1.24
+#>   composite  150  0.85 [0.80, 0.89]  good      0.45  1.25
 #> 
 #> Reliable change, first to last occasion
 #>   - composite: 6 people up, 2 down, 142 within measurement error.
 #> 
 #> ICC(A,1): two-way mixed effects, absolute agreement, single measurement (Koo &
-#> Li, 2016). SEM: standard error of measurement. SDC: smallest detectable
-#> change, 1.96 x sqrt(2) x SEM (Weir, 2005). Reference ranges describe the
-#> interval; they are not a pass or a fail.
+#> Li, 2016). SEM: standard error of measurement, sqrt(MS error). SDC: smallest
+#> detectable change, 1.96 x sqrt(2) x SEM (Weir, 2005). Reference ranges
+#> describe the interval; they are not a pass or a fail.
 nomo_table(rt, "reliable_change")
 #> # A tibble: 150 × 7
 #>    composite   row first_score last_score  change     rci status            
 #>    <chr>     <int>       <dbl>      <dbl>   <dbl>   <dbl> <chr>             
-#>  1 composite     1       3.53       3.55   0.0222  0.0350 no_reliable_change
+#>  1 composite     1       3.53       3.55   0.0222  0.0349 no_reliable_change
 #>  2 composite     2       2.07       1.94  -0.133  -0.209  no_reliable_change
 #>  3 composite     3       3.58       2.85  -0.731  -1.15   no_reliable_change
 #>  4 composite     4       3.14       3.45   0.306   0.482  no_reliable_change
-#>  5 composite     5       2.59       2.06  -0.537  -0.846  no_reliable_change
+#>  5 composite     5       2.59       2.06  -0.537  -0.845  no_reliable_change
 #>  6 composite     6       0.998      0.242 -0.756  -1.19   no_reliable_change
-#>  7 composite     7       1.95       1.97   0.0284  0.0448 no_reliable_change
+#>  7 composite     7       1.95       1.97   0.0284  0.0447 no_reliable_change
 #>  8 composite     8       1.70       2.83   1.12    1.77   no_reliable_change
 #>  9 composite     9       3.11       3.46   0.354   0.558  no_reliable_change
-#> 10 composite    10       2.68       2.90   0.218   0.344  no_reliable_change
+#> 10 composite    10       2.68       2.90   0.218   0.343  no_reliable_change
 #> # ℹ 140 more rows
 ```

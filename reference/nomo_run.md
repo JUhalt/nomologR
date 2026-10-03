@@ -75,9 +75,22 @@ nomo_run(
   consistency cannot be computed within one scale. So they are computed
   once, over every item in the run with the run's scales, and never
   inside the per-scale item audits. `reverse`, `scale_range`,
-  `pair_magnitude`, and `scales` may be given alongside `effort`. When
-  the scales came from a `contentvalidR` handoff that declares keying,
-  its keying is used unless `reverse` or `scale_range` is given here.
+  `pair_magnitude`, and `scales` may be given alongside `effort`.
+  `reverse` and `scale_range` also reach the per-scale item audits, with
+  or without `effort`, and `reverse` must name items in the run's
+  scales. When the scales came from a `contentvalidR` handoff, each of
+  `reverse` and `scale_range` is taken from its declared keying unless
+  given here, as in
+  [`nomo_screen()`](https://juhalt.github.io/nomologR/reference/nomo_screen.md);
+  giving one replaces only that one. The decision log records a declared
+  value replaced, or a response scale the handoff did not record
+  supplied here.
+
+  The invariance and network stages refit the measurement model with the
+  CFA stage's `ordered`, `estimator`, and `missing` from `settings$cfa`,
+  unless `settings$invariance` or `settings$network` names its own
+  (`NULL` for the default). The decision log records what was inherited
+  and any value that differs from the CFA's.
 
   Two further requests attach evidence to the measurement model:
 
@@ -115,8 +128,15 @@ A `nomo_run` object. The fields to read are:
 
 - `decision_requests`: the decisions the run is waiting for.
 
-- `decision_log`: the workflow's decisions, with their rationales and
-  sources.
+- `decision_log`: the workflow's own log, one row per design choice,
+  decision, or recorded event, with the columns `id`, `stage`, `scope`,
+  `observation`, `reason`, `options`, `consequence`, `decision`,
+  `rationale`, and `source`. `source` is `"researcher_input"` (given in
+  the call, such as the scales or a setting), `"researcher_decision"` (a
+  decision at a pause, or a revision), `"content_review"` (from a
+  `contentvalidR` handoff), or `"pipeline"` (recorded by the workflow).
+  These columns differ from those of the components' decision logs,
+  which `nomo_table(x, "component_log")` returns with their own columns.
 
 - `scales`, `mode`, `sample_design`, `sample_n`, `decisions`, and
   `settings`.

@@ -18,12 +18,14 @@ nomo_partial(level, syntax, rationale)
   Character vector naming the first invariance level at which each
   release should apply. Supported labels are `thresholds`, `metric`,
   `scalar`, `strong`, and `strict`; the applicable subset depends on the
-  indicator category structure.
+  indicator category structure. It should be the level that first holds
+  the released parameter's type equal, such as `metric` for a loading.
 
 - syntax:
 
   Character vector of lavaan parameter expressions to exclude from the
-  corresponding equality constraints.
+  corresponding equality constraints, naming the factors and indicators
+  as the model does.
 
 - rationale:
 
@@ -46,6 +48,17 @@ for example `"F =~ x2"`, `"x3 ~ 1"`, or `"u2 | t1"`.
 A release first requested at one level is carried forward to later,
 more-restrictive levels so that a loading freed at the metric level does
 not silently become constrained again at the scalar level.
+
+[`nomo_invariance()`](https://juhalt.github.io/nomologR/reference/nomo_invariance.md)
+and
+[`nomo_invariance_longitudinal()`](https://juhalt.github.io/nomologR/reference/nomo_invariance_longitudinal.md)
+check each release against the model when they fit it. A release must
+name a loading, intercept, threshold, or residual variance of an
+indicator in the model, and must free it in the generated model;
+otherwise it is an error. It applies from the level that first holds its
+parameter type equal: declared earlier, it is moved to that level, and
+the decision log says so; declared later, it is an error, because the
+two models would not be nested.
 
 ## References
 

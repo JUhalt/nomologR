@@ -96,8 +96,9 @@ reliability depends on it.</p></dd>
 occasions, ICC(A,1) with its 95% interval and Koo and Li's description
 of that interval (<code>koo_li</code>), ICC(C,1) with its interval, the mean change
 from the first to the last occasion with its interval, the pooled
-standard deviation, the standard error of measurement (<code>sem</code>), and the
-smallest detectable change (<code>sdc</code>).</p></li>
+standard deviation, the standard error of measurement (<code>sem</code>, the
+square root of the residual mean square), and the smallest detectable
+change (<code>sdc</code>).</p></li>
 <li><p><code>reliable_change</code>: one row per person and composite, with the first and
 last scores, the change, the reliable change index (<code>rci</code>), and whether
 the change is a reliable increase, a reliable decrease, or neither.</p></li>
@@ -127,14 +128,22 @@ interval, such as "good to excellent". These are reference values, not a pass
 or a fail, and a reliability depends on the interval between occasions and on
 whether the construct itself changed.</p>
 <p><strong>Measurement error and change.</strong> The standard error of measurement is
-\(SD \sqrt{1 - ICC}\) (Nunnally &amp; Bernstein, 1994),
-with ICC(A,1) and the standard deviation pooled over occasions. The smallest
-detectable change is \(1.96 \sqrt{2} \, SEM\): a
-change in a person's score smaller than that is within measurement error at
-95% (Weir, 2005). Jacobson and Truax's (1991) reliable change index divides a
-person's change by \(\sqrt{2} \, SEM\), so it exceeds 1.96
-exactly when the change exceeds the smallest detectable change. A reliable
-change is not necessarily a meaningful one.</p>
+\(\sqrt{MS_E}\), the square root of the residual mean square
+of the two-way model (Weir, 2005): how far a person's scores spread across
+occasions once the shift in the mean between occasions is removed. It does
+not depend on which ICC is chosen. When the occasions do not differ in
+mean, it is close to \(SD \sqrt{1 - ICC}\)
+(Nunnally &amp; Bernstein, 1994), with ICC(A,1) and the standard deviation
+pooled over occasions; when they do, that form counts the shift as
+measurement error and overstates it. The smallest detectable change is
+\(1.96 \sqrt{2} \, SEM\): a change in a person's
+score smaller than that is within measurement error at 95% (Weir, 2005).
+Jacobson and Truax's (1991) reliable change index divides a person's change
+by \(\sqrt{2} \, SEM\), so it exceeds 1.96 exactly when
+the change exceeds the smallest detectable change. The change compared
+includes any shift in the mean, so a shift that everyone shares can make
+many changes reliable. A reliable change is not necessarily a meaningful
+one.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
@@ -175,29 +184,29 @@ Research, 19</em>(1), 231-240. <a href="https://doi.org/10.1519/15184.1" class="
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Reliability across occasions</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Composite    n  ICC(A,1) [95% CI]  Koo &amp; Li   SEM   SDC</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   composite  150  0.85 [0.80, 0.89]  good      0.45  1.24</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   composite  150  0.85 [0.80, 0.89]  good      0.45  1.25</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Reliable change, first to last occasion</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   - composite: 6 people up, 2 down, 142 within measurement error.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ICC(A,1): two-way mixed effects, absolute agreement, single measurement (Koo &amp;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Li, 2016). SEM: standard error of measurement. SDC: smallest detectable</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> change, 1.96 x sqrt(2) x SEM (Weir, 2005). Reference ranges describe the</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> interval; they are not a pass or a fail.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Li, 2016). SEM: standard error of measurement, sqrt(MS error). SDC: smallest</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> detectable change, 1.96 x sqrt(2) x SEM (Weir, 2005). Reference ranges</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> describe the interval; they are not a pass or a fail.</span>
 <span class="r-in"><span><span class="fu"><a href="nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">rt</span>, <span class="st">"reliable_change"</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 150 × 7</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    composite   row first_score last_score  change     rci status            </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> composite     1       3.53       3.55   0.022<span style="text-decoration: underline;">2</span>  0.035<span style="text-decoration: underline;">0</span> no_reliable_change</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> composite     1       3.53       3.55   0.022<span style="text-decoration: underline;">2</span>  0.034<span style="text-decoration: underline;">9</span> no_reliable_change</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> composite     2       2.07       1.94  -<span style="color: #BB0000;">0.133</span>  -<span style="color: #BB0000;">0.209</span>  no_reliable_change</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> composite     3       3.58       2.85  -<span style="color: #BB0000;">0.731</span>  -<span style="color: #BB0000;">1.15</span>   no_reliable_change</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> composite     4       3.14       3.45   0.306   0.482  no_reliable_change</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> composite     5       2.59       2.06  -<span style="color: #BB0000;">0.537</span>  -<span style="color: #BB0000;">0.846</span>  no_reliable_change</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> composite     5       2.59       2.06  -<span style="color: #BB0000;">0.537</span>  -<span style="color: #BB0000;">0.845</span>  no_reliable_change</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> composite     6       0.998      0.242 -<span style="color: #BB0000;">0.756</span>  -<span style="color: #BB0000;">1.19</span>   no_reliable_change</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> composite     7       1.95       1.97   0.028<span style="text-decoration: underline;">4</span>  0.044<span style="text-decoration: underline;">8</span> no_reliable_change</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> composite     7       1.95       1.97   0.028<span style="text-decoration: underline;">4</span>  0.044<span style="text-decoration: underline;">7</span> no_reliable_change</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> composite     8       1.70       2.83   1.12    1.77   no_reliable_change</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> composite     9       3.11       3.46   0.354   0.558  no_reliable_change</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> composite    10       2.68       2.90   0.218   0.344  no_reliable_change</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> composite    10       2.68       2.90   0.218   0.343  no_reliable_change</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 140 more rows</span></span>
 </code></pre></div>
     </div>

@@ -102,7 +102,19 @@ nomo_factors(
 
   Common-factor extraction method passed to
   [`psych::fa()`](https://rdrr.io/pkg/psych/man/fa.html) when obtaining
-  factor eigenvalues. The default is `"minres"`.
+  the factor eigenvalues for parallel analysis. The default is
+  `"minres"`. Supported values are `"minres"`, `"uls"`, `"ols"`,
+  `"wls"`, `"gls"`, `"pa"`, `"ml"`, `"minchi"`, and `"old.min"`. For
+  `"minchi"`, the number of cases observed for each item pair is passed
+  to [`psych::fa()`](https://rdrr.io/pkg/psych/man/fa.html), which
+  weights the residuals by it. `"alpha"` is not available here: the
+  eigenvalues come from a one-factor solution, which
+  [`psych::fa()`](https://rdrr.io/pkg/psych/man/fa.html) cannot fit with
+  alpha factoring (use it in
+  [`nomo_efa()`](https://juhalt.github.io/nomologR/reference/nomo_efa.md)
+  with two or more factors). `"minrank"` is not supported, because
+  [`psych::fa()`](https://rdrr.io/pkg/psych/man/fa.html) needs the
+  `Rcsdp` package for it.
 
 - smooth:
 
@@ -120,7 +132,14 @@ nomo_factors(
 
 An object of class `nomo_factors`. The fields to read are:
 
-- `items`, `n_cases`, and `n_items`.
+- `items`, `n_cases`, and `n_items`. `n_cases` is the number of rows
+  analyzed (every row under `missing = "pairwise"`, including rows with
+  no item data; the complete rows under `missing = "complete"`).
+
+- `min_pairwise_n`: the smallest number of cases observed jointly on any
+  item pair, the effective sample size under pairwise deletion. It
+  equals `n_cases` when no item value is missing or
+  `missing = "complete"`.
 
 - `item_types`: each item's screened and modeling type.
 
@@ -234,7 +253,7 @@ Kaiser, H. F. (1974). An index of factorial simplicity. *Psychometrika,
 fac <- nomo_factors(nomo_demo_continuous, n_iter = 20, seed = 2026)
 fac
 #> <nomo_factors> Factor-retention evidence
-#> Cases: 500 | Items: 10 | Correlation: pearson
+#> Cases: 500 (minimum pairwise N: 473) | Items: 10 | Correlation: pearson
 #> Criterion set: core | Available methods: 3 | Families: 2 | Skipped: 1
 #> Parallel analysis (percentile): 2 | MAP TR2/TR4: 2/2 | KMO: 0.874
 #> All 2 available criterion families (3 methods) point to 2 factors. Related
@@ -244,7 +263,8 @@ fac
 #> the documented reason.
 summary(fac)
 #> <nomo_factors summary> Factor-retention evidence
-#> Cases: 500 | Items: 10 | Correlation: pearson | Criteria: core
+#> Cases: 500 (minimum pairwise N: 473) | Items: 10 | Correlation: pearson
+#> Criteria: core
 #> 
 #> Retention evidence
 #>   Method              Factors  Role

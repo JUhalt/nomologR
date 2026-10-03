@@ -123,7 +123,7 @@ trusting a single rule:
 fac <- nomo_factors(nomo_demo_continuous, seed = 2026)
 fac
 #> <nomo_factors> Factor-retention evidence
-#> Cases: 500 | Items: 10 | Correlation: pearson
+#> Cases: 500 (minimum pairwise N: 473) | Items: 10 | Correlation: pearson
 #> Criterion set: core | Available methods: 3 | Families: 2 | Skipped: 1
 #> Parallel analysis (percentile): 2 | MAP TR2/TR4: 2/2 | KMO: 0.874
 #> All 2 available criterion families (3 methods) point to 2 factors. Related

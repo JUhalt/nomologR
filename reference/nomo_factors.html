@@ -172,7 +172,15 @@ number state is restored before return.</p></dd>
 
 <dt id="arg-fm">fm<a class="anchor" aria-label="anchor" href="#arg-fm"></a></dt>
 <dd><p>Common-factor extraction method passed to <code><a href="https://rdrr.io/pkg/psych/man/fa.html" class="external-link">psych::fa()</a></code> when
-obtaining factor eigenvalues. The default is <code>"minres"</code>.</p></dd>
+obtaining the factor eigenvalues for parallel analysis. The default is
+<code>"minres"</code>. Supported values are <code>"minres"</code>, <code>"uls"</code>, <code>"ols"</code>, <code>"wls"</code>,
+<code>"gls"</code>, <code>"pa"</code>, <code>"ml"</code>, <code>"minchi"</code>, and <code>"old.min"</code>. For <code>"minchi"</code>,
+the number of cases observed for each item pair is passed to
+<code><a href="https://rdrr.io/pkg/psych/man/fa.html" class="external-link">psych::fa()</a></code>, which weights the residuals by it. <code>"alpha"</code> is not
+available here: the eigenvalues come from a one-factor solution, which
+<code><a href="https://rdrr.io/pkg/psych/man/fa.html" class="external-link">psych::fa()</a></code> cannot fit with alpha factoring (use it in <code><a href="nomo_efa.html">nomo_efa()</a></code> with
+two or more factors). <code>"minrank"</code> is not supported, because
+<code><a href="https://rdrr.io/pkg/psych/man/fa.html" class="external-link">psych::fa()</a></code> needs the <code>Rcsdp</code> package for it.</p></dd>
 
 
 <dt id="arg-smooth">smooth<a class="anchor" aria-label="anchor" href="#arg-smooth"></a></dt>
@@ -187,7 +195,12 @@ is explicit, recorded, and performed with <code><a href="https://rdrr.io/pkg/psy
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>An object of class <code>nomo_factors</code>. The fields to read are:</p><ul><li><p><code>items</code>, <code>n_cases</code>, and <code>n_items</code>.</p></li>
+    <p>An object of class <code>nomo_factors</code>. The fields to read are:</p><ul><li><p><code>items</code>, <code>n_cases</code>, and <code>n_items</code>. <code>n_cases</code> is the number of rows
+analyzed (every row under <code>missing = "pairwise"</code>, including rows with
+no item data; the complete rows under <code>missing = "complete"</code>).</p></li>
+<li><p><code>min_pairwise_n</code>: the smallest number of cases observed jointly on any
+item pair, the effective sample size under pairwise deletion. It equals
+<code>n_cases</code> when no item value is missing or <code>missing = "complete"</code>.</p></li>
 <li><p><code>item_types</code>: each item's screened and modeling type.</p></li>
 <li><p><code>correlation_method</code> and <code>correlation_matrix</code>: the correlations analyzed.</p></li>
 <li><p><code>kmo</code> and <code>bartlett</code>: sampling-adequacy evidence.</p></li>
@@ -267,7 +280,7 @@ Journal of Statistical Psychology, 3</em>(2), 77-85.
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">fac</span> <span class="op">&lt;-</span> <span class="fu">nomo_factors</span><span class="op">(</span><span class="va">nomo_demo_continuous</span>, n_iter <span class="op">=</span> <span class="fl">20</span>, seed <span class="op">=</span> <span class="fl">2026</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fac</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;nomo_factors&gt; Factor-retention evidence</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Cases: 500 | Items: 10 | Correlation: pearson</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Cases: 500 (minimum pairwise N: 473) | Items: 10 | Correlation: pearson</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Criterion set: core | Available methods: 3 | Families: 2 | Skipped: 1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Parallel analysis (percentile): 2 | MAP TR2/TR4: 2/2 | KMO: 0.874</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> All 2 available criterion families (3 methods) point to 2 factors. Related</span>
@@ -277,7 +290,8 @@ Journal of Statistical Psychology, 3</em>(2), 77-85.
 <span class="r-out co"><span class="r-pr">#&gt;</span> the documented reason.</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fac</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;nomo_factors summary&gt; Factor-retention evidence</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Cases: 500 | Items: 10 | Correlation: pearson | Criteria: core</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Cases: 500 (minimum pairwise N: 473) | Items: 10 | Correlation: pearson</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Criteria: core</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Retention evidence</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Method              Factors  Role</span>

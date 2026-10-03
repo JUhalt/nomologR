@@ -5,8 +5,12 @@ composite, such as a scale mean or sum, so that
 [`nomo_network()`](https://juhalt.github.io/nomologR/reference/nomo_network.md)
 can model the composite as a single-indicator latent variable. The
 composite's error variance is fixed at \\(1 - \rho)\sigma^2\\, where
-\\\rho\\ is its reliability and \\\sigma^2\\ its observed variance, so
-the relationships it enters are corrected for its unreliability.
+\\\rho\\ is its reliability and \\\sigma^2\\ its variance as the model
+analyzes it, so the relationships it enters are corrected for its
+unreliability. The variance is computed on the cases the model analyzes
+(the complete cases, under listwise deletion) and with the estimator's
+denominator, so the fitted model's reliability for the composite is the
+one supplied.
 
 ## Usage
 

@@ -177,15 +177,19 @@ walk[reversed] <- 6L - walk[reversed]
 
 The responses are now recoded, so the run should not treat any item as
 still needing it. `reverse = character(0)` says so, in place of the
-handoff’s keying:
+reverse-keyed items the handoff declared. It replaces only that part of
+the handoff’s keying: the response scale still comes from the handoff,
+and the run’s decision log records the change.
 
 ``` r
 
 run <- nomo_run(
   walk,
   scales = handoff,
-  settings = list(screen = list(reverse = character(0), scale_range = c(1, 5)))
+  settings = list(screen = list(reverse = character(0)))
 )
+run$decision_log$observation[run$decision_log$id == "keying"]
+#> [1] "`settings$screen$reverse` (none) was used in place of the reverse-keyed item(s) the content-review handoff declared (EF2, TF2)."
 ef <- run$results$screen$EF
 summary(ef)
 #> <nomo_screen summary> Item and data audit

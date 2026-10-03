@@ -106,11 +106,14 @@ indicators; original HTMT assumes tau-equivalence.</p></dd>
 
 
 <dt id="arg-htmt-missing">htmt_missing<a class="anchor" aria-label="anchor" href="#arg-htmt-missing"></a></dt>
-<dd><p>Missing-data option passed to <code><a href="https://rdrr.io/pkg/semTools/man/htmt.html" class="external-link">semTools::htmt()</a></code>. The
-default <code>"default"</code> delegates the unrestricted-correlation missing-data
-handling to <code><a href="https://rdrr.io/pkg/lavaan/man/lavCor.html" class="external-link">lavaan::lavCor()</a></code> rather than silently imposing listwise
-deletion. Other supported values are <code>"listwise"</code>, <code>"pairwise"</code>,
-<code>"direct"</code>, <code>"ml"</code>, and <code>"fiml"</code>.</p></dd>
+<dd><p>Missing-data handling for the correlations behind HTMT
+and HTMT2, passed to <code><a href="https://rdrr.io/pkg/semTools/man/htmt.html" class="external-link">semTools::htmt()</a></code>. The default, <code>"default"</code>, follows
+the fitted model, so HTMT rests on the same cases as the CFA: <code>"fiml"</code>
+when the CFA used full-information maximum likelihood, <code>"pairwise"</code> when
+it used pairwise deletion, and <code>"listwise"</code> otherwise. Other supported
+values are <code>"listwise"</code>, <code>"pairwise"</code>, <code>"direct"</code>, <code>"ml"</code>, and <code>"fiml"</code>.
+The handling used and the number of cases appear in <code>htmt_status</code> and the
+decision log.</p></dd>
 
 
 <dt id="arg-fornell-larcker">fornell_larcker<a class="anchor" aria-label="anchor" href="#arg-fornell-larcker"></a></dt>
@@ -127,12 +130,18 @@ references are review prompts rather than universal pass/fail cutoffs.</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A <code>nomo_validity</code> object. The fields to read are:</p><ul><li><p><code>ave</code>: average variance extracted per construct, as convergent
-evidence.</p></li>
+evidence. AVE is not defined for a factor with a cross-loaded
+indicator; its row has an <code>NA</code> estimate and the attention
+<code>"unavailable"</code>.</p></li>
 <li><p><code>latent_correlations</code>: construct correlations with intervals.</p></li>
 <li><p><code>htmt2</code> and <code>htmt</code>: heterotrait-monotrait ratios per pair.</p></li>
 <li><p><code>discriminant</code>: each pair's separation evidence with its reference and
 interpretation.</p></li>
-<li><p><code>htmt_status</code>: which HTMT variants were computed, and why any was not.</p></li>
+<li><p><code>htmt_status</code>: which HTMT variants were computed, and why any was not.
+For a computed variant, <code>missing</code> is the missing-data handling used and
+<code>n</code> the number of cases: the complete cases under listwise deletion, the
+smallest pairwise count under pairwise deletion, and every case with an
+indicator observed otherwise.</p></li>
 <li><p><code>fornell_larcker_pairs</code>: the historical comparison, when requested.</p></li>
 <li><p><code>standardized_loadings</code>, <code>references</code>, and <code>decision_log</code>.</p></li>
 </ul><p>Other fields record the call, the settings used, and intermediate engine
@@ -204,20 +213,21 @@ and proposed remedies. <em>Journal of the Academy of Marketing Science, 44</em>(
 <span class="r-out co"><span class="r-pr">#&gt;</span> and HTMT-family statistics address construct separation. These are</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> complementary questions, not interchangeable pass/fail tests.</span>
 <span class="r-in"><span><span class="va">val</span><span class="op">$</span><span class="va">decision_log</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 11 × 10</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    stage    object   metric  value reference severity observation recommendation</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> validity measure… evide… <span style="color: #BB0000;">NA</span>     Fornell … info     Convergent… Interpret num…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> validity x2       stand…  0.424 configur… review   Absolute s… Inspect item …</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> validity visual   AVE     0.371 configur… review   AVE is bel… Inspect stand…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> validity textual  AVE     0.721 configur… info     AVE is at … Carry AVE for…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> validity speed    AVE     0.424 configur… review   AVE is bel… Inspect stand…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> validity textual… HTMT2   0.280 configur… info     HTMT2 does… Interpret thi…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> validity visual … HTMT2   0.387 configur… info     HTMT2 does… Interpret thi…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> validity visual … HTMT2   0.384 configur… info     HTMT2 does… Interpret thi…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> validity textual… HTMT    0.290 configur… info     HTMT does … Interpret thi…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> validity visual … HTMT    0.467 configur… info     HTMT does … Interpret thi…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">11</span> validity visual … HTMT    0.424 configur… info     HTMT does … Interpret thi…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 12 × 10</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    stage    object  metric   value reference severity observation recommendation</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> validity measur… evide…  <span style="color: #BB0000;">NA</span>     Fornell … info     <span style="color: #949494;">"</span>Convergen… Interpret num…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> validity x2      stand…   0.424 configur… review   <span style="color: #949494;">"</span>Absolute … Inspect item …</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> validity visual  AVE      0.371 configur… review   <span style="color: #949494;">"</span>AVE is be… Inspect stand…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> validity textual AVE      0.721 configur… info     <span style="color: #949494;">"</span>AVE is at… Carry AVE for…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> validity speed   AVE      0.424 configur… review   <span style="color: #949494;">"</span>AVE is be… Inspect stand…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> validity textua… HTMT2    0.280 configur… info     <span style="color: #949494;">"</span>HTMT2 doe… Interpret thi…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> validity visual… HTMT2    0.387 configur… info     <span style="color: #949494;">"</span>HTMT2 doe… Interpret thi…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> validity visual… HTMT2    0.384 configur… info     <span style="color: #949494;">"</span>HTMT2 doe… Interpret thi…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> validity textua… HTMT     0.290 configur… info     <span style="color: #949494;">"</span>HTMT does… Interpret thi…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> validity visual… HTMT     0.467 configur… info     <span style="color: #949494;">"</span>HTMT does… Interpret thi…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">11</span> validity visual… HTMT     0.424 configur… info     <span style="color: #949494;">"</span>HTMT does… Interpret thi…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">12</span> validity measur… htmt_… 301     semTools… info     <span style="color: #949494;">"</span>HTMT-fami… No action nee…</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 2 more variables: decision &lt;chr&gt;, rationale &lt;chr&gt;</span></span>
 </code></pre></div>
     </div>

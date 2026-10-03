@@ -207,7 +207,8 @@ fac <- nomo_factors(
 )
 summary(fac)
 #> <nomo_factors summary> Factor-retention evidence
-#> Cases: 500 | Items: 10 | Correlation: pearson | Criteria: core
+#> Cases: 500 (minimum pairwise N: 473) | Items: 10 | Correlation: pearson
+#> Criteria: core
 #> 
 #> Retention evidence
 #>   Method              Factors  Role
@@ -291,7 +292,8 @@ efa <- nomo_efa(
 )
 summary(efa)
 #> <nomo_efa summary> Exploratory factor analysis
-#> Cases: 500 | Items: 10 | Factors: 2 (from nomo_factors())
+#> Cases: 500 (minimum pairwise N: 473) | Items: 10
+#> Factors: 2 (from nomo_factors())
 #> Correlation: pearson | Extraction: minres | Rotation: oblimin
 #> Supporting adequacy: KMO 0.874
 #> 

@@ -274,7 +274,7 @@ nomo_table(corrected, "single_indicators")
 #> # A tibble: 1 × 9
 #>   variable    indicator      reliability    se coefficient source     n variance
 #>   <chr>       <chr>                <dbl> <dbl> <chr>       <chr>  <int>    <dbl>
-#> 1 persistence persistence_si       0.816    NA omega       this …   800    0.646
+#> 1 persistence persistence_si       0.816    NA omega       this …   800    0.645
 #> # ℹ 1 more variable: error_variance <dbl>
 ```
 
@@ -294,10 +294,10 @@ nomo_table(corrected, "sensitivity")
 #>   variable    shift reliability id    estimate ci_lower ci_upper concordance
 #>   <chr>       <dbl>       <dbl> <chr>    <dbl>    <dbl>    <dbl> <chr>      
 #> 1 persistence -0.1        0.716 H1       0.487    0.414    0.560 concordant 
-#> 2 persistence -0.05       0.766 H1       0.471    0.400    0.542 concordant 
+#> 2 persistence -0.05       0.766 H1       0.471    0.400    0.541 concordant 
 #> 3 persistence  0          0.816 H1       0.456    0.387    0.525 concordant 
 #> 4 persistence  0.05       0.866 H1       0.443    0.376    0.510 concordant 
-#> 5 persistence  0.1        0.916 H1       0.431    0.365    0.496 concordant
+#> 5 persistence  0.1        0.916 H1       0.430    0.365    0.496 concordant
 ```
 
 Three choices matter:

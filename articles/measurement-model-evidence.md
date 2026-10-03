@@ -912,25 +912,27 @@ summary(rt)
     ## 
     ## Reliability across occasions
     ##   Composite    n  ICC(A,1) [95% CI]  Koo & Li   SEM   SDC
-    ##   Agency     150  0.84 [0.75, 0.89]  good      0.47  1.31
+    ##   Agency     150  0.84 [0.75, 0.89]  good      0.45  1.25
     ## 
     ## Consistency and change
     ##   Composite  ICC(C,1) [95% CI]  Mean change [95% CI]    SD
     ##   Agency     0.85 [0.80, 0.89]  +0.24 [0.13, 0.34]    1.17
     ## 
     ## Reliable change, first to last occasion
-    ##   - Agency: 8 people up, 0 down, 142 within measurement error.
+    ##   - Agency: 10 people up, 1 down, 139 within measurement error.
     ## 
     ## Flagged
     ##   - review: `Agency` changed by 0.24 on average from `agency_t1` to
     ##     `agency_t2`, 95% CI [0.13, 0.34]. Scores shifted systematically, as
     ##     practice or real change would make them. ICC(A,1) counts the shift as
-    ##     disagreement and ICC(C,1) does not; ICC(C,1) is 0.85 here.
+    ##     disagreement and ICC(C,1) does not; ICC(C,1) is 0.85 here. The SEM leaves
+    ##     the shift out, so the shift counts toward each person's change when
+    ##     reliable change is classified.
     ## 
     ## ICC(A,1): two-way mixed effects, absolute agreement, single measurement (Koo &
-    ## Li, 2016). SEM: standard error of measurement. SDC: smallest detectable
-    ## change, 1.96 x sqrt(2) x SEM (Weir, 2005). Reference ranges describe the
-    ## interval; they are not a pass or a fail.
+    ## Li, 2016). SEM: standard error of measurement, sqrt(MS error). SDC: smallest
+    ## detectable change, 1.96 x sqrt(2) x SEM (Weir, 2005). Reference ranges
+    ## describe the interval; they are not a pass or a fail.
 
 These scores were simulated to rise by .30 between occasions, and in
 this sample they rose by 0.24. That rise is why ICC(A,1) is below
@@ -938,10 +940,11 @@ ICC(C,1), and the summary flags it.
 
 Koo and Li read the reliability range from the interval rather than the
 estimate: poor below .50, moderate to .75, good to .90, and excellent
-above. The standard error of measurement, SD × √(1 − ICC), gives the
-smallest detectable change, 1.96 × √2 × SEM (Weir, 2005). A person whose
-score changed by more than that changed reliably, in Jacobson and
-Truax’s (1991) sense, which is not the same as meaningfully.
+above. The standard error of measurement, the square root of the
+residual mean square, leaves that rise out and gives the smallest
+detectable change, 1.96 × √2 × SEM (Weir, 2005). A person whose score
+changed by more than that changed reliably, in Jacobson and Truax’s
+(1991) sense, which is not the same as meaningfully.
 
 ## Method variance from a marker variable
 

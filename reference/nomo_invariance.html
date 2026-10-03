@@ -99,7 +99,14 @@ an object created by <code><a href="nomo_model.html">nomo_model()</a></code>.</p
 
 
 <dt id="arg-ordered">ordered<a class="anchor" aria-label="anchor" href="#arg-ordered"></a></dt>
-<dd><p>Optional character vector naming ordered indicators.</p></dd>
+<dd><p>Optional character vector naming ordered indicators. Model
+indicators stored as ordered factors are modeled as ordered whether or not
+they are named here, since lavaan fits them as categorical; the result's
+<code>ordered</code> includes them, <code>ordered_detected</code> lists them, and the decision
+log lists them for review. They then follow the rules for ordered
+indicators: the ordered <code>levels</code> sequence, <code>ID.fac = "std.lv"</code>, and no
+ML-family estimator or FIML. Convert such columns to numeric to model
+them as continuous.</p></dd>
 
 
 <dt id="arg-levels">levels<a class="anchor" aria-label="anchor" href="#arg-levels"></a></dt>
@@ -131,8 +138,12 @@ diagnostic evidence. Diagnostics never trigger automatic release/refitting.</p><
 
 
 <dt id="arg-id-cat">ID.cat<a class="anchor" aria-label="anchor" href="#arg-id-cat"></a></dt>
-<dd><p>Ordered-indicator identification method passed to
-<code><a href="https://rdrr.io/pkg/semTools/man/measEq.syntax.html" class="external-link">semTools::measEq.syntax()</a></code>. Wu-Estabrook is the default.</p></dd>
+<dd><p>Ordered-indicator identification passed to
+<code><a href="https://rdrr.io/pkg/semTools/man/measEq.syntax.html" class="external-link">semTools::measEq.syntax()</a></code>. Only Wu and Estabrook's (2016) identification
+is supported, as <code>"Wu.Estabrook.2016"</code> (the default) or a semTools alias
+for it (<code>"Wu.2016"</code>, <code>"Wu.Estabrook"</code>, <code>"Wu"</code>): the level sequences and
+their notes are built for it, and under semTools' other choices the levels
+would not constrain what their names say.</p></dd>
 
 
 <dt id="arg-parameterization">parameterization<a class="anchor" aria-label="anchor" href="#arg-parameterization"></a></dt>
@@ -146,12 +157,16 @@ the default for ordered indicators.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A <code>nomo_invariance</code> object. The fields to read are:</p><ul><li><p><code>groups</code>, <code>requested_levels</code>, and <code>completed_levels</code>.</p></li>
+    <p>A <code>nomo_invariance</code> object. The fields to read are:</p><ul><li><p><code>groups</code> and <code>requested_levels</code>.</p></li>
+<li><p><code>completed_levels</code>: the levels that were estimated and converged.
+Fitting stops at the first level that fails or does not converge; that
+level is in <code>fit_evidence</code> but not here.</p></li>
 <li><p><code>fit_evidence</code>: one row per level, with its fit, its change from the
 level before, the likelihood-ratio test, and any warning or error.</p></li>
 <li><p><code>local_strain</code>: score diagnostics for each equality constraint, which
 localize strain without releasing anything.</p></li>
-<li><p><code>partial</code>: the researcher-specified releases, when given.</p></li>
+<li><p><code>partial</code>: the researcher-specified releases, when given, each at the
+level it applies from.</p></li>
 <li><p><code>latent_means</code>: at each level that holds intercepts equal, each group's
 latent means relative to the reference group, in the reference group's
 latent standard deviations, with their intervals. See <strong>Latent means</strong>.</p></li>
@@ -178,6 +193,17 @@ identification.</p>
 are carried forward to more restrictive levels and their rationales are
 retained. <code>nomo_invariance()</code> never searches for a combination of releases
 that makes a fit rule pass.</p>
+<p>Each release must name a loading, intercept, threshold, or residual variance
+of an indicator in <code>model</code>, and must free that parameter in the generated
+model: <code><a href="https://rdrr.io/pkg/semTools/man/measEq.syntax.html" class="external-link">semTools::measEq.syntax()</a></code> ignores a release it cannot match, so a
+misspelled name, or a marker loading fixed at 1, is an error rather than a
+fully constrained model reported as partial. A release applies from the
+level that first holds its parameter type equal (loadings at <code>metric</code>,
+intercepts at <code>scalar</code>, and so on, as the sequence for the indicators sets
+them). Declared at an earlier level, where it would change nothing, it is
+moved to that first level and the decision log says so. Declared at a later
+level, it is an error, because the earlier model would hold the parameter
+equal and the later one free it, so the two would not be nested.</p>
 <p>When <code>localize = TRUE</code>, univariate score tests for equality constraints are
 retained as diagnostic evidence. They are explicitly not used to modify the
 fitted model.</p>
@@ -194,10 +220,16 @@ At each level that holds intercepts equal, <code>latent_means</code> gives each 
 latent means relative to the reference group, the first group, which the
 default <code>ID.fac = "std.lv"</code> fixes at a mean of 0 and a variance of 1. Each
 mean is then a difference in the reference group's latent standard
-deviations, the effect size Hancock (2001) describes. Under another
-identification the table is empty. Where the intercepts are not invariant,
-the means are not comparable until the non-invariant intercepts are
-released with <code><a href="nomo_partial.html">nomo_partial()</a></code> (Vandenberg &amp; Lance, 2000).</p>
+deviations, the effect size Hancock (2001) describes. The fitted model
+decides which means are reported: only those of factors whose reference
+mean is fixed at 0 and variance at 1, and only where the compared group's
+mean is estimated. So the table is empty under another identification, and
+for a model with higher-order factors, which <code><a href="https://rdrr.io/pkg/semTools/man/measEq.syntax.html" class="external-link">semTools::measEq.syntax()</a></code>
+identifies by unit loadings (the decision log records the switch). A factor
+whose intercepts are all released has no estimated difference; the decision
+log says so. Where the intercepts are not invariant, the means are not
+comparable until the non-invariant intercepts are released with
+<code><a href="nomo_partial.html">nomo_partial()</a></code> (Vandenberg &amp; Lance, 2000).</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
