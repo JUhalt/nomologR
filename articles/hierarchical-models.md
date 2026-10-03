@@ -76,6 +76,7 @@ subscales <- list(
 )
 
 nomo_model(subscales, structure = "bifactor", general = "G")
+#> <nomo_model> Measurement model syntax
 #> G =~ NA*x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8 + x9 + x10 + x11 + x12
 #> Focus =~ NA*x1 + x2 + x3 + x4
 #> Drive =~ NA*x5 + x6 + x7 + x8
@@ -97,14 +98,17 @@ first-order factors carries a note that matters later:
 ``` r
 
 nomo_model(subscales, structure = "higher_order", general = "G")
+#> <nomo_model> Measurement model syntax
 #> Focus =~ x1 + x2 + x3 + x4
 #> Drive =~ x5 + x6 + x7 + x8
 #> Poise =~ x9 + x10 + x11 + x12
 #> G =~ NA*Focus + Drive + Poise
 #> G ~~ 1*G
 #> 
-#> Identification notes:
-#> - review: With three first-order factors the second-order part is just identified: this model fits exactly as well as the correlated-factors model, so model fit cannot distinguish the two.
+#> Identification notes
+#>   - Review: With three first-order factors the second-order part is just
+#>     identified: this model fits exactly as well as the correlated-factors
+#>     model, so model fit cannot distinguish the two.
 ```
 
 ``` r
@@ -149,7 +153,7 @@ h
 #>   Poise   group          0.699           -0.022            0.485
 #> 
 #> Notes
-#>   - review: A bifactor model will usually fit at least as well as
+#>   - Review: A bifactor model will usually fit at least as well as
 #>     correlated-factors or higher-order models of the same items, even when it
 #>     did not generate the data (Reise, 2012), and a higher-order model is a
 #>     constrained version of it (Yung, Thissen, & McLeod, 1999). Bonifay, Lane,
@@ -163,16 +167,16 @@ h
 #>     higher-order model generated the data. They concluded that which model to
 #>     adopt should not rely on which is better fitting. Compare the alternatives
 #>     with nomo_compare() and choose on substantive grounds, not on fit alone.
-#>   - review: Factor determinacy is at or below .90 for G, Focus, Drive, Poise.
+#>   - Review: Factor determinacy is at or below .90 for G, Focus, Drive, Poise.
 #>     Gorsuch (1983, p. 260) recommended using factor score estimates only above
 #>     that value. This is his recommendation reported as context, not a rule
 #>     applied here; the score may still be usable for some purposes.
-#>   - review: Two equally valid sets of factor scores could correlate as low as
+#>   - Review: Two equally valid sets of factor scores could correlate as low as
 #>     G (0.61), Focus (0.01), Drive (-0.18), Poise (-0.02). Gorsuch (1983, p.
 #>     260) suggested this minimum be above .70. A negative value means two
 #>     researchers scoring the same data could rank people in opposite orders and
 #>     both be consistent with the model.
-#>   - review: Construct replicability H is below .70 for Focus, Drive, Poise.
+#>   - Review: Construct replicability H is below .70 for Focus, Drive, Poise.
 #>     Hancock and Mueller (2001) proposed .70 as a standard; a factor below it
 #>     is not well defined by its own indicators and is expected to change across
 #>     studies. Reported as their standard, not applied as a rule.

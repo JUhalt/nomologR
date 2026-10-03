@@ -274,8 +274,8 @@ inv
 #> Completed: configural -> metric -> scalar
 #> 
 #>   Level         CFI  RMSEA   SRMR  CFI change  RMSEA change   LRT p
-#>   configural  1.000  0.000  0.002           -             -       -
-#>   metric      1.000  0.000  0.028      +0.000        +0.000    .146
+#>   configural  1.000  0.000  0.002          --            --      --
+#>   metric      1.000  0.000  0.028       0.000         0.000    .146
 #>   scalar      0.954  0.121  0.065      -0.046        +0.121  < .001
 #> Localized equality-constraint diagnostics retained: 12
 #> 

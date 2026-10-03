@@ -79,9 +79,9 @@ summary(rel)
     ## <nomo_reliability summary> Reliability
     ## 
     ## Coefficients
-    ##   Construct  Indicators  Omega                 Alpha
-    ##   F1         continuous  0.891 [0.871, 0.908]  0.890 [0.870, 0.907]
-    ##   F2         continuous  0.862 [0.840, 0.881]  0.861 [0.837, 0.881]
+    ##   Construct Indicators Omega                Alpha
+    ##   F1        continuous 0.891 [0.871, 0.908] 0.890 [0.870, 0.907]
+    ##   F2        continuous 0.862 [0.840, 0.881] 0.861 [0.837, 0.881]
     ##   Not shown for width: Omega scale. See nomo_table(x, "coefficients").
     ##   Bracketed values are bootstrap confidence intervals.
     ## 
@@ -541,9 +541,8 @@ summary(b5_comparison)
     ##   b5_loading_zero  12025.9  12109.1                       1
     ## 
     ## Difference tests against the reference model
-    ##   Model            Relation                  Check   Method    Chi-sq diff  df
-    ##   b5_loading_zero  nested, more constrained  nested  standard        46.91   1
-    ##   Not shown for width: p. See nomo_table(x, "comparisons").
+    ##   Model           Relation                 Check  Method   Chi-sq diff df      p
+    ##   b5_loading_zero nested, more constrained nested standard       46.91  1 < .001
     ## 
     ## Changes in fit (model minus reference)
     ##   Model               CFI     TLI   RMSEA    SRMR    AIC    BIC
@@ -698,18 +697,18 @@ summary(esem)
     ##   A with B  0.478  0.499      -0.021
     ## 
     ## Flagged
-    ##   - review: ESEM: TLI 1.006, RMSEA 0.000. CFA: TLI 0.965, RMSEA 0.051. Fixing
-    ##     the cross-loadings at zero costs chi-square 55.24 on 8 df, p < .001. The
-    ##     largest change in a factor correlation, ESEM minus CFA, is -0.02. ESEM
-    ##     fits better even on indices that penalize its extra parameters. Where its
-    ##     factor correlations are lower, the CFA's zero cross-loadings are inflating
-    ##     them; Marsh et al. (2014) then prefer the ESEM, or a CFA with the
-    ##     cross-loadings the items' content supports.
-    ##   - review: Cross-loadings at or above 0.3: a5 on B 0.32. Read the item's
+    ##   - ESEM vs. CFA (Review): ESEM: TLI 1.006, RMSEA 0.000. CFA: TLI 0.965, RMSEA
+    ##     0.051. Fixing the cross-loadings at zero costs chi-square 55.24 on 8 df,
+    ##     p < .001. The largest change in a factor correlation, ESEM minus CFA, is
+    ##     -0.02. ESEM fits better even on indices that penalize its extra
+    ##     parameters. Where its factor correlations are lower, the CFA's zero
+    ##     cross-loadings are inflating them; Marsh et al. (2014) then prefer the
+    ##     ESEM, or a CFA with the cross-loadings the items' content supports.
+    ##   - a5 (Review): Cross-loadings at or above 0.3: a5 on B 0.32. Read the item's
     ##     content for both factors. A cross-loading is evidence about the item, not
     ##     an instruction to remove it.
-    ##   - review: Main loadings below 0.4: b5 on B 0.30. Inspect the item's content
-    ##     and its cross-loadings together.
+    ##   - b5 (Review): Main loadings below 0.4: b5 on B 0.30. Inspect the item's
+    ##     content and its cross-loadings together.
 
 The ESEM fits better even on TLI and RMSEA, which penalize its extra
 parameters (TLI 1.006 vs. 0.965, RMSEA 0.000 vs. 0.051). Without being
@@ -922,7 +921,7 @@ summary(rt)
     ##   - Agency: 10 people up, 1 down, 139 within measurement error.
     ## 
     ## Flagged
-    ##   - review: `Agency` changed by 0.24 on average from `agency_t1` to
+    ##   - Agency (Review): `Agency` changed by 0.24 on average from `agency_t1` to
     ##     `agency_t2`, 95% CI [0.13, 0.34]. Scores shifted systematically, as
     ##     practice or real change would make them. ICC(A,1) counts the shift as
     ##     disagreement and ICC(C,1) does not; ICC(C,1) is 0.85 here. The SEM leaves
@@ -1011,8 +1010,8 @@ mv
     ##   A with B  0.434     0.434     0.422          0.422          0.423
     ## 
     ## Flagged
-    ##   - review: Marker-based method variance is present (chi-square difference
-    ##     11.89 on 1 df, p < .001).
+    ##   - Baseline vs. Method-C (Review): Marker-based method variance is present
+    ##     (chi-square difference 11.89 on 1 df, p < .001).
     ## 
     ## Comprehensive CFA marker technique (Williams, Hartman, & Cavazotte, 2010).
     ## Baseline: the marker uncorrelated with the substantive factors. Method-C:

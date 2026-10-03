@@ -242,8 +242,8 @@ run
 #>     plausible set is 1. The pipeline has not adopted a factor count.
 #>   - Persistence: Parallel analysis currently suggests 1 factor; the retained
 #>     plausible set is 1. The pipeline has not adopted a factor count.
-#>   Example: decisions = list(factor_count = c(Agency = <integer>, Persistence =
-#>   <integer>))
+#>   Example: decisions = list(factor_count = c(Agency = <integer>,
+#>   Persistence = <integer>))
 #> 
 #> No later stage has been run automatically while this consequential decision is
 #> unresolved.

@@ -296,8 +296,8 @@ summary(scr)
 #>   Top share is the proportion of responses in the most common category.
 #> 
 #> Flagged items
-#>   - b5 (review): `b5` has a corrected item-rest correlation of r = 0.28 (n =
-#>     473), below the teaching reference.
+#>   - b5 (review): `b5` has a corrected item-rest correlation of r = 0.28
+#>     (n = 473), below the teaching reference.
 #> 
 #> Flags are review aids, not decisions to keep or delete an item.
 ```

@@ -103,19 +103,24 @@ factors <- list(
 )
 
 nomo_model(factors)
+#> <nomo_model> Measurement model syntax
 #> engagement =~ e1 + e2 + e3
 #> belonging =~ b1 + b2 + b3
 #> efficacy =~ f1 + f2 + f3
 nomo_model(factors, structure = "higher_order", general = "Wellbeing")
+#> <nomo_model> Measurement model syntax
 #> engagement =~ e1 + e2 + e3
 #> belonging =~ b1 + b2 + b3
 #> efficacy =~ f1 + f2 + f3
 #> Wellbeing =~ NA*engagement + belonging + efficacy
 #> Wellbeing ~~ 1*Wellbeing
 #> 
-#> Identification notes:
-#> - review: With three first-order factors the second-order part is just identified: this model fits exactly as well as the correlated-factors model, so model fit cannot distinguish the two.
+#> Identification notes
+#>   - Review: With three first-order factors the second-order part is just
+#>     identified: this model fits exactly as well as the correlated-factors
+#>     model, so model fit cannot distinguish the two.
 nomo_model(factors, structure = "bifactor", general = "Wellbeing")
+#> <nomo_model> Measurement model syntax
 #> Wellbeing =~ NA*e1 + e2 + e3 + b1 + b2 + b3 + f1 + f2 + f3
 #> engagement =~ NA*e1 + e2 + e3
 #> belonging =~ NA*b1 + b2 + b3

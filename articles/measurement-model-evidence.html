@@ -156,9 +156,9 @@ places.</p>
 <pre><code><span><span class="co">## &lt;nomo_reliability summary&gt; Reliability</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Coefficients</span></span>
-<span><span class="co">##   Construct  Indicators  Omega                 Alpha</span></span>
-<span><span class="co">##   F1         continuous  0.891 [0.871, 0.908]  0.890 [0.870, 0.907]</span></span>
-<span><span class="co">##   F2         continuous  0.862 [0.840, 0.881]  0.861 [0.837, 0.881]</span></span>
+<span><span class="co">##   Construct Indicators Omega                Alpha</span></span>
+<span><span class="co">##   F1        continuous 0.891 [0.871, 0.908] 0.890 [0.870, 0.907]</span></span>
+<span><span class="co">##   F2        continuous 0.862 [0.840, 0.881] 0.861 [0.837, 0.881]</span></span>
 <span><span class="co">##   Not shown for width: Omega scale. See nomo_table(x, "coefficients").</span></span>
 <span><span class="co">##   Bracketed values are bootstrap confidence intervals.</span></span>
 <span><span class="co">## </span></span>
@@ -550,9 +550,8 @@ and fix its loading to zero:</p>
 <span><span class="co">##   b5_loading_zero  12025.9  12109.1                       1</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Difference tests against the reference model</span></span>
-<span><span class="co">##   Model            Relation                  Check   Method    Chi-sq diff  df</span></span>
-<span><span class="co">##   b5_loading_zero  nested, more constrained  nested  standard        46.91   1</span></span>
-<span><span class="co">##   Not shown for width: p. See nomo_table(x, "comparisons").</span></span>
+<span><span class="co">##   Model           Relation                 Check  Method   Chi-sq diff df      p</span></span>
+<span><span class="co">##   b5_loading_zero nested, more constrained nested standard       46.91  1 &lt; .001</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Changes in fit (model minus reference)</span></span>
 <span><span class="co">##   Model               CFI     TLI   RMSEA    SRMR    AIC    BIC</span></span>
@@ -687,18 +686,18 @@ the ESEM beside the CFA of the same model:</p>
 <span><span class="co">##   A with B  0.478  0.499      -0.021</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Flagged</span></span>
-<span><span class="co">##   - review: ESEM: TLI 1.006, RMSEA 0.000. CFA: TLI 0.965, RMSEA 0.051. Fixing</span></span>
-<span><span class="co">##     the cross-loadings at zero costs chi-square 55.24 on 8 df, p &lt; .001. The</span></span>
-<span><span class="co">##     largest change in a factor correlation, ESEM minus CFA, is -0.02. ESEM</span></span>
-<span><span class="co">##     fits better even on indices that penalize its extra parameters. Where its</span></span>
-<span><span class="co">##     factor correlations are lower, the CFA's zero cross-loadings are inflating</span></span>
-<span><span class="co">##     them; Marsh et al. (2014) then prefer the ESEM, or a CFA with the</span></span>
-<span><span class="co">##     cross-loadings the items' content supports.</span></span>
-<span><span class="co">##   - review: Cross-loadings at or above 0.3: a5 on B 0.32. Read the item's</span></span>
+<span><span class="co">##   - ESEM vs. CFA (Review): ESEM: TLI 1.006, RMSEA 0.000. CFA: TLI 0.965, RMSEA</span></span>
+<span><span class="co">##     0.051. Fixing the cross-loadings at zero costs chi-square 55.24 on 8 df,</span></span>
+<span><span class="co">##     p &lt; .001. The largest change in a factor correlation, ESEM minus CFA, is</span></span>
+<span><span class="co">##     -0.02. ESEM fits better even on indices that penalize its extra</span></span>
+<span><span class="co">##     parameters. Where its factor correlations are lower, the CFA's zero</span></span>
+<span><span class="co">##     cross-loadings are inflating them; Marsh et al. (2014) then prefer the</span></span>
+<span><span class="co">##     ESEM, or a CFA with the cross-loadings the items' content supports.</span></span>
+<span><span class="co">##   - a5 (Review): Cross-loadings at or above 0.3: a5 on B 0.32. Read the item's</span></span>
 <span><span class="co">##     content for both factors. A cross-loading is evidence about the item, not</span></span>
 <span><span class="co">##     an instruction to remove it.</span></span>
-<span><span class="co">##   - review: Main loadings below 0.4: b5 on B 0.30. Inspect the item's content</span></span>
-<span><span class="co">##     and its cross-loadings together.</span></span></code></pre>
+<span><span class="co">##   - b5 (Review): Main loadings below 0.4: b5 on B 0.30. Inspect the item's</span></span>
+<span><span class="co">##     content and its cross-loadings together.</span></span></code></pre>
 <p>The ESEM fits better even on TLI and RMSEA, which penalize its extra
 parameters (TLI 1.006 vs. 0.965, RMSEA 0.000 vs. 0.051). Without being
 told where to look, its loadings show both features built into these
@@ -891,7 +890,7 @@ it.</p>
 <span><span class="co">##   - Agency: 10 people up, 1 down, 139 within measurement error.</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Flagged</span></span>
-<span><span class="co">##   - review: `Agency` changed by 0.24 on average from `agency_t1` to</span></span>
+<span><span class="co">##   - Agency (Review): `Agency` changed by 0.24 on average from `agency_t1` to</span></span>
 <span><span class="co">##     `agency_t2`, 95% CI [0.13, 0.34]. Scores shifted systematically, as</span></span>
 <span><span class="co">##     practice or real change would make them. ICC(A,1) counts the shift as</span></span>
 <span><span class="co">##     disagreement and ICC(C,1) does not; ICC(C,1) is 0.85 here. The SEM leaves</span></span>
@@ -978,8 +977,8 @@ method factor that loads .30 on every item:</p>
 <span><span class="co">##   A with B  0.434     0.434     0.422          0.422          0.423</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Flagged</span></span>
-<span><span class="co">##   - review: Marker-based method variance is present (chi-square difference</span></span>
-<span><span class="co">##     11.89 on 1 df, p &lt; .001).</span></span>
+<span><span class="co">##   - Baseline vs. Method-C (Review): Marker-based method variance is present</span></span>
+<span><span class="co">##     (chi-square difference 11.89 on 1 df, p &lt; .001).</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Comprehensive CFA marker technique (Williams, Hartman, &amp; Cavazotte, 2010).</span></span>
 <span><span class="co">## Baseline: the marker uncorrelated with the substantive factors. Method-C:</span></span>

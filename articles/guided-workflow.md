@@ -54,8 +54,8 @@ run
 #>     plausible set is 1. The pipeline has not adopted a factor count.
 #>   - SocialDesirability: Parallel analysis currently suggests 1 factor; the
 #>     retained plausible set is 1. The pipeline has not adopted a factor count.
-#>   Example: decisions = list(factor_count = c(Agency = <integer>, Persistence =
-#>   <integer>, SocialDesirability = <integer>))
+#>   Example: decisions = list(factor_count = c(Agency = <integer>,
+#>   Persistence = <integer>, SocialDesirability = <integer>))
 #> 
 #> No later stage has been run automatically while this consequential decision is
 #> unresolved.
@@ -122,8 +122,8 @@ run
 #>   labeled as such.
 #>   - measurement_model: EFA has completed for every supplied scale. No
 #>     confirmatory measurement model has been constructed or fitted.
-#>   Example: decisions = list(cfa_model = list(value = model, rationale =
-#>   "Prespecified measurement model"))
+#>   Example: decisions = list(cfa_model = list(value = model,
+#>   rationale = "Prespecified measurement model"))
 #> 
 #> No later stage has been run automatically while this consequential decision is
 #> unresolved.

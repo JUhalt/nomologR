@@ -269,7 +269,7 @@ h
 #>   C       group          0.641           -0.178            0.406
 #> 
 #> Notes
-#>   - review: A bifactor model will usually fit at least as well as
+#>   - Review: A bifactor model will usually fit at least as well as
 #>     correlated-factors or higher-order models of the same items, even when it
 #>     did not generate the data (Reise, 2012), and a higher-order model is a
 #>     constrained version of it (Yung, Thissen, & McLeod, 1999). Bonifay, Lane,
@@ -283,16 +283,16 @@ h
 #>     higher-order model generated the data. They concluded that which model to
 #>     adopt should not rely on which is better fitting. Compare the alternatives
 #>     with nomo_compare() and choose on substantive grounds, not on fit alone.
-#>   - review: Factor determinacy is at or below .90 for G, A, B, C. Gorsuch
+#>   - Review: Factor determinacy is at or below .90 for G, A, B, C. Gorsuch
 #>     (1983, p. 260) recommended using factor score estimates only above that
 #>     value. This is his recommendation reported as context, not a rule applied
 #>     here; the score may still be usable for some purposes.
-#>   - review: Two equally valid sets of factor scores could correlate as low as
+#>   - Review: Two equally valid sets of factor scores could correlate as low as
 #>     G (0.50), A (-0.01), B (0.02), C (-0.18). Gorsuch (1983, p. 260) suggested
 #>     this minimum be above .70. A negative value means two researchers scoring
 #>     the same data could rank people in opposite orders and both be consistent
 #>     with the model.
-#>   - review: Construct replicability H is below .70 for A, B, C. Hancock and
+#>   - Review: Construct replicability H is below .70 for A, B, C. Hancock and
 #>     Mueller (2001) proposed .70 as a standard; a factor below it is not well
 #>     defined by its own indicators and is expected to change across studies.
 #>     Reported as their standard, not applied as a rule.

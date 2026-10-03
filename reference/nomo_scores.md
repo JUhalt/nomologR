@@ -166,17 +166,17 @@ summed
 #>   chi-square difference 43.27 on 12 df, p < .001
 #> 
 #> Notes
-#>   - review: The parallel model that unit weighting assumes fits worse than the
+#>   - Review: The parallel model that unit weighting assumes fits worse than the
 #>     model you fitted (chi-square difference 43.27 on 12 df, p < .001). The
 #>     items are not interchangeable in the way adding them assumes. This does
 #>     not forbid a sum score; it means the choice needs a reason beyond
 #>     convenience, and that `validity` and `correlational_accuracy` describe
 #>     what it costs.
-#>   - review: Validity is below .90 for visual, speed. Gorsuch (1983, p. 260)
+#>   - Review: Validity is below .90 for visual, speed. Gorsuch (1983, p. 260)
 #>     recommended at least .80, and above .90 if the scores are to serve as
 #>     adequate substitutes for the factors themselves. Reported as his
 #>     recommendation, not applied as a rule.
-#>   - concern: Correlations among these scores do not reproduce the correlations
+#>   - Concern: Correlations among these scores do not reproduce the correlations
 #>     among the factors: the largest discrepancy is -0.162, between visual and
 #>     speed. A relationship estimated from these scores carries that much bias,
 #>     and its direction is a property of the method and the model rather than a
@@ -186,7 +186,7 @@ summed
 #>     coefficients, and scores from one model containing every factor, like
 #>     these, are not it: the predictors need regression-method scores and the
 #>     outcome Bartlett scores, each from a measurement model of its own.
-#>   - review: These scores also carry the other factors: the score for textual
+#>   - Review: These scores also carry the other factors: the score for textual
 #>     correlates +0.431 with a factor it does not represent (Grice, 2001). A
 #>     score that is not univocal cannot be treated as though it measured its own
 #>     factor alone.

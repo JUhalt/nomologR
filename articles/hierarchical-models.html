@@ -151,6 +151,7 @@ from the same list of subscales. The researcher chooses the structure;
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="../reference/nomo_model.html">nomo_model</a></span><span class="op">(</span><span class="va">subscales</span>, structure <span class="op">=</span> <span class="st">"bifactor"</span>, general <span class="op">=</span> <span class="st">"G"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; &lt;nomo_model&gt; Measurement model syntax</span></span>
 <span><span class="co">#&gt; G =~ NA*x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8 + x9 + x10 + x11 + x12</span></span>
 <span><span class="co">#&gt; Focus =~ NA*x1 + x2 + x3 + x4</span></span>
 <span><span class="co">#&gt; Drive =~ NA*x5 + x6 + x7 + x8</span></span>
@@ -168,14 +169,17 @@ and every covariance among factors is fixed to 0. A higher-order model
 with three first-order factors carries a note that matters later:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/nomo_model.html">nomo_model</a></span><span class="op">(</span><span class="va">subscales</span>, structure <span class="op">=</span> <span class="st">"higher_order"</span>, general <span class="op">=</span> <span class="st">"G"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; &lt;nomo_model&gt; Measurement model syntax</span></span>
 <span><span class="co">#&gt; Focus =~ x1 + x2 + x3 + x4</span></span>
 <span><span class="co">#&gt; Drive =~ x5 + x6 + x7 + x8</span></span>
 <span><span class="co">#&gt; Poise =~ x9 + x10 + x11 + x12</span></span>
 <span><span class="co">#&gt; G =~ NA*Focus + Drive + Poise</span></span>
 <span><span class="co">#&gt; G ~~ 1*G</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Identification notes:</span></span>
-<span><span class="co">#&gt; - review: With three first-order factors the second-order part is just identified: this model fits exactly as well as the correlated-factors model, so model fit cannot distinguish the two.</span></span></code></pre></div>
+<span><span class="co">#&gt; Identification notes</span></span>
+<span><span class="co">#&gt;   - Review: With three first-order factors the second-order part is just</span></span>
+<span><span class="co">#&gt;     identified: this model fits exactly as well as the correlated-factors</span></span>
+<span><span class="co">#&gt;     model, so model fit cannot distinguish the two.</span></span></code></pre></div>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">correlated</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_cfa.html">nomo_cfa</a></span><span class="op">(</span><span class="fu"><a href="../reference/nomo_model.html">nomo_model</a></span><span class="op">(</span><span class="va">subscales</span><span class="op">)</span>, data <span class="op">=</span> <span class="va">dat</span><span class="op">)</span></span>
 <span><span class="va">higher</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_cfa.html">nomo_cfa</a></span><span class="op">(</span><span class="fu"><a href="../reference/nomo_model.html">nomo_model</a></span><span class="op">(</span><span class="va">subscales</span>, <span class="st">"higher_order"</span><span class="op">)</span>, data <span class="op">=</span> <span class="va">dat</span><span class="op">)</span></span>
@@ -215,7 +219,7 @@ model and reports the indices:</p>
 <span><span class="co">#&gt;   Poise   group          0.699           -0.022            0.485</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Notes</span></span>
-<span><span class="co">#&gt;   - review: A bifactor model will usually fit at least as well as</span></span>
+<span><span class="co">#&gt;   - Review: A bifactor model will usually fit at least as well as</span></span>
 <span><span class="co">#&gt;     correlated-factors or higher-order models of the same items, even when it</span></span>
 <span><span class="co">#&gt;     did not generate the data (Reise, 2012), and a higher-order model is a</span></span>
 <span><span class="co">#&gt;     constrained version of it (Yung, Thissen, &amp; McLeod, 1999). Bonifay, Lane,</span></span>
@@ -229,16 +233,16 @@ model and reports the indices:</p>
 <span><span class="co">#&gt;     higher-order model generated the data. They concluded that which model to</span></span>
 <span><span class="co">#&gt;     adopt should not rely on which is better fitting. Compare the alternatives</span></span>
 <span><span class="co">#&gt;     with nomo_compare() and choose on substantive grounds, not on fit alone.</span></span>
-<span><span class="co">#&gt;   - review: Factor determinacy is at or below .90 for G, Focus, Drive, Poise.</span></span>
+<span><span class="co">#&gt;   - Review: Factor determinacy is at or below .90 for G, Focus, Drive, Poise.</span></span>
 <span><span class="co">#&gt;     Gorsuch (1983, p. 260) recommended using factor score estimates only above</span></span>
 <span><span class="co">#&gt;     that value. This is his recommendation reported as context, not a rule</span></span>
 <span><span class="co">#&gt;     applied here; the score may still be usable for some purposes.</span></span>
-<span><span class="co">#&gt;   - review: Two equally valid sets of factor scores could correlate as low as</span></span>
+<span><span class="co">#&gt;   - Review: Two equally valid sets of factor scores could correlate as low as</span></span>
 <span><span class="co">#&gt;     G (0.61), Focus (0.01), Drive (-0.18), Poise (-0.02). Gorsuch (1983, p.</span></span>
 <span><span class="co">#&gt;     260) suggested this minimum be above .70. A negative value means two</span></span>
 <span><span class="co">#&gt;     researchers scoring the same data could rank people in opposite orders and</span></span>
 <span><span class="co">#&gt;     both be consistent with the model.</span></span>
-<span><span class="co">#&gt;   - review: Construct replicability H is below .70 for Focus, Drive, Poise.</span></span>
+<span><span class="co">#&gt;   - Review: Construct replicability H is below .70 for Focus, Drive, Poise.</span></span>
 <span><span class="co">#&gt;     Hancock and Mueller (2001) proposed .70 as a standard; a factor below it</span></span>
 <span><span class="co">#&gt;     is not well defined by its own indicators and is expected to change across</span></span>
 <span><span class="co">#&gt;     studies. Reported as their standard, not applied as a rule.</span></span>

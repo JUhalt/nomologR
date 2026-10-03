@@ -136,18 +136,18 @@ summary(run$results$screen$EF)
 #>   Top share is the proportion of responses in the most common category.
 #> 
 #> Flagged items
-#>   - EF1 (review): `EF1` has a corrected item-rest correlation of r = 0.17 (n =
-#>     400), below the teaching reference.
-#>   - EF2 (review): `EF2` has a negative corrected item-rest correlation (r =
-#>     -0.50, n = 400). It is declared reverse-keyed, and this is the sign such
-#>     an item shows before it is recoded: recoded on the declared 1 to 5 scale,
-#>     its item-rest correlation is r = 0.50. The data were not recoded.
-#>   - EF3 (review): `EF3` has a corrected item-rest correlation of r = 0.21 (n =
-#>     400), below the teaching reference.
-#>   - EF4 (review): `EF4` has a corrected item-rest correlation of r = 0.17 (n =
-#>     400), below the teaching reference.
-#>   - EF6 (review): `EF6` has a corrected item-rest correlation of r = 0.18 (n =
-#>     400), below the teaching reference.
+#>   - EF1 (review): `EF1` has a corrected item-rest correlation of r = 0.17
+#>     (n = 400), below the teaching reference.
+#>   - EF2 (review): `EF2` has a negative corrected item-rest correlation
+#>     (r = -0.50, n = 400). It is declared reverse-keyed, and this is the sign
+#>     such an item shows before it is recoded: recoded on the declared 1 to 5
+#>     scale, its item-rest correlation is r = 0.50. The data were not recoded.
+#>   - EF3 (review): `EF3` has a corrected item-rest correlation of r = 0.21
+#>     (n = 400), below the teaching reference.
+#>   - EF4 (review): `EF4` has a corrected item-rest correlation of r = 0.17
+#>     (n = 400), below the teaching reference.
+#>   - EF6 (review): `EF6` has a corrected item-rest correlation of r = 0.18
+#>     (n = 400), below the teaching reference.
 #> 
 #> Flags are review aids, not decisions to keep or delete an item.
 ```
@@ -207,8 +207,8 @@ summary(ef)
 #>   Top share is the proportion of responses in the most common category.
 #> 
 #> Flagged items
-#>   - EF4 (review): `EF4` has a corrected item-rest correlation of r = 0.23 (n =
-#>     400), below the teaching reference.
+#>   - EF4 (review): `EF4` has a corrected item-rest correlation of r = 0.23
+#>     (n = 400), below the teaching reference.
 #> 
 #> Flags are review aids, not decisions to keep or delete an item.
 ```
@@ -354,7 +354,7 @@ summary(inv)
 #> Latent means relative to A (its latent SD)
 #>   Level   Group  Factor  Difference  95% CI            p
 #>   scalar  B      EF           -0.14  [-0.36, 0.08]  .218
-#>   scalar  B      TF            0.22  [-0.00, 0.44]  .054
+#>   scalar  B      TF            0.22  [0.00, 0.44]   .054
 #>   Comparable only with invariant intercepts, full or partial.
 #> 
 #> Largest equality-constraint score diagnostics (diagnostic only)

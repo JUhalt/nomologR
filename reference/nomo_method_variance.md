@@ -238,8 +238,8 @@ mv
 #>   A with B  0.434     0.434     0.422          0.422          0.423
 #> 
 #> Flagged
-#>   - review: Marker-based method variance is present (chi-square difference
-#>     11.89 on 1 df, p < .001).
+#>   - Baseline vs. Method-C (Review): Marker-based method variance is present
+#>     (chi-square difference 11.89 on 1 df, p < .001).
 #> 
 #> Comprehensive CFA marker technique (Williams, Hartman, & Cavazotte, 2010).
 #> Baseline: the marker uncorrelated with the substantive factors. Method-C:

@@ -238,11 +238,11 @@ summary(rel_ci)
 #> <nomo_reliability summary> Reliability
 #> 
 #> Coefficients
-#>   Construct  Indicators  Omega                 Alpha
-#>   speed      continuous  0.686 [0.585, 0.752]  0.688 [0.625, 0.743]
-#>   textual    continuous  0.885 [0.859, 0.900]  0.883 [0.854, 0.898]
-#>   visual     continuous  0.612 [0.542, 0.686]  0.626 [0.554, 0.693]
-#>   Not shown for width: Omega scale, Flag. See nomo_table(x, "coefficients").
+#>   Construct Indicators Omega                Alpha                Flag
+#>   speed     continuous 0.686 [0.585, 0.752] 0.688 [0.625, 0.743] review
+#>   textual   continuous 0.885 [0.859, 0.900] 0.883 [0.854, 0.898]
+#>   visual    continuous 0.612 [0.542, 0.686] 0.626 [0.554, 0.693] review
+#>   Not shown for width: Omega scale. See nomo_table(x, "coefficients").
 #>   Bracketed values are bootstrap confidence intervals.
 #> 
 #> Measurement-model context requires review: reliability is conditional on the

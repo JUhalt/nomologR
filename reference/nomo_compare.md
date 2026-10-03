@@ -236,8 +236,8 @@ cmp
 #> B.
 #> 
 #> Compared with `full`
-#>   - no_b5 (nested, more constrained): chi-square difference = 46.91, df = 1, p
-#>     < .001; CFI change -0.029, RMSEA change +0.022; AIC change +44.9
+#>   - no_b5 (nested, more constrained): chi-square difference = 46.91, df = 1,
+#>     p < .001; CFI change -0.029, RMSEA change +0.022; AIC change +44.9
 #> 
 #> No model was selected automatically. summary() shows interpretations and
 #> measurement evidence.

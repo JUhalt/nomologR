@@ -161,10 +161,10 @@ nomo_apa_table(cfa, "fit", number = 2)
 #> ------------------------------------------------------------------------------
 #> Measurement model  85.31  24  < .001  .931  0.896  0.092 [0.071, 0.114]  0.065
 #> ------------------------------------------------------------------------------
-#> Note. Estimated with ML; N = 301. CFI = comparative fit index; TLI =
-#> Tucker-Lewis index; RMSEA = root mean square error of approximation; SRMR =
-#> standardized root mean square residual. Fit indices are reported as evidence,
-#> not against fixed cutoffs.
+#> Note. Estimated with ML; N = 301. CFI = comparative fit index;
+#> TLI = Tucker-Lewis index; RMSEA = root mean square error of approximation;
+#> SRMR = standardized root mean square residual. Fit indices are reported as
+#> evidence, not against fixed cutoffs.
 nomo_apa_table(nomo_reliability(cfa), number = 3)
 #> Table 3
 #> Reliability Estimates

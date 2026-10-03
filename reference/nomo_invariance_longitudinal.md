@@ -225,7 +225,7 @@ long
 #> Completed: configural -> metric -> scalar -> strict
 #> 
 #>   Level         CFI  RMSEA   SRMR  CFI change  RMSEA change   LRT p
-#>   configural  1.000  0.000  0.020           -             -       -
+#>   configural  1.000  0.000  0.020          --            --      --
 #>   metric      0.999  0.012  0.030      -0.001        +0.012    .018
 #>   scalar      0.963  0.058  0.045      -0.036        +0.046  < .001
 #>   strict      0.964  0.053  0.047      +0.001        -0.005    .669

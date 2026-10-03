@@ -70,10 +70,10 @@ inv
 #> Completed: configural -> metric -> scalar -> strict
 #> 
 #>   Level         CFI  RMSEA   SRMR  CFI change  RMSEA change   LRT p
-#>   configural  1.000  0.000  0.002           -             -       -
-#>   metric      1.000  0.000  0.028      +0.000        +0.000    .146
+#>   configural  1.000  0.000  0.002          --            --      --
+#>   metric      1.000  0.000  0.028       0.000         0.000    .146
 #>   scalar      0.954  0.121  0.065      -0.046        +0.121  < .001
-#>   strict      0.954  0.102  0.066      +0.000        -0.019    .483
+#>   strict      0.954  0.102  0.066       0.000        -0.019    .483
 #> Localized equality-constraint diagnostics retained: 24
 #> 
 #> Fit changes and score diagnostics are evidence. They are not pass/fail rules,
