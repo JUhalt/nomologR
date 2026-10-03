@@ -137,14 +137,26 @@ reliability (<code><a href="nomo_reliability.html">nomo_reliability()</a></code>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A <code>nomo_compare</code> object. The fields to read are:</p><ul><li><p><code>models</code>: fit and information criteria for each model.</p></li>
+    <p>A <code>nomo_compare</code> object. The fields to read are:</p><ul><li><p><code>models</code>: fit and information criteria for each model. <code>df</code> is the
+degrees of freedom of the chi-square shown, which for mean-and-variance
+adjusted tests (such as <code>MLMVS</code>) differ from the model's.</p></li>
 <li><p><code>comparisons</code>: for each model against the <code>reference</code>, the nesting
 relation, the difference test, changes in fit and information criteria,
-and an interpretation.</p></li>
+and an interpretation. <code>relation</code> is one of <code>"more_constrained"</code>,
+<code>"less_constrained"</code>, <code>"equivalent"</code>, <code>"non_nested"</code>,
+<code>"different_variables"</code>, or <code>"undetermined"</code> (the nesting check could
+not run and nesting was not declared). <code>nesting_check</code> is one of
+<code>"nested"</code>, <code>"not_nested"</code>, <code>"equivalent"</code>, <code>"unavailable"</code>,
+<code>"not_run"</code> (declared non-nested), or <code>"not_applicable"</code> (different
+observed variables). <code>df_difference</code> is the difference in the models'
+degrees of freedom.</p></li>
 <li><p><code>loadings</code>: standardized loadings side by side.</p></li>
-<li><p><code>evidence</code>: reliability, AVE, and HTMT2 by model, when <code>evidence = TRUE</code>.</p></li>
-<li><p><code>fits</code>: the fitted <code>nomo_cfa</code> objects, and <code>engine_warnings</code>, the
-warnings <code>lavaan</code> raised for each.</p></li>
+<li><p><code>evidence</code>: reliability, AVE, and HTMT2 by model, when <code>evidence = TRUE</code>.
+An HTMT2 pair is labeled in model order, as <code><a href="nomo_validity.html">nomo_validity()</a></code> lists it.</p></li>
+<li><p><code>fits</code>: the fitted <code>nomo_cfa</code> objects; each keeps the warnings <code>lavaan</code>
+raised while fitting it in its own <code>engine_warnings</code>.</p></li>
+<li><p><code>engine_warnings</code>: for each model compared with the <code>reference</code>, the
+warnings raised by the nesting check and the difference test.</p></li>
 <li><p><code>reference</code>, <code>rationale</code>, <code>origin</code>, <code>references</code>, and <code>decision_log</code>.</p></li>
 </ul><p>Other fields record the call, the settings used, and intermediate engine
 results. They may change between releases and are not part of the stable
@@ -159,8 +171,9 @@ statistics and fit indices would not be comparable.</p>
 <p><strong>Nesting.</strong> With <code>nested = "auto"</code>, nesting is checked from the models'
 implied moments with <code><a href="https://rdrr.io/pkg/semTools/man/net.html" class="external-link">semTools::net()</a></code> (Bentler &amp; Satorra, 2010). The
 difference test is reported only for nested models. If the check cannot run
-(for example for some categorical models), set <code>nested = "yes"</code> when one
-model is obtained from the other by fixing or constraining parameters. A
+(for example for some categorical models), the relation is reported as
+<code>"undetermined"</code> and flagged for review; set <code>nested = "yes"</code> when one model
+is obtained from the other by fixing or constraining parameters. A
 declaration that the check contradicts is recorded as a concern and no test
 is reported.</p>
 <p><strong>Difference tests.</strong> Tests come from <code><a href="https://rdrr.io/pkg/lavaan/man/lavTestLRT.html" class="external-link">lavaan::lavTestLRT()</a></code>: the ordinary
@@ -326,7 +339,7 @@ Statistics, 6</em>(2), 461-464. <a href="https://doi.org/10.1214/aos/1176344136"
 <span class="r-out co"><span class="r-pr">#&gt;</span>   B          alpha   0.771  0.771</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   A          AVE     0.497  0.497</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   B          AVE     0.434  0.521</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   B vs A     HTMT2   0.533  0.533</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   A vs B     HTMT2   0.533  0.533</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   - The loading fixed to zero for b5 keeps that item in this composite; the</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     coefficient does not describe a shortened scale.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>

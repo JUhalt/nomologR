@@ -79,19 +79,34 @@ nomo_compare(
 
 A `nomo_compare` object. The fields to read are:
 
-- `models`: fit and information criteria for each model.
+- `models`: fit and information criteria for each model. `df` is the
+  degrees of freedom of the chi-square shown, which for
+  mean-and-variance adjusted tests (such as `MLMVS`) differ from the
+  model's.
 
 - `comparisons`: for each model against the `reference`, the nesting
   relation, the difference test, changes in fit and information
-  criteria, and an interpretation.
+  criteria, and an interpretation. `relation` is one of
+  `"more_constrained"`, `"less_constrained"`, `"equivalent"`,
+  `"non_nested"`, `"different_variables"`, or `"undetermined"` (the
+  nesting check could not run and nesting was not declared).
+  `nesting_check` is one of `"nested"`, `"not_nested"`, `"equivalent"`,
+  `"unavailable"`, `"not_run"` (declared non-nested), or
+  `"not_applicable"` (different observed variables). `df_difference` is
+  the difference in the models' degrees of freedom.
 
 - `loadings`: standardized loadings side by side.
 
 - `evidence`: reliability, AVE, and HTMT2 by model, when
-  `evidence = TRUE`.
+  `evidence = TRUE`. An HTMT2 pair is labeled in model order, as
+  [`nomo_validity()`](https://juhalt.github.io/nomologR/reference/nomo_validity.md)
+  lists it.
 
-- `fits`: the fitted `nomo_cfa` objects, and `engine_warnings`, the
-  warnings `lavaan` raised for each.
+- `fits`: the fitted `nomo_cfa` objects; each keeps the warnings
+  `lavaan` raised while fitting it in its own `engine_warnings`.
+
+- `engine_warnings`: for each model compared with the `reference`, the
+  warnings raised by the nesting check and the difference test.
 
 - `reference`, `rationale`, `origin`, `references`, and `decision_log`.
 
@@ -112,7 +127,8 @@ implied moments with
 [`semTools::net()`](https://rdrr.io/pkg/semTools/man/net.html) (Bentler
 & Satorra, 2010). The difference test is reported only for nested
 models. If the check cannot run (for example for some categorical
-models), set `nested = "yes"` when one model is obtained from the other
+models), the relation is reported as `"undetermined"` and flagged for
+review; set `nested = "yes"` when one model is obtained from the other
 by fixing or constraining parameters. A declaration that the check
 contradicts is recorded as a concern and no test is reported.
 
@@ -300,7 +316,7 @@ summary(cmp_evidence)
 #>   B          alpha   0.771  0.771
 #>   A          AVE     0.497  0.497
 #>   B          AVE     0.434  0.521
-#>   B vs A     HTMT2   0.533  0.533
+#>   A vs B     HTMT2   0.533  0.533
 #>   - The loading fixed to zero for b5 keeps that item in this composite; the
 #>     coefficient does not describe a shortened scale.
 #> 

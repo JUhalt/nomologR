@@ -39,7 +39,8 @@ A character scalar of class `nomo_model` that can be passed directly to
 [`nomo_cfa()`](https://juhalt.github.io/nomologR/reference/nomo_cfa.md)
 or to [`lavaan::cfa()`](https://rdrr.io/pkg/lavaan/man/cfa.html).
 Attributes record the `factors`, `structure`, `general` factor, and any
-identification `notes`.
+identification `notes`, a character vector named by severity (`"review"`
+or `"concern"`).
 
 ## Details
 
@@ -63,7 +64,14 @@ The helper never derives a structure from exploratory results.
   (each factor's first loading is freed and its variance fixed to 1), so
   the model is identified the same way whatever `std.lv` is used to fit
   it. At least two group factors with at least two indicators each are
-  required; configurations known to be fragile are noted.
+  required. Two accepted configurations are not identified without an
+  added constraint, which `nomo_model()` does not write: a group factor
+  with two indicators (its two loadings enter the covariances only
+  through their product), and two group factors with no more than three
+  indicators each. Both are noted as concerns: `lavaan` may still report
+  convergence, but the loadings are arbitrary. Two group factors with
+  more indicators are identified but can be empirically unstable, which
+  is noted for review.
 
 Any identification notes are attached as the `"notes"` attribute and
 printed with the syntax. Use
@@ -106,7 +114,7 @@ nomo_model(factors, structure = "higher_order", general = "Wellbeing")
 #> Wellbeing ~~ 1*Wellbeing
 #> 
 #> Identification notes:
-#> - With three first-order factors the second-order part is just identified: this model fits exactly as well as the correlated-factors model, so model fit cannot distinguish the two.
+#> - review: With three first-order factors the second-order part is just identified: this model fits exactly as well as the correlated-factors model, so model fit cannot distinguish the two.
 nomo_model(factors, structure = "bifactor", general = "Wellbeing")
 #> Wellbeing =~ NA*e1 + e2 + e3 + b1 + b2 + b3 + f1 + f2 + f3
 #> engagement =~ NA*e1 + e2 + e3

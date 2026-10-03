@@ -97,7 +97,8 @@ hierarchical structures these are the first-order or group factors.</p></dd>
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A character scalar of class <code>nomo_model</code> that can be passed directly
 to <code><a href="nomo_cfa.html">nomo_cfa()</a></code> or to <code><a href="https://rdrr.io/pkg/lavaan/man/cfa.html" class="external-link">lavaan::cfa()</a></code>. Attributes record the <code>factors</code>,
-<code>structure</code>, <code>general</code> factor, and any identification <code>notes</code>.</p>
+<code>structure</code>, <code>general</code> factor, and any identification <code>notes</code>, a character
+vector named by severity (<code>"review"</code> or <code>"concern"</code>).</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -116,8 +117,14 @@ indicator, and each element of <code>factors</code> becomes a group factor. All
 factors are orthogonal. Identification is written into the syntax (each
 factor's first loading is freed and its variance fixed to 1), so the model
 is identified the same way whatever <code>std.lv</code> is used to fit it. At least
-two group factors with at least two indicators each are required;
-configurations known to be fragile are noted.</p></li>
+two group factors with at least two indicators each are required. Two
+accepted configurations are not identified without an added constraint,
+which <code>nomo_model()</code> does not write: a group factor with two indicators
+(its two loadings enter the covariances only through their product), and
+two group factors with no more than three indicators each. Both are noted
+as concerns: <code>lavaan</code> may still report convergence, but the loadings are
+arbitrary. Two group factors with more indicators are identified but can
+be empirically unstable, which is noted for review.</p></li>
 </ul><p>Any identification notes are attached as the <code>"notes"</code> attribute and printed
 with the syntax. Use <code><a href="nomo_hierarchical.html">nomo_hierarchical()</a></code> to evaluate a fitted higher-order
 or bifactor model.</p>
@@ -154,7 +161,7 @@ between the higher-order factor model and the hierarchical factor model.
 <span class="r-out co"><span class="r-pr">#&gt;</span> Wellbeing ~~ 1*Wellbeing</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Identification notes:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - With three first-order factors the second-order part is just identified: this model fits exactly as well as the correlated-factors model, so model fit cannot distinguish the two.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> - review: With three first-order factors the second-order part is just identified: this model fits exactly as well as the correlated-factors model, so model fit cannot distinguish the two.</span>
 <span class="r-in"><span><span class="fu">nomo_model</span><span class="op">(</span><span class="va">factors</span>, structure <span class="op">=</span> <span class="st">"bifactor"</span>, general <span class="op">=</span> <span class="st">"Wellbeing"</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Wellbeing =~ NA*e1 + e2 + e3 + b1 + b2 + b3 + f1 + f2 + f3</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> engagement =~ NA*e1 + e2 + e3</span>

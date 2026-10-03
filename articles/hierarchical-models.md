@@ -104,7 +104,7 @@ nomo_model(subscales, structure = "higher_order", general = "G")
 #> G ~~ 1*G
 #> 
 #> Identification notes:
-#> - With three first-order factors the second-order part is just identified: this model fits exactly as well as the correlated-factors model, so model fit cannot distinguish the two.
+#> - review: With three first-order factors the second-order part is just identified: this model fits exactly as well as the correlated-factors model, so model fit cannot distinguish the two.
 ```
 
 ``` r

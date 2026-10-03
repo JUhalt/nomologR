@@ -37,9 +37,13 @@ nomo_cfa(
 
 - ordered:
 
-  Optional character vector naming binary/ordinal indicators. When
-  supplied and `estimator = NULL`, `nomo_cfa()` explicitly requests
-  `WLSMV`.
+  Optional character vector naming binary/ordinal indicators. Model
+  indicators stored as ordered factors are treated as declared whether
+  or not they are named here, because `lavaan` fits them as categorical;
+  the decision log flags them for review. Names that are not variables
+  in the model are not used, and the decision log lists them. When any
+  indicator is ordered and `estimator = NULL`, `nomo_cfa()` explicitly
+  requests `WLSMV`.
 
 - estimator:
 
@@ -91,7 +95,11 @@ A `nomo_cfa` object. The fields to read are:
 
 - `converged`, `estimator`, `data_n`, `n_used`, and `sample_summary`.
 
-- `fit_evidence`: global fit indices with their teaching references.
+- `fit_evidence`: global fit indices with their teaching references;
+  `variant` names the `lavaan` measure each value comes from. Robust
+  values are preferred, then scaled ones, then standard ones. When
+  `lavaan` was asked for a scaled test statistic but could not compute
+  it, every value is the standard one, and the decision log says so.
 
 - `standardized_loadings`: one row per loading, with its interval, flag,
   and explanation.

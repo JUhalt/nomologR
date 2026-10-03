@@ -96,8 +96,11 @@ or an object created by <code><a href="nomo_model.html">nomo_model()</a></code>.
 
 <dt id="arg-ordered">ordered<a class="anchor" aria-label="anchor" href="#arg-ordered"></a></dt>
 <dd><p>Optional character vector naming binary/ordinal indicators.
-When supplied and <code>estimator = NULL</code>, <code>nomo_cfa()</code> explicitly requests
-<code>WLSMV</code>.</p></dd>
+Model indicators stored as ordered factors are treated as declared whether
+or not they are named here, because <code>lavaan</code> fits them as categorical; the
+decision log flags them for review. Names that are not variables in the
+model are not used, and the decision log lists them. When any indicator is
+ordered and <code>estimator = NULL</code>, <code>nomo_cfa()</code> explicitly requests <code>WLSMV</code>.</p></dd>
 
 
 <dt id="arg-estimator">estimator<a class="anchor" aria-label="anchor" href="#arg-estimator"></a></dt>
@@ -141,7 +144,11 @@ as quarantined diagnostics. They never trigger automatic respecification.</p></d
     <p>A <code>nomo_cfa</code> object. The fields to read are:</p><ul><li><p><code>fit</code>: the unchanged <code>lavaan</code> fit, for anything else <code>lavaan</code> reports.</p></li>
 <li><p><code>model</code>: the model syntax fitted.</p></li>
 <li><p><code>converged</code>, <code>estimator</code>, <code>data_n</code>, <code>n_used</code>, and <code>sample_summary</code>.</p></li>
-<li><p><code>fit_evidence</code>: global fit indices with their teaching references.</p></li>
+<li><p><code>fit_evidence</code>: global fit indices with their teaching references;
+<code>variant</code> names the <code>lavaan</code> measure each value comes from. Robust
+values are preferred, then scaled ones, then standard ones. When
+<code>lavaan</code> was asked for a scaled test statistic but could not compute it,
+every value is the standard one, and the decision log says so.</p></li>
 <li><p><code>standardized_loadings</code>: one row per loading, with its interval, flag,
 and explanation.</p></li>
 <li><p><code>factor_correlations</code>: latent correlations with intervals.</p></li>
