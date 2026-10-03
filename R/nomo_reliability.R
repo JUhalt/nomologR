@@ -307,19 +307,39 @@ nomo_reliability <- function(fit,
         "latent_response",
         "observed_continuous"
       )
+      # The reason follows what was returned, not only the indicator type.
       alpha_status$reason <- ifelse(
-        alpha_status$indicator_type == "ordered",
+        !alpha_status$available,
         paste(
-          "Alpha is calculated on the polychoric/latent-response scale.",
-          "This is not alpha for the observed summed ordinal score and should be labeled accordingly."
+          "Alpha was requested but was not returned by the reliability engine.",
+          "Inspect the fitted model and engine output before interpretation."
         ),
-        paste(
-          "Alpha was computed for the continuous composite as a secondary statistic.",
-          "Its reliability interpretation depends on essential tau-equivalence."
+        ifelse(
+          alpha_status$indicator_type == "ordered",
+          paste(
+            "Alpha is calculated on the polychoric/latent-response scale.",
+            "This is not alpha for the observed summed ordinal score and should be labeled accordingly."
+          ),
+          paste(
+            "Alpha was computed for the continuous composite as a secondary statistic.",
+            "Its reliability interpretation depends on essential tau-equivalence."
+          )
         )
       )
     }
   }
+
+  # A factor with one indicator has no internal-consistency reliability: the
+  # model cannot separate that indicator's true-score variance from its error
+  # variance, and semTools reports no composite for it (#145).
+  single_indicator <- type_context$construct[type_context$n_items == 1L]
+  single_indicator_reason <- paste(
+    "No reliability is estimated for a single-indicator factor: with one",
+    "indicator, the model cannot separate its true-score variance from its",
+    "error variance."
+  )
+  alpha_status$reason[alpha_status$construct %in% single_indicator] <-
+    single_indicator_reason
 
   omega_tbl <- nomo_reliability_tidy(omega_engine, metric = "omega", construct_names = fit_info$latent_names)
 
@@ -496,6 +516,25 @@ nomo_reliability <- function(fit,
         "Label the latent-response-scale interpretation explicitly in reports."
       },
       rationale = "Observed ordinal scores and their underlying latent responses are different score scales."
+    )
+  }
+
+  if (length(single_indicator)) {
+    log <- nomo_log_add(
+      log,
+      stage = "reliability",
+      object = paste(single_indicator, collapse = ", "),
+      metric = "single_indicator_factor",
+      value = length(single_indicator),
+      reference = "semTools::compRelSEM()",
+      severity = "info",
+      observation = single_indicator_reason,
+      recommendation = paste(
+        "If this score's precision matters, take its reliability from another",
+        "source, such as a test-retest study or a published estimate, and",
+        "report where it came from."
+      ),
+      rationale = "A coefficient is reported only where the fitted model defines it."
     )
   }
 

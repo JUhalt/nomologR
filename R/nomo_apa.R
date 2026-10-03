@@ -301,17 +301,26 @@ nomo_apa_fit_table <- function(fe, estimator, n, title, number, source,
 #' @export
 nomo_apa_table.nomo_reliability <- function(x, type = NULL, number = NULL,
                                             title = NULL, ...) {
-  constructs <- unique(c(as.character(x$omega$construct), as.character(x$alpha$construct)))
-  pick <- function(tbl, construct) {
-    row <- tbl[tbl$construct == construct, , drop = FALSE]
+  # A multi-group fit has a row per construct and group, labeled by group (#145).
+  keys <- unique(dplyr::bind_rows(
+    x$omega[, c("construct", "block")], x$alpha[, c("construct", "block")]
+  ))
+  pick <- function(i, tbl) {
+    row <- tbl[tbl$construct == keys$construct[[i]] & tbl$block == keys$block[[i]], ,
+               drop = FALSE]
     if (!nrow(row)) return(nomo_apa_dash)
     nomo_apa_interval(row$estimate[[1L]], row$ci_lower[[1L]], row$ci_upper[[1L]],
                       bounded = TRUE)
   }
+  label <- if (length(unique(keys$block)) > 1L) {
+    paste0(keys$construct, " (", keys$block, ")")
+  } else {
+    keys$construct
+  }
   body <- data.frame(
-    Construct = constructs,
-    omega = vapply(constructs, pick, character(1), tbl = x$omega, USE.NAMES = FALSE),
-    alpha = vapply(constructs, pick, character(1), tbl = x$alpha, USE.NAMES = FALSE),
+    Construct = label,
+    omega = vapply(seq_len(nrow(keys)), pick, character(1), tbl = x$omega),
+    alpha = vapply(seq_len(nrow(keys)), pick, character(1), tbl = x$alpha),
     stringsAsFactors = FALSE
   )
   has_ci <- any(is.finite(x$omega$ci_lower))

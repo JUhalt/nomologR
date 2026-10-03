@@ -970,3 +970,135 @@ test_that("a parallel bootstrap is reproducible for a seed and a worker count", 
   entry <- first$decision_log[first$decision_log$metric == "bootstrap_reproducibility", ]
   expect_match(entry$observation, "on 2 snow workers", fixed = TRUE)
 })
+
+
+# Return shapes and undeclared ordered factors (#145) ---------------------------
+
+test_that("ordered-factor columns fitted without `ordered` are reliability's ordered indicators", {
+  model <- "A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4 + b5"
+  undeclared <- lavaan::cfa(model, data = nomo_demo_ordinal)
+  declared <- lavaan::cfa(model, data = nomo_demo_ordinal,
+                          ordered = names(nomo_demo_ordinal))
+
+  rel <- nomo_reliability(undeclared)
+  expect_setequal(rel$ordered, names(nomo_demo_ordinal))
+  expect_identical(unname(rel$item_type_context$indicator_type), c("ordered", "ordered"))
+  expect_equal(rel$evidence, nomo_reliability(declared)$evidence)
+  expect_identical(nrow(rel$alpha), 0L)
+})
+
+
+test_that("a multi-group fit keeps each group's coefficients apart", {
+  skip_on_cran()
+  mg <- lavaan::cfa(
+    "Agency =~ ag1 + ag2 + ag3 + ag4\nPersistence =~ pe1 + pe2 + pe3 + pe4",
+    data = nomo_demo_network, group = "group"
+  )
+  rel <- nomo_reliability(mg)
+  keys <- paste(rel$evidence$metric, rel$evidence$construct, rel$evidence$block)
+  expect_identical(anyDuplicated(keys), 0L)
+  expect_setequal(rel$evidence$block, c("online", "paper"))
+
+  direct <- as.data.frame(semTools::compRelSEM(mg, tau.eq = FALSE, obs.var = TRUE,
+                                               simplify = TRUE))
+  expect_equal(
+    rel$omega$estimate[rel$omega$construct == "Agency" & rel$omega$block == "paper"],
+    direct["paper", "Agency"]
+  )
+
+  # One summary row per construct and group, not their cross-product.
+  tab <- nomo_table(rel, "coefficients")
+  expect_identical(nrow(tab), 4L)
+  paper <- tab[tab$construct == "Agency" & tab$block == "paper", ]
+  expect_equal(paper$omega, direct["paper", "Agency"])
+  expect_equal(
+    paper$alpha,
+    rel$alpha$estimate[rel$alpha$construct == "Agency" & rel$alpha$block == "paper"]
+  )
+
+  # Each bootstrap draw is matched to its own group: the statistic of the
+  # fitted model reproduces every point estimate under its own key.
+  key <- paste(rel$evidence$metric, rel$evidence$construct, rel$evidence$block, sep = "::")
+  stat <- nomo_reliability_boot_stat(
+    fit = mg, expected_keys = key,
+    construct_names = nomo_measurement_fit(mg)$latent_names,
+    type_context = rel$item_type_context, obs.var = TRUE,
+    ordinal_scale = TRUE, include_alpha = TRUE
+  )
+  expect_equal(unname(stat), rel$evidence$estimate)
+
+  # The APA table labels each row with its group.
+  apa <- nomo_apa_table(rel)
+  expect_identical(apa$body$Construct, c("Agency (online)", "Agency (paper)",
+                                         "Persistence (online)", "Persistence (paper)"))
+  expect_identical(apa$body[[2L]][[2L]],
+                   nomo_apa_interval(direct["paper", "Agency"], NA, NA, bounded = TRUE))
+
+  # One composite across groups comes back named by group.
+  one <- nomo_reliability(lavaan::cfa(
+    "Agency =~ ag1 + ag2 + ag3 + ag4", data = nomo_demo_network, group = "group"
+  ))
+  expect_identical(unique(one$evidence$construct), "Agency")
+  expect_setequal(one$evidence$block, c("online", "paper"))
+})
+
+
+test_that("a single-indicator factor has no reliability and says so", {
+  fit <- lavaan::cfa("A =~ a1 + a2 + a3 + a4 + a5\nS =~ b1", data = nomo_demo_continuous)
+  rel <- nomo_reliability(fit)
+
+  # The scale's omega keeps its name, rather than an invented one.
+  expect_identical(unique(rel$evidence$construct), "A")
+  expect_equal(rel$omega$estimate,
+               as.numeric(semTools::compRelSEM(fit, tau.eq = FALSE, simplify = TRUE)))
+
+  status <- rel$alpha_status[rel$alpha_status$construct == "S", ]
+  expect_false(status$available)
+  expect_match(status$reason, "No reliability is estimated for a single-indicator factor",
+               fixed = TRUE)
+  expect_true(rel$alpha_status$available[rel$alpha_status$construct == "A"])
+
+  entry <- rel$decision_log[rel$decision_log$metric == "single_indicator_factor", ]
+  expect_identical(entry$object, "S")
+  expect_identical(entry$severity, "info")
+  expect_false("construct_1" %in% rel$decision_log$object)
+
+  local_reproducible_output(width = 80)
+  printed <- capture.output(print(rel))
+  expect_match(printed, "Omega range: 0.835 to 0.835", fixed = TRUE, all = FALSE)
+  expect_match(printed, "Alpha: 1 of 2 constructs", fixed = TRUE, all = FALSE)
+  summarized <- capture.output(print(summary(rel)))
+  expect_match(summarized, "^  A +overall +continuous +0\\.835 +0\\.829", all = FALSE)
+  expect_false(any(grepl("Alpha was computed", summarized, fixed = TRUE)))
+
+  # Beside two scales, the single-indicator factor's reason no longer says
+  # alpha was computed.
+  three <- nomo_reliability(lavaan::cfa(
+    "A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4\nS =~ b5",
+    data = nomo_demo_continuous
+  ))
+  expect_match(three$alpha_status$reason[three$alpha_status$construct == "S"],
+               "single-indicator factor", fixed = TRUE)
+  expect_identical(sort(unique(three$alpha$construct)), c("A", "B"))
+})
+
+
+test_that("an alpha the engine did not return is not described as computed", {
+  local_mocked_bindings(
+    nomo_reliability_tidy = function(x, metric, construct_names = NULL) {
+      if (identical(metric, "alpha")) {
+        return(tibble::tibble(construct = "A", block = "overall",
+                              metric = "alpha", estimate = .8))
+      }
+      tibble::tibble(construct = c("A", "B"), block = "overall",
+                     metric = metric, estimate = c(.8, .7))
+    }
+  )
+  rel <- nomo_reliability(lavaan::cfa(
+    "A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4 + b5",
+    data = nomo_demo_continuous
+  ))
+  b <- rel$alpha_status[rel$alpha_status$construct == "B", ]
+  expect_false(b$available)
+  expect_match(b$reason, "was not returned by the reliability engine", fixed = TRUE)
+})

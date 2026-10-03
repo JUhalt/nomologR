@@ -399,11 +399,15 @@ test_that("presentation branches communicate point-only and interval workflows",
 # internal helpers directly.
 
 test_that("closeout: measurement helper fallback schemas cover data-frame, list, and HTMT alignment branches", {
+  # Two rows without a group column are two blocks, never one block twice
+  # (#145); one row is the single overall block.
   tidy_df <- nomologR:::nomo_reliability_tidy(
     data.frame(F1 = c(.8, .9)),
     metric = "omega"
   )
-  expect_true(all(tidy_df$block == "overall"))
+  expect_identical(tidy_df$block, c("block_1", "block_2"))
+  one_row <- nomologR:::nomo_reliability_tidy(data.frame(F1 = .8), metric = "omega")
+  expect_identical(one_row$block, "overall")
 
   tidy_list <- nomologR:::nomo_reliability_tidy(
     list(F1 = c(.8, .9)),
@@ -595,4 +599,89 @@ test_that("closeout B: HTMT input recovery handles one-element data lists and un
   unavailable <- nomologR:::nomo_validity_htmt_inputs(fi)
   expect_false(unavailable$available)
   expect_match(unavailable$reason, "Raw observed data", fixed = TRUE)
+})
+
+
+# semTools return shapes (#145) ------------------------------------------------
+
+test_that("each semTools return shape keeps one row per construct and block", {
+  # A multi-group result with several composites names its groups in the row
+  # names, with no group column.
+  by_rows <- data.frame(Agency = c(.84, .86), Persistence = c(.82, .81),
+                        row.names = c("online", "paper"))
+  tidy <- nomo_reliability_tidy(by_rows, "omega", c("Agency", "Persistence"))
+  expect_identical(tidy$construct, rep(c("Agency", "Persistence"), each = 2L))
+  expect_identical(tidy$block, rep(c("online", "paper"), 2L))
+
+  # One composite across groups comes back as a vector named by group.
+  one <- nomo_reliability_tidy(c(online = .84, paper = .86), "omega", "Agency")
+  expect_identical(one$construct, c("Agency", "Agency"))
+  expect_identical(one$block, c("online", "paper"))
+  # A vector named by its constructs is read as before.
+  named <- nomo_reliability_tidy(c(Agency = .84), "omega", "Agency")
+  expect_identical(c(named$construct, named$block), c("Agency", "overall"))
+
+  # A lone composite is unnamed; with a single-indicator factor dropped, the
+  # remaining composite is named from the factors that have one.
+  lone <- nomo_reliability_tidy(.835, "omega", "A")
+  expect_identical(lone$construct, "A")
+
+  # AVE for factors with a cross-loaded indicator is a logical NA vector.
+  na_ave <- nomo_reliability_tidy(c(A = NA, B = NA), "AVE")
+  expect_identical(na_ave$construct, c("A", "B"))
+  expect_true(all(is.na(na_ave$estimate)))
+  expect_type(na_ave$estimate, "double")
+  na_df <- nomo_reliability_tidy(
+    data.frame(group = c("g1", "g2"), A = c(NA, NA)), "AVE"
+  )
+  expect_identical(na_df$block, c("g1", "g2"))
+
+  # A multilevel AVE lists each level, with that level's factors inside it.
+  levels <- list(within = c(FW = .64), cluster = c(FB = .96))
+  multilevel <- nomo_reliability_tidy(levels, "AVE", c("FW", "FB"))
+  expect_identical(multilevel$construct, c("FW", "FB"))
+  expect_identical(multilevel$block, c("within", "cluster"))
+})
+
+
+test_that("measurement-fit names come from factors with more than one indicator", {
+  fit <- lavaan::cfa("S =~ b1\nA =~ a1 + a2 + a3 + a4 + a5", data = nomo_demo_continuous)
+  info <- nomo_measurement_fit(fit)
+  expect_identical(info$latent_names, "A")
+
+  # A multi-group model counts each indicator once.
+  mg <- lavaan::cfa("Agency =~ ag1 + ag2 + ag3 + ag4\nS =~ pe1",
+                    data = nomo_demo_network, group = "group")
+  types <- nomo_reliability_item_types(nomo_measurement_fit(mg))
+  expect_identical(unname(types$n_items), c(4L, 1L))
+})
+
+
+test_that("ordered indicators are read from what lavaan fitted", {
+  # Ordered-factor columns are fitted as categorical even when `ordered` does
+  # not name them, and lavInspect(fit, "ordered") is then empty (#145).
+  fit <- lavaan::cfa("A =~ a1 + a2 + a3 + a4 + a5", data = nomo_demo_ordinal)
+  expect_length(lavaan::lavInspect(fit, "ordered"), 0L)
+  info <- nomo_measurement_fit(fit)
+  expect_identical(info$ordered, paste0("a", 1:5))
+  expect_identical(unname(nomo_reliability_item_types(info)$indicator_type), "ordered")
+})
+
+
+test_that("HTMT's missing-data handling follows the fitted model, and its cases are counted", {
+  model <- "A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4 + b5"
+  listwise <- lavaan::cfa(model, data = nomo_demo_continuous)
+  fiml <- lavaan::cfa(model, data = nomo_demo_continuous, missing = "fiml")
+  expect_identical(nomo_validity_htmt_missing(listwise), "listwise")
+  expect_identical(nomo_validity_htmt_missing(fiml), "fiml")
+  ord <- nomo_demo_ordinal
+  ord$a1[1:20] <- NA
+  pairwise <- lavaan::cfa(model, data = ord, missing = "pairwise")
+  expect_identical(nomo_validity_htmt_missing(pairwise), "pairwise")
+  expect_identical(nomo_validity_htmt_missing(NULL), "listwise")
+
+  dat <- data.frame(a = c(1, NA, 3, NA), b = c(1, 2, NA, NA), c = c(1, 2, 3, NA))
+  expect_identical(nomo_validity_htmt_n(dat, "listwise"), 1L)
+  expect_identical(nomo_validity_htmt_n(dat, "pairwise"), 1L)
+  expect_identical(nomo_validity_htmt_n(dat, "fiml"), 3L)
 })
