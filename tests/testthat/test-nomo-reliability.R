@@ -301,7 +301,17 @@ test_that("reliability CI arguments are validated", {
   )
   expect_error(nomo_reliability(fit, ci_level = 1), "strictly between")
   expect_error(nomo_reliability(fit, ci_boot = 10), "at least 20")
-  expect_error(nomo_reliability(fit, ci_seed = Inf), "finite integer")
+  expect_error(nomo_reliability(fit, ci_seed = Inf), "finite whole number")
+
+  # Nothing is silently cut to its first element, read from text, or truncated
+  # (#145).
+  expect_error(nomo_reliability(fit, ci_level = c(.9, .95)), "`ci_level` must be one number")
+  expect_error(nomo_reliability(fit, ci_level = "0.9"), "`ci_level` must be one number")
+  expect_error(nomo_reliability(fit, ci_boot = 20.9), "`ci_boot` must be one whole number")
+  expect_error(nomo_reliability(fit, ci_boot = c(20, 30)), "`ci_boot` must be one whole number")
+  expect_error(nomo_reliability(fit, ci_seed = 1.9), "`ci_seed` must be NULL or one finite whole")
+  expect_error(nomo_reliability(fit, ci_seed = "1"), "`ci_seed` must be NULL or one finite whole")
+  expect_identical(nomo_reliability(fit, ci_level = .9)$ci_level, .9)
 })
 
 # ---- consolidated from test-coverage-sprint-reliability.R ----
@@ -358,18 +368,18 @@ test_that("reliability summary signals and score scales cover ordered branches",
 })
 
 
-test_that("reliability CI formatting and plot limits cover edge branches", {
-  expect_true(is.na(
-    nomologR:::nomo_reliability_ci_string(NA_real_, .1, .2)
-  ))
-  expect_equal(
-    nomologR:::nomo_reliability_ci_string(.75, NA_real_, NA_real_),
-    "0.750"
+test_that("reliability flag text and plot limits cover edge branches", {
+  # A coefficient prints without its leading zero and with the decimals that
+  # set it apart from its reference (#144).
+  text <- nomologR:::nomo_reliability_flag_text
+  expect_identical(
+    text(c("omega", "alpha", "omega", "omega"), c(.68, .698, NA, 1.02), .70),
+    c("Omega .68 is below the review reference .70.",
+      "Alpha .698 is below the review reference .70.",
+      "Omega could not be computed.",
+      "Omega 1.02 is outside the 0 to 1 range of a reliability.")
   )
-  expect_equal(
-    nomologR:::nomo_reliability_ci_string(.75, .60, .85),
-    "0.750 [0.600, 0.850]"
-  )
+  expect_identical(nomologR:::nomo_reliability_ci_label(NULL), "95% CI")
 
   expect_equal(nomologR:::nomo_plot_x_limits(numeric()), c(0, 1))
   expect_equal(
@@ -400,15 +410,15 @@ test_that("reliability print methods cover point, bootstrap, strain, and empty b
   )
   boot$model_strain <- TRUE
   txt2 <- paste(capture.output(print(boot)), collapse = "\n")
-  expect_match(txt2, "percentile bootstrap CI", fixed = TRUE)
-  expect_match(txt2, "minimum successful draws", fixed = TRUE)
+  expect_match(txt2, "95% CI, percentile bootstrap", fixed = TRUE)
+  expect_match(txt2, "Fewest usable draws: 15", fixed = TRUE)
   expect_match(txt2, "Bootstrap note", fixed = TRUE)
   expect_match(txt2, "Measurement-model context", fixed = TRUE)
   # A status without a count of successful draws leaves that part out.
   boot$ci_status$min_successful_draws <- NA_integer_
   txt_no_min <- paste(capture.output(print(boot)), collapse = "\n")
-  expect_match(txt_no_min, "20 requested draws", fixed = TRUE)
-  expect_false(grepl("minimum successful draws", txt_no_min, fixed = TRUE))
+  expect_match(txt_no_min, "Draws: 20 requested", fixed = TRUE)
+  expect_false(grepl("Fewest usable draws", txt_no_min, fixed = TRUE))
 
   s <- summary(rel)
   empty <- s
@@ -421,7 +431,7 @@ test_that("reliability print methods cover point, bootstrap, strain, and empty b
 
   txt3 <- paste(capture.output(print(empty)), collapse = "\n")
   expect_match(txt3, "No reliability coefficients", fixed = TRUE)
-  expect_match(txt3, "Secondary alpha unavailable", fixed = TRUE)
+  expect_match(txt3, "Alpha not computed", fixed = TRUE)
   expect_match(txt3, "Sampling uncertainty was not bootstrapped", fixed = TRUE)
   expect_match(txt3, "requires review", fixed = TRUE)
 })
@@ -436,7 +446,8 @@ test_that("reliability summary print reports bootstrap interval notation", {
   s$table$omega_ci_upper <- s$table$omega + .05
 
   txt <- paste(capture.output(print(s)), collapse = "\n")
-  expect_match(txt, "Bracketed values are bootstrap confidence intervals", fixed = TRUE)
+  expect_match(txt, "CI -- Percentile bootstrap confidence interval.", fixed = TRUE)
+  expect_match(txt, "95% CI", fixed = TRUE)
 })
 
 
@@ -465,7 +476,7 @@ test_that("reliability plot covers errors, one-coefficient guides, CIs, and face
   )
   p2 <- plot(ci)
   expect_s3_class(p2, "ggplot")
-  expect_match(plot_text(p2$labels$subtitle), "bootstrap CIs", fixed = TRUE)
+  expect_match(plot_text(p2$labels$subtitle), "95% CI (percentile bootstrap)", fixed = TRUE)
   expect_true(length(p2$facet$params$facets) >= 1L)
 })
 
@@ -538,7 +549,7 @@ test_that("reliability print covers alpha-not-requested and no-finite-omega bran
   no_alpha$evidence$estimate[no_alpha$evidence$metric == "omega"] <- NA_real_
 
   txt <- paste(capture.output(print(no_alpha)), collapse = "\n")
-  expect_false(grepl("Omega range:", txt, fixed = TRUE))
+  expect_false(grepl("Omega: ", txt, fixed = TRUE))
   expect_false(grepl("Alpha:", txt, fixed = TRUE))
 })
 
@@ -909,7 +920,7 @@ test_that("the printed status names the worker count when there was more than on
   # The print reads the recorded count, so a two-worker status prints it
   # without running a parallel bootstrap here.
   rel$ci_status$workers <- 2L
-  expect_output(print(rel), "| 2 workers", fixed = TRUE)
+  expect_output(print(rel), "Workers: 2", fixed = TRUE)
 })
 
 
@@ -1065,10 +1076,11 @@ test_that("a single-indicator factor has no reliability and says so", {
 
   local_reproducible_output(width = 80)
   printed <- capture.output(print(rel))
-  expect_match(printed, "Omega range: 0.835 to 0.835", fixed = TRUE, all = FALSE)
+  expect_match(printed, "Omega: .83 | Omega flags: none", fixed = TRUE, all = FALSE)
   expect_match(printed, "Alpha: 1 of 2 constructs", fixed = TRUE, all = FALSE)
   summarized <- capture.output(print(summary(rel)))
-  expect_match(summarized, "^  A +overall +continuous +0\\.835 +0\\.829", all = FALSE)
+  expect_match(summarized, "^  A +continuous +\\.83 +\\.83$", all = FALSE)
+  expect_match(summarized, "^  S +continuous +-- +--$", all = FALSE)
   expect_false(any(grepl("Alpha was computed", summarized, fixed = TRUE)))
 
   # Beside two scales, the single-indicator factor's reason no longer says
@@ -1101,4 +1113,114 @@ test_that("an alpha the engine did not return is not described as computed", {
   b <- rel$alpha_status[rel$alpha_status$construct == "B", ]
   expect_false(b$available)
   expect_match(b$reason, "was not returned by the reliability engine", fixed = TRUE)
+})
+
+
+# Pre-RC findings (#145) and the shared output style (#144) ---------------------
+
+test_that("the summary lists constructs in model order, as omega does (#145)", {
+  cfa <- nomo_cfa("visual =~ x1 + x2 + x3\ntextual =~ x4 + x5 + x6\nspeed =~ x7 + x8 + x9",
+                  data = lavaan::HolzingerSwineford1939)
+  rel <- nomo_reliability(cfa)
+  order <- c("visual", "textual", "speed")
+  expect_identical(rel$omega$construct, order)
+  expect_identical(rel$item_type_context$construct, order)
+  expect_identical(summary(rel)$table$construct, order)
+  expect_identical(nomo_table(rel, "coefficients")$construct, order)
+})
+
+
+test_that("bootstrapping a covariance-matrix fit says that raw data are needed (#145)", {
+  fit <- lavaan::cfa("A =~ a1 + a2 + a3\nB =~ b1 + b2 + b3", data = nomo_demo_continuous)
+  covariance <- lavaan::cfa(
+    "A =~ a1 + a2 + a3\nB =~ b1 + b2 + b3",
+    sample.cov = lavaan::lavInspect(fit, "sampstat")$cov, sample.nobs = 473
+  )
+  expect_no_warning(rel <- nomo_reliability(covariance, ci = "bootstrap", ci_boot = 20))
+  expect_false(rel$ci_status$available)
+  expect_identical(
+    rel$ci_status$reason,
+    "Bootstrap intervals need the raw data; this model was fitted from a covariance matrix."
+  )
+  expect_true(is.na(rel$ci_status$min_successful_draws))
+  entry <- rel$decision_log[rel$decision_log$metric == "bootstrap_ci", ]
+  expect_identical(entry$severity, "review")
+  expect_match(entry$observation, "need the raw data", fixed = TRUE)
+  # No draws were made, so none is described.
+  expect_false("bootstrap_reproducibility" %in% rel$decision_log$metric)
+  local_reproducible_output(width = 80)
+  printed <- capture.output(print(rel))
+  expect_false(any(grepl("Fewest usable draws", printed, fixed = TRUE)))
+  expect_match(printed, "Bootstrap note: Bootstrap intervals need the raw data", all = FALSE)
+})
+
+
+test_that("a theta-parameterized fit says that latent-response omega depends on it (#145)", {
+  skip_on_cran()
+  model <- "A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4 + b5"
+  theta <- lavaan::cfa(model, data = nomo_demo_ordinal, ordered = TRUE,
+                       parameterization = "theta")
+  latent <- nomo_reliability(theta, ordinal_scale = FALSE)
+  entry <- latent$decision_log[latent$decision_log$metric == "parameterization", ]
+  expect_identical(entry$severity, "review")
+  expect_identical(entry$object, "A, B")
+  expect_match(entry$recommendation, "`parameterization = \"delta\"`", fixed = TRUE)
+  # The observed-score omega is the same under either parameterization.
+  expect_false("parameterization" %in% nomo_reliability(theta)$decision_log$metric)
+  delta <- lavaan::cfa(model, data = nomo_demo_ordinal, ordered = TRUE)
+  expect_false("parameterization" %in%
+                 nomo_reliability(delta, ordinal_scale = FALSE)$decision_log$metric)
+})
+
+
+test_that("a guidance list that asks for automatic changes is refused (#145)", {
+  fit <- lavaan::cfa("F =~ x1 + x2 + x3", data = lavaan::HolzingerSwineford1939)
+  guidance <- nomo_defaults()
+  guidance$auto_delete <- TRUE
+  expect_error(nomo_reliability(fit, guidance = guidance),
+               "`guidance$auto_delete` cannot be `TRUE`", fixed = TRUE)
+  guidance$auto_delete <- FALSE
+  guidance$auto_respecify <- TRUE
+  expect_error(nomo_reliability(fit, guidance = guidance), "guidance$auto_respecify",
+               fixed = TRUE)
+})
+
+
+test_that("reliability output follows the shared style (#144)", {
+  cfa <- nomo_cfa("visual =~ x1 + x2 + x3\ntextual =~ x4 + x5 + x6\nspeed =~ x7 + x8 + x9",
+                  data = lavaan::HolzingerSwineford1939)
+  rel <- nomo_reliability(cfa)
+  local_reproducible_output(width = 80)
+  printed <- capture.output(print(rel))
+  expect_identical(printed[[1L]], "<nomo_reliability> Reliability")
+  # The reference prints as omega does, without a leading zero.
+  expect_match(printed, "Review reference: .70", fixed = TRUE, all = FALSE)
+  expect_false(any(grepl("0.7\\b", printed)))
+  expect_true("Omega: .61 to .89 | Omega flags: 2 review, 0 concern" %in% printed)
+  expect_true("  - visual (Review): Omega .61 is below the review reference .70." %in% printed)
+  expect_identical(printed[[length(printed)]], "See summary(x) for each construct's omega and alpha.")
+  expect_true(all(nchar(printed) <= 79L))
+
+  summarized <- capture.output(print(summary(rel)))
+  expect_identical(summarized[[1L]], "<nomo_reliability summary> Reliability")
+  expect_true("  Construct  Indicators  Omega  Alpha  Flag" %in% summarized)
+  expect_true("  visual     continuous    .61    .63  Review" %in% summarized)
+  expect_match(summarized, "^  - visual \\(Review\\): Alpha \\.63 is below", all = FALSE)
+  expect_false(any(grepl("review$", summarized)))
+
+  # The interval's level is taken from the object.
+  s <- summary(rel)
+  s$ci_status$level <- .9
+  s$table$omega_ci_lower <- s$table$omega - .05
+  s$table$omega_ci_upper <- s$table$omega + .05
+  expect_match(capture.output(print(s)), "Omega  90% CI", fixed = TRUE, all = FALSE)
+
+  # The plot: the shape carries the flag, with a legend while anything is flagged.
+  p <- plot(rel)
+  expect_setequal(ggplot2::get_guide_data(p, "shape")$.label, c("No flag", "Review"))
+  expect_match(p$labels$subtitle, "review reference (.70)", fixed = TRUE)
+  rel$evidence$attention[] <- "info"
+  expect_null(ggplot2::get_guide_data(plot(rel, type = "coefficients"), "shape"))
+  expect_error(plot(rel, type = "loadings"), '`type` must be one of "coefficients"',
+               fixed = TRUE)
 })

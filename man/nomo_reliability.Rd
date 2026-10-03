@@ -82,6 +82,11 @@ of \code{\link[=nomo_table]{nomo_table()}}. See \strong{Conventions in returned 
 Other fields record the call, the settings used, and intermediate engine
 results. They may change between releases and are not part of the stable
 interface (see \code{?nomologR}).
+
+\code{print()} shows the range of omega, the flags it raised against the review
+reference, and how uncertainty was handled; \code{summary()} adds each
+construct's omega and alpha with their intervals and score scales, and
+the reason any alpha was not computed.
 }
 \description{
 \code{nomo_reliability()} estimates score reliability from a fitted first-order
@@ -93,9 +98,18 @@ its stronger assumptions.
 \details{
 The function is deliberately measurement-first: it refuses nonconverged
 models, structural SEMs, higher-order models, and cross-loaded first-order
-indicators in the v0.1 workflow. When global CFA strain or an improper
-solution is present, reliability is still inspectable but the decision log
-warns that model-based reliability can be distorted by misspecification.
+indicators. When global CFA strain or an improper solution is present,
+reliability is still inspectable but the decision log warns that
+model-based reliability can be distorted by misspecification.
+
+For ordered indicators, the observed-score omega (\code{ordinal_scale = TRUE})
+is the same whether lavaan fitted the model with its delta or theta
+parameterization. The latent-response coefficients (\code{ordinal_scale = FALSE}) are computed in the model's unstandardized metric and differ between
+the two; with a theta-parameterized fit the decision log says so.
+
+Bootstrap intervals refit the model to resampled cases, so they need the
+raw data: a model fitted from a covariance matrix has none, and its
+\code{ci_status} says so.
 
 Average variance extracted (AVE) is not a reliability coefficient and is
 intentionally handled by \code{\link[=nomo_validity]{nomo_validity()}} instead.

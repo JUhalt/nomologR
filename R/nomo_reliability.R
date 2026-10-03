@@ -10,9 +10,19 @@
 #'
 #' The function is deliberately measurement-first: it refuses nonconverged
 #' models, structural SEMs, higher-order models, and cross-loaded first-order
-#' indicators in the v0.1 workflow. When global CFA strain or an improper
-#' solution is present, reliability is still inspectable but the decision log
-#' warns that model-based reliability can be distorted by misspecification.
+#' indicators. When global CFA strain or an improper solution is present,
+#' reliability is still inspectable but the decision log warns that
+#' model-based reliability can be distorted by misspecification.
+#'
+#' For ordered indicators, the observed-score omega (`ordinal_scale = TRUE`)
+#' is the same whether lavaan fitted the model with its delta or theta
+#' parameterization. The latent-response coefficients (`ordinal_scale =
+#' FALSE`) are computed in the model's unstandardized metric and differ between
+#' the two; with a theta-parameterized fit the decision log says so.
+#'
+#' Bootstrap intervals refit the model to resampled cases, so they need the
+#' raw data: a model fitted from a covariance matrix has none, and its
+#' `ci_status` says so.
 #'
 #' Average variance extracted (AVE) is not a reliability coefficient and is
 #' intentionally handled by [nomo_validity()] instead.
@@ -70,6 +80,11 @@
 #'   Other fields record the call, the settings used, and intermediate engine
 #'   results. They may change between releases and are not part of the stable
 #'   interface (see `?nomologR`).
+#'
+#'   `print()` shows the range of omega, the flags it raised against the review
+#'   reference, and how uncertainty was handled; `summary()` adds each
+#'   construct's omega and alpha with their intervals and score scales, and
+#'   the reason any alpha was not computed.
 #'
 #' @references
 #' Historical context:
@@ -152,19 +167,24 @@ nomo_reliability <- function(fit,
   }
 
   ci <- nomo_match_arg(ci)
-  ci_level <- suppressWarnings(as.numeric(ci_level)[1L])
-  if (!is.finite(ci_level) || ci_level <= 0 || ci_level >= 1) {
+  # Checked before any coercion: a vector, a string, or a fraction was once
+  # silently cut to its first element or truncated (#145).
+  if (!is.numeric(ci_level) || length(ci_level) != 1L || !is.finite(ci_level) ||
+        ci_level <= 0 || ci_level >= 1) {
     stop("`ci_level` must be one number strictly between 0 and 1.", call. = FALSE)
   }
-  ci_boot <- suppressWarnings(as.integer(ci_boot)[1L])
-  if (!is.finite(ci_boot) || ci_boot < 20L) {
-    stop("`ci_boot` must be an integer of at least 20.", call. = FALSE)
+  ci_level <- as.numeric(ci_level)
+  if (!is.numeric(ci_boot) || length(ci_boot) != 1L || !is.finite(ci_boot) ||
+        ci_boot != round(ci_boot) || ci_boot < 20) {
+    stop("`ci_boot` must be one whole number of at least 20.", call. = FALSE)
   }
+  ci_boot <- as.integer(ci_boot)
   if (!is.null(ci_seed)) {
-    ci_seed <- suppressWarnings(as.integer(ci_seed)[1L])
-    if (!is.finite(ci_seed)) {
-      stop("`ci_seed` must be NULL or one finite integer.", call. = FALSE)
+    if (!is.numeric(ci_seed) || length(ci_seed) != 1L || !is.finite(ci_seed) ||
+          ci_seed != round(ci_seed) || abs(ci_seed) > .Machine$integer.max) {
+      stop("`ci_seed` must be NULL or one finite whole number.", call. = FALSE)
     }
+    ci_seed <- as.integer(ci_seed)
   }
   if (!is.numeric(ci_ncpus) || length(ci_ncpus) != 1L || !is.finite(ci_ncpus) ||
         ci_ncpus < 1 || ci_ncpus != round(ci_ncpus)) {
@@ -173,6 +193,7 @@ nomo_reliability <- function(fit,
   ci_ncpus <- as.integer(ci_ncpus)
 
   reference <- nomo_guidance_value(guidance, "reliability_reference")
+  nomo_defaults_check_safeguards(guidance)
   fit_info <- nomo_measurement_fit(fit)
   type_context <- nomo_reliability_item_types(fit_info)
 
@@ -364,9 +385,14 @@ nomo_reliability <- function(fit,
     ifelse(evidence$estimate < reference, "review", "info")
   )
 
+  # The reference prints as the coefficient does (#144), and a value just
+  # below it shows the decimals that tell them apart.
+  reference_shown <- nomo_present_stat(reference, "reliability")
   evidence$interpretation <- vapply(seq_len(nrow(evidence)), function(i) {
     metric <- evidence$metric[[i]]
     estimate <- evidence$estimate[[i]]
+    label <- if (identical(metric, "alpha")) "Alpha" else "Omega"
+    shown <- nomo_present_stat(estimate, "reliability", reference = reference)
 
     if (!is.finite(estimate) || estimate < 0 || estimate > 1) {
       core <- paste(
@@ -375,14 +401,14 @@ nomo_reliability <- function(fit,
       )
     } else if (estimate < reference) {
       core <- paste0(
-        "The coefficient is below the configured reliability reference (",
-        format(reference, trim = TRUE),
+        label, " (", shown, ") is below the configured review reference (",
+        reference_shown,
         "). This is a prompt to investigate score precision for the intended use, not an automatic scale-revision rule."
       )
     } else {
       core <- paste0(
-        "The coefficient is at or above the configured reliability reference (",
-        format(reference, trim = TRUE),
+        label, " (", shown, ") is at or above the configured review reference (",
+        reference_shown,
         "). This contributes evidence of score consistency for this sample/model but does not establish construct validity."
       )
     }
@@ -427,7 +453,12 @@ nomo_reliability <- function(fit,
       level = ci_level,
       R = ci_boot,
       seed = ci_seed,
-      ncpus = ci_ncpus
+      ncpus = ci_ncpus,
+      # lavaan keeps no cases for a model fitted from a covariance matrix.
+      raw_data = !is.null(tryCatch(
+        lavaan::lavInspect(fit_info$fit, "data"),
+        error = function(e) NULL
+      ))
     )
 
     if (nrow(ci_result$intervals)) {
@@ -521,6 +552,33 @@ nomo_reliability <- function(fit,
       },
       rationale = "Observed ordinal scores and their underlying latent responses are different score scales."
     )
+
+    # Same model, same fit, same standardized loadings; only the latent-response
+    # coefficients change with the parameterization (#145).
+    if (!ordinal_scale && nomo_measurement_theta(fit_info)) {
+      log <- nomo_log_add(
+        log,
+        stage = "reliability",
+        object = paste(ordered_constructs, collapse = ", "),
+        metric = "parameterization",
+        reference = "lavaan parameterization = \"theta\"",
+        severity = "review",
+        observation = paste(
+          "The model was fitted with lavaan's theta parameterization. The",
+          "latent-response omega and alpha are computed in the model's",
+          "unstandardized metric, so they differ from those of a",
+          "delta-parameterized fit of the same model, whose fit and",
+          "standardized loadings are identical."
+        ),
+        recommendation = paste(
+          "Refit with `parameterization = \"delta\"` before reporting",
+          "latent-response coefficients, or report the observed-score omega",
+          "(`ordinal_scale = TRUE`), which is the same under either",
+          "parameterization."
+        ),
+        rationale = "A coefficient should not depend on an identification choice that leaves the model unchanged."
+      )
+    }
   }
 
   if (length(single_indicator)) {
@@ -620,7 +678,7 @@ nomo_reliability <- function(fit,
       object = evidence$construct[[i]],
       metric = evidence$metric[[i]],
       value = evidence$estimate[[i]],
-      reference = paste0("configured review reference = ", reference),
+      reference = paste0("configured review reference = ", reference_shown),
       severity = sev,
       observation = evidence$interpretation[[i]],
       recommendation = if (sev == "info") {
@@ -637,7 +695,30 @@ nomo_reliability <- function(fit,
   # the record a report carries: with only the seed, a reader rerunning the
   # analysis on a different number of workers would get different intervals and
   # no way to know why.
-  if (identical(ci, "bootstrap")) {
+  # Requested intervals that could not be computed are disclosed, as an
+  # unavailable HTMT is (#145).
+  if (identical(ci, "bootstrap") && !isTRUE(ci_status$available[[1L]])) {
+    log <- nomo_log_add(
+      log,
+      stage = "reliability",
+      object = "uncertainty",
+      metric = "bootstrap_ci",
+      reference = "lavaan::bootstrapLavaan()",
+      severity = "review",
+      observation = paste(
+        "Bootstrap intervals were requested but are not available:",
+        ci_status$reason[[1L]]
+      ),
+      recommendation = paste(
+        "Report the point estimates without intervals, or resolve the stated",
+        "problem and rerun."
+      ),
+      rationale = "Unavailable evidence should be disclosed, not manufactured by changing the analysis."
+    )
+  }
+
+  # Nothing was drawn from a model without raw data.
+  if (identical(ci, "bootstrap") && !is.na(ci_status$min_successful_draws[[1L]])) {
     seed_text <- if (is.null(ci_seed)) "no seed" else paste("seed", ci_seed)
     workers_text <- if (ci_ncpus == 1L) {
       "serially"
