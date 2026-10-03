@@ -2617,3 +2617,37 @@ test_that("null correlation matrices that were smoothed are logged, not warned (
   pa$n_valid <- 10L
   expect_false(any(log_for(pa)$metric == "parallel_null_iterations"))
 })
+
+
+test_that("the summary lists the decision log's flags, each with its reference (#144)", {
+  set.seed(9491)
+  noise <- as.data.frame(matrix(stats::rnorm(200 * 8), ncol = 8))
+  # A stricter concern reference makes this sample's KMO a concern.
+  strict <- nomo_defaults()
+  strict$factor_kmo_concern_reference <- 0.90
+  strict$factor_kmo_review_reference <- 0.95
+  out <- nomo_factors(noise, n_iter = 10, seed = 9491, guidance = strict)
+  kmo <- out$decision_log[out$decision_log$metric == "kmo", ]
+  expect_identical(kmo$severity, "concern")
+  expect_match(kmo$observation, "^Overall KMO = \\.[0-9]+, below the \\.90 concern reference\\.$")
+
+  local_reproducible_output(width = 80)
+  printed <- gsub("\\s+", " ", paste(capture.output(print(out)), collapse = " "))
+  expect_match(printed, "Flags: [0-9]+ review, [1-9] concern")
+  summarized <- capture.output(print(summary(out)))
+  expect_true("Flagged" %in% summarized)
+  expect_match(summarized, "^  - Concern: Overall KMO = ", all = FALSE)
+  # The synthesis is not repeated as a flag.
+  expect_false(any(grepl("Concern: All|Review: All|Review: Parallel analysis suggests", summarized)))
+
+  # A review-level KMO names the review reference.
+  review <- nomo_factors(noise, n_iter = 10, seed = 9491)
+  expect_identical(review$decision_log$severity[review$decision_log$metric == "kmo"], "review")
+  expect_match(review$decision_log$observation[review$decision_log$metric == "kmo"],
+               "below the .60 review reference.", fixed = TRUE)
+  expect_match(review$decision_log$observation[review$decision_log$metric == "parallel_rule_sensitivity"],
+               "^The parallel-analysis rules suggest [0-9]+ \\(percentile\\), [0-9]+ \\(mean\\), and [0-9]+ \\(crawford\\)\\.$")
+
+  # An object without a decision log has no flags.
+  expect_identical(nrow(nomologR:::nomo_factors_flag_rows(NULL)), 0L)
+})

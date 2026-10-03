@@ -124,7 +124,7 @@
     Output
       <nomo_factors> Factor-retention evidence
       Cases: 500 (minimum pairwise N: 473) | Items: 10 | Correlation: Pearson
-      Criterion set: core | Methods run: 3 | Families: 2 | Not run: 1
+      Criterion set: core | Methods run: 3 | Families: 2 | Not run: 1 | Flags: none
       Parallel analysis (percentile rule): 2 | MAP: 2 (TR2), 2 (TR4) | KMO: .87
       MAP = Velicer's minimum average partial criterion, original (TR2) and revised
       (TR4); KMO = Kaiser-Meyer-Olkin measure of sampling adequacy.

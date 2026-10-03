@@ -1499,12 +1499,24 @@ nomo_factors_log <- function(item_types,
       metric = "kmo",
       value = kmo$overall,
       reference = sprintf(
-        "%.2f/%.2f are teaching review/concern prompts, not universal laws",
-        review_ref,
-        concern_ref
+        "%s and %s are teaching review and concern prompts, not universal laws",
+        nomo_present_stat(review_ref, "proportion"),
+        nomo_present_stat(concern_ref, "proportion")
       ),
       severity = severity,
-      observation = sprintf("Overall KMO = %.3f.", kmo$overall),
+      # The flag's reference is named, so the row reads on its own in the
+      # summary's Flagged section.
+      observation = switch(
+        severity,
+        info = sprintf("Overall KMO = %s.", nomo_present_stat(kmo$overall, "proportion")),
+        sprintf(
+          "Overall KMO = %s, below the %s %s reference.",
+          nomo_present_stat(kmo$overall, "proportion",
+                            reference = if (severity == "concern") concern_ref else review_ref),
+          nomo_present_stat(if (severity == "concern") concern_ref else review_ref, "proportion"),
+          severity
+        )
+      ),
       recommendation = paste(
         "Use KMO as supporting evidence about shared-factor structure and",
         "inspect item-level MSA values; do not use it to choose factor count."
@@ -1595,10 +1607,9 @@ nomo_factors_log <- function(item_types,
     reference = "Agreement across PA decision rules strengthens rule robustness",
     severity = if (pa_unique == 1L) "info" else "review",
     observation = paste0(
-      "PA rule suggestions: ",
-      paste(
-        sprintf("%s=%d", pa$sensitivity$rule, pa$sensitivity$n_factors),
-        collapse = "; "
+      "The parallel-analysis rules suggest ",
+      nomo_present_or(
+        sprintf("%d (%s)", pa$sensitivity$n_factors, pa$sensitivity$rule), "and"
       ),
       "."
     ),

@@ -1489,3 +1489,22 @@ test_that("the item plot shows each flag by shape and color with its references 
   expect_match(plot_text(plot(out, type = "residuals")$labels$subtitle),
                "Root mean square residual (RMSR) = 0.0", fixed = TRUE)
 })
+
+
+test_that("a KMO below a reference names it in the EFA log (#144)", {
+  log_with <- function(kmo) {
+    nomologR:::nomo_efa_log(
+      k = 1L, factor_source = "researcher", factor_context = NULL, rotation = "oblimin",
+      fm = "minres", extraction_note = "", correlation_method = "pearson",
+      item_types = tibble::tibble(item = "a", source = "inferred_from_storage"),
+      missing = "complete", min_pairwise_n = 300L, smoothed = FALSE, original_min_eigen = 0.5,
+      item_summary = tibble::tibble(item = character(), attention = character()),
+      rmsr = 0.02, kmo = list(available = TRUE, overall = kmo), n_cases = 300L, n_items = 6L,
+      guidance = nomo_defaults()
+    )
+  }
+  observation <- function(log) log$observation[log$metric == "kmo"]
+  expect_identical(observation(log_with(0.55)), "Overall KMO = .55, below the .60 review reference.")
+  expect_identical(observation(log_with(0.4996)), "Overall KMO = .4996, below the .50 concern reference.")
+  expect_identical(observation(log_with(0.8)), "Overall KMO = .80.")
+})

@@ -27,7 +27,8 @@ print.nomo_factors <- function(x, ...) {
     sprintf("Criterion set: %s", x$criterion_set),
     sprintf("Methods run: %s", counts$methods),
     sprintf("Families: %d", counts$families),
-    sprintf("Not run: %d", counts$skipped)
+    sprintf("Not run: %d", counts$skipped),
+    paste0("Flags: ", nomo_present_flag_counts(nomo_factors_flag_rows(x$decision_log)$severity))
   ))
 
   # Revised MAP is shown only when the criterion set asked for it (#145,
@@ -59,6 +60,18 @@ print.nomo_factors <- function(x, ...) {
   nomo_present_text(nomo_factors_bind_calls(x$recommendation))
   nomo_present_pointer("summary(x)", "the evidence by method and the criteria that did not run")
   invisible(x)
+}
+
+
+# The decision-log rows a reader should look at again: review and concern
+# rows, except those the summary already shows in their own section (the
+# synthesis, the EKC qualification, and the legacy Kaiser rule).
+nomo_factors_flag_rows <- function(log) {
+  empty <- data.frame(metric = character(), severity = character(),
+                      observation = character(), recommendation = character())
+  if (!is.data.frame(log) || !all(names(empty) %in% names(log))) return(empty)
+  shown <- c("retention_family_concordance", "ekc", "kaiser")
+  log[log$severity %in% c("review", "concern") & !log$metric %in% shown, , drop = FALSE]
 }
 
 
@@ -248,6 +261,11 @@ print.summary_nomo_factors <- function(x, ...) {
     ifelse(adequacy$available, paste0("Bartlett's test: ", adequacy$display),
            adequacy$display)
   ))
+
+  # Review and concern rows of the decision log, with what to do about each.
+  flags <- nomo_factors_flag_rows(x$decision_log)
+  nomo_present_flagged(unit = NULL, status = flags$severity,
+                       text = paste(flags$observation, flags$recommendation))
 
   nomo_present_section("Synthesis")
   nomo_present_text(nomo_factors_bind_calls(x$recommendation), indent = 2L)

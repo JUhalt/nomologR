@@ -1172,7 +1172,17 @@ nomo_efa_log <- function(k,
       value = kmo$overall,
       reference = "KMO is supporting adequacy evidence, not an item-retention rule",
       severity = kmo_severity,
-      observation = sprintf("Overall KMO = %s.", nomo_present_stat(kmo$overall, "proportion")),
+      observation = switch(
+        kmo_severity,
+        info = sprintf("Overall KMO = %s.", nomo_present_stat(kmo$overall, "proportion")),
+        sprintf(
+          "Overall KMO = %s, below the %s %s reference.",
+          nomo_present_stat(kmo$overall, "proportion",
+                            reference = if (kmo_severity == "concern") kmo_concern else kmo_review),
+          nomo_present_stat(if (kmo_severity == "concern") kmo_concern else kmo_review, "proportion"),
+          kmo_severity
+        )
+      ),
       recommendation = "Use KMO with the broader structural evidence rather than as a stand-alone gate."
     )
   }
