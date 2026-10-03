@@ -36,7 +36,8 @@ print.nomo_hierarchical <- function(x, digits = 3, ...) {
   nomo_present_section("Total score")
   nomo_present_table(
     idx, c("Index" = "label", "Estimate" = "estimate"),
-    formats = list(estimate = number)
+    formats = list(estimate = number),
+    more = "nomo_table(x, \"indices\")"
   )
 
   nomo_present_section("Subscales")
@@ -45,7 +46,8 @@ print.nomo_hierarchical <- function(x, digits = 3, ...) {
     c("Subscale" = "subscale", "Items" = "n_items",
       "Omega subscale" = "omega_subscale",
       "Omega hierarchical subscale" = "omega_hierarchical_subscale"),
-    formats = list(omega_subscale = number, omega_hierarchical_subscale = number)
+    formats = list(omega_subscale = number, omega_hierarchical_subscale = number),
+    more = "nomo_table(x, \"subscales\")"
   )
 
   if (!is.null(x$factors) && nrow(x$factors)) {
@@ -56,7 +58,8 @@ print.nomo_hierarchical <- function(x, digits = 3, ...) {
         "Determinacy" = "factor_determinacy", "Min competing r" = "min_competing_r",
         "Replicability H" = "construct_replicability"),
       formats = list(factor_determinacy = number, min_competing_r = number,
-                     construct_replicability = number)
+                     construct_replicability = number),
+      more = "nomo_table(x, \"factors\")"
     )
   }
 
@@ -109,7 +112,8 @@ print.summary_nomo_hierarchical <- function(x, ...) {
     x$subscales,
     c("Subscale" = "subscale", "Items" = "n_items",
       "Omega subscale" = "omega_subscale",
-      "Omega hierarchical subscale" = "omega_hierarchical_subscale")
+      "Omega hierarchical subscale" = "omega_hierarchical_subscale"),
+    more = "nomo_table(x, \"subscales\")"
   )
 
   if (nrow(x$notes)) {

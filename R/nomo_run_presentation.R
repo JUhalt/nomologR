@@ -71,7 +71,7 @@ nomo_run_key_evidence <- function(x) {
   if (length(factors)) {
     suggested <- vapply(factors, function(f) {
       n <- f$parallel$n_factors
-      if (length(n)) format(n) else "-"
+      if (length(n)) format(n) else nomo_present_missing
     }, character(1))
     out <- c(out, paste0("Parallel analysis suggests: ",
                          paste(names(suggested), suggested, collapse = ", ")))
@@ -258,7 +258,8 @@ print.summary_nomo_run <- function(x, ...) {
   stages <- x$stage_status
   stages$status_shown <- gsub("_", " ", stages$status)
   nomo_present_section("Stages")
-  nomo_present_table(stages, c("Stage" = "stage", "Status" = "status_shown"))
+  nomo_present_table(stages, c("Stage" = "stage", "Status" = "status_shown"),
+                     more = "nomo_table(x, \"stages\")")
   detailed <- stages[nzchar(stages$detail), , drop = FALSE]
   nomo_present_bullets(paste0(detailed$stage, ": ", detailed$detail))
 
@@ -310,7 +311,8 @@ print.summary_nomo_run <- function(x, ...) {
     nomo_present_table(
       counts,
       c("Stage" = "stage", "Methods" = "n", "Primary" = "primary",
-        "Historical" = "historical")
+        "Historical" = "historical"),
+      more = "nomo_table(x, \"methods\")"
     )
     primary <- m[m$role == "primary", , drop = FALSE]
     if (nrow(primary)) {

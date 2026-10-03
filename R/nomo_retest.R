@@ -455,7 +455,8 @@ print.summary_nomo_retest <- function(x, ...) {
     show,
     c("Composite" = "composite", "ICC(C,1) [95% CI]" = "consistency",
       "Mean change [95% CI]" = "change", "SD" = "sd"),
-    formats = list(sd = function(v) nomo_present_number(v, 2L))
+    formats = list(sd = function(v) nomo_present_number(v, 2L)),
+    more = "nomo_table(x, \"icc\")"
   )
 
   nomo_retest_present_change(x$reliable_change)

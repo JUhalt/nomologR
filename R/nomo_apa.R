@@ -31,10 +31,10 @@ nomo_apa_capitalize <- function(x) {
 # its zero while CFI (which cannot) loses it.
 nomo_apa_number <- function(x, digits = 2L, bounded = FALSE) {
   x <- suppressWarnings(as.numeric(x))
-  # Round first so a small negative value that rounds to zero is written as
-  # zero, not as a signed "-.000".
-  x <- round(x, digits)
-  x[is.finite(x) & x == 0] <- 0
+  # Rounded half away from zero, as the console rounds (#144), so .625 is .63;
+  # and rounded first so a small negative value that rounds to zero is written
+  # as zero, not as a signed "-.000".
+  x <- nomo_present_round(x, digits)
   out <- formatC(x, format = "f", digits = digits)
   if (isTRUE(bounded)) {
     out <- sub("^(-?)0\\.", "\\1.", out)
@@ -44,11 +44,13 @@ nomo_apa_number <- function(x, digits = 2L, bounded = FALSE) {
 }
 
 
-# p values are bounded, so they take no leading zero, and anything below .001
-# is written as a bound rather than a rounded zero.
+# p values are bounded, so they take no leading zero; anything below .001 is
+# written as a bound rather than a rounded zero, and anything that would round
+# to 1.000 as "> .999".
 nomo_apa_p <- function(p) {
   p <- suppressWarnings(as.numeric(p))
   out <- nomo_apa_number(p, digits = 3L, bounded = TRUE)
+  out[is.finite(p) & out == "1.000"] <- "> .999"
   out[is.finite(p) & p < 0.001] <- "< .001"
   out
 }

@@ -310,13 +310,18 @@ nomo_model_bifactor <- function(factors, general) {
 
 #' @export
 print.nomo_model <- function(x, ...) {
+  # The syntax is printed bare, so it can be copied as it is; the notes are
+  # wrapped like every other note (#145).
+  nomo_present_header("nomo_model", "Measurement model syntax")
   cat(as.character(x), "\n", sep = "")
   notes <- attr(x, "notes")
   if (length(notes)) {
     # A note is prefixed with its severity, as other notes in the package are.
-    flag <- nomo_present_flag(if (is.null(names(notes))) rep("", length(notes)) else names(notes))
-    cat("\nIdentification notes:\n")
-    cat(paste0("- ", ifelse(nzchar(flag), paste0(flag, ": "), ""), notes), sep = "\n")
+    nomo_present_section("Identification notes")
+    nomo_present_notes(data.frame(
+      severity = if (is.null(names(notes))) rep("", length(notes)) else names(notes),
+      note = unname(notes), stringsAsFactors = FALSE
+    ))
   }
   invisible(x)
 }

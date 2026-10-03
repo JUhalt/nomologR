@@ -128,7 +128,8 @@ print.summary_nomo_efa <- function(x, ...) {
         r = fc[pairs],
         stringsAsFactors = FALSE
       ),
-      c("Factor 1" = "factor1", "Factor 2" = "factor2", "r" = "r")
+      c("Factor 1" = "factor1", "Factor 2" = "factor2", "r" = "r"),
+      more = "nomo_table(x, \"factor_correlations\")"
     )
   } else {
     nomo_present_text("Not applicable to a one-factor solution.", indent = 2L)

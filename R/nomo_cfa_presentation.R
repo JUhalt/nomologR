@@ -221,7 +221,8 @@ print.summary_nomo_cfa <- function(x, ...) {
     nomo_present_table(
       fc,
       c("Factor 1" = "factor1", "Factor 2" = "factor2", "r" = "correlation",
-        "95% CI" = "interval")
+        "95% CI" = "interval"),
+      more = "nomo_table(x, \"factor_correlations\")"
     )
   }
 

@@ -77,7 +77,7 @@ print.summary_nomo_screen <- function(x, ...) {
                         sub("^numeric_", "", review$item_type))
   review$flag <- nomo_present_flag(review$attention)
   review$item_rest <- nomo_screen_review_item_rest(review)
-  percent <- function(v) ifelse(is.finite(v), sprintf("%.1f%%", 100 * v), "-")
+  percent <- function(v) ifelse(is.finite(v), sprintf("%.1f%%", 100 * v), nomo_present_missing)
   nomo_present_section("Item review")
   nomo_present_table(
     review,
