@@ -143,6 +143,14 @@ test_that("a Monte Carlo study reports recovery and power at each sample size", 
   expect_match(printed, "Max bias and Max SE bias are the largest absolute relative biases",
                fixed = TRUE, all = FALSE)
   expect_false(any(nchar(printed) > 80L))
+  # Coverage is a range, and a missing bound leaves the whole cell missing,
+  # never half a range such as "---0.95" (#145).
+  expect_match(printed, "^ +300 .* 0[.][0-9]{2} to [01][.][0-9]{2} +(yes|no)$", all = FALSE)
+  half <- pw
+  half$summary$min_coverage[[1L]] <- NA_real_
+  shown <- capture.output(print(half))
+  expect_match(shown, "^ +60 .* -- +(yes|no)$", all = FALSE)
+  expect_false(any(grepl("---", shown, fixed = TRUE)))
 
   # The tables are reached through nomo_table(), by sample size by default
   # (#145), and a table cut for width names the call that shows the rest.
@@ -195,8 +203,10 @@ test_that("the simulation handles zero values, missing parameters, and failed fi
   expect_true(is.na(failing$summary$improper))
   expect_true(is.na(failing$n_required))
   local_reproducible_output(width = 80)
-  expect_match(capture.output(print(failing)), "No simulated N meets the references",
-               fixed = TRUE, all = FALSE)
+  failed <- capture.output(print(failing))
+  expect_match(failed, "No simulated N meets the references", fixed = TRUE, all = FALSE)
+  # Without a converged replication there is no coverage to show (#145).
+  expect_false(any(grepl("---", failed, fixed = TRUE)))
 
   # Without a seed, the session's random stream is used as it stands; without
   # any random state, one is created and removed again.

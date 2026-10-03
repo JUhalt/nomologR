@@ -139,7 +139,7 @@ nomo_network_present_single <- function(single, sensitivity, detail = FALSE) {
   }
 
   # Numbers stay numeric, so they are right-aligned like the variances; a
-  # missing standard error is shown as "-", and the column is left out when
+  # missing standard error is shown as "--", and the column is left out when
   # no composite has one.
   nomo_present_section("Single indicators")
   nomo_present_table(

@@ -112,8 +112,8 @@
         Top share is the proportion of responses in the most common category.
       
       Flagged items
-        - b5 (review): `b5` has a corrected item-rest correlation of r = 0.28 (n =
-          473), below the teaching reference.
+        - b5 (review): `b5` has a corrected item-rest correlation of r = 0.28
+          (n = 473), below the teaching reference.
       
       Flags are review aids, not decisions to keep or delete an item.
 
@@ -317,17 +317,17 @@
         chi-square difference 171.84 on 16 df, p < .001
       
       Notes
-        - review: The parallel model that unit weighting assumes fits worse than the
+        - Review: The parallel model that unit weighting assumes fits worse than the
           model you fitted (chi-square difference 171.84 on 16 df, p < .001). The
           items are not interchangeable in the way adding them assumes. This does
           not forbid a sum score; it means the choice needs a reason beyond
           convenience, and that `validity` and `correlational_accuracy` describe
           what it costs.
-        - review: Validity is below .90 for B. Gorsuch (1983, p. 260) recommended at
+        - Review: Validity is below .90 for B. Gorsuch (1983, p. 260) recommended at
           least .80, and above .90 if the scores are to serve as adequate
           substitutes for the factors themselves. Reported as his recommendation,
           not applied as a rule.
-        - concern: Correlations among these scores do not reproduce the correlations
+        - Concern: Correlations among these scores do not reproduce the correlations
           among the factors: the largest discrepancy is -0.097, between A and B. A
           relationship estimated from these scores carries that much bias, and its
           direction is a property of the method and the model rather than a constant
@@ -337,11 +337,11 @@
           coefficients, and scores from one model containing every factor, like
           these, are not it: the predictors need regression-method scores and the
           outcome Bartlett scores, each from a measurement model of its own.
-        - review: These scores also carry the other factors: the score for A
+        - Review: These scores also carry the other factors: the score for A
           correlates +0.455 with a factor it does not represent (Grice, 2001). A
           score that is not univocal cannot be treated as though it measured its own
           factor alone.
-        - review: The strongest standardized loading is at least twice the weakest
+        - Review: The strongest standardized loading is at least twice the weakest
           for B. Adding those items gives the weakest indicator the same say as the
           strongest, so two people with the same total can differ on the construct
           by having endorsed different items.
@@ -376,7 +376,7 @@
           show that adding items assumes a parallel model: equal unstandardized
           loadings and equal residual variances. That assumption needs the same
           justification as any other measurement model.
-        - review: The parallel model that unit weighting assumes fits worse than the
+        - Review: The parallel model that unit weighting assumes fits worse than the
           model you fitted (chi-square difference 171.84 on 16 df, p < .001). The
           items are not interchangeable in the way adding them assumes. This does
           not forbid a sum score; it means the choice needs a reason beyond
@@ -386,11 +386,11 @@
           scale; coefficient H belongs to optimally weighted scores (McNeish & Wolf,
           2020). Reporting H for a sum score, or alpha for a weighted one, describes
           a scale that was not used.
-        - review: Validity is below .90 for B. Gorsuch (1983, p. 260) recommended at
+        - Review: Validity is below .90 for B. Gorsuch (1983, p. 260) recommended at
           least .80, and above .90 if the scores are to serve as adequate
           substitutes for the factors themselves. Reported as his recommendation,
           not applied as a rule.
-        - concern: Correlations among these scores do not reproduce the correlations
+        - Concern: Correlations among these scores do not reproduce the correlations
           among the factors: the largest discrepancy is -0.097, between A and B. A
           relationship estimated from these scores carries that much bias, and its
           direction is a property of the method and the model rather than a constant
@@ -400,11 +400,11 @@
           coefficients, and scores from one model containing every factor, like
           these, are not it: the predictors need regression-method scores and the
           outcome Bartlett scores, each from a measurement model of its own.
-        - review: These scores also carry the other factors: the score for A
+        - Review: These scores also carry the other factors: the score for A
           correlates +0.455 with a factor it does not represent (Grice, 2001). A
           score that is not univocal cannot be treated as though it measured its own
           factor alone.
-        - review: The strongest standardized loading is at least twice the weakest
+        - Review: The strongest standardized loading is at least twice the weakest
           for B. Adding those items gives the weakest indicator the same say as the
           strongest, so two people with the same total can differ on the construct
           by having endorsed different items.
@@ -466,7 +466,7 @@
         C       group          0.641           -0.178            0.406
       
       Notes
-        - review: A bifactor model will usually fit at least as well as
+        - Review: A bifactor model will usually fit at least as well as
           correlated-factors or higher-order models of the same items, even when it
           did not generate the data (Reise, 2012), and a higher-order model is a
           constrained version of it (Yung, Thissen, & McLeod, 1999). Bonifay, Lane,
@@ -480,16 +480,16 @@
           higher-order model generated the data. They concluded that which model to
           adopt should not rely on which is better fitting. Compare the alternatives
           with nomo_compare() and choose on substantive grounds, not on fit alone.
-        - review: Factor determinacy is at or below .90 for G, A, B, C. Gorsuch
+        - Review: Factor determinacy is at or below .90 for G, A, B, C. Gorsuch
           (1983, p. 260) recommended using factor score estimates only above that
           value. This is his recommendation reported as context, not a rule applied
           here; the score may still be usable for some purposes.
-        - review: Two equally valid sets of factor scores could correlate as low as
+        - Review: Two equally valid sets of factor scores could correlate as low as
           G (0.50), A (-0.01), B (0.02), C (-0.18). Gorsuch (1983, p. 260) suggested
           this minimum be above .70. A negative value means two researchers scoring
           the same data could rank people in opposite orders and both be consistent
           with the model.
-        - review: Construct replicability H is below .70 for A, B, C. Hancock and
+        - Review: Construct replicability H is below .70 for A, B, C. Hancock and
           Mueller (2001) proposed .70 as a standard; a factor below it is not well
           defined by its own indicators and is expected to change across studies.
           Reported as their standard, not applied as a rule.
@@ -529,7 +529,7 @@
       Notes
         - Bifactor model: G is measured by all 9 items, with 3 group factors (A, B,
           C).
-        - review: A bifactor model will usually fit at least as well as
+        - Review: A bifactor model will usually fit at least as well as
           correlated-factors or higher-order models of the same items, even when it
           did not generate the data (Reise, 2012), and a higher-order model is a
           constrained version of it (Yung, Thissen, & McLeod, 1999). Bonifay, Lane,
@@ -552,16 +552,16 @@
           residual. The two are equivalent when the data are unidimensional and can
           differ under a bifactor model, which Rodriguez et al. note without
           preferring either. Read each as the question it answers.
-        - review: Factor determinacy is at or below .90 for G, A, B, C. Gorsuch
+        - Review: Factor determinacy is at or below .90 for G, A, B, C. Gorsuch
           (1983, p. 260) recommended using factor score estimates only above that
           value. This is his recommendation reported as context, not a rule applied
           here; the score may still be usable for some purposes.
-        - review: Two equally valid sets of factor scores could correlate as low as
+        - Review: Two equally valid sets of factor scores could correlate as low as
           G (0.50), A (-0.01), B (0.02), C (-0.18). Gorsuch (1983, p. 260) suggested
           this minimum be above .70. A negative value means two researchers scoring
           the same data could rank people in opposite orders and both be consistent
           with the model.
-        - review: Construct replicability H is below .70 for A, B, C. Hancock and
+        - Review: Construct replicability H is below .70 for A, B, C. Hancock and
           Mueller (2001) proposed .70 as a standard; a factor below it is not well
           defined by its own indicators and is expected to change across studies.
           Reported as their standard, not applied as a rule.
@@ -578,8 +578,8 @@
       Rationale: Is b5 needed?
       
       Compared with `full`
-        - no_b5 (nested, more constrained): chi-square difference = 46.91, df = 1, p
-          < .001; CFI change -0.029, RMSEA change +0.022; AIC change +44.9
+        - no_b5 (nested, more constrained): chi-square difference = 46.91, df = 1,
+          p < .001; CFI change -0.029, RMSEA change +0.022; AIC change +44.9
       
       No model was selected automatically. summary() shows interpretations and
       measurement evidence.
@@ -663,8 +663,8 @@
       Completed: configural -> metric -> scalar
       
         Level         CFI  RMSEA   SRMR  CFI change  RMSEA change   LRT p
-        configural  1.000  0.000  0.002           -             -       -
-        metric      1.000  0.000  0.028      +0.000        +0.000    .146
+        configural  1.000  0.000  0.002          --            --      --
+        metric      1.000  0.000  0.028       0.000         0.000    .146
         scalar      0.954  0.121  0.065      -0.046        +0.121  < .001
       Localized equality-constraint diagnostics retained: 12
       
@@ -693,7 +693,7 @@
       
       Changes from the preceding level
         Level   CFI change  RMSEA change  SRMR change  LRT chi-square  df       p
-        metric      +0.000        +0.000       +0.026            5.38   3    .146
+        metric       0.000         0.000       +0.026            5.38   3    .146
         scalar      -0.046        +0.121       +0.037           63.23   3  < .001
       
       Latent means relative to online (its latent SD)
@@ -851,8 +851,8 @@
           plausible set is 1. The pipeline has not adopted a factor count.
         - SocialDesirability: Parallel analysis currently suggests 1 factor; the
           retained plausible set is 1. The pipeline has not adopted a factor count.
-        Example: decisions = list(factor_count = c(Agency = <integer>, Persistence =
-        <integer>, SocialDesirability = <integer>))
+        Example: decisions = list(factor_count = c(Agency = <integer>,
+        Persistence = <integer>, SocialDesirability = <integer>))
       
       No later stage has been run automatically while this consequential decision is
       unresolved.

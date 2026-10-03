@@ -148,7 +148,7 @@ test_that("fragile bifactor configurations are noted, impossible ones refused", 
   both <- nomo_model(list(A = c("a1", "a2"), B = c("b1", "b2")), structure = "bifactor")
   expect_identical(names(attr(both, "notes")), c("concern", "concern"))
   expect_match(attr(both, "notes")[[2L]], "Group factors A, B have two indicators each", fixed = TRUE)
-  expect_output(print(both), "- concern: Group factors A, B", fixed = TRUE)
+  expect_output(print(both), "- Concern: Group factors A, B", fixed = TRUE)
 
   expect_error(
     nomo_model(hier_groups["A"], structure = "bifactor"),
@@ -191,12 +191,12 @@ test_that("printed syntax includes identification notes", {
   m <- nomo_model(hier_groups, structure = "higher_order")
   out <- paste(capture.output(print(m)), collapse = "\n")
   expect_match(out, "G =~ NA*A + B + C", fixed = TRUE)
-  expect_match(out, "Identification notes:")
-  expect_match(out, "- review: With three first-order factors", fixed = TRUE)
+  expect_match(out, "\nIdentification notes\n", fixed = TRUE)
+  expect_match(out, "  - Review: With three first-order factors", fixed = TRUE)
 
   # Notes without a severity are printed as they are.
   attr(m, "notes") <- unname(attr(m, "notes"))
-  expect_output(print(m), "\n- With three first-order factors", fixed = TRUE)
+  expect_output(print(m), "\n  - With three first-order factors", fixed = TRUE)
 })
 
 

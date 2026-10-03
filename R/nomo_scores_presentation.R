@@ -94,7 +94,8 @@ print.summary_nomo_scores <- function(x, digits = 3, ...) {
         min_loading = function(v) nomo_present_number(v, 2L),
         max_loading = function(v) nomo_present_number(v, 2L),
         loading_ratio = function(v) nomo_present_number(v, 2L)
-      )
+      ),
+      more = "nomo_table(x, \"unit_weighting\")"
     )
   }
 

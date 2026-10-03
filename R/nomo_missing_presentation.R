@@ -24,7 +24,9 @@ print.nomo_missing <- function(x, digits = 3, ...) {
         "Converged" = "converged", "Admissible" = "admissible"),
       "Available", x$strategies$available
     ),
-    formats = list(n_used = function(v) ifelse(is.finite(v), format(v, trim = TRUE), "-")),
+    formats = list(n_used = function(v) {
+      ifelse(is.finite(v), format(v, trim = TRUE), nomo_present_missing)
+    }),
     more = "nomo_table(x, \"strategies\")"
   )
   # Why a strategy was not fitted, such as the reference when nothing is missing.
