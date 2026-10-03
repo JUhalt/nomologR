@@ -624,6 +624,50 @@ test_that("nomo_factors hardens public input validation branches", {
 })
 
 
+test_that("extraction methods that cannot give retention eigenvalues fail clearly", {
+  set.seed(4501)
+  f <- rnorm(150)
+  dat <- as.data.frame(replicate(5, 0.8 * f + rnorm(150, sd = 0.6)))
+
+  # alpha cannot fit the one-factor solution the eigenvalues come from, and
+  # minrank needs Rcsdp, which nomologR does not declare (#145, factors-2).
+  for (fm in c("alpha", "minrank", "not-an-estimator")) {
+    expect_error(
+      nomo_factors(dat, n_iter = 10, fm = fm),
+      sprintf("Unsupported extraction method `fm = \"%s\"` for factor retention", fm),
+      fixed = TRUE
+    )
+  }
+})
+
+
+test_that("fm = \"minchi\" weights by the pairwise Ns instead of running minres", {
+  set.seed(4502)
+  f <- rnorm(300)
+  dat <- as.data.frame(replicate(6, 0.75 * f + rnorm(300, sd = 0.65)))
+  for (j in seq_along(dat)) {
+    dat[sample(nrow(dat), 25L * j), j] <- NA
+  }
+
+  minchi <- nomo_factors(
+    dat, criterion_set = "minimal", n_iter = 10, seed = 77, fm = "minchi"
+  )
+  minres <- nomo_factors(
+    dat, criterion_set = "minimal", n_iter = 10, seed = 77, fm = "minres"
+  )
+
+  # Both the observed and the null eigenvalues use the pairwise Ns.
+  expect_false(isTRUE(all.equal(
+    minchi$scree$factor_eigenvalue,
+    minres$scree$factor_eigenvalue
+  )))
+  expect_false(isTRUE(all.equal(
+    minchi$parallel$random_eigenvalues,
+    minres$parallel$random_eigenvalues
+  )))
+})
+
+
 test_that("nomo_factors rejects unusable observed-data configurations explicitly", {
   constant <- data.frame(
     a = rep(1, 8),

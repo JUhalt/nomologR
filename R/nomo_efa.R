@@ -27,8 +27,12 @@
 #'   Orthogonal rotations are allowed but are recorded as a researcher choice.
 #' @param fm Common-factor extraction method passed to [psych::fa()]. The
 #'   default is `"minres"`. Supported values are `"minres"`, `"uls"`, `"ols"`,
-#'   `"wls"`, `"gls"`, `"pa"`, `"ml"`, `"minchi"`, `"minrank"`, `"alpha"`,
-#'   and `"old.min"`.
+#'   `"wls"`, `"gls"`, `"pa"`, `"ml"`, `"minchi"`, `"alpha"`, and
+#'   `"old.min"`. `"alpha"` needs at least two factors, because
+#'   [psych::fa()] cannot fit a one-factor alpha solution. For `"minchi"`,
+#'   the number of cases observed for each item pair is passed to
+#'   [psych::fa()], which weights the residuals by it. `"minrank"` is not
+#'   supported, because [psych::fa()] needs the `Rcsdp` package for it.
 #' @param correlation Optional correlation strategy: `"auto"`, `"pearson"`,
 #'   `"polychoric"`, `"tetrachoric"`, or `"mixed"`. If `NULL`, the value is
 #'   inherited from a supplied `nomo_factors` object when possible; otherwise
@@ -133,7 +137,7 @@ nomo_efa <- function(data,
   }
   supported_fm <- c(
     "minres", "uls", "ols", "wls", "gls", "pa",
-    "ml", "minchi", "minrank", "alpha", "old.min"
+    "ml", "minchi", "alpha", "old.min"
   )
   if (!fm %in% supported_fm) {
     stop(
@@ -251,6 +255,15 @@ nomo_efa <- function(data,
     stop("`factors` must be a positive integer or a `nomo_factors` object.", call. = FALSE)
   }
   k <- as.integer(k)
+  if (fm == "alpha" && k < 2L) {
+    stop(
+      paste(
+        "`fm = \"alpha\"` needs at least two factors; psych::fa() cannot fit",
+        "a one-factor alpha solution. Choose another extraction method."
+      ),
+      call. = FALSE
+    )
+  }
 
   if (is.null(items)) {
     items <- names(data)
@@ -392,6 +405,11 @@ nomo_efa <- function(data,
   )
   if (common_n_available) {
     fa_args$n.obs <- nrow(analysis_data)
+  }
+  if (fm == "minchi") {
+    # Given a correlation matrix without the pairwise Ns, psych::fa() quietly
+    # replaces minchi with minres.
+    fa_args$np.obs <- pairwise_n
   }
 
   fit <- tryCatch(

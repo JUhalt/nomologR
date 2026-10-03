@@ -67,7 +67,15 @@ reference. If \code{NULL}, the value in
 number state is restored before return.}
 
 \item{fm}{Common-factor extraction method passed to \code{\link[psych:fa]{psych::fa()}} when
-obtaining factor eigenvalues. The default is \code{"minres"}.}
+obtaining the factor eigenvalues for parallel analysis. The default is
+\code{"minres"}. Supported values are \code{"minres"}, \code{"uls"}, \code{"ols"}, \code{"wls"},
+\code{"gls"}, \code{"pa"}, \code{"ml"}, \code{"minchi"}, and \code{"old.min"}. For \code{"minchi"},
+the number of cases observed for each item pair is passed to
+\code{\link[psych:fa]{psych::fa()}}, which weights the residuals by it. \code{"alpha"} is not
+available here: the eigenvalues come from a one-factor solution, which
+\code{\link[psych:fa]{psych::fa()}} cannot fit with alpha factoring (use it in \code{\link[=nomo_efa]{nomo_efa()}} with
+two or more factors). \code{"minrank"} is not supported, because
+\code{\link[psych:fa]{psych::fa()}} needs the \code{Rcsdp} package for it.}
 
 \item{smooth}{Logical. If \code{FALSE} (default), a non-positive-definite observed
 correlation matrix blocks factor-retention analysis. If \code{TRUE}, smoothing

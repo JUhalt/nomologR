@@ -40,8 +40,12 @@ Orthogonal rotations are allowed but are recorded as a researcher choice.}
 
 \item{fm}{Common-factor extraction method passed to \code{\link[psych:fa]{psych::fa()}}. The
 default is \code{"minres"}. Supported values are \code{"minres"}, \code{"uls"}, \code{"ols"},
-\code{"wls"}, \code{"gls"}, \code{"pa"}, \code{"ml"}, \code{"minchi"}, \code{"minrank"}, \code{"alpha"},
-and \code{"old.min"}.}
+\code{"wls"}, \code{"gls"}, \code{"pa"}, \code{"ml"}, \code{"minchi"}, \code{"alpha"}, and
+\code{"old.min"}. \code{"alpha"} needs at least two factors, because
+\code{\link[psych:fa]{psych::fa()}} cannot fit a one-factor alpha solution. For \code{"minchi"},
+the number of cases observed for each item pair is passed to
+\code{\link[psych:fa]{psych::fa()}}, which weights the residuals by it. \code{"minrank"} is not
+supported, because \code{\link[psych:fa]{psych::fa()}} needs the \code{Rcsdp} package for it.}
 
 \item{correlation}{Optional correlation strategy: \code{"auto"}, \code{"pearson"},
 \code{"polychoric"}, \code{"tetrachoric"}, or \code{"mixed"}. If \code{NULL}, the value is

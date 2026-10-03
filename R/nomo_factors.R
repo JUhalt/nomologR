@@ -56,7 +56,15 @@
 #' @param seed Integer seed for the null-data simulation. The caller's random
 #'   number state is restored before return.
 #' @param fm Common-factor extraction method passed to [psych::fa()] when
-#'   obtaining factor eigenvalues. The default is `"minres"`.
+#'   obtaining the factor eigenvalues for parallel analysis. The default is
+#'   `"minres"`. Supported values are `"minres"`, `"uls"`, `"ols"`, `"wls"`,
+#'   `"gls"`, `"pa"`, `"ml"`, `"minchi"`, and `"old.min"`. For `"minchi"`,
+#'   the number of cases observed for each item pair is passed to
+#'   [psych::fa()], which weights the residuals by it. `"alpha"` is not
+#'   available here: the eigenvalues come from a one-factor solution, which
+#'   [psych::fa()] cannot fit with alpha factoring (use it in [nomo_efa()] with
+#'   two or more factors). `"minrank"` is not supported, because
+#'   [psych::fa()] needs the `Rcsdp` package for it.
 #' @param smooth Logical. If `FALSE` (default), a non-positive-definite observed
 #'   correlation matrix blocks factor-retention analysis. If `TRUE`, smoothing
 #'   is explicit, recorded, and performed with [psych::cor.smooth()].
@@ -268,6 +276,22 @@ nomo_factors <- function(data,
   if (!is.character(fm) || length(fm) != 1L || is.na(fm) || fm == "") {
     stop("`fm` must be a single non-empty character value.", call. = FALSE)
   }
+  supported_fm <- c(
+    "minres", "uls", "ols", "wls", "gls", "pa", "ml", "minchi", "old.min"
+  )
+  if (!fm %in% supported_fm) {
+    stop(
+      sprintf(
+        paste0(
+          "Unsupported extraction method `fm = \"%s\"` for factor retention. ",
+          "Use one of: %s."
+        ),
+        fm,
+        paste(supported_fm, collapse = ", ")
+      ),
+      call. = FALSE
+    )
+  }
   if (!is.logical(smooth) || length(smooth) != 1L || is.na(smooth)) {
     stop("`smooth` must be `TRUE` or `FALSE`.", call. = FALSE)
   }
@@ -406,7 +430,11 @@ nomo_factors <- function(data,
   }
   max_factors <- min(as.integer(max_factors), ncol(analysis_data) - 1L)
 
-  observed_fa <- nomo_factors_factor_eigenvalues(corr, fm = fm)
+  observed_fa <- nomo_factors_factor_eigenvalues(
+    corr,
+    fm = fm,
+    np_obs = if (fm == "minchi") pairwise_n
+  )
 
   pa <- nomo_factors_parallel(
     x = analysis_data,
@@ -809,7 +837,9 @@ nomo_factors_pairwise_n <- function(x) {
 }
 
 
-nomo_factors_factor_eigenvalues <- function(corr, fm) {
+# `np_obs` holds the pairwise Ns. psych::fa() needs them for `fm = "minchi"`:
+# given a correlation matrix without them, it quietly fits minres instead.
+nomo_factors_factor_eigenvalues <- function(corr, fm, np_obs = NULL) {
   fit <- tryCatch(
     suppressWarnings(
       suppressMessages(
@@ -818,6 +848,7 @@ nomo_factors_factor_eigenvalues <- function(corr, fm) {
           nfactors = 1,
           rotate = "none",
           fm = fm,
+          np.obs = np_obs,
           warnings = FALSE
         )
       )
@@ -913,7 +944,11 @@ nomo_factors_parallel <- function(x,
     }
 
     values <- tryCatch(
-      nomo_factors_factor_eigenvalues(r_null, fm = fm),
+      nomo_factors_factor_eigenvalues(
+        r_null,
+        fm = fm,
+        np_obs = if (fm == "minchi") nomo_factors_pairwise_n(permuted)
+      ),
       error = function(e) NULL
     )
     if (is.null(values) || length(values) != p || any(!is.finite(values))) {

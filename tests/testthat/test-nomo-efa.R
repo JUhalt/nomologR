@@ -541,6 +541,43 @@ test_that("unsupported extraction methods fail before the engine can fall back",
 })
 
 
+test_that("every documented extraction method runs or fails with a clear reason", {
+  dat <- make_efa_factor_count_data(seed = 8204L)
+
+  # minrank needs Rcsdp, which nomologR does not declare (#145, factors-2).
+  err <- expect_error(
+    nomo_efa(dat, factors = 2, fm = "minrank"),
+    "Unsupported extraction method `fm = \"minrank\"`",
+    fixed = TRUE
+  )
+  listed <- sub(".*Use one of: ", "", conditionMessage(err))
+  expect_false(grepl("minrank", listed, fixed = TRUE))
+
+  # psych::fa() cannot fit a one-factor alpha solution.
+  expect_error(
+    nomo_efa(dat, factors = 1, fm = "alpha"),
+    "needs at least two factors"
+  )
+  alpha <- nomo_efa(dat, factors = 2, fm = "alpha")
+  expect_identical(alpha$fm, "alpha")
+  expect_identical(alpha$fit$fm, "alpha")
+})
+
+
+test_that("fm = \"minchi\" weights by the pairwise Ns instead of running minres", {
+  dat <- make_efa_factor_count_data(n = 300L, seed = 8205L)
+  for (j in seq_along(dat)) {
+    dat[sample(nrow(dat), 25L * j), j] <- NA
+  }
+
+  minchi <- nomo_efa(dat, factors = 2, fm = "minchi")
+  minres <- nomo_efa(dat, factors = 2, fm = "minres")
+
+  expect_identical(minchi$fit$fm, "minchi")
+  expect_false(isTRUE(all.equal(minchi$pattern_matrix, minres$pattern_matrix)))
+})
+
+
 test_that("EFA helper diagnostics cover review combinations safely", {
   pattern <- matrix(
     c(
