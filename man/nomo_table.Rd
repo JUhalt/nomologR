@@ -74,6 +74,36 @@ row per revision, or no rows for a workflow that was never revised.
 used, and is equivalent to \code{nomo_methods(x)}; see \code{\link[=nomo_methods]{nomo_methods()}}.
 }
 }
+\section{Fit tables}{
+
+Fit tables name their indices in one of two ways, a known difference that
+is kept as it is (see \strong{Conventions in returned tables} in \code{?nomologR}).
+The \code{nomo_cfa} and \code{nomo_missing} tables spell them \code{chi_square},
+\code{p_value}, \code{CFI}, and so on. The others use the names of
+\code{\link[lavaan:fitMeasures]{lavaan::fitMeasures()}}: \code{chisq}, \code{pvalue}, \code{cfi}, and so on.
+\itemize{
+\item \code{nomo_cfa}, \code{"fit"}: long by design, one row per index, named in
+\code{metric} (\code{chi_square}, \code{df}, \code{p_value}, \code{CFI}, \code{TLI}, \code{RMSEA},
+\code{RMSEA_CI_lower}, \code{RMSEA_CI_upper}, \code{SRMR}), with its \code{value},
+\code{reference}, and \code{attention} flag.
+\item \code{nomo_missing}, \code{"fit"}: one row per \code{strategy}, with \code{chi_square}, \code{df},
+\code{p_value}, \code{CFI}, \code{TLI}, \code{RMSEA}, and \code{SRMR}.
+\item \code{nomo_esem}, \code{"models"}: one row per \code{model}, with \code{chisq}, \code{df},
+\code{pvalue}, \code{cfi}, \code{tli}, \code{rmsea}, \code{srmr}, \code{aic}, and \code{bic}.
+\item \code{nomo_method_variance}, \code{"models"}: one row per \code{model}, with \code{chisq},
+\code{df}, \code{pvalue}, \code{cfi}, \code{tli}, \code{rmsea}, and \code{srmr}.
+\item \code{nomo_compare}, \code{"models"}: one row per \code{model}, with \code{npar}, \code{df},
+\code{chisq}, \code{cfi}, \code{tli}, \code{rmsea}, \code{srmr}, \code{aic}, and \code{bic}. The difference
+tests and their p-values are in \code{"comparisons"}.
+\item \code{nomo_invariance}, \code{"fit"}: one row per \code{level}, with \code{chisq}, \code{df},
+\code{pvalue}, \code{cfi}, \code{rmsea}, and \code{srmr}, the changes from the level before
+(\code{delta_cfi}, \code{delta_rmsea}, \code{delta_srmr}), and the likelihood-ratio test
+against it (\code{lrt_chisq}, \code{lrt_df}, \code{lrt_p}).
+\item \code{nomo_network}, \code{"fit"}: one row, with \code{chisq}, \code{df}, \code{pvalue}, \code{cfi},
+\code{tli}, \code{rmsea}, and \code{srmr}.
+}
+}
+
 \examples{
 h <- nomo_hypotheses(
   "Agency -> Persistence" = positive(min = .20),

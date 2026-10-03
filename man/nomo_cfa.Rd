@@ -70,6 +70,13 @@ only; nothing is freed.
 \item \code{decision_log}.
 }
 
+In \code{sample_summary}, \code{pct_dropped} is a proportion between 0 and 1. The
+tables flag in different vocabularies: \code{attention} is \code{"info"},
+\code{"review"}, or \code{"unavailable"} in \code{fit_evidence}, and \code{"KEEP"},
+\code{"REVIEW"}, or \code{"STRONG REVIEW"} in \code{standardized_loadings}; \code{severity} in
+\code{heywood} and \code{decision_log} is \code{"info"}, \code{"review"}, or \code{"concern"}. See
+\strong{Conventions in returned tables} in \code{?nomologR}.
+
 Other fields record the call, the settings used, and intermediate engine
 results. They may change between releases and are not part of the stable
 interface (see \code{?nomologR}).

@@ -61,6 +61,33 @@
 #'   `"methods"` returns the registry entries for the methods the run actually
 #'   used, and is equivalent to `nomo_methods(x)`; see [nomo_methods()].
 #'
+#' @section Fit tables:
+#' Fit tables name their indices in one of two ways, a known difference that
+#' is kept as it is (see **Conventions in returned tables** in `?nomologR`).
+#' The `nomo_cfa` and `nomo_missing` tables spell them `chi_square`,
+#' `p_value`, `CFI`, and so on. The others use the names of
+#' [lavaan::fitMeasures()]: `chisq`, `pvalue`, `cfi`, and so on.
+#'
+#' * `nomo_cfa`, `"fit"`: long by design, one row per index, named in
+#'   `metric` (`chi_square`, `df`, `p_value`, `CFI`, `TLI`, `RMSEA`,
+#'   `RMSEA_CI_lower`, `RMSEA_CI_upper`, `SRMR`), with its `value`,
+#'   `reference`, and `attention` flag.
+#' * `nomo_missing`, `"fit"`: one row per `strategy`, with `chi_square`, `df`,
+#'   `p_value`, `CFI`, `TLI`, `RMSEA`, and `SRMR`.
+#' * `nomo_esem`, `"models"`: one row per `model`, with `chisq`, `df`,
+#'   `pvalue`, `cfi`, `tli`, `rmsea`, `srmr`, `aic`, and `bic`.
+#' * `nomo_method_variance`, `"models"`: one row per `model`, with `chisq`,
+#'   `df`, `pvalue`, `cfi`, `tli`, `rmsea`, and `srmr`.
+#' * `nomo_compare`, `"models"`: one row per `model`, with `npar`, `df`,
+#'   `chisq`, `cfi`, `tli`, `rmsea`, `srmr`, `aic`, and `bic`. The difference
+#'   tests and their p-values are in `"comparisons"`.
+#' * `nomo_invariance`, `"fit"`: one row per `level`, with `chisq`, `df`,
+#'   `pvalue`, `cfi`, `rmsea`, and `srmr`, the changes from the level before
+#'   (`delta_cfi`, `delta_rmsea`, `delta_srmr`), and the likelihood-ratio test
+#'   against it (`lrt_chisq`, `lrt_df`, `lrt_p`).
+#' * `nomo_network`, `"fit"`: one row, with `chisq`, `df`, `pvalue`, `cfi`,
+#'   `tli`, `rmsea`, and `srmr`.
+#'
 #' @param x A supported `nomologR` result object.
 #' @param ... Additional arguments passed to methods, usually `type`.
 #'

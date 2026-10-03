@@ -52,6 +52,13 @@
 #'   * `engine_warnings`: warnings `lavaan` raised.
 #'   * `decision_log`.
 #'
+#'   In `sample_summary`, `pct_dropped` is a proportion between 0 and 1. The
+#'   tables flag in different vocabularies: `attention` is `"info"`,
+#'   `"review"`, or `"unavailable"` in `fit_evidence`, and `"KEEP"`,
+#'   `"REVIEW"`, or `"STRONG REVIEW"` in `standardized_loadings`; `severity` in
+#'   `heywood` and `decision_log` is `"info"`, `"review"`, or `"concern"`. See
+#'   **Conventions in returned tables** in `?nomologR`.
+#'
 #'   Other fields record the call, the settings used, and intermediate engine
 #'   results. They may change between releases and are not part of the stable
 #'   interface (see `?nomologR`).

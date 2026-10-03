@@ -49,6 +49,11 @@
 #'   * `fornell_larcker_pairs`: the historical comparison, when requested.
 #'   * `standardized_loadings`, `references`, and `decision_log`.
 #'
+#'   `attention` in `standardized_loadings` is `"KEEP"`, `"REVIEW"`, or
+#'   `"STRONG REVIEW"`, as in [nomo_cfa()]; the other tables flag with
+#'   `"info"`, `"review"`, or `"concern"`. See **Conventions in returned
+#'   tables** in `?nomologR`.
+#'
 #'   Other fields record the call, the settings used, and intermediate engine
 #'   results. They may change between releases and are not part of the stable
 #'   interface (see `?nomologR`).

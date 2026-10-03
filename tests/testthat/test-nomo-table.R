@@ -123,3 +123,88 @@ test_that("?nomo_table lists every type each method accepts, and no other (#145)
     expect_setequal(documented, as.character(accepted))
   }
 })
+
+
+test_that("the fit-table columns ?nomo_table names are the ones returned (#145)", {
+  skip_on_cran()
+  items <- nomo_test_rd_items(nomo_test_rd_text("nomo_table", "Fit tables"))
+
+  two <- "A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4 + b5"
+  cfa <- nomo_cfa(two, data = nomo_demo_continuous)
+  no_b5 <- nomo_cfa(sub("b5$", "0*b5", two), data = nomo_demo_continuous)
+  agency <- c("ag1", "ag2", "ag3", "ag4")
+  persistence <- c("pe1", "pe2", "pe3", "pe4")
+  model <- nomo_model(list(Agency = agency, Persistence = persistence))
+
+  # The ?nomo_method_variance example's population, with a method factor.
+  set.seed(2010)
+  marker_data <- lavaan::simulateData(
+    paste(
+      "A =~ 0.7*a1 + 0.7*a2 + 0.6*a3 + 0.6*a4",
+      "B =~ 0.7*b1 + 0.6*b2 + 0.6*b3 + 0.5*b4",
+      "M =~ 0.7*m1 + 0.7*m2 + 0.6*m3",
+      "CMV =~ 0.3*a1 + 0.3*a2 + 0.3*a3 + 0.3*a4 + 0.3*b1 + 0.3*b2 + 0.3*b3 +",
+      "  0.3*b4 + 0.3*m1 + 0.3*m2 + 0.3*m3",
+      "A ~~ 0.4*B",
+      "A ~~ 0*M",
+      "B ~~ 0*M",
+      "CMV ~~ 0*A + 0*B + 0*M",
+      sep = "\n"
+    ),
+    sample.nobs = 600, standardized = TRUE
+  )
+
+  tables <- list(
+    nomo_cfa = nomo_table(cfa, "fit"),
+    nomo_missing = nomo_table(
+      nomo_missing(cfa, data = nomo_demo_continuous, reliability = FALSE), "fit"
+    ),
+    nomo_esem = nomo_table(nomo_esem(model, nomo_demo_network), "models"),
+    nomo_method_variance = nomo_table(
+      nomo_method_variance(
+        "A =~ a1 + a2 + a3 + a4\nB =~ b1 + b2 + b3 + b4",
+        data = marker_data, marker = c("m1", "m2", "m3")
+      ),
+      "models"
+    ),
+    nomo_compare = nomo_table(
+      nomo_compare(full = cfa, no_b5 = no_b5, rationale = "Test b5.", evidence = FALSE),
+      "models"
+    ),
+    nomo_invariance = nomo_table(
+      nomo_invariance(
+        paste("Agency =~", paste(agency, collapse = " + ")),
+        data = nomo_demo_network, group = "group", levels = c("configural", "metric")
+      ),
+      "fit"
+    ),
+    nomo_network = nomo_table(
+      nomo_network(
+        model, data = nomo_demo_network,
+        hypotheses = nomo_hypotheses("Agency -> Persistence" = positive())
+      ),
+      "fit"
+    )
+  )
+  # Every documented fit table is checked.
+  expect_setequal(sub("^\\\\code\\{([a-z_]+)\\}.*$", "\\1", items), names(tables))
+
+  for (cls in names(tables)) {
+    item <- items[startsWith(items, paste0("\\code{", cls, "},"))]
+    named <- regmatches(item, gregexpr("\\\\code\\{[A-Za-z_][A-Za-z0-9_]*\\}", item))[[1L]]
+    named <- setdiff(gsub("^\\\\code\\{|\\}$", "", named), cls)
+    tb <- tables[[cls]]
+    # The long nomo_cfa table names its indices in `metric`.
+    returned <- c(names(tb), if ("metric" %in% names(tb)) tb$metric)
+    expect_true(all(named %in% returned), label = paste(cls, toString(setdiff(named, returned))))
+  }
+
+  # The p-value is `p_value` in the nomo_cfa and nomo_missing tables and
+  # `pvalue` where lavaan's names are kept (?nomologR).
+  expect_true("p_value" %in% tables$nomo_cfa$metric)
+  expect_true("p_value" %in% names(tables$nomo_missing))
+  for (cls in c("nomo_esem", "nomo_method_variance", "nomo_invariance", "nomo_network")) {
+    expect_true("pvalue" %in% names(tables[[cls]]), label = cls)
+    expect_false("p_value" %in% names(tables[[cls]]), label = cls)
+  }
+})

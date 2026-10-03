@@ -74,6 +74,11 @@ indices per row, the pairs they used, and their settings, when
 supplied.
 }
 
+\code{pct_missing}, in \code{item_summary} and \code{case_summary}, is a proportion
+between 0 and 1, as are the \verb{*_prop} and \verb{proportion_*} columns.
+\code{percent_unique} is a percentage, 0 to 100, as the near-zero-variance rule
+states it. See \strong{Conventions in returned tables} in \code{?nomologR}.
+
 Other fields record the call, the settings used, and intermediate engine
 results. They may change between releases and are not part of the stable
 interface (see \code{?nomologR}).

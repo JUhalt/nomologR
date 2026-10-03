@@ -28,11 +28,16 @@ keeps working in the next.
 \item their documented arguments and defaults;
 \item the documented fields of the objects they return;
 \item the \code{type} values \code{\link[=nomo_table]{nomo_table()}} accepts;
-\item the columns of decision logs.
+\item the columns of decision logs. Each analysis's decision log has the
+columns \code{stage}, \code{object}, \code{metric}, \code{value}, \code{reference}, \code{severity},
+\code{observation}, \code{recommendation}, \code{decision}, and \code{rationale}; the guided
+workflow keeps its own log, described in \code{\link[=nomo_run]{nomo_run()}}.
 }
 
 Functions reached only with \code{:::}, undocumented fields, the wording of
 decision-log rows, and the layout of rendered reports are not covered.
+Names and values that differ from one table to another are covered as they
+stand; \strong{Conventions in returned tables} below sets them out.
 
 \strong{Deprecation before removal.} A breaking change is deprecated for at least
 one minor release before it takes effect. Breaking changes include removing
@@ -64,6 +69,67 @@ producer. Within a schema version, fields are only added, and nomologR
 ignores fields it does not know. Anything else is a new schema version,
 agreed with \code{contentvalidR}. nomologR refuses a schema version it does not
 read, naming both package versions.
+}
+
+\section{Conventions in returned tables}{
+
+A few names and values differ from one table to another. They are part of
+the interface described above and are kept as they are, so they are set
+out here.
+
+\strong{Proportions and percentages.} A column named \verb{pct_*} holds a proportion
+between 0 and 1, not a percentage, although printed output shows it as a
+percentage: \code{pct_missing} in the \code{item_summary} and \code{case_summary} of
+\code{\link[=nomo_screen]{nomo_screen()}} and in the \code{variables} table of \code{\link[=nomo_missing]{nomo_missing()}},
+\code{pct_incomplete} in the \code{pattern} table of \code{\link[=nomo_missing]{nomo_missing()}}, and
+\code{pct_dropped} in the \code{sample_summary} of \code{\link[=nomo_cfa]{nomo_cfa()}}. Columns named
+\verb{*_prop} or \verb{proportion_*} are proportions too. The one percentage is
+\code{percent_unique} in the \code{item_summary} of \code{\link[=nomo_screen]{nomo_screen()}}, the number of
+distinct responses as a percentage (0 to 100) of the observed responses,
+which is the scale of the near-zero-variance rule. Its reference in
+\code{\link[=nomo_defaults]{nomo_defaults()}}, \code{nzv_percent_unique_reference}, is a percentage as well.
+
+\strong{Flags.} A stored flag uses one of three vocabularies:
+\itemize{
+\item Loading tables. \code{attention} in the \code{item_summary} of \code{\link[=nomo_efa]{nomo_efa()}} and in
+the \code{standardized_loadings} of \code{\link[=nomo_cfa]{nomo_cfa()}} and \code{\link[=nomo_validity]{nomo_validity()}} is
+\code{"KEEP"}, \code{"REVIEW"}, or \code{"STRONG REVIEW"}.
+\item The item review of \code{\link[=summary.nomo_screen]{summary.nomo_screen()}}. \code{attention} is \code{"none"},
+\code{"review"}, or \code{"concern"}.
+\item Decision logs and other evidence. \code{severity} in each analysis's decision
+log and in the \code{heywood} table of \code{\link[=nomo_cfa]{nomo_cfa()}}, and the \code{attention},
+\code{measurement_attention}, and \code{signal} columns of the other evidence
+tables, are \code{"info"}, \code{"review"}, or \code{"concern"}. An evidence table may
+also mark a value that could not be computed as \code{"unavailable"}, as the
+\code{fit_evidence} of \code{\link[=nomo_cfa]{nomo_cfa()}} does.
+}
+
+The three describe the same levels. Printed output, plots, and reports show
+them in one wording: no flag for \code{"KEEP"}, \code{"none"}, and \code{"info"}; "review"
+for \code{"REVIEW"} and \code{"review"}; "concern" for \code{"STRONG REVIEW"} and
+\code{"concern"}; and "not computed" for \code{"unavailable"}. The stored values do
+not change, so code that filters a table uses that table's own values.
+
+\strong{P-values and fit indices.} A p-value is named \code{p_value}, or
+\verb{<model>_p_value} where a table holds one for each model. Three kinds of
+table differ:
+\itemize{
+\item \code{lavaan}'s parameter tables, \code{parameter_estimates} and
+\code{standardized_solution}, keep \code{lavaan}'s name, \code{pvalue}.
+\item The \code{models} tables of \code{\link[=nomo_esem]{nomo_esem()}}, \code{\link[=nomo_method_variance]{nomo_method_variance()}}, and
+\code{\link[=nomo_compare]{nomo_compare()}}, and the \code{fit_evidence} of \code{\link[=nomo_invariance]{nomo_invariance()}} and
+\code{\link[=nomo_network]{nomo_network()}}, name the fit indices they hold as
+\code{\link[lavaan:fitMeasures]{lavaan::fitMeasures()}} does: \code{chisq}, \code{df}, \code{pvalue}, \code{cfi}, \code{tli},
+\code{rmsea}, \code{srmr}, \code{aic}, and \code{bic}. In \code{\link[=nomo_invariance]{nomo_invariance()}}, the
+likelihood-ratio test against the level before is \code{lrt_chisq}, \code{lrt_df},
+and \code{lrt_p}.
+\item The \code{fit_evidence} of \code{\link[=nomo_cfa]{nomo_cfa()}} is long, one row per index named in
+\code{metric}. It and the \code{fit} table of \code{\link[=nomo_missing]{nomo_missing()}} spell the indices
+\code{chi_square}, \code{df}, \code{p_value}, \code{CFI}, \code{TLI}, \code{RMSEA}, and \code{SRMR}.
+}
+
+The \strong{Fit tables} section of \code{\link[=nomo_table]{nomo_table()}} names the index columns of
+each fit table.
 }
 
 \seealso{

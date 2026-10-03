@@ -53,6 +53,11 @@ interpretation.
 \item \code{standardized_loadings}, \code{references}, and \code{decision_log}.
 }
 
+\code{attention} in \code{standardized_loadings} is \code{"KEEP"}, \code{"REVIEW"}, or
+\code{"STRONG REVIEW"}, as in \code{\link[=nomo_cfa]{nomo_cfa()}}; the other tables flag with
+\code{"info"}, \code{"review"}, or \code{"concern"}. See \strong{Conventions in returned
+tables} in \code{?nomologR}.
+
 Other fields record the call, the settings used, and intermediate engine
 results. They may change between releases and are not part of the stable
 interface (see \code{?nomologR}).

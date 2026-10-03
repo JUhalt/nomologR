@@ -80,6 +80,10 @@ loadings, communality, flags, and the explanation of any flag.
 \item \code{decision_log}.
 }
 
+The flag in \code{item_summary}, \code{attention}, is \code{"KEEP"}, \code{"REVIEW"}, or
+\code{"STRONG REVIEW"}; \code{severity} in \code{decision_log} is \code{"info"}, \code{"review"},
+or \code{"concern"}. See \strong{Conventions in returned tables} in \code{?nomologR}.
+
 Other fields record the call, the settings used, and intermediate engine
 results. They may change between releases and are not part of the stable
 interface (see \code{?nomologR}).
