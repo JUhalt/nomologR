@@ -181,6 +181,40 @@ test_that("pairwise missingness skips Bartlett rather than inventing one N", {
 })
 
 
+test_that("the minimum pairwise N is returned and printed beside the case count", {
+  # #145, factors-3: rows with no item data count in n_cases only.
+  set.seed(4503)
+  f <- rnorm(150)
+  dat <- as.data.frame(replicate(5, 0.8 * f + rnorm(150, sd = 0.6)))
+  dat[1:40, ] <- NA
+  dat[41:45, 1] <- NA
+
+  out <- nomo_factors(dat, criterion_set = "minimal", n_iter = 10, seed = 78)
+
+  expect_equal(out$n_cases, 150L)
+  expect_equal(out$min_pairwise_n, 105L)
+  expect_equal(out$min_pairwise_n, min(out$pairwise_n))
+  expect_output(print(out), "Cases: 150 (minimum pairwise N: 105) |", fixed = TRUE)
+  expect_output(
+    print(summary(out)),
+    "Cases: 150 (minimum pairwise N: 105) |",
+    fixed = TRUE
+  )
+
+  complete <- nomo_factors(
+    dat,
+    missing = "complete",
+    criterion_set = "minimal",
+    n_iter = 10,
+    seed = 78
+  )
+  expect_equal(complete$min_pairwise_n, complete$n_cases)
+  printed <- paste(capture.output(print(complete)), collapse = "\n")
+  expect_match(printed, "Cases: 105 |", fixed = TRUE)
+  expect_false(grepl("minimum pairwise", printed, fixed = TRUE))
+})
+
+
 test_that("non-positive-definite matrices are never silently smoothed", {
   set.seed(105)
   x <- rnorm(180)

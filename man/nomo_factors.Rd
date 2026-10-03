@@ -86,7 +86,12 @@ is explicit, recorded, and performed with \code{\link[psych:cor.smooth]{psych::c
 \value{
 An object of class \code{nomo_factors}. The fields to read are:
 \itemize{
-\item \code{items}, \code{n_cases}, and \code{n_items}.
+\item \code{items}, \code{n_cases}, and \code{n_items}. \code{n_cases} is the number of rows
+analyzed (every row under \code{missing = "pairwise"}, including rows with
+no item data; the complete rows under \code{missing = "complete"}).
+\item \code{min_pairwise_n}: the smallest number of cases observed jointly on any
+item pair, the effective sample size under pairwise deletion. It equals
+\code{n_cases} when no item value is missing or \code{missing = "complete"}.
 \item \code{item_types}: each item's screened and modeling type.
 \item \code{correlation_method} and \code{correlation_matrix}: the correlations analyzed.
 \item \code{kmo} and \code{bartlett}: sampling-adequacy evidence.

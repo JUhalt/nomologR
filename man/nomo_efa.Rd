@@ -74,13 +74,21 @@ An object of class \code{nomo_efa}. The fields to read are:
 \itemize{
 \item \code{items}, \code{n_factors}, and \code{factor_source}, which records whether the
 count was the researcher's or taken from a \code{nomo_factors} result.
+\item \code{n_cases}: the number of rows analyzed (every row under
+\code{missing = "pairwise"}, including rows with no item data; the complete
+rows under \code{missing = "complete"}).
+\item \code{min_pairwise_n}: the smallest number of cases observed jointly on any
+item pair, the effective sample size under pairwise deletion. It equals
+\code{n_cases} when no item value is missing or \code{missing = "complete"}.
 \item \code{correlation_method} and \code{correlation_matrix}: the correlations analyzed.
 \item \code{pattern_matrix}, \code{structure_matrix}, and \code{factor_correlations}.
 \item \code{communalities}, \code{uniquenesses}, and \code{complexity}.
 \item \code{item_summary}: one row per item, with its primary and secondary
 loadings, communality, flags, and the explanation of any flag.
 \item \code{residual_matrix}, \code{residual_pairs}, and \code{rmsr}: local misfit.
-\item \code{sample_adequacy}: sample size, KMO, and Bartlett's test.
+\item \code{sample_adequacy}: \code{n_cases}, \code{min_pairwise_n}, \code{n_items},
+\code{cases_per_item} (\code{min_pairwise_n} divided by \code{n_items}), \code{kmo}, and
+\code{bartlett}.
 \item \code{decision_log}.
 }
 

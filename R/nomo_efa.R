@@ -55,13 +55,21 @@
 #'
 #'   * `items`, `n_factors`, and `factor_source`, which records whether the
 #'     count was the researcher's or taken from a `nomo_factors` result.
+#'   * `n_cases`: the number of rows analyzed (every row under
+#'     `missing = "pairwise"`, including rows with no item data; the complete
+#'     rows under `missing = "complete"`).
+#'   * `min_pairwise_n`: the smallest number of cases observed jointly on any
+#'     item pair, the effective sample size under pairwise deletion. It equals
+#'     `n_cases` when no item value is missing or `missing = "complete"`.
 #'   * `correlation_method` and `correlation_matrix`: the correlations analyzed.
 #'   * `pattern_matrix`, `structure_matrix`, and `factor_correlations`.
 #'   * `communalities`, `uniquenesses`, and `complexity`.
 #'   * `item_summary`: one row per item, with its primary and secondary
 #'     loadings, communality, flags, and the explanation of any flag.
 #'   * `residual_matrix`, `residual_pairs`, and `rmsr`: local misfit.
-#'   * `sample_adequacy`: sample size, KMO, and Bartlett's test.
+#'   * `sample_adequacy`: `n_cases`, `min_pairwise_n`, `n_items`,
+#'     `cases_per_item` (`min_pairwise_n` divided by `n_items`), `kmo`, and
+#'     `bartlett`.
 #'   * `decision_log`.
 #'
 #'   Other fields record the call, the settings used, and intermediate engine
@@ -504,7 +512,7 @@ nomo_efa <- function(data,
   sample_adequacy <- list(
     n_cases = nrow(analysis_data),
     n_items = length(items),
-    cases_per_item = nrow(analysis_data) / length(items),
+    cases_per_item = min_pairwise_n / length(items),
     min_pairwise_n = min_pairwise_n,
     kmo = kmo,
     bartlett = bartlett
@@ -962,20 +970,31 @@ nomo_efa_log <- function(k,
     )
   }
 
+  # Under pairwise deletion, rows with little or no item data count in
+  # `n_cases` but not in the correlations, so the prompt uses the smallest
+  # jointly observed N, as nomo_factors() does.
   small_n_ref <- guidance$factor_small_n_reference
   if (is.null(small_n_ref)) small_n_ref <- 100L
-  if (n_cases < small_n_ref) {
+  if (min_pairwise_n < small_n_ref) {
+    pairwise_text <- if (min_pairwise_n < n_cases) {
+      sprintf(
+        "; the smallest number observed jointly on an item pair was %d",
+        min_pairwise_n
+      )
+    } else {
+      ""
+    }
     log <- nomo_log_add(
       log,
       stage = "efa",
       object = "sample",
       metric = "sample_size",
-      value = n_cases,
+      value = min_pairwise_n,
       reference = sprintf("%d cases is a teaching review reference, not a universal minimum", small_n_ref),
       severity = "review",
       observation = sprintf(
-        "%d cases were analyzed for %d items (%.1f cases per item).",
-        n_cases, n_items, n_cases / n_items
+        "%d cases were analyzed for %d items%s (%.1f cases per item).",
+        n_cases, n_items, pairwise_text, min_pairwise_n / n_items
       ),
       recommendation = paste(
         "Evaluate sample adequacy jointly with communalities, loading magnitude,",

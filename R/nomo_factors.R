@@ -72,7 +72,12 @@
 #'
 #' @return An object of class `nomo_factors`. The fields to read are:
 #'
-#'   * `items`, `n_cases`, and `n_items`.
+#'   * `items`, `n_cases`, and `n_items`. `n_cases` is the number of rows
+#'     analyzed (every row under `missing = "pairwise"`, including rows with
+#'     no item data; the complete rows under `missing = "complete"`).
+#'   * `min_pairwise_n`: the smallest number of cases observed jointly on any
+#'     item pair, the effective sample size under pairwise deletion. It equals
+#'     `n_cases` when no item value is missing or `missing = "complete"`.
 #'   * `item_types`: each item's screened and modeling type.
 #'   * `correlation_method` and `correlation_matrix`: the correlations analyzed.
 #'   * `kmo` and `bartlett`: sampling-adequacy evidence.
@@ -511,6 +516,7 @@ nomo_factors <- function(data,
   out <- list(
     call = match.call(),
     n_cases = nrow(analysis_data),
+    min_pairwise_n = min_pairwise_n,
     n_items = length(items),
     items = items,
     item_types = item_types,
@@ -1663,4 +1669,20 @@ nomo_factors_log <- function(item_types,
 
 nomo_null_default <- function(x, fallback) {
   if (is.null(x) || length(x) == 0L) fallback else x
+}
+
+
+# The case count printed by nomo_factors() and nomo_efa(). Under pairwise
+# deletion the row count can overstate the information in the correlations,
+# so the smallest jointly observed N is shown beside it when the two differ.
+nomo_factors_cases_text <- function(n_cases, min_pairwise_n = NULL) {
+  text <- sprintf("Cases: %d", as.integer(n_cases))
+  if (isTRUE(min_pairwise_n < n_cases)) {
+    text <- sprintf(
+      "%s (minimum pairwise N: %d)",
+      text,
+      as.integer(min_pairwise_n)
+    )
+  }
+  text
 }
