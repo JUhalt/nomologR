@@ -2541,8 +2541,8 @@ nomo_methods_short_citations <- function(keys, bib) {
 #'   `NULL` (default), the whole registry is returned.
 #' @param stage Optional character vector restricting the result to these
 #'   workflow stages. One or more of `"screen"`, `"factors"`, `"efa"`, `"cfa"`,
-#'   `"compare"`, `"reliability"`, `"validity"`, `"invariance"`, `"network"`,
-#'   `"workflow"`.
+#'   `"compare"`, `"reliability"`, `"validity"`, `"invariance"`, `"scores"`,
+#'   `"network"`, `"workflow"`.
 #' @param lineage Optional character vector restricting the result to
 #'   `"historical"`, `"contemporary"`, or `"emerging"` methods.
 #' @param references If `FALSE` (default), each row is one method and the
