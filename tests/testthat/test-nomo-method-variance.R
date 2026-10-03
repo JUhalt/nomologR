@@ -192,7 +192,7 @@ test_that("the results print and summarize within 80 columns", {
                all = FALSE)
   expect_match(printed, "Baseline  Method-C  Method-S(.05)  Method-S(.01)", fixed = TRUE,
                all = FALSE)
-  expect_match(printed, "review: Marker-based method variance is present", fixed = TRUE,
+  expect_match(printed, "(Review): Marker-based method variance is present", fixed = TRUE,
                all = FALSE)
   # The closing note defines the models the tables name.
   note <- paste(printed, collapse = " ")

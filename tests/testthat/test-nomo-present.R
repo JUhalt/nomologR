@@ -2,16 +2,16 @@
 
 test_that("numbers, p-values, and intervals follow one format", {
   expect_identical(nomologR:::nomo_present_number(c(0.12345, NA, Inf)),
-                   c("0.123", "-", "-"))
+                   c("0.123", "--", "--"))
   expect_identical(nomologR:::nomo_present_number(2, 1L), "2.0")
   expect_identical(nomologR:::nomo_present_signed(c(0.0216, -0.4, NA)),
-                   c("+0.022", "-0.400", "-"))
+                   c("+0.022", "-0.400", "--"))
   expect_identical(nomologR:::nomo_present_p(c(0.00004, 0.0431, 0.5, NA)),
-                   c("< .001", ".043", ".500", "-"))
+                   c("< .001", ".043", ".500", "--"))
   expect_identical(nomologR:::nomo_present_p_clause(c(0.0002, 0.2, NA)),
                    c("p < .001", "p = .200", ""))
   expect_identical(nomologR:::nomo_present_ci(c(0.1, NA), c(0.3, NA)),
-                   c("[0.100, 0.300]", "-"))
+                   c("[0.100, 0.300]", "--"))
 })
 
 
@@ -122,7 +122,7 @@ test_that("tables align, drop empty columns, and name what does not fit", {
   ))
   expect_identical(out[[1L]], "  Item   Value    N  OK        p")
   expect_identical(out[[2L]], "  a1     0.500   10  yes    .200")
-  expect_identical(out[[3L]], "  a2    -0.250  200  -    < .001")
+  expect_identical(out[[3L]], "  a2    -0.250  200  --   < .001")
 
   wide <- data.frame(a = "x", b = strrep("y", 30), c = strrep("z", 30))
   narrow <- utils::capture.output(nomologR:::nomo_present_table(
@@ -151,7 +151,7 @@ test_that("notes carry their flag, and a column with one value is left out", {
   expect_identical(
     capture.output(notes(data.frame(severity = c("info", "review"),
                                     note = c("A note.", "Look again.")))),
-    c("  - A note.", "  - review: Look again.")
+    c("  - A note.", "  - Review: Look again.")
   )
 
   drop <- nomologR:::nomo_present_drop_constant
@@ -170,13 +170,13 @@ test_that("flagged log entries and percentages are shown one way (#89)", {
   )
   expect_identical(capture.output(flagged(log[1L, ])), character())
   expect_identical(capture.output(flagged(log)),
-                   c("", "Flagged", "  - review: Look again.", "  - concern: A problem."))
+                   c("", "Flagged", "  - Concern: A problem.", "  - Review: Look again."))
   expect_identical(capture.output(flagged(log, recommendation = TRUE))[3:4],
-                   c("  - review: Look again. Check it.", "  - concern: A problem. Fix it."))
+                   c("  - Concern: A problem. Fix it.", "  - Review: Look again. Check it."))
 
   # One decimal, so a single failure in 500 is not rounded away.
   expect_identical(nomologR:::nomo_present_percent(c(0.998, 0.0432, NA)),
-                   c("99.8%", "4.3%", "-"))
+                   c("99.8%", "4.3%", "--"))
 })
 
 

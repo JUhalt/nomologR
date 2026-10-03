@@ -71,7 +71,7 @@ nomo_run_key_evidence <- function(x) {
   if (length(factors)) {
     suggested <- vapply(factors, function(f) {
       n <- f$parallel$n_factors
-      if (length(n)) format(n) else "-"
+      if (length(n)) format(n) else nomo_present_missing
     }, character(1))
     out <- c(out, paste0("Parallel analysis suggests: ",
                          paste(names(suggested), suggested, collapse = ", ")))

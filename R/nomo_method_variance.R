@@ -685,7 +685,7 @@ nomo_method_variance_log <- function(marker, comparisons, retained, reliability,
 
 nomo_present_p_text <- function(p) {
   shown <- nomo_present_p(p)
-  if (startsWith(shown, "<")) shown else paste("=", shown)
+  ifelse(grepl("^[<>]", shown), shown, paste("=", shown))
 }
 
 

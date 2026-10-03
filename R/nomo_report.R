@@ -62,8 +62,8 @@ nomo_report_flatten_table <- function(x) {
 # code's. For reading, a name becomes words ("omega_ci_lower" is "Omega CI
 # lower"), a flag uses the console's wording, a missing or empty cell is an em
 # dash, and TRUE/FALSE is yes/no. Numbers are left for the table writer to
-# round. The console's "-" is not used: pandoc reads markdown inside the HTML
-# table, and a cell holding only "-" becomes a list item that breaks it.
+# round. The console's "--" is not used: pandoc reads markdown inside the HTML
+# table, where "--" becomes an en dash and a lone "-" a list item that breaks it.
 # Names that are not the package's own are left as they are: any name with a
 # capital letter, such as a factor called F1, a single word with a digit, such
 # as an item called ag1, and whatever the caller protects, such as the run's
