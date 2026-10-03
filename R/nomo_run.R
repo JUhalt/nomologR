@@ -316,6 +316,12 @@ nomo_run_resume <- function(resume,
 #'   records a declared value replaced, or a response scale the handoff did not
 #'   record supplied here.
 #'
+#'   The invariance and network stages refit the measurement model with the
+#'   CFA stage's `ordered`, `estimator`, and `missing` from `settings$cfa`,
+#'   unless `settings$invariance` or `settings$network` names its own (`NULL`
+#'   for the default). The decision log records what was inherited and any
+#'   value that differs from the CFA's.
+#'
 #'   Two further requests attach evidence to the measurement model:
 #'
 #'   * `list(scores = list(method = "sum"))` scores it with [nomo_scores()],

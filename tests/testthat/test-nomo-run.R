@@ -951,6 +951,97 @@ test_that("nomo_split roles carry into CFA and network replication", {
   expect_equal(run$results$cfa$data_n, split$n_validation)
   expect_s3_class(run$results$network, "nomo_network")
   expect_false(is.null(run$results$network$validation))
+  # Nothing set for the CFA, so nothing is inherited or recorded.
+  expect_false(any(startsWith(run$decision_log$id, "estimation_settings:")))
+})
+
+
+run_downstream <- function(dat, cfa, invariance = list(), network = list()) {
+  nomo_run(
+    data = dat,
+    scales = list(WellBeing = c("i1", "i2", "i3", "i4")),
+    settings = c(
+      m8_full_settings(),
+      list(
+        cfa = cfa,
+        invariance = c(list(group = "group", levels = "configural", localize = FALSE), invariance),
+        network = c(list(hypotheses = nomo_hypotheses("WellBeing -> criterion" = positive())),
+                    network)
+      )
+    ),
+    decisions = list(factor_count = 1L, cfa_model = m8_model(), measurement_model = "proceed")
+  )
+}
+
+
+test_that("invariance and the network are estimated with the CFA stage's settings", {
+  skip_on_cran()
+  dat <- make_m8_full_data(n = 360L, seed = 8406L)
+  dat$i1[1:40] <- NA
+  options_of <- function(fit) lavaan::lavInspect(fit, "options")
+  nobs_of <- function(fit) sum(unlist(lavaan::lavInspect(fit, "nobs")))
+
+  # The CFA was estimated with FIML, so invariance and the network are too,
+  # on the same 360 cases rather than the 320 complete ones (#145).
+  run <- run_downstream(dat, cfa = list(missing = "fiml"))
+  expect_identical(run$status, "complete")
+  expect_identical(options_of(run$results$invariance$fits$configural)$missing, "ml")
+  expect_identical(options_of(run$results$network$fit)$missing, "ml")
+  expect_equal(nobs_of(run$results$invariance$fits$configural), 360)
+  expect_equal(nobs_of(run$results$network$fit), 360)
+
+  row <- run$decision_log[run$decision_log$id == "estimation_settings:invariance", ]
+  expect_identical(row$stage, "invariance")
+  expect_identical(row$source, "pipeline")
+  expect_identical(
+    row$observation,
+    paste("Invariance testing re-estimates the measurement model with the CFA stage's",
+          "missing = \"fiml\", from `settings$cfa`.")
+  )
+  expect_identical(row$decision, "missing = \"fiml\"")
+  expect_identical(row$consequence, "This stage uses the reviewed CFA's estimation settings.")
+  network_row <- run$decision_log[run$decision_log$id == "estimation_settings:network", ]
+  expect_match(network_row$observation, "The nomological network re-estimates", fixed = TRUE)
+
+  # A stage's own setting is used and the difference recorded; NULL asks for
+  # the default.
+  own <- run_downstream(dat, cfa = list(missing = "fiml", estimator = "MLR"),
+                        invariance = list(missing = "listwise"),
+                        network = list(missing = NULL))
+  expect_identical(own$status, "complete")
+  configural <- options_of(own$results$invariance$fits$configural)
+  expect_identical(configural$missing, "listwise")
+  expect_true("yuan.bentler.mplus" %in% configural$test)
+  expect_identical(options_of(own$results$network$fit)$missing, "listwise")
+
+  row <- own$decision_log[own$decision_log$id == "estimation_settings:invariance", ]
+  expect_identical(row$source, "researcher_input")
+  expect_match(row$observation, "with the CFA stage's estimator = \"MLR\", from `settings$cfa`.",
+               fixed = TRUE)
+  expect_match(row$observation,
+               "`settings$invariance` sets missing = \"listwise\", where the CFA stage used missing = \"fiml\".",
+               fixed = TRUE)
+  expect_identical(row$decision, "estimator = \"MLR\", missing = \"listwise\"")
+  expect_match(row$consequence, "differ from the reviewed CFA's", fixed = TRUE)
+  network_row <- own$decision_log[own$decision_log$id == "estimation_settings:network", ]
+  expect_match(network_row$observation,
+               "sets missing = NULL (the default), where the CFA stage used missing = \"fiml\".",
+               fixed = TRUE)
+})
+
+
+test_that("an ordinal CFA's indicators stay ordinal in invariance and the network", {
+  skip_on_cran()
+  dat <- make_m8_full_data(n = 400L, seed = 8409L)
+  items <- c("i1", "i2", "i3", "i4")
+  for (i in items) dat[[i]] <- as.integer(cut(dat[[i]], c(-Inf, -1, 0, 1, Inf)))
+
+  run <- run_downstream(dat, cfa = list(ordered = items))
+  expect_identical(run$status, "complete")
+  expect_identical(run$results$invariance$ordered, items)
+  expect_setequal(lavaan::lavNames(run$results$network$fit, "ov.ord"), items)
+  row <- run$decision_log[run$decision_log$id == "estimation_settings:network", ]
+  expect_match(row$observation, "ordered = c(\"i1\", \"i2\", \"i3\", \"i4\")", fixed = TRUE)
 })
 
 

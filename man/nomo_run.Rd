@@ -61,6 +61,12 @@ scales came from a \code{contentvalidR} handoff, each of \code{reverse} and
 records a declared value replaced, or a response scale the handoff did not
 record supplied here.
 
+The invariance and network stages refit the measurement model with the
+CFA stage's \code{ordered}, \code{estimator}, and \code{missing} from \code{settings$cfa},
+unless \code{settings$invariance} or \code{settings$network} names its own (\code{NULL}
+for the default). The decision log records what was inherited and any
+value that differs from the CFA's.
+
 Two further requests attach evidence to the measurement model:
 \itemize{
 \item \code{list(scores = list(method = "sum"))} scores it with \code{\link[=nomo_scores]{nomo_scores()}},
