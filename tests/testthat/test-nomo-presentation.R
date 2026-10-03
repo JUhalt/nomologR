@@ -583,7 +583,8 @@ test_that("validity discriminant table covers latent-only and HTMT fallbacks", {
   expect_gt(nrow(out), 0L)
   expect_true(all(is.na(out$HTMT2)))
   expect_true(all(is.na(out$HTMT)))
-  expect_true(all(out$signal == "unavailable"))
+  # Without HTMT, the latent correlation still evaluates the pair (#145).
+  expect_true(all(out$signal == "info"))
 
   htmt_only <- val
   htmt_only$latent_correlations <- tibble::tibble()
@@ -624,10 +625,15 @@ test_that("validity print methods cover unavailable, not-requested, grouped, and
   unavailable$ngroups <- 2L
   unavailable$fornell_larcker_requested <- TRUE
 
-  txt <- paste(capture.output(print(unavailable)), collapse = "\n")
-  expect_match(txt, "requested but unavailable", fixed = TRUE)
-  expect_match(txt, "not silently pooled", fixed = TRUE)
-  expect_match(txt, "legacy/supporting", fixed = TRUE)
+  # One construct: HTMT is not defined for this model.
+  txt <- gsub("\\s+", " ", paste(capture.output(print(unavailable)), collapse = " "))
+  expect_match(txt, "HTMT-family values are not defined for this model", fixed = TRUE)
+  # Where it is defined but was not computed, the print says so.
+  unavailable$htmt_applicable <- TRUE
+  txt <- gsub("\\s+", " ", paste(capture.output(print(unavailable)), collapse = " "))
+  expect_match(txt, "HTMT-family values could not be computed", fixed = TRUE)
+  expect_match(txt, "Loadings are not pooled across groups or levels", fixed = TRUE)
+  expect_match(txt, "legacy, supporting evidence only", fixed = TRUE)
 
   not_requested <- unavailable
   not_requested$htmt_status$requested <- FALSE
@@ -641,8 +647,8 @@ test_that("validity print methods cover unavailable, not-requested, grouped, and
   txt3 <- paste(capture.output(print(s)), collapse = "\n")
   expect_match(txt3, "No convergent summary", fixed = TRUE)
   expect_match(txt3, "No pairwise construct-separation", fixed = TRUE)
-  expect_match(txt3, "Unavailable requested HTMT-family evidence", fixed = TRUE)
-  expect_match(txt3, "legacy/supporting information", fixed = TRUE)
+  expect_match(txt3, "HTMT-family values not computed", fixed = TRUE)
+  expect_match(txt3, "Fornell-Larcker comparison (legacy, supporting only)", fixed = TRUE)
 })
 
 
@@ -839,7 +845,7 @@ test_that("validity summary print covers populated evidence and grouped loading 
   txt <- paste(capture.output(print(s)), collapse = "\n")
   expect_match(txt, "Convergent evidence by construct", fixed = TRUE)
   expect_match(txt, "Construct separation", fixed = TRUE)
-  expect_match(txt, "Loading ranges are omitted", fixed = TRUE)
+  expect_match(txt, "Loading summaries are left out", fixed = TRUE)
 })
 
 

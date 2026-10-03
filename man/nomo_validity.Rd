@@ -18,8 +18,11 @@ nomo_validity(
 
 \item{ave_obs_var}{Logical passed to \code{\link[semTools:AVE]{semTools::AVE()}}. \code{TRUE} (default) uses
 observed variances in the denominator; \code{FALSE} uses model-implied
-variances. For ordinal indicators, \code{semTools} calculates AVE using the
-polychoric correlation structure.}
+variances. For ordinal indicators, \code{semTools} calculates AVE from the
+polychoric correlation structure in the model's unstandardized metric, so
+a fit with lavaan's theta parameterization gives a different AVE from the
+delta fit of the same model; the decision log then gives the mean squared
+standardized loading, which is the same under either.}
 
 \item{htmt}{Which heterotrait-monotrait summaries to request: \code{"both"}
 (default), \code{"htmt2"}, \code{"htmt"}, or \code{"none"}. HTMT2 is prioritized
@@ -49,7 +52,12 @@ A \code{nomo_validity} object. The fields to read are:
 evidence. AVE is not defined for a factor with a cross-loaded
 indicator; its row has an \code{NA} estimate and the attention
 \code{"unavailable"}.
-\item \code{latent_correlations}: construct correlations with intervals.
+\item \code{latent_correlations}: construct correlations with intervals, and their
+\code{reference} and \code{attention}. A pair is flagged for review when its
+correlation could exceed the HTMT-family reference: the upper limit of
+its interval (Rönkkö & Cho, 2022), or the estimate when there is no
+interval, is above it. A correlation beyond 1 in absolute value is a
+concern.
 \item \code{htmt2} and \code{htmt}: heterotrait-monotrait ratios per pair.
 \item \code{discriminant}: each pair's separation evidence with its reference and
 interpretation.
@@ -57,7 +65,10 @@ interpretation.
 For a computed variant, \code{missing} is the missing-data handling used and
 \code{n} the number of cases: the complete cases under listwise deletion, the
 smallest pairwise count under pairwise deletion, and every case with an
-indicator observed otherwise.
+indicator observed otherwise. HTMT is not defined with one construct or
+for a construct with one indicator, which has no within-construct
+correlations; such pairs are left out, and the decision log records it
+as information rather than as missing evidence.
 \item \code{fornell_larcker_pairs}: the historical comparison, when requested.
 \item \code{standardized_loadings}, \code{references}, and \code{decision_log}.
 }
@@ -70,9 +81,19 @@ indicator observed otherwise.
 be computed, as when an AVE is missing or negative and so has no square
 root. See \strong{Conventions in returned tables} in \code{?nomologR}.
 
+In the \code{"discriminant"} table of \code{\link[=nomo_table]{nomo_table()}}, \code{signal} is the more
+severe of the HTMT-family flag (HTMT2, or HTMT when HTMT2 was not
+computed) and the latent correlation's \code{attention}, so a pair is still
+evaluated when no HTMT value exists.
+
 Other fields record the call, the settings used, and intermediate engine
 results. They may change between releases and are not part of the stable
 interface (see \code{?nomologR}).
+
+\code{print()} counts the convergent and construct-separation flags and names
+each flagged construct or pair; \code{summary()} adds the AVE and loading
+summary for each construct, the latent correlation and HTMT-family values
+for each pair, and the full reason for each flag.
 }
 \description{
 \code{nomo_validity()} summarizes several complementary forms of measurement
@@ -126,7 +147,7 @@ modeling. \emph{Industrial Management & Data Systems, 121}(12), 2637-2650.
 \doi{10.1108/IMDS-02-2021-0082}
 
 Rönkkö, M., & Cho, E. (2022). An updated guideline for assessing
-discriminant validity. \emph{Organizational Research Methods, 25}(1).
+discriminant validity. \emph{Organizational Research Methods, 25}(1), 6-47.
 \doi{10.1177/1094428120968614}
 
 Voorhees, C. M., Brady, M. K., Calantone, R., & Ramirez, E. (2016).

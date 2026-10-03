@@ -15,7 +15,9 @@
 }
 \value{
 A \code{ggplot2} object. The conceptual 0-to-1 coefficient range is shown
-by default and expands only if an empirical value lies outside it.
+by default and expands only if an empirical value lies outside it. Each
+point's shape and color show its flag, with a legend whenever a point is
+flagged.
 }
 \description{
 Plot convergent or discriminant validity evidence

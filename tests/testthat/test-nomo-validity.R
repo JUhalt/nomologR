@@ -88,10 +88,10 @@ test_that("each construct pair is one row, with its correlation and HTMT togethe
   }
 
   printed <- utils::capture.output(print(out))
-  expect_true(any(grepl("across 3 pairs", printed, fixed = TRUE)))
+  expect_true(any(grepl("(3 pairs)", printed, fixed = TRUE)))
 
   p <- plot(out, type = "discriminant")
-  expect_identical(levels(p$data$pair), rev(c("F1 vs F2", "F1 vs F3", "F2 vs F3")))
+  expect_identical(levels(p$data$pair), rev(c("F1 vs. F2", "F1 vs. F3", "F2 vs. F3")))
 })
 
 
@@ -550,4 +550,233 @@ test_that("a single construct has no pairs, and its output raises no warnings", 
   expect_no_warning(print(summary(v)))
   expect_no_warning(evidence <- nomologR:::nomo_run_key_evidence(list(results = list(validity = v))))
   expect_match(evidence, "separation flags none", fixed = TRUE)
+})
+
+
+# Pre-RC findings (#145) and the shared output style (#144) ---------------------
+
+validity_redundant_fit <- function() {
+  set.seed(13)
+  n <- 400
+  f1 <- rnorm(n)
+  f2 <- .97 * f1 + sqrt(1 - .97^2) * rnorm(n)
+  dat <- data.frame(
+    p1 = .8 * f1 + rnorm(n, sd = .6), p2 = .8 * f1 + rnorm(n, sd = .6),
+    p3 = .8 * f1 + rnorm(n, sd = .6), q1 = .8 * f2 + rnorm(n, sd = .6),
+    q2 = .8 * f2 + rnorm(n, sd = .6), q3 = .8 * f2 + rnorm(n, sd = .6)
+  )
+  lavaan::cfa("P =~ p1 + p2 + p3\nQ =~ q1 + q2 + q3", data = dat)
+}
+
+
+test_that("a latent correlation near 1 is flagged when HTMT is absent (#145)", {
+  out <- nomo_validity(validity_redundant_fit(), htmt = "none")
+  latent <- out$latent_correlations
+  expect_identical(latent$attention, "review")
+  expect_identical(latent$reference, out$htmt_reference)
+  expect_match(latent$interpretation, "could exceed the configured review reference (.85)",
+               fixed = TRUE)
+  entry <- out$decision_log[out$decision_log$metric == "latent_correlation", ]
+  expect_identical(entry$severity, "review")
+  expect_identical(entry$object, "P vs Q")
+  expect_match(entry$reference, "farthest from zero", fixed = TRUE)
+  expect_identical(summary(out)$discriminant$signal, "review")
+
+  local_reproducible_output(width = 80)
+  printed <- capture.output(print(out))
+  expect_true("Separation flags: 1 review, 0 concern (1 pair)" %in% printed)
+  expect_match(printed, "^  - P vs. Q \\(Review\\): Latent r \\.9[0-9], 95% CI", all = FALSE)
+  expect_match(printed, "HTMT-family values were not requested", all = FALSE)
+
+  # Several groups: HTMT is not computed, and the latent correlations still
+  # give each pair a flag.
+  grouped <- nomo_validity(lavaan::cfa(
+    "visual =~ x1 + x2 + x3\ntextual =~ x4 + x5 + x6",
+    data = lavaan::HolzingerSwineford1939, group = "school"
+  ))
+  expect_identical(grouped$latent_correlations$attention, c("info", "info"))
+  expect_setequal(
+    grouped$decision_log$object[grouped$decision_log$metric == "latent_correlation"],
+    c("visual vs textual (Pasteur)", "visual vs textual (Grant-White)")
+  )
+  expect_identical(summary(grouped)$discriminant$signal, c("info", "info"))
+})
+
+
+test_that("latent correlations beyond 1, without intervals, or missing are read correctly (#145)", {
+  attention <- nomologR:::nomo_validity_latent_attention
+  tab <- tibble::tibble(
+    construct_1 = c("A", "A", "B", "C", "A"), construct_2 = c("B", "C", "C", "D", "D"),
+    block = "overall", correlation = c(1.02, .90, -.40, NA, .70),
+    ci_lower = c(.98, NA, -.55, NA, .62), ci_upper = c(1.06, NA, -.25, NA, 1.04)
+  )
+  out <- attention(tab, .85)
+  expect_identical(out$attention, c("concern", "review", "info", "unavailable", "review"))
+  expect_match(out$interpretation[[1L]], "beyond 1 in absolute value", fixed = TRUE)
+  expect_match(out$interpretation[[2L]], "the estimate is .90", fixed = TRUE)
+  expect_match(out$interpretation[[3L]], "r = -.40, 95% CI [-.55, -.25]) stays within",
+               fixed = TRUE)
+  expect_identical(out$interpretation[[4L]], "The latent correlation could not be computed.")
+  expect_match(out$interpretation[[5L]], "The interval runs past 1", fixed = TRUE)
+
+  # A saved object from before latent correlations carried a flag still gets one.
+  val <- nomo_validity(validity_redundant_fit(), htmt = "none")
+  val$latent_correlations$attention <- NULL
+  expect_identical(nomologR:::nomo_validity_discriminant_table(val)$signal, "review")
+
+  # With neither HTMT nor a latent correlation, a pair is not evaluated.
+  val$latent_correlations$correlation <- NA_real_
+  local_reproducible_output(width = 80)
+  printed <- capture.output(print(val))
+  expect_true("Separation flags: not evaluated (1 pair)" %in% printed)
+
+  # A latent interval past 1 is explained in the summary.
+  val <- nomo_validity(validity_redundant_fit(), htmt = "none")
+  s <- summary(val)
+  s$discriminant$latent_r_ci_upper <- 1.03
+  expect_match(paste(capture.output(print(s)), collapse = " "), "runs past 1", fixed = TRUE)
+})
+
+
+test_that("flag counts name what they count, and constructs are counted once (#145)", {
+  local_reproducible_output(width = 80)
+  cfa <- nomo_cfa(nomo_model(list(A = paste0("a", 1:5), B = paste0("b", 1:5))),
+                  data = nomo_demo_continuous)
+  printed <- capture.output(print(nomo_validity(cfa)))
+  expect_true("Convergent flags: 2 review, 0 concern (2 constructs)" %in% printed)
+  expect_true("Separation flags: none (1 pair)" %in% printed)
+  expect_false(any(grepl("Construct separation: none", printed, fixed = TRUE)))
+  expect_match(printed, "^  - B \\(Review\\): AVE \\.43 is below the review reference \\.50; 1 of 5",
+               all = FALSE)
+  expect_match(printed, "^AVE = average variance extracted", all = FALSE)
+  expect_identical(printed[[length(printed)]], "See summary(x) for the evidence for each construct and pair.")
+
+  grouped <- capture.output(print(nomo_validity(lavaan::cfa(
+    "visual =~ x1 + x2 + x3\ntextual =~ x4 + x5 + x6",
+    data = lavaan::HolzingerSwineford1939, group = "school"
+  ))))
+  expect_match(grouped, "^Constructs: 2 \\| Groups: 2", all = FALSE)
+  expect_match(grouped, "(2 constructs in 2 groups)", fixed = TRUE, all = FALSE)
+  expect_match(grouped, "visual in Pasteur (Review)", fixed = TRUE, all = FALSE)
+  expect_match(grouped, "nomo_invariance() compares", fixed = TRUE, all = FALSE)
+  expect_false(any(grepl("later invariance workflow", grouped, fixed = TRUE)))
+
+  one <- capture.output(print(nomo_validity(nomo_cfa("A =~ a1 + a2 + a3 + a4",
+                                                     data = nomo_demo_continuous))))
+  expect_true("Separation flags: not applicable (one construct)" %in% one)
+})
+
+
+test_that("an HTMT that cannot exist is not applicable, not a flag (#145)", {
+  single <- nomo_validity(lavaan::cfa("A =~ a1 + a2 + a3 + a4 + a5\nS =~ b1",
+                                      data = nomo_demo_continuous))
+  expect_false(any(single$htmt_status$available))
+  expect_match(single$htmt_status$reason[[1L]], "one indicator (S)", fixed = TRUE)
+  expect_identical(nrow(single$discriminant), 0L)
+  expect_false(single$htmt_applicable)
+  log <- single$decision_log
+  expect_identical(log$severity[log$metric %in% c("HTMT2", "HTMT")], c("info", "info"))
+  expect_false(any(log$severity == "concern"))
+  local_reproducible_output(width = 80)
+  printed <- capture.output(print(single))
+  expect_match(printed, "HTMT-family values are not defined for this model", all = FALSE)
+  expect_match(capture.output(print(summary(single))), "HTMT-family values not defined",
+               fixed = TRUE, all = FALSE)
+
+  one <- nomo_validity(nomo_cfa("A =~ a1 + a2 + a3 + a4", data = nomo_demo_continuous))
+  expect_identical(one$decision_log$severity[one$decision_log$metric %in% c("HTMT2", "HTMT")],
+                   c("info", "info"))
+  expect_match(one$htmt_status$reason[[1L]], "this model has one", fixed = TRUE)
+
+  # With two other constructs, HTMT is computed for their pair alone.
+  three <- nomo_validity(lavaan::cfa("A =~ a1 + a2 + a3\nB =~ b1 + b2 + b3\nS =~ b4",
+                                     data = nomo_demo_continuous))
+  expect_true(all(three$htmt_status$available))
+  expect_identical(nrow(three$htmt2), 1L)
+  entry <- three$decision_log[three$decision_log$metric == "htmt_single_indicator", ]
+  expect_identical(entry$severity, "info")
+  expect_identical(entry$object, "S")
+  expect_identical(nrow(summary(three)$discriminant), 3L)
+  expect_true(all(summary(three)$convergent$block == "overall"))
+})
+
+
+test_that("a theta-parameterized ordinal fit says that AVE depends on it (#145)", {
+  skip_on_cran()
+  model <- "A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4 + b5"
+  delta <- lavaan::cfa(model, data = nomo_demo_ordinal, ordered = TRUE)
+  theta <- lavaan::cfa(model, data = nomo_demo_ordinal, ordered = TRUE,
+                       parameterization = "theta")
+  expect_false("parameterization" %in% nomo_validity(delta, htmt = "none")$decision_log$metric)
+  out <- nomo_validity(theta, htmt = "none")
+  entry <- out$decision_log[out$decision_log$metric == "parameterization", ]
+  expect_identical(entry$severity, "review")
+  # The mean squared standardized loading is the delta fit's AVE.
+  delta_ave <- nomo_validity(delta, htmt = "none")$ave$estimate
+  expect_match(entry$observation,
+               sprintf("is %s for A, %s for B.",
+                       nomologR:::nomo_present_stat(delta_ave[[1L]], "reliability", reference = .5),
+                       nomologR:::nomo_present_stat(delta_ave[[2L]], "reliability", reference = .5)),
+               fixed = TRUE)
+})
+
+
+test_that("validity errors and guidance name what to fix (#145)", {
+  structural <- lavaan::sem("A =~ a1 + a2 + a3\nB =~ b1 + b2 + b3\nB ~ A",
+                            data = nomo_demo_continuous)
+  expect_error(nomo_validity(structural), "Measurement evidence is computed from CFA", fixed = TRUE)
+  expect_error(nomologR:::nomo_measurement_fit(structural, arg = "model"),
+               "`model` contains latent structural regressions", fixed = TRUE)
+  guidance <- nomo_defaults()
+  guidance$auto_delete <- TRUE
+  expect_error(nomo_validity(structural, guidance = guidance), "guidance$auto_delete",
+               fixed = TRUE)
+})
+
+
+test_that("validity shows constructs in model order and references by their formatter (#145)", {
+  cfa <- nomo_cfa("visual =~ x1 + x2 + x3\ntextual =~ x4 + x5 + x6\nspeed =~ x7 + x8 + x9",
+                  data = lavaan::HolzingerSwineford1939)
+  val <- nomo_validity(cfa)
+  expect_identical(summary(val)$convergent$construct, c("visual", "textual", "speed"))
+  log <- val$decision_log
+  expect_identical(unique(log$reference[log$metric == "AVE"]), "configured review reference = .50")
+  expect_identical(unique(log$reference[log$metric == "HTMT2"]),
+                   "configured review reference = 0.85")
+  # HTMT pairs are named in model order in the log, as the latent correlations are.
+  expect_setequal(log$object[log$metric == "HTMT2"],
+                  c("visual vs textual", "visual vs speed", "textual vs speed"))
+})
+
+
+test_that("validity plots keep a legend whenever a point is flagged (#145)", {
+  skip_on_cran()
+  cfa <- nomo_cfa(nomo_model(list(A = paste0("a", 1:5), B = paste0("b", 1:5))),
+                  data = nomo_demo_continuous)
+  val <- nomo_validity(cfa)
+  # Both AVEs are flagged for review: the legend stays and explains the shape.
+  p <- plot(val, type = "ave")
+  expect_identical(ggplot2::get_guide_data(p, "shape")$.label, "Review")
+  expect_match(p$labels$subtitle, "review reference (.50)", fixed = TRUE)
+  expect_identical(p$scales$get_scales("x")$labels(c(0, .5, 1)), c("0", ".50", "1.00"))
+  # Nothing flagged: no legend.
+  val$ave$attention[] <- "info"
+  expect_null(ggplot2::get_guide_data(plot(val, type = "ave"), "shape"))
+
+  redundant <- nomo_validity(validity_redundant_fit())
+  p <- plot(redundant, type = "discriminant")
+  expect_identical(ggplot2::get_guide_data(p, "shape")$.label, "Review")
+  expect_identical(levels(p$data$pair), "P vs. Q")
+  expect_match(p$labels$subtitle, "(0.85)", fixed = TRUE)
+})
+
+
+test_that("the summary shows the Fornell-Larcker pairs when they were requested (#145)", {
+  local_reproducible_output(width = 80)
+  out <- nomo_validity(validity_redundant_fit(), fornell_larcker = TRUE)
+  printed <- capture.output(print(summary(out)))
+  expect_true("Fornell-Larcker comparison (legacy, supporting only)" %in% printed)
+  expect_match(printed, "^  P +Q +\\.9[0-9] +\\.8[0-9] +Review$", all = FALSE)
+  expect_match(printed, "Root AVE -- Square root of AVE", fixed = TRUE, all = FALSE)
+  expect_true(all(nchar(printed) <= 80L))
 })

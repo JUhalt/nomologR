@@ -20,8 +20,11 @@
 #' @param fit A fitted [nomo_cfa()] object or fitted `lavaan` CFA model.
 #' @param ave_obs_var Logical passed to [semTools::AVE()]. `TRUE` (default) uses
 #'   observed variances in the denominator; `FALSE` uses model-implied
-#'   variances. For ordinal indicators, `semTools` calculates AVE using the
-#'   polychoric correlation structure.
+#'   variances. For ordinal indicators, `semTools` calculates AVE from the
+#'   polychoric correlation structure in the model's unstandardized metric, so
+#'   a fit with lavaan's theta parameterization gives a different AVE from the
+#'   delta fit of the same model; the decision log then gives the mean squared
+#'   standardized loading, which is the same under either.
 #' @param htmt Which heterotrait-monotrait summaries to request: `"both"`
 #'   (default), `"htmt2"`, `"htmt"`, or `"none"`. HTMT2 is prioritized
 #'   because its geometric-mean formulation is designed for congeneric
@@ -46,7 +49,12 @@
 #'     evidence. AVE is not defined for a factor with a cross-loaded
 #'     indicator; its row has an `NA` estimate and the attention
 #'     `"unavailable"`.
-#'   * `latent_correlations`: construct correlations with intervals.
+#'   * `latent_correlations`: construct correlations with intervals, and their
+#'     `reference` and `attention`. A pair is flagged for review when its
+#'     correlation could exceed the HTMT-family reference: the upper limit of
+#'     its interval (Rönkkö & Cho, 2022), or the estimate when there is no
+#'     interval, is above it. A correlation beyond 1 in absolute value is a
+#'     concern.
 #'   * `htmt2` and `htmt`: heterotrait-monotrait ratios per pair.
 #'   * `discriminant`: each pair's separation evidence with its reference and
 #'     interpretation.
@@ -54,7 +62,10 @@
 #'     For a computed variant, `missing` is the missing-data handling used and
 #'     `n` the number of cases: the complete cases under listwise deletion, the
 #'     smallest pairwise count under pairwise deletion, and every case with an
-#'     indicator observed otherwise.
+#'     indicator observed otherwise. HTMT is not defined with one construct or
+#'     for a construct with one indicator, which has no within-construct
+#'     correlations; such pairs are left out, and the decision log records it
+#'     as information rather than as missing evidence.
 #'   * `fornell_larcker_pairs`: the historical comparison, when requested.
 #'   * `standardized_loadings`, `references`, and `decision_log`.
 #'
@@ -66,9 +77,19 @@
 #'   be computed, as when an AVE is missing or negative and so has no square
 #'   root. See **Conventions in returned tables** in `?nomologR`.
 #'
+#'   In the `"discriminant"` table of [nomo_table()], `signal` is the more
+#'   severe of the HTMT-family flag (HTMT2, or HTMT when HTMT2 was not
+#'   computed) and the latent correlation's `attention`, so a pair is still
+#'   evaluated when no HTMT value exists.
+#'
 #'   Other fields record the call, the settings used, and intermediate engine
 #'   results. They may change between releases and are not part of the stable
 #'   interface (see `?nomologR`).
+#'
+#'   `print()` counts the convergent and construct-separation flags and names
+#'   each flagged construct or pair; `summary()` adds the AVE and loading
+#'   summary for each construct, the latent correlation and HTMT-family values
+#'   for each pair, and the full reason for each flag.
 #'
 #' @references
 #' Historical context:
@@ -94,7 +115,7 @@
 #' \doi{10.1108/IMDS-02-2021-0082}
 #'
 #' Rönkkö, M., & Cho, E. (2022). An updated guideline for assessing
-#' discriminant validity. *Organizational Research Methods, 25*(1).
+#' discriminant validity. *Organizational Research Methods, 25*(1), 6-47.
 #' \doi{10.1177/1094428120968614}
 #'
 #' Voorhees, C. M., Brady, M. K., Calantone, R., & Ramirez, E. (2016).
@@ -144,6 +165,10 @@ nomo_validity <- function(fit,
   loading_reference <- nomo_guidance_value(guidance, "cfa_loading_reference")
   ave_reference <- nomo_guidance_value(guidance, "ave_reference")
   htmt_reference <- nomo_guidance_value(guidance, "htmt_reference")
+  nomo_defaults_check_safeguards(guidance)
+  # References print as the values they are compared with (#144).
+  ave_reference_shown <- nomo_present_stat(ave_reference, "reliability")
+  htmt_reference_shown <- nomo_present_stat(htmt_reference, "htmt")
 
   fit_info <- nomo_measurement_fit(
     fit,
@@ -192,6 +217,8 @@ nomo_validity <- function(fit,
     )
     ave$interpretation <- vapply(seq_len(nrow(ave)), function(i) {
       estimate <- ave$estimate[[i]]
+      # The group or level, when there are several, so each row says which.
+      label <- if (ave$block[[i]] == "overall") "AVE" else paste("AVE in", ave$block[[i]])
       if (cross_na[[i]]) {
         paste(
           "AVE is not computed for a factor with a cross-loaded indicator,",
@@ -205,14 +232,16 @@ nomo_validity <- function(fit,
         )
       } else if (estimate < ave_reference) {
         paste0(
-          "AVE is below the configured convergent-evidence reference (",
-          format(ave_reference, trim = TRUE),
+          label, " (", nomo_present_stat(estimate, "reliability", reference = ave_reference),
+          ") is below the configured convergent-evidence reference (",
+          ave_reference_shown,
           "). Inspect standardized loadings, indicator-specific error, and content coverage; do not automatically delete items."
         )
       } else {
         paste0(
-          "AVE is at or above the configured convergent-evidence reference (",
-          format(ave_reference, trim = TRUE),
+          label, " (", nomo_present_stat(estimate, "reliability", reference = ave_reference),
+          ") is at or above the configured convergent-evidence reference (",
+          ave_reference_shown,
           "). This contributes convergent evidence but does not establish construct validity by itself."
         )
       }
@@ -221,10 +250,8 @@ nomo_validity <- function(fit,
 
   latent_correlations <- nomo_validity_latent_correlations(fit_info$fit)
   if (nrow(latent_correlations)) {
-    latent_correlations$abs_correlation <- abs(latent_correlations$correlation)
-    latent_correlations$interpretation <- paste(
-      "Model-based latent-factor association; interpret its magnitude with HTMT-family evidence,",
-      "theory, and the intended distinction between constructs."
+    latent_correlations <- nomo_validity_latent_attention(
+      latent_correlations, htmt_reference
     )
   }
 
@@ -365,14 +392,14 @@ nomo_validity <- function(fit,
         paste(method, "is unavailable or inadmissible; inspect the observed-correlation structure.")
       } else if (estimate > htmt_reference) {
         paste0(
-          method, " exceeds the configured review reference (",
-          format(htmt_reference, trim = TRUE),
+          method, " (", nomo_present_stat(estimate, "htmt", reference = htmt_reference),
+          ") exceeds the configured review reference (", htmt_reference_shown,
           "). This raises a construct-separation concern; inspect theoretical distinctiveness, item content, cross-construct overlap, and latent correlations rather than automatically merging or deleting constructs."
         )
       } else {
         paste0(
-          method, " does not exceed the configured review reference (",
-          format(htmt_reference, trim = TRUE),
+          method, " (", nomo_present_stat(estimate, "htmt", reference = htmt_reference),
+          ") does not exceed the configured review reference (", htmt_reference_shown,
           "). This contributes evidence of empirical separation but is not a declaration that discriminant validity has been established."
         )
       }
@@ -443,7 +470,9 @@ nomo_validity <- function(fit,
         object = weak_loadings$item[[i]],
         metric = "standardized_loading",
         value = weak_loadings$loading[[i]],
-        reference = paste0("configured review reference = ", loading_reference),
+        reference = paste0(
+          "configured review reference = ", nomo_present_stat(loading_reference, "loading")
+        ),
         severity = if (weak_loadings$attention[[i]] == "STRONG REVIEW") "concern" else "review",
         observation = weak_loadings$explanation[[i]],
         recommendation = "Inspect item content, precision, and model specification; do not automatically delete the indicator.",
@@ -467,7 +496,7 @@ nomo_validity <- function(fit,
         object = ave$construct[[i]],
         metric = "AVE",
         value = ave$estimate[[i]],
-        reference = paste0("configured review reference = ", ave_reference),
+        reference = paste0("configured review reference = ", ave_reference_shown),
         severity = severity,
         observation = ave$interpretation[[i]],
         recommendation = if (ave$attention[[i]] == "unavailable") {
@@ -485,7 +514,93 @@ nomo_validity <- function(fit,
     }
   }
 
+  # An ordered-indicator fit with the theta parameterization gives a different
+  # AVE from the delta fit of the same model. The mean squared standardized
+  # loading is the delta value, whatever the parameterization (#145).
+  if (nrow(ave) && nomo_measurement_theta(fit_info) && nrow(loadings)) {
+    ordered_factors <- unique(loadings$factor[loadings$item %in% fit_info$ordered])
+    delta_ave <- vapply(ordered_factors, function(f) {
+      mean(loadings$loading[loadings$factor == f]^2)
+    }, numeric(1))
+    log <- nomo_log_add(
+      log,
+      stage = "validity",
+      object = paste(ordered_factors, collapse = ", "),
+      metric = "parameterization",
+      reference = "lavaan parameterization = \"theta\"",
+      severity = "review",
+      observation = paste0(
+        "The model was fitted with lavaan's theta parameterization, and ",
+        "semTools computes AVE in the model's unstandardized metric, so AVE ",
+        "differs from that of a delta-parameterized fit of the same model. The ",
+        "mean squared standardized loading, which is AVE under either, is ",
+        paste(sprintf(
+          "%s for %s",
+          nomo_present_stat(delta_ave, "reliability", reference = ave_reference),
+          ordered_factors
+        ), collapse = ", "),
+        "."
+      ),
+      recommendation = paste(
+        "Report the mean squared standardized loading, or refit with",
+        "`parameterization = \"delta\"`, before comparing AVE with its reference."
+      ),
+      rationale = "A coefficient should not depend on an identification choice that leaves the model unchanged."
+    )
+  }
+
+  # A latent correlation is logged when it is flagged, or when its pair has no
+  # HTMT-family value and so no other record of its separation (#145).
+  if (nrow(latent_correlations)) {
+    pair_key <- function(a, b, block) {
+      paste(pmin(a, b), pmax(a, b), block, sep = "\r")
+    }
+    with_htmt <- if (nrow(discriminant)) {
+      pair_key(discriminant$construct_1, discriminant$construct_2, discriminant$block)
+    } else {
+      character()
+    }
+    logged <- is.finite(latent_correlations$correlation) & (
+      latent_correlations$attention != "info" |
+        !pair_key(latent_correlations$construct_1, latent_correlations$construct_2,
+                  latent_correlations$block) %in% with_htmt
+    )
+    for (i in which(logged)) {
+      row <- latent_correlations[i, , drop = FALSE]
+      severity <- row$attention
+      log <- nomo_log_add(
+        log,
+        stage = "validity",
+        object = nomo_validity_pair_label(row$construct_1, row$construct_2, row$block),
+        metric = "latent_correlation",
+        value = row$correlation,
+        reference = paste0(
+          "configured review reference = ", nomo_present_stat(htmt_reference, "r"),
+          ", read from the interval's limit farthest from zero (R\u00f6nkk\u00f6 & Cho, 2022)"
+        ),
+        severity = severity,
+        observation = row$interpretation,
+        recommendation = if (severity == "info") {
+          "Interpret this alongside HTMT-family evidence and theoretical distinctiveness."
+        } else {
+          paste(
+            "Investigate construct overlap, item content, and theory; do not",
+            "automatically merge constructs or delete indicators."
+          )
+        },
+        rationale = paste(
+          "Two constructs whose latent correlation could exceed the reference",
+          "may not be empirically distinct, whether or not HTMT can be computed."
+        )
+      )
+    }
+  }
+
   if (nrow(discriminant)) {
+    # The pair is named in model order, as the latent correlation's row is.
+    named <- nomo_validity_orient_pairs(
+      discriminant, unique(c(loadings[["factor"]], fit_info$latent_names))
+    )
     for (i in seq_len(nrow(discriminant))) {
       severity <- if (discriminant$attention[[i]] == "concern") {
         "concern"
@@ -497,10 +612,10 @@ nomo_validity <- function(fit,
       log <- nomo_log_add(
         log,
         stage = "validity",
-        object = paste(discriminant$construct_1[[i]], discriminant$construct_2[[i]], sep = " vs "),
+        object = paste(named$construct_1[[i]], named$construct_2[[i]], sep = " vs "),
         metric = discriminant$method[[i]],
         value = discriminant$estimate[[i]],
-        reference = paste0("configured review reference = ", htmt_reference),
+        reference = paste0("configured review reference = ", htmt_reference_shown),
         severity = severity,
         observation = discriminant$interpretation[[i]],
         recommendation = if (severity == "info") {
@@ -518,6 +633,9 @@ nomo_validity <- function(fit,
     ,
     drop = FALSE
   ]
+  # A statistic that cannot exist for this model, such as HTMT with one
+  # construct, is information, not a gap in the evidence to review (#145).
+  htmt_applicable <- !identical(htmt_inputs$applicable, FALSE)
   if (nrow(unavailable)) {
     for (i in seq_len(nrow(unavailable))) {
       log <- nomo_log_add(
@@ -525,12 +643,37 @@ nomo_validity <- function(fit,
         stage = "validity",
         object = "measurement_model",
         metric = unavailable$method[[i]],
-        severity = "review",
+        severity = if (htmt_applicable) "review" else "info",
         observation = paste(unavailable$method[[i]], "was not computed:", unavailable$reason[[i]]),
-        recommendation = "Use the available measurement evidence and report the stated limitation explicitly rather than substituting a different estimand silently.",
+        recommendation = if (htmt_applicable) {
+          "Use the available measurement evidence and report the stated limitation explicitly rather than substituting a different estimand silently."
+        } else {
+          "No action needed: HTMT is not defined for this model, and the latent correlations, if any, carry the construct-separation evidence."
+        },
         rationale = "Unavailable evidence should be disclosed, not manufactured by changing the analysis."
       )
     }
+  }
+  single <- htmt_inputs$single
+  if (length(single) && nrow(htmt_status) && any(htmt_status$available)) {
+    log <- nomo_log_add(
+      log,
+      stage = "validity",
+      object = paste(single, collapse = ", "),
+      metric = "htmt_single_indicator",
+      value = length(single),
+      reference = "semTools::htmt()",
+      severity = "info",
+      observation = paste0(
+        "HTMT-family values are not defined for pairs that include ",
+        paste(single, collapse = ", "), ", ",
+        nomo_present_noun(length(single), "a construct", "constructs"),
+        " with one indicator and so no within-construct correlations. They ",
+        "were computed for the other pairs."
+      ),
+      recommendation = "The latent correlation is the construct-separation evidence for those pairs.",
+      rationale = "A statistic is reported only where it is defined."
+    )
   }
 
   computed_htmt <- htmt_status[htmt_status$available, , drop = FALSE]
@@ -656,6 +799,7 @@ nomo_validity <- function(fit,
     htmt_requested = htmt,
     htmt_missing = htmt_missing,
     htmt_status = htmt_status,
+    htmt_applicable = htmt_applicable,
     htmt2_matrix = htmt2_matrix,
     htmt_matrix = htmt_matrix,
     htmt2 = htmt2,
@@ -673,4 +817,70 @@ nomo_validity <- function(fit,
   )
   class(out) <- c("nomo_validity", "list")
   out
+}
+
+
+# A pair of constructs as the decision log names it, with its group or level
+# when the model has more than one block.
+nomo_validity_pair_label <- function(construct_1, construct_2, block = "overall") {
+  pair <- paste(construct_1, construct_2, sep = " vs ")
+  ifelse(block == "overall", pair, paste0(pair, " (", block, ")"))
+}
+
+
+# Latent correlations flagged against the HTMT-family reference (#145). Without
+# this, a pair whose latent correlation is .98 went unflagged whenever HTMT
+# could not be computed (several groups, a cross-loading, a covariance-matrix
+# fit) or was not requested. The value read is the limit of the interval
+# farthest from zero, as Ronkko and Cho (2022) recommend, or the estimate when
+# there is no interval. A correlation beyond 1 is inadmissible.
+nomo_validity_latent_attention <- function(latent, reference) {
+  r <- latent$correlation
+  limit <- pmax(abs(latent$ci_lower), abs(latent$ci_upper))
+  read <- ifelse(is.finite(limit), limit, abs(r))
+  latent$abs_correlation <- abs(r)
+  latent$reference <- reference
+  latent$attention <- ifelse(
+    !is.finite(r), "unavailable",
+    ifelse(abs(r) > 1, "concern", ifelse(read > reference, "review", "info"))
+  )
+  reference_shown <- nomo_present_stat(reference, "r")
+  latent$interpretation <- vapply(seq_len(nrow(latent)), function(i) {
+    if (!is.finite(r[[i]])) {
+      return("The latent correlation could not be computed.")
+    }
+    value <- paste0("r = ", nomo_present_stat(r[[i]], "r"))
+    interval <- nomo_present_ci(latent$ci_lower[[i]], latent$ci_upper[[i]], kind = "r")
+    if (interval != nomo_present_missing) value <- paste0(value, ", 95% CI ", interval)
+    beyond <- if (is.finite(limit[[i]]) && limit[[i]] > 1) {
+      " The interval runs past 1, which a correlation cannot reach; it is lavaan's symmetric interval."
+    } else {
+      ""
+    }
+    switch(
+      latent$attention[[i]],
+      concern = paste0(
+        "The latent correlation (", value, ") is beyond 1 in absolute value, ",
+        "which is inadmissible. Inspect the measurement model before ",
+        "interpreting construct separation.", beyond
+      ),
+      review = paste0(
+        "The latent correlation (", value, ") could exceed the configured ",
+        "review reference (", reference_shown, "): the ",
+        if (is.finite(limit[[i]])) "limit of its interval farthest from zero" else "estimate",
+        " is ", nomo_present_stat(read[[i]], "r", reference = reference),
+        ". The two constructs may not be empirically distinct (R\u00f6nkk\u00f6 & Cho, 2022);",
+        " inspect theory, item content, and HTMT-family evidence rather than",
+        " automatically merging constructs.",
+        beyond
+      ),
+      paste0(
+        "The latent correlation (", value, ") stays within the configured ",
+        "review reference (", reference_shown, "). Interpret its magnitude with ",
+        "HTMT-family evidence, theory, and the intended distinction between ",
+        "constructs.", beyond
+      )
+    )
+  }, character(1))
+  latent
 }
