@@ -15,5 +15,8 @@
 \code{x}, invisibly.
 }
 \description{
-Print factor-retention evidence
+\code{print()} shows the count each main criterion suggests, the sampling
+adequacy, and the synthesis; \code{summary()} adds the evidence by method, the
+parallel-analysis rule sensitivity, the criteria that did not run and why,
+and the concordance across criterion families.
 }

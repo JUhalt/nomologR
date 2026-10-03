@@ -4,8 +4,8 @@
 #' not universal pass/fail criteria. They are intended to trigger inspection and
 #' explanation in downstream `nomologR` functions.
 #'
-#' @param profile Guidance profile. Only `"teaching"` is implemented during the
-#'   initial development series.
+#' @param profile Guidance profile. `"teaching"`, the only profile, holds
+#'   reference values commonly taught in measurement courses.
 #'
 #' @details
 #' Each value is a commonly taught reference point from the literature cited in
@@ -18,6 +18,19 @@
 #' statistic: [nomo_screen()] flags a case on long-string only when at least
 #' that many items are screened, because half the length of a shorter item set
 #' is a run that attentive respondents give often.
+#'
+#' `factor_cd_population`, `factor_cd_samples`, and `factor_cd_alpha` are the
+#' simulation settings for the comparison-data criterion of [nomo_factors()]:
+#' the size of each simulated population, the number of samples drawn per
+#' candidate structure, and the significance level of the test that stops
+#' adding factors. The defaults (5000 cases, 100 samples, .30) are smaller than
+#' those of [EFAtools::efa_cd()] (10000 cases, 500 samples) to keep the run
+#' short; raise them for a final analysis.
+#'
+#' `auto_delete` and `auto_respecify` are always `FALSE`. They record a design
+#' rule rather than switch a feature: nomologR never deletes an item or
+#' respecifies a model on its own. [nomo_factors()] and [nomo_efa()] stop with
+#' an explanation when either is set to `TRUE`.
 #'
 #' @return A named list of guidance settings.
 #' @export
@@ -70,4 +83,27 @@ nomo_defaults <- function(profile = "teaching") {
       "determine item retention, model respecification, or validity."
     )
   )
+}
+
+
+# `auto_delete` and `auto_respecify` are not switches: nomologR never deletes
+# an item or respecifies a model. A guidance list that sets either to TRUE
+# would otherwise be accepted and silently ignored (#145, defaults-dead-fields).
+nomo_defaults_check_safeguards <- function(guidance) {
+  set <- c("auto_delete", "auto_respecify")[c(
+    isTRUE(guidance$auto_delete), isTRUE(guidance$auto_respecify)
+  )]
+  if (length(set)) {
+    stop(
+      sprintf(
+        paste(
+          "%s cannot be `TRUE`: nomologR never deletes an item or respecifies",
+          "a model on its own. Flags in the results mark what to review."
+        ),
+        nomo_present_or(sprintf("`guidance$%s`", set))
+      ),
+      call. = FALSE
+    )
+  }
+  invisible(guidance)
 }

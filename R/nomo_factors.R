@@ -22,6 +22,19 @@
 #' factors. It reports which factor counts deserve investigation and records
 #' disagreements among retention methods.
 #'
+#' Comparison data (`criterion_set = "all"`) simulates populations of known
+#' structure with the settings `factor_cd_population` (5000 cases),
+#' `factor_cd_samples` (100 samples per candidate structure), and
+#' `factor_cd_alpha` (.30) from [nomo_defaults()]. These are smaller than
+#' the 10000 cases and 500 samples [EFAtools::efa_cd()] uses by default, to
+#' keep the run short; raise them in `guidance` for a final analysis. The
+#' settings used are recorded in the decision log.
+#'
+#' `print()` shows the count each main criterion suggests and the synthesis;
+#' `summary()` adds the evidence by method, the parallel-analysis rule
+#' sensitivity, the criteria that did not run and why, the concordance across
+#' criterion families, and the supporting adequacy evidence.
+#'
 #' @param data A data frame containing candidate items.
 #' @param items Optional character vector identifying item columns. If `NULL`,
 #'   all columns are treated as candidate items.
@@ -32,8 +45,13 @@
 #'   `"binary"`. Explicit overrides are applied before default-type rejection,
 #'   so researchers can intentionally model otherwise ambiguous storage (for
 #'   example, an unordered factor whose levels already encode a substantive
-#'   order). Overrides do not reorder, relabel, or recode the supplied data.
-#'   For example, `c(item1 = "ordinal", item2 = "ordinal")`.
+#'   order). Overrides do not reorder or relabel categories, and the supplied
+#'   data are not modified. Ordinal and binary items are scored by the rank of
+#'   their observed values, in numeric order or a factor's level order, so
+#'   codes such as 0/25/50/75/100 or 1/3/5, and factor levels nobody chose,
+#'   are analyzed as consecutive categories. Polychoric correlations model at
+#'   most 8 categories; an ordinal item with more is refused with the
+#'   alternatives. For example, `c(item1 = "ordinal", item2 = "ordinal")`.
 #' @param missing Missing-data handling for correlation estimation. `"pairwise"`
 #'   uses pairwise-complete observations; `"complete"` restricts the analysis to
 #'   cases complete on all selected items.
@@ -44,15 +62,25 @@
 #'   assumptions are not compatible with the current data are explicitly marked
 #'   as skipped rather than silently substituted.
 #' @param parallel_rule Parallel-analysis decision rule: `"percentile"`
-#'   (default), `"mean"`, or `"crawford"`. All three rules are computed from
-#'   the same null simulations and retained in the result as sensitivity evidence.
+#'   (default), `"mean"`, or `"crawford"`. A factor is retained while its
+#'   observed eigenvalue exceeds the null reference. `"percentile"` compares
+#'   every eigenvalue with the `quantile` of the null eigenvalues; `"mean"`
+#'   compares it with their mean; `"crawford"` uses the `quantile` for the
+#'   first eigenvalue and the mean for the rest (Crawford et al., 2010). All
+#'   three rules are computed from the same null simulations and retained in
+#'   the result as sensitivity evidence.
 #' @param n_iter Number of null-data iterations used for parallel analysis. If
-#'   `NULL`, the value in `guidance$factor_parallel_iterations` is used.
+#'   `NULL`, the value in `guidance$factor_parallel_iterations` is used. It
+#'   also sets the number of simulated data sets for NEST and Hull, which
+#'   default to 1000 in `EFAtools`, so a small `n_iter` makes those criteria
+#'   coarser too.
 #' @param quantile Quantile of null eigenvalues used as the parallel-analysis
 #'   reference. If `NULL`, the value in
-#'   `guidance$factor_parallel_quantile` is used.
-#' @param max_factors Maximum number of factors/components evaluated for MAP. If
-#'   `NULL`, up to 10 or `p - 1`, whichever is smaller, are evaluated.
+#'   `guidance$factor_parallel_quantile` is used. It also sets the percentile
+#'   Hull compares its fit values with.
+#' @param max_factors Maximum number of factors/components evaluated for MAP,
+#'   and the largest factor count comparison data tries. If `NULL`, up to 10
+#'   or `p - 1`, whichever is smaller, are evaluated.
 #' @param seed Integer seed for the null-data simulation. The caller's random
 #'   number state is restored before return.
 #' @param fm Common-factor extraction method passed to [psych::fa()] when
@@ -200,6 +228,7 @@ nomo_factors <- function(data,
       call. = FALSE
     )
   }
+  nomo_defaults_check_safeguards(guidance)
 
   correlation <- nomo_match_arg(correlation)
   missing <- nomo_match_arg(missing)
@@ -281,9 +310,7 @@ nomo_factors <- function(data,
   if (!is.character(fm) || length(fm) != 1L || is.na(fm) || fm == "") {
     stop("`fm` must be a single non-empty character value.", call. = FALSE)
   }
-  supported_fm <- c(
-    "minres", "uls", "ols", "wls", "gls", "pa", "ml", "minchi", "old.min"
-  )
+  supported_fm <- nomo_factors_supported_fm(alpha = FALSE)
   if (!fm %in% supported_fm) {
     stop(
       sprintf(
@@ -588,6 +615,7 @@ nomo_factors_model_types <- function(selected,
     if (
       !is.character(types) ||
         is.null(names(types)) ||
+        anyNA(names(types)) ||
         any(names(types) == "") ||
         anyDuplicated(names(types))
     ) {
@@ -699,18 +727,11 @@ nomo_factors_numeric_data <- function(selected, item_types) {
     }
 
     if (type == "ordinal") {
-      return(as.numeric(x))
+      return(nomo_factors_rank_codes(x))
     }
 
     if (type == "binary") {
-      if (is.factor(x) || is.logical(x)) {
-        return(as.numeric(x))
-      }
-
-      observed <- sort(unique(x[!is.na(x)]))
-      ans <- rep(NA_real_, length(x))
-      ans[!is.na(x)] <- match(x[!is.na(x)], observed) - 1L
-      return(ans)
+      return(nomo_factors_rank_codes(x) - 1)
     }
 
     stop("Unsupported modeling type reached numeric conversion.", call. = FALSE)
@@ -719,6 +740,67 @@ nomo_factors_numeric_data <- function(selected, item_types) {
   out <- as.data.frame(out, stringsAsFactors = FALSE)
   names(out) <- names(selected)
   out
+}
+
+
+# Ordinal and binary items are scored by the rank of their observed values, in
+# numeric order or a factor's level order (#145, factors-4). psych counts the
+# categories of an item from its lowest to its highest code, so a 5-point item
+# coded 0/25/50/75/100, or a factor with a level nobody chose, would otherwise
+# be refused or read as having categories it does not have. Ranking keeps the
+# order and changes nothing for items coded 1, 2, 3, ...
+nomo_factors_rank_codes <- function(x) {
+  codes <- if (is.factor(x)) as.integer(x) else as.numeric(x)
+  observed <- sort(unique(codes[!is.na(codes)]))
+  as.numeric(match(codes, observed))
+}
+
+
+# The extraction methods psych::fa() runs as named. "minrank" needs the Rcsdp
+# package, which nomologR does not declare. "alpha" cannot fit the one-factor
+# solution the retention eigenvalues come from, so nomo_factors() leaves it out
+# and nomo_efa() accepts it for two or more factors. One list for both
+# functions (#145, factors-1).
+nomo_factors_supported_fm <- function(alpha = TRUE) {
+  fm <- c("minres", "uls", "ols", "wls", "gls", "pa", "ml", "minchi", "alpha", "old.min")
+  if (isTRUE(alpha)) fm else setdiff(fm, "alpha")
+}
+
+
+# Polychoric correlations, alone or within mixed correlations, model at most 8
+# categories in psych. An ordinal item with more is refused here, by name and
+# with the alternatives, rather than by psych's "polychoric is probably not
+# needed" (#145, factors-4).
+nomo_factors_check_categories <- function(x, model_types, method) {
+  if (!method %in% c("polychoric", "mixed")) return(invisible(NULL))
+  ordinal <- which(model_types == "ordinal")
+  n_categories <- vapply(x[ordinal], function(v) length(unique(v[!is.na(v)])), integer(1))
+  wide <- names(x)[ordinal][n_categories > 8L]
+  if (length(wide)) {
+    stop(
+      sprintf(
+        paste(
+          "%s %s more than 8 observed categories, more than %s correlations can",
+          "model. Declare %s continuous in `types`, or use `correlation = \"pearson\"`."
+        ),
+        nomo_present_or(sprintf("`%s`", wide), "and"),
+        if (length(wide) == 1L) "has" else "have",
+        method,
+        if (length(wide) == 1L) "it" else "them"
+      ),
+      call. = FALSE
+    )
+  }
+  invisible(NULL)
+}
+
+
+# psych::tetrachoric() and psych::mixedCor() write a blank line to the console
+# with cat() on every call, which suppressMessages() cannot catch; parallel
+# analysis calls them once per null iteration (#145, factors-5).
+nomo_factors_quiet <- function(expr) {
+  utils::capture.output(value <- suppressWarnings(suppressMessages(expr)))
+  value
 }
 
 
@@ -767,50 +849,45 @@ nomo_factors_correlation <- function(x, model_types, method, use) {
   } else {
     "complete.obs"
   }
+  nomo_factors_check_categories(x, model_types, method)
 
   result <- tryCatch(
     {
       if (method == "pearson") {
         stats::cor(x, use = use_cor)
       } else if (method == "polychoric") {
-        suppressWarnings(
-          suppressMessages(
-            psych::polychoric(
-              x,
-              correct = 0.5,
-              smooth = FALSE,
-              global = FALSE
-            )$rho
-          )
+        nomo_factors_quiet(
+          psych::polychoric(
+            x,
+            correct = 0.5,
+            smooth = FALSE,
+            global = FALSE
+          )$rho
         )
       } else if (method == "tetrachoric") {
-        suppressWarnings(
-          suppressMessages(
-            psych::tetrachoric(
-              x,
-              correct = 0.5,
-              smooth = FALSE
-            )$rho
-          )
+        nomo_factors_quiet(
+          psych::tetrachoric(
+            x,
+            correct = 0.5,
+            smooth = FALSE
+          )$rho
         )
       } else if (method == "mixed") {
         c_idx <- which(model_types == "continuous")
         p_idx <- which(model_types == "ordinal")
         d_idx <- which(model_types == "binary")
 
-        suppressWarnings(
-          suppressMessages(
-            psych::mixedCor(
-              data = x,
-              c = if (length(c_idx)) c_idx else NULL,
-              p = if (length(p_idx)) p_idx else NULL,
-              d = if (length(d_idx)) d_idx else NULL,
-              smooth = FALSE,
-              correct = 0.5,
-              global = FALSE,
-              use = use_cor
-            )$rho
-          )
+        nomo_factors_quiet(
+          psych::mixedCor(
+            data = x,
+            c = if (length(c_idx)) c_idx else NULL,
+            p = if (length(p_idx)) p_idx else NULL,
+            d = if (length(d_idx)) d_idx else NULL,
+            smooth = FALSE,
+            correct = 0.5,
+            global = FALSE,
+            use = use_cor
+          )$rho
         )
       } else {
         stop("Unknown correlation method.", call. = FALSE)
@@ -942,7 +1019,10 @@ nomo_factors_parallel <- function(x,
     }
 
     if (min(eig) <= 1e-08) {
-      r_null <- tryCatch(psych::cor.smooth(r_null), error = function(e) NULL)
+      # The count is recorded in `n_smoothed_null`, so psych's warning for each
+      # smoothed null matrix is not passed on to the console.
+      r_null <- tryCatch(suppressWarnings(psych::cor.smooth(r_null)),
+                         error = function(e) NULL)
       if (is.null(r_null)) {
         next
       }
@@ -1453,11 +1533,11 @@ nomo_factors_log <- function(item_types,
       value = bartlett$p_value,
       reference = "Supporting test; strongly sample-size sensitive",
       severity = "info",
-      observation = sprintf(
-        "Bartlett's test: chi-square(%d) = %.2f, p = %s.",
-        as.integer(bartlett$df),
-        bartlett$chisq,
-        format.pval(bartlett$p_value, digits = 3, eps = 0.001)
+      observation = paste0(
+        "Bartlett's test: ",
+        nomo_present_chisq(bartlett$chisq, bartlett$df, bartlett$p_value),
+        ".",
+        nomo_factors_bartlett_qualifier(correlation_method, sentence = TRUE)
       ),
       recommendation = paste(
         "Treat this as evidence about whether the matrix differs from an",
@@ -1488,9 +1568,9 @@ nomo_factors_log <- function(item_types,
     metric = "parallel_analysis",
     value = pa$n_factors,
     reference = sprintf(
-      "Common-factor PA using the selected %s rule; %.0fth percentile also retained as sensitivity evidence",
+      "Common-factor PA using the selected %s rule; the %s also retained as sensitivity evidence",
       pa$rule,
-      100 * pa$quantile
+      nomo_factors_percentile(pa$quantile)
     ),
     severity = "info",
     observation = sprintf(
@@ -1532,6 +1612,38 @@ nomo_factors_log <- function(item_types,
     }
   )
 
+  # Null matrices that had to be smoothed, or null data sets that could not be
+  # used, are recorded here rather than left to engine warnings.
+  n_smoothed <- nomo_null_default(pa$n_smoothed_null, 0L)
+  n_valid <- nomo_null_default(pa$n_valid, pa$n_requested)
+  if (isTRUE(n_smoothed > 0L) || isTRUE(n_valid < pa$n_requested)) {
+    log <- nomo_log_add(
+      log,
+      stage = "factors",
+      object = "retention",
+      metric = "parallel_null_iterations",
+      value = n_valid,
+      reference = "Each null data set should give a usable, positive-definite correlation matrix",
+      severity = "info",
+      observation = paste0(
+        sprintf("Parallel analysis used %d of %d requested null data sets", n_valid,
+                pa$n_requested),
+        if (n_smoothed > 0L) {
+          sprintf("; %d null correlation %s not positive definite and %s smoothed",
+                  n_smoothed, if (n_smoothed == 1L) "matrix was" else "matrices were",
+                  if (n_smoothed == 1L) "was" else "were")
+        } else {
+          ""
+        },
+        "."
+      ),
+      recommendation = paste(
+        "Sparse categories or missing data can make null correlations unstable;",
+        "compare the parallel-analysis count with more null data sets (`n_iter`)."
+      )
+    )
+  }
+
   log <- nomo_log_add(
     log,
     stage = "factors",
@@ -1548,24 +1660,28 @@ nomo_factors_log <- function(item_types,
     recommendation = "Treat original MAP as complementary retention evidence."
   )
 
-  log <- nomo_log_add(
-    log,
-    stage = "factors",
-    object = "retention",
-    metric = "map_revised",
-    value = map$n_factors_revised,
-    reference = "Velicer revised MAP (TR4), including m = 0",
-    severity = if (map$n_factors_revised == map$n_factors_original) "info" else "review",
-    observation = sprintf(
-      "Revised MAP (TR4) reaches its minimum at %d factor%s.",
-      map$n_factors_revised,
-      if (map$n_factors_revised == 1L) "" else "s"
-    ),
-    recommendation = paste(
-      "Compare TR2 and TR4. Disagreement is sensitivity evidence, not a reason",
-      "to select whichever count is more convenient."
+  # Revised MAP is logged only when the criterion set asked for it (#145,
+  # factors-7): "minimal" is parallel analysis and original MAP alone.
+  if ("map_revised" %in% criteria$plan) {
+    log <- nomo_log_add(
+      log,
+      stage = "factors",
+      object = "retention",
+      metric = "map_revised",
+      value = map$n_factors_revised,
+      reference = "Velicer revised MAP (TR4), including m = 0",
+      severity = if (map$n_factors_revised == map$n_factors_original) "info" else "review",
+      observation = sprintf(
+        "Revised MAP (TR4) reaches its minimum at %d factor%s.",
+        map$n_factors_revised,
+        if (map$n_factors_revised == 1L) "" else "s"
+      ),
+      recommendation = paste(
+        "Compare TR2 and TR4. Disagreement is sensitivity evidence, not a reason",
+        "to select whichever count is more convenient."
+      )
     )
-  )
+  }
 
   if (isTRUE(map$truncated)) {
     log <- nomo_log_add(
@@ -1613,6 +1729,10 @@ nomo_factors_log <- function(item_types,
           } else {
             "Treat this as one additional piece of retention evidence and inspect its assumptions."
           }
+          reference_i <- ev$reference[[1L]]
+          if (identical(row_i$criterion[[1L]], "comparison_data")) {
+            reference_i <- paste0(reference_i, nomo_factors_cd_settings_text(criteria$cd_settings))
+          }
 
           log <- nomo_log_add(
             log,
@@ -1620,7 +1740,7 @@ nomo_factors_log <- function(item_types,
             object = "retention",
             metric = row_i$criterion[[1L]],
             value = ev$n_factors[[1L]],
-            reference = ev$reference[[1L]],
+            reference = reference_i,
             severity = severity_i,
             observation = sprintf(
               "%s suggests %d factor%s%s.",
@@ -1669,6 +1789,56 @@ nomo_factors_log <- function(item_types,
 
 nomo_null_default <- function(x, fallback) {
   if (is.null(x) || length(x) == 0L) fallback else x
+}
+
+
+# The simulation settings comparison data ran with, for its decision-log row:
+# the defaults in nomo_defaults() are smaller than EFAtools::efa_cd()'s own
+# (#145, factors-12).
+nomo_factors_cd_settings_text <- function(settings) {
+  if (is.null(settings)) return("")
+  sprintf(
+    paste0(
+      "; simulated with a population of %d cases, %d samples per candidate ",
+      "structure, and alpha = %s (EFAtools::efa_cd() defaults to 10000 cases ",
+      "and 500 samples)"
+    ),
+    as.integer(settings$population), as.integer(settings$samples),
+    nomo_present_level(settings$alpha)
+  )
+}
+
+
+# A quantile as a percentile in words: "95th percentile", "93rd percentile",
+# "97.5th percentile" (#145, factors-9).
+nomo_factors_percentile <- function(quantile) {
+  pct <- 100 * quantile
+  if (abs(pct - round(pct)) < 1e-8) {
+    return(paste(nomo_present_ordinal(pct), "percentile"))
+  }
+  paste0(format(signif(pct, 6L)), "th percentile")
+}
+
+
+# Bartlett's test assumes product-moment correlations, as EKC's reference
+# series does, so with other correlations it is approximate (#145,
+# factors-13). As a sentence for the decision log, or a parenthetical note.
+nomo_factors_bartlett_qualifier <- function(correlation_method, sentence = FALSE) {
+  if (identical(correlation_method, "pearson") || is.null(correlation_method)) return("")
+  if (isTRUE(sentence)) {
+    sprintf(
+      " The test assumes Pearson correlations, so with %s correlations it is approximate.",
+      correlation_method
+    )
+  } else {
+    sprintf(" (approximate for %s correlations)", correlation_method)
+  }
+}
+
+
+# The correlation analyzed, as printed: Pearson is a name.
+nomo_factors_correlation_label <- function(method) {
+  if (identical(method, "pearson")) "Pearson" else as.character(method)
 }
 
 

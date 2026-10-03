@@ -504,7 +504,7 @@ test_that("presentation covers unavailable and smoothed states", {
   )
 
   printed <- paste(capture.output(print(unavailable)), collapse = "\n")
-  expect_match(printed, "KMO: unavailable")
+  expect_match(printed, "KMO: not computed")
 
   s <- summary(unavailable)
   expect_identical(s$adequacy$display[s$adequacy$metric == "KMO"], "unavailable")
@@ -599,11 +599,20 @@ test_that("summary prints skipped criteria and qualification together", {
 })
 
 
-test_that("p-value formatter covers unavailable, tiny, and ordinary values", {
-  expect_identical(nomo_format_p(NA_real_), "unavailable")
-  expect_identical(nomo_format_p(c(0.1, 0.2)), "unavailable")
-  expect_identical(nomo_format_p(0.0005), "< .001")
-  expect_identical(nomo_format_p(0.05), "= 0.050")
+test_that("Bartlett's test is written as every chi-square test is (#145)", {
+  # The private nomo_format_p() kept the leading zero ("p = 0.264") and the
+  # log used format.pval() ("p = <0.001").
+  out <- nomo_factors(make_cov_final_data(n = 40L, seed = 9311L), n_iter = 10, seed = 9311)
+  out$bartlett$p_value <- 0.264
+  out$bartlett$chisq <- 12.3456
+  display <- summary(out)$adequacy$display[[2L]]
+  expect_identical(display, "chi-square(10) = 12.35, p = .264")
+  expect_false(exists("nomo_format_p", envir = asNamespace("nomologR"), inherits = FALSE))
+
+  log <- out$decision_log
+  expect_match(log$observation[log$metric == "bartlett"],
+               "^Bartlett's test: chi-square\\(10\\) = [0-9.]+, p [<=] \\.[0-9]+\\.$")
+  expect_false(any(grepl("p = <", log$observation, fixed = TRUE)))
 })
 
 # ---- consolidated from test-nomo-factors-coverage.R ----
@@ -2282,4 +2291,329 @@ test_that("closeout C: null-default helper covers both NULL and zero-length fall
     nomologR:::nomo_null_default(integer(), 7L),
     7L
   )
+})
+
+# Pre-1.0 audit findings (#145) -------------------------------------------------
+
+test_that("one list of extraction methods serves both functions (#145, factors-1)", {
+  expect_identical(
+    nomologR:::nomo_factors_supported_fm(),
+    c("minres", "uls", "ols", "wls", "gls", "pa", "ml", "minchi", "alpha", "old.min")
+  )
+  expect_false("alpha" %in% nomologR:::nomo_factors_supported_fm(alpha = FALSE))
+  dat <- make_cov_final_data(n = 60L)
+  expect_error(nomo_factors(dat, n_iter = 10, fm = "bogus"), "Unsupported extraction method")
+  expect_error(nomo_factors(dat, n_iter = 10, fm = "pca"), "Unsupported extraction method")
+})
+
+
+test_that("ordinal and binary codes are ranked, and too many categories are named (#145, factors-4)", {
+  ord <- make_cov_final_ordinal(n = 200L, seed = 9411L)
+  codes <- as.data.frame(lapply(ord, as.integer))
+  types <- stats::setNames(rep("ordinal", ncol(codes)), names(codes))
+  base <- nomo_factors(codes, types = types, n_iter = 10, seed = 1)
+
+  # 0/25/50/75/100 and 1/3/5/7/9 are the same five ordered categories.
+  spaced <- nomo_factors(as.data.frame(lapply(codes, function(v) (v - 1) * 25)),
+                         types = types, n_iter = 10, seed = 1)
+  odd <- nomo_factors(as.data.frame(lapply(codes, function(v) 2 * v - 1)),
+                      types = types, n_iter = 10, seed = 1)
+  expect_identical(spaced$correlation_method, "polychoric")
+  expect_equal(spaced$correlation_matrix, base$correlation_matrix)
+  expect_equal(odd$correlation_matrix, base$correlation_matrix)
+
+  # A binary factor with a level nobody chose.
+  set.seed(9412)
+  latent <- stats::rnorm(200)
+  bin <- as.data.frame(replicate(4, as.integer(latent + stats::rnorm(200) > 0)))
+  bin$z <- factor(ifelse(latent + stats::rnorm(200) > 0, "yes", "no"),
+                  levels = c("no", "maybe", "yes"))
+  out <- nomo_factors(bin, types = c(z = "binary"), n_iter = 10, seed = 1)
+  expect_identical(out$correlation_method, "tetrachoric")
+
+  ranked <- nomologR:::nomo_factors_rank_codes(factor(c("c", "a", NA), levels = c("a", "b", "c")))
+  expect_identical(ranked, c(2, 1, NA))
+
+  # Ten ordered categories are more than polychoric correlations model.
+  set.seed(9413)
+  ten <- as.data.frame(lapply(1:5, function(i) {
+    ordered(sample(1:10, 150, replace = TRUE), levels = 1:10)
+  }))
+  names(ten) <- paste0("t", 1:5)
+  ten$t5 <- ordered(sample(1:4, 150, replace = TRUE))
+  expect_error(
+    nomo_factors(ten, n_iter = 10),
+    paste("`t1`, `t2`, `t3`, and `t4` have more than 8 observed categories, more than",
+          "polychoric correlations can model. Declare them continuous in `types`, or",
+          "use `correlation = \"pearson\"`."),
+    fixed = TRUE
+  )
+  expect_error(
+    nomologR:::nomo_factors_check_categories(ten["t1"], "ordinal", "mixed"),
+    "`t1` has more than 8 observed categories, more than mixed correlations can model. Declare it",
+    fixed = TRUE
+  )
+  expect_null(nomologR:::nomo_factors_check_categories(ten["t1"], "ordinal", "pearson"))
+})
+
+
+test_that("tetrachoric and mixed correlations print nothing to the console (#145, factors-5)", {
+  set.seed(9421)
+  latent <- stats::rnorm(200)
+  bin <- as.data.frame(replicate(5, as.integer(latent + stats::rnorm(200) > 0)))
+  expect_identical(capture.output(f <- nomo_factors(bin, n_iter = 10, seed = 1)), character())
+  expect_identical(f$correlation_method, "tetrachoric")
+
+  mixed <- bin
+  mixed$c1 <- latent + stats::rnorm(200)
+  mixed$c2 <- latent + stats::rnorm(200)
+  expect_identical(capture.output(m <- nomo_factors(mixed, n_iter = 10, seed = 1)), character())
+  expect_identical(m$correlation_method, "mixed")
+  expect_identical(capture.output(e <- nomo_efa(mixed, factors = 1)), character())
+})
+
+
+test_that("a minimal criterion set neither shows nor logs revised MAP (#145, factors-7)", {
+  out <- nomo_factors(make_cov_final_data(), criterion_set = "minimal", n_iter = 10, seed = 9431)
+  expect_false(any(out$decision_log$metric == "map_revised"))
+  printed <- capture.output(print(out))
+  expect_match(printed, "MAP: [0-9]+ \\(TR2\\) \\|", all = FALSE)
+  expect_false(any(grepl("TR4", printed, fixed = TRUE)))
+
+  core <- nomo_factors(make_cov_final_data(), n_iter = 10, seed = 9431)
+  expect_true(any(core$decision_log$metric == "map_revised"))
+  expect_match(capture.output(print(core)), "MAP: [0-9]+ \\(TR2\\), [0-9]+ \\(TR4\\)", all = FALSE)
+  # An object without a status table shows both.
+  core$criterion_status <- NULL
+  expect_true(nomologR:::nomo_factors_ran(core, "map_revised"))
+})
+
+
+test_that("the synthesis is worded by how much agrees, and 0 factors has its own text (#145, factors-8)", {
+  evidence <- function(ids, counts, roles = NULL) {
+    meta <- lapply(ids, nomologR:::nomo_factors_criterion_metadata)
+    tibble::tibble(
+      criterion = ids,
+      method = vapply(meta, `[[`, character(1), "method"),
+      family = vapply(meta, `[[`, character(1), "family"),
+      family_method = vapply(meta, `[[`, character(1), "family_method"),
+      n_factors = as.integer(counts),
+      role = if (is.null(roles)) vapply(meta, `[[`, character(1), "role") else roles,
+      reference = ""
+    )
+  }
+  synth <- nomologR:::nomo_factors_synthesis
+
+  two <- synth(evidence(c("parallel", "map_original"), c(2, 2)), parallel_n = 2L)
+  expect_match(two$text, "^Both available criterion families \\(2 methods\\) point to 2 factors\\.")
+  expect_match(two$text, "Agreement between two criterion families is limited evidence", fixed = TRUE)
+  expect_false(grepl("strong", two$text, fixed = TRUE))
+
+  one <- synth(evidence(c("parallel", "kaiser"), c(1, 1)), parallel_n = 1L)
+  expect_match(one$text, "^The one available criterion family \\(1 method\\) points to 1 factor\\.")
+  expect_match(one$text, "A single criterion family is limited evidence", fixed = TRUE)
+
+  three <- synth(evidence(c("parallel", "map_original", "ekc"), c(2, 2, 2)), parallel_n = 2L)
+  expect_match(three$text, "^All 3 available criterion families \\(3 methods\\) point to 2 factors\\.")
+  expect_match(three$text, "this is converging evidence", fixed = TRUE)
+
+  zero <- synth(evidence(c("parallel", "map_original", "ekc"), c(0, 0, 0)), parallel_n = 0L,
+                status = tibble::tibble(status = c("available", "skipped")))
+  expect_identical(
+    zero$text,
+    paste("All 3 available criterion families (3 methods) point to 0 factors. No criterion",
+          "found evidence of a common factor; check item quality, coding, and sample size",
+          "before fitting an EFA. 1 requested method was not evaluated; nomo_table(x,",
+          "\"criteria\") gives the reason.")
+  )
+  expect_false(grepl("investigating that solution", zero$text, fixed = TRUE))
+
+  near <- synth(evidence(c("parallel", "map_original", "ekc"), c(0, 1, 1)), parallel_n = 0L)
+  expect_identical(near$agreement, "near")
+  expect_match(near$text, "Some criteria found no evidence of a common factor", fixed = TRUE)
+  majority <- synth(evidence(c("parallel", "map_original", "ekc"), c(0, 0, 1)), parallel_n = 0L)
+  expect_identical(majority$agreement, "primary_majority")
+  expect_match(majority$text, "Some criteria found no evidence", fixed = TRUE)
+  divergent <- synth(evidence(c("parallel", "map_original", "ekc"), c(0, 3, 4)), parallel_n = 0L)
+  expect_identical(divergent$agreement, "divergent")
+  expect_match(divergent$text, "Some criteria found no evidence", fixed = TRUE)
+
+  only <- synth(tibble::tibble(), parallel_n = 0L)
+  expect_match(only$text, "^Parallel analysis suggests 0 factors, and no additional")
+  expect_match(only$text, "No criterion found evidence of a common factor", fixed = TRUE)
+})
+
+
+test_that("percentiles read as ordinals and Bartlett is qualified off Pearson (#145, factors-9, factors-13)", {
+  percentile <- nomologR:::nomo_factors_percentile
+  expect_identical(percentile(c(0.93)), "93rd percentile")
+  expect_identical(percentile(0.95), "95th percentile")
+  expect_identical(percentile(0.975), "97.5th percentile")
+
+  out <- nomo_factors(make_cov_final_data(), n_iter = 10, quantile = 0.93, seed = 9441)
+  reference <- out$decision_log$reference[out$decision_log$metric == "parallel_analysis"]
+  expect_match(reference, "the 93rd percentile also retained", fixed = TRUE)
+  expect_identical(levels(plot(out, type = "retention")$data$series)[[2L]],
+                   "Null 93rd percentile")
+  crawford <- out
+  crawford$parallel$rule <- "crawford"
+  expect_identical(levels(plot(crawford, type = "retention")$data$series)[[2L]],
+                   "Crawford: null 93rd percentile first, mean thereafter")
+
+  ordinal <- nomo_factors(make_cov_final_ordinal(), n_iter = 10, seed = 9442)
+  expect_identical(ordinal$correlation_method, "polychoric")
+  expect_true(endsWith(summary(ordinal)$adequacy$display[[2L]],
+                       ", p < .001 (approximate for polychoric correlations)"))
+  expect_match(ordinal$decision_log$observation[ordinal$decision_log$metric == "bartlett"],
+               "The test assumes Pearson correlations, so with polychoric correlations it is approximate.",
+               fixed = TRUE)
+  expect_identical(nomologR:::nomo_factors_bartlett_qualifier("pearson"), "")
+  expect_identical(nomologR:::nomo_factors_bartlett_qualifier(NULL), "")
+})
+
+
+test_that("factor-retention plots wrap their text and keep labels off the reference line (#145)", {
+  out <- nomo_factors(make_cov_final_data(seed = 9451L), n_iter = 10, seed = 9451)
+  legacy <- out
+  row <- legacy$evidence[1L, , drop = FALSE]
+  row$criterion <- "nest"
+  row$method <- "NEST"
+  row$role <- "extended"
+  legacy$evidence <- dplyr::bind_rows(legacy$evidence, row)
+  row$criterion <- "hull"
+  row$method <- "Hull (CAF)"
+  legacy$evidence <- dplyr::bind_rows(legacy$evidence, row)
+
+  plots <- c(lapply(c("retention", "parallel_rules", "scree", "map", "evidence",
+                      "concordance", "kmo"), function(type) plot(out, type = type)),
+             list(plot(legacy, type = "evidence")))
+  for (p in plots) {
+    expect_identical(p$theme$text$size, 11)
+    for (k in c("title", "subtitle", "caption")) {
+      text <- p$labels[[k]]
+      if (is.null(text)) next
+      expect_true(all(nchar(strsplit(text, "\n", fixed = TRUE)[[1L]]) <= 85L), label = text)
+    }
+  }
+  expect_match(plot_text(plots[[8L]]$labels$caption),
+               "MAP = minimum average partial (TR2, original; TR4, revised); NEST = next eigenvalue sufficiency test; CAF =",
+               fixed = TRUE)
+  expect_false(grepl("p-value", plot_text(plots[[2L]]$labels$caption), fixed = TRUE))
+
+  # The MSA values sit in one column past the bars and the dashed line.
+  kmo <- ggplot2::ggplot_build(plots[[7L]])
+  labels <- kmo$data[[3L]]
+  expect_length(unique(labels$y), 1L)
+  expect_gt(unique(labels$y), max(out$kmo$item$msa, out$kmo$overall))
+  expect_match(labels$label, "^\\.[0-9]{2}$")
+  expect_match(plot_text(plots[[7L]]$labels$subtitle), "Kaiser-Meyer-Olkin (KMO) value, .",
+               fixed = TRUE)
+  bare <- plot(out, type = "kmo", show_values = FALSE)
+  expect_length(bare$layers, 2L)
+})
+
+
+test_that("comparison data records its simulation settings (#145, factors-12)", {
+  expect_identical(nomologR:::nomo_factors_cd_settings_text(NULL), "")
+  expect_identical(
+    nomologR:::nomo_factors_cd_settings_text(list(population = 600L, samples = 10L, alpha = 0.3)),
+    paste0("; simulated with a population of 600 cases, 10 samples per candidate structure, ",
+           "and alpha = .30 (EFAtools::efa_cd() defaults to 10000 cases and 500 samples)")
+  )
+})
+
+
+test_that("the print counts the methods it reports and points to the criteria (#145, efa-7, clarity-28)", {
+  out <- nomo_factors(make_cov_final_data(seed = 9461L), n_iter = 10, seed = 9461)
+  legacy <- out
+  legacy$criterion_status <- dplyr::bind_rows(
+    legacy$criterion_status,
+    tibble::tibble(criterion = "kaiser", method = "Kaiser-Guttman (> 1)", status = "available",
+                   reason = "", qualification = "")
+  )
+  legacy$evidence <- dplyr::bind_rows(
+    legacy$evidence,
+    tibble::tibble(criterion = "kaiser", method = "Kaiser-Guttman (> 1)", family = "kaiser",
+                   family_method = "Kaiser-Guttman", n_factors = 1L, role = "legacy",
+                   reference = "")
+  )
+  expect_match(capture.output(print(legacy)), "Methods run: 4 (+1 legacy) | Families: 3",
+               fixed = TRUE, all = FALSE)
+  legacy$family_evidence <- NULL
+  expect_identical(nomologR:::nomo_factors_method_counts(legacy)$families, 4L)
+
+  pairwise <- make_cov_final_data(seed = 9462L)
+  pairwise$i1[1:10] <- NA
+  skipped <- nomo_factors(pairwise, n_iter = 10, seed = 9462)
+  expect_match(skipped$recommendation,
+               "1 requested method was not evaluated; nomo_table(x, \"criteria\") gives the reason.",
+               fixed = TRUE)
+  expect_false(grepl("criterion status", skipped$recommendation, fixed = TRUE))
+})
+
+
+test_that("factor-retention output follows the shared style at 80 and 40 columns (#144)", {
+  out <- nomo_factors(make_cov_final_data(seed = 9471L), n_iter = 10, seed = 9471)
+  smoothed <- out
+  smoothed$smoothed <- TRUE
+  smoothed$kmo$available <- FALSE
+  for (width in c(80L, 40L)) {
+    local_reproducible_output(width = width)
+    printed <- capture.output(print(out))
+    summarized <- capture.output(print(summary(smoothed)))
+    expect_match(printed[[1L]], "^<nomo_factors> Factor-retention")
+    expect_true(all(nchar(c(printed, summarized)) <= width))
+    expect_false(any(grepl("NA|-0\\.00|p-value|0\\.[0-9]{3}", c(printed, summarized))))
+    expect_true(endsWith(
+      gsub("\\s+", " ", paste(printed, collapse = " ")),
+      "See summary(x) for the evidence by method and the criteria that did not run."
+    ))
+    expect_true("Abbreviations" %in% summarized)
+  }
+  flat <- function(lines) gsub("\\s+", " ", paste(lines, collapse = " "))
+  expect_match(flat(summarized), "KMO: not computed; the correlation matrix", fixed = TRUE)
+  expect_match(flat(summarized), "Correlation matrix: smoothed", fixed = TRUE)
+  expect_match(flat(capture.output(print(smoothed))), "explicitly smoothed", fixed = TRUE)
+  expect_match(flat(capture.output(print(smoothed))), "KMO: not computed", fixed = TRUE)
+})
+
+
+test_that("null correlation matrices that were smoothed are logged, not warned (#145)", {
+  # Deferred from the freeze wave: psych's smoothing warning for each null
+  # matrix reached the console.
+  set.seed(9481)
+  f <- stats::rnorm(120)
+  dat <- as.data.frame(replicate(6, as.integer(0.8 * f + stats::rnorm(120, sd = 0.6) > 1)))
+  expect_no_warning(out <- nomo_factors(dat, n_iter = 10, seed = 9481))
+
+  pa <- out$parallel
+  log_for <- function(pa) {
+    nomologR:::nomo_factors_log(
+      item_types = out$item_types, requested_correlation = "auto",
+      correlation_method = out$correlation_method, missing = "pairwise",
+      min_pairwise_n = 120L, smoothed = FALSE, original_min_eigen = 0.2,
+      kmo = out$kmo, bartlett = out$bartlett, pa = pa, map = out$map,
+      criteria = list(evidence = out$evidence, status = out$criterion_status,
+                      plan = "parallel"),
+      synthesis = list(support_for_primary = 1L, agreement = "convergent", text = ""),
+      guidance = nomo_defaults()
+    )
+  }
+  pa$n_smoothed_null <- 3L
+  pa$n_valid <- 9L
+  row <- log_for(pa)
+  row <- row[row$metric == "parallel_null_iterations", ]
+  expect_identical(
+    row$observation,
+    paste("Parallel analysis used 9 of 10 requested null data sets; 3 null correlation",
+          "matrices were not positive definite and were smoothed.")
+  )
+  pa$n_smoothed_null <- 1L
+  expect_match(log_for(pa)$observation, "1 null correlation matrix was not positive definite and was",
+               all = FALSE, fixed = TRUE)
+  pa$n_smoothed_null <- 0L
+  expect_match(log_for(pa)$observation, "^Parallel analysis used 9 of 10 requested null data sets\\.$",
+               all = FALSE)
+  pa$n_valid <- 10L
+  expect_false(any(log_for(pa)$metric == "parallel_null_iterations"))
 })
