@@ -1252,3 +1252,258 @@ test_that("a summary without fit indices says why rather than listing references
   s$fit_evidence$value <- NA_real_
   expect_output(print(s), "No fit index is available.", fixed = TRUE)
 })
+
+
+# Audit fixes (#145) ------------------------------------------------------------
+
+ordinal_two_factor <- "A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4 + b5"
+
+
+test_that("ordered-factor indicators not named in `ordered` are recorded as fitted (#145)", {
+  skip_on_cran()
+  undeclared <- nomo_cfa(ordinal_two_factor, nomo_demo_ordinal, modification_indices = FALSE)
+  declared <- nomo_cfa(ordinal_two_factor, nomo_demo_ordinal, ordered = names(nomo_demo_ordinal),
+                       modification_indices = FALSE)
+
+  # lavaan fits these columns as categorical either way; the result now says so.
+  expect_identical(undeclared$ordered, names(nomo_demo_ordinal))
+  expect_identical(undeclared$estimator, "WLSMV")
+  expect_identical(undeclared$estimator_engine, "DWLS")
+  expect_identical(undeclared$estimator_source, "ordered_default")
+  expect_equal(undeclared$fit_measures_all[["chisq.scaled"]],
+               declared$fit_measures_all[["chisq.scaled"]], tolerance = 1e-8)
+  expect_output(print(undeclared), "Ordered indicators: 10", fixed = TRUE)
+
+  log <- undeclared$decision_log
+  detected <- log[log$metric == "ordered_detected", , drop = FALSE]
+  expect_identical(detected$severity, "review")
+  expect_identical(detected$value, 10)
+  expect_match(log$observation[log$metric == "ordered_indicators"],
+               "10 indicators are modeled as ordered: 0 named in `ordered` and 10 stored as ordered factors.",
+               fixed = TRUE)
+  expect_match(log$observation[log$metric == "estimator"],
+               "declared or stored as ordered factors, so WLSMV was requested", fixed = TRUE)
+  expect_false(any(grepl("continuous-data default", log$observation, fixed = TRUE)))
+
+  # What follows from the fit treats the indicators as ordered too.
+  expect_true(all(c("wlsmv_cfa", "categorical_correlations") %in% nomo_methods_used(undeclared)))
+  expect_false("ml_cfa" %in% nomo_methods_used(undeclared))
+  rel <- nomo_reliability(undeclared)
+  expect_true(all(nomo_reliability_item_types(nomo_measurement_fit(undeclared))$indicator_type ==
+                    "ordered"))
+  expect_s3_class(rel, "nomo_reliability")
+
+  # Declared and detected indicators are counted separately in the log.
+  partly <- nomo_cfa(ordinal_two_factor, nomo_demo_ordinal, ordered = c("a1", "a2"),
+                     modification_indices = FALSE)
+  expect_identical(partly$ordered, c("a1", "a2", "a3", "a4", "a5", paste0("b", 1:5)))
+  expect_match(partly$decision_log$observation[partly$decision_log$metric == "ordered_indicators"],
+               "2 named in `ordered` and 8 stored as ordered factors", fixed = TRUE)
+  expect_identical(
+    partly$decision_log$object[partly$decision_log$metric == "ordered_detected"],
+    "a3, a4, a5, b1, b2, b3, b4, b5"
+  )
+})
+
+
+test_that("undeclared ordered factors meet the ordered-data estimator checks (#145)", {
+  expect_error(
+    nomo_cfa(ordinal_two_factor, nomo_demo_ordinal, estimator = "MLR"),
+    "These indicators are stored as ordered factors and count as declared: a1, a2",
+    fixed = TRUE
+  )
+  expect_error(
+    nomo_cfa(ordinal_two_factor, nomo_demo_ordinal, missing = "fiml"),
+    "FIML is not supported by lavaan for declared ordered indicators. These indicators",
+    fixed = TRUE
+  )
+
+  one <- nomo_demo_continuous
+  one$a1 <- ordered(cut(one$a1, c(-Inf, 3, 4, 5, Inf)))
+  expect_error(
+    nomo_cfa(ordinal_two_factor, one, estimator = "ML"),
+    "This indicator is stored as an ordered factor and counts as declared: a1.",
+    fixed = TRUE
+  )
+})
+
+
+test_that("declared ordered names outside the model are not counted (#145)", {
+  skip_on_cran()
+  numeric_items <- as.data.frame(lapply(nomo_demo_ordinal, as.numeric))
+  out <- nomo_cfa("A =~ a1 + a2 + a3 + a4 + a5", numeric_items,
+                  ordered = names(numeric_items), modification_indices = FALSE)
+
+  expect_identical(out$ordered, paste0("a", 1:5))
+  expect_output(print(out), "Ordered indicators: 5", fixed = TRUE)
+  row <- out$decision_log[out$decision_log$metric == "ordered_indicators", , drop = FALSE]
+  expect_identical(row$object, "a1, a2, a3, a4, a5")
+  expect_identical(row$value, 5)
+  expect_match(row$observation, paste(
+    "5 indicators were declared ordered. `ordered` named 5 variables not in the",
+    "model, which were not used: b1, b2, b3, b4, b5."
+  ), fixed = TRUE)
+  expect_false("ordered_detected" %in% out$decision_log$metric)
+
+  # Only names outside the model: nothing is ordered, and the log says why.
+  none <- nomo_cfa("A =~ a1 + a2 + a3 + a4 + a5", numeric_items, ordered = "b1",
+                   modification_indices = FALSE)
+  expect_identical(none$ordered, character())
+  expect_identical(none$estimator, "ML")
+  expect_match(
+    none$decision_log$observation[none$decision_log$metric == "ordered_indicators"],
+    "`ordered` named 1 variable not in the model, which was not used: b1.", fixed = TRUE
+  )
+})
+
+
+test_that("fit evidence takes every value from one version of the fit (#145)", {
+  # lavaan reported no scaled test statistic but a scaled RMSEA of 0 for a
+  # model whose standard RMSEA is 0.22: every value is the standard one.
+  no_scaled <- c(
+    chisq = 754.7, chisq.scaled = NA, df = 19, df.scaled = 19, pvalue = 0,
+    pvalue.scaled = NA, cfi = .702, cfi.scaled = NA, cfi.robust = NA,
+    tli = .561, tli.scaled = NA, tli.robust = NA, rmsea = .220,
+    rmsea.scaled = 0, rmsea.robust = NA, rmsea.ci.lower = .207,
+    rmsea.ci.lower.scaled = 0, rmsea.ci.upper = .234, rmsea.ci.upper.scaled = 0,
+    srmr = .144
+  )
+  tab <- nomo_cfa_fit_evidence(no_scaled, nomo_defaults())
+  expect_identical(
+    tab$variant,
+    c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "rmsea.ci.lower", "rmsea.ci.upper", "srmr")
+  )
+  expect_equal(tab$value[tab$metric == "RMSEA"], .220)
+  expect_identical(tab$attention[tab$metric == "RMSEA"], "review")
+  expect_true(nomo_cfa_scaled_unavailable(no_scaled))
+  expect_false(nomo_cfa_scaled_unavailable(c(chisq = 75.8, cfi = .97)))
+  expect_false(nomo_cfa_scaled_unavailable(c(chisq = 75.8, chisq.scaled = 74.9)))
+
+  # The interval is the one around the RMSEA reported, or none at all.
+  robust_point <- c(
+    chisq.scaled = 80, rmsea.robust = .05, rmsea.scaled = .06,
+    rmsea.ci.lower.robust = NA, rmsea.ci.lower.scaled = .04,
+    rmsea.ci.upper.robust = NA, rmsea.ci.upper.scaled = .08
+  )
+  tab <- nomo_cfa_fit_evidence(robust_point, nomo_defaults())
+  expect_identical(tab$variant[tab$metric == "RMSEA"], "rmsea.robust")
+  expect_true(all(is.na(tab$value[tab$metric %in% c("RMSEA_CI_lower", "RMSEA_CI_upper")])))
+  tab <- nomo_cfa_fit_evidence(c(chisq = 10, rmsea.ci.lower = .01), nomo_defaults())
+  expect_true(is.na(tab$value[tab$metric == "RMSEA_CI_lower"]))
+
+  # Within the scaled version, robust indices come first and scaled ones follow.
+  scaled_only <- c(chisq = 75.8, chisq.scaled = 65.8, df = 34, df.scaled = 29.9,
+                   cfi = .973, cfi.scaled = .874)
+  tab <- nomo_cfa_fit_evidence(scaled_only, nomo_defaults())
+  expect_identical(tab$variant[tab$metric %in% c("chi_square", "df", "CFI")],
+                   c("chisq.scaled", "df.scaled", "cfi.scaled"))
+
+  log <- nomo_cfa_decision_log(
+    estimator_label = "MLR", engine_estimator = "ML", estimator_source = "researcher",
+    ordered = character(), missing = NULL, data_n = 100, n_used = 100, converged = TRUE,
+    warnings = character(), fit_evidence = tibble::tibble(), loadings = tibble::tibble(),
+    heywood = tibble::tibble(), residual_pairs = tibble::tibble(),
+    modification_indices = tibble::tibble(), modification_indices_requested = FALSE,
+    mi_error = NULL, scaled_unavailable = TRUE
+  )
+  row <- log[log$metric == "scaled_test_unavailable", , drop = FALSE]
+  expect_identical(row$severity, "review")
+  expect_match(row$observation, "every fit index reported are the standard", fixed = TRUE)
+})
+
+
+test_that("a fit without a scaled test statistic reports standard values throughout (#145)", {
+  skip_on_cran()
+  out <- nomo_cfa("Agency =~ ag1 + ag2 + ag3 + pe1; Persistence =~ ag4 + pe2 + pe3 + pe4",
+                  nomo_demo_network, estimator = "MLR", modification_indices = FALSE)
+  fe <- out$fit_evidence
+  if (nomo_cfa_scaled_unavailable(out$fit_measures_all)) {
+    expect_false(any(grepl("scaled|robust", fe$variant)))
+    expect_equal(fe$value[fe$metric == "RMSEA"], unname(out$fit_measures_all[["rmsea"]]))
+    expect_true("scaled_test_unavailable" %in% out$decision_log$metric)
+  } else {
+    expect_identical(fe$variant[fe$metric == "chi_square"], "chisq.scaled")
+    expect_false("scaled_test_unavailable" %in% out$decision_log$metric)
+  }
+})
+
+
+test_that("ML with FIML keeps lavaan's robust fit indices beside the standard chi-square (#145)", {
+  # No scaled test was requested, so there is no failed scaled statistic: the
+  # robust (missing-data corrected) indices are used, with their own interval.
+  fiml_like <- c(
+    chisq = 81.2, df = 34, pvalue = 1e-5, cfi = .9716, cfi.robust = .9717,
+    tli = .9624, tli.robust = .9625, rmsea = .0527, rmsea.robust = .0527,
+    rmsea.ci.lower = .0380, rmsea.ci.lower.robust = .0380,
+    rmsea.ci.upper = .0675, rmsea.ci.upper.robust = .0677, srmr = .0486
+  )
+  expect_false(nomo_cfa_scaled_unavailable(fiml_like))
+  expected_variants <- c(
+    "chisq", "df", "pvalue", "cfi.robust", "tli.robust", "rmsea.robust",
+    "rmsea.ci.lower.robust", "rmsea.ci.upper.robust", "srmr"
+  )
+  tab <- nomo_cfa_fit_evidence(fiml_like, nomo_defaults())
+  expect_identical(tab$variant, expected_variants)
+  expect_equal(tab$value[tab$metric == "RMSEA_CI_upper"], .0677)
+
+  skip_on_cran()
+  model <- "A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4 + b5"
+  out <- nomo_cfa(model, nomo_demo_continuous, missing = "fiml", modification_indices = FALSE)
+  direct <- lavaan::cfa(model, data = nomo_demo_continuous, missing = "fiml")
+  fe <- out$fit_evidence
+  expect_identical(fe$variant, expected_variants)
+  expect_equal(
+    fe$value,
+    as.numeric(lavaan::fitMeasures(direct, expected_variants)),
+    tolerance = 1e-8
+  )
+  expect_false("scaled_test_unavailable" %in% out$decision_log$metric)
+})
+
+
+test_that("a higher-order disturbance is a latent variance, not an observed residual (#145)", {
+  skip_on_cran()
+  # The covariance matrix implied by a higher-order model whose first-order
+  # factor F1 has a negative disturbance variance. With data reproducing it
+  # exactly, the ML estimate is that population value.
+  lambda <- kronecker(diag(4), matrix(.7, 3, 1))
+  gamma <- c(1, .6, .6, .45)
+  phi <- tcrossprod(gamma) + diag(c(-.05, .64, .64, .64))
+  sigma <- lambda %*% phi %*% t(lambda) + diag(.51, 12)
+  set.seed(14501)
+  z <- scale(matrix(rnorm(300 * 12), 300, 12), scale = FALSE)
+  dat <- as.data.frame(z %*% solve(chol(stats::cov(z))) %*% chol(sigma))
+  names(dat) <- paste0("x", 1:12)
+
+  model <- nomo_model(
+    list(F1 = paste0("x", 1:3), F2 = paste0("x", 4:6), F3 = paste0("x", 7:9),
+         F4 = paste0("x", 10:12)),
+    structure = "higher_order"
+  )
+  out <- nomo_cfa(model, dat, modification_indices = FALSE)
+
+  f1 <- out$heywood[out$heywood$object == "F1", , drop = FALSE]
+  expect_identical(f1$issue, "negative_latent_variance")
+  expect_false("negative_observed_residual_variance" %in% out$heywood$issue)
+  expect_identical(sum(out$decision_log$object == "F1" &
+                         out$decision_log$metric == "negative_latent_variance"), 1L)
+
+  # A weak second-order loading points to the factor, not to item content.
+  weak <- out$standardized_loadings[out$standardized_loadings$factor == "G" &
+                                      out$standardized_loadings$attention == "REVIEW", ]
+  expect_identical(weak$item, "F4")
+  expect_match(weak$explanation, "inspect the first-order factor's definition", fixed = TRUE)
+  items <- out$standardized_loadings[out$standardized_loadings$factor == "F1", ]
+  expect_true(all(items$attention == "KEEP"))
+})
+
+
+test_that("the loading helper words first-order factors and items apart (#145)", {
+  std <- data.frame(
+    lhs = c("F1", "G"), op = c("=~", "=~"), rhs = c("x1", "F1"),
+    est.std = c(.30, .30)
+  )
+  tab <- nomo_cfa_loadings(std, nomo_defaults())
+  expect_match(tab$explanation[[1L]], "inspect item content", fixed = TRUE)
+  expect_match(tab$explanation[[2L]], "inspect the first-order factor's definition", fixed = TRUE)
+})
