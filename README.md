@@ -1111,6 +1111,13 @@ reporting
 walkthrough](https://juhalt.github.io/nomologR/articles/reproducible-report.html)
 for the documented inputs and limitations.
 
+`file` is required. `nomo_report()` has no default path, so a report is
+written only where you ask:
+
+``` r
+nomo_report(run, file = "construct-validation-report.html")
+```
+
 The report cites the methods the workflow actually used, not every
 method the package offers. The same information is available directly:
 
@@ -1144,9 +1151,9 @@ they can. No table labels a result as passing or failing. The discriminant table
 of constructs its latent correlation with a confidence interval beside HTMT2
 and HTMT, rather than the Fornell-Larcker matrix.
 
-`nomo_report(run, apa_tables = TRUE)` appends the same tables for every
-result a guided run holds, numbered in order, as a *Manuscript tables*
-appendix.
+`nomo_report(run, file = "report.html", apa_tables = TRUE)` appends the
+same tables for every result a guided run holds, numbered in order, as a
+*Manuscript tables* appendix.
 
 ## Development path
 

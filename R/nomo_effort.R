@@ -162,11 +162,14 @@ nomo_effort_pairs <- function(responses, direction = c("antonym", "synonym"),
   first <- responses[, items[candidates[, 1L]], drop = FALSE]
   second <- responses[, items[candidates[, 2L]], drop = FALSE]
 
+  # The same minimum holds for each respondent: one who left a pair member
+  # unanswered may have only two usable pairs, and a correlation over those two
+  # is again exactly +1 or -1, so that respondent gets no value.
   out$values <- vapply(seq_len(nrow(responses)), function(i) {
     a <- as.numeric(first[i, ])
     b <- as.numeric(second[i, ])
     ok <- is.finite(a) & is.finite(b)
-    if (sum(ok) < 2L) return(NA_real_)
+    if (sum(ok) < 3L) return(NA_real_)
     if (stats::sd(a[ok]) == 0 || stats::sd(b[ok]) == 0) return(NA_real_)
     stats::cor(a[ok], b[ok])
   }, numeric(1))
@@ -214,11 +217,13 @@ nomo_effort_even_odd <- function(responses, scales) {
     if (stats::sd(a[ok]) == 0 || stats::sd(b[ok]) == 0) next
     if (sum(ok) < 3L) next
     r <- stats::cor(a[ok], b[ok])
-    # Spearman-Brown correction for the halved scale length. At r = -1 it is
-    # undefined, and near it the correction diverges, so those are NA rather
-    # than a very large negative number that means nothing.
-    if (!is.finite(r) || (1 + r) < 1e-8) next
-    out[[i]] <- (2 * r) / (1 + r)
+    # Spearman-Brown correction for the halved scale length. The correction
+    # extrapolates for a negative correlation: it passes -1 at r = -1/3 and
+    # diverges toward r = -1, where it is undefined. Those values are very
+    # large negative numbers that mean nothing, so the index is bounded at -1,
+    # as careless::evenodd() (Yentes & Wilhelm) bounds it. The bound is applied
+    # to r itself, which also avoids dividing by zero at r = -1.
+    out[[i]] <- if (isTRUE(r <= -1 / 3)) -1 else (2 * r) / (1 + r)
   }
 
   out
@@ -250,8 +255,9 @@ nomo_effort_recode <- function(responses, reverse, scale_range) {
 }
 
 
-nomo_effort_screen <- function(selected, scales = NULL, reverse = NULL,
-                               scale_range = NULL, pair_magnitude = 0.60) {
+nomo_effort_screen <- function(selected, long_string_min_items, scales = NULL,
+                               reverse = NULL, scale_range = NULL,
+                               pair_magnitude = 0.60) {
   responses <- as.matrix(selected)
   storage.mode(responses) <- "double"
   n_items <- ncol(responses)
@@ -279,8 +285,15 @@ nomo_effort_screen <- function(selected, scales = NULL, reverse = NULL,
   # correlation or a negative synonym correlation as close to certain evidence
   # of careless responding. The other indices have no stated rule, so they are
   # reported without a flag.
+  #
+  # Half the length is a rule for long assessments. On a short item set it is a
+  # run of a few responses, which attentive respondents give all the time: with
+  # two items every case reaches it, and with six about a third do. So the run
+  # is always reported, and it becomes a flag only when at least
+  # `long_string_min_items` items are screened (#145).
   long_limit <- ceiling(n_items / 2)
-  effort$flag_long_string <- is.finite(effort$long_string) &
+  long_applied <- n_items >= long_string_min_items
+  effort$flag_long_string <- long_applied & is.finite(effort$long_string) &
     effort$long_string >= long_limit
   effort$flag_antonym <- is.finite(effort$antonym_r) & effort$antonym_r > 0
   effort$flag_synonym <- is.finite(effort$synonym_r) & effort$synonym_r < 0
@@ -301,6 +314,8 @@ nomo_effort_screen <- function(selected, scales = NULL, reverse = NULL,
     antonym_pairs = antonyms$pairs,
     synonym_pairs = synonyms$pairs,
     long_string_limit = long_limit,
+    long_string_min_items = long_string_min_items,
+    long_string_rule_applied = long_applied,
     # NULL means nobody said; character(0) means someone checked and nothing is
     # reversed. Those are different facts and are reported differently.
     keying_declared = !is.null(reverse),
@@ -318,26 +333,65 @@ nomo_effort_log <- function(result, n_items) {
   n <- nrow(e)
   pct <- function(k) sprintf("%.1f%%", 100 * k / max(n, 1L))
 
-  n_long <- sum(e$flag_long_string)
-  log <- nomo_log_add(
-    log, stage = "screen", object = "cases", metric = "long_string",
-    value = n_long,
-    reference = sprintf(
-      "Curran (2016): a run of at least half the items (%d of %d), a conservative rule of thumb",
-      result$long_string_limit, n_items
-    ),
-    severity = if (n_long > 0L) "review" else "info",
-    observation = sprintf(
-      "%d case%s (%s) gave the same response to at least %d consecutive items.",
-      n_long, if (n_long == 1L) "" else "s", pct(n_long), result$long_string_limit
-    ),
-    recommendation = paste(
-      "Curran offers half the scale length as a conservative starting point and",
-      "says it is not the best cut score for every scale: a scale whose items",
-      "barely vary in intensity invites long runs from careful respondents.",
-      "Inspect these cases before deciding anything about them."
+  long_limit <- result$long_string_limit
+  if (isTRUE(result$long_string_rule_applied)) {
+    n_long <- sum(e$flag_long_string)
+    log <- nomo_log_add(
+      log, stage = "screen", object = "cases", metric = "long_string",
+      value = n_long,
+      reference = sprintf(
+        "Curran (2016): a run of at least half the items (%d of %d), a conservative rule of thumb",
+        long_limit, n_items
+      ),
+      severity = if (n_long > 0L) "review" else "info",
+      observation = sprintf(
+        paste(
+          "%d of %d cases (%s) gave the same response to at least %d consecutive",
+          "items, half of the %d items screened."
+        ),
+        n_long, n, pct(n_long), long_limit, n_items
+      ),
+      recommendation = paste(
+        "Curran offers half the scale length as a conservative starting point and",
+        "says it is not the best cut score for every scale: a scale whose items",
+        "barely vary in intensity invites long runs from careful respondents.",
+        "Inspect these cases before deciding anything about them."
+      )
     )
-  )
+  } else {
+    # The rule is not applied to a short item set, and the log says what it
+    # would have counted, so a reader can see why: the share reaching half the
+    # length is the share the rule would have flagged by arithmetic.
+    n_reached <- sum(is.finite(e$long_string) & e$long_string >= long_limit)
+    log <- nomo_log_add(
+      log, stage = "screen", object = "cases", metric = "long_string",
+      value = NA_real_,
+      reference = sprintf(
+        "Curran (2016): a run of at least half the items (%d of %d); flagged here only with %d or more items",
+        long_limit, n_items, as.integer(result$long_string_min_items)
+      ),
+      severity = "info",
+      observation = sprintf(
+        paste(
+          "With %d item%s screened, fewer than the %d the half-length rule is",
+          "applied to, no case was flagged on long-string. %d of %d cases (%s)",
+          "gave the same response to at least %d consecutive item%s, half of",
+          "the item set."
+        ),
+        n_items, if (n_items == 1L) "" else "s",
+        as.integer(result$long_string_min_items),
+        n_reached, n, pct(n_reached),
+        long_limit, if (long_limit == 1L) "" else "s"
+      ),
+      recommendation = paste(
+        "Half the length of a short item set is a run of only a few responses,",
+        "which attentive respondents give often, so the rule would flag them by",
+        "arithmetic. Each case's longest run is still reported in `long_string`;",
+        "read it alongside the other indices. The minimum number of items is",
+        "`long_string_min_items` in `nomo_defaults()`."
+      )
+    )
+  }
 
   for (kind in c("antonym", "synonym")) {
     pairs <- result[[paste0(kind, "_pairs")]]
@@ -388,10 +442,10 @@ nomo_effort_log <- function(result, n_items) {
       ),
       recommendation = if (coarse) {
         sprintf(paste(
-          "Only %d pairs were available. Each value rests on that many points,",
-          "so attentive respondents will cross zero by chance and some of these",
-          "flags are arithmetic rather than behavior. Meade and Craig (2012) used",
-          "five pairs. Read these flags alongside the other indices, not alone."
+          "Only %d pairs were available. Each value rests on at most that many",
+          "points, so attentive respondents will cross zero by chance and some of",
+          "these flags are arithmetic rather than behavior. Meade and Craig (2012)",
+          "used five pairs. Read these flags alongside the other indices, not alone."
         ), n_pairs)
       } else {
         paste(
@@ -416,8 +470,9 @@ nomo_effort_log <- function(result, n_items) {
       recommendation = paste(
         "No source states a cut score, so no case is flagged on this index.",
         "The Spearman-Brown correction extrapolates for negative correlations",
-        "and can fall below -1; a value below zero indicates inconsistency and",
-        "its exact size does not carry further meaning.",
+        "and would fall below -1, so the value is bounded at -1; a value below",
+        "zero indicates inconsistency and its exact size does not carry further",
+        "meaning.",
         if (isTRUE(result$keying_declared) && result$n_reversed > 0L) {
           "Reverse-keyed items were recoded for this index only."
         } else if (isTRUE(result$keying_declared)) {

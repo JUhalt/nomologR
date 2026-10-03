@@ -367,6 +367,27 @@ test_that("nomo_missing prints and tabulates its evidence", {
 })
 
 
+test_that("the object holds the fields its help page gives, and no others (#145)", {
+  skip_on_cran()
+  out <- missing_results()$mar
+
+  # The fields ?nomo_missing gives as the ones to read, which the stability
+  # policy covers. `reference` and `fitted_as` are among them: print() reads
+  # both.
+  stable <- c("reference", "fitted_as", "pattern", "variables", "strategies",
+              "fit", "estimates", "reliability", "decision_log")
+  # The fields it names as not part of the stable interface. A field added to
+  # the object belongs in one list or the other on that page.
+  other <- c("call", "object", "ordered", "fits")
+  expect_setequal(names(out), c(stable, other))
+  expect_identical(out$reference, "ml")
+  expect_identical(out$fitted_as, "listwise")
+  # The unit the page states: proportions, not percentages.
+  expect_true(out$pattern$pct_incomplete > 0 && out$pattern$pct_incomplete < 1)
+  expect_true(all(out$variables$pct_missing >= 0 & out$variables$pct_missing < 1))
+})
+
+
 # Remaining paths (#72) --------------------------------------------------------
 
 missing_demo_model <- "A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4 + b5"
