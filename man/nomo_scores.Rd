@@ -23,6 +23,10 @@ Single-group, single-level, with no regressions among latent variables.}
 An object of class \code{nomo_scores}. The fields to read are:
 \itemize{
 \item \code{scores}: one column per factor, one row per case used.
+\item \code{rows}: for each row of \code{scores}, the row of the data the model was
+fitted to. A case the model did not use, as listwise deletion drops an
+incomplete one, has no score, so \code{scores} can have fewer rows than the
+data. \code{data[x$rows, ]} holds the scored cases in the order of \code{scores}.
 \item \code{method} and \code{weighting}: how the scores were computed.
 \item \code{diagnostics}: Grice's validity, univocality, and correlational
 accuracy per factor.
@@ -48,7 +52,12 @@ items is not a model-free arithmetic calculation but a \emph{parallel} factor
 model, assuming equal unstandardized loadings and equal residual variances.
 For \code{method = "sum"} and \code{method = "mean"}, that constrained model is fitted
 and compared with the model supplied, so a researcher can see whether the
-assumption their sum score makes is consistent with their data.
+assumption their sum score makes is consistent with their data. The parallel
+model is the supplied model with those two sets of constraints added and
+nothing else changed, estimated as the supplied model was: the same cases,
+estimator, and missing-data handling, with factor covariances and residual
+covariances kept as specified. When the comparison cannot be made,
+\code{parallel_test$note} says why.
 
 \strong{A score is not the latent variable.} Grice (2001) evaluates factor scores
 on three criteria, all reported here and all computed from the fitted model:
@@ -84,7 +93,8 @@ themselves, is reported where a value falls below it and is never applied as
 a rule.
 
 The supplied data is never modified, and scores are computed only for the
-cases the model used.
+cases the model used. \code{rows} records which rows of the data those are, so
+the scores can be matched to the data when some cases were dropped.
 }
 \examples{
 model <- '
@@ -103,6 +113,11 @@ summed$unit_weighting
 refined <- nomo_scores(cfa, method = "regression")
 refined$diagnostics
 head(refined$scores)
+
+# Scores joined to the data, by the rows the model used
+scored <- lavaan::HolzingerSwineford1939
+scored[refined$rows, names(refined$scores)] <- refined$scores
+head(scored[, c("id", names(refined$scores))])
 
 }
 \references{
