@@ -6,6 +6,7 @@ nomo_compare_relation_label <- function(relation) {
     less_constrained = "nested, less constrained",
     equivalent = "equivalent",
     non_nested = "not nested",
+    undetermined = "nesting not determined",
     different_variables = "different observed variables"
   )
   out <- unname(labels[relation])

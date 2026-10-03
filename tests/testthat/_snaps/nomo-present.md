@@ -641,7 +641,7 @@
         B          alpha   0.771  0.771
         A          AVE     0.497  0.497
         B          AVE     0.434  0.521
-        B vs A     HTMT2   0.533  0.533
+        A vs B     HTMT2   0.533  0.533
         - The loading fixed to zero for b5 keeps that item in this composite; the
           coefficient does not describe a shortened scale.
       
