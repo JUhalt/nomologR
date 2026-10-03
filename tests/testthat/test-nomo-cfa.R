@@ -1734,6 +1734,23 @@ test_that("nomo_model() refuses names lavaan would rename or cannot read (#145)"
                                C = c("x7", "x8", "x9")),
                           structure = "higher_order", general = "g-factor"),
                'The `general` factor name cannot be read by lavaan: "g-factor".', fixed = TRUE)
+  # On a narrow console a long line breaks after a "+", and what is printed
+  # still reads as the same model.
+  factors <- list(engagement = c("e1", "e2", "e3"), belonging = c("b1", "b2", "b3"),
+                  efficacy = c("f1", "f2", "f3"))
+  bifactor <- nomo_model(factors, structure = "bifactor", general = "Wellbeing")
+  local_reproducible_output(width = 40)
+  printed <- capture.output(print(bifactor))
+  expect_true(all(nchar(printed) <= 40L))
+  expect_true(all(c("Wellbeing =~ NA*e1 + e2 + e3 + b1 + b2 +", "  b3 + f1 + f2 + f3") %in%
+                    printed))
+  syntax <- printed[2:(which(printed == "")[[1L]] - 1L)]
+  same <- function(model) {
+    pt <- lavaan::lavaanify(model)
+    pt[, c("lhs", "op", "rhs", "free", "ustart")]
+  }
+  expect_identical(same(paste(syntax, collapse = "\n")), same(bifactor))
+
   # Dots and underscores are names lavaan reads as written.
   model <- nomo_model(list(self.efficacy = c("x1", "x2", "x3"), self_worth = c("x4", "x5", "x6")))
   fitted <- nomo_cfa(model, lavaan::HolzingerSwineford1939, modification_indices = FALSE)

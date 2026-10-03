@@ -338,12 +338,35 @@ nomo_model_bifactor <- function(factors, general) {
 }
 
 
+# A syntax line wider than the console is broken after a "+", with the rest
+# indented. lavaan reads a line that ends in an operator as continued on the
+# next, so the printed syntax can still be copied as it is.
+nomo_model_wrap_syntax <- function(lines, width = nomo_present_width()) {
+  unlist(lapply(lines, function(line) {
+    terms <- strsplit(line, " + ", fixed = TRUE)[[1L]]
+    out <- character()
+    current <- terms[[1L]]
+    for (term in terms[-1L]) {
+      candidate <- paste(current, "+", term)
+      # Room for the " +" that ends a broken line.
+      if (nchar(candidate, type = "width") > width - 2L) {
+        out <- c(out, paste(current, "+"))
+        current <- paste0("  ", term)
+      } else {
+        current <- candidate
+      }
+    }
+    c(out, current)
+  }), use.names = FALSE)
+}
+
+
 #' @export
 print.nomo_model <- function(x, ...) {
   # The syntax is printed bare, so it can be copied as it is; the notes are
   # wrapped like every other note (#145).
   nomo_present_header("nomo_model", "Measurement model syntax")
-  cat(as.character(x), "\n", sep = "")
+  nomo_present_cat(nomo_model_wrap_syntax(strsplit(as.character(x), "\n", fixed = TRUE)[[1L]]))
   notes <- attr(x, "notes")
   if (length(notes)) {
     # A note is prefixed with its severity, as other notes in the package are.
