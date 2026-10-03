@@ -22,9 +22,18 @@
 #'   `factors` is a `nomo_factors` object. It keeps that result's items,
 #'   modeling types, correlations, and missing-data handling while recording a
 #'   researcher-selected factor count, rather than implying that the
-#'   parallel-analysis suggestion was adopted.
+#'   parallel-analysis suggestion was adopted. It is required when parallel
+#'   analysis suggested 0 factors, since there is then no count to adopt.
 #' @param rotation Rotation passed to [psych::fa()]. The default is `"oblimin"`.
-#'   Orthogonal rotations are allowed but are recorded as a researcher choice.
+#'   The oblique rotations are `"oblimin"`, `"quartimin"`, `"simplimax"`,
+#'   `"geominQ"`, `"bentlerQ"`, `"biquartimin"`, `"promax"`, `"Promax"`, and
+#'   `"cluster"`; the orthogonal ones are `"varimax"`, `"Varimax"`,
+#'   `"quartimax"`, `"equamax"`, `"varimin"`, `"geominT"`, `"bentlerT"`, and
+#'   `"bifactor"`; `"none"` keeps the extracted solution without rotation.
+#'   Orthogonal rotations and `"none"` are allowed but are recorded as a
+#'   researcher choice for review. Target rotations are not available, because
+#'   `nomo_efa()` does not pass a target matrix. A one-factor solution is not
+#'   rotated.
 #' @param fm Common-factor extraction method passed to [psych::fa()]. The
 #'   default is `"minres"`. Supported values are `"minres"`, `"uls"`, `"ols"`,
 #'   `"wls"`, `"gls"`, `"pa"`, `"ml"`, `"minchi"`, `"alpha"`, and
@@ -49,7 +58,21 @@
 #'   smoothing; otherwise `FALSE`. If `FALSE`, a non-positive-definite
 #'   correlation matrix stops the analysis. If `TRUE`, [psych::cor.smooth()] is
 #'   used explicitly and the intervention is recorded.
-#' @param guidance Guidance settings from [nomo_defaults()].
+#' @param guidance Guidance settings from [nomo_defaults()]. A list holding
+#'   only the settings to change is completed from [nomo_defaults()].
+#'
+#' @details
+#' The decision log also records what can make a solution improper or hard to
+#' interpret, as concerns or prompts for review: a communality at or above 1
+#' (a Heywood case), a model with more parameters than the correlations can
+#' identify (negative degrees of freedom) or exactly as many (zero), an
+#' extraction that did not converge, and any warning or message from
+#' [psych::fa()].
+#'
+#' `print()` shows the settings, the residual misfit, the item flags, and any
+#' problem with the solution; `summary()` adds the item loadings and
+#' communalities with an explanation of every flag, the factor correlations,
+#' and the largest residual correlations.
 #'
 #' @return An object of class `nomo_efa`. The fields to read are:
 #'
@@ -140,17 +163,19 @@ nomo_efa <- function(data,
       call. = FALSE
     )
   }
+  nomo_defaults_check_safeguards(guidance)
+  # A list holding only the settings to change is completed from the defaults
+  # (#145, efa-6), as nomo_factors() reads a missing setting as its default.
+  guidance <- utils::modifyList(nomo_defaults(), guidance)
   if (!is.character(rotation) || length(rotation) != 1L ||
       is.na(rotation) || rotation == "") {
     stop("`rotation` must be a single non-empty character value.", call. = FALSE)
   }
+  nomo_efa_check_rotation(rotation)
   if (!is.character(fm) || length(fm) != 1L || is.na(fm) || fm == "") {
     stop("`fm` must be a single non-empty character value.", call. = FALSE)
   }
-  supported_fm <- c(
-    "minres", "uls", "ols", "wls", "gls", "pa",
-    "ml", "minchi", "alpha", "old.min"
-  )
+  supported_fm <- nomo_factors_supported_fm()
   if (!fm %in% supported_fm) {
     stop(
       sprintf(
@@ -183,7 +208,7 @@ nomo_efa <- function(data,
         length(primary_k) != 1L ||
         is.na(primary_k) ||
         !is.numeric(primary_k) ||
-        primary_k < 1L) {
+        primary_k < 0) {
       stop(
         paste(
           "The supplied `nomo_factors` object does not contain a positive",
@@ -193,6 +218,19 @@ nomo_efa <- function(data,
       )
     }
     primary_k <- as.integer(primary_k)
+    # A count of 0 leaves nothing to adopt, but a researcher's own count can
+    # still be fitted with the retention context (#145, efa-2).
+    if (primary_k < 1L && is.null(factor_count)) {
+      stop(
+        paste(
+          "The supplied `nomo_factors` object does not contain a positive",
+          "parallel-analysis factor suggestion: parallel analysis suggested 0",
+          "factors. To fit an EFA anyway, give the count with `factor_count`,",
+          "for example `factor_count = 1`."
+        ),
+        call. = FALSE
+      )
+    }
 
     if (!is.null(factor_count)) {
       if (!is.numeric(factor_count) ||
@@ -407,13 +445,16 @@ nomo_efa <- function(data,
   }
 
   common_n_available <- missing == "complete" || !anyNA(analysis_data)
+  # psych reports non-convergence and improper solutions only through its
+  # warnings and messages, so they are collected and recorded rather than
+  # suppressed (#145, efa-1).
   fa_args <- list(
     r = corr,
     nfactors = k,
     rotate = rotation,
     fm = fm,
     residuals = TRUE,
-    warnings = FALSE
+    warnings = TRUE
   )
   if (common_n_available) {
     fa_args$n.obs <- nrow(analysis_data)
@@ -424,19 +465,28 @@ nomo_efa <- function(data,
     fa_args$np.obs <- pairwise_n
   }
 
+  engine_messages <- character()
   fit <- tryCatch(
-    suppressWarnings(
-      suppressMessages(
-        do.call(psych::fa, fa_args)
-      )
+    withCallingHandlers(
+      do.call(psych::fa, fa_args),
+      warning = function(w) {
+        engine_messages <<- c(engine_messages, conditionMessage(w))
+        invokeRestart("muffleWarning")
+      },
+      message = function(m) {
+        engine_messages <<- c(engine_messages, conditionMessage(m))
+        invokeRestart("muffleMessage")
+      }
     ),
     error = function(e) {
       stop(
-        sprintf("EFA estimation failed: %s", conditionMessage(e)),
+        sprintf("EFA estimation failed (fm = \"%s\", rotation = \"%s\"): %s", fm, rotation,
+                conditionMessage(e)),
         call. = FALSE
       )
     }
   )
+  engine_messages <- nomo_efa_engine_messages(engine_messages)
 
   pattern <- unclass(fit$loadings)
   pattern <- as.matrix(pattern)
@@ -484,6 +534,16 @@ nomo_efa <- function(data,
   } else {
     nomo_efa_complexity(pattern)
   }
+
+  # A communality of 1 or more leaves a unique variance of 0 or less: an
+  # improper (Heywood) solution, which psych only warns about (#145, efa-1).
+  # The minres, ml, and similar extractions stop a unique variance at .005, so
+  # a Heywood case shows there as a communality of .995.
+  heywood <- items[is.finite(h2) & (h2 >= 0.995 - 1e-4 | uniqueness <= 0.005 + 1e-4)]
+  # The degrees of freedom of a k-factor model of p items (#145, efa-3).
+  # Below zero the model has more parameters than correlations; at zero it
+  # reproduces them exactly, so a small RMSR says nothing about fit.
+  dof <- ((length(items) - k)^2 - (length(items) + k)) / 2
 
   item_summary <- nomo_efa_item_summary(
     pattern = pattern,
@@ -540,7 +600,11 @@ nomo_efa <- function(data,
     kmo = kmo,
     n_cases = nrow(analysis_data),
     n_items = length(items),
-    guidance = guidance
+    guidance = guidance,
+    oblique = oblique,
+    heywood = heywood,
+    dof = dof,
+    engine_messages = engine_messages
   )
 
   out <- list(
@@ -567,6 +631,9 @@ nomo_efa <- function(data,
     smoothed = smoothed,
     original_min_eigen = original_min_eigen,
     fit = fit,
+    dof = dof,
+    heywood = heywood,
+    engine_warnings = engine_messages,
     pattern_matrix = pattern,
     structure_matrix = structure,
     factor_correlations = phi,
@@ -667,13 +734,17 @@ nomo_efa_item_summary <- function(pattern,
       "KEEP"
     }
 
+    # Each value has the decimals it needs to differ from its reference, so a
+    # flag never reads "0.40 is below the 0.40 reference" (#145, efa-5), and
+    # a loading is compared in absolute value.
     reasons <- character()
     if (weak_primary) {
       reasons <- c(
         reasons,
         sprintf(
-          "primary loading |%.2f| is below the %.2f teaching reference",
-          primary, load_ref
+          "The primary loading, %s in absolute value, is below the %s teaching reference.",
+          nomo_present_stat(abs(primary), "loading", reference = load_ref),
+          nomo_present_stat(load_ref, "loading")
         )
       )
     }
@@ -681,8 +752,9 @@ nomo_efa_item_summary <- function(pattern,
       reasons <- c(
         reasons,
         sprintf(
-          "secondary loading |%.2f| meets/exceeds the %.2f cross-loading reference",
-          secondary, cross_ref
+          "The secondary loading, %s in absolute value, is at or above the %s cross-loading reference.",
+          nomo_present_stat(abs(secondary), "loading", reference = cross_ref),
+          nomo_present_stat(cross_ref, "loading")
         )
       )
     }
@@ -690,13 +762,14 @@ nomo_efa_item_summary <- function(pattern,
       reasons <- c(
         reasons,
         sprintf(
-          "communality %.2f is below the %.2f teaching reference",
-          communality[[i]], communality_ref
+          "The communality, %s, is below the %s teaching reference.",
+          nomo_present_stat(communality[[i]], "proportion", reference = communality_ref),
+          nomo_present_stat(communality_ref, "proportion")
         )
       )
     }
     if (!length(reasons)) {
-      reasons <- "no numeric teaching-reference flags; retain substantive review"
+      reasons <- "No loading or communality reaches a teaching reference; review the content as usual."
     }
 
     tibble::tibble(
@@ -713,7 +786,7 @@ nomo_efa_item_summary <- function(pattern,
       cross_loading = cross_loading,
       low_communality = low_communality,
       attention = attention,
-      explanation = paste(reasons, collapse = "; ")
+      explanation = paste(reasons, collapse = " ")
     )
   })
 
@@ -764,7 +837,11 @@ nomo_efa_log <- function(k,
                          kmo,
                          n_cases,
                          n_items,
-                         guidance) {
+                         guidance,
+                         oblique = rotation %in% nomo_efa_rotations$oblique,
+                         heywood = character(),
+                         dof = NA_real_,
+                         engine_messages = character()) {
   log <- nomo_log_new()
 
   log <- nomo_log_add(
@@ -780,18 +857,25 @@ nomo_efa_log <- function(k,
       k,
       switch(
         factor_source,
-        nomo_factors = "nomo_factors() handoff",
+        nomo_factors = "the parallel-analysis count from nomo_factors()",
         researcher_with_nomo_factors_context =
-          "researcher factor-count decision after nomo_factors() review",
+          "a researcher factor-count decision after reviewing nomo_factors()",
         "direct specification"
       )
     ),
     recommendation = "Compare neighboring plausible solutions when retention evidence is ambiguous."
   )
 
-  if (!is.null(factor_context) &&
-      length(factor_context$plausible_factors) > 0L &&
-      any(factor_context$plausible_factors != k)) {
+  # A count parallel analysis did not support (0 factors), or a plausible set
+  # with other counts, is a prompt to compare solutions (#145, efa-2).
+  primary_zero <- identical(factor_context$primary_parallel, 0L)
+  plausible <- factor_context$plausible_factors
+  if (!is.null(factor_context) && (primary_zero || any(plausible != k))) {
+    plausible_text <- if (length(plausible)) {
+      sprintf("; the broader plausible set includes: %s", paste(plausible, collapse = ", "))
+    } else {
+      ""
+    }
     retention_observation <- if (
       identical(
         factor_source,
@@ -800,20 +884,19 @@ nomo_efa_log <- function(k,
     ) {
       sprintf(
         paste0(
-          "The researcher selected %d factor%s after reviewing M2 evidence. ",
-          "Primary parallel analysis suggested %d; the broader plausible set includes: %s."
+          "The researcher selected %s after reviewing the nomo_factors() evidence. ",
+          "Primary parallel analysis suggested %d%s.%s"
         ),
-        k,
-        if (k == 1L) "" else "s",
+        nomo_present_count(k, "factor"),
         factor_context$primary_parallel,
-        paste(factor_context$plausible_factors, collapse = ", ")
+        plausible_text,
+        if (primary_zero) " Parallel analysis found no factor above the null reference." else ""
       )
     } else {
       sprintf(
-        "The M2 handoff selected %d factor%s for this EFA, while the broader plausible set includes: %s.",
-        k,
-        if (k == 1L) "" else "s",
-        paste(factor_context$plausible_factors, collapse = ", ")
+        "The parallel-analysis count from nomo_factors() selected %s for this EFA%s.",
+        nomo_present_count(k, "factor"),
+        plausible_text
       )
     }
 
@@ -826,10 +909,48 @@ nomo_efa_log <- function(k,
       reference = "Retention evidence identifies solutions to investigate; it does not prove dimensionality",
       severity = "review",
       observation = retention_observation,
-      recommendation = "Fit and compare substantively plausible neighboring EFA solutions rather than treating the handoff as proof."
+      recommendation = paste(
+        "Fit and compare substantively plausible neighboring EFA solutions rather",
+        "than treating the count from nomo_factors() as proof."
+      )
     )
   }
 
+  # The wording follows the solution that was fitted (#145, efa-4): one factor
+  # is not rotated, an unrotated or orthogonal solution has no factor
+  # correlations to examine, and only an oblique one does.
+  rotation_text <- if (k < 2L) {
+    list(
+      severity = "info",
+      observation = sprintf("Extraction = %s; a one-factor solution is not rotated.", fm),
+      recommendation = "Interpret the loadings directly; one factor has no factor correlations."
+    )
+  } else if (identical(rotation, "none")) {
+    list(
+      severity = "review",
+      observation = sprintf("Extraction = %s; the solution was left unrotated.", fm),
+      recommendation = paste(
+        "An unrotated solution was researcher-selected; its loadings are not",
+        "rotated toward simple structure and its factors are uncorrelated by",
+        "construction, so justify the choice."
+      )
+    )
+  } else if (isTRUE(oblique)) {
+    list(
+      severity = "info",
+      observation = sprintf("Extraction = %s; rotation = %s (oblique).", fm, rotation),
+      recommendation = "Interpret the pattern matrix first and examine factor correlations."
+    )
+  } else {
+    list(
+      severity = "review",
+      observation = sprintf("Extraction = %s; rotation = %s (orthogonal).", fm, rotation),
+      recommendation = paste(
+        "Orthogonal rotation was researcher-selected; justify the assumption that",
+        "factors are uncorrelated."
+      )
+    )
+  }
   log <- nomo_log_add(
     log,
     stage = "efa",
@@ -837,16 +958,9 @@ nomo_efa_log <- function(k,
     metric = "extraction_rotation",
     value = NA_real_,
     reference = "Common-factor extraction; oblique rotation is the default",
-    severity = if (tolower(rotation) %in% c("varimax", "quartimax", "equamax")) "review" else "info",
-    observation = paste(
-      sprintf("Extraction = %s; rotation = %s.", fm, rotation),
-      extraction_note
-    ),
-    recommendation = if (tolower(rotation) %in% c("varimax", "quartimax", "equamax")) {
-      "Orthogonal rotation was researcher-selected; justify the assumption that factors are uncorrelated."
-    } else {
-      "Interpret the pattern matrix first and examine factor correlations."
-    }
+    severity = rotation_text$severity,
+    observation = paste(rotation_text$observation, extraction_note),
+    recommendation = rotation_text$recommendation
   )
 
   log <- nomo_log_add(
@@ -874,13 +988,16 @@ nomo_efa_log <- function(k,
       object = paste(inherited_types, collapse = ", "),
       metric = "modeling_types_inherited",
       value = length(inherited_types),
-      reference = "Carry forward explicit M2 modeling decisions unless the researcher overrides them",
+      reference = "Carry forward explicit nomo_factors() modeling decisions unless the researcher overrides them",
       severity = "info",
       observation = paste(
         "Modeling types were inherited from the supplied `nomo_factors` object for:",
         paste(inherited_types, collapse = ", ")
       ),
-      recommendation = "Confirm that the M2 item set and measurement-level decisions remain appropriate for this EFA."
+      recommendation = paste(
+        "Confirm that the item set and measurement-level decisions from",
+        "nomo_factors() remain appropriate for this EFA."
+      )
     )
   }
 
@@ -916,6 +1033,90 @@ nomo_efa_log <- function(k,
     )
   }
 
+  # Problems with the solution itself (#145, efa-1 and efa-3).
+  if (is.finite(dof) && dof <= 0) {
+    log <- nomo_log_add(
+      log,
+      stage = "efa",
+      object = "model",
+      metric = "identification",
+      value = dof,
+      reference = "A k-factor model of p items has ((p - k)^2 - (p + k)) / 2 degrees of freedom",
+      severity = if (dof < 0) "concern" else "review",
+      observation = nomo_efa_dof_text(k, n_items, dof),
+      recommendation = if (dof < 0) {
+        "Fit fewer factors; the loadings and residuals of this solution are not interpretable."
+      } else {
+        paste(
+          "Do not read the small residuals as good fit; judge the solution by its",
+          "loadings, communalities, and interpretability."
+        )
+      }
+    )
+  }
+
+  for (item in heywood) {
+    h2 <- item_summary$communality[item_summary$item == item]
+    log <- nomo_log_add(
+      log,
+      stage = "efa",
+      object = item,
+      metric = "heywood",
+      value = h2,
+      reference = "A proper solution has every communality below 1 and every unique variance above 0",
+      severity = "concern",
+      observation = nomo_efa_heywood_text(item, h2),
+      recommendation = paste(
+        "Do not interpret this solution as it stands; try fewer factors, another",
+        "extraction method, or more cases, and inspect the item for redundancy."
+      )
+    )
+  }
+
+  nonconverged <- grepl("iteration|converge", engine_messages, ignore.case = TRUE)
+  if (any(nonconverged)) {
+    log <- nomo_log_add(
+      log,
+      stage = "efa",
+      object = "model",
+      metric = "convergence",
+      value = NA_real_,
+      reference = "Estimates are interpretable only when the extraction converged",
+      severity = "concern",
+      observation = sprintf(
+        "The %s extraction did not converge: psych::fa() reported \"%s\".",
+        fm, engine_messages[nonconverged][[1L]]
+      ),
+      recommendation = paste(
+        "Do not interpret this solution as it stands; try another extraction",
+        "method or fewer factors."
+      )
+    )
+  }
+  # psych's ultra-Heywood warning says what the heywood row above says.
+  other_messages <- engine_messages[!nonconverged &
+                                      !(grepl("Heywood", engine_messages) & length(heywood) > 0L)]
+  if (length(other_messages)) {
+    log <- nomo_log_add(
+      log,
+      stage = "efa",
+      object = "model",
+      metric = "engine_warnings",
+      value = length(other_messages),
+      reference = "Engine warnings and messages are recorded, never suppressed",
+      severity = "review",
+      observation = paste0(
+        "psych::fa() reported: ",
+        paste0("\"", other_messages, "\"", collapse = "; "),
+        "."
+      ),
+      recommendation = "Read the message with the solution and decide whether the solution can be interpreted."
+    )
+  }
+
+  loading_ref <- nomo_null_default(guidance$efa_loading_reference, 0.40)
+  cross_ref <- nomo_null_default(guidance$efa_crossloading_reference, 0.30)
+  communality_ref <- nomo_null_default(guidance$efa_communality_reference, 0.40)
   for (i in seq_len(nrow(item_summary))) {
     row <- item_summary[i, ]
     if (row$attention == "KEEP") next
@@ -927,10 +1128,10 @@ nomo_efa_log <- function(k,
       metric = "item_structure_review",
       value = abs(row$primary_loading),
       reference = sprintf(
-        "loading %.2f; cross-loading %.2f; communality %.2f are teaching references",
-        guidance$efa_loading_reference,
-        guidance$efa_crossloading_reference,
-        guidance$efa_communality_reference
+        "Teaching references: loading %s, cross-loading %s, communality %s",
+        nomo_present_stat(loading_ref, "loading"),
+        nomo_present_stat(cross_ref, "loading"),
+        nomo_present_stat(communality_ref, "proportion")
       ),
       severity = if (row$attention == "STRONG REVIEW") "concern" else "review",
       observation = row$explanation,
@@ -949,14 +1150,16 @@ nomo_efa_log <- function(k,
     value = rmsr,
     reference = "Residual size is descriptive evidence, not a binary fit rule",
     severity = "info",
-    observation = sprintf("Off-diagonal RMSR = %.3f.", rmsr),
+    observation = sprintf("Off-diagonal RMSR = %s.", nomo_present_stat(rmsr, "fit")),
     recommendation = "Inspect the largest localized residuals alongside the loading pattern."
   )
 
   if (isTRUE(kmo$available)) {
-    kmo_severity <- if (kmo$overall < guidance$factor_kmo_concern_reference) {
+    kmo_concern <- nomo_null_default(guidance$factor_kmo_concern_reference, 0.50)
+    kmo_review <- nomo_null_default(guidance$factor_kmo_review_reference, 0.60)
+    kmo_severity <- if (kmo$overall < kmo_concern) {
       "concern"
-    } else if (kmo$overall < guidance$factor_kmo_review_reference) {
+    } else if (kmo$overall < kmo_review) {
       "review"
     } else {
       "info"
@@ -969,7 +1172,7 @@ nomo_efa_log <- function(k,
       value = kmo$overall,
       reference = "KMO is supporting adequacy evidence, not an item-retention rule",
       severity = kmo_severity,
-      observation = sprintf("Overall KMO = %.3f.", kmo$overall),
+      observation = sprintf("Overall KMO = %s.", nomo_present_stat(kmo$overall, "proportion")),
       recommendation = "Use KMO with the broader structural evidence rather than as a stand-alone gate."
     )
   }
@@ -977,8 +1180,7 @@ nomo_efa_log <- function(k,
   # Under pairwise deletion, rows with little or no item data count in
   # `n_cases` but not in the correlations, so the prompt uses the smallest
   # jointly observed N, as nomo_factors() does.
-  small_n_ref <- guidance$factor_small_n_reference
-  if (is.null(small_n_ref)) small_n_ref <- 100L
+  small_n_ref <- nomo_null_default(guidance$factor_small_n_reference, 100L)
   if (min_pairwise_n < small_n_ref) {
     pairwise_text <- if (min_pairwise_n < n_cases) {
       sprintf(
@@ -1009,4 +1211,97 @@ nomo_efa_log <- function(k,
   }
 
   log
+}
+
+
+# The rotations psych::fa() runs without further arguments, by whether they
+# keep the factors correlated. Target rotations need a target matrix, which
+# nomo_efa() does not pass: without one, psych stops or silently uses Promax
+# (#145, efa-4).
+nomo_efa_rotations <- list(
+  oblique = c("oblimin", "quartimin", "simplimax", "geominQ", "bentlerQ",
+              "biquartimin", "promax", "Promax", "cluster"),
+  orthogonal = c("varimax", "Varimax", "quartimax", "equamax", "varimin",
+                 "geominT", "bentlerT", "bifactor"),
+  unrotated = "none",
+  target = c("targetQ", "targetT", "TargetQ", "TargetT", "specialQ", "specialT")
+)
+
+
+nomo_efa_check_rotation <- function(rotation) {
+  if (rotation %in% nomo_efa_rotations$target) {
+    stop(
+      sprintf(
+        paste(
+          "`rotation = \"%s\"` needs a target matrix, which `nomo_efa()` does",
+          "not pass to psych::fa(). Choose an oblique rotation such as",
+          "\"oblimin\", or fit the target rotation with psych::fa() directly."
+        ),
+        rotation
+      ),
+      call. = FALSE
+    )
+  }
+  choices <- unlist(nomo_efa_rotations[c("oblique", "orthogonal", "unrotated")],
+                    use.names = FALSE)
+  if (!rotation %in% choices) {
+    stop(
+      sprintf(
+        "`rotation` must be one of %s, not \"%s\".",
+        nomo_present_or(sprintf("\"%s\"", choices)), rotation
+      ),
+      call. = FALSE
+    )
+  }
+  invisible(rotation)
+}
+
+
+# psych announces loading GPArotation as a message; it says nothing about the
+# solution, so it is not recorded. Repeated messages are recorded once.
+nomo_efa_engine_messages <- function(messages) {
+  messages <- trimws(gsub("\\s+", " ", messages))
+  messages <- messages[nzchar(messages) & !grepl("^Loading required namespace", messages)]
+  unique(messages)
+}
+
+
+# "3 factors on 4 items leave -3 degrees of freedom: ..." (#145, efa-3).
+nomo_efa_dof_text <- function(k, n_items, dof) {
+  lead <- sprintf(
+    "%s on %s %s %s degrees of freedom",
+    nomo_present_count(k, "factor"), nomo_present_count(n_items, "item"),
+    nomo_present_noun(k, "leaves", "leave"), nomo_present_df(dof)
+  )
+  if (dof < 0) {
+    paste0(lead, ": more parameters than the correlations can identify, so the",
+           " residuals are not interpretable and an RMSR near 0 is not evidence of fit.")
+  } else {
+    paste0(lead, ": the model reproduces the correlations exactly, so an RMSR near",
+           " 0 is not evidence of fit.")
+  }
+}
+
+
+# "The communality of b2 is 1.004, so its unique variance is below 0" (#145,
+# efa-1); without an item, "The communality is ...", for a bullet that names
+# the item already. The communality shows the decimals that tell it apart from
+# 1.
+nomo_efa_heywood_text <- function(item, h2) {
+  shown <- nomo_present_stat(h2, "proportion", reference = 1)
+  subject <- if (is.null(item)) "The communality" else sprintf("The communality of %s", item)
+  if (h2 > 1) {
+    sprintf(
+      "%s is %s, so its unique variance is below 0: an improper (ultra-Heywood) solution.",
+      subject, shown
+    )
+  } else {
+    sprintf(
+      paste(
+        "%s is %s, so its unique variance is 0 or at the .005 floor that",
+        "psych::fa() sets: an improper (Heywood) solution."
+      ),
+      subject, shown
+    )
+  }
 }

@@ -33,10 +33,19 @@ parallel-analysis factor count is used unless \code{factor_count} is supplied.}
 \code{factors} is a \code{nomo_factors} object. It keeps that result's items,
 modeling types, correlations, and missing-data handling while recording a
 researcher-selected factor count, rather than implying that the
-parallel-analysis suggestion was adopted.}
+parallel-analysis suggestion was adopted. It is required when parallel
+analysis suggested 0 factors, since there is then no count to adopt.}
 
 \item{rotation}{Rotation passed to \code{\link[psych:fa]{psych::fa()}}. The default is \code{"oblimin"}.
-Orthogonal rotations are allowed but are recorded as a researcher choice.}
+The oblique rotations are \code{"oblimin"}, \code{"quartimin"}, \code{"simplimax"},
+\code{"geominQ"}, \code{"bentlerQ"}, \code{"biquartimin"}, \code{"promax"}, \code{"Promax"}, and
+\code{"cluster"}; the orthogonal ones are \code{"varimax"}, \code{"Varimax"},
+\code{"quartimax"}, \code{"equamax"}, \code{"varimin"}, \code{"geominT"}, \code{"bentlerT"}, and
+\code{"bifactor"}; \code{"none"} keeps the extracted solution without rotation.
+Orthogonal rotations and \code{"none"} are allowed but are recorded as a
+researcher choice for review. Target rotations are not available, because
+\code{nomo_efa()} does not pass a target matrix. A one-factor solution is not
+rotated.}
 
 \item{fm}{Common-factor extraction method passed to \code{\link[psych:fa]{psych::fa()}}. The
 default is \code{"minres"}. Supported values are \code{"minres"}, \code{"uls"}, \code{"ols"},
@@ -67,7 +76,8 @@ smoothing; otherwise \code{FALSE}. If \code{FALSE}, a non-positive-definite
 correlation matrix stops the analysis. If \code{TRUE}, \code{\link[psych:cor.smooth]{psych::cor.smooth()}} is
 used explicitly and the intervention is recorded.}
 
-\item{guidance}{Guidance settings from \code{\link[=nomo_defaults]{nomo_defaults()}}.}
+\item{guidance}{Guidance settings from \code{\link[=nomo_defaults]{nomo_defaults()}}. A list holding
+only the settings to change is completed from \code{\link[=nomo_defaults]{nomo_defaults()}}.}
 }
 \value{
 An object of class \code{nomo_efa}. The fields to read are:
@@ -112,6 +122,18 @@ a \code{nomo_factors} object. When a \code{nomo_factors} object is supplied, its
 parallel-analysis suggestion is used as the requested EFA factor count and,
 unless overridden, its item set, modeling types, correlation model, and
 missing-data strategy are carried forward.
+
+The decision log also records what can make a solution improper or hard to
+interpret, as concerns or prompts for review: a communality at or above 1
+(a Heywood case), a model with more parameters than the correlations can
+identify (negative degrees of freedom) or exactly as many (zero), an
+extraction that did not converge, and any warning or message from
+\code{\link[psych:fa]{psych::fa()}}.
+
+\code{print()} shows the settings, the residual misfit, the item flags, and any
+problem with the solution; \code{summary()} adds the item loadings and
+communalities with an explanation of every flag, the factor correlations,
+and the largest residual correlations.
 }
 \examples{
 efa <- nomo_efa(nomo_demo_continuous, factors = 2)

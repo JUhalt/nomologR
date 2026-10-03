@@ -2,37 +2,96 @@
 
 #' @export
 print.nomo_efa <- function(x, ...) {
-  source_text <- if (identical(x$factor_source, "nomo_factors")) {
-    "nomo_factors() handoff"
-  } else {
-    "researcher specified"
-  }
-
   nomo_present_header("nomo_efa", "Exploratory factor analysis")
+  nomo_efa_present_facts(x)
+  nomo_present_facts(c(
+    paste0("RMSR: ", nomo_present_stat(x$rmsr, "fit")),
+    paste0("Item flags: ", nomo_present_flag_counts(x$item_summary$attention))
+  ))
+  nomo_efa_present_checks(x$decision_log)
+  nomo_present_text(
+    "RMSR = root mean square of the off-diagonal residual correlations. No ",
+    "item was deleted and no model was refit automatically."
+  )
+  nomo_present_pointer("summary(x)", "the loadings and the reason for each flag")
+  invisible(x)
+}
+
+
+# The settings, as print() and summary() show them. "from nomo_factors()" is
+# the wording in both (#145, clarity-29): "handoff" names the contentvalidR
+# object in this package.
+nomo_efa_present_facts <- function(x) {
+  source_text <- switch(
+    as.character(x$factor_source),
+    nomo_factors = "from nomo_factors()",
+    researcher_with_nomo_factors_context = "researcher's choice after nomo_factors()",
+    "researcher specified"
+  )
   nomo_present_facts(c(
     nomo_factors_cases_text(x$n_cases, x$min_pairwise_n),
     sprintf("Items: %d", x$n_items),
     sprintf("Factors: %d (%s)", x$n_factors, source_text)
   ))
   nomo_present_facts(c(
-    sprintf("Correlation: %s", x$correlation),
+    sprintf("Correlation: %s", nomo_factors_correlation_label(x$correlation)),
     sprintf("Extraction: %s", x$fm),
-    sprintf("Rotation: %s", x$rotation)
+    sprintf("Rotation: %s", nomo_efa_rotation_text(x))
   ))
-  nomo_present_facts(c(
-    paste0("Off-diagonal RMSR: ", nomo_present_number(x$rmsr)),
-    paste0("Flags: ", nomo_present_flag_counts(x$item_summary$attention))
-  ))
-  nomo_present_text("No items were automatically deleted or refit.")
-  invisible(x)
 }
+
+
+# The rotation as fitted (#145, efa-7): a one-factor solution is not rotated,
+# whatever `rotation` was requested.
+nomo_efa_rotation_text <- function(x) {
+  if (isTRUE(x$n_factors < 2L)) return("not applicable (one factor)")
+  if (identical(x$rotation, "none")) return("none (unrotated)")
+  sprintf("%s (%s)", x$rotation, if (isTRUE(x$oblique)) "oblique" else "orthogonal")
+}
+
+
+# Problems with the solution itself, from the decision log: identification,
+# Heywood cases, convergence, and engine messages (#145, efa-1 and efa-3). A
+# summary shows a Heywood case with its item instead.
+nomo_efa_solution_checks <- function(log,
+                                     metrics = c("identification", "heywood", "convergence",
+                                                 "engine_warnings")) {
+  if (!nomo_efa_has_log(log)) {
+    return(data.frame(severity = character(), note = character()))
+  }
+  rows <- log[log$metric %in% metrics, , drop = FALSE]
+  rows <- rows[order(match(rows$severity, c("concern", "review", "info"))), , drop = FALSE]
+  data.frame(severity = rows$severity, note = rows$observation, stringsAsFactors = FALSE)
+}
+
+nomo_efa_has_log <- function(log) {
+  is.data.frame(log) && all(c("object", "metric", "severity", "observation") %in% names(log))
+}
+
+# The items with an improper communality, from the decision log.
+nomo_efa_heywood_items <- function(log) {
+  if (!nomo_efa_has_log(log)) return(character())
+  log$object[log$metric == "heywood"]
+}
+
+nomo_efa_present_checks <- function(log) {
+  checks <- nomo_efa_solution_checks(log)
+  if (!nrow(checks)) return(invisible(NULL))
+  nomo_present_section("Solution checks")
+  nomo_present_notes(checks)
+  cat("\n")
+}
+
 
 #' Summarize a guided exploratory factor analysis
 #'
 #' @param object A `nomo_efa` object.
 #' @param ... Unused.
 #'
-#' @return An object of class `summary_nomo_efa`.
+#' @return An object of class `summary_nomo_efa`. Printing it shows the
+#'   settings, the supporting adequacy evidence, each item's loadings and
+#'   communality with the reason for every flag, the factor correlations, any
+#'   problem with the solution, and the largest residual correlations.
 #' @export
 summary.nomo_efa <- function(object, ...) {
   out <- list(
@@ -56,7 +115,8 @@ summary.nomo_efa <- function(object, ...) {
     kmo = object$kmo,
     bartlett = object$bartlett,
     sample_adequacy = object$sample_adequacy,
-    decision_log = object$decision_log
+    decision_log = object$decision_log,
+    guidance = object$guidance
   )
   class(out) <- c("summary_nomo_efa", "list")
   out
@@ -64,62 +124,80 @@ summary.nomo_efa <- function(object, ...) {
 
 #' @export
 print.summary_nomo_efa <- function(x, ...) {
-  source_text <- if (identical(x$factor_source, "nomo_factors")) {
-    "from nomo_factors()"
-  } else {
-    "researcher specified"
-  }
-
   nomo_present_header("nomo_efa", "Exploratory factor analysis", summary = TRUE)
+  nomo_efa_present_facts(x)
   nomo_present_facts(c(
-    nomo_factors_cases_text(x$n_cases, x$min_pairwise_n),
-    sprintf("Items: %d", x$n_items),
-    sprintf("Factors: %d (%s)", x$n_factors, source_text)
-  ))
-  nomo_present_facts(c(
-    sprintf("Correlation: %s", x$correlation),
-    sprintf("Extraction: %s", x$fm),
-    sprintf("Rotation: %s", x$rotation)
-  ))
-  bartlett <- if (isTRUE(x$bartlett$available)) {
-    sprintf("Bartlett chi-square(%s) = %s, %s", format(x$bartlett$df, trim = TRUE),
-            nomo_present_number(x$bartlett$chisq, 2L),
-            nomo_present_p_clause(x$bartlett$p_value))
-  } else {
-    ""
-  }
-  nomo_present_facts(c(
-    paste0("Supporting adequacy: ", if (isTRUE(x$kmo$available)) {
-      paste("KMO", nomo_present_number(x$kmo$overall))
+    paste0("KMO: ", nomo_factors_kmo_text(x$kmo)),
+    if (isTRUE(x$bartlett$available)) {
+      paste0(
+        "Bartlett's test: ",
+        nomo_present_chisq(x$bartlett$chisq, x$bartlett$df, x$bartlett$p_value),
+        nomo_factors_bartlett_qualifier(x$correlation)
+      )
     } else {
-      "KMO unavailable"
-    }),
-    bartlett
+      ""
+    }
   ))
 
+  # A value near its teaching reference shows the decimals that tell them
+  # apart (guide point 9); loadings are compared in absolute value.
+  load_ref <- nomo_null_default(x$guidance$efa_loading_reference, 0.40)
+  cross_ref <- nomo_null_default(x$guidance$efa_crossloading_reference, 0.30)
+  communality_ref <- nomo_null_default(x$guidance$efa_communality_reference, 0.40)
+  loading <- function(ref) {
+    function(v) nomo_present_stat(v, "loading", reference = sign(v) * ref)
+  }
   items <- x$item_summary
-  items$flag <- nomo_present_flag(items$attention)
+  # An item with an improper communality is shown as a concern beside its
+  # communality, which takes the decimals that tell it apart from 1 (#145,
+  # efa-1). The stored flags are unchanged.
+  heywood <- items$item %in% nomo_efa_heywood_items(x$decision_log)
+  status <- ifelse(heywood, "concern", items$attention)
+  text <- items$explanation
+  text[heywood] <- trimws(paste(
+    vapply(items$communality[heywood], function(h2) nomo_efa_heywood_text(NULL, h2),
+           character(1)),
+    ifelse(items$attention[heywood] == "KEEP", "", items$explanation[heywood])
+  ))
+  items$flag <- nomo_present_status(status)
   nomo_present_section("Item structure")
   nomo_present_table(
     items,
     c("Item" = "item", "Factor" = "primary_factor", "Loading" = "primary_loading",
       "Next factor" = "secondary_factor", "Loading" = "secondary_loading",
       "Communality" = "communality", "Flag" = "flag"),
+    formats = list(
+      primary_loading = loading(load_ref),
+      secondary_loading = loading(cross_ref),
+      communality = function(v) {
+        nomo_present_stat(v, "proportion", reference = ifelse(heywood, 1, communality_ref))
+      }
+    ),
     more = "nomo_table(x, \"items\")"
   )
-
-  flagged <- items[nzchar(items$flag), , drop = FALSE]
-  if (nrow(flagged)) {
-    nomo_present_section("Flagged items")
-    nomo_present_bullets(sprintf("%s (%s): %s", flagged$item, flagged$flag,
-                                 flagged$explanation))
-  } else {
-    nomo_present_text("No item was flagged for review.", indent = 2L)
+  if (!any(nzchar(items$flag))) {
+    nomo_present_text("No item reached a teaching reference.", indent = 2L)
   }
+  nomo_present_flagged(unit = items$item, status = status, text = text)
 
   nomo_present_section("Factor correlations")
-  if (x$n_factors > 1L) {
-    fc <- x$factor_correlations
+  fc <- x$factor_correlations
+  if (isTRUE(x$n_factors < 2L)) {
+    nomo_present_text("Not applicable to a one-factor solution.", indent = 2L)
+  } else if (!isTRUE(x$oblique)) {
+    # An orthogonal or unrotated solution fixes them at 0; a table of zeros
+    # would read as estimates (#145, efa-7).
+    nomo_present_text(
+      "Fixed at 0: ",
+      if (identical(x$rotation, "none")) {
+        "an unrotated solution"
+      } else {
+        sprintf("the orthogonal %s rotation", x$rotation)
+      },
+      " does not estimate them.",
+      indent = 2L
+    )
+  } else {
     pairs <- which(lower.tri(fc), arr.ind = TRUE)
     nomo_present_table(
       data.frame(
@@ -129,24 +207,41 @@ print.summary_nomo_efa <- function(x, ...) {
         stringsAsFactors = FALSE
       ),
       c("Factor 1" = "factor1", "Factor 2" = "factor2", "r" = "r"),
+      formats = list(r = function(v) nomo_present_stat(v, "r")),
       more = "nomo_table(x, \"factor_correlations\")"
     )
-  } else {
-    nomo_present_text("Not applicable to a one-factor solution.", indent = 2L)
+  }
+
+  checks <- nomo_efa_solution_checks(
+    x$decision_log, metrics = c("identification", "convergence", "engine_warnings")
+  )
+  if (nrow(checks)) {
+    nomo_present_section("Solution checks")
+    nomo_present_notes(checks)
   }
 
   nomo_present_section("Largest residual correlations")
-  nomo_present_text("Off-diagonal RMSR: ", nomo_present_number(x$rmsr), indent = 2L)
+  nomo_present_text("RMSR: ", nomo_present_stat(x$rmsr, "fit"), indent = 2L)
   nomo_present_table(
     x$largest_residuals,
     c("Item 1" = "item1", "Item 2" = "item2", "Residual" = "residual"),
+    formats = list(residual = function(v) nomo_present_stat(v, "r", digits = 3L)),
     more = "nomo_table(x, \"residuals\")"
   )
+
+  nomo_present_key(c(
+    KMO = "Kaiser-Meyer-Olkin measure of sampling adequacy.",
+    RMSR = "Root mean square of the off-diagonal residual correlations."
+  ), title = "Abbreviations")
 
   cat("\n")
   nomo_present_text(
     "Numerical references trigger inspection, not automatic deletion or ",
     "hidden refitting."
+  )
+  nomo_present_pointer(
+    c("nomo_table(x, \"pattern\")", "nomo_table(x, \"decision_log\")"),
+    c("the full pattern matrix", "every recorded decision")
   )
   invisible(x)
 }
@@ -187,7 +282,7 @@ plot.nomo_efa <- function(x,
         ggplot2::geom_tile() +
         ggplot2::geom_text(
           ggplot2::aes(
-            label = sprintf("%.2f", loading),
+            label = nomo_present_stat(loading, "loading"),
             colour = label_contrast
           ),
           size = 3
@@ -202,11 +297,7 @@ plot.nomo_efa <- function(x,
         ) +
         nomo_plot_labs(
           title = "EFA pattern matrix",
-          subtitle = if (x$oblique) {
-            "Oblique solution: pattern coefficients are primary for factor interpretation"
-          } else {
-            "Orthogonal solution: factor axes are constrained to be uncorrelated"
-          },
+          subtitle = nomo_efa_solution_subtitle(x),
           x = NULL,
           y = NULL,
           fill = "Loading",
@@ -215,72 +306,74 @@ plot.nomo_efa <- function(x,
             "Reference values trigger review; they do not authorize automatic deletion."
           )
         ) +
-        ggplot2::theme_minimal()
+        ggplot2::theme_minimal(base_size = 11)
     )
   }
 
   if (type == "items") {
-    primary <- x$item_summary[, c(
-      "item", "primary_loading", "attention"
-    )]
+    primary <- x$item_summary[, c("item", "primary_loading", "attention")]
     names(primary)[names(primary) == "primary_loading"] <- "loading"
     primary$loading_type <- "Primary"
 
-    secondary <- x$item_summary[, c(
-      "item", "secondary_loading", "attention"
-    )]
+    secondary <- x$item_summary[, c("item", "secondary_loading", "attention")]
     names(secondary)[names(secondary) == "secondary_loading"] <- "loading"
     secondary$loading_type <- "Secondary"
 
     dat <- dplyr::bind_rows(primary, secondary)
     dat$loading <- abs(dat$loading)
+    dat <- dat[is.finite(dat$loading), , drop = FALSE]
     dat$item <- factor(dat$item, levels = rev(x$items))
-    dat$loading_type <- factor(
-      dat$loading_type,
-      levels = c("Primary", "Secondary")
-    )
+    dat$loading_type <- factor(dat$loading_type, levels = c("Primary", "Secondary"))
+    # The item's flag, by shape and color together (guide point 27); an
+    # improper communality is a concern, as the summary shows it.
+    heywood <- dat$item %in% nomo_efa_heywood_items(x$decision_log)
+    dat$status <- nomo_plot_status(ifelse(heywood, "concern", dat$attention))
 
+    load_ref <- nomo_null_default(x$guidance$efa_loading_reference, 0.40)
+    cross_ref <- nomo_null_default(x$guidance$efa_crossloading_reference, 0.30)
     references <- data.frame(
-      reference = factor(
-        c("Primary review", "Cross-loading review"),
-        levels = c("Primary review", "Cross-loading review")
-      ),
-      x = c(
-        x$guidance$efa_loading_reference,
-        x$guidance$efa_crossloading_reference
-      )
+      loading_type = factor(c("Primary", "Secondary"), levels = c("Primary", "Secondary")),
+      x = c(load_ref, cross_ref)
     )
+    references <- references[references$loading_type %in% dat$loading_type, , drop = FALSE]
 
     return(
       ggplot2::ggplot(
         dat,
-        ggplot2::aes(x = loading, y = item, shape = loading_type)
+        ggplot2::aes(x = loading, y = item, shape = status, colour = status)
       ) +
         ggplot2::geom_vline(
           data = references,
-          ggplot2::aes(xintercept = x, linetype = reference),
+          ggplot2::aes(xintercept = x),
+          linetype = "dashed",
           inherit.aes = FALSE
         ) +
-        ggplot2::geom_point(size = 2.8, na.rm = TRUE) +
-        ggplot2::scale_shape_manual(
-          values = c(Primary = 16, Secondary = 1)
+        ggplot2::geom_point(size = 2.8) +
+        ggplot2::facet_wrap(
+          stats::as.formula("~ loading_type"),
+          nrow = 1,
+          labeller = ggplot2::as_labeller(c(Primary = "Primary loading",
+                                            Secondary = "Secondary loading"))
         ) +
+        nomo_plot_status_scales(dat$status, name = "Flag") +
         nomo_plot_labs(
           title = "Primary and secondary EFA loadings",
-          subtitle = paste(
-            "Filled circles are primary loadings; open circles are secondary loadings.",
-            "Both teaching references are shown."
+          subtitle = sprintf(
+            paste(
+              "Absolute loadings. Dashed lines mark the %s loading and %s",
+              "cross-loading teaching references."
+            ),
+            nomo_present_stat(load_ref, "loading"),
+            nomo_present_stat(cross_ref, "loading")
           ),
           x = "Absolute loading",
           y = NULL,
-          shape = "Loading",
-          linetype = "Teaching reference",
           caption = paste(
-            "Item attention (KEEP / REVIEW / STRONG REVIEW) is reported in the item table.",
-            "No threshold automatically deletes an item."
+            "Each item's flag (review or concern) is explained in summary(x).",
+            "No reference value deletes an item."
           )
         ) +
-        ggplot2::theme_minimal()
+        ggplot2::theme_minimal(base_size = 11)
     )
   }
 
@@ -308,13 +401,14 @@ plot.nomo_efa <- function(x,
         ggplot2::geom_tile() +
         ggplot2::scale_fill_gradient2(
           midpoint = 0,
-          limits = c(-max_abs, max_abs)
+          limits = c(-max_abs, max_abs),
+          labels = nomo_plot_bounded_labels
         ) +
         nomo_plot_labs(
           title = "EFA residual-correlation matrix",
           subtitle = sprintf(
-            "Unique off-diagonal pairs only | RMSR = %.3f",
-            x$rmsr
+            "Unique off-diagonal pairs | Root mean square residual (RMSR) = %s",
+            nomo_present_stat(x$rmsr, "fit")
           ),
           x = NULL,
           y = NULL,
@@ -324,7 +418,7 @@ plot.nomo_efa <- function(x,
             "Inspect localized strain; no hidden refitting is performed."
           )
         ) +
-        ggplot2::theme_minimal() +
+        ggplot2::theme_minimal(base_size = 11) +
         ggplot2::theme(
           axis.text.x = ggplot2::element_text(angle = 45, hjust = 1)
         )
@@ -348,7 +442,7 @@ plot.nomo_efa <- function(x,
           title = "EFA factor correlations",
           subtitle = "Interfactor correlations require at least two factors"
         ) +
-        ggplot2::theme_void()
+        ggplot2::theme_void(base_size = 11)
     )
   }
 
@@ -370,7 +464,7 @@ plot.nomo_efa <- function(x,
     ggplot2::geom_tile() +
     ggplot2::geom_text(
       ggplot2::aes(
-        label = sprintf("%.2f", correlation),
+        label = nomo_present_stat(correlation, "r"),
         colour = label_contrast
       ),
       size = 3
@@ -381,12 +475,15 @@ plot.nomo_efa <- function(x,
     ) +
     ggplot2::scale_fill_gradient2(
       midpoint = 0,
-      limits = c(-1, 1)
+      limits = c(-1, 1),
+      labels = nomo_plot_bounded_labels
     ) +
     nomo_plot_labs(
       title = "EFA factor correlations",
-      subtitle = if (x$oblique) {
+      subtitle = if (isTRUE(x$oblique)) {
         "Unique interfactor correlations from the oblique solution"
+      } else if (identical(x$rotation, "none")) {
+        "Unrotated solution: the factors are uncorrelated by construction"
       } else {
         "Orthogonal rotation constrains interfactor correlations to zero"
       },
@@ -395,7 +492,21 @@ plot.nomo_efa <- function(x,
       fill = "Correlation",
       caption = "Diagonal 1.00 values and duplicate upper-triangle cells are omitted."
     ) +
-    ggplot2::theme_minimal()
+    ggplot2::theme_minimal(base_size = 11)
+}
+
+
+# The pattern plot's subtitle names the solution that was fitted (#145, efa-7).
+nomo_efa_solution_subtitle <- function(x) {
+  if (isTRUE(x$n_factors < 2L)) {
+    "One-factor solution: the loadings are not rotated"
+  } else if (isTRUE(x$oblique)) {
+    "Oblique solution: pattern coefficients are primary for factor interpretation"
+  } else if (identical(x$rotation, "none")) {
+    "Unrotated solution: the loadings are not rotated toward simple structure"
+  } else {
+    "Orthogonal solution: factor axes are constrained to be uncorrelated"
+  }
 }
 
 utils::globalVariables(c(
@@ -405,6 +516,7 @@ utils::globalVariables(c(
   "attention",
   "loading_type",
   "reference",
+  "status",
   "x",
   "item1",
   "item2",

@@ -154,7 +154,7 @@ test_that("presentation methods return stable user-facing objects", {
   expect_s3_class(plot(out, type = "residuals"), "ggplot")
   expect_s3_class(plot(out, type = "factor_correlations"), "ggplot")
 
-  expect_output(print(out), "No items were automatically deleted")
+  expect_output(print(out), "No item was\\s+deleted and no model was refit automatically")
   expect_output(print(summary(out)), "Item structure")
 })
 
@@ -1058,10 +1058,15 @@ test_that("closeout B: EFA presentation covers researcher, review, unavailable a
   s <- summary(efa)
   summary_text <- paste(capture.output(print(s)), collapse = "\n")
   expect_match(summary_text, "researcher specified", fixed = TRUE)
-  expect_match(summary_text, "KMO unavailable", fixed = TRUE)
-  expect_match(summary_text, "p = .123", fixed = TRUE)
-  expect_match(summary_text, "Flagged items", fixed = TRUE)
+  expect_match(summary_text, "KMO: not computed", fixed = TRUE)
+  expect_match(summary_text, "chi-square(1) = 2.00, p = .123", fixed = TRUE)
+  expect_match(summary_text, "\nFlagged\n  - i2 (Review): Synthetic review.", fixed = TRUE)
   expect_match(summary_text, "Factor correlations", fixed = TRUE)
+  # An orthogonal solution's factor correlations are fixed, not estimated
+  # (#145, efa-7).
+  expect_match(summary_text, "Fixed at 0: the orthogonal varimax rotation does not",
+               fixed = TRUE)
+  expect_false(grepl("0.000", summary_text, fixed = TRUE))
 
   expect_s3_class(plot(efa, type = "pattern"), "ggplot")
   expect_s3_class(plot(efa, type = "residuals"), "ggplot")
@@ -1133,8 +1138,11 @@ test_that("closeout C: EFA presentation covers nomo_factors handoff and oblique 
     class = c("nomo_efa", "list")
   )
 
+  # One wording in print and summary; "handoff" names the contentvalidR object
+  # (#145, clarity-29).
   printed <- paste(capture.output(print(efa)), collapse = "\n")
-  expect_match(printed, "nomo_factors() handoff", fixed = TRUE)
+  expect_match(printed, "Factors: 2 (from nomo_factors())", fixed = TRUE)
+  expect_false(grepl("handoff", printed, fixed = TRUE))
 
   summary_printed <- paste(
     capture.output(print(summary(efa))),
@@ -1149,4 +1157,335 @@ test_that("closeout C: EFA presentation covers nomo_factors handoff and oblique 
     "Oblique solution",
     fixed = TRUE
   )
+})
+
+# Pre-1.0 audit findings (#145) -------------------------------------------------
+
+# Six items and three factors at n = 60: the solution gives a1 a communality
+# just above 1, which psych only warns about.
+make_efa_heywood_data <- function() {
+  set.seed(1)
+  n <- 60
+  f1 <- rnorm(n)
+  f2 <- rnorm(n)
+  data.frame(
+    a1 = f1 + rnorm(n, sd = .5), a2 = f1 + rnorm(n, sd = .8), a3 = f1 + rnorm(n),
+    b1 = f2 + rnorm(n, sd = .5), b2 = f2 + rnorm(n, sd = .8), b3 = f2 + rnorm(n)
+  )
+}
+
+
+test_that("a Heywood case and a non-converged extraction are recorded, not swallowed (#145, efa-1)", {
+  dat <- make_efa_heywood_data()
+  out <- nomo_efa(dat, factors = 3)
+  expect_gte(max(out$communalities), 1)
+  # a1 is above 1; b1 sits at the .005 floor psych sets on a unique variance.
+  expect_identical(out$heywood, c("a1", "b1"))
+  row <- out$decision_log[out$decision_log$metric == "heywood", ]
+  expect_identical(row$object, c("a1", "b1"))
+  expect_identical(row$severity, c("concern", "concern"))
+  expect_match(row$observation[[1L]],
+               "The communality of a1 is 1.0001, so its unique variance is below 0", fixed = TRUE)
+  expect_match(row$observation[[2L]], "The communality of b1 is .996, so its unique variance is 0 or",
+               fixed = TRUE)
+  p <- plot(out, type = "items")
+  expect_identical(unique(as.character(p$data$status[p$data$item == "a1"])), "concern")
+  expect_match(out$engine_warnings, "ultra-Heywood", all = FALSE)
+  # psych's own warning is kept on the object but not repeated in the log.
+  expect_false(any(out$decision_log$metric == "engine_warnings"))
+
+  printed <- capture.output(print(out))
+  expect_true("Solution checks" %in% printed)
+  expect_match(printed, "^  - Concern: The communality of a1 is 1.0001", all = FALSE)
+  # The summary shows it with its item, as a concern beside its communality.
+  summarized <- capture.output(print(summary(out)))
+  expect_match(summarized, "^  a1 .* 1\\.0001  Concern$", all = FALSE)
+  expect_match(summarized, "^  - a1 \\(Concern\\): The communality is 1.0001, so its unique", all = FALSE)
+  expect_true("Solution checks" %in% summarized)
+  expect_false(any(grepl("communality of a1", summarized, fixed = TRUE)))
+
+  # Principal axis factoring stops at its iteration limit here.
+  pa <- nomo_efa(dat, factors = 3, fm = "pa")
+  row <- pa$decision_log[pa$decision_log$metric == "convergence", ]
+  expect_identical(row$severity, "concern")
+  expect_match(row$observation, "The pa extraction did not converge", fixed = TRUE)
+  expect_match(row$observation, "maximum iteration exceeded", fixed = TRUE)
+
+  # A communality of exactly 1 is a Heywood case, above 1 an ultra-Heywood case.
+  heywood_text <- nomologR:::nomo_efa_heywood_text
+  expect_identical(
+    heywood_text("x", 0.995),
+    paste("The communality of x is .995, so its unique variance is 0 or at the .005 floor that",
+          "psych::fa() sets: an improper (Heywood) solution.")
+  )
+  expect_match(heywood_text(NULL, 1.004), "^The communality is 1.004, so its unique variance is below 0")
+  expect_identical(
+    nomologR:::nomo_efa_engine_messages(c("Loading required namespace: GPArotation\n",
+                                          " maximum  iteration exceeded\n", "",
+                                          "maximum iteration exceeded")),
+    "maximum iteration exceeded"
+  )
+
+  # Any other engine message is recorded for review.
+  log <- nomologR:::nomo_efa_log(
+    k = 2L, factor_source = "researcher", factor_context = NULL, rotation = "promax",
+    fm = "minres", extraction_note = "", correlation_method = "pearson",
+    item_types = tibble::tibble(item = "a", source = "inferred_from_storage"),
+    missing = "complete", min_pairwise_n = 300L, smoothed = FALSE, original_min_eigen = 0.5,
+    item_summary = tibble::tibble(item = character(), attention = character()),
+    rmsr = 0.02, kmo = list(available = FALSE), n_cases = 300L, n_items = 6L,
+    guidance = nomo_defaults(), engine_messages = "A message from the engine"
+  )
+  expect_identical(log$severity[log$metric == "engine_warnings"], "review")
+  expect_identical(log$observation[log$metric == "engine_warnings"],
+                   "psych::fa() reported: \"A message from the engine\".")
+  # promax is oblique: the rotation needs no justification.
+  expect_identical(log$severity[log$metric == "extraction_rotation"], "info")
+})
+
+
+test_that("a parallel-analysis count of 0 does not block a researcher's factor count (#145, efa-2)", {
+  set.seed(3301)
+  dat <- as.data.frame(matrix(rnorm(160 * 4), ncol = 4))
+  names(dat) <- paste0("i", 1:4)
+  dat$i2 <- dat$i1 + rnorm(160)
+  zero <- list(
+    parallel = list(n_factors = 0L),
+    items = names(dat),
+    correlation = "pearson",
+    missing = "pairwise",
+    plausible_factors = 0L,
+    recommendation = "No factor."
+  )
+  class(zero) <- c("nomo_factors", "list")
+
+  err <- expect_error(nomo_efa(dat, factors = zero), "does not contain a positive")
+  expect_match(conditionMessage(err), "parallel analysis suggested 0 factors", fixed = TRUE)
+  expect_match(conditionMessage(err), "`factor_count = 1`", fixed = TRUE)
+
+  out <- nomo_efa(dat, factors = zero, factor_count = 1)
+  expect_identical(out$n_factors, 1L)
+  expect_identical(out$factor_source, "researcher_with_nomo_factors_context")
+  expect_identical(out$factor_context$primary_parallel, 0L)
+  row <- out$decision_log[out$decision_log$metric == "retention_ambiguity", ]
+  expect_identical(row$severity, "review")
+  expect_identical(
+    row$observation,
+    paste("The researcher selected 1 factor after reviewing the nomo_factors() evidence.",
+          "Primary parallel analysis suggested 0. Parallel analysis found no factor above",
+          "the null reference.")
+  )
+
+  # A malformed suggestion is still refused.
+  zero$parallel$n_factors <- NA_integer_
+  expect_error(nomo_efa(dat, factors = zero, factor_count = 1), "does not contain a positive")
+
+  # The guided workflow's example is a count nomo_efa() can fit.
+  requests <- nomologR:::nomo_run_factor_requests(list(
+    scales = list(A = names(dat)),
+    results = list(factors = list(A = list(parallel = list(n_factors = 0L))))
+  ))
+  expect_identical(requests$example, "decisions = list(factor_count = 1L)")
+})
+
+
+test_that("models the correlations cannot identify are flagged (#145, efa-3)", {
+  set.seed(3302)
+  g <- rnorm(300)
+  dat <- as.data.frame(replicate(4, g + rnorm(300)))
+
+  three <- nomo_efa(dat, factors = 3)
+  expect_identical(three$dof, -3)
+  row <- three$decision_log[three$decision_log$metric == "identification", ]
+  expect_identical(row$severity, "concern")
+  expect_match(row$observation, "^3 factors on 4 items leave -3 degrees of freedom: more parameters")
+  expect_match(row$recommendation, "Fit fewer factors", fixed = TRUE)
+  expect_match(paste(capture.output(print(three)), collapse = " "),
+               "Concern: 3 factors on 4 items leave -3 degrees of freedom", fixed = TRUE)
+
+  two <- nomo_efa(dat, factors = 2)
+  expect_identical(two$decision_log$value[two$decision_log$metric == "identification"], -1)
+
+  # One factor on three items is just identified: review, not concern.
+  one <- nomo_efa(dat[, 1:3], factors = 1)
+  row <- one$decision_log[one$decision_log$metric == "identification", ]
+  expect_identical(row$severity, "review")
+  expect_match(row$observation, "^1 factor on 3 items leaves 0 degrees of freedom: the model reproduces")
+
+  four <- nomo_efa(dat, factors = 1)
+  expect_false(any(four$decision_log$metric == "identification"))
+})
+
+
+test_that("rotation is checked, and the log and methods describe the solution fitted (#145, efa-4)", {
+  dat <- make_efa_factor_count_data(seed = 8301L)
+
+  expect_error(nomo_efa(dat, factors = 2, rotation = "oblimn"),
+               "`rotation` must be one of \"oblimin\",", fixed = TRUE)
+  expect_error(nomo_efa(dat, factors = 1, rotation = "oblimn"), 'not "oblimn"', fixed = TRUE)
+  expect_error(nomo_efa(dat, factors = 2, rotation = "targetQ"), "needs a target matrix",
+               fixed = TRUE)
+
+  rotation_row <- function(fit) {
+    fit$decision_log[fit$decision_log$metric == "extraction_rotation", ]
+  }
+
+  one <- nomo_efa(dat, factors = 1)
+  expect_identical(rotation_row(one)$severity, "info")
+  expect_match(rotation_row(one)$observation, "a one-factor solution is not rotated", fixed = TRUE)
+  expect_identical(rotation_row(one)$recommendation,
+                   "Interpret the loadings directly; one factor has no factor correlations.")
+
+  none <- nomo_efa(dat, factors = 2, rotation = "none")
+  expect_false(none$oblique)
+  expect_identical(rotation_row(none)$severity, "review")
+  expect_match(rotation_row(none)$recommendation, "An unrotated solution was researcher-selected")
+
+  geomin <- nomo_efa(dat, factors = 2, rotation = "geominT")
+  expect_identical(rotation_row(geomin)$severity, "review")
+  expect_match(rotation_row(geomin)$observation, "rotation = geominT (orthogonal)", fixed = TRUE)
+
+  promax <- nomo_efa(dat, factors = 2, rotation = "promax")
+  expect_true(promax$oblique)
+  expect_identical(rotation_row(promax)$severity, "info")
+
+  # The methods registry names oblimin and varimax, so only they are credited.
+  used <- function(fit) nomo_methods_used(fit)
+  expect_false(any(c("oblique_rotation", "orthogonal_rotation") %in% used(promax)))
+  expect_false(any(c("oblique_rotation", "orthogonal_rotation") %in% used(none)))
+  expect_false(any(c("oblique_rotation", "orthogonal_rotation") %in% used(geomin)))
+  expect_true("oblique_rotation" %in% used(nomo_efa(dat, factors = 2)))
+
+  # The console and plots say what was fitted (#145, efa-7).
+  expect_output(print(one), "Rotation: not applicable (one factor)", fixed = TRUE)
+  expect_output(print(none), "Rotation: none (unrotated)", fixed = TRUE)
+  expect_output(print(summary(none)), "Fixed at 0: an unrotated solution does not estimate them.",
+                fixed = TRUE)
+  expect_match(plot_text(plot(one)$labels$subtitle), "One-factor solution", fixed = TRUE)
+  expect_match(plot_text(plot(none)$labels$subtitle), "Unrotated solution", fixed = TRUE)
+  expect_match(plot_text(plot(none, type = "factor_correlations")$labels$subtitle),
+               "uncorrelated by construction", fixed = TRUE)
+  expect_match(plot_text(plot(geomin)$labels$subtitle), "Orthogonal solution", fixed = TRUE)
+})
+
+
+test_that("flag explanations are sentences that tell a value from its reference (#145, efa-5)", {
+  pattern <- matrix(
+    c(.72, .10,
+      -.3996, .05,
+      .45, -.3004),
+    nrow = 3, byrow = TRUE,
+    dimnames = list(c("good", "near", "cross"), c("F1", "F2"))
+  )
+  s <- nomologR:::nomo_efa_item_summary(
+    pattern = pattern,
+    communality = c(.60, .3997, .50),
+    uniqueness = c(.40, .6003, .50),
+    complexity = c(1, 1, 2),
+    guidance = nomo_defaults()
+  )
+  expect_identical(
+    s$explanation[s$item == "near"],
+    paste("The primary loading, 0.3996 in absolute value, is below the 0.40 teaching",
+          "reference. The communality, .3997, is below the .40 teaching reference.")
+  )
+  expect_identical(
+    s$explanation[s$item == "cross"],
+    paste("The secondary loading, 0.3004 in absolute value, is at or above the 0.30",
+          "cross-loading reference.")
+  )
+  expect_match(s$explanation[s$item == "good"], "^No loading or communality reaches")
+  expect_false(any(grepl("|", s$explanation, fixed = TRUE)))
+  expect_false(any(grepl("meets/exceeds", s$explanation, fixed = TRUE)))
+})
+
+
+test_that("a partial guidance list is completed from the defaults (#145, efa-6)", {
+  dat <- make_efa_factor_count_data(seed = 8302L)
+  expect_s3_class(nomo_efa(dat, factors = 2, guidance = list()), "nomo_efa")
+  stricter <- nomo_efa(dat, factors = 2, guidance = list(efa_loading_reference = 0.95))
+  expect_identical(stricter$guidance$efa_loading_reference, 0.95)
+  expect_identical(stricter$guidance$efa_communality_reference, 0.40)
+  expect_true(all(stricter$item_summary$weak_primary))
+
+  types <- c("ordinal")
+  names(types) <- NA_character_
+  expect_error(nomo_efa(dat, factors = 2, types = types), "named character vector")
+})
+
+
+test_that("the log says where the factor count came from without milestone labels (#145, efa-8)", {
+  dat <- make_efa_factor_count_data(seed = 8303L)
+  fake <- list(
+    parallel = list(n_factors = 2L),
+    items = names(dat),
+    correlation = "pearson",
+    missing = "pairwise",
+    plausible_factors = 1:3,
+    modeling_types = tibble::tibble(
+      item = names(dat), screen_type = "numeric_continuous",
+      model_type = "continuous", source = "inferred_from_storage"
+    )
+  )
+  class(fake) <- c("nomo_factors", "list")
+  for (out in list(nomo_efa(dat, factors = fake), nomo_efa(dat, factors = fake, factor_count = 3))) {
+    text <- unlist(out$decision_log[c("observation", "reference", "recommendation")])
+    expect_false(any(grepl("\\bM2\\b", text)))
+    expect_false(any(grepl("handoff", text, fixed = TRUE)))
+  }
+  adopted <- nomo_efa(dat, factors = fake)$decision_log
+  expect_identical(
+    adopted$observation[adopted$metric == "retention_ambiguity"],
+    paste("The parallel-analysis count from nomo_factors() selected 2 factors for this EFA;",
+          "the broader plausible set includes: 1, 2, 3.")
+  )
+})
+
+
+test_that("EFA output follows the shared style at 80 and 40 columns (#144)", {
+  dat <- make_efa_factor_count_data(seed = 8304L)
+  dat$a3 <- dat$a3 + 0.9 * dat$b1
+  out <- nomo_efa(dat, factors = 2)
+
+  for (width in c(80L, 40L)) {
+    local_reproducible_output(width = width)
+    printed <- capture.output(print(out))
+    summarized <- capture.output(print(summary(out)))
+    expect_identical(printed[[1L]], "<nomo_efa> Exploratory factor analysis")
+    expect_true(all(nchar(c(printed, summarized)) <= width))
+    expect_match(gsub("\\s+", " ", paste(printed, collapse = " ")),
+                 "See summary(x) for the loadings and the reason for each flag.", fixed = TRUE)
+    expect_false(any(grepl("NA|-0\\.00|p-value|STRONG|KEEP", c(printed, summarized))))
+    expect_true("Flagged" %in% summarized)
+    expect_true("Abbreviations" %in% summarized)
+  }
+
+  local_reproducible_output(width = 40)
+  summarized <- capture.output(print(summary(out)))
+  # The status column is kept for width; dropped columns name nomo_table().
+  expect_match(summarized[grepl("^  Item +Factor", summarized)], "Flag$")
+  expect_match(paste(summarized, collapse = " "), "Not shown for width: .* See\\s+nomo_table\\(x,\\s+\"items\"\\)\\.")
+})
+
+
+test_that("the item plot shows each flag by shape and color with its references (#145, efa-7)", {
+  out <- nomo_efa(nomo_demo_continuous, factors = 2)
+  p <- plot(out, type = "items")
+  built <- ggplot2::ggplot_build(p)
+  expect_true(all(c("Primary", "Secondary") %in% p$data$loading_type))
+  expect_identical(levels(p$data$status), c("none", "review", "concern", "not computed"))
+  expect_identical(ggplot2::get_guide_data(p, "shape")$.label, c("No flag", "Review", "Concern"))
+  expect_false(grepl("KEEP|STRONG", plot_text(p$labels$caption)))
+  expect_match(plot_text(p$labels$subtitle), "0.40 loading and 0.30 cross-loading", fixed = TRUE)
+  expect_s3_class(built, "ggplot_built")
+
+  one <- plot(nomo_efa(nomo_demo_continuous[, 1:5], factors = 1), type = "items")
+  expect_false("Secondary" %in% as.character(one$data$loading_type))
+
+  phi <- ggplot2::ggplot_build(plot(out, type = "factor_correlations"))
+  expect_match(phi$data[[2L]]$label, "^-?\\.[0-9]{2}$")
+  pattern <- ggplot2::ggplot_build(plot(out, type = "pattern"))
+  expect_match(pattern$data[[2L]]$label, "^-?[0-9]\\.[0-9]{2}$")
+  expect_match(plot_text(plot(out, type = "residuals")$labels$subtitle),
+               "Root mean square residual (RMSR) = 0.0", fixed = TRUE)
 })
