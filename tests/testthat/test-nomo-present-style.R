@@ -350,8 +350,10 @@ test_that("the Flagged section, key, and pointer read as the guide shows (#144)"
 
 
 test_that("the code is ASCII, and the stated output rule allows accented names (#145)", {
+  # An installed package keeps no R sources, so the check runs from the source
+  # tree only.
   source_dir <- testthat::test_path("..", "..", "R")
-  skip_if_not(dir.exists(source_dir))
+  skip_if_not(file.exists(file.path(source_dir, "nomo_present.R")))
   # Help text may hold an accented author name; the code itself never does.
   for (file in list.files(source_dir, pattern = "[.]R$", full.names = TRUE)) {
     code <- grep("^\\s*#", readLines(file, warn = FALSE), value = TRUE, invert = TRUE)
