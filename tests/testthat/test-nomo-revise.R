@@ -519,6 +519,13 @@ test_that("a revision keeps the content-review handoff, its keying, and its reco
   expect_true(all(definitions$source == "content_review"))
   expect_match(definitions$observation[[1L]], "carried from content review", fixed = TRUE)
   expect_false(any(startsWith(log$id, "reinstated:") | startsWith(log$id, "removed:")))
+  # With nothing reinstated or removed, content review's own wording stands.
+  expect_identical(revise_log_row(child, "content_review")$consequence,
+                   revise_log_row(parent, "content_review")$consequence)
+  expect_match(revise_log_row(child, "content_review")$consequence,
+               "Held-back items are not analyzed, and nomologR", fixed = TRUE)
+  expect_identical(revise_log_row(child, "held_back:EF5")$reason,
+                   "Only items carried by content review are analyzed.")
 
   # The careless-responding screen recodes as content review declared.
   effort <- child$results$effort$effort_settings
@@ -570,8 +577,20 @@ test_that("a revision that departs from content review records each departure", 
                fixed = TRUE)
   expect_identical(revise_log_row(child, "held_back:EF5")$consequence,
                    "Revision 1 reinstated it, so it is analyzed in this run.")
+  expect_match(revise_log_row(child, "held_back:EF5")$reason,
+               "unless a researcher revision reinstates one.", fixed = TRUE)
   expect_identical(revise_log_row(child, "held_back:TF5")$consequence,
                    "It is not screened, modeled, or scored in this run.")
+  expect_identical(revise_log_row(child, "held_back:TF5")$reason,
+                   "Only items carried by content review are analyzed.")
+  # The content-review row no longer says held-back items are never analyzed.
+  content <- revise_log_row(child, "content_review")$consequence
+  expect_match(content,
+               "Held-back items are not analyzed unless a researcher revision reinstates them",
+               fixed = TRUE)
+  expect_match(content, "each such change has its own reinstated: or removed: row.",
+               fixed = TRUE)
+  expect_match(content, "nomologR neither reinstates nor drops an item", fixed = TRUE)
 
   removed <- revise_log_row(child, "removed:EF2")
   expect_identical(removed$scope, "EF")
@@ -595,6 +614,7 @@ test_that("a revision that departs from content review records each departure", 
   expect_identical(again$rationale, why)
   expect_match(again$observation, "revision 1 reinstated it", fixed = TRUE)
   expect_identical(revise_log_row(second, "removed:EF2")$rationale, why)
+  expect_identical(revise_log_row(second, "content_review")$consequence, content)
 })
 
 

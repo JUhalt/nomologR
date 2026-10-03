@@ -267,9 +267,26 @@ nomo_revise_content_review_log <- function(log, handoff, scales, lineage) {
   }
 
   held <- intersect(as.character(ev$item[!ev$carried]), analyzed)
+  dropped <- setdiff(unlist(handoff$scales, use.names = FALSE), analyzed)
+  # The content_review row, rebuilt from the handoff, would otherwise still say
+  # that held-back items are not analyzed.
+  if (length(held) || length(dropped)) {
+    log$consequence[log$id == "content_review"] <- paste(
+      "Held-back items are not analyzed unless a researcher revision reinstates",
+      "them, and carried items are not dropped unless one removes them; each such",
+      "change has its own reinstated: or removed: row. nomologR neither reinstates",
+      "nor drops an item on the strength of these data."
+    )
+  }
+
   for (item in held) {
     by <- latest(item, "items_added")
-    log$consequence[log$id == paste0("held_back:", item)] <- sprintf(
+    row <- log$id == paste0("held_back:", item)
+    log$reason[row] <- paste(
+      "Only items carried by content review are analyzed unless a researcher",
+      "revision reinstates one."
+    )
+    log$consequence[row] <- sprintf(
       "Revision %d reinstated it, so it is analyzed in this run.", by$revision
     )
     log <- nomo_run_workflow_log_add(
@@ -293,7 +310,7 @@ nomo_revise_content_review_log <- function(log, handoff, scales, lineage) {
     )
   }
 
-  for (item in setdiff(unlist(handoff$scales, use.names = FALSE), analyzed)) {
+  for (item in dropped) {
     by <- latest(item, "items_removed")
     log <- nomo_run_workflow_log_add(
       log,
