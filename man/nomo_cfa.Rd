@@ -24,8 +24,11 @@ or an object created by \code{\link[=nomo_model]{nomo_model()}}.}
 \item{data}{A data frame containing the model indicators.}
 
 \item{ordered}{Optional character vector naming binary/ordinal indicators.
-When supplied and \code{estimator = NULL}, \code{nomo_cfa()} explicitly requests
-\code{WLSMV}.}
+Model indicators stored as ordered factors are treated as declared whether
+or not they are named here, because \code{lavaan} fits them as categorical; the
+decision log flags them for review. Names that are not variables in the
+model are not used, and the decision log lists them. When any indicator is
+ordered and \code{estimator = NULL}, \code{nomo_cfa()} explicitly requests \code{WLSMV}.}
 
 \item{estimator}{Optional \code{lavaan} estimator. For continuous indicators,
 leaving this as \code{NULL} preserves \code{lavaan::cfa()}'s default. Robust ML
@@ -55,7 +58,11 @@ A \code{nomo_cfa} object. The fields to read are:
 \item \code{fit}: the unchanged \code{lavaan} fit, for anything else \code{lavaan} reports.
 \item \code{model}: the model syntax fitted.
 \item \code{converged}, \code{estimator}, \code{data_n}, \code{n_used}, and \code{sample_summary}.
-\item \code{fit_evidence}: global fit indices with their teaching references.
+\item \code{fit_evidence}: global fit indices with their teaching references;
+\code{variant} names the \code{lavaan} measure each value comes from. Robust or
+scaled values are used only when \code{lavaan} computed the scaled test
+statistic; otherwise every value is the standard one, and the decision
+log says so.
 \item \code{standardized_loadings}: one row per loading, with its interval, flag,
 and explanation.
 \item \code{factor_correlations}: latent correlations with intervals.
