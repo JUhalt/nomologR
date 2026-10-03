@@ -24,6 +24,11 @@ the corresponding analysis function (for example, \code{\link[=nomo_efa]{nomo_ef
 \code{\link[=nomo_cfa]{nomo_cfa()}}, \code{\link[=nomo_reliability]{nomo_reliability()}}, and \code{\link[=nomo_validity]{nomo_validity()}}). Changing a
 reference changes which evidence is flagged for review; it never deletes
 items, respecifies models, or declares validity.
+
+\code{long_string_min_items} is a count of items, not a reference value for a
+statistic: \code{\link[=nomo_screen]{nomo_screen()}} flags a case on long-string only when at least
+that many items are screened, because half the length of a shorter item set
+is a run that attentive respondents give often.
 }
 \examples{
 guidance <- nomo_defaults()

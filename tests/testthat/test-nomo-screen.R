@@ -1125,12 +1125,61 @@ test_that("a negative item-rest correlation the declared keying does not explain
                           out$decision_log$metric == "corrected_item_rest", ]
   expect_match(z$observation, "so the keying does not explain the sign", fixed = TRUE)
 
-  # Without usable keying, the entry reads as before.
+  # Without a response scale the keying cannot be used, so the entry reads as
+  # before, and the log says why rather than leaving the explanation absent
+  # (#145).
   plain <- nomo_screen(data, reverse = "z")
   z <- plain$decision_log[plain$decision_log$object == "z" &
                             plain$decision_log$metric == "corrected_item_rest", ]
   expect_false(grepl("declared reverse-keyed", z$observation, fixed = TRUE))
   expect_match(z$recommendation, "Inspect intended keying", fixed = TRUE)
+  unused <- plain$decision_log[plain$decision_log$metric == "keying_not_used", ]
+  expect_identical(nrow(unused), 1L)
+  expect_identical(unused$severity, "info")
+  expect_identical(unused$value, 1)
+  expect_match(unused$observation,
+               "Reverse-keyed item(s) z were declared without `scale_range`", fixed = TRUE)
+  expect_match(unused$recommendation, "scale_range = c(min, max)", fixed = TRUE)
+
+  # Usable keying, no keying, and keying declared with nothing reversed leave
+  # no such row.
+  expect_false("keying_not_used" %in% out$decision_log$metric)
+  expect_false("keying_not_used" %in% nomo_screen(data)$decision_log$metric)
+  expect_false("keying_not_used" %in%
+                 nomo_screen(data, reverse = character(0))$decision_log$metric)
+})
+
+
+test_that("`reverse` and `scale_range` are checked without the effort indices (#145)", {
+  data <- data.frame(x = c(1, 2, 3, 4, 5), y = c(2, 1, 4, 3, 5), z = c(5, 4, 2, 3, 1))
+
+  # Each of these was accepted silently when `effort = FALSE`, although both
+  # arguments still reach the item audit. They are refused in either mode.
+  for (effort in c(FALSE, TRUE)) {
+    expect_error(nomo_screen(data, effort = effort, reverse = "nope", scale_range = c(1, 5)),
+                 "`reverse` names item(s) not being screened: nope.", fixed = TRUE)
+    expect_error(nomo_screen(data, effort = effort, reverse = 3),
+                 "`reverse` must be a character vector of item names.", fixed = TRUE)
+    expect_error(nomo_screen(data, effort = effort, scale_range = c(5, 1)),
+                 "min below max", fixed = TRUE)
+    expect_error(nomo_screen(data, effort = effort, scale_range = "a"),
+                 "min below max", fixed = TRUE)
+    expect_error(nomo_screen(data, effort = effort, scale_range = c(1, 3, 5)),
+                 "min below max", fixed = TRUE)
+    expect_error(nomo_screen(data, effort = effort, reverse = "z", scale_range = c(1, Inf)),
+                 "min below max", fixed = TRUE)
+    expect_error(nomo_screen(data, effort = effort, reverse = "z", scale_range = c(1, NA)),
+                 "min below max", fixed = TRUE)
+  }
+
+  # An item outside `items` is not being screened, whatever `data` holds.
+  expect_error(nomo_screen(data, items = c("x", "y"), reverse = "z", scale_range = c(1, 5)),
+               "not being screened: z", fixed = TRUE)
+
+  # Reverse-keyed items with no range are refused only where they would have
+  # to be recoded for an index.
+  expect_error(nomo_screen(data, effort = TRUE, reverse = "z"), "not inferred", fixed = TRUE)
+  expect_s3_class(nomo_screen(data, reverse = "z"), "nomo_screen")
 })
 
 

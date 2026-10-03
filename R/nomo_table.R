@@ -29,6 +29,8 @@
 #'   [nomo_validity()].
 #' * `nomo_scores`: `"scores"`, `"diagnostics"`, `"unit_weighting"`,
 #'   `"notes"`; see [nomo_scores()].
+#' * `nomo_power`: `"power"` from [nomo_power_rmsea()]; `"summary"` (default)
+#'   and `"parameters"` from [nomo_power_simulate()].
 #' * `nomo_hypotheses`: the machine-readable hypothesis table (no `type`).
 #' * `nomo_network`: `"hypotheses"` (default), `"fit"`, `"measurement"`,
 #'   `"relations"`, `"replication"`, `"single_indicators"`, `"sensitivity"`,

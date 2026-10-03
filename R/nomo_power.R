@@ -39,6 +39,8 @@
 #'   `rmsea_null`, `rmsea_alt`, `alpha`, `target_power`, `power` (a table of
 #'   sample sizes and their power), and `n_required` (the smallest sample size
 #'   reaching `target_power`, or `NA` if none up to one million does).
+#'   [nomo_table()] returns the `"power"` table, its one `type`; `summary()`
+#'   shows what `print()` shows.
 #'
 #'   Other fields record the kind of power analysis. They may change between
 #'   releases and are not part of the stable interface (see `?nomologR`).
@@ -259,7 +261,9 @@ nomo_power_model_df <- function(model) {
 #'   `focus`, the largest absolute biases, the coverage range, and
 #'   `meets_references`), `n_required` (the smallest simulated sample size that
 #'   meets the references, or `NA`), `focus`, `reps`, `alpha`, and `seed` (the
-#'   seed given, or `NA` without one).
+#'   seed given, or `NA` without one). [nomo_table()] returns the `"summary"`
+#'   table, its default `type`, or the `"parameters"` table; `print()` shows
+#'   the first and `summary()` both.
 #'
 #'   Other fields record the call, the population and analysis models, and the
 #'   kind of power analysis. They may change between releases and are not part
@@ -511,9 +515,44 @@ nomo_power_summary <- function(run, parameters, focus, size) {
 
 #' @export
 print.nomo_power <- function(x, ...) {
+  nomo_power_present(x)
+  invisible(x)
+}
+
+
+# A power analysis holds one table per sample size and, for a simulation, one
+# per parameter, so its summary is the object itself: what summary() adds is
+# the per-parameter table that print() leaves to nomo_table().
+#' @export
+summary.nomo_power <- function(object, ...) {
+  class(object) <- c("summary_nomo_power", "list")
+  object
+}
+
+
+#' @export
+print.summary_nomo_power <- function(x, ...) {
+  nomo_power_present(x, detail = TRUE)
+  invisible(x)
+}
+
+
+# The tables a power analysis holds differ by its kind, and so do the `type`
+# values: "power" for the RMSEA tests; "summary" and "parameters" for a
+# simulation.
+#' @export
+nomo_table.nomo_power <- function(x, type = NULL, ...) {
+  choices <- if (identical(x$type, "rmsea")) "power" else c("summary", "parameters")
+  type <- nomo_match_arg(type, choices)
+  x[[type]]
+}
+
+
+nomo_power_present <- function(x, detail = FALSE) {
   if (identical(x$type, "rmsea")) {
     labels <- c(close = "close fit", not_close = "not-close fit", exact = "exact fit")
-    nomo_present_header("nomo_power", sprintf("Power of the test of %s", labels[[x$test]]))
+    nomo_present_header("nomo_power", sprintf("Power of the test of %s", labels[[x$test]]),
+                        summary = detail)
     nomo_present_facts(c(
       sprintf("df: %d", x$df),
       sprintf("RMSEA: null %s, alternative %s", format(x$rmsea_null), format(x$rmsea_alt)),
@@ -538,7 +577,8 @@ print.nomo_power <- function(x, ...) {
     return(invisible(x))
   }
 
-  nomo_present_header("nomo_power", "Monte Carlo power and sample size")
+  nomo_present_header("nomo_power", "Monte Carlo power and sample size",
+                      summary = detail)
   nomo_present_facts(c(
     sprintf("Replications: %d per N", x$reps),
     sprintf("alpha: %s", format(x$alpha)),
@@ -561,7 +601,7 @@ print.nomo_power <- function(x, ...) {
                    min_power = function(v) nomo_present_number(v, 2L),
                    max_abs_bias = nomo_present_percent,
                    max_abs_se_bias = nomo_present_percent),
-    more = "x$parameters"
+    more = "nomo_table(x, \"summary\")"
   )
   nomo_present_text(
     if (is.na(x$n_required)) {
@@ -571,6 +611,21 @@ print.nomo_power <- function(x, ...) {
     },
     indent = 2L
   )
+  if (isTRUE(detail)) {
+    # Biases are percentages and coverage and power proportions, as above.
+    nomo_present_section("By sample size and parameter")
+    nomo_present_table(
+      x$parameters,
+      c("N" = "n", "Parameter" = "parameter", "Population" = "population",
+        "Estimate" = "mean_estimate", "Bias" = "relative_bias",
+        "SE bias" = "se_bias", "Coverage" = "coverage", "Power" = "power"),
+      formats = list(relative_bias = nomo_present_percent,
+                     se_bias = nomo_present_percent,
+                     coverage = function(v) nomo_present_number(v, 2L),
+                     power = function(v) nomo_present_number(v, 2L)),
+      more = "nomo_table(x, \"parameters\")"
+    )
+  }
   cat("\n")
   nomo_present_text(
     "Max bias and Max SE bias are the largest absolute relative biases across ",

@@ -14,6 +14,11 @@
 #' reference changes which evidence is flagged for review; it never deletes
 #' items, respecifies models, or declares validity.
 #'
+#' `long_string_min_items` is a count of items, not a reference value for a
+#' statistic: [nomo_screen()] flags a case on long-string only when at least
+#' that many items are screened, because half the length of a shorter item set
+#' is a run that attentive respondents give often.
+#'
 #' @return A named list of guidance settings.
 #' @export
 #'
@@ -36,6 +41,7 @@ nomo_defaults <- function(profile = "teaching") {
     response_concentration_reference = 0.80,
     nzv_frequency_ratio_reference = 19,
     nzv_percent_unique_reference = 10,
+    long_string_min_items = 20L,
     factor_small_n_reference = 100L,
     factor_kmo_review_reference = 0.60,
     factor_kmo_concern_reference = 0.50,

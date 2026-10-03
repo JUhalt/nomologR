@@ -24,6 +24,14 @@ associations/covariances.
 \details{
 The function records theory; it does not inspect data, fit a model, or infer
 predictions from statistical significance.
+
+A pair of variables carries a directed path or an association, not both.
+Hypotheses that give the same two variables both are refused, because the
+two cannot be estimated side by side. Directed paths in both directions are
+accepted here, because whether a reciprocal pair is identified depends on
+the model. \code{\link[=nomo_network]{nomo_network()}} evaluates both when \code{model} itself writes the
+two paths, as a model of reciprocal effects identified by instruments does,
+and stops rather than add one of them.
 }
 \examples{
 h <- nomo_hypotheses(
