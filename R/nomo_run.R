@@ -24,7 +24,11 @@ nomo_run_fresh <- function(data,
 
   scales <- nomo_run_validate_scales(scales, roles)
   settings <- nomo_run_validate_settings(settings, scales)
+  nomo_run_check_reverse(settings, scales)
   decisions <- nomo_run_validate_decisions(decisions)
+  # Declared keying lets the item audit say whether a negative item-rest
+  # correlation is an item not yet recoded (#60). The data are never recoded.
+  keying <- nomo_run_screen_keying(settings, scales, handoff)
 
   x <- list(
     call = call,
@@ -63,6 +67,7 @@ nomo_run_fresh <- function(data,
   # it always had.
   if (!is.null(handoff)) x$handoff <- handoff
   class(x) <- c("nomo_run", "list")
+  x$decision_log <- nomo_run_keying_log(x$decision_log, keying)
 
   for (scope in names(scales)) {
     extra <- nomo_run_scope_settings(
@@ -74,13 +79,8 @@ nomo_run_fresh <- function(data,
     # Careless-responding indices describe a respondent across the whole
     # instrument, so they are computed once below, never per scale (#73).
     extra[nomo_run_effort_arguments()] <- NULL
-    # Declared keying lets the item audit say whether a negative item-rest
-    # correlation is an item not yet recoded (#60). The data are never recoded.
-    keying <- nomo_run_screen_keying(settings, handoff)
-    if (!is.null(keying)) {
-      extra$reverse <- intersect(keying$reverse, scales[[scope]])
-      extra$scale_range <- keying$scale_range
-    }
+    extra$reverse <- intersect(keying$reverse, scales[[scope]])
+    extra$scale_range <- keying$scale_range
 
     result <- nomo_run_safe_component(
       fun = nomo_screen,
@@ -100,7 +100,7 @@ nomo_run_fresh <- function(data,
     x$results$screen[[scope]] <- result$value
   }
 
-  effort <- nomo_run_effort_request(settings, scales, handoff)
+  effort <- nomo_run_effort_request(settings, scales, keying)
   if (!is.null(effort)) {
     result <- nomo_run_safe_component(
       fun = nomo_screen,
@@ -181,6 +181,21 @@ nomo_run_fresh <- function(data,
 }
 
 
+# Whether two guidance lists hold the same values. An element one of them lacks
+# is read as its nomo_defaults() value, so a run saved before nomo_defaults()
+# gained an element resumes with the defaults; only a changed value differs.
+nomo_run_same_guidance <- function(a, b) {
+  if (!is.list(a) || !is.list(b)) return(identical(a, b))
+  complete <- function(g) {
+    defaults <- nomo_defaults()
+    absent <- setdiff(names(defaults), names(g))
+    g[absent] <- defaults[absent]
+    g[order(names(g))]
+  }
+  identical(complete(a), complete(b))
+}
+
+
 nomo_run_resume <- function(resume,
                             data,
                             scales,
@@ -214,7 +229,7 @@ nomo_run_resume <- function(resume,
 
   if (!mode_missing) x$mode <- mode
 
-  if (!guidance_missing && !identical(guidance, x$guidance)) {
+  if (!guidance_missing && !nomo_run_same_guidance(guidance, x$guidance)) {
     stop(
       paste(
         "Guidance cannot be changed mid-workflow; start a new `nomo_run()`",
@@ -307,9 +322,20 @@ nomo_run_resume <- function(resume,
 #'   and even-odd consistency cannot be computed within one scale. So they are
 #'   computed once, over every item in the run with the run's scales, and never
 #'   inside the per-scale item audits. `reverse`, `scale_range`,
-#'   `pair_magnitude`, and `scales` may be given alongside `effort`. When the
-#'   scales came from a `contentvalidR` handoff that declares keying, its
-#'   keying is used unless `reverse` or `scale_range` is given here.
+#'   `pair_magnitude`, and `scales` may be given alongside `effort`. `reverse`
+#'   and `scale_range` also reach the per-scale item audits, with or without
+#'   `effort`, and `reverse` must name items in the run's scales. When the
+#'   scales came from a `contentvalidR` handoff, each of `reverse` and
+#'   `scale_range` is taken from its declared keying unless given here, as in
+#'   [nomo_screen()]; giving one replaces only that one. The decision log
+#'   records a declared value replaced, or a response scale the handoff did not
+#'   record supplied here.
+#'
+#'   The invariance and network stages refit the measurement model with the
+#'   CFA stage's `ordered`, `estimator`, and `missing` from `settings$cfa`,
+#'   unless `settings$invariance` or `settings$network` names its own (`NULL`
+#'   for the default). The decision log records what was inherited and any
+#'   value that differs from the CFA's.
 #'
 #'   Two further requests attach evidence to the measurement model:
 #'
@@ -335,8 +361,15 @@ nomo_run_resume <- function(resume,
 #'     example `results$screen$Agency` is a `nomo_screen` object.
 #'   * `stage_status`: one row per stage.
 #'   * `decision_requests`: the decisions the run is waiting for.
-#'   * `decision_log`: the workflow's decisions, with their rationales and
-#'     sources.
+#'   * `decision_log`: the workflow's own log, one row per design choice,
+#'     decision, or recorded event, with the columns `id`, `stage`, `scope`,
+#'     `observation`, `reason`, `options`, `consequence`, `decision`,
+#'     `rationale`, and `source`. `source` is `"researcher_input"` (given in
+#'     the call, such as the scales or a setting), `"researcher_decision"`
+#'     (a decision at a pause, or a revision), `"content_review"` (from a
+#'     `contentvalidR` handoff), or `"pipeline"` (recorded by the workflow).
+#'     These columns differ from those of the components' decision logs, which
+#'     `nomo_table(x, "component_log")` returns with their own columns.
 #'   * `scales`, `mode`, `sample_design`, `sample_n`, `decisions`, and
 #'     `settings`.
 #'

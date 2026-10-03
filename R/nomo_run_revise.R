@@ -226,6 +226,117 @@ nomo_revise_comparison_summary <- function(comparison, note) {
 }
 
 
+# A revision of a run whose scales came from content review keeps that record
+# (#145), and says where the revised items depart from it. The child's log is
+# rebuilt from the handoff, so departures are measured against the content
+# review, not the parent: a scale whose items differ is the researcher's
+# definition, a reinstated held-back item and a removed carried item each get a
+# row, and each row's rationale is that of the latest revision that made the
+# change.
+nomo_revise_content_review_log <- function(log, handoff, scales, lineage) {
+  if (is.null(handoff)) return(log)
+  ev <- handoff$evidence
+  p <- handoff$provenance
+  analyzed <- unique(unlist(scales, use.names = FALSE))
+
+  for (nm in names(scales)) {
+    carried <- handoff$scales[[nm]]
+    if (setequal(scales[[nm]], carried)) next
+    added <- setdiff(scales[[nm]], carried)
+    removed <- setdiff(carried, scales[[nm]])
+    change <- c(
+      if (length(added)) paste("added", paste(added, collapse = ", ")),
+      if (length(removed)) paste("removed", paste(removed, collapse = ", "))
+    )
+    row <- log$id == paste0("scale_definition:", nm)
+    log$observation[row] <- sprintf(
+      "Scale `%s` contains %s. Content review in %s %s carried %s for it; researcher revisions %s.",
+      nm, nomo_present_count(length(scales[[nm]]), "item"), p$package, p$package_version,
+      paste(carried, collapse = ", "), paste(change, collapse = " and ")
+    )
+    log$source[row] <- "researcher_decision"
+  }
+
+  latest <- function(item, column) {
+    hit <- vapply(strsplit(lineage[[column]], ", ", fixed = TRUE),
+                  function(v) item %in% v, logical(1))
+    lineage[utils::tail(c(nrow(lineage), which(hit)), 1L), , drop = FALSE]
+  }
+  scopes <- function(item, sets) {
+    paste(names(sets)[vapply(sets, function(s) item %in% s, logical(1))], collapse = ", ")
+  }
+
+  held <- intersect(as.character(ev$item[!ev$carried]), analyzed)
+  dropped <- setdiff(unlist(handoff$scales, use.names = FALSE), analyzed)
+  # The content_review row, rebuilt from the handoff, would otherwise still say
+  # that held-back items are not analyzed.
+  if (length(held) || length(dropped)) {
+    log$consequence[log$id == "content_review"] <- paste(
+      "Held-back items are not analyzed unless a researcher revision reinstates",
+      "them, and carried items are not dropped unless one removes them; each such",
+      "change has its own reinstated: or removed: row. nomologR neither reinstates",
+      "nor drops an item on the strength of these data."
+    )
+  }
+
+  for (item in held) {
+    by <- latest(item, "items_added")
+    row <- log$id == paste0("held_back:", item)
+    log$reason[row] <- paste(
+      "Only items carried by content review are analyzed unless a researcher",
+      "revision reinstates one."
+    )
+    log$consequence[row] <- sprintf(
+      "Revision %d reinstated it, so it is analyzed in this run.", by$revision
+    )
+    log <- nomo_run_workflow_log_add(
+      log,
+      id = paste0("reinstated:", item),
+      stage = "design",
+      scope = scopes(item, scales),
+      observation = sprintf(
+        "%s, which content review held back, is analyzed in this run: revision %d reinstated it.",
+        item, by$revision
+      ),
+      reason = "Content review held the item back, so analyzing it departs from that review.",
+      options = paste(
+        "Report the reinstatement and its rationale alongside the content-review",
+        "evidence for the item."
+      ),
+      consequence = "The item is screened, modeled, and scored in this run.",
+      decision = "reinstated",
+      rationale = by$rationale,
+      source = "researcher_decision"
+    )
+  }
+
+  for (item in dropped) {
+    by <- latest(item, "items_removed")
+    log <- nomo_run_workflow_log_add(
+      log,
+      id = paste0("removed:", item),
+      stage = "design",
+      scope = scopes(item, handoff$scales),
+      observation = sprintf(
+        "%s, which content review carried, is not analyzed in this run: revision %d removed it.",
+        item, by$revision
+      ),
+      reason = "Content review carried the item, so removing it departs from that review.",
+      options = paste(
+        "Report the removal and its rationale, and check that the remaining items",
+        "still cover the construct as content review defined it."
+      ),
+      consequence = "The item is not screened, modeled, or scored in this run.",
+      decision = "removed",
+      rationale = by$rationale,
+      source = "researcher_decision"
+    )
+  }
+
+  log
+}
+
+
 #' Revise a guided workflow and keep its lineage
 #'
 #' `nomo_revise()` creates a child workflow from a parent `nomo_run()` with a
@@ -243,7 +354,15 @@ nomo_revise_comparison_summary <- function(comparison, note) {
 #'
 #' The factor-count decision is inherited from the parent unless `decisions`
 #' supplies a new one, so the revision changes only what the researcher
-#' changed.
+#' changed. The parent's settings carry over too, except that reverse keying
+#' set for an item the revision removes is dropped with the item.
+#'
+#' When the parent's scales came from a `contentvalidR` handoff, the child
+#' keeps it: its declared keying, the content-review rows of the decision
+#' log, and the report's content-review section carry over. A scale whose
+#' items no longer match those content review carried is recorded as the
+#' researcher's definition, and each held-back item the revision reinstates,
+#' or carried item it removes, gets its own row with the revision's rationale.
 #'
 #' Because a revision prompted by results is evaluated on the data that
 #' prompted it, the decision log records whether the change was `"post_hoc"`
@@ -400,13 +519,27 @@ nomo_revise <- function(run,
   child_decisions$cfa_model <- list(value = revised_model, rationale = rationale)
   for (nm in names(decisions)) child_decisions[[nm]] <- decisions[[nm]]
 
-  child <- nomo_run(
+  # Keying declared for an item the revision removes no longer applies to it.
+  child_settings <- run$settings
+  child_settings$screen$reverse <- intersect(
+    child_settings$screen$reverse, unlist(scales, use.names = FALSE)
+  )
+
+  # The child is built from the parent's handoff, when there is one, so its
+  # declared keying and the content-review record carry into it (#145).
+  child <- nomo_run_fresh(
     data = run$source_data,
     scales = scales,
     mode = run$mode,
     guidance = run$guidance,
-    settings = run$settings,
-    decisions = child_decisions
+    decisions = child_decisions,
+    settings = child_settings,
+    call = quote(nomo_run(
+      data = run$source_data, scales = scales, mode = run$mode,
+      guidance = run$guidance, decisions = child_decisions,
+      settings = child_settings
+    )),
+    handoff = run$handoff
   )
 
   comparison <- NULL
@@ -507,6 +640,9 @@ nomo_revise <- function(run,
     decision = sprintf("revised measurement model: %s", revised_model),
     rationale = rationale,
     source = "researcher_decision"
+  )
+  child$decision_log <- nomo_revise_content_review_log(
+    child$decision_log, run$handoff, scales, child$lineage
   )
 
   child$decision_log <- nomo_run_workflow_log_add(

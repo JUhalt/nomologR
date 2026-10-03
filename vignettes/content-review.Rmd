@@ -109,14 +109,18 @@ walk[reversed] <- 6L - walk[reversed]
 ```
 
 The responses are now recoded, so the run should not treat any item as still
-needing it. `reverse = character(0)` says so, in place of the handoff's keying:
+needing it. `reverse = character(0)` says so, in place of the reverse-keyed
+items the handoff declared. It replaces only that part of the handoff's keying:
+the response scale still comes from the handoff, and the run's decision log
+records the change.
 
 ```{r recoded-run}
 run <- nomo_run(
   walk,
   scales = handoff,
-  settings = list(screen = list(reverse = character(0), scale_range = c(1, 5)))
+  settings = list(screen = list(reverse = character(0)))
 )
+run$decision_log$observation[run$decision_log$id == "keying"]
 ef <- run$results$screen$EF
 summary(ef)
 ```
