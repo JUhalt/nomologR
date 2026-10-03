@@ -117,6 +117,13 @@ A `nomo_reliability` object. The fields to read are:
 
 - `references` and `decision_log`.
 
+`attention` in `evidence` and `severity` in `decision_log` are `"info"`,
+`"review"`, or `"concern"`, as is `signal` in the `"coefficients"` table
+of
+[`nomo_table()`](https://juhalt.github.io/nomologR/reference/nomo_table.md).
+See **Conventions in returned tables** in
+[`?nomologR`](https://juhalt.github.io/nomologR/reference/nomologR-package.md).
+
 Other fields record the call, the settings used, and intermediate engine
 results. They may change between releases and are not part of the stable
 interface (see

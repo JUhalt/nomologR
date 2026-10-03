@@ -81,9 +81,14 @@ keeps working in the next.</p>
 <li><p>their documented arguments and defaults;</p></li>
 <li><p>the documented fields of the objects they return;</p></li>
 <li><p>the <code>type</code> values <code><a href="nomo_table.html">nomo_table()</a></code> accepts;</p></li>
-<li><p>the columns of decision logs.</p></li>
+<li><p>the columns of decision logs. Each analysis's decision log has the
+columns <code>stage</code>, <code>object</code>, <code>metric</code>, <code>value</code>, <code>reference</code>, <code>severity</code>,
+<code>observation</code>, <code>recommendation</code>, <code>decision</code>, and <code>rationale</code>; the guided
+workflow keeps its own log, described in <code><a href="nomo_run.html">nomo_run()</a></code>.</p></li>
 </ul><p>Functions reached only with <code>:::</code>, undocumented fields, the wording of
-decision-log rows, and the layout of rendered reports are not covered.</p>
+decision-log rows, and the layout of rendered reports are not covered.
+Names and values that differ from one table to another are covered as they
+stand; <strong>Conventions in returned tables</strong> below sets them out.</p>
 <p><strong>Deprecation before removal.</strong> A breaking change is deprecated for at least
 one minor release before it takes effect. Breaking changes include removing
 or renaming any part of the interface, or changing a default in a way that
@@ -107,6 +112,57 @@ producer. Within a schema version, fields are only added, and nomologR
 ignores fields it does not know. Anything else is a new schema version,
 agreed with <code>contentvalidR</code>. nomologR refuses a schema version it does not
 read, naming both package versions.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="conventions-in-returned-tables">Conventions in returned tables<a class="anchor" aria-label="anchor" href="#conventions-in-returned-tables"></a></h2>
+
+
+<p>A few names and values differ from one table to another. They are part of
+the interface described above and are kept as they are, so they are set
+out here.</p>
+<p><strong>Proportions and percentages.</strong> A column named <code>pct_*</code> holds a proportion
+between 0 and 1, not a percentage, although printed output shows it as a
+percentage: <code>pct_missing</code> in the <code>item_summary</code> and <code>case_summary</code> of
+<code><a href="nomo_screen.html">nomo_screen()</a></code> and in the <code>variables</code> table of <code><a href="nomo_missing.html">nomo_missing()</a></code>,
+<code>pct_incomplete</code> in the <code>pattern</code> table of <code><a href="nomo_missing.html">nomo_missing()</a></code>, and
+<code>pct_dropped</code> in the <code>sample_summary</code> of <code><a href="nomo_cfa.html">nomo_cfa()</a></code>. Columns named
+<code>*_prop</code> or <code>proportion_*</code> are proportions too. The one percentage is
+<code>percent_unique</code> in the <code>item_summary</code> of <code><a href="nomo_screen.html">nomo_screen()</a></code>, the number of
+distinct responses as a percentage (0 to 100) of the observed responses,
+which is the scale of the near-zero-variance rule. Its reference in
+<code><a href="nomo_defaults.html">nomo_defaults()</a></code>, <code>nzv_percent_unique_reference</code>, is a percentage as well.</p>
+<p><strong>Flags.</strong> A stored flag uses one of three vocabularies:</p><ul><li><p>Loading tables. <code>attention</code> in the <code>item_summary</code> of <code><a href="nomo_efa.html">nomo_efa()</a></code> and in
+the <code>standardized_loadings</code> of <code><a href="nomo_cfa.html">nomo_cfa()</a></code> and <code><a href="nomo_validity.html">nomo_validity()</a></code> is
+<code>"KEEP"</code>, <code>"REVIEW"</code>, or <code>"STRONG REVIEW"</code>.</p></li>
+<li><p>The item review of <code><a href="summary.nomo_screen.html">summary.nomo_screen()</a></code>. <code>attention</code> is <code>"none"</code>,
+<code>"review"</code>, or <code>"concern"</code>.</p></li>
+<li><p>Decision logs and other evidence. <code>severity</code> in each analysis's decision
+log and in the <code>heywood</code> table of <code><a href="nomo_cfa.html">nomo_cfa()</a></code>, and the <code>attention</code>,
+<code>measurement_attention</code>, and <code>signal</code> columns of the other evidence
+tables, are <code>"info"</code>, <code>"review"</code>, or <code>"concern"</code>. An evidence table may
+also mark a value that could not be computed as <code>"unavailable"</code>, as the
+<code>fit_evidence</code> of <code><a href="nomo_cfa.html">nomo_cfa()</a></code> does.</p></li>
+</ul><p>The three describe the same levels. Printed output, plots, and reports show
+them in one wording: no flag for <code>"KEEP"</code>, <code>"none"</code>, and <code>"info"</code>; "review"
+for <code>"REVIEW"</code> and <code>"review"</code>; "concern" for <code>"STRONG REVIEW"</code> and
+<code>"concern"</code>; and "not computed" for <code>"unavailable"</code>. The stored values do
+not change, so code that filters a table uses that table's own values.</p>
+<p><strong>P-values and fit indices.</strong> A p-value is named <code>p_value</code>, or
+<code>&lt;model&gt;_p_value</code> where a table holds one for each model. Three kinds of
+table differ:</p><ul><li><p><code>lavaan</code>'s parameter tables, <code>parameter_estimates</code> and
+<code>standardized_solution</code>, keep <code>lavaan</code>'s name, <code>pvalue</code>.</p></li>
+<li><p>The <code>models</code> tables of <code><a href="nomo_esem.html">nomo_esem()</a></code>, <code><a href="nomo_method_variance.html">nomo_method_variance()</a></code>, and
+<code><a href="nomo_compare.html">nomo_compare()</a></code>, and the <code>fit_evidence</code> of <code><a href="nomo_invariance.html">nomo_invariance()</a></code> and
+<code><a href="nomo_network.html">nomo_network()</a></code>, name the fit indices they hold as
+<code><a href="https://rdrr.io/pkg/lavaan/man/fitMeasures.html" class="external-link">lavaan::fitMeasures()</a></code> does: <code>chisq</code>, <code>df</code>, <code>pvalue</code>, <code>cfi</code>, <code>tli</code>,
+<code>rmsea</code>, <code>srmr</code>, <code>aic</code>, and <code>bic</code>. In <code><a href="nomo_invariance.html">nomo_invariance()</a></code>, the
+likelihood-ratio test against the level before is <code>lrt_chisq</code>, <code>lrt_df</code>,
+and <code>lrt_p</code>.</p></li>
+<li><p>The <code>fit_evidence</code> of <code><a href="nomo_cfa.html">nomo_cfa()</a></code> is long, one row per index named in
+<code>metric</code>. It and the <code>fit</code> table of <code><a href="nomo_missing.html">nomo_missing()</a></code> spell the indices
+<code>chi_square</code>, <code>df</code>, <code>p_value</code>, <code>CFI</code>, <code>TLI</code>, <code>RMSEA</code>, and <code>SRMR</code>.</p></li>
+</ul><p>The <strong>Fit tables</strong> section of <code><a href="nomo_table.html">nomo_table()</a></code> names the index columns of
+each fit table.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

@@ -161,7 +161,13 @@ largest first.</p></li>
 only; nothing is freed.</p></li>
 <li><p><code>engine_warnings</code>: warnings <code>lavaan</code> raised.</p></li>
 <li><p><code>decision_log</code>.</p></li>
-</ul><p>Other fields record the call, the settings used, and intermediate engine
+</ul><p>In <code>sample_summary</code>, <code>pct_dropped</code> is a proportion between 0 and 1. The
+tables flag in different vocabularies: <code>attention</code> is <code>"info"</code>,
+<code>"review"</code>, or <code>"unavailable"</code> in <code>fit_evidence</code>, and <code>"KEEP"</code>,
+<code>"REVIEW"</code>, or <code>"STRONG REVIEW"</code> in <code>standardized_loadings</code>; <code>severity</code> in
+<code>heywood</code> and <code>decision_log</code> is <code>"info"</code>, <code>"review"</code>, or <code>"concern"</code>. See
+<strong>Conventions in returned tables</strong> in <code><a href="nomologR-package.html">?nomologR</a></code>.</p>
+<p>Other fields record the call, the settings used, and intermediate engine
 results. They may change between releases and are not part of the stable
 interface (see <code><a href="nomologR-package.html">?nomologR</a></code>).</p>
     </div>

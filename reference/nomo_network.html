@@ -190,7 +190,11 @@ variance fixed. Empty when <code>single_indicators</code> is not used.</p></li>
 <li><p><code>single_indicator_sensitivity</code>: each hypothesis's estimate, interval,
 and concordance with each composite's reliability shifted by up to .10.</p></li>
 <li><p><code>converged</code>, <code>engine_warnings</code>, and <code>decision_log</code>.</p></li>
-</ul><p>Other fields record the call, the settings used, and intermediate engine
+</ul><p><code>measurement_attention</code> in <code>hypothesis_evidence</code>, <code>attention</code> in the
+<code>summary</code> and <code>loadings</code> tables of <code>measurement_context</code>, and <code>severity</code>
+in <code>decision_log</code> are <code>"info"</code>, <code>"review"</code>, or <code>"concern"</code>. See
+<strong>Conventions in returned tables</strong> in <code><a href="nomologR-package.html">?nomologR</a></code>.</p>
+<p>Other fields record the call, the settings used, and intermediate engine
 results. They may change between releases and are not part of the stable
 interface (see <code><a href="nomologR-package.html">?nomologR</a></code>).</p>
     </div>

@@ -83,7 +83,8 @@ order general, specific, probability.</p>
 <dd><p>Which table to build. For <code>nomo_cfa</code>: <code>"loadings"</code>, <code>"fit"</code>, or
 <code>"factor_correlations"</code>. For <code>nomo_validity</code>: <code>"discriminant"</code> or
 <code>"convergent"</code>. For <code>nomo_network</code>: <code>"hypotheses"</code> or <code>"fit"</code>. Other
-objects have one table each.</p></dd>
+objects have one table each, so <code>type</code> is left <code>NULL</code> for them; any other
+value is an error.</p></dd>
 
 
 <dt id="arg-number">number<a class="anchor" aria-label="anchor" href="#arg-number"></a></dt>
@@ -91,7 +92,7 @@ objects have one table each.</p></dd>
 
 
 <dt id="arg-title">title<a class="anchor" aria-label="anchor" href="#arg-title"></a></dt>
-<dd><p>Optional title; a descriptive default is supplied.</p></dd>
+<dd><p>Optional title, one string; a descriptive default is supplied.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -101,7 +102,21 @@ objects have one table each.</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A <code>nomo_apa_table</code> object, which prints in the console and renders
-as a formatted table, with its title and notes, when knitted.</p>
+as a formatted table, with its title and notes, when knitted. The fields
+to read are:</p><ul><li><p><code>number</code>: the table number, an integer, or <code>NULL</code> when none was given.</p></li>
+<li><p><code>title</code>: the table title.</p></li>
+<li><p><code>body</code>: a data frame of formatted cells, all character. Its column
+names are the column headings.</p></li>
+<li><p><code>stub</code>: the name of the stub column, the first column of <code>body</code>, which
+says what each row describes.</p></li>
+<li><p><code>notes</code>: a list of three character vectors, <code>general</code>, <code>specific</code>, and
+<code>probability</code>, the three kinds of APA table note in the order they are
+printed. Any of them may be empty.</p></li>
+<li><p><code>source</code>: the class of the result the table was built from, such as
+<code>"nomo_cfa"</code>.</p></li>
+</ul><p>Headings, cells, and notes are written in Markdown, as pandoc reads it:
+italics as <code>*p*</code> and a superscript as <code>^a^</code>. Printing in the console drops
+these marks from the headings and notes; knitting renders them.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

@@ -144,7 +144,14 @@ smallest pairwise count under pairwise deletion, and every case with an
 indicator observed otherwise.</p></li>
 <li><p><code>fornell_larcker_pairs</code>: the historical comparison, when requested.</p></li>
 <li><p><code>standardized_loadings</code>, <code>references</code>, and <code>decision_log</code>.</p></li>
-</ul><p>Other fields record the call, the settings used, and intermediate engine
+</ul><p><code>attention</code> in <code>standardized_loadings</code> is <code>"KEEP"</code>, <code>"REVIEW"</code>, or
+<code>"STRONG REVIEW"</code>, as in <code><a href="nomo_cfa.html">nomo_cfa()</a></code>. <code>attention</code> in <code>ave</code> and
+<code>discriminant</code>, and <code>severity</code> in <code>decision_log</code>, are <code>"info"</code>,
+<code>"review"</code>, or <code>"concern"</code>. <code>attention</code> in <code>fornell_larcker_pairs</code> is
+<code>"info"</code> or <code>"review"</code>, or <code>"unavailable"</code> when the comparison could not
+be computed, as when an AVE is missing or negative and so has no square
+root. See <strong>Conventions in returned tables</strong> in <code><a href="nomologR-package.html">?nomologR</a></code>.</p>
+<p>Other fields record the call, the settings used, and intermediate engine
 results. They may change between releases and are not part of the stable
 interface (see <code><a href="nomologR-package.html">?nomologR</a></code>).</p>
     </div>

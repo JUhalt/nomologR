@@ -25,7 +25,7 @@ nomo_methods(x = NULL, stage = NULL, lineage = NULL, references = FALSE)
   Optional character vector restricting the result to these workflow
   stages. One or more of `"screen"`, `"factors"`, `"efa"`, `"cfa"`,
   `"compare"`, `"reliability"`, `"validity"`, `"invariance"`,
-  `"network"`, `"workflow"`.
+  `"scores"`, `"network"`, `"workflow"`.
 
 - lineage:
 

@@ -140,6 +140,34 @@ row per revision, or no rows for a workflow that was never revised.
 <code>"methods"</code> returns the registry entries for the methods the run actually
 used, and is equivalent to <code>nomo_methods(x)</code>; see <code><a href="nomo_methods.html">nomo_methods()</a></code>.</p></li>
 </ul></div>
+    <div class="section level2">
+    <h2 id="fit-tables">Fit tables<a class="anchor" aria-label="anchor" href="#fit-tables"></a></h2>
+
+
+<p>Fit tables name their indices in one of two ways, a known difference that
+is kept as it is (see <strong>Conventions in returned tables</strong> in <code><a href="nomologR-package.html">?nomologR</a></code>).
+The <code>nomo_cfa</code> and <code>nomo_missing</code> tables spell them <code>chi_square</code>,
+<code>p_value</code>, <code>CFI</code>, and so on. The others use the names of
+<code><a href="https://rdrr.io/pkg/lavaan/man/fitMeasures.html" class="external-link">lavaan::fitMeasures()</a></code>: <code>chisq</code>, <code>pvalue</code>, <code>cfi</code>, and so on.</p><ul><li><p><code>nomo_cfa</code>, <code>"fit"</code>: long by design, one row per index, named in
+<code>metric</code> (<code>chi_square</code>, <code>df</code>, <code>p_value</code>, <code>CFI</code>, <code>TLI</code>, <code>RMSEA</code>,
+<code>RMSEA_CI_lower</code>, <code>RMSEA_CI_upper</code>, <code>SRMR</code>), with its <code>value</code>,
+<code>reference</code>, and <code>attention</code> flag.</p></li>
+<li><p><code>nomo_missing</code>, <code>"fit"</code>: one row per <code>strategy</code>, with <code>chi_square</code>, <code>df</code>,
+<code>p_value</code>, <code>CFI</code>, <code>TLI</code>, <code>RMSEA</code>, and <code>SRMR</code>.</p></li>
+<li><p><code>nomo_esem</code>, <code>"models"</code>: one row per <code>model</code>, with <code>chisq</code>, <code>df</code>,
+<code>pvalue</code>, <code>cfi</code>, <code>tli</code>, <code>rmsea</code>, <code>srmr</code>, <code>aic</code>, and <code>bic</code>.</p></li>
+<li><p><code>nomo_method_variance</code>, <code>"models"</code>: one row per <code>model</code>, with <code>chisq</code>,
+<code>df</code>, <code>pvalue</code>, <code>cfi</code>, <code>tli</code>, <code>rmsea</code>, and <code>srmr</code>.</p></li>
+<li><p><code>nomo_compare</code>, <code>"models"</code>: one row per <code>model</code>, with <code>npar</code>, <code>df</code>,
+<code>chisq</code>, <code>cfi</code>, <code>tli</code>, <code>rmsea</code>, <code>srmr</code>, <code>aic</code>, and <code>bic</code>. The difference
+tests and their p-values are in <code>"comparisons"</code>.</p></li>
+<li><p><code>nomo_invariance</code>, <code>"fit"</code>: one row per <code>level</code>, with <code>chisq</code>, <code>df</code>,
+<code>pvalue</code>, <code>cfi</code>, <code>rmsea</code>, and <code>srmr</code>, the changes from the level before
+(<code>delta_cfi</code>, <code>delta_rmsea</code>, <code>delta_srmr</code>), and the likelihood-ratio test
+against it (<code>lrt_chisq</code>, <code>lrt_df</code>, <code>lrt_p</code>).</p></li>
+<li><p><code>nomo_network</code>, <code>"fit"</code>: one row, with <code>chisq</code>, <code>df</code>, <code>pvalue</code>, <code>cfi</code>,
+<code>tli</code>, <code>rmsea</code>, and <code>srmr</code>.</p></li>
+</ul></div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>

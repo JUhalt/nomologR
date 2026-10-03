@@ -94,6 +94,17 @@ A `nomo_validity` object. The fields to read are:
 
 - `standardized_loadings`, `references`, and `decision_log`.
 
+`attention` in `standardized_loadings` is `"KEEP"`, `"REVIEW"`, or
+`"STRONG REVIEW"`, as in
+[`nomo_cfa()`](https://juhalt.github.io/nomologR/reference/nomo_cfa.md).
+`attention` in `ave` and `discriminant`, and `severity` in
+`decision_log`, are `"info"`, `"review"`, or `"concern"`. `attention` in
+`fornell_larcker_pairs` is `"info"` or `"review"`, or `"unavailable"`
+when the comparison could not be computed, as when an AVE is missing or
+negative and so has no square root. See **Conventions in returned
+tables** in
+[`?nomologR`](https://juhalt.github.io/nomologR/reference/nomologR-package.md).
+
 Other fields record the call, the settings used, and intermediate engine
 results. They may change between releases and are not part of the stable
 interface (see

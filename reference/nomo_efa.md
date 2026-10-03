@@ -141,6 +141,11 @@ An object of class `nomo_efa`. The fields to read are:
 
 - `decision_log`.
 
+The flag in `item_summary`, `attention`, is `"KEEP"`, `"REVIEW"`, or
+`"STRONG REVIEW"`; `severity` in `decision_log` is `"info"`, `"review"`,
+or `"concern"`. See **Conventions in returned tables** in
+[`?nomologR`](https://juhalt.github.io/nomologR/reference/nomologR-package.md).
+
 Other fields record the call, the settings used, and intermediate engine
 results. They may change between releases and are not part of the stable
 interface (see

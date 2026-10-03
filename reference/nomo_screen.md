@@ -114,6 +114,12 @@ An object of class `nomo_screen`. The fields to read are:
 - `handoff`: the content-review handoff read from `items`, when one was
   supplied.
 
+`pct_missing`, in `item_summary` and `case_summary`, is a proportion
+between 0 and 1, as are the `*_prop` and `proportion_*` columns.
+`percent_unique` is a percentage, 0 to 100, as the near-zero-variance
+rule states it. See **Conventions in returned tables** in
+[`?nomologR`](https://juhalt.github.io/nomologR/reference/nomologR-package.md).
+
 Other fields record the call, the settings used, and intermediate engine
 results. They may change between releases and are not part of the stable
 interface (see

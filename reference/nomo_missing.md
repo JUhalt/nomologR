@@ -83,6 +83,11 @@ refitted models (`fits`). They may change between releases and are not
 part of the stable interface (see
 [`?nomologR`](https://juhalt.github.io/nomologR/reference/nomologR-package.md)).
 
+`pct_incomplete` in `pattern` and `pct_missing` in `variables` are
+proportions between 0 and 1, not percentages. See **Conventions in
+returned tables** in
+[`?nomologR`](https://juhalt.github.io/nomologR/reference/nomologR-package.md).
+
 ## Details
 
 **Which strategies.** For continuous indicators, listwise deletion is

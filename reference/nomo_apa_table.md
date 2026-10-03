@@ -23,7 +23,8 @@ nomo_apa_table(x, type = NULL, number = NULL, title = NULL, ...)
   Which table to build. For `nomo_cfa`: `"loadings"`, `"fit"`, or
   `"factor_correlations"`. For `nomo_validity`: `"discriminant"` or
   `"convergent"`. For `nomo_network`: `"hypotheses"` or `"fit"`. Other
-  objects have one table each.
+  objects have one table each, so `type` is left `NULL` for them; any
+  other value is an error.
 
 - number:
 
@@ -31,7 +32,7 @@ nomo_apa_table(x, type = NULL, number = NULL, title = NULL, ...)
 
 - title:
 
-  Optional title; a descriptive default is supplied.
+  Optional title, one string; a descriptive default is supplied.
 
 - ...:
 
@@ -40,7 +41,29 @@ nomo_apa_table(x, type = NULL, number = NULL, title = NULL, ...)
 ## Value
 
 A `nomo_apa_table` object, which prints in the console and renders as a
-formatted table, with its title and notes, when knitted.
+formatted table, with its title and notes, when knitted. The fields to
+read are:
+
+- `number`: the table number, an integer, or `NULL` when none was given.
+
+- `title`: the table title.
+
+- `body`: a data frame of formatted cells, all character. Its column
+  names are the column headings.
+
+- `stub`: the name of the stub column, the first column of `body`, which
+  says what each row describes.
+
+- `notes`: a list of three character vectors, `general`, `specific`, and
+  `probability`, the three kinds of APA table note in the order they are
+  printed. Any of them may be empty.
+
+- `source`: the class of the result the table was built from, such as
+  `"nomo_cfa"`.
+
+Headings, cells, and notes are written in Markdown, as pandoc reads it:
+italics as `*p*` and a superscript as `^a^`. Printing in the console
+drops these marks from the headings and notes; knitting renders them.
 
 ## Details
 
