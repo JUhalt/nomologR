@@ -28,7 +28,10 @@ an object created by \code{nomo_model()}.}
 
 \item{group}{Character scalar naming the grouping variable in \code{data}.}
 
-\item{ordered}{Optional character vector naming ordered indicators.}
+\item{ordered}{Optional character vector naming ordered indicators. Model
+indicators stored as ordered factors are modeled as ordered whether or not
+they are named here, since lavaan fits them as categorical; the result's
+\code{ordered} includes them, and the decision log lists them for review.}
 
 \item{levels}{Optional invariance levels. \code{NULL} uses the sequence implied by
 the indicator category structure.}

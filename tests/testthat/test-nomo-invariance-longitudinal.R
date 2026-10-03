@@ -151,6 +151,29 @@ test_that("ordered items are expanded to every occasion", {
 })
 
 
+test_that("items stored as ordered factors are ordered on every occasion (#145)", {
+  skip_on_cran()
+  cut_items <- as.data.frame(lapply(nomo_demo_longitudinal, function(x) {
+    ordered(as.integer(cut(x, c(-Inf, 3, 3.75, 4.5, 5.25, Inf))))
+  }))
+  # One column of w4 is stored as integers: the item is still ordered on
+  # every occasion, as `ordered` would make it.
+  cut_items$w4_t3 <- as.integer(as.character(cut_items$w4_t3))
+  long <- nomo_invariance_longitudinal(
+    long_model, cut_items, occasions = long_occasions, ordered = "w1",
+    levels = c("configural", "thresholds"), localize = FALSE
+  )
+  expect_identical(long$ordered_detected, c("w2", "w3", "w4"))
+  expect_identical(length(long$ordered), 12L)
+  expect_true("w4_t3" %in% long$ordered)
+  expect_identical(long$indicator_type, "ordered_polytomous")
+  expect_identical(long$estimator, "WLSMV")
+  row <- long$decision_log[long$decision_log$metric == "ordered_detected", ]
+  expect_identical(row$object, "w2, w3, w4")
+  expect_identical(row$severity, "review")
+})
+
+
 test_that("the results print and summarize within 80 columns", {
   skip_on_cran()
   long <- long_default()

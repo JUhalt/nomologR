@@ -1837,3 +1837,62 @@ test_that("latent means need intercepts held equal and std.lv identification", {
   expect_no_warning(capture.output(print(summary(old))))
   expect_null(nomo_table(old, "latent_means"))
 })
+
+
+# Audit fixes before the 1.0 freeze (#145) ------------------------------------------
+
+test_that("indicators stored as ordered factors are modeled as ordered without `ordered` (#145)", {
+  skip_on_cran()
+  # Five five-category items stored as ordered factors, with a population
+  # latent difference of .50 SD. lavaan fits them as categorical; recorded as
+  # continuous, the scalar model had been unidentified and the difference 0.
+  set.seed(11)
+  n <- 400
+  make_group <- function(shift) {
+    f <- rnorm(n, shift)
+    as.data.frame(lapply(1:5, function(i) {
+      ordered(cut(.8 * f + rnorm(n, sd = .6), c(-Inf, -1, -.3, .3, 1, Inf), labels = FALSE))
+    }), col.names = paste0("u", 1:5))
+  }
+  dat <- rbind(transform(make_group(0), grp = "A"), transform(make_group(.5), grp = "B"))
+
+  out <- nomo_invariance("F =~ u1 + u2 + u3 + u4 + u5", dat, group = "grp", ordered = "u1",
+                         levels = c("configural", "thresholds", "metric", "scalar"),
+                         localize = FALSE)
+  expect_identical(out$ordered, paste0("u", 1:5))
+  expect_identical(out$ordered_detected, paste0("u", 2:5))
+  expect_identical(out$indicator_type, "ordered_polytomous")
+  expect_identical(out$estimator, "WLSMV")
+  expect_identical(out$estimator_source, "ordered_default")
+  expect_identical(lavaan::lavInspect(out$fits$scalar, "options")$parameterization, "theta")
+  expect_identical(out$fit_evidence$df, c(10, 20, 24, 28))
+  means <- out$latent_means
+  expect_identical(means$level, "scalar")
+  expect_true(means$ci_lower < .50 && .50 < means$ci_upper)
+
+  row <- out$decision_log[out$decision_log$metric == "ordered_detected", ]
+  expect_identical(row$severity, "review")
+  expect_identical(row$stage, "invariance")
+  expect_identical(row$object, "u2, u3, u4, u5")
+  expect_true("categorical_invariance" %in% nomo_methods_used(out))
+})
+
+
+test_that("nomo_demo_ordinal is modeled as ordered without `ordered` (#145)", {
+  skip_on_cran()
+  dat <- nomo_demo_ordinal
+  dat$half <- rep(c("first", "second"), length.out = nrow(dat))
+  out <- nomo_invariance("A =~ a1 + a2 + a3 + a4", dat, group = "half",
+                         levels = "configural", localize = FALSE)
+  expect_identical(out$ordered_detected, paste0("a", 1:4))
+  expect_identical(out$indicator_type, "ordered_polytomous")
+  expect_identical(lavaan::lavInspect(out$fits$configural, "options")$parameterization, "theta")
+  expect_true("ordered_detected" %in% out$decision_log$metric)
+
+  # Declared, nothing is detected and nothing is logged.
+  declared <- nomo_invariance("A =~ a1 + a2 + a3 + a4", dat, group = "half",
+                              ordered = paste0("a", 1:4), levels = "configural",
+                              localize = FALSE)
+  expect_identical(declared$ordered_detected, character())
+  expect_false("ordered_detected" %in% declared$decision_log$metric)
+})

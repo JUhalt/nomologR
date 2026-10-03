@@ -36,7 +36,9 @@ reference for latent change.}
 \item{columns}{A pattern for the column names, containing \code{{item}} and
 \code{{occasion}}.}
 
-\item{ordered}{Optional names of ordered items, as in \code{model}.}
+\item{ordered}{Optional names of ordered items, as in \code{model}. Items whose
+columns are stored as ordered factors are modeled as ordered whether or
+not they are named here, and the decision log lists them for review.}
 
 \item{levels}{Optional invariance levels. \code{NULL} uses the sequence implied by
 the indicator category structure.}
@@ -114,7 +116,8 @@ across occasions instead of groups. A partial release names the item as in
 the intercept of \code{w3}. For ordered items, Wu and Estabrook's (2016)
 identification is the default; \code{ID.cat = "millsap"}, with \code{ID.fac = "UL"},
 applies Millsap and Tein's (2004) conditions, which Liu et al. (2017) extend
-to repeated measures.
+to repeated measures. An item whose columns are stored as ordered factors
+is modeled as ordered on every occasion, whether or not \code{ordered} names it.
 
 \strong{Latent change.} Once intercepts are invariant, fully or partially, the
 construct's mean can be compared across occasions. Under the default

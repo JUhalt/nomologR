@@ -32,7 +32,8 @@
 #' the intercept of `w3`. For ordered items, Wu and Estabrook's (2016)
 #' identification is the default; `ID.cat = "millsap"`, with `ID.fac = "UL"`,
 #' applies Millsap and Tein's (2004) conditions, which Liu et al. (2017) extend
-#' to repeated measures.
+#' to repeated measures. An item whose columns are stored as ordered factors
+#' is modeled as ordered on every occasion, whether or not `ordered` names it.
 #'
 #' **Latent change.** Once intercepts are invariant, fully or partially, the
 #' construct's mean can be compared across occasions. Under the default
@@ -50,7 +51,9 @@
 #'   reference for latent change.
 #' @param columns A pattern for the column names, containing `{item}` and
 #'   `{occasion}`.
-#' @param ordered Optional names of ordered items, as in `model`.
+#' @param ordered Optional names of ordered items, as in `model`. Items whose
+#'   columns are stored as ordered factors are modeled as ordered whether or
+#'   not they are named here, and the decision log lists them for review.
 #' @param partial Optional researcher-specified releases from [nomo_partial()],
 #'   naming items as in `model`.
 #' @param auto The lags over which each item's unique factors are correlated:
@@ -221,9 +224,20 @@ nomo_invariance_longitudinal <- function(model,
     collapse = "\n"
   )
 
+  # An item stored as an ordered factor is ordered on every occasion, as
+  # lavaan would fit its columns (#145); an item, not a column, is what
+  # `ordered` names.
+  found <- nomo_ordered_indicators(
+    longitudinal_model, data, unlist(long_items[ordered])
+  )
+  ordered_detected <- items[vapply(
+    long_items, function(columns) any(columns %in% found$detected), logical(1)
+  )]
+  ordered <- c(ordered, ordered_detected)
+
   prepared <- nomo_invariance_prepare(
     data = data,
-    ordered = if (is.null(ordered)) NULL else unname(unlist(long_items[ordered])),
+    ordered = if (length(ordered)) unname(unlist(long_items[ordered])),
     levels = levels,
     partial = partial,
     localize = localize,
@@ -287,7 +301,8 @@ nomo_invariance_longitudinal <- function(model,
     partial = partial,
     localize = localize,
     score_diagnostics = run$score_diagnostics,
-    design = "occasions"
+    design = "occasions",
+    ordered_detected = ordered_detected
   )
   latent_means <- nomo_invariance_longitudinal_means(
     fits = run$fits,
@@ -320,6 +335,7 @@ nomo_invariance_longitudinal <- function(model,
     indicator_type = sequence_info$type,
     identification_note = sequence_info$identification_note,
     ordered = ordered_columns,
+    ordered_detected = ordered_detected,
     ordered_categories = prepared$category_table,
     requested_levels = levels,
     completed_levels = fit_evidence$level,

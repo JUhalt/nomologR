@@ -504,7 +504,8 @@ nomo_invariance_decision_log <- function(group,
                                          partial = NULL,
                                          localize = TRUE,
                                          score_diagnostics = NULL,
-                                         design = "groups") {
+                                         design = "groups",
+                                         ordered_detected = character()) {
   log <- nomo_log_new()
   across_occasions <- identical(design, "occasions")
 
@@ -582,6 +583,7 @@ nomo_invariance_decision_log <- function(group,
       recommendation = "Keep category structure visible when reporting invariance."
     )
   }
+  log <- nomo_ordered_detected_log(log, ordered_detected, "invariance")
 
   if (!is.null(estimator)) {
     log <- nomo_log_add(
@@ -714,6 +716,10 @@ nomo_invariance_decision_log <- function(group,
 
 # Checks and normalizes the options nomo_invariance() and
 # nomo_invariance_longitudinal() share, and chooses the invariance sequence.
+# With `model`, model indicators stored as ordered factors are treated as
+# declared, since lavaan fits them as categorical whether or not `ordered` names
+# them (#145); the longitudinal function detects them by item before it calls
+# this and passes no `model`.
 nomo_invariance_prepare <- function(data,
                                     ordered,
                                     levels,
@@ -724,7 +730,8 @@ nomo_invariance_prepare <- function(data,
                                     ID.fac,
                                     ID.cat,
                                     parameterization,
-                                    guidance) {
+                                    guidance,
+                                    model = NULL) {
   if (is.null(ordered)) {
     ordered <- character()
   } else {
@@ -743,6 +750,13 @@ nomo_invariance_prepare <- function(data,
         call. = FALSE
       )
     }
+  }
+
+  ordered_detected <- character()
+  if (!is.null(model)) {
+    found <- nomo_ordered_indicators(model, data, ordered)
+    ordered <- found$ordered
+    ordered_detected <- found$detected
   }
 
   if (!is.logical(localize) || length(localize) != 1L || is.na(localize)) {
@@ -839,6 +853,7 @@ nomo_invariance_prepare <- function(data,
 
   list(
     ordered = ordered,
+    ordered_detected = ordered_detected,
     category_table = category_table,
     sequence_info = sequence_info,
     levels = levels,
@@ -1048,7 +1063,10 @@ nomo_invariance_engine_args <- function(syntax_base,
 #'   an object created by `nomo_model()`.
 #' @param data A non-empty data frame.
 #' @param group Character scalar naming the grouping variable in `data`.
-#' @param ordered Optional character vector naming ordered indicators.
+#' @param ordered Optional character vector naming ordered indicators. Model
+#'   indicators stored as ordered factors are modeled as ordered whether or not
+#'   they are named here, since lavaan fits them as categorical; the result's
+#'   `ordered` includes them, and the decision log lists them for review.
 #' @param levels Optional invariance levels. `NULL` uses the sequence implied by
 #'   the indicator category structure.
 #' @param partial Optional researcher-specified partial-invariance releases from
@@ -1233,7 +1251,8 @@ nomo_invariance <- function(model,
     ID.fac = ID.fac,
     ID.cat = ID.cat,
     parameterization = parameterization,
-    guidance = guidance
+    guidance = guidance,
+    model = model
   )
   ordered <- prepared$ordered
   category_table <- prepared$category_table
@@ -1315,7 +1334,8 @@ nomo_invariance <- function(model,
     sequence_note = sequence_info$identification_note,
     partial = partial,
     localize = localize,
-    score_diagnostics = score_diagnostics
+    score_diagnostics = score_diagnostics,
+    ordered_detected = prepared$ordered_detected
   )
 
   latent_means <- nomo_invariance_latent_means(
@@ -1338,6 +1358,7 @@ nomo_invariance <- function(model,
     indicator_type = sequence_info$type,
     identification_note = sequence_info$identification_note,
     ordered = ordered,
+    ordered_detected = prepared$ordered_detected,
     ordered_categories = category_table,
     requested_levels = levels,
     completed_levels = fit_evidence$level,
