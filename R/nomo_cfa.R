@@ -48,7 +48,10 @@
 #'     every value is the standard one, and the decision log says so.
 #'   * `standardized_loadings`: one row per loading, with its interval, flag,
 #'     and explanation.
-#'   * `factor_correlations`: latent correlations with intervals.
+#'   * `factor_correlations`: latent correlations with intervals. A
+#'     correlation the model fixes, such as the zero correlations of a
+#'     bifactor model, is listed at its fixed value; `summary()` shows it as
+#'     fixed rather than estimated.
 #'   * `heywood`: improper-solution signals, if any.
 #'   * `parameter_estimates` and `standardized_solution`: `lavaan`'s parameter
 #'     tables, as tibbles.
@@ -69,6 +72,13 @@
 #'   Other fields record the call, the settings used, and intermediate engine
 #'   results. They may change between releases and are not part of the stable
 #'   interface (see `?nomologR`).
+#'
+#'   `print()` shows the cases used, the estimator, convergence, the fit
+#'   indices, and how many flags were raised. `summary()` adds the chi-square
+#'   test, the fit indices with their references, the standardized loadings,
+#'   the factor correlations, any improper solution, the largest residual
+#'   correlations and modification indices, and each flag with its
+#'   explanation; for a model that did not converge it shows only the flags.
 #'
 #' @references
 #' Historical foundations:
@@ -219,8 +229,7 @@ nomo_cfa <- function(model,
       is.na(modification_indices)) {
     stop("`modification_indices` must be TRUE or FALSE.", call. = FALSE)
   }
-  if (!is.numeric(mi_top) || length(mi_top) != 1L || is.na(mi_top) ||
-      !is.finite(mi_top) || mi_top < 0 || mi_top != as.integer(mi_top)) {
+  if (!nomo_is_whole_number(mi_top) || mi_top < 0) {
     stop("`mi_top` must be a non-negative integer.", call. = FALSE)
   }
   mi_top <- as.integer(mi_top)
@@ -667,9 +676,10 @@ nomo_cfa_loadings <- function(standardized_solution, guidance) {
   # second-order loading, so its content is the factor's definition.
   content <- ifelse(rows$rhs %in% rows$lhs, "the first-order factor's definition", "item content")
   attention[weak] <- "REVIEW"
+  # The reference is written as the loadings are, "0.50" (#144).
   explanation[weak] <- paste0(
     "Absolute standardized loading is below the configured teaching reference of ",
-    format(guidance$cfa_loading_reference, trim = TRUE),
+    nomo_present_stat(guidance$cfa_loading_reference, "loading"),
     "; inspect ", content[weak], ", precision, and model specification."
   )
   attention[extreme] <- "STRONG REVIEW"
@@ -1053,7 +1063,8 @@ nomo_cfa_decision_log <- function(estimator_label, engine_estimator,
         log <- nomo_log_add(
           log, stage = "cfa", object = "model",
           metric = paste0("fit_", tolower(row$metric)), value = row$value,
-          reference = paste("Configured teaching reference:", format(row$reference, trim = TRUE)),
+          reference = paste("Configured teaching reference:",
+                            nomo_present_stat(row$reference, nomo_cfa_fit_kind(row$metric))),
           severity = "review", observation = row$explanation,
           recommendation = paste(
             "Inspect estimator, sample size, localized residuals, parameter",
@@ -1126,7 +1137,8 @@ nomo_cfa_decision_log <- function(estimator_label, engine_estimator,
       value = residual_pairs$residual[[1L]],
       reference = "Localized residuals identify where model-implied relationships miss observed relationships",
       severity = "info",
-      observation = paste("Largest absolute residual correlation:", format(residual_pairs$abs_residual[[1L]], digits = 3)),
+      observation = paste0("Largest absolute residual correlation: ",
+                           nomo_present_stat(residual_pairs$abs_residual[[1L]], "estimate"), "."),
       recommendation = paste(
         "Inspect localized strain substantively; a residual does not by itself",
         "authorize a correlated error or cross-loading."
@@ -1138,7 +1150,7 @@ nomo_cfa_decision_log <- function(estimator_label, engine_estimator,
     log <- nomo_log_add(
       log, stage = "cfa", object = "model", metric = "modification_indices",
       value = nrow(modification_indices),
-      reference = "Modification indices are post-hoc diagnostics, not respecification instructions",
+      reference = "Modification indices are post hoc diagnostics, not respecification instructions",
       severity = "info",
       observation = if (is.null(mi_error)) {
         sprintf("%s %s retained for inspection.",

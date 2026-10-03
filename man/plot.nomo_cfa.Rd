@@ -15,7 +15,9 @@
 \item{...}{Unused.}
 }
 \value{
-A \code{ggplot2} object.
+A \code{ggplot2} object. Flags are drawn with the package's status
+shapes and colors (filled circle for no flag, open circle for review,
+filled square for concern), with a legend whenever a flag is drawn.
 }
 \description{
 Plot confirmatory factor-analysis evidence

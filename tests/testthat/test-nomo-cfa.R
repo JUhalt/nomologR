@@ -637,11 +637,22 @@ test_that("CFA print method handles engine labels, warnings, and unavailable val
   out$fit_evidence$value[out$fit_evidence$metric %in% c("CFI", "TLI", "RMSEA", "SRMR")] <- NA_real_
 
   txt <- capture.output(print(out))
-  expect_true(any(grepl("Cases: unknown of", txt, fixed = TRUE)))
+  expect_true(any(grepl("Cases: -- of 301 used", txt, fixed = TRUE)))
   expect_true(any(grepl("engine: DWLS", txt, fixed = TRUE)))
-  expect_true(any(grepl("Converged: NO", txt, fixed = TRUE)))
+  # No status is shown in capitals (#144).
+  expect_true(any(grepl("Converged: no", txt, fixed = TRUE)))
   expect_true(any(grepl("Engine warnings: 1", txt, fixed = TRUE)))
   expect_false(any(grepl("Fit:", txt, fixed = TRUE)))
+  # The flags count what did not converge and lavaan's warning, not loadings
+  # computed from an unconverged fit.
+  expect_true(any(grepl("Flags: 1 review, 1 concern", txt, fixed = TRUE)))
+
+  out$estimator <- NA_character_
+  out$estimator_engine <- NA_character_
+  txt <- capture.output(print(out))
+  expect_true(any(grepl("Estimator: -- |", txt, fixed = TRUE)))
+  # With no abbreviation shown, no definitions are printed.
+  expect_false(any(grepl(" = ", txt, fixed = TRUE)))
 })
 
 
@@ -667,17 +678,20 @@ test_that("summary printer covers flagged and diagnostic sections", {
   s$fit_evidence$variant[s$fit_evidence$metric == "CFI"] <- "cfi.robust"
 
   txt <- capture.output(print(s))
-  expect_true(any(grepl("(10 not used,", txt, fixed = TRUE)))
+  expect_true(any(grepl("(10 not used, 3.3%)", txt, fixed = TRUE)))
   expect_true(any(grepl("Ordered indicators: 1", txt, fixed = TRUE)))
-  expect_true(any(grepl("robust", txt, fixed = TRUE)))
-  expect_true(any(grepl("Flagged loadings", txt, fixed = TRUE)))
-  expect_true(any(grepl("synthetic loading review", txt, fixed = TRUE)))
+  expect_true(any(grepl("CFI is a robust value.", txt, fixed = TRUE)))
+  # One "Flagged" section, concern before review (#144).
+  expect_true("Flagged" %in% txt)
+  flagged <- txt[(which(txt == "Flagged") + 1L):length(txt)]
+  expect_match(flagged[[1L]], "^  - x1 \\(Concern\\): synthetic improper solution\\.")
+  expect_true(any(grepl("x1 on visual (Review): synthetic loading review.", txt, fixed = TRUE)))
+  expect_true(any(grepl("lavaan (Review): synthetic engine warning.", txt, fixed = TRUE)))
   expect_true(any(grepl("Factor correlations", txt, fixed = TRUE)))
-  expect_true(any(grepl("x1: synthetic_heywood (-0.100). synthetic improper solution",
-                        txt, fixed = TRUE)))
+  # An improper-solution signal of an unknown kind is named in words.
+  expect_true(any(grepl("^  x1 +Synthetic heywood +-0.10$", txt)))
   expect_true(any(grepl("Largest residual correlations", txt, fixed = TRUE)))
   expect_true(any(grepl("Modification indices (diagnostic only)", txt, fixed = TRUE)))
-  expect_true(any(grepl("Engine warnings", txt, fixed = TRUE)))
   expect_true(any(grepl("no single cutoff establishes model validity", txt, fixed = TRUE)))
 })
 
@@ -1242,15 +1256,33 @@ test_that("a model its fit indices cannot test says so, and keeps its warnings (
 
 
 test_that("a summary without fit indices says why rather than listing references (#89)", {
-  stuck <- nomo_cfa(nomo_model(list(A = paste0("a", 1:5), B = paste0("b", 1:5))),
-                    data = nomo_demo_continuous, control = list(iter.max = 2))
-  expect_false(stuck$converged)
-  expect_output(print(summary(stuck)), "No fit index is available: the model did not converge.",
-                fixed = TRUE)
-
   s <- summary(nomo_cfa("A =~ a1 + a2 + a3 + a4", data = nomo_demo_continuous))
   s$fit_evidence$value <- NA_real_
   expect_output(print(s), "No fit index is available.", fixed = TRUE)
+})
+
+
+test_that("an unconverged CFA shows no loadings, fit, or reassurance as results (#145)", {
+  stuck <- nomo_cfa(nomo_model(list(A = paste0("a", 1:5), B = paste0("b", 1:5))),
+                    data = nomo_demo_continuous, control = list(iter.max = 2))
+  expect_false(stuck$converged)
+  local_reproducible_output(width = 80)
+  txt <- capture.output(print(summary(stuck)))
+  # The optimizer's last values are not estimates, so neither they nor the
+  # sentences that would reassure about them are printed.
+  expect_true("Not converged" %in% txt)
+  expect_false(any(c("Standardized loadings", "Factor correlations", "Global fit") %in% txt))
+  expect_false(any(grepl("No loading was flagged", txt, fixed = TRUE)))
+  expect_false(any(grepl("No improper-solution signal", txt, fixed = TRUE)))
+  expect_true(any(grepl("Convergence (Concern): lavaan did not report convergence", txt,
+                        fixed = TRUE)))
+  expect_true(any(grepl("Optimizer (Review): Researcher-supplied", txt, fixed = TRUE)))
+
+  printed <- capture.output(print(stuck))
+  expect_true(any(grepl("did not converge, so its loadings and fit are not estimates",
+                        printed, fixed = TRUE)))
+  expect_false(any(grepl("Flags: none", printed, fixed = TRUE)))
+  expect_match(printed, "1 concern", all = FALSE)
 })
 
 
@@ -1506,4 +1538,204 @@ test_that("the loading helper words first-order factors and items apart (#145)",
   tab <- nomo_cfa_loadings(std, nomo_defaults())
   expect_match(tab$explanation[[1L]], "inspect item content", fixed = TRUE)
   expect_match(tab$explanation[[2L]], "inspect the first-order factor's definition", fixed = TRUE)
+})
+
+
+# Pre-RC fixes and the shared output style (#144, #145) ----------------------------
+
+hs_three <- "visual =~ x1 + x2 + x3\ntextual =~ x4 + x5 + x6\nspeed =~ x7 + x8 + x9"
+
+
+test_that("a whole-number argument beyond the integer range gets its own message (#145)", {
+  expect_error(nomo_cfa(hs_three, lavaan::HolzingerSwineford1939, mi_top = 1e10),
+               "`mi_top` must be a non-negative integer.", fixed = TRUE)
+  expect_error(nomo_cfa(hs_three, lavaan::HolzingerSwineford1939, mi_top = 2.5),
+               "`mi_top` must be a non-negative integer.", fixed = TRUE)
+  expect_error(nomo_cfa(hs_three, lavaan::HolzingerSwineford1939, mi_top = -1),
+               "`mi_top` must be a non-negative integer.", fixed = TRUE)
+})
+
+
+test_that("references are written as the values they are compared with (#144)", {
+  skip_on_cran()
+  out <- nomo_cfa(hs_three, lavaan::HolzingerSwineford1939, estimator = "MLR",
+                  modification_indices = FALSE)
+  weak <- out$standardized_loadings$explanation[out$standardized_loadings$attention == "REVIEW"]
+  expect_match(weak, "teaching reference of 0.50;", fixed = TRUE)
+  log <- out$decision_log
+  expect_identical(log$reference[log$metric == "fit_cfi"], "Configured teaching reference: .950")
+  expect_identical(log$reference[log$metric == "fit_rmsea"], "Configured teaching reference: 0.060")
+  expect_match(log$observation[log$metric == "largest_residual_correlation"],
+               "^Largest absolute residual correlation: 0\\.[0-9]{2}\\.$")
+})
+
+
+test_that("the CFA says which chi-square and which index versions it shows (#145)", {
+  skip_on_cran()
+  local_reproducible_output(width = 80)
+  hs <- lavaan::HolzingerSwineford1939
+  mlr <- nomo_cfa(hs_three, hs, estimator = "MLR", modification_indices = FALSE)
+  printed <- capture.output(print(mlr))
+  expect_true("Fit: CFI .930 | TLI 0.895 | RMSEA 0.092 | SRMR 0.065" %in% printed)
+  expect_true("CFI, TLI, and RMSEA are robust values." %in% printed)
+  summarized <- paste(capture.output(print(summary(mlr))), collapse = " ")
+  expect_match(summarized, "chi-square(24) = 87.13, p < .001   The chi-square is the Yuan-Bentler",
+               fixed = TRUE)
+  # A flagged value is shown beside its reference, in the same format.
+  expect_match(summarized, "CFI (Review): The value, .930, is below the teaching reference of .950",
+               fixed = TRUE)
+  expect_match(summarized, "RMSEA (Review): The value, 0.092, is above", fixed = TRUE)
+
+  # A fractional df prints with two decimals (#145).
+  mlmvs <- nomo_cfa(hs_three, hs, estimator = "MLMVS", modification_indices = FALSE)
+  expect_output(print(summary(mlmvs)), "chi-square(19.95) = 67.23, p < .001", fixed = TRUE)
+  expect_output(print(summary(mlmvs)), "the mean- and variance-adjusted test statistic",
+                fixed = TRUE)
+
+  # For the guided run's key evidence, a value can carry its version.
+  expect_identical(
+    unname(nomologR:::nomo_cfa_fit_parts(mlr$fit_evidence, c("CFI", "SRMR"), tag = TRUE)),
+    c("CFI .930 (robust)", "SRMR 0.065")
+  )
+})
+
+
+test_that("the versions note covers each combination of variants (#145)", {
+  note <- nomologR:::nomo_cfa_versions_note
+  expect_identical(note(c(chi_square = "chisq", CFI = "cfi", TLI = "tli", RMSEA = "rmsea")), "")
+  expect_identical(
+    note(c(chi_square = "chisq.scaled", CFI = "cfi", TLI = "tli", RMSEA = "rmsea")),
+    "The chi-square is the scaled test statistic."
+  )
+  expect_identical(
+    note(c(chi_square = "chisq.scaled", CFI = "cfi.robust", TLI = "tli.robust",
+           RMSEA = "rmsea.scaled"), "Yuan-Bentler scaled"),
+    paste("The chi-square is the Yuan-Bentler scaled test statistic, CFI and TLI are",
+          "robust values, and RMSEA is a scaled value.")
+  )
+
+  # A scaled test without a label here is named as lavaan names it.
+  fit <- nomo_cfa(hs_three, lavaan::HolzingerSwineford1939, modification_indices = FALSE)$fit
+  real <- lavaan::lavInspect
+  label <- testthat::with_mocked_bindings(
+    nomologR:::nomo_cfa_test_label(fit),
+    lavInspect = function(object, what, ...) {
+      if (identical(what, "options")) return(list(test = c("standard", "browne.residual.adf")))
+      real(object, what, ...)
+    },
+    .package = "lavaan"
+  )
+  expect_identical(label, "browne residual adf")
+  expect_identical(nomologR:::nomo_cfa_test_label(NULL), "")
+})
+
+
+test_that("correlations a model fixes are not shown as estimates (#145)", {
+  skip_on_cran()
+  local_reproducible_output(width = 80)
+  hs <- lavaan::HolzingerSwineford1939
+  factors <- list(visual = c("x1", "x2", "x3"), textual = c("x4", "x5", "x6"),
+                  speed = c("x7", "x8", "x9"))
+  bifactor <- nomo_cfa(nomo_model(factors, structure = "bifactor"), hs,
+                       modification_indices = FALSE)
+  txt <- capture.output(print(summary(bifactor)))
+  expect_false(any(grepl("Factor 1", txt, fixed = TRUE)))
+  expect_match(gsub("\\s+", " ", paste(txt, collapse = " ")),
+               "Every factor correlation is fixed at 0 by the model, so not estimated: G with visual",
+               fixed = TRUE)
+  # The stored table is unchanged.
+  expect_identical(nrow(bifactor$factor_correlations), 6L)
+  # The improper solution of this fit is listed, with its signal in words.
+  expect_true(any(grepl("^  x1 +Negative residual variance +-1\\.14$", txt)))
+
+  # One correlation fixed at zero beside estimated ones, then at another value.
+  orth <- nomo_cfa(paste(hs_three, "visual ~~ 0*textual", sep = "\n"), hs,
+                   modification_indices = FALSE)
+  txt <- paste(capture.output(print(summary(orth))), collapse = " ")
+  expect_match(txt, "Fixed at 0 by the model, so not estimated: visual with textual.", fixed = TRUE)
+  expect_match(txt, "visual    speed", fixed = TRUE)
+  fixed <- nomo_cfa(paste(hs_three, "visual ~~ 0.3*textual", sep = "\n"), hs,
+                    modification_indices = FALSE)
+  expect_output(print(summary(fixed)),
+                "Fixed by the model, so not estimated: visual with textual.", fixed = TRUE)
+
+  # Without a parameter table, nothing is taken to be fixed.
+  expect_identical(
+    nomologR:::nomo_cfa_fixed_correlations(
+      tibble::tibble(factor1 = "A", factor2 = "B"), fit = NULL
+    ),
+    FALSE
+  )
+})
+
+
+test_that("an improper solution is tabled once, with the loading flagged once (#144)", {
+  skip_on_cran()
+  local_reproducible_output(width = 80)
+  heywood <- nomo_cfa("visual =~ x1+x2+x3\ntextual =~ x4+x5+x6\nspeed =~ x7+x8",
+                      lavaan::HolzingerSwineford1939)
+  txt <- capture.output(print(summary(heywood)))
+  expect_true(any(grepl("^  speed =~ x8 +Loading above 1 +1\\.25$", txt)))
+  flagged <- txt[(which(txt == "Flagged") + 1L):length(txt)]
+  expect_match(flagged[[1L]], "^  - x8 on speed \\(Concern\\): Absolute standardized loading exceeds 1")
+  expect_false(any(grepl("speed =~ x8 (Concern)", txt, fixed = TRUE)))
+  expect_match(paste(capture.output(print(heywood)), collapse = " "),
+               "Improper-solution signals: 2", fixed = TRUE)
+})
+
+
+test_that("second-order loadings sit under an Indicator column (#145)", {
+  skip_on_cran()
+  local_reproducible_output(width = 80)
+  factors <- list(visual = c("x1", "x2", "x3"), textual = c("x4", "x5", "x6"),
+                  speed = c("x7", "x8", "x9"))
+  ho <- nomo_cfa(nomo_model(factors, structure = "higher_order"),
+                 lavaan::HolzingerSwineford1939, modification_indices = FALSE)
+  txt <- capture.output(print(summary(ho)))
+  expect_match(txt, "^  Factor +Indicator +Loading", all = FALSE)
+  expect_match(txt, "^  G +visual +0\\.", all = FALSE)
+})
+
+
+test_that("CFA plots draw flags with the shared status shapes and name the references (#144)", {
+  skip_on_cran()
+  out <- nomo_cfa(hs_three, lavaan::HolzingerSwineford1939, modification_indices = FALSE)
+  out$standardized_loadings$attention[1:3] <- c("KEEP", "REVIEW", "STRONG REVIEW")
+  p <- plot(out, type = "loadings")
+  guide <- ggplot2::get_guide_data(p, "shape")
+  expect_identical(guide$.label, c("No flag", "Review", "Concern"))
+  expect_identical(unname(guide$shape), c(16, 1, 15))
+  expect_match(p$labels$subtitle, "0.50", fixed = TRUE)
+
+  fit <- plot(out, type = "fit")
+  # The reference is a dashed mark, never the cross that means "not computed".
+  geoms <- vapply(fit$layers, function(l) class(l$geom)[[1L]], character(1))
+  expect_true("GeomErrorbar" %in% geoms)
+  expect_false(any(vapply(fit$layers, function(l) identical(l$aes_params$shape, 4), logical(1))))
+  expect_match(gsub("\n", " ", fit$labels$caption),
+               "References: CFI .950, TLI 0.950, RMSEA 0.060, SRMR 0.080", fixed = TRUE)
+  with_mi <- nomo_cfa(hs_three, lavaan::HolzingerSwineford1939, mi_top = 3)
+  expect_identical(plot(with_mi, type = "modification_indices")$labels$subtitle,
+                   "Post hoc diagnostic evidence only")
+})
+
+
+test_that("nomo_model() refuses names lavaan would rename or cannot read (#145)", {
+  expect_error(
+    nomo_model(list(visual = c("x1", "x2", "x3"), "self-efficacy" = c("x4", "x5", "x6"))),
+    'Factor name cannot be read by lavaan: "self-efficacy". Use letters, digits, `.`, and `_`, starting with a letter, for example "self.efficacy".',
+    fixed = TRUE
+  )
+  expect_error(nomo_model(list("1st" = c("x1", "x2"), "my factor" = c("x3", "x4"))),
+               'Factor names cannot be read by lavaan: "1st", "my factor".', fixed = TRUE)
+  expect_error(nomo_model(list(A = c("item 1", "item2"))),
+               'Indicator name cannot be read by lavaan: "item 1".', fixed = TRUE)
+  expect_error(nomo_model(list(A = c("x1", "x2", "x3"), B = c("x4", "x5", "x6"),
+                               C = c("x7", "x8", "x9")),
+                          structure = "higher_order", general = "g-factor"),
+               'The `general` factor name cannot be read by lavaan: "g-factor".', fixed = TRUE)
+  # Dots and underscores are names lavaan reads as written.
+  model <- nomo_model(list(self.efficacy = c("x1", "x2", "x3"), self_worth = c("x4", "x5", "x6")))
+  fitted <- nomo_cfa(model, lavaan::HolzingerSwineford1939, modification_indices = FALSE)
+  expect_identical(unique(fitted$standardized_loadings$factor), c("self.efficacy", "self_worth"))
 })
