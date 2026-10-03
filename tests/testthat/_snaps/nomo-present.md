@@ -885,7 +885,7 @@
       All requested stages are complete or explicitly marked not requested. No
       hidden item deletion, model respecification, parameter freeing, or validity
       verdict was performed. summary(x) shows the stages and decisions, and
-      nomo_report(x) archives the evidence.
+      nomo_report(x, file = "report.html") archives the evidence.
 
 ---
 

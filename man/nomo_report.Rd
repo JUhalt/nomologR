@@ -6,7 +6,7 @@
 \usage{
 nomo_report(
   x,
-  file = "nomologR-report.html",
+  file,
   title = "nomologR reproducible analysis report",
   include_plots = TRUE,
   include_session = TRUE,
@@ -19,7 +19,9 @@ nomo_report(
 \arguments{
 \item{x}{An object created by \code{\link[=nomo_run]{nomo_run()}}.}
 
-\item{file}{Output path. The extension chooses the format: \code{.html} or
+\item{file}{Output path. Required: \code{nomo_report()} has no default path, so
+it writes a report only where you ask, and stops with an error when \code{file}
+is not given. The extension chooses the format: \code{.html} or
 \code{.htm} for a self-contained HTML report, \code{.docx} for a Word document. The
 Word report carries the same tables, figures, and interpretation contract
 as the HTML one; collapsible sections are shown expanded, and it uses

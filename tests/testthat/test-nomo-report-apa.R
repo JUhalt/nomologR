@@ -78,7 +78,11 @@ test_that("a table that does not apply is left out rather than failing the repor
 
 
 test_that("apa_tables must be TRUE or FALSE", {
-  expect_error(nomo_report(report_apa_run(), apa_tables = NA), "apa_tables")
+  expect_error(
+    nomo_report(report_apa_run(), file = tempfile(fileext = ".html"),
+                apa_tables = NA),
+    "apa_tables"
+  )
 })
 
 

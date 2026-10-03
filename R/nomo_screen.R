@@ -26,11 +26,16 @@
 #'   inter-item correlations are then reviewed only within a scale, since items
 #'   of different constructs need not correlate positively. A `contentvalidR`
 #'   handoff supplies its scales here.
-#' @param reverse Optional character vector naming reverse-keyed items. Used
-#'   only to recode an internal copy for the indices that need it; the data is
-#'   never recoded.
-#' @param scale_range Numeric `c(min, max)` of the response scale. Required
-#'   whenever `reverse` is supplied, and never inferred from the data.
+#' @param reverse Optional character vector naming reverse-keyed items, each of
+#'   which must be an item being screened. Used only to recode an internal copy:
+#'   for the careless-responding indices that need it, and to say whether a
+#'   declared item's negative item-rest correlation is the sign expected before
+#'   recoding. The data is never recoded.
+#' @param scale_range Numeric `c(min, max)` of the response scale, with `min`
+#'   below `max`. It is needed to use `reverse` and is never inferred from the
+#'   data. With `effort = TRUE`, naming reverse-keyed items without it is
+#'   refused. With `effort = FALSE` the audit runs, and the decision log
+#'   records that the declared keying was not used.
 #' @param pair_magnitude Minimum absolute between-person correlation for an
 #'   item pair to count as a psychometric antonym or synonym. Curran (2016)
 #'   suggests .60 while saying there is no firm basis for it, so it is an
@@ -75,10 +80,22 @@
 #' attentive respondents well and random responders poorly, so an unflagged case
 #' is not thereby shown to be attentive.
 #'
+#' The long-string rule is applied only when at least
+#' `guidance$long_string_min_items` items are screened (20 in
+#' [nomo_defaults()]). Half the length of a shorter item set is a run of a few
+#' responses, which attentive respondents give often: with two items every case
+#' reaches it. On a shorter set each case's longest run is still reported in
+#' `long_string`, no case is flagged on it, and the decision log states the
+#' number of items and the share of cases that reached half the length.
+#'
 #' Each respondent's antonym, synonym, and even-odd value is a correlation whose
 #' N is the number of pairs or scales. With two, every value is exactly +1 or
 #' -1, so at least three are required; with fewer than five the log says the
-#' flags are coarse. Cases are flagged, never removed.
+#' flags are coarse. The same holds for each respondent: one who answered fewer
+#' than three of the pairs, or both halves of fewer than three scales, has no
+#' value. Even-odd consistency is Spearman-Brown corrected, and the correction
+#' has no meaning below -1, so the value is bounded there: it lies between -1
+#' and 1. Cases are flagged, never removed.
 #'
 #' **Items from content review.** `items` may be the handoff that
 #' `contentvalidR`'s `content_handoff()` produces after content review. Only
@@ -115,7 +132,8 @@
 #'   * `decision_log`: the evidence and its explanations (see [nomo_table()]).
 #'   * `effort`, `effort_pairs`, and `effort_settings`: the careless-responding
 #'     indices per row, the pairs they used, and their settings, when
-#'     `effort = TRUE`.
+#'     `effort = TRUE`. The settings include `long_string_rule_applied`, which
+#'     is `FALSE` when too few items were screened for the long-string rule.
 #'   * `handoff`: the content-review handoff read from `items`, when one was
 #'     supplied.
 #'
@@ -245,6 +263,7 @@ nomo_screen <- function(data,
     reverse = reverse, scale_range = scale_range,
     pair_magnitude = pair_magnitude
   )
+  long_string_min_items <- if (isTRUE(effort)) nomo_screen_long_string_min(guidance)
 
   item_summary <- dplyr::bind_rows(
     lapply(items, function(item) {
@@ -302,6 +321,36 @@ nomo_screen <- function(data,
       recommendation = paste(
         "Verify that identifiers, demographics, grouping variables, and other",
         "non-item columns are not being interpreted as scale items."
+      )
+    )
+  }
+
+  # Declared keying is used only on a copy recoded against the response scale,
+  # and the scale is never inferred. This is reached only without the effort
+  # indices, which refuse the same call. Nothing is computed from the keying
+  # here, so the audit proceeds and says the keying went unused, rather than
+  # leaving its explanation silently absent.
+  if (length(reverse) && is.null(scale_range)) {
+    decision_log <- nomo_log_add(
+      decision_log,
+      stage = "screen",
+      object = "item_keying",
+      metric = "keying_not_used",
+      value = length(reverse),
+      reference = "The response scale is never inferred from the data",
+      severity = "info",
+      observation = sprintf(
+        paste(
+          "Reverse-keyed item(s) %s were declared without `scale_range`, so the",
+          "declared keying was not used: a negative item-rest correlation of",
+          "such an item is reported without the keying explanation."
+        ),
+        paste(reverse, collapse = ", ")
+      ),
+      recommendation = paste(
+        "Supply `scale_range = c(min, max)` to have a declared item's negative",
+        "item-rest correlation checked against its recoded value. With",
+        "`effort = TRUE` the range is required."
       )
     )
   }
@@ -445,7 +494,8 @@ nomo_screen <- function(data,
       scales = effort_args$scales,
       reverse = effort_args$reverse,
       scale_range = effort_args$scale_range,
-      pair_magnitude = pair_magnitude
+      pair_magnitude = pair_magnitude,
+      long_string_min_items = long_string_min_items
     )
     effort_log <- nomo_effort_log(effort_result, n_items = length(items))
   }
@@ -506,7 +556,9 @@ nomo_screen <- function(data,
           reverse = effort_args$reverse,
           scale_range = effort_args$scale_range,
           pair_magnitude = pair_magnitude,
-          long_string_limit = effort_result$long_string_limit
+          long_string_limit = effort_result$long_string_limit,
+          long_string_min_items = effort_result$long_string_min_items,
+          long_string_rule_applied = effort_result$long_string_rule_applied
         )
       ),
       out[tail_names]
@@ -573,10 +625,18 @@ print.nomo_screen <- function(x, ...) {
   if (!is.null(x$effort) && nrow(x$effort)) {
     e <- x$effort
     flagged <- sum(e$n_flags > 0L)
+    # On a short item set the long-string rule is not applied, and a count of
+    # zero would read as a finding about the sample. A screen saved before the
+    # setting existed applied the rule.
+    long_applied <- !isFALSE(x$effort_settings$long_string_rule_applied)
     nomo_present_facts(c(
       sprintf("Careless-responding flags: %d case%s", flagged,
               if (flagged == 1L) "" else "s"),
-      sprintf("long-string %d", sum(e$flag_long_string)),
+      if (long_applied) {
+        sprintf("long-string %d", sum(e$flag_long_string))
+      } else {
+        "long-string not applied"
+      },
       sprintf("antonym %d", sum(e$flag_antonym)),
       sprintf("synonym %d", sum(e$flag_synonym))
     ))
@@ -810,6 +870,31 @@ nomo_screen_effort_args <- function(effort, selected, items, scales, reverse,
     }
   }
 
+  # `reverse` and `scale_range` also explain a negative item-rest correlation
+  # in the item audit, so they too are checked whether or not the effort
+  # indices are requested. Unchecked, a misspelled item or a reversed range
+  # was a silent no-op: the explanation never appeared and nothing said why.
+  if (!is.null(reverse)) {
+    if (!is.character(reverse)) {
+      stop("`reverse` must be a character vector of item names.", call. = FALSE)
+    }
+    unknown <- setdiff(reverse, items)
+    if (length(unknown)) {
+      stop(
+        paste0("`reverse` names item(s) not being screened: ",
+               paste(unknown, collapse = ", "), "."),
+        call. = FALSE
+      )
+    }
+  }
+
+  if (!is.null(scale_range)) {
+    if (!is.numeric(scale_range) || length(scale_range) != 2L ||
+          !all(is.finite(scale_range)) || scale_range[[1L]] >= scale_range[[2L]]) {
+      stop("`scale_range` must be `c(min, max)` with min below max.", call. = FALSE)
+    }
+  }
+
   if (!isTRUE(effort)) {
     return(list(scales = NULL, reverse = NULL, scale_range = NULL))
   }
@@ -831,39 +916,40 @@ nomo_screen_effort_args <- function(effort, selected, items, scales, reverse,
     stop("`pair_magnitude` must be a single number between 0 and 1.", call. = FALSE)
   }
 
-  if (!is.null(reverse)) {
-    if (!is.character(reverse)) {
-      stop("`reverse` must be a character vector of item names.", call. = FALSE)
-    }
-    unknown <- setdiff(reverse, items)
-    if (length(unknown)) {
-      stop(
-        paste0("`reverse` names item(s) not being screened: ",
-               paste(unknown, collapse = ", "), "."),
-        call. = FALSE
-      )
-    }
-    if (length(reverse) && is.null(scale_range)) {
-      stop(
-        paste(
-          "Recoding reverse-keyed items needs the response scale's minimum and",
-          "maximum, supplied as `scale_range = c(min, max)`. It is not inferred",
-          "from the data, because an unused category would make the inferred",
-          "range wrong and every recoded response with it."
-        ),
-        call. = FALSE
-      )
-    }
-  }
-
-  if (!is.null(scale_range)) {
-    if (!is.numeric(scale_range) || length(scale_range) != 2L ||
-          anyNA(scale_range) || scale_range[[1L]] >= scale_range[[2L]]) {
-      stop("`scale_range` must be `c(min, max)` with min below max.", call. = FALSE)
-    }
+  # The indices are computed on recoded responses, so reverse-keyed items with
+  # no range are refused. Without the indices nothing is computed from the
+  # keying, and the screen logs that it went unused (see nomo_screen()).
+  if (length(reverse) && is.null(scale_range)) {
+    stop(
+      paste(
+        "Recoding reverse-keyed items needs the response scale's minimum and",
+        "maximum, supplied as `scale_range = c(min, max)`. It is not inferred",
+        "from the data, because an unused category would make the inferred",
+        "range wrong and every recoded response with it."
+      ),
+      call. = FALSE
+    )
   }
 
   list(scales = scales, reverse = reverse, scale_range = scale_range)
+}
+
+
+# The fewest screened items at which the long-string rule becomes a flag. A
+# guidance list without the setting, such as one built before it existed, gets
+# the default; a setting that is not a number of items is refused, because a
+# silent fallback would change which cases are flagged.
+nomo_screen_long_string_min <- function(guidance) {
+  value <- guidance$long_string_min_items
+  if (is.null(value)) return(nomo_defaults()$long_string_min_items)
+  if (!is.numeric(value) || length(value) != 1L || !is.finite(value) ||
+        value < 1 || value != round(value)) {
+    stop(
+      "`guidance$long_string_min_items` must be a single whole number of items.",
+      call. = FALSE
+    )
+  }
+  as.integer(value)
 }
 
 

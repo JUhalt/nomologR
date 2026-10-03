@@ -255,10 +255,10 @@ nomo_scores_parallel_test <- function(input) {
   )
 
   # The parallel model below is written for continuous indicators: equal
-  # loadings and equal residual variances, fitted by maximum likelihood. With
-  # ordered indicators the researcher's model uses a categorical estimator, and
-  # a continuous parallel model is not a nested alternative to it, so the test
-  # is not run rather than run against the wrong model.
+  # loadings and equal residual variances. With ordered indicators the
+  # researcher's model uses a categorical estimator, in which an item's
+  # residual variance is not a free parameter to hold equal, so the test is
+  # not run rather than run against the wrong model.
   if (length(input$ordered)) {
     empty$note <- paste(
       "The parallel-model test is implemented here for continuous indicators.",
@@ -269,8 +269,8 @@ nomo_scores_parallel_test <- function(input) {
     return(empty)
   }
 
-  syntax <- nomo_scores_parallel_syntax(input)
-  if (is.null(syntax)) {
+  table <- nomo_scores_parallel_table(input)
+  if (is.null(table)) {
     empty$note <- paste(
       "The parallel model could not be written for this fit, so the",
       "constraints that unit weighting assumes were not tested."
@@ -278,17 +278,32 @@ nomo_scores_parallel_test <- function(input) {
     return(empty)
   }
 
-  # Unit scoring has already retrieved these data, so they are available here.
+  # The parallel model is estimated exactly as the fitted model was: the same
+  # cases and sample statistics, estimator, missing-data handling, mean
+  # structure, and test statistic. A refit with lavaan's defaults would set a
+  # maximum-likelihood, listwise model against, say, a robust or
+  # full-information one, and lavaan refuses that comparison.
+  options <- input$fit@Options
+  # Its standard errors are never read, so they are not resampled.
+  if (identical(options$se, "bootstrap")) options$se <- "standard"
   parallel_fit <- tryCatch(
-    suppressWarnings(lavaan::cfa(
-      syntax,
-      data = as.data.frame(lavaan::lavInspect(input$fit, "data"))
+    suppressWarnings(lavaan::lavaan(
+      model = table,
+      slotOptions = options,
+      slotData = input$fit@Data,
+      slotSampleStats = input$fit@SampleStats
     )),
     error = function(e) e
   )
-  if (inherits(parallel_fit, "error") ||
-        !isTRUE(tryCatch(lavaan::lavInspect(parallel_fit, "converged"),
-                         error = function(e) FALSE))) {
+  if (inherits(parallel_fit, "error")) {
+    empty$note <- paste0(
+      "The parallel model could not be fitted, so the constraints that unit ",
+      "weighting assumes were not tested. lavaan reported: ",
+      nomo_scores_condition(parallel_fit), "."
+    )
+    return(empty)
+  }
+  if (!isTRUE(lavaan::lavInspect(parallel_fit, "converged"))) {
     empty$note <- paste(
       "The parallel model did not converge, so the constraints that unit",
       "weighting assumes could not be tested against this model."
@@ -296,47 +311,172 @@ nomo_scores_parallel_test <- function(input) {
     return(empty)
   }
 
-  test <- tryCatch(
-    suppressWarnings(as.data.frame(lavaan::lavTestLRT(input$fit, parallel_fit))),
+  # A model that already holds the loadings and the residual variances equal
+  # gains no constraint, and a difference on no degrees of freedom is no test.
+  # lavaan gives no degrees of freedom for a fit without a test statistic
+  # (test = "none"), and then there is no comparison to make either: that is a
+  # comparison not computed, not a model that is already parallel.
+  added <- tryCatch(
+    unname(
+      lavaan::fitMeasures(parallel_fit, "df") - lavaan::fitMeasures(input$fit, "df")
+    ),
     error = function(e) e
   )
-  if (inherits(test, "error") || nrow(test) < 2L) {
+  if (inherits(added, "error") || !isTRUE(is.finite(added))) {
     empty$note <- paste(
       "The comparison between the fitted model and the parallel model could",
-      "not be computed, so unit weighting was not tested."
+      "not be computed, so unit weighting was not tested.",
+      if (inherits(added, "error")) {
+        sprintf("lavaan reported: %s.", nomo_scores_condition(added))
+      } else {
+        "lavaan did not report the degrees of freedom of the two models."
+      }
+    )
+    return(empty)
+  }
+  if (added <= 0) {
+    empty$note <- paste(
+      "The model you fitted already holds the loadings and the residual",
+      "variances equal within each factor, so the parallel model adds no",
+      "constraint to it and there is nothing further to test: the fit of the",
+      "model you fitted is itself the evidence for what unit weighting assumes."
+    )
+    return(empty)
+  }
+
+  warnings <- character()
+  test <- tryCatch(
+    withCallingHandlers(
+      as.data.frame(lavaan::lavTestLRT(input$fit, parallel_fit)),
+      warning = function(w) {
+        warnings <<- unique(c(warnings, nomo_scores_condition(w)))
+        invokeRestart("muffleWarning")
+      }
+    ),
+    error = function(e) e
+  )
+  if (inherits(test, "error")) {
+    empty$note <- paste0(
+      "The comparison between the fitted model and the parallel model could ",
+      "not be computed, so unit weighting was not tested. lavaan reported: ",
+      nomo_scores_condition(test), "."
     )
     return(empty)
   }
 
   row <- test[nrow(test), , drop = FALSE]
+  chisq_diff <- nomo_compare_lrt_value(row, "chisq.*diff|diff.*chisq")
+  df_diff <- nomo_compare_lrt_value(row, "^df.*diff|diff.*df")
+  p_value <- nomo_compare_lrt_value(row, "pr\\(>chisq\\)|p.*value|pvalue")
+
+  # Constraints that hold exactly leave a difference of zero, which the two
+  # optimizations reach only to rounding error, on either side of it.
+  if (is.finite(chisq_diff) && abs(chisq_diff) < 1e-6) chisq_diff <- 0
+
+  # The parallel model is nested in the fitted one, so its chi-square cannot be
+  # the smaller of the two. A negative difference comes from a scaled statistic
+  # or from an optimization that stopped short, and it is not a test: its
+  # p-value of 1 would read as support for unit weighting.
+  usable <- is.finite(chisq_diff) && chisq_diff >= 0 && is.finite(df_diff) &&
+    df_diff > 0 && is.finite(p_value)
+  if (!usable) {
+    empty$note <- paste(c(
+      sprintf(
+        paste(
+          "The comparison between the fitted model and the parallel model did",
+          "not give a usable chi-square difference (lavaan returned %s on %s",
+          "df), so unit weighting was not tested."
+        ),
+        format(round(chisq_diff, 2L), nsmall = 2L), format(df_diff, trim = TRUE)
+      ),
+      sprintf("lavaan reported: %s.", warnings)
+    ), collapse = " ")
+    return(empty)
+  }
+
   list(
     available = TRUE,
-    chisq_diff = nomo_compare_lrt_value(row, "chisq.*diff|diff.*chisq"),
-    df_diff = nomo_compare_lrt_value(row, "^df.*diff|diff.*df"),
-    p_value = nomo_compare_lrt_value(row, "pr\\(>chisq\\)|p.*value|pvalue"),
+    chisq_diff = chisq_diff,
+    df_diff = df_diff,
+    p_value = p_value,
     note = ""
   )
 }
 
 
-# The parallel model constrains every loading to a single value and every
-# residual variance to a single value, within each factor, which is what unit
-# weighting assumes about the items it adds together.
-nomo_scores_parallel_syntax <- function(input) {
+# lavaan's message on one line, without a closing full stop, since the notes
+# that quote it add their own.
+nomo_scores_condition <- function(condition) {
+  sub("[.]+$", "", trimws(gsub("[[:space:]]+", " ", conditionMessage(condition))))
+}
+
+
+# The parallel model is the fitted model with two sets of constraints added and
+# nothing taken away: within each factor, one value for every loading and one
+# for every residual variance, which is what unit weighting assumes about the
+# items it adds together. It is written from the fitted model's own parameter
+# table, so that everything else the researcher specified (factor covariances
+# fixed or free, residual covariances, intercepts, constraints of their own) is
+# carried over unchanged and the two models are nested.
+nomo_scores_parallel_table <- function(input) {
   if (!length(input$factors) || length(input$cross_loaded)) return(NULL)
+  if (any(lengths(input$factors) < 2L)) return(NULL)
 
-  blocks <- vapply(names(input$factors), function(f) {
+  table <- as.data.frame(lavaan::parTable(input$fit), stringsAsFactors = FALSE)
+  # Starting values and estimates belong to the fitted model. Defined
+  # parameters do not change the fit, and one that names a loading fixed below
+  # could no longer be evaluated.
+  table <- table[
+    table$op != ":=", setdiff(names(table), c("start", "est", "se")),
+    drop = FALSE
+  ]
+
+  equal <- list()
+  for (f in names(input$factors)) {
     items <- input$factors[[f]]
-    if (length(items) < 2L) return(NA_character_)
-    label <- paste0("l_", f)
-    loadings <- paste(sprintf("%s*%s", label, items), collapse = " + ")
-    residuals <- paste(
-      sprintf("%s ~~ e_%s*%s", items, f, items),
-      collapse = "\n"
+    sets <- list(
+      which(table$op == "=~" & table$lhs == f & table$rhs %in% items),
+      which(table$op == "~~" & table$lhs == table$rhs & table$lhs %in% items)
     )
-    paste0(f, " =~ ", loadings, "\n", residuals)
-  }, character(1))
+    for (rows in sets) {
+      free <- rows[table$free[rows] > 0L]
+      value <- unique(table$ustart[setdiff(rows, free)])
+      # Parameters the researcher fixed at different values cannot also be
+      # equal, so no parallel model is nested in that fit; nor is one where the
+      # fit holds fewer than two of them to set equal.
+      if (length(rows) < 2L || length(value) > 1L || anyNA(value)) return(NULL)
+      if (length(value)) {
+        # One is already fixed, as a marker loading is at 1: the others take
+        # its value, which leaves the factor's scale where the fit put it.
+        table$free[free] <- 0L
+        table$ustart[free] <- value
+      } else {
+        equal[[length(equal) + 1L]] <- data.frame(
+          lhs = table$plabel[free[[1L]]], rhs = table$plabel[free[-1L]],
+          stringsAsFactors = FALSE
+        )
+      }
+    }
+  }
 
-  if (anyNA(blocks)) return(NULL)
-  paste(blocks, collapse = "\n")
+  table$free[table$free > 0L] <- seq_len(sum(table$free > 0L))
+  equal <- do.call(rbind, equal)
+  if (!is.null(equal)) {
+    constraints <- table[rep(1L, nrow(equal)), , drop = FALSE]
+    constraints$lhs <- equal$lhs
+    constraints$op <- "=="
+    constraints$rhs <- equal$rhs
+    constraints$user <- 2L
+    constraints$block <- 0L
+    constraints$group <- 0L
+    constraints$free <- 0L
+    constraints$ustart <- NA_real_
+    constraints$exo <- 0L
+    constraints$label <- ""
+    constraints$plabel <- ""
+    table <- rbind(table, constraints)
+  }
+  table$id <- seq_len(nrow(table))
+  rownames(table) <- NULL
+  table
 }
