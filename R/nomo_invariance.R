@@ -89,7 +89,33 @@ nomo_invariance_sequences <- function(ordered = character(),
 }
 
 
-nomo_invariance_validate_levels <- function(levels, sequence) {
+# The completed levels as a path for print(), summary() and nomo_run()'s key
+# evidence; "none" when the first level failed, since completed_levels holds
+# only converged levels (#145).
+nomo_invariance_level_path <- function(levels) {
+  if (length(levels)) paste(levels, collapse = " -> ") else "none"
+}
+
+
+# Appended to an error that arises only because indicators are ordered, when
+# some were detected from their storage rather than named in `ordered`: the
+# ordered sequence, the std.lv requirement and the estimator limits would
+# otherwise come with no word on why they apply (#145).
+nomo_invariance_detected_note <- function(detected) {
+  if (!length(detected)) return("")
+  n <- length(detected)
+  sprintf(
+    " %s %s stored as %s and modeled as ordered; convert %s to numeric to model %s as continuous.",
+    nomo_present_or(detected, "and"),
+    nomo_present_noun(n, "is", "are"),
+    nomo_present_noun(n, "an ordered factor", "ordered factors"),
+    nomo_present_noun(n, "it", "them"),
+    nomo_present_noun(n, "it", "them")
+  )
+}
+
+
+nomo_invariance_validate_levels <- function(levels, sequence, note = "") {
   if (is.null(levels)) return(sequence)
 
   if (!is.character(levels) || !length(levels) || anyNA(levels)) {
@@ -100,8 +126,9 @@ nomo_invariance_validate_levels <- function(levels, sequence) {
   if (any(!levels %in% sequence) || anyDuplicated(levels)) {
     stop(
       sprintf(
-        "`levels` may contain only: %s.",
-        paste(sequence, collapse = ", ")
+        "`levels` may contain only: %s.%s",
+        paste(sequence, collapse = ", "),
+        note
       ),
       call. = FALSE
     )
@@ -113,7 +140,8 @@ nomo_invariance_validate_levels <- function(levels, sequence) {
       paste0(
         "`levels` must form an ordered prefix of ",
         paste(sequence, collapse = " -> "),
-        "."
+        ".",
+        note
       ),
       call. = FALSE
     )
@@ -337,13 +365,55 @@ nomo_invariance_add_comparison <- function(current_row,
 }
 
 
-nomo_invariance_validate_partial <- function(partial, sequence) {
-  if (is.null(partial)) return(invisible(TRUE))
+# A release in lavaan syntax, parsed as semTools parses `group.partial`.
+nomo_invariance_parse_release <- function(release) {
+  rows <- tryCatch(
+    lavaan::lavParseModelString(release, as.data.frame. = TRUE),
+    error = function(e) NULL
+  )
+  if (!NROW(rows)) {
+    stop(
+      sprintf(
+        paste0(
+          "Release `%s` is not lavaan parameter syntax such as `F =~ x2`, ",
+          "`x3 ~ 1`, `u2 | t1`, or `x1 ~~ x1`."
+        ),
+        release
+      ),
+      call. = FALSE
+    )
+  }
+  rows
+}
+
+
+# The model's loadings, as factor and item, against which releases are checked.
+# A model lavaan cannot parse is left to lavaan, which explains the error.
+nomo_invariance_model_structure <- function(model) {
+  pt <- lavaan::lavaanify(model)
+  loadings <- pt[pt$op == "=~", , drop = FALSE]
+  tibble::tibble(factor = loadings$lhs, item = loadings$rhs)
+}
+
+
+# Each release must name a parameter of `model` that some level holds equal
+# (#145): semTools ignores a release that matches nothing, which had left the
+# model fully constrained while the fit table, summary, and log reported the
+# release. A release applies from the level that first holds its parameter type
+# equal. Declared earlier, it changes nothing before that level, so it is
+# moved there and the log says so. Declared later, the level before would hold
+# the parameter equal and the next free it, so the two models would not be
+# nested and their difference test would be invalid; that is an error.
+# Returns the releases at the levels they apply from, and the declared levels.
+nomo_invariance_validate_partial <- function(partial, sequence_info, structure,
+                                             hint = "") {
+  if (is.null(partial)) return(list(partial = NULL, declared = NULL))
 
   if (!inherits(partial, "nomo_partial")) {
     stop("`partial` must be NULL or an object created by `nomo_partial()`.", call. = FALSE)
   }
 
+  sequence <- sequence_info$sequence
   bad <- setdiff(unique(partial$releases$level), sequence)
   if (length(bad)) {
     stop(
@@ -358,6 +428,112 @@ nomo_invariance_validate_partial <- function(partial, sequence) {
     )
   }
 
+  types <- c("=~" = "loadings", "~1" = "intercepts", "|" = "thresholds",
+             "~~" = "residuals")
+  nouns <- c(loadings = "a loading", intercepts = "an intercept",
+             thresholds = "a threshold", residuals = "a residual variance")
+  indicators <- setdiff(structure$item, structure$factor)
+  declared <- partial$releases$level
+
+  for (i in seq_len(nrow(partial$releases))) {
+    release <- partial$releases$syntax[[i]]
+    rows <- nomo_invariance_parse_release(release)
+    named <- ifelse(
+      rows$op == "=~",
+      paste(rows$lhs, rows$rhs) %in% paste(structure$factor, structure$item),
+      rows$lhs %in% indicators & (rows$op != "~~" | rows$rhs == rows$lhs)
+    )
+    type <- unique(unname(types[rows$op]))
+    if (anyNA(type) || length(type) != 1L || !all(named)) {
+      stop(
+        sprintf(
+          paste0(
+            "Release `%s` does not name a loading (`F =~ x2`), intercept ",
+            "(`x3 ~ 1`), threshold (`u2 | t1`), or residual variance ",
+            "(`x1 ~~ x1`) of an indicator in `model`, the parameters the ",
+            "levels hold equal.%s"
+          ),
+          release, hint
+        ),
+        call. = FALSE
+      )
+    }
+
+    holds <- vapply(
+      sequence,
+      function(level) type %in% sequence_info$constraints[[level]],
+      logical(1)
+    )
+    if (!any(holds)) {
+      stop(
+        sprintf(
+          "Release `%s` frees %s, and no level of this sequence holds %s equal.",
+          release, nouns[[type]], type
+        ),
+        call. = FALSE
+      )
+    }
+    first <- sequence[holds][[1L]]
+    if (match(declared[[i]], sequence) > match(first, sequence)) {
+      stop(
+        sprintf(
+          paste0(
+            "Release `%s` frees %s, and %s are first held equal at the %s ",
+            "level, so declare it at %s rather than %s: released only from %s ",
+            "on, the %s model would not be nested in the model before it."
+          ),
+          release, nouns[[type]], type, first, first, declared[[i]],
+          declared[[i]], declared[[i]]
+        ),
+        call. = FALSE
+      )
+    }
+    partial$releases$level[[i]] <- first
+  }
+
+  list(partial = partial, declared = declared)
+}
+
+
+# semTools ignores a release it cannot apply, such as a marker loading fixed at
+# 1 or a threshold fixed for identification. So each release applied at a level
+# must free a parameter in the generated syntax: one estimated in some group or
+# occasion and not labeled equal across them (#145). `names_map` gives, across
+# occasions, each item's and factor's names in the fitted model.
+nomo_invariance_check_releases <- function(syntax, releases, level, ngroups,
+                                           names_map = NULL,
+                                           parameterization = NULL) {
+  if (!length(releases)) return(invisible(TRUE))
+  # Without ordered indicators there is no parameterization to pass.
+  args <- list(syntax, ngroups = ngroups)
+  args$parameterization <- parameterization
+  pt <- suppressWarnings(do.call(lavaan::lavaanify, args))
+  expand <- function(name) {
+    if (name %in% names(names_map)) names_map[[name]] else name
+  }
+  for (release in releases) {
+    rows <- nomo_invariance_parse_release(release)
+    freed <- vapply(seq_len(nrow(rows)), function(i) {
+      hit <- pt$op == rows$op[[i]] &
+        pt$lhs %in% expand(rows$lhs[[i]]) &
+        pt$rhs %in% expand(rows$rhs[[i]]) &
+        (rows$op[[i]] != "~~" | pt$lhs == pt$rhs)
+      any(pt$free[hit] > 0L) && length(unique(pt$label[hit])) > 1L
+    }, logical(1))
+    if (!all(freed)) {
+      stop(
+        sprintf(
+          paste0(
+            "Release `%s` frees no parameter at the %s level: the generated ",
+            "model fixes it or still holds it equal, as for a marker loading ",
+            "or a threshold fixed for identification. Remove the release."
+          ),
+          release, level
+        ),
+        call. = FALSE
+      )
+    }
+  }
   invisible(TRUE)
 }
 
@@ -504,7 +680,10 @@ nomo_invariance_decision_log <- function(group,
                                          partial = NULL,
                                          localize = TRUE,
                                          score_diagnostics = NULL,
-                                         design = "groups") {
+                                         design = "groups",
+                                         ordered_detected = character(),
+                                         ID.fac_requested = ID.fac,
+                                         partial_declared = partial$releases$level) {
   log <- nomo_log_new()
   across_occasions <- identical(design, "occasions")
 
@@ -582,6 +761,7 @@ nomo_invariance_decision_log <- function(group,
       recommendation = "Keep category structure visible when reporting invariance."
     )
   }
+  log <- nomo_ordered_detected_log(log, ordered_detected, "invariance")
 
   if (!is.null(estimator)) {
     log <- nomo_log_add(
@@ -609,20 +789,39 @@ nomo_invariance_decision_log <- function(group,
     )
   }
 
+  switched <- !identical(ID.fac, ID.fac_requested)
   log <- nomo_log_add(
     log,
     stage = "invariance",
     object = "model",
     metric = "factor_identification",
     reference = ID.fac,
-    severity = "info",
-    observation = sprintf("Factor identification uses `%s`.", ID.fac),
-    recommendation = "Identification is explicit and held consistent across levels."
+    severity = if (switched) "review" else "info",
+    observation = if (switched) {
+      sprintf(
+        paste(
+          "Factor identification uses `%s`, not the requested `%s`: semTools",
+          "identifies a model with higher-order factors by unit loadings."
+        ),
+        ID.fac, ID.fac_requested
+      )
+    } else {
+      sprintf("Factor identification uses `%s`.", ID.fac)
+    },
+    recommendation = if (switched) {
+      paste(
+        "Latent means are reported only where the reference's latent mean is",
+        "fixed at 0 and its variance at 1, so none are reported here."
+      )
+    } else {
+      "Identification is explicit and held consistent across levels."
+    }
   )
 
   if (!is.null(partial) && nrow(partial$releases)) {
     for (i in seq_len(nrow(partial$releases))) {
       row <- partial$releases[i, , drop = FALSE]
+      declared <- partial_declared[[i]]
       log <- nomo_log_add(
         log,
         stage = "invariance_partial",
@@ -630,11 +829,21 @@ nomo_invariance_decision_log <- function(group,
         metric = "researcher_requested_release",
         reference = row$level[[1L]],
         severity = "info",
-        observation = sprintf(
-          "Researcher requested release `%s` beginning at the %s level.",
-          row$syntax[[1L]],
-          row$level[[1L]]
-        ),
+        observation = if (identical(declared, row$level[[1L]])) {
+          sprintf(
+            "Researcher requested release `%s` beginning at the %s level.",
+            row$syntax[[1L]],
+            row$level[[1L]]
+          )
+        } else {
+          sprintf(
+            paste(
+              "Researcher requested release `%s` at the %s level. No level",
+              "holds its parameters equal before %s, so it applies from there."
+            ),
+            row$syntax[[1L]], declared, row$level[[1L]]
+          )
+        },
         recommendation = paste(
           "Rationale:",
           row$rationale[[1L]],
@@ -714,6 +923,13 @@ nomo_invariance_decision_log <- function(group,
 
 # Checks and normalizes the options nomo_invariance() and
 # nomo_invariance_longitudinal() share, and chooses the invariance sequence.
+# With `model`, model indicators stored as ordered factors are treated as
+# declared, since lavaan fits them as categorical whether or not `ordered` names
+# them (#145); the longitudinal function detects them by item before it calls
+# this, passes no `model`, and passes the items it detected as
+# `ordered_detected` so the errors below can name them. `structure` holds the
+# model's loadings, as factor and item, against which partial releases are
+# checked; it is evaluated only when there are releases.
 nomo_invariance_prepare <- function(data,
                                     ordered,
                                     levels,
@@ -724,7 +940,11 @@ nomo_invariance_prepare <- function(data,
                                     ID.fac,
                                     ID.cat,
                                     parameterization,
-                                    guidance) {
+                                    guidance,
+                                    model = NULL,
+                                    structure = NULL,
+                                    release_hint = "",
+                                    ordered_detected = character()) {
   if (is.null(ordered)) {
     ordered <- character()
   } else {
@@ -745,6 +965,13 @@ nomo_invariance_prepare <- function(data,
     }
   }
 
+  if (!is.null(model)) {
+    found <- nomo_ordered_indicators(model, data, ordered)
+    ordered <- found$ordered
+    ordered_detected <- found$detected
+  }
+  detected_note <- nomo_invariance_detected_note(ordered_detected)
+
   if (!is.logical(localize) || length(localize) != 1L || is.na(localize)) {
     stop("`localize` must be TRUE or FALSE.", call. = FALSE)
   }
@@ -758,9 +985,12 @@ nomo_invariance_prepare <- function(data,
   )
   levels <- nomo_invariance_validate_levels(
     levels = levels,
-    sequence = sequence_info$sequence
+    sequence = sequence_info$sequence,
+    note = detected_note
   )
-  nomo_invariance_validate_partial(partial, sequence_info$sequence)
+  releases <- nomo_invariance_validate_partial(
+    partial, sequence_info, structure, release_hint
+  )
 
   if (!is.null(estimator)) {
     if (!is.character(estimator) || length(estimator) != 1L ||
@@ -784,9 +1014,21 @@ nomo_invariance_prepare <- function(data,
   }
   ID.fac <- trimws(ID.fac)
 
-  if (!is.character(ID.cat) || length(ID.cat) != 1L ||
-      is.na(ID.cat) || !nzchar(trimws(ID.cat))) {
-    stop("`ID.cat` must be one non-empty character value.", call. = FALSE)
+  # The level sequences and their notes are built for Wu and Estabrook's (2016)
+  # identification. Under semTools' other choices the levels would not
+  # constrain what their labels say: under Millsap and Tein's, the thresholds
+  # step also fixes the intercepts and the scalar step adds nothing (#145).
+  if (!is.character(ID.cat) || length(ID.cat) != 1L || is.na(ID.cat) ||
+      !tolower(trimws(ID.cat)) %in%
+        c("wu.estabrook.2016", "wu.2016", "wu.estabrook", "wu", "wu2016")) {
+    stop(
+      paste0(
+        "`ID.cat` must be \"Wu.Estabrook.2016\" or a semTools alias for it ",
+        "(\"Wu.2016\", \"Wu.Estabrook\", \"Wu\"): the ordered-indicator ",
+        "sequences follow Wu and Estabrook's (2016) identification."
+      ),
+      call. = FALSE
+    )
   }
   ID.cat <- trimws(ID.cat)
 
@@ -800,11 +1042,12 @@ nomo_invariance_prepare <- function(data,
     stop("`guidance` must be a list returned by `nomo_defaults()`.", call. = FALSE)
   }
 
-  if (length(ordered) &&
-      !identical(tolower(ID.fac), "std.lv") &&
-      grepl("^wu", tolower(ID.cat))) {
+  if (length(ordered) && !identical(tolower(ID.fac), "std.lv")) {
     stop(
-      "Wu-Estabrook categorical identification should use `ID.fac = \"std.lv\"`.",
+      paste0(
+        "Wu-Estabrook categorical identification should use `ID.fac = \"std.lv\"`.",
+        detected_note
+      ),
       call. = FALSE
     )
   }
@@ -814,7 +1057,8 @@ nomo_invariance_prepare <- function(data,
       paste0(
         "ML-family estimators are not supported here with declared ordered ",
         "indicators. Leave `estimator = NULL` for WLSMV or select a ",
-        "categorical-data estimator supported by lavaan."
+        "categorical-data estimator supported by lavaan.",
+        detected_note
       ),
       call. = FALSE
     )
@@ -823,7 +1067,10 @@ nomo_invariance_prepare <- function(data,
   if (length(ordered) && !is.null(missing) &&
       tolower(missing) %in% c("ml", "fiml", "ml.x", "fiml.x")) {
     stop(
-      "FIML is not supported by lavaan for declared ordered indicators.",
+      paste0(
+        "FIML is not supported by lavaan for declared ordered indicators.",
+        detected_note
+      ),
       call. = FALSE
     )
   }
@@ -839,9 +1086,12 @@ nomo_invariance_prepare <- function(data,
 
   list(
     ordered = ordered,
+    ordered_detected = ordered_detected,
     category_table = category_table,
     sequence_info = sequence_info,
     levels = levels,
+    partial = releases$partial,
+    partial_declared = releases$declared,
     missing = missing,
     ID.fac = ID.fac,
     ID.cat = ID.cat,
@@ -857,7 +1107,8 @@ nomo_invariance_prepare <- function(data,
 # arguments every level shares; `equal` and `release` name the measEq.syntax()
 # arguments that carry a level's equality constraints and partial releases:
 # group.equal and group.partial across groups, long.equal and long.partial
-# across occasions.
+# across occasions. `ngroups` and `names_map` let each release be checked in
+# the generated syntax (see nomo_invariance_check_releases()).
 nomo_invariance_fit_levels <- function(levels,
                                        constraints,
                                        partial,
@@ -866,7 +1117,9 @@ nomo_invariance_fit_levels <- function(levels,
                                        fit_base,
                                        equal,
                                        release,
-                                       localize) {
+                                       localize,
+                                       ngroups = 1L,
+                                       names_map = NULL) {
   syntax <- list()
   syntax_text <- list()
   fits <- list()
@@ -875,6 +1128,9 @@ nomo_invariance_fit_levels <- function(levels,
   comparison_warnings <- list()
   evidence_rows <- list()
   score_diagnostics <- list()
+  # semTools identifies a model with higher-order factors by unit loadings,
+  # whatever `ID.fac` asks for, and says so in a message (#145).
+  ID.fac_used <- NULL
 
   previous_level <- NULL
 
@@ -892,7 +1148,14 @@ nomo_invariance_fit_levels <- function(levels,
     syntax_args[[release]] <- if (length(partial_for_level)) partial_for_level else ""
 
     syn <- tryCatch(
-      do.call(semTools::measEq.syntax, syntax_args),
+      withCallingHandlers(
+        do.call(semTools::measEq.syntax, syntax_args),
+        message = function(m) {
+          if (grepl("ID.fac set to \"ul\"", conditionMessage(m), fixed = TRUE)) {
+            ID.fac_used <<- "ul"
+          }
+        }
+      ),
       error = function(e) {
         stop(
           sprintf(
@@ -907,6 +1170,10 @@ nomo_invariance_fit_levels <- function(levels,
 
     syntax[[level]] <- syn
     syntax_text[[level]] <- as.character(syn)
+    nomo_invariance_check_releases(
+      syntax_text[[level]], partial_for_level, level, ngroups, names_map,
+      fit_base$parameterization
+    )
 
     warnings <- character()
     fit_error <- NULL
@@ -993,7 +1260,8 @@ nomo_invariance_fit_levels <- function(levels,
     engine_warnings = engine_warnings,
     comparison_warnings = comparison_warnings,
     score_diagnostics = score_diagnostics,
-    fit_evidence = dplyr::bind_rows(evidence_rows)
+    fit_evidence = dplyr::bind_rows(evidence_rows),
+    ID.fac = ID.fac_used
   )
 }
 
@@ -1040,6 +1308,18 @@ nomo_invariance_engine_args <- function(syntax_base,
 #' retained. `nomo_invariance()` never searches for a combination of releases
 #' that makes a fit rule pass.
 #'
+#' Each release must name a loading, intercept, threshold, or residual variance
+#' of an indicator in `model`, and must free that parameter in the generated
+#' model: `semTools::measEq.syntax()` ignores a release it cannot match, so a
+#' misspelled name, or a marker loading fixed at 1, is an error rather than a
+#' fully constrained model reported as partial. A release applies from the
+#' level that first holds its parameter type equal (loadings at `metric`,
+#' intercepts at `scalar`, and so on, as the sequence for the indicators sets
+#' them). Declared at an earlier level, where it would change nothing, it is
+#' moved to that first level and the decision log says so. Declared at a later
+#' level, it is an error, because the earlier model would hold the parameter
+#' equal and the later one free it, so the two would not be nested.
+#'
 #' When `localize = TRUE`, univariate score tests for equality constraints are
 #' retained as diagnostic evidence. They are explicitly not used to modify the
 #' fitted model.
@@ -1048,7 +1328,14 @@ nomo_invariance_engine_args <- function(syntax_base,
 #'   an object created by `nomo_model()`.
 #' @param data A non-empty data frame.
 #' @param group Character scalar naming the grouping variable in `data`.
-#' @param ordered Optional character vector naming ordered indicators.
+#' @param ordered Optional character vector naming ordered indicators. Model
+#'   indicators stored as ordered factors are modeled as ordered whether or not
+#'   they are named here, since lavaan fits them as categorical; the result's
+#'   `ordered` includes them, `ordered_detected` lists them, and the decision
+#'   log lists them for review. They then follow the rules for ordered
+#'   indicators: the ordered `levels` sequence, `ID.fac = "std.lv"`, and no
+#'   ML-family estimator or FIML. Convert such columns to numeric to model
+#'   them as continuous.
 #' @param levels Optional invariance levels. `NULL` uses the sequence implied by
 #'   the indicator category structure.
 #' @param partial Optional researcher-specified partial-invariance releases from
@@ -1066,27 +1353,41 @@ nomo_invariance_engine_args <- function(syntax_base,
 #' latent means relative to the reference group, the first group, which the
 #' default `ID.fac = "std.lv"` fixes at a mean of 0 and a variance of 1. Each
 #' mean is then a difference in the reference group's latent standard
-#' deviations, the effect size Hancock (2001) describes. Under another
-#' identification the table is empty. Where the intercepts are not invariant,
-#' the means are not comparable until the non-invariant intercepts are
-#' released with [nomo_partial()] (Vandenberg & Lance, 2000).
+#' deviations, the effect size Hancock (2001) describes. The fitted model
+#' decides which means are reported: only those of factors whose reference
+#' mean is fixed at 0 and variance at 1, and only where the compared group's
+#' mean is estimated. So the table is empty under another identification, and
+#' for a model with higher-order factors, which `semTools::measEq.syntax()`
+#' identifies by unit loadings (the decision log records the switch). A factor
+#' whose intercepts are all released has no estimated difference; the decision
+#' log says so. Where the intercepts are not invariant, the means are not
+#' comparable until the non-invariant intercepts are released with
+#' [nomo_partial()] (Vandenberg & Lance, 2000).
 #'
 #' @param ID.fac Factor-identification method passed to
 #'   `semTools::measEq.syntax()`. `"std.lv"` is the default.
-#' @param ID.cat Ordered-indicator identification method passed to
-#'   `semTools::measEq.syntax()`. Wu-Estabrook is the default.
+#' @param ID.cat Ordered-indicator identification passed to
+#'   `semTools::measEq.syntax()`. Only Wu and Estabrook's (2016) identification
+#'   is supported, as `"Wu.Estabrook.2016"` (the default) or a semTools alias
+#'   for it (`"Wu.2016"`, `"Wu.Estabrook"`, `"Wu"`): the level sequences and
+#'   their notes are built for it, and under semTools' other choices the levels
+#'   would not constrain what their names say.
 #' @param parameterization Lavaan categorical parameterization. `"theta"` is
 #'   the default for ordered indicators.
 #' @param guidance Guidance settings from `nomo_defaults()`.
 #'
 #' @return A `nomo_invariance` object. The fields to read are:
 #'
-#'   * `groups`, `requested_levels`, and `completed_levels`.
+#'   * `groups` and `requested_levels`.
+#'   * `completed_levels`: the levels that were estimated and converged.
+#'     Fitting stops at the first level that fails or does not converge; that
+#'     level is in `fit_evidence` but not here.
 #'   * `fit_evidence`: one row per level, with its fit, its change from the
 #'     level before, the likelihood-ratio test, and any warning or error.
 #'   * `local_strain`: score diagnostics for each equality constraint, which
 #'     localize strain without releasing anything.
-#'   * `partial`: the researcher-specified releases, when given.
+#'   * `partial`: the researcher-specified releases, when given, each at the
+#'     level it applies from.
 #'   * `latent_means`: at each level that holds intercepts equal, each group's
 #'     latent means relative to the reference group, in the reference group's
 #'     latent standard deviations, with their intervals. See **Latent means**.
@@ -1233,12 +1534,15 @@ nomo_invariance <- function(model,
     ID.fac = ID.fac,
     ID.cat = ID.cat,
     parameterization = parameterization,
-    guidance = guidance
+    guidance = guidance,
+    model = model,
+    structure = nomo_invariance_model_structure(model)
   )
   ordered <- prepared$ordered
   category_table <- prepared$category_table
   sequence_info <- prepared$sequence_info
   levels <- prepared$levels
+  partial <- prepared$partial
   missing <- prepared$missing
   ID.fac <- prepared$ID.fac
   ID.cat <- prepared$ID.cat
@@ -1281,7 +1585,8 @@ nomo_invariance <- function(model,
     fit_base = engine$fit,
     equal = "group.equal",
     release = "group.partial",
-    localize = localize
+    localize = localize,
+    ngroups = length(groups)
   )
   syntax <- run$syntax
   syntax_text <- run$syntax_text
@@ -1291,6 +1596,8 @@ nomo_invariance <- function(model,
   comparison_warnings <- run$comparison_warnings
   score_diagnostics <- run$score_diagnostics
   fit_evidence <- run$fit_evidence
+  ID.fac_requested <- ID.fac
+  if (!is.null(run$ID.fac)) ID.fac <- run$ID.fac
 
   local_strain <- dplyr::bind_rows(
     lapply(score_diagnostics, function(x) x$table)
@@ -1315,18 +1622,22 @@ nomo_invariance <- function(model,
     sequence_note = sequence_info$identification_note,
     partial = partial,
     localize = localize,
-    score_diagnostics = score_diagnostics
+    score_diagnostics = score_diagnostics,
+    ordered_detected = prepared$ordered_detected,
+    ID.fac_requested = ID.fac_requested,
+    partial_declared = prepared$partial_declared
   )
 
-  latent_means <- nomo_invariance_latent_means(
+  means <- nomo_invariance_latent_means(
     fits = fits,
     constraints = constraints,
-    fit_evidence = fit_evidence,
-    ID.fac = ID.fac
+    fit_evidence = fit_evidence
   )
+  latent_means <- means$table
   decision_log <- dplyr::bind_rows(
     decision_log,
-    nomo_invariance_latent_means_log(latent_means)
+    nomo_invariance_latent_means_log(latent_means),
+    nomo_invariance_fixed_means_log(means$fixed)
   )
 
   out <- list(
@@ -1338,9 +1649,11 @@ nomo_invariance <- function(model,
     indicator_type = sequence_info$type,
     identification_note = sequence_info$identification_note,
     ordered = ordered,
+    ordered_detected = prepared$ordered_detected,
     ordered_categories = category_table,
     requested_levels = levels,
-    completed_levels = fit_evidence$level,
+    # A level that failed or did not converge stays in fit_evidence (#145).
+    completed_levels = fit_evidence$level[fit_evidence$status == "estimated"],
     constraints = constraints[fit_evidence$level],
     partial = partial,
     partial_requested = partial_requested,
@@ -1383,10 +1696,18 @@ nomo_invariance <- function(model,
 # The structured-means comparison of groups on the construct: at each level
 # whose intercepts are held equal, fully or with the researcher's partial
 # releases, the groups' latent means can be compared (Byrne, Shavelson, &
-# Muthén, 1989). Under std.lv identification the reference group's latent means
-# are 0 and its variances 1, so each mean is a difference in the reference
-# group's latent standard deviations, the effect size Hancock (2001) describes.
-nomo_invariance_latent_means <- function(fits, constraints, fit_evidence, ID.fac) {
+# Muthén, 1989). Where the reference group's latent mean is fixed at 0 and its
+# variance at 1, as std.lv identification fixes them, each mean is a difference
+# in the reference group's latent standard deviations, the effect size Hancock
+# (2001) describes.
+#
+# The fitted parameter table decides which means qualify, not `ID.fac` (#145).
+# semTools identifies a higher-order model by unit loadings whatever `ID.fac`
+# asks for, which had left a group's own mean reported as a standardized
+# difference; and a factor whose intercepts are all released keeps its means
+# fixed at 0, which had been reported as a difference of 0 [0, 0]. Such fixed
+# means are returned in `fixed`, for the log.
+nomo_invariance_latent_means <- function(fits, constraints, fit_evidence) {
   out <- tibble::tibble(
     level = character(),
     group = character(),
@@ -1398,29 +1719,110 @@ nomo_invariance_latent_means <- function(fits, constraints, fit_evidence, ID.fac
     ci_upper = numeric(),
     p_value = numeric()
   )
-  if (!identical(tolower(ID.fac), "std.lv")) return(out)
 
   converged <- fit_evidence$level[fit_evidence$converged %in% TRUE]
   rows <- lapply(converged, function(level) {
     if (!"intercepts" %in% constraints[[level]]) return(NULL)
     fit <- fits[[level]]
-    pe <- lavaan::parameterEstimates(fit, ci = TRUE)
-    latent <- lavaan::lavNames(fit, type = "lv")
-    means <- pe[pe$op == "~1" & pe$lhs %in% latent & pe$group > 1L, , drop = FALSE]
+    est <- nomo_invariance_mean_estimates(fit)
+    scaled <- Filter(
+      function(f) nomo_invariance_scaled(est$table, f),
+      lavaan::lavNames(fit, type = "lv")
+    )
+    means <- est$means[est$means$lhs %in% scaled & est$means$group > 1L, , drop = FALSE]
     labels <- lavaan::lavInspect(fit, "group.label")
-    tibble::tibble(
-      level = level,
-      group = labels[means$group],
-      reference_group = labels[[1L]],
-      factor = means$lhs,
-      estimate = means$est,
-      se = means$se,
-      ci_lower = means$ci.lower,
-      ci_upper = means$ci.upper,
-      p_value = means$pvalue
+    free <- means[means$free > 0L, , drop = FALSE]
+    list(
+      table = tibble::tibble(
+        level = level,
+        group = labels[free$group],
+        reference_group = labels[[1L]],
+        factor = free$lhs,
+        estimate = free$est,
+        se = free$se,
+        ci_lower = free$ci.lower,
+        ci_upper = free$ci.upper,
+        p_value = free$pvalue
+      ),
+      fixed = tibble::tibble(
+        level = level,
+        factor = unique(means$lhs[means$free == 0L]),
+        design = "groups"
+      )
     )
   })
-  dplyr::bind_rows(out, rows)
+  list(
+    table = dplyr::bind_rows(out, lapply(rows, `[[`, "table")),
+    fixed = dplyr::bind_rows(nomo_invariance_no_fixed(), lapply(rows, `[[`, "fixed"))
+  )
+}
+
+
+nomo_invariance_no_fixed <- function() {
+  tibble::tibble(level = character(), factor = character(), design = character())
+}
+
+
+# The latent means of a fitted model with their intervals, each marked free or
+# fixed from the parameter table, which parameterEstimates() does not report.
+# `table` is the parameter table, for nomo_invariance_scaled().
+nomo_invariance_mean_estimates <- function(fit) {
+  pt <- lavaan::parTable(fit)
+  pe <- lavaan::parameterEstimates(fit, ci = TRUE)
+  # A one-group model, as across occasions, has no group column.
+  pe$group <- if (is.null(pe$group)) 1L else pe$group
+  means <- pe[pe$op == "~1", , drop = FALSE]
+  means$free <- pt$free[match(
+    paste(means$lhs, "~1", means$group),
+    paste(pt$lhs, pt$op, pt$group)
+  )]
+  list(table = pt, means = means)
+}
+
+
+# Whether a factor's latent mean is fixed at 0 and its variance at 1 in the
+# first group, the reference, so that other means are in its latent SDs.
+nomo_invariance_scaled <- function(pt, factor) {
+  mean <- pt[pt$lhs == factor & pt$op == "~1" & pt$group == 1L, , drop = FALSE]
+  var <- pt[pt$lhs == factor & pt$op == "~~" & pt$rhs == factor & pt$group == 1L, ,
+            drop = FALSE]
+  nrow(mean) == 1L && nrow(var) == 1L && mean$free == 0L && var$free == 0L &&
+    mean$est == 0 && var$est == 1
+}
+
+
+# A factor scaled in the reference whose mean is fixed in a compared group or
+# occasion has no estimated difference: semTools fixes it when every intercept
+# of the factor's indicators is released.
+nomo_invariance_fixed_means_log <- function(fixed) {
+  log <- nomo_log_new()
+  if (!nrow(fixed)) return(log)
+  unit <- if (identical(fixed$design[[1L]], "occasions")) "on every occasion" else "in every group"
+  factors <- unique(fixed$factor)
+  nomo_log_add(
+    log, stage = "invariance", object = paste(factors, collapse = ", "),
+    metric = "latent_means_fixed",
+    value = length(factors),
+    reference = "A latent mean is identified only with an intercept held equal",
+    severity = "review",
+    observation = sprintf(
+      paste(
+        "No latent mean difference is estimated for %s at the %s %s: with",
+        "every intercept of %s indicators released, %s latent mean is fixed",
+        "at 0 %s."
+      ),
+      paste(factors, collapse = ", "),
+      paste(unique(fixed$level), collapse = " and "),
+      nomo_present_noun(length(unique(fixed$level)), "level", "levels"),
+      nomo_present_noun(length(factors), "its", "their"),
+      nomo_present_noun(length(factors), "its", "each"),
+      unit
+    ),
+    recommendation = paste(
+      "To compare latent means, keep at least one of the factor's intercepts",
+      "equal; the decision to release them all is the researcher's."
+    )
+  )
 }
 
 

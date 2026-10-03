@@ -14,12 +14,22 @@
 #' more-restrictive levels so that a loading freed at the metric level does not
 #' silently become constrained again at the scalar level.
 #'
+#' [nomo_invariance()] and [nomo_invariance_longitudinal()] check each release
+#' against the model when they fit it. A release must name a loading,
+#' intercept, threshold, or residual variance of an indicator in the model,
+#' and must free it in the generated model; otherwise it is an error. It
+#' applies from the level that first holds its parameter type equal: declared
+#' earlier, it is moved to that level, and the decision log says so; declared
+#' later, it is an error, because the two models would not be nested.
+#'
 #' @param level Character vector naming the first invariance level at which each
 #'   release should apply. Supported labels are `thresholds`, `metric`, `scalar`,
 #'   `strong`, and `strict`; the applicable subset depends on the indicator
-#'   category structure.
+#'   category structure. It should be the level that first holds the released
+#'   parameter's type equal, such as `metric` for a loading.
 #' @param syntax Character vector of lavaan parameter expressions to exclude from
-#'   the corresponding equality constraints.
+#'   the corresponding equality constraints, naming the factors and indicators
+#'   as the model does.
 #' @param rationale Character vector documenting why each release was chosen.
 #'   A single rationale may be recycled across multiple releases.
 #'

@@ -250,7 +250,7 @@ print.nomo_invariance <- function(x, ...) {
   }
 
   nomo_present_facts(sprintf("Requested: %s", paste(x$requested_levels, collapse = " -> ")))
-  nomo_present_facts(sprintf("Completed: %s", paste(x$completed_levels, collapse = " -> ")))
+  nomo_present_facts(sprintf("Completed: %s", nomo_invariance_level_path(x$completed_levels)))
 
   if (!is.null(x$partial) && x$partial$n > 0L) {
     nomo_present_facts(sprintf("Researcher-specified partial releases: %d", x$partial$n))
@@ -339,7 +339,7 @@ print.summary_nomo_invariance <- function(x, ...) {
             paste(x$groups, collapse = ", "))
   ))
   nomo_present_facts(sprintf(
-    "Levels completed: %s", paste(x$completed_levels, collapse = " -> ")
+    "Levels completed: %s", nomo_invariance_level_path(x$completed_levels)
   ))
 
   nomo_present_section("Identification and sequence")

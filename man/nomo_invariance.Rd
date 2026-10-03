@@ -28,7 +28,14 @@ an object created by \code{nomo_model()}.}
 
 \item{group}{Character scalar naming the grouping variable in \code{data}.}
 
-\item{ordered}{Optional character vector naming ordered indicators.}
+\item{ordered}{Optional character vector naming ordered indicators. Model
+indicators stored as ordered factors are modeled as ordered whether or not
+they are named here, since lavaan fits them as categorical; the result's
+\code{ordered} includes them, \code{ordered_detected} lists them, and the decision
+log lists them for review. They then follow the rules for ordered
+indicators: the ordered \code{levels} sequence, \code{ID.fac = "std.lv"}, and no
+ML-family estimator or FIML. Convert such columns to numeric to model
+them as continuous.}
 
 \item{levels}{Optional invariance levels. \code{NULL} uses the sequence implied by
 the indicator category structure.}
@@ -46,8 +53,12 @@ diagnostic evidence. Diagnostics never trigger automatic release/refitting.}
 \item{ID.fac}{Factor-identification method passed to
 \code{semTools::measEq.syntax()}. \code{"std.lv"} is the default.}
 
-\item{ID.cat}{Ordered-indicator identification method passed to
-\code{semTools::measEq.syntax()}. Wu-Estabrook is the default.}
+\item{ID.cat}{Ordered-indicator identification passed to
+\code{semTools::measEq.syntax()}. Only Wu and Estabrook's (2016) identification
+is supported, as \code{"Wu.Estabrook.2016"} (the default) or a semTools alias
+for it (\code{"Wu.2016"}, \code{"Wu.Estabrook"}, \code{"Wu"}): the level sequences and
+their notes are built for it, and under semTools' other choices the levels
+would not constrain what their names say.}
 
 \item{parameterization}{Lavaan categorical parameterization. \code{"theta"} is
 the default for ordered indicators.}
@@ -57,12 +68,16 @@ the default for ordered indicators.}
 \value{
 A \code{nomo_invariance} object. The fields to read are:
 \itemize{
-\item \code{groups}, \code{requested_levels}, and \code{completed_levels}.
+\item \code{groups} and \code{requested_levels}.
+\item \code{completed_levels}: the levels that were estimated and converged.
+Fitting stops at the first level that fails or does not converge; that
+level is in \code{fit_evidence} but not here.
 \item \code{fit_evidence}: one row per level, with its fit, its change from the
 level before, the likelihood-ratio test, and any warning or error.
 \item \code{local_strain}: score diagnostics for each equality constraint, which
 localize strain without releasing anything.
-\item \code{partial}: the researcher-specified releases, when given.
+\item \code{partial}: the researcher-specified releases, when given, each at the
+level it applies from.
 \item \code{latent_means}: at each level that holds intercepts equal, each group's
 latent means relative to the reference group, in the reference group's
 latent standard deviations, with their intervals. See \strong{Latent means}.
@@ -97,6 +112,18 @@ are carried forward to more restrictive levels and their rationales are
 retained. \code{nomo_invariance()} never searches for a combination of releases
 that makes a fit rule pass.
 
+Each release must name a loading, intercept, threshold, or residual variance
+of an indicator in \code{model}, and must free that parameter in the generated
+model: \code{semTools::measEq.syntax()} ignores a release it cannot match, so a
+misspelled name, or a marker loading fixed at 1, is an error rather than a
+fully constrained model reported as partial. A release applies from the
+level that first holds its parameter type equal (loadings at \code{metric},
+intercepts at \code{scalar}, and so on, as the sequence for the indicators sets
+them). Declared at an earlier level, where it would change nothing, it is
+moved to that first level and the decision log says so. Declared at a later
+level, it is an error, because the earlier model would hold the parameter
+equal and the later one free it, so the two would not be nested.
+
 When \code{localize = TRUE}, univariate score tests for equality constraints are
 retained as diagnostic evidence. They are explicitly not used to modify the
 fitted model.
@@ -111,10 +138,16 @@ At each level that holds intercepts equal, \code{latent_means} gives each group'
 latent means relative to the reference group, the first group, which the
 default \code{ID.fac = "std.lv"} fixes at a mean of 0 and a variance of 1. Each
 mean is then a difference in the reference group's latent standard
-deviations, the effect size Hancock (2001) describes. Under another
-identification the table is empty. Where the intercepts are not invariant,
-the means are not comparable until the non-invariant intercepts are
-released with \code{\link[=nomo_partial]{nomo_partial()}} (Vandenberg & Lance, 2000).
+deviations, the effect size Hancock (2001) describes. The fitted model
+decides which means are reported: only those of factors whose reference
+mean is fixed at 0 and variance at 1, and only where the compared group's
+mean is estimated. So the table is empty under another identification, and
+for a model with higher-order factors, which \code{semTools::measEq.syntax()}
+identifies by unit loadings (the decision log records the switch). A factor
+whose intercepts are all released has no estimated difference; the decision
+log says so. Where the intercepts are not invariant, the means are not
+comparable until the non-invariant intercepts are released with
+\code{\link[=nomo_partial]{nomo_partial()}} (Vandenberg & Lance, 2000).
 }
 
 \examples{
