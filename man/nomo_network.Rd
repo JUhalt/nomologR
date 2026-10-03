@@ -34,9 +34,22 @@ validation subset is reserved for replication.}
 this together with a \code{nomo_split} object.}
 
 \item{add_missing}{Logical. If \code{TRUE} (default), theory-specified relations
-absent from \code{model} are appended transparently before estimation.}
+absent from \code{model} are appended transparently before estimation: the
+directed paths first, then the associations the model still lacks.}
 
-\item{ordered}{Optional character vector naming ordered indicators.}
+\item{ordered}{Optional character vector naming ordered indicators. A
+variable of the fitted model stored as an ordered factor, in \code{data} or in
+\code{validation_data}, is treated as declared whether or not it is named
+here, because lavaan fits such a column as ordered-categorical either
+way. The decision log lists the columns found this way for review. A
+column that is an ordered factor in only one of the two samples is
+declared ordered in both, so both are fitted with the same estimator;
+the sample that stores it as numbers is then fitted with a
+categorical-data estimator, and its estimates differ from a fit that
+treats the column as continuous. An exogenous covariate is the
+exception: lavaan does not model a covariate as ordered-categorical, so
+one stored as an ordered factor is refused. Supply it as a numeric
+column or as dummy-coded columns.}
 
 \item{estimator}{Optional lavaan estimator. When ordered indicators are
 declared and \code{estimator = NULL}, WLSMV is requested.}
@@ -63,17 +76,19 @@ given as one number or as a \code{\link[=nomo_single_indicator]{nomo_single_indi
 A \code{nomo_network} object. The fields to read are:
 \itemize{
 \item \code{hypothesis_evidence}: one row per hypothesis, with its prediction,
-estimate, interval, concordance with the prediction, and
+estimate, interval, \code{concordance} with the prediction (see
+\strong{Concordance}), \code{evidence_scope} (see \strong{Evidence scope}), and
 interpretation.
 \item \code{replication_evidence}: the same comparison in \code{validation_data}, when
-given.
+given, with its \code{replication_status} (see \strong{Replication status}).
 \item \code{fit_evidence}: global fit of the fitted model.
 \item \code{parameter_estimates} and \code{standardized_solution}: \code{lavaan}'s parameter
 tables, as tibbles.
 \item \code{measurement_context}: the measurement model's loadings and fit, which
 qualify the structural evidence.
-\item \code{model_fitted} and \code{model_relations}: the syntax fitted and the
-relations added from the hypotheses.
+\item \code{model_fitted} and \code{model_relations}: the syntax fitted, and for each
+hypothesis whether its relation was already in the model to be fitted
+(\code{already_in_model}) or was added (\code{added_from_hypothesis}).
 \item \code{fit}: the \code{lavaan} fit, and \code{validation}, the validation fit, when
 given.
 \item \code{single_indicators}: one row per composite modeled as a single
@@ -99,17 +114,132 @@ so the theory object itself can define the structural portion of the network.
 Directed \code{A -> B} hypotheses map to lavaan regression paths \code{B ~ A}.
 Association \verb{A <-> B} hypotheses map to covariance paths \code{A ~~ B}.
 
+A directed path is in the model when \code{model} writes it. An association is
+judged against the model that will be fitted, which is \code{model} with the
+hypothesized directed paths in place: it is in the model when \code{model} writes
+it or when lavaan adds it there automatically, as it does between exogenous
+factors. \code{model_relations} records which relations were already in the
+model and which were added.
+
+When the fitted model also predicts an endpoint of an association, \code{A ~~ B}
+is a covariance between residuals. The model predicts a variable when a
+directed path points to it, and when it is an indicator of a factor, which
+includes a factor that loads on a higher-order factor. The estimate is then
+the association that remains after those predictors, a residual
+association, and it can differ from the overall association in size and in
+sign. Such a hypothesis has \code{evidence_scope} \code{"residual_association"}, its
+interpretation says so, and the decision log flags it for review. If the
+theory concerns the overall association, evaluate it in a model that does
+not predict those variables.
+
+A pair of variables carries a directed path or an association, not both:
+\code{nomo_network()} stops when an association hypothesis names two variables
+that the model to be fitted joins with a directed path. It also stops when
+a hypothesis would add a path opposite to another, because a reciprocal
+pair is not identified without further restrictions. A reciprocal pair
+that \code{model} itself writes is fitted as written, and hypotheses about
+either direction are evaluated; whether that model is identified, by
+instruments for example, is for the researcher to establish.
+
 For quantitative \code{negligible(within = ...)} predictions, \code{nomo_network()}
-evaluates the SESOI using a normal-approximation equivalence confidence
-interval. With the default \code{equivalence_alpha = .05}, this is a 90 percent
-interval, corresponding to the usual two one-sided tests logic. A bare
-\code{negligible()} prediction remains non-confirmable from \code{p > .05}.
+evaluates the smallest effect size of interest (SESOI), the region the
+researcher treats as negligible, using a normal-approximation equivalence
+confidence interval. With the default \code{equivalence_alpha = .05}, this is a
+90 percent interval, corresponding to the usual two one-sided tests logic.
+A bare \code{negligible()} prediction remains non-confirmable from \code{p > .05}.
 
 The function can also fit the same prespecified model in a validation sample.
 Pass \code{validation_data} explicitly, or pass a \code{nomo_split} object as \code{data} to
 use its calibration and validation subsets. No model relation is added or
 removed on the basis of validation results.
 }
+\section{Concordance}{
+
+\code{concordance} in \code{hypothesis_evidence} compares each estimate and its
+confidence interval with the theoretical region of its prediction, on the
+scale the prediction names (standardized by default). For \code{positive()} and
+\code{negative()} predictions the interval is the 95 percent confidence
+interval. For \code{negligible(within = ...)} it is the equivalence interval,
+with confidence \code{1 - 2 * equivalence_alpha} (90 percent by default). A
+bound given as \code{min}, \code{max}, or \code{within} belongs to the region; zero, the
+bound of a prediction of direction alone, does not. The values, in the
+order the rules are applied:
+\itemize{
+\item \code{"not_evaluable"}: the model did not converge, no parameter of the fitted
+model matches the relation, or the estimate has no standard error, as
+happens when the model is not identified. The estimate is not compared
+with the prediction.
+\item \code{"not_confirmable_without_sesoi"}: a bare \code{negligible()} prediction, which
+gives no region to compare the interval with.
+\item \code{"concordant"}: the whole interval lies inside the region.
+\item \code{"directionally_concordant_imprecise"}: the estimate lies inside the
+region, and its interval extends outside it.
+\item \code{"inconsistent"}: the estimate and its whole interval lie outside the
+region. A relation with the predicted sign is inconsistent when its
+interval excludes the predicted magnitude.
+\item \code{"direction_concordant_below_magnitude"}: for a \code{positive()} or
+\code{negative()} prediction with \code{min} or \code{max}, the estimate has the
+predicted sign and is smaller in magnitude than the region requires, and
+its interval reaches the region.
+\item \code{"direction_concordant_above_magnitude"}: the same, with an estimate
+larger in magnitude than the region allows.
+\item \code{"inconclusive"}: any other estimate outside the region whose interval
+reaches the region, such as an estimate of the wrong sign whose interval
+includes values of the predicted sign.
+}
+
+The decision log records \code{"concordant"} for information, \code{"inconsistent"}
+and \code{"not_evaluable"} as concerns, and the other values for review. None is
+a verdict on validity: each is one piece of evidence, read with the
+measurement context, the fit, and whether the prediction was made a priori.
+}
+
+\section{Evidence scope}{
+
+\code{evidence_scope} in \code{hypothesis_evidence} names what kind of parameter the
+estimate is. For a directed path: \code{"latent_structural"} (factor to factor),
+\code{"latent_to_observed_outcome"}, \code{"observed_to_latent"}, and
+\code{"observed_structural"}. For an association: \code{"latent_association"},
+\code{"latent_observed_association"}, \code{"observed_association"}, and
+\code{"residual_association"} when the fitted model predicts an endpoint, by a
+directed path or a factor loading, whatever the endpoints are. A relation
+without an estimate keeps the scope its endpoints give it.
+}
+
+\section{Replication status}{
+
+With a validation sample, \code{replication_status} in \code{replication_evidence}
+compares the two samples' estimates and concordance. The values, in the
+order the rules are applied:
+\itemize{
+\item \code{"not_evaluable"}: the relation is \code{"not_evaluable"} or has no estimate
+in at least one sample.
+\item \code{"sign_reversal"}, \code{"direction_not_replicated"}, and
+\code{"sign_change_within_uncertainty"}: a \code{positive()} or \code{negative()}
+prediction whose two point estimates have opposite signs. See
+\strong{Replication status when the sign changes}.
+\item \code{"replicated_concordance"}: \code{"concordant"} in both samples.
+\item \code{"not_replicated"}: compatible with the prediction in the primary sample
+and \code{"inconsistent"} in the validation sample. Compatible means
+\code{"concordant"}, \code{"directionally_concordant_imprecise"},
+\code{"direction_concordant_below_magnitude"}, or
+\code{"direction_concordant_above_magnitude"}, the values whose interval
+reaches the region.
+\item \code{"unstable"}: \code{"inconsistent"} in the primary sample and compatible with
+the prediction in the validation sample.
+\item \code{"replicated_inconsistency"}: \code{"inconsistent"} in both samples.
+\item \code{"direction_replicated_but_uncertain"}: a \code{positive()} or \code{negative()}
+prediction whose estimates have the same sign in both samples, without
+meeting a rule above.
+\item \code{"mixed_or_inconclusive"}: any other pattern.
+}
+
+The decision log records \code{"replicated_concordance"} for information;
+\code{"sign_reversal"}, \code{"direction_not_replicated"}, \code{"not_replicated"},
+\code{"unstable"}, and \code{"replicated_inconsistency"} as concerns; and the other
+values for review.
+}
+
 \section{Replication status when the sign changes}{
 
 When a directional prediction's primary and validation point estimates have

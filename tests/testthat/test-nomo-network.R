@@ -1127,6 +1127,8 @@ test_that("correct direction below a prespecified magnitude remains distinct fro
     seed = 7103L
   )
 
+  # The whole interval is short of the magnitude: the direction is right and
+  # the predicted magnitude is excluded, which is inconsistent with it (#145).
   out <- nomo_network(
     network_truth_model(),
     data = dat,
@@ -1138,11 +1140,22 @@ test_that("correct direction below a prespecified magnitude remains distinct fro
   row <- out$hypothesis_evidence
 
   expect_gt(row$estimate, 0)
-  expect_lt(row$estimate, .30)
-  expect_equal(
-    row$concordance,
-    "direction_concordant_below_magnitude"
-  )
+  expect_lt(row$ci_upper, .30)
+  expect_equal(row$concordance, "inconsistent")
+  expect_match(row$interpretation, "has the predicted direction", fixed = TRUE)
+  expect_match(row$interpretation, "smaller in magnitude", fixed = TRUE)
+
+  # An interval that still reaches the magnitude leaves the question open.
+  reaching <- nomo_network(
+    network_truth_model(),
+    data = dat,
+    hypotheses = nomo_hypotheses(
+      "A -> B" = positive(min = row$estimate + (row$ci_upper - row$estimate) / 2)
+    )
+  )$hypothesis_evidence
+
+  expect_equal(reaching$concordance, "direction_concordant_below_magnitude")
+  expect_match(reaching$interpretation, "still overlaps that region", fixed = TRUE)
 })
 
 
@@ -1834,4 +1847,573 @@ test_that("a latent-to-observed relationship is disclosed, and a single measure 
   # The network cannot tell a composite from a single measured variable, so the
   # disclosure must say plainly that it does not apply to the latter.
   expect_match(entry$recommendation, "is not a composite", fixed = TRUE)
+})
+
+
+# Audit of the network stage (#145) --------------------------------------------
+
+demo_network_model <- function(factors = c("Agency", "Persistence")) {
+  items <- list(
+    Agency = c("ag1", "ag2", "ag3", "ag4"),
+    Persistence = c("pe1", "pe2", "pe3", "pe4"),
+    SocialDesirability = c("sd1", "sd2", "sd3")
+  )
+  as.character(nomo_model(items[factors]))
+}
+
+classify_against <- function(expectation, estimate, ci_lower, ci_upper) {
+  hypothesis <- as.list(
+    nomo_hypotheses("A -> B" = expectation)$hypotheses[1, , drop = FALSE]
+  )
+  nomo_network_classify(hypothesis, estimate, ci_lower, ci_upper, converged = TRUE)
+}
+
+
+test_that("an association is judged against the model that will be fitted (#145)", {
+  model <- demo_network_model(c("Agency", "Persistence", "SocialDesirability"))
+
+  # lavaan covaries exogenous factors by itself, but not once a hypothesized
+  # path makes Persistence an outcome. The association is then added.
+  out <- nomo_network(
+    model,
+    data = nomo_demo_network,
+    hypotheses = nomo_hypotheses(
+      "Agency -> Persistence" = positive(),
+      "Persistence <-> SocialDesirability" = negligible(within = c(-.15, .15)),
+      "Agency <-> SocialDesirability" = negligible(within = c(-.15, .15))
+    )
+  )
+  relations <- out$model_relations
+
+  expect_identical(relations$already_in_model, c(FALSE, FALSE, TRUE))
+  expect_identical(relations$added_from_hypothesis, c(TRUE, TRUE, FALSE))
+  expect_match(out$model_fitted, "Persistence ~~ SocialDesirability", fixed = TRUE)
+  expect_no_match(out$model_fitted, "Agency ~~ SocialDesirability", fixed = TRUE)
+  expect_true(all(is.finite(out$hypothesis_evidence$estimate)))
+  expect_false(any(out$hypothesis_evidence$concordance == "not_evaluable"))
+
+  # Every relation the result calls present has a parameter in the fit.
+  fitted <- out$parameter_estimates
+  expect_true(any(
+    fitted$op == "~~" & fitted$lhs == "Agency" &
+      fitted$rhs == "SocialDesirability"
+  ))
+
+  # Without a directed path, lavaan's own covariance is the association.
+  kept <- nomo_network(
+    model,
+    data = nomo_demo_network,
+    hypotheses = nomo_hypotheses(
+      "Persistence <-> SocialDesirability" = negligible(within = c(-.15, .15))
+    ),
+    add_missing = FALSE
+  )
+  expect_true(kept$model_relations$already_in_model)
+  expect_true(is.finite(kept$hypothesis_evidence$estimate))
+
+  # With one, and no additions allowed, it is absent and reported as absent.
+  absent <- nomo_network(
+    paste(model, "Persistence ~ Agency", sep = "\n"),
+    data = nomo_demo_network,
+    hypotheses = nomo_hypotheses(
+      "Persistence <-> SocialDesirability" = negligible(within = c(-.15, .15))
+    ),
+    add_missing = FALSE
+  )
+  expect_false(absent$model_relations$already_in_model)
+  expect_false(absent$model_relations$added_from_hypothesis)
+  expect_identical(absent$hypothesis_evidence$concordance, "not_evaluable")
+
+  # Nothing was estimated, so nothing is said to be estimated as a residual
+  # association, although the model predicts Persistence.
+  expect_true(is.na(absent$hypothesis_evidence$estimate))
+  expect_identical(absent$hypothesis_evidence$evidence_scope, "latent_association")
+  expect_no_match(
+    absent$hypothesis_evidence$interpretation, "residual association", fixed = TRUE
+  )
+  expect_false("residual_association" %in% absent$decision_log$metric)
+
+  # The log row is written for estimated relations only, whatever the scope.
+  unestimated <- absent$hypothesis_evidence
+  unestimated$evidence_scope <- "residual_association"
+  expect_identical(nrow(nomo_network_residual_log(unestimated)), 0L)
+})
+
+
+test_that("the covariance of two fixed covariates is added, so it is estimated (#145)", {
+  set.seed(14501)
+  dat <- nomo_demo_network
+  dat$x1 <- rnorm(nrow(dat))
+  dat$x2 <- .3 * dat$x1 + rnorm(nrow(dat))
+
+  out <- nomo_network(
+    demo_network_model("Agency"),
+    data = dat,
+    hypotheses = nomo_hypotheses(
+      "x1 -> Agency" = negligible(within = c(-.2, .2)),
+      "x2 -> Agency" = negligible(within = c(-.2, .2)),
+      "x1 <-> x2" = positive()
+    )
+  )
+
+  expect_true(out$model_relations$added_from_hypothesis[[3L]])
+  expect_gt(out$hypothesis_evidence$se[[3L]], 0)
+  expect_identical(out$hypothesis_evidence$concordance[[3L]], "concordant")
+})
+
+
+test_that("a pair of variables carries one relation in the fitted model (#145)", {
+  model <- paste(demo_network_model(), "Persistence ~ Agency", sep = "\n")
+
+  expect_error(
+    nomo_network(
+      model, nomo_demo_network,
+      nomo_hypotheses("Agency <-> Persistence" = positive())
+    ),
+    "can carry a directed path or an association, not both"
+  )
+  expect_error(
+    nomo_network(
+      model, nomo_demo_network,
+      nomo_hypotheses("Persistence -> Agency" = positive())
+    ),
+    "would add a path opposite to one the model already has"
+  )
+
+  # A hypothesis set built before nomo_hypotheses() refused such pairs.
+  legacy <- nomo_hypotheses(
+    "Agency -> Persistence" = positive(),
+    "Agency <-> Performance" = positive()
+  )
+  legacy$hypotheses$target[[2L]] <- "Persistence"
+  legacy$hypotheses$relation[[2L]] <- "Agency <-> Persistence"
+  expect_error(
+    nomo_network(demo_network_model(), nomo_demo_network, legacy),
+    "Hypothesis `Agency <-> Persistence` is an association"
+  )
+})
+
+
+test_that("a reciprocal pair is evaluated when the model writes it, and never added (#145)", {
+  # y1 = .4 * y2 + .5 * x1 + e1 and y2 = .3 * y1 + .5 * x2 + e2, in reduced
+  # form. Each equation has an instrument the other lacks, so the nonrecursive
+  # model is identified.
+  set.seed(14504)
+  n <- 1500
+  x1 <- rnorm(n)
+  x2 <- rnorm(n)
+  u1 <- .5 * x1 + rnorm(n)
+  u2 <- .5 * x2 + rnorm(n)
+  dat <- data.frame(
+    y1 = (u1 + .4 * u2) / (1 - .4 * .3),
+    y2 = (u2 + .3 * u1) / (1 - .4 * .3),
+    x1 = x1,
+    x2 = x2
+  )
+  h <- nomo_hypotheses(
+    "y2 -> y1" = positive(scale = "unstandardized"),
+    "y1 -> y2" = positive(scale = "unstandardized")
+  )
+
+  out <- nomo_network("y1 ~ y2 + x1\ny2 ~ y1 + x2", dat, h)
+  evidence <- out$hypothesis_evidence
+
+  expect_true(out$converged)
+  expect_length(out$engine_warnings, 0L)
+  expect_identical(out$model_relations$already_in_model, c(TRUE, TRUE))
+  expect_identical(out$model_relations$added_from_hypothesis, c(FALSE, FALSE))
+  expect_identical(evidence$concordance, c("concordant", "concordant"))
+  expect_true(all(evidence$se > 0))
+  expect_lt(abs(evidence$estimate[[1L]] - .4), .1)
+  expect_lt(abs(evidence$estimate[[2L]] - .3), .1)
+
+  # nomologR does not add a reciprocal pair: neither one direction beside a
+  # path of the model, nor both directions from the hypotheses.
+  expect_error(
+    nomo_network("y1 ~ y2 + x1\ny2 ~ x2", dat, h),
+    "Hypothesis `y1 -> y2` would add a path opposite to one the model already has",
+    fixed = TRUE
+  )
+  expect_error(
+    nomo_network("y1 ~ x1\ny2 ~ x2", dat, h),
+    "Hypothesis `y2 -> y1` would add a path opposite to one another hypothesis adds",
+    fixed = TRUE
+  )
+
+  # Without additions, the hypotheses the model lacks are reported as absent.
+  absent <- nomo_network("y1 ~ x1\ny2 ~ x2", dat, h, add_missing = FALSE)
+  expect_identical(
+    absent$hypothesis_evidence$concordance, c("not_evaluable", "not_evaluable")
+  )
+})
+
+
+test_that("an association with a predicted endpoint is labeled a residual association (#145)", {
+  out <- nomo_network(
+    demo_network_model(),
+    data = nomo_demo_network,
+    hypotheses = nomo_hypotheses(
+      "Agency -> Persistence" = positive(),
+      "Agency -> Performance" = positive(),
+      "Persistence <-> Performance" = positive()
+    )
+  )
+  evidence <- out$hypothesis_evidence
+
+  expect_identical(
+    evidence$evidence_scope,
+    c("latent_structural", "latent_to_observed_outcome", "residual_association")
+  )
+  expect_match(evidence$interpretation[[3L]], "residual association", fixed = TRUE)
+  expect_match(
+    evidence$interpretation[[3L]], "`Persistence` and `Performance`", fixed = TRUE
+  )
+  expect_no_match(evidence$interpretation[[1L]], "residual association", fixed = TRUE)
+
+  # The quantity differs from the overall association the two share, here
+  # even in sign, which is why it is labeled.
+  implied <- stats::cov2cor(lavaan::lavInspect(out$fit, "cov.all"))
+  expect_lt(evidence$estimate[[3L]], 0)
+  expect_gt(implied["Persistence", "Performance"], 0)
+
+  entry <- out$decision_log[out$decision_log$metric == "residual_association", ]
+  expect_identical(nrow(entry), 1L)
+  expect_identical(entry$severity, "review")
+  expect_identical(entry$object, "Persistence <-> Performance")
+  expect_equal(entry$value, evidence$estimate[[3L]])
+
+  expect_output(print(summary(out)), "residual association", fixed = TRUE)
+
+  # Associations among variables nothing predicts keep their scope.
+  plain <- nomo_network(
+    demo_network_model(c("Agency", "SocialDesirability")),
+    data = nomo_demo_network,
+    hypotheses = nomo_hypotheses(
+      "Agency <-> SocialDesirability" = negligible(within = c(-.15, .15))
+    )
+  )
+  expect_identical(plain$hypothesis_evidence$evidence_scope, "latent_association")
+  expect_false(any(plain$decision_log$metric == "residual_association"))
+
+  expect_identical(
+    nomo_network_scope("latent", "observed", "association", residual = TRUE),
+    "residual_association"
+  )
+})
+
+
+test_that("an association with an indicator endpoint is a residual association (#145)", {
+  # A loading predicts an indicator as a path predicts an outcome, so `~~`
+  # with an indicator is a covariance of its unique part.
+  out <- nomo_network(
+    demo_network_model(),
+    data = nomo_demo_network,
+    hypotheses = nomo_hypotheses(
+      "pe1 <-> pe2" = positive(),
+      "ag1 <-> Performance" = positive(),
+      "Agency <-> Persistence" = positive()
+    )
+  )
+  evidence <- out$hypothesis_evidence
+
+  expect_identical(
+    evidence$evidence_scope,
+    c("residual_association", "residual_association", "latent_association")
+  )
+  expect_match(
+    evidence$interpretation[[1L]],
+    "predicts `pe1` and `pe2` from other variables, by a directed path or a factor loading",
+    fixed = TRUE
+  )
+  expect_match(evidence$interpretation[[2L]], "predicts `ag1` from", fixed = TRUE)
+  expect_no_match(evidence$interpretation[[3L]], "residual association", fixed = TRUE)
+
+  # The two indicators correlate substantially; what their factor leaves of
+  # that association is near zero.
+  expect_gt(stats::cor(nomo_demo_network$pe1, nomo_demo_network$pe2), .40)
+  expect_lt(abs(evidence$estimate[[1L]]), .20)
+
+  entries <- out$decision_log[out$decision_log$metric == "residual_association", ]
+  expect_identical(entries$object, c("pe1 <-> pe2", "ag1 <-> Performance"))
+  expect_identical(entries$severity, c("review", "review"))
+  expect_match(entries$observation[[1L]], "a directed path or a factor loading", fixed = TRUE)
+
+  # A first-order factor is an indicator of the factor above it.
+  higher <- nomo_network_hypothesis_evidence(
+    hypotheses = nomo_hypotheses("Agency <-> Performance" = positive()),
+    parameter_estimates = tibble::tibble(
+      lhs = c("G", "Agency"), op = c("=~", "~~"), rhs = c("Agency", "Performance"),
+      est = c(.7, .2), se = c(.05, .04), pvalue = c(0, 0),
+      ci.lower = c(.6, .12), ci.upper = c(.8, .28)
+    ),
+    standardized_solution = tibble::tibble(
+      lhs = c("G", "Agency"), op = c("=~", "~~"), rhs = c("Agency", "Performance"),
+      est.std = c(.7, .2), se = c(.05, .04), pvalue = c(0, 0),
+      ci.lower = c(.6, .12), ci.upper = c(.8, .28)
+    ),
+    converged = TRUE,
+    latent = c("G", "Agency"),
+    data = nomo_demo_network,
+    measurement_context = out$measurement_context
+  )
+  expect_identical(higher$evidence_scope, "residual_association")
+  expect_identical(higher$concordance, "concordant")
+})
+
+
+test_that("an estimate that misses a magnitude is classed by side and by interval (#145)", {
+  above <- classify_against(positive(max = .30), .35, .25, .45)
+  expect_identical(above$concordance, "direction_concordant_above_magnitude")
+  expect_match(above$interpretation, "larger in magnitude", fixed = TRUE)
+  expect_match(above$interpretation, "(0, 0.3]", fixed = TRUE)
+
+  below <- classify_against(positive(min = .30), .25, .15, .35)
+  expect_identical(below$concordance, "direction_concordant_below_magnitude")
+  expect_match(below$interpretation, "smaller in magnitude", fixed = TRUE)
+
+  expect_identical(
+    classify_against(negative(min = -.30), -.35, -.45, -.25)$concordance,
+    "direction_concordant_above_magnitude"
+  )
+  expect_identical(
+    classify_against(negative(max = -.30), -.25, -.35, -.15)$concordance,
+    "direction_concordant_below_magnitude"
+  )
+
+  # An interval wholly outside the region is inconsistent with the predicted
+  # magnitude, on either side, although the direction is as predicted.
+  beyond <- classify_against(positive(min = .10, max = .20), .39, .32, .45)
+  expect_identical(beyond$concordance, "inconsistent")
+  expect_match(beyond$interpretation, "has the predicted direction", fixed = TRUE)
+  expect_match(beyond$interpretation, "larger in magnitude", fixed = TRUE)
+
+  short <- classify_against(positive(min = .20), .05, .01, .09)
+  expect_identical(short$concordance, "inconsistent")
+  expect_match(short$interpretation, "smaller in magnitude", fixed = TRUE)
+
+  wrong_sign <- classify_against(positive(min = .20), -.25, -.35, -.15)
+  expect_identical(wrong_sign$concordance, "inconsistent")
+  expect_no_match(wrong_sign$interpretation, "predicted direction", fixed = TRUE)
+
+  expect_identical(
+    classify_against(negligible(within = c(-.1, .1)), .15, .05, .30)$concordance,
+    "inconclusive"
+  )
+})
+
+
+test_that("the above-magnitude value reaches the output, the log and replication (#145)", {
+  out <- nomo_network(
+    demo_network_model(),
+    data = nomo_demo_network,
+    hypotheses = nomo_hypotheses(
+      "Agency -> Persistence" = positive(max = .40),
+      "Agency -> Performance" = positive(max = .30)
+    )
+  )
+  evidence <- out$hypothesis_evidence
+
+  expect_identical(
+    evidence$concordance,
+    c("direction_concordant_above_magnitude", "inconsistent")
+  )
+  log <- out$decision_log[out$decision_log$metric == "theory_concordance", ]
+  expect_identical(log$severity, c("review", "concern"))
+
+  expect_identical(
+    nomo_network_pretty_status("direction_concordant_above_magnitude"),
+    "Direction concordant / above magnitude"
+  )
+  expect_true(
+    "Direction concordant / above magnitude" %in% nomo_network_concordance_levels()
+  )
+  expect_false(anyNA(plot(out, type = "concordance")$data$concordance_display))
+  expect_identical(
+    nomo_apa_concordance("direction_concordant_above_magnitude"),
+    "Direction concordant, above predicted magnitude"
+  )
+
+  sample <- function(estimate, concordance) {
+    list(hypothesis_evidence = tibble::tibble(
+      id = "H1", relation = "A -> B", prediction = "positive",
+      estimate = estimate, ci_lower = estimate - .1, ci_upper = estimate + .1,
+      concordance = concordance
+    ))
+  }
+  expect_identical(
+    nomo_network_replication_evidence(
+      sample(.45, "direction_concordant_above_magnitude"),
+      sample(.90, "inconsistent")
+    )$replication_status,
+    "not_replicated"
+  )
+})
+
+
+test_that("an estimate without a standard error is not evaluable (#145)", {
+  no_interval <- classify_against(positive(), .25, NA_real_, NA_real_)
+  expect_identical(no_interval$concordance, "not_evaluable")
+  expect_match(no_interval$interpretation, "standard error was unavailable", fixed = TRUE)
+
+  # A reciprocal pair written in the model is not identified, so lavaan
+  # converges without standard errors.
+  model <- paste(
+    demo_network_model(), "Persistence ~ Agency", "Agency ~ Persistence",
+    sep = "\n"
+  )
+  out <- suppressWarnings(nomo_network(
+    model,
+    data = nomo_demo_network,
+    hypotheses = nomo_hypotheses("Agency -> Persistence" = positive())
+  ))
+  evidence <- out$hypothesis_evidence
+
+  expect_true(out$converged)
+  expect_true(is.finite(evidence$estimate))
+  expect_true(is.na(evidence$se))
+  expect_identical(evidence$concordance, "not_evaluable")
+  expect_match(evidence$interpretation, "standard error was unavailable", fixed = TRUE)
+  expect_no_match(evidence$interpretation, "confidence interval extends", fixed = TRUE)
+
+  context <- out$measurement_context$summary
+  expect_identical(context$attention, "concern")
+  expect_match(context$observation, "standard errors could not be computed", fixed = TRUE)
+
+  log <- out$decision_log
+  expect_identical(log$severity[log$metric == "measurement_context"], "concern")
+  expect_identical(log$severity[log$metric == "theory_concordance"], "concern")
+})
+
+
+test_that("columns stored as ordered factors are treated as declared (#145)", {
+  dat <- nomo_demo_ordinal
+  model <- as.character(nomo_model(list(
+    A = paste0("a", 1:5), B = paste0("b", 1:5)
+  )))
+  h <- nomo_hypotheses("A -> B" = positive())
+
+  found <- nomo_network(model, dat, h)
+  named <- nomo_network(model, dat, h, ordered = names(dat))
+
+  expect_identical(found$estimator, "WLSMV")
+  expect_identical(found$estimator_source, "ordered_default")
+  expect_setequal(found$ordered, names(dat))
+  expect_setequal(found$ordered_detected, names(dat))
+  expect_identical(named$ordered_detected, character())
+  expect_equal(found$hypothesis_evidence$estimate, named$hypothesis_evidence$estimate)
+  expect_equal(found$fit_evidence, named$fit_evidence)
+
+  metrics <- found$decision_log$metric
+  expect_true(all(c("ordered_indicators", "ordered_detected", "estimator") %in% metrics))
+  detected <- found$decision_log[metrics == "ordered_detected", ]
+  expect_identical(detected$stage, "network")
+  expect_identical(detected$severity, "review")
+  expect_equal(detected$value, 10)
+  expect_false("ordered_detected" %in% named$decision_log$metric)
+
+  # Naming some columns leaves the rest to be found.
+  partly <- nomo_network(model, dat, h, ordered = c("a1", "a2"))
+  expect_setequal(partly$ordered_detected, setdiff(names(dat), c("a1", "a2")))
+
+  # The ordered-data guards apply to columns found this way, and say so.
+  expect_error(
+    nomo_network(model, dat, h, estimator = "MLR"),
+    "ML-family estimators are not supported.*Stored as ordered factors and treated as declared: a1"
+  )
+  expect_error(
+    nomo_network(model, dat, h, missing = "fiml"),
+    "FIML is not supported.*Stored as ordered factors"
+  )
+})
+
+
+test_that("an exogenous covariate stored as an ordered factor is refused, not declared (#145)", {
+  set.seed(14505)
+  dat <- nomo_demo_network
+  dat$edu <- sample(1:4, nrow(dat), replace = TRUE)
+  factored <- dat
+  factored$edu <- factor(dat$edu, ordered = TRUE)
+  h <- nomo_hypotheses(
+    "Agency -> Persistence" = positive(),
+    "edu -> Persistence" = negligible(within = c(-.2, .2))
+  )
+
+  # lavaan conditions on a covariate and does not model it as ordered, so
+  # declaring it would switch a model of continuous indicators to WLSMV and
+  # log an ordered-categorical model that was not fitted.
+  expect_error(
+    nomo_network(demo_network_model(), factored, h),
+    "Exogenous covariate(s) stored as ordered factors: edu. lavaan does not model",
+    fixed = TRUE
+  )
+  expect_error(
+    nomo_network(demo_network_model(), dat, h, validation_data = factored),
+    "Exogenous covariate(s) stored as ordered factors: edu",
+    fixed = TRUE
+  )
+
+  # As numbers, the covariate leaves the continuous-indicator model as it was.
+  numeric <- nomo_network(demo_network_model(), dat, h)
+  expect_true(numeric$converged)
+  expect_identical(numeric$estimator, "ML")
+  expect_identical(numeric$estimator_source, "lavaan_default")
+  expect_identical(numeric$ordered, character())
+  expect_false(
+    any(c("ordered_detected", "ordered_indicators") %in% numeric$decision_log$metric)
+  )
+
+  # The same column as an outcome is modeled as ordered, so it is declared.
+  outcome <- nomo_network(
+    demo_network_model("Agency"), factored,
+    nomo_hypotheses("Agency -> edu" = negligible(within = c(-.2, .2)))
+  )
+  expect_identical(outcome$ordered, "edu")
+  expect_identical(outcome$ordered_detected, "edu")
+  expect_identical(outcome$estimator, "WLSMV")
+  expect_true(any(outcome$parameter_estimates$op == "|"))
+})
+
+
+test_that("an ordered column in either sample is treated as declared in both (#145)", {
+  ordinal <- nomo_demo_ordinal
+  half <- seq_len(nrow(ordinal)) <= nrow(ordinal) / 2
+  primary <- as.data.frame(lapply(ordinal[half, ], as.integer))
+  validation <- ordinal[!half, ]
+
+  out <- nomo_network(
+    as.character(nomo_model(list(A = paste0("a", 1:5), B = paste0("b", 1:5)))),
+    data = primary,
+    validation_data = validation,
+    hypotheses = nomo_hypotheses("A -> B" = positive())
+  )
+
+  expect_setequal(out$ordered_detected, names(ordinal))
+  expect_identical(out$estimator, "WLSMV")
+  expect_identical(out$validation$estimator, "WLSMV")
+  expect_identical(sum(out$decision_log$metric == "ordered_detected"), 1L)
+
+  # The primary sample stores the columns as integers and is fitted as
+  # ordered-categorical all the same, so one estimator serves both samples.
+  # Its estimates are therefore not those of a fit that treats them as
+  # continuous, which ?nomo_network states.
+  expect_identical(lavaan::lavInspect(out$fit, "options")$estimator, "DWLS")
+  expect_true(any(out$parameter_estimates$op == "|"))
+})
+
+
+test_that("the estimator a fit used is recorded when none was requested (#145)", {
+  out <- nomo_network(
+    demo_network_model(),
+    data = nomo_demo_network,
+    hypotheses = nomo_hypotheses("Agency -> Persistence" = positive())
+  )
+  expect_identical(out$estimator, "ML")
+  expect_identical(out$estimator_source, "lavaan_default")
+  expect_false("estimator" %in% out$decision_log$metric)
+
+  categorical <- lavaan::cfa(
+    "A =~ a1 + a2 + a3 + a4 + a5", data = nomo_demo_ordinal
+  )
+  expect_identical(nomo_network_fitted_estimator(categorical), "WLSMV")
+  expect_true(is.na(nomo_network_fitted_estimator("not a fit")))
 })

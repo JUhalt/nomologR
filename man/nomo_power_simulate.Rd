@@ -47,7 +47,9 @@ proportions that converged and that were improper, the smallest power in
 \code{focus}, the largest absolute biases, the coverage range, and
 \code{meets_references}), \code{n_required} (the smallest simulated sample size that
 meets the references, or \code{NA}), \code{focus}, \code{reps}, \code{alpha}, and \code{seed} (the
-seed given, or \code{NA} without one).
+seed given, or \code{NA} without one). \code{\link[=nomo_table]{nomo_table()}} returns the \code{"summary"}
+table, its default \code{type}, or the \code{"parameters"} table; \code{print()} shows
+the first and \code{summary()} both.
 
 Other fields record the call, the population and analysis models, and the
 kind of power analysis. They may change between releases and are not part

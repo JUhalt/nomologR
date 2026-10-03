@@ -5,6 +5,7 @@ nomo_network_pretty_status <- function(x) {
     concordant = "Concordant",
     directionally_concordant_imprecise = "Directionally concordant / imprecise",
     direction_concordant_below_magnitude = "Direction concordant / below magnitude",
+    direction_concordant_above_magnitude = "Direction concordant / above magnitude",
     inconclusive = "Inconclusive",
     inconsistent = "Inconsistent",
     not_confirmable_without_sesoi = "Not confirmable without SESOI",
@@ -36,6 +37,7 @@ nomo_network_concordance_levels <- function() {
     "Not confirmable without SESOI",
     "Inconclusive",
     "Direction concordant / below magnitude",
+    "Direction concordant / above magnitude",
     "Directionally concordant / imprecise",
     "Concordant"
   )

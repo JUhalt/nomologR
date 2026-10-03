@@ -641,6 +641,7 @@ nomo_apa_concordance <- function(x) {
     concordant = "Concordant",
     directionally_concordant_imprecise = "Direction concordant, imprecise",
     direction_concordant_below_magnitude = "Direction concordant, below predicted magnitude",
+    direction_concordant_above_magnitude = "Direction concordant, above predicted magnitude",
     inconclusive = "Inconclusive",
     inconsistent = "Inconsistent",
     not_evaluable = "Not evaluable",
