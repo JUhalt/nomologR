@@ -197,6 +197,29 @@ test_that("a release names items as in the one-occasion model (#145)", {
 })
 
 
+test_that("latent change fixed by releasing every intercept is not reported (#145)", {
+  skip_on_cran()
+  long <- nomo_invariance_longitudinal(
+    long_model, nomo_demo_longitudinal, occasions = long_occasions,
+    levels = c("configural", "metric", "scalar"), localize = FALSE,
+    partial = nomo_partial("scalar", paste0("w", 1:4, " ~ 1"), "Every intercept drifts.")
+  )
+  expect_identical(nrow(long$latent_means), 0L)
+  expect_false("latent_change" %in% long$decision_log$metric)
+  fixed <- long$decision_log[long$decision_log$metric == "latent_means_fixed", ]
+  expect_match(fixed$observation, "fixed at 0 on every occasion.", fixed = TRUE)
+})
+
+
+test_that("ID.cat values other than Wu-Estabrook are refused (#145)", {
+  expect_error(
+    nomo_invariance_longitudinal(long_model, nomo_demo_longitudinal, long_occasions,
+                                 ID.cat = "millsap", ID.fac = "UL"),
+    "`ID.cat` must be \"Wu.Estabrook.2016\"", fixed = TRUE
+  )
+})
+
+
 test_that("the results print and summarize within 80 columns", {
   skip_on_cran()
   long <- long_default()

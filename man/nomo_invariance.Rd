@@ -49,8 +49,12 @@ diagnostic evidence. Diagnostics never trigger automatic release/refitting.}
 \item{ID.fac}{Factor-identification method passed to
 \code{semTools::measEq.syntax()}. \code{"std.lv"} is the default.}
 
-\item{ID.cat}{Ordered-indicator identification method passed to
-\code{semTools::measEq.syntax()}. Wu-Estabrook is the default.}
+\item{ID.cat}{Ordered-indicator identification passed to
+\code{semTools::measEq.syntax()}. Only Wu and Estabrook's (2016) identification
+is supported, as \code{"Wu.Estabrook.2016"} (the default) or a semTools alias
+for it (\code{"Wu.2016"}, \code{"Wu.Estabrook"}, \code{"Wu"}): the level sequences and
+their notes are built for it, and under semTools' other choices the levels
+would not constrain what their names say.}
 
 \item{parameterization}{Lavaan categorical parameterization. \code{"theta"} is
 the default for ordered indicators.}
@@ -60,7 +64,10 @@ the default for ordered indicators.}
 \value{
 A \code{nomo_invariance} object. The fields to read are:
 \itemize{
-\item \code{groups}, \code{requested_levels}, and \code{completed_levels}.
+\item \code{groups} and \code{requested_levels}.
+\item \code{completed_levels}: the levels that were estimated and converged.
+Fitting stops at the first level that fails or does not converge; that
+level is in \code{fit_evidence} but not here.
 \item \code{fit_evidence}: one row per level, with its fit, its change from the
 level before, the likelihood-ratio test, and any warning or error.
 \item \code{local_strain}: score diagnostics for each equality constraint, which
@@ -127,10 +134,16 @@ At each level that holds intercepts equal, \code{latent_means} gives each group'
 latent means relative to the reference group, the first group, which the
 default \code{ID.fac = "std.lv"} fixes at a mean of 0 and a variance of 1. Each
 mean is then a difference in the reference group's latent standard
-deviations, the effect size Hancock (2001) describes. Under another
-identification the table is empty. Where the intercepts are not invariant,
-the means are not comparable until the non-invariant intercepts are
-released with \code{\link[=nomo_partial]{nomo_partial()}} (Vandenberg & Lance, 2000).
+deviations, the effect size Hancock (2001) describes. The fitted model
+decides which means are reported: only those of factors whose reference
+mean is fixed at 0 and variance at 1, and only where the compared group's
+mean is estimated. So the table is empty under another identification, and
+for a model with higher-order factors, which \code{semTools::measEq.syntax()}
+identifies by unit loadings (the decision log records the switch). A factor
+whose intercepts are all released has no estimated difference; the decision
+log says so. Where the intercepts are not invariant, the means are not
+comparable until the non-invariant intercepts are released with
+\code{\link[=nomo_partial]{nomo_partial()}} (Vandenberg & Lance, 2000).
 }
 
 \examples{

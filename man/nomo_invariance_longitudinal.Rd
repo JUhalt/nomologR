@@ -60,8 +60,12 @@ occasions only.}
 \item{ID.fac}{Factor-identification method passed to
 \code{semTools::measEq.syntax()}. \code{"std.lv"} is the default.}
 
-\item{ID.cat}{Ordered-indicator identification method passed to
-\code{semTools::measEq.syntax()}. Wu-Estabrook is the default.}
+\item{ID.cat}{Ordered-indicator identification passed to
+\code{semTools::measEq.syntax()}. Only Wu and Estabrook's (2016) identification
+is supported, as \code{"Wu.Estabrook.2016"} (the default) or a semTools alias
+for it (\code{"Wu.2016"}, \code{"Wu.Estabrook"}, \code{"Wu"}): the level sequences and
+their notes are built for it, and under semTools' other choices the levels
+would not constrain what their names say.}
 
 \item{parameterization}{Lavaan categorical parameterization. \code{"theta"} is
 the default for ordered indicators.}
@@ -114,18 +118,19 @@ releases, and score diagnostics are those of \code{\link[=nomo_invariance]{nomo_
 across occasions instead of groups. A partial release names the item as in
 \code{model}, and frees that parameter across all occasions: \code{"w3 ~ 1"} releases
 the intercept of \code{w3}. A release naming a column, such as \code{"w3_t2 ~ 1"}, is
-an error, as is any release that frees no parameter. For ordered items, Wu
-and Estabrook's (2016) identification is the default; \code{ID.cat = "millsap"},
-with \code{ID.fac = "UL"}, applies Millsap and Tein's (2004) conditions, which
-Liu et al. (2017) extend to repeated measures. An item whose columns are
-stored as ordered factors
-is modeled as ordered on every occasion, whether or not \code{ordered} names it.
+an error, as is any release that frees no parameter. Ordered items follow
+Wu and Estabrook's (2016) identification, the only \code{ID.cat} supported; Liu
+et al. (2017) discuss testing invariance over time with ordered-categorical
+measures. An item whose columns are stored as ordered factors is modeled as
+ordered on every occasion, whether or not \code{ordered} names it.
 
 \strong{Latent change.} Once intercepts are invariant, fully or partially, the
 construct's mean can be compared across occasions. Under the default
 \code{ID.fac = "std.lv"} the first occasion's latent mean is 0 and its variance
 1, so \code{latent_means} gives each later occasion's latent mean as a change in
-the first occasion's latent standard deviations, with its interval.
+the first occasion's latent standard deviations, with its interval. With
+every intercept of a factor's items released, its later means are fixed at
+0 rather than estimated; the decision log says so, and they are left out.
 }
 \examples{
 \donttest{
@@ -159,10 +164,6 @@ Liu, Y., Millsap, R. E., West, S. G., Tein, J.-Y., Tanaka, R., & Grimm, K. J.
 (2017). Testing measurement invariance in longitudinal data with
 ordered-categorical measures. \emph{Psychological Methods, 22}(3), 486-506.
 \doi{10.1037/met0000075}
-
-Millsap, R. E., & Tein, J.-Y. (2004). Assessing factorial invariance in
-ordered-categorical measures. \emph{Multivariate Behavioral Research, 39}(3),
-479-515. \doi{10.1207/S15327906MBR3903_4}
 
 Widaman, K. F., Ferrer, E., & Conger, R. D. (2010). Factorial invariance
 within longitudinal structural equation models: Measuring the same construct
