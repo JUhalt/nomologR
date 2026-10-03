@@ -47,6 +47,10 @@ the reference.
 \item \code{decision_log}.
 \item \code{fits}: the refitted objects.
 }
+
+\code{pct_incomplete} in \code{pattern} and \code{pct_missing} in \code{variables} are
+proportions between 0 and 1, not percentages. See \strong{Conventions in returned
+tables} in \code{?nomologR}.
 }
 \description{
 \code{nomo_missing()} refits the same prespecified model under alternative

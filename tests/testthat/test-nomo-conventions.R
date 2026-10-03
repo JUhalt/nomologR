@@ -36,9 +36,31 @@ test_that("each help page names the units and flags of its own tables", {
   }
   expect_true(rd_names(nomo_test_rd_text("nomo_cfa", "\\value"), "pct_dropped"))
 
+  # Pages whose tables use only the evidence vocabulary name it too.
+  for (topic in c("nomo_reliability", "nomo_network")) {
+    value <- nomo_test_rd_text(topic, "\\value")
+    for (flag in c("info", "review", "concern")) {
+      expect_true(rd_names(value, sprintf('"%s"', flag)), label = paste(topic, flag))
+    }
+    expect_true(grepl("Conventions in returned tables", value, fixed = TRUE), label = topic)
+  }
+  expect_true(rd_names(nomo_test_rd_text("nomo_network", "\\value"), "measurement_attention"))
+  expect_true(rd_names(nomo_test_rd_text("nomo_reliability", "\\value"), "signal"))
+
+  # The Fornell-Larcker comparison can be "unavailable", which the page says.
+  validity <- nomo_test_rd_text("nomo_validity", "\\value")
+  expect_true(rd_names(validity, "fornell_larcker_pairs"))
+  expect_true(rd_names(validity, '"unavailable"'))
+
   screen <- nomo_test_rd_text("nomo_screen", "\\value")
   expect_true(rd_names(screen, "pct_missing"))
   expect_true(rd_names(screen, "percent_unique"))
+
+  missing <- nomo_test_rd_text("nomo_missing", "\\value")
+  expect_true(rd_names(missing, "pct_missing"))
+  expect_true(rd_names(missing, "pct_incomplete"))
+  expect_true(grepl("proportions", missing, fixed = TRUE))
+  expect_true(grepl("Conventions in returned tables", missing, fixed = TRUE))
 })
 
 
@@ -99,15 +121,47 @@ test_that("stored flags stay within their documented vocabularies", {
     "visual =~ x1 + x2 + x3\ntextual =~ x4 + x5 + x6\nspeed =~ x7 + x8 + x9",
     data = lavaan::HolzingerSwineford1939
   )
-  val <- nomo_validity(cfa)
+  val <- nomo_validity(cfa, fornell_larcker = TRUE)
+  rel <- nomo_reliability(cfa)
+  net <- nomo_network(
+    "A =~ ag1 + ag2 + ag3 + ag4\nP =~ pe1 + pe2 + pe3 + pe4",
+    data = nomo_demo_network,
+    hypotheses = nomo_hypotheses("A -> P" = positive())
+  )
 
   expect_true(all(efa$item_summary$attention %in% loading))
   expect_true(all(cfa$standardized_loadings$attention %in% loading))
   expect_true(all(val$standardized_loadings$attention %in% loading))
   expect_true(all(summary(scr)$item_review$attention %in% c("none", "review", "concern")))
   expect_true(all(cfa$fit_evidence$attention %in% c(evidence, "unavailable")))
+  expect_gt(nrow(val$fornell_larcker_pairs), 0L)
+  expect_true(all(val$fornell_larcker_pairs$attention %in% c("info", "review", "unavailable")))
+  expect_true(all(c(
+    val$ave$attention, val$discriminant$attention,
+    rel$evidence$attention, nomo_table(rel)$signal,
+    net$hypothesis_evidence$measurement_attention,
+    net$measurement_context$summary$attention,
+    net$measurement_context$loadings$attention
+  ) %in% evidence))
   expect_true(all(c(
     scr$decision_log$severity, efa$decision_log$severity,
-    cfa$decision_log$severity, val$decision_log$severity
+    cfa$decision_log$severity, val$decision_log$severity,
+    rel$decision_log$severity, net$decision_log$severity
   ) %in% evidence))
+})
+
+
+test_that("a Fornell-Larcker pair is unavailable when an AVE has no square root", {
+  skip_on_cran()
+  cfa <- nomo_cfa(
+    "visual =~ x1 + x2 + x3\ntextual =~ x4 + x5 + x6\nspeed =~ x7 + x8 + x9",
+    data = lavaan::HolzingerSwineford1939
+  )
+  ave <- nomo_validity(cfa)$ave
+  ave$estimate[ave$construct == "visual"] <- -0.1
+  # sqrt() of the negative AVE warns; the pair's flag is what is checked here.
+  pairs <- suppressWarnings(nomo_validity_fornell_larcker(cfa$fit, ave))$pairs
+  with_visual <- pairs$construct_1 == "visual" | pairs$construct_2 == "visual"
+  expect_true(all(pairs$attention[with_visual] == "unavailable"))
+  expect_true(all(pairs$attention[!with_visual] %in% c("info", "review")))
 })

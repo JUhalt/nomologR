@@ -75,6 +75,10 @@ showed strain that qualifies the coefficients.
 \item \code{references} and \code{decision_log}.
 }
 
+\code{attention} in \code{evidence} and \code{severity} in \code{decision_log} are \code{"info"},
+\code{"review"}, or \code{"concern"}, as is \code{signal} in the \code{"coefficients"} table
+of \code{\link[=nomo_table]{nomo_table()}}. See \strong{Conventions in returned tables} in \code{?nomologR}.
+
 Other fields record the call, the settings used, and intermediate engine
 results. They may change between releases and are not part of the stable
 interface (see \code{?nomologR}).

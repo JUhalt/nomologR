@@ -100,6 +100,10 @@ nomo_missing_half_se <- 0.5
 #' * `decision_log`.
 #' * `fits`: the refitted objects.
 #'
+#' `pct_incomplete` in `pattern` and `pct_missing` in `variables` are
+#' proportions between 0 and 1, not percentages. See **Conventions in returned
+#' tables** in `?nomologR`.
+#'
 #' @references
 #' Enders, C. K., & Bandalos, D. L. (2001). The relative performance of full
 #' information maximum likelihood estimation for missing data in structural

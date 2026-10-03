@@ -63,6 +63,10 @@
 #'     showed strain that qualifies the coefficients.
 #'   * `references` and `decision_log`.
 #'
+#'   `attention` in `evidence` and `severity` in `decision_log` are `"info"`,
+#'   `"review"`, or `"concern"`, as is `signal` in the `"coefficients"` table
+#'   of [nomo_table()]. See **Conventions in returned tables** in `?nomologR`.
+#'
 #'   Other fields record the call, the settings used, and intermediate engine
 #'   results. They may change between releases and are not part of the stable
 #'   interface (see `?nomologR`).

@@ -85,6 +85,11 @@ and concordance with each composite's reliability shifted by up to .10.
 \item \code{converged}, \code{engine_warnings}, and \code{decision_log}.
 }
 
+\code{measurement_attention} in \code{hypothesis_evidence}, \code{attention} in the
+\code{summary} and \code{loadings} tables of \code{measurement_context}, and \code{severity}
+in \code{decision_log} are \code{"info"}, \code{"review"}, or \code{"concern"}. See
+\strong{Conventions in returned tables} in \code{?nomologR}.
+
 Other fields record the call, the settings used, and intermediate engine
 results. They may change between releases and are not part of the stable
 interface (see \code{?nomologR}).
