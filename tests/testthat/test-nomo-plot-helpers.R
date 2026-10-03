@@ -73,6 +73,21 @@ test_that("bounded axes are labeled without the leading zero (#144)", {
     nomologR:::nomo_plot_bounded_labels(c(0, 0.25, 0.5, 0.75, 1, -0.5, NA)),
     c("0", ".25", ".50", ".75", "1.00", "-.50", NA)
   )
-  expect_identical(nomologR:::nomo_plot_bounded_labels(c(0.125, 0.0001), digits = 2L),
-                   c(".13", "0"))
+  # A break that two decimals would round is shown with the decimals it needs,
+  # so a gridline at .125 never reads .13 (#145). The tolerance keeps the
+  # binary error of computed breaks from asking for more.
+  labels <- nomologR:::nomo_plot_bounded_labels
+  expect_identical(labels(seq(0.1, 0.2, by = 0.025)),
+                   c(".100", ".125", ".150", ".175", ".200"))
+  expect_identical(labels(c(-0.1, 0.3 - 0.1 - 0.2, 0.1, NA)), c("-.10", "0", ".10", NA))
+  expect_identical(labels(c(0.0025, 0.005, 1 / 3)), c(".0025", ".0050", ".3333"))
+  expect_identical(labels(c(0.25, 0.5), digits = 3L), c(".250", ".500"))
+  expect_identical(labels(c(NA, Inf)), c(NA_character_, NA_character_))
+
+  skip_on_cran()
+  p <- ggplot2::ggplot(data.frame(x = 1:2, y = c(0.1, 0.2)), ggplot2::aes(x, y)) +
+    ggplot2::geom_point() +
+    ggplot2::scale_y_continuous(labels = labels)
+  shown <- ggplot2::ggplot_build(p)$layout$panel_params[[1L]]$y$get_labels()
+  expect_identical(shown[!is.na(shown)], c(".100", ".125", ".150", ".175", ".200"))
 })

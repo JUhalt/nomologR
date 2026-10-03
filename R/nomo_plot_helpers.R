@@ -46,7 +46,8 @@ nomo_plot_labs <- function(...) {
 # the statuses drawn, and leaves it out only when every point has no flag: a
 # legend appears whenever a non-default status is drawn, even a single one.
 # nomo_plot_bounded_labels() labels the axis of a statistic that cannot exceed
-# 1 without the leading zero (0, .25, .50, .75, 1.00).
+# 1 without the leading zero (0, .25, .50, .75, 1.00), with a third or fourth
+# decimal only when a break needs it (.100, .125, .150).
 
 nomo_plot_status_levels <- c("none", "review", "concern", "not computed")
 
@@ -101,8 +102,14 @@ nomo_plot_status_scales <- function(status, name = "Flag") {
 
 
 # Axis labels for a bounded statistic in APA style: 0, .25, .50, .75, 1.00.
+# The breaks take the fewest decimals, at least `digits` and at most 4, that
+# show every break as it is, so a gridline at .125 reads .125, not .13. The
+# tolerance absorbs the binary error of computed breaks such as 0.1 + 0.05.
 nomo_plot_bounded_labels <- function(x, digits = 2L) {
   x <- suppressWarnings(as.numeric(x))
+  breaks <- x[is.finite(x)]
+  inexact <- function(d) any(abs(nomo_present_round(breaks, d) - breaks) > 1e-8)
+  while (digits < 4L && inexact(digits)) digits <- digits + 1L
   out <- nomo_present_number(x, digits, bounded = TRUE)
   out[is.finite(x) & nomo_present_round(x, digits) == 0] <- "0"
   out[!is.finite(x)] <- NA_character_
