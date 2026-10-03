@@ -13,8 +13,8 @@ actually used in producing that object are returned, in registry order. If
 
 \item{stage}{Optional character vector restricting the result to these
 workflow stages. One or more of \code{"screen"}, \code{"factors"}, \code{"efa"}, \code{"cfa"},
-\code{"compare"}, \code{"reliability"}, \code{"validity"}, \code{"invariance"}, \code{"network"},
-\code{"workflow"}.}
+\code{"compare"}, \code{"reliability"}, \code{"validity"}, \code{"invariance"}, \code{"scores"},
+\code{"network"}, \code{"workflow"}.}
 
 \item{lineage}{Optional character vector restricting the result to
 \code{"historical"}, \code{"contemporary"}, or \code{"emerging"} methods.}

@@ -115,6 +115,21 @@ test_that("every stage of the workflow is represented", {
 })
 
 
+test_that("?nomo_methods lists every stage `stage` accepts (#145)", {
+  arguments <- nomo_test_rd_text("nomo_methods", "\\arguments")
+  stage <- regmatches(
+    arguments,
+    regexpr("\\\\item\\{stage\\}.*?\\\\item\\{lineage\\}", arguments, perl = TRUE)
+  )
+  documented <- regmatches(stage, gregexpr('\\\\code\\{"[a-z_]+"\\}', stage))[[1L]]
+  documented <- gsub('^\\\\code\\{"|"\\}$', "", documented)
+
+  # "scores" was accepted but missing from the help page.
+  expect_true("scores" %in% documented)
+  expect_setequal(documented, nomo_methods_stages())
+})
+
+
 test_that("context methods are never primary evidence", {
   reg <- nomo_methods_registry()
   context <- reg[reg$role == "context", ]

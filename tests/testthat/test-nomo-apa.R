@@ -208,6 +208,36 @@ test_that("unsupported objects and arguments are refused with an explanation", {
 })
 
 
+test_that("a one-table result refuses a `type`, and `title` must be one string (#145)", {
+  # The check comes first, so a bare object of each class is enough.
+  for (cls in c("nomo_reliability", "nomo_invariance", "nomo_retest")) {
+    expect_error(
+      nomo_apa_table(structure(list(), class = cls), "nonsense"),
+      sprintf('`type` must be NULL for a `%s` result, which has one APA table, not "nonsense".', cls),
+      fixed = TRUE
+    )
+  }
+
+  for (bad in list(c("A", "B"), NA_character_, 1, character())) {
+    expect_error(nomo_apa_table(apa_cfa(), "fit", title = bad),
+                 "`title` must be NULL or one string.", fixed = TRUE)
+  }
+  expect_identical(nomo_apa_table(apa_cfa(), "fit", title = "Fit")$title, "Fit")
+})
+
+
+test_that("?nomo_apa_table lists the fields of the table it returns (#145)", {
+  # The structure is covered by the stability policy, so each field is named.
+  value <- nomo_test_rd_text("nomo_apa_table", "\\value")
+  tab <- nomo_apa_table(apa_cfa(), "fit", number = 2)
+
+  for (field in c(names(tab), names(tab$notes))) {
+    expect_true(grepl(sprintf("\\code{%s}", field), value, fixed = TRUE), label = field)
+  }
+  expect_true(grepl("Markdown", value, fixed = TRUE))
+})
+
+
 # Remaining paths (#72) --------------------------------------------------------
 
 test_that("a one-factor model has no factor-correlation table, and says why", {

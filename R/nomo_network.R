@@ -1867,6 +1867,11 @@ nomo_network_validate_data <- function(data, label) {
 #'     and concordance with each composite's reliability shifted by up to .10.
 #'   * `converged`, `engine_warnings`, and `decision_log`.
 #'
+#'   `measurement_attention` in `hypothesis_evidence`, `attention` in the
+#'   `summary` and `loadings` tables of `measurement_context`, and `severity`
+#'   in `decision_log` are `"info"`, `"review"`, or `"concern"`. See
+#'   **Conventions in returned tables** in `?nomologR`.
+#'
 #'   Other fields record the call, the settings used, and intermediate engine
 #'   results. They may change between releases and are not part of the stable
 #'   interface (see `?nomologR`).

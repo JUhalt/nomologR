@@ -13,17 +13,36 @@ nomo_apa_table(x, type = NULL, number = NULL, title = NULL, ...)
 \item{type}{Which table to build. For \code{nomo_cfa}: \code{"loadings"}, \code{"fit"}, or
 \code{"factor_correlations"}. For \code{nomo_validity}: \code{"discriminant"} or
 \code{"convergent"}. For \code{nomo_network}: \code{"hypotheses"} or \code{"fit"}. Other
-objects have one table each.}
+objects have one table each, so \code{type} is left \code{NULL} for them; any other
+value is an error.}
 
 \item{number}{Optional table number, printed in bold as "Table 1".}
 
-\item{title}{Optional title; a descriptive default is supplied.}
+\item{title}{Optional title, one string; a descriptive default is supplied.}
 
 \item{...}{Unused.}
 }
 \value{
 A \code{nomo_apa_table} object, which prints in the console and renders
-as a formatted table, with its title and notes, when knitted.
+as a formatted table, with its title and notes, when knitted. The fields
+to read are:
+\itemize{
+\item \code{number}: the table number, an integer, or \code{NULL} when none was given.
+\item \code{title}: the table title.
+\item \code{body}: a data frame of formatted cells, all character. Its column
+names are the column headings.
+\item \code{stub}: the name of the stub column, the first column of \code{body}, which
+says what each row describes.
+\item \code{notes}: a list of three character vectors, \code{general}, \code{specific}, and
+\code{probability}, the three kinds of APA table note in the order they are
+printed. Any of them may be empty.
+\item \code{source}: the class of the result the table was built from, such as
+\code{"nomo_cfa"}.
+}
+
+Headings, cells, and notes are written in Markdown, as pandoc reads it:
+italics as \verb{*p*} and a superscript as \verb{^a^}. Printing in the console drops
+these marks from the headings and notes; knitting renders them.
 }
 \description{
 Formats the evidence in a \code{nomologR} result as a table ready for a thesis,

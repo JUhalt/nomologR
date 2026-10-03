@@ -55,6 +55,10 @@ Other fields record the call, the class of the model compared (\code{object}),
 whether its indicators are ordered (\code{ordered}), and the refitted models
 (\code{fits}). They may change between releases and are not part of the stable
 interface (see \code{?nomologR}).
+
+\code{pct_incomplete} in \code{pattern} and \code{pct_missing} in \code{variables} are
+proportions between 0 and 1, not percentages. See \strong{Conventions in returned
+tables} in \code{?nomologR}.
 }
 \description{
 \code{nomo_missing()} refits the same prespecified model under alternative

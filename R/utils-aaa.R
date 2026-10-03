@@ -20,10 +20,15 @@
 #' * their documented arguments and defaults;
 #' * the documented fields of the objects they return;
 #' * the `type` values [nomo_table()] accepts;
-#' * the columns of decision logs.
+#' * the columns of decision logs. Each analysis's decision log has the
+#'   columns `stage`, `object`, `metric`, `value`, `reference`, `severity`,
+#'   `observation`, `recommendation`, `decision`, and `rationale`; the guided
+#'   workflow keeps its own log, described in [nomo_run()].
 #'
 #' Functions reached only with `:::`, undocumented fields, the wording of
 #' decision-log rows, and the layout of rendered reports are not covered.
+#' Names and values that differ from one table to another are covered as they
+#' stand; **Conventions in returned tables** below sets them out.
 #'
 #' **Deprecation before removal.** A breaking change is deprecated for at least
 #' one minor release before it takes effect. Breaking changes include removing
@@ -54,6 +59,63 @@
 #' ignores fields it does not know. Anything else is a new schema version,
 #' agreed with `contentvalidR`. nomologR refuses a schema version it does not
 #' read, naming both package versions.
+#'
+#' @section Conventions in returned tables:
+#' A few names and values differ from one table to another. They are part of
+#' the interface described above and are kept as they are, so they are set
+#' out here.
+#'
+#' **Proportions and percentages.** A column named `pct_*` holds a proportion
+#' between 0 and 1, not a percentage, although printed output shows it as a
+#' percentage: `pct_missing` in the `item_summary` and `case_summary` of
+#' [nomo_screen()] and in the `variables` table of [nomo_missing()],
+#' `pct_incomplete` in the `pattern` table of [nomo_missing()], and
+#' `pct_dropped` in the `sample_summary` of [nomo_cfa()]. Columns named
+#' `*_prop` or `proportion_*` are proportions too. The one percentage is
+#' `percent_unique` in the `item_summary` of [nomo_screen()], the number of
+#' distinct responses as a percentage (0 to 100) of the observed responses,
+#' which is the scale of the near-zero-variance rule. Its reference in
+#' [nomo_defaults()], `nzv_percent_unique_reference`, is a percentage as well.
+#'
+#' **Flags.** A stored flag uses one of three vocabularies:
+#'
+#' * Loading tables. `attention` in the `item_summary` of [nomo_efa()] and in
+#'   the `standardized_loadings` of [nomo_cfa()] and [nomo_validity()] is
+#'   `"KEEP"`, `"REVIEW"`, or `"STRONG REVIEW"`.
+#' * The item review of [summary.nomo_screen()]. `attention` is `"none"`,
+#'   `"review"`, or `"concern"`.
+#' * Decision logs and other evidence. `severity` in each analysis's decision
+#'   log and in the `heywood` table of [nomo_cfa()], and the `attention`,
+#'   `measurement_attention`, and `signal` columns of the other evidence
+#'   tables, are `"info"`, `"review"`, or `"concern"`. An evidence table may
+#'   also mark a value that could not be computed as `"unavailable"`, as the
+#'   `fit_evidence` of [nomo_cfa()] does.
+#'
+#' The three describe the same levels. Printed output, plots, and reports show
+#' them in one wording: no flag for `"KEEP"`, `"none"`, and `"info"`; "review"
+#' for `"REVIEW"` and `"review"`; "concern" for `"STRONG REVIEW"` and
+#' `"concern"`; and "not computed" for `"unavailable"`. The stored values do
+#' not change, so code that filters a table uses that table's own values.
+#'
+#' **P-values and fit indices.** A p-value is named `p_value`, or
+#' `<model>_p_value` where a table holds one for each model. Three kinds of
+#' table differ:
+#'
+#' * `lavaan`'s parameter tables, `parameter_estimates` and
+#'   `standardized_solution`, keep `lavaan`'s name, `pvalue`.
+#' * The `models` tables of [nomo_esem()], [nomo_method_variance()], and
+#'   [nomo_compare()], and the `fit_evidence` of [nomo_invariance()] and
+#'   [nomo_network()], name the fit indices they hold as
+#'   [lavaan::fitMeasures()] does: `chisq`, `df`, `pvalue`, `cfi`, `tli`,
+#'   `rmsea`, `srmr`, `aic`, and `bic`. In [nomo_invariance()], the
+#'   likelihood-ratio test against the level before is `lrt_chisq`, `lrt_df`,
+#'   and `lrt_p`.
+#' * The `fit_evidence` of [nomo_cfa()] is long, one row per index named in
+#'   `metric`. It and the `fit` table of [nomo_missing()] spell the indices
+#'   `chi_square`, `df`, `p_value`, `CFI`, `TLI`, `RMSEA`, and `SRMR`.
+#'
+#' The **Fit tables** section of [nomo_table()] names the index columns of
+#' each fit table.
 #'
 #' @keywords internal
 "_PACKAGE"

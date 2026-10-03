@@ -62,6 +62,14 @@ indicator observed otherwise.
 \item \code{standardized_loadings}, \code{references}, and \code{decision_log}.
 }
 
+\code{attention} in \code{standardized_loadings} is \code{"KEEP"}, \code{"REVIEW"}, or
+\code{"STRONG REVIEW"}, as in \code{\link[=nomo_cfa]{nomo_cfa()}}. \code{attention} in \code{ave} and
+\code{discriminant}, and \code{severity} in \code{decision_log}, are \code{"info"},
+\code{"review"}, or \code{"concern"}. \code{attention} in \code{fornell_larcker_pairs} is
+\code{"info"} or \code{"review"}, or \code{"unavailable"} when the comparison could not
+be computed, as when an AVE is missing or negative and so has no square
+root. See \strong{Conventions in returned tables} in \code{?nomologR}.
+
 Other fields record the call, the settings used, and intermediate engine
 results. They may change between releases and are not part of the stable
 interface (see \code{?nomologR}).

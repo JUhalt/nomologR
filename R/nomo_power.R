@@ -541,8 +541,11 @@ print.summary_nomo_power <- function(x, ...) {
 # values: "power" for the RMSEA tests; "summary" and "parameters" for a
 # simulation.
 #' @export
-nomo_table.nomo_power <- function(x, type = NULL, ...) {
+nomo_table.nomo_power <- function(x, type = c("power", "summary", "parameters"), ...) {
+  # Every type is listed in the signature, as ?nomo_table documents them; an
+  # object accepts the ones that describe it, and defaults to the first.
   choices <- if (identical(x$type, "rmsea")) "power" else c("summary", "parameters")
+  if (missing(type)) type <- NULL
   type <- nomo_match_arg(type, choices)
   x[[type]]
 }
