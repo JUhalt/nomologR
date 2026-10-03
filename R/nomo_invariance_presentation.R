@@ -264,7 +264,7 @@ print.nomo_invariance <- function(x, ...) {
       "CFI change" = "delta_cfi", "RMSEA change" = "delta_rmsea",
       "LRT p" = "lrt_p"),
     formats = list(delta_cfi = signed, delta_rmsea = signed, lrt_p = nomo_present_p),
-    more = "summary(x)"
+    more = "nomo_table(x, \"fit\")"
   )
   nomo_invariance_present_problems(x$fit_evidence)
 

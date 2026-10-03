@@ -241,6 +241,40 @@ test_that("a narrow table keeps its status and p columns and tightens before dro
 })
 
 
+test_that("tables that drop a column for width point to the call that shows it (#145)", {
+  skip_on_cran()
+  local_reproducible_output(width = 50)
+  pointed <- function(lines) {
+    text <- gsub("\\s+", " ", paste(lines, collapse = " "))
+    notes <- regmatches(text, gregexpr("Not shown for width: [^.]+\\.( See [^.]+\\.)?", text))[[1L]]
+    expect_gt(length(notes), 0L)
+    expect_true(all(grepl("See nomo_table\\(x, \"[a-z_]+\"\\)\\.$", notes)), label = paste(notes))
+  }
+
+  set.seed(2026)
+  n <- 500
+  g <- rnorm(n)
+  s <- matrix(rnorm(n * 3), n, 3)
+  dat <- as.data.frame(sapply(1:9, function(i) .6 * g + .45 * s[, ceiling(i / 3)] + rnorm(n, sd = .65)))
+  names(dat) <- paste0("x", 1:9)
+  factors <- list(A = c("x1", "x2", "x3"), B = c("x4", "x5", "x6"), C = c("x7", "x8", "x9"))
+  hier <- nomo_hierarchical(nomo_cfa(nomo_model(factors, structure = "bifactor"), data = dat))
+  pointed(utils::capture.output(print(hier)))
+  pointed(utils::capture.output(print(summary(hier))))
+
+  true <- stats::rnorm(150)
+  scores <- data.frame(agency_t1 = 3 + true + stats::rnorm(150, sd = .45),
+                       agency_t2 = 3.5 + true + stats::rnorm(150, sd = .45))
+  pointed(utils::capture.output(print(summary(nomo_retest(scores, c("agency_t1", "agency_t2"))))))
+
+  inv <- nomo_invariance("Agency =~ ag1 + ag2 + ag3 + ag4", data = nomo_demo_network,
+                         group = "group", levels = c("configural", "metric"))
+  printed <- utils::capture.output(print(inv))
+  pointed(printed)
+  expect_match(printed[grepl("^  Level", printed)], "LRT p$")
+})
+
+
 test_that("the Flagged section, key, and pointer read as the guide shows (#144)", {
   local_reproducible_output(width = 80)
   flagged <- nomologR:::nomo_present_flagged
