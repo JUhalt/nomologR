@@ -1428,6 +1428,39 @@ test_that("a fit without a scaled test statistic reports standard values through
 })
 
 
+test_that("ML with FIML keeps lavaan's robust fit indices beside the standard chi-square (#145)", {
+  # No scaled test was requested, so there is no failed scaled statistic: the
+  # robust (missing-data corrected) indices are used, with their own interval.
+  fiml_like <- c(
+    chisq = 81.2, df = 34, pvalue = 1e-5, cfi = .9716, cfi.robust = .9717,
+    tli = .9624, tli.robust = .9625, rmsea = .0527, rmsea.robust = .0527,
+    rmsea.ci.lower = .0380, rmsea.ci.lower.robust = .0380,
+    rmsea.ci.upper = .0675, rmsea.ci.upper.robust = .0677, srmr = .0486
+  )
+  expect_false(nomo_cfa_scaled_unavailable(fiml_like))
+  expected_variants <- c(
+    "chisq", "df", "pvalue", "cfi.robust", "tli.robust", "rmsea.robust",
+    "rmsea.ci.lower.robust", "rmsea.ci.upper.robust", "srmr"
+  )
+  tab <- nomo_cfa_fit_evidence(fiml_like, nomo_defaults())
+  expect_identical(tab$variant, expected_variants)
+  expect_equal(tab$value[tab$metric == "RMSEA_CI_upper"], .0677)
+
+  skip_on_cran()
+  model <- "A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4 + b5"
+  out <- nomo_cfa(model, nomo_demo_continuous, missing = "fiml", modification_indices = FALSE)
+  direct <- lavaan::cfa(model, data = nomo_demo_continuous, missing = "fiml")
+  fe <- out$fit_evidence
+  expect_identical(fe$variant, expected_variants)
+  expect_equal(
+    fe$value,
+    as.numeric(lavaan::fitMeasures(direct, expected_variants)),
+    tolerance = 1e-8
+  )
+  expect_false("scaled_test_unavailable" %in% out$decision_log$metric)
+})
+
+
 test_that("a higher-order disturbance is a latent variance, not an observed residual (#145)", {
   skip_on_cran()
   # The covariance matrix implied by a higher-order model whose first-order

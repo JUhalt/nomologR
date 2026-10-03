@@ -42,10 +42,10 @@
 #'   * `model`: the model syntax fitted.
 #'   * `converged`, `estimator`, `data_n`, `n_used`, and `sample_summary`.
 #'   * `fit_evidence`: global fit indices with their teaching references;
-#'     `variant` names the `lavaan` measure each value comes from. Robust or
-#'     scaled values are used only when `lavaan` computed the scaled test
-#'     statistic; otherwise every value is the standard one, and the decision
-#'     log says so.
+#'     `variant` names the `lavaan` measure each value comes from. Robust
+#'     values are preferred, then scaled ones, then standard ones. When
+#'     `lavaan` was asked for a scaled test statistic but could not compute it,
+#'     every value is the standard one, and the decision log says so.
 #'   * `standardized_loadings`: one row per loading, with its interval, flag,
 #'     and explanation.
 #'   * `factor_correlations`: latent correlations with intervals.
@@ -548,14 +548,15 @@ nomo_cfa_scaled_unavailable <- function(measures) {
 
 nomo_cfa_fit_evidence <- function(measures, guidance) {
   refs <- guidance$fit_reference
-  # One version for every value of a fit (#145). Scaled and robust indices
-  # follow from the scaled test statistic, so they are used only when that
-  # statistic is finite; otherwise every value is the standard one. Without a
-  # scaling factor lavaan can still report a scaled RMSEA, such as 0 for a model
-  # whose standard RMSEA is 0.22.
-  scaled <- is.finite(nomo_cfa_first_measure(measures, "chisq.scaled")$value)
-  test <- if (scaled) ".scaled" else ""
-  index <- if (scaled) c(".robust", ".scaled") else ""
+  # Robust, then scaled, then standard values (#145). When lavaan was asked for
+  # a scaled test statistic but could not compute it, every value is the
+  # standard one: without a scaling factor lavaan can still report a scaled
+  # RMSEA, such as 0 for a model whose standard RMSEA is 0.22. A fit with no
+  # scaled test at all, such as ML with FIML, keeps lavaan's robust
+  # (missing-data corrected) indices beside the standard chi-square.
+  unscaled <- nomo_cfa_scaled_unavailable(measures)
+  test <- if (unscaled) "" else c(".scaled", "")
+  index <- if (unscaled) "" else c(".robust", ".scaled", "")
   chi <- nomo_cfa_first_measure(measures, paste0("chisq", test))
   df <- nomo_cfa_first_measure(measures, paste0("df", test))
   p <- nomo_cfa_first_measure(measures, paste0("pvalue", test))

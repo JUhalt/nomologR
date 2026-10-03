@@ -59,10 +59,10 @@ A \code{nomo_cfa} object. The fields to read are:
 \item \code{model}: the model syntax fitted.
 \item \code{converged}, \code{estimator}, \code{data_n}, \code{n_used}, and \code{sample_summary}.
 \item \code{fit_evidence}: global fit indices with their teaching references;
-\code{variant} names the \code{lavaan} measure each value comes from. Robust or
-scaled values are used only when \code{lavaan} computed the scaled test
-statistic; otherwise every value is the standard one, and the decision
-log says so.
+\code{variant} names the \code{lavaan} measure each value comes from. Robust
+values are preferred, then scaled ones, then standard ones. When
+\code{lavaan} was asked for a scaled test statistic but could not compute it,
+every value is the standard one, and the decision log says so.
 \item \code{standardized_loadings}: one row per loading, with its interval, flag,
 and explanation.
 \item \code{factor_correlations}: latent correlations with intervals.
