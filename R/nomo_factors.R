@@ -56,7 +56,15 @@
 #' @param seed Integer seed for the null-data simulation. The caller's random
 #'   number state is restored before return.
 #' @param fm Common-factor extraction method passed to [psych::fa()] when
-#'   obtaining factor eigenvalues. The default is `"minres"`.
+#'   obtaining the factor eigenvalues for parallel analysis. The default is
+#'   `"minres"`. Supported values are `"minres"`, `"uls"`, `"ols"`, `"wls"`,
+#'   `"gls"`, `"pa"`, `"ml"`, `"minchi"`, and `"old.min"`. For `"minchi"`,
+#'   the number of cases observed for each item pair is passed to
+#'   [psych::fa()], which weights the residuals by it. `"alpha"` is not
+#'   available here: the eigenvalues come from a one-factor solution, which
+#'   [psych::fa()] cannot fit with alpha factoring (use it in [nomo_efa()] with
+#'   two or more factors). `"minrank"` is not supported, because
+#'   [psych::fa()] needs the `Rcsdp` package for it.
 #' @param smooth Logical. If `FALSE` (default), a non-positive-definite observed
 #'   correlation matrix blocks factor-retention analysis. If `TRUE`, smoothing
 #'   is explicit, recorded, and performed with [psych::cor.smooth()].
@@ -64,7 +72,12 @@
 #'
 #' @return An object of class `nomo_factors`. The fields to read are:
 #'
-#'   * `items`, `n_cases`, and `n_items`.
+#'   * `items`, `n_cases`, and `n_items`. `n_cases` is the number of rows
+#'     analyzed (every row under `missing = "pairwise"`, including rows with
+#'     no item data; the complete rows under `missing = "complete"`).
+#'   * `min_pairwise_n`: the smallest number of cases observed jointly on any
+#'     item pair, the effective sample size under pairwise deletion. It equals
+#'     `n_cases` when no item value is missing or `missing = "complete"`.
 #'   * `item_types`: each item's screened and modeling type.
 #'   * `correlation_method` and `correlation_matrix`: the correlations analyzed.
 #'   * `kmo` and `bartlett`: sampling-adequacy evidence.
@@ -268,6 +281,22 @@ nomo_factors <- function(data,
   if (!is.character(fm) || length(fm) != 1L || is.na(fm) || fm == "") {
     stop("`fm` must be a single non-empty character value.", call. = FALSE)
   }
+  supported_fm <- c(
+    "minres", "uls", "ols", "wls", "gls", "pa", "ml", "minchi", "old.min"
+  )
+  if (!fm %in% supported_fm) {
+    stop(
+      sprintf(
+        paste0(
+          "Unsupported extraction method `fm = \"%s\"` for factor retention. ",
+          "Use one of: %s."
+        ),
+        fm,
+        paste(supported_fm, collapse = ", ")
+      ),
+      call. = FALSE
+    )
+  }
   if (!is.logical(smooth) || length(smooth) != 1L || is.na(smooth)) {
     stop("`smooth` must be `TRUE` or `FALSE`.", call. = FALSE)
   }
@@ -406,7 +435,11 @@ nomo_factors <- function(data,
   }
   max_factors <- min(as.integer(max_factors), ncol(analysis_data) - 1L)
 
-  observed_fa <- nomo_factors_factor_eigenvalues(corr, fm = fm)
+  observed_fa <- nomo_factors_factor_eigenvalues(
+    corr,
+    fm = fm,
+    np_obs = if (fm == "minchi") pairwise_n
+  )
 
   pa <- nomo_factors_parallel(
     x = analysis_data,
@@ -483,6 +516,7 @@ nomo_factors <- function(data,
   out <- list(
     call = match.call(),
     n_cases = nrow(analysis_data),
+    min_pairwise_n = min_pairwise_n,
     n_items = length(items),
     items = items,
     item_types = item_types,
@@ -809,7 +843,9 @@ nomo_factors_pairwise_n <- function(x) {
 }
 
 
-nomo_factors_factor_eigenvalues <- function(corr, fm) {
+# `np_obs` holds the pairwise Ns. psych::fa() needs them for `fm = "minchi"`:
+# given a correlation matrix without them, it quietly fits minres instead.
+nomo_factors_factor_eigenvalues <- function(corr, fm, np_obs = NULL) {
   fit <- tryCatch(
     suppressWarnings(
       suppressMessages(
@@ -818,6 +854,7 @@ nomo_factors_factor_eigenvalues <- function(corr, fm) {
           nfactors = 1,
           rotate = "none",
           fm = fm,
+          np.obs = np_obs,
           warnings = FALSE
         )
       )
@@ -913,7 +950,11 @@ nomo_factors_parallel <- function(x,
     }
 
     values <- tryCatch(
-      nomo_factors_factor_eigenvalues(r_null, fm = fm),
+      nomo_factors_factor_eigenvalues(
+        r_null,
+        fm = fm,
+        np_obs = if (fm == "minchi") nomo_factors_pairwise_n(permuted)
+      ),
       error = function(e) NULL
     )
     if (is.null(values) || length(values) != p || any(!is.finite(values))) {
@@ -1628,4 +1669,20 @@ nomo_factors_log <- function(item_types,
 
 nomo_null_default <- function(x, fallback) {
   if (is.null(x) || length(x) == 0L) fallback else x
+}
+
+
+# The case count printed by nomo_factors() and nomo_efa(). Under pairwise
+# deletion the row count can overstate the information in the correlations,
+# so the smallest jointly observed N is shown beside it when the two differ.
+nomo_factors_cases_text <- function(n_cases, min_pairwise_n = NULL) {
+  text <- sprintf("Cases: %d", as.integer(n_cases))
+  if (isTRUE(min_pairwise_n < n_cases)) {
+    text <- sprintf(
+      "%s (minimum pairwise N: %d)",
+      text,
+      as.integer(min_pairwise_n)
+    )
+  }
+  text
 }

@@ -40,8 +40,12 @@ Orthogonal rotations are allowed but are recorded as a researcher choice.}
 
 \item{fm}{Common-factor extraction method passed to \code{\link[psych:fa]{psych::fa()}}. The
 default is \code{"minres"}. Supported values are \code{"minres"}, \code{"uls"}, \code{"ols"},
-\code{"wls"}, \code{"gls"}, \code{"pa"}, \code{"ml"}, \code{"minchi"}, \code{"minrank"}, \code{"alpha"},
-and \code{"old.min"}.}
+\code{"wls"}, \code{"gls"}, \code{"pa"}, \code{"ml"}, \code{"minchi"}, \code{"alpha"}, and
+\code{"old.min"}. \code{"alpha"} needs at least two factors, because
+\code{\link[psych:fa]{psych::fa()}} cannot fit a one-factor alpha solution. For \code{"minchi"},
+the number of cases observed for each item pair is passed to
+\code{\link[psych:fa]{psych::fa()}}, which weights the residuals by it. \code{"minrank"} is not
+supported, because \code{\link[psych:fa]{psych::fa()}} needs the \code{Rcsdp} package for it.}
 
 \item{correlation}{Optional correlation strategy: \code{"auto"}, \code{"pearson"},
 \code{"polychoric"}, \code{"tetrachoric"}, or \code{"mixed"}. If \code{NULL}, the value is
@@ -70,13 +74,21 @@ An object of class \code{nomo_efa}. The fields to read are:
 \itemize{
 \item \code{items}, \code{n_factors}, and \code{factor_source}, which records whether the
 count was the researcher's or taken from a \code{nomo_factors} result.
+\item \code{n_cases}: the number of rows analyzed (every row under
+\code{missing = "pairwise"}, including rows with no item data; the complete
+rows under \code{missing = "complete"}).
+\item \code{min_pairwise_n}: the smallest number of cases observed jointly on any
+item pair, the effective sample size under pairwise deletion. It equals
+\code{n_cases} when no item value is missing or \code{missing = "complete"}.
 \item \code{correlation_method} and \code{correlation_matrix}: the correlations analyzed.
 \item \code{pattern_matrix}, \code{structure_matrix}, and \code{factor_correlations}.
 \item \code{communalities}, \code{uniquenesses}, and \code{complexity}.
 \item \code{item_summary}: one row per item, with its primary and secondary
 loadings, communality, flags, and the explanation of any flag.
 \item \code{residual_matrix}, \code{residual_pairs}, and \code{rmsr}: local misfit.
-\item \code{sample_adequacy}: sample size, KMO, and Bartlett's test.
+\item \code{sample_adequacy}: \code{n_cases}, \code{min_pairwise_n}, \code{n_items},
+\code{cases_per_item} (\code{min_pairwise_n} divided by \code{n_items}), \code{kmo}, and
+\code{bartlett}.
 \item \code{decision_log}.
 }
 
