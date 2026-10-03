@@ -570,7 +570,8 @@ nomo_power_present <- function(x, detail = FALSE) {
     if (nrow(x$power)) {
       nomo_present_section("Power by sample size")
       nomo_present_table(x$power, c("N" = "n", "Power" = "power"),
-                         formats = list(power = function(v) nomo_present_number(v, 2L)))
+                         formats = list(power = function(v) nomo_present_number(v, 2L)),
+                         more = "nomo_table(x, \"power\")")
     }
     cat("\n")
     nomo_present_text(

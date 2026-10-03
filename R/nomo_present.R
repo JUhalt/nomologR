@@ -57,7 +57,9 @@
 #       decisive p columns) and the first (stub) column are never dropped; the
 #       others go from the right, and the line "Not shown for width: X, Y. See
 #       <more>." names them, where `more` is the call that shows them, such as
-#       nomo_table(x, "fit"). Missing cells are "--".
+#       nomo_table(x, "fit"). Every call passes `more`, even for a table too
+#       narrow to lose a column; a test reads the sources to check it. Missing
+#       cells are "--".
 #   nomo_present_key(entries, title = "What these columns mean")
 #       a key section; `entries` is a named vector, c(SE = "Standard error."),
 #       printed "  SE -- Standard error." with a 6-space hanging indent.

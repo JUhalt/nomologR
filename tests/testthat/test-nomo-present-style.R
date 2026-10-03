@@ -365,3 +365,37 @@ test_that("the code is ASCII, and the stated output rule allows accented names (
   expect_false(any(grepl("output is ASCII;", rules, fixed = TRUE)))
   expect_true(any(grepl("output is ASCII except proper names", rules, fixed = TRUE)))
 })
+
+
+test_that("every printed table names the call that shows a column it drops (#145)", {
+  # Read from the source tree, as above: each nomo_present_table() call passes
+  # `more`, so no "Not shown for width" note is left without a pointer.
+  source_dir <- testthat::test_path("..", "..", "R")
+  skip_if_not(file.exists(file.path(source_dir, "nomo_present.R")))
+  calls <- 0L
+  for (file in list.files(source_dir, pattern = "[.]R$", full.names = TRUE)) {
+    data <- utils::getParseData(parse(file, keep.source = TRUE))
+    named <- data$parent[data$token == "SYMBOL_FUNCTION_CALL" &
+                           data$text == "nomo_present_table"]
+    for (call in data$parent[match(named, data$id)]) {
+      calls <- calls + 1L
+      args <- data[data$parent == call, ]
+      expect_true(any(args$token == "SYMBOL_SUB" & args$text == "more"),
+                  label = sprintf("%s:%d passes `more`", basename(file),
+                                  data$line1[data$id == call]))
+    }
+  }
+  expect_gt(calls, 50L)
+
+  # A factor-retention summary on a narrow console: the evidence table drops
+  # its role column and points to the table that holds it.
+  set.seed(4503)
+  f <- stats::rnorm(150)
+  dat <- as.data.frame(replicate(5, 0.8 * f + stats::rnorm(150, sd = 0.6)))
+  fac <- nomo_factors(dat, criterion_set = "minimal", n_iter = 10, seed = 78)
+  local_reproducible_output(width = 40)
+  text <- gsub("\\s+", " ", paste(utils::capture.output(print(summary(fac))), collapse = " "))
+  notes <- regmatches(text, gregexpr("Not shown for width: [^.]+\\.( See [^ ]+ [^ ]+)?", text))[[1L]]
+  expect_gt(length(notes), 0L)
+  expect_true(all(grepl("See nomo_table\\(x, \"[a-z_]+\"\\)\\.$", notes)), label = paste(notes))
+})

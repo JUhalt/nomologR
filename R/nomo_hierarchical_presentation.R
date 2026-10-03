@@ -36,7 +36,8 @@ print.nomo_hierarchical <- function(x, digits = 3, ...) {
   nomo_present_section("Total score")
   nomo_present_table(
     idx, c("Index" = "label", "Estimate" = "estimate"),
-    formats = list(estimate = number)
+    formats = list(estimate = number),
+    more = "nomo_table(x, \"indices\")"
   )
 
   nomo_present_section("Subscales")

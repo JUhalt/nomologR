@@ -133,7 +133,8 @@ print.summary_nomo_factors <- function(x, ...) {
   nomo_present_section("Retention evidence")
   nomo_present_table(
     x$evidence,
-    c("Method" = "method", "Factors" = "n_factors", "Role" = "role")
+    c("Method" = "method", "Factors" = "n_factors", "Role" = "role"),
+    more = "nomo_table(x, \"evidence\")"
   )
 
   sensitivity <- x$parallel_sensitivity
@@ -142,7 +143,8 @@ print.summary_nomo_factors <- function(x, ...) {
     sensitivity$chosen <- ifelse(sensitivity$selected, "selected", "")
     nomo_present_table(
       sensitivity,
-      c("Rule" = "rule", "Factors" = "n_factors", "Used" = "chosen")
+      c("Rule" = "rule", "Factors" = "n_factors", "Used" = "chosen"),
+      more = "x$parallel$sensitivity"
     )
   }
 
@@ -167,7 +169,8 @@ print.summary_nomo_factors <- function(x, ...) {
     nomo_present_section("Concordance across criterion families")
     nomo_present_table(
       x$concordance,
-      c("Factors" = "n_factors", "Families" = "n_families", "Which" = "families")
+      c("Factors" = "n_factors", "Families" = "n_families", "Which" = "families"),
+      more = "nomo_table(x, \"concordance\")"
     )
   }
 
