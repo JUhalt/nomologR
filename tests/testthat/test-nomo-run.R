@@ -160,6 +160,33 @@ test_that("resume protects source data scales and guidance", {
 })
 
 
+test_that("a run saved before nomo_defaults() gained an element resumes with the defaults", {
+  dat <- make_m8_full_data(n = 180L, seed = 8603L)
+  run <- nomo_run(
+    data = dat,
+    scales = list(WellBeing = c("i1", "i2", "i3", "i4")),
+    settings = m8_full_settings()
+  )
+
+  # A run saved by an earlier release lacks guidance elements added since.
+  saved <- run
+  saved$guidance$factor_small_n_reference <- NULL
+  resumed <- nomo_run(
+    resume = saved,
+    guidance = nomo_defaults(),
+    decisions = list(factor_count = 1L)
+  )
+  expect_identical(resumed$next_stage, "cfa")
+  expect_identical(resumed$guidance, saved$guidance)
+
+  # A changed value still stops the resume.
+  changed <- nomo_defaults()
+  changed$item_total_reference <- 0.40
+  expect_error(nomo_run(resume = saved, guidance = changed), "Guidance cannot", fixed = TRUE)
+  expect_error(nomo_run(resume = saved, guidance = "teaching"), "Guidance cannot", fixed = TRUE)
+})
+
+
 test_that("blocked result presentation and table branches are retained", {
   dat <- make_m8_full_data(n = 180L, seed = 8604L)
   dat$i4 <- 1

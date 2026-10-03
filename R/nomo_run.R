@@ -181,6 +181,21 @@ nomo_run_fresh <- function(data,
 }
 
 
+# Whether two guidance lists hold the same values. An element one of them lacks
+# is read as its nomo_defaults() value, so a run saved before nomo_defaults()
+# gained an element resumes with the defaults; only a changed value differs.
+nomo_run_same_guidance <- function(a, b) {
+  if (!is.list(a) || !is.list(b)) return(identical(a, b))
+  complete <- function(g) {
+    defaults <- nomo_defaults()
+    absent <- setdiff(names(defaults), names(g))
+    g[absent] <- defaults[absent]
+    g[order(names(g))]
+  }
+  identical(complete(a), complete(b))
+}
+
+
 nomo_run_resume <- function(resume,
                             data,
                             scales,
@@ -214,7 +229,7 @@ nomo_run_resume <- function(resume,
 
   if (!mode_missing) x$mode <- mode
 
-  if (!guidance_missing && !identical(guidance, x$guidance)) {
+  if (!guidance_missing && !nomo_run_same_guidance(guidance, x$guidance)) {
     stop(
       paste(
         "Guidance cannot be changed mid-workflow; start a new `nomo_run()`",
