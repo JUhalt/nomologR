@@ -385,7 +385,7 @@ test_that("a revised workflow without a fitted model records why it was not comp
   parent <- revise_parent_run()
 
   # Simulate a child workflow that stopped before fitting its measurement model.
-  local_mocked_bindings(nomo_run = function(...) {
+  local_mocked_bindings(nomo_run_fresh = function(...) {
     child <- parent
     child$results$cfa <- NULL
     child
@@ -452,4 +452,164 @@ test_that("revision guards handle unparseable models and missing rationales", {
   )
   expect_equal(inherited$value, c(A = 1))
   expect_match(inherited$rationale, "Inherited from the parent workflow")
+})
+
+
+# Revising a run whose scales came from content review (#145) ----------------
+
+revise_handoff_model <- function(ef = c("EF1", "EF2", "EF3", "EF4", "EF6")) {
+  paste0(
+    "EF =~ ", paste(ef, collapse = " + "),
+    "\nTF =~ TF1 + TF2 + TF3 + TF4 + TF6"
+  )
+}
+
+revise_handoff_parent <- local({
+  cache <- NULL
+  function() {
+    if (!is.null(cache)) return(cache)
+    h <- readRDS(test_path("fixtures", "contentvalidR", "handoff-walkthrough-sort-v0.10.1.rds"))
+    # Content review declares the held-back EF5 reverse-keyed as well, so a
+    # revision that reinstates it has keying to keep.
+    h$item_evidence$keying[h$item_evidence$item == "EF5"] <- -1
+    set.seed(145)
+    n <- 300
+    ef <- stats::rnorm(n)
+    tf <- .5 * ef + stats::rnorm(n, sd = .85)
+    items <- c(paste0("EF", 1:6), paste0("TF", 1:6))
+    data <- as.data.frame(stats::setNames(lapply(items, function(i) {
+      f <- if (startsWith(i, "EF")) ef else tf
+      as.numeric(pmin(5, pmax(1, round(3 + f + stats::rnorm(n, sd = .9)))))
+    }), items))
+    # Answered as worded, so the reverse-keyed items run the other way.
+    data[c("EF2", "EF5", "TF2")] <- 6 - data[c("EF2", "EF5", "TF2")]
+    cache <<- nomo_run(
+      data,
+      scales = h,
+      settings = list(screen = list(effort = TRUE), factors = list(seed = 145, n_iter = 10L)),
+      decisions = list(factor_count = c(EF = 1, TF = 1), cfa_model = revise_handoff_model())
+    )
+    cache
+  }
+})
+
+revise_log_row <- function(run, id) run$decision_log[run$decision_log$id == id, ]
+
+revise_keyed_note <- function(run, scope, item) {
+  log <- run$results$screen[[scope]]$decision_log
+  any(grepl("declared reverse-keyed", log$observation[log$object == item], fixed = TRUE))
+}
+
+
+test_that("a revision keeps the content-review handoff, its keying, and its record", {
+  skip_on_cran()
+  parent <- revise_handoff_parent()
+  expect_identical(parent$status, "paused")
+
+  child <- nomo_revise(
+    parent,
+    cfa_model = paste(revise_handoff_model(), "EF1 ~~ EF3", sep = "\n"),
+    rationale = "EF1 and EF3 share wording about deadlines."
+  )
+
+  expect_identical(child$handoff, parent$handoff)
+  log <- child$decision_log
+  expect_true(all(c("content_review", "held_back:EF5", "held_back:TF5") %in% log$id))
+  definitions <- log[startsWith(log$id, "scale_definition:"), ]
+  expect_true(all(definitions$source == "content_review"))
+  expect_match(definitions$observation[[1L]], "carried from content review", fixed = TRUE)
+  expect_false(any(startsWith(log$id, "reinstated:") | startsWith(log$id, "removed:")))
+
+  # The careless-responding screen recodes as content review declared.
+  effort <- child$results$effort$effort_settings
+  expect_identical(effort$reverse, c("EF2", "TF2"))
+  expect_identical(effort$scale_range, c(1, 5))
+  expect_identical(revise_log_row(child, "careless_responding")$source, "content_review")
+
+  # The item audit still explains EF2's negative item-rest correlation.
+  expect_true(revise_keyed_note(child, "EF", "EF2"))
+
+  review <- nomologR:::nomo_report_content_review(child)
+  expect_match(review$summary, "only carried items were analyzed.", fixed = TRUE)
+})
+
+
+test_that("a revision that departs from content review records each departure", {
+  skip_on_cran()
+  parent <- revise_handoff_parent()
+  why <- "EF5 restores the effort-after-setbacks content; EF2 repeats EF1."
+  child <- nomo_revise(
+    parent,
+    items = list(EF = c("EF1", "EF3", "EF4", "EF5", "EF6")),
+    cfa_model = revise_handoff_model(c("EF1", "EF3", "EF4", "EF5", "EF6")),
+    rationale = why
+  )
+  expect_identical(child$status, "paused")
+
+  # Declared keying follows the items: EF2 is gone, and the reinstated EF5 is
+  # declared reverse-keyed.
+  expect_identical(child$results$effort$effort_settings$reverse, c("EF5", "TF2"))
+  expect_true(revise_keyed_note(child, "EF", "EF5"))
+
+  ef <- revise_log_row(child, "scale_definition:EF")
+  expect_identical(ef$source, "researcher_decision")
+  expect_match(
+    ef$observation,
+    paste("Content review in contentvalidR 0.10.1 carried EF1, EF2, EF3, EF4, EF6 for it;",
+          "researcher revisions added EF5 and removed EF2."),
+    fixed = TRUE
+  )
+  expect_identical(revise_log_row(child, "scale_definition:TF")$source, "content_review")
+
+  reinstated <- revise_log_row(child, "reinstated:EF5")
+  expect_identical(reinstated$scope, "EF")
+  expect_identical(reinstated$source, "researcher_decision")
+  expect_identical(reinstated$rationale, why)
+  expect_match(reinstated$observation,
+               "EF5, which content review held back, is analyzed in this run: revision 1 reinstated it.",
+               fixed = TRUE)
+  expect_identical(revise_log_row(child, "held_back:EF5")$consequence,
+                   "Revision 1 reinstated it, so it is analyzed in this run.")
+  expect_identical(revise_log_row(child, "held_back:TF5")$consequence,
+                   "It is not screened, modeled, or scored in this run.")
+
+  removed <- revise_log_row(child, "removed:EF2")
+  expect_identical(removed$scope, "EF")
+  expect_identical(removed$rationale, why)
+  expect_match(removed$observation, "revision 1 removed it.", fixed = TRUE)
+
+  review <- nomologR:::nomo_report_content_review(child)
+  expect_match(review$summary, "a researcher revision changed which items were analyzed",
+               fixed = TRUE)
+
+  # A later revision keeps each departure with the rationale of the revision
+  # that made it.
+  second <- nomo_revise(
+    child,
+    cfa_model = paste(revise_handoff_model(c("EF1", "EF3", "EF4", "EF5", "EF6")),
+                      "EF1 ~~ EF3", sep = "\n"),
+    rationale = "EF1 and EF3 share wording about deadlines.",
+    compare = FALSE
+  )
+  again <- revise_log_row(second, "reinstated:EF5")
+  expect_identical(again$rationale, why)
+  expect_match(again$observation, "revision 1 reinstated it", fixed = TRUE)
+  expect_identical(revise_log_row(second, "removed:EF2")$rationale, why)
+})
+
+
+test_that("reverse keying set for an item a revision removes is dropped with it", {
+  skip_on_cran()
+  parent <- revise_parent_run()
+  parent$settings$screen <- list(reverse = c("a2", "b5"), scale_range = c(1, 7))
+  child <- nomo_revise(
+    parent,
+    items = list(B = paste0("b", 1:4)),
+    cfa_model = "A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4",
+    rationale = "b5 measures content already covered and loads weakly.",
+    compare = FALSE
+  )
+  expect_identical(child$settings$screen$reverse, "a2")
+  expect_identical(child$settings$screen$scale_range, c(1, 7))
+  expect_identical(child$status, "paused")
 })

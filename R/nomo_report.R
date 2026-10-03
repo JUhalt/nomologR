@@ -354,11 +354,17 @@ nomo_report_content_review <- function(x) {
         paste(
           "Scales and item membership came from content review in %s %s",
           "(workflow: %s; carry rule: %s; method: %s), not from these data.",
-          "%d of %s %s carried; only carried items were analyzed."
+          "%d of %s %s carried; %s"
         ),
         p$package, p$package_version, p$workflow, p$keep, p$method,
         sum(ev$carried), nomo_present_count(nrow(ev), "reviewed item"),
-        nomo_present_noun(sum(ev$carried), "was", "were")
+        nomo_present_noun(sum(ev$carried), "was", "were"),
+        # A revision can reinstate or remove items (#145).
+        if (setequal(unlist(x$scales), unlist(h$scales))) {
+          "only carried items were analyzed."
+        } else {
+          "a researcher revision changed which items were analyzed, as the decision log records."
+        }
       ),
       keying_text,
       if (length(p$citation)) {
