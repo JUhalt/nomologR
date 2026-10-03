@@ -345,6 +345,17 @@ plot.nomo_efa <- function(x,
       x = c(load_ref, cross_ref)
     )
     references <- references[references$loading_type %in% dat$loading_type, , drop = FALSE]
+    # A one-factor solution has no secondary loadings, so only the primary
+    # reference is drawn and named.
+    reference_text <- if (any(references$loading_type == "Secondary")) {
+      sprintf(
+        "Dashed lines mark the %s loading and %s cross-loading teaching references.",
+        nomo_present_stat(load_ref, "loading"), nomo_present_stat(cross_ref, "loading")
+      )
+    } else {
+      sprintf("The dashed line marks the %s loading teaching reference.",
+              nomo_present_stat(load_ref, "loading"))
+    }
 
     return(
       ggplot2::ggplot(
@@ -367,14 +378,7 @@ plot.nomo_efa <- function(x,
         nomo_plot_status_scales(dat$status, name = "Flag") +
         nomo_plot_labs(
           title = "Primary and secondary EFA loadings",
-          subtitle = sprintf(
-            paste(
-              "Absolute loadings. Dashed lines mark the %s loading and %s",
-              "cross-loading teaching references."
-            ),
-            nomo_present_stat(load_ref, "loading"),
-            nomo_present_stat(cross_ref, "loading")
-          ),
+          subtitle = paste("Absolute loadings.", reference_text),
           x = "Absolute loading",
           y = NULL,
           caption = paste(
