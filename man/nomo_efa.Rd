@@ -127,11 +127,12 @@ unless overridden, its item set, modeling types, correlation model, and
 missing-data strategy are carried forward.
 
 The decision log also records what can make a solution improper or hard to
-interpret, as concerns or prompts for review: a communality at or above 1
-(a Heywood case), a model with more parameters than the correlations can
-identify (negative degrees of freedom) or exactly as many (zero), an
-extraction that did not converge, and any warning or message from
-\code{\link[psych:fa]{psych::fa()}}.
+interpret, as concerns or prompts for review: a communality of .995 or more,
+which leaves a unique variance at or near 0 (a Heywood case; psych's
+extractions often stop just short of 1), a model with more parameters than
+the correlations can identify (negative degrees of freedom) or exactly as
+many (zero), an extraction that did not converge, and any warning or message
+from \code{\link[psych:fa]{psych::fa()}}.
 
 \code{print()} shows the settings, the residual misfit, the item flags, and any
 problem with the solution; \code{summary()} adds the item loadings and

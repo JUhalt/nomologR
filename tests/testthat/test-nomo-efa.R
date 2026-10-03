@@ -1179,15 +1179,32 @@ test_that("a Heywood case and a non-converged extraction are recorded, not swall
   dat <- make_efa_heywood_data()
   out <- nomo_efa(dat, factors = 3)
   expect_gte(max(out$communalities), 1)
-  # a1 is above 1; b1 sits at the .005 floor psych sets on a unique variance.
+  # a1 is above 1; b1 is just below 1, where psych's extractions often stop
+  # (its unique variance is below .005, not at it).
   expect_identical(out$heywood, c("a1", "b1"))
+  expect_lt(1 - out$communalities[["b1"]], 0.005)
   row <- out$decision_log[out$decision_log$metric == "heywood", ]
   expect_identical(row$object, c("a1", "b1"))
   expect_identical(row$severity, c("concern", "concern"))
   expect_match(row$observation[[1L]],
                "The communality of a1 is 1.0001, so its unique variance is below 0", fixed = TRUE)
-  expect_match(row$observation[[2L]], "The communality of b1 is .996, so its unique variance is 0 or",
-               fixed = TRUE)
+  expect_identical(
+    row$observation[[2L]],
+    sprintf("The communality of b1 is %s, so its unique variance (%s) is at or near 0: %s",
+            nomologR:::nomo_present_stat(out$communalities[["b1"]], "proportion", digits = 3L),
+            nomologR:::nomo_present_stat(1 - out$communalities[["b1"]], "proportion", digits = 3L),
+            "an improper (Heywood) solution.")
+  )
+  expect_match(row$reference[[1L]], "A communality of .995 or more", fixed = TRUE)
+  # The print counts the flags the summary shows: a Heywood item is a concern.
+  status <- ifelse(out$item_summary$item %in% out$heywood, "concern", out$item_summary$attention)
+  expect_false(identical(nomologR:::nomo_present_flag_counts(status),
+                         nomologR:::nomo_present_flag_counts(out$item_summary$attention)))
+  expect_output(print(out), paste0("Item flags: ", nomologR:::nomo_present_flag_counts(status)), fixed = TRUE)
+  expect_identical(
+    sum(grepl("Concern$", capture.output(print(summary(out))))),
+    sum(nomologR:::nomo_present_flag(status) == "concern")
+  )
   p <- plot(out, type = "items")
   expect_identical(unique(as.character(p$data$status[p$data$item == "a1"])), "concern")
   expect_match(out$engine_warnings, "ultra-Heywood", all = FALSE)
@@ -1212,12 +1229,17 @@ test_that("a Heywood case and a non-converged extraction are recorded, not swall
   expect_match(row$observation, "maximum iteration exceeded", fixed = TRUE)
 
   # A communality of exactly 1 is a Heywood case, above 1 an ultra-Heywood case.
+  # Below 1, the unique variance is stated with the communality's decimals.
   heywood_text <- nomologR:::nomo_efa_heywood_text
   expect_identical(
     heywood_text("x", 0.995),
-    paste("The communality of x is .995, so its unique variance is 0 or at the .005 floor that",
-          "psych::fa() sets: an improper (Heywood) solution.")
+    paste("The communality of x is .995, so its unique variance (.005) is at or near 0: an",
+          "improper (Heywood) solution.")
   )
+  expect_match(heywood_text(NULL, 0.9997), "^The communality is .9997, so its unique variance \\(.0003\\)")
+  expect_match(heywood_text(NULL, 0.99491), "^The communality is .99, so its unique variance \\(.01\\)")
+  expect_identical(heywood_text("x", 1),
+                   "The communality of x is 1.00, so its unique variance is 0: an improper (Heywood) solution.")
   expect_match(heywood_text(NULL, 1.004), "^The communality is 1.004, so its unique variance is below 0")
   expect_identical(
     nomologR:::nomo_efa_engine_messages(c("Loading required namespace: GPArotation\n",

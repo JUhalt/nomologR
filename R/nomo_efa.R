@@ -66,11 +66,12 @@
 #'
 #' @details
 #' The decision log also records what can make a solution improper or hard to
-#' interpret, as concerns or prompts for review: a communality at or above 1
-#' (a Heywood case), a model with more parameters than the correlations can
-#' identify (negative degrees of freedom) or exactly as many (zero), an
-#' extraction that did not converge, and any warning or message from
-#' [psych::fa()].
+#' interpret, as concerns or prompts for review: a communality of .995 or more,
+#' which leaves a unique variance at or near 0 (a Heywood case; psych's
+#' extractions often stop just short of 1), a model with more parameters than
+#' the correlations can identify (negative degrees of freedom) or exactly as
+#' many (zero), an extraction that did not converge, and any warning or message
+#' from [psych::fa()].
 #'
 #' `print()` shows the settings, the residual misfit, the item flags, and any
 #' problem with the solution; `summary()` adds the item loadings and
@@ -540,8 +541,12 @@ nomo_efa <- function(data,
 
   # A communality of 1 or more leaves a unique variance of 0 or less: an
   # improper (Heywood) solution, which psych only warns about (#145, efa-1).
-  # The minres, ml, and similar extractions stop a unique variance at .005, so
-  # a Heywood case shows there as a communality of .995.
+  # psych's minres, uls, ols, and ml extractions keep the unique variances
+  # they optimize at .005 or above, but the communalities they report come
+  # from the final loadings, so a Heywood case often shows as a communality
+  # between .995 and 1 rather than at or above 1. A communality of .995 or
+  # more (a unique variance of .005 or less) is treated as a Heywood case for
+  # every extraction, pa included.
   heywood <- items[is.finite(h2) & (h2 >= 0.995 - 1e-4 | uniqueness <= 0.005 + 1e-4)]
   # The degrees of freedom of a k-factor model of p items (#145, efa-3).
   # Below zero the model has more parameters than correlations; at zero it
@@ -1066,7 +1071,7 @@ nomo_efa_log <- function(k,
       object = item,
       metric = "heywood",
       value = h2,
-      reference = "A proper solution has every communality below 1 and every unique variance above 0",
+      reference = "A communality of .995 or more leaves a unique variance at or near 0 (a Heywood case)",
       severity = "concern",
       observation = nomo_efa_heywood_text(item, h2),
       recommendation = paste(
@@ -1318,7 +1323,8 @@ nomo_efa_dof_text <- function(k, n_items, dof) {
 # "The communality of b2 is 1.004, so its unique variance is below 0" (#145,
 # efa-1); without an item, "The communality is ...", for a bullet that names
 # the item already. The communality shows the decimals that tell it apart from
-# 1.
+# 1, and the unique variance (1 minus the communality) takes as many: ".997,
+# so its unique variance (.003) is at or near 0".
 nomo_efa_heywood_text <- function(item, h2) {
   shown <- nomo_present_stat(h2, "proportion", reference = 1)
   subject <- if (is.null(item)) "The communality" else sprintf("The communality of %s", item)
@@ -1327,13 +1333,14 @@ nomo_efa_heywood_text <- function(item, h2) {
       "%s is %s, so its unique variance is below 0: an improper (ultra-Heywood) solution.",
       subject, shown
     )
+  } else if (h2 == 1) {
+    sprintf("%s is %s, so its unique variance is 0: an improper (Heywood) solution.",
+            subject, shown)
   } else {
+    digits <- nchar(shown) - as.integer(regexpr(".", shown, fixed = TRUE))
     sprintf(
-      paste(
-        "%s is %s, so its unique variance is 0 or at the .005 floor that",
-        "psych::fa() sets: an improper (Heywood) solution."
-      ),
-      subject, shown
+      "%s is %s, so its unique variance (%s) is at or near 0: an improper (Heywood) solution.",
+      subject, shown, nomo_present_stat(1 - h2, "proportion", digits = digits)
     )
   }
 }

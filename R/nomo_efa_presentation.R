@@ -4,9 +4,12 @@
 print.nomo_efa <- function(x, ...) {
   nomo_present_header("nomo_efa", "Exploratory factor analysis")
   nomo_efa_present_facts(x)
+  # The count uses the statuses summary() shows, so a Heywood item counts as a
+  # concern in both.
+  status <- nomo_efa_item_status(x$item_summary, x$decision_log)
   nomo_present_facts(c(
     paste0("RMSR: ", nomo_present_stat(x$rmsr, "fit")),
-    paste0("Item flags: ", nomo_present_flag_counts(x$item_summary$attention))
+    paste0("Item flags: ", nomo_present_flag_counts(status))
   ))
   nomo_efa_present_checks(x$decision_log)
   nomo_present_text(
@@ -72,6 +75,13 @@ nomo_efa_has_log <- function(log) {
 nomo_efa_heywood_items <- function(log) {
   if (!nomo_efa_has_log(log)) return(character())
   log$object[log$metric == "heywood"]
+}
+
+# Each item's status as print(), summary(), and the items plot show it: the
+# stored flag, except that an item with an improper communality is a concern
+# (#145, efa-1). The stored flags are unchanged.
+nomo_efa_item_status <- function(items, log) {
+  ifelse(items$item %in% nomo_efa_heywood_items(log), "concern", items$attention)
 }
 
 nomo_efa_present_checks <- function(log) {
@@ -152,7 +162,7 @@ print.summary_nomo_efa <- function(x, ...) {
   # communality, which takes the decimals that tell it apart from 1 (#145,
   # efa-1). The stored flags are unchanged.
   heywood <- items$item %in% nomo_efa_heywood_items(x$decision_log)
-  status <- ifelse(heywood, "concern", items$attention)
+  status <- nomo_efa_item_status(items, x$decision_log)
   text <- items$explanation
   text[heywood] <- trimws(paste(
     vapply(items$communality[heywood], function(h2) nomo_efa_heywood_text(NULL, h2),
@@ -326,8 +336,7 @@ plot.nomo_efa <- function(x,
     dat$loading_type <- factor(dat$loading_type, levels = c("Primary", "Secondary"))
     # The item's flag, by shape and color together (guide point 27); an
     # improper communality is a concern, as the summary shows it.
-    heywood <- dat$item %in% nomo_efa_heywood_items(x$decision_log)
-    dat$status <- nomo_plot_status(ifelse(heywood, "concern", dat$attention))
+    dat$status <- nomo_plot_status(nomo_efa_item_status(dat, x$decision_log))
 
     load_ref <- nomo_null_default(x$guidance$efa_loading_reference, 0.40)
     cross_ref <- nomo_null_default(x$guidance$efa_crossloading_reference, 0.30)
