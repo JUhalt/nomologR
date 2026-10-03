@@ -154,9 +154,10 @@ print.nomo_reliability <- function(x, ...) {
     # such as a saved object from an earlier version.
     workers <- if ("workers" %in% names(x$ci_status)) x$ci_status$workers else NULL
     used <- x$ci_status$min_successful_draws[[1L]]
+    # Spelled out, as the print has no key to define "CI".
     nomo_present_facts(c(
-      paste0("Uncertainty: ", nomo_reliability_ci_label(x$ci_status),
-             ", percentile bootstrap"),
+      paste0("Uncertainty: ", sub(" CI$", "", nomo_reliability_ci_label(x$ci_status)),
+             " percentile bootstrap intervals"),
       sprintf("Draws: %d requested", x$ci_status$requested_draws[[1L]]),
       if (is.finite(used)) sprintf("Fewest usable draws: %d", used) else "",
       if (length(workers) && is.finite(workers[[1L]]) && workers[[1L]] > 1L) {

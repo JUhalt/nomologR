@@ -780,3 +780,40 @@ test_that("the summary shows the Fornell-Larcker pairs when they were requested 
   expect_match(printed, "Root AVE -- Square root of AVE", fixed = TRUE, all = FALSE)
   expect_true(all(nchar(printed) <= 80L))
 })
+
+
+test_that("each flagged construct and pair gets one sentence in print (#145)", {
+  local_reproducible_output(width = 80)
+  redundant <- nomo_validity(validity_redundant_fit())
+  printed <- capture.output(print(redundant))
+  expect_match(printed, "^  - P vs. Q \\(Review\\): HTMT2 0\\.9[0-9] is above the review reference 0\\.85; latent r",
+               all = FALSE)
+
+  cfa <- nomo_cfa(nomo_model(list(A = paste0("a", 1:5), B = paste0("b", 1:5))),
+                  data = nomo_demo_continuous)
+  val <- nomo_validity(cfa)
+  # An AVE outside 0 to 1, and one that is not admissible at all.
+  val$ave$estimate <- c(NA, 1.2)
+  val$ave$attention <- c("concern", "concern")
+  # A latent correlation beyond 1, and one flagged without an interval.
+  odd <- val
+  odd$latent_correlations$correlation <- 1.02
+  odd$latent_correlations$attention <- "concern"
+  printed <- gsub("\\s+", " ", paste(capture.output(print(odd)), collapse = " "))
+  expect_match(printed, "A (Concern): The AVE is not admissible.", fixed = TRUE)
+  expect_match(printed, "B (Concern): AVE 1.20 is outside 0 to 1; 1 of 5", fixed = TRUE)
+  expect_match(printed, "A vs. B (Concern): Latent r 1.02 is beyond 1.", fixed = TRUE)
+
+  no_interval <- val
+  no_interval$latent_correlations$correlation <- .90
+  no_interval$latent_correlations$ci_lower <- NA_real_
+  no_interval$latent_correlations$ci_upper <- NA_real_
+  no_interval$latent_correlations$attention <- "review"
+  printed <- gsub("\\s+", " ", paste(capture.output(print(no_interval)), collapse = " "))
+  expect_match(printed, "A vs. B (Review): Latent r .90 exceeds .85.", fixed = TRUE)
+
+  # Several levels are counted as levels.
+  levels <- val
+  levels$nlevels <- 2L
+  expect_match(capture.output(print(levels)), "^Constructs: 2 \\| Levels: 2", all = FALSE)
+})

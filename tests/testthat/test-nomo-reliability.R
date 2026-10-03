@@ -410,7 +410,7 @@ test_that("reliability print methods cover point, bootstrap, strain, and empty b
   )
   boot$model_strain <- TRUE
   txt2 <- paste(capture.output(print(boot)), collapse = "\n")
-  expect_match(txt2, "95% CI, percentile bootstrap", fixed = TRUE)
+  expect_match(txt2, "Uncertainty: 95% percentile bootstrap intervals", fixed = TRUE)
   expect_match(txt2, "Fewest usable draws: 15", fixed = TRUE)
   expect_match(txt2, "Bootstrap note", fixed = TRUE)
   expect_match(txt2, "Measurement-model context", fixed = TRUE)

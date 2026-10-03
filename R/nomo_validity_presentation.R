@@ -303,7 +303,7 @@ nomo_validity_flagged_brief <- function(x, convergent, discriminant) {
     if (!length(parts)) parts <- "the AVE is not admissible"
     units <- c(units, nomo_validity_unit(row$construct, row$block))
     status <- c(status, row$signal)
-    text <- c(text, paste0(paste(parts, collapse = "; "), "."))
+    text <- c(text, paste0(nomo_validity_capitalize(paste(parts, collapse = "; ")), "."))
   }
 
   ref <- x$htmt_reference
@@ -543,14 +543,16 @@ print.summary_nomo_validity <- function(x, ...) {
     HTMT = "Heterotrait-monotrait ratio (Henseler et al., 2015)",
     "Root AVE" = "Square root of AVE, which the Fornell-Larcker comparison sets against |r|"
   )
+  # AVE and the HTMT family are named in the closing paragraph whatever the
+  # tables show, so they are always defined.
   pairs <- x$fornell_larcker_pairs
   shown <- c(
-    AVE = any(is.finite(x$convergent[["AVE"]])),
+    AVE = TRUE,
     "|loading|" = any(is.finite(x$convergent[["min_abs_loading"]])),
     "Latent r" = any(is.finite(x$discriminant[["latent_r"]])),
     CI = any(is.finite(x$discriminant[["latent_r_ci_lower"]])),
-    HTMT2 = any(is.finite(x$discriminant[["HTMT2"]])),
-    HTMT = any(is.finite(x$discriminant[["HTMT"]])),
+    HTMT2 = TRUE,
+    HTMT = TRUE,
     "Root AVE" = isTRUE(x$fornell_larcker_requested) && is.data.frame(pairs) && nrow(pairs) > 0L
   )
   nomo_present_key(key[shown])
