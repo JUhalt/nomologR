@@ -776,6 +776,12 @@ test_that("the interpretation omits sections that have nothing to report", {
   expect_no_match(out, "chi-square", fixed = TRUE)
   expect_no_match(out, "Change in fit", fixed = TRUE)
   expect_no_match(out, "AIC", fixed = TRUE)
+
+  # An index without a change is named as unavailable beside those with one.
+  row$delta_cfi <- -0.0291
+  row$delta_rmsea <- 0.0004
+  out <- nomologR:::nomo_compare_interpretation(row)
+  expect_match(out, "CFI -.029, TLI unavailable, RMSEA 0.000, SRMR unavailable.", fixed = TRUE)
 })
 
 
