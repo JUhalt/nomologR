@@ -166,11 +166,25 @@ nomo_measurement_fit <- function(x, arg = "fit", allow_cross_loadings = FALSE) {
     cross_loaded_items <- character()
   }
 
-  ordered_raw <- tryCatch(
-    lavaan::lavInspect(x, "ordered"),
+  # semTools reports a composite only for a factor with more than one
+  # indicator, and leaves a lone composite unnamed. Its coefficients are named
+  # from these factors, in model order, so a single-indicator factor beside
+  # one scale does not leave that scale's omega under an invented name (#145).
+  composite_names <- lv
+  if (!is.null(pe) && length(lv)) {
+    indicator_count <- vapply(lv, function(f) {
+      length(unique(pe$rhs[pe$op == "=~" & pe$lhs == f]))
+    }, integer(1))
+    composite_names <- lv[indicator_count > 1L]
+  }
+
+  # lavaan fits a column stored as an ordered factor as categorical whether or
+  # not `ordered` named it, and lavInspect(x, "ordered") lists only the named
+  # ones. lavNames(x, "ov.ord") lists what was fitted (#145).
+  ordered <- unique(tryCatch(
+    as.character(lavaan::lavNames(x, type = "ov.ord")),
     error = function(e) character()
-  )
-  ordered <- unique(as.character(unlist(ordered_raw, use.names = FALSE)))
+  ))
 
   ngroups <- suppressWarnings(as.integer(tryCatch(
     lavaan::lavInspect(x, "ngroups"),
@@ -195,7 +209,8 @@ nomo_measurement_fit <- function(x, arg = "fit", allow_cross_loadings = FALSE) {
     ordered = ordered,
     post_check = post_check,
     parameter_estimates = pe,
-    latent_names = lv,
+    # The names semTools results are matched to, not every latent variable.
+    latent_names = composite_names,
     cross_loaded_items = cross_loaded_items,
     ngroups = ngroups,
     nlevels = nlevels
@@ -234,9 +249,24 @@ nomo_reliability_tidy <- function(x, metric, construct_names = NULL) {
     paste0("construct_", seq_len(n))
   }
 
-  if (is.numeric(x) && is.null(dim(x))) {
+  # semTools returns NA as a logical vector when no value is defined, as AVE
+  # is for a factor with a cross-loaded indicator; it keeps its row (#145).
+  values_like <- function(v) is.numeric(v) || is.logical(v)
+
+  if (is.atomic(x) && is.null(dim(x)) && values_like(x)) {
     values <- as.numeric(x)
-    nm <- fallback_names(names(x), length(values))
+    blocks <- names(x)
+    # One composite in a multi-group model comes back named by group.
+    if (length(construct_names) == 1L && length(values) > 1L &&
+        !is.null(blocks) && !any(blocks %in% construct_names)) {
+      return(tibble::tibble(
+        construct = as.character(construct_names),
+        block = as.character(blocks),
+        metric = metric,
+        estimate = values
+      ))
+    }
+    nm <- fallback_names(blocks, length(values))
     return(tibble::tibble(
       construct = nm,
       block = "overall",
@@ -248,17 +278,23 @@ nomo_reliability_tidy <- function(x, metric, construct_names = NULL) {
   if (is.data.frame(x)) {
     meta_names <- intersect(names(x), c("group", "level", "block"))
     value_names <- setdiff(names(x), meta_names)
-    value_names <- value_names[vapply(x[value_names], is.numeric, logical(1))]
+    value_names <- value_names[vapply(x[value_names], values_like, logical(1))]
 
     if (!length(value_names)) return(tibble::tibble())
 
-    rows <- lapply(value_names, function(v) {
-      block <- if (length(meta_names)) {
-        apply(x[meta_names], 1L, function(z) paste(z, collapse = ":"))
-      } else {
-        rep("overall", nrow(x))
-      }
+    # Without a group column, a multi-group result names its groups in the
+    # row names (#145).
+    if (length(meta_names)) {
+      block <- apply(x[meta_names], 1L, function(z) paste(z, collapse = ":"))
+    } else if (nrow(x) == 1L) {
+      block <- "overall"
+    } else if (.row_names_info(x) > 0L) {
+      block <- rownames(x)
+    } else {
+      block <- paste0("block_", seq_len(nrow(x)))
+    }
 
+    rows <- lapply(value_names, function(v) {
       tibble::tibble(
         construct = v,
         block = as.character(block),
@@ -275,7 +311,18 @@ nomo_reliability_tidy <- function(x, metric, construct_names = NULL) {
     rows <- lapply(seq_along(x), function(i) {
       vals <- suppressWarnings(as.numeric(x[[i]]))
       if (!length(vals)) return(NULL)
-      blocks <- names(x[[i]])
+      inner <- names(x[[i]])
+      # A multilevel result lists each level, with that level's factors
+      # inside it.
+      if (!is.null(inner) && all(inner %in% construct_names)) {
+        return(tibble::tibble(
+          construct = inner,
+          block = nm[[i]],
+          metric = metric,
+          estimate = vals
+        ))
+      }
+      blocks <- inner
       if (is.null(blocks) || any(!nzchar(blocks))) {
         blocks <- if (length(vals) == 1L) "overall" else paste0("block_", seq_along(vals))
       }
@@ -297,7 +344,9 @@ nomo_reliability_item_types <- function(fit_info) {
   pe <- fit_info$parameter_estimates
   if (is.null(pe)) return(tibble::tibble())
 
-  loads <- pe[pe$op == "=~", c("lhs", "rhs"), drop = FALSE]
+  # A multi-group model lists each loading once per group; an indicator is
+  # counted once.
+  loads <- unique(pe[pe$op == "=~", c("lhs", "rhs"), drop = FALSE])
   if (!nrow(loads)) return(tibble::tibble())
 
   loads$ordered <- loads$rhs %in% fit_info$ordered
@@ -533,6 +582,37 @@ nomo_validity_htmt_inputs <- function(fit_info) {
     data = dat[, required, drop = FALSE],
     ordered = intersect(fit_info$ordered, required)
   )
+}
+
+
+# The missing-data handling of the fitted model, in the terms semTools::htmt()
+# passes to lavaan::lavCor(): full information when the model used maximum
+# likelihood (or a two-stage estimate of the same saturated moments), pairwise
+# when it used pairwise deletion, and listwise otherwise (#145).
+nomo_validity_htmt_missing <- function(fit) {
+  mode <- tolower(as.character(
+    tryCatch(lavaan::lavInspect(fit, "options")$missing, error = function(e) "")
+  )[1L])
+  if (mode %in% c("ml", "ml.x", "two.stage", "robust.two.stage")) {
+    "fiml"
+  } else if (mode %in% c("pairwise", "available.cases", "doubly.robust")) {
+    "pairwise"
+  } else {
+    "listwise"
+  }
+}
+
+
+# The cases the HTMT correlations rest on under each handling: the complete
+# cases, the smallest pairwise count, or every case with any indicator observed.
+nomo_validity_htmt_n <- function(data, missing) {
+  observed <- !is.na(as.matrix(data))
+  as.integer(switch(
+    missing,
+    listwise = sum(rowSums(!observed) == 0L),
+    pairwise = min(crossprod(observed)),
+    sum(rowSums(observed) > 0L)
+  ))
 }
 
 

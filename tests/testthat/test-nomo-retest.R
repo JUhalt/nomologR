@@ -37,7 +37,10 @@ test_that("the agreement and consistency ICCs are McGraw and Wong's A,1 and C,1"
 
   sd_pooled <- sqrt(mean(c(stats::var(dat$agency_t1), stats::var(dat$agency_t2))))
   expect_equal(icc$sd, sd_pooled)
-  expect_equal(icc$sem, sd_pooled * sqrt(1 - icc$icc_agreement))
+  # The SEM is the square root of the residual mean square (#145); with a
+  # small shift it is close to the pooled SD times sqrt(1 - ICC(A,1)).
+  expect_equal(icc$sem, sqrt(mse))
+  expect_equal(icc$sem, sd_pooled * sqrt(1 - icc$icc_agreement), tolerance = .01)
   expect_equal(icc$sdc, stats::qnorm(.975) * sqrt(2) * icc$sem)
   change <- dat$agency_t2 - dat$agency_t1
   expect_equal(icc$mean_change, mean(change))
@@ -112,6 +115,54 @@ test_that("a systematic shift between occasions is flagged, and its absence note
   change <- steady$decision_log[steady$decision_log$metric == "mean_change", ]
   expect_identical(change$severity, "info")
   expect_match(change$recommendation, "includes no change", fixed = TRUE)
+})
+
+
+test_that("a shift between occasions does not inflate the measurement error (#145)", {
+  # Random error with SD .45 on each occasion and a shift of 1.
+  dat <- retest_data(shift = 1)
+  rt <- nomo_retest(dat, c("agency_t1", "agency_t2"))
+  icc <- rt$icc
+  x <- as.matrix(dat[c("agency_t1", "agency_t2")])
+  residual <- x - outer(rowMeans(x), c(1, 1)) - outer(rep(1, 150), colMeans(x)) + mean(x)
+  expect_equal(icc$sem, sqrt(sum(residual^2) / 149))
+  expect_lt(abs(icc$sem - .45), .06)
+  # The within-occasion SD with ICC(A,1) counts the shift as error.
+  expect_gt(icc$sd * sqrt(1 - icc$icc_agreement), 1.4 * icc$sem)
+
+  # Jacobson and Truax's standard error, s1 * sqrt(1 - r), agrees under a shift,
+  # and so does their classification.
+  jt <- stats::sd(dat$agency_t1) * sqrt(1 - stats::cor(dat$agency_t1, dat$agency_t2))
+  expect_equal(icc$sem, jt, tolerance = .1)
+  rc <- rt$reliable_change
+  expect_identical(rc$status == "reliable_increase", rc$change > icc$sdc)
+  expect_gt(sum(rc$status == "reliable_increase"), 40L)
+
+  log <- rt$decision_log[rt$decision_log$metric == "mean_change", ]
+  expect_match(log$recommendation, "The SEM leaves the shift out", fixed = TRUE)
+
+  # The same three occasions give psych's residual mean square.
+  three <- nomo_retest(dat, c("agency_t1", "agency_t2", "agency_t3"))
+  ms <- psych::ICC(as.matrix(dat), lmer = FALSE)$stats["MS", "Residual"]
+  expect_equal(three$icc$sem, sqrt(ms))
+})
+
+
+test_that("without random error, every changed score is a reliable change", {
+  set.seed(1)
+  a <- stats::rnorm(40)
+  exact <- nomo_retest(data.frame(a = a, b = a + 2), c("a", "b"))
+  expect_lt(exact$icc$sem, 1e-8)
+  expect_true(all(exact$reliable_change$status == "reliable_increase"))
+
+  # A score that did not change has not changed reliably, even with no error.
+  same <- data.frame(a = a, b = a)
+  same$b[1:3] <- same$b[1:3] - 1
+  partly <- nomo_retest(same, c("a", "b"))
+  rc <- partly$reliable_change
+  expect_identical(rc$status[1:3], rep("reliable_decrease", 3L))
+  expect_true(all(rc$rci[-(1:3)] == 0))
+  expect_true(all(rc$status[-(1:3)] == "no_reliable_change"))
 })
 
 

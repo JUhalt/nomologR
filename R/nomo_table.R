@@ -54,8 +54,8 @@
 #' * `nomo_missing`: `"strategies"` (default), `"estimates"`, `"fit"`,
 #'   `"reliability"`, `"pattern"`, `"variables"`, `"decision_log"`; see
 #'   [nomo_missing()].
-#' * `nomo_hierarchical`: `"indices"` (default), `"subscales"`, `"loadings"`,
-#'   `"notes"`, `"decision_log"`; see [nomo_hierarchical()].
+#' * `nomo_hierarchical`: `"indices"` (default), `"subscales"`, `"factors"`,
+#'   `"loadings"`, `"notes"`, `"decision_log"`; see [nomo_hierarchical()].
 #' * `nomo_run`: `"stages"` (default), `"requests"`, `"decisions"`,
 #'   `"component_log"`, `"scales"`, `"recipe"`, `"settings"`, `"lineage"`,
 #'   `"methods"`; see [nomo_run()] and [nomo_revise()]. `"lineage"` returns one
