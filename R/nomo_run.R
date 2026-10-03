@@ -361,8 +361,15 @@ nomo_run_resume <- function(resume,
 #'     example `results$screen$Agency` is a `nomo_screen` object.
 #'   * `stage_status`: one row per stage.
 #'   * `decision_requests`: the decisions the run is waiting for.
-#'   * `decision_log`: the workflow's decisions, with their rationales and
-#'     sources.
+#'   * `decision_log`: the workflow's own log, one row per design choice,
+#'     decision, or recorded event, with the columns `id`, `stage`, `scope`,
+#'     `observation`, `reason`, `options`, `consequence`, `decision`,
+#'     `rationale`, and `source`. `source` is `"researcher_input"` (given in
+#'     the call, such as the scales or a setting), `"researcher_decision"`
+#'     (a decision at a pause, or a revision), `"content_review"` (from a
+#'     `contentvalidR` handoff), or `"pipeline"` (recorded by the workflow).
+#'     These columns differ from those of the components' decision logs, which
+#'     `nomo_table(x, "component_log")` returns with their own columns.
 #'   * `scales`, `mode`, `sample_design`, `sample_n`, `decisions`, and
 #'     `settings`.
 #'

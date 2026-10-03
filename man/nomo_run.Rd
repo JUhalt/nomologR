@@ -94,8 +94,15 @@ A \code{nomo_run} object. The fields to read are:
 example \code{results$screen$Agency} is a \code{nomo_screen} object.
 \item \code{stage_status}: one row per stage.
 \item \code{decision_requests}: the decisions the run is waiting for.
-\item \code{decision_log}: the workflow's decisions, with their rationales and
-sources.
+\item \code{decision_log}: the workflow's own log, one row per design choice,
+decision, or recorded event, with the columns \code{id}, \code{stage}, \code{scope},
+\code{observation}, \code{reason}, \code{options}, \code{consequence}, \code{decision},
+\code{rationale}, and \code{source}. \code{source} is \code{"researcher_input"} (given in
+the call, such as the scales or a setting), \code{"researcher_decision"}
+(a decision at a pause, or a revision), \code{"content_review"} (from a
+\code{contentvalidR} handoff), or \code{"pipeline"} (recorded by the workflow).
+These columns differ from those of the components' decision logs, which
+\code{nomo_table(x, "component_log")} returns with their own columns.
 \item \code{scales}, \code{mode}, \code{sample_design}, \code{sample_n}, \code{decisions}, and
 \code{settings}.
 }
