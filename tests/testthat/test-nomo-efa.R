@@ -1325,6 +1325,13 @@ test_that("rotation is checked, and the log and methods describe the solution fi
   expect_error(nomo_efa(dat, factors = 1, rotation = "oblimn"), 'not "oblimn"', fixed = TRUE)
   expect_error(nomo_efa(dat, factors = 2, rotation = "targetQ"), "needs a target matrix",
                fixed = TRUE)
+  # psych runs bifactor and biquartimin only when it is attached, so they are
+  # refused with the reason rather than failing inside the engine.
+  for (rotation in c("bifactor", "biquartimin")) {
+    expect_error(nomo_efa(dat, factors = 3, rotation = rotation),
+                 sprintf("`rotation = \"%s\"` is not available: psych::fa() runs it", rotation),
+                 fixed = TRUE)
+  }
 
   rotation_row <- function(fit) {
     fit$decision_log[fit$decision_log$metric == "extraction_rotation", ]
@@ -1366,6 +1373,25 @@ test_that("rotation is checked, and the log and methods describe the solution fi
   expect_match(plot_text(plot(none, type = "factor_correlations")$labels$subtitle),
                "uncorrelated by construction", fixed = TRUE)
   expect_match(plot_text(plot(geomin)$labels$subtitle), "Orthogonal solution", fixed = TRUE)
+})
+
+
+test_that("every rotation nomo_efa() accepts fits two and three factors (#145, efa-4)", {
+  set.seed(8305)
+  f <- matrix(stats::rnorm(240 * 3), ncol = 3)
+  dat <- as.data.frame(f[, rep(1:3, each = 3)] + matrix(stats::rnorm(240 * 9, sd = 0.8), ncol = 9))
+  names(dat) <- paste0(rep(c("a", "b", "c"), each = 3), 1:3)
+  rotations <- nomologR:::nomo_efa_rotations
+  accepted <- unlist(rotations[c("oblique", "orthogonal", "unrotated")], use.names = FALSE)
+  expect_length(accepted, 16L)
+  expect_false(any(c(rotations$target, rotations$general) %in% accepted))
+  for (rotation in accepted) {
+    for (k in 2:3) {
+      fit <- nomo_efa(dat, factors = k, rotation = rotation)
+      expect_s3_class(fit, "nomo_efa")
+      expect_identical(fit$oblique, rotation %in% rotations$oblique, label = rotation)
+    }
+  }
 })
 
 

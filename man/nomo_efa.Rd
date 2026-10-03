@@ -38,14 +38,17 @@ analysis suggested 0 factors, since there is then no count to adopt.}
 
 \item{rotation}{Rotation passed to \code{\link[psych:fa]{psych::fa()}}. The default is \code{"oblimin"}.
 The oblique rotations are \code{"oblimin"}, \code{"quartimin"}, \code{"simplimax"},
-\code{"geominQ"}, \code{"bentlerQ"}, \code{"biquartimin"}, \code{"promax"}, \code{"Promax"}, and
-\code{"cluster"}; the orthogonal ones are \code{"varimax"}, \code{"Varimax"},
-\code{"quartimax"}, \code{"equamax"}, \code{"varimin"}, \code{"geominT"}, \code{"bentlerT"}, and
-\code{"bifactor"}; \code{"none"} keeps the extracted solution without rotation.
-Orthogonal rotations and \code{"none"} are allowed but are recorded as a
-researcher choice for review. Target rotations are not available, because
-\code{nomo_efa()} does not pass a target matrix. A one-factor solution is not
-rotated.}
+\code{"geominQ"}, \code{"bentlerQ"}, \code{"promax"}, \code{"Promax"}, and \code{"cluster"}; the
+orthogonal ones are \code{"varimax"}, \code{"Varimax"}, \code{"quartimax"},
+\code{"equamax"}, \code{"varimin"}, \code{"geominT"}, and \code{"bentlerT"}; \code{"none"} keeps
+the extracted solution without rotation. Orthogonal rotations and
+\code{"none"} are allowed but are recorded as a researcher choice for review.
+Target rotations are not available, because \code{nomo_efa()} does not pass a
+target matrix. \code{"bifactor"} and \code{"biquartimin"} are not available either,
+because \code{\link[psych:fa]{psych::fa()}} runs them through GPArotation only when psych is
+attached and only for three or more factors; a general factor is tested
+with \code{nomo_model(structure = "bifactor")} and \code{\link[=nomo_hierarchical]{nomo_hierarchical()}}. A
+one-factor solution is not rotated.}
 
 \item{fm}{Common-factor extraction method passed to \code{\link[psych:fa]{psych::fa()}}. The
 default is \code{"minres"}. Supported values are \code{"minres"}, \code{"uls"}, \code{"ols"},

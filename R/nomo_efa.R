@@ -26,14 +26,17 @@
 #'   analysis suggested 0 factors, since there is then no count to adopt.
 #' @param rotation Rotation passed to [psych::fa()]. The default is `"oblimin"`.
 #'   The oblique rotations are `"oblimin"`, `"quartimin"`, `"simplimax"`,
-#'   `"geominQ"`, `"bentlerQ"`, `"biquartimin"`, `"promax"`, `"Promax"`, and
-#'   `"cluster"`; the orthogonal ones are `"varimax"`, `"Varimax"`,
-#'   `"quartimax"`, `"equamax"`, `"varimin"`, `"geominT"`, `"bentlerT"`, and
-#'   `"bifactor"`; `"none"` keeps the extracted solution without rotation.
-#'   Orthogonal rotations and `"none"` are allowed but are recorded as a
-#'   researcher choice for review. Target rotations are not available, because
-#'   `nomo_efa()` does not pass a target matrix. A one-factor solution is not
-#'   rotated.
+#'   `"geominQ"`, `"bentlerQ"`, `"promax"`, `"Promax"`, and `"cluster"`; the
+#'   orthogonal ones are `"varimax"`, `"Varimax"`, `"quartimax"`,
+#'   `"equamax"`, `"varimin"`, `"geominT"`, and `"bentlerT"`; `"none"` keeps
+#'   the extracted solution without rotation. Orthogonal rotations and
+#'   `"none"` are allowed but are recorded as a researcher choice for review.
+#'   Target rotations are not available, because `nomo_efa()` does not pass a
+#'   target matrix. `"bifactor"` and `"biquartimin"` are not available either,
+#'   because [psych::fa()] runs them through GPArotation only when psych is
+#'   attached and only for three or more factors; a general factor is tested
+#'   with `nomo_model(structure = "bifactor")` and [nomo_hierarchical()]. A
+#'   one-factor solution is not rotated.
 #' @param fm Common-factor extraction method passed to [psych::fa()]. The
 #'   default is `"minres"`. Supported values are `"minres"`, `"uls"`, `"ols"`,
 #'   `"wls"`, `"gls"`, `"pa"`, `"ml"`, `"minchi"`, `"alpha"`, and
@@ -1227,14 +1230,18 @@ nomo_efa_log <- function(k,
 # The rotations psych::fa() runs without further arguments, by whether they
 # keep the factors correlated. Target rotations need a target matrix, which
 # nomo_efa() does not pass: without one, psych stops or silently uses Promax
-# (#145, efa-4).
+# (#145, efa-4). psych's "bifactor" and "biquartimin" rotations call a
+# criterion (vgQ.bimin) that GPArotation finds only when psych is attached,
+# and they fail for two factors even then, so they are refused with the reason
+# as well (checked with psych 2.6.5 and GPArotation 2026.8.2).
 nomo_efa_rotations <- list(
   oblique = c("oblimin", "quartimin", "simplimax", "geominQ", "bentlerQ",
-              "biquartimin", "promax", "Promax", "cluster"),
+              "promax", "Promax", "cluster"),
   orthogonal = c("varimax", "Varimax", "quartimax", "equamax", "varimin",
-                 "geominT", "bentlerT", "bifactor"),
+                 "geominT", "bentlerT"),
   unrotated = "none",
-  target = c("targetQ", "targetT", "TargetQ", "TargetT", "specialQ", "specialT")
+  target = c("targetQ", "targetT", "TargetQ", "TargetT", "specialQ", "specialT"),
+  general = c("bifactor", "biquartimin")
 )
 
 
@@ -1246,6 +1253,21 @@ nomo_efa_check_rotation <- function(rotation) {
           "`rotation = \"%s\"` needs a target matrix, which `nomo_efa()` does",
           "not pass to psych::fa(). Choose an oblique rotation such as",
           "\"oblimin\", or fit the target rotation with psych::fa() directly."
+        ),
+        rotation
+      ),
+      call. = FALSE
+    )
+  }
+  if (rotation %in% nomo_efa_rotations$general) {
+    stop(
+      sprintf(
+        paste(
+          "`rotation = \"%s\"` is not available: psych::fa() runs it through",
+          "GPArotation only when psych is attached, and only for three or more",
+          "factors. Choose an oblique rotation such as \"oblimin\", or test a general",
+          "factor with `nomo_model(structure = \"bifactor\")`, `nomo_cfa()`, and",
+          "`nomo_hierarchical()`."
         ),
         rotation
       ),
