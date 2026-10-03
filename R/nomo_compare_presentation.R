@@ -41,11 +41,22 @@ nomo_compare_flagged <- function(x, recommendation = FALSE) {
   rows <- log$metric == "model_comparison"
   note <- x$comparisons$test_note[match(log$object[rows], x$comparisons$model)]
   text[rows] <- ifelse(nzchar(note), note, text[rows])
-  if (isTRUE(recommendation)) text <- paste(text, log$recommendation)
+  if (isTRUE(recommendation)) text <- nomo_compare_then_recommend(text, log$recommendation)
   nomo_present_flagged(
     unit = ifelse(log$metric == "comparison_origin", "Origin", log$object),
     status = log$severity, text = text
   )
+}
+
+
+# An observation followed by its recommendation, as a summary's "Flagged"
+# section gives them. The observation is ended with a full stop first, since a
+# lavaan message kept as an observation or a note has none, and the shared
+# helper adds one only at the very end (#145).
+nomo_compare_then_recommend <- function(observation, recommendation) {
+  observation <- trimws(observation)
+  ended <- !nzchar(observation) | grepl("[.!?]$", observation)
+  paste(ifelse(ended, observation, paste0(observation, ".")), recommendation)
 }
 
 
@@ -268,8 +279,10 @@ nomo_compare_present_evidence <- function(ev) {
   # A pair is labeled with "vs.", as labels are (guide point 25).
   wide$construct <- sub(" vs ", " vs. ", wide$construct, fixed = TRUE)
   nomo_present_table(wide, columns, formats = formats, more = "nomo_table(x, \"evidence\")")
+  # With no notes, the usual case, recycle0 gives no bullet rather than an
+  # empty "- :".
   notes <- ev[nzchar(ev$note), , drop = FALSE]
-  nomo_present_bullets(unique(paste0(notes$model, ": ", notes$note)))
+  nomo_present_bullets(unique(paste0(notes$model, ": ", notes$note, recycle0 = TRUE)))
   intersect(c("AVE", "HTMT2"), wide$metric)
 }
 

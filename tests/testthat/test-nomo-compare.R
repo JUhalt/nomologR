@@ -1049,6 +1049,50 @@ test_that("measurement evidence names the model it is missing for (#145)", {
 })
 
 
+test_that("measurement evidence with no notes, the usual case, prints no empty bullet (#145)", {
+  skip_on_cran()
+  hs <- lavaan::HolzingerSwineford1939
+  m3 <- "visual =~ x1 + x2 + x3\ntextual =~ x4 + x5 + x6\nspeed =~ x7 + x8 + x9"
+  out <- nomo_compare(
+    full = nomo_cfa(m3, hs, modification_indices = FALSE),
+    orth = nomo_cfa(paste0(m3, "\nvisual ~~ 0*textual"), hs, modification_indices = FALSE),
+    rationale = "x"
+  )
+  expect_false(any(nzchar(out$evidence$note)))
+  local_reproducible_output(width = 80)
+  txt <- capture.output(print(summary(out)))
+  expect_false(any(grepl("^ *- *:? *$", txt)))
+  after <- txt[(which(txt == "Measurement evidence by model") + 1L):length(txt)]
+  # The table's last row is followed by the blank line that ends the section.
+  expect_match(after[[which(after == "")[[1L]] - 1L]], "HTMT2")
+})
+
+
+test_that("a flag's note ends with a full stop before its recommendation (#145)", {
+  pair <- compare_fitted_pair()
+  out <- testthat::with_mocked_bindings(
+    nomo_compare(full = pair$full, zero = pair$zero, rationale = "x", evidence = FALSE),
+    lavTestLRT = function(...) stop("mocked difference-test failure"),
+    .package = "lavaan"
+  )
+  expect_identical(out$decision_log$severity[out$decision_log$metric == "model_comparison"],
+                   "review")
+  local_reproducible_output(width = 80)
+  # The summary gives the note, which ends with lavaan's message, then the
+  # recommendation; print() gives the note alone.
+  summarized <- paste(trimws(capture.output(print(summary(out)))), collapse = " ")
+  expect_match(summarized, "mocked difference-test failure. Weigh the statistical evidence",
+               fixed = TRUE)
+  printed <- paste(trimws(capture.output(print(out))), collapse = " ")
+  expect_match(printed, "mocked difference-test failure.", fixed = TRUE)
+  expect_false(grepl("Weigh the statistical evidence", printed, fixed = TRUE))
+  expect_identical(
+    nomologR:::nomo_compare_then_recommend(c("Ends.", "Asks?", " No stop ", ""), "Do this."),
+    c("Ends. Do this.", "Asks? Do this.", "No stop. Do this.", " Do this.")
+  )
+})
+
+
 test_that("compare output shows the origin without a hyphen and points to its calls (#144)", {
   pair <- compare_fitted_pair()
   out <- nomo_compare(full = pair$full, zero_b5 = pair$zero, rationale = "From the MIs.",

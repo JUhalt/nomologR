@@ -217,6 +217,14 @@ test_that("an improper ESEM keeps lavaan's warnings and is flagged as a concern 
   flagged <- printed[(which(printed == "Flagged") + 1L):length(printed)]
   expect_match(flagged[[1L]], "\\(Concern\\)")
   expect_match(printed, "ESEM ag1", all = FALSE, fixed = TRUE)
+  # lavaan's message has no full stop; the summary adds one before the
+  # recommendation that follows it, and print() gives the message alone.
+  expect_false(grepl("[.]$", es$engine_warnings$ESEM[[1L]]))
+  summarized <- paste(trimws(capture.output(print(summary(es)))), collapse = " ")
+  expect_match(summarized, "variances are negative. Inspect the warning in context",
+               fixed = TRUE)
+  expect_match(paste(trimws(printed), collapse = " "), "variances are negative. ",
+               fixed = TRUE)
 })
 
 
