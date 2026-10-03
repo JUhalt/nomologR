@@ -28,10 +28,29 @@ Reise, and Haviland (2016).}
 \item{guidance}{Guidance settings returned by \code{\link[=nomo_defaults]{nomo_defaults()}}.}
 }
 \value{
-A \code{nomo_hierarchical} object with the detected \code{structure}, the
-\code{general} factor, the \code{groups} and their items, an \code{indices} table, a
-\code{subscales} table, an item-level \code{loadings} table, identification and
-estimand notes, and a \code{decision_log}.
+A \code{nomo_hierarchical} object. The fields to read are:
+\itemize{
+\item \code{structure}: \code{"bifactor"} or \code{"higher_order"}, as detected.
+\item \code{general} and \code{groups}: the general (or second-order) factor, and each
+group factor with its items.
+\item \code{estimand}: \code{"observed_composite"} with continuous indicators and
+\code{"latent_response"} with ordered ones (see \strong{Estimands}).
+\item \code{indices}: omega total, omega hierarchical, the share of omega total
+that is general, ECV, and PUC, each with its estimand and
+interpretation.
+\item \code{subscales}: omega subscale and omega hierarchical subscale for each
+group factor.
+\item \code{factors}: for the general factor and each group factor, factor
+determinacy, its square, the minimum correlation between competing sets
+of factor scores, and construct replicability H (see \strong{Factor scores}).
+\item \code{loadings}: each item's standardized general and group loadings,
+communality, and share of common variance that is general.
+\item \code{notes} and \code{decision_log}.
+}
+
+Other fields record the call, the settings used, and the fitted model.
+They may change between releases and are not part of the stable interface
+(see \code{?nomologR}).
 }
 \description{
 \code{nomo_hierarchical()} answers the question behind many published scales that
@@ -64,8 +83,10 @@ unit-weighted composite that a set of sources explains. With continuous
 indicators the composite is the observed sum score. With ordered indicators
 the indices describe the \emph{latent-response} composite, an upper bound on the
 reliability of the observed ordinal sum score; the observed ordinal-scale
-version is not provided. ECV and PUC describe the item set and do not depend
-on the denominator.
+version is not provided. They are computed on the latent responses'
+correlation scale, so they are the same whether the model was fitted with
+lavaan's delta or theta parameterization. ECV and PUC describe the item set
+and do not depend on the denominator.
 
 \strong{No verdicts.} The indices are reported with plain-language
 interpretation, but no value is treated as a pass/fail threshold. Reise

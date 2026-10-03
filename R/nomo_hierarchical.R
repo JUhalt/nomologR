@@ -31,8 +31,10 @@
 #' indicators the composite is the observed sum score. With ordered indicators
 #' the indices describe the *latent-response* composite, an upper bound on the
 #' reliability of the observed ordinal sum score; the observed ordinal-scale
-#' version is not provided. ECV and PUC describe the item set and do not depend
-#' on the denominator.
+#' version is not provided. They are computed on the latent responses'
+#' correlation scale, so they are the same whether the model was fitted with
+#' lavaan's delta or theta parameterization. ECV and PUC describe the item set
+#' and do not depend on the denominator.
 #'
 #' **No verdicts.** The indices are reported with plain-language
 #' interpretation, but no value is treated as a pass/fail threshold. Reise
@@ -102,10 +104,28 @@
 #'   Reise, and Haviland (2016).
 #' @param guidance Guidance settings returned by [nomo_defaults()].
 #'
-#' @return A `nomo_hierarchical` object with the detected `structure`, the
-#'   `general` factor, the `groups` and their items, an `indices` table, a
-#'   `subscales` table, an item-level `loadings` table, identification and
-#'   estimand notes, and a `decision_log`.
+#' @return A `nomo_hierarchical` object. The fields to read are:
+#'
+#'   * `structure`: `"bifactor"` or `"higher_order"`, as detected.
+#'   * `general` and `groups`: the general (or second-order) factor, and each
+#'     group factor with its items.
+#'   * `estimand`: `"observed_composite"` with continuous indicators and
+#'     `"latent_response"` with ordered ones (see **Estimands**).
+#'   * `indices`: omega total, omega hierarchical, the share of omega total
+#'     that is general, ECV, and PUC, each with its estimand and
+#'     interpretation.
+#'   * `subscales`: omega subscale and omega hierarchical subscale for each
+#'     group factor.
+#'   * `factors`: for the general factor and each group factor, factor
+#'     determinacy, its square, the minimum correlation between competing sets
+#'     of factor scores, and construct replicability H (see **Factor scores**).
+#'   * `loadings`: each item's standardized general and group loadings,
+#'     communality, and share of common variance that is general.
+#'   * `notes` and `decision_log`.
+#'
+#'   Other fields record the call, the settings used, and the fitted model.
+#'   They may change between releases and are not part of the stable interface
+#'   (see `?nomologR`).
 #'
 #' @references
 #' Beauducel, A. (2011). Indeterminacy of factor score estimates in slightly
@@ -264,10 +284,9 @@ nomo_hierarchical_input <- function(x) {
     )
   }
 
-  ordered <- unique(as.character(unlist(
-    tryCatch(lavaan::lavInspect(x, "ordered"), error = function(e) character()),
-    use.names = FALSE
-  )))
+  # What lavaan fitted as ordered, including columns stored as ordered factors
+  # that `ordered` did not name (#145).
+  ordered <- unique(as.character(lavaan::lavNames(x, type = "ov.ord")))
 
   list(fit = x, source = source, pe = pe, lv = lv, ov = ov, ordered = ordered)
 }
@@ -465,6 +484,20 @@ nomo_hierarchical_matrices <- function(fit, structure, obs.var) {
   }
 
   theta <- est$theta
+
+  # The loadings must be on the scale of the covariances they are divided by.
+  # For ordered indicators the implied and sample matrices are correlations of
+  # the latent responses, while under parameterization = "theta" the loadings
+  # are on a scale whose residual variances are fixed. Rescaling each item by
+  # the ratio of its implied variance to the variance its loadings reproduce
+  # puts both on one scale; the ratio is one for continuous indicators and for
+  # the delta parameterization (#145).
+  items <- rownames(source_loadings)
+  reproduced <- diag(source_loadings %*% psi %*% t(source_loadings) + theta)
+  ratio <- diag(implied)[items] / reproduced
+  ratio[!is.finite(ratio) | ratio <= 0] <- 1
+  source_loadings <- source_loadings * sqrt(ratio)
+  theta <- theta * tcrossprod(sqrt(ratio))
 
   list(
     source_loadings = source_loadings,

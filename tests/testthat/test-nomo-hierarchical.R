@@ -291,6 +291,35 @@ test_that("ordered indicators report the latent-response estimand", {
 })
 
 
+test_that("the delta and theta parameterizations give the same indices (#145)", {
+  skip_on_cran()
+  dat <- hier_sample(hier_bifactor_population()$sigma, 800, 404)
+  ord <- as.data.frame(lapply(dat, function(x) ordered(cut(x, c(-Inf, -1, 0, 1, Inf)))))
+  model <- as.character(nomo_model(hier_groups, "bifactor"))
+  # Ordered-factor columns are fitted as ordered without being named, and the
+  # estimand follows what lavaan fitted.
+  delta <- lavaan::cfa(model, data = ord)
+  theta <- lavaan::cfa(model, data = ord, parameterization = "theta")
+
+  for (obs_var in c(TRUE, FALSE)) {
+    hd <- nomo_hierarchical(delta, obs.var = obs_var)
+    ht <- nomo_hierarchical(theta, obs.var = obs_var)
+    expect_identical(ht$estimand, "latent_response")
+    expect_equal(ht$indices$estimate, hd$indices$estimate, tolerance = 1e-5)
+    expect_equal(ht$subscales, hd$subscales, tolerance = 1e-5)
+    expect_equal(ht$factors, hd$factors, tolerance = 1e-5)
+    expect_equal(ht$loadings, hd$loadings, tolerance = 1e-5)
+  }
+  expect_lt(hier_index(ht, "omega_total"), 1)
+
+  # The loadings are lavaan's standardized loadings under either one.
+  std <- lavaan::standardizedSolution(theta)
+  general <- std[std$op == "=~" & std$lhs == "G", ]
+  expect_equal(ht$loadings$general_loading, general$est.std[match(ht$loadings$item, general$rhs)],
+               tolerance = 1e-5)
+})
+
+
 # Structure detection and refusals ---------------------------------------------
 
 test_that("structure is read from hand-written syntax too", {

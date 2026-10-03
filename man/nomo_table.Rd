@@ -64,8 +64,8 @@ internal \code{constraint} label and adds a human-readable
 \item \code{nomo_missing}: \code{"strategies"} (default), \code{"estimates"}, \code{"fit"},
 \code{"reliability"}, \code{"pattern"}, \code{"variables"}, \code{"decision_log"}; see
 \code{\link[=nomo_missing]{nomo_missing()}}.
-\item \code{nomo_hierarchical}: \code{"indices"} (default), \code{"subscales"}, \code{"loadings"},
-\code{"notes"}, \code{"decision_log"}; see \code{\link[=nomo_hierarchical]{nomo_hierarchical()}}.
+\item \code{nomo_hierarchical}: \code{"indices"} (default), \code{"subscales"}, \code{"factors"},
+\code{"loadings"}, \code{"notes"}, \code{"decision_log"}; see \code{\link[=nomo_hierarchical]{nomo_hierarchical()}}.
 \item \code{nomo_run}: \code{"stages"} (default), \code{"requests"}, \code{"decisions"},
 \code{"component_log"}, \code{"scales"}, \code{"recipe"}, \code{"settings"}, \code{"lineage"},
 \code{"methods"}; see \code{\link[=nomo_run]{nomo_run()}} and \code{\link[=nomo_revise]{nomo_revise()}}. \code{"lineage"} returns one
