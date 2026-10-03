@@ -588,8 +588,14 @@ nomo_power_present <- function(x, detail = FALSE) {
     sprintf("Focus: %s", paste(x$focus, collapse = ", "))
   ))
   summary <- x$summary
-  summary$coverage <- paste(nomo_present_number(summary$min_coverage, 2L),
-                            nomo_present_number(summary$max_coverage, 2L), sep = "-")
+  # The range of coverage across parameters, or the missing marker when an N
+  # has no converged replication: never half a range.
+  summary$coverage <- ifelse(
+    is.finite(summary$min_coverage) & is.finite(summary$max_coverage),
+    paste(nomo_present_number(summary$min_coverage, 2L),
+          nomo_present_number(summary$max_coverage, 2L), sep = " to "),
+    nomo_present_missing
+  )
   summary$meets <- ifelse(summary$meets_references, "yes", "no")
   # Convergence, improper solutions, and biases are percentages, as the
   # references for bias are; power and coverage are proportions.
@@ -634,7 +640,7 @@ nomo_power_present <- function(x, detail = FALSE) {
     "Max bias and Max SE bias are the largest absolute relative biases across ",
     "the parameters. References (Muth\u00e9n & Muth\u00e9n, 2002): parameter ",
     "and SE bias within 10%, SE bias within 5% for the focus parameters, ",
-    "coverage 0.91-0.98, and power 0.80 for the focus parameters. They are ",
+    "coverage 0.91 to 0.98, and power 0.80 for the focus parameters. They are ",
     "guides for choosing N, not rules."
   )
   invisible(x)
