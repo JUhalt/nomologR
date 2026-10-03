@@ -6,8 +6,11 @@
 #' such as a scale mean or sum, so that [nomo_network()] can model the
 #' composite as a single-indicator latent variable. The composite's error
 #' variance is fixed at \eqn{(1 - \rho)\sigma^2}, where \eqn{\rho} is its
-#' reliability and \eqn{\sigma^2} its observed variance, so the relationships
-#' it enters are corrected for its unreliability.
+#' reliability and \eqn{\sigma^2} its variance as the model analyzes it, so the
+#' relationships it enters are corrected for its unreliability. The variance
+#' is computed on the cases the model analyzes (the complete cases, under
+#' listwise deletion) and with the estimator's denominator, so the fitted
+#' model's reliability for the composite is the one supplied.
 #'
 #' @details
 #' **Where the method comes from.** Spearman (1904) corrected a correlation for
@@ -333,8 +336,14 @@ nomo_network_single_spec <- function(single_indicators, data, validation_data,
 
 # The model and data with each composite made the single indicator of a latent
 # variable of the same name, its error variance fixed at (1 - reliability)
-# times its variance in these data.
-nomo_network_single_apply <- function(model, data, spec) {
+# times its variance as lavaan analyzes it, so the fitted model's reliability
+# for the composite is the one supplied (#145): on the rows lavaan keeps, and
+# with its denominator, N for the maximum-likelihood family and in models with
+# ordered indicators, N - 1 for the other continuous-data estimators. Under
+# full-information estimation a composite with missing values of its own still
+# uses its observed values on those rows.
+nomo_network_single_apply <- function(model, data, spec, missing = NULL,
+                                      estimator = NULL, ordered = character()) {
   table <- tibble::tibble(
     variable = character(),
     indicator = character(),
@@ -348,13 +357,37 @@ nomo_network_single_apply <- function(model, data, spec) {
   )
   if (!nrow(spec)) return(list(model = model, data = data, table = table))
 
+  # lavaan's rows: under listwise deletion, the complete cases on the model's
+  # observed variables; otherwise, unless missing = "ml.x", the cases complete
+  # on its observed exogenous covariates, which fixed.x = TRUE requires. Each
+  # composite becomes an indicator, so it is not one of those covariates.
+  mode <- if (is.null(missing)) "listwise" else tolower(missing)
+  partable <- nomo_network_model_table(model)
+  required <- if (mode %in% c("listwise", "default")) {
+    lavaan::lavNames(partable, "ov")
+  } else if (mode %in% c("ml.x", "fiml.x")) {
+    character()
+  } else {
+    setdiff(lavaan::lavNames(partable, "ov.x"), spec$variable)
+  }
+  required <- intersect(required, names(data))
+  analyzed <- if (length(required)) {
+    stats::complete.cases(data[required])
+  } else {
+    rep(TRUE, nrow(data))
+  }
+  n_denominator <- is.null(estimator) || grepl("^ML", toupper(estimator)) ||
+    length(ordered) > 0L
+
   lines <- character()
   rows <- vector("list", nrow(spec))
   for (k in seq_len(nrow(spec))) {
     v <- spec$variable[[k]]
     indicator <- nomo_network_single_name(v, names(data))
     x <- data[[v]]
-    variance <- stats::var(x, na.rm = TRUE)
+    used <- x[analyzed & !is.na(x)]
+    n_used <- length(used)
+    variance <- stats::var(used) * (if (n_denominator) (n_used - 1) / n_used else 1)
     if (!is.finite(variance) || variance <= 0) {
       stop(
         sprintf("`%s` does not vary, so its error variance cannot be fixed.", v),
@@ -376,7 +409,7 @@ nomo_network_single_apply <- function(model, data, spec) {
       se = spec$se[[k]],
       coefficient = spec$coefficient[[k]],
       source = spec$source[[k]],
-      n = as.integer(sum(!is.na(x))),
+      n = as.integer(n_used),
       variance = variance,
       error_variance = error_variance
     )

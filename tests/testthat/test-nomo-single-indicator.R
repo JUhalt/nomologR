@@ -121,7 +121,12 @@ test_that("a composite modeled as a single indicator is corrected for its unreli
   expect_identical(si$variable, "persistence")
   expect_identical(si$indicator, "persistence_si")
   expect_identical(si$coefficient, "unspecified")
-  expect_equal(si$variance, stats::var(si_data$persistence))
+  # The variance lavaan analyzes: the complete cases, with ML's denominator N.
+  used <- si_data$persistence[stats::complete.cases(
+    si_data[c("ag1", "ag2", "ag3", "ag4", "persistence")]
+  )]
+  expect_identical(si$n, length(used))
+  expect_equal(si$variance, stats::var(used) * (length(used) - 1) / length(used))
   expect_equal(si$error_variance, (1 - rho) * si$variance)
   expect_match(net$model_fitted, "persistence =~ persistence_si", fixed = TRUE)
   expect_identical(net$model_original, si_model)
@@ -135,6 +140,66 @@ test_that("a composite modeled as a single indicator is corrected for its unreli
   # The composite is latent now, so no observed endpoint is disclosed for it.
   expect_false("mixed_endpoints" %in% log$metric)
   expect_true("single_indicator_reliability" %in% nomo_methods(net)$id)
+})
+
+
+test_that("the fitted model's reliability for a composite is the one supplied (#145)", {
+  skip_on_cran()
+  implied <- function(net) {
+    std <- lavaan::standardizedSolution(net$fit)
+    std$est.std[std$op == "=~" & std$lhs == "comp"]^2
+  }
+  h <- nomo_hypotheses("comp -> y" = positive())
+
+  # Cases missing on another model variable, chosen by the composite's value,
+  # leave lavaan fewer and less varied rows than the composite has.
+  set.seed(3)
+  n <- 800
+  f <- stats::rnorm(n)
+  dat <- data.frame(y = .5 * f + stats::rnorm(n, sd = .8), comp = f + stats::rnorm(n, sd = .5))
+  dat$other <- .3 * dat$comp + stats::rnorm(n)
+  extreme <- order(abs(dat$comp - mean(dat$comp)), decreasing = TRUE)[1:200]
+  dat$other[extreme] <- NA
+
+  listwise <- nomo_network("y ~ comp + other", dat, h, single_indicators = c(comp = .8))
+  expect_identical(listwise$single_indicators$n, 600L)
+  expect_equal(implied(listwise), .8, tolerance = 1e-6)
+
+  # FIML keeps the rows that fixed.x = TRUE allows: those observed on `other`.
+  fiml <- suppressWarnings(nomo_network("y ~ comp + other", dat, h,
+                                        single_indicators = c(comp = .8), missing = "fiml"))
+  expect_identical(fiml$single_indicators$n, 600L)
+  expect_equal(implied(fiml), .8, tolerance = 1e-6)
+  every <- nomo_network("y ~ comp + other", dat, h,
+                        single_indicators = c(comp = .8), missing = "ml.x")
+  expect_identical(every$single_indicators$n, 800L)
+  expect_equal(implied(every), .8, tolerance = 1e-6)
+  # Without exogenous covariates, FIML keeps every row.
+  outcome <- dat[c("y", "comp")]
+  outcome$y[extreme] <- NA
+  open <- nomo_network("y ~ comp", outcome, h, single_indicators = c(comp = .8),
+                       missing = "fiml")
+  expect_identical(open$single_indicators$n, 800L)
+  expect_equal(implied(open), .8, tolerance = 1e-6)
+
+  # In a small sample the denominator matters: N for ML, N - 1 for ULS.
+  small <- dat[1:30, c("y", "comp")]
+  ml <- nomo_network("y ~ comp", small, h, single_indicators = c(comp = .8))
+  expect_equal(implied(ml), .8, tolerance = 1e-6)
+  uls <- nomo_network("y ~ comp", small, h, single_indicators = c(comp = .8),
+                      estimator = "ULS")
+  expect_equal(implied(uls), .8, tolerance = 1e-6)
+  expect_equal(uls$single_indicators$variance, stats::var(small$comp))
+
+  # With ordered indicators, lavaan's continuous variances use N as well.
+  ord <- nomo_demo_ordinal
+  ord$bmean <- rowMeans(sapply(ord[paste0("b", 1:5)], as.numeric))
+  wlsmv <- nomo_network("A =~ a1 + a2 + a3 + a4 + a5", ord,
+                        nomo_hypotheses("bmean -> A" = positive()),
+                        ordered = paste0("a", 1:5), single_indicators = c(bmean = .8))
+  sampstat <- lavaan::lavInspect(wlsmv$fit, "sampstat")$cov["bmean_si", "bmean_si"]
+  expect_equal(wlsmv$single_indicators$variance, sampstat)
+  expect_equal(wlsmv$single_indicators$variance, stats::var(ord$bmean) * 499 / 500)
 })
 
 
