@@ -283,6 +283,20 @@ print.summary_nomo_factors <- function(x, ...) {
 }
 
 
+# The MAP plot's y-axis labels, panel by panel. TR2 averages squared partial
+# correlations, so its axis is bounded and drops the leading zero (guide point
+# 29); TR4 uses fourth matrix powers and can run far above 1, so a panel with
+# a break above 1 keeps plain numbers.
+nomo_factors_map_labels <- function(breaks) {
+  finite <- breaks[is.finite(breaks)]
+  if (all(abs(finite) <= 1)) {
+    nomo_plot_bounded_labels(breaks)
+  } else {
+    ifelse(is.finite(breaks), format(breaks, trim = TRUE, scientific = FALSE), NA_character_)
+  }
+}
+
+
 # The abbreviations a factor-retention summary shows, each defined once
 # (guide point 23): MAP and KMO always, the others when their criterion was
 # requested. TR4 is defined only when revised MAP was requested (#145,
@@ -560,6 +574,7 @@ plot.nomo_factors <- function(x,
         scales = "free_y"
       ) +
       ggplot2::scale_x_continuous(breaks = d$n_factors) +
+      ggplot2::scale_y_continuous(labels = nomo_factors_map_labels) +
       nomo_plot_labs(
         title = if (revised) {
           "Velicer's minimum average partial (MAP) criteria"

@@ -2421,6 +2421,11 @@ test_that("a minimal criterion set neither shows nor logs revised MAP (#145, fac
   expect_identical(levels(map$data$criterion), c("Original MAP (TR2)", "Revised MAP (TR4)"))
   expect_match(map$labels$subtitle, "| Revised TR4 minimum: ", fixed = TRUE)
   expect_match(plot_text(map$labels$caption), "TR4 their fourth powers", fixed = TRUE)
+  # TR2 is bounded, so its axis drops the leading zero; TR4 can exceed 1.
+  map_labels <- nomologR:::nomo_factors_map_labels
+  expect_identical(map_labels(c(0, 0.25, 0.5, NA)), c("0", ".25", ".50", NA))
+  expect_identical(map_labels(c(0, 30, 60, NA)), c("0", "30", "60", NA))
+  expect_s3_class(ggplot2::ggplot_build(map), "ggplot_built")
   # An object without a status table shows both.
   core$criterion_status <- NULL
   expect_true(nomologR:::nomo_factors_ran(core, "map_revised"))
