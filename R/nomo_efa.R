@@ -33,7 +33,7 @@
 #'   `"none"` are allowed but are recorded as a researcher choice for review.
 #'   Target rotations are not available, because `nomo_efa()` does not pass a
 #'   target matrix. `"bifactor"` and `"biquartimin"` are not available either,
-#'   because [psych::fa()] runs them through GPArotation only when psych is
+#'   because [psych::fa()] runs them through `GPArotation` only when `psych` is
 #'   attached and only for three or more factors; a general factor is tested
 #'   with `nomo_model(structure = "bifactor")` and [nomo_hierarchical()]. A
 #'   one-factor solution is not rotated.

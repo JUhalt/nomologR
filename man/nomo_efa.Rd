@@ -45,7 +45,7 @@ the extracted solution without rotation. Orthogonal rotations and
 \code{"none"} are allowed but are recorded as a researcher choice for review.
 Target rotations are not available, because \code{nomo_efa()} does not pass a
 target matrix. \code{"bifactor"} and \code{"biquartimin"} are not available either,
-because \code{\link[psych:fa]{psych::fa()}} runs them through GPArotation only when psych is
+because \code{\link[psych:fa]{psych::fa()}} runs them through \code{GPArotation} only when \code{psych} is
 attached and only for three or more factors; a general factor is tested
 with \code{nomo_model(structure = "bifactor")} and \code{\link[=nomo_hierarchical]{nomo_hierarchical()}}. A
 one-factor solution is not rotated.}
