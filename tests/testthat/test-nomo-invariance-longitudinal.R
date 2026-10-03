@@ -174,6 +174,29 @@ test_that("items stored as ordered factors are ordered on every occasion (#145)"
 })
 
 
+test_that("a release names items as in the one-occasion model (#145)", {
+  # The column name matched nothing, so the scalar model had stayed fully
+  # constrained while the output reported the release.
+  expect_error(
+    nomo_invariance_longitudinal(
+      long_model, nomo_demo_longitudinal, occasions = long_occasions,
+      levels = c("configural", "metric", "scalar"),
+      partial = nomo_partial("scalar", "w3_t2 ~ 1", "Column name.")
+    ),
+    "Release `w3_t2 ~ 1` does not name.*name items and factors as in the one-occasion `model`"
+  )
+
+  skip_on_cran()
+  # A loading release frees w2's loading on the later occasions.
+  loading <- nomo_invariance_longitudinal(
+    long_model, nomo_demo_longitudinal, occasions = long_occasions,
+    levels = c("configural", "metric"), localize = FALSE,
+    partial = nomo_partial("metric", "Wellbeing =~ w2", "Prespecified.")
+  )
+  expect_identical(diff(loading$fit_evidence$df), 4)
+})
+
+
 test_that("the results print and summarize within 80 columns", {
   skip_on_cran()
   long <- long_default()

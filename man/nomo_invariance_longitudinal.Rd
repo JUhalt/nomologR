@@ -44,7 +44,7 @@ not they are named here, and the decision log lists them for review.}
 the indicator category structure.}
 
 \item{partial}{Optional researcher-specified releases from \code{\link[=nomo_partial]{nomo_partial()}},
-naming items as in \code{model}.}
+naming items and factors as in \code{model}.}
 
 \item{localize}{Logical. If \code{TRUE}, retain equality-constraint score tests as
 diagnostic evidence. Diagnostics never trigger automatic release/refitting.}
@@ -113,10 +113,12 @@ span.
 releases, and score diagnostics are those of \code{\link[=nomo_invariance]{nomo_invariance()}}, applied
 across occasions instead of groups. A partial release names the item as in
 \code{model}, and frees that parameter across all occasions: \code{"w3 ~ 1"} releases
-the intercept of \code{w3}. For ordered items, Wu and Estabrook's (2016)
-identification is the default; \code{ID.cat = "millsap"}, with \code{ID.fac = "UL"},
-applies Millsap and Tein's (2004) conditions, which Liu et al. (2017) extend
-to repeated measures. An item whose columns are stored as ordered factors
+the intercept of \code{w3}. A release naming a column, such as \code{"w3_t2 ~ 1"}, is
+an error, as is any release that frees no parameter. For ordered items, Wu
+and Estabrook's (2016) identification is the default; \code{ID.cat = "millsap"},
+with \code{ID.fac = "UL"}, applies Millsap and Tein's (2004) conditions, which
+Liu et al. (2017) extend to repeated measures. An item whose columns are
+stored as ordered factors
 is modeled as ordered on every occasion, whether or not \code{ordered} names it.
 
 \strong{Latent change.} Once intercepts are invariant, fully or partially, the

@@ -65,7 +65,8 @@ A \code{nomo_invariance} object. The fields to read are:
 level before, the likelihood-ratio test, and any warning or error.
 \item \code{local_strain}: score diagnostics for each equality constraint, which
 localize strain without releasing anything.
-\item \code{partial}: the researcher-specified releases, when given.
+\item \code{partial}: the researcher-specified releases, when given, each at the
+level it applies from.
 \item \code{latent_means}: at each level that holds intercepts equal, each group's
 latent means relative to the reference group, in the reference group's
 latent standard deviations, with their intervals. See \strong{Latent means}.
@@ -99,6 +100,18 @@ Partial invariance is researcher controlled. Supply an object from
 are carried forward to more restrictive levels and their rationales are
 retained. \code{nomo_invariance()} never searches for a combination of releases
 that makes a fit rule pass.
+
+Each release must name a loading, intercept, threshold, or residual variance
+of an indicator in \code{model}, and must free that parameter in the generated
+model: \code{semTools::measEq.syntax()} ignores a release it cannot match, so a
+misspelled name, or a marker loading fixed at 1, is an error rather than a
+fully constrained model reported as partial. A release applies from the
+level that first holds its parameter type equal (loadings at \code{metric},
+intercepts at \code{scalar}, and so on, as the sequence for the indicators sets
+them). Declared at an earlier level, where it would change nothing, it is
+moved to that first level and the decision log says so. Declared at a later
+level, it is an error, because the earlier model would hold the parameter
+equal and the later one free it, so the two would not be nested.
 
 When \code{localize = TRUE}, univariate score tests for equality constraints are
 retained as diagnostic evidence. They are explicitly not used to modify the

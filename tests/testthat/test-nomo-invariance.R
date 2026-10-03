@@ -501,13 +501,80 @@ test_that("partial helper carries releases forward and validates sequences", {
     rationale = "binary-only release"
   )
 
+  structure <- tibble::tibble(factor = "F", item = c("x1", "x2", "x3", "x4"))
   expect_error(
     nomologR:::nomo_invariance_validate_partial(
       bad,
-      sequence
+      nomologR:::nomo_invariance_sequences(),
+      structure
     ),
     "not part"
   )
+
+  checked <- nomologR:::nomo_invariance_validate_partial(
+    p, nomologR:::nomo_invariance_sequences(), structure
+  )
+  expect_identical(checked$partial$releases$level, c("metric", "scalar"))
+  expect_identical(checked$declared, c("metric", "scalar"))
+  expect_identical(
+    nomologR:::nomo_invariance_validate_partial(NULL, list(), structure),
+    list(partial = NULL, declared = NULL)
+  )
+})
+
+
+test_that("each release must name a parameter the levels hold equal (#145)", {
+  continuous <- nomologR:::nomo_invariance_sequences()
+  structure <- tibble::tibble(
+    factor = c("F", "F", "F", "G", "G"),
+    item = c("x1", "x2", "x3", "F", "x4")
+  )
+  check <- function(level, syntax, sequence = continuous) {
+    nomologR:::nomo_invariance_validate_partial(
+      nomo_partial(level, syntax, "Prespecified."), sequence, structure,
+      hint = " A hint."
+    )
+  }
+
+  # A loading, intercept, or residual variance of an indicator in the model.
+  ok <- check(c("metric", "scalar", "strict", "metric"),
+              c("F =~ x2", "x3 ~ 1", "x1 ~~ x1", "G =~ F"))
+  expect_identical(ok$partial$releases$level, c("metric", "scalar", "strict", "metric"))
+
+  # semTools would ignore each of these silently.
+  for (syntax in c("x9 ~ 1", "f =~ x2", "F =~ x4", "F ~ 1", "x1 ~~ x2", "F ~ x1",
+                   "F =~ x2\nx3 ~ 1")) {
+    expect_error(check("metric", syntax), "does not name a loading", fixed = TRUE)
+  }
+  expect_error(check("metric", "x9 ~ 1"), "levels hold equal. A hint.", fixed = TRUE)
+  expect_error(check("metric", "hello"), "is not lavaan parameter syntax", fixed = TRUE)
+  expect_error(check("metric", "x1 ~ "), "is not lavaan parameter syntax", fixed = TRUE)
+  expect_error(check("metric", "x1 | t1"),
+               "frees a threshold, and no level of this sequence holds thresholds equal",
+               fixed = TRUE)
+
+  # Declared after the level that first holds it equal, the two models would
+  # not be nested.
+  expect_error(
+    check("scalar", "F =~ x2"),
+    "frees a loading, and loadings are first held equal at the metric level, so declare it at metric rather than scalar",
+    fixed = TRUE
+  )
+  polytomous <- nomologR:::nomo_invariance_sequences(
+    "x1", tibble::tibble(item = "x1", categories = 5L)
+  )
+  expect_error(check("metric", "x1 | t1", polytomous), "at the thresholds level",
+               fixed = TRUE)
+
+  # Declared before it, the release changes nothing there, so it is applied
+  # from that level and the declared level is kept for the log.
+  moved <- check(c("metric", "metric"), c("x3 ~ 1", "x1 ~~ x1"))
+  expect_identical(moved$partial$releases$level, c("scalar", "strict"))
+  expect_identical(moved$declared, c("metric", "metric"))
+  binary <- nomologR:::nomo_invariance_sequences(
+    "x1", tibble::tibble(item = "x1", categories = 2L)
+  )
+  expect_identical(check("strong", "x1 | t1", binary)$partial$releases$level, "strong")
 })
 
 
@@ -1895,4 +1962,72 @@ test_that("nomo_demo_ordinal is modeled as ordered without `ordered` (#145)", {
                               localize = FALSE)
   expect_identical(declared$ordered_detected, character())
   expect_false("ordered_detected" %in% declared$decision_log$metric)
+})
+
+
+test_that("a release that frees no parameter is an error, not a silent no-op (#145)", {
+  model <- "Agency =~ ag1 + ag2 + ag3 + ag4"
+  release <- function(level, syntax) nomo_partial(level, syntax, "Prespecified.")
+  fit <- function(...) {
+    nomo_invariance(model, nomo_demo_network, group = "group",
+                    levels = c("configural", "metric", "scalar"), localize = FALSE, ...)
+  }
+
+  # A missing item and a factor-name case typo had left the model fully
+  # constrained while the output reported the release.
+  expect_error(fit(partial = release("scalar", "ag9 ~ 1")), "Release `ag9 ~ 1` does not name",
+               fixed = TRUE)
+  expect_error(fit(partial = release("metric", "agency =~ ag3")),
+               "Release `agency =~ ag3` does not name", fixed = TRUE)
+  expect_error(fit(partial = release("metric", "ag3")), "is not lavaan parameter syntax",
+               fixed = TRUE)
+  expect_error(fit(partial = release("metric", "ag1 | t1")),
+               "no level of this sequence holds thresholds equal", fixed = TRUE)
+  expect_error(fit(partial = list(releases = data.frame())), "object created by `nomo_partial()`",
+               fixed = TRUE)
+
+  # Named correctly but fixed in the generated model: under unit loadings the
+  # marker loading is 1 in every group.
+  expect_error(
+    fit(partial = release("metric", "Agency =~ ag1"), ID.fac = "UL"),
+    "Release `Agency =~ ag1` frees no parameter at the metric level",
+    fixed = TRUE
+  )
+
+  # A residual-variance release frees one parameter at the strict level.
+  full <- nomo_invariance(model, nomo_demo_network, group = "group", localize = FALSE)
+  freed <- nomo_invariance(model, nomo_demo_network, group = "group", localize = FALSE,
+                           partial = release("strict", "ag3 ~~ ag3"))
+  strict <- function(x) x$fit_evidence$df[x$fit_evidence$level == "strict"]
+  expect_identical(strict(full) - strict(freed), 1)
+})
+
+
+test_that("a release declared at the wrong level is moved or refused (#145)", {
+  model <- "Agency =~ ag1 + ag2 + ag3 + ag4"
+  levels <- c("configural", "metric", "scalar")
+
+  # A loading released only at scalar would leave scalar not nested in metric.
+  expect_error(
+    nomo_invariance(model, nomo_demo_network, group = "group", levels = levels,
+                    partial = nomo_partial("scalar", "Agency =~ ag3", "Late.")),
+    "declare it at metric rather than scalar", fixed = TRUE
+  )
+
+  # An intercept declared at metric changes nothing there; it applies from
+  # scalar, and the summary and log say so.
+  early <- nomo_invariance(model, nomo_demo_network, group = "group", levels = levels,
+                           localize = FALSE,
+                           partial = nomo_partial("metric", "ag3 ~ 1", "Early."))
+  expect_identical(early$partial$releases$level, "scalar")
+  expect_identical(early$fit_evidence$partial_requested, c("", "", "ag3 ~ 1"))
+  expect_identical(early$fit_evidence$df, c(4, 7, 9))
+  log <- early$decision_log[early$decision_log$metric == "researcher_requested_release", ]
+  expect_identical(log$reference, "scalar")
+  expect_match(log$observation, "at the metric level. No level holds its parameters equal before scalar",
+               fixed = TRUE)
+  local_reproducible_output(width = 80)
+  printed <- capture.output(print(summary(early)))
+  expect_match(printed, "intercepts from scalar, except ag3 ~ 1.", fixed = TRUE, all = FALSE)
+  expect_match(printed, "P1 (scalar): ag3 ~ 1.", fixed = TRUE, all = FALSE)
 })

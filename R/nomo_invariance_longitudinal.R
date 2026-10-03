@@ -29,10 +29,12 @@
 #' releases, and score diagnostics are those of [nomo_invariance()], applied
 #' across occasions instead of groups. A partial release names the item as in
 #' `model`, and frees that parameter across all occasions: `"w3 ~ 1"` releases
-#' the intercept of `w3`. For ordered items, Wu and Estabrook's (2016)
-#' identification is the default; `ID.cat = "millsap"`, with `ID.fac = "UL"`,
-#' applies Millsap and Tein's (2004) conditions, which Liu et al. (2017) extend
-#' to repeated measures. An item whose columns are stored as ordered factors
+#' the intercept of `w3`. A release naming a column, such as `"w3_t2 ~ 1"`, is
+#' an error, as is any release that frees no parameter. For ordered items, Wu
+#' and Estabrook's (2016) identification is the default; `ID.cat = "millsap"`,
+#' with `ID.fac = "UL"`, applies Millsap and Tein's (2004) conditions, which
+#' Liu et al. (2017) extend to repeated measures. An item whose columns are
+#' stored as ordered factors
 #' is modeled as ordered on every occasion, whether or not `ordered` names it.
 #'
 #' **Latent change.** Once intercepts are invariant, fully or partially, the
@@ -55,7 +57,7 @@
 #'   columns are stored as ordered factors are modeled as ordered whether or
 #'   not they are named here, and the decision log lists them for review.
 #' @param partial Optional researcher-specified releases from [nomo_partial()],
-#'   naming items as in `model`.
+#'   naming items and factors as in `model`.
 #' @param auto The lags over which each item's unique factors are correlated:
 #'   `"all"` (default) or a positive whole number, such as `1` for adjacent
 #'   occasions only.
@@ -246,11 +248,17 @@ nomo_invariance_longitudinal <- function(model,
     ID.fac = ID.fac,
     ID.cat = ID.cat,
     parameterization = parameterization,
-    guidance = guidance
+    guidance = guidance,
+    structure = structure,
+    release_hint = paste(
+      " Across occasions, name items and factors as in the one-occasion",
+      "`model`; a release applies on every occasion."
+    )
   )
   ordered_columns <- prepared$ordered
   sequence_info <- prepared$sequence_info
   levels <- prepared$levels
+  partial <- prepared$partial
   nomo_check_model_variables(longitudinal_model, data)
 
   engine <- nomo_invariance_engine_args(
@@ -280,7 +288,8 @@ nomo_invariance_longitudinal <- function(model,
     fit_base = engine$fit,
     equal = "long.equal",
     release = "long.partial",
-    localize = localize
+    localize = localize,
+    names_map = c(long_items, long_factors)
   )
   fit_evidence <- run$fit_evidence
   ordered_used <- length(ordered_columns) > 0L
@@ -302,7 +311,8 @@ nomo_invariance_longitudinal <- function(model,
     localize = localize,
     score_diagnostics = run$score_diagnostics,
     design = "occasions",
-    ordered_detected = ordered_detected
+    ordered_detected = ordered_detected,
+    partial_declared = prepared$partial_declared
   )
   latent_means <- nomo_invariance_longitudinal_means(
     fits = run$fits,
