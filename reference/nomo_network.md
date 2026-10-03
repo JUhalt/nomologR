@@ -53,11 +53,24 @@ nomo_network(
 - add_missing:
 
   Logical. If `TRUE` (default), theory-specified relations absent from
-  `model` are appended transparently before estimation.
+  `model` are appended transparently before estimation: the directed
+  paths first, then the associations the model still lacks.
 
 - ordered:
 
-  Optional character vector naming ordered indicators.
+  Optional character vector naming ordered indicators. A variable of the
+  fitted model stored as an ordered factor, in `data` or in
+  `validation_data`, is treated as declared whether or not it is named
+  here, because lavaan fits such a column as ordered-categorical either
+  way. The decision log lists the columns found this way for review. A
+  column that is an ordered factor in only one of the two samples is
+  declared ordered in both, so both are fitted with the same estimator;
+  the sample that stores it as numbers is then fitted with a
+  categorical-data estimator, and its estimates differ from a fit that
+  treats the column as continuous. An exogenous covariate is the
+  exception: lavaan does not model a covariate as ordered-categorical,
+  so one stored as an ordered factor is refused. Supply it as a numeric
+  column or as dummy-coded columns.
 
 - estimator:
 
@@ -103,11 +116,12 @@ nomo_network(
 A `nomo_network` object. The fields to read are:
 
 - `hypothesis_evidence`: one row per hypothesis, with its prediction,
-  estimate, interval, concordance with the prediction, and
+  estimate, interval, `concordance` with the prediction (see
+  **Concordance**), `evidence_scope` (see **Evidence scope**), and
   interpretation.
 
 - `replication_evidence`: the same comparison in `validation_data`, when
-  given.
+  given, with its `replication_status` (see **Replication status**).
 
 - `fit_evidence`: global fit of the fitted model.
 
@@ -117,8 +131,9 @@ A `nomo_network` object. The fields to read are:
 - `measurement_context`: the measurement model's loadings and fit, which
   qualify the structural evidence.
 
-- `model_fitted` and `model_relations`: the syntax fitted and the
-  relations added from the hypotheses.
+- `model_fitted` and `model_relations`: the syntax fitted, and for each
+  hypothesis whether its relation was already in the model to be fitted
+  (`already_in_model`) or was added (`added_from_hypothesis`).
 
 - `fit`: the `lavaan` fit, and `validation`, the validation fit, when
   given.
@@ -144,9 +159,38 @@ interface (see
 Directed `A -> B` hypotheses map to lavaan regression paths `B ~ A`.
 Association `A <-> B` hypotheses map to covariance paths `A ~~ B`.
 
+A directed path is in the model when `model` writes it. An association
+is judged against the model that will be fitted, which is `model` with
+the hypothesized directed paths in place: it is in the model when
+`model` writes it or when lavaan adds it there automatically, as it does
+between exogenous factors. `model_relations` records which relations
+were already in the model and which were added.
+
+When the fitted model also predicts an endpoint of an association,
+`A ~~ B` is a covariance between residuals. The model predicts a
+variable when a directed path points to it, and when it is an indicator
+of a factor, which includes a factor that loads on a higher-order
+factor. The estimate is then the association that remains after those
+predictors, a residual association, and it can differ from the overall
+association in size and in sign. Such a hypothesis has `evidence_scope`
+`"residual_association"`, its interpretation says so, and the decision
+log flags it for review. If the theory concerns the overall association,
+evaluate it in a model that does not predict those variables.
+
+A pair of variables carries a directed path or an association, not both:
+`nomo_network()` stops when an association hypothesis names two
+variables that the model to be fitted joins with a directed path. It
+also stops when a hypothesis would add a path opposite to another,
+because a reciprocal pair is not identified without further
+restrictions. A reciprocal pair that `model` itself writes is fitted as
+written, and hypotheses about either direction are evaluated; whether
+that model is identified, by instruments for example, is for the
+researcher to establish.
+
 For quantitative `negligible(within = ...)` predictions,
-`nomo_network()` evaluates the SESOI using a normal-approximation
-equivalence confidence interval. With the default
+`nomo_network()` evaluates the smallest effect size of interest (SESOI),
+the region the researcher treats as negligible, using a
+normal-approximation equivalence confidence interval. With the default
 `equivalence_alpha = .05`, this is a 90 percent interval, corresponding
 to the usual two one-sided tests logic. A bare
 [`negligible()`](https://juhalt.github.io/nomologR/reference/nomo_expectations.md)
@@ -156,6 +200,116 @@ The function can also fit the same prespecified model in a validation
 sample. Pass `validation_data` explicitly, or pass a `nomo_split` object
 as `data` to use its calibration and validation subsets. No model
 relation is added or removed on the basis of validation results.
+
+## Concordance
+
+`concordance` in `hypothesis_evidence` compares each estimate and its
+confidence interval with the theoretical region of its prediction, on
+the scale the prediction names (standardized by default). For
+[`positive()`](https://juhalt.github.io/nomologR/reference/nomo_expectations.md)
+and
+[`negative()`](https://juhalt.github.io/nomologR/reference/nomo_expectations.md)
+predictions the interval is the 95 percent confidence interval. For
+`negligible(within = ...)` it is the equivalence interval, with
+confidence `1 - 2 * equivalence_alpha` (90 percent by default). A bound
+given as `min`, `max`, or `within` belongs to the region; zero, the
+bound of a prediction of direction alone, does not. The values, in the
+order the rules are applied:
+
+- `"not_evaluable"`: the model did not converge, no parameter of the
+  fitted model matches the relation, or the estimate has no standard
+  error, as happens when the model is not identified. The estimate is
+  not compared with the prediction.
+
+- `"not_confirmable_without_sesoi"`: a bare
+  [`negligible()`](https://juhalt.github.io/nomologR/reference/nomo_expectations.md)
+  prediction, which gives no region to compare the interval with.
+
+- `"concordant"`: the whole interval lies inside the region.
+
+- `"directionally_concordant_imprecise"`: the estimate lies inside the
+  region, and its interval extends outside it.
+
+- `"inconsistent"`: the estimate and its whole interval lie outside the
+  region. A relation with the predicted sign is inconsistent when its
+  interval excludes the predicted magnitude.
+
+- `"direction_concordant_below_magnitude"`: for a
+  [`positive()`](https://juhalt.github.io/nomologR/reference/nomo_expectations.md)
+  or
+  [`negative()`](https://juhalt.github.io/nomologR/reference/nomo_expectations.md)
+  prediction with `min` or `max`, the estimate has the predicted sign
+  and is smaller in magnitude than the region requires, and its interval
+  reaches the region.
+
+- `"direction_concordant_above_magnitude"`: the same, with an estimate
+  larger in magnitude than the region allows.
+
+- `"inconclusive"`: any other estimate outside the region whose interval
+  reaches the region, such as an estimate of the wrong sign whose
+  interval includes values of the predicted sign.
+
+The decision log records `"concordant"` for information,
+`"inconsistent"` and `"not_evaluable"` as concerns, and the other values
+for review. None is a verdict on validity: each is one piece of
+evidence, read with the measurement context, the fit, and whether the
+prediction was made a priori.
+
+## Evidence scope
+
+`evidence_scope` in `hypothesis_evidence` names what kind of parameter
+the estimate is. For a directed path: `"latent_structural"` (factor to
+factor), `"latent_to_observed_outcome"`, `"observed_to_latent"`, and
+`"observed_structural"`. For an association: `"latent_association"`,
+`"latent_observed_association"`, `"observed_association"`, and
+`"residual_association"` when the fitted model predicts an endpoint, by
+a directed path or a factor loading, whatever the endpoints are. A
+relation without an estimate keeps the scope its endpoints give it.
+
+## Replication status
+
+With a validation sample, `replication_status` in `replication_evidence`
+compares the two samples' estimates and concordance. The values, in the
+order the rules are applied:
+
+- `"not_evaluable"`: the relation is `"not_evaluable"` or has no
+  estimate in at least one sample.
+
+- `"sign_reversal"`, `"direction_not_replicated"`, and
+  `"sign_change_within_uncertainty"`: a
+  [`positive()`](https://juhalt.github.io/nomologR/reference/nomo_expectations.md)
+  or
+  [`negative()`](https://juhalt.github.io/nomologR/reference/nomo_expectations.md)
+  prediction whose two point estimates have opposite signs. See
+  **Replication status when the sign changes**.
+
+- `"replicated_concordance"`: `"concordant"` in both samples.
+
+- `"not_replicated"`: compatible with the prediction in the primary
+  sample and `"inconsistent"` in the validation sample. Compatible means
+  `"concordant"`, `"directionally_concordant_imprecise"`,
+  `"direction_concordant_below_magnitude"`, or
+  `"direction_concordant_above_magnitude"`, the values whose interval
+  reaches the region.
+
+- `"unstable"`: `"inconsistent"` in the primary sample and compatible
+  with the prediction in the validation sample.
+
+- `"replicated_inconsistency"`: `"inconsistent"` in both samples.
+
+- `"direction_replicated_but_uncertain"`: a
+  [`positive()`](https://juhalt.github.io/nomologR/reference/nomo_expectations.md)
+  or
+  [`negative()`](https://juhalt.github.io/nomologR/reference/nomo_expectations.md)
+  prediction whose estimates have the same sign in both samples, without
+  meeting a rule above.
+
+- `"mixed_or_inconclusive"`: any other pattern.
+
+The decision log records `"replicated_concordance"` for information;
+`"sign_reversal"`, `"direction_not_replicated"`, `"not_replicated"`,
+`"unstable"`, and `"replicated_inconsistency"` as concerns; and the
+other values for review.
 
 ## Replication status when the sign changes
 

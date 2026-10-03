@@ -111,8 +111,12 @@ estimates are of interest.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A <code>nomo_missing</code> object containing:</p><ul><li><p><code>pattern</code>: missingness in the modeled variables.</p></li>
-<li><p><code>variables</code>: missing values per variable.</p></li>
+    <p>A <code>nomo_missing</code> object. The fields to read are:</p><ul><li><p><code>reference</code> and <code>fitted_as</code>: the strategy the others are compared with,
+and the strategy the supplied model was fitted with, each named by its
+lavaan <code>missing</code> option, such as <code>"ml"</code> or <code>"listwise"</code>.</p></li>
+<li><p><code>pattern</code>: missingness in the modeled variables. <code>pct_incomplete</code> is a
+proportion, from 0 to 1.</p></li>
+<li><p><code>variables</code>: missing values per variable. <code>pct_missing</code> is a proportion.</p></li>
 <li><p><code>strategies</code>: one row per strategy.</p></li>
 <li><p><code>fit</code>: fit indices by strategy.</p></li>
 <li><p><code>estimates</code>: standardized loadings and factor correlations for a
@@ -121,8 +125,11 @@ the reference.</p></li>
 <li><p><code>reliability</code>: for a <code>nomo_cfa</code>, reliability by strategy, unless
 <code>reliability = FALSE</code>.</p></li>
 <li><p><code>decision_log</code>.</p></li>
-<li><p><code>fits</code>: the refitted objects.</p></li>
-</ul></div>
+</ul><p>Other fields record the call, the class of the model compared (<code>object</code>),
+whether its indicators are ordered (<code>ordered</code>), and the refitted models
+(<code>fits</code>). They may change between releases and are not part of the stable
+interface (see <code><a href="nomologR-package.html">?nomologR</a></code>).</p>
+    </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p><strong>Which strategies.</strong> For continuous indicators, listwise deletion is

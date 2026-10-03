@@ -359,7 +359,7 @@ replication[, c(
 #> 1 H1    Agency -> P…           0.472              0.441   concordant            
 #> 2 H2    Agency <-> …          -0.0285             0.0531  directionally_concord…
 #> 3 H3    Agency -> P…           0.448              0.369   concordant            
-#> 4 H4    Persistence…          -0.101              0.00364 direction_concordant_…
+#> 4 H4    Persistence…          -0.101              0.00364 inconsistent          
 #> # ℹ 1 more variable: replication_status <chr>
 ```
 

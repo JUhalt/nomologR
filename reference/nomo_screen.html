@@ -119,14 +119,19 @@ handoff supplies its scales here.</p></dd>
 
 
 <dt id="arg-reverse">reverse<a class="anchor" aria-label="anchor" href="#arg-reverse"></a></dt>
-<dd><p>Optional character vector naming reverse-keyed items. Used
-only to recode an internal copy for the indices that need it; the data is
-never recoded.</p></dd>
+<dd><p>Optional character vector naming reverse-keyed items, each of
+which must be an item being screened. Used only to recode an internal copy:
+for the careless-responding indices that need it, and to say whether a
+declared item's negative item-rest correlation is the sign expected before
+recoding. The data is never recoded.</p></dd>
 
 
 <dt id="arg-scale-range">scale_range<a class="anchor" aria-label="anchor" href="#arg-scale-range"></a></dt>
-<dd><p>Numeric <code>c(min, max)</code> of the response scale. Required
-whenever <code>reverse</code> is supplied, and never inferred from the data.</p></dd>
+<dd><p>Numeric <code>c(min, max)</code> of the response scale, with <code>min</code>
+below <code>max</code>. It is needed to use <code>reverse</code> and is never inferred from the
+data. With <code>effort = TRUE</code>, naming reverse-keyed items without it is
+refused. With <code>effort = FALSE</code> the audit runs, and the decision log
+records that the declared keying was not used.</p></dd>
 
 
 <dt id="arg-pair-magnitude">pair_magnitude<a class="anchor" aria-label="anchor" href="#arg-pair-magnitude"></a></dt>
@@ -154,7 +159,8 @@ of the same scale; otherwise they are <code>NA</code>.</p></li>
 <li><p><code>decision_log</code>: the evidence and its explanations (see <code><a href="nomo_table.html">nomo_table()</a></code>).</p></li>
 <li><p><code>effort</code>, <code>effort_pairs</code>, and <code>effort_settings</code>: the careless-responding
 indices per row, the pairs they used, and their settings, when
-<code>effort = TRUE</code>.</p></li>
+<code>effort = TRUE</code>. The settings include <code>long_string_rule_applied</code>, which
+is <code>FALSE</code> when too few items were screened for the long-string rule.</p></li>
 <li><p><code>handoff</code>: the content-review handoff read from <code>items</code>, when one was
 supplied.</p></li>
 </ul><p>Other fields record the call, the settings used, and intermediate engine
@@ -197,10 +203,21 @@ correlation. The other indices have no stated cut score and are reported
 without a flag. Huang et al. found the indices they recommended identified
 attentive respondents well and random responders poorly, so an unflagged case
 is not thereby shown to be attentive.</p>
+<p>The long-string rule is applied only when at least
+<code>guidance$long_string_min_items</code> items are screened (20 in
+<code><a href="nomo_defaults.html">nomo_defaults()</a></code>). Half the length of a shorter item set is a run of a few
+responses, which attentive respondents give often: with two items every case
+reaches it. On a shorter set each case's longest run is still reported in
+<code>long_string</code>, no case is flagged on it, and the decision log states the
+number of items and the share of cases that reached half the length.</p>
 <p>Each respondent's antonym, synonym, and even-odd value is a correlation whose
 N is the number of pairs or scales. With two, every value is exactly +1 or
 -1, so at least three are required; with fewer than five the log says the
-flags are coarse. Cases are flagged, never removed.</p>
+flags are coarse. The same holds for each respondent: one who answered fewer
+than three of the pairs, or both halves of fewer than three scales, has no
+value. Even-odd consistency is Spearman-Brown corrected, and the correction
+has no meaning below -1, so the value is bounded there: it lies between -1
+and 1. Cases are flagged, never removed.</p>
 <p><strong>Items from content review.</strong> <code>items</code> may be the handoff that
 <code>contentvalidR</code>'s <code>content_handoff()</code> produces after content review. Only
 items it marks as carried are screened. Every item it held back is listed in

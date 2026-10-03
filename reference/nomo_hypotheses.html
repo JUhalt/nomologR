@@ -89,6 +89,13 @@ origin. <code>n</code> is the number of hypotheses.</p>
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>The function records theory; it does not inspect data, fit a model, or infer
 predictions from statistical significance.</p>
+<p>A pair of variables carries a directed path or an association, not both.
+Hypotheses that give the same two variables both are refused, because the
+two cannot be estimated side by side. Directed paths in both directions are
+accepted here, because whether a reciprocal pair is identified depends on
+the model. <code><a href="nomo_network.html">nomo_network()</a></code> evaluates both when <code>model</code> itself writes the
+two paths, as a model of reciprocal effects identified by instruments does,
+and stops rather than add one of them.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>

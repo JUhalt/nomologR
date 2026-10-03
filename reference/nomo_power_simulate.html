@@ -134,7 +134,9 @@ proportions that converged and that were improper, the smallest power in
 <code>focus</code>, the largest absolute biases, the coverage range, and
 <code>meets_references</code>), <code>n_required</code> (the smallest simulated sample size that
 meets the references, or <code>NA</code>), <code>focus</code>, <code>reps</code>, <code>alpha</code>, and <code>seed</code> (the
-seed given, or <code>NA</code> without one).</p>
+seed given, or <code>NA</code> without one). <code><a href="nomo_table.html">nomo_table()</a></code> returns the <code>"summary"</code>
+table, its default <code>type</code>, or the <code>"parameters"</code> table; <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> shows
+the first and <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> both.</p>
 <p>Other fields record the call, the population and analysis models, and the
 kind of power analysis. They may change between releases and are not part
 of the stable interface (see <code><a href="nomologR-package.html">?nomologR</a></code>).</p>

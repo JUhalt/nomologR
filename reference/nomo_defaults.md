@@ -33,6 +33,13 @@ and
 Changing a reference changes which evidence is flagged for review; it
 never deletes items, respecifies models, or declares validity.
 
+`long_string_min_items` is a count of items, not a reference value for a
+statistic:
+[`nomo_screen()`](https://juhalt.github.io/nomologR/reference/nomo_screen.md)
+flags a case on long-string only when at least that many items are
+screened, because half the length of a shorter item set is a run that
+attentive respondents give often.
+
 ## Examples
 
 ``` r

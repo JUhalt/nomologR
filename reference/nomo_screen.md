@@ -58,14 +58,19 @@ nomo_screen(
 
 - reverse:
 
-  Optional character vector naming reverse-keyed items. Used only to
-  recode an internal copy for the indices that need it; the data is
-  never recoded.
+  Optional character vector naming reverse-keyed items, each of which
+  must be an item being screened. Used only to recode an internal copy:
+  for the careless-responding indices that need it, and to say whether a
+  declared item's negative item-rest correlation is the sign expected
+  before recoding. The data is never recoded.
 
 - scale_range:
 
-  Numeric `c(min, max)` of the response scale. Required whenever
-  `reverse` is supplied, and never inferred from the data.
+  Numeric `c(min, max)` of the response scale, with `min` below `max`.
+  It is needed to use `reverse` and is never inferred from the data.
+  With `effort = TRUE`, naming reverse-keyed items without it is
+  refused. With `effort = FALSE` the audit runs, and the decision log
+  records that the declared keying was not used.
 
 - pair_magnitude:
 
@@ -102,7 +107,9 @@ An object of class `nomo_screen`. The fields to read are:
 
 - `effort`, `effort_pairs`, and `effort_settings`: the
   careless-responding indices per row, the pairs they used, and their
-  settings, when `effort = TRUE`.
+  settings, when `effort = TRUE`. The settings include
+  `long_string_rule_applied`, which is `FALSE` when too few items were
+  screened for the long-string rule.
 
 - `handoff`: the content-review handoff read from `items`, when one was
   supplied.
@@ -158,10 +165,24 @@ and are reported without a flag. Huang et al. found the indices they
 recommended identified attentive respondents well and random responders
 poorly, so an unflagged case is not thereby shown to be attentive.
 
+The long-string rule is applied only when at least
+`guidance$long_string_min_items` items are screened (20 in
+[`nomo_defaults()`](https://juhalt.github.io/nomologR/reference/nomo_defaults.md)).
+Half the length of a shorter item set is a run of a few responses, which
+attentive respondents give often: with two items every case reaches it.
+On a shorter set each case's longest run is still reported in
+`long_string`, no case is flagged on it, and the decision log states the
+number of items and the share of cases that reached half the length.
+
 Each respondent's antonym, synonym, and even-odd value is a correlation
 whose N is the number of pairs or scales. With two, every value is
 exactly +1 or -1, so at least three are required; with fewer than five
-the log says the flags are coarse. Cases are flagged, never removed.
+the log says the flags are coarse. The same holds for each respondent:
+one who answered fewer than three of the pairs, or both halves of fewer
+than three scales, has no value. Even-odd consistency is Spearman-Brown
+corrected, and the correction has no meaning below -1, so the value is
+bounded there: it lies between -1 and 1. Cases are flagged, never
+removed.
 
 **Items from content review.** `items` may be the handoff that
 `contentvalidR`'s `content_handoff()` produces after content review.

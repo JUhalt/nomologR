@@ -61,6 +61,10 @@ A `nomo_power` object. The fields to read are `test`, `df`,
 `rmsea_null`, `rmsea_alt`, `alpha`, `target_power`, `power` (a table of
 sample sizes and their power), and `n_required` (the smallest sample
 size reaching `target_power`, or `NA` if none up to one million does).
+[`nomo_table()`](https://juhalt.github.io/nomologR/reference/nomo_table.md)
+returns the `"power"` table, its one `type`;
+[`summary()`](https://rdrr.io/r/base/summary.html) shows what
+[`print()`](https://rdrr.io/r/base/print.html) shows.
 
 Other fields record the kind of power analysis. They may change between
 releases and are not part of the stable interface (see

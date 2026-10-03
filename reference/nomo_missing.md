@@ -52,11 +52,17 @@ nomo_missing(fit, data, strategies = NULL, ...)
 
 ## Value
 
-A `nomo_missing` object containing:
+A `nomo_missing` object. The fields to read are:
 
-- `pattern`: missingness in the modeled variables.
+- `reference` and `fitted_as`: the strategy the others are compared
+  with, and the strategy the supplied model was fitted with, each named
+  by its lavaan `missing` option, such as `"ml"` or `"listwise"`.
 
-- `variables`: missing values per variable.
+- `pattern`: missingness in the modeled variables. `pct_incomplete` is a
+  proportion, from 0 to 1.
+
+- `variables`: missing values per variable. `pct_missing` is a
+  proportion.
 
 - `strategies`: one row per strategy.
 
@@ -71,7 +77,11 @@ A `nomo_missing` object containing:
 
 - `decision_log`.
 
-- `fits`: the refitted objects.
+Other fields record the call, the class of the model compared
+(`object`), whether its indicators are ordered (`ordered`), and the
+refitted models (`fits`). They may change between releases and are not
+part of the stable interface (see
+[`?nomologR`](https://juhalt.github.io/nomologR/reference/nomologR-package.md)).
 
 ## Details
 

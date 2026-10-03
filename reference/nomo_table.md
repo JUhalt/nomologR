@@ -63,6 +63,11 @@ default.
   `"notes"`; see
   [`nomo_scores()`](https://juhalt.github.io/nomologR/reference/nomo_scores.md).
 
+- `nomo_power`: `"power"` from
+  [`nomo_power_rmsea()`](https://juhalt.github.io/nomologR/reference/nomo_power_rmsea.md);
+  `"summary"` (default) and `"parameters"` from
+  [`nomo_power_simulate()`](https://juhalt.github.io/nomologR/reference/nomo_power_simulate.md).
+
 - `nomo_hypotheses`: the machine-readable hypothesis table (no `type`).
 
 - `nomo_network`: `"hypotheses"` (default), `"fit"`, `"measurement"`,

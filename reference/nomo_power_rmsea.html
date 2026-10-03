@@ -116,7 +116,9 @@ replacing the test's defaults.</p></dd>
     <p>A <code>nomo_power</code> object. The fields to read are <code>test</code>, <code>df</code>,
 <code>rmsea_null</code>, <code>rmsea_alt</code>, <code>alpha</code>, <code>target_power</code>, <code>power</code> (a table of
 sample sizes and their power), and <code>n_required</code> (the smallest sample size
-reaching <code>target_power</code>, or <code>NA</code> if none up to one million does).</p>
+reaching <code>target_power</code>, or <code>NA</code> if none up to one million does).
+<code><a href="nomo_table.html">nomo_table()</a></code> returns the <code>"power"</code> table, its one <code>type</code>; <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>
+shows what <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> shows.</p>
 <p>Other fields record the kind of power analysis. They may change between
 releases and are not part of the stable interface (see <code><a href="nomologR-package.html">?nomologR</a></code>).</p>
     </div>

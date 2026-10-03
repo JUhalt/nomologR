@@ -92,6 +92,10 @@ Single-group, single-level, with no regressions among latent variables.</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>An object of class <code>nomo_scores</code>. The fields to read are:</p><ul><li><p><code>scores</code>: one column per factor, one row per case used.</p></li>
+<li><p><code>rows</code>: for each row of <code>scores</code>, the row of the data the model was
+fitted to. A case the model did not use, as listwise deletion drops an
+incomplete one, has no score, so <code>scores</code> can have fewer rows than the
+data. <code>data[x$rows, ]</code> holds the scored cases in the order of <code>scores</code>.</p></li>
 <li><p><code>method</code> and <code>weighting</code>: how the scores were computed.</p></li>
 <li><p><code>diagnostics</code>: Grice's validity, univocality, and correlational
 accuracy per factor.</p></li>
@@ -111,7 +115,12 @@ items is not a model-free arithmetic calculation but a <em>parallel</em> factor
 model, assuming equal unstandardized loadings and equal residual variances.
 For <code>method = "sum"</code> and <code>method = "mean"</code>, that constrained model is fitted
 and compared with the model supplied, so a researcher can see whether the
-assumption their sum score makes is consistent with their data.</p>
+assumption their sum score makes is consistent with their data. The parallel
+model is the supplied model with those two sets of constraints added and
+nothing else changed, estimated as the supplied model was: the same cases,
+estimator, and missing-data handling, with factor covariances and residual
+covariances kept as specified. When the comparison cannot be made,
+<code>parallel_test$note</code> says why.</p>
 <p><strong>A score is not the latent variable.</strong> Grice (2001) evaluates factor scores
 on three criteria, all reported here and all computed from the fitted model:</p><ul><li><p><code>validity</code>, the correlation between a score and the factor it estimates.
 For <code>method = "regression"</code> this equals the factor determinacy coefficient
@@ -139,7 +148,8 @@ reach .80, and above .90 for scores serving as substitutes for the factors
 themselves, is reported where a value falls below it and is never applied as
 a rule.</p>
 <p>The supplied data is never modified, and scores are computed only for the
-cases the model used.</p>
+cases the model used. <code>rows</code> records which rows of the data those are, so
+the scores can be matched to the data when some cases were dropped.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
@@ -237,6 +247,18 @@ replicability.</p></div>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span>  0.419   0.018<span style="text-decoration: underline;">5</span> -<span style="color: #BB0000;">0.271</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> -<span style="color: #BB0000;">0.416</span>  -<span style="color: #BB0000;">0.122</span>   0.194 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">6</span>  0.023<span style="text-decoration: underline;">3</span> -<span style="color: #BB0000;">1.33</span>    0.709 </span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Scores joined to the data, by the rows the model used</span></span></span>
+<span class="r-in"><span><span class="va">scored</span> <span class="op">&lt;-</span> <span class="fu">lavaan</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/lavaan/man/HolzingerSwineford1939.html" class="external-link">HolzingerSwineford1939</a></span></span></span>
+<span class="r-in"><span><span class="va">scored</span><span class="op">[</span><span class="va">refined</span><span class="op">$</span><span class="va">rows</span>, <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">refined</span><span class="op">$</span><span class="va">scores</span><span class="op">)</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">refined</span><span class="op">$</span><span class="va">scores</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">scored</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"id"</span>, <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">refined</span><span class="op">$</span><span class="va">scores</span><span class="op">)</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   id      visual     textual       speed</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1  1 -0.81767524 -0.13754501  0.06150726</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2  2  0.04951940 -1.01272402  0.62549360</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3  3 -0.76139670 -1.87228634 -0.84057276</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4  4  0.41934153  0.01848569 -0.27133710</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5  5 -0.41590481 -0.12225009  0.19432951</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6  6  0.02325632 -1.32981727  0.70885348</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

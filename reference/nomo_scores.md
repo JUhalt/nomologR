@@ -38,6 +38,12 @@ An object of class `nomo_scores`. The fields to read are:
 
 - `scores`: one column per factor, one row per case used.
 
+- `rows`: for each row of `scores`, the row of the data the model was
+  fitted to. A case the model did not use, as listwise deletion drops an
+  incomplete one, has no score, so `scores` can have fewer rows than the
+  data. `data[x$rows, ]` holds the scored cases in the order of
+  `scores`.
+
 - `method` and `weighting`: how the scores were computed.
 
 - `diagnostics`: Grice's validity, univocality, and correlational
@@ -64,7 +70,11 @@ model, assuming equal unstandardized loadings and equal residual
 variances. For `method = "sum"` and `method = "mean"`, that constrained
 model is fitted and compared with the model supplied, so a researcher
 can see whether the assumption their sum score makes is consistent with
-their data.
+their data. The parallel model is the supplied model with those two sets
+of constraints added and nothing else changed, estimated as the supplied
+model was: the same cases, estimator, and missing-data handling, with
+factor covariances and residual covariances kept as specified. When the
+comparison cannot be made, `parallel_test$note` says why.
 
 **A score is not the latent variable.** Grice (2001) evaluates factor
 scores on three criteria, all reported here and all computed from the
@@ -105,7 +115,9 @@ the factors themselves, is reported where a value falls below it and is
 never applied as a rule.
 
 The supplied data is never modified, and scores are computed only for
-the cases the model used.
+the cases the model used. `rows` records which rows of the data those
+are, so the scores can be matched to the data when some cases were
+dropped.
 
 ## References
 
@@ -207,4 +219,16 @@ head(refined$scores)
 #> 4  0.419   0.0185 -0.271 
 #> 5 -0.416  -0.122   0.194 
 #> 6  0.0233 -1.33    0.709 
+
+# Scores joined to the data, by the rows the model used
+scored <- lavaan::HolzingerSwineford1939
+scored[refined$rows, names(refined$scores)] <- refined$scores
+head(scored[, c("id", names(refined$scores))])
+#>   id      visual     textual       speed
+#> 1  1 -0.81767524 -0.13754501  0.06150726
+#> 2  2  0.04951940 -1.01272402  0.62549360
+#> 3  3 -0.76139670 -1.87228634 -0.84057276
+#> 4  4  0.41934153  0.01848569 -0.27133710
+#> 5  5 -0.41590481 -0.12225009  0.19432951
+#> 6  6  0.02325632 -1.32981727  0.70885348
 ```

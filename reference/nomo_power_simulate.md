@@ -74,6 +74,10 @@ proportions that converged and that were improper, the smallest power in
 `meets_references`), `n_required` (the smallest simulated sample size
 that meets the references, or `NA`), `focus`, `reps`, `alpha`, and
 `seed` (the seed given, or `NA` without one).
+[`nomo_table()`](https://juhalt.github.io/nomologR/reference/nomo_table.md)
+returns the `"summary"` table, its default `type`, or the `"parameters"`
+table; [`print()`](https://rdrr.io/r/base/print.html) shows the first
+and [`summary()`](https://rdrr.io/r/base/summary.html) both.
 
 Other fields record the call, the population and analysis models, and
 the kind of power analysis. They may change between releases and are not

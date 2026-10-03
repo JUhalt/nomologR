@@ -87,6 +87,10 @@ the corresponding analysis function (for example, <code><a href="nomo_efa.html">
 <code><a href="nomo_cfa.html">nomo_cfa()</a></code>, <code><a href="nomo_reliability.html">nomo_reliability()</a></code>, and <code><a href="nomo_validity.html">nomo_validity()</a></code>). Changing a
 reference changes which evidence is flagged for review; it never deletes
 items, respecifies models, or declares validity.</p>
+<p><code>long_string_min_items</code> is a count of items, not a reference value for a
+statistic: <code><a href="nomo_screen.html">nomo_screen()</a></code> flags a case on long-string only when at least
+that many items are screened, because half the length of a shorter item set
+is a run that attentive respondents give often.</p>
     </div>
 
     <div class="section level2">

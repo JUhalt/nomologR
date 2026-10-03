@@ -36,6 +36,16 @@ origin. `n` is the number of hypotheses.
 The function records theory; it does not inspect data, fit a model, or
 infer predictions from statistical significance.
 
+A pair of variables carries a directed path or an association, not both.
+Hypotheses that give the same two variables both are refused, because
+the two cannot be estimated side by side. Directed paths in both
+directions are accepted here, because whether a reciprocal pair is
+identified depends on the model.
+[`nomo_network()`](https://juhalt.github.io/nomologR/reference/nomo_network.md)
+evaluates both when `model` itself writes the two paths, as a model of
+reciprocal effects identified by instruments does, and stops rather than
+add one of them.
+
 ## References
 
 Cronbach, L. J., & Meehl, P. E. (1955). Construct validity in
