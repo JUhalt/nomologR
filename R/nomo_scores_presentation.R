@@ -65,13 +65,16 @@ summary.nomo_scores <- function(object, ...) {
     factor_correlations = object$factor_correlations,
     notes = object$notes
   )
-  class(out) <- c("summary.nomo_scores", "list")
+  # "summary_nomo_scores" is the class, named as every other summary class in
+  # the package is. "summary.nomo_scores" was its name before 1.0.0 and is kept
+  # as a second class for one release, so that inherits() on it still holds.
+  class(out) <- c("summary_nomo_scores", "summary.nomo_scores", "list")
   out
 }
 
 
 #' @export
-print.summary.nomo_scores <- function(x, digits = 3, ...) {
+print.summary_nomo_scores <- function(x, digits = 3, ...) {
   nomo_present_header("nomo_scores", "Scores", summary = TRUE)
   nomo_present_facts(c(
     sprintf("%s weighting (method: %s)",

@@ -29,6 +29,27 @@ test_that("RMSEA power reproduces MacCallum, Browne, and Sugawara's sample sizes
 })
 
 
+test_that("RMSEA power has the table and summary every result object has (#145)", {
+  close <- nomo_power_rmsea(df = 20, n = c(100, 200, 400))
+
+  # One table, so one type, which is also the default.
+  expect_identical(nomo_table(close), close$power)
+  expect_identical(nomo_table(close, "power"), close$power)
+  expect_error(nomo_table(close, "parameters"),
+               '`type` must be one of "power", not "parameters".', fixed = TRUE)
+
+  s <- summary(close)
+  expect_identical(class(s), c("summary_nomo_power", "list"))
+  expect_identical(s$power, close$power)
+  local_reproducible_output(width = 80)
+  printed <- capture.output(returned <- print(s))
+  expect_identical(returned, s)
+  expect_identical(printed[[1L]], "<nomo_power summary> Power of the test of close fit")
+  # A summary of the RMSEA tests has nothing to add to what print() shows.
+  expect_identical(printed[-1L], capture.output(print(close))[-1L])
+})
+
+
 test_that("the degrees of freedom come from the model however it is given", {
   model <- nomo_model(list(A = paste0("a", 1:4), B = paste0("b", 1:4)))
   expect_identical(nomo_power_rmsea(model)$df, 19L)
@@ -122,6 +143,35 @@ test_that("a Monte Carlo study reports recovery and power at each sample size", 
   expect_match(printed, "Max bias and Max SE bias are the largest absolute relative biases",
                fixed = TRUE, all = FALSE)
   expect_false(any(nchar(printed) > 80L))
+
+  # The tables are reached through nomo_table(), by sample size by default
+  # (#145), and a table cut for width names the call that shows the rest.
+  expect_identical(nomo_table(pw), pw$summary)
+  expect_identical(nomo_table(pw, "summary"), pw$summary)
+  expect_identical(nomo_table(pw, "parameters"), pw$parameters)
+  expect_error(nomo_table(pw, "power"),
+               '`type` must be one of "summary" or "parameters", not "power".',
+               fixed = TRUE)
+  local_reproducible_output(width = 50)
+  narrow <- gsub("[[:space:]]+", " ", paste(capture.output(print(pw)), collapse = " "))
+  expect_match(narrow, "Not shown for width: ", fixed = TRUE)
+  expect_match(narrow, "See nomo_table(x, \"summary\").", fixed = TRUE)
+  expect_false(grepl("x$parameters", narrow, fixed = TRUE))
+
+  # summary() adds the table print() leaves out: every parameter at every N.
+  s <- summary(pw)
+  expect_identical(class(s), c("summary_nomo_power", "list"))
+  expect_identical(s$parameters, pw$parameters)
+  local_reproducible_output(width = 80)
+  detail <- capture.output(print(s))
+  expect_identical(detail[[1L]], "<nomo_power summary> Monte Carlo power and sample size")
+  expect_match(detail, "By sample size and parameter", fixed = TRUE, all = FALSE)
+  expect_identical(sum(grepl("^ +[0-9]+ +A~~B ", detail)), 2L)
+  # Biases are percentages, as they are by sample size.
+  expect_match(detail, "^ +60 +A~~B +0[.]300 +-?[0-9.]+ +-?[0-9.]+% +-?[0-9.]+% +[0-9.]+ +[0-9.]+$",
+               all = FALSE)
+  expect_false(any(grepl("By sample size and parameter", printed, fixed = TRUE)))
+  expect_false(any(nchar(detail) > 80L))
 })
 
 
