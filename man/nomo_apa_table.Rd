@@ -13,11 +13,12 @@ nomo_apa_table(x, type = NULL, number = NULL, title = NULL, ...)
 \item{type}{Which table to build. For \code{nomo_cfa}: \code{"loadings"}, \code{"fit"}, or
 \code{"factor_correlations"}. For \code{nomo_validity}: \code{"discriminant"} or
 \code{"convergent"}. For \code{nomo_network}: \code{"hypotheses"} or \code{"fit"}. Other
-objects have one table each.}
+objects have one table each, so \code{type} is left \code{NULL} for them; any other
+value is an error.}
 
 \item{number}{Optional table number, printed in bold as "Table 1".}
 
-\item{title}{Optional title; a descriptive default is supplied.}
+\item{title}{Optional title, one string; a descriptive default is supplied.}
 
 \item{...}{Unused.}
 }

@@ -75,6 +75,9 @@ nomo_apa_new <- function(body, title, stub, general = character(),
     }
     number <- as.integer(number)
   }
+  if (!is.character(title) || length(title) != 1L || is.na(title)) {
+    stop("`title` must be NULL or one string.", call. = FALSE)
+  }
   body[] <- lapply(body, as.character)
   out <- list(
     number = number,
@@ -86,6 +89,19 @@ nomo_apa_new <- function(body, title, stub, general = character(),
   )
   class(out) <- c("nomo_apa_table", "list")
   out
+}
+
+
+# A result with one table takes no `type`, so a value given is refused rather
+# than ignored.
+nomo_apa_one_table <- function(type, source) {
+  if (!is.null(type)) {
+    stop(sprintf(
+      "`type` must be NULL for a `%s` result, which has one APA table, not %s.",
+      source, paste(sprintf('"%s"', as.character(type)), collapse = ", ")
+    ), call. = FALSE)
+  }
+  invisible(NULL)
 }
 
 
@@ -134,9 +150,10 @@ nomo_apa_new <- function(body, title, stub, general = character(),
 #' @param type Which table to build. For `nomo_cfa`: `"loadings"`, `"fit"`, or
 #'   `"factor_correlations"`. For `nomo_validity`: `"discriminant"` or
 #'   `"convergent"`. For `nomo_network`: `"hypotheses"` or `"fit"`. Other
-#'   objects have one table each.
+#'   objects have one table each, so `type` is left `NULL` for them; any other
+#'   value is an error.
 #' @param number Optional table number, printed in bold as "Table 1".
-#' @param title Optional title; a descriptive default is supplied.
+#' @param title Optional title, one string; a descriptive default is supplied.
 #' @param ... Unused.
 #'
 #' @return A `nomo_apa_table` object, which prints in the console and renders
@@ -318,6 +335,7 @@ nomo_apa_fit_table <- function(fe, estimator, n, title, number, source,
 #' @export
 nomo_apa_table.nomo_reliability <- function(x, type = NULL, number = NULL,
                                             title = NULL, ...) {
+  nomo_apa_one_table(type, "nomo_reliability")
   constructs <- unique(c(as.character(x$omega$construct), as.character(x$alpha$construct)))
   pick <- function(tbl, construct) {
     row <- tbl[tbl$construct == construct, , drop = FALSE]
@@ -355,6 +373,7 @@ nomo_apa_table.nomo_reliability <- function(x, type = NULL, number = NULL,
 #' @export
 nomo_apa_table.nomo_invariance <- function(x, type = NULL, number = NULL,
                                            title = NULL, ...) {
+  nomo_apa_one_table(type, "nomo_invariance")
   fe <- x$fit_evidence
   change <- function(v) nomo_apa_number(v, 3L, bounded = TRUE)
   lrt <- ifelse(
@@ -519,6 +538,7 @@ nomo_apa_table.nomo_network <- function(x, type = c("hypotheses", "fit"),
 #' @export
 nomo_apa_table.nomo_retest <- function(x, type = NULL, number = NULL,
                                        title = NULL, ...) {
+  nomo_apa_one_table(type, "nomo_retest")
   icc <- x$icc
   body <- data.frame(
     Composite = icc$composite,
