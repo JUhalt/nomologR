@@ -52,9 +52,14 @@ recomputing completed stages.
 and even-odd consistency cannot be computed within one scale. So they are
 computed once, over every item in the run with the run's scales, and never
 inside the per-scale item audits. \code{reverse}, \code{scale_range},
-\code{pair_magnitude}, and \code{scales} may be given alongside \code{effort}. When the
-scales came from a \code{contentvalidR} handoff that declares keying, its
-keying is used unless \code{reverse} or \code{scale_range} is given here.
+\code{pair_magnitude}, and \code{scales} may be given alongside \code{effort}. \code{reverse}
+and \code{scale_range} also reach the per-scale item audits, with or without
+\code{effort}, and \code{reverse} must name items in the run's scales. When the
+scales came from a \code{contentvalidR} handoff, each of \code{reverse} and
+\code{scale_range} is taken from its declared keying unless given here, as in
+\code{\link[=nomo_screen]{nomo_screen()}}; giving one replaces only that one. The decision log
+records a declared value replaced, or a response scale the handoff did not
+record supplied here.
 
 Two further requests attach evidence to the measurement model:
 \itemize{
