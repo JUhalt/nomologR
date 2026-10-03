@@ -38,7 +38,9 @@ reference for latent change.}
 
 \item{ordered}{Optional names of ordered items, as in \code{model}. Items whose
 columns are stored as ordered factors are modeled as ordered whether or
-not they are named here, and the decision log lists them for review.}
+not they are named here: the result's \code{ordered_detected} lists them, the
+decision log lists them for review, and the rules for ordered indicators
+in \code{\link[=nomo_invariance]{nomo_invariance()}} apply.}
 
 \item{levels}{Optional invariance levels. \code{NULL} uses the sequence implied by
 the indicator category structure.}

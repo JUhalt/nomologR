@@ -97,7 +97,25 @@ nomo_invariance_level_path <- function(levels) {
 }
 
 
-nomo_invariance_validate_levels <- function(levels, sequence) {
+# Appended to an error that arises only because indicators are ordered, when
+# some were detected from their storage rather than named in `ordered`: the
+# ordered sequence, the std.lv requirement and the estimator limits would
+# otherwise come with no word on why they apply (#145).
+nomo_invariance_detected_note <- function(detected) {
+  if (!length(detected)) return("")
+  n <- length(detected)
+  sprintf(
+    " %s %s stored as %s and modeled as ordered; convert %s to numeric to model %s as continuous.",
+    nomo_present_or(detected, "and"),
+    nomo_present_noun(n, "is", "are"),
+    nomo_present_noun(n, "an ordered factor", "ordered factors"),
+    nomo_present_noun(n, "it", "them"),
+    nomo_present_noun(n, "it", "them")
+  )
+}
+
+
+nomo_invariance_validate_levels <- function(levels, sequence, note = "") {
   if (is.null(levels)) return(sequence)
 
   if (!is.character(levels) || !length(levels) || anyNA(levels)) {
@@ -108,8 +126,9 @@ nomo_invariance_validate_levels <- function(levels, sequence) {
   if (any(!levels %in% sequence) || anyDuplicated(levels)) {
     stop(
       sprintf(
-        "`levels` may contain only: %s.",
-        paste(sequence, collapse = ", ")
+        "`levels` may contain only: %s.%s",
+        paste(sequence, collapse = ", "),
+        note
       ),
       call. = FALSE
     )
@@ -121,7 +140,8 @@ nomo_invariance_validate_levels <- function(levels, sequence) {
       paste0(
         "`levels` must form an ordered prefix of ",
         paste(sequence, collapse = " -> "),
-        "."
+        ".",
+        note
       ),
       call. = FALSE
     )
@@ -906,9 +926,10 @@ nomo_invariance_decision_log <- function(group,
 # With `model`, model indicators stored as ordered factors are treated as
 # declared, since lavaan fits them as categorical whether or not `ordered` names
 # them (#145); the longitudinal function detects them by item before it calls
-# this and passes no `model`. `structure` holds the model's loadings, as
-# factor and item, against which partial releases are checked; it is evaluated
-# only when there are releases.
+# this, passes no `model`, and passes the items it detected as
+# `ordered_detected` so the errors below can name them. `structure` holds the
+# model's loadings, as factor and item, against which partial releases are
+# checked; it is evaluated only when there are releases.
 nomo_invariance_prepare <- function(data,
                                     ordered,
                                     levels,
@@ -922,7 +943,8 @@ nomo_invariance_prepare <- function(data,
                                     guidance,
                                     model = NULL,
                                     structure = NULL,
-                                    release_hint = "") {
+                                    release_hint = "",
+                                    ordered_detected = character()) {
   if (is.null(ordered)) {
     ordered <- character()
   } else {
@@ -943,12 +965,12 @@ nomo_invariance_prepare <- function(data,
     }
   }
 
-  ordered_detected <- character()
   if (!is.null(model)) {
     found <- nomo_ordered_indicators(model, data, ordered)
     ordered <- found$ordered
     ordered_detected <- found$detected
   }
+  detected_note <- nomo_invariance_detected_note(ordered_detected)
 
   if (!is.logical(localize) || length(localize) != 1L || is.na(localize)) {
     stop("`localize` must be TRUE or FALSE.", call. = FALSE)
@@ -963,7 +985,8 @@ nomo_invariance_prepare <- function(data,
   )
   levels <- nomo_invariance_validate_levels(
     levels = levels,
-    sequence = sequence_info$sequence
+    sequence = sequence_info$sequence,
+    note = detected_note
   )
   releases <- nomo_invariance_validate_partial(
     partial, sequence_info, structure, release_hint
@@ -1021,7 +1044,10 @@ nomo_invariance_prepare <- function(data,
 
   if (length(ordered) && !identical(tolower(ID.fac), "std.lv")) {
     stop(
-      "Wu-Estabrook categorical identification should use `ID.fac = \"std.lv\"`.",
+      paste0(
+        "Wu-Estabrook categorical identification should use `ID.fac = \"std.lv\"`.",
+        detected_note
+      ),
       call. = FALSE
     )
   }
@@ -1031,7 +1057,8 @@ nomo_invariance_prepare <- function(data,
       paste0(
         "ML-family estimators are not supported here with declared ordered ",
         "indicators. Leave `estimator = NULL` for WLSMV or select a ",
-        "categorical-data estimator supported by lavaan."
+        "categorical-data estimator supported by lavaan.",
+        detected_note
       ),
       call. = FALSE
     )
@@ -1040,7 +1067,10 @@ nomo_invariance_prepare <- function(data,
   if (length(ordered) && !is.null(missing) &&
       tolower(missing) %in% c("ml", "fiml", "ml.x", "fiml.x")) {
     stop(
-      "FIML is not supported by lavaan for declared ordered indicators.",
+      paste0(
+        "FIML is not supported by lavaan for declared ordered indicators.",
+        detected_note
+      ),
       call. = FALSE
     )
   }
@@ -1301,7 +1331,11 @@ nomo_invariance_engine_args <- function(syntax_base,
 #' @param ordered Optional character vector naming ordered indicators. Model
 #'   indicators stored as ordered factors are modeled as ordered whether or not
 #'   they are named here, since lavaan fits them as categorical; the result's
-#'   `ordered` includes them, and the decision log lists them for review.
+#'   `ordered` includes them, `ordered_detected` lists them, and the decision
+#'   log lists them for review. They then follow the rules for ordered
+#'   indicators: the ordered `levels` sequence, `ID.fac = "std.lv"`, and no
+#'   ML-family estimator or FIML. Convert such columns to numeric to model
+#'   them as continuous.
 #' @param levels Optional invariance levels. `NULL` uses the sequence implied by
 #'   the indicator category structure.
 #' @param partial Optional researcher-specified partial-invariance releases from

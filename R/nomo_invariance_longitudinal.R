@@ -56,7 +56,9 @@
 #'   `{occasion}`.
 #' @param ordered Optional names of ordered items, as in `model`. Items whose
 #'   columns are stored as ordered factors are modeled as ordered whether or
-#'   not they are named here, and the decision log lists them for review.
+#'   not they are named here: the result's `ordered_detected` lists them, the
+#'   decision log lists them for review, and the rules for ordered indicators
+#'   in [nomo_invariance()] apply.
 #' @param partial Optional researcher-specified releases from [nomo_partial()],
 #'   naming items and factors as in `model`.
 #' @param auto The lags over which each item's unique factors are correlated:
@@ -250,7 +252,8 @@ nomo_invariance_longitudinal <- function(model,
     release_hint = paste(
       " Across occasions, name items and factors as in the one-occasion",
       "`model`; a release applies on every occasion."
-    )
+    ),
+    ordered_detected = ordered_detected
   )
   ordered_columns <- prepared$ordered
   sequence_info <- prepared$sequence_info

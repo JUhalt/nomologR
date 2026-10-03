@@ -174,6 +174,22 @@ test_that("items stored as ordered factors are ordered on every occasion (#145)"
 })
 
 
+test_that("an error that detected ordered items cause names the items (#145)", {
+  cut_items <- as.data.frame(lapply(nomo_demo_longitudinal, function(x) {
+    ordered(as.integer(cut(x, c(-Inf, 3, 3.75, 4.5, 5.25, Inf))))
+  }))
+  expect_error(
+    nomo_invariance_longitudinal(
+      long_model, cut_items, occasions = long_occasions, ordered = "w1",
+      levels = c("configural", "metric", "scalar")
+    ),
+    paste("ordered prefix of configural -> thresholds -> metric -> scalar -> strict.",
+          "w2, w3, and w4 are stored as ordered factors and modeled as ordered;"),
+    fixed = TRUE
+  )
+})
+
+
 test_that("a release names items as in the one-occasion model (#145)", {
   # The column name matched nothing, so the scalar model had stayed fully
   # constrained while the output reported the release.

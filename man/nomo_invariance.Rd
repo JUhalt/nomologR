@@ -31,7 +31,11 @@ an object created by \code{nomo_model()}.}
 \item{ordered}{Optional character vector naming ordered indicators. Model
 indicators stored as ordered factors are modeled as ordered whether or not
 they are named here, since lavaan fits them as categorical; the result's
-\code{ordered} includes them, and the decision log lists them for review.}
+\code{ordered} includes them, \code{ordered_detected} lists them, and the decision
+log lists them for review. They then follow the rules for ordered
+indicators: the ordered \code{levels} sequence, \code{ID.fac = "std.lv"}, and no
+ML-family estimator or FIML. Convert such columns to numeric to model
+them as continuous.}
 
 \item{levels}{Optional invariance levels. \code{NULL} uses the sequence implied by
 the indicator category structure.}

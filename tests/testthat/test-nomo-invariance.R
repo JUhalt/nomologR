@@ -1975,6 +1975,49 @@ test_that("nomo_demo_ordinal is modeled as ordered without `ordered` (#145)", {
 })
 
 
+test_that("an error that detected ordered factors cause says why (#145)", {
+  # These calls had run on the continuous sequence; with the indicators
+  # detected as ordered they stop, and each message names them.
+  set.seed(5)
+  dat <- as.data.frame(lapply(1:5, function(i) ordered(sample(1:5, 120, replace = TRUE))),
+                       col.names = paste0("u", 1:5))
+  dat$grp <- rep(c("A", "B"), each = 60)
+  model <- "F =~ u1 + u2 + u3 + u4 + u5"
+  note <- paste0("u2, u3, u4, and u5 are stored as ordered factors and modeled as ordered; ",
+                 "convert them to numeric to model them as continuous.")
+  run <- function(...) nomo_invariance(model, dat, group = "grp", ordered = "u1", ...)
+
+  expect_error(run(levels = c("configural", "metric", "scalar")),
+               paste0("ordered prefix of configural -> thresholds -> metric -> scalar -> strict. ",
+                      note), fixed = TRUE)
+  expect_error(run(levels = c("configural", "strong")),
+               paste0("may contain only: configural, thresholds, metric, scalar, strict. ", note),
+               fixed = TRUE)
+  expect_error(run(ID.fac = "UL"),
+               paste0("should use `ID.fac = \"std.lv\"`. ", note), fixed = TRUE)
+  expect_error(run(estimator = "MLR"),
+               paste0("categorical-data estimator supported by lavaan. ", note), fixed = TRUE)
+  expect_error(run(missing = "fiml"),
+               paste0("for declared ordered indicators. ", note), fixed = TRUE)
+
+  # One detected indicator reads in the singular.
+  one <- dat
+  for (item in c("u1", "u3", "u4", "u5")) one[[item]] <- as.integer(one[[item]])
+  expect_error(
+    nomo_invariance(model, one, group = "grp", ID.fac = "UL"),
+    paste("u2 is stored as an ordered factor and modeled as ordered;",
+          "convert it to numeric to model it as continuous."),
+    fixed = TRUE
+  )
+
+  # Declared in `ordered`, nothing was detected and the message is unchanged.
+  expect_error(
+    nomo_invariance(model, dat, group = "grp", ordered = paste0("u", 1:5), ID.fac = "UL"),
+    "should use `ID\\.fac = \"std\\.lv\"`\\.$"
+  )
+})
+
+
 test_that("a release that frees no parameter is an error, not a silent no-op (#145)", {
   model <- "Agency =~ ag1 + ag2 + ag3 + ag4"
   release <- function(level, syntax) nomo_partial(level, syntax, "Prespecified.")
