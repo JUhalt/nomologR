@@ -183,6 +183,106 @@ test_that("cross-loaded indicators remain inspectable but HTMT is not forced", {
   expect_true(all(!out$htmt_status$available))
   expect_true(any(grepl("cross-loaded", out$htmt_status$reason)))
   expect_true(any(out$decision_log$metric == "cross_loading"))
+
+  # Every factor here has the cross-loaded indicator, so semTools returns AVE
+  # as NA for both. The object still prints, summarizes, and tabulates (#145).
+  expect_identical(out$ave$construct, c("F1", "F2"))
+  expect_true(all(is.na(out$ave$estimate)))
+  expect_identical(out$ave$attention, c("unavailable", "unavailable"))
+  local_reproducible_output(width = 80)
+  expect_no_error(capture.output(print(out)))
+  expect_no_error(capture.output(print(summary(out))))
+  convergent <- nomo_table(out, "convergent")
+  expect_identical(convergent$construct, c("F1", "F2"))
+  expect_true(all(is.na(convergent$AVE)))
+  expect_identical(nrow(nomo_table(out, "discriminant")), 1L)
+  seen <- character()
+  legacy <- withCallingHandlers(
+    nomo_validity(fit, fornell_larcker = TRUE),
+    warning = function(w) {
+      seen <<- c(seen, conditionMessage(w))
+      invokeRestart("muffleWarning")
+    }
+  )
+  expect_false(any(grepl("block", seen, fixed = TRUE)))
+  expect_true(all(legacy$fornell_larcker_pairs$attention == "unavailable"))
+
+  # The expected NA is not reported as an inadmissible value.
+  ave_log <- out$decision_log[out$decision_log$metric == "AVE", ]
+  expect_identical(ave_log$severity, c("info", "info"))
+  expect_match(ave_log$observation, "not computed for a factor with a cross-loaded indicator",
+               fixed = TRUE)
+  expect_match(ave_log$recommendation, "do not change indicator membership", fixed = TRUE)
+})
+
+
+test_that("only the factors that share a cross-loaded indicator lose their AVE", {
+  fit <- lavaan::cfa(
+    "visual =~ x1 + x2 + x3 + x9\ntextual =~ x4 + x5 + x6\nspeed =~ x7 + x8 + x9",
+    data = lavaan::HolzingerSwineford1939
+  )
+  out <- nomo_validity(fit)
+  ave <- out$ave
+  expect_identical(ave$attention[ave$construct != "textual"], c("unavailable", "unavailable"))
+  expect_identical(ave$attention[ave$construct == "textual"], "info")
+  log <- out$decision_log[out$decision_log$metric == "AVE", ]
+  expect_false(any(log$severity == "concern"))
+})
+
+
+test_that("a convergent table is built when no AVE table could be made", {
+  fit <- lavaan::cfa("A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4 + b5",
+                     data = nomo_demo_continuous)
+  out <- nomo_validity(fit, htmt = "none")
+  out$ave <- tibble::tibble()
+  convergent <- nomo_validity_convergent_table(out)
+  expect_identical(convergent$construct, c("A", "B"))
+  expect_true(all(is.na(convergent$AVE)))
+})
+
+
+test_that("HTMT follows the CFA's missing-data handling by default and records its cases", {
+  skip_on_cran()
+  model <- nomo_model(list(A = paste0("a", 1:5), B = paste0("b", 1:5)))
+  fiml <- nomo_cfa(model, data = nomo_demo_continuous, missing = "fiml")
+
+  # The default uses the cases the FIML CFA used, as htmt_missing = "fiml" does.
+  default <- nomo_validity(fiml)
+  explicit <- nomo_validity(fiml, htmt_missing = "fiml")
+  expect_equal(default$htmt2$estimate, explicit$htmt2$estimate)
+  expect_equal(default$htmt$estimate, explicit$htmt$estimate)
+  expect_identical(default$htmt_status$missing, c("fiml", "fiml"))
+  expect_identical(default$htmt_status$n, c(500L, 500L))
+  entry <- default$decision_log[default$decision_log$metric == "htmt_missing_data", ]
+  expect_identical(entry$severity, "info")
+  expect_identical(entry$value, 500)
+  expect_match(entry$observation, "the fitted model's own missing-data handling", fixed = TRUE)
+
+  # Listwise deletion on request drops cases the CFA used, and the log says so.
+  listwise <- nomo_validity(fiml, htmt_missing = "listwise")
+  expect_identical(listwise$htmt_status$n, c(473L, 473L))
+  expect_false(isTRUE(all.equal(listwise$htmt2$estimate, default$htmt2$estimate)))
+  entry <- listwise$decision_log[listwise$decision_log$metric == "htmt_missing_data", ]
+  expect_identical(entry$severity, "review")
+  expect_match(entry$observation, "(as requested): n = 473, the complete cases, of the 500",
+               fixed = TRUE)
+  expect_match(entry$recommendation, "rests on fewer cases than the CFA", fixed = TRUE)
+
+  # A listwise CFA keeps listwise deletion, on the same cases.
+  plain <- nomo_validity(nomo_cfa(model, data = nomo_demo_continuous))
+  expect_identical(plain$htmt_status$missing, c("listwise", "listwise"))
+  expect_identical(plain$htmt_status$n, c(473L, 473L))
+  expect_equal(plain$htmt2$estimate, listwise$htmt2$estimate)
+  pairwise <- nomo_validity(fiml, htmt_missing = "pairwise", htmt = "htmt2")
+  expect_match(
+    pairwise$decision_log$observation[pairwise$decision_log$metric == "htmt_missing_data"],
+    "the smallest number of cases for any pair", fixed = TRUE
+  )
+
+  # Not computed: no handling or count is recorded, and nothing is logged.
+  none <- nomo_validity(fiml, htmt = "none")
+  expect_true(all(is.na(none$htmt_status$n)))
+  expect_false("htmt_missing_data" %in% none$decision_log$metric)
 })
 
 

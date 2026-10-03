@@ -26,11 +26,14 @@ polychoric correlation structure.}
 because its geometric-mean formulation is designed for congeneric
 indicators; original HTMT assumes tau-equivalence.}
 
-\item{htmt_missing}{Missing-data option passed to \code{\link[semTools:htmt]{semTools::htmt()}}. The
-default \code{"default"} delegates the unrestricted-correlation missing-data
-handling to \code{lavaan::lavCor()} rather than silently imposing listwise
-deletion. Other supported values are \code{"listwise"}, \code{"pairwise"},
-\code{"direct"}, \code{"ml"}, and \code{"fiml"}.}
+\item{htmt_missing}{Missing-data handling for the correlations behind HTMT
+and HTMT2, passed to \code{\link[semTools:htmt]{semTools::htmt()}}. The default, \code{"default"}, follows
+the fitted model, so HTMT rests on the same cases as the CFA: \code{"fiml"}
+when the CFA used full-information maximum likelihood, \code{"pairwise"} when
+it used pairwise deletion, and \code{"listwise"} otherwise. Other supported
+values are \code{"listwise"}, \code{"pairwise"}, \code{"direct"}, \code{"ml"}, and \code{"fiml"}.
+The handling used and the number of cases appear in \code{htmt_status} and the
+decision log.}
 
 \item{fornell_larcker}{Logical. If \code{TRUE}, also produce a legacy
 Fornell-Larcker matrix and pairwise comparison where available. It is not
@@ -43,12 +46,18 @@ references are review prompts rather than universal pass/fail cutoffs.}
 A \code{nomo_validity} object. The fields to read are:
 \itemize{
 \item \code{ave}: average variance extracted per construct, as convergent
-evidence.
+evidence. AVE is not defined for a factor with a cross-loaded
+indicator; its row has an \code{NA} estimate and the attention
+\code{"unavailable"}.
 \item \code{latent_correlations}: construct correlations with intervals.
 \item \code{htmt2} and \code{htmt}: heterotrait-monotrait ratios per pair.
 \item \code{discriminant}: each pair's separation evidence with its reference and
 interpretation.
 \item \code{htmt_status}: which HTMT variants were computed, and why any was not.
+For a computed variant, \code{missing} is the missing-data handling used and
+\code{n} the number of cases: the complete cases under listwise deletion, the
+smallest pairwise count under pairwise deletion, and every case with an
+indicator observed otherwise.
 \item \code{fornell_larcker_pairs}: the historical comparison, when requested.
 \item \code{standardized_loadings}, \code{references}, and \code{decision_log}.
 }
