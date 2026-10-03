@@ -86,19 +86,27 @@ nomo_missing_half_se <- 0.5
 #'   estimates are of interest.
 #' @param ... Unused.
 #'
-#' @return A `nomo_missing` object containing:
+#' @return A `nomo_missing` object. The fields to read are:
 #'
-#' * `pattern`: missingness in the modeled variables.
-#' * `variables`: missing values per variable.
-#' * `strategies`: one row per strategy.
-#' * `fit`: fit indices by strategy.
-#' * `estimates`: standardized loadings and factor correlations for a
-#'   `nomo_cfa`, or hypothesis estimates for a `nomo_network`, compared with
-#'   the reference.
-#' * `reliability`: for a `nomo_cfa`, reliability by strategy, unless
-#'   `reliability = FALSE`.
-#' * `decision_log`.
-#' * `fits`: the refitted objects.
+#'   * `reference` and `fitted_as`: the strategy the others are compared with,
+#'     and the strategy the supplied model was fitted with, each named by its
+#'     lavaan `missing` option, such as `"ml"` or `"listwise"`.
+#'   * `pattern`: missingness in the modeled variables. `pct_incomplete` is a
+#'     proportion, from 0 to 1.
+#'   * `variables`: missing values per variable. `pct_missing` is a proportion.
+#'   * `strategies`: one row per strategy.
+#'   * `fit`: fit indices by strategy.
+#'   * `estimates`: standardized loadings and factor correlations for a
+#'     `nomo_cfa`, or hypothesis estimates for a `nomo_network`, compared with
+#'     the reference.
+#'   * `reliability`: for a `nomo_cfa`, reliability by strategy, unless
+#'     `reliability = FALSE`.
+#'   * `decision_log`.
+#'
+#'   Other fields record the call, the class of the model compared (`object`),
+#'   whether its indicators are ordered (`ordered`), and the refitted models
+#'   (`fits`). They may change between releases and are not part of the stable
+#'   interface (see `?nomologR`).
 #'
 #' `pct_incomplete` in `pattern` and `pct_missing` in `variables` are
 #' proportions between 0 and 1, not percentages. See **Conventions in returned

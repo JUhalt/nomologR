@@ -149,14 +149,17 @@ test_that("the hypotheses table reports evidence, not whether it was prespecifie
 
 test_that("a relation the model cannot estimate is shown as an empty cell", {
   skip_on_cran()
-  # A path and a correlation between the same two factors cannot both be
-  # estimated, so one of them has no estimate; APA marks that with a dash
-  # rather than a zero or a blank that could be misread as a value.
+  # A hypothesized path the model lacks, with additions turned off, has no
+  # estimate; APA marks that with a dash rather than a zero or a blank that
+  # could be misread as a value. (A path and a correlation between the same
+  # two factors, the earlier way to get one, is now refused, #145.)
   h <- nomo_hypotheses(
-    "Agency -> Persistence" = positive(min = .20),
+    "Agency -> Performance" = positive(),
     "Agency <-> Persistence" = positive()
   )
-  net <- nomo_network(apa_model, data = nomo_demo_network, hypotheses = h)
+  net <- nomo_network(
+    apa_model, data = nomo_demo_network, hypotheses = h, add_missing = FALSE
+  )
   tab <- nomo_apa_table(net)
 
   missing <- !is.finite(net$hypothesis_evidence$estimate)

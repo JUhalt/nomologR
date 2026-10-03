@@ -1205,7 +1205,8 @@ nomo_methods_registry <- function() {
       paste(
         "Reads raw responses. Curran's half-the-scale rule of thumb is flagged",
         "as his conservative starting point, which he says is not the best cut",
-        "score for every scale."
+        "score for every scale. Applied only to item sets long enough for it;",
+        "a shorter set reports the run without a flag."
       ),
       "nomo_screen()", "nomologR",
       c("curran_2016", "meade_craig_2012")
@@ -1243,8 +1244,8 @@ nomo_methods_registry <- function() {
       "Within-person correlation between odd and even halves of each scale.",
       paste(
         "Needs at least three scales and declared reverse keying. Spearman-Brown",
-        "corrected, which can fall below -1 for negative correlations. No stated",
-        "cut score."
+        "corrected and bounded at -1, below which the correction has no meaning.",
+        "No stated cut score."
       ),
       "nomo_screen()", "nomologR",
       c("meade_craig_2012", "curran_2016")

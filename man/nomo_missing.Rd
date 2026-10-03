@@ -33,10 +33,14 @@ ordered indicators is slow to compute, so \code{FALSE} is useful when only the
 estimates are of interest.}
 }
 \value{
-A \code{nomo_missing} object containing:
+A \code{nomo_missing} object. The fields to read are:
 \itemize{
-\item \code{pattern}: missingness in the modeled variables.
-\item \code{variables}: missing values per variable.
+\item \code{reference} and \code{fitted_as}: the strategy the others are compared with,
+and the strategy the supplied model was fitted with, each named by its
+lavaan \code{missing} option, such as \code{"ml"} or \code{"listwise"}.
+\item \code{pattern}: missingness in the modeled variables. \code{pct_incomplete} is a
+proportion, from 0 to 1.
+\item \code{variables}: missing values per variable. \code{pct_missing} is a proportion.
 \item \code{strategies}: one row per strategy.
 \item \code{fit}: fit indices by strategy.
 \item \code{estimates}: standardized loadings and factor correlations for a
@@ -45,8 +49,12 @@ the reference.
 \item \code{reliability}: for a \code{nomo_cfa}, reliability by strategy, unless
 \code{reliability = FALSE}.
 \item \code{decision_log}.
-\item \code{fits}: the refitted objects.
 }
+
+Other fields record the call, the class of the model compared (\code{object}),
+whether its indicators are ordered (\code{ordered}), and the refitted models
+(\code{fits}). They may change between releases and are not part of the stable
+interface (see \code{?nomologR}).
 
 \code{pct_incomplete} in \code{pattern} and \code{pct_missing} in \code{variables} are
 proportions between 0 and 1, not percentages. See \strong{Conventions in returned

@@ -11,20 +11,56 @@ test_that("nomo_report validates workflow and output arguments", {
     "HTML"
   )
 
+  # `file` is required, so the checks that come after it need a path. None of
+  # these calls gets as far as writing it.
+  file <- tempfile(fileext = ".html")
+
   expect_error(
-    nomo_report(run, title = ""),
+    nomo_report(run, file = file, title = ""),
     "title"
   )
 
   expect_error(
-    nomo_report(run, max_table_rows = 0),
+    nomo_report(run, file = file, max_table_rows = 0),
     "positive integer"
   )
 
   expect_error(
-    nomo_report(run, include_plots = NA),
+    nomo_report(run, file = file, include_plots = NA),
     "include_plots"
   )
+
+  expect_false(file.exists(file))
+})
+
+
+test_that("nomo_report() has no default path and writes only where asked", {
+  run <- make_m9_minimal_run()
+
+  # No default: the formal is empty, where it used to be a file name in the
+  # working directory.
+  expect_identical(deparse(formals(nomo_report)$file), "")
+
+  scratch <- tempfile("nomo-report-wd-")
+  dir.create(scratch)
+  report_without_file <- function() {
+    old <- setwd(scratch)
+    on.exit(setwd(old), add = TRUE)
+    nomo_report(run, include_plots = FALSE, include_session = FALSE)
+  }
+
+  # The error names the argument and suggests a path, and nothing is written
+  # to the working directory.
+  expect_error(report_without_file(), "`file` is required", fixed = TRUE)
+  expect_error(report_without_file(), "no default path", fixed = TRUE)
+  expect_error(report_without_file(), "file = \"report.html\"", fixed = TRUE)
+  expect_length(list.files(scratch), 0L)
+  unlink(scratch, recursive = TRUE)
+
+  # A path given by position is still a path given.
+  expect_error(nomo_report(run, "report.pdf"), "HTML or Word")
+  # An object that is not a workflow is reported before the missing path.
+  expect_error(nomo_report(list()), "nomo_run")
 })
 
 

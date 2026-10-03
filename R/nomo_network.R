@@ -1,13 +1,14 @@
 # Theory-specified nomological network -----------------------------------------
 
-nomo_network_model_table <- function(model) {
+nomo_network_model_table <- function(model, fixed.x = FALSE) {
   tryCatch(
     as.data.frame(
       lavaan::lavaanify(
         model = model,
         model.type = "sem",
         meanstructure = TRUE,
-        auto = TRUE
+        auto = TRUE,
+        fixed.x = fixed.x
       )
     ),
     error = function(e) {
@@ -34,8 +35,11 @@ nomo_network_relation_present <- function(partable, relation) {
     ))
   }
 
+  # The covariance of two fixed exogenous covariates is held at its sample
+  # value rather than estimated, so it does not count as present.
   any(
     partable$op == "~~" &
+      partable$exo == 0L &
       (
         (partable$lhs == relation$source & partable$rhs == relation$target) |
           (partable$lhs == relation$target & partable$rhs == relation$source)
@@ -53,6 +57,81 @@ nomo_network_relation_syntax <- function(relation) {
 }
 
 
+nomo_network_compose_model <- function(model, lines) {
+  if (!length(lines)) return(model)
+
+  paste(
+    c(
+      model,
+      "",
+      "# Theory-specified nomological relations added by nomologR",
+      lines
+    ),
+    collapse = "\n"
+  )
+}
+
+
+# An association cannot be estimated beside a directed path between the same
+# two variables. A path added in the direction opposite to another gives a
+# reciprocal pair, which is not identified without further restrictions, so
+# none is added. A reciprocal pair the researcher wrote in `model` is fitted
+# as written: it can be identified, by instruments for example, and only the
+# researcher's model says whether it is.
+nomo_network_check_pairs <- function(partable, h, added) {
+  regressions <- partable[partable$op == "~", , drop = FALSE]
+
+  for (i in seq_len(nrow(h))) {
+    source <- h$source[[i]]
+    target <- h$target[[i]]
+    reverse <- any(regressions$lhs == source & regressions$rhs == target)
+    forward <- any(regressions$lhs == target & regressions$rhs == source)
+
+    if (identical(h$relation_type[[i]], "association") && (reverse || forward)) {
+      stop(
+        sprintf(
+          paste(
+            "Hypothesis `%s` is an association, but the model to be fitted has a",
+            "directed path between `%s` and `%s`. A pair of variables can carry",
+            "a directed path or an association, not both. Keep the relation the",
+            "theory predicts."
+          ),
+          h$relation[[i]], source, target
+        ),
+        call. = FALSE
+      )
+    }
+
+    if (added[[i]] && reverse) {
+      # The opposite path is in the researcher's model unless another
+      # hypothesis adds it.
+      other <- added & h$relation_type == "directed" &
+        h$source == target & h$target == source
+      opposite <- if (any(other)) {
+        "another hypothesis adds"
+      } else {
+        "the model already has"
+      }
+      stop(
+        sprintf(
+          paste(
+            "Hypothesis `%s` would add a path opposite to one %s between `%s`",
+            "and `%s`. A reciprocal pair is not identified without further",
+            "restrictions, so `nomo_network()` does not add one. Keep one",
+            "direction, or write both paths in `model` together with what",
+            "identifies them."
+          ),
+          h$relation[[i]], opposite, source, target
+        ),
+        call. = FALSE
+      )
+    }
+  }
+
+  invisible(TRUE)
+}
+
+
 nomo_network_prepare_model <- function(model, hypotheses, add_missing) {
   partable <- nomo_network_model_table(model)
 
@@ -60,43 +139,50 @@ nomo_network_prepare_model <- function(model, hypotheses, add_missing) {
   latent <- latent[nzchar(latent)]
 
   h <- hypotheses$hypotheses
-  additions <- vector("list", nrow(h))
+  rows <- lapply(seq_len(nrow(h)), function(i) as.list(h[i, , drop = FALSE]))
+  syntax <- vapply(rows, nomo_network_relation_syntax, character(1))
+  directed <- h$relation_type == "directed"
 
-  for (i in seq_len(nrow(h))) {
-    hyp_row <- as.list(h[i, , drop = FALSE])
+  # A directed path is in the model only when the researcher wrote it.
+  present <- vapply(
+    rows,
+    function(row) nomo_network_relation_present(partable, row),
+    logical(1)
+  )
+  added <- isTRUE(add_missing) & directed & !present
 
-    present <- nomo_network_relation_present(partable, hyp_row)
-    syntax <- nomo_network_relation_syntax(hyp_row)
+  # An association is judged against the model that will be fitted: the
+  # researcher's model with the hypothesized paths in place, under the settings
+  # lavaan::sem() fits it with. A covariance lavaan adds between two exogenous
+  # factors is no longer added once a hypothesized path makes one of them an
+  # outcome, so judging it against the researcher's model alone would leave
+  # the hypothesis without a parameter (#145). lavaan warns here when the
+  # model gives an exogenous covariate a variance or covariance; the fit
+  # repeats that warning, and it is recorded there.
+  fitted_table <- suppressWarnings(nomo_network_model_table(
+    nomo_network_compose_model(model, syntax[added]),
+    fixed.x = TRUE
+  ))
+  nomo_network_check_pairs(fitted_table, h, added)
 
-    additions[[i]] <- tibble::tibble(
-      id = hyp_row$id,
-      relation = hyp_row$relation,
-      syntax = syntax,
-      already_in_model = present,
-      added_from_hypothesis = isTRUE(add_missing) && !present,
-      origin = hyp_row$origin
-    )
-  }
+  present[!directed] <- vapply(
+    rows[!directed],
+    function(row) nomo_network_relation_present(fitted_table, row),
+    logical(1)
+  )
+  added <- isTRUE(add_missing) & !present
 
-  additions <- dplyr::bind_rows(additions)
-  lines <- additions$syntax[additions$added_from_hypothesis]
-
-  full_model <- if (length(lines)) {
-    paste(
-      c(
-        model,
-        "",
-        "# Theory-specified nomological relations added by nomologR",
-        lines
-      ),
-      collapse = "\n"
-    )
-  } else {
-    model
-  }
+  additions <- tibble::tibble(
+    id = h$id,
+    relation = h$relation,
+    syntax = syntax,
+    already_in_model = present,
+    added_from_hypothesis = added,
+    origin = h$origin
+  )
 
   list(
-    full_model = full_model,
+    full_model = nomo_network_compose_model(model, syntax[added]),
     additions = additions,
     latent = latent,
     original_partable = partable
@@ -306,6 +392,20 @@ nomo_network_classify <- function(hypothesis,
     ))
   }
 
+  # A converged fit can still lack standard errors, usually because the model
+  # is not identified. Without an interval nothing can be said about where the
+  # relation lies, so the point estimate is not compared with the prediction.
+  if (!is.finite(ci_lower) || !is.finite(ci_upper)) {
+    return(list(
+      concordance = "not_evaluable",
+      interpretation = paste(
+        "A point estimate was obtained, but its standard error was",
+        "unavailable, so uncertainty could not be evaluated and the estimate",
+        "is not compared with the prediction."
+      )
+    ))
+  }
+
   prediction <- hypothesis$prediction
 
   if (identical(prediction, "negligible") &&
@@ -364,35 +464,59 @@ nomo_network_classify <- function(hypothesis,
     ))
   }
 
-  if (prediction %in% c("positive", "negative")) {
-    direction_ok <- nomo_network_direction_correct(estimate, prediction)
+  direction_ok <- isTRUE(nomo_network_direction_correct(estimate, prediction))
+  magnitude_missed <- direction_ok && isTRUE(hypothesis$magnitude_specified)
 
-    if (isTRUE(direction_ok) && isTRUE(hypothesis$magnitude_specified)) {
-      return(list(
-        concordance = "direction_concordant_below_magnitude",
-        interpretation = paste(
-          "The estimate has the predicted direction but does not meet the",
-          "researcher-specified magnitude boundary."
+  # The estimate is outside the region. With the predicted direction and a
+  # researcher-specified magnitude, it missed that magnitude on one side:
+  # beyond the bound it had to stay within, or short of the bound it had to
+  # reach.
+  above <- abs(estimate) > max(abs(c(hypothesis$lower, hypothesis$upper)))
+  missed <- sprintf(
+    if (above) {
+      "larger in magnitude than the researcher-specified region %s allows"
+    } else {
+      "smaller in magnitude than the researcher-specified region %s requires"
+    },
+    hypothesis$region
+  )
+
+  if (!isTRUE(overlap)) {
+    return(list(
+      concordance = "inconsistent",
+      interpretation = if (magnitude_missed) {
+        paste0(
+          "The estimate has the predicted direction, but the estimate and its ",
+          "whole confidence interval are ", missed, "."
         )
-      ))
-    }
+      } else {
+        paste(
+          "The estimate and confidence interval do not overlap the",
+          "researcher-specified theoretical region."
+        )
+      }
+    ))
   }
 
-  if (isTRUE(overlap)) {
+  if (magnitude_missed) {
     return(list(
-      concordance = "inconclusive",
-      interpretation = paste(
-        "The point estimate is outside the predicted region, but the",
-        "confidence interval still overlaps values compatible with theory."
+      concordance = if (above) {
+        "direction_concordant_above_magnitude"
+      } else {
+        "direction_concordant_below_magnitude"
+      },
+      interpretation = paste0(
+        "The estimate has the predicted direction but is ", missed,
+        ". Its confidence interval still overlaps that region."
       )
     ))
   }
 
   list(
-    concordance = "inconsistent",
+    concordance = "inconclusive",
     interpretation = paste(
-      "The estimate and confidence interval do not overlap the",
-      "researcher-specified theoretical region."
+      "The point estimate is outside the predicted region, but the",
+      "confidence interval still overlaps values compatible with theory."
     )
   )
 }
@@ -405,7 +529,14 @@ nomo_network_node_type <- function(node, latent, data) {
 }
 
 
-nomo_network_scope <- function(source_type, target_type, relation_type) {
+nomo_network_scope <- function(source_type,
+                               target_type,
+                               relation_type,
+                               residual = FALSE) {
+  # An association with an endpoint the fitted model predicts is estimated on
+  # what the predictors leave of that endpoint, whatever the endpoints' types.
+  if (isTRUE(residual)) return("residual_association")
+
   if (identical(relation_type, "directed")) {
     if (identical(source_type, "latent") && identical(target_type, "observed")) {
       return("latent_to_observed_outcome")
@@ -542,7 +673,16 @@ nomo_network_measurement_context <- function(fit,
   low_loading_n <- sum(loading_table$attention == "review", na.rm = TRUE)
   negative_variance_n <- sum(improper$negative_variance, na.rm = TRUE)
 
-  attention <- if (!isTRUE(converged) || negative_variance_n > 0L) {
+  # A converged fit whose information matrix cannot be inverted returns its
+  # estimates without standard errors: no estimated parameter has one.
+  standard_errors <- suppressWarnings(
+    as.numeric(as.data.frame(parameter_estimates)$se)
+  )
+  no_standard_errors <- isTRUE(converged) && nrow(parameter_estimates) > 0L &&
+    !any(is.finite(standard_errors) & standard_errors > 0)
+
+  attention <- if (!isTRUE(converged) || negative_variance_n > 0L ||
+                   no_standard_errors) {
     "concern"
   } else if (low_loading_n > 0L || length(fit_flags) || length(warnings)) {
     "review"
@@ -552,6 +692,15 @@ nomo_network_measurement_context <- function(fit,
 
   notes <- character()
   if (!isTRUE(converged)) notes <- c(notes, "network model did not converge")
+  if (no_standard_errors) {
+    notes <- c(
+      notes,
+      paste(
+        "standard errors could not be computed, which usually means the model",
+        "is not identified"
+      )
+    )
+  }
   if (negative_variance_n > 0L) {
     notes <- c(
       notes,
@@ -622,6 +771,16 @@ nomo_network_hypothesis_evidence <- function(hypotheses,
 
   measurement_attention <- measurement_context$summary$attention[[1L]]
   measurement_observation <- measurement_context$summary$observation[[1L]]
+
+  # Variables the fitted model predicts: an outcome of a directed path, and an
+  # indicator of a factor, which the loading predicts (a first-order factor
+  # under a higher-order one included). A covariance involving one of them is
+  # a covariance of its residual. A fit without a parameter table has none.
+  fitted <- as.data.frame(parameter_estimates)
+  predicted <- unique(as.character(c(
+    fitted$lhs[fitted$op == "~"],
+    fitted$rhs[fitted$op == "=~"]
+  )))
 
   for (i in seq_len(nrow(h))) {
     hyp <- as.list(h[i, , drop = FALSE])
@@ -770,6 +929,31 @@ nomo_network_hypothesis_evidence <- function(hypotheses,
 
     base_interpretation <- classified$interpretation
 
+    # A relation without an estimate is not labeled: nothing was estimated,
+    # as a residual or otherwise, and it keeps its ordinary scope.
+    labeled <- identical(hyp$relation_type, "association") && is.finite(estimate)
+    residual_of <- if (labeled) {
+      intersect(c(hyp$source, hyp$target), predicted)
+    } else {
+      character()
+    }
+
+    if (length(residual_of)) {
+      base_interpretation <- paste(
+        base_interpretation,
+        sprintf(
+          paste(
+            "The fitted model also predicts %s from other variables, by a",
+            "directed path or a factor loading, so this estimate is a residual",
+            "association: the association that remains after those predictors,",
+            "not the overall association between `%s` and `%s`."
+          ),
+          paste0("`", residual_of, "`", collapse = " and "),
+          hyp$source, hyp$target
+        )
+      )
+    }
+
     if (identical(hyp$prediction, "negligible") &&
         isTRUE(hyp$magnitude_specified) &&
         is.finite(eq_ci[["lower"]]) &&
@@ -813,7 +997,8 @@ nomo_network_hypothesis_evidence <- function(hypotheses,
       evidence_scope = nomo_network_scope(
         source_type,
         target_type,
-        hyp$relation_type
+        hyp$relation_type,
+        residual = length(residual_of) > 0L
       ),
       relation_type = hyp$relation_type,
       prediction = hyp$prediction,
@@ -966,12 +1151,26 @@ nomo_network_fit_once <- function(model_fitted,
     measurement_context = measurement_context,
     hypothesis_evidence = hypothesis_evidence,
     estimator = if (is.null(estimator_requested)) {
-      NA_character_
+      nomo_network_fitted_estimator(fit)
     } else {
       estimator_requested
     },
     estimator_source = estimator_source
   )
+}
+
+
+# The estimator lavaan chose for a fit made without one requested, so the
+# result records what was fitted. lavaan reports WLSMV as DWLS with a
+# scaled-and-shifted test statistic.
+nomo_network_fitted_estimator <- function(fit) {
+  options <- tryCatch(
+    lavaan::lavInspect(fit, "options"),
+    error = function(e) list()
+  )
+  estimator <- toupper(as.character(options$estimator)[1L])
+  wlsmv <- identical(estimator, "DWLS") && "scaled.shifted" %in% options$test
+  if (wlsmv) "WLSMV" else estimator
 }
 
 
@@ -1078,10 +1277,12 @@ nomo_network_replication_evidence <- function(primary, validation) {
 
   rows <- vector("list", nrow(a))
 
+  # Statuses whose interval reaches the theoretical region.
   supportive <- c(
     "concordant",
     "directionally_concordant_imprecise",
-    "direction_concordant_below_magnitude"
+    "direction_concordant_below_magnitude",
+    "direction_concordant_above_magnitude"
   )
 
   for (i in seq_len(nrow(a))) {
@@ -1188,7 +1389,8 @@ nomo_network_decision_log <- function(model_additions,
                                       ordered,
                                       measurement_context,
                                       replication_evidence = NULL,
-                                      sample_role = "primary") {
+                                      sample_role = "primary",
+                                      ordered_detected = character()) {
   log <- nomo_log_new()
 
   log <- nomo_log_add(
@@ -1271,6 +1473,7 @@ nomo_network_decision_log <- function(model_additions,
       recommendation = "Interpret SEM estimates using the categorical-data estimator."
     )
   }
+  log <- nomo_ordered_detected_log(log, ordered_detected, "network")
 
   if (!is.null(estimator)) {
     log <- nomo_log_add(
@@ -1307,6 +1510,7 @@ nomo_network_decision_log <- function(model_additions,
     } else if (row$concordance[[1L]] %in% c(
       "directionally_concordant_imprecise",
       "direction_concordant_below_magnitude",
+      "direction_concordant_above_magnitude",
       "inconclusive",
       "not_confirmable_without_sesoi"
     )) {
@@ -1395,16 +1599,123 @@ nomo_network_validate_data <- function(data, label) {
 #' Directed `A -> B` hypotheses map to lavaan regression paths `B ~ A`.
 #' Association `A <-> B` hypotheses map to covariance paths `A ~~ B`.
 #'
+#' A directed path is in the model when `model` writes it. An association is
+#' judged against the model that will be fitted, which is `model` with the
+#' hypothesized directed paths in place: it is in the model when `model` writes
+#' it or when lavaan adds it there automatically, as it does between exogenous
+#' factors. `model_relations` records which relations were already in the
+#' model and which were added.
+#'
+#' When the fitted model also predicts an endpoint of an association, `A ~~ B`
+#' is a covariance between residuals. The model predicts a variable when a
+#' directed path points to it, and when it is an indicator of a factor, which
+#' includes a factor that loads on a higher-order factor. The estimate is then
+#' the association that remains after those predictors, a residual
+#' association, and it can differ from the overall association in size and in
+#' sign. Such a hypothesis has `evidence_scope` `"residual_association"`, its
+#' interpretation says so, and the decision log flags it for review. If the
+#' theory concerns the overall association, evaluate it in a model that does
+#' not predict those variables.
+#'
+#' A pair of variables carries a directed path or an association, not both:
+#' `nomo_network()` stops when an association hypothesis names two variables
+#' that the model to be fitted joins with a directed path. It also stops when
+#' a hypothesis would add a path opposite to another, because a reciprocal
+#' pair is not identified without further restrictions. A reciprocal pair
+#' that `model` itself writes is fitted as written, and hypotheses about
+#' either direction are evaluated; whether that model is identified, by
+#' instruments for example, is for the researcher to establish.
+#'
 #' For quantitative `negligible(within = ...)` predictions, `nomo_network()`
-#' evaluates the SESOI using a normal-approximation equivalence confidence
-#' interval. With the default `equivalence_alpha = .05`, this is a 90 percent
-#' interval, corresponding to the usual two one-sided tests logic. A bare
-#' `negligible()` prediction remains non-confirmable from `p > .05`.
+#' evaluates the smallest effect size of interest (SESOI), the region the
+#' researcher treats as negligible, using a normal-approximation equivalence
+#' confidence interval. With the default `equivalence_alpha = .05`, this is a
+#' 90 percent interval, corresponding to the usual two one-sided tests logic.
+#' A bare `negligible()` prediction remains non-confirmable from `p > .05`.
 #'
 #' The function can also fit the same prespecified model in a validation sample.
 #' Pass `validation_data` explicitly, or pass a `nomo_split` object as `data` to
 #' use its calibration and validation subsets. No model relation is added or
 #' removed on the basis of validation results.
+#'
+#' @section Concordance:
+#' `concordance` in `hypothesis_evidence` compares each estimate and its
+#' confidence interval with the theoretical region of its prediction, on the
+#' scale the prediction names (standardized by default). For `positive()` and
+#' `negative()` predictions the interval is the 95 percent confidence
+#' interval. For `negligible(within = ...)` it is the equivalence interval,
+#' with confidence `1 - 2 * equivalence_alpha` (90 percent by default). A
+#' bound given as `min`, `max`, or `within` belongs to the region; zero, the
+#' bound of a prediction of direction alone, does not. The values, in the
+#' order the rules are applied:
+#'
+#' * `"not_evaluable"`: the model did not converge, no parameter of the fitted
+#'   model matches the relation, or the estimate has no standard error, as
+#'   happens when the model is not identified. The estimate is not compared
+#'   with the prediction.
+#' * `"not_confirmable_without_sesoi"`: a bare `negligible()` prediction, which
+#'   gives no region to compare the interval with.
+#' * `"concordant"`: the whole interval lies inside the region.
+#' * `"directionally_concordant_imprecise"`: the estimate lies inside the
+#'   region, and its interval extends outside it.
+#' * `"inconsistent"`: the estimate and its whole interval lie outside the
+#'   region. A relation with the predicted sign is inconsistent when its
+#'   interval excludes the predicted magnitude.
+#' * `"direction_concordant_below_magnitude"`: for a `positive()` or
+#'   `negative()` prediction with `min` or `max`, the estimate has the
+#'   predicted sign and is smaller in magnitude than the region requires, and
+#'   its interval reaches the region.
+#' * `"direction_concordant_above_magnitude"`: the same, with an estimate
+#'   larger in magnitude than the region allows.
+#' * `"inconclusive"`: any other estimate outside the region whose interval
+#'   reaches the region, such as an estimate of the wrong sign whose interval
+#'   includes values of the predicted sign.
+#'
+#' The decision log records `"concordant"` for information, `"inconsistent"`
+#' and `"not_evaluable"` as concerns, and the other values for review. None is
+#' a verdict on validity: each is one piece of evidence, read with the
+#' measurement context, the fit, and whether the prediction was made a priori.
+#'
+#' @section Evidence scope:
+#' `evidence_scope` in `hypothesis_evidence` names what kind of parameter the
+#' estimate is. For a directed path: `"latent_structural"` (factor to factor),
+#' `"latent_to_observed_outcome"`, `"observed_to_latent"`, and
+#' `"observed_structural"`. For an association: `"latent_association"`,
+#' `"latent_observed_association"`, `"observed_association"`, and
+#' `"residual_association"` when the fitted model predicts an endpoint, by a
+#' directed path or a factor loading, whatever the endpoints are. A relation
+#' without an estimate keeps the scope its endpoints give it.
+#'
+#' @section Replication status:
+#' With a validation sample, `replication_status` in `replication_evidence`
+#' compares the two samples' estimates and concordance. The values, in the
+#' order the rules are applied:
+#'
+#' * `"not_evaluable"`: the relation is `"not_evaluable"` or has no estimate
+#'   in at least one sample.
+#' * `"sign_reversal"`, `"direction_not_replicated"`, and
+#'   `"sign_change_within_uncertainty"`: a `positive()` or `negative()`
+#'   prediction whose two point estimates have opposite signs. See
+#'   **Replication status when the sign changes**.
+#' * `"replicated_concordance"`: `"concordant"` in both samples.
+#' * `"not_replicated"`: compatible with the prediction in the primary sample
+#'   and `"inconsistent"` in the validation sample. Compatible means
+#'   `"concordant"`, `"directionally_concordant_imprecise"`,
+#'   `"direction_concordant_below_magnitude"`, or
+#'   `"direction_concordant_above_magnitude"`, the values whose interval
+#'   reaches the region.
+#' * `"unstable"`: `"inconsistent"` in the primary sample and compatible with
+#'   the prediction in the validation sample.
+#' * `"replicated_inconsistency"`: `"inconsistent"` in both samples.
+#' * `"direction_replicated_but_uncertain"`: a `positive()` or `negative()`
+#'   prediction whose estimates have the same sign in both samples, without
+#'   meeting a rule above.
+#' * `"mixed_or_inconclusive"`: any other pattern.
+#'
+#' The decision log records `"replicated_concordance"` for information;
+#' `"sign_reversal"`, `"direction_not_replicated"`, `"not_replicated"`,
+#' `"unstable"`, and `"replicated_inconsistency"` as concerns; and the other
+#' values for review.
 #'
 #' @section Replication status when the sign changes:
 #' When a directional prediction's primary and validation point estimates have
@@ -1439,8 +1750,21 @@ nomo_network_validate_data <- function(data, label) {
 #' @param validation_data Optional independent validation data frame. Do not use
 #'   this together with a `nomo_split` object.
 #' @param add_missing Logical. If `TRUE` (default), theory-specified relations
-#'   absent from `model` are appended transparently before estimation.
-#' @param ordered Optional character vector naming ordered indicators.
+#'   absent from `model` are appended transparently before estimation: the
+#'   directed paths first, then the associations the model still lacks.
+#' @param ordered Optional character vector naming ordered indicators. A
+#'   variable of the fitted model stored as an ordered factor, in `data` or in
+#'   `validation_data`, is treated as declared whether or not it is named
+#'   here, because lavaan fits such a column as ordered-categorical either
+#'   way. The decision log lists the columns found this way for review. A
+#'   column that is an ordered factor in only one of the two samples is
+#'   declared ordered in both, so both are fitted with the same estimator;
+#'   the sample that stores it as numbers is then fitted with a
+#'   categorical-data estimator, and its estimates differ from a fit that
+#'   treats the column as continuous. An exogenous covariate is the
+#'   exception: lavaan does not model a covariate as ordered-categorical, so
+#'   one stored as an ordered factor is refused. Supply it as a numeric
+#'   column or as dummy-coded columns.
 #' @param estimator Optional lavaan estimator. When ordered indicators are
 #'   declared and `estimator = NULL`, WLSMV is requested.
 #' @param missing Optional lavaan missing-data option.
@@ -1520,17 +1844,19 @@ nomo_network_validate_data <- function(data, label) {
 #' @return A `nomo_network` object. The fields to read are:
 #'
 #'   * `hypothesis_evidence`: one row per hypothesis, with its prediction,
-#'     estimate, interval, concordance with the prediction, and
+#'     estimate, interval, `concordance` with the prediction (see
+#'     **Concordance**), `evidence_scope` (see **Evidence scope**), and
 #'     interpretation.
 #'   * `replication_evidence`: the same comparison in `validation_data`, when
-#'     given.
+#'     given, with its `replication_status` (see **Replication status**).
 #'   * `fit_evidence`: global fit of the fitted model.
 #'   * `parameter_estimates` and `standardized_solution`: `lavaan`'s parameter
 #'     tables, as tibbles.
 #'   * `measurement_context`: the measurement model's loadings and fit, which
 #'     qualify the structural evidence.
-#'   * `model_fitted` and `model_relations`: the syntax fitted and the
-#'     relations added from the hypotheses.
+#'   * `model_fitted` and `model_relations`: the syntax fitted, and for each
+#'     hypothesis whether its relation was already in the model to be fitted
+#'     (`already_in_model`) or was added (`added_from_hypothesis`).
 #'   * `fit`: the `lavaan` fit, and `validation`, the validation fit, when
 #'     given.
 #'   * `single_indicators`: one row per composite modeled as a single
@@ -1742,25 +2068,6 @@ nomo_network <- function(model,
     missing <- trimws(missing)
   }
 
-  if (length(ordered) && !is.null(estimator) && grepl("^ML", estimator)) {
-    stop(
-      paste0(
-        "ML-family estimators are not supported here with declared ordered ",
-        "indicators. Leave `estimator = NULL` for WLSMV or select a ",
-        "categorical-data estimator supported by lavaan."
-      ),
-      call. = FALSE
-    )
-  }
-
-  if (length(ordered) && !is.null(missing) &&
-      tolower(missing) %in% c("ml", "fiml", "ml.x", "fiml.x")) {
-    stop(
-      "FIML is not supported by lavaan for declared ordered indicators.",
-      call. = FALSE
-    )
-  }
-
   prepared <- nomo_network_prepare_model(
     model = model,
     hypotheses = hypotheses,
@@ -1785,11 +2092,81 @@ nomo_network <- function(model,
     nomo_check_model_variables(model, validation_data, "validation_data")
   }
 
+  # lavaan fits a column stored as an ordered factor as categorical whether or
+  # not `ordered` names it, so such columns of the fitted model are treated as
+  # declared, in either sample (#145).
+  ordered_named <- ordered
+  ordered_detected <- character()
+  for (sample_data in list(primary_data, validation_data)) {
+    ordered_detected <- union(
+      ordered_detected,
+      nomo_ordered_indicators(prepared$full_model, sample_data, ordered_named)$detected
+    )
+  }
+
+  # That holds for the variables lavaan models, not for an exogenous covariate.
+  # lavaan conditions on a covariate: beside ordered outcomes it uses the codes
+  # of an ordered factor as numbers, and with continuous outcomes only, its
+  # estimation fails (lavaan 0.7.2). Declaring the covariate would record an
+  # ordered-categorical model that was not fitted, so it is refused and the
+  # researcher chooses its coding.
+  covariates <- lavaan::lavNames(
+    suppressWarnings(nomo_network_model_table(prepared$full_model, fixed.x = TRUE)),
+    "ov.x"
+  )
+  ordered_covariates <- intersect(ordered_detected, covariates)
+  if (length(ordered_covariates)) {
+    stop(
+      sprintf(
+        paste(
+          "Exogenous covariate(s) stored as ordered factors: %s. lavaan does not",
+          "model an exogenous covariate as ordered-categorical, so these columns",
+          "cannot be treated as declared in `ordered`. Supply each as a numeric",
+          "column or as dummy-coded columns."
+        ),
+        paste(ordered_covariates, collapse = ", ")
+      ),
+      call. = FALSE
+    )
+  }
+  ordered <- c(ordered_named, ordered_detected)
+  detected_note <- if (length(ordered_detected)) {
+    sprintf(
+      " Stored as ordered factors and treated as declared: %s.",
+      paste(ordered_detected, collapse = ", ")
+    )
+  } else {
+    ""
+  }
+
+  if (length(ordered) && !is.null(estimator) && grepl("^ML", estimator)) {
+    stop(
+      paste0(
+        "ML-family estimators are not supported here with declared ordered ",
+        "indicators. Leave `estimator = NULL` for WLSMV or select a ",
+        "categorical-data estimator supported by lavaan.",
+        detected_note
+      ),
+      call. = FALSE
+    )
+  }
+
+  if (length(ordered) && !is.null(missing) &&
+      tolower(missing) %in% c("ml", "fiml", "ml.x", "fiml.x")) {
+    stop(
+      paste0(
+        "FIML is not supported by lavaan for declared ordered indicators.",
+        detected_note
+      ),
+      call. = FALSE
+    )
+  }
+
   single <- nomo_network_single_spec(
     single_indicators = single_indicators,
     data = primary_data,
     validation_data = validation_data,
-    ordered = ordered,
+    ordered = ordered_named,
     prepared = prepared
   )
 
@@ -1880,11 +2257,13 @@ nomo_network <- function(model,
     ordered = ordered,
     measurement_context = primary$measurement_context,
     replication_evidence = replication_evidence,
-    sample_role = primary_role
+    sample_role = primary_role,
+    ordered_detected = ordered_detected
   )
 
   decision_log <- dplyr::bind_rows(
     decision_log,
+    nomo_network_residual_log(primary$hypothesis_evidence),
     nomo_network_endpoint_log(hypotheses, primary$fit),
     nomo_network_single_log(primary_sample$table, sensitivity$table)
   )
@@ -1915,6 +2294,7 @@ nomo_network <- function(model,
     data_n = primary$data_n,
     validation_n = if (is.null(validation)) NA_integer_ else validation$data_n,
     ordered = ordered,
+    ordered_detected = ordered_detected,
     estimator = primary$estimator,
     estimator_source = primary$estimator_source,
     missing = missing,
@@ -1942,6 +2322,56 @@ nomo_network <- function(model,
   out
 }
 
+
+
+# Residual associations --------------------------------------------------------
+#
+# `A <-> B` is fitted as the covariance `A ~~ B`. When the fitted model also
+# predicts A or B, lavaan estimates that covariance between residuals, so the
+# estimate is what remains of the association after the predictors and can
+# differ from the overall association in size and in sign. The estimate is
+# kept and labeled: its evidence scope is "residual_association", its
+# interpretation says so, and the log asks for review.
+nomo_network_residual_log <- function(hypothesis_evidence) {
+  log <- nomo_log_new()
+  # Only a relation that has an estimate is said to be estimated.
+  residual <- hypothesis_evidence[
+    hypothesis_evidence$evidence_scope == "residual_association" &
+      is.finite(hypothesis_evidence$estimate),
+    ,
+    drop = FALSE
+  ]
+
+  for (i in seq_len(nrow(residual))) {
+    log <- nomo_log_add(
+      log,
+      stage = "network",
+      object = residual$relation[[i]],
+      metric = "residual_association",
+      value = residual$estimate[[i]],
+      reference = "An association with a predicted endpoint is a residual covariance",
+      severity = "review",
+      observation = sprintf(
+        paste(
+          "`%s` is estimated as a residual association, because the fitted",
+          "model predicts at least one of its endpoints from other variables,",
+          "by a directed path or a factor loading. The estimate is the",
+          "association that remains after those predictors, not the overall",
+          "association between the two variables."
+        ),
+        residual$relation[[i]]
+      ),
+      recommendation = paste(
+        "Read the prediction against a residual association, which can differ",
+        "from the overall association in size and in sign. If the theory",
+        "concerns the overall association, evaluate it in a model that does",
+        "not predict these variables."
+      )
+    )
+  }
+
+  log
+}
 
 
 # Observed endpoints -----------------------------------------------------------

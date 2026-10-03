@@ -37,8 +37,11 @@ This is the first CRAN submission of nomologR.
 * Examples wrapped in `\donttest{}` refit models repeatedly (bootstrap
   intervals, several missing-data strategies). Each is fully runnable, and all
   pass under `--run-donttest`.
-* The package writes files only where the user asks: `nomo_report()` writes to
-  its `file` argument, and examples, tests, and vignettes use `tempfile()`.
+* The package writes files only where the user asks. `nomo_report()` is the
+  only function that writes a file. Its `file` argument is required and has no
+  default path, so nothing is written to the working directory by default, and
+  an existing file is not replaced unless `overwrite = TRUE`. Examples, tests,
+  and vignettes write to `tempdir()`.
 * Where a function sets a seed, it restores the user's random-number state on
   exit.
 
