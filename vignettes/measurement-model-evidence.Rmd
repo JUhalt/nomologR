@@ -564,8 +564,9 @@ ICC(A,1) is below ICC(C,1), and the summary flags it.
 
 Koo and Li read the reliability range from the interval rather than the
 estimate: poor below .50, moderate to .75, good to .90, and excellent above.
-The standard error of measurement, SD × √(1 − ICC), gives the smallest
-detectable change, 1.96 × √2 × SEM (Weir, 2005). A person whose score changed
+The standard error of measurement, the square root of the residual mean
+square, leaves that rise out and gives the smallest detectable change,
+1.96 × √2 × SEM (Weir, 2005). A person whose score changed
 by more than that changed reliably, in Jacobson and Truax's (1991) sense, which
 is not the same as meaningfully.
 
