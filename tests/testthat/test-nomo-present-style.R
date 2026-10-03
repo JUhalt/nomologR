@@ -187,6 +187,24 @@ test_that("headers, sections, and facts fit narrow consoles (#145)", {
 })
 
 
+test_that("a model's syntax prints under a header, with its notes wrapped (#145)", {
+  local_reproducible_output(width = 80)
+  model <- nomo_model(list(A = c("a1", "a2"), B = c("b1", "b2", "b3"), C = c("c1", "c2", "c3")),
+                      structure = "bifactor")
+  printed <- utils::capture.output(print(model))
+  expect_identical(printed[[1L]], "<nomo_model> Measurement model syntax")
+  expect_identical(printed[[2L]], "G =~ NA*a1 + a2 + b1 + b2 + b3 + c1 + c2 + c3")
+  expect_true("Identification notes" %in% printed)
+  expect_match(printed, "^  - Concern: Group factor A has two indicators", all = FALSE)
+  expect_true(all(nchar(printed) <= 79L))
+  plain <- utils::capture.output(print(nomo_model(list(A = c("a1", "a2", "a3")))))
+  expect_identical(plain, c("<nomo_model> Measurement model syntax", "A =~ a1 + a2 + a3"))
+  unnamed <- nomo_model(list(A = c("a1", "a2", "a3")))
+  attr(unnamed, "notes") <- "A note without a severity."
+  expect_identical(utils::capture.output(print(unnamed))[5L], "  - A note without a severity.")
+})
+
+
 test_that("a narrow table keeps its status and p columns and tightens before dropping (#145)", {
   local_reproducible_output(width = 60)
   d <- data.frame(
