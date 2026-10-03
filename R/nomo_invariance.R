@@ -89,8 +89,9 @@ nomo_invariance_sequences <- function(ordered = character(),
 }
 
 
-# The completed levels as a path for print() and summary(); "none" when the
-# first level failed, since completed_levels holds only converged levels (#145).
+# The completed levels as a path for print(), summary() and nomo_run()'s key
+# evidence; "none" when the first level failed, since completed_levels holds
+# only converged levels (#145).
 nomo_invariance_level_path <- function(levels) {
   if (length(levels)) paste(levels, collapse = " -> ") else "none"
 }

@@ -1847,6 +1847,11 @@ test_that("closeout C: invariance fit failures are retained as evidence instead 
   expect_identical(out$completed_levels, character())
   expect_output(print(out), "Completed: none", fixed = TRUE)
   expect_output(print(summary(out)), "Levels completed: none", fixed = TRUE)
+  # nomo_run()'s key evidence had ended in a dangling "completed ".
+  expect_identical(
+    nomologR:::nomo_run_key_evidence(list(results = list(invariance = out))),
+    "Invariance: completed none"
+  )
 })
 
 
