@@ -61,7 +61,15 @@ before any downstream branch runs.
 
 The factor-count decision is inherited from the parent unless \code{decisions}
 supplies a new one, so the revision changes only what the researcher
-changed.
+changed. The parent's settings carry over too, except that reverse keying
+set for an item the revision removes is dropped with the item.
+
+When the parent's scales came from a \code{contentvalidR} handoff, the child
+keeps it: its declared keying, the content-review rows of the decision
+log, and the report's content-review section carry over. A scale whose
+items no longer match those content review carried is recorded as the
+researcher's definition, and each held-back item the revision reinstates,
+or carried item it removes, gets its own row with the revision's rationale.
 
 Because a revision prompted by results is evaluated on the data that
 prompted it, the decision log records whether the change was \code{"post_hoc"}

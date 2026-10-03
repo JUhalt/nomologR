@@ -23,8 +23,14 @@
 #'   factors are orthogonal. Identification is written into the syntax (each
 #'   factor's first loading is freed and its variance fixed to 1), so the model
 #'   is identified the same way whatever `std.lv` is used to fit it. At least
-#'   two group factors with at least two indicators each are required;
-#'   configurations known to be fragile are noted.
+#'   two group factors with at least two indicators each are required. Two
+#'   accepted configurations are not identified without an added constraint,
+#'   which `nomo_model()` does not write: a group factor with two indicators
+#'   (its two loadings enter the covariances only through their product), and
+#'   two group factors with no more than three indicators each. Both are noted
+#'   as concerns: `lavaan` may still report convergence, but the loadings are
+#'   arbitrary. Two group factors with more indicators are identified but can
+#'   be empirically unstable, which is noted for review.
 #'
 #' Any identification notes are attached as the `"notes"` attribute and printed
 #' with the syntax. Use [nomo_hierarchical()] to evaluate a fitted higher-order
@@ -39,7 +45,8 @@
 #'
 #' @return A character scalar of class `nomo_model` that can be passed directly
 #'   to [nomo_cfa()] or to `lavaan::cfa()`. Attributes record the `factors`,
-#'   `structure`, `general` factor, and any identification `notes`.
+#'   `structure`, `general` factor, and any identification `notes`, a character
+#'   vector named by severity (`"review"` or `"concern"`).
 #'
 #' @references
 #' Holzinger, K. J., & Swineford, F. (1937). The bi-factor method.
@@ -198,11 +205,11 @@ nomo_model_higher_order <- function(factors, general) {
 
   notes <- character()
   if (k == 3L) {
-    notes <- paste(
+    notes <- c(review = paste(
       "With three first-order factors the second-order part is just",
       "identified: this model fits exactly as well as the correlated-factors",
       "model, so model fit cannot distinguish the two."
-    )
+    ))
   }
 
   list(syntax = syntax, notes = notes)
@@ -262,9 +269,24 @@ nomo_model_bifactor <- function(factors, general) {
     orthogonal
   )
 
+  # Notes are named by severity (#145). Two configurations are accepted but not
+  # identified: an orthogonal group factor with two indicators enters the
+  # covariances only through the product of its two loadings, and with two
+  # group factors of three indicators each one combination of loadings cannot
+  # be recovered, although the model has positive degrees of freedom. No
+  # constraint is added; the researcher decides.
   notes <- character()
-  if (k == 2L) {
-    notes <- c(notes, paste(
+  if (k == 2L && all(lengths(factors) <= 3L)) {
+    notes <- c(notes, concern = paste(
+      "With two group factors of no more than three indicators each, the",
+      "bifactor model is not identified without an added constraint, although",
+      "its degrees of freedom are positive: one combination of its loadings",
+      "cannot be determined from the covariances. lavaan may still report",
+      "convergence, but the loadings are arbitrary and their standard errors",
+      "cannot be computed."
+    ))
+  } else if (k == 2L) {
+    notes <- c(notes, review = paste(
       "With only two group factors, a bifactor model can be empirically",
       "under-identified or unstable. Inspect lavaan's warnings and the",
       "standard errors before interpreting the solution."
@@ -272,10 +294,13 @@ nomo_model_bifactor <- function(factors, general) {
   }
   two_item <- names(factors)[lengths(factors) == 2L]
   if (length(two_item)) {
-    notes <- c(notes, paste0(
-      "Group factor(s) with two indicators (",
-      paste(two_item, collapse = ", "),
-      ") are weakly identified; their loadings can be unstable."
+    notes <- c(notes, concern = paste0(
+      "Group ", nomo_present_noun(length(two_item), "factor ", "factors "),
+      paste(two_item, collapse = ", "), " ",
+      nomo_present_noun(length(two_item), "has two indicators", "have two indicators each"),
+      ", so the model is not identified without an added constraint, such as",
+      " equal loadings: a two-indicator group factor's loadings enter the",
+      " covariances between items only through their product."
     ))
   }
 
@@ -288,8 +313,10 @@ print.nomo_model <- function(x, ...) {
   cat(as.character(x), "\n", sep = "")
   notes <- attr(x, "notes")
   if (length(notes)) {
+    # A note is prefixed with its severity, as other notes in the package are.
+    flag <- nomo_present_flag(if (is.null(names(notes))) rep("", length(notes)) else names(notes))
     cat("\nIdentification notes:\n")
-    cat(paste0("- ", notes), sep = "\n")
+    cat(paste0("- ", ifelse(nzchar(flag), paste0(flag, ": "), ""), notes), sep = "\n")
   }
   invisible(x)
 }

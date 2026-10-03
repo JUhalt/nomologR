@@ -206,7 +206,9 @@ nomo_compare_model_row <- function(label, cfa, observed) {
     n_used = as.numeric(cfa$n_used),
     observed_variables = length(observed),
     npar = nomo_compare_measure(measures, "npar"),
-    df = nomo_compare_measure(measures, "df"),
+    # The degrees of freedom of the chi-square shown, which differ from the
+    # model's for mean-and-variance adjusted tests such as MLMVS.
+    df = pick("df"),
     chisq = pick("chi_square"),
     cfi = pick("CFI"),
     tli = pick("TLI"),
@@ -303,6 +305,9 @@ nomo_compare_nesting <- function(reference_fit,
 
   relation <- if (isTRUE(equivalent)) {
     "equivalent"
+  } else if (identical(declared, "auto") && identical(check, "unavailable")) {
+    # Neither checked nor declared: the relation is not known (#145).
+    "undetermined"
   } else if (!nested) {
     "non_nested"
   } else if (df_other > df_reference) {
@@ -476,6 +481,10 @@ nomo_compare_interpretation <- function(row) {
     ),
     equivalent = sprintf("`%s` and `%s` are equivalent models.", row$model, row$reference),
     non_nested = sprintf("`%s` and `%s` are not nested.", row$model, row$reference),
+    undetermined = sprintf(
+      "Whether `%s` and `%s` are nested was not determined.",
+      row$model, row$reference
+    ),
     different_variables = sprintf(
       "`%s` and `%s` contain different observed variables.",
       row$model, row$reference
@@ -594,7 +603,8 @@ nomo_compare_evidence <- function(label, model, guidance) {
       )
     }
     if (nrow(val$value$htmt2)) {
-      h <- val$value$htmt2
+      # In model order, as nomo_validity() lists the pair (#145).
+      h <- nomo_validity_orient_pairs(val$value$htmt2, nomo_validity_construct_order(val$value))
       rows[[length(rows) + 1L]] <- tibble::tibble(
         model = label,
         construct = paste(h$construct_1, "vs", h$construct_2),
@@ -687,8 +697,9 @@ nomo_compare_references <- function() {
 #' **Nesting.** With `nested = "auto"`, nesting is checked from the models'
 #' implied moments with [semTools::net()] (Bentler & Satorra, 2010). The
 #' difference test is reported only for nested models. If the check cannot run
-#' (for example for some categorical models), set `nested = "yes"` when one
-#' model is obtained from the other by fixing or constraining parameters. A
+#' (for example for some categorical models), the relation is reported as
+#' `"undetermined"` and flagged for review; set `nested = "yes"` when one model
+#' is obtained from the other by fixing or constraining parameters. A
 #' declaration that the check contradicts is recorded as a concern and no test
 #' is reported.
 #'
@@ -736,14 +747,26 @@ nomo_compare_references <- function() {
 #'
 #' @return A `nomo_compare` object. The fields to read are:
 #'
-#'   * `models`: fit and information criteria for each model.
+#'   * `models`: fit and information criteria for each model. `df` is the
+#'     degrees of freedom of the chi-square shown, which for mean-and-variance
+#'     adjusted tests (such as `MLMVS`) differ from the model's.
 #'   * `comparisons`: for each model against the `reference`, the nesting
 #'     relation, the difference test, changes in fit and information criteria,
-#'     and an interpretation.
+#'     and an interpretation. `relation` is one of `"more_constrained"`,
+#'     `"less_constrained"`, `"equivalent"`, `"non_nested"`,
+#'     `"different_variables"`, or `"undetermined"` (the nesting check could
+#'     not run and nesting was not declared). `nesting_check` is one of
+#'     `"nested"`, `"not_nested"`, `"equivalent"`, `"unavailable"`,
+#'     `"not_run"` (declared non-nested), or `"not_applicable"` (different
+#'     observed variables). `df_difference` is the difference in the models'
+#'     degrees of freedom.
 #'   * `loadings`: standardized loadings side by side.
 #'   * `evidence`: reliability, AVE, and HTMT2 by model, when `evidence = TRUE`.
-#'   * `fits`: the fitted `nomo_cfa` objects, and `engine_warnings`, the
-#'     warnings `lavaan` raised for each.
+#'     An HTMT2 pair is labeled in model order, as [nomo_validity()] lists it.
+#'   * `fits`: the fitted `nomo_cfa` objects; each keeps the warnings `lavaan`
+#'     raised while fitting it in its own `engine_warnings`.
+#'   * `engine_warnings`: for each model compared with the `reference`, the
+#'     warnings raised by the nesting check and the difference test.
 #'   * `reference`, `rationale`, `origin`, `references`, and `decision_log`.
 #'
 #'   Other fields record the call, the settings used, and intermediate engine
@@ -893,6 +916,9 @@ nomo_compare <- function(...,
   comparison_rows <- list()
   engine_warnings <- list()
   conflicts <- character()
+  # Constraints are counted in the models' degrees of freedom, not in those of
+  # an adjusted test statistic.
+  model_df <- function(nm) nomo_compare_measure(models[[nm]]$fit_measures_all, "df")
 
   for (nm in setdiff(labels, reference_label)) {
     other_row <- model_rows[model_rows$model == nm, , drop = FALSE]
@@ -902,8 +928,8 @@ nomo_compare <- function(...,
       reference_fit = reference_model$fit,
       other_fit = models[[nm]]$fit,
       same_variables = same_variables,
-      df_reference = reference_row$df,
-      df_other = other_row$df,
+      df_reference = model_df(reference_label),
+      df_other = model_df(nm),
       declared = nested
     )
     if (isTRUE(nesting$conflict)) conflicts <- c(conflicts, nm)
@@ -944,7 +970,7 @@ nomo_compare <- function(...,
       nested_declared = nested,
       nesting_check = nesting$check,
       nested = isTRUE(nesting$nested),
-      df_difference = other_row$df - reference_row$df,
+      df_difference = model_df(nm) - model_df(reference_label),
       test = if (test_available) test$label else NA_character_,
       method = if (test_available) test$method else NA_character_,
       chisq_diff = test$statistic,

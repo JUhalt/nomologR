@@ -531,9 +531,13 @@ test_that("the nesting check explains itself when semTools cannot answer", {
   expect_match(declared_yes$note, "mocked nesting failure", fixed = TRUE)
   expect_match(declared_yes$note, "treated as nested because the researcher declared them nested")
 
+  expect_identical(declared_yes$relation, "more_constrained")
+
   declared_auto <- nesting("auto", failure)
   expect_identical(declared_auto$check, "unavailable")
   expect_false(declared_auto$nested)
+  # Neither checked nor declared, so the relation is not known (#145).
+  expect_identical(declared_auto$relation, "undetermined")
   expect_match(declared_auto$note, "Nesting could not be checked automatically")
   expect_match(declared_auto$note, 'set `nested = "yes"`', fixed = TRUE)
 
@@ -550,6 +554,7 @@ test_that("the nesting check explains itself when semTools cannot answer", {
 
   na_result <- nesting("auto", na_net)
   expect_identical(na_result$check, "unavailable")
+  expect_identical(na_result$relation, "undetermined")
   expect_match(na_result$note, "did not converge when fitted to the other model's implied moments", fixed = TRUE)
 
   # Equal degrees of freedom: the models are equivalent and the data cannot
@@ -803,4 +808,71 @@ test_that("warnings are collected once while evidence is computed quietly", {
   failed <- nomologR:::nomo_compare_quietly(stop("mocked evidence failure"))
   expect_s3_class(failed$value, "error")
   expect_identical(conditionMessage(failed$value), "mocked evidence failure")
+})
+
+
+# Audit fixes (#145) ------------------------------------------------------------
+
+test_that("a nesting check that cannot run leaves the relation undetermined, for review (#145)", {
+  pair <- compare_fitted_pair()
+  out <- testthat::with_mocked_bindings(
+    nomo_compare(full = pair$full, zero_b5 = pair$zero, rationale = "Item b5.", evidence = FALSE),
+    net = function(...) stop("mocked nesting failure"),
+    .package = "semTools"
+  )
+
+  cmp <- out$comparisons
+  expect_identical(cmp$relation, "undetermined")
+  expect_identical(cmp$nesting_check, "unavailable")
+  expect_false(cmp$test_available)
+  expect_match(cmp$interpretation, "^Whether `zero_b5` and `full` are nested was not determined\\.")
+  expect_no_match(cmp$interpretation, "are not nested", fixed = TRUE)
+  expect_identical(
+    out$decision_log$severity[out$decision_log$metric == "model_comparison"],
+    "review"
+  )
+  expect_output(print(out), "zero_b5 (nesting not determined): no difference test", fixed = TRUE)
+  expect_identical(nomologR:::nomo_compare_relation_label("undetermined"), "nesting not determined")
+})
+
+
+test_that("the model table pairs each chi-square with its own degrees of freedom (#145)", {
+  skip_on_cran()
+  full <- nomo_cfa(compare_syntax$full, nomo_demo_continuous, estimator = "MLMVS")
+  zero <- nomo_cfa(compare_syntax$zero_b5, nomo_demo_continuous, estimator = "MLMVS")
+  out <- nomo_compare(full = full, zero_b5 = zero, rationale = "Item b5.", evidence = FALSE)
+
+  df_of <- function(m) m$fit_evidence$value[m$fit_evidence$metric == "df"]
+  expect_identical(full$fit_evidence$variant[full$fit_evidence$metric == "chi_square"], "chisq.scaled")
+  expect_equal(out$models$df, c(df_of(full), df_of(zero)))
+  expect_false(isTRUE(all.equal(out$models$df[[1L]], 34)))
+
+  # Nesting and the difference in constraints still count the models' degrees
+  # of freedom.
+  expect_identical(out$comparisons$relation, "more_constrained")
+  expect_identical(out$comparisons$df_difference, 1)
+})
+
+
+test_that("HTMT2 pairs in the evidence table follow model order, as nomo_validity() does (#145)", {
+  skip_on_cran()
+  pair <- compare_fitted_pair()
+  ev <- nomologR:::nomo_compare_evidence("full", pair$full, nomo_defaults())
+  val <- nomo_table(nomo_validity(pair$full), "discriminant")
+
+  expect_identical(ev$construct[ev$metric == "HTMT2"], "A vs B")
+  expect_identical(c(val$construct_1, val$construct_2), c("A", "B"))
+})
+
+
+test_that("an undeclared ordered fit compares with the declared one (#145)", {
+  skip_on_cran()
+  undeclared <- nomo_cfa(compare_syntax$full, nomo_demo_ordinal, modification_indices = FALSE)
+  declared <- nomo_cfa(compare_syntax$zero_b5, nomo_demo_ordinal,
+                       ordered = names(nomo_demo_ordinal), modification_indices = FALSE)
+
+  out <- nomo_compare(undeclared = undeclared, declared = declared,
+                      rationale = "Item b5.", nested = "yes", evidence = FALSE)
+  expect_identical(out$estimator, "WLSMV")
+  expect_true(out$comparisons$test_available)
 })

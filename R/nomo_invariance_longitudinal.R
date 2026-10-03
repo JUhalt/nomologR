@@ -29,16 +29,20 @@
 #' releases, and score diagnostics are those of [nomo_invariance()], applied
 #' across occasions instead of groups. A partial release names the item as in
 #' `model`, and frees that parameter across all occasions: `"w3 ~ 1"` releases
-#' the intercept of `w3`. For ordered items, Wu and Estabrook's (2016)
-#' identification is the default; `ID.cat = "millsap"`, with `ID.fac = "UL"`,
-#' applies Millsap and Tein's (2004) conditions, which Liu et al. (2017) extend
-#' to repeated measures.
+#' the intercept of `w3`. A release naming a column, such as `"w3_t2 ~ 1"`, is
+#' an error, as is any release that frees no parameter. Ordered items follow
+#' Wu and Estabrook's (2016) identification, the only `ID.cat` supported; Liu
+#' et al. (2017) discuss testing invariance over time with ordered-categorical
+#' measures. An item whose columns are stored as ordered factors is modeled as
+#' ordered on every occasion, whether or not `ordered` names it.
 #'
 #' **Latent change.** Once intercepts are invariant, fully or partially, the
 #' construct's mean can be compared across occasions. Under the default
 #' `ID.fac = "std.lv"` the first occasion's latent mean is 0 and its variance
 #' 1, so `latent_means` gives each later occasion's latent mean as a change in
-#' the first occasion's latent standard deviations, with its interval.
+#' the first occasion's latent standard deviations, with its interval. With
+#' every intercept of a factor's items released, its later means are fixed at
+#' 0 rather than estimated; the decision log says so, and they are left out.
 #'
 #' @inheritParams nomo_invariance
 #' @param model A measurement model for one occasion, in the items' own names:
@@ -50,9 +54,13 @@
 #'   reference for latent change.
 #' @param columns A pattern for the column names, containing `{item}` and
 #'   `{occasion}`.
-#' @param ordered Optional names of ordered items, as in `model`.
+#' @param ordered Optional names of ordered items, as in `model`. Items whose
+#'   columns are stored as ordered factors are modeled as ordered whether or
+#'   not they are named here: the result's `ordered_detected` lists them, the
+#'   decision log lists them for review, and the rules for ordered indicators
+#'   in [nomo_invariance()] apply.
 #' @param partial Optional researcher-specified releases from [nomo_partial()],
-#'   naming items as in `model`.
+#'   naming items and factors as in `model`.
 #' @param auto The lags over which each item's unique factors are correlated:
 #'   `"all"` (default) or a positive whole number, such as `1` for adjacent
 #'   occasions only.
@@ -77,10 +85,6 @@
 #' (2017). Testing measurement invariance in longitudinal data with
 #' ordered-categorical measures. *Psychological Methods, 22*(3), 486-506.
 #' \doi{10.1037/met0000075}
-#'
-#' Millsap, R. E., & Tein, J.-Y. (2004). Assessing factorial invariance in
-#' ordered-categorical measures. *Multivariate Behavioral Research, 39*(3),
-#' 479-515. \doi{10.1207/S15327906MBR3903_4}
 #'
 #' Widaman, K. F., Ferrer, E., & Conger, R. D. (2010). Factorial invariance
 #' within longitudinal structural equation models: Measuring the same construct
@@ -221,9 +225,20 @@ nomo_invariance_longitudinal <- function(model,
     collapse = "\n"
   )
 
+  # An item stored as an ordered factor is ordered on every occasion, as
+  # lavaan would fit its columns (#145); an item, not a column, is what
+  # `ordered` names.
+  found <- nomo_ordered_indicators(
+    longitudinal_model, data, unlist(long_items[ordered])
+  )
+  ordered_detected <- items[vapply(
+    long_items, function(columns) any(columns %in% found$detected), logical(1)
+  )]
+  ordered <- c(ordered, ordered_detected)
+
   prepared <- nomo_invariance_prepare(
     data = data,
-    ordered = if (is.null(ordered)) NULL else unname(unlist(long_items[ordered])),
+    ordered = if (length(ordered)) unname(unlist(long_items[ordered])),
     levels = levels,
     partial = partial,
     localize = localize,
@@ -232,11 +247,18 @@ nomo_invariance_longitudinal <- function(model,
     ID.fac = ID.fac,
     ID.cat = ID.cat,
     parameterization = parameterization,
-    guidance = guidance
+    guidance = guidance,
+    structure = structure,
+    release_hint = paste(
+      " Across occasions, name items and factors as in the one-occasion",
+      "`model`; a release applies on every occasion."
+    ),
+    ordered_detected = ordered_detected
   )
   ordered_columns <- prepared$ordered
   sequence_info <- prepared$sequence_info
   levels <- prepared$levels
+  partial <- prepared$partial
   nomo_check_model_variables(longitudinal_model, data)
 
   engine <- nomo_invariance_engine_args(
@@ -266,7 +288,8 @@ nomo_invariance_longitudinal <- function(model,
     fit_base = engine$fit,
     equal = "long.equal",
     release = "long.partial",
-    localize = localize
+    localize = localize,
+    names_map = c(long_items, long_factors)
   )
   fit_evidence <- run$fit_evidence
   ordered_used <- length(ordered_columns) > 0L
@@ -287,21 +310,24 @@ nomo_invariance_longitudinal <- function(model,
     partial = partial,
     localize = localize,
     score_diagnostics = run$score_diagnostics,
-    design = "occasions"
+    design = "occasions",
+    ordered_detected = ordered_detected,
+    partial_declared = prepared$partial_declared
   )
-  latent_means <- nomo_invariance_longitudinal_means(
+  means <- nomo_invariance_longitudinal_means(
     fits = run$fits,
     constraints = sequence_info$constraints,
     fit_evidence = fit_evidence,
-    ID.fac = prepared$ID.fac,
     long_factors = long_factors,
     occasions = occasions
   )
+  latent_means <- means$table
   decision_log <- dplyr::bind_rows(
     decision_log[1L, , drop = FALSE],
     nomo_invariance_longitudinal_residual_log(auto),
     decision_log[-1L, , drop = FALSE],
-    nomo_invariance_longitudinal_means_log(latent_means)
+    nomo_invariance_longitudinal_means_log(latent_means),
+    nomo_invariance_fixed_means_log(means$fixed)
   )
 
   out <- list(
@@ -320,9 +346,10 @@ nomo_invariance_longitudinal <- function(model,
     indicator_type = sequence_info$type,
     identification_note = sequence_info$identification_note,
     ordered = ordered_columns,
+    ordered_detected = ordered_detected,
     ordered_categories = prepared$category_table,
     requested_levels = levels,
-    completed_levels = fit_evidence$level,
+    completed_levels = fit_evidence$level[fit_evidence$status == "estimated"],
     constraints = sequence_info$constraints[fit_evidence$level],
     partial = partial,
     partial_requested = nomo_invariance_partial_cumulative(
@@ -381,9 +408,12 @@ nomo_invariance_longitudinal_structure <- function(model) {
 
 
 # Latent change: at each level holding intercepts equal, each later occasion's
-# latent mean. Under std.lv the first occasion's latent mean is 0 and its
-# variance 1, so the means are changes in its latent standard deviations.
-nomo_invariance_longitudinal_means <- function(fits, constraints, fit_evidence, ID.fac,
+# latent mean. Where the first occasion's latent mean is fixed at 0 and its
+# variance at 1, as under std.lv, the means are changes in its latent standard
+# deviations. As across groups, the fitted parameter table decides: a later
+# mean semTools fixes, because every intercept of the factor's items was
+# released, is returned in `fixed` for the log rather than as a change of 0.
+nomo_invariance_longitudinal_means <- function(fits, constraints, fit_evidence,
                                                long_factors, occasions) {
   out <- tibble::tibble(
     level = character(),
@@ -396,30 +426,46 @@ nomo_invariance_longitudinal_means <- function(fits, constraints, fit_evidence, 
     ci_upper = numeric(),
     p_value = numeric()
   )
-  if (!identical(tolower(ID.fac), "std.lv")) return(out)
 
   converged <- fit_evidence$level[fit_evidence$converged %in% TRUE]
   rows <- lapply(converged, function(level) {
     if (!"intercepts" %in% constraints[[level]]) return(NULL)
-    pe <- lavaan::parameterEstimates(fits[[level]], ci = TRUE)
-    dplyr::bind_rows(lapply(names(long_factors), function(f) {
+    est <- nomo_invariance_mean_estimates(fits[[level]])
+    scaled <- Filter(
+      function(f) nomo_invariance_scaled(est$table, long_factors[[f]][[1L]]),
+      names(long_factors)
+    )
+    pieces <- lapply(scaled, function(f) {
       later <- long_factors[[f]][-1L]
-      hit <- pe[pe$op == "~1" & pe$lhs %in% later, , drop = FALSE]
-      hit <- hit[match(later, hit$lhs), , drop = FALSE]
-      tibble::tibble(
-        level = level,
-        occasion = occasions[-1L],
-        reference_occasion = occasions[[1L]],
-        factor = f,
-        estimate = hit$est,
-        se = hit$se,
-        ci_lower = hit$ci.lower,
-        ci_upper = hit$ci.upper,
-        p_value = hit$pvalue
+      hit <- est$means[match(later, est$means$lhs), , drop = FALSE]
+      free <- hit$free > 0L
+      list(
+        table = tibble::tibble(
+          level = level,
+          occasion = occasions[-1L][free],
+          reference_occasion = occasions[[1L]],
+          factor = f,
+          estimate = hit$est[free],
+          se = hit$se[free],
+          ci_lower = hit$ci.lower[free],
+          ci_upper = hit$ci.upper[free],
+          p_value = hit$pvalue[free]
+        ),
+        fixed = tibble::tibble(
+          level = level, factor = if (all(free)) character() else f,
+          design = "occasions"
+        )
       )
-    }))
+    })
+    list(
+      table = dplyr::bind_rows(lapply(pieces, `[[`, "table")),
+      fixed = dplyr::bind_rows(lapply(pieces, `[[`, "fixed"))
+    )
   })
-  dplyr::bind_rows(out, rows)
+  list(
+    table = dplyr::bind_rows(out, lapply(rows, `[[`, "table")),
+    fixed = dplyr::bind_rows(nomo_invariance_no_fixed(), lapply(rows, `[[`, "fixed"))
+  )
 }
 
 

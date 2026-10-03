@@ -46,14 +46,26 @@ reliability (\code{\link[=nomo_reliability]{nomo_reliability()}}) and convergent
 \value{
 A \code{nomo_compare} object. The fields to read are:
 \itemize{
-\item \code{models}: fit and information criteria for each model.
+\item \code{models}: fit and information criteria for each model. \code{df} is the
+degrees of freedom of the chi-square shown, which for mean-and-variance
+adjusted tests (such as \code{MLMVS}) differ from the model's.
 \item \code{comparisons}: for each model against the \code{reference}, the nesting
 relation, the difference test, changes in fit and information criteria,
-and an interpretation.
+and an interpretation. \code{relation} is one of \code{"more_constrained"},
+\code{"less_constrained"}, \code{"equivalent"}, \code{"non_nested"},
+\code{"different_variables"}, or \code{"undetermined"} (the nesting check could
+not run and nesting was not declared). \code{nesting_check} is one of
+\code{"nested"}, \code{"not_nested"}, \code{"equivalent"}, \code{"unavailable"},
+\code{"not_run"} (declared non-nested), or \code{"not_applicable"} (different
+observed variables). \code{df_difference} is the difference in the models'
+degrees of freedom.
 \item \code{loadings}: standardized loadings side by side.
 \item \code{evidence}: reliability, AVE, and HTMT2 by model, when \code{evidence = TRUE}.
-\item \code{fits}: the fitted \code{nomo_cfa} objects, and \code{engine_warnings}, the
-warnings \code{lavaan} raised for each.
+An HTMT2 pair is labeled in model order, as \code{\link[=nomo_validity]{nomo_validity()}} lists it.
+\item \code{fits}: the fitted \code{nomo_cfa} objects; each keeps the warnings \code{lavaan}
+raised while fitting it in its own \code{engine_warnings}.
+\item \code{engine_warnings}: for each model compared with the \code{reference}, the
+warnings raised by the nesting check and the difference test.
 \item \code{reference}, \code{rationale}, \code{origin}, \code{references}, and \code{decision_log}.
 }
 
@@ -79,8 +91,9 @@ statistics and fit indices would not be comparable.
 \strong{Nesting.} With \code{nested = "auto"}, nesting is checked from the models'
 implied moments with \code{\link[semTools:net]{semTools::net()}} (Bentler & Satorra, 2010). The
 difference test is reported only for nested models. If the check cannot run
-(for example for some categorical models), set \code{nested = "yes"} when one
-model is obtained from the other by fixing or constraining parameters. A
+(for example for some categorical models), the relation is reported as
+\code{"undetermined"} and flagged for review; set \code{nested = "yes"} when one model
+is obtained from the other by fixing or constraining parameters. A
 declaration that the check contradicts is recorded as a concern and no test
 is reported.
 

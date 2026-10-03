@@ -1,7 +1,13 @@
 # Presentation methods for convergent/discriminant evidence -------------------
 
 nomo_validity_convergent_table <- function(x) {
-  ave <- x$ave[, c("construct", "block", "estimate", "attention"), drop = FALSE]
+  # An AVE table without rows has no columns either.
+  ave_cols <- c("construct", "block", "estimate", "attention")
+  ave <- if (all(ave_cols %in% names(x$ave))) {
+    x$ave[, ave_cols, drop = FALSE]
+  } else {
+    tibble::tibble()
+  }
   if (nrow(ave)) {
     names(ave)[names(ave) == "estimate"] <- "AVE"
     names(ave)[names(ave) == "attention"] <- "ave_attention"

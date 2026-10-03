@@ -29,14 +29,22 @@
 #' whether the construct itself changed.
 #'
 #' **Measurement error and change.** The standard error of measurement is
-#' \eqn{SD \sqrt{1 - ICC}}{SD * sqrt(1 - ICC)} (Nunnally & Bernstein, 1994),
-#' with ICC(A,1) and the standard deviation pooled over occasions. The smallest
-#' detectable change is \eqn{1.96 \sqrt{2} \, SEM}{1.96 * sqrt(2) * SEM}: a
-#' change in a person's score smaller than that is within measurement error at
-#' 95% (Weir, 2005). Jacobson and Truax's (1991) reliable change index divides a
-#' person's change by \eqn{\sqrt{2} \, SEM}{sqrt(2) * SEM}, so it exceeds 1.96
-#' exactly when the change exceeds the smallest detectable change. A reliable
-#' change is not necessarily a meaningful one.
+#' \eqn{\sqrt{MS_E}}{sqrt(MS_E)}, the square root of the residual mean square
+#' of the two-way model (Weir, 2005): how far a person's scores spread across
+#' occasions once the shift in the mean between occasions is removed. It does
+#' not depend on which ICC is chosen. When the occasions do not differ in
+#' mean, it is close to \eqn{SD \sqrt{1 - ICC}}{SD * sqrt(1 - ICC)}
+#' (Nunnally & Bernstein, 1994), with ICC(A,1) and the standard deviation
+#' pooled over occasions; when they do, that form counts the shift as
+#' measurement error and overstates it. The smallest detectable change is
+#' \eqn{1.96 \sqrt{2} \, SEM}{1.96 * sqrt(2) * SEM}: a change in a person's
+#' score smaller than that is within measurement error at 95% (Weir, 2005).
+#' Jacobson and Truax's (1991) reliable change index divides a person's change
+#' by \eqn{\sqrt{2} \, SEM}{sqrt(2) * SEM}, so it exceeds 1.96 exactly when
+#' the change exceeds the smallest detectable change. The change compared
+#' includes any shift in the mean, so a shift that everyone shares can make
+#' many changes reliable. A reliable change is not necessarily a meaningful
+#' one.
 #'
 #' @param data A data frame with one row per person.
 #' @param scores The columns holding the same composite on successive
@@ -52,8 +60,9 @@
 #'     occasions, ICC(A,1) with its 95% interval and Koo and Li's description
 #'     of that interval (`koo_li`), ICC(C,1) with its interval, the mean change
 #'     from the first to the last occasion with its interval, the pooled
-#'     standard deviation, the standard error of measurement (`sem`), and the
-#'     smallest detectable change (`sdc`).
+#'     standard deviation, the standard error of measurement (`sem`, the
+#'     square root of the residual mean square), and the smallest detectable
+#'     change (`sdc`).
 #'   * `reliable_change`: one row per person and composite, with the first and
 #'     last scores, the change, the reliable change index (`rci`), and whether
 #'     the change is a reliable increase, a reliable decrease, or neither.
@@ -216,7 +225,14 @@ nomo_retest_one <- function(data, cols, label) {
   icc_a <- agreement$ICC[[1L]]
 
   sd_pooled <- sqrt(mean(vapply(x, stats::var, numeric(1))))
-  sem <- sd_pooled * sqrt(max(0, 1 - icc_a))
+  # The standard error of measurement is the square root of the residual mean
+  # square of the two-way model: each person's spread across occasions once
+  # the shift in the mean between occasions is removed. Pairing ICC(A,1), which
+  # counts that shift as error, with the within-occasion SD inflated the SEM,
+  # the SDC, and the RCI's denominator whenever scores shifted (#145).
+  m <- as.matrix(x)
+  residual <- sweep(sweep(m, 1L, rowMeans(m)), 2L, colMeans(m)) + mean(m)
+  sem <- sqrt(sum(residual^2) / ((n - 1L) * (length(cols) - 1L)))
   critical <- stats::qnorm(0.975)
   sdc <- critical * sqrt(2) * sem
 
@@ -227,6 +243,9 @@ nomo_retest_one <- function(data, cols, label) {
   half_width <- stats::qt(0.975, n - 1L) * stats::sd(change) / sqrt(n)
 
   rci <- change / (sqrt(2) * sem)
+  # With no random error at all, a person whose score did not change has not
+  # changed reliably.
+  rci[change == 0] <- 0
   status <- ifelse(
     rci > critical, "reliable_increase",
     ifelse(rci < -critical, "reliable_decrease", "no_reliable_change")
@@ -349,7 +368,9 @@ nomo_retest_log <- function(icc, reliable_change, interval) {
         paste(
           "Scores shifted systematically, as practice or real change would",
           "make them. ICC(A,1) counts the shift as disagreement and ICC(C,1)",
-          "does not; ICC(C,1) is", number(row$icc_consistency), "here."
+          "does not; ICC(C,1) is", number(row$icc_consistency), "here.",
+          "The SEM leaves the shift out, so the shift counts toward each",
+          "person's change when reliable change is classified."
         )
       } else {
         "The interval includes no change in the mean between occasions."
@@ -483,8 +504,8 @@ nomo_retest_present_note <- function() {
   cat("\n")
   nomo_present_text(
     "ICC(A,1): two-way mixed effects, absolute agreement, single measurement ",
-    "(Koo & Li, 2016). SEM: standard error of measurement. SDC: smallest ",
-    "detectable change, 1.96 x sqrt(2) x SEM (Weir, 2005). Reference ranges ",
+    "(Koo & Li, 2016). SEM: standard error of measurement, sqrt(MS error). ",
+    "SDC: smallest detectable change, 1.96 x sqrt(2) x SEM (Weir, 2005). Reference ranges ",
     "describe the interval; they are not a pass or a fail."
   )
 }

@@ -501,13 +501,80 @@ test_that("partial helper carries releases forward and validates sequences", {
     rationale = "binary-only release"
   )
 
+  structure <- tibble::tibble(factor = "F", item = c("x1", "x2", "x3", "x4"))
   expect_error(
     nomologR:::nomo_invariance_validate_partial(
       bad,
-      sequence
+      nomologR:::nomo_invariance_sequences(),
+      structure
     ),
     "not part"
   )
+
+  checked <- nomologR:::nomo_invariance_validate_partial(
+    p, nomologR:::nomo_invariance_sequences(), structure
+  )
+  expect_identical(checked$partial$releases$level, c("metric", "scalar"))
+  expect_identical(checked$declared, c("metric", "scalar"))
+  expect_identical(
+    nomologR:::nomo_invariance_validate_partial(NULL, list(), structure),
+    list(partial = NULL, declared = NULL)
+  )
+})
+
+
+test_that("each release must name a parameter the levels hold equal (#145)", {
+  continuous <- nomologR:::nomo_invariance_sequences()
+  structure <- tibble::tibble(
+    factor = c("F", "F", "F", "G", "G"),
+    item = c("x1", "x2", "x3", "F", "x4")
+  )
+  check <- function(level, syntax, sequence = continuous) {
+    nomologR:::nomo_invariance_validate_partial(
+      nomo_partial(level, syntax, "Prespecified."), sequence, structure,
+      hint = " A hint."
+    )
+  }
+
+  # A loading, intercept, or residual variance of an indicator in the model.
+  ok <- check(c("metric", "scalar", "strict", "metric"),
+              c("F =~ x2", "x3 ~ 1", "x1 ~~ x1", "G =~ F"))
+  expect_identical(ok$partial$releases$level, c("metric", "scalar", "strict", "metric"))
+
+  # semTools would ignore each of these silently.
+  for (syntax in c("x9 ~ 1", "f =~ x2", "F =~ x4", "F ~ 1", "x1 ~~ x2", "F ~ x1",
+                   "F =~ x2\nx3 ~ 1")) {
+    expect_error(check("metric", syntax), "does not name a loading", fixed = TRUE)
+  }
+  expect_error(check("metric", "x9 ~ 1"), "levels hold equal. A hint.", fixed = TRUE)
+  expect_error(check("metric", "hello"), "is not lavaan parameter syntax", fixed = TRUE)
+  expect_error(check("metric", "x1 ~ "), "is not lavaan parameter syntax", fixed = TRUE)
+  expect_error(check("metric", "x1 | t1"),
+               "frees a threshold, and no level of this sequence holds thresholds equal",
+               fixed = TRUE)
+
+  # Declared after the level that first holds it equal, the two models would
+  # not be nested.
+  expect_error(
+    check("scalar", "F =~ x2"),
+    "frees a loading, and loadings are first held equal at the metric level, so declare it at metric rather than scalar",
+    fixed = TRUE
+  )
+  polytomous <- nomologR:::nomo_invariance_sequences(
+    "x1", tibble::tibble(item = "x1", categories = 5L)
+  )
+  expect_error(check("metric", "x1 | t1", polytomous), "at the thresholds level",
+               fixed = TRUE)
+
+  # Declared before it, the release changes nothing there, so it is applied
+  # from that level and the declared level is kept for the log.
+  moved <- check(c("metric", "metric"), c("x3 ~ 1", "x1 ~~ x1"))
+  expect_identical(moved$partial$releases$level, c("scalar", "strict"))
+  expect_identical(moved$declared, c("metric", "metric"))
+  binary <- nomologR:::nomo_invariance_sequences(
+    "x1", tibble::tibble(item = "x1", categories = 2L)
+  )
+  expect_identical(check("strong", "x1 | t1", binary)$partial$releases$level, "strong")
 })
 
 
@@ -1775,6 +1842,16 @@ test_that("closeout C: invariance fit failures are retained as evidence instead 
     fixed = TRUE
   )
   expect_length(out$fit_measures$configural, 0L)
+
+  # The failed level stays in fit_evidence but was not completed (#145).
+  expect_identical(out$completed_levels, character())
+  expect_output(print(out), "Completed: none", fixed = TRUE)
+  expect_output(print(summary(out)), "Levels completed: none", fixed = TRUE)
+  # nomo_run()'s key evidence had ended in a dangling "completed ".
+  expect_identical(
+    nomologR:::nomo_run_key_evidence(list(results = list(invariance = out))),
+    "Invariance: completed none"
+  )
 })
 
 
@@ -1836,4 +1913,282 @@ test_that("latent means need intercepts held equal and std.lv identification", {
   local_reproducible_output(width = 80)
   expect_no_warning(capture.output(print(summary(old))))
   expect_null(nomo_table(old, "latent_means"))
+})
+
+
+# Audit fixes before the 1.0 freeze (#145) ------------------------------------------
+
+test_that("indicators stored as ordered factors are modeled as ordered without `ordered` (#145)", {
+  skip_on_cran()
+  # Five five-category items stored as ordered factors, with a population
+  # latent difference of .50 SD. lavaan fits them as categorical; recorded as
+  # continuous, the scalar model had been unidentified and the difference 0.
+  set.seed(11)
+  n <- 400
+  make_group <- function(shift) {
+    f <- rnorm(n, shift)
+    as.data.frame(lapply(1:5, function(i) {
+      ordered(cut(.8 * f + rnorm(n, sd = .6), c(-Inf, -1, -.3, .3, 1, Inf), labels = FALSE))
+    }), col.names = paste0("u", 1:5))
+  }
+  dat <- rbind(transform(make_group(0), grp = "A"), transform(make_group(.5), grp = "B"))
+
+  out <- nomo_invariance("F =~ u1 + u2 + u3 + u4 + u5", dat, group = "grp", ordered = "u1",
+                         levels = c("configural", "thresholds", "metric", "scalar"),
+                         localize = FALSE)
+  expect_identical(out$ordered, paste0("u", 1:5))
+  expect_identical(out$ordered_detected, paste0("u", 2:5))
+  expect_identical(out$indicator_type, "ordered_polytomous")
+  expect_identical(out$estimator, "WLSMV")
+  expect_identical(out$estimator_source, "ordered_default")
+  expect_identical(lavaan::lavInspect(out$fits$scalar, "options")$parameterization, "theta")
+  expect_identical(out$fit_evidence$df, c(10, 20, 24, 28))
+  means <- out$latent_means
+  expect_identical(means$level, "scalar")
+  expect_true(means$ci_lower < .50 && .50 < means$ci_upper)
+
+  row <- out$decision_log[out$decision_log$metric == "ordered_detected", ]
+  expect_identical(row$severity, "review")
+  expect_identical(row$stage, "invariance")
+  expect_identical(row$object, "u2, u3, u4, u5")
+  expect_true("categorical_invariance" %in% nomo_methods_used(out))
+})
+
+
+test_that("nomo_demo_ordinal is modeled as ordered without `ordered` (#145)", {
+  skip_on_cran()
+  dat <- nomo_demo_ordinal
+  dat$half <- rep(c("first", "second"), length.out = nrow(dat))
+  out <- nomo_invariance("A =~ a1 + a2 + a3 + a4", dat, group = "half",
+                         levels = "configural", localize = FALSE)
+  expect_identical(out$ordered_detected, paste0("a", 1:4))
+  expect_identical(out$indicator_type, "ordered_polytomous")
+  expect_identical(lavaan::lavInspect(out$fits$configural, "options")$parameterization, "theta")
+  expect_true("ordered_detected" %in% out$decision_log$metric)
+
+  # Declared, nothing is detected and nothing is logged.
+  declared <- nomo_invariance("A =~ a1 + a2 + a3 + a4", dat, group = "half",
+                              ordered = paste0("a", 1:4), levels = "configural",
+                              localize = FALSE)
+  expect_identical(declared$ordered_detected, character())
+  expect_false("ordered_detected" %in% declared$decision_log$metric)
+})
+
+
+test_that("an error that detected ordered factors cause says why (#145)", {
+  # These calls had run on the continuous sequence; with the indicators
+  # detected as ordered they stop, and each message names them.
+  set.seed(5)
+  dat <- as.data.frame(lapply(1:5, function(i) ordered(sample(1:5, 120, replace = TRUE))),
+                       col.names = paste0("u", 1:5))
+  dat$grp <- rep(c("A", "B"), each = 60)
+  model <- "F =~ u1 + u2 + u3 + u4 + u5"
+  note <- paste0("u2, u3, u4, and u5 are stored as ordered factors and modeled as ordered; ",
+                 "convert them to numeric to model them as continuous.")
+  run <- function(...) nomo_invariance(model, dat, group = "grp", ordered = "u1", ...)
+
+  expect_error(run(levels = c("configural", "metric", "scalar")),
+               paste0("ordered prefix of configural -> thresholds -> metric -> scalar -> strict. ",
+                      note), fixed = TRUE)
+  expect_error(run(levels = c("configural", "strong")),
+               paste0("may contain only: configural, thresholds, metric, scalar, strict. ", note),
+               fixed = TRUE)
+  expect_error(run(ID.fac = "UL"),
+               paste0("should use `ID.fac = \"std.lv\"`. ", note), fixed = TRUE)
+  expect_error(run(estimator = "MLR"),
+               paste0("categorical-data estimator supported by lavaan. ", note), fixed = TRUE)
+  expect_error(run(missing = "fiml"),
+               paste0("for declared ordered indicators. ", note), fixed = TRUE)
+
+  # One detected indicator reads in the singular.
+  one <- dat
+  for (item in c("u1", "u3", "u4", "u5")) one[[item]] <- as.integer(one[[item]])
+  expect_error(
+    nomo_invariance(model, one, group = "grp", ID.fac = "UL"),
+    paste("u2 is stored as an ordered factor and modeled as ordered;",
+          "convert it to numeric to model it as continuous."),
+    fixed = TRUE
+  )
+
+  # Declared in `ordered`, nothing was detected and the message is unchanged.
+  expect_error(
+    nomo_invariance(model, dat, group = "grp", ordered = paste0("u", 1:5), ID.fac = "UL"),
+    "should use `ID\\.fac = \"std\\.lv\"`\\.$"
+  )
+})
+
+
+test_that("a release that frees no parameter is an error, not a silent no-op (#145)", {
+  model <- "Agency =~ ag1 + ag2 + ag3 + ag4"
+  release <- function(level, syntax) nomo_partial(level, syntax, "Prespecified.")
+  fit <- function(...) {
+    nomo_invariance(model, nomo_demo_network, group = "group",
+                    levels = c("configural", "metric", "scalar"), localize = FALSE, ...)
+  }
+
+  # A missing item and a factor-name case typo had left the model fully
+  # constrained while the output reported the release.
+  expect_error(fit(partial = release("scalar", "ag9 ~ 1")), "Release `ag9 ~ 1` does not name",
+               fixed = TRUE)
+  expect_error(fit(partial = release("metric", "agency =~ ag3")),
+               "Release `agency =~ ag3` does not name", fixed = TRUE)
+  expect_error(fit(partial = release("metric", "ag3")), "is not lavaan parameter syntax",
+               fixed = TRUE)
+  expect_error(fit(partial = release("metric", "ag1 | t1")),
+               "no level of this sequence holds thresholds equal", fixed = TRUE)
+  expect_error(fit(partial = list(releases = data.frame())), "object created by `nomo_partial()`",
+               fixed = TRUE)
+
+  # Named correctly but fixed in the generated model: under unit loadings the
+  # marker loading is 1 in every group.
+  expect_error(
+    fit(partial = release("metric", "Agency =~ ag1"), ID.fac = "UL"),
+    "Release `Agency =~ ag1` frees no parameter at the metric level",
+    fixed = TRUE
+  )
+
+  # A residual-variance release frees one parameter at the strict level.
+  full <- nomo_invariance(model, nomo_demo_network, group = "group", localize = FALSE)
+  freed <- nomo_invariance(model, nomo_demo_network, group = "group", localize = FALSE,
+                           partial = release("strict", "ag3 ~~ ag3"))
+  strict <- function(x) x$fit_evidence$df[x$fit_evidence$level == "strict"]
+  expect_identical(strict(full) - strict(freed), 1)
+})
+
+
+test_that("a release declared at the wrong level is moved or refused (#145)", {
+  model <- "Agency =~ ag1 + ag2 + ag3 + ag4"
+  levels <- c("configural", "metric", "scalar")
+
+  # A loading released only at scalar would leave scalar not nested in metric.
+  expect_error(
+    nomo_invariance(model, nomo_demo_network, group = "group", levels = levels,
+                    partial = nomo_partial("scalar", "Agency =~ ag3", "Late.")),
+    "declare it at metric rather than scalar", fixed = TRUE
+  )
+
+  # An intercept declared at metric changes nothing there; it applies from
+  # scalar, and the summary and log say so.
+  early <- nomo_invariance(model, nomo_demo_network, group = "group", levels = levels,
+                           localize = FALSE,
+                           partial = nomo_partial("metric", "ag3 ~ 1", "Early."))
+  expect_identical(early$partial$releases$level, "scalar")
+  expect_identical(early$fit_evidence$partial_requested, c("", "", "ag3 ~ 1"))
+  expect_identical(early$fit_evidence$df, c(4, 7, 9))
+  log <- early$decision_log[early$decision_log$metric == "researcher_requested_release", ]
+  expect_identical(log$reference, "scalar")
+  expect_match(log$observation, "at the metric level. No level holds its parameters equal before scalar",
+               fixed = TRUE)
+  local_reproducible_output(width = 80)
+  printed <- capture.output(print(summary(early)))
+  expect_match(printed, "intercepts from scalar, except ag3 ~ 1.", fixed = TRUE, all = FALSE)
+  expect_match(printed, "P1 (scalar): ag3 ~ 1.", fixed = TRUE, all = FALSE)
+})
+
+
+test_that("latent means come from the fitted parameter table (#145)", {
+  skip_on_cran()
+  # A second-order model: semTools identifies it by unit loadings, so no
+  # factor's reference mean is 0 with variance 1, and the group's own G mean
+  # had been reported as a standardized difference.
+  set.seed(3)
+  n <- 300
+  make_group <- function(shift) {
+    g <- rnorm(n, shift)
+    out <- list()
+    for (k in 1:3) {
+      f <- .8 * g + rnorm(n, sd = .6)
+      for (j in 1:3) out[[paste0("y", k, j)]] <- .8 * f + rnorm(n, sd = .6)
+    }
+    as.data.frame(out)
+  }
+  dat <- rbind(transform(make_group(0), grp = "a"), transform(make_group(.5), grp = "b"))
+  model <- paste(
+    "F1 =~ y11 + y12 + y13", "F2 =~ y21 + y22 + y23", "F3 =~ y31 + y32 + y33",
+    "G =~ F1 + F2 + F3", sep = "\n"
+  )
+  messages <- character()
+  higher <- withCallingHandlers(
+    nomo_invariance(model, dat, group = "grp", localize = FALSE,
+                    levels = c("configural", "metric", "scalar")),
+    message = function(m) {
+      messages <<- c(messages, conditionMessage(m))
+      invokeRestart("muffleMessage")
+    }
+  )
+  expect_true(any(grepl("ID.fac set to \"ul\"", messages, fixed = TRUE)))
+  expect_identical(higher$ID.fac, "ul")
+  expect_identical(nrow(higher$latent_means), 0L)
+  id <- higher$decision_log[higher$decision_log$metric == "factor_identification", ]
+  expect_identical(id$severity, "review")
+  expect_match(id$observation, "uses `ul`, not the requested `std.lv`", fixed = TRUE)
+  expect_match(id$recommendation, "none are reported here", fixed = TRUE)
+  expect_false(any(c("latent_means", "latent_means_fixed") %in% higher$decision_log$metric))
+})
+
+
+test_that("a latent mean fixed by releasing every intercept is not reported (#145)", {
+  model <- "Agency =~ ag1 + ag2 + ag3 + ag4"
+  all_free <- nomo_invariance(
+    model, nomo_demo_network, group = "group", localize = FALSE,
+    levels = c("configural", "metric", "scalar"),
+    partial = nomo_partial("scalar", paste0("ag", 1:4, " ~ 1"), "Every intercept differs.")
+  )
+  # It had been reported as a difference of 0.00 [0.00, 0.00].
+  expect_identical(nrow(all_free$latent_means), 0L)
+  log <- all_free$decision_log
+  expect_false("latent_means" %in% log$metric)
+  fixed <- log[log$metric == "latent_means_fixed", ]
+  expect_identical(fixed$severity, "review")
+  expect_identical(fixed$object, "Agency")
+  expect_match(fixed$observation, "No latent mean difference is estimated for Agency at the scalar level",
+               fixed = TRUE)
+  expect_match(fixed$observation, "fixed at 0 in every group.", fixed = TRUE)
+  expect_false("latent_mean_comparison" %in% nomo_methods_used(all_free))
+
+  # The note names each factor and level once.
+  log2 <- nomologR:::nomo_invariance_fixed_means_log(tibble::tibble(
+    level = c("scalar", "scalar", "strict", "strict"), factor = c("A", "B", "A", "B"),
+    design = "groups"
+  ))
+  expect_identical(log2$object, "A, B")
+  expect_match(log2$observation, "for A, B at the scalar and strict levels", fixed = TRUE)
+  expect_match(log2$observation, "of their indicators released, each latent mean", fixed = TRUE)
+})
+
+
+test_that("ID.cat is restricted to the Wu-Estabrook identification the sequences use (#145)", {
+  model <- "Agency =~ ag1 + ag2 + ag3 + ag4"
+  for (id_cat in c("millsap", "Millsap.Tein.2004", "mplus", "lisrel")) {
+    expect_error(
+      nomo_invariance(model, nomo_demo_network, group = "group", ID.cat = id_cat),
+      "`ID.cat` must be \"Wu.Estabrook.2016\" or a semTools alias", fixed = TRUE
+    )
+  }
+  wu <- nomo_invariance(model, nomo_demo_network, group = "group", levels = "configural",
+                        ID.cat = "Wu", localize = FALSE)
+  expect_identical(wu$completed_levels, "configural")
+})
+
+
+test_that("completed_levels leaves out a level that did not converge (#145)", {
+  skip_on_cran()
+  # Binary items with a loading released at strong: the strong model does not
+  # converge, and completed_levels had listed it anyway.
+  set.seed(1)
+  n <- 150
+  make_group <- function() {
+    f <- rnorm(n)
+    as.data.frame(lapply(1:4, function(i) as.integer(.8 * f + rnorm(n, sd = .6) > 0)),
+                  col.names = paste0("u", 1:4))
+  }
+  dat <- rbind(transform(make_group(), grp = "A"), transform(make_group(), grp = "B"))
+  out <- suppressWarnings(nomo_invariance(
+    "F =~ u1 + u2 + u3 + u4", dat, group = "grp", ordered = paste0("u", 1:4),
+    localize = FALSE, partial = nomo_partial("strong", "F =~ u2", "Prespecified.")
+  ))
+  expect_identical(out$fit_evidence$level, c("configural", "strong"))
+  expect_identical(out$fit_evidence$status, c("estimated", "not_converged"))
+  expect_identical(out$completed_levels, "configural")
+  expect_output(print(out), "Completed: configural\n", fixed = TRUE)
 })

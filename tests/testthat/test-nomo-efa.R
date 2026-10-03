@@ -525,6 +525,57 @@ test_that("small samples trigger review rather than a hard minimum", {
   expect_equal(nrow(row), 1L)
   expect_equal(row$severity, "review")
   expect_match(row$reference, "not a universal minimum")
+  expect_identical(
+    row$observation,
+    "80 cases were analyzed for 4 items (20.0 cases per item)."
+  )
+  expect_equal(out$min_pairwise_n, out$n_cases)
+
+  printed <- paste(capture.output(print(out)), collapse = "\n")
+  expect_match(printed, "Cases: 80 |", fixed = TRUE)
+  expect_false(grepl("minimum pairwise", printed, fixed = TRUE))
+})
+
+
+test_that("rows with no item data do not inflate the EFA sample-size evidence", {
+  # #145, factors-3: under pairwise deletion, nrow() counted empty rows.
+  set.seed(3208)
+  n <- 120
+  f <- rnorm(n)
+  dat <- data.frame(
+    i1 = .8 * f + rnorm(n, sd = .6),
+    i2 = .75 * f + rnorm(n, sd = .65),
+    i3 = .7 * f + rnorm(n, sd = .7),
+    i4 = .72 * f + rnorm(n, sd = .68)
+  )
+  dat[1:60, ] <- NA
+  dat$i1[61:62] <- NA
+
+  out <- nomo_efa(dat, factors = 1)
+
+  expect_equal(out$n_cases, 120L)
+  expect_equal(out$min_pairwise_n, 58L)
+  expect_equal(out$sample_adequacy$n_cases, 120L)
+  expect_equal(out$sample_adequacy$min_pairwise_n, 58L)
+  expect_equal(out$sample_adequacy$cases_per_item, 58 / 4)
+
+  row <- out$decision_log[out$decision_log$metric == "sample_size", ]
+  expect_equal(nrow(row), 1L)
+  expect_equal(row$value, 58)
+  expect_identical(
+    row$observation,
+    paste(
+      "120 cases were analyzed for 4 items; the smallest number observed",
+      "jointly on an item pair was 58 (14.5 cases per item)."
+    )
+  )
+
+  expect_output(print(out), "Cases: 120 (minimum pairwise N: 58) |", fixed = TRUE)
+  expect_output(
+    print(summary(out)),
+    "Cases: 120 (minimum pairwise N: 58) |",
+    fixed = TRUE
+  )
 })
 
 
@@ -538,6 +589,43 @@ test_that("unsupported extraction methods fail before the engine can fall back",
     nomo_efa(dat, factors = 1, fm = "definitely-not-an-estimator"),
     "Unsupported extraction method"
   )
+})
+
+
+test_that("every documented extraction method runs or fails with a clear reason", {
+  dat <- make_efa_factor_count_data(seed = 8204L)
+
+  # minrank needs Rcsdp, which nomologR does not declare (#145, factors-2).
+  err <- expect_error(
+    nomo_efa(dat, factors = 2, fm = "minrank"),
+    "Unsupported extraction method `fm = \"minrank\"`",
+    fixed = TRUE
+  )
+  listed <- sub(".*Use one of: ", "", conditionMessage(err))
+  expect_false(grepl("minrank", listed, fixed = TRUE))
+
+  # psych::fa() cannot fit a one-factor alpha solution.
+  expect_error(
+    nomo_efa(dat, factors = 1, fm = "alpha"),
+    "needs at least two factors"
+  )
+  alpha <- nomo_efa(dat, factors = 2, fm = "alpha")
+  expect_identical(alpha$fm, "alpha")
+  expect_identical(alpha$fit$fm, "alpha")
+})
+
+
+test_that("fm = \"minchi\" weights by the pairwise Ns instead of running minres", {
+  dat <- make_efa_factor_count_data(n = 300L, seed = 8205L)
+  for (j in seq_along(dat)) {
+    dat[sample(nrow(dat), 25L * j), j] <- NA
+  }
+
+  minchi <- nomo_efa(dat, factors = 2, fm = "minchi")
+  minres <- nomo_efa(dat, factors = 2, fm = "minres")
+
+  expect_identical(minchi$fit$fm, "minchi")
+  expect_false(isTRUE(all.equal(minchi$pattern_matrix, minres$pattern_matrix)))
 })
 
 

@@ -52,9 +52,20 @@ recomputing completed stages.
 and even-odd consistency cannot be computed within one scale. So they are
 computed once, over every item in the run with the run's scales, and never
 inside the per-scale item audits. \code{reverse}, \code{scale_range},
-\code{pair_magnitude}, and \code{scales} may be given alongside \code{effort}. When the
-scales came from a \code{contentvalidR} handoff that declares keying, its
-keying is used unless \code{reverse} or \code{scale_range} is given here.
+\code{pair_magnitude}, and \code{scales} may be given alongside \code{effort}. \code{reverse}
+and \code{scale_range} also reach the per-scale item audits, with or without
+\code{effort}, and \code{reverse} must name items in the run's scales. When the
+scales came from a \code{contentvalidR} handoff, each of \code{reverse} and
+\code{scale_range} is taken from its declared keying unless given here, as in
+\code{\link[=nomo_screen]{nomo_screen()}}; giving one replaces only that one. The decision log
+records a declared value replaced, or a response scale the handoff did not
+record supplied here.
+
+The invariance and network stages refit the measurement model with the
+CFA stage's \code{ordered}, \code{estimator}, and \code{missing} from \code{settings$cfa},
+unless \code{settings$invariance} or \code{settings$network} names its own (\code{NULL}
+for the default). The decision log records what was inherited and any
+value that differs from the CFA's.
 
 Two further requests attach evidence to the measurement model:
 \itemize{
@@ -83,8 +94,15 @@ A \code{nomo_run} object. The fields to read are:
 example \code{results$screen$Agency} is a \code{nomo_screen} object.
 \item \code{stage_status}: one row per stage.
 \item \code{decision_requests}: the decisions the run is waiting for.
-\item \code{decision_log}: the workflow's decisions, with their rationales and
-sources.
+\item \code{decision_log}: the workflow's own log, one row per design choice,
+decision, or recorded event, with the columns \code{id}, \code{stage}, \code{scope},
+\code{observation}, \code{reason}, \code{options}, \code{consequence}, \code{decision},
+\code{rationale}, and \code{source}. \code{source} is \code{"researcher_input"} (given in
+the call, such as the scales or a setting), \code{"researcher_decision"}
+(a decision at a pause, or a revision), \code{"content_review"} (from a
+\code{contentvalidR} handoff), or \code{"pipeline"} (recorded by the workflow).
+These columns differ from those of the components' decision logs, which
+\code{nomo_table(x, "component_log")} returns with their own columns.
 \item \code{scales}, \code{mode}, \code{sample_design}, \code{sample_n}, \code{decisions}, and
 \code{settings}.
 }

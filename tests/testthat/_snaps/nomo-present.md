@@ -123,7 +123,7 @@
       print(fac)
     Output
       <nomo_factors> Factor-retention evidence
-      Cases: 500 | Items: 10 | Correlation: pearson
+      Cases: 500 (minimum pairwise N: 473) | Items: 10 | Correlation: pearson
       Criterion set: core | Available methods: 3 | Families: 2 | Skipped: 1
       Parallel analysis (percentile): 2 | MAP TR2/TR4: 2/2 | KMO: 0.874
       All 2 available criterion families (3 methods) point to 2 factors. Related
@@ -138,7 +138,8 @@
       print(summary(fac))
     Output
       <nomo_factors summary> Factor-retention evidence
-      Cases: 500 | Items: 10 | Correlation: pearson | Criteria: core
+      Cases: 500 (minimum pairwise N: 473) | Items: 10 | Correlation: pearson
+      Criteria: core
       
       Retention evidence
         Method              Factors  Role
@@ -183,7 +184,8 @@
       print(efa)
     Output
       <nomo_efa> Exploratory factor analysis
-      Cases: 500 | Items: 10 | Factors: 2 (nomo_factors() handoff)
+      Cases: 500 (minimum pairwise N: 473) | Items: 10
+      Factors: 2 (nomo_factors() handoff)
       Correlation: pearson | Extraction: minres | Rotation: oblimin
       Off-diagonal RMSR: 0.018 | Flags: 2 review, 1 concern
       No items were automatically deleted or refit.
@@ -194,7 +196,8 @@
       print(summary(efa))
     Output
       <nomo_efa summary> Exploratory factor analysis
-      Cases: 500 | Items: 10 | Factors: 2 (from nomo_factors())
+      Cases: 500 (minimum pairwise N: 473) | Items: 10
+      Factors: 2 (from nomo_factors())
       Correlation: pearson | Extraction: minres | Rotation: oblimin
       Supporting adequacy: KMO 0.874
       
@@ -641,7 +644,7 @@
         B          alpha   0.771  0.771
         A          AVE     0.497  0.497
         B          AVE     0.434  0.521
-        B vs A     HTMT2   0.533  0.533
+        A vs B     HTMT2   0.533  0.533
         - The loading fixed to zero for b5 keeps that item in this composite; the
           coefficient does not describe a shortened scale.
       
@@ -989,6 +992,6 @@
           rationales
         Full entries and references: nomo_methods(x).
       
-      Component decision and evidence-log rows retained: 94; see nomo_table(x,
+      Component decision and evidence-log rows retained: 95; see nomo_table(x,
       "component_log").
 

@@ -67,7 +67,15 @@ reference. If \code{NULL}, the value in
 number state is restored before return.}
 
 \item{fm}{Common-factor extraction method passed to \code{\link[psych:fa]{psych::fa()}} when
-obtaining factor eigenvalues. The default is \code{"minres"}.}
+obtaining the factor eigenvalues for parallel analysis. The default is
+\code{"minres"}. Supported values are \code{"minres"}, \code{"uls"}, \code{"ols"}, \code{"wls"},
+\code{"gls"}, \code{"pa"}, \code{"ml"}, \code{"minchi"}, and \code{"old.min"}. For \code{"minchi"},
+the number of cases observed for each item pair is passed to
+\code{\link[psych:fa]{psych::fa()}}, which weights the residuals by it. \code{"alpha"} is not
+available here: the eigenvalues come from a one-factor solution, which
+\code{\link[psych:fa]{psych::fa()}} cannot fit with alpha factoring (use it in \code{\link[=nomo_efa]{nomo_efa()}} with
+two or more factors). \code{"minrank"} is not supported, because
+\code{\link[psych:fa]{psych::fa()}} needs the \code{Rcsdp} package for it.}
 
 \item{smooth}{Logical. If \code{FALSE} (default), a non-positive-definite observed
 correlation matrix blocks factor-retention analysis. If \code{TRUE}, smoothing
@@ -78,7 +86,12 @@ is explicit, recorded, and performed with \code{\link[psych:cor.smooth]{psych::c
 \value{
 An object of class \code{nomo_factors}. The fields to read are:
 \itemize{
-\item \code{items}, \code{n_cases}, and \code{n_items}.
+\item \code{items}, \code{n_cases}, and \code{n_items}. \code{n_cases} is the number of rows
+analyzed (every row under \code{missing = "pairwise"}, including rows with
+no item data; the complete rows under \code{missing = "complete"}).
+\item \code{min_pairwise_n}: the smallest number of cases observed jointly on any
+item pair, the effective sample size under pairwise deletion. It equals
+\code{n_cases} when no item value is missing or \code{missing = "complete"}.
 \item \code{item_types}: each item's screened and modeling type.
 \item \code{correlation_method} and \code{correlation_matrix}: the correlations analyzed.
 \item \code{kmo} and \code{bartlett}: sampling-adequacy evidence.

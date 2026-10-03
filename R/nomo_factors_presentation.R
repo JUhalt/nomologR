@@ -12,7 +12,7 @@
 print.nomo_factors <- function(x, ...) {
   nomo_present_header("nomo_factors", "Factor-retention evidence")
   nomo_present_facts(c(
-    sprintf("Cases: %d", x$n_cases),
+    nomo_factors_cases_text(x$n_cases, x$min_pairwise_n),
     sprintf("Items: %d", x$n_items),
     sprintf("Correlation: %s", x$correlation_method)
   ))
@@ -86,6 +86,7 @@ summary.nomo_factors <- function(object, ...) {
 
   out <- list(
     n_cases = object$n_cases,
+    min_pairwise_n = object$min_pairwise_n,
     n_items = object$n_items,
     correlation_method = object$correlation_method,
     correlation = object$correlation_method,
@@ -122,7 +123,7 @@ summary.nomo_factors <- function(object, ...) {
 print.summary_nomo_factors <- function(x, ...) {
   nomo_present_header("nomo_factors", "Factor-retention evidence", summary = TRUE)
   nomo_present_facts(c(
-    sprintf("Cases: %d", x$n_cases),
+    nomo_factors_cases_text(x$n_cases, x$min_pairwise_n),
     sprintf("Items: %d", x$n_items),
     sprintf("Correlation: %s", x$correlation_method),
     sprintf("Criteria: %s", x$criterion_set),

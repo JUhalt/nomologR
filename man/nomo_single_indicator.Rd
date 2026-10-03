@@ -42,8 +42,11 @@ A \code{nomo_single_indicator} object. The fields to read are
 such as a scale mean or sum, so that \code{\link[=nomo_network]{nomo_network()}} can model the
 composite as a single-indicator latent variable. The composite's error
 variance is fixed at \eqn{(1 - \rho)\sigma^2}, where \eqn{\rho} is its
-reliability and \eqn{\sigma^2} its observed variance, so the relationships
-it enters are corrected for its unreliability.
+reliability and \eqn{\sigma^2} its variance as the model analyzes it, so the
+relationships it enters are corrected for its unreliability. The variance
+is computed on the cases the model analyzes (the complete cases, under
+listwise deletion) and with the estimator's denominator, so the fitted
+model's reliability for the composite is the one supplied.
 }
 \details{
 \strong{Where the method comes from.} Spearman (1904) corrected a correlation for

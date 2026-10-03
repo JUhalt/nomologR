@@ -10,7 +10,7 @@ print.nomo_efa <- function(x, ...) {
 
   nomo_present_header("nomo_efa", "Exploratory factor analysis")
   nomo_present_facts(c(
-    sprintf("Cases: %d", x$n_cases),
+    nomo_factors_cases_text(x$n_cases, x$min_pairwise_n),
     sprintf("Items: %d", x$n_items),
     sprintf("Factors: %d (%s)", x$n_factors, source_text)
   ))
@@ -37,6 +37,7 @@ print.nomo_efa <- function(x, ...) {
 summary.nomo_efa <- function(object, ...) {
   out <- list(
     n_cases = object$n_cases,
+    min_pairwise_n = object$min_pairwise_n,
     n_items = object$n_items,
     n_factors = object$n_factors,
     factor_source = object$factor_source,
@@ -71,7 +72,7 @@ print.summary_nomo_efa <- function(x, ...) {
 
   nomo_present_header("nomo_efa", "Exploratory factor analysis", summary = TRUE)
   nomo_present_facts(c(
-    sprintf("Cases: %d", x$n_cases),
+    nomo_factors_cases_text(x$n_cases, x$min_pairwise_n),
     sprintf("Items: %d", x$n_items),
     sprintf("Factors: %d (%s)", x$n_factors, source_text)
   ))

@@ -115,7 +115,7 @@ nomo_run_key_evidence <- function(x) {
   }
   if (!is.null(r$invariance)) {
     out <- c(out, paste0("Invariance: completed ",
-                         paste(r$invariance$completed_levels, collapse = " -> ")))
+                         nomo_invariance_level_path(r$invariance$completed_levels)))
   }
   if (!is.null(r$network)) {
     n_hyp <- nrow(r$network$hypothesis_evidence)

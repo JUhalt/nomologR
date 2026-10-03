@@ -151,6 +151,91 @@ test_that("ordered items are expanded to every occasion", {
 })
 
 
+test_that("items stored as ordered factors are ordered on every occasion (#145)", {
+  skip_on_cran()
+  cut_items <- as.data.frame(lapply(nomo_demo_longitudinal, function(x) {
+    ordered(as.integer(cut(x, c(-Inf, 3, 3.75, 4.5, 5.25, Inf))))
+  }))
+  # One column of w4 is stored as integers: the item is still ordered on
+  # every occasion, as `ordered` would make it.
+  cut_items$w4_t3 <- as.integer(as.character(cut_items$w4_t3))
+  long <- nomo_invariance_longitudinal(
+    long_model, cut_items, occasions = long_occasions, ordered = "w1",
+    levels = c("configural", "thresholds"), localize = FALSE
+  )
+  expect_identical(long$ordered_detected, c("w2", "w3", "w4"))
+  expect_identical(length(long$ordered), 12L)
+  expect_true("w4_t3" %in% long$ordered)
+  expect_identical(long$indicator_type, "ordered_polytomous")
+  expect_identical(long$estimator, "WLSMV")
+  row <- long$decision_log[long$decision_log$metric == "ordered_detected", ]
+  expect_identical(row$object, "w2, w3, w4")
+  expect_identical(row$severity, "review")
+})
+
+
+test_that("an error that detected ordered items cause names the items (#145)", {
+  cut_items <- as.data.frame(lapply(nomo_demo_longitudinal, function(x) {
+    ordered(as.integer(cut(x, c(-Inf, 3, 3.75, 4.5, 5.25, Inf))))
+  }))
+  expect_error(
+    nomo_invariance_longitudinal(
+      long_model, cut_items, occasions = long_occasions, ordered = "w1",
+      levels = c("configural", "metric", "scalar")
+    ),
+    paste("ordered prefix of configural -> thresholds -> metric -> scalar -> strict.",
+          "w2, w3, and w4 are stored as ordered factors and modeled as ordered;"),
+    fixed = TRUE
+  )
+})
+
+
+test_that("a release names items as in the one-occasion model (#145)", {
+  # The column name matched nothing, so the scalar model had stayed fully
+  # constrained while the output reported the release.
+  expect_error(
+    nomo_invariance_longitudinal(
+      long_model, nomo_demo_longitudinal, occasions = long_occasions,
+      levels = c("configural", "metric", "scalar"),
+      partial = nomo_partial("scalar", "w3_t2 ~ 1", "Column name.")
+    ),
+    "Release `w3_t2 ~ 1` does not name.*name items and factors as in the one-occasion `model`"
+  )
+
+  skip_on_cran()
+  # A loading release frees w2's loading on the later occasions.
+  loading <- nomo_invariance_longitudinal(
+    long_model, nomo_demo_longitudinal, occasions = long_occasions,
+    levels = c("configural", "metric"), localize = FALSE,
+    partial = nomo_partial("metric", "Wellbeing =~ w2", "Prespecified.")
+  )
+  expect_identical(diff(loading$fit_evidence$df), 4)
+})
+
+
+test_that("latent change fixed by releasing every intercept is not reported (#145)", {
+  skip_on_cran()
+  long <- nomo_invariance_longitudinal(
+    long_model, nomo_demo_longitudinal, occasions = long_occasions,
+    levels = c("configural", "metric", "scalar"), localize = FALSE,
+    partial = nomo_partial("scalar", paste0("w", 1:4, " ~ 1"), "Every intercept drifts.")
+  )
+  expect_identical(nrow(long$latent_means), 0L)
+  expect_false("latent_change" %in% long$decision_log$metric)
+  fixed <- long$decision_log[long$decision_log$metric == "latent_means_fixed", ]
+  expect_match(fixed$observation, "fixed at 0 on every occasion.", fixed = TRUE)
+})
+
+
+test_that("ID.cat values other than Wu-Estabrook are refused (#145)", {
+  expect_error(
+    nomo_invariance_longitudinal(long_model, nomo_demo_longitudinal, long_occasions,
+                                 ID.cat = "millsap", ID.fac = "UL"),
+    "`ID.cat` must be \"Wu.Estabrook.2016\"", fixed = TRUE
+  )
+})
+
+
 test_that("the results print and summarize within 80 columns", {
   skip_on_cran()
   long <- long_default()

@@ -2183,7 +2183,10 @@ nomo_network <- function(model,
   # One sample fitted with the composites in `spec` as single indicators; with
   # none, the model and data are fitted as given.
   fit_sample <- function(spec, sample_data, sample_role) {
-    applied <- nomo_network_single_apply(prepared$full_model, sample_data, spec)
+    applied <- nomo_network_single_apply(
+      prepared$full_model, sample_data, spec, missing, estimator_requested,
+      ordered
+    )
     list(
       result = nomo_network_fit_once(
         model_fitted = applied$model,

@@ -24,8 +24,9 @@ A \code{nomo_retest} object. The fields to read are:
 occasions, ICC(A,1) with its 95\% interval and Koo and Li's description
 of that interval (\code{koo_li}), ICC(C,1) with its interval, the mean change
 from the first to the last occasion with its interval, the pooled
-standard deviation, the standard error of measurement (\code{sem}), and the
-smallest detectable change (\code{sdc}).
+standard deviation, the standard error of measurement (\code{sem}, the
+square root of the residual mean square), and the smallest detectable
+change (\code{sdc}).
 \item \code{reliable_change}: one row per person and composite, with the first and
 last scores, the change, the reliable change index (\code{rci}), and whether
 the change is a reliable increase, a reliable decrease, or neither.
@@ -64,14 +65,22 @@ or a fail, and a reliability depends on the interval between occasions and on
 whether the construct itself changed.
 
 \strong{Measurement error and change.} The standard error of measurement is
-\eqn{SD \sqrt{1 - ICC}}{SD * sqrt(1 - ICC)} (Nunnally & Bernstein, 1994),
-with ICC(A,1) and the standard deviation pooled over occasions. The smallest
-detectable change is \eqn{1.96 \sqrt{2} \, SEM}{1.96 * sqrt(2) * SEM}: a
-change in a person's score smaller than that is within measurement error at
-95\% (Weir, 2005). Jacobson and Truax's (1991) reliable change index divides a
-person's change by \eqn{\sqrt{2} \, SEM}{sqrt(2) * SEM}, so it exceeds 1.96
-exactly when the change exceeds the smallest detectable change. A reliable
-change is not necessarily a meaningful one.
+\eqn{\sqrt{MS_E}}{sqrt(MS_E)}, the square root of the residual mean square
+of the two-way model (Weir, 2005): how far a person's scores spread across
+occasions once the shift in the mean between occasions is removed. It does
+not depend on which ICC is chosen. When the occasions do not differ in
+mean, it is close to \eqn{SD \sqrt{1 - ICC}}{SD * sqrt(1 - ICC)}
+(Nunnally & Bernstein, 1994), with ICC(A,1) and the standard deviation
+pooled over occasions; when they do, that form counts the shift as
+measurement error and overstates it. The smallest detectable change is
+\eqn{1.96 \sqrt{2} \, SEM}{1.96 * sqrt(2) * SEM}: a change in a person's
+score smaller than that is within measurement error at 95\% (Weir, 2005).
+Jacobson and Truax's (1991) reliable change index divides a person's change
+by \eqn{\sqrt{2} \, SEM}{sqrt(2) * SEM}, so it exceeds 1.96 exactly when
+the change exceeds the smallest detectable change. The change compared
+includes any shift in the mean, so a shift that everyone shares can make
+many changes reliable. A reliable change is not necessarily a meaningful
+one.
 }
 \examples{
 # Agency scores on two occasions, two weeks apart (simulated).

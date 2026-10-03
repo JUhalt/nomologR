@@ -27,8 +27,12 @@
 #'   Orthogonal rotations are allowed but are recorded as a researcher choice.
 #' @param fm Common-factor extraction method passed to [psych::fa()]. The
 #'   default is `"minres"`. Supported values are `"minres"`, `"uls"`, `"ols"`,
-#'   `"wls"`, `"gls"`, `"pa"`, `"ml"`, `"minchi"`, `"minrank"`, `"alpha"`,
-#'   and `"old.min"`.
+#'   `"wls"`, `"gls"`, `"pa"`, `"ml"`, `"minchi"`, `"alpha"`, and
+#'   `"old.min"`. `"alpha"` needs at least two factors, because
+#'   [psych::fa()] cannot fit a one-factor alpha solution. For `"minchi"`,
+#'   the number of cases observed for each item pair is passed to
+#'   [psych::fa()], which weights the residuals by it. `"minrank"` is not
+#'   supported, because [psych::fa()] needs the `Rcsdp` package for it.
 #' @param correlation Optional correlation strategy: `"auto"`, `"pearson"`,
 #'   `"polychoric"`, `"tetrachoric"`, or `"mixed"`. If `NULL`, the value is
 #'   inherited from a supplied `nomo_factors` object when possible; otherwise
@@ -51,13 +55,21 @@
 #'
 #'   * `items`, `n_factors`, and `factor_source`, which records whether the
 #'     count was the researcher's or taken from a `nomo_factors` result.
+#'   * `n_cases`: the number of rows analyzed (every row under
+#'     `missing = "pairwise"`, including rows with no item data; the complete
+#'     rows under `missing = "complete"`).
+#'   * `min_pairwise_n`: the smallest number of cases observed jointly on any
+#'     item pair, the effective sample size under pairwise deletion. It equals
+#'     `n_cases` when no item value is missing or `missing = "complete"`.
 #'   * `correlation_method` and `correlation_matrix`: the correlations analyzed.
 #'   * `pattern_matrix`, `structure_matrix`, and `factor_correlations`.
 #'   * `communalities`, `uniquenesses`, and `complexity`.
 #'   * `item_summary`: one row per item, with its primary and secondary
 #'     loadings, communality, flags, and the explanation of any flag.
 #'   * `residual_matrix`, `residual_pairs`, and `rmsr`: local misfit.
-#'   * `sample_adequacy`: sample size, KMO, and Bartlett's test.
+#'   * `sample_adequacy`: `n_cases`, `min_pairwise_n`, `n_items`,
+#'     `cases_per_item` (`min_pairwise_n` divided by `n_items`), `kmo`, and
+#'     `bartlett`.
 #'   * `decision_log`.
 #'
 #'   The flag in `item_summary`, `attention`, is `"KEEP"`, `"REVIEW"`, or
@@ -137,7 +149,7 @@ nomo_efa <- function(data,
   }
   supported_fm <- c(
     "minres", "uls", "ols", "wls", "gls", "pa",
-    "ml", "minchi", "minrank", "alpha", "old.min"
+    "ml", "minchi", "alpha", "old.min"
   )
   if (!fm %in% supported_fm) {
     stop(
@@ -255,6 +267,15 @@ nomo_efa <- function(data,
     stop("`factors` must be a positive integer or a `nomo_factors` object.", call. = FALSE)
   }
   k <- as.integer(k)
+  if (fm == "alpha" && k < 2L) {
+    stop(
+      paste(
+        "`fm = \"alpha\"` needs at least two factors; psych::fa() cannot fit",
+        "a one-factor alpha solution. Choose another extraction method."
+      ),
+      call. = FALSE
+    )
+  }
 
   if (is.null(items)) {
     items <- names(data)
@@ -397,6 +418,11 @@ nomo_efa <- function(data,
   if (common_n_available) {
     fa_args$n.obs <- nrow(analysis_data)
   }
+  if (fm == "minchi") {
+    # Given a correlation matrix without the pairwise Ns, psych::fa() quietly
+    # replaces minchi with minres.
+    fa_args$np.obs <- pairwise_n
+  }
 
   fit <- tryCatch(
     suppressWarnings(
@@ -490,7 +516,7 @@ nomo_efa <- function(data,
   sample_adequacy <- list(
     n_cases = nrow(analysis_data),
     n_items = length(items),
-    cases_per_item = nrow(analysis_data) / length(items),
+    cases_per_item = min_pairwise_n / length(items),
     min_pairwise_n = min_pairwise_n,
     kmo = kmo,
     bartlett = bartlett
@@ -948,20 +974,31 @@ nomo_efa_log <- function(k,
     )
   }
 
+  # Under pairwise deletion, rows with little or no item data count in
+  # `n_cases` but not in the correlations, so the prompt uses the smallest
+  # jointly observed N, as nomo_factors() does.
   small_n_ref <- guidance$factor_small_n_reference
   if (is.null(small_n_ref)) small_n_ref <- 100L
-  if (n_cases < small_n_ref) {
+  if (min_pairwise_n < small_n_ref) {
+    pairwise_text <- if (min_pairwise_n < n_cases) {
+      sprintf(
+        "; the smallest number observed jointly on an item pair was %d",
+        min_pairwise_n
+      )
+    } else {
+      ""
+    }
     log <- nomo_log_add(
       log,
       stage = "efa",
       object = "sample",
       metric = "sample_size",
-      value = n_cases,
+      value = min_pairwise_n,
       reference = sprintf("%d cases is a teaching review reference, not a universal minimum", small_n_ref),
       severity = "review",
       observation = sprintf(
-        "%d cases were analyzed for %d items (%.1f cases per item).",
-        n_cases, n_items, n_cases / n_items
+        "%d cases were analyzed for %d items%s (%.1f cases per item).",
+        n_cases, n_items, pairwise_text, min_pairwise_n / n_items
       ),
       recommendation = paste(
         "Evaluate sample adequacy jointly with communalities, loading magnitude,",

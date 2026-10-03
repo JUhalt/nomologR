@@ -15,8 +15,11 @@
 #'   or an object created by [nomo_model()].
 #' @param data A data frame containing the model indicators.
 #' @param ordered Optional character vector naming binary/ordinal indicators.
-#'   When supplied and `estimator = NULL`, `nomo_cfa()` explicitly requests
-#'   `WLSMV`.
+#'   Model indicators stored as ordered factors are treated as declared whether
+#'   or not they are named here, because `lavaan` fits them as categorical; the
+#'   decision log flags them for review. Names that are not variables in the
+#'   model are not used, and the decision log lists them. When any indicator is
+#'   ordered and `estimator = NULL`, `nomo_cfa()` explicitly requests `WLSMV`.
 #' @param estimator Optional `lavaan` estimator. For continuous indicators,
 #'   leaving this as `NULL` preserves `lavaan::cfa()`'s default. Robust ML
 #'   variants such as `"MLR"` remain explicit researcher choices.
@@ -38,7 +41,11 @@
 #'   * `fit`: the unchanged `lavaan` fit, for anything else `lavaan` reports.
 #'   * `model`: the model syntax fitted.
 #'   * `converged`, `estimator`, `data_n`, `n_used`, and `sample_summary`.
-#'   * `fit_evidence`: global fit indices with their teaching references.
+#'   * `fit_evidence`: global fit indices with their teaching references;
+#'     `variant` names the `lavaan` measure each value comes from. Robust
+#'     values are preferred, then scaled ones, then standard ones. When
+#'     `lavaan` was asked for a scaled test statistic but could not compute it,
+#'     every value is the standard one, and the decision log says so.
 #'   * `standardized_loadings`: one row per loading, with its interval, flag,
 #'     and explanation.
 #'   * `factor_correlations`: latent correlations with intervals.
@@ -219,11 +226,37 @@ nomo_cfa <- function(model,
   mi_top <- as.integer(mi_top)
   nomo_cfa_validate_guidance(guidance)
 
+  # Only the model's indicators count as ordered (#145). Declared names outside
+  # the model are noted in the log, and indicators stored as ordered factors are
+  # treated as declared, because lavaan fits them as categorical either way.
+  model_observed <- tryCatch(
+    as.character(lavaan::lavNames(lavaan::lavaanify(model), type = "ov")),
+    error = function(e) character()
+  )
+  ordered_unused <- setdiff(ordered, model_observed)
+  ordered_found <- nomo_ordered_indicators(model, data, intersect(ordered, model_observed))
+  ordered <- ordered_found$ordered
+  ordered_detected <- ordered_found$detected
+  detected_note <- if (length(ordered_detected)) {
+    sprintf(
+      " %s and %s as declared: %s.",
+      nomo_present_noun(
+        length(ordered_detected),
+        "This indicator is stored as an ordered factor",
+        "These indicators are stored as ordered factors"
+      ),
+      nomo_present_noun(length(ordered_detected), "counts", "count"),
+      paste(ordered_detected, collapse = ", ")
+    )
+  } else {
+    ""
+  }
+
   if (length(ordered) && !is.null(estimator) && grepl("^ML", estimator)) {
     stop(
       paste0(
         "ML-family estimators are not supported here with declared ordered ",
-        "indicators. Leave `estimator = NULL` for WLSMV or choose a ",
+        "indicators.", detected_note, " Leave `estimator = NULL` for WLSMV or choose a ",
         "categorical-data estimator supported by lavaan."
       ),
       call. = FALSE
@@ -234,8 +267,8 @@ nomo_cfa <- function(model,
       tolower(missing) %in% c("ml", "fiml", "ml.x", "fiml.x")) {
     stop(
       paste0(
-        "FIML is not supported by lavaan for declared ordered indicators. ",
-        "Use an ordered-data missingness option supported by your estimator ",
+        "FIML is not supported by lavaan for declared ordered indicators.",
+        detected_note, " Use an ordered-data missingness option supported by your estimator ",
         "or address missingness before this model."
       ),
       call. = FALSE
@@ -347,11 +380,10 @@ nomo_cfa <- function(model,
   } else {
     tryCatch(as.character(lavaan::lavNames(fit, type = "lv")), error = function(e) character())
   }
-  observed_names <- if (nrow(standardized_loadings)) {
-    unique(standardized_loadings$item)
-  } else {
-    tryCatch(as.character(lavaan::lavNames(fit, type = "ov")), error = function(e) character())
-  }
+  # Observed names come from the fit rather than from the loadings: in a
+  # higher-order model a first-order factor is the indicator of a second-order
+  # loading, and its disturbance is a latent variance, not an observed residual.
+  observed_names <- tryCatch(as.character(lavaan::lavNames(fit, type = "ov")), error = function(e) character())
 
   factor_correlations <- nomo_cfa_factor_correlations(standardized_solution, latent_names)
   heywood <- nomo_cfa_heywood(
@@ -413,6 +445,8 @@ nomo_cfa <- function(model,
     engine_estimator = engine_estimator,
     estimator_source = estimator_source,
     ordered = ordered,
+    ordered_detected = ordered_detected,
+    ordered_unused = ordered_unused,
     missing = missing,
     control = control,
     data_n = nrow(data),
@@ -420,6 +454,7 @@ nomo_cfa <- function(model,
     converged = converged,
     warnings = all_warnings,
     fit_evidence = fit_evidence,
+    scaled_unavailable = nomo_cfa_scaled_unavailable(fit_measures_all),
     loadings = standardized_loadings,
     heywood = heywood,
     residual_pairs = residual_pairs,
@@ -510,22 +545,36 @@ nomo_cfa_first_measure <- function(measures, candidates) {
 }
 
 
+# TRUE when lavaan was asked for a scaled test statistic but could not compute
+# it, for example because the scaling factor is unavailable.
+nomo_cfa_scaled_unavailable <- function(measures) {
+  "chisq.scaled" %in% names(measures) &&
+    !is.finite(suppressWarnings(as.numeric(measures[["chisq.scaled"]])[1L]))
+}
+
+
 nomo_cfa_fit_evidence <- function(measures, guidance) {
   refs <- guidance$fit_reference
-  chi <- nomo_cfa_first_measure(measures, c("chisq.scaled", "chisq"))
-  df <- nomo_cfa_first_measure(measures, c("df.scaled", "df"))
-  p <- nomo_cfa_first_measure(measures, c("pvalue.scaled", "pvalue"))
-  cfi <- nomo_cfa_first_measure(measures, c("cfi.robust", "cfi.scaled", "cfi"))
-  tli <- nomo_cfa_first_measure(measures, c("tli.robust", "tli.scaled", "tli"))
-  rmsea <- nomo_cfa_first_measure(measures, c("rmsea.robust", "rmsea.scaled", "rmsea"))
-  rmsea_lo <- nomo_cfa_first_measure(
-    measures,
-    c("rmsea.ci.lower.robust", "rmsea.ci.lower.scaled", "rmsea.ci.lower")
-  )
-  rmsea_hi <- nomo_cfa_first_measure(
-    measures,
-    c("rmsea.ci.upper.robust", "rmsea.ci.upper.scaled", "rmsea.ci.upper")
-  )
+  # Robust, then scaled, then standard values (#145). When lavaan was asked for
+  # a scaled test statistic but could not compute it, every value is the
+  # standard one: without a scaling factor lavaan can still report a scaled
+  # RMSEA, such as 0 for a model whose standard RMSEA is 0.22. A fit with no
+  # scaled test at all, such as ML with FIML, keeps lavaan's robust
+  # (missing-data corrected) indices beside the standard chi-square.
+  unscaled <- nomo_cfa_scaled_unavailable(measures)
+  test <- if (unscaled) "" else c(".scaled", "")
+  index <- if (unscaled) "" else c(".robust", ".scaled", "")
+  chi <- nomo_cfa_first_measure(measures, paste0("chisq", test))
+  df <- nomo_cfa_first_measure(measures, paste0("df", test))
+  p <- nomo_cfa_first_measure(measures, paste0("pvalue", test))
+  cfi <- nomo_cfa_first_measure(measures, paste0("cfi", index))
+  tli <- nomo_cfa_first_measure(measures, paste0("tli", index))
+  rmsea <- nomo_cfa_first_measure(measures, paste0("rmsea", index))
+  # The interval is the one around the RMSEA reported; with no RMSEA the
+  # candidate names match nothing, so there is no interval either.
+  interval <- sub("^rmsea", "", rmsea$variant)
+  rmsea_lo <- nomo_cfa_first_measure(measures, paste0("rmsea.ci.lower", interval))
+  rmsea_hi <- nomo_cfa_first_measure(measures, paste0("rmsea.ci.upper", interval))
   srmr <- nomo_cfa_first_measure(measures, c("srmr"))
 
   values <- c(
@@ -614,11 +663,14 @@ nomo_cfa_loadings <- function(standardized_solution, guidance) {
   weak <- is.finite(loading) & abs(loading) < guidance$cfa_loading_reference
   extreme <- is.finite(loading) & abs(loading) > 1 + 1e-6
   unavailable <- !is.finite(loading)
+  # In a higher-order model a first-order factor is the indicator of a
+  # second-order loading, so its content is the factor's definition.
+  content <- ifelse(rows$rhs %in% rows$lhs, "the first-order factor's definition", "item content")
   attention[weak] <- "REVIEW"
   explanation[weak] <- paste0(
     "Absolute standardized loading is below the configured teaching reference of ",
     format(guidance$cfa_loading_reference, trim = TRUE),
-    "; inspect item content, precision, and model specification."
+    "; inspect ", content[weak], ", precision, and model specification."
   )
   attention[extreme] <- "STRONG REVIEW"
   explanation[extreme] <- paste(
@@ -828,12 +880,19 @@ nomo_cfa_decision_log <- function(estimator_label, engine_estimator,
                                   loadings, heywood, residual_pairs,
                                   modification_indices,
                                   modification_indices_requested,
-                                  mi_error) {
+                                  mi_error, ordered_detected = character(),
+                                  ordered_unused = character(),
+                                  scaled_unavailable = FALSE) {
   log <- nomo_log_new()
   estimator_observation <- switch(
     estimator_source,
     ordered_default = paste0(
-      "Ordered indicators were declared, so WLSMV was requested explicitly. ",
+      if (length(ordered_detected)) {
+        "Ordered indicators were declared or stored as ordered factors"
+      } else {
+        "Ordered indicators were declared"
+      },
+      ", so WLSMV was requested explicitly. ",
       "lavaan may report DWLS as the parameter-estimation engine because ",
       "WLSMV uses diagonal weighting for estimation with robust test/SE corrections."
     ),
@@ -857,18 +916,36 @@ nomo_cfa_decision_log <- function(estimator_label, engine_estimator,
     )
   )
 
+  ordered_observation <- if (!length(ordered)) {
+    "No indicators were explicitly declared ordered."
+  } else if (length(ordered_detected)) {
+    sprintf(
+      "%s modeled as ordered: %d named in `ordered` and %d stored as ordered factors.",
+      nomo_present_count(length(ordered), "indicator is", "indicators are"),
+      length(ordered) - length(ordered_detected), length(ordered_detected)
+    )
+  } else {
+    sprintf("%s %s declared ordered.", nomo_present_count(length(ordered), "indicator"),
+            nomo_present_noun(length(ordered), "was", "were"))
+  }
+  if (length(ordered_unused)) {
+    ordered_observation <- paste0(ordered_observation, sprintf(
+      " `ordered` named %s not in the model, which %s not used: %s.",
+      nomo_present_count(length(ordered_unused), "variable"),
+      nomo_present_noun(length(ordered_unused), "was", "were"),
+      paste(ordered_unused, collapse = ", ")
+    ))
+  }
   log <- nomo_log_add(
     log, stage = "cfa",
     object = if (length(ordered)) paste(ordered, collapse = ", ") else "model",
     metric = "ordered_indicators", value = length(ordered),
     reference = "Binary/ordinal outcomes should be declared rather than inferred solely from integer storage",
     severity = "info",
-    observation = if (length(ordered)) {
-      sprintf("%s %s declared ordered.", nomo_present_count(length(ordered), "indicator"),
-              nomo_present_noun(length(ordered), "was", "were"))
-    } else "No indicators were explicitly declared ordered.",
+    observation = ordered_observation,
     recommendation = "Confirm the measurement level of all indicators before interpreting the model."
   )
+  log <- nomo_ordered_detected_log(log, ordered_detected, stage = "cfa")
 
   if (!is.null(missing)) {
     log <- nomo_log_add(
@@ -948,6 +1025,24 @@ nomo_cfa_decision_log <- function(estimator_label, engine_estimator,
         recommendation = "Inspect the warning in context before interpreting model fit."
       )
     }
+  }
+
+  if (isTRUE(scaled_unavailable)) {
+    log <- nomo_log_add(
+      log, stage = "cfa", object = "model", metric = "scaled_test_unavailable",
+      value = NA_real_,
+      reference = "Robust and scaled fit indices follow from the scaled test statistic",
+      severity = "review",
+      observation = paste(
+        "lavaan could not compute the scaled test statistic for this estimator,",
+        "so the chi-square and every fit index reported are the standard,",
+        "unscaled versions; lavaan's scaled and robust indices were not used."
+      ),
+      recommendation = paste(
+        "Report that the fit indices are unscaled, and inspect the underlying",
+        "lavaan fit to see why the scaling factor could not be computed."
+      )
+    )
   }
 
   if (inherits(fit_evidence, "data.frame") && nrow(fit_evidence)) {

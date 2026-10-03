@@ -26,11 +26,14 @@
 #'   (default), `"htmt2"`, `"htmt"`, or `"none"`. HTMT2 is prioritized
 #'   because its geometric-mean formulation is designed for congeneric
 #'   indicators; original HTMT assumes tau-equivalence.
-#' @param htmt_missing Missing-data option passed to [semTools::htmt()]. The
-#'   default `"default"` delegates the unrestricted-correlation missing-data
-#'   handling to `lavaan::lavCor()` rather than silently imposing listwise
-#'   deletion. Other supported values are `"listwise"`, `"pairwise"`,
-#'   `"direct"`, `"ml"`, and `"fiml"`.
+#' @param htmt_missing Missing-data handling for the correlations behind HTMT
+#'   and HTMT2, passed to [semTools::htmt()]. The default, `"default"`, follows
+#'   the fitted model, so HTMT rests on the same cases as the CFA: `"fiml"`
+#'   when the CFA used full-information maximum likelihood, `"pairwise"` when
+#'   it used pairwise deletion, and `"listwise"` otherwise. Other supported
+#'   values are `"listwise"`, `"pairwise"`, `"direct"`, `"ml"`, and `"fiml"`.
+#'   The handling used and the number of cases appear in `htmt_status` and the
+#'   decision log.
 #' @param fornell_larcker Logical. If `TRUE`, also produce a legacy
 #'   Fornell-Larcker matrix and pairwise comparison where available. It is not
 #'   used as the primary discriminant-validity criterion.
@@ -40,12 +43,18 @@
 #' @return A `nomo_validity` object. The fields to read are:
 #'
 #'   * `ave`: average variance extracted per construct, as convergent
-#'     evidence.
+#'     evidence. AVE is not defined for a factor with a cross-loaded
+#'     indicator; its row has an `NA` estimate and the attention
+#'     `"unavailable"`.
 #'   * `latent_correlations`: construct correlations with intervals.
 #'   * `htmt2` and `htmt`: heterotrait-monotrait ratios per pair.
 #'   * `discriminant`: each pair's separation evidence with its reference and
 #'     interpretation.
 #'   * `htmt_status`: which HTMT variants were computed, and why any was not.
+#'     For a computed variant, `missing` is the missing-data handling used and
+#'     `n` the number of cases: the complete cases under listwise deletion, the
+#'     smallest pairwise count under pairwise deletion, and every case with an
+#'     indicator observed otherwise.
 #'   * `fornell_larcker_pairs`: the historical comparison, when requested.
 #'   * `standardized_loadings`, `references`, and `decision_log`.
 #'
@@ -163,15 +172,33 @@ nomo_validity <- function(fit,
 
   ave <- nomo_validity_ave_tidy(ave_engine, construct_names = fit_info$latent_names)
   if (nrow(ave)) {
+    # semTools::AVE() is not defined for a factor with a cross-loaded
+    # indicator. That NA is expected, so it is reported as not computed rather
+    # than as an inadmissible value (#145).
+    pe <- fit_info$parameter_estimates
+    cross_factors <- unique(
+      pe$lhs[pe$op == "=~" & pe$rhs %in% fit_info$cross_loaded_items]
+    )
+    cross_na <- !is.finite(ave$estimate) & ave$construct %in% cross_factors
     ave$reference <- ave_reference
     ave$attention <- ifelse(
-      !is.finite(ave$estimate) | ave$estimate < 0 | ave$estimate > 1,
-      "concern",
-      ifelse(ave$estimate < ave_reference, "review", "info")
+      cross_na,
+      "unavailable",
+      ifelse(
+        !is.finite(ave$estimate) | ave$estimate < 0 | ave$estimate > 1,
+        "concern",
+        ifelse(ave$estimate < ave_reference, "review", "info")
+      )
     )
     ave$interpretation <- vapply(seq_len(nrow(ave)), function(i) {
       estimate <- ave$estimate[[i]]
-      if (!is.finite(estimate) || estimate < 0 || estimate > 1) {
+      if (cross_na[[i]]) {
+        paste(
+          "AVE is not computed for a factor with a cross-loaded indicator,",
+          "because its share of that indicator's variance is not defined.",
+          "The cross-loading entry in the decision log explains the model."
+        )
+      } else if (!is.finite(estimate) || estimate < 0 || estimate > 1) {
         paste(
           "AVE is unavailable or outside its conventional 0-1 range.",
           "Inspect model admissibility, cross-loadings, and indicator specification before interpretation."
@@ -208,18 +235,23 @@ nomo_validity <- function(fit,
     method = character(),
     requested = logical(),
     available = logical(),
-    reason = character()
+    reason = character(),
+    missing = character(),
+    n = integer()
   )
 
   want_htmt2 <- htmt %in% c("both", "htmt2")
   want_htmt <- htmt %in% c("both", "htmt")
 
-  add_status <- function(method, requested, available, reason = "") {
+  add_status <- function(method, requested, available, reason = "",
+                         missing = NA_character_, n = NA_integer_) {
     tibble::tibble(
       method = method,
       requested = requested,
       available = available,
-      reason = reason
+      reason = reason,
+      missing = missing,
+      n = if (isTRUE(available)) as.integer(n) else NA_integer_
     )
   }
 
@@ -242,13 +274,22 @@ nomo_validity <- function(fit,
       )
     }
   } else {
+    # "default" follows the fitted model's own missing-data handling, so HTMT
+    # and the CFA rest on the same cases; the cases used are recorded (#145).
+    htmt_missing_used <- if (identical(htmt_missing, "default")) {
+      nomo_validity_htmt_missing(fit_info$fit)
+    } else {
+      htmt_missing
+    }
+    htmt_n <- nomo_validity_htmt_n(htmt_inputs$data, htmt_missing_used)
+
     if (want_htmt2) {
       htmt2_error <- NULL
       htmt2_matrix <- tryCatch(
         semTools::htmt(
           model = htmt_inputs$model,
           data = htmt_inputs$data,
-          missing = htmt_missing,
+          missing = htmt_missing_used,
           ordered = if (length(htmt_inputs$ordered)) htmt_inputs$ordered else NULL,
           absolute = TRUE,
           htmt2 = TRUE
@@ -262,7 +303,8 @@ nomo_validity <- function(fit,
         htmt_status,
         add_status(
           "HTMT2", TRUE, !is.null(htmt2_matrix),
-          if (is.null(htmt2_error)) "" else htmt2_error
+          if (is.null(htmt2_error)) "" else htmt2_error,
+          missing = htmt_missing_used, n = htmt_n
         )
       )
     }
@@ -273,7 +315,7 @@ nomo_validity <- function(fit,
         semTools::htmt(
           model = htmt_inputs$model,
           data = htmt_inputs$data,
-          missing = htmt_missing,
+          missing = htmt_missing_used,
           ordered = if (length(htmt_inputs$ordered)) htmt_inputs$ordered else NULL,
           absolute = TRUE,
           htmt2 = FALSE
@@ -287,7 +329,8 @@ nomo_validity <- function(fit,
         htmt_status,
         add_status(
           "HTMT", TRUE, !is.null(htmt_matrix),
-          if (is.null(htmt_error)) "" else htmt_error
+          if (is.null(htmt_error)) "" else htmt_error,
+          missing = htmt_missing_used, n = htmt_n
         )
       )
     }
@@ -427,7 +470,12 @@ nomo_validity <- function(fit,
         reference = paste0("configured review reference = ", ave_reference),
         severity = severity,
         observation = ave$interpretation[[i]],
-        recommendation = if (severity == "info") {
+        recommendation = if (ave$attention[[i]] == "unavailable") {
+          paste(
+            "Use the standardized loadings as this factor's convergent",
+            "evidence; do not change indicator membership only to obtain AVE."
+          )
+        } else if (severity == "info") {
           "Carry AVE forward as one piece of convergent evidence."
         } else {
           "Inspect standardized loadings, item content, error variance, and dimensionality before deciding whether any scale revision is warranted."
@@ -483,6 +531,64 @@ nomo_validity <- function(fit,
         rationale = "Unavailable evidence should be disclosed, not manufactured by changing the analysis."
       )
     }
+  }
+
+  computed_htmt <- htmt_status[htmt_status$available, , drop = FALSE]
+  if (nrow(computed_htmt)) {
+    missing_used <- computed_htmt$missing[[1L]]
+    n_used <- computed_htmt$n[[1L]]
+    n_fit <- sum(lavaan::lavInspect(fit_info$fit, "nobs"))
+    # Under the CFA's own handling, HTMT and the CFA rest on the same cases by
+    # construction. Under pairwise deletion the smallest pairwise count is below
+    # the CFA's total N, but the CFA's own correlations rest on the same counts,
+    # so only a different handling is compared with the CFA's N (#145).
+    same_handling <- identical(
+      if (missing_used %in% c("ml", "direct")) "fiml" else missing_used,
+      nomo_validity_htmt_missing(fit_info$fit)
+    )
+    fewer <- !same_handling && isTRUE(n_used < n_fit)
+    log <- nomo_log_add(
+      log,
+      stage = "validity",
+      object = "measurement_model",
+      metric = "htmt_missing_data",
+      value = n_used,
+      reference = "semTools::htmt(); lavaan::lavCor()",
+      severity = if (fewer) "review" else "info",
+      observation = sprintf(
+        "HTMT-family correlations used `missing = \"%s\"` (%s): n = %d, %s, of the %d cases the CFA analyzed.",
+        missing_used,
+        if (identical(htmt_missing, "default")) {
+          "the fitted model's own missing-data handling"
+        } else if (same_handling) {
+          "as requested, the fitted model's own missing-data handling"
+        } else {
+          "as requested"
+        },
+        n_used,
+        switch(
+          missing_used,
+          listwise = "the complete cases",
+          pairwise = "the smallest number of cases for any pair of indicators",
+          "the cases with any indicator observed"
+        ),
+        n_fit
+      ),
+      recommendation = if (fewer) {
+        paste(
+          "HTMT rests on fewer cases than the CFA. Report both sample sizes, or",
+          "set `htmt_missing` to the CFA's missing-data handling."
+        )
+      } else if (same_handling) {
+        paste(
+          "No action needed; HTMT and the CFA use the same missing-data handling",
+          "on the same cases."
+        )
+      } else {
+        "No action needed; HTMT and the CFA rest on the same cases."
+      },
+      rationale = "Evidence computed on different cases should say so."
+    )
   }
 
   if (length(fit_info$cross_loaded_items)) {

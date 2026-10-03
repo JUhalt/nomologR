@@ -107,6 +107,86 @@ nomo_run_branch_requested <- function(x, stage) {
 }
 
 
+# Invariance and the network re-estimate the measurement model the researcher
+# reviewed, so they are estimated as its CFA was (#145): each takes `ordered`,
+# `estimator`, and `missing` from `settings$cfa` unless its own settings name
+# them. A design-log row records what was inherited, and any setting of the
+# stage's own that differs from the CFA's. Returns the stage's arguments and
+# the log.
+nomo_run_inherit_estimation <- function(x, stage, extra) {
+  cfa <- x$settings$cfa
+  own <- x$settings[[stage]]
+  inherited <- character()
+  differs <- character()
+  for (arg in c("ordered", "estimator", "missing")) {
+    if (arg %in% names(own)) {
+      if (!identical(own[[arg]], cfa[[arg]])) differs <- c(differs, arg)
+    } else if (!is.null(cfa[[arg]])) {
+      extra[[arg]] <- cfa[[arg]]
+      inherited <- c(inherited, arg)
+    }
+  }
+  if (!length(inherited) && !length(differs)) {
+    return(list(extra = extra, log = x$decision_log))
+  }
+
+  shown <- function(args, values) {
+    paste(vapply(args, function(arg) {
+      value <- values[[arg]]
+      if (is.null(value)) return(sprintf("%s = NULL (the default)", arg))
+      sprintf("%s = %s", arg, paste(deparse(value, width.cutoff = 500L), collapse = " "))
+    }, character(1)), collapse = ", ")
+  }
+  what <- c(invariance = "Invariance testing", network = "The nomological network")[[stage]]
+
+  observation <- c(
+    if (length(inherited)) {
+      sprintf(
+        "%s re-estimates the measurement model with the CFA stage's %s, from `settings$cfa`.",
+        what, shown(inherited, cfa)
+      )
+    },
+    if (length(differs)) {
+      sprintf(
+        "`settings$%s` sets %s, where the CFA stage used %s.",
+        stage, shown(differs, own), shown(differs, cfa)
+      )
+    }
+  )
+
+  log <- nomo_run_workflow_log_add(
+    x$decision_log,
+    id = paste0("estimation_settings:", stage),
+    stage = stage,
+    scope = "measurement_model",
+    observation = paste(observation, collapse = " "),
+    reason = paste(
+      "Invariance and network results are read as evidence about the",
+      "measurement model the researcher reviewed, so by default they are",
+      "estimated as its CFA was."
+    ),
+    options = sprintf(
+      paste(
+        "Name `ordered`, `estimator`, or `missing` in `settings$%s` to estimate",
+        "this stage differently, and record why."
+      ),
+      stage
+    ),
+    consequence = if (length(differs)) {
+      paste(
+        "This stage's results rest on estimation settings that differ from the",
+        "reviewed CFA's; read them with that difference in mind."
+      )
+    } else {
+      "This stage uses the reviewed CFA's estimation settings."
+    },
+    decision = shown(c(inherited, differs), extra),
+    source = if (length(differs)) "researcher_input" else "pipeline"
+  )
+  list(extra = extra, log = log)
+}
+
+
 nomo_run_run_invariance <- function(x) {
   if (!nomo_run_branch_requested(x, "invariance")) {
     x$results$invariance <- NULL
@@ -127,6 +207,9 @@ nomo_run_run_invariance <- function(x) {
     "invariance",
     remove = "group"
   )
+  inherited <- nomo_run_inherit_estimation(x, "invariance", extra)
+  extra <- inherited$extra
+  x$decision_log <- inherited$log
   roles <- nomo_run_data_roles(x$source_data)
 
   result <- nomo_run_safe_component(
@@ -178,6 +261,9 @@ nomo_run_run_network <- function(x) {
     "network",
     remove = "hypotheses"
   )
+  inherited <- nomo_run_inherit_estimation(x, "network", extra)
+  extra <- inherited$extra
+  x$decision_log <- inherited$log
 
   result <- nomo_run_safe_component(
     fun = nomo_network,
