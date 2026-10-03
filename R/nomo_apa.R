@@ -140,7 +140,24 @@ nomo_apa_new <- function(body, title, stub, general = character(),
 #' @param ... Unused.
 #'
 #' @return A `nomo_apa_table` object, which prints in the console and renders
-#'   as a formatted table, with its title and notes, when knitted.
+#'   as a formatted table, with its title and notes, when knitted. The fields
+#'   to read are:
+#'
+#'   * `number`: the table number, an integer, or `NULL` when none was given.
+#'   * `title`: the table title.
+#'   * `body`: a data frame of formatted cells, all character. Its column
+#'     names are the column headings.
+#'   * `stub`: the name of the stub column, the first column of `body`, which
+#'     says what each row describes.
+#'   * `notes`: a list of three character vectors, `general`, `specific`, and
+#'     `probability`, the three kinds of APA table note in the order they are
+#'     printed. Any of them may be empty.
+#'   * `source`: the class of the result the table was built from, such as
+#'     `"nomo_cfa"`.
+#'
+#'   Headings, cells, and notes are written in Markdown, as pandoc reads it:
+#'   italics as `*p*` and a superscript as `^a^`. Printing in the console drops
+#'   these marks from the headings and notes; knitting renders them.
 #'
 #' @references
 #' American Psychological Association. (2020). *Publication manual of the

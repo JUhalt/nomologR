@@ -205,6 +205,18 @@ test_that("unsupported objects and arguments are refused with an explanation", {
 })
 
 
+test_that("?nomo_apa_table lists the fields of the table it returns (#145)", {
+  # The structure is covered by the stability policy, so each field is named.
+  value <- nomo_test_rd_text("nomo_apa_table", "\\value")
+  tab <- nomo_apa_table(apa_cfa(), "fit", number = 2)
+
+  for (field in c(names(tab), names(tab$notes))) {
+    expect_true(grepl(sprintf("\\code{%s}", field), value, fixed = TRUE), label = field)
+  }
+  expect_true(grepl("Markdown", value, fixed = TRUE))
+})
+
+
 # Remaining paths (#72) --------------------------------------------------------
 
 test_that("a one-factor model has no factor-correlation table, and says why", {
