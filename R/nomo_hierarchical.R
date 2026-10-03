@@ -78,10 +78,11 @@
 #' weighted. It uses only that factor's loadings and treats the remainder of
 #' each item as uncorrelated residual.
 #'
-#' The two are the same quantity when the data are unidimensional, and can
-#' differ under a bifactor model, where an item's residual with respect to one
-#' factor contains the other factors and is correlated across items. Rodriguez
-#' et al. (2016) state this and decline to prefer either, so both are reported.
+#' When the data are unidimensional, H equals `determinacy_r2`, the squared
+#' determinacy. The two can differ under a bifactor model, where an item's
+#' residual with respect to one factor contains the other factors and is
+#' correlated across items. Rodriguez et al. (2016) state this and decline to
+#' prefer either, so both are reported.
 #' Determinacy is always computed from the model-reproduced matrix, whatever
 #' `obs.var` is set to, because that is what the formula is defined on.
 #'
@@ -91,6 +92,12 @@
 #' reported as their authors' recommendations where a value falls below them,
 #' as with fixed fit-index cutoffs elsewhere in the package, and are never
 #' applied as rules.
+#'
+#' **Improper solutions.** A negative variance estimate, a residual variance or
+#' the variance of a general or group source (in a higher-order model, a
+#' first-order factor's disturbance), makes the solution improper. The
+#' indices that depend on a negative source variance are `NA`, and a concern
+#' note says which variance is negative.
 #'
 #' @param fit A `nomo_cfa` object or fitted `lavaan` model containing a
 #'   bifactor or higher-order measurement model. Single-group, single-level
@@ -121,11 +128,16 @@
 #'     of factor scores, and construct replicability H (see **Factor scores**).
 #'   * `loadings`: each item's standardized general and group loadings,
 #'     communality, and share of common variance that is general.
-#'   * `notes` and `decision_log`.
+#'   * `notes`: each note's `topic`, `severity`, and full text (`note`), with
+#'     a one-sentence version (`brief`); and `decision_log`.
 #'
 #'   Other fields record the call, the settings used, and the fitted model.
 #'   They may change between releases and are not part of the stable interface
 #'   (see `?nomologR`).
+#'
+#'   `print()` shows the indices for the total score and the item set, the
+#'   subscale and factor-score tables, and one sentence for each flagged note;
+#'   `summary()` adds each index's interpretation and every note in full.
 #'
 #' @references
 #' Beauducel, A. (2011). Indeterminacy of factor score estimates in slightly
@@ -206,6 +218,10 @@ nomo_hierarchical <- function(fit,
          !nzchar(general))) {
     stop("`general` must be NULL or a single factor name.", call. = FALSE)
   }
+  if (!is.list(guidance)) {
+    stop("`guidance` must be a list from `nomo_defaults()`.", call. = FALSE)
+  }
+  nomo_defaults_check_safeguards(guidance)
 
   input <- nomo_hierarchical_input(fit)
   structure <- nomo_hierarchical_structure(input, general)
@@ -520,8 +536,15 @@ nomo_hierarchical_compute <- function(matrices, structure) {
   psi <- matrices$psi
   S <- matrices$denominator_cov
 
+  # A negative source variance (a Heywood case, common for a first-order
+  # disturbance in a higher-order model) has no square root and attributes
+  # negative variance to its source. What depends on it is NA, and the notes
+  # flag the improper solution (#145).
+  usable <- diag(psi) >= 0
+  root <- function(source) if (usable[[source]]) sqrt(psi[source, source]) else NA_real_
   contribution <- function(weight_items, source) {
     w <- as.numeric(rownames(LA) %in% weight_items)
+    if (!usable[[source]]) return(NA_real_)
     psi[source, source] * sum(w * LA[, source])^2
   }
   denominator <- function(weight_items) sum(S[weight_items, weight_items])
@@ -536,7 +559,7 @@ nomo_hierarchical_compute <- function(matrices, structure) {
   omega_h <- general_total / total_denominator
 
   sd_items <- sqrt(diag(matrices$implied)[items])
-  general_std <- LA[items, general] * sqrt(psi[general, general]) / sd_items
+  general_std <- LA[items, general] * root(general) / sd_items
   group_of <- vapply(items, function(i) {
     k <- names(groups)[vapply(groups, function(g) i %in% g, logical(1))]
     if (length(k)) k else NA_character_
@@ -544,7 +567,7 @@ nomo_hierarchical_compute <- function(matrices, structure) {
   group_std <- vapply(items, function(i) {
     k <- group_of[[i]]
     if (is.na(k)) return(0)
-    LA[i, k] * sqrt(psi[k, k]) / sd_items[[i]]
+    LA[i, k] * root(k) / sd_items[[i]]
   }, numeric(1))
 
   ecv <- sum(general_std^2) / sum(general_std^2 + group_std^2)
@@ -665,10 +688,11 @@ nomo_hierarchical_factor_scores <- function(matrices,
     determinacy <- sqrt(pmin(quadratic, 1))
   }
 
+  # A loading that is NA, from a negative source variance, leaves H undefined.
   replicability <- vapply(sources, function(k) {
     l <- lambda[, k]
-    l <- l[l != 0]
-    if (!length(l) || any(abs(l) >= 1)) return(NA_real_)
+    l <- l[is.na(l) | l != 0]
+    if (!length(l) || anyNA(l) || any(abs(l) >= 1)) return(NA_real_)
     1 / (1 + 1 / sum(l^2 / (1 - l^2)))
   }, numeric(1))
 
@@ -695,53 +719,65 @@ nomo_hierarchical_interpretation <- function(indices, structure) {
     sprintf("the general factor (%s)", structure$general)
   }
   capitalize <- function(x) paste0(toupper(substr(x, 1L, 1L)), substring(x, 2L))
+  # Shares print as proportions do (#144).
+  share <- function(name) nomo_present_stat(value(name), "proportion")
 
-  c(
+  text <- c(
     sprintf(
-      "Common sources explain %.2f of the variance of the unit-weighted total score.",
-      value("omega_total")
+      "Common sources explain %s of the variance of the unit-weighted total score.",
+      share("omega_total")
     ),
     sprintf(
-      "%s explains %.2f of the variance of the unit-weighted total score.",
+      "%s explains %s of the variance of the unit-weighted total score.",
       capitalize(general_label),
-      value("omega_hierarchical")
+      share("omega_hierarchical")
     ),
     sprintf(
-      "Of the total score's reliable variance, %.2f reflects %s and the rest reflects group factors.",
-      value("omega_hierarchical_relative"),
+      "Of the total score's reliable variance, %s reflects %s and the rest reflects group factors.",
+      share("omega_hierarchical_relative"),
       general_label
     ),
     sprintf(
       paste(
-        "%s explains %.2f of the common variance across items. Higher values",
+        "%s explains %s of the common variance across items. Higher values",
         "indicate a stronger general factor relative to the group factors; no",
         "benchmark value establishes that the items are unidimensional."
       ),
       capitalize(general_label),
-      value("ecv")
+      share("ecv")
     ),
     sprintf(
       paste(
-        "%.2f of item correlations are influenced only by the general factor.",
-        "When this is very high, even a modest ECV can yield relatively",
+        "Of the item correlations, %s are influenced only by the general factor.",
+        "When this share is very high, even a modest ECV can yield relatively",
         "unbiased estimates from a unidimensional model."
       ),
-      value("puc")
+      share("puc")
     )
   )
+  # An index that rests on a negative variance is not computed.
+  missing <- !is.finite(indices$estimate)
+  text[missing] <- paste(
+    "Not computed: a variance estimate this index depends on is negative,",
+    "so the solution is improper."
+  )
+  text
 }
 
 
 # Notes and decision log -------------------------------------------------------
 
 nomo_hierarchical_notes <- function(input, structure, matrices, computed, obs.var) {
+  # Each note has its full text, which summary() and the decision log give,
+  # and one sentence for print() (#145).
   notes <- tibble::tibble(
     topic = character(),
     severity = character(),
-    note = character()
+    note = character(),
+    brief = character()
   )
-  add <- function(notes, topic, severity, note) {
-    tibble::add_row(notes, topic = topic, severity = severity, note = note)
+  add <- function(notes, topic, severity, note, brief = note) {
+    tibble::add_row(notes, topic = topic, severity = severity, note = note, brief = brief)
   }
 
   k <- length(structure$groups)
@@ -760,6 +796,9 @@ nomo_hierarchical_notes <- function(input, structure, matrices, computed, obs.va
         "With three first-order factors the second-order part is just",
         "identified. This model fits exactly as well as the correlated-factors",
         "model, so fit cannot distinguish them."
+      ), brief = paste(
+        "With three first-order factors the second-order part is just",
+        "identified, so fit cannot distinguish it from the correlated-factors model."
       ))
     }
   } else {
@@ -772,7 +811,12 @@ nomo_hierarchical_notes <- function(input, structure, matrices, computed, obs.va
       structure$general, length(structure$items), nomo_present_count(k, "group factor"),
       paste(names(structure$groups), collapse = ", "),
       if (length(only_general)) {
-        sprintf(" Item(s) %s load on the general factor only.", paste(only_general, collapse = ", "))
+        sprintf(
+          " %s %s %s on the general factor only.",
+          nomo_present_noun(length(only_general), "Item", "Items"),
+          paste(only_general, collapse = ", "),
+          nomo_present_noun(length(only_general), "loads", "load")
+        )
       } else {
         ""
       }
@@ -782,11 +826,19 @@ nomo_hierarchical_notes <- function(input, structure, matrices, computed, obs.va
         "With only two group factors, a bifactor model can be empirically",
         "under-identified or unstable. Check lavaan's warnings and standard",
         "errors before interpreting the group factors."
+      ), brief = paste(
+        "With only two group factors, the bifactor model can be empirically",
+        "under-identified or unstable."
       ))
     }
   }
 
-  notes <- add(notes, "model_choice", "review", paste(
+  # A caution that holds for every bifactor and higher-order model, whatever
+  # the data show, so it is information rather than a flag (#145).
+  notes <- add(notes, "model_choice", "info", brief = paste(
+    "Fit alone does not choose between a bifactor and a higher-order model;",
+    "see the summary or ?nomo_hierarchical."
+  ), note = paste(
     "A bifactor model will usually fit at least as well as correlated-factors",
     "or higher-order models of the same items, even when it did not generate",
     "the data (Reise, 2012), and a higher-order model is a constrained version",
@@ -818,16 +870,27 @@ nomo_hierarchical_notes <- function(input, structure, matrices, computed, obs.va
     ))
   }
 
+  # A loading is NA when its source variance is negative.
   mixed <- vapply(names(structure$groups), function(g) {
     l <- computed$loadings$group_loading[computed$loadings$subscale %in% g]
-    any(l > 0) && any(l < 0)
+    any(l > 0, na.rm = TRUE) && any(l < 0, na.rm = TRUE)
   }, logical(1))
   if (any(mixed)) {
+    shown <- names(mixed)[mixed]
     notes <- add(notes, "group_loadings", "review", paste0(
-      "Group factor(s) ", paste(names(mixed)[mixed], collapse = ", "),
-      " have loadings of mixed sign, so what the group factor represents ",
+      nomo_present_noun(length(shown), "Group factor ", "Group factors "),
+      paste(shown, collapse = ", "),
+      nomo_present_noun(length(shown), " has", " have"),
+      " loadings of mixed sign, so what the group factor represents ",
       "after the general factor is removed is unclear. Inspect the item ",
       "content before interpreting its subscale score."
+    ), brief = paste0(
+      nomo_present_noun(length(shown), "Group factor ", "Group factors "),
+      paste(shown, collapse = ", "),
+      nomo_present_noun(length(shown), " has", " have"),
+      " loadings of mixed sign, so what ",
+      nomo_present_noun(length(shown), "it represents", "they represent"),
+      " beyond the general factor is unclear."
     ))
   }
 
@@ -838,6 +901,32 @@ nomo_hierarchical_notes <- function(input, structure, matrices, computed, obs.va
       "Negative residual variance for ", paste(negative, collapse = ", "),
       ". The solution is improper and the indices should not be interpreted ",
       "until the cause is understood."
+    ), brief = paste0(
+      "Negative residual variance for ", paste(negative, collapse = ", "),
+      ": the solution is improper."
+    ))
+  }
+
+  # A negative variance of the general or a group source, such as a
+  # first-order disturbance in a higher-order model (#145).
+  psi <- diag(matrices$psi)[matrices$sources]
+  negative <- names(psi)[psi < 0]
+  if (length(negative)) {
+    what <- if (identical(structure$type, "higher_order")) {
+      nomo_present_noun(length(negative), "disturbance variance", "disturbance variances")
+    } else {
+      nomo_present_noun(length(negative), "factor variance", "factor variances")
+    }
+    notes <- add(notes, "improper_solution", "concern", paste0(
+      "Negative ", what, " for ", paste(negative, collapse = ", "),
+      ". The solution is improper: the indices that depend on ",
+      nomo_present_noun(length(negative), "this variance", "these variances"),
+      " are not computed, and the others should not be interpreted until the ",
+      "cause is understood."
+    ), brief = paste0(
+      "Negative ", what, " for ", paste(negative, collapse = ", "),
+      ": the solution is improper, and the indices that depend on ",
+      nomo_present_noun(length(negative), "it", "them"), " are not computed."
     ))
   }
 
@@ -858,9 +947,13 @@ nomo_hierarchical_factor_score_notes <- function(notes, add, factors) {
     "factor's score can use the other items to partial out the general factor.",
     "Construct replicability H (Hancock & Mueller, 2001) uses only that",
     "factor's own loadings and treats the rest of each item as uncorrelated",
-    "residual. The two are equivalent when the data are unidimensional and can",
-    "differ under a bifactor model, which Rodriguez et al. note without",
-    "preferring either. Read each as the question it answers."
+    "residual. When the data are unidimensional, H equals the squared",
+    "determinacy (`determinacy_r2`); under a bifactor model the two can",
+    "differ, which Rodriguez et al. note without preferring either. Read each",
+    "as the question it answers."
+  ), brief = paste(
+    "Factor determinacy and construct replicability H answer different",
+    "questions; the summary explains each."
   ))
 
   undetermined <- factors$factor[
@@ -873,6 +966,11 @@ nomo_hierarchical_factor_score_notes <- function(notes, add, factors) {
       ". Gorsuch (1983, p. 260) recommended using factor score estimates only ",
       "above that value. This is his recommendation reported as context, not a ",
       "rule applied here; the score may still be usable for some purposes."
+    ), brief = paste0(
+      "Factor determinacy is at or below .90 for ",
+      paste(undetermined, collapse = ", "),
+      ", the value above which Gorsuch (1983) recommended using factor score ",
+      "estimates."
     ))
   }
 
@@ -880,15 +978,19 @@ nomo_hierarchical_factor_score_notes <- function(notes, add, factors) {
     is.finite(factors$min_competing_r) & factors$min_competing_r <= 0.70
   ]
   if (length(opposed)) {
+    lowest <- paste(sprintf(
+      "%s (%s)", opposed,
+      nomo_present_stat(factors$min_competing_r[factors$factor %in% opposed], "r")
+    ), collapse = ", ")
     notes <- add(notes, "factor_scores", "review", paste0(
       "Two equally valid sets of factor scores could correlate as low as ",
-      paste(sprintf(
-        "%s (%.2f)", opposed,
-        factors$min_competing_r[factors$factor %in% opposed]
-      ), collapse = ", "),
+      lowest,
       ". Gorsuch (1983, p. 260) suggested this minimum be above .70. A ",
       "negative value means two researchers scoring the same data could rank ",
       "people in opposite orders and both be consistent with the model."
+    ), brief = paste0(
+      "Two equally valid sets of factor scores could correlate as low as ",
+      lowest, ", below the .70 Gorsuch (1983) suggested."
     ))
   }
 
@@ -903,6 +1005,9 @@ nomo_hierarchical_factor_score_notes <- function(notes, add, factors) {
       ". Hancock and Mueller (2001) proposed .70 as a standard; a factor below ",
       "it is not well defined by its own indicators and is expected to change ",
       "across studies. Reported as their standard, not applied as a rule."
+    ), brief = paste0(
+      "Construct replicability H is below .70, the standard Hancock and ",
+      "Mueller (2001) proposed, for ", paste(unreplicable, collapse = ", "), "."
     ))
   }
 
@@ -910,10 +1015,10 @@ nomo_hierarchical_factor_score_notes <- function(notes, add, factors) {
     notes <- add(notes, "factor_scores", "concern", paste(
       "Determinacy or replicability could not be computed for at least one",
       "factor. This happens when the model-reproduced correlation matrix is",
-      "singular, or when a standardized loading is at or beyond one, which is",
-      "itself an improper solution. The affected values are NA rather than",
-      "guessed."
-    ))
+      "singular, when a source variance is negative, or when a standardized",
+      "loading is at or beyond one; the last two are themselves improper",
+      "solutions. The affected values are NA rather than guessed."
+    ), brief = "Determinacy or replicability could not be computed for at least one factor.")
   }
 
   notes
@@ -947,14 +1052,22 @@ nomo_hierarchical_decision_log <- function(structure, notes, computed) {
       value = row$omega_hierarchical_subscale,
       reference = "Descriptive index; no pass/fail threshold is applied",
       severity = "info",
-      observation = sprintf(
-        paste(
-          "After removing the general factor, %.2f of the %s composite's",
-          "variance is reliable variance specific to %s (omega subscale = %.2f)."
-        ),
-        row$omega_hierarchical_subscale, row$subscale, row$subscale,
-        row$omega_subscale
-      ),
+      observation = if (is.finite(row$omega_hierarchical_subscale)) {
+        sprintf(
+          paste(
+            "After removing the general factor, %s of the %s composite's",
+            "variance is reliable variance specific to %s (omega subscale = %s)."
+          ),
+          nomo_present_stat(row$omega_hierarchical_subscale, "proportion"),
+          row$subscale, row$subscale,
+          nomo_present_stat(row$omega_subscale, "reliability")
+        )
+      } else {
+        sprintf(
+          "Omega hierarchical subscale for %s is not computed: its variance estimate is negative.",
+          row$subscale
+        )
+      },
       recommendation = paste(
         "Report a subscale score only if the reliable variance it carries",
         "beyond the general factor supports its intended use."
