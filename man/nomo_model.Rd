@@ -23,7 +23,8 @@ hierarchical structures these are the first-order or group factors.}
 \value{
 A character scalar of class \code{nomo_model} that can be passed directly
 to \code{\link[=nomo_cfa]{nomo_cfa()}} or to \code{lavaan::cfa()}. Attributes record the \code{factors},
-\code{structure}, \code{general} factor, and any identification \code{notes}.
+\code{structure}, \code{general} factor, and any identification \code{notes}, a character
+vector named by severity (\code{"review"} or \code{"concern"}).
 }
 \description{
 \code{nomo_model()} is a small convenience helper for reflective CFA models. It
@@ -49,8 +50,14 @@ indicator, and each element of \code{factors} becomes a group factor. All
 factors are orthogonal. Identification is written into the syntax (each
 factor's first loading is freed and its variance fixed to 1), so the model
 is identified the same way whatever \code{std.lv} is used to fit it. At least
-two group factors with at least two indicators each are required;
-configurations known to be fragile are noted.
+two group factors with at least two indicators each are required. Two
+accepted configurations are not identified without an added constraint,
+which \code{nomo_model()} does not write: a group factor with two indicators
+(its two loadings enter the covariances only through their product), and
+two group factors with no more than three indicators each. Both are noted
+as concerns: \code{lavaan} may still report convergence, but the loadings are
+arbitrary. Two group factors with more indicators are identified but can
+be empirically unstable, which is noted for review.
 }
 
 Any identification notes are attached as the \code{"notes"} attribute and printed
