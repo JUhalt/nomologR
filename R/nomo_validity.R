@@ -527,9 +527,18 @@ nomo_validity <- function(fit,
 
   computed_htmt <- htmt_status[htmt_status$available, , drop = FALSE]
   if (nrow(computed_htmt)) {
+    missing_used <- computed_htmt$missing[[1L]]
     n_used <- computed_htmt$n[[1L]]
     n_fit <- sum(lavaan::lavInspect(fit_info$fit, "nobs"))
-    fewer <- isTRUE(n_used < n_fit)
+    # Under the CFA's own handling, HTMT and the CFA rest on the same cases by
+    # construction. Under pairwise deletion the smallest pairwise count is below
+    # the CFA's total N, but the CFA's own correlations rest on the same counts,
+    # so only a different handling is compared with the CFA's N (#145).
+    same_handling <- identical(
+      if (missing_used %in% c("ml", "direct")) "fiml" else missing_used,
+      nomo_validity_htmt_missing(fit_info$fit)
+    )
+    fewer <- !same_handling && isTRUE(n_used < n_fit)
     log <- nomo_log_add(
       log,
       stage = "validity",
@@ -540,15 +549,17 @@ nomo_validity <- function(fit,
       severity = if (fewer) "review" else "info",
       observation = sprintf(
         "HTMT-family correlations used `missing = \"%s\"` (%s): n = %d, %s, of the %d cases the CFA analyzed.",
-        computed_htmt$missing[[1L]],
+        missing_used,
         if (identical(htmt_missing, "default")) {
           "the fitted model's own missing-data handling"
+        } else if (same_handling) {
+          "as requested, the fitted model's own missing-data handling"
         } else {
           "as requested"
         },
         n_used,
         switch(
-          computed_htmt$missing[[1L]],
+          missing_used,
           listwise = "the complete cases",
           pairwise = "the smallest number of cases for any pair of indicators",
           "the cases with any indicator observed"
@@ -559,6 +570,11 @@ nomo_validity <- function(fit,
         paste(
           "HTMT rests on fewer cases than the CFA. Report both sample sizes, or",
           "set `htmt_missing` to the CFA's missing-data handling."
+        )
+      } else if (same_handling) {
+        paste(
+          "No action needed; HTMT and the CFA use the same missing-data handling",
+          "on the same cases."
         )
       } else {
         "No action needed; HTMT and the CFA rest on the same cases."

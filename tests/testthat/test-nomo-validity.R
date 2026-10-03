@@ -257,6 +257,31 @@ test_that("HTMT follows the CFA's missing-data handling by default and records i
   expect_identical(entry$severity, "info")
   expect_identical(entry$value, 500)
   expect_match(entry$observation, "the fitted model's own missing-data handling", fixed = TRUE)
+  expect_match(entry$recommendation, "use the same missing-data handling", fixed = TRUE)
+  # "direct" names the same full-information handling as the FIML CFA's.
+  direct <- nomo_validity(fiml, htmt_missing = "direct", htmt = "htmt2")
+  entry <- direct$decision_log[direct$decision_log$metric == "htmt_missing_data", ]
+  expect_identical(entry$severity, "info")
+  expect_match(entry$observation, "(as requested, the fitted model's own", fixed = TRUE)
+
+  # A pairwise CFA rests on pairwise counts too: HTMT under the same handling
+  # is not flagged, whether by default or on request (#145).
+  pairwise_cfa <- nomo_cfa(model, data = nomo_demo_continuous, missing = "pairwise")
+  for (requested in c("default", "pairwise")) {
+    same <- nomo_validity(pairwise_cfa, htmt_missing = requested, htmt = "htmt2")
+    expect_identical(same$htmt_status$missing, "pairwise")
+    expect_identical(same$htmt_status$n, 473L)
+    entry <- same$decision_log[same$decision_log$metric == "htmt_missing_data", ]
+    expect_identical(entry$severity, "info")
+    expect_match(entry$observation, "the smallest number of cases for any pair", fixed = TRUE)
+    expect_match(entry$recommendation, "use the same missing-data handling", fixed = TRUE)
+    expect_no_match(entry$recommendation, "set `htmt_missing`", fixed = TRUE)
+  }
+  # Listwise deletion on request after a pairwise CFA drops cases, for review.
+  dropped <- nomo_validity(pairwise_cfa, htmt_missing = "listwise", htmt = "htmt2")
+  entry <- dropped$decision_log[dropped$decision_log$metric == "htmt_missing_data", ]
+  expect_identical(entry$severity, "review")
+  expect_match(entry$recommendation, "rests on fewer cases than the CFA", fixed = TRUE)
 
   # Listwise deletion on request drops cases the CFA used, and the log says so.
   listwise <- nomo_validity(fiml, htmt_missing = "listwise")
@@ -269,10 +294,17 @@ test_that("HTMT follows the CFA's missing-data handling by default and records i
   expect_match(entry$recommendation, "rests on fewer cases than the CFA", fixed = TRUE)
 
   # A listwise CFA keeps listwise deletion, on the same cases.
-  plain <- nomo_validity(nomo_cfa(model, data = nomo_demo_continuous))
+  plain_cfa <- nomo_cfa(model, data = nomo_demo_continuous)
+  plain <- nomo_validity(plain_cfa)
   expect_identical(plain$htmt_status$missing, c("listwise", "listwise"))
   expect_identical(plain$htmt_status$n, c(473L, 473L))
   expect_equal(plain$htmt2$estimate, listwise$htmt2$estimate)
+  # A different handling on as many cases as the CFA is not flagged.
+  other <- nomo_validity(plain_cfa, htmt_missing = "fiml", htmt = "htmt2")
+  entry <- other$decision_log[other$decision_log$metric == "htmt_missing_data", ]
+  expect_identical(entry$severity, "info")
+  expect_match(entry$observation, "(as requested): n = 473", fixed = TRUE)
+  expect_match(entry$recommendation, "rest on the same cases", fixed = TRUE)
   pairwise <- nomo_validity(fiml, htmt_missing = "pairwise", htmt = "htmt2")
   expect_match(
     pairwise$decision_log$observation[pairwise$decision_log$metric == "htmt_missing_data"],
