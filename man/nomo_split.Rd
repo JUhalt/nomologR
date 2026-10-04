@@ -17,7 +17,8 @@ nomo_split(
 \item{validation_prop}{Proportion of rows assigned to the validation sample.
 Must be strictly between 0 and 1.}
 
-\item{seed}{Integer seed used to make the split reproducible.}
+\item{seed}{Integer seed used, with the random-number generator recorded in
+\code{rng_kind}, to make the split reproducible.}
 
 \item{guidance}{Guidance settings from \code{\link[=nomo_defaults]{nomo_defaults()}}.}
 }
@@ -28,12 +29,17 @@ A \code{nomo_split} object. The fields to read are:
 \item \code{assignment}: which sample each row went to.
 \item \code{n_total}, \code{n_calibration}, \code{n_validation}, and
 \code{validation_prop_realized}.
-\item \code{seed} and \code{decision_log}.
+\item \code{seed}, \code{rng_kind}, and \code{decision_log}. \code{rng_kind} is the
+random-number generator, normal, and sample kinds of \code{\link[=RNGkind]{RNGkind()}} that
+drew the split.
 }
 
 Other fields record the call, the settings used, and intermediate engine
 results. They may change between releases and are not part of the stable
 interface (see \code{?nomologR}).
+
+\code{print()} shows the sizes of the two samples, the proportion requested and
+realized, the seed, and the random-number generator.
 }
 \description{
 \code{nomo_split()} creates an explicit random split for workflows in which EFA
@@ -46,6 +52,12 @@ when one is available.
 \details{
 The caller's random-number-generator state is restored after the split so
 that using \code{nomo_split()} does not silently alter later stochastic analyses.
+
+The split depends on the seed and on the random-number generator in use,
+which \code{rng_kind} records: the same seed under another \code{\link[=RNGkind]{RNGkind()}}, such as
+\code{"L'Ecuyer-CMRG"} or \code{sample.kind = "Rounding"}, gives a different split. To
+reproduce a split, set the recorded kinds with \code{RNGkind()} before calling
+\code{nomo_split()} with the same seed, or keep \code{assignment}.
 }
 \examples{
 split <- nomo_split(nomo_demo_continuous, validation_prop = 0.40, seed = 2026)

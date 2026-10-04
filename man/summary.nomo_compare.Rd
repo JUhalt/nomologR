@@ -14,7 +14,8 @@
 \value{
 An object of class \code{summary_nomo_compare} containing model fit,
 comparisons with interpretations, side-by-side standardized loadings, and
-measurement evidence.
+measurement evidence. Printing it shows these as tables, with each flag
+and its recommendation.
 }
 \description{
 Summarize a measurement-model comparison

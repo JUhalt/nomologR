@@ -28,28 +28,39 @@ the items, and the target.}
 \item{estimator, missing}{Optional lavaan \code{estimator} and \code{missing} options.}
 
 \item{guidance}{Guidance settings from \code{\link[=nomo_defaults]{nomo_defaults()}}; its
-\code{efa_loading_reference} and \code{efa_crossloading_reference} are used.}
+\code{efa_loading_reference} and \code{efa_crossloading_reference} are used, and
+they are checked before any model is fitted.}
 }
 \value{
 A \code{nomo_esem} object. The fields to read are:
 \itemize{
 \item \code{loadings}: each item's standardized loading on each factor in the
 ESEM, whether it is the item's main loading or a cross-loading, its
-standard error and p-value, and the CFA's loading for main loadings.
+standard error and p value, and the CFA's loading for main loadings.
 \item \code{factor_correlations}: each pair of factors' correlation (\code{factor1},
 \code{factor2}) in the ESEM and the CFA, and their difference.
-\item \code{models}: both models' chi-square, degrees of freedom, p-value, CFI,
+\item \code{models}: both models' chi-square, degrees of freedom, p value, CFI,
 TLI, RMSEA, SRMR, AIC, and BIC. With a robust estimator, the chi-square
 is scaled and the indices are robust, as in \code{\link[=nomo_cfa]{nomo_cfa()}}.
-\item \code{comparisons}: the likelihood-ratio test of the CFA against the ESEM,
-with \code{chisq_diff}, \code{df_diff}, and \code{p_value}.
+\item \code{comparisons}: the chi-square difference test of the CFA against the
+ESEM, with \code{chisq_diff}, \code{df_diff}, and \code{p_value}. It is the
+likelihood-ratio test under ML, the scaled difference test (Satorra &
+Bentler, 2001) under a robust ML estimator, and the scaled-and-shifted
+test (Satorra, 2000) under WLSMV, as \code{\link[lavaan:lavTestLRT]{lavaan::lavTestLRT()}} chooses.
+\item \code{n} and \code{data_n}: the cases the models used and the rows of \code{data}.
 \item \code{fits}: the fitted \code{lavaan} models, named \code{ESEM} and \code{CFA}.
+\item \code{engine_warnings}: the warnings \code{lavaan} raised, as a list with elements
+\code{ESEM}, \code{CFA}, and \code{comparison} (the difference test).
 \item \code{decision_log}.
 }
 
 Other fields record the call and the settings used. They may change
 between releases and are not part of the stable interface (see
 \code{?nomologR}).
+
+\code{print()} shows both models' fit, the difference test, the factor
+correlations in each model, and the flags. \code{summary()} adds the ESEM
+loadings beside the CFA's and each flag's recommendation.
 }
 \description{
 \code{nomo_esem()} fits a measurement model as exploratory structural equation
@@ -80,10 +91,17 @@ it fits better and its factor correlations are lower, which shows that the
 CFA's zero cross-loadings distort the structure; otherwise the CFA is the
 more parsimonious account. Fit is compared on TLI and RMSEA, which penalize
 the ESEM's extra parameters, so the CFA can fit better on them. The CFA is
-nested in the ESEM, and their likelihood-ratio test is reported too, but in
-large samples it rejects trivial misfit. The decision log also flags
+nested in the ESEM, and their chi-square difference test is reported too,
+but in large samples it rejects trivial misfit. The decision log also flags
 cross-loadings at or above the guidance's cross-loading reference and main
 loadings below its loading reference.
+
+\strong{Admissibility.} Both models must converge; otherwise the function stops
+and names the model that did not. The warnings \code{lavaan} raises are kept, and
+a negative variance, a standardized loading above 1, or a latent correlation
+above 1 in either model is recorded as a concern, as \code{\link[=nomo_cfa]{nomo_cfa()}} records
+it. Cases \code{lavaan} did not use, such as incomplete cases without
+\code{missing = "fiml"}, are reported.
 }
 \examples{
 \donttest{
@@ -109,4 +127,13 @@ Marsh, H. W., Morin, A. J. S., Parker, P. D., & Kaur, G. (2014). Exploratory
 structural equation modeling: An integration of the best features of
 exploratory and confirmatory factor analysis. \emph{Annual Review of Clinical
 Psychology, 10}, 85-110. \doi{10.1146/annurev-clinpsy-032813-153700}
+
+Satorra, A. (2000). Scaled and adjusted restricted tests in multi-sample
+analysis of moment structures. In R. D. H. Heijmans, D. S. G. Pollock, &
+A. Satorra (Eds.), \emph{Innovations in multivariate statistical analysis} (pp.
+233-247). Springer. \doi{10.1007/978-1-4615-4603-0_17}
+
+Satorra, A., & Bentler, P. M. (2001). A scaled difference chi-square test
+statistic for moment structure analysis. \emph{Psychometrika, 66}(4), 507-514.
+\doi{10.1007/BF02296192}
 }

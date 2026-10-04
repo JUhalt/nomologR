@@ -67,12 +67,13 @@ test_that("plot legends use the same flag wording (#89)", {
   )
   val <- nomo_validity(cfa)
 
+  # The CFA plots use the shared status scales (#144).
   cfa$standardized_loadings$attention[1:3] <- c("KEEP", "REVIEW", "STRONG REVIEW")
   p <- plot(cfa, type = "loadings")
   expect_identical(p$labels$shape, "Flag")
-  expect_identical(legend(p, "shape"), c("none", "review", "concern"))
+  expect_identical(legend(p, "shape"), c("No flag", "Review", "Concern"))
   cfa$fit_evidence$attention <- ifelse(cfa$fit_evidence$metric == "SRMR", "review", "info")
-  expect_identical(legend(plot(cfa, type = "fit"), "shape"), c("none", "review"))
+  expect_identical(legend(plot(cfa, type = "fit"), "shape"), c("No flag", "Review"))
 
   val$ave$attention <- c("info", "concern")
   expect_identical(legend(plot(val, type = "ave"), "shape"), c("No flag", "Concern"))
