@@ -1017,7 +1017,8 @@ nomo_hierarchical_factor_score_notes <- function(notes, add, factors) {
       "factor. This happens when the model-reproduced correlation matrix is",
       "singular, when a source variance is negative, or when a standardized",
       "loading is at or beyond one; the last two are themselves improper",
-      "solutions. The affected values are NA rather than guessed."
+      "solutions. The affected values are left missing (shown as --) rather",
+      "than guessed."
     ), brief = "Determinacy or replicability could not be computed for at least one factor.")
   }
 

@@ -119,7 +119,15 @@ nomo_hierarchical_present_key <- function(x) {
 
 # The notes' one-sentence form, for notes stored before it existed.
 nomo_hierarchical_brief <- function(notes) {
-  if ("brief" %in% names(notes)) notes$brief else notes$note
+  nomo_hierarchical_bind_pages(if ("brief" %in% names(notes)) notes$brief else notes$note)
+}
+
+
+# A page citation stays on one line, "(1983, p. 260)" never breaking after
+# "p.". nomo_present_bind() does not bind it yet (a helper request, #144), so
+# the notes bind it here; the no-break space is undone after wrapping.
+nomo_hierarchical_bind_pages <- function(text) {
+  gsub("\\b(pp?\\.) (?=[0-9])", paste0("\\1", nomo_present_nbsp), text, perl = TRUE)
 }
 
 
@@ -191,11 +199,11 @@ print.summary_nomo_hierarchical <- function(x, ...) {
   nomo_hierarchical_present_tables(x, formats, indices = FALSE)
 
   notes <- x$notes
-  nomo_present_flagged(status = notes$severity, text = notes$note)
+  nomo_present_flagged(status = notes$severity, text = nomo_hierarchical_bind_pages(notes$note))
   info <- notes[!notes$severity %in% c("review", "concern"), , drop = FALSE]
   if (nrow(info)) {
     nomo_present_section("Notes")
-    nomo_present_bullets(info$note)
+    nomo_present_bullets(nomo_hierarchical_bind_pages(info$note))
   }
 
   nomo_hierarchical_present_key(x)

@@ -903,7 +903,7 @@ test_that("undefined determinacy and replicability are NA with a note, not guess
   expect_true(any(notes$severity == "concern"))
   expect_match(
     paste(notes$note, collapse = " "),
-    "NA rather than guessed",
+    "left missing (shown as --) rather than guessed",
     fixed = TRUE
   )
 })
@@ -965,7 +965,13 @@ test_that("a negative disturbance variance gives NA indices and a concern, not a
   printed <- capture.output(print(h))
   expect_true("  Omega total                         --" %in% printed)
   expect_match(printed, "^  - Concern: Negative disturbance variance for A", all = FALSE)
-  expect_no_error(capture.output(print(summary(h))))
+  summarized <- capture.output(print(summary(h)))
+  # A page citation is never broken after "p." (#144).
+  expect_true(any(grepl("Gorsuch (1983, p. 260)", summarized, fixed = TRUE)))
+  expect_false(any(grepl("\\bp\\.$", summarized)))
+  expect_true(all(nchar(summarized) <= 80L))
+  expect_identical(nomologR:::nomo_hierarchical_bind_pages("pp. 6-47 and p. 3"),
+                   "pp.\u00a06-47 and p.\u00a03")
   # The variance plot leaves out a composite it cannot divide, and the
   # loadings plot a loading it cannot standardize; each caption says which.
   p <- plot(h)
