@@ -34,7 +34,11 @@ nomo_validity(
   [`semTools::AVE()`](https://rdrr.io/pkg/semTools/man/AVE.html). `TRUE`
   (default) uses observed variances in the denominator; `FALSE` uses
   model-implied variances. For ordinal indicators, `semTools` calculates
-  AVE using the polychoric correlation structure.
+  AVE from the polychoric correlation structure in the model's
+  unstandardized metric, so a fit with lavaan's theta parameterization
+  gives a different AVE from the delta fit of the same model; the
+  decision log then gives the mean squared standardized loading, which
+  is the same under either.
 
 - htmt:
 
@@ -77,7 +81,12 @@ A `nomo_validity` object. The fields to read are:
   indicator; its row has an `NA` estimate and the attention
   `"unavailable"`.
 
-- `latent_correlations`: construct correlations with intervals.
+- `latent_correlations`: construct correlations with intervals, and
+  their `reference` and `attention`. A correlation is flagged for review
+  when it could exceed the HTMT-family reference: the upper limit of its
+  interval (Rönkkö & Cho, 2022), or the estimate when there is no
+  interval, is above it. A correlation beyond 1 in absolute value is a
+  concern.
 
 - `htmt2` and `htmt`: heterotrait-monotrait ratios per pair.
 
@@ -88,7 +97,11 @@ A `nomo_validity` object. The fields to read are:
   For a computed variant, `missing` is the missing-data handling used
   and `n` the number of cases: the complete cases under listwise
   deletion, the smallest pairwise count under pairwise deletion, and
-  every case with an indicator observed otherwise.
+  every case with an indicator observed otherwise. HTMT is not defined
+  with one construct or for a construct with one indicator, which has no
+  within-construct correlations; such pairs are left out, and the
+  decision log records it as information rather than as missing
+  evidence.
 
 - `fornell_larcker_pairs`: the historical comparison, when requested.
 
@@ -105,10 +118,26 @@ negative and so has no square root. See **Conventions in returned
 tables** in
 [`?nomologR`](https://juhalt.github.io/nomologR/reference/nomologR-package.md).
 
+In the `"discriminant"` table of
+[`nomo_table()`](https://juhalt.github.io/nomologR/reference/nomo_table.md),
+`signal` is the HTMT-family flag (HTMT2, or HTMT when HTMT2 was not
+computed). Where neither was computed, as with several groups, a
+cross-loading, or `htmt = "none"`, it is the latent correlation's
+`attention`, so the pair is still evaluated; a latent correlation beyond
+1 is a concern either way. Beside an HTMT-family value, a latent
+correlation flagged for review is recorded in the decision log as
+information, and the summary names the pair.
+
 Other fields record the call, the settings used, and intermediate engine
 results. They may change between releases and are not part of the stable
 interface (see
 [`?nomologR`](https://juhalt.github.io/nomologR/reference/nomologR-package.md)).
+
+[`print()`](https://rdrr.io/r/base/print.html) counts the convergent and
+construct-separation flags and names each flagged construct or pair;
+[`summary()`](https://rdrr.io/r/base/summary.html) adds the AVE and
+loading summary for each construct, the latent correlation and
+HTMT-family values for each pair, and the full reason for each flag.
 
 ## Details
 
@@ -147,7 +176,7 @@ modeling. *Industrial Management & Data Systems, 121*(12), 2637-2650.
 [doi:10.1108/IMDS-02-2021-0082](https://doi.org/10.1108/IMDS-02-2021-0082)
 
 Rönkkö, M., & Cho, E. (2022). An updated guideline for assessing
-discriminant validity. *Organizational Research Methods, 25*(1).
+discriminant validity. *Organizational Research Methods, 25*(1), 6-47.
 [doi:10.1177/1094428120968614](https://doi.org/10.1177/1094428120968614)
 
 Voorhees, C. M., Brady, M. K., Calantone, R., & Ramirez, E. (2016).
@@ -168,37 +197,64 @@ cfa <- nomo_cfa(model, data = lavaan::HolzingerSwineford1939)
 val <- nomo_validity(cfa)
 summary(val)
 #> <nomo_validity summary> Convergent and discriminant evidence
+#> Constructs: 3 | AVE reference: .50 | HTMT reference: 0.85
+#> Convergent flags: 2 review, 0 concern (3 constructs)
+#> Separation flags: none (3 pairs)
 #> 
 #> Convergent evidence by construct
-#>   Construct    AVE  Min |loading|  Median |loading|  Loadings flagged  Flag
-#>   visual     0.371          0.424             0.581                 1  review
-#>   textual    0.721          0.838             0.852                 0
-#>   speed      0.424          0.570             0.665                 0  review
+#>   Construct  AVE  Min |loading|  Median |loading|  Loadings flagged  Flag
+#>   visual     .37           0.42              0.58                 1  Review
+#>   textual    .72           0.84              0.85                 0
+#>   speed      .42           0.57              0.67                 0  Review
 #> 
 #> Construct separation
-#>   Construct 1  Construct 2  Latent r  95% CI          HTMT2   HTMT
-#>   visual       textual         0.459  [0.334, 0.584]  0.384  0.424
-#>   visual       speed           0.471  [0.328, 0.613]  0.387  0.467
-#>   textual      speed           0.283  [0.148, 0.418]  0.280  0.290
+#>   Construct 1  Construct 2  Latent r  95% CI      HTMT2  HTMT
+#>   visual       textual           .46  [.33, .58]   0.38  0.42
+#>   visual       speed             .47  [.33, .61]   0.39  0.47
+#>   textual      speed             .28  [.15, .42]   0.28  0.29
+#> 
+#> Flagged
+#>   - x2 (Review): Standardized loading 0.42 is below the review reference 0.50
+#>     in absolute value; inspect item content, precision, and model
+#>     specification.
+#>   - visual (Review): AVE (.37) is below the configured convergent-evidence
+#>     reference (.50). Inspect standardized loadings, indicator-specific error,
+#>     and content coverage; do not automatically delete items.
+#>   - speed (Review): AVE (.42) is below the configured convergent-evidence
+#>     reference (.50). Inspect standardized loadings, indicator-specific error,
+#>     and content coverage; do not automatically delete items.
+#> 
+#> What these columns mean
+#>   AVE -- Average variance extracted, the mean share of its indicators'
+#>       variance a construct explains.
+#>   |loading| -- Absolute standardized loading.
+#>   Latent r -- Correlation between two constructs in the CFA.
+#>   CI -- Confidence interval, as lavaan computes it.
+#>   HTMT2 -- Heterotrait-monotrait ratio with geometric means (Roemer et al.,
+#>       2021).
+#>   HTMT -- Heterotrait-monotrait ratio (Henseler et al., 2015).
 #> 
 #> Standardized loadings and AVE address convergent evidence; latent correlations
 #> and HTMT-family statistics address construct separation. These are
 #> complementary questions, not interchangeable pass/fail tests.
+#> 
+#> See nomo_table(x, "discriminant") for every value and x$decision_log for the
+#> reasoning behind each flag.
 val$decision_log
 #> # A tibble: 12 × 10
 #>    stage    object  metric   value reference severity observation recommendation
 #>    <chr>    <chr>   <chr>    <dbl> <chr>     <chr>    <chr>       <chr>         
 #>  1 validity measur… evide…  NA     Fornell … info     "Convergen… Interpret num…
-#>  2 validity x2      stand…   0.424 configur… review   "Absolute … Inspect item …
-#>  3 validity visual  AVE      0.371 configur… review   "AVE is be… Inspect stand…
-#>  4 validity textual AVE      0.721 configur… info     "AVE is at… Carry AVE for…
-#>  5 validity speed   AVE      0.424 configur… review   "AVE is be… Inspect stand…
-#>  6 validity textua… HTMT2    0.280 configur… info     "HTMT2 doe… Interpret thi…
-#>  7 validity visual… HTMT2    0.387 configur… info     "HTMT2 doe… Interpret thi…
-#>  8 validity visual… HTMT2    0.384 configur… info     "HTMT2 doe… Interpret thi…
-#>  9 validity textua… HTMT     0.290 configur… info     "HTMT does… Interpret thi…
-#> 10 validity visual… HTMT     0.467 configur… info     "HTMT does… Interpret thi…
-#> 11 validity visual… HTMT     0.424 configur… info     "HTMT does… Interpret thi…
+#>  2 validity x2      stand…   0.424 configur… review   "Standardi… Inspect item …
+#>  3 validity visual  AVE      0.371 configur… review   "AVE (.37)… Inspect stand…
+#>  4 validity textual AVE      0.721 configur… info     "AVE (.72)… Carry AVE for…
+#>  5 validity speed   AVE      0.424 configur… review   "AVE (.42)… Inspect stand…
+#>  6 validity textua… HTMT2    0.280 configur… info     "HTMT2 (0.… Interpret thi…
+#>  7 validity visual… HTMT2    0.387 configur… info     "HTMT2 (0.… Interpret thi…
+#>  8 validity visual… HTMT2    0.384 configur… info     "HTMT2 (0.… Interpret thi…
+#>  9 validity textua… HTMT     0.290 configur… info     "HTMT (0.2… Interpret thi…
+#> 10 validity visual… HTMT     0.467 configur… info     "HTMT (0.4… Interpret thi…
+#> 11 validity visual… HTMT     0.424 configur… info     "HTMT (0.4… Interpret thi…
 #> 12 validity measur… htmt_… 301     semTools… info     "HTMT-fami… No action nee…
 #> # ℹ 2 more variables: decision <chr>, rationale <chr>
 ```

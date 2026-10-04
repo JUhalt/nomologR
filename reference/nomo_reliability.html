@@ -168,14 +168,26 @@ of <code><a href="nomo_table.html">nomo_table()</a></code>. See <strong>Conventi
 <p>Other fields record the call, the settings used, and intermediate engine
 results. They may change between releases and are not part of the stable
 interface (see <code><a href="nomologR-package.html">?nomologR</a></code>).</p>
+<p><code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> shows the range of omega, the flags it raised against the review
+reference, and how uncertainty was handled; <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> adds each
+construct's omega and alpha with their intervals and score scales, the
+reason any alpha was not computed, and every flag in the decision log
+with its reason.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>The function is deliberately measurement-first: it refuses nonconverged
 models, structural SEMs, higher-order models, and cross-loaded first-order
-indicators in the v0.1 workflow. When global CFA strain or an improper
-solution is present, reliability is still inspectable but the decision log
-warns that model-based reliability can be distorted by misspecification.</p>
+indicators. When global CFA strain or an improper solution is present,
+reliability is still inspectable but the decision log warns that
+model-based reliability can be distorted by misspecification.</p>
+<p>For ordered indicators, the observed-score omega (<code>ordinal_scale = TRUE</code>)
+is the same whether lavaan fitted the model with its delta or theta
+parameterization. The latent-response coefficients (<code>ordinal_scale = FALSE</code>) are computed in the model's unstandardized metric and differ between
+the two; with a theta-parameterized fit the decision log says so.</p>
+<p>Bootstrap intervals refit the model to resampled cases, so they need the
+raw data: a model fitted from a covariance matrix has none, and its
+<code>ci_status</code> says so.</p>
 <p>Average variance extracted (AVE) is not a reliability coefficient and is
 intentionally handled by <code><a href="nomo_validity.html">nomo_validity()</a></code> instead.</p>
     </div>
@@ -222,33 +234,52 @@ of Cronbach's alpha. <em>Psychometrika, 74</em>(1), 107-120.
 <span class="r-in"><span><span class="va">rel</span> <span class="op">&lt;-</span> <span class="fu">nomo_reliability</span><span class="op">(</span><span class="va">cfa</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">rel</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;nomo_reliability summary&gt; Reliability</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Constructs: 3 | Review reference: .70</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Coefficients</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Construct  Indicators  Omega  Alpha  Omega scale          Flag</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   speed      continuous  0.686  0.688  observed continuous  review</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   textual    continuous  0.885  0.883  observed continuous</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   visual     continuous  0.612  0.626  observed continuous  review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Construct  Indicators  Omega  Alpha  Flag</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   visual     continuous    .61    .63  Review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   textual    continuous    .89    .88</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   speed      continuous    .69    .69  Review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Flagged</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   - visual (Review): Omega .61 is below the review reference .70. Inspect</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     score purpose, indicator quality, dimensionality, and CFA evidence before</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     changing the scale.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   - speed (Review): Omega .69 is below the review reference .70. Inspect score</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     purpose, indicator quality, dimensionality, and CFA evidence before</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     changing the scale.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   - visual (Review): Alpha .63 is below the review reference .70. Inspect</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     score purpose, indicator quality, dimensionality, and CFA evidence before</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     changing the scale.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   - speed (Review): Alpha .69 is below the review reference .70. Inspect score</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     purpose, indicator quality, dimensionality, and CFA evidence before</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     changing the scale.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   - Review: At least one CFA fit reference is flagged for review. Model-based</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     omega is conditional on the adequacy of the fitted measurement model.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     Investigate the CFA before treating the reliability coefficient as stable</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     evidence.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Sampling uncertainty was not bootstrapped. For report-ready intervals, rerun</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> with `ci = "bootstrap"`.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Measurement-model context requires review: reliability is conditional on the</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> fitted CFA.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Omega is primary for the congeneric CFA workflow; alpha is secondary and</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> assumption-dependent. Reliability contributes score-precision evidence, not</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> construct validity.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> See x$decision_log for the reasoning behind each coefficient.</span>
 <span class="r-in"><span><span class="va">rel</span><span class="op">$</span><span class="va">decision_log</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 9 × 10</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   stage       object metric  value reference severity observation recommendation</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> reliability measu… coeff… <span style="color: #BB0000;">NA</span>     Dunn et … info     Model-base… Interpret rel…</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> reliability measu… model… <span style="color: #BB0000;">NA</span>     Bell, Ch… review   At least o… Investigate t…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> reliability speed… alpha… <span style="color: #BB0000;">NA</span>     Dunn et … info     Coefficien… Report alpha …</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> reliability visual omega   0.612 configur… review   The coeffi… Inspect score…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> reliability textu… omega   0.885 configur… info     The coeffi… Carry this re…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">6</span> reliability speed  omega   0.686 configur… review   The coeffi… Inspect score…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">7</span> reliability visual alpha   0.626 configur… review   The coeffi… Inspect score…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">8</span> reliability textu… alpha   0.883 configur… info     The coeffi… Carry this re…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">9</span> reliability speed  alpha   0.688 configur… review   The coeffi… Inspect score…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> reliability visua… alpha… <span style="color: #BB0000;">NA</span>     Dunn et … info     Coefficien… Report alpha …</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> reliability visual omega   0.612 configur… review   Omega (.61… Inspect score…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> reliability textu… omega   0.885 configur… info     Omega (.89… Carry this re…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">6</span> reliability speed  omega   0.686 configur… review   Omega (.69… Inspect score…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">7</span> reliability visual alpha   0.626 configur… review   Alpha (.63… Inspect score…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">8</span> reliability textu… alpha   0.883 configur… info     Alpha (.88… Carry this re…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">9</span> reliability speed  alpha   0.688 configur… review   Alpha (.69… Inspect score…</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 2 more variables: decision &lt;chr&gt;, rationale &lt;chr&gt;</span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># \donttest{</span></span></span>
@@ -257,20 +288,40 @@ of Cronbach's alpha. <em>Psychometrika, 74</em>(1), 107-120.
 <span class="r-in"><span><span class="va">rel_ci</span> <span class="op">&lt;-</span> <span class="fu">nomo_reliability</span><span class="op">(</span><span class="va">cfa</span>, ci <span class="op">=</span> <span class="st">"bootstrap"</span>, ci_boot <span class="op">=</span> <span class="fl">100</span>, ci_seed <span class="op">=</span> <span class="fl">2026</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">rel_ci</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;nomo_reliability summary&gt; Reliability</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Constructs: 3 | Review reference: .70</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Coefficients</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Construct Indicators Omega                Alpha                Flag</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   speed     continuous 0.686 [0.585, 0.752] 0.688 [0.625, 0.743] review</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   textual   continuous 0.885 [0.859, 0.900] 0.883 [0.854, 0.898]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   visual    continuous 0.612 [0.542, 0.686] 0.626 [0.554, 0.693] review</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Not shown for width: Omega scale. See nomo_table(x, "coefficients").</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Bracketed values are bootstrap confidence intervals.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Construct  Indicators  Omega  95% CI      Alpha  95% CI      Flag</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   visual     continuous    .61  [.54, .69]    .63  [.55, .69]  Review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   textual    continuous    .89  [.86, .90]    .88  [.85, .90]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   speed      continuous    .69  [.59, .75]    .69  [.63, .74]  Review</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Measurement-model context requires review: reliability is conditional on the</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> fitted CFA.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Flagged</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   - visual (Review): Omega .61 is below the review reference .70. Inspect</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     score purpose, indicator quality, dimensionality, and CFA evidence before</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     changing the scale.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   - speed (Review): Omega .69 is below the review reference .70. Inspect score</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     purpose, indicator quality, dimensionality, and CFA evidence before</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     changing the scale.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   - visual (Review): Alpha .63 is below the review reference .70. Inspect</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     score purpose, indicator quality, dimensionality, and CFA evidence before</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     changing the scale.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   - speed (Review): Alpha .69 is below the review reference .70. Inspect score</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     purpose, indicator quality, dimensionality, and CFA evidence before</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     changing the scale.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   - Review: At least one CFA fit reference is flagged for review. Model-based</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     omega is conditional on the adequacy of the fitted measurement model.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     Investigate the CFA before treating the reliability coefficient as stable</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     evidence.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> What these columns mean</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   CI -- Percentile bootstrap confidence interval.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Omega is primary for the congeneric CFA workflow; alpha is secondary and</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> assumption-dependent. Reliability contributes score-precision evidence, not</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> construct validity.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> See x$decision_log for the reasoning behind each coefficient.</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>

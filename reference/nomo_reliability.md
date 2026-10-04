@@ -129,14 +129,31 @@ results. They may change between releases and are not part of the stable
 interface (see
 [`?nomologR`](https://juhalt.github.io/nomologR/reference/nomologR-package.md)).
 
+[`print()`](https://rdrr.io/r/base/print.html) shows the range of omega,
+the flags it raised against the review reference, and how uncertainty
+was handled; [`summary()`](https://rdrr.io/r/base/summary.html) adds
+each construct's omega and alpha with their intervals and score scales,
+the reason any alpha was not computed, and every flag in the decision
+log with its reason.
+
 ## Details
 
 The function is deliberately measurement-first: it refuses nonconverged
 models, structural SEMs, higher-order models, and cross-loaded
-first-order indicators in the v0.1 workflow. When global CFA strain or
-an improper solution is present, reliability is still inspectable but
-the decision log warns that model-based reliability can be distorted by
-misspecification.
+first-order indicators. When global CFA strain or an improper solution
+is present, reliability is still inspectable but the decision log warns
+that model-based reliability can be distorted by misspecification.
+
+For ordered indicators, the observed-score omega
+(`ordinal_scale = TRUE`) is the same whether lavaan fitted the model
+with its delta or theta parameterization. The latent-response
+coefficients (`ordinal_scale = FALSE`) are computed in the model's
+unstandardized metric and differ between the two; with a
+theta-parameterized fit the decision log says so.
+
+Bootstrap intervals refit the model to resampled cases, so they need the
+raw data: a model fitted from a covariance matrix has none, and its
+`ci_status` says so.
 
 Average variance extracted (AVE) is not a reliability coefficient and is
 intentionally handled by
@@ -201,33 +218,52 @@ cfa <- nomo_cfa(model, data = lavaan::HolzingerSwineford1939)
 rel <- nomo_reliability(cfa)
 summary(rel)
 #> <nomo_reliability summary> Reliability
+#> Constructs: 3 | Review reference: .70
 #> 
 #> Coefficients
-#>   Construct  Indicators  Omega  Alpha  Omega scale          Flag
-#>   speed      continuous  0.686  0.688  observed continuous  review
-#>   textual    continuous  0.885  0.883  observed continuous
-#>   visual     continuous  0.612  0.626  observed continuous  review
+#>   Construct  Indicators  Omega  Alpha  Flag
+#>   visual     continuous    .61    .63  Review
+#>   textual    continuous    .89    .88
+#>   speed      continuous    .69    .69  Review
+#> 
+#> Flagged
+#>   - visual (Review): Omega .61 is below the review reference .70. Inspect
+#>     score purpose, indicator quality, dimensionality, and CFA evidence before
+#>     changing the scale.
+#>   - speed (Review): Omega .69 is below the review reference .70. Inspect score
+#>     purpose, indicator quality, dimensionality, and CFA evidence before
+#>     changing the scale.
+#>   - visual (Review): Alpha .63 is below the review reference .70. Inspect
+#>     score purpose, indicator quality, dimensionality, and CFA evidence before
+#>     changing the scale.
+#>   - speed (Review): Alpha .69 is below the review reference .70. Inspect score
+#>     purpose, indicator quality, dimensionality, and CFA evidence before
+#>     changing the scale.
+#>   - Review: At least one CFA fit reference is flagged for review. Model-based
+#>     omega is conditional on the adequacy of the fitted measurement model.
+#>     Investigate the CFA before treating the reliability coefficient as stable
+#>     evidence.
 #> 
 #> Sampling uncertainty was not bootstrapped. For report-ready intervals, rerun
 #> with `ci = "bootstrap"`.
-#> Measurement-model context requires review: reliability is conditional on the
-#> fitted CFA.
 #> Omega is primary for the congeneric CFA workflow; alpha is secondary and
 #> assumption-dependent. Reliability contributes score-precision evidence, not
 #> construct validity.
+#> 
+#> See x$decision_log for the reasoning behind each coefficient.
 rel$decision_log
 #> # A tibble: 9 × 10
 #>   stage       object metric  value reference severity observation recommendation
 #>   <chr>       <chr>  <chr>   <dbl> <chr>     <chr>    <chr>       <chr>         
 #> 1 reliability measu… coeff… NA     Dunn et … info     Model-base… Interpret rel…
 #> 2 reliability measu… model… NA     Bell, Ch… review   At least o… Investigate t…
-#> 3 reliability speed… alpha… NA     Dunn et … info     Coefficien… Report alpha …
-#> 4 reliability visual omega   0.612 configur… review   The coeffi… Inspect score…
-#> 5 reliability textu… omega   0.885 configur… info     The coeffi… Carry this re…
-#> 6 reliability speed  omega   0.686 configur… review   The coeffi… Inspect score…
-#> 7 reliability visual alpha   0.626 configur… review   The coeffi… Inspect score…
-#> 8 reliability textu… alpha   0.883 configur… info     The coeffi… Carry this re…
-#> 9 reliability speed  alpha   0.688 configur… review   The coeffi… Inspect score…
+#> 3 reliability visua… alpha… NA     Dunn et … info     Coefficien… Report alpha …
+#> 4 reliability visual omega   0.612 configur… review   Omega (.61… Inspect score…
+#> 5 reliability textu… omega   0.885 configur… info     Omega (.89… Carry this re…
+#> 6 reliability speed  omega   0.686 configur… review   Omega (.69… Inspect score…
+#> 7 reliability visual alpha   0.626 configur… review   Alpha (.63… Inspect score…
+#> 8 reliability textu… alpha   0.883 configur… info     Alpha (.88… Carry this re…
+#> 9 reliability speed  alpha   0.688 configur… review   Alpha (.69… Inspect score…
 #> # ℹ 2 more variables: decision <chr>, rationale <chr>
 
 # \donttest{
@@ -236,19 +272,39 @@ rel$decision_log
 rel_ci <- nomo_reliability(cfa, ci = "bootstrap", ci_boot = 100, ci_seed = 2026)
 summary(rel_ci)
 #> <nomo_reliability summary> Reliability
+#> Constructs: 3 | Review reference: .70
 #> 
 #> Coefficients
-#>   Construct Indicators Omega                Alpha                Flag
-#>   speed     continuous 0.686 [0.585, 0.752] 0.688 [0.625, 0.743] review
-#>   textual   continuous 0.885 [0.859, 0.900] 0.883 [0.854, 0.898]
-#>   visual    continuous 0.612 [0.542, 0.686] 0.626 [0.554, 0.693] review
-#>   Not shown for width: Omega scale. See nomo_table(x, "coefficients").
-#>   Bracketed values are bootstrap confidence intervals.
+#>   Construct  Indicators  Omega  95% CI      Alpha  95% CI      Flag
+#>   visual     continuous    .61  [.54, .69]    .63  [.55, .69]  Review
+#>   textual    continuous    .89  [.86, .90]    .88  [.85, .90]
+#>   speed      continuous    .69  [.59, .75]    .69  [.63, .74]  Review
 #> 
-#> Measurement-model context requires review: reliability is conditional on the
-#> fitted CFA.
+#> Flagged
+#>   - visual (Review): Omega .61 is below the review reference .70. Inspect
+#>     score purpose, indicator quality, dimensionality, and CFA evidence before
+#>     changing the scale.
+#>   - speed (Review): Omega .69 is below the review reference .70. Inspect score
+#>     purpose, indicator quality, dimensionality, and CFA evidence before
+#>     changing the scale.
+#>   - visual (Review): Alpha .63 is below the review reference .70. Inspect
+#>     score purpose, indicator quality, dimensionality, and CFA evidence before
+#>     changing the scale.
+#>   - speed (Review): Alpha .69 is below the review reference .70. Inspect score
+#>     purpose, indicator quality, dimensionality, and CFA evidence before
+#>     changing the scale.
+#>   - Review: At least one CFA fit reference is flagged for review. Model-based
+#>     omega is conditional on the adequacy of the fitted measurement model.
+#>     Investigate the CFA before treating the reliability coefficient as stable
+#>     evidence.
+#> 
+#> What these columns mean
+#>   CI -- Percentile bootstrap confidence interval.
+#> 
 #> Omega is primary for the congeneric CFA workflow; alpha is secondary and
 #> assumption-dependent. Reliability contributes score-precision evidence, not
 #> construct validity.
+#> 
+#> See x$decision_log for the reasoning behind each coefficient.
 # }
 ```

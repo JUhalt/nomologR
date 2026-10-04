@@ -37,20 +37,33 @@ A `nomo_retest` object. The fields to read are:
   occasions, ICC(A,1) with its 95% interval and Koo and Li's description
   of that interval (`koo_li`), ICC(C,1) with its interval, the mean
   change from the first to the last occasion with its interval, the
-  pooled standard deviation, the standard error of measurement (`sem`,
-  the square root of the residual mean square), and the smallest
-  detectable change (`sdc`).
+  pooled standard deviation (`sd`, the standard deviation of the scores
+  pooled over occasions, not of the change), the standard error of
+  measurement (`sem`, the square root of the residual mean square), and
+  the smallest detectable change (`sdc`).
 
 - `reliable_change`: one row per person and composite, with the first
   and last scores, the change, the reliable change index (`rci`), and
   whether the change is a reliable increase, a reliable decrease, or
-  neither.
+  neither. A person whose score did not change has an `rci` of 0, even
+  when there is no measurement error at all.
 
 - `interval` and `decision_log`.
+
+A case without a score on every occasion of a composite is left out of
+that composite, and the decision log says how many were. Scores must be
+finite numbers or `NA`.
 
 Other fields record the call and the columns used (`scores`). They may
 change between releases and are not part of the stable interface (see
 [`?nomologR`](https://juhalt.github.io/nomologR/reference/nomologR-package.md)).
+
+[`print()`](https://rdrr.io/r/base/print.html) shows each composite's
+ICC(A,1) with its interval and Koo and Li's description, the measurement
+error, and how many people changed reliably;
+[`summary()`](https://rdrr.io/r/base/summary.html) adds the consistency
+form ICC(C,1) and the mean change with its interval, and the full reason
+for each flag.
 
 ## Details
 
@@ -135,19 +148,35 @@ rt <- nomo_retest(panel, scores = c("agency_t1", "agency_t2"),
                   interval = "two weeks")
 rt
 #> <nomo_retest> Test-retest reliability
-#> Composites: 1 | Interval: two weeks
+#> McGraw and Wong (1996); Koo and Li (2016).
+#> Composites: 1 | Cases: 150 | Interval: two weeks
 #> 
 #> Reliability across occasions
-#>   Composite    n  ICC(A,1) [95% CI]  Koo & Li   SEM   SDC
-#>   composite  150  0.85 [0.80, 0.89]  good      0.45  1.25
+#>   Composite    n  ICC(A,1)  95% CI      Koo and Li  Pooled SD   SEM   SDC
+#>   composite  150       .85  [.80, .89]  good             1.17  0.45  1.25
 #> 
 #> Reliable change, first to last occasion
-#>   - composite: 6 people up, 2 down, 142 within measurement error.
+#>   - composite: 6 up, 2 down, and 142 within measurement error, of 150 people.
 #> 
-#> ICC(A,1): two-way mixed effects, absolute agreement, single measurement (Koo &
-#> Li, 2016). SEM: standard error of measurement, sqrt(MS error). SDC: smallest
-#> detectable change, 1.96 x sqrt(2) x SEM (Weir, 2005). Reference ranges
-#> describe the interval; they are not a pass or a fail.
+#> What these columns mean
+#>   n -- Cases with a score on every occasion.
+#>   ICC(A,1) -- Intraclass correlation from a two-way mixed-effects model,
+#>       absolute agreement, single measurement.
+#>   CI -- Confidence interval.
+#>   Koo and Li -- Their description of the ICC(A,1) interval: poor below .50,
+#>       moderate to .75, good to .90, excellent above.
+#>   Pooled SD -- Standard deviation of the scores pooled over occasions, not of
+#>       the change.
+#>   SEM -- Standard error of measurement, the square root of the residual mean
+#>       square (Weir, 2005).
+#>   SDC -- Smallest detectable change, 1.96 x sqrt(2) x SEM (Weir, 2005).
+#> 
+#> Reference ranges describe the interval; they are not a pass or a fail. A
+#> reliable change is larger than measurement error, which does not make it a
+#> meaningful one.
+#> 
+#> See summary(x) for the consistency form and the mean change and
+#> nomo_table(x, "reliable_change") for each person's change.
 nomo_table(rt, "reliable_change")
 #> # A tibble: 150 × 7
 #>    composite   row first_score last_score  change     rci status            

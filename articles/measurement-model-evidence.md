@@ -77,17 +77,21 @@ summary(rel)
 ```
 
     ## <nomo_reliability summary> Reliability
+    ## Constructs: 2 | Review reference: .70
     ## 
     ## Coefficients
-    ##   Construct Indicators Omega                Alpha
-    ##   F1        continuous 0.891 [0.871, 0.908] 0.890 [0.870, 0.907]
-    ##   F2        continuous 0.862 [0.840, 0.881] 0.861 [0.837, 0.881]
-    ##   Not shown for width: Omega scale. See nomo_table(x, "coefficients").
-    ##   Bracketed values are bootstrap confidence intervals.
+    ##   Construct  Indicators  Omega  95% CI      Alpha  95% CI
+    ##   F1         continuous    .89  [.87, .91]    .89  [.87, .91]
+    ##   F2         continuous    .86  [.84, .88]    .86  [.84, .88]
+    ## 
+    ## What these columns mean
+    ##   CI -- Percentile bootstrap confidence interval.
     ## 
     ## Omega is primary for the congeneric CFA workflow; alpha is secondary and
     ## assumption-dependent. Reliability contributes score-precision evidence, not
     ## construct validity.
+    ## 
+    ## See x$decision_log for the reasoning behind each coefficient.
 
 ``` r
 
@@ -95,19 +99,34 @@ summary(val)
 ```
 
     ## <nomo_validity summary> Convergent and discriminant evidence
+    ## Constructs: 2 | AVE reference: .50 | HTMT reference: 0.85
+    ## Convergent flags: none (2 constructs) | Separation flags: none (1 pair)
     ## 
     ## Convergent evidence by construct
-    ##   Construct    AVE  Min |loading|  Median |loading|  Loadings flagged
-    ##   F1         0.671          0.793             0.822                 0
-    ##   F2         0.611          0.711             0.795                 0
+    ##   Construct  AVE  Min |loading|  Median |loading|  Loadings flagged
+    ##   F1         .67           0.79              0.82                 0
+    ##   F2         .61           0.71              0.80                 0
     ## 
     ## Construct separation
-    ##   Construct 1  Construct 2  Latent r  95% CI          HTMT2   HTMT
-    ##   F1           F2              0.223  [0.127, 0.318]  0.221  0.225
+    ##   Construct 1  Construct 2  Latent r  95% CI      HTMT2  HTMT
+    ##   F1           F2                .22  [.13, .32]   0.22  0.23
+    ## 
+    ## What these columns mean
+    ##   AVE -- Average variance extracted, the mean share of its indicators'
+    ##       variance a construct explains.
+    ##   |loading| -- Absolute standardized loading.
+    ##   Latent r -- Correlation between two constructs in the CFA.
+    ##   CI -- Confidence interval, as lavaan computes it.
+    ##   HTMT2 -- Heterotrait-monotrait ratio with geometric means (Roemer et al.,
+    ##       2021).
+    ##   HTMT -- Heterotrait-monotrait ratio (Henseler et al., 2015).
     ## 
     ## Standardized loadings and AVE address convergent evidence; latent correlations
     ## and HTMT-family statistics address construct separation. These are
     ## complementary questions, not interchangeable pass/fail tests.
+    ## 
+    ## See nomo_table(x, "discriminant") for every value and x$decision_log for the
+    ## reasoning behind each flag.
 
 The figures also avoid duplication. Item-level loading evidence belongs
 to the CFA; reliability gets a coefficient plot; convergent validity
@@ -202,16 +221,27 @@ summary(weak_rel)
 ```
 
     ## <nomo_reliability summary> Reliability
+    ## Constructs: 1 | Review reference: .70
     ## 
     ## Coefficients
-    ##   Construct  Indicators  Omega  Alpha  Omega scale          Flag
-    ##   Weak       continuous  0.369  0.363  observed continuous  review
+    ##   Construct  Indicators  Omega  Alpha  Flag
+    ##   Weak       continuous    .37    .36  Review
+    ## 
+    ## Flagged
+    ##   - Weak (Review): Omega .37 is below the review reference .70. Inspect score
+    ##     purpose, indicator quality, dimensionality, and CFA evidence before
+    ##     changing the scale.
+    ##   - Weak (Review): Alpha .36 is below the review reference .70. Inspect score
+    ##     purpose, indicator quality, dimensionality, and CFA evidence before
+    ##     changing the scale.
     ## 
     ## Sampling uncertainty was not bootstrapped. For report-ready intervals, rerun
     ## with `ci = "bootstrap"`.
     ## Omega is primary for the congeneric CFA workflow; alpha is secondary and
     ## assumption-dependent. Reliability contributes score-precision evidence, not
     ## construct validity.
+    ## 
+    ## See x$decision_log for the reasoning behind each coefficient.
 
 ``` r
 
@@ -219,17 +249,51 @@ summary(weak_val)
 ```
 
     ## <nomo_validity summary> Convergent and discriminant evidence
+    ## Constructs: 1 | AVE reference: .50 | HTMT reference: 0.85
+    ## Convergent flags: 1 review, 0 concern (1 construct)
+    ## Separation flags: not applicable (one construct)
     ## 
     ## Convergent evidence by construct
-    ##   Construct    AVE  Min |loading|  Median |loading|  Loadings flagged  Flag
-    ##   Weak       0.114          0.200             0.311                 5  review
+    ##   Construct  AVE  Min |loading|  Median |loading|  Loadings flagged  Flag
+    ##   Weak       .11           0.20              0.31                 5  Review
     ## 
     ## Construct separation
     ##   No pairwise construct-separation summary is available.
     ## 
+    ## Flagged
+    ##   - W1 (Review): Standardized loading 0.20 is below the review reference 0.50
+    ##     in absolute value; inspect item content, precision, and model
+    ##     specification.
+    ##   - W2 (Review): Standardized loading 0.31 is below the review reference 0.50
+    ##     in absolute value; inspect item content, precision, and model
+    ##     specification.
+    ##   - W3 (Review): Standardized loading 0.27 is below the review reference 0.50
+    ##     in absolute value; inspect item content, precision, and model
+    ##     specification.
+    ##   - W4 (Review): Standardized loading 0.499 is below the review reference 0.50
+    ##     in absolute value; inspect item content, precision, and model
+    ##     specification.
+    ##   - W5 (Review): Standardized loading 0.34 is below the review reference 0.50
+    ##     in absolute value; inspect item content, precision, and model
+    ##     specification.
+    ##   - Weak (Review): AVE (.11) is below the configured convergent-evidence
+    ##     reference (.50). Inspect standardized loadings, indicator-specific error,
+    ##     and content coverage; do not automatically delete items.
+    ## 
+    ## What these columns mean
+    ##   AVE -- Average variance extracted, the mean share of its indicators'
+    ##       variance a construct explains.
+    ##   |loading| -- Absolute standardized loading.
+    ##   HTMT2 -- Heterotrait-monotrait ratio with geometric means (Roemer et al.,
+    ##       2021).
+    ##   HTMT -- Heterotrait-monotrait ratio (Henseler et al., 2015).
+    ## 
     ## Standardized loadings and AVE address convergent evidence; latent correlations
     ## and HTMT-family statistics address construct separation. These are
     ## complementary questions, not interchangeable pass/fail tests.
+    ## 
+    ## See nomo_table(x, "discriminant") for every value and x$decision_log for the
+    ## reasoning behind each flag.
 
 This is why `nomologR` does not collapse measurement quality into a
 single global-fit verdict. Weak standardized loadings, low AVE, and weak
@@ -274,17 +338,20 @@ summary(overlap_rel)
 ```
 
     ## <nomo_reliability summary> Reliability
+    ## Constructs: 2 | Review reference: .70
     ## 
     ## Coefficients
-    ##   Construct  Indicators  Omega  Alpha  Omega scale
-    ##   F1         continuous  0.893  0.894  observed continuous
-    ##   F2         continuous  0.896  0.895  observed continuous
+    ##   Construct  Indicators  Omega  Alpha
+    ##   F1         continuous    .89    .89
+    ##   F2         continuous    .90    .89
     ## 
     ## Sampling uncertainty was not bootstrapped. For report-ready intervals, rerun
     ## with `ci = "bootstrap"`.
     ## Omega is primary for the congeneric CFA workflow; alpha is secondary and
     ## assumption-dependent. Reliability contributes score-precision evidence, not
     ## construct validity.
+    ## 
+    ## See x$decision_log for the reasoning behind each coefficient.
 
 ``` r
 
@@ -292,19 +359,45 @@ summary(overlap_val)
 ```
 
     ## <nomo_validity summary> Convergent and discriminant evidence
+    ## Constructs: 2 | AVE reference: .50 | HTMT reference: 0.85
+    ## Convergent flags: none (2 constructs)
+    ## Separation flags: 1 review, 0 concern (1 pair)
     ## 
     ## Convergent evidence by construct
-    ##   Construct    AVE  Min |loading|  Median |loading|  Loadings flagged
-    ##   F1         0.737          0.837             0.865                 0
-    ##   F2         0.742          0.848             0.851                 0
+    ##   Construct  AVE  Min |loading|  Median |loading|  Loadings flagged
+    ##   F1         .74           0.84              0.87                 0
+    ##   F2         .74           0.85              0.85                 0
     ## 
     ## Construct separation
-    ##   Construct 1  Construct 2  Latent r  95% CI          HTMT2   HTMT  Flag
-    ##   F1           F2              0.933  [0.912, 0.954]  0.931  0.932  review
+    ##   Construct 1  Construct 2  Latent r  95% CI      HTMT2  HTMT  Flag
+    ##   F1           F2                .93  [.91, .95]   0.93  0.93  Review
+    ## 
+    ## Flagged
+    ##   - F1 vs. F2 (Review): HTMT2 (0.93) exceeds the configured review reference
+    ##     (0.85). This raises a construct-separation concern; inspect theoretical
+    ##     distinctiveness, item content, cross-construct overlap, and latent
+    ##     correlations rather than automatically merging or deleting constructs.
+    ##   - F1 vs. F2 (Review): HTMT (0.93) exceeds the configured review reference
+    ##     (0.85). This raises a construct-separation concern; inspect theoretical
+    ##     distinctiveness, item content, cross-construct overlap, and latent
+    ##     correlations rather than automatically merging or deleting constructs.
+    ## 
+    ## What these columns mean
+    ##   AVE -- Average variance extracted, the mean share of its indicators'
+    ##       variance a construct explains.
+    ##   |loading| -- Absolute standardized loading.
+    ##   Latent r -- Correlation between two constructs in the CFA.
+    ##   CI -- Confidence interval, as lavaan computes it.
+    ##   HTMT2 -- Heterotrait-monotrait ratio with geometric means (Roemer et al.,
+    ##       2021).
+    ##   HTMT -- Heterotrait-monotrait ratio (Henseler et al., 2015).
     ## 
     ## Standardized loadings and AVE address convergent evidence; latent correlations
     ## and HTMT-family statistics address construct separation. These are
     ## complementary questions, not interchangeable pass/fail tests.
+    ## 
+    ## See nomo_table(x, "discriminant") for every value and x$decision_log for the
+    ## reasoning behind each flag.
 
 Here, strong omega and AVE do not erase a high latent correlation or
 HTMT2 value. The package therefore recommends investigating theoretical
@@ -359,12 +452,13 @@ summary(ordinal_rel)
 ```
 
     ## <nomo_reliability summary> Reliability
+    ## Constructs: 1 | Review reference: .70
     ## 
     ## Coefficients
     ##   Construct  Indicators  Omega  Omega scale
-    ##   F          ordered     0.829  observed ordinal
+    ##   F          ordered       .83  observed ordinal
     ## 
-    ## Secondary alpha unavailable for
+    ## Alpha not computed
     ##   - F (ordered indicators, observed ordinal scale): Observed-scale alpha is
     ##     not computed from an ordered-indicator CFA. Current semTools intentionally
     ##     disallows ord.scale = TRUE with tau-equivalent alpha for ordered
@@ -378,6 +472,8 @@ summary(ordinal_rel)
     ## Omega is primary for the congeneric CFA workflow; alpha is secondary and
     ## assumption-dependent. Reliability contributes score-precision evidence, not
     ## construct validity.
+    ## 
+    ## See x$decision_log for the reasoning behind each coefficient.
 
 Observed-scale omega is available for the practical ordinal composite.
 Observed-scale alpha is deliberately reported as unavailable in this
@@ -952,31 +1048,48 @@ summary(rt)
 ```
 
     ## <nomo_retest summary> Test-retest reliability
-    ## Composites: 1 | Interval: two weeks
+    ## McGraw and Wong (1996); Koo and Li (2016).
+    ## Composites: 1 | Cases: 150 | Interval: two weeks
     ## 
     ## Reliability across occasions
-    ##   Composite    n  ICC(A,1) [95% CI]  Koo & Li   SEM   SDC
-    ##   Agency     150  0.84 [0.75, 0.89]  good      0.45  1.25
+    ##   Composite    n  ICC(A,1)  95% CI      Koo and Li  Pooled SD   SEM   SDC
+    ##   Agency     150       .84  [.75, .89]  good             1.17  0.45  1.25
     ## 
     ## Consistency and change
-    ##   Composite  ICC(C,1) [95% CI]  Mean change [95% CI]    SD
-    ##   Agency     0.85 [0.80, 0.89]  +0.24 [0.13, 0.34]    1.17
+    ##   Composite  ICC(C,1)  95% CI      Mean change  95% CI
+    ##   Agency          .85  [.80, .89]        +0.24  [0.13, 0.34]
     ## 
     ## Reliable change, first to last occasion
-    ##   - Agency: 10 people up, 1 down, 139 within measurement error.
+    ##   - Agency: 10 up, 1 down, and 139 within measurement error, of 150 people.
     ## 
     ## Flagged
-    ##   - Agency (Review): `Agency` changed by 0.24 on average from `agency_t1` to
+    ##   - Agency (Review): `Agency` changed by +0.24 on average from `agency_t1` to
     ##     `agency_t2`, 95% CI [0.13, 0.34]. Scores shifted systematically, as
     ##     practice or real change would make them. ICC(A,1) counts the shift as
-    ##     disagreement and ICC(C,1) does not; ICC(C,1) is 0.85 here. The SEM leaves
+    ##     disagreement and ICC(C,1) does not; ICC(C,1) is .85 here. The SEM leaves
     ##     the shift out, so the shift counts toward each person's change when
     ##     reliable change is classified.
     ## 
-    ## ICC(A,1): two-way mixed effects, absolute agreement, single measurement (Koo &
-    ## Li, 2016). SEM: standard error of measurement, sqrt(MS error). SDC: smallest
-    ## detectable change, 1.96 x sqrt(2) x SEM (Weir, 2005). Reference ranges
-    ## describe the interval; they are not a pass or a fail.
+    ## What these columns mean
+    ##   n -- Cases with a score on every occasion.
+    ##   ICC(A,1) -- Intraclass correlation from a two-way mixed-effects model,
+    ##       absolute agreement, single measurement.
+    ##   ICC(C,1) -- The same with consistency, which ignores a shift in the mean
+    ##       between occasions.
+    ##   CI -- Confidence interval.
+    ##   Koo and Li -- Their description of the ICC(A,1) interval: poor below .50,
+    ##       moderate to .75, good to .90, excellent above.
+    ##   Pooled SD -- Standard deviation of the scores pooled over occasions, not of
+    ##       the change.
+    ##   SEM -- Standard error of measurement, the square root of the residual mean
+    ##       square (Weir, 2005).
+    ##   SDC -- Smallest detectable change, 1.96 x sqrt(2) x SEM (Weir, 2005).
+    ## 
+    ## Reference ranges describe the interval; they are not a pass or a fail. A
+    ## reliable change is larger than measurement error, which does not make it a
+    ## meaningful one.
+    ## 
+    ## See nomo_table(x, "reliable_change") for each person's change.
 
 These scores were simulated to rise by .30 between occasions, and in
 this sample they rose by 0.24. That rise is why ICC(A,1) is below

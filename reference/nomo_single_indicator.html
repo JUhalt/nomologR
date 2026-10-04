@@ -128,7 +128,8 @@ omega is used.</p></dd>
     <p>A <code>nomo_single_indicator</code> object. The fields to read are
 <code>reliability</code>, <code>se</code> (<code>NA</code> when not supplied), <code>coefficient</code>, <code>source</code>
 (<code>NA</code> when not supplied), and <code>construct</code> (<code>NA</code> unless taken from a
-<code><a href="nomo_reliability.html">nomo_reliability()</a></code> result).</p>
+<code><a href="nomo_reliability.html">nomo_reliability()</a></code> result). <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> shows the reliability, its
+standard error, and where it comes from.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -142,18 +143,26 @@ modeling every item was impractical (Williams &amp; Hazer, 1986), and Bagozzi an
 Heatherton (1994) called it the "total aggregation" model.</p>
 <p><strong>Does it work?</strong> Savalei (2019) compared single indicators with path
 analysis, which ignores measurement error, and with full multiple-indicator
-SEM, in samples of 30 to 200. With the reliability fixed at or slightly above
-its true value, single indicators gave the most accurate estimates and the
-most power; misestimating the reliability by more cost accuracy. Where the
-items are available and the sample is large enough, modeling them as
-indicators remains the fuller correction.</p>
+SEM, in samples of 30 to 200. Path analysis and single indicators whose
+reliability was fixed a priori, at a value that slightly overestimated the
+true one, gave the most accurate estimates and the most power. Single
+indicators whose reliability was estimated from the same data (coefficient
+alpha) and full SEM performed in between, and she recommended a
+fixed-reliability single indicator in small samples. An omega estimated from
+the same sample, as from <code><a href="nomo_reliability.html">nomo_reliability()</a></code> on these data, corresponds to
+the data-estimated variant. Where the items are available and the sample is
+large enough, modeling them as indicators remains the fuller correction.</p>
 <p><strong>Which reliability.</strong> A coefficient corrects only the error its design can
 see: internal consistency, for example, leaves transient error in, and the
 coefficient chosen decides what the correction means (DeShon, 1998). Omega
 from the composite's own measurement model (<code><a href="nomo_reliability.html">nomo_reliability()</a></code>) is the
 default. Coefficient alpha understates reliability when loadings differ, so
 it fixes too large an error variance and overcorrects; <code><a href="nomo_network.html">nomo_network()</a></code> flags
-it for review.</p>
+it for review. The single indicator is the observed sum or mean, so with
+ordered items the omega should be the observed-score one
+(<code>ordinal_scale = TRUE</code>, the default); a latent-response omega
+(<code>ordinal_scale = FALSE</code>) describes a hypothetical continuous composite, and
+taking it brings a warning and is recorded in <code>source</code>.</p>
 <p><strong>Uncertainty.</strong> A reliability is itself an estimate. Standard errors that
 treat it as known are too small, and Oberski and Satorra (2013) derived the
 term to add. Supply <code>se</code>, and <code><a href="nomo_network.html">nomo_network()</a></code> adds it. The derivation
@@ -198,15 +207,21 @@ records.</p></div>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># A published reliability, with its source.</span></span></span>
 <span class="r-in"><span><span class="fu">nomo_single_indicator</span><span class="op">(</span><span class="fl">.85</span>, source <span class="op">=</span> <span class="st">"Test manual, Table 4"</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;nomo_single_indicator&gt; Reliability for a single indicator</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Reliability: 0.850 (omega)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Reliability: .850 (omega)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Source: Test manual, Table 4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> See ?nomo_network for how x in `single_indicators` fixes the composite's error</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> variance.</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Omega from the composite's own measurement model in this sample.</span></span></span>
 <span class="r-in"><span><span class="va">cfa</span> <span class="op">&lt;-</span> <span class="fu"><a href="nomo_cfa.html">nomo_cfa</a></span><span class="op">(</span><span class="st">"Persistence =~ pe1 + pe2 + pe3 + pe4"</span>, <span class="va">nomo_demo_network</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">nomo_single_indicator</span><span class="op">(</span><span class="fu"><a href="nomo_reliability.html">nomo_reliability</a></span><span class="op">(</span><span class="va">cfa</span><span class="op">)</span>, construct <span class="op">=</span> <span class="st">"Persistence"</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;nomo_single_indicator&gt; Reliability for a single indicator</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Reliability: 0.816 (omega) | Construct: Persistence</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Reliability: .816 (omega) | Construct: Persistence</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Source: this sample (nomo_reliability())</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> See ?nomo_network for how x in `single_indicators` fixes the composite's error</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> variance.</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

@@ -62,7 +62,8 @@ A `nomo_single_indicator` object. The fields to read are `reliability`,
 `se` (`NA` when not supplied), `coefficient`, `source` (`NA` when not
 supplied), and `construct` (`NA` unless taken from a
 [`nomo_reliability()`](https://juhalt.github.io/nomologR/reference/nomo_reliability.md)
-result).
+result). [`print()`](https://rdrr.io/r/base/print.html) shows the
+reliability, its standard error, and where it comes from.
 
 ## Details
 
@@ -78,12 +79,17 @@ aggregation" model.
 
 **Does it work?** Savalei (2019) compared single indicators with path
 analysis, which ignores measurement error, and with full
-multiple-indicator SEM, in samples of 30 to 200. With the reliability
-fixed at or slightly above its true value, single indicators gave the
-most accurate estimates and the most power; misestimating the
-reliability by more cost accuracy. Where the items are available and the
-sample is large enough, modeling them as indicators remains the fuller
-correction.
+multiple-indicator SEM, in samples of 30 to 200. Path analysis and
+single indicators whose reliability was fixed a priori, at a value that
+slightly overestimated the true one, gave the most accurate estimates
+and the most power. Single indicators whose reliability was estimated
+from the same data (coefficient alpha) and full SEM performed in
+between, and she recommended a fixed-reliability single indicator in
+small samples. An omega estimated from the same sample, as from
+[`nomo_reliability()`](https://juhalt.github.io/nomologR/reference/nomo_reliability.md)
+on these data, corresponds to the data-estimated variant. Where the
+items are available and the sample is large enough, modeling them as
+indicators remains the fuller correction.
 
 **Which reliability.** A coefficient corrects only the error its design
 can see: internal consistency, for example, leaves transient error in,
@@ -93,7 +99,11 @@ and the coefficient chosen decides what the correction means (DeShon,
 is the default. Coefficient alpha understates reliability when loadings
 differ, so it fixes too large an error variance and overcorrects;
 [`nomo_network()`](https://juhalt.github.io/nomologR/reference/nomo_network.md)
-flags it for review.
+flags it for review. The single indicator is the observed sum or mean,
+so with ordered items the omega should be the observed-score one
+(`ordinal_scale = TRUE`, the default); a latent-response omega
+(`ordinal_scale = FALSE`) describes a hypothetical continuous composite,
+and taking it brings a warning and is recorded in `source`.
 
 **Uncertainty.** A reliability is itself an estimate. Standard errors
 that treat it as known are too small, and Oberski and Satorra (2013)
@@ -151,13 +161,19 @@ whose `single_indicators` argument takes these records.
 # A published reliability, with its source.
 nomo_single_indicator(.85, source = "Test manual, Table 4")
 #> <nomo_single_indicator> Reliability for a single indicator
-#> Reliability: 0.850 (omega)
+#> Reliability: .850 (omega)
 #> Source: Test manual, Table 4
+#> 
+#> See ?nomo_network for how x in `single_indicators` fixes the composite's error
+#> variance.
 
 # Omega from the composite's own measurement model in this sample.
 cfa <- nomo_cfa("Persistence =~ pe1 + pe2 + pe3 + pe4", nomo_demo_network)
 nomo_single_indicator(nomo_reliability(cfa), construct = "Persistence")
 #> <nomo_single_indicator> Reliability for a single indicator
-#> Reliability: 0.816 (omega) | Construct: Persistence
+#> Reliability: .816 (omega) | Construct: Persistence
 #> Source: this sample (nomo_reliability())
+#> 
+#> See ?nomo_network for how x in `single_indicators` fixes the composite's error
+#> variance.
 ```

@@ -132,60 +132,59 @@ reads the structure from the fitted model and reports the indices:
 h <- nomo_hierarchical(bifactor)
 h
 #> <nomo_hierarchical> Hierarchical model evaluation
+#> Rodriguez, Reise, and Haviland (2016).
 #> Bifactor model | General factor: G | Group factors: Focus, Drive, Poise
 #> Estimand: unit-weighted observed composite
 #> 
 #> Total score
-#>   Index                        Estimate
-#>   omega total                     0.915
-#>   omega hierarchical              0.792
-#>   omega hierarchical relative     0.865
-#>   ECV                             0.676
-#>   PUC                             0.727
+#>   Index                         Estimate
+#>   Omega total                        .92
+#>   Omega hierarchical                 .79
+#>   Omega hierarchical, relative       .86
+#> 
+#> Item set
+#>   Index  Estimate
+#>   ECV         .68
+#>   PUC         .73
 #> 
 #> Subscales
 #>   Subscale  Items  Omega subscale  Omega hierarchical subscale
-#>   Focus         4           0.839                        0.288
-#>   Drive         4           0.819                        0.204
-#>   Poise         4           0.807                        0.295
+#>   Focus         4             .84                          .29
+#>   Drive         4             .82                          .20
+#>   Poise         4             .81                          .29
 #> 
 #> Factor scores
 #>   Factor  Role     Determinacy  Min competing r  Replicability H
-#>   G       general        0.898            0.612            0.878
-#>   Focus   group          0.709            0.007            0.500
-#>   Drive   group          0.639           -0.185            0.403
-#>   Poise   group          0.699           -0.022            0.485
+#>   G       general          .90              .61              .88
+#>   Focus   group            .71              .01              .50
+#>   Drive   group            .64             -.18              .40
+#>   Poise   group            .70             -.02              .49
 #> 
-#> Notes
-#>   - Review: A bifactor model will usually fit at least as well as
-#>     correlated-factors or higher-order models of the same items, even when it
-#>     did not generate the data (Reise, 2012), and a higher-order model is a
-#>     constrained version of it (Yung, Thissen, & McLeod, 1999). Bonifay, Lane,
-#>     and Reise (2017) call the bifactor model's tendency to show superior
-#>     goodness of fit in model comparison studies a particular concern, and say
-#>     that superior fit may be a symptom of overfitting: modeling not only the
-#>     trends in the data but also unwanted noise. Murray and Johnson (2013)
-#>     compared these two structures directly and found the comparison biased in
-#>     favor of the bifactor model: unless there was essentially no unmodeled
-#>     complexity, their simulation favored the bifactor model even when a
-#>     higher-order model generated the data. They concluded that which model to
-#>     adopt should not rely on which is better fitting. Compare the alternatives
-#>     with nomo_compare() and choose on substantive grounds, not on fit alone.
-#>   - Review: Factor determinacy is at or below .90 for G, Focus, Drive, Poise.
-#>     Gorsuch (1983, p. 260) recommended using factor score estimates only above
-#>     that value. This is his recommendation reported as context, not a rule
-#>     applied here; the score may still be usable for some purposes.
+#> Flagged
+#>   - Review: Factor determinacy is at or below .90 for G, Focus, Drive, Poise,
+#>     the value above which Gorsuch (1983) recommended using factor score
+#>     estimates.
 #>   - Review: Two equally valid sets of factor scores could correlate as low as
-#>     G (0.61), Focus (0.01), Drive (-0.18), Poise (-0.02). Gorsuch (1983, p.
-#>     260) suggested this minimum be above .70. A negative value means two
-#>     researchers scoring the same data could rank people in opposite orders and
-#>     both be consistent with the model.
-#>   - Review: Construct replicability H is below .70 for Focus, Drive, Poise.
-#>     Hancock and Mueller (2001) proposed .70 as a standard; a factor below it
-#>     is not well defined by its own indicators and is expected to change across
-#>     studies. Reported as their standard, not applied as a rule.
+#>     G (.61), Focus (.01), Drive (-.18), Poise (-.02), below the .70 Gorsuch
+#>     (1983) suggested.
+#>   - Review: Construct replicability H is below .70, the standard Hancock and
+#>     Mueller (2001) proposed, for Focus, Drive, Poise.
 #> 
-#> No index is treated as a pass/fail threshold; see nomo_table(x, "indices").
+#> What these abbreviations mean
+#>   ECV -- Explained common variance: the share of the items' common variance
+#>       that the general factor explains.
+#>   PUC -- Percentage of uncontaminated correlations, shown as a proportion: the
+#>       share of item correlations that reflect the general factor alone.
+#>   Min competing r -- The lowest correlation two equally valid sets of factor
+#>       scores could have, twice the squared determinacy minus one.
+#>   Replicability H -- Construct replicability (Hancock & Mueller, 2001): how
+#>       well a factor's own indicators, optimally weighted, define it.
+#> 
+#> These indices do not choose between a bifactor and a higher-order structure,
+#> and no value is treated as a pass/fail threshold.
+#> 
+#> See summary(x) for each index's meaning with the notes in full and
+#> nomo_table(x, "factors") for every factor-score value.
 ```
 
 Reading the total score:

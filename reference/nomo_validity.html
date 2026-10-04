@@ -94,8 +94,11 @@ as a sensitivity/teaching comparison.</p>
 <dt id="arg-ave-obs-var">ave_obs_var<a class="anchor" aria-label="anchor" href="#arg-ave-obs-var"></a></dt>
 <dd><p>Logical passed to <code><a href="https://rdrr.io/pkg/semTools/man/AVE.html" class="external-link">semTools::AVE()</a></code>. <code>TRUE</code> (default) uses
 observed variances in the denominator; <code>FALSE</code> uses model-implied
-variances. For ordinal indicators, <code>semTools</code> calculates AVE using the
-polychoric correlation structure.</p></dd>
+variances. For ordinal indicators, <code>semTools</code> calculates AVE from the
+polychoric correlation structure in the model's unstandardized metric, so
+a fit with lavaan's theta parameterization gives a different AVE from the
+delta fit of the same model; the decision log then gives the mean squared
+standardized loading, which is the same under either.</p></dd>
 
 
 <dt id="arg-htmt">htmt<a class="anchor" aria-label="anchor" href="#arg-htmt"></a></dt>
@@ -133,7 +136,11 @@ references are review prompts rather than universal pass/fail cutoffs.</p></dd>
 evidence. AVE is not defined for a factor with a cross-loaded
 indicator; its row has an <code>NA</code> estimate and the attention
 <code>"unavailable"</code>.</p></li>
-<li><p><code>latent_correlations</code>: construct correlations with intervals.</p></li>
+<li><p><code>latent_correlations</code>: construct correlations with intervals, and their
+<code>reference</code> and <code>attention</code>. A correlation is flagged for review when it
+could exceed the HTMT-family reference: the upper limit of its interval
+(Rönkkö &amp; Cho, 2022), or the estimate when there is no interval, is
+above it. A correlation beyond 1 in absolute value is a concern.</p></li>
 <li><p><code>htmt2</code> and <code>htmt</code>: heterotrait-monotrait ratios per pair.</p></li>
 <li><p><code>discriminant</code>: each pair's separation evidence with its reference and
 interpretation.</p></li>
@@ -141,7 +148,10 @@ interpretation.</p></li>
 For a computed variant, <code>missing</code> is the missing-data handling used and
 <code>n</code> the number of cases: the complete cases under listwise deletion, the
 smallest pairwise count under pairwise deletion, and every case with an
-indicator observed otherwise.</p></li>
+indicator observed otherwise. HTMT is not defined with one construct or
+for a construct with one indicator, which has no within-construct
+correlations; such pairs are left out, and the decision log records it
+as information rather than as missing evidence.</p></li>
 <li><p><code>fornell_larcker_pairs</code>: the historical comparison, when requested.</p></li>
 <li><p><code>standardized_loadings</code>, <code>references</code>, and <code>decision_log</code>.</p></li>
 </ul><p><code>attention</code> in <code>standardized_loadings</code> is <code>"KEEP"</code>, <code>"REVIEW"</code>, or
@@ -151,9 +161,21 @@ indicator observed otherwise.</p></li>
 <code>"info"</code> or <code>"review"</code>, or <code>"unavailable"</code> when the comparison could not
 be computed, as when an AVE is missing or negative and so has no square
 root. See <strong>Conventions in returned tables</strong> in <code><a href="nomologR-package.html">?nomologR</a></code>.</p>
+<p>In the <code>"discriminant"</code> table of <code><a href="nomo_table.html">nomo_table()</a></code>, <code>signal</code> is the
+HTMT-family flag (HTMT2, or HTMT when HTMT2 was not computed). Where
+neither was computed, as with several groups, a cross-loading, or
+<code>htmt = "none"</code>, it is the latent correlation's <code>attention</code>, so the pair
+is still evaluated; a latent correlation beyond 1 is a concern either way.
+Beside an HTMT-family value, a latent correlation flagged for review is
+recorded in the decision log as information, and the summary names the
+pair.</p>
 <p>Other fields record the call, the settings used, and intermediate engine
 results. They may change between releases and are not part of the stable
 interface (see <code><a href="nomologR-package.html">?nomologR</a></code>).</p>
+<p><code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> counts the convergent and construct-separation flags and names
+each flagged construct or pair; <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> adds the AVE and loading
+summary for each construct, the latent correlation and HTMT-family values
+for each pair, and the full reason for each flag.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -184,7 +206,7 @@ criterion for assessing discriminant validity in structural equation
 modeling. <em>Industrial Management &amp; Data Systems, 121</em>(12), 2637-2650.
 <a href="https://doi.org/10.1108/IMDS-02-2021-0082" class="external-link">doi:10.1108/IMDS-02-2021-0082</a></p>
 <p>Rönkkö, M., &amp; Cho, E. (2022). An updated guideline for assessing
-discriminant validity. <em>Organizational Research Methods, 25</em>(1).
+discriminant validity. <em>Organizational Research Methods, 25</em>(1), 6-47.
 <a href="https://doi.org/10.1177/1094428120968614" class="external-link">doi:10.1177/1094428120968614</a></p>
 <p>Voorhees, C. M., Brady, M. K., Calantone, R., &amp; Ramirez, E. (2016).
 Discriminant validity testing in marketing: An analysis, causes for concern,
@@ -203,37 +225,64 @@ and proposed remedies. <em>Journal of the Academy of Marketing Science, 44</em>(
 <span class="r-in"><span><span class="va">val</span> <span class="op">&lt;-</span> <span class="fu">nomo_validity</span><span class="op">(</span><span class="va">cfa</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">val</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;nomo_validity summary&gt; Convergent and discriminant evidence</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Constructs: 3 | AVE reference: .50 | HTMT reference: 0.85</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Convergent flags: 2 review, 0 concern (3 constructs)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Separation flags: none (3 pairs)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Convergent evidence by construct</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Construct    AVE  Min |loading|  Median |loading|  Loadings flagged  Flag</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   visual     0.371          0.424             0.581                 1  review</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   textual    0.721          0.838             0.852                 0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   speed      0.424          0.570             0.665                 0  review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Construct  AVE  Min |loading|  Median |loading|  Loadings flagged  Flag</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   visual     .37           0.42              0.58                 1  Review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   textual    .72           0.84              0.85                 0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   speed      .42           0.57              0.67                 0  Review</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Construct separation</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Construct 1  Construct 2  Latent r  95% CI          HTMT2   HTMT</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   visual       textual         0.459  [0.334, 0.584]  0.384  0.424</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   visual       speed           0.471  [0.328, 0.613]  0.387  0.467</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   textual      speed           0.283  [0.148, 0.418]  0.280  0.290</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Construct 1  Construct 2  Latent r  95% CI      HTMT2  HTMT</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   visual       textual           .46  [.33, .58]   0.38  0.42</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   visual       speed             .47  [.33, .61]   0.39  0.47</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   textual      speed             .28  [.15, .42]   0.28  0.29</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Flagged</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   - x2 (Review): Standardized loading 0.42 is below the review reference 0.50</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     in absolute value; inspect item content, precision, and model</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     specification.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   - visual (Review): AVE (.37) is below the configured convergent-evidence</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     reference (.50). Inspect standardized loadings, indicator-specific error,</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     and content coverage; do not automatically delete items.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   - speed (Review): AVE (.42) is below the configured convergent-evidence</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     reference (.50). Inspect standardized loadings, indicator-specific error,</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     and content coverage; do not automatically delete items.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> What these columns mean</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   AVE -- Average variance extracted, the mean share of its indicators'</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       variance a construct explains.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   |loading| -- Absolute standardized loading.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Latent r -- Correlation between two constructs in the CFA.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   CI -- Confidence interval, as lavaan computes it.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   HTMT2 -- Heterotrait-monotrait ratio with geometric means (Roemer et al.,</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       2021).</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   HTMT -- Heterotrait-monotrait ratio (Henseler et al., 2015).</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Standardized loadings and AVE address convergent evidence; latent correlations</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> and HTMT-family statistics address construct separation. These are</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> complementary questions, not interchangeable pass/fail tests.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> See nomo_table(x, "discriminant") for every value and x$decision_log for the</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> reasoning behind each flag.</span>
 <span class="r-in"><span><span class="va">val</span><span class="op">$</span><span class="va">decision_log</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 12 × 10</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    stage    object  metric   value reference severity observation recommendation</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> validity measur… evide…  <span style="color: #BB0000;">NA</span>     Fornell … info     <span style="color: #949494;">"</span>Convergen… Interpret num…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> validity x2      stand…   0.424 configur… review   <span style="color: #949494;">"</span>Absolute … Inspect item …</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> validity visual  AVE      0.371 configur… review   <span style="color: #949494;">"</span>AVE is be… Inspect stand…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> validity textual AVE      0.721 configur… info     <span style="color: #949494;">"</span>AVE is at… Carry AVE for…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> validity speed   AVE      0.424 configur… review   <span style="color: #949494;">"</span>AVE is be… Inspect stand…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> validity textua… HTMT2    0.280 configur… info     <span style="color: #949494;">"</span>HTMT2 doe… Interpret thi…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> validity visual… HTMT2    0.387 configur… info     <span style="color: #949494;">"</span>HTMT2 doe… Interpret thi…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> validity visual… HTMT2    0.384 configur… info     <span style="color: #949494;">"</span>HTMT2 doe… Interpret thi…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> validity textua… HTMT     0.290 configur… info     <span style="color: #949494;">"</span>HTMT does… Interpret thi…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> validity visual… HTMT     0.467 configur… info     <span style="color: #949494;">"</span>HTMT does… Interpret thi…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">11</span> validity visual… HTMT     0.424 configur… info     <span style="color: #949494;">"</span>HTMT does… Interpret thi…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> validity x2      stand…   0.424 configur… review   <span style="color: #949494;">"</span>Standardi… Inspect item …</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> validity visual  AVE      0.371 configur… review   <span style="color: #949494;">"</span>AVE (.37)… Inspect stand…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> validity textual AVE      0.721 configur… info     <span style="color: #949494;">"</span>AVE (.72)… Carry AVE for…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> validity speed   AVE      0.424 configur… review   <span style="color: #949494;">"</span>AVE (.42)… Inspect stand…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> validity textua… HTMT2    0.280 configur… info     <span style="color: #949494;">"</span>HTMT2 (0.… Interpret thi…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> validity visual… HTMT2    0.387 configur… info     <span style="color: #949494;">"</span>HTMT2 (0.… Interpret thi…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> validity visual… HTMT2    0.384 configur… info     <span style="color: #949494;">"</span>HTMT2 (0.… Interpret thi…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> validity textua… HTMT     0.290 configur… info     <span style="color: #949494;">"</span>HTMT (0.2… Interpret thi…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> validity visual… HTMT     0.467 configur… info     <span style="color: #949494;">"</span>HTMT (0.4… Interpret thi…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">11</span> validity visual… HTMT     0.424 configur… info     <span style="color: #949494;">"</span>HTMT (0.4… Interpret thi…</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">12</span> validity measur… htmt_… 301     semTools… info     <span style="color: #949494;">"</span>HTMT-fami… No action nee…</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 2 more variables: decision &lt;chr&gt;, rationale &lt;chr&gt;</span></span>
 </code></pre></div>

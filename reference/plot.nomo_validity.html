@@ -71,7 +71,10 @@
 
 
 <dt id="arg-type">type<a class="anchor" aria-label="anchor" href="#arg-type"></a></dt>
-<dd><p>Plot type: <code>"ave"</code> or <code>"discriminant"</code>.</p></dd>
+<dd><p>Plot type: <code>"ave"</code> or <code>"discriminant"</code>. The discriminant plot
+draws each pair at the value that sets its flag: HTMT2, HTMT when HTMT2
+was not computed, and the latent correlation with its interval when
+neither was.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -81,7 +84,9 @@
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A <code>ggplot2</code> object. The conceptual 0-to-1 coefficient range is shown
-by default and expands only if an empirical value lies outside it.</p>
+by default and expands only if an empirical value lies outside it. Each
+point's shape and color show its flag, the same flag as in <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> and
+<code><a href="nomo_table.html">nomo_table()</a></code>, with a legend whenever a point is flagged.</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

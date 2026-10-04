@@ -96,16 +96,26 @@ reliability depends on it.</p></dd>
 occasions, ICC(A,1) with its 95% interval and Koo and Li's description
 of that interval (<code>koo_li</code>), ICC(C,1) with its interval, the mean change
 from the first to the last occasion with its interval, the pooled
-standard deviation, the standard error of measurement (<code>sem</code>, the
-square root of the residual mean square), and the smallest detectable
-change (<code>sdc</code>).</p></li>
+standard deviation (<code>sd</code>, the standard deviation of the scores pooled
+over occasions, not of the change), the standard error of measurement
+(<code>sem</code>, the square root of the residual mean square), and the smallest
+detectable change (<code>sdc</code>).</p></li>
 <li><p><code>reliable_change</code>: one row per person and composite, with the first and
 last scores, the change, the reliable change index (<code>rci</code>), and whether
-the change is a reliable increase, a reliable decrease, or neither.</p></li>
+the change is a reliable increase, a reliable decrease, or neither. A
+person whose score did not change has an <code>rci</code> of 0, even when there is
+no measurement error at all.</p></li>
 <li><p><code>interval</code> and <code>decision_log</code>.</p></li>
-</ul><p>Other fields record the call and the columns used (<code>scores</code>). They may
+</ul><p>A case without a score on every occasion of a composite is left out of
+that composite, and the decision log says how many were. Scores must be
+finite numbers or <code>NA</code>.</p>
+<p>Other fields record the call and the columns used (<code>scores</code>). They may
 change between releases and are not part of the stable interface (see
 <code><a href="nomologR-package.html">?nomologR</a></code>).</p>
+<p><code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> shows each composite's ICC(A,1) with its interval and Koo and
+Li's description, the measurement error, and how many people changed
+reliably; <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> adds the consistency form ICC(C,1) and the mean
+change with its interval, and the full reason for each flag.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -180,19 +190,35 @@ Research, 19</em>(1), 231-240. <a href="https://doi.org/10.1519/15184.1" class="
 <span class="r-in"><span>                  interval <span class="op">=</span> <span class="st">"two weeks"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">rt</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;nomo_retest&gt; Test-retest reliability</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Composites: 1 | Interval: two weeks</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> McGraw and Wong (1996); Koo and Li (2016).</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Composites: 1 | Cases: 150 | Interval: two weeks</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Reliability across occasions</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Composite    n  ICC(A,1) [95% CI]  Koo &amp; Li   SEM   SDC</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   composite  150  0.85 [0.80, 0.89]  good      0.45  1.25</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Composite    n  ICC(A,1)  95% CI      Koo and Li  Pooled SD   SEM   SDC</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   composite  150       .85  [.80, .89]  good             1.17  0.45  1.25</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Reliable change, first to last occasion</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   - composite: 6 people up, 2 down, 142 within measurement error.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   - composite: 6 up, 2 down, and 142 within measurement error, of 150 people.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ICC(A,1): two-way mixed effects, absolute agreement, single measurement (Koo &amp;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Li, 2016). SEM: standard error of measurement, sqrt(MS error). SDC: smallest</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> detectable change, 1.96 x sqrt(2) x SEM (Weir, 2005). Reference ranges</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> describe the interval; they are not a pass or a fail.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> What these columns mean</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   n -- Cases with a score on every occasion.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ICC(A,1) -- Intraclass correlation from a two-way mixed-effects model,</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       absolute agreement, single measurement.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   CI -- Confidence interval.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Koo and Li -- Their description of the ICC(A,1) interval: poor below .50,</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       moderate to .75, good to .90, excellent above.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Pooled SD -- Standard deviation of the scores pooled over occasions, not of</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       the change.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   SEM -- Standard error of measurement, the square root of the residual mean</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       square (Weir, 2005).</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   SDC -- Smallest detectable change, 1.96 x sqrt(2) x SEM (Weir, 2005).</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Reference ranges describe the interval; they are not a pass or a fail. A</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> reliable change is larger than measurement error, which does not make it a</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> meaningful one.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> See summary(x) for the consistency form and the mean change and</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> nomo_table(x, "reliable_change") for each person's change.</span>
 <span class="r-in"><span><span class="fu"><a href="nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">rt</span>, <span class="st">"reliable_change"</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 150 × 7</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    composite   row first_score last_score  change     rci status            </span>

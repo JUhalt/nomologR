@@ -154,33 +154,52 @@ places.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">rel</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## &lt;nomo_reliability summary&gt; Reliability</span></span>
+<span><span class="co">## Constructs: 2 | Review reference: .70</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Coefficients</span></span>
-<span><span class="co">##   Construct Indicators Omega                Alpha</span></span>
-<span><span class="co">##   F1        continuous 0.891 [0.871, 0.908] 0.890 [0.870, 0.907]</span></span>
-<span><span class="co">##   F2        continuous 0.862 [0.840, 0.881] 0.861 [0.837, 0.881]</span></span>
-<span><span class="co">##   Not shown for width: Omega scale. See nomo_table(x, "coefficients").</span></span>
-<span><span class="co">##   Bracketed values are bootstrap confidence intervals.</span></span>
+<span><span class="co">##   Construct  Indicators  Omega  95% CI      Alpha  95% CI</span></span>
+<span><span class="co">##   F1         continuous    .89  [.87, .91]    .89  [.87, .91]</span></span>
+<span><span class="co">##   F2         continuous    .86  [.84, .88]    .86  [.84, .88]</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## What these columns mean</span></span>
+<span><span class="co">##   CI -- Percentile bootstrap confidence interval.</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Omega is primary for the congeneric CFA workflow; alpha is secondary and</span></span>
 <span><span class="co">## assumption-dependent. Reliability contributes score-precision evidence, not</span></span>
-<span><span class="co">## construct validity.</span></span></code></pre>
+<span><span class="co">## construct validity.</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## See x$decision_log for the reasoning behind each coefficient.</span></span></code></pre>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">val</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## &lt;nomo_validity summary&gt; Convergent and discriminant evidence</span></span>
+<span><span class="co">## Constructs: 2 | AVE reference: .50 | HTMT reference: 0.85</span></span>
+<span><span class="co">## Convergent flags: none (2 constructs) | Separation flags: none (1 pair)</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Convergent evidence by construct</span></span>
-<span><span class="co">##   Construct    AVE  Min |loading|  Median |loading|  Loadings flagged</span></span>
-<span><span class="co">##   F1         0.671          0.793             0.822                 0</span></span>
-<span><span class="co">##   F2         0.611          0.711             0.795                 0</span></span>
+<span><span class="co">##   Construct  AVE  Min |loading|  Median |loading|  Loadings flagged</span></span>
+<span><span class="co">##   F1         .67           0.79              0.82                 0</span></span>
+<span><span class="co">##   F2         .61           0.71              0.80                 0</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Construct separation</span></span>
-<span><span class="co">##   Construct 1  Construct 2  Latent r  95% CI          HTMT2   HTMT</span></span>
-<span><span class="co">##   F1           F2              0.223  [0.127, 0.318]  0.221  0.225</span></span>
+<span><span class="co">##   Construct 1  Construct 2  Latent r  95% CI      HTMT2  HTMT</span></span>
+<span><span class="co">##   F1           F2                .22  [.13, .32]   0.22  0.23</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## What these columns mean</span></span>
+<span><span class="co">##   AVE -- Average variance extracted, the mean share of its indicators'</span></span>
+<span><span class="co">##       variance a construct explains.</span></span>
+<span><span class="co">##   |loading| -- Absolute standardized loading.</span></span>
+<span><span class="co">##   Latent r -- Correlation between two constructs in the CFA.</span></span>
+<span><span class="co">##   CI -- Confidence interval, as lavaan computes it.</span></span>
+<span><span class="co">##   HTMT2 -- Heterotrait-monotrait ratio with geometric means (Roemer et al.,</span></span>
+<span><span class="co">##       2021).</span></span>
+<span><span class="co">##   HTMT -- Heterotrait-monotrait ratio (Henseler et al., 2015).</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Standardized loadings and AVE address convergent evidence; latent correlations</span></span>
 <span><span class="co">## and HTMT-family statistics address construct separation. These are</span></span>
-<span><span class="co">## complementary questions, not interchangeable pass/fail tests.</span></span></code></pre>
+<span><span class="co">## complementary questions, not interchangeable pass/fail tests.</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## See nomo_table(x, "discriminant") for every value and x$decision_log for the</span></span>
+<span><span class="co">## reasoning behind each flag.</span></span></code></pre>
 <p>The figures also avoid duplication. Item-level loading evidence
 belongs to the CFA; reliability gets a coefficient plot; convergent
 validity gets an AVE plot; and construct separation gets an HTMT-family
@@ -248,30 +267,75 @@ score is precise.</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">weak_rel</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## &lt;nomo_reliability summary&gt; Reliability</span></span>
+<span><span class="co">## Constructs: 1 | Review reference: .70</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Coefficients</span></span>
-<span><span class="co">##   Construct  Indicators  Omega  Alpha  Omega scale          Flag</span></span>
-<span><span class="co">##   Weak       continuous  0.369  0.363  observed continuous  review</span></span>
+<span><span class="co">##   Construct  Indicators  Omega  Alpha  Flag</span></span>
+<span><span class="co">##   Weak       continuous    .37    .36  Review</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## Flagged</span></span>
+<span><span class="co">##   - Weak (Review): Omega .37 is below the review reference .70. Inspect score</span></span>
+<span><span class="co">##     purpose, indicator quality, dimensionality, and CFA evidence before</span></span>
+<span><span class="co">##     changing the scale.</span></span>
+<span><span class="co">##   - Weak (Review): Alpha .36 is below the review reference .70. Inspect score</span></span>
+<span><span class="co">##     purpose, indicator quality, dimensionality, and CFA evidence before</span></span>
+<span><span class="co">##     changing the scale.</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Sampling uncertainty was not bootstrapped. For report-ready intervals, rerun</span></span>
 <span><span class="co">## with `ci = "bootstrap"`.</span></span>
 <span><span class="co">## Omega is primary for the congeneric CFA workflow; alpha is secondary and</span></span>
 <span><span class="co">## assumption-dependent. Reliability contributes score-precision evidence, not</span></span>
-<span><span class="co">## construct validity.</span></span></code></pre>
+<span><span class="co">## construct validity.</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## See x$decision_log for the reasoning behind each coefficient.</span></span></code></pre>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">weak_val</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## &lt;nomo_validity summary&gt; Convergent and discriminant evidence</span></span>
+<span><span class="co">## Constructs: 1 | AVE reference: .50 | HTMT reference: 0.85</span></span>
+<span><span class="co">## Convergent flags: 1 review, 0 concern (1 construct)</span></span>
+<span><span class="co">## Separation flags: not applicable (one construct)</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Convergent evidence by construct</span></span>
-<span><span class="co">##   Construct    AVE  Min |loading|  Median |loading|  Loadings flagged  Flag</span></span>
-<span><span class="co">##   Weak       0.114          0.200             0.311                 5  review</span></span>
+<span><span class="co">##   Construct  AVE  Min |loading|  Median |loading|  Loadings flagged  Flag</span></span>
+<span><span class="co">##   Weak       .11           0.20              0.31                 5  Review</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Construct separation</span></span>
 <span><span class="co">##   No pairwise construct-separation summary is available.</span></span>
 <span><span class="co">## </span></span>
+<span><span class="co">## Flagged</span></span>
+<span><span class="co">##   - W1 (Review): Standardized loading 0.20 is below the review reference 0.50</span></span>
+<span><span class="co">##     in absolute value; inspect item content, precision, and model</span></span>
+<span><span class="co">##     specification.</span></span>
+<span><span class="co">##   - W2 (Review): Standardized loading 0.31 is below the review reference 0.50</span></span>
+<span><span class="co">##     in absolute value; inspect item content, precision, and model</span></span>
+<span><span class="co">##     specification.</span></span>
+<span><span class="co">##   - W3 (Review): Standardized loading 0.27 is below the review reference 0.50</span></span>
+<span><span class="co">##     in absolute value; inspect item content, precision, and model</span></span>
+<span><span class="co">##     specification.</span></span>
+<span><span class="co">##   - W4 (Review): Standardized loading 0.499 is below the review reference 0.50</span></span>
+<span><span class="co">##     in absolute value; inspect item content, precision, and model</span></span>
+<span><span class="co">##     specification.</span></span>
+<span><span class="co">##   - W5 (Review): Standardized loading 0.34 is below the review reference 0.50</span></span>
+<span><span class="co">##     in absolute value; inspect item content, precision, and model</span></span>
+<span><span class="co">##     specification.</span></span>
+<span><span class="co">##   - Weak (Review): AVE (.11) is below the configured convergent-evidence</span></span>
+<span><span class="co">##     reference (.50). Inspect standardized loadings, indicator-specific error,</span></span>
+<span><span class="co">##     and content coverage; do not automatically delete items.</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## What these columns mean</span></span>
+<span><span class="co">##   AVE -- Average variance extracted, the mean share of its indicators'</span></span>
+<span><span class="co">##       variance a construct explains.</span></span>
+<span><span class="co">##   |loading| -- Absolute standardized loading.</span></span>
+<span><span class="co">##   HTMT2 -- Heterotrait-monotrait ratio with geometric means (Roemer et al.,</span></span>
+<span><span class="co">##       2021).</span></span>
+<span><span class="co">##   HTMT -- Heterotrait-monotrait ratio (Henseler et al., 2015).</span></span>
+<span><span class="co">## </span></span>
 <span><span class="co">## Standardized loadings and AVE address convergent evidence; latent correlations</span></span>
 <span><span class="co">## and HTMT-family statistics address construct separation. These are</span></span>
-<span><span class="co">## complementary questions, not interchangeable pass/fail tests.</span></span></code></pre>
+<span><span class="co">## complementary questions, not interchangeable pass/fail tests.</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## See nomo_table(x, "discriminant") for every value and x$decision_log for the</span></span>
+<span><span class="co">## reasoning behind each flag.</span></span></code></pre>
 <p>This is why <code>nomologR</code> does not collapse measurement
 quality into a single global-fit verdict. Weak standardized loadings,
 low AVE, and weak model-based reliability remain important even when
@@ -309,33 +373,62 @@ empirically.</p>
 <div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">overlap_rel</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## &lt;nomo_reliability summary&gt; Reliability</span></span>
+<span><span class="co">## Constructs: 2 | Review reference: .70</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Coefficients</span></span>
-<span><span class="co">##   Construct  Indicators  Omega  Alpha  Omega scale</span></span>
-<span><span class="co">##   F1         continuous  0.893  0.894  observed continuous</span></span>
-<span><span class="co">##   F2         continuous  0.896  0.895  observed continuous</span></span>
+<span><span class="co">##   Construct  Indicators  Omega  Alpha</span></span>
+<span><span class="co">##   F1         continuous    .89    .89</span></span>
+<span><span class="co">##   F2         continuous    .90    .89</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Sampling uncertainty was not bootstrapped. For report-ready intervals, rerun</span></span>
 <span><span class="co">## with `ci = "bootstrap"`.</span></span>
 <span><span class="co">## Omega is primary for the congeneric CFA workflow; alpha is secondary and</span></span>
 <span><span class="co">## assumption-dependent. Reliability contributes score-precision evidence, not</span></span>
-<span><span class="co">## construct validity.</span></span></code></pre>
+<span><span class="co">## construct validity.</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## See x$decision_log for the reasoning behind each coefficient.</span></span></code></pre>
 <div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">overlap_val</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## &lt;nomo_validity summary&gt; Convergent and discriminant evidence</span></span>
+<span><span class="co">## Constructs: 2 | AVE reference: .50 | HTMT reference: 0.85</span></span>
+<span><span class="co">## Convergent flags: none (2 constructs)</span></span>
+<span><span class="co">## Separation flags: 1 review, 0 concern (1 pair)</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Convergent evidence by construct</span></span>
-<span><span class="co">##   Construct    AVE  Min |loading|  Median |loading|  Loadings flagged</span></span>
-<span><span class="co">##   F1         0.737          0.837             0.865                 0</span></span>
-<span><span class="co">##   F2         0.742          0.848             0.851                 0</span></span>
+<span><span class="co">##   Construct  AVE  Min |loading|  Median |loading|  Loadings flagged</span></span>
+<span><span class="co">##   F1         .74           0.84              0.87                 0</span></span>
+<span><span class="co">##   F2         .74           0.85              0.85                 0</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Construct separation</span></span>
-<span><span class="co">##   Construct 1  Construct 2  Latent r  95% CI          HTMT2   HTMT  Flag</span></span>
-<span><span class="co">##   F1           F2              0.933  [0.912, 0.954]  0.931  0.932  review</span></span>
+<span><span class="co">##   Construct 1  Construct 2  Latent r  95% CI      HTMT2  HTMT  Flag</span></span>
+<span><span class="co">##   F1           F2                .93  [.91, .95]   0.93  0.93  Review</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## Flagged</span></span>
+<span><span class="co">##   - F1 vs. F2 (Review): HTMT2 (0.93) exceeds the configured review reference</span></span>
+<span><span class="co">##     (0.85). This raises a construct-separation concern; inspect theoretical</span></span>
+<span><span class="co">##     distinctiveness, item content, cross-construct overlap, and latent</span></span>
+<span><span class="co">##     correlations rather than automatically merging or deleting constructs.</span></span>
+<span><span class="co">##   - F1 vs. F2 (Review): HTMT (0.93) exceeds the configured review reference</span></span>
+<span><span class="co">##     (0.85). This raises a construct-separation concern; inspect theoretical</span></span>
+<span><span class="co">##     distinctiveness, item content, cross-construct overlap, and latent</span></span>
+<span><span class="co">##     correlations rather than automatically merging or deleting constructs.</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## What these columns mean</span></span>
+<span><span class="co">##   AVE -- Average variance extracted, the mean share of its indicators'</span></span>
+<span><span class="co">##       variance a construct explains.</span></span>
+<span><span class="co">##   |loading| -- Absolute standardized loading.</span></span>
+<span><span class="co">##   Latent r -- Correlation between two constructs in the CFA.</span></span>
+<span><span class="co">##   CI -- Confidence interval, as lavaan computes it.</span></span>
+<span><span class="co">##   HTMT2 -- Heterotrait-monotrait ratio with geometric means (Roemer et al.,</span></span>
+<span><span class="co">##       2021).</span></span>
+<span><span class="co">##   HTMT -- Heterotrait-monotrait ratio (Henseler et al., 2015).</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Standardized loadings and AVE address convergent evidence; latent correlations</span></span>
 <span><span class="co">## and HTMT-family statistics address construct separation. These are</span></span>
-<span><span class="co">## complementary questions, not interchangeable pass/fail tests.</span></span></code></pre>
+<span><span class="co">## complementary questions, not interchangeable pass/fail tests.</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## See nomo_table(x, "discriminant") for every value and x$decision_log for the</span></span>
+<span><span class="co">## reasoning behind each flag.</span></span></code></pre>
 <p>Here, strong omega and AVE do not erase a high latent correlation or
 HTMT2 value. The package therefore recommends investigating theoretical
 distinctiveness, item content, cross-construct overlap, and the intended
@@ -380,12 +473,13 @@ scale.</p>
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">ordinal_rel</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## &lt;nomo_reliability summary&gt; Reliability</span></span>
+<span><span class="co">## Constructs: 1 | Review reference: .70</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Coefficients</span></span>
 <span><span class="co">##   Construct  Indicators  Omega  Omega scale</span></span>
-<span><span class="co">##   F          ordered     0.829  observed ordinal</span></span>
+<span><span class="co">##   F          ordered       .83  observed ordinal</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Secondary alpha unavailable for</span></span>
+<span><span class="co">## Alpha not computed</span></span>
 <span><span class="co">##   - F (ordered indicators, observed ordinal scale): Observed-scale alpha is</span></span>
 <span><span class="co">##     not computed from an ordered-indicator CFA. Current semTools intentionally</span></span>
 <span><span class="co">##     disallows ord.scale = TRUE with tau-equivalent alpha for ordered</span></span>
@@ -398,7 +492,9 @@ scale.</p>
 <span><span class="co">## with `ci = "bootstrap"`.</span></span>
 <span><span class="co">## Omega is primary for the congeneric CFA workflow; alpha is secondary and</span></span>
 <span><span class="co">## assumption-dependent. Reliability contributes score-precision evidence, not</span></span>
-<span><span class="co">## construct validity.</span></span></code></pre>
+<span><span class="co">## construct validity.</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## See x$decision_log for the reasoning behind each coefficient.</span></span></code></pre>
 <p>Observed-scale omega is available for the practical ordinal
 composite. Observed-scale alpha is deliberately reported as unavailable
 in this ordered-CFA estimand rather than silently replacing it with a
@@ -921,31 +1017,48 @@ it.</p>
 <span>                  interval <span class="op">=</span> <span class="st">"two weeks"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">rt</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## &lt;nomo_retest summary&gt; Test-retest reliability</span></span>
-<span><span class="co">## Composites: 1 | Interval: two weeks</span></span>
+<span><span class="co">## McGraw and Wong (1996); Koo and Li (2016).</span></span>
+<span><span class="co">## Composites: 1 | Cases: 150 | Interval: two weeks</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Reliability across occasions</span></span>
-<span><span class="co">##   Composite    n  ICC(A,1) [95% CI]  Koo &amp; Li   SEM   SDC</span></span>
-<span><span class="co">##   Agency     150  0.84 [0.75, 0.89]  good      0.45  1.25</span></span>
+<span><span class="co">##   Composite    n  ICC(A,1)  95% CI      Koo and Li  Pooled SD   SEM   SDC</span></span>
+<span><span class="co">##   Agency     150       .84  [.75, .89]  good             1.17  0.45  1.25</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Consistency and change</span></span>
-<span><span class="co">##   Composite  ICC(C,1) [95% CI]  Mean change [95% CI]    SD</span></span>
-<span><span class="co">##   Agency     0.85 [0.80, 0.89]  +0.24 [0.13, 0.34]    1.17</span></span>
+<span><span class="co">##   Composite  ICC(C,1)  95% CI      Mean change  95% CI</span></span>
+<span><span class="co">##   Agency          .85  [.80, .89]        +0.24  [0.13, 0.34]</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Reliable change, first to last occasion</span></span>
-<span><span class="co">##   - Agency: 10 people up, 1 down, 139 within measurement error.</span></span>
+<span><span class="co">##   - Agency: 10 up, 1 down, and 139 within measurement error, of 150 people.</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Flagged</span></span>
-<span><span class="co">##   - Agency (Review): `Agency` changed by 0.24 on average from `agency_t1` to</span></span>
+<span><span class="co">##   - Agency (Review): `Agency` changed by +0.24 on average from `agency_t1` to</span></span>
 <span><span class="co">##     `agency_t2`, 95% CI [0.13, 0.34]. Scores shifted systematically, as</span></span>
 <span><span class="co">##     practice or real change would make them. ICC(A,1) counts the shift as</span></span>
-<span><span class="co">##     disagreement and ICC(C,1) does not; ICC(C,1) is 0.85 here. The SEM leaves</span></span>
+<span><span class="co">##     disagreement and ICC(C,1) does not; ICC(C,1) is .85 here. The SEM leaves</span></span>
 <span><span class="co">##     the shift out, so the shift counts toward each person's change when</span></span>
 <span><span class="co">##     reliable change is classified.</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## ICC(A,1): two-way mixed effects, absolute agreement, single measurement (Koo &amp;</span></span>
-<span><span class="co">## Li, 2016). SEM: standard error of measurement, sqrt(MS error). SDC: smallest</span></span>
-<span><span class="co">## detectable change, 1.96 x sqrt(2) x SEM (Weir, 2005). Reference ranges</span></span>
-<span><span class="co">## describe the interval; they are not a pass or a fail.</span></span></code></pre>
+<span><span class="co">## What these columns mean</span></span>
+<span><span class="co">##   n -- Cases with a score on every occasion.</span></span>
+<span><span class="co">##   ICC(A,1) -- Intraclass correlation from a two-way mixed-effects model,</span></span>
+<span><span class="co">##       absolute agreement, single measurement.</span></span>
+<span><span class="co">##   ICC(C,1) -- The same with consistency, which ignores a shift in the mean</span></span>
+<span><span class="co">##       between occasions.</span></span>
+<span><span class="co">##   CI -- Confidence interval.</span></span>
+<span><span class="co">##   Koo and Li -- Their description of the ICC(A,1) interval: poor below .50,</span></span>
+<span><span class="co">##       moderate to .75, good to .90, excellent above.</span></span>
+<span><span class="co">##   Pooled SD -- Standard deviation of the scores pooled over occasions, not of</span></span>
+<span><span class="co">##       the change.</span></span>
+<span><span class="co">##   SEM -- Standard error of measurement, the square root of the residual mean</span></span>
+<span><span class="co">##       square (Weir, 2005).</span></span>
+<span><span class="co">##   SDC -- Smallest detectable change, 1.96 x sqrt(2) x SEM (Weir, 2005).</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## Reference ranges describe the interval; they are not a pass or a fail. A</span></span>
+<span><span class="co">## reliable change is larger than measurement error, which does not make it a</span></span>
+<span><span class="co">## meaningful one.</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## See nomo_table(x, "reliable_change") for each person's change.</span></span></code></pre>
 <p>These scores were simulated to rise by .30 between occasions, and in
 this sample they rose by 0.24. That rise is why ICC(A,1) is below
 ICC(C,1), and the summary flags it.</p>

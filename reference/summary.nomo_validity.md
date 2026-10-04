@@ -24,4 +24,5 @@ summary(object, ...)
 An object of class `summary_nomo_validity`. `$convergent` combines AVE
 with a compact loading summary, while `$discriminant` aligns latent
 correlations, HTMT2, and original HTMT without repeating the full CFA
-loading table.
+loading table. Printed, it shows both tables, the legacy Fornell-Larcker
+comparison when it was requested, and the full reason for each flag.

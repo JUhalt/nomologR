@@ -74,12 +74,19 @@ A `nomo_hierarchical` object. The fields to read are:
 - `loadings`: each item's standardized general and group loadings,
   communality, and share of common variance that is general.
 
-- `notes` and `decision_log`.
+- `notes`: each note's `topic`, `severity`, and full text (`note`), with
+  a one-sentence version (`brief`); and `decision_log`.
 
 Other fields record the call, the settings used, and the fitted model.
 They may change between releases and are not part of the stable
 interface (see
 [`?nomologR`](https://juhalt.github.io/nomologR/reference/nomologR-package.md)).
+
+[`print()`](https://rdrr.io/r/base/print.html) shows the indices for the
+total score and the item set, the subscale and factor-score tables, and
+one sentence for each flagged note;
+[`summary()`](https://rdrr.io/r/base/summary.html) adds each index's
+interpretation and every note in full.
 
 ## Details
 
@@ -156,13 +163,13 @@ of variance in a factor explainable by its own indicators when optimally
 weighted. It uses only that factor's loadings and treats the remainder
 of each item as uncorrelated residual.
 
-The two are the same quantity when the data are unidimensional, and can
-differ under a bifactor model, where an item's residual with respect to
-one factor contains the other factors and is correlated across items.
-Rodriguez et al. (2016) state this and decline to prefer either, so both
-are reported. Determinacy is always computed from the model-reproduced
-matrix, whatever `obs.var` is set to, because that is what the formula
-is defined on.
+When the data are unidimensional, H equals `determinacy_r2`, the squared
+determinacy. The two can differ under a bifactor model, where an item's
+residual with respect to one factor contains the other factors and is
+correlated across items. Rodriguez et al. (2016) state this and decline
+to prefer either, so both are reported. Determinacy is always computed
+from the model-reproduced matrix, whatever `obs.var` is set to, because
+that is what the formula is defined on.
 
 Gorsuch (1983) recommended using factor score estimates only when
 determinacy exceeds .90, with competing score sets correlating above
@@ -170,6 +177,12 @@ determinacy exceeds .90, with competing score sets correlating above
 These are reported as their authors' recommendations where a value falls
 below them, as with fixed fit-index cutoffs elsewhere in the package,
 and are never applied as rules.
+
+**Improper solutions.** A negative variance estimate, a residual
+variance or the variance of a general or group source (in a higher-order
+model, a first-order factor's disturbance), makes the solution improper.
+The indices that depend on a negative source variance are `NA`, and a
+concern note says which variance is negative.
 
 ## References
 
@@ -244,60 +257,58 @@ bf <- nomo_cfa(nomo_model(factors, structure = "bifactor"), data = dat)
 h <- nomo_hierarchical(bf)
 h
 #> <nomo_hierarchical> Hierarchical model evaluation
+#> Rodriguez, Reise, and Haviland (2016).
 #> Bifactor model | General factor: G | Group factors: A, B, C
 #> Estimand: unit-weighted observed composite
 #> 
 #> Total score
-#>   Index                        Estimate
-#>   omega total                     0.896
-#>   omega hierarchical              0.741
-#>   omega hierarchical relative     0.827
-#>   ECV                             0.609
-#>   PUC                             0.750
+#>   Index                         Estimate
+#>   Omega total                        .90
+#>   Omega hierarchical                 .74
+#>   Omega hierarchical, relative       .83
+#> 
+#> Item set
+#>   Index  Estimate
+#>   ECV         .61
+#>   PUC         .75
 #> 
 #> Subscales
 #>   Subscale  Items  Omega subscale  Omega hierarchical subscale
-#>   A             3           0.798                        0.330
-#>   B             3           0.791                        0.354
-#>   C             3           0.799                        0.239
+#>   A             3             .80                          .33
+#>   B             3             .79                          .35
+#>   C             3             .80                          .24
 #> 
 #> Factor scores
 #>   Factor  Role     Determinacy  Min competing r  Replicability H
-#>   G       general        0.867            0.502            0.829
-#>   A       group          0.704           -0.009            0.489
-#>   B       group          0.715            0.023            0.501
-#>   C       group          0.641           -0.178            0.406
+#>   G       general          .87              .50              .83
+#>   A       group            .70             -.01              .49
+#>   B       group            .72              .02              .50
+#>   C       group            .64             -.18              .41
 #> 
-#> Notes
-#>   - Review: A bifactor model will usually fit at least as well as
-#>     correlated-factors or higher-order models of the same items, even when it
-#>     did not generate the data (Reise, 2012), and a higher-order model is a
-#>     constrained version of it (Yung, Thissen, & McLeod, 1999). Bonifay, Lane,
-#>     and Reise (2017) call the bifactor model's tendency to show superior
-#>     goodness of fit in model comparison studies a particular concern, and say
-#>     that superior fit may be a symptom of overfitting: modeling not only the
-#>     trends in the data but also unwanted noise. Murray and Johnson (2013)
-#>     compared these two structures directly and found the comparison biased in
-#>     favor of the bifactor model: unless there was essentially no unmodeled
-#>     complexity, their simulation favored the bifactor model even when a
-#>     higher-order model generated the data. They concluded that which model to
-#>     adopt should not rely on which is better fitting. Compare the alternatives
-#>     with nomo_compare() and choose on substantive grounds, not on fit alone.
-#>   - Review: Factor determinacy is at or below .90 for G, A, B, C. Gorsuch
-#>     (1983, p. 260) recommended using factor score estimates only above that
-#>     value. This is his recommendation reported as context, not a rule applied
-#>     here; the score may still be usable for some purposes.
+#> Flagged
+#>   - Review: Factor determinacy is at or below .90 for G, A, B, C, the value
+#>     above which Gorsuch (1983) recommended using factor score estimates.
 #>   - Review: Two equally valid sets of factor scores could correlate as low as
-#>     G (0.50), A (-0.01), B (0.02), C (-0.18). Gorsuch (1983, p. 260) suggested
-#>     this minimum be above .70. A negative value means two researchers scoring
-#>     the same data could rank people in opposite orders and both be consistent
-#>     with the model.
-#>   - Review: Construct replicability H is below .70 for A, B, C. Hancock and
-#>     Mueller (2001) proposed .70 as a standard; a factor below it is not well
-#>     defined by its own indicators and is expected to change across studies.
-#>     Reported as their standard, not applied as a rule.
+#>     G (.50), A (-.01), B (.02), C (-.18), below the .70 Gorsuch (1983)
+#>     suggested.
+#>   - Review: Construct replicability H is below .70, the standard Hancock and
+#>     Mueller (2001) proposed, for A, B, C.
 #> 
-#> No index is treated as a pass/fail threshold; see nomo_table(x, "indices").
+#> What these abbreviations mean
+#>   ECV -- Explained common variance: the share of the items' common variance
+#>       that the general factor explains.
+#>   PUC -- Percentage of uncontaminated correlations, shown as a proportion: the
+#>       share of item correlations that reflect the general factor alone.
+#>   Min competing r -- The lowest correlation two equally valid sets of factor
+#>       scores could have, twice the squared determinacy minus one.
+#>   Replicability H -- Construct replicability (Hancock & Mueller, 2001): how
+#>       well a factor's own indicators, optimally weighted, define it.
+#> 
+#> These indices do not choose between a bifactor and a higher-order structure,
+#> and no value is treated as a pass/fail threshold.
+#> 
+#> See summary(x) for each index's meaning with the notes in full and
+#> nomo_table(x, "factors") for every factor-score value.
 nomo_table(h, "subscales")
 #> # A tibble: 3 × 6
 #>   subscale n_items omega_subscale omega_hierarchical_s…¹ omega_hs_relative items

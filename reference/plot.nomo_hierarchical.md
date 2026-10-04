@@ -28,4 +28,7 @@ plot(x, type = c("variance", "loadings"), ...)
 
 ## Value
 
-A `ggplot` object.
+A `ggplot` object. A composite whose shares rest on a negative variance
+estimate is left out of the variance plot, and a loading that rests on
+one is left out of the loadings plot; the caption names what was left
+out.

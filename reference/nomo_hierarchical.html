@@ -128,10 +128,14 @@ determinacy, its square, the minimum correlation between competing sets
 of factor scores, and construct replicability H (see <strong>Factor scores</strong>).</p></li>
 <li><p><code>loadings</code>: each item's standardized general and group loadings,
 communality, and share of common variance that is general.</p></li>
-<li><p><code>notes</code> and <code>decision_log</code>.</p></li>
+<li><p><code>notes</code>: each note's <code>topic</code>, <code>severity</code>, and full text (<code>note</code>), with
+a one-sentence version (<code>brief</code>); and <code>decision_log</code>.</p></li>
 </ul><p>Other fields record the call, the settings used, and the fitted model.
 They may change between releases and are not part of the stable interface
 (see <code><a href="nomologR-package.html">?nomologR</a></code>).</p>
+<p><code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> shows the indices for the total score and the item set, the
+subscale and factor-score tables, and one sentence for each flagged note;
+<code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> adds each index's interpretation and every note in full.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -192,10 +196,11 @@ consistent with the model.</p>
 variance in a factor explainable by its own indicators when optimally
 weighted. It uses only that factor's loadings and treats the remainder of
 each item as uncorrelated residual.</p>
-<p>The two are the same quantity when the data are unidimensional, and can
-differ under a bifactor model, where an item's residual with respect to one
-factor contains the other factors and is correlated across items. Rodriguez
-et al. (2016) state this and decline to prefer either, so both are reported.
+<p>When the data are unidimensional, H equals <code>determinacy_r2</code>, the squared
+determinacy. The two can differ under a bifactor model, where an item's
+residual with respect to one factor contains the other factors and is
+correlated across items. Rodriguez et al. (2016) state this and decline to
+prefer either, so both are reported.
 Determinacy is always computed from the model-reproduced matrix, whatever
 <code>obs.var</code> is set to, because that is what the formula is defined on.</p>
 <p>Gorsuch (1983) recommended using factor score estimates only when
@@ -204,6 +209,11 @@ Hancock and Mueller (2001) proposed .70 as a standard for H. These are
 reported as their authors' recommendations where a value falls below them,
 as with fixed fit-index cutoffs elsewhere in the package, and are never
 applied as rules.</p>
+<p><strong>Improper solutions.</strong> A negative variance estimate, a residual variance or
+the variance of a general or group source (in a higher-order model, a
+first-order factor's disturbance), makes the solution improper. The
+indices that depend on a negative source variance are <code>NA</code>, and a concern
+note says which variance is negative.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
@@ -263,60 +273,58 @@ between the higher-order factor model and the hierarchical factor model.
 <span class="r-in"><span><span class="va">h</span> <span class="op">&lt;-</span> <span class="fu">nomo_hierarchical</span><span class="op">(</span><span class="va">bf</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">h</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;nomo_hierarchical&gt; Hierarchical model evaluation</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Rodriguez, Reise, and Haviland (2016).</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Bifactor model | General factor: G | Group factors: A, B, C</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Estimand: unit-weighted observed composite</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Total score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Index                        Estimate</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   omega total                     0.896</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   omega hierarchical              0.741</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   omega hierarchical relative     0.827</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   ECV                             0.609</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   PUC                             0.750</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Index                         Estimate</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Omega total                        .90</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Omega hierarchical                 .74</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Omega hierarchical, relative       .83</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Item set</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Index  Estimate</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ECV         .61</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   PUC         .75</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Subscales</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Subscale  Items  Omega subscale  Omega hierarchical subscale</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   A             3           0.798                        0.330</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   B             3           0.791                        0.354</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   C             3           0.799                        0.239</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   A             3             .80                          .33</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   B             3             .79                          .35</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   C             3             .80                          .24</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Factor scores</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Factor  Role     Determinacy  Min competing r  Replicability H</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   G       general        0.867            0.502            0.829</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   A       group          0.704           -0.009            0.489</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   B       group          0.715            0.023            0.501</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   C       group          0.641           -0.178            0.406</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   G       general          .87              .50              .83</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   A       group            .70             -.01              .49</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   B       group            .72              .02              .50</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   C       group            .64             -.18              .41</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Notes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   - Review: A bifactor model will usually fit at least as well as</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     correlated-factors or higher-order models of the same items, even when it</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     did not generate the data (Reise, 2012), and a higher-order model is a</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     constrained version of it (Yung, Thissen, &amp; McLeod, 1999). Bonifay, Lane,</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     and Reise (2017) call the bifactor model's tendency to show superior</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     goodness of fit in model comparison studies a particular concern, and say</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     that superior fit may be a symptom of overfitting: modeling not only the</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     trends in the data but also unwanted noise. Murray and Johnson (2013)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     compared these two structures directly and found the comparison biased in</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     favor of the bifactor model: unless there was essentially no unmodeled</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     complexity, their simulation favored the bifactor model even when a</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     higher-order model generated the data. They concluded that which model to</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     adopt should not rely on which is better fitting. Compare the alternatives</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     with nomo_compare() and choose on substantive grounds, not on fit alone.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   - Review: Factor determinacy is at or below .90 for G, A, B, C. Gorsuch</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     (1983, p. 260) recommended using factor score estimates only above that</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     value. This is his recommendation reported as context, not a rule applied</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     here; the score may still be usable for some purposes.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Flagged</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   - Review: Factor determinacy is at or below .90 for G, A, B, C, the value</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     above which Gorsuch (1983) recommended using factor score estimates.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   - Review: Two equally valid sets of factor scores could correlate as low as</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     G (0.50), A (-0.01), B (0.02), C (-0.18). Gorsuch (1983, p. 260) suggested</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     this minimum be above .70. A negative value means two researchers scoring</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     the same data could rank people in opposite orders and both be consistent</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     with the model.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   - Review: Construct replicability H is below .70 for A, B, C. Hancock and</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     Mueller (2001) proposed .70 as a standard; a factor below it is not well</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     defined by its own indicators and is expected to change across studies.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     Reported as their standard, not applied as a rule.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     G (.50), A (-.01), B (.02), C (-.18), below the .70 Gorsuch (1983)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     suggested.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   - Review: Construct replicability H is below .70, the standard Hancock and</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     Mueller (2001) proposed, for A, B, C.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> No index is treated as a pass/fail threshold; see nomo_table(x, "indices").</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> What these abbreviations mean</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ECV -- Explained common variance: the share of the items' common variance</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       that the general factor explains.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   PUC -- Percentage of uncontaminated correlations, shown as a proportion: the</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       share of item correlations that reflect the general factor alone.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Min competing r -- The lowest correlation two equally valid sets of factor</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       scores could have, twice the squared determinacy minus one.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Replicability H -- Construct replicability (Hancock &amp; Mueller, 2001): how</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       well a factor's own indicators, optimally weighted, define it.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> These indices do not choose between a bifactor and a higher-order structure,</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> and no value is treated as a pass/fail threshold.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> See summary(x) for each index's meaning with the notes in full and</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> nomo_table(x, "factors") for every factor-score value.</span>
 <span class="r-in"><span><span class="fu"><a href="nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">h</span>, <span class="st">"subscales"</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 3 × 6</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   subscale n_items omega_subscale omega_hierarchical_s…¹ omega_hs_relative items</span>
