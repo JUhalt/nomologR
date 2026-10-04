@@ -3,7 +3,7 @@
 #' `nomo_model()` is a small convenience helper for reflective CFA models. It
 #' converts a named list of factor-to-indicator assignments into `lavaan`
 #' measurement-model syntax. It deliberately does not add residual covariances,
-#' cross-loadings, equality constraints, or other post-hoc changes.
+#' cross-loadings, equality constraints, or other post hoc changes.
 #'
 #' @details
 #' Three structures are available, and the researcher chooses among them. The
@@ -39,6 +39,10 @@
 #' @param factors A named list. Each element name is a latent-factor name and
 #'   each element value is a character vector of observed indicators. For
 #'   hierarchical structures these are the first-order or group factors.
+#'   Factor and indicator names must be names `lavaan` can read: letters,
+#'   digits, `.`, and `_`, starting with a letter, as [make.names()] leaves
+#'   them. A name such as `"self-efficacy"` is refused, because `lavaan` would
+#'   fit it as a factor called `efficacy`.
 #' @param structure One of `"correlated"`, `"higher_order"`, or `"bifactor"`.
 #' @param general Name of the second-order or general factor. Used only when
 #'   `structure` is `"higher_order"` or `"bifactor"`.
@@ -46,7 +50,8 @@
 #' @return A character scalar of class `nomo_model` that can be passed directly
 #'   to [nomo_cfa()] or to `lavaan::cfa()`. Attributes record the `factors`,
 #'   `structure`, `general` factor, and any identification `notes`, a character
-#'   vector named by severity (`"review"` or `"concern"`).
+#'   vector named by severity (`"review"` or `"concern"`). `print()` shows the
+#'   syntax as it can be copied, then any identification notes.
 #'
 #' @references
 #' Holzinger, K. J., & Swineford, F. (1937). The bi-factor method.
@@ -109,6 +114,8 @@ nomo_model <- function(factors,
     x
   })
   names(cleaned) <- factor_names
+  nomo_model_check_names(factor_names, "Factor")
+  nomo_model_check_names(unlist(cleaned, use.names = FALSE), "Indicator")
 
   notes <- character()
 
@@ -116,6 +123,7 @@ nomo_model <- function(factors,
     syntax <- nomo_model_first_order(cleaned)
   } else {
     general <- nomo_model_validate_general(general, cleaned)
+    nomo_model_check_names(general, "The `general` factor")
 
     if (identical(structure, "higher_order")) {
       built <- nomo_model_higher_order(cleaned, general)
@@ -133,6 +141,28 @@ nomo_model <- function(factors,
   attr(out, "notes") <- notes
   class(out) <- c("nomo_model", "character")
   out
+}
+
+
+# lavaan reads a name only when it is a syntactic R name: "self-efficacy" is
+# fitted as a factor called "efficacy", "1st" as "st", and "my factor" with a
+# deprecation warning, so such a name is refused before anything is fitted
+# (#145). make.names() leaves exactly the names lavaan accepts unchanged.
+nomo_model_check_names <- function(names, what) {
+  bad <- unique(names[names != make.names(names)])
+  if (!length(bad)) return(invisible(TRUE))
+  stop(
+    sprintf(
+      paste(
+        "%s %s cannot be read by lavaan: %s. Use letters, digits, `.`, and `_`,",
+        "starting with a letter, for example %s."
+      ),
+      what, nomo_present_noun(length(bad), "name", "names"),
+      paste(sprintf('"%s"', bad), collapse = ", "),
+      paste(sprintf('"%s"', make.names(bad)), collapse = ", ")
+    ),
+    call. = FALSE
+  )
 }
 
 
@@ -308,12 +338,35 @@ nomo_model_bifactor <- function(factors, general) {
 }
 
 
+# A syntax line wider than the console is broken after a "+", with the rest
+# indented. lavaan reads a line that ends in an operator as continued on the
+# next, so the printed syntax can still be copied as it is.
+nomo_model_wrap_syntax <- function(lines, width = nomo_present_width()) {
+  unlist(lapply(lines, function(line) {
+    terms <- strsplit(line, " + ", fixed = TRUE)[[1L]]
+    out <- character()
+    current <- terms[[1L]]
+    for (term in terms[-1L]) {
+      candidate <- paste(current, "+", term)
+      # Room for the " +" that ends a broken line.
+      if (nchar(candidate, type = "width") > width - 2L) {
+        out <- c(out, paste(current, "+"))
+        current <- paste0("  ", term)
+      } else {
+        current <- candidate
+      }
+    }
+    c(out, current)
+  }), use.names = FALSE)
+}
+
+
 #' @export
 print.nomo_model <- function(x, ...) {
   # The syntax is printed bare, so it can be copied as it is; the notes are
   # wrapped like every other note (#145).
   nomo_present_header("nomo_model", "Measurement model syntax")
-  cat(as.character(x), "\n", sep = "")
+  nomo_present_cat(nomo_model_wrap_syntax(strsplit(as.character(x), "\n", fixed = TRUE)[[1L]]))
   notes <- attr(x, "notes")
   if (length(notes)) {
     # A note is prefixed with its severity, as other notes in the package are.
@@ -323,5 +376,6 @@ print.nomo_model <- function(x, ...) {
       note = unname(notes), stringsAsFactors = FALSE
     ))
   }
+  nomo_present_pointer("nomo_cfa(x, data)", "a guided fit of this model")
   invisible(x)
 }

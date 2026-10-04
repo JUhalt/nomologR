@@ -5,10 +5,16 @@
     Output
       <nomo_cfa> Confirmatory factor analysis
       Cases: 473 of 500 used | Estimator: ML | Converged: yes
-      Fit: CFI 0.973 | TLI 0.965 | RMSEA 0.051 | SRMR 0.052
-      Loadings: 10 | Flags: 1 review, 0 concern
-      No parameter was freed and no model was refit automatically. summary() shows
-      the evidence.
+      Fit: CFI .973 | TLI 0.965 | RMSEA 0.051 | SRMR 0.052
+      Loadings: 10 | Flags: 2 review, 0 concern
+      No parameter was freed and no model was refit automatically.
+      
+      ML = maximum likelihood; CFI = comparative fit index; TLI = Tucker-Lewis
+      index; RMSEA = root mean square error of approximation; SRMR = standardized
+      root mean square residual.
+      
+      See summary(x) for the evidence and each flag and nomo_table(x, "fit") for
+      every fit index.
 
 ---
 
@@ -20,34 +26,29 @@
       
       Global fit
         chi-square(34) = 75.83, p < .001
-        Index  Value  90% CI          Reference
-        CFI    0.973                      0.950
-        TLI    0.965                      0.950
-        RMSEA  0.051  [0.036, 0.066]      0.060
-        SRMR   0.052                      0.080
+        Index  Value  Reference  90% CI
+        CFI     .973       .950
+        TLI    0.965      0.950
+        RMSEA  0.051      0.060  [0.036, 0.066]
+        SRMR   0.052      0.080
         References are teaching values for review, not cutoffs.
       
       Standardized loadings
-        Factor  Item  Loading     SE  95% CI          Flag
-        A       a1      0.771  0.025  [0.723, 0.820]
-        A       a2      0.744  0.026  [0.692, 0.795]
-        A       a3      0.669  0.030  [0.609, 0.728]
-        A       a4      0.738  0.026  [0.687, 0.790]
-        A       a5      0.598  0.034  [0.531, 0.665]
-        B       b1      0.794  0.025  [0.746, 0.843]
-        B       b2      0.695  0.030  [0.636, 0.753]
-        B       b3      0.757  0.026  [0.705, 0.809]
-        B       b4      0.628  0.033  [0.563, 0.693]
-        B       b5      0.337  0.045  [0.249, 0.426]  review
-      
-      Flagged loadings
-        - b5 on B (review): Absolute standardized loading is below the configured
-          teaching reference of 0.5; inspect item content, precision, and model
-          specification.
+        Factor  Indicator  Loading    SE  95% CI        Flag
+        A       a1            0.77  0.02  [0.72, 0.82]
+        A       a2            0.74  0.03  [0.69, 0.80]
+        A       a3            0.67  0.03  [0.61, 0.73]
+        A       a4            0.74  0.03  [0.69, 0.79]
+        A       a5            0.60  0.03  [0.53, 0.66]
+        B       b1            0.79  0.02  [0.75, 0.84]
+        B       b2            0.69  0.03  [0.64, 0.75]
+        B       b3            0.76  0.03  [0.71, 0.81]
+        B       b4            0.63  0.03  [0.56, 0.69]
+        B       b5            0.34  0.05  [0.25, 0.43]  Review
       
       Factor correlations
-        Factor 1  Factor 2      r  95% CI
-        A         B         0.499  [0.413, 0.586]
+        Factor 1  Factor 2    r  95% CI
+        A         B         .50  [.41, .59]
       
       Improper solutions
         No improper-solution signal, such as a negative residual variance, was
@@ -55,24 +56,47 @@
       
       Largest residual correlations
         Item 1  Item 2  Residual
-        b3      a5         0.189
-        b1      a5         0.187
-        b2      a5         0.144
-        b4      a5         0.139
-        b3      a4        -0.067
+        b3      a5          0.19
+        b1      a5          0.19
+        b2      a5          0.14
+        b4      a5          0.14
+        b3      a4         -0.07
       
       Modification indices (diagnostic only)
-        Parameter     MI     EPC  Std. EPC
-        B =~ a5    48.34   0.488     0.365
-        B =~ a1     9.41  -0.183    -0.145
-        a5 ~~ b3    7.57   0.081     0.150
-        a5 ~~ b1    4.78   0.061     0.125
-        a3 ~~ a4    4.64   0.073     0.133
+        Parameter     MI    EPC  Std. EPC
+        B =~ a5    48.34   0.49      0.37
+        B =~ a1     9.41  -0.18     -0.14
+        a5 ~~ b3    7.57   0.08      0.15
+        a5 ~~ b1    4.78   0.06      0.12
+        a3 ~~ a4    4.64   0.07      0.13
         Modification indices locate strain. They do not authorize freeing a
         parameter, and nomologR never does so automatically.
       
+      Flagged
+        - Cases (Review): 473 of 500 input cases were used. Confirm that the loss
+          follows the intended missing-data strategy.
+        - b5 on B (Review): Absolute standardized loading is below the configured
+          teaching reference of 0.50; inspect item content, precision, and model
+          specification.
+      
+      What these columns mean
+        ML -- Maximum likelihood.
+        CFI -- Comparative fit index.
+        TLI -- Tucker-Lewis index.
+        RMSEA -- Root mean square error of approximation.
+        SRMR -- Standardized root mean square residual.
+        CI -- Confidence interval.
+        SE -- Standard error.
+        MI -- Modification index, the expected drop in the chi-square if the
+            parameter were freed.
+        EPC -- Expected parameter change if the parameter were freed.
+        Std. EPC -- The expected parameter change with all variables standardized.
+      
       Global fit, local strain, and parameter estimates are evidence to interpret
       together; no single cutoff establishes model validity.
+      
+      See nomo_table(x, "decision_log") for the decision log and x$fit for lavaan's
+      full output.
 
 # the item audit, factor retention, and EFA read as designed (#89)
 
@@ -604,15 +628,22 @@
       print(cmp)
     Output
       <nomo_compare> Measurement-model comparison
-      Models: 2 | Reference: full | Estimator: ML | Cases: 473 | Origin: a-priori
+      Models: 2 | Reference: full | Estimator: ML | Cases: 473 of 500 used
+      Origin: a priori
       Rationale: Is b5 needed?
       
-      Compared with `full`
-        - no_b5 (nested, more constrained): chi-square difference = 46.91, df = 1,
-          p < .001; CFI change -0.029, RMSEA change +0.022; AIC change +44.9
+      Compared with full
+        - no_b5 (nested, more constrained): Delta chi-square(1) = 46.91, p < .001;
+          CFI change -.029, RMSEA change +0.022; AIC change +44.91
       
-      No model was selected automatically. summary() shows interpretations and
-      measurement evidence.
+      ML = maximum likelihood; CFI = comparative fit index; RMSEA = root mean square
+      error of approximation; AIC = Akaike information criterion.
+      
+      No model was selected automatically; read the comparison with theory and the
+      recorded rationale.
+      
+      See summary(x) for the interpretations and measurement evidence and
+      nomo_table(x, "comparisons") for every test.
 
 ---
 
@@ -621,66 +652,81 @@
     Output
       <nomo_compare summary> Measurement-model comparison
       Rationale: Is b5 needed?
-      Origin: a-priori | Reference model: full
+      Reference: full | Estimator: ML | Cases: 473 of 500 used | Origin: a priori
       
       Model fit
-        Model  Parameters  df  Chi-square    CFI    TLI  RMSEA   SRMR
-        full           21  34       75.83  0.973  0.965  0.051  0.052
-        no_b5          20  35      122.75  0.944  0.928  0.073  0.093
+        Model  Chi-square  df       p   CFI    TLI  RMSEA   SRMR  Parameters
+        full        75.83  34  < .001  .973  0.965  0.051  0.052          21
+        no_b5      122.75  35  < .001  .944  0.928  0.073  0.093          20
       
       Information criteria
-        Model      AIC      BIC  Loadings fixed to zero
-        full   11981.0  12068.4                       0
-        no_b5  12025.9  12109.1                       1
+        Model       AIC       BIC  Loadings fixed to zero
+        full   11981.02  12068.36                       0
+        no_b5  12025.93  12109.11                       1
       
       Difference tests against the reference model
-        Model  Relation                  Check   Method    Chi-sq diff  df       p
-        no_b5  nested, more constrained  nested  standard        46.91   1  < .001
+        Model  Delta chi-square  df       p  Relation
+        no_b5             46.91   1  < .001  nested, more constrained
       
       Changes in fit (model minus reference)
-        Model     CFI     TLI   RMSEA    SRMR    AIC    BIC
-        no_b5  -0.029  -0.036  +0.022  +0.042  +44.9  +40.8
+        Model    CFI     TLI   RMSEA    SRMR     AIC     BIC
+        no_b5  -.029  -0.036  +0.022  +0.042  +44.91  +40.75
       
       Interpretation
         - `no_b5` is nested within `full` and has 1 more degree of freedom
-          (additional constraints). Chi-Squared Difference Test: chi-square
-          difference = 46.91, df = 1, p < .001. A small p-value indicates that the
-          extra constraints are not fully consistent with the data; with large
-          samples, even small misspecifications produce small p-values. Change in
-          fit (`no_b5` minus `full`): CFI -0.029, TLI -0.036, RMSEA +0.022, SRMR
-          +0.042. AIC +44.9 and BIC +40.8 (`no_b5` minus `full`); lower values favor
-          a model for these data, and only differences are interpretable. No model
-          is selected automatically; read this evidence with theory and the recorded
-          rationale.
+          (additional constraints). Delta chi-square(1) = 46.91, p < .001. A small p
+          value indicates that the extra constraints are not fully consistent with
+          the data; with large samples, even small misspecifications produce small p
+          values. Change in fit (`no_b5` minus `full`): CFI -.029, TLI -0.036, RMSEA
+          +0.022, SRMR +0.042. AIC +44.91 and BIC +40.75 (`no_b5` minus `full`);
+          lower values favor a model for these data, and only differences are
+          interpretable. No model is selected automatically; read this evidence with
+          theory and the recorded rationale.
       
       Standardized loadings by model
-        Factor  Item   full  no_b5
-        A       a1    0.771  0.771
-        A       a2    0.744  0.744
-        A       a3    0.669  0.669
-        A       a4    0.738  0.738
-        A       a5    0.598  0.598
-        B       b1    0.794  0.795
-        B       b2    0.695  0.699
-        B       b3    0.757  0.757
-        B       b4    0.628  0.624
-        B       b5    0.337  0.000
+        Factor  Indicator  full  no_b5
+        A       a1         0.77   0.77
+        A       a2         0.74   0.74
+        A       a3         0.67   0.67
+        A       a4         0.74   0.74
+        A       a5         0.60   0.60
+        B       b1         0.79   0.79
+        B       b2         0.69   0.70
+        B       b3         0.76   0.76
+        B       b4         0.63   0.62
+        B       b5         0.34   0.00
       
       Measurement evidence by model
-        Construct  Metric   full  no_b5
-        A          omega   0.835  0.835
-        B          omega   0.784  0.622
-        A          alpha   0.827  0.827
-        B          alpha   0.771  0.771
-        A          AVE     0.497  0.497
-        B          AVE     0.434  0.521
-        A vs B     HTMT2   0.533  0.533
-        - The loading fixed to zero for b5 keeps that item in this composite; the
-          coefficient does not describe a shortened scale.
+        Construct  Metric  full  no_b5
+        A          omega    .83    .83
+        B          omega    .78    .62
+        A          alpha    .83    .83
+        B          alpha    .77    .77
+        A          AVE      .50    .50
+        B          AVE      .43    .52
+        A vs. B    HTMT2   0.53   0.53
+        - no_b5: The loading fixed to zero for b5 keeps that item in this composite;
+          the coefficient does not describe a shortened scale.
+      
+      What these columns mean
+        ML -- Maximum likelihood.
+        CFI -- Comparative fit index.
+        TLI -- Tucker-Lewis index.
+        RMSEA -- Root mean square error of approximation.
+        SRMR -- Standardized root mean square residual.
+        df -- Degrees of freedom.
+        AIC -- Akaike information criterion.
+        BIC -- Bayesian information criterion.
+        AVE -- Average variance extracted.
+        HTMT2 -- Heterotrait-monotrait ratio of correlations, geometric-mean
+            version.
       
       No model was selected automatically. Difference tests, changes in fit,
       information criteria, and measurement evidence answer different questions;
       read them together with theory and the recorded rationale.
+      
+      See nomo_table(x, "decision_log") for the decision log and x$fits for each
+      model's own analysis.
 
 ---
 
@@ -847,10 +893,14 @@
       print(nomo_split(nomo_demo_network, validation_prop = 0.4, seed = 2026))
     Output
       <nomo_split> Calibration and validation split
-      Rows: 800 total | 480 calibration | 320 validation
-      Validation proportion: 0.400 requested | 0.400 realized | Seed: 2026
+      Rows: 800 | Calibration: 480 | Validation: 320
+      Validation proportion: .40 requested, .40 realized | Seed: 2026
+      Generator: Mersenne-Twister, Inversion, Rejection
+      
       Use splitting only when the gain in independence justifies the loss of
       precision.
+      
+      See x$assignment for the sample each row went to.
 
 # guided runs say what they found, and group repeated requests (#89)
 
