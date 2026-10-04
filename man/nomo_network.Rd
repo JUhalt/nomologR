@@ -56,7 +56,11 @@ declared and \code{estimator = NULL}, WLSMV is requested.}
 
 \item{missing}{Optional lavaan missing-data option.}
 
-\item{std.lv}{Logical passed to \code{lavaan::sem()}.}
+\item{std.lv}{Logical passed to \code{lavaan::sem()}. It also sets the metric of
+an unstandardized estimate that involves a latent variable: with \code{TRUE},
+each factor's variance, or residual variance for an outcome, is 1; with
+\code{FALSE}, each factor takes the units of its first indicator. See \code{scale}
+in \link{nomo_expectations}.}
 
 \item{control}{Optional optimizer-control list passed to \code{lavaan::sem()}.}
 
@@ -81,14 +85,23 @@ estimate, interval, \code{concordance} with the prediction (see
 interpretation.
 \item \code{replication_evidence}: the same comparison in \code{validation_data}, when
 given, with its \code{replication_status} (see \strong{Replication status}).
-\item \code{fit_evidence}: global fit of the fitted model.
+\item \code{fit_evidence}: global fit of the fitted model, with \code{chisq_version}
+and \code{index_version} naming the version of the chi-square and of CFI,
+TLI, and RMSEA reported: \code{"standard"}, \code{"scaled"}, or \code{"robust"}.
 \item \code{parameter_estimates} and \code{standardized_solution}: \code{lavaan}'s parameter
 tables, as tibbles.
-\item \code{measurement_context}: the measurement model's loadings and fit, which
-qualify the structural evidence.
+\item \code{measurement_context}: the loadings, the variances, and the fit of the
+measurement model alone (\code{fit}), with the test of the structural
+restrictions against it (\code{structural_test}), which qualify the
+structural evidence. See \strong{Measurement context and model fit}.
 \item \code{model_fitted} and \code{model_relations}: the syntax fitted, and for each
 hypothesis whether its relation was already in the model to be fitted
 (\code{already_in_model}) or was added (\code{added_from_hypothesis}).
+\item \code{model_changes}: each relation the added paths fixed to zero or lavaan
+added (\code{change}), with the outcome responsible.
+\item \code{data_n} and \code{n_used}: the rows of the primary sample and the cases the
+fit analyzed; \code{validation_n} and \code{validation_n_used} for the validation
+sample.
 \item \code{fit}: the \code{lavaan} fit, and \code{validation}, the validation fit, when
 given.
 \item \code{single_indicators}: one row per composite modeled as a single
@@ -112,8 +125,9 @@ interface (see \code{?nomologR}).
 \description{
 \code{nomo_network()} combines a researcher-specified measurement/SEM model with a
 machine-readable object from \code{nomo_hypotheses()}. Hypothesized relations that
-are not already present in \code{model} can be added transparently before fitting,
-so the theory object itself can define the structural portion of the network.
+are not already present in \code{model} can be added before fitting, so the
+theory object itself can define the structural portion of the network. Each
+addition, and each relation the additions change, is recorded.
 }
 \details{
 Directed \code{A -> B} hypotheses map to lavaan regression paths \code{B ~ A}.
@@ -125,6 +139,22 @@ hypothesized directed paths in place: it is in the model when \code{model} write
 it or when lavaan adds it there automatically, as it does between exogenous
 factors. \code{model_relations} records which relations were already in the
 model and which were added.
+
+An added path changes more than its own relation. \code{lavaan::sem()} covaries
+exogenous variables with one another and the residuals of outcomes with one
+another, but not an exogenous variable with an outcome. So once a path
+makes a variable an outcome, every relation it had with an exogenous
+variable other than its predictors is fixed to zero, although \code{model}
+estimated it, and two outcomes gain a residual covariance that neither
+\code{model} nor the hypotheses name. The relations of the variables the
+hypotheses make outcomes that no hypothesis names are therefore
+restrictions of the network, and their misfit counts against the theory's
+structure. \code{model_changes} lists
+each relation fixed to zero (\code{"fixed_to_zero"}) or added by lavaan
+(\code{"added_by_lavaan"}), and the decision log records the first for review
+(\code{relation_constrained}) and the second for information
+(\code{relation_auto_freed}). A relation the theory allows belongs in the
+hypotheses or in \code{model}.
 
 When the fitted model also predicts an endpoint of an association, \code{A ~~ B}
 is a covariance between residuals. The model predicts a variable when a
@@ -156,8 +186,45 @@ A bare \code{negligible()} prediction remains non-confirmable from \code{p > .05
 The function can also fit the same prespecified model in a validation sample.
 Pass \code{validation_data} explicitly, or pass a \code{nomo_split} object as \code{data} to
 use its calibration and validation subsets. No model relation is added or
-removed on the basis of validation results.
+removed on the basis of validation results. The validation sample's rows in
+the decision log have the stage \code{"network_validation"}, so they are never
+read as a second entry for the same relation.
+
+Rows with a missing value are dropped by lavaan's default listwise
+deletion. \code{n_used} records the cases analyzed, the output reports them
+beside the rows supplied ("Cases: 479 of 800"), and the decision log flags
+the loss for review (\code{cases_used}). With continuous indicators,
+\code{missing = "fiml"} uses every case that has data.
+
+\code{print()} shows each hypothesis's concordance, estimate, and the interval
+its concordance was judged on, the replication evidence, and what is
+flagged about the cases, the measurement context, the model fit, and the
+relations the added paths changed. \code{summary()} adds the fit of the network
+and of the measurement model alone, the changed relations, each prediction
+in full, the concordance counts, and every flag with its recommendation.
 }
+\section{Measurement context and model fit}{
+
+The fit of the network model mixes two sources of misfit, the measurement
+model and the structural restrictions, which Anderson and Gerbing (1988)
+separate by fitting the measurement model first. \code{nomo_network()} also fits
+the measurement model alone: the network with its structural part
+saturated, in which every pair of factors and observed variables outside
+the factor definitions that no path or covariance joins is allowed to
+covary. The measurement context judges the measurement model's own fit,
+with its loadings and variances. The model fit, a separate decision-log row
+(\code{model_fit}), judges the network's fit and, when the measurement model
+meets the references, attributes the misfit to the structural part. The
+difference test between the two (\code{structural_test}, a Delta chi-square from
+\code{lavaan::lavTestLRT()}, scaled as the estimator requires) tests the
+structural restrictions. A model without latent variables has no
+measurement model to judge.
+
+The fit indices are the robust versions when lavaan reports them, and the
+chi-square is the scaled one; \code{chisq_version} and \code{index_version} in
+\code{fit_evidence} say which, and \code{summary()} prints them.
+}
+
 \section{Concordance}{
 
 \code{concordance} in \code{hypothesis_evidence} compares each estimate and its
@@ -197,6 +264,9 @@ The decision log records \code{"concordant"} for information, \code{"inconsisten
 and \code{"not_evaluable"} as concerns, and the other values for review. None is
 a verdict on validity: each is one piece of evidence, read with the
 measurement context, the fit, and whether the prediction was made a priori.
+Printed output and plots show the values in short words, such as "In
+region, imprecise" for \code{"directionally_concordant_imprecise"}, which also
+reads for a \code{negligible()} prediction; the stored values do not change.
 }
 
 \section{Evidence scope}{
@@ -235,14 +305,17 @@ the prediction in the validation sample.
 \item \code{"replicated_inconsistency"}: \code{"inconsistent"} in both samples.
 \item \code{"direction_replicated_but_uncertain"}: a \code{positive()} or \code{negative()}
 prediction whose estimates have the same sign in both samples, without
-meeting a rule above.
+meeting a rule above. When that shared sign is the opposite of the
+prediction, the interpretation says so, and printed output labels it
+"Opposite in both" rather than "Same direction".
 \item \code{"mixed_or_inconclusive"}: any other pattern.
 }
 
 The decision log records \code{"replicated_concordance"} for information;
 \code{"sign_reversal"}, \code{"direction_not_replicated"}, \code{"not_replicated"},
-\code{"unstable"}, and \code{"replicated_inconsistency"} as concerns; and the other
-values for review.
+\code{"unstable"}, \code{"replicated_inconsistency"}, and a
+\code{"direction_replicated_but_uncertain"} opposite to the prediction as
+concerns; and the other values for review.
 }
 
 \section{Replication status when the sign changes}{

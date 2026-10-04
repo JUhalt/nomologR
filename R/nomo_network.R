@@ -181,31 +181,123 @@ nomo_network_prepare_model <- function(model, hypotheses, add_missing) {
     origin = h$origin
   )
 
+  full_model <- nomo_network_compose_model(model, syntax[added])
+  changes <- nomo_network_model_changes(
+    suppressWarnings(nomo_network_model_table(model, fixed.x = TRUE)),
+    suppressWarnings(nomo_network_model_table(full_model, fixed.x = TRUE)),
+    h
+  )
+
   list(
-    full_model = nomo_network_compose_model(model, syntax[added]),
+    full_model = full_model,
     additions = additions,
+    changes = changes,
     latent = latent,
     original_partable = partable
   )
 }
 
 
-nomo_network_validate_nodes <- function(hypotheses, latent, data) {
-  nodes <- unique(c(
-    hypotheses$hypotheses$source,
-    hypotheses$hypotheses$target
-  ))
+# The covariances a model estimates between two different variables, free or
+# held at their sample values (fixed exogenous covariates), as sorted pairs.
+nomo_network_covariance_pairs <- function(partable) {
+  rows <- partable$op == "~~" & partable$lhs != partable$rhs &
+    (partable$free > 0L | partable$exo == 1L)
+  data.frame(
+    lhs = partable$lhs[rows],
+    rhs = partable$rhs[rows],
+    key = vapply(which(rows), function(i) {
+      paste(sort(c(partable$lhs[[i]], partable$rhs[[i]])), collapse = "\r")
+    }, character(1)),
+    stringsAsFactors = FALSE
+  )
+}
 
+
+# Relations the added paths change beyond the hypotheses themselves (#145).
+# lavaan::sem() covaries exogenous factors and the residuals of outcomes, not
+# an exogenous variable with an outcome. So a path that makes a variable an
+# outcome fixes to zero each covariance it had with an exogenous variable the
+# path does not come from, and two outcomes gain a residual covariance nobody
+# wrote. Both change the model the hypotheses are tested in, so both are
+# recorded; the relations the hypotheses name are not.
+nomo_network_model_changes <- function(given_table, fitted_table, h) {
+  given <- nomo_network_covariance_pairs(given_table)
+  fitted <- nomo_network_covariance_pairs(fitted_table)
+  hypothesized <- vapply(seq_len(nrow(h)), function(i) {
+    paste(sort(c(h$source[[i]], h$target[[i]])), collapse = "\r")
+  }, character(1))
+
+  dropped <- given[!given$key %in% c(fitted$key, hypothesized), , drop = FALSE]
+  freed <- fitted[!fitted$key %in% c(given$key, hypothesized), , drop = FALSE]
+
+  # The outcomes of the fitted model, named in the explanation: a covariance
+  # lavaan no longer adds has one at an end.
+  outcomes <- unique(fitted_table$lhs[fitted_table$op == "~"])
+
+  tibble::tibble(
+    relation = sprintf("%s <-> %s", c(dropped$lhs, freed$lhs), c(dropped$rhs, freed$rhs)),
+    lhs = c(dropped$lhs, freed$lhs),
+    rhs = c(dropped$rhs, freed$rhs),
+    change = rep(c("fixed_to_zero", "added_by_lavaan"), c(nrow(dropped), nrow(freed))),
+    outcome = c(
+      vapply(seq_len(nrow(dropped)), function(i) {
+        paste(intersect(c(dropped$lhs[[i]], dropped$rhs[[i]]), outcomes), collapse = " and ")
+      }, character(1)),
+      vapply(seq_len(nrow(freed)), function(i) {
+        paste(intersect(c(freed$lhs[[i]], freed$rhs[[i]]), outcomes), collapse = " and ")
+      }, character(1))
+    )
+  )
+}
+
+
+nomo_network_nodes <- function(hypotheses) {
+  unique(c(hypotheses$hypotheses$source, hypotheses$hypotheses$target))
+}
+
+
+# lavaan reads a name only as letters, digits, dots, and underscores, not
+# starting with a digit. A column such as `Job Sat` is otherwise reported by
+# the engine as missing from the data, which it is not (#145). Checked before
+# the model is composed, which would fail on such a name first.
+nomo_network_validate_names <- function(hypotheses) {
+  nodes <- nomo_network_nodes(hypotheses)
+  unusable <- nodes[!grepl("^[[:alpha:]._][[:alnum:]._]*$", nodes)]
+  if (length(unusable)) {
+    n <- length(unusable)
+    stop(
+      sprintf(
+        paste(
+          "%s cannot be %s in lavaan model syntax, which allows only letters,",
+          "digits, dots, and underscores, not starting with a digit. Rename the",
+          "%s in `data` and in the hypotheses."
+        ),
+        nomo_present_or(paste0("`", unusable, "`"), "and"),
+        nomo_present_noun(n, "a variable name", "variable names"),
+        nomo_present_noun(n, "column", "columns")
+      ),
+      call. = FALSE
+    )
+  }
+  invisible(TRUE)
+}
+
+
+nomo_network_validate_nodes <- function(hypotheses, latent, data) {
+  nodes <- nomo_network_nodes(hypotheses)
   available <- unique(c(latent, names(data)))
   unknown <- setdiff(nodes, available)
 
   if (length(unknown)) {
     stop(
-      paste0(
-        "The following hypothesis node(s) are neither latent variables in ",
-        "`model` nor observed columns in `data`: ",
-        paste(unknown, collapse = ", "),
-        "."
+      sprintf(
+        "%s neither %s in `model` nor %s in `data`: %s.",
+        nomo_present_noun(length(unknown), "This hypothesis node is",
+                          "These hypothesis nodes are"),
+        nomo_present_noun(length(unknown), "a latent variable", "latent variables"),
+        nomo_present_noun(length(unknown), "an observed column", "observed columns"),
+        paste(unknown, collapse = ", ")
       ),
       call. = FALSE
     )
@@ -226,6 +318,24 @@ nomo_network_fit_measure <- function(measures, candidates) {
   }
 
   NA_real_
+}
+
+
+# The version of an index the fit evidence reports, from the first candidate
+# lavaan gives a finite value for: "standard", "scaled", or "robust" (#145).
+nomo_network_fit_version <- function(measures, candidates) {
+  for (candidate in candidates) {
+    if (is.finite(nomo_network_fit_measure(measures, candidate))) {
+      return(if (grepl("robust", candidate)) {
+        "robust"
+      } else if (grepl("scaled", candidate)) {
+        "scaled"
+      } else {
+        "standard"
+      })
+    }
+  }
+  NA_character_
 }
 
 
@@ -254,8 +364,23 @@ nomo_network_fit_evidence <- function(fit) {
       measures,
       c("rmsea.robust", "rmsea.scaled", "rmsea")
     ),
-    srmr = nomo_network_fit_measure(measures, "srmr")
+    srmr = nomo_network_fit_measure(measures, "srmr"),
+    chisq_version = nomo_network_fit_version(measures, c("chisq.scaled", "chisq")),
+    index_version = nomo_network_index_version(measures)
   )
+}
+
+
+# CFI, TLI, and RMSEA come from the same candidates, so they share a version
+# unless lavaan leaves one of them out; then the version is "mixed".
+nomo_network_index_version <- function(measures) {
+  versions <- unique(stats::na.omit(c(
+    nomo_network_fit_version(measures, c("cfi.robust", "cfi.scaled", "cfi")),
+    nomo_network_fit_version(measures, c("tli.robust", "tli.scaled", "tli")),
+    nomo_network_fit_version(measures, c("rmsea.robust", "rmsea.scaled", "rmsea"))
+  )))
+  if (length(versions) > 1L) return("mixed")
+  if (length(versions)) versions else NA_character_
 }
 
 
@@ -414,7 +539,7 @@ nomo_network_classify <- function(hypothesis,
       concordance = "not_confirmable_without_sesoi",
       interpretation = paste(
         "Theory predicted a negligible relation but no quantitative negligible",
-        "region was supplied. A non-significant p-value is not treated as",
+        "region was supplied. A non-significant p value is not treated as",
         "confirmation of negligibility."
       )
     ))
@@ -560,13 +685,18 @@ nomo_network_scope <- function(source_type,
 }
 
 
+# The measurement evidence that qualifies the structural evidence: loadings,
+# variances, convergence, engine warnings, and the fit of the measurement model
+# alone. `fit_evidence` is that fit; `measurement_fit` says where it came from
+# (see nomo_network_measurement_fit()), and "not_computed" judges no fit.
 nomo_network_measurement_context <- function(fit,
                                              standardized_solution,
                                              parameter_estimates,
                                              fit_evidence,
                                              converged,
                                              warnings,
-                                             guidance) {
+                                             guidance,
+                                             measurement_fit = "fitted") {
   latent <- tryCatch(
     as.character(lavaan::lavNames(fit, type = "lv")),
     error = function(e) character()
@@ -644,30 +774,15 @@ nomo_network_measurement_context <- function(fit,
     )
   }
 
-  refs <- guidance$fit_reference
-  fit_flags <- character()
-
-  if (is.list(refs) && nrow(fit_evidence)) {
-    if ("cfi" %in% names(refs) &&
-        is.finite(fit_evidence$cfi[[1L]]) &&
-        fit_evidence$cfi[[1L]] < refs$cfi) {
-      fit_flags <- c(fit_flags, "CFI below configured review reference")
-    }
-    if ("tli" %in% names(refs) &&
-        is.finite(fit_evidence$tli[[1L]]) &&
-        fit_evidence$tli[[1L]] < refs$tli) {
-      fit_flags <- c(fit_flags, "TLI below configured review reference")
-    }
-    if ("rmsea" %in% names(refs) &&
-        is.finite(fit_evidence$rmsea[[1L]]) &&
-        fit_evidence$rmsea[[1L]] > refs$rmsea) {
-      fit_flags <- c(fit_flags, "RMSEA above configured review reference")
-    }
-    if ("srmr" %in% names(refs) &&
-        is.finite(fit_evidence$srmr[[1L]]) &&
-        fit_evidence$srmr[[1L]] > refs$srmr) {
-      fit_flags <- c(fit_flags, "SRMR above configured review reference")
-    }
+  # The fit judged here is the measurement model's own, never the network's:
+  # misfit the structural restrictions add is theory strain, and the model-fit
+  # stream reports it (#145). `measurement_fit` says where `fit_evidence` came
+  # from; a context computed for a refit judges no fit at all.
+  status <- if (!length(latent)) "no_latent" else measurement_fit
+  fit_flags <- if (status %in% c("fitted", "same")) {
+    nomo_network_fit_flags(fit_evidence, guidance$fit_reference)
+  } else {
+    character()
   }
 
   low_loading_n <- sum(loading_table$attention == "review", na.rm = TRUE)
@@ -690,38 +805,65 @@ nomo_network_measurement_context <- function(fit,
     "info"
   }
 
+  # Each note is a sentence that names the values and the references, so the
+  # flag can be judged where it is printed (#145).
   notes <- character()
-  if (!isTRUE(converged)) notes <- c(notes, "network model did not converge")
+  if (!isTRUE(converged)) notes <- c(notes, "The network model did not converge.")
   if (no_standard_errors) {
     notes <- c(
       notes,
       paste(
-        "standard errors could not be computed, which usually means the model",
-        "is not identified"
+        "The standard errors could not be computed, which usually means the",
+        "model is not identified."
       )
     )
   }
   if (negative_variance_n > 0L) {
-    notes <- c(
-      notes,
-      sprintf("%d negative variance estimate(s)", negative_variance_n)
-    )
+    negative <- improper[improper$negative_variance, , drop = FALSE]
+    notes <- c(notes, sprintf(
+      "%s: %s.",
+      nomo_present_noun(negative_variance_n, "Negative variance estimate",
+                        "Negative variance estimates"),
+      paste0(negative$variable, " (", nomo_present_stat(negative$estimate, "estimate"),
+             ")", collapse = ", ")
+    ))
   }
   if (low_loading_n > 0L) {
-    notes <- c(
-      notes,
-      sprintf(
-        "%s below the configured absolute review reference",
-        nomo_present_count(low_loading_n, "loading")
-      )
-    )
+    low <- loading_table[loading_table$attention == "review", , drop = FALSE]
+    reference <- low$review_reference[[1L]]
+    notes <- c(notes, sprintf(
+      "%s below the review reference of %s in absolute value: %s.",
+      nomo_present_noun(low_loading_n, "Standardized loading", "Standardized loadings"),
+      nomo_present_stat(reference, "loading"),
+      paste0(low$item, " (", nomo_present_stat(low$loading, "loading", reference = reference),
+             ")", collapse = ", ")
+    ))
   }
-  notes <- c(notes, fit_flags)
+  if (length(fit_flags)) {
+    notes <- c(notes, sprintf(
+      "In the measurement model alone, %s.", nomo_present_or(fit_flags, "and")
+    ))
+  }
+  if (identical(status, "no_latent")) {
+    notes <- c(notes, paste(
+      "The model has no latent variables, so there is no measurement model to",
+      "evaluate."
+    ))
+  }
+  if (identical(status, "failed")) {
+    notes <- c(notes, paste(
+      "The measurement model alone could not be fitted, so its fit is not part",
+      "of this context."
+    ))
+  }
   if (length(warnings)) {
-    notes <- c(notes, sprintf("%d captured engine warning(s)", length(warnings)))
+    notes <- c(notes, sprintf(
+      "Engine %s captured: %d (see the decision log).",
+      nomo_present_noun(length(warnings), "warning", "warnings"), length(warnings)
+    ))
   }
   if (!length(notes)) {
-    notes <- "no configured measurement-context review signal was triggered"
+    notes <- "No measurement-context flag was raised."
   }
 
   summary <- tibble::tibble(
@@ -732,7 +874,7 @@ nomo_network_measurement_context <- function(fit,
     negative_variance_flags = negative_variance_n,
     global_fit_review_flags = length(fit_flags),
     engine_warning_count = length(warnings),
-    observation = paste(notes, collapse = "; ")
+    observation = paste(notes, collapse = " ")
   )
 
   list(
@@ -740,6 +882,194 @@ nomo_network_measurement_context <- function(fit,
     loadings = loading_table,
     variances = improper,
     fit_reference_flags = fit_flags
+  )
+}
+
+
+# Each fit index beyond its configured review reference, as a clause that names
+# the value and the reference in the same format: "TLI 0.939 is below 0.950".
+nomo_network_fit_flags <- function(fit_evidence, refs) {
+  if (!is.list(refs) || !is.data.frame(fit_evidence) || !nrow(fit_evidence)) {
+    return(character())
+  }
+  checks <- list(
+    cfi = c("CFI", "fit_bounded", "below"), tli = c("TLI", "fit", "below"),
+    rmsea = c("RMSEA", "fit", "above"), srmr = c("SRMR", "fit", "above")
+  )
+  flags <- character()
+  for (index in names(checks)) {
+    reference <- suppressWarnings(as.numeric(refs[[index]])[1L])
+    value <- if (index %in% names(fit_evidence)) fit_evidence[[index]][[1L]] else NA_real_
+    if (!length(reference) || !is.finite(reference) || !is.finite(value)) next
+    check <- checks[[index]]
+    beyond <- if (check[[3L]] == "below") value < reference else value > reference
+    if (beyond) {
+      flags <- c(flags, sprintf(
+        "%s %s is %s %s", check[[1L]],
+        nomo_present_stat(value, check[[2L]], reference = reference), check[[3L]],
+        nomo_present_stat(reference, check[[2L]])
+      ))
+    }
+  }
+  flags
+}
+
+
+# The measurement model alone (#145): the fitted network with its structural
+# part saturated, which is how Anderson and Gerbing (1988) separate the two
+# steps. Each pair of structural variables -- the factors that are not
+# themselves indicators, and the observed variables outside the factor
+# definitions -- that no path or covariance joins gains a free covariance. A
+# pair joined by a path never gains one, so in an acyclic model the latent
+# covariances become unrestricted: the model fits as the measurement model with
+# every structural variable correlated does, and the network is nested in it.
+# Everything else in the model, its labels and constraints included, is kept
+# as written.
+nomo_network_saturating_lines <- function(partable) {
+  partable <- as.data.frame(partable)
+  indicators <- unique(partable$rhs[partable$op == "=~"])
+  factors <- unique(partable$lhs[partable$op == "=~"])
+  joined_rows <- partable$op == "~" | (partable$op == "~~" & partable$lhs != partable$rhs)
+  variables <- unique(c(partable$lhs[partable$op %in% c("~", "~~")],
+                        partable$rhs[partable$op %in% c("~", "~~")]))
+  structural <- setdiff(unique(c(factors, variables)), indicators)
+  if (length(structural) < 2L) return(character())
+
+  lhs <- partable$lhs[joined_rows]
+  rhs <- partable$rhs[joined_rows]
+  joined <- c(paste(lhs, rhs), paste(rhs, lhs))
+  pairs <- utils::combn(sort(structural), 2L)
+  open <- !paste(pairs[1L, ], pairs[2L, ]) %in% joined
+  sprintf("%s ~~ %s", pairs[1L, open], pairs[2L, open])
+}
+
+
+# The measurement model alone, fitted with the network's settings, and the
+# test of the structural restrictions against it. `status` is "same" when the
+# structural part is already saturated, so the network is its own measurement
+# model; "no_latent" when there is no measurement model; and "failed" when it
+# cannot be fitted or is not nested as expected.
+nomo_network_measurement_fit <- function(fit, fit_args, fit_evidence) {
+  none <- tibble::tibble(chisq_diff = NA_real_, df_diff = NA_real_,
+                         p_value = NA_real_, method = NA_character_)
+  out <- list(status = "failed", fit_evidence = fit_evidence[0, , drop = FALSE],
+              structural_test = none, lines = character())
+  latent <- tryCatch(as.character(lavaan::lavNames(fit, type = "lv")),
+                     error = function(e) character())
+  if (!length(latent)) {
+    out$status <- "no_latent"
+    return(out)
+  }
+  partable <- tryCatch(lavaan::parTable(fit), error = function(e) NULL)
+  if (is.null(partable)) return(out)
+  lines <- nomo_network_saturating_lines(partable)
+  out$lines <- lines
+  if (!length(lines)) {
+    out$status <- "same"
+    out$fit_evidence <- fit_evidence
+    out$structural_test$df_diff <- 0
+    return(out)
+  }
+
+  fit_args$model <- paste(
+    c(fit_args$model, "", "# Structural part saturated by nomologR", lines),
+    collapse = "\n"
+  )
+  saturated <- tryCatch(
+    suppressWarnings(do.call(lavaan::sem, fit_args)),
+    error = function(e) NULL
+  )
+  if (is.null(saturated) ||
+      !isTRUE(tryCatch(lavaan::lavInspect(saturated, "converged"),
+                       error = function(e) FALSE))) {
+    return(out)
+  }
+  evidence <- nomo_network_fit_evidence(saturated)
+  df_diff <- fit_evidence$df[[1L]] - evidence$df[[1L]]
+  if (!is.finite(df_diff) || df_diff <= 0) return(out)
+  out$status <- "fitted"
+  out$fit_evidence <- evidence
+
+  # lavaan conditions on exogenous covariates with categorical outcomes;
+  # a covariate the saturated model correlates is no longer conditioned on,
+  # and the two statistics are then not comparable.
+  conditional <- function(f) isTRUE(lavaan::lavInspect(f, "options")$conditional.x)
+  if (conditional(fit) != conditional(saturated)) return(out)
+  test <- tryCatch(
+    suppressWarnings(lavaan::lavTestLRT(fit, saturated)),
+    error = function(e) NULL
+  )
+  if (is.null(test) || nrow(test) < 2L) return(out)
+  heading <- paste(attr(test, "heading"), collapse = " ")
+  out$structural_test <- tibble::tibble(
+    chisq_diff = as.numeric(test[["Chisq diff"]][[2L]]),
+    df_diff = as.numeric(test[["Df diff"]][[2L]]),
+    p_value = as.numeric(test[["Pr(>Chisq)"]][[2L]]),
+    method = if (grepl("method = \"", heading, fixed = TRUE)) {
+      sub(".*method = \"([^\"]+)\".*", "\\1", heading)
+    } else {
+      "standard"
+    }
+  )
+  out
+}
+
+
+# The fit of the network model as fitted, against the configured references.
+# It is a stream of its own (#145): misfit in the measurement model alone
+# belongs to the measurement context, and misfit the structural restrictions
+# add is strain on the theory's structure.
+nomo_network_model_fit_context <- function(fit_evidence, measurement, guidance) {
+  flags <- nomo_network_fit_flags(fit_evidence, guidance$fit_reference)
+  test <- measurement$structural_test
+  test_text <- if (is.data.frame(test) && nrow(test) && is.finite(test$chisq_diff[[1L]])) {
+    nomo_present_chisq(test$chisq_diff[[1L]], test$df_diff[[1L]], test$p_value[[1L]],
+                       delta = TRUE)
+  } else {
+    ""
+  }
+  measurement_flags <- nomo_network_fit_flags(measurement$fit_evidence, guidance$fit_reference)
+
+  observation <- if (!length(flags)) {
+    "No fit index of the network model is beyond its review reference."
+  } else {
+    paste0("In the network model, ", nomo_present_or(flags, "and"), ".")
+  }
+  if (length(flags)) {
+    observation <- paste(observation, switch(
+      measurement$status,
+      fitted = if (length(measurement_flags)) {
+        paste0(
+          "The measurement model alone is flagged as well (see the measurement ",
+          "context)", if (nzchar(test_text)) paste0(", and the structural ",
+          "restrictions add ", test_text) else "", "."
+        )
+      } else {
+        paste0(
+          "The measurement model alone meets the references",
+          if (nzchar(test_text)) paste0(", and the structural restrictions add ", test_text) else "",
+          ", so the misfit is in the structural part of the network."
+        )
+      },
+      same = paste(
+        "The structural part adds no restriction to the measurement model, so",
+        "the misfit is in the measurement model."
+      ),
+      no_latent = paste(
+        "The model has no latent variables, so the misfit is in its",
+        "structural restrictions."
+      ),
+      paste(
+        "The measurement model alone could not be fitted, so the misfit is not",
+        "attributed to the measurement or the structural part."
+      )
+    ))
+  }
+
+  list(
+    attention = if (length(flags)) "review" else "info",
+    flags = flags,
+    observation = observation
   )
 }
 
@@ -842,7 +1172,7 @@ nomo_network_hypothesis_evidence <- function(hypotheses,
 
     # The uncertainty in a single indicator's reliability, added to the
     # estimate's variance as Oberski and Satorra (2013) derive. The interval
-    # and p-value follow from the larger standard error.
+    # and p value follow from the larger standard error.
     added <- if (hyp$id %in% names(extra_variance)) extra_variance[[hyp$id]] else 0
     if (added > 0 && is.finite(se)) {
       se <- sqrt(se^2 + added)
@@ -961,12 +1291,12 @@ nomo_network_hypothesis_evidence <- function(hypotheses,
       base_interpretation <- paste(
         base_interpretation,
         sprintf(
-          paste0(
-            "Negligibility is evaluated using the %.1f%% normal-approximation ",
-            "equivalence CI corresponding to alpha = %.3f, not by p > .05."
+          paste(
+            "Negligibility is evaluated using the normal-approximation",
+            "equivalence interval (%s, alpha = %s), not by p > .05."
           ),
-          100 * (1 - 2 * equivalence_alpha),
-          equivalence_alpha
+          nomo_present_ci_label(1 - 2 * equivalence_alpha),
+          nomo_present_level(equivalence_alpha)
         )
       )
     }
@@ -982,7 +1312,7 @@ nomo_network_hypothesis_evidence <- function(hypotheses,
     if (!identical(measurement_attention, "info")) {
       base_interpretation <- paste(
         base_interpretation,
-        "Measurement context also requires review:",
+        "The measurement context also requires review.",
         measurement_observation
       )
     }
@@ -1047,7 +1377,8 @@ nomo_network_fit_once <- function(model_fitted,
                                   control,
                                   guidance,
                                   equivalence_alpha,
-                                  sample_role) {
+                                  sample_role,
+                                  measurement_fit = FALSE) {
   fit_args <- list(
     model = model_fitted,
     data = data,
@@ -1117,15 +1448,35 @@ nomo_network_fit_once <- function(model_fitted,
     error = function(e) character()
   )
 
+  n_used <- nomo_network_cases_used(fit)
+
+  # The measurement model alone is fitted for the samples reported, not for
+  # the refits a sensitivity analysis makes.
+  measurement <- if (isTRUE(measurement_fit) && converged) {
+    nomo_network_measurement_fit(fit, fit_args, fit_evidence)
+  } else {
+    list(
+      status = "not_computed", fit_evidence = fit_evidence[0, , drop = FALSE],
+      structural_test = tibble::tibble(chisq_diff = NA_real_, df_diff = NA_real_,
+                                       p_value = NA_real_, method = NA_character_),
+      lines = character()
+    )
+  }
+
   measurement_context <- nomo_network_measurement_context(
     fit = fit,
     standardized_solution = standardized_solution,
     parameter_estimates = parameter_estimates,
-    fit_evidence = fit_evidence,
+    fit_evidence = measurement$fit_evidence,
     converged = converged,
     warnings = engine_warnings,
-    guidance = guidance
+    guidance = guidance,
+    measurement_fit = measurement$status
   )
+  measurement_context$fit <- measurement$fit_evidence
+  measurement_context$structural_test <- measurement$structural_test
+  measurement_context$fit_status <- measurement$status
+  model_fit <- nomo_network_model_fit_context(fit_evidence, measurement, guidance)
 
   hypothesis_evidence <- nomo_network_hypothesis_evidence(
     hypotheses = hypotheses,
@@ -1142,10 +1493,12 @@ nomo_network_fit_once <- function(model_fitted,
     sample_role = sample_role,
     model_fitted = model_fitted,
     data_n = nrow(data),
+    n_used = n_used,
     converged = converged,
     engine_warnings = engine_warnings,
     fit = fit,
     fit_evidence = fit_evidence,
+    model_fit = model_fit,
     parameter_estimates = parameter_estimates,
     standardized_solution = standardized_solution,
     measurement_context = measurement_context,
@@ -1157,6 +1510,17 @@ nomo_network_fit_once <- function(model_fitted,
     },
     estimator_source = estimator_source
   )
+}
+
+
+# The cases lavaan analyzed, which listwise deletion can make fewer than the
+# rows supplied (#145); NA when the fit cannot say.
+nomo_network_cases_used <- function(fit) {
+  n <- suppressWarnings(sum(as.numeric(unlist(tryCatch(
+    lavaan::lavInspect(fit, "nobs"),
+    error = function(e) NA_real_
+  )))))
+  if (is.finite(n) && n > 0) n else NA_real_
 }
 
 
@@ -1271,6 +1635,14 @@ nomo_network_sign_change <- function(primary_row, validation_row) {
 }
 
 
+# Whether an estimate has the sign opposite to a directional prediction. A
+# negligible prediction, or a missing estimate, has no direction to oppose.
+nomo_network_opposite_direction <- function(prediction, estimate) {
+  predicted <- c(positive = 1, negative = -1)[as.character(prediction)]
+  !is.na(predicted) & is.finite(estimate) & sign(estimate) == -predicted
+}
+
+
 nomo_network_replication_evidence <- function(primary, validation) {
   a <- primary$hypothesis_evidence
   b <- validation$hypothesis_evidence
@@ -1357,10 +1729,21 @@ nomo_network_replication_evidence <- function(primary, validation) {
     } else if (prediction %in% c("positive", "negative") &&
                sign(est_a) == sign(est_b)) {
       status <- "direction_replicated_but_uncertain"
-      interpretation <- paste(
-        "The estimated direction is the same across samples, but uncertainty",
-        "or magnitude evidence prevents stronger replication language."
-      )
+      # The same sign in both samples is a replicated direction only when it is
+      # the predicted one; the stored status covers both, so the
+      # interpretation and the log say which (#145).
+      interpretation <- if (nomo_network_opposite_direction(prediction, est_a)) {
+        paste(
+          "Both samples estimate the relation in the direction opposite to the",
+          "prediction. The shared direction is not a replication of the",
+          "prediction; uncertainty prevents a stronger statement against it."
+        )
+      } else {
+        paste(
+          "The estimated direction is the same across samples, but uncertainty",
+          "or magnitude evidence prevents stronger replication language."
+        )
+      }
     }
 
     rows[[i]] <- tibble::tibble(
@@ -1390,12 +1773,16 @@ nomo_network_decision_log <- function(model_additions,
                                       measurement_context,
                                       replication_evidence = NULL,
                                       sample_role = "primary",
-                                      ordered_detected = character()) {
+                                      ordered_detected = character(),
+                                      model_fit = NULL,
+                                      cases = NULL,
+                                      model_changes = NULL,
+                                      stage = "network") {
   log <- nomo_log_new()
 
   log <- nomo_log_add(
     log,
-    stage = "network",
+    stage = stage,
     object = sample_role,
     metric = "convergence",
     value = as.numeric(converged),
@@ -1412,17 +1799,58 @@ nomo_network_decision_log <- function(model_additions,
     recommendation = if (isTRUE(converged)) {
       paste(
         "Interpret theoretical relations together with measurement quality,",
-        "model fit, uncertainty, and the a-priori/post-hoc distinction."
+        "model fit, uncertainty, and the a priori/post hoc distinction."
       )
     } else {
       "Investigate estimation/model problems before interpreting theory."
     }
   )
 
+  # The cases analyzed, as nomo_cfa() records them: listwise deletion can drop
+  # rows without a word from lavaan (#145).
+  if (!is.null(cases) && is.finite(cases$n_used)) {
+    dropped <- max(0, cases$data_n - cases$n_used)
+    log <- nomo_log_add(
+      log,
+      stage = stage,
+      object = sample_role,
+      metric = "cases_used",
+      value = cases$n_used,
+      reference = paste(
+        "Case retention stays visible because missing-data handling can change",
+        "the analyzed sample"
+      ),
+      severity = if (dropped > 0) "review" else "info",
+      observation = if (dropped > 0) {
+        sprintf(
+          "%d of %d rows of the %s sample were analyzed; %s %s dropped by %s.",
+          as.integer(cases$n_used), as.integer(cases$data_n), sample_role,
+          nomo_present_count(as.integer(dropped), "row"),
+          nomo_present_noun(dropped, "was", "were"),
+          if (is.null(cases$missing)) "listwise deletion" else {
+            sprintf("lavaan's handling of missing values (missing = \"%s\")", cases$missing)
+          }
+        )
+      } else {
+        sprintf("All %d rows of the %s sample were analyzed.",
+                as.integer(cases$data_n), sample_role)
+      },
+      recommendation = if (dropped > 0) {
+        paste(
+          "Confirm that the case loss follows the intended missing-data strategy.",
+          "With continuous indicators, missing = \"fiml\" uses every case that has",
+          "data; nomo_missing() compares the strategies."
+        )
+      } else {
+        "Report the number of cases analyzed with the network's estimates."
+      }
+    )
+  }
+
   measurement_row <- measurement_context$summary[1L, , drop = FALSE]
   log <- nomo_log_add(
     log,
-    stage = "network",
+    stage = stage,
     object = sample_role,
     metric = "measurement_context",
     value = measurement_row$loading_review_flags[[1L]],
@@ -1435,12 +1863,82 @@ nomo_network_decision_log <- function(model_additions,
     )
   )
 
+  # The fit of the network model, apart from the measurement model's (#145).
+  if (!is.null(model_fit)) {
+    log <- nomo_log_add(
+      log,
+      stage = stage,
+      object = sample_role,
+      metric = "model_fit",
+      value = length(model_fit$flags),
+      reference = "Fit references in nomo_defaults()$fit_reference",
+      severity = model_fit$attention,
+      observation = model_fit$observation,
+      recommendation = paste(
+        "Misfit beyond the measurement model's comes from the structural",
+        "restrictions, such as the relations the hypothesized paths fix to zero.",
+        "Read it as strain on the theory's structure, not as a measurement",
+        "problem (Anderson & Gerbing, 1988)."
+      )
+    )
+  }
+
+  # Relations the added paths fixed to zero or lavaan added (#145).
+  changes <- if (is.null(model_changes)) data.frame() else model_changes
+  for (i in seq_len(nrow(changes))) {
+    fixed <- identical(changes$change[[i]], "fixed_to_zero")
+    outcome <- strsplit(changes$outcome[[i]], " and ", fixed = TRUE)[[1L]]
+    log <- nomo_log_add(
+      log,
+      stage = stage,
+      object = changes$relation[[i]],
+      metric = if (fixed) "relation_constrained" else "relation_auto_freed",
+      value = 0,
+      reference = if (fixed) "Free in the model as given" else "In neither the model nor the hypotheses",
+      severity = if (fixed) "review" else "info",
+      observation = if (fixed) {
+        sprintf(
+          paste(
+            "`%s`, estimated in the model as given, is fixed to zero in the fitted",
+            "model: with the hypothesized paths, %s %s, and lavaan does not",
+            "covary an outcome's residual with a variable that does not predict",
+            "it."
+          ),
+          changes$relation[[i]],
+          nomo_present_or(paste0("`", outcome, "`"), "and"),
+          nomo_present_noun(length(outcome), "is an outcome", "are outcomes")
+        )
+      } else {
+        sprintf(
+          paste(
+            "`%s` is estimated in the fitted model although neither the model",
+            "nor the hypotheses name it: lavaan covaries the residuals of the",
+            "outcomes the hypothesized paths create."
+          ),
+          changes$relation[[i]]
+        )
+      },
+      recommendation = if (fixed) {
+        paste(
+          "Fixing a relation to zero is a restriction of the network, and its",
+          "misfit counts against the theory's structure. If the theory allows",
+          "the relation, add it as a hypothesis or write it in `model`."
+        )
+      } else {
+        paste(
+          "The hypothesis estimates are conditional on this relation. If the",
+          "theory excludes it, fix it to zero in `model`."
+        )
+      }
+    )
+  }
+
   added <- model_additions[model_additions$added_from_hypothesis, , drop = FALSE]
   if (nrow(added)) {
     for (i in seq_len(nrow(added))) {
       log <- nomo_log_add(
         log,
-        stage = "network",
+        stage = stage,
         object = added$relation[[i]],
         metric = "theory_path_added",
         severity = "info",
@@ -1460,7 +1958,7 @@ nomo_network_decision_log <- function(model_additions,
   if (length(ordered)) {
     log <- nomo_log_add(
       log,
-      stage = "network",
+      stage = stage,
       object = sample_role,
       metric = "ordered_indicators",
       reference = paste(ordered, collapse = ", "),
@@ -1478,7 +1976,7 @@ nomo_network_decision_log <- function(model_additions,
   if (!is.null(estimator)) {
     log <- nomo_log_add(
       log,
-      stage = "network",
+      stage = stage,
       object = sample_role,
       metric = "estimator",
       reference = estimator,
@@ -1491,7 +1989,7 @@ nomo_network_decision_log <- function(model_additions,
   if (length(warnings)) {
     log <- nomo_log_add(
       log,
-      stage = "network",
+      stage = stage,
       object = sample_role,
       metric = "engine_warnings",
       value = length(warnings),
@@ -1521,7 +2019,7 @@ nomo_network_decision_log <- function(model_additions,
 
     log <- nomo_log_add(
       log,
-      stage = "network",
+      stage = stage,
       object = row$relation[[1L]],
       metric = "theory_concordance",
       value = row$estimate[[1L]],
@@ -1538,7 +2036,11 @@ nomo_network_decision_log <- function(model_additions,
   if (!is.null(replication_evidence) && nrow(replication_evidence)) {
     for (i in seq_len(nrow(replication_evidence))) {
       row <- replication_evidence[i, , drop = FALSE]
-      severity <- if (row$replication_status[[1L]] %in% c(
+      # Both samples against the predicted direction is no replication of it.
+      opposite <- identical(row$replication_status[[1L]], "direction_replicated_but_uncertain") &&
+        all(c("prediction", "primary_estimate") %in% names(row)) &&
+        isTRUE(nomo_network_opposite_direction(row$prediction[[1L]], row$primary_estimate[[1L]]))
+      severity <- if (opposite || row$replication_status[[1L]] %in% c(
         "sign_reversal",
         "direction_not_replicated",
         "not_replicated",
@@ -1593,8 +2095,9 @@ nomo_network_validate_data <- function(data, label) {
 #'
 #' `nomo_network()` combines a researcher-specified measurement/SEM model with a
 #' machine-readable object from `nomo_hypotheses()`. Hypothesized relations that
-#' are not already present in `model` can be added transparently before fitting,
-#' so the theory object itself can define the structural portion of the network.
+#' are not already present in `model` can be added before fitting, so the
+#' theory object itself can define the structural portion of the network. Each
+#' addition, and each relation the additions change, is recorded.
 #'
 #' Directed `A -> B` hypotheses map to lavaan regression paths `B ~ A`.
 #' Association `A <-> B` hypotheses map to covariance paths `A ~~ B`.
@@ -1605,6 +2108,22 @@ nomo_network_validate_data <- function(data, label) {
 #' it or when lavaan adds it there automatically, as it does between exogenous
 #' factors. `model_relations` records which relations were already in the
 #' model and which were added.
+#'
+#' An added path changes more than its own relation. `lavaan::sem()` covaries
+#' exogenous variables with one another and the residuals of outcomes with one
+#' another, but not an exogenous variable with an outcome. So once a path
+#' makes a variable an outcome, every relation it had with an exogenous
+#' variable other than its predictors is fixed to zero, although `model`
+#' estimated it, and two outcomes gain a residual covariance that neither
+#' `model` nor the hypotheses name. The relations of the variables the
+#' hypotheses make outcomes that no hypothesis names are therefore
+#' restrictions of the network, and their misfit counts against the theory's
+#' structure. `model_changes` lists
+#' each relation fixed to zero (`"fixed_to_zero"`) or added by lavaan
+#' (`"added_by_lavaan"`), and the decision log records the first for review
+#' (`relation_constrained`) and the second for information
+#' (`relation_auto_freed`). A relation the theory allows belongs in the
+#' hypotheses or in `model`.
 #'
 #' When the fitted model also predicts an endpoint of an association, `A ~~ B`
 #' is a covariance between residuals. The model predicts a variable when a
@@ -1636,7 +2155,42 @@ nomo_network_validate_data <- function(data, label) {
 #' The function can also fit the same prespecified model in a validation sample.
 #' Pass `validation_data` explicitly, or pass a `nomo_split` object as `data` to
 #' use its calibration and validation subsets. No model relation is added or
-#' removed on the basis of validation results.
+#' removed on the basis of validation results. The validation sample's rows in
+#' the decision log have the stage `"network_validation"`, so they are never
+#' read as a second entry for the same relation.
+#'
+#' Rows with a missing value are dropped by lavaan's default listwise
+#' deletion. `n_used` records the cases analyzed, the output reports them
+#' beside the rows supplied ("Cases: 479 of 800"), and the decision log flags
+#' the loss for review (`cases_used`). With continuous indicators,
+#' `missing = "fiml"` uses every case that has data.
+#'
+#' `print()` shows each hypothesis's concordance, estimate, and the interval
+#' its concordance was judged on, the replication evidence, and what is
+#' flagged about the cases, the measurement context, the model fit, and the
+#' relations the added paths changed. `summary()` adds the fit of the network
+#' and of the measurement model alone, the changed relations, each prediction
+#' in full, the concordance counts, and every flag with its recommendation.
+#'
+#' @section Measurement context and model fit:
+#' The fit of the network model mixes two sources of misfit, the measurement
+#' model and the structural restrictions, which Anderson and Gerbing (1988)
+#' separate by fitting the measurement model first. `nomo_network()` also fits
+#' the measurement model alone: the network with its structural part
+#' saturated, in which every pair of factors and observed variables outside
+#' the factor definitions that no path or covariance joins is allowed to
+#' covary. The measurement context judges the measurement model's own fit,
+#' with its loadings and variances. The model fit, a separate decision-log row
+#' (`model_fit`), judges the network's fit and, when the measurement model
+#' meets the references, attributes the misfit to the structural part. The
+#' difference test between the two (`structural_test`, a Delta chi-square from
+#' `lavaan::lavTestLRT()`, scaled as the estimator requires) tests the
+#' structural restrictions. A model without latent variables has no
+#' measurement model to judge.
+#'
+#' The fit indices are the robust versions when lavaan reports them, and the
+#' chi-square is the scaled one; `chisq_version` and `index_version` in
+#' `fit_evidence` say which, and `summary()` prints them.
 #'
 #' @section Concordance:
 #' `concordance` in `hypothesis_evidence` compares each estimate and its
@@ -1675,6 +2229,9 @@ nomo_network_validate_data <- function(data, label) {
 #' and `"not_evaluable"` as concerns, and the other values for review. None is
 #' a verdict on validity: each is one piece of evidence, read with the
 #' measurement context, the fit, and whether the prediction was made a priori.
+#' Printed output and plots show the values in short words, such as "In
+#' region, imprecise" for `"directionally_concordant_imprecise"`, which also
+#' reads for a `negligible()` prediction; the stored values do not change.
 #'
 #' @section Evidence scope:
 #' `evidence_scope` in `hypothesis_evidence` names what kind of parameter the
@@ -1709,13 +2266,16 @@ nomo_network_validate_data <- function(data, label) {
 #' * `"replicated_inconsistency"`: `"inconsistent"` in both samples.
 #' * `"direction_replicated_but_uncertain"`: a `positive()` or `negative()`
 #'   prediction whose estimates have the same sign in both samples, without
-#'   meeting a rule above.
+#'   meeting a rule above. When that shared sign is the opposite of the
+#'   prediction, the interpretation says so, and printed output labels it
+#'   "Opposite in both" rather than "Same direction".
 #' * `"mixed_or_inconclusive"`: any other pattern.
 #'
 #' The decision log records `"replicated_concordance"` for information;
 #' `"sign_reversal"`, `"direction_not_replicated"`, `"not_replicated"`,
-#' `"unstable"`, and `"replicated_inconsistency"` as concerns; and the other
-#' values for review.
+#' `"unstable"`, `"replicated_inconsistency"`, and a
+#' `"direction_replicated_but_uncertain"` opposite to the prediction as
+#' concerns; and the other values for review.
 #'
 #' @section Replication status when the sign changes:
 #' When a directional prediction's primary and validation point estimates have
@@ -1768,7 +2328,11 @@ nomo_network_validate_data <- function(data, label) {
 #' @param estimator Optional lavaan estimator. When ordered indicators are
 #'   declared and `estimator = NULL`, WLSMV is requested.
 #' @param missing Optional lavaan missing-data option.
-#' @param std.lv Logical passed to `lavaan::sem()`.
+#' @param std.lv Logical passed to `lavaan::sem()`. It also sets the metric of
+#'   an unstandardized estimate that involves a latent variable: with `TRUE`,
+#'   each factor's variance, or residual variance for an outcome, is 1; with
+#'   `FALSE`, each factor takes the units of its first indicator. See `scale`
+#'   in [nomo_expectations].
 #' @param control Optional optimizer-control list passed to `lavaan::sem()`.
 #' @param equivalence_alpha One number strictly between 0 and .5. For
 #'   quantitative negligible predictions, the equivalence confidence level is
@@ -1849,14 +2413,23 @@ nomo_network_validate_data <- function(data, label) {
 #'     interpretation.
 #'   * `replication_evidence`: the same comparison in `validation_data`, when
 #'     given, with its `replication_status` (see **Replication status**).
-#'   * `fit_evidence`: global fit of the fitted model.
+#'   * `fit_evidence`: global fit of the fitted model, with `chisq_version`
+#'     and `index_version` naming the version of the chi-square and of CFI,
+#'     TLI, and RMSEA reported: `"standard"`, `"scaled"`, or `"robust"`.
 #'   * `parameter_estimates` and `standardized_solution`: `lavaan`'s parameter
 #'     tables, as tibbles.
-#'   * `measurement_context`: the measurement model's loadings and fit, which
-#'     qualify the structural evidence.
+#'   * `measurement_context`: the loadings, the variances, and the fit of the
+#'     measurement model alone (`fit`), with the test of the structural
+#'     restrictions against it (`structural_test`), which qualify the
+#'     structural evidence. See **Measurement context and model fit**.
 #'   * `model_fitted` and `model_relations`: the syntax fitted, and for each
 #'     hypothesis whether its relation was already in the model to be fitted
 #'     (`already_in_model`) or was added (`added_from_hypothesis`).
+#'   * `model_changes`: each relation the added paths fixed to zero or lavaan
+#'     added (`change`), with the outcome responsible.
+#'   * `data_n` and `n_used`: the rows of the primary sample and the cases the
+#'     fit analyzed; `validation_n` and `validation_n_used` for the validation
+#'     sample.
 #'   * `fit`: the `lavaan` fit, and `validation`, the validation fit, when
 #'     given.
 #'   * `single_indicators`: one row per composite modeled as a single
@@ -2017,6 +2590,7 @@ nomo_network <- function(model,
   if (!is.list(guidance)) {
     stop("`guidance` must be a list returned by `nomo_defaults()`.", call. = FALSE)
   }
+  nomo_defaults_check_safeguards(guidance)
 
   if (is.null(ordered)) {
     ordered <- character()
@@ -2068,6 +2642,7 @@ nomo_network <- function(model,
     missing <- trimws(missing)
   }
 
+  nomo_network_validate_names(hypotheses)
   prepared <- nomo_network_prepare_model(
     model = model,
     hypotheses = hypotheses,
@@ -2181,8 +2756,9 @@ nomo_network <- function(model,
   }
 
   # One sample fitted with the composites in `spec` as single indicators; with
-  # none, the model and data are fitted as given.
-  fit_sample <- function(spec, sample_data, sample_role) {
+  # none, the model and data are fitted as given. The samples reported also fit
+  # their measurement model alone; the sensitivity refits do not need it.
+  fit_sample <- function(spec, sample_data, sample_role, measurement_fit = FALSE) {
     applied <- nomo_network_single_apply(
       prepared$full_model, sample_data, spec, missing, estimator_requested,
       ordered
@@ -2201,7 +2777,8 @@ nomo_network <- function(model,
         control = control,
         guidance = guidance,
         equivalence_alpha = equivalence_alpha,
-        sample_role = sample_role
+        sample_role = sample_role,
+        measurement_fit = measurement_fit
       ),
       model = applied$model,
       data = applied$data,
@@ -2209,7 +2786,7 @@ nomo_network <- function(model,
     )
   }
 
-  primary_sample <- fit_sample(single, primary_data, primary_role)
+  primary_sample <- fit_sample(single, primary_data, primary_role, measurement_fit = TRUE)
   primary <- primary_sample$result
 
   sensitivity <- nomo_network_single_sensitivity(
@@ -2225,7 +2802,7 @@ nomo_network <- function(model,
   replication_evidence <- tibble::tibble()
 
   if (!is.null(validation_data)) {
-    validation_sample <- fit_sample(single, validation_data, "validation")
+    validation_sample <- fit_sample(single, validation_data, "validation", measurement_fit = TRUE)
     validation <- validation_sample$result
 
     # The validation sample's standard errors add the reliabilities'
@@ -2261,7 +2838,10 @@ nomo_network <- function(model,
     measurement_context = primary$measurement_context,
     replication_evidence = replication_evidence,
     sample_role = primary_role,
-    ordered_detected = ordered_detected
+    ordered_detected = ordered_detected,
+    model_fit = primary$model_fit,
+    cases = list(n_used = primary$n_used, data_n = primary$data_n, missing = missing),
+    model_changes = prepared$changes
   )
 
   decision_log <- dplyr::bind_rows(
@@ -2271,6 +2851,8 @@ nomo_network <- function(model,
     nomo_network_single_log(primary_sample$table, sensitivity$table)
   )
 
+  # The validation sample's rows have a stage of their own, so a relation's
+  # evidence in the two samples is never read as two entries for one (#145).
   if (!is.null(validation)) {
     validation_log <- nomo_network_decision_log(
       model_additions = prepared$additions[0, , drop = FALSE],
@@ -2281,7 +2863,10 @@ nomo_network <- function(model,
       ordered = ordered,
       measurement_context = validation$measurement_context,
       replication_evidence = NULL,
-      sample_role = "validation"
+      sample_role = "validation",
+      model_fit = validation$model_fit,
+      cases = list(n_used = validation$n_used, data_n = validation$data_n, missing = missing),
+      stage = "network_validation"
     )
     decision_log <- dplyr::bind_rows(decision_log, validation_log)
   }
@@ -2291,11 +2876,14 @@ nomo_network <- function(model,
     model_original = model,
     model_fitted = primary_sample$model,
     model_relations = prepared$additions,
+    model_changes = prepared$changes,
     hypotheses = hypotheses,
     sample_role = primary_role,
     split_source = split_source,
     data_n = primary$data_n,
+    n_used = primary$n_used,
     validation_n = if (is.null(validation)) NA_integer_ else validation$data_n,
+    validation_n_used = if (is.null(validation)) NA_real_ else validation$n_used,
     ordered = ordered,
     ordered_detected = ordered_detected,
     estimator = primary$estimator,

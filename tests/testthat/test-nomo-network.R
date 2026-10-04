@@ -211,7 +211,7 @@ test_that("nomo_network validates unknown nodes and optional model augmentation"
         "A -> MissingThing" = positive()
       )
     ),
-    "neither latent variables"
+    "neither a latent variable"
   )
 
   out <- nomo_network(
@@ -582,7 +582,7 @@ test_that("new replication statuses have readable labels", {
   expect_equal(labels, c(
     "Sign reversal",
     "Direction not replicated",
-    "Sign change within uncertainty"
+    "Sign change, uncertain"
   ))
 })
 
@@ -1188,7 +1188,7 @@ test_that("weak measurement propagates a review flag without rewriting theory ev
   )
   expect_match(
     out$hypothesis_evidence$interpretation,
-    "Measurement context also requires review"
+    "measurement context also requires review"
   )
 })
 
@@ -1398,7 +1398,7 @@ test_that("closeout: network measurement context covers empty and strained measu
     guidance = g
   )
   expect_identical(strained$summary$attention[[1L]], "concern")
-  expect_match(strained$summary$observation[[1L]], "negative variance", fixed = TRUE)
+  expect_match(strained$summary$observation[[1L]], "Negative variance estimate: i1 (-0.10).", fixed = TRUE)
 })
 
 
@@ -1508,7 +1508,7 @@ test_that("closeout: network public validation covers ordered validation and ML/
       dat,
       nomo_hypotheses("F -> missing_node" = positive())
     ),
-    "neither latent variables"
+    "neither a latent variable"
   )
 })
 
@@ -1713,7 +1713,7 @@ test_that("closeout B: network presentation covers zero-span theory regions and 
   expect_gt(nrow(s$replication_counts), 0L)
 
   txt <- paste(capture.output(print(s)), collapse = "\n")
-  expect_match(txt, "Validation sample: N = 100", fixed = TRUE)
+  expect_match(txt, "Validation cases: 100", fixed = TRUE)
   expect_match(txt, "Replication evidence", fixed = TRUE)
 
   expect_s3_class(plot(net, type = "replication"), "ggplot")
@@ -2222,10 +2222,10 @@ test_that("the above-magnitude value reaches the output, the log and replication
 
   expect_identical(
     nomo_network_pretty_status("direction_concordant_above_magnitude"),
-    "Direction concordant / above magnitude"
+    "Larger than predicted"
   )
   expect_true(
-    "Direction concordant / above magnitude" %in% nomo_network_concordance_levels()
+    "Larger than predicted" %in% nomo_network_concordance_levels()
   )
   expect_false(anyNA(plot(out, type = "concordance")$data$concordance_display))
   expect_identical(
@@ -2416,4 +2416,741 @@ test_that("the estimator a fit used is recorded when none was requested (#145)",
   )
   expect_identical(nomo_network_fitted_estimator(categorical), "WLSMV")
   expect_true(is.na(nomo_network_fitted_estimator("not a fit")))
+})
+
+
+# Pre-RC disclosure and presentation (#144, #145) ------------------------------
+#
+# The networks the tests below share, each fitted once.
+
+rg_cache <- new.env()
+rg_network <- function(key, expr) {
+  if (is.null(rg_cache[[key]])) assign(key, expr, envir = rg_cache)
+  rg_cache[[key]]
+}
+
+rg_three <- function() demo_network_model(c("Agency", "Persistence", "SocialDesirability"))
+
+rg_default <- function() {
+  rg_network("default", nomo_network(rg_three(), nomo_demo_network, nomo_hypotheses(
+    "Agency -> Persistence" = positive(min = .20),
+    "Agency <-> SocialDesirability" = negligible(within = c(-.15, .15)),
+    "Agency -> Performance" = positive()
+  )))
+}
+
+# One path makes Persistence an outcome of SocialDesirability, which fixes its
+# relation with Agency to zero: a measurement model that fits, a network that
+# does not.
+rg_dropped <- function() {
+  rg_network("dropped", nomo_network(rg_three(), nomo_demo_network, nomo_hypotheses(
+    "SocialDesirability -> Persistence" = negligible(within = c(-.15, .15))
+  )))
+}
+
+rg_split <- function() {
+  rg_network("split", nomo_network(
+    rg_three(),
+    nomo_split(nomo_demo_network, validation_prop = .40, seed = 2026),
+    nomo_hypotheses(
+      "Agency -> Persistence" = positive(min = .20),
+      "Agency <-> SocialDesirability" = negligible(within = c(-.15, .15)),
+      "Agency -> Performance" = positive()
+    )
+  ))
+}
+
+rg_missing_data <- function() {
+  dat <- nomo_demo_network
+  set.seed(1)
+  for (v in c("ag1", "pe2", "sd3", "Performance")) dat[[v]][sample(nrow(dat), 100)] <- NA
+  dat
+}
+
+rg_text <- function(x) {
+  paste(utils::capture.output(print(x)), collapse = "\n")
+}
+
+rg_flat <- function(x) gsub("\\s+", " ", rg_text(x))
+
+
+test_that("relations the added paths fix to zero or lavaan adds are disclosed (#145)", {
+  dropped <- rg_dropped()
+  # The model as given estimates Agency <-> Persistence; the path from
+  # SocialDesirability makes Persistence an outcome, so it is fixed to zero.
+  expect_identical(dropped$model_changes$relation, "Agency <-> Persistence")
+  expect_identical(dropped$model_changes$change, "fixed_to_zero")
+  expect_identical(dropped$model_changes$outcome, "Persistence")
+  row <- dropped$decision_log[dropped$decision_log$metric == "relation_constrained", ]
+  expect_identical(row$object, "Agency <-> Persistence")
+  expect_identical(row$severity, "review")
+  expect_match(row$observation, "fixed to zero in the fitted model", fixed = TRUE)
+  expect_match(row$observation, "`Persistence` is an outcome", fixed = TRUE)
+  expect_match(rg_text(dropped), "Review: `Agency <-> Persistence`, estimated in the model", fixed = TRUE)
+
+  # Two outcomes gain a residual covariance nobody wrote, disclosed for
+  # information, and summary() lists both kinds.
+  net <- rg_default()
+  expect_setequal(net$model_changes$change, c("fixed_to_zero", "added_by_lavaan"))
+  freed <- net$decision_log[net$decision_log$metric == "relation_auto_freed", ]
+  expect_identical(freed$object, "Persistence <-> Performance")
+  expect_identical(freed$severity, "info")
+  summary_text <- rg_flat(summary(net))
+  expect_match(summary_text, "Relations the hypothesized paths changed", fixed = TRUE)
+  expect_match(summary_text, "Persistence <-> Performance: estimated as a residual covariance",
+               fixed = TRUE)
+
+  # Nothing is added, so nothing changes; an empty table stays empty.
+  as_given <- nomologR:::nomo_network_prepare_model(
+    rg_three(), nomo_hypotheses("Agency -> Persistence" = positive()), add_missing = FALSE
+  )
+  expect_identical(nrow(as_given$changes), 0L)
+  expect_named(as_given$changes, c("relation", "lhs", "rhs", "change", "outcome"))
+
+  doc <- nomo_test_rd_text("nomo_network", "\\details")
+  expect_match(doc, "every relation it had with an exogenous variable other than its predictors is fixed to zero",
+               fixed = TRUE)
+})
+
+
+test_that("misfit of the structural restrictions is not attributed to measurement (#145)", {
+  dropped <- rg_dropped()
+  context <- dropped$measurement_context
+  # The measurement model alone fits as the three-factor CFA does.
+  cfa <- lavaan::cfa(rg_three(), nomo_demo_network, std.lv = TRUE)
+  expect_identical(context$fit_status, "fitted")
+  expect_equal(context$fit$chisq, unname(lavaan::fitMeasures(cfa, "chisq")), tolerance = 1e-6)
+  expect_identical(context$summary$global_fit_review_flags, 0L)
+  expect_identical(context$summary$attention, "info")
+  expect_identical(context$summary$observation, "No measurement-context flag was raised.")
+  expect_no_match(dropped$hypothesis_evidence$interpretation, "measurement context", fixed = TRUE)
+
+  # The restrictions add a chi-square of their own, which the model-fit row
+  # reports with the values and references it compared.
+  test <- context$structural_test
+  expect_equal(test$df_diff, 1)
+  expect_equal(test$chisq_diff, dropped$fit_evidence$chisq - context$fit$chisq, tolerance = 1e-6)
+  expect_identical(test$method, "standard")
+  fit_row <- dropped$decision_log[dropped$decision_log$metric == "model_fit", ]
+  expect_identical(fit_row$severity, "review")
+  expect_match(fit_row$observation, "TLI 0.939 is below 0.950", fixed = TRUE)
+  expect_match(fit_row$observation, "so the misfit is in the structural part of the network",
+               fixed = TRUE)
+  expect_match(fit_row$observation, "Delta chi-square(1) = 126.67, p < .001", fixed = TRUE)
+  printed <- rg_text(dropped)
+  expect_match(printed, "Measurement context: no flags | Model fit: review", fixed = TRUE)
+  # The indices the flag names are defined once, and only those.
+  expect_match(printed, "Abbreviations\n  TLI -- Tucker-Lewis index.\n", fixed = TRUE)
+  expect_no_match(printed, "CFI --", fixed = TRUE)
+  expect_no_match(rg_text(rg_default()), "Abbreviations", fixed = TRUE)
+  summary_text <- rg_text(summary(dropped))
+  expect_match(summary_text, "Measurement model alone: chi-square(41) = 53.91", fixed = TRUE)
+  expect_match(summary_text, "Structural restrictions: Delta chi-square(1) = 126.67, p < .001",
+               fixed = TRUE)
+
+  # A model without latent variables has no measurement model to judge.
+  observed <- nomo_network("Performance ~ ag1", nomo_demo_network,
+                           nomo_hypotheses("ag2 <-> Performance" = positive()))
+  expect_identical(observed$measurement_context$fit_status, "no_latent")
+  expect_identical(observed$measurement_context$summary$attention, "info")
+  expect_match(observed$measurement_context$summary$observation, "no latent variables", fixed = TRUE)
+  expect_match(observed$decision_log$observation[observed$decision_log$metric == "model_fit"],
+               "misfit is in its structural restrictions", fixed = TRUE)
+  expect_match(rg_text(observed), "Measurement context: no latent variables | Model fit: review",
+               fixed = TRUE)
+  expect_match(rg_text(summary(observed)), "Measurement model alone: none, as the model has no",
+               fixed = TRUE)
+})
+
+
+test_that("the measurement model alone is the network with its structural part saturated (#145)", {
+  # A path between every pair: the structural part is already saturated.
+  two <- nomo_network(demo_network_model(), nomo_demo_network,
+                      nomo_hypotheses("Agency -> Persistence" = positive()))
+  expect_identical(two$measurement_context$fit_status, "same")
+  expect_identical(two$measurement_context$fit, two$fit_evidence)
+  expect_equal(two$measurement_context$structural_test$df_diff, 0)
+  expect_match(rg_flat(summary(two)), "Measurement model alone: the network model itself",
+               fixed = TRUE)
+
+  # A refit, as the sensitivity analyses and nomo_missing() make, fits no
+  # measurement model and judges no fit in its measurement context.
+  h <- nomo_hypotheses("Agency -> Persistence" = positive())
+  refit <- nomologR:::nomo_network_fit_once(
+    model_fitted = two$model_fitted, model_relations = two$model_relations, hypotheses = h,
+    data = nomo_demo_network, ordered = character(), estimator_requested = NULL,
+    estimator_source = "lavaan_default", missing = NULL, std.lv = TRUE, control = NULL,
+    guidance = nomo_defaults(), equivalence_alpha = .05, sample_role = "primary"
+  )
+  expect_identical(refit$measurement_context$fit_status, "not_computed")
+  expect_identical(nrow(refit$measurement_context$fit), 0L)
+  expect_equal(refit$n_used, 800)
+
+  lines <- nomologR:::nomo_network_saturating_lines(data.frame(
+    lhs = c("A", "A", "B", "B", "C", "C", "B", "D"),
+    op = c("=~", "=~", "=~", "=~", "=~", "=~", "~", "~"),
+    rhs = c("a1", "a2", "b1", "b2", "c1", "c2", "A", "C"),
+    stringsAsFactors = FALSE
+  ))
+  expect_identical(lines, c("A ~~ C", "A ~~ D", "B ~~ C", "B ~~ D"))
+  expect_identical(nomologR:::nomo_network_saturating_lines(data.frame(
+    lhs = "A", op = "=~", rhs = "a1", stringsAsFactors = FALSE
+  )), character())
+
+  # A fit that cannot be refitted, a table lavaan cannot give, a refit that
+  # is not nested, and a test lavaan cannot compute each leave the
+  # measurement model unavailable or untested rather than wrong.
+  net <- rg_dropped()
+  args <- list(model = net$model_fitted, data = nomo_demo_network, std.lv = TRUE)
+  unusable <- args
+  unusable$data <- data.frame(x = 1:3)
+  failed <- nomologR:::nomo_network_measurement_fit(net$fit, unusable, net$fit_evidence)
+  expect_identical(failed$status, "failed")
+  expect_identical(nrow(failed$fit_evidence), 0L)
+  wider <- net$fit_evidence
+  wider$df <- 0
+  expect_identical(nomologR:::nomo_network_measurement_fit(net$fit, args, wider)$status, "failed")
+  testthat::local_mocked_bindings(
+    lavTestLRT = function(...) stop("no test"),
+    .package = "lavaan"
+  )
+  untested <- nomologR:::nomo_network_measurement_fit(net$fit, args, net$fit_evidence)
+  expect_identical(untested$status, "fitted")
+  expect_true(is.na(untested$structural_test$chisq_diff))
+  testthat::local_mocked_bindings(
+    parTable = function(...) stop("no table"),
+    .package = "lavaan"
+  )
+  expect_identical(nomologR:::nomo_network_measurement_fit(net$fit, args, net$fit_evidence)$status,
+                   "failed")
+})
+
+
+test_that("a covariate conditioned on with ordered outcomes leaves the structure untested (#145)", {
+  skip_on_cran()
+  ordinal <- nomo_demo_ordinal
+  set.seed(2)
+  ordinal$z <- stats::rnorm(nrow(ordinal))
+  out <- nomo_network(
+    "A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4 + b5\nB ~ z",
+    ordinal,
+    nomo_hypotheses("A -> B" = positive()),
+    ordered = paste0(rep(c("a", "b"), each = 5), 1:5)
+  )
+  expect_identical(out$measurement_context$fit_status, "fitted")
+  expect_true(is.na(out$measurement_context$structural_test$chisq_diff))
+  # Without the test, the summary reports the two fits and no difference.
+  expect_no_match(rg_text(summary(out)), "Structural restrictions", fixed = TRUE)
+})
+
+
+test_that("the model-fit stream attributes misfit only when it can (#145)", {
+  refs <- nomo_defaults()
+  poor <- tibble::tibble(cfi = .90, tli = .90, rmsea = .10, srmr = .10)
+  good <- tibble::tibble(cfi = .99, tli = .99, rmsea = .02, srmr = .02)
+  test <- tibble::tibble(chisq_diff = 20, df_diff = 2, p_value = .00005, method = "standard")
+  context <- function(status, fit = good, structural = test) {
+    nomologR:::nomo_network_model_fit_context(
+      poor, list(status = status, fit_evidence = fit, structural_test = structural), refs
+    )
+  }
+  expect_match(context("fitted")$observation, "measurement model alone meets the references, and the structural restrictions add Delta chi-square(2) = 20.00, p < .001",
+               fixed = TRUE)
+  flagged <- context("fitted", fit = poor)$observation
+  expect_match(flagged, "is flagged as well (see the measurement context), and the structural restrictions add",
+               fixed = TRUE)
+  expect_match(context("fitted", fit = poor, structural = test[0, ])$observation,
+               "flagged as well (see the measurement context).", fixed = TRUE)
+  expect_match(context("fitted", structural = NULL)$observation,
+               "meets the references, so the misfit", fixed = TRUE)
+  expect_match(context("same")$observation, "the misfit is in the measurement model", fixed = TRUE)
+  expect_match(context("failed")$observation, "is not attributed", fixed = TRUE)
+  expect_identical(context("failed")$attention, "review")
+
+  quiet <- nomologR:::nomo_network_model_fit_context(
+    good, list(status = "fitted", fit_evidence = good, structural_test = test), refs
+  )
+  expect_identical(quiet$attention, "info")
+  expect_identical(quiet$observation,
+                   "No fit index of the network model is beyond its review reference.")
+
+  # A reference that is missing or a fit that is empty raises nothing.
+  expect_identical(nomologR:::nomo_network_fit_flags(poor, list(cfi = NA)), character())
+  expect_identical(nomologR:::nomo_network_fit_flags(poor[0, ], refs$fit_reference), character())
+  expect_identical(nomologR:::nomo_network_fit_flags(poor, NULL), character())
+  # A value just past its reference shows the decimals that tell them apart.
+  expect_identical(nomologR:::nomo_network_fit_flags(tibble::tibble(cfi = .9496), list(cfi = .95)),
+                   "CFI .9496 is below .950")
+
+  # A measurement context computed for a refit judges no fit, and one whose
+  # measurement model could not be fitted says so.
+  fit <- rg_dropped()$fit
+  args <- list(
+    fit = fit, standardized_solution = rg_dropped()$standardized_solution,
+    parameter_estimates = rg_dropped()$parameter_estimates, fit_evidence = poor,
+    converged = TRUE, warnings = character(), guidance = refs
+  )
+  refit <- do.call(nomologR:::nomo_network_measurement_context,
+                   c(args, list(measurement_fit = "not_computed")))
+  expect_identical(refit$summary$global_fit_review_flags, 0L)
+  failed <- do.call(nomologR:::nomo_network_measurement_context,
+                    c(args, list(measurement_fit = "failed")))
+  expect_match(failed$summary$observation, "could not be fitted", fixed = TRUE)
+})
+
+
+test_that("the cases analyzed are reported beside the rows supplied (#145)", {
+  dat <- rg_missing_data()
+  net <- nomo_network(rg_three(), dat, nomo_hypotheses("Agency -> Persistence" = positive()))
+  used <- lavaan::lavInspect(net$fit, "nobs")
+  expect_identical(net$data_n, 800L)
+  expect_equal(net$n_used, used)
+  expect_lt(net$n_used, 800)
+  expect_match(rg_text(net), sprintf("Cases: %d of 800 | Converged: yes", used), fixed = TRUE)
+  row <- net$decision_log[net$decision_log$metric == "cases_used", ]
+  expect_identical(row$severity, "review")
+  expect_match(row$observation, sprintf("%d of 800 rows of the primary sample were analyzed", used),
+               fixed = TRUE)
+  expect_match(row$observation, "dropped by listwise deletion", fixed = TRUE)
+  expect_match(row$recommendation, "missing = \"fiml\"", fixed = TRUE)
+  expect_match(rg_text(net), "Cases (Review):", fixed = TRUE)
+
+  named <- nomo_network(rg_three(), dat, nomo_hypotheses("Agency -> Persistence" = positive()),
+                        missing = "listwise")
+  expect_match(named$decision_log$observation[named$decision_log$metric == "cases_used"],
+               "lavaan's handling of missing values (missing = \"listwise\")", fixed = TRUE)
+
+  # Each sample of a split reports its own cases, and complete data says so.
+  split <- nomo_network(rg_three(), nomo_split(dat, validation_prop = .40, seed = 2026),
+                        nomo_hypotheses("Agency -> Persistence" = positive()))
+  expect_match(rg_text(split), sprintf(
+    "Calibration cases: %d of 480 | Validation cases: %d of 320",
+    lavaan::lavInspect(split$fit, "nobs"), lavaan::lavInspect(split$validation$fit, "nobs")
+  ), fixed = TRUE)
+  expect_equal(split$validation_n_used, lavaan::lavInspect(split$validation$fit, "nobs"))
+  complete <- rg_default()
+  expect_match(rg_text(complete), "Cases: 800 | Converged: yes", fixed = TRUE)
+  expect_identical(
+    complete$decision_log$observation[complete$decision_log$metric == "cases_used"],
+    "All 800 rows of the primary sample were analyzed."
+  )
+  expect_true(is.na(nomologR:::nomo_network_cases_used(NULL)))
+  expect_identical(nomologR:::nomo_network_cases_text("Cases", NULL, 10), "Cases: 10")
+})
+
+
+test_that("a negligible prediction shows the interval its concordance is judged on (#145)", {
+  net <- nomo_network(rg_three(), nomo_demo_network, nomo_hypotheses(
+    "Agency <-> SocialDesirability" = negligible(within = c(-.07, .085))
+  ))
+  evidence <- net$hypothesis_evidence
+  expect_identical(evidence$concordance, "concordant")
+  # The 95% interval reaches past the region; the 90% equivalence interval,
+  # the one judged, does not, and it is the one printed, with decimals enough
+  # to tell its bound from the region's.
+  expect_gt(evidence$ci_upper, .085)
+  printed <- rg_text(net)
+  expect_match(printed, "Estimate  90% CI", fixed = TRUE)
+  expect_match(printed, "[-.065, .08]", fixed = TRUE)
+  expect_match(rg_flat(net), "CI = confidence interval: the 90% equivalence interval the negligible() prediction is judged on.",
+               fixed = TRUE)
+  segment <- ggplot2::layer_data(plot(net, "effects"), 3L)
+  expect_equal(segment$x, evidence$equivalence_ci_lower)
+  expect_equal(segment$xend, evidence$equivalence_ci_upper)
+  expect_match(plot_text(plot(net, "effects")$labels$caption), "90% equivalence interval",
+               fixed = TRUE)
+
+  # Beside directional predictions, the note names the rows judged that way.
+  expect_match(rg_flat(rg_default()), "CI = confidence interval (95%); for H2, a negligible() prediction, it is the 90% equivalence interval",
+               fixed = TRUE)
+  expect_match(rg_text(rg_default()), "Estimate  CI\n", fixed = TRUE)
+})
+
+
+test_that("a bare negligible() prediction draws no theory band (#145)", {
+  net <- nomo_network(rg_three(), nomo_demo_network, nomo_hypotheses(
+    "Agency -> Persistence" = positive(min = .2),
+    "Agency <-> SocialDesirability" = negligible()
+  ))
+  prepared <- nomologR:::nomo_network_theory_plot_data(net)
+  bare <- prepared$data[prepared$data$id == "H2", ]
+  expect_true(is.na(bare$theory_lower_plot))
+  expect_true(is.na(bare$theory_upper_plot))
+  # The unbounded side of a region still runs to the plot's edge.
+  expect_equal(prepared$data$theory_upper_plot[prepared$data$id == "H1"], prepared$limits[[2L]])
+  p <- plot(net, "effects")
+  band <- ggplot2::layer_data(p, 1L)
+  expect_identical(nrow(band), 1L)
+  expect_equal(band$x, .2)
+  expect_match(plot_text(p$labels$caption), "No region was specified for H2, so no band is drawn.",
+               fixed = TRUE)
+  # The printed row says why it cannot be confirmed, and defines SESOI.
+  expect_match(rg_text(net), "H2  Agency <-> SocialDesirability  Not confirmable", fixed = TRUE)
+  expect_match(rg_flat(net), "Not confirmable: H2 has no region, the smallest effect size of interest (SESOI) a negligible() prediction needs, so a non-significant estimate cannot confirm it.",
+               fixed = TRUE)
+})
+
+
+test_that("the status columns survive an 80-column console, and bullets a 40-column one (#145)", {
+  local_reproducible_output(width = 80)
+  split <- rg_split()
+  printed <- utils::capture.output(print(split))
+  expect_false(any(grepl("Not shown for width", printed, fixed = TRUE)))
+  expect_true(any(grepl("^  H1  Agency -> Persistence +Replicated +0.47 +0.44$", printed)))
+  expect_true(all(nchar(printed) <= 80L))
+  imprecise <- nomo_network(rg_three(), rg_missing_data(), nomo_hypotheses(
+    "Agency -> Persistence" = positive(min = .20),
+    "Agency <-> SocialDesirability" = negligible(within = c(-.15, .15)),
+    "Agency -> Performance" = positive()
+  ))
+  printed <- utils::capture.output(print(imprecise))
+  expect_true(any(grepl("In region, imprecise", printed, fixed = TRUE)))
+  expect_false(any(grepl("Not shown for width", printed, fixed = TRUE)))
+
+  local_reproducible_output(width = 40)
+  narrow <- utils::capture.output(print(split))
+  expect_true(all(nchar(narrow) <= 40L))
+  expect_true("  - H1 Agency -> Persistence" %in% narrow)
+  flat <- gsub("\\s+", " ", paste(narrow, collapse = " "))
+  expect_match(flat, "(Concordant): 0.47, 95% CI [0.38, 0.56].", fixed = TRUE)
+  expect_match(flat, "H2 Agency <-> SocialDesirability (Concordant): -.03, 90% CI [-.12, .06].",
+               fixed = TRUE)
+  expect_match(flat, "H1 Agency -> Persistence (Replicated): calibration 0.47, validation 0.44.",
+               fixed = TRUE)
+  expect_true(all(nchar(utils::capture.output(print(summary(split)))) <= 40L))
+})
+
+
+test_that("the validation sample's log rows name their sample (#145)", {
+  log <- rg_split()$decision_log
+  validation <- log[log$stage == "network_validation", ]
+  expect_setequal(
+    validation$metric,
+    c("convergence", "cases_used", "measurement_context", "model_fit", "theory_concordance")
+  )
+  expect_identical(sum(validation$metric == "theory_concordance"), 3L)
+  # No two rows share a stage, an object, and a metric.
+  expect_false(anyDuplicated(log[c("stage", "object", "metric")]) > 0L)
+  expect_match(rg_flat(summary(rg_split())),
+               "Validation: H2 Agency <-> SocialDesirability (Review)", fixed = TRUE)
+  expect_match(rg_flat(summary(rg_split())),
+               "Replication: H2 Agency <-> SocialDesirability (Review)", fixed = TRUE)
+})
+
+
+test_that("the fit statistics name their version and the estimator (#145)", {
+  ordinal <- nomo_network(
+    "A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4 + b5",
+    nomo_demo_ordinal, nomo_hypotheses("A -> B" = positive()), ordered = names(nomo_demo_ordinal)
+  )
+  expect_identical(ordinal$fit_evidence$chisq_version, "scaled")
+  expect_identical(ordinal$fit_evidence$index_version, "robust")
+  text <- rg_text(summary(ordinal))
+  expect_match(text, "Estimator: WLSMV", fixed = TRUE)
+  expect_match(text, "Version: scaled chi-square; robust CFI, TLI, and RMSEA.", fixed = TRUE)
+  expect_match(text, "WLSMV -- weighted least squares, mean- and variance-adjusted.", fixed = TRUE)
+  expect_match(plot_text(plot(ordinal, "fit")$labels$caption), "Version: scaled chi-square",
+               fixed = TRUE)
+
+  standard <- rg_default()
+  expect_identical(standard$fit_evidence$chisq_version, "standard")
+  expect_identical(standard$fit_evidence$index_version, "standard")
+  expect_no_match(rg_text(summary(standard)), "Version:", fixed = TRUE)
+  expect_match(rg_text(summary(standard)), "ML -- maximum likelihood.", fixed = TRUE)
+
+  expect_identical(nomologR:::nomo_network_index_version(c(cfi.robust = .9, tli.scaled = .9)),
+                   "mixed")
+  expect_true(is.na(nomologR:::nomo_network_index_version(numeric())))
+  expect_identical(
+    nomologR:::nomo_network_version_text(tibble::tibble(chisq_version = "standard",
+                                                        index_version = "mixed")),
+    "Version: a mix of scaled and robust CFI, TLI, and RMSEA."
+  )
+
+  # A robust test names its difference method; an unknown estimator is a dash.
+  robust <- nomo_network(rg_three(), nomo_demo_network, estimator = "MLR", nomo_hypotheses(
+    "SocialDesirability -> Persistence" = negligible(within = c(-.15, .15))
+  ))
+  expect_match(rg_flat(summary(robust)), "p < .001 (satorra.bentler.2001)", fixed = TRUE)
+  s <- summary(robust)
+  s$estimator <- NA_character_
+  expect_match(rg_text(s), "Estimator: --", fixed = TRUE)
+})
+
+
+test_that("post hoc predictions are marked wherever a concordance is shown (#145)", {
+  net <- nomo_network(rg_three(), nomo_demo_network, nomo_hypotheses(
+    "Agency -> Persistence" = positive(origin = "post_hoc"),
+    "Agency -> Performance" = positive()
+  ))
+  printed <- rg_text(net)
+  expect_match(printed, "H1  Agency -> Persistence (post hoc)  Concordant", fixed = TRUE)
+  expect_match(printed, "H2  Agency -> Performance +Concordant")
+  expect_match(rg_flat(net), "H1 was specified post hoc, so its concordance is exploratory, not confirmatory evidence.",
+               fixed = TRUE)
+  for (type in c("effects", "concordance")) {
+    labels <- levels(plot(net, type)$data$label)
+    expect_true("H1  Agency -> Persistence (post hoc)" %in% labels, label = type)
+  }
+  expect_match(rg_flat(summary(net)), "H1 positive > 0 latent structural Post hoc", fixed = TRUE)
+})
+
+
+test_that("the scale of the estimates is stated, row by row when it differs (#145)", {
+  expect_match(rg_flat(rg_default()), "Estimates are standardized.", fixed = TRUE)
+  mixed <- nomo_network(rg_three(), nomo_demo_network, nomo_hypotheses(
+    "Agency -> Persistence" = positive(min = .2),
+    "Agency -> Performance" = positive(min = 2, scale = "unstandardized")
+  ))
+  expect_match(rg_flat(mixed), "H1 is standardized; H2 is unstandardized.", fixed = TRUE)
+  summary_text <- rg_flat(summary(mixed))
+  expect_match(summary_text, "H2 positive >= 2.00 unstandardized", fixed = TRUE)
+  expect_identical(plot(mixed, "effects")$labels$x,
+                   "Estimate (standardized or unstandardized, as each hypothesis specifies)")
+  expect_identical(plot(rg_default(), "effects")$labels$x, "Standardized estimate")
+
+  # The metric of an unstandardized latent estimate is documented.
+  expect_match(nomo_test_rd_text("nomo_expectations", "\\arguments"),
+               "the same unstandardized bound can be met under", fixed = TRUE)
+  expect_match(nomo_test_rd_text("nomo_network", "\\arguments"),
+               "each factor takes the units of its first indicator", fixed = TRUE)
+})
+
+
+test_that("negligible and directional statuses read sensibly in short words (#145)", {
+  net <- nomo_network(rg_three(), nomo_demo_network, nomo_hypotheses(
+    "Agency <-> SocialDesirability" = negligible(within = c(-.05, .05))
+  ))
+  expect_identical(net$hypothesis_evidence$concordance, "directionally_concordant_imprecise")
+  expect_match(rg_text(net), "In region, imprecise", fixed = TRUE)
+  expect_no_match(rg_text(net), "Direction", fixed = TRUE)
+  expect_identical(
+    nomologR:::nomo_network_pretty_status(c("direction_concordant_below_magnitude", "made_up_value")),
+    c("Smaller than predicted", "made up value")
+  )
+  expect_identical(
+    nomologR:::nomo_network_concordance_flag(
+      c("concordant", "inconsistent", "not_evaluable", "inconclusive")
+    ),
+    c("info", "concern", "unavailable", "review")
+  )
+  expect_identical(
+    nomologR:::nomo_network_replication_flag(
+      c("replicated_concordance", "unstable", "not_evaluable", "mixed_or_inconclusive",
+        "direction_replicated_but_uncertain"),
+      opposite = c(FALSE, FALSE, FALSE, FALSE, TRUE)
+    ),
+    c("info", "concern", "unavailable", "review", "concern")
+  )
+})
+
+
+test_that("a direction shared against the prediction is not called replicated (#145)", {
+  row <- function(est, lo, hi, con) {
+    tibble::tibble(id = "H1", relation = "A -> B", prediction = "positive",
+                   estimate = est, ci_lower = lo, ci_upper = hi, concordance = con)
+  }
+  against <- nomologR:::nomo_network_replication_evidence(
+    list(hypothesis_evidence = row(-.30, -.40, -.20, "inconsistent")),
+    list(hypothesis_evidence = row(-.05, -.15, .05, "inconclusive"))
+  )
+  expect_identical(against$replication_status, "direction_replicated_but_uncertain")
+  expect_match(against$interpretation, "direction opposite to the prediction", fixed = TRUE)
+  with <- nomologR:::nomo_network_replication_evidence(
+    list(hypothesis_evidence = row(.30, .20, .40, "concordant")),
+    list(hypothesis_evidence = row(.05, -.05, .15, "inconclusive"))
+  )
+  expect_identical(with$replication_status, "direction_replicated_but_uncertain")
+  expect_match(with$interpretation, "same across samples", fixed = TRUE)
+
+  log <- function(replication) {
+    out <- nomologR:::nomo_network_decision_log(
+      model_additions = tibble::tibble(relation = "A -> B", syntax = "B ~ A",
+                                       added_from_hypothesis = FALSE),
+      hypotheses_evidence = row(.3, .2, .4, "concordant")[0, ],
+      converged = TRUE, warnings = character(), estimator = NULL, ordered = character(),
+      measurement_context = list(summary = tibble::tibble(
+        loading_review_flags = 0L, attention = "info", observation = "Synthetic."
+      )),
+      replication_evidence = replication
+    )
+    out$severity[out$stage == "network_replication"]
+  }
+  expect_identical(log(against), "concern")
+  expect_identical(log(with), "review")
+  expect_identical(nomologR:::nomo_network_pretty_status(
+    c(against$replication_status, with$replication_status), opposite = c(TRUE, FALSE)
+  ), c("Opposite in both", "Same direction"))
+  expect_identical(
+    unname(nomologR:::nomo_network_opposite_direction(c("positive", "negative", "negligible", "positive"),
+                                                      c(-.1, -.1, -.1, NA))),
+    c(TRUE, FALSE, FALSE, FALSE)
+  )
+})
+
+
+test_that("flags name the values and references they compare (#145)", {
+  weak <- nomo_network(
+    "A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4 + b5",
+    nomo_demo_ordinal, nomo_hypotheses("A -> B" = positive()), ordered = names(nomo_demo_ordinal)
+  )
+  observation <- weak$measurement_context$summary$observation
+  expect_identical(
+    observation,
+    "Standardized loading below the review reference of 0.50 in absolute value: b5 (0.34)."
+  )
+  expect_match(rg_text(summary(weak)), "Flag: review | Constructs: 2 | Loading flags: 1", fixed = TRUE)
+  # The replication table heads its first column with the sample's role.
+  expect_match(rg_text(rg_split()), "Replication  Calibration  Validation", fixed = TRUE)
+  expect_match(rg_text(summary(rg_split())), "Calibration sample, network model: chi-square(51)",
+               fixed = TRUE)
+  expect_match(rg_text(summary(rg_split())), "Validation sample, structural restrictions:",
+               fixed = TRUE)
+})
+
+
+test_that("a node lavaan cannot name is refused before the engine misreports it (#145)", {
+  dat <- nomo_demo_network
+  dat[["Job Sat"]] <- dat$Performance
+  dat[["2nd"]] <- dat$Performance
+  expect_error(
+    nomo_network(rg_three(), dat, nomo_hypotheses("Agency -> Job Sat" = positive())),
+    "`Job Sat` cannot be a variable name in lavaan model syntax", fixed = TRUE
+  )
+  expect_error(
+    nomo_network(rg_three(), dat, nomo_hypotheses("Agency -> Job Sat" = positive(),
+                                                  "Agency -> 2nd" = positive())),
+    "`Job Sat` and `2nd` cannot be variable names in lavaan model syntax, which allows only letters, digits, dots, and underscores, not starting with a digit. Rename the columns",
+    fixed = TRUE
+  )
+  expect_error(
+    nomo_network(rg_three(), nomo_demo_network, nomo_hypotheses(
+      "Agency -> Missing1" = positive(), "Agency -> Missing2" = positive()
+    )),
+    "These hypothesis nodes are neither latent variables in `model` nor observed columns in `data`: Missing1, Missing2.",
+    fixed = TRUE
+  )
+  # A dotted name is a lavaan name.
+  dat$job.sat <- dat$Performance
+  expect_s3_class(nomo_network(demo_network_model(), dat,
+                               nomo_hypotheses("Agency -> job.sat" = positive())), "nomo_network")
+})
+
+
+test_that("the summary counts and facts read as label: value (#145)", {
+  printed <- rg_text(rg_default())
+  expect_match(printed, "Measurement context: no flags | Model fit: no flags", fixed = TRUE)
+  expect_no_match(printed, "no configured", fixed = TRUE)
+  expect_match(printed, "\nSee summary(x) for the fit and the flagged evidence in full and\n",
+               fixed = TRUE)
+  summary_text <- rg_text(summary(rg_default()))
+  expect_match(summary_text, "Concordance\n  Concordant: 3\n", fixed = TRUE)
+  expect_match(summary_text, "Flag: none | Constructs: 3", fixed = TRUE)
+  expect_match(rg_text(summary(rg_split())), "Replication\n  Mixed: 1 | Replicated: 2\n", fixed = TRUE)
+  expect_match(summary_text, "\nSee nomo_table(x, \"decision_log\") for every decision-log row",
+               fixed = TRUE)
+  # The facts inside a section break between parts, never inside one.
+  local_reproducible_output(width = 50)
+  facts <- utils::capture.output(nomologR:::nomo_network_section_facts(
+    c("Loading flags: 0", "Negative variances: 0", "Engine warnings: 0")
+  ))
+  expect_identical(facts, c("  Loading flags: 0 | Negative variances: 0",
+                            "  Engine warnings: 0"))
+})
+
+
+test_that("replication plots label points by ID and name the relations (#145)", {
+  p <- plot(rg_split(), "replication")
+  labels <- ggplot2::layer_data(p, 3L)$label
+  expect_setequal(labels, c("H1", "H2", "H3"))
+  expect_match(plot_text(p$labels$caption), "H1 = Agency -> Persistence; H2 = Agency <-> SocialDesirability",
+               fixed = TRUE)
+  expect_identical(p$labels$x, "Calibration estimate")
+  # The status uses the shared shapes: no flag and review here.
+  expect_setequal(as.character(p$data$status), c("none", "review"))
+  expect_identical(
+    sort(unique(ggplot2::layer_data(p, 2L)$shape)),
+    sort(unname(nomologR:::nomo_plot_status_shapes[c("none", "review")]))
+  )
+})
+
+
+test_that("the fit plot marks each index against a dashed reference (#145)", {
+  p <- plot(rg_dropped(), "fit")
+  expect_identical(as.character(p$data$status), c("none", "review", "review", "review"))
+  expect_identical(p$data$value_label, c(".953", "0.939", "0.064", "0.126"))
+  expect_identical(p$data$reference_label,
+                   c("reference .950", "reference 0.950", "reference 0.060", "reference 0.080"))
+  expect_identical(ggplot2::layer_data(p, 1L)$linetype[[1L]], 2)
+  # A reference that is not configured draws no line and no label.
+  net <- rg_dropped()
+  net$guidance$fit_reference$srmr <- NULL
+  expect_identical(plot(net, "fit")$data$reference_label[[4L]], "")
+})
+
+
+test_that("correlations on an axis drop the leading zero (#145)", {
+  net <- nomo_network(rg_three(), nomo_demo_network, nomo_hypotheses(
+    "Agency <-> SocialDesirability" = negligible(within = c(-.15, .15)),
+    "Agency <-> Persistence" = positive(min = .3)
+  ))
+  expect_identical(nomologR:::nomo_network_axis_labels(c("r", "r")),
+                   nomologR:::nomo_plot_bounded_labels)
+  expect_s3_class(nomologR:::nomo_network_axis_labels(c("r", "estimate")), "waiver")
+  built <- ggplot2::ggplot_build(plot(net, "effects"))
+  expect_false(any(grepl("^-?0\\.", stats::na.omit(built$layout$panel_params[[1L]]$x$get_labels()))))
+})
+
+
+test_that("regions print in words with their bounds as given (#145)", {
+  h <- nomo_hypotheses(
+    "A -> B" = positive(),
+    "A -> C" = positive(min = .2),
+    "A -> D" = positive(max = .5),
+    "A -> E" = negative(),
+    "A -> F" = negative(max = -.125),
+    "A -> G" = negative(min = -.5),
+    "A <-> H" = negligible(within = c(-.07, .085)),
+    "A <-> I" = negligible()
+  )$hypotheses
+  kind <- nomologR:::nomo_network_kind(h$scale, h$relation_type)
+  expect_identical(
+    nomologR:::nomo_network_region_text(h, kind),
+    c("> 0", ">= 0.20", "(0, 0.50]", "< 0", "<= -0.125", "[-0.50, 0)", "[-.07, .085]",
+      "not specified")
+  )
+  expect_identical(nomologR:::nomo_network_nearest_bound(c(.1, NA, .4), c(0, 0, NA), c(.3, .3, NA)),
+                   c(0, NA, NA))
+})
+
+
+test_that("single indicators print their reliability and sensitivity in the shared formats (#144)", {
+  skip_on_cran()
+  dat <- nomo_demo_network
+  dat$persistence <- rowMeans(dat[c("pe1", "pe2", "pe3", "pe4")])
+  net <- nomo_network(
+    "Agency =~ ag1 + ag2 + ag3 + ag4", dat,
+    nomo_hypotheses("Agency -> persistence" = positive(min = .20)),
+    single_indicators = list(persistence = nomo_single_indicator(
+      .80, se = .02, coefficient = "omega", source = "Test manual"
+    ))
+  )
+  expect_match(rg_text(net), "Single indicator: persistence (reliability .80, omega)", fixed = TRUE)
+  summary_text <- rg_text(summary(net))
+  expect_true(grepl("Composite +Coefficient +Reliability +SE +Variance +Error variance", summary_text))
+  expect_true(grepl("persistence +omega +\\.80 +0\\.02", summary_text))
+  expect_true(grepl("persistence +H1( +[0-9.]+){5} +(Unchanged|Changes)", summary_text))
+  expect_match(summary_text, "SE -- standard error.", fixed = TRUE)
+  expect_no_match(rg_text(summary(rg_default())), "SE --", fixed = TRUE)
+})
+
+
+test_that("guidance that asks nomologR to delete or respecify is refused (#145)", {
+  g <- nomo_defaults()
+  g$auto_delete <- TRUE
+  expect_error(
+    nomo_network(demo_network_model(), nomo_demo_network,
+                 nomo_hypotheses("Agency -> Persistence" = positive()), guidance = g),
+    "`guidance$auto_delete` cannot be `TRUE`", fixed = TRUE
+  )
 })
