@@ -471,18 +471,48 @@ nomo_run_flag_place <- function(component, scope) {
 }
 
 
+# The names a flag can be about: the scales and their items, and the
+# indicators and factors of the measurement models, which may differ from
+# them (#145).
+nomo_run_flag_names <- function(scales, models = character()) {
+  out <- c(unlist(strsplit(scales$items, ", ", fixed = TRUE)), scales$scale)
+  for (model in models) {
+    parsed <- nomo_run_model_names(model)
+    out <- c(out, parsed$indicators, parsed$factors)
+  }
+  unique(out)
+}
+
+
+# Whether a log row's object names what it is about: one of `names`, or a pair
+# of them, such as "AG =~ sd1", "AG ~~ PE", or "AG vs PE".
+nomo_run_flag_named <- function(object, names) {
+  parts <- strsplit(as.character(object), " (=~|~~|~|vs) ")
+  vapply(parts, function(p) length(p) > 0L && all(p %in% names), logical(1))
+}
+
+
 # Each flag the components raised, concern before review (guide point 22). A
-# flag on an item or a construct names it and where it was raised, "b5 in the
-# CFA"; any other flag names where it was raised, "The Agency factor
-# retention".
-nomo_run_present_flagged <- function(log, scales) {
+# flag on an item, a factor, or a pair of them names it and where it was
+# raised, "b5 in the CFA"; any other flag names where it was raised, "The
+# Agency factor retention". `models` are the measurement models the run
+# fitted, whose indicators and factors need not be the scales' (#145).
+nomo_run_present_flagged <- function(log, scales, models = character()) {
   if (!nrow(log) || !all(c("severity", "object", "observation") %in% names(log))) {
     return(invisible(NULL))
   }
   place <- nomo_run_flag_place(log$pipeline_component, log$pipeline_scope)
-  named <- log$object %in% c(unlist(strsplit(scales$items, ", ", fixed = TRUE)), scales$scale)
-  unit <- ifelse(named, paste(log$object, "in", place),
-                 paste0(toupper(substr(place, 1L, 1L)), substring(place, 2L)))
+  named <- nomo_run_flag_named(log$object, nomo_run_flag_names(scales, models))
+  unit <- ifelse(named, paste(gsub(" vs ", " vs. ", log$object, fixed = TRUE), "in", place),
+                 place)
+  # Units with the same flag share a bullet, so only the first of them starts
+  # the line with a capital: "The Agency EFA, the Persistence EFA (Review)".
+  text <- trimws(log$observation)
+  text[is.na(text)] <- ""
+  text <- ifelse(nzchar(text) & !grepl("[.!?]$", text), paste0(text, "."), text)
+  key <- paste(nomo_present_status(log$severity), text, sep = "\r")
+  lead <- !named & unit == unit[match(key, key)]
+  unit[lead] <- paste0(toupper(substr(unit[lead], 1L, 1L)), substring(unit[lead], 2L))
   nomo_present_flagged(unit = unit, status = log$severity, text = log$observation)
 }
 
@@ -514,6 +544,9 @@ nomo_run_summary_body <- function(x) {
     nomo_present_section("Recorded decisions")
     d <- x$decisions
     decision <- gsub("\\s*\n\\s*", "; ", d$decision)
+    # A model's operator stays on one line with its two sides: "ag1 ~~ ag2".
+    nb <- nomo_present_nbsp
+    decision <- gsub(" (=~|~~|~) ", paste0(nb, "\\1", nb), decision)
     decision[d$id == "sample_design"] <- gsub("_", " ", decision[d$id == "sample_design"])
     rationale <- ifelse(nzchar(d$rationale), paste0(" Rationale: ", d$rationale), "")
     nomo_present_bullets(sprintf("%s (%s, %s): %s.%s", d$id, nomo_run_stage_words(d$stage),
@@ -563,7 +596,10 @@ nomo_run_summary_body <- function(x) {
     }
   }
 
-  nomo_run_present_flagged(x$component_log, x$scales)
+  # A run with no recorded decision has an empty decision table, so its
+  # columns are read without `$`.
+  models <- x$decisions[["decision"]][x$decisions[["id"]] %in% "cfa_model"]
+  nomo_run_present_flagged(x$component_log, x$scales, models)
 }
 
 

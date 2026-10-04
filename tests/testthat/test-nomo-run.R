@@ -2193,6 +2193,60 @@ test_that("the summary lists each component flag where it was raised (#144)", {
   ))
   expect_identical(utils::capture.output(nomologR:::nomo_run_present_flagged(log[0, ], scales)),
                    character())
+
+  # The measurement model's indicators and factors are named too, as are pairs
+  # of them, even where they differ from the scales (#145). Only the first of
+  # several places sharing one flag starts with a capital.
+  log <- tibble::tibble(
+    pipeline_component = c("cfa", "validity", "cfa", "validity", "validity", "efa", "efa"),
+    pipeline_scope = c("workflow", "workflow", "workflow", "workflow", "workflow", "Agency",
+                       "Persistence"),
+    object = c("sd1", "AG", "AG =~ sd1", "AG vs PE", "measurement_model", "model", "model"),
+    severity = c("review", "review", "concern", "review", "review", "review", "review"),
+    observation = c("Low loading.", "Low AVE.", "Loading beyond one.", "High HTMT.",
+                    "HTMT not computed.", "Weak factor.", "Weak factor.")
+  )
+  scales <- tibble::tibble(scale = "Agency", n_items = 4L, items = "ag1, ag2, ag3, ag4")
+  out <- utils::capture.output(nomologR:::nomo_run_present_flagged(
+    log, scales, c("AG =~ ag1 + ag2 + sd1\nPE =~ pe1 + pe2 + pe3", "not lavaan ~~~ =~")
+  ))
+  expect_identical(out, c(
+    "", "Flagged",
+    "  - AG =~ sd1 in the CFA (Concern): Loading beyond one.",
+    "  - sd1 in the CFA (Review): Low loading.",
+    "  - AG in validity (Review): Low AVE.",
+    "  - AG vs. PE in validity (Review): High HTMT.",
+    "  - Validity (Review): HTMT not computed.",
+    "  - The Agency EFA, the Persistence EFA (Review): Weak factor."
+  ))
+  # A list of names is left to the text, since units are listed with commas.
+  expect_identical(
+    nomologR:::nomo_run_flag_named(c("AG ~~ PE", "ag1, sd1", "", NA), c("AG", "PE", "ag1", "sd1")),
+    c(TRUE, FALSE, FALSE, FALSE)
+  )
+
+  skip_on_cran()
+  # A factor named differently from its scale, with an indicator no scale supplied.
+  run <- nomo_run(nomo_demo_network, list(Agency = paste0("ag", 1:4)),
+                  settings = list(factors = list(n_iter = 20L, seed = 2026L)),
+                  decisions = list(factor_count = c(Agency = 1L),
+                                   cfa_model = "AG =~ ag1 + ag2 + ag3 + ag4 + sd1"))
+  s <- utils::capture.output(print(summary(run)))
+  expect_true("  - sd1 in the CFA, sd1 in validity (Review): Absolute standardized loading is" %in% s)
+  expect_true(any(startsWith(s, "  - AG in validity (Review): AVE is below")))
+})
+
+
+test_that("a recorded model keeps each operator on one line with its two sides (#144)", {
+  run <- make_m9_minimal_run()
+  run$decision_log <- nomologR:::nomo_run_workflow_log_add(
+    run$decision_log, id = "cfa_model", stage = "cfa", scope = "measurement_model",
+    decision = "WellBeingFactor =~ i1 + i2\ni1 ~~ i2", source = "researcher_decision"
+  )
+  s <- run_lines(summary(run), 40L)
+  expect_true(all(nchar(s) <= 40L))
+  expect_true(any(grepl("WellBeingFactor =~ i1", s, fixed = TRUE)))
+  expect_true(any(grepl("i1 ~~ i2.", s, fixed = TRUE)))
 })
 
 
