@@ -111,21 +111,41 @@ nomo_missing_present_differences <- function(x, title, limit = Inf) {
   shown$estimate_shown <- shown$estimate
   shown$reference_shown <- shown$reference_estimate
   nomo_present_section(title)
-  nomo_present_table(
-    shown,
-    c("Parameter" = "parameter", "Strategy" = "strategy_label",
-      "Estimate" = "estimate_shown", "Reference" = "reference_shown",
-      "Difference (SE)" = "difference_in_se"),
-    formats = list(
-      estimate_shown = function(v) shown$estimate_text,
-      reference_shown = function(v) shown$reference_text,
-      difference_in_se = function(v) nomo_present_stat(v, "stat", signed = TRUE)
-    ),
-    more = "nomo_table(x, \"estimates\")",
-    # The difference is what the table is for, so a narrow console drops the
-    # estimates before it.
-    keep = c(nomo_present_keep, "Difference (SE)")
-  )
+  nomo_missing_present_by_strategy(shown, x$strategies, function(rows, strategy, indent) {
+    columns <- c("Parameter" = "parameter", "Strategy" = "strategy_label",
+                 "Estimate" = "estimate_shown", "Reference" = "reference_shown",
+                 "Difference (SE)" = "difference_in_se")
+    nomo_present_table(
+      rows,
+      columns[strategy | columns != "strategy_label"],
+      formats = list(
+        estimate_shown = function(v) rows$estimate_text,
+        reference_shown = function(v) rows$reference_text,
+        difference_in_se = function(v) nomo_present_stat(v, "stat", signed = TRUE)
+      ),
+      more = "nomo_table(x, \"estimates\")",
+      indent = indent,
+      # The difference is what the table is for, so a narrow console drops the
+      # estimates before it.
+      keep = c(nomo_present_keep, "Difference (SE)")
+    )
+  })
+}
+
+
+# Rows that differ only by strategy cannot be told apart once a narrow console
+# drops the Strategy column, so with more than one comparison strategy each has
+# a table of its own under its label, in the order of the strategies table.
+# With one, a single table names it in a column. `draw(rows, strategy, indent)`
+# prints a table, with the Strategy column when `strategy` is TRUE.
+nomo_missing_present_by_strategy <- function(rows, strategies, draw) {
+  groups <- unique(rows$strategy[order(match(rows$strategy, strategies$strategy))])
+  if (length(groups) < 2L) return(draw(rows, TRUE, 2L))
+  for (s in groups) {
+    nomo_present_text(nomo_missing_table_label(s, strategies), indent = 2L)
+    draw(rows[rows$strategy == s, , drop = FALSE], FALSE, 4L)
+  }
+  invisible(NULL)
 }
 
 
@@ -236,22 +256,26 @@ print.summary_nomo_missing <- function(x, ...) {
     # Three decimals, as the estimates have: strategies' coefficients often
     # agree to two.
     coefficient <- function(v) nomo_present_stat(v, "reliability", digits = 3L)
-    nomo_present_section("Reliability by strategy")
-    nomo_present_table(
-      compared,
-      nomo_present_drop_constant(
-        c("Construct" = "construct", "Block" = "block", "Coefficient" = "metric",
-          "Strategy" = "strategy_label", "Estimate" = "estimate",
-          "Reference" = "reference_estimate", "Difference" = "difference"),
-        "Block", compared$block
-      ),
-      formats = list(estimate = coefficient, reference_estimate = coefficient,
-                     difference = function(v) {
-                       nomo_present_stat(v, "reliability", digits = 3L, signed = TRUE)
-                     }),
-      more = "nomo_table(x, \"reliability\")",
-      keep = c(nomo_present_keep, "Difference")
+    columns <- nomo_present_drop_constant(
+      c("Construct" = "construct", "Block" = "block", "Coefficient" = "metric",
+        "Strategy" = "strategy_label", "Estimate" = "estimate",
+        "Reference" = "reference_estimate", "Difference" = "difference"),
+      "Block", compared$block
     )
+    nomo_present_section("Reliability by strategy")
+    nomo_missing_present_by_strategy(compared, x$strategies, function(rows, strategy, indent) {
+      nomo_present_table(
+        rows,
+        columns[strategy | columns != "strategy_label"],
+        formats = list(estimate = coefficient, reference_estimate = coefficient,
+                       difference = function(v) {
+                         nomo_present_stat(v, "reliability", digits = 3L, signed = TRUE)
+                       }),
+        more = "nomo_table(x, \"reliability\")",
+        indent = indent,
+        keep = c(nomo_present_keep, "Difference")
+      )
+    })
   }
 
   nomo_missing_key(

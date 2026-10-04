@@ -715,6 +715,63 @@ test_that("summary() shows every comparison and each recommendation (#145)", {
 })
 
 
+test_that("with several comparison strategies, each has a table of its own at any width (#145)", {
+  skip_on_cran()
+  fit <- nomo_cfa(missing_demo_model, data = nomo_demo_continuous)
+  out <- nomo_missing(fit, data = nomo_demo_continuous,
+                      strategies = c("listwise", "pairwise", "fiml"))
+  differences <- out$estimates[out$estimates$role == "comparison", ]
+  reliability <- out$reliability[out$reliability$role == "comparison", ]
+
+  for (width in c(80L, 40L)) {
+    local_reproducible_output(width = width)
+    printed <- capture.output(print(out))
+    detail <- capture.output(print(summary(out)))
+    expect_false(any(nchar(c(printed, detail)) > width), label = paste("width", width))
+
+    # Each strategy heads its own rows, in the order of the strategies table,
+    # and no table needs a Strategy column to tell them apart.
+    for (shown in list(printed, detail)) {
+      expect_identical(grep("^  (Listwise|Pairwise) deletion$", shown, value = TRUE)[1:2],
+                       c("  Listwise deletion", "  Pairwise deletion"))
+      expect_false(any(grepl("Strategy +Estimate", shown)))
+    }
+    # In the summary, every difference and every coefficient sits under its
+    # strategy: listwise rows before the pairwise heading, pairwise rows after.
+    part <- function(from, to) {
+      detail[seq(grep(from, detail)[[1L]], grep(to, detail)[[1L]])]
+    }
+    for (table in list(
+      list(lines = part("^Differences from the reference", "^Reliability by strategy$"),
+           row = "^    [AB] (=~|~~) ", strategy = differences$strategy),
+      list(lines = part("^Reliability by strategy$", "^What these terms mean$"),
+           row = "^    [AB] +(omega|alpha) ", strategy = reliability$strategy)
+    )) {
+      at <- grep("^  (Listwise|Pairwise) deletion$", table$lines)
+      rows <- grep(table$row, table$lines)
+      expect_length(at, 2L)
+      expect_identical(length(rows), length(table$strategy))
+      expect_identical(sum(rows > at[[1L]] & rows < at[[2L]]),
+                       sum(table$strategy == "listwise"))
+      expect_identical(sum(rows > at[[2L]]), sum(table$strategy == "pairwise"))
+    }
+  }
+
+  # At 40 columns the difference is still shown for each strategy's rows.
+  local_reproducible_output(width = 40)
+  printed <- capture.output(print(out))
+  expect_match(printed, "^    Parameter +Estimate +Difference \\(SE\\)$", all = FALSE)
+  expect_match(printed, "^    B =~ b3 +0[.]772 +[+]0[.]41$", all = FALSE)
+
+  # With one comparison strategy, one table names it in a column.
+  local_reproducible_output(width = 80)
+  one <- capture.output(print(missing_results()$mar))
+  expect_false(any(grepl("^  Listwise deletion$", one)))
+  expect_match(one, "^  Parameter +Strategy +Estimate +Reference +Difference \\(SE\\)$",
+               all = FALSE)
+})
+
+
 test_that("plot() draws each difference against half a reference standard error (#145)", {
   out <- nomo_missing(nomo_cfa(missing_demo_model, data = nomo_demo_continuous),
                       data = nomo_demo_continuous, reliability = FALSE)

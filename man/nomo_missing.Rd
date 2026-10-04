@@ -132,8 +132,10 @@ FIML is requested with ULS, the label names both, such as "Two-stage ML
 \code{print()} shows the missingness, the strategies compared, the largest
 differences from the reference, and each flag's observation; \code{summary()}
 adds missing values by variable, fit and reliability by strategy, every
-difference, and each recorded decision with its recommendation. \code{plot()}
-draws each difference from the reference in reference standard errors.
+difference, and each recorded decision with its recommendation. With more
+than one comparison strategy, each strategy's differences and coefficients
+are a table of their own. \code{plot()} draws each difference from the reference
+in reference standard errors.
 
 \strong{Not implemented.} Mean substitution is not offered. It understates
 variances and distorts covariances. Schafer and Graham (2002) show that even

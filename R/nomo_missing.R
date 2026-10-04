@@ -88,8 +88,10 @@ nomo_missing_half_se_reference <- paste(
 #' `print()` shows the missingness, the strategies compared, the largest
 #' differences from the reference, and each flag's observation; `summary()`
 #' adds missing values by variable, fit and reliability by strategy, every
-#' difference, and each recorded decision with its recommendation. `plot()`
-#' draws each difference from the reference in reference standard errors.
+#' difference, and each recorded decision with its recommendation. With more
+#' than one comparison strategy, each strategy's differences and coefficients
+#' are a table of their own. `plot()` draws each difference from the reference
+#' in reference standard errors.
 #'
 #' **Not implemented.** Mean substitution is not offered. It understates
 #' variances and distorts covariances. Schafer and Graham (2002) show that even
