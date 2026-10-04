@@ -59,11 +59,12 @@ nomo_run_block_error <- function(x,
     class = as.character(error_class)
   )
 
+  # The stage is named by the row the detail sits in.
   x <- nomo_run_set_stage(
     x,
     stage,
     "blocked",
-    sprintf("%s failed for `%s`: %s", stage, scope, message)
+    sprintf("Could not complete for `%s`: %s", scope, message)
   )
 
   x$decision_requests <- tibble::tibble(

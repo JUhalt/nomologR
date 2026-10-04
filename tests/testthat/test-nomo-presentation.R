@@ -703,8 +703,9 @@ test_that("guided-run presentation covers research blocked and complete states",
   )
   txt <- paste(capture.output(print(run)), collapse = "\n")
   expect_match(txt, "Mode: research", fixed = TRUE)
-  expect_match(txt, "Researcher decision required", fixed = TRUE)
-  expect_match(txt, "Blocked at cfa", fixed = TRUE)
+  # A blocked run has no decision to supply, so it shows one block (#145).
+  expect_no_match(txt, "Researcher decision required", fixed = TRUE)
+  expect_match(txt, "Blocked at the CFA stage (measurement model)", fixed = TRUE)
 
   run$status <- "complete"
   run$next_stage <- NULL
@@ -777,7 +778,7 @@ test_that("guided-run tables and summary printing cover empty and populated bran
   s2 <- summary(complete)
   txt2 <- paste(capture.output(print(s2)), collapse = "\n")
   if (nrow(s2$component_log)) {
-    expect_match(txt2, "Component decision and evidence-log rows retained", fixed = TRUE)
+    expect_match(gsub("\\s+", " ", txt2), "rows of the component logs.", fixed = TRUE)
   }
 })
 

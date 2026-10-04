@@ -539,7 +539,6 @@ nomo_run_merge_future_settings <- function(x, settings) {
 
   settings <- nomo_run_check_settings_shape(settings)
   merged <- x$settings
-  if (is.null(merged)) merged <- list()
   for (stage in names(settings)) {
     current <- merged[[stage]]
     if (is.null(current)) current <- list()

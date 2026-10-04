@@ -901,15 +901,15 @@
       print(paused)
     Output
       <nomo_run> Guided workflow
-      Status: PAUSED | Mode: teaching | Sample design: same sample
-      Exploratory N = 800 | Confirmatory N = 800 | Scales: 3
-      Completed: screen -> factors | Next: efa
+      Status: Paused | Mode: teaching | Sample design: same sample
+      Exploratory cases: 800 | Confirmatory cases: 800 | Scales: 3
+      Completed: screen -> factors | Next: EFA
       
       Key evidence
         - Item audit: 11 items; flags: none
         - Parallel analysis suggests: Agency 1, Persistence 1, SocialDesirability 1
       
-      Researcher decision required: efa (Agency, Persistence, SocialDesirability)
+      Researcher decision required on the factor counts
         Reason: The EFA factor count changes the fitted model. Retention evidence
         can inform that choice, but it does not authorize the pipeline to choose for
         the researcher.
@@ -929,6 +929,11 @@
       
       No later stage has been run automatically while this consequential decision is
       unresolved.
+      
+      EFA = exploratory factor analysis.
+      
+      See summary(x) for the stages and recorded decisions and
+      nomo_table(x, "requests") for the decision requests.
 
 ---
 
@@ -936,29 +941,35 @@
       print(complete)
     Output
       <nomo_run> Guided workflow
-      Status: COMPLETE | Mode: teaching | Sample design: same sample
-      Exploratory N = 800 | Confirmatory N = 800 | Scales: 3
-      Completed: screen -> factors -> efa -> cfa -> reliability -> validity ->
+      Status: Complete | Mode: teaching | Sample design: same sample
+      Exploratory cases: 800 | Confirmatory cases: 800 | Scales: 3
+      Completed: screen -> factors -> EFA -> CFA -> reliability -> validity ->
         invariance -> network
-      Next: none
       
       Key evidence
         - Item audit: 11 items; flags: none
         - Parallel analysis suggests: Agency 1, Persistence 1, SocialDesirability 1
         - EFA item flags: none
-        - CFA: CFI 0.996, RMSEA 0.020, SRMR 0.021; loading flags: none
-        - Reliability: omega 0.729 to 0.849
+        - CFA: CFI .996, RMSEA 0.020, SRMR 0.021; loading flags: none
+        - Reliability: omega .73 to .85
         - Validity: convergent flags 1 review, 0 concern; separation flags none
         - Invariance: completed configural -> metric
         - Network: 1 hypothesis; 1 concordant
         - Careless responding: 0 cases flagged, none removed
         - Scores: sum method
-        - Missing-data sensitivity: computed for cfa and network
+        - Missing-data sensitivity: only one strategy could be fitted for the
+          measurement model and the network
       
       All requested stages are complete or explicitly marked not requested. No
       hidden item deletion, model respecification, parameter freeing, or validity
-      verdict was performed. summary(x) shows the stages and decisions, and
-      nomo_report(x, file = "report.html") archives the evidence.
+      verdict was performed.
+      
+      EFA = exploratory factor analysis; CFA = confirmatory factor analysis;
+      CFI = comparative fit index; RMSEA = root mean square error of approximation;
+      SRMR = standardized root mean square residual.
+      
+      See summary(x) for the stages and recorded decisions and
+      nomo_report(x, file = "report.html") for an archived report.
 
 ---
 
@@ -966,32 +977,35 @@
       print(summary(complete))
     Output
       <nomo_run summary> Guided workflow
-      Status: COMPLETE | Mode: teaching | Sample design: same sample | Next: none
+      Status: Complete | Mode: teaching | Sample design: same sample
+      Exploratory cases: 800 | Confirmatory cases: 800 | Scales: 3
+      Completed: screen -> factors -> EFA -> CFA -> reliability -> validity ->
+        invariance -> network
       
       Stages
         Stage        Status
-        screen       completed
-        factors      completed
-        efa          completed
-        cfa          completed
-        reliability  completed
-        validity     completed
-        invariance   completed
-        network      completed
-        - screen: Candidate items audited exactly as supplied; no data or item
+        Screen       Completed
+        Factors      Completed
+        EFA          Completed
+        CFA          Completed
+        Reliability  Completed
+        Validity     Completed
+        Invariance   Completed
+        Network      Completed
+        - Screen: Candidate items audited exactly as supplied; no data or item
           membership changed.
-        - factors: Factor-retention evidence computed; no factor count was adopted
+        - Factors: Factor-retention evidence computed; no factor count was adopted
           automatically.
-        - efa: EFA fitted using explicit researcher factor-count decisions; no items
+        - EFA: EFA fitted using explicit researcher factor-count decisions; no items
           were removed automatically.
-        - cfa: Researcher-specified CFA estimated; the model was not respecified
+        - CFA: Researcher-specified CFA estimated; the model was not respecified
           automatically.
-        - reliability: Reliability evidence computed from the retained CFA model.
-        - validity: Convergent/discriminant evidence computed; no valid/invalid
+        - Reliability: Reliability evidence computed from the retained CFA model.
+        - Validity: Convergent/discriminant evidence computed; no valid/invalid
           verdict was created.
-        - invariance: Requested invariance evidence computed; diagnostics did not
+        - Invariance: Requested invariance evidence computed; diagnostics did not
           free parameters automatically.
-        - network: Theory-specified network evidence computed without a one-number
+        - Network: Theory-specified network evidence computed without a one-number
           validity score or validation-sample respecification.
       
       Scales
@@ -1000,71 +1014,132 @@
         - SocialDesirability (3 items): sd1, sd2, sd3
       
       Recorded decisions
-        - sample_design (design, researcher input): same_sample.
+        - sample_design (design, researcher input): same sample.
         - scale_definition:Agency (design, researcher input): ag1, ag2, ag3, ag4.
         - scale_definition:Persistence (design, researcher input): pe1, pe2, pe3,
           pe4.
         - scale_definition:SocialDesirability (design, researcher input): sd1, sd2,
           sd3.
         - careless_responding (screen, researcher input): effort = TRUE.
-        - factor_count:Agency (efa, researcher decision): 1.
-        - factor_count:Persistence (efa, researcher decision): 1.
-        - factor_count:SocialDesirability (efa, researcher decision): 1.
-        - cfa_model (cfa, researcher decision): Agency =~ ag1 + ag2 + ag3 + ag4;
+        - factor_count:Agency (EFA, researcher decision): 1.
+        - factor_count:Persistence (EFA, researcher decision): 1.
+        - factor_count:SocialDesirability (EFA, researcher decision): 1.
+        - cfa_model (CFA, researcher decision): Agency =~ ag1 + ag2 + ag3 + ag4;
           Persistence =~ pe1 + pe2 + pe3 + pe4; SocialDesirability =~ sd1 + sd2 +
           sd3.
-        - scores (cfa, researcher input): method = "sum".
-        - missing_data_cfa (cfa, researcher input): strategies: listwise, ml.
-        - measurement_model (measurement_review, researcher decision): proceed.
+        - scores (CFA, researcher input): method = "sum".
+        - missing_data_cfa (CFA, researcher input): strategies: listwise, ml.
+        - measurement_model (measurement review, researcher decision): proceed.
         - missing_data_network (network, researcher input): strategies: listwise,
           ml.
         - workflow_complete (workflow, pipeline): complete.
       
       Component recipe
-        Stage        Scope               Function            Status
-        screen       Agency              nomo_screen()       completed
-        factors      Agency              nomo_factors()      completed
-        efa          Agency              nomo_efa()          completed
-        screen       Persistence         nomo_screen()       completed
-        factors      Persistence         nomo_factors()      completed
-        efa          Persistence         nomo_efa()          completed
-        screen       SocialDesirability  nomo_screen()       completed
-        factors      SocialDesirability  nomo_factors()      completed
-        efa          SocialDesirability  nomo_efa()          completed
-        cfa          measurement model   nomo_cfa()          completed
-        reliability  measurement model   nomo_reliability()  completed
-        validity     measurement model   nomo_validity()     completed
-        invariance   configured branch   nomo_invariance()   completed
-        network      configured branch   nomo_network()      completed
-        Data roles and researcher control for each step: nomo_table(x, "recipe").
+        Stage         Scope                Function                    Status
+        Screen        Agency               nomo_screen()               Completed
+        Factors       Agency               nomo_factors()              Completed
+        EFA           Agency               nomo_efa()                  Completed
+        Screen        Persistence          nomo_screen()               Completed
+        Factors       Persistence          nomo_factors()              Completed
+        EFA           Persistence          nomo_efa()                  Completed
+        Screen        SocialDesirability   nomo_screen()               Completed
+        Factors       SocialDesirability   nomo_factors()              Completed
+        EFA           SocialDesirability   nomo_efa()                  Completed
+        Screen        careless responding  nomo_screen(effort = TRUE)  Completed
+        CFA           measurement model    nomo_cfa()                  Completed
+        Reliability   measurement model    nomo_reliability()          Completed
+        Validity      measurement model    nomo_validity()             Completed
+        Scores        measurement model    nomo_scores()               Completed
+        Missing data  measurement model    nomo_missing()              Completed
+        Invariance    configured branch    nomo_invariance()           Completed
+        Network       configured branch    nomo_network()              Completed
+        Missing data  theory network       nomo_missing()              Completed
       
-      Methods used: 48
+      Methods
+        Methods used: 48 (13 primary, 13 historical)
         Stage        Methods  Primary  Historical
-        screen             9        0           1
-        factors            5        1           3
-        efa                3        1           1
-        cfa                9        1           3
-        reliability        2        1           1
-        validity           4        2           1
-        invariance         4        2           0
-        scores             5        1           1
-        network            3        2           1
-        workflow           4        2           1
-        Primary methods:
-        - factors: Common-factor parallel analysis
-        - efa: MINRES common-factor extraction
-        - cfa: Maximum-likelihood confirmatory factor analysis
-        - reliability: Model-based coefficient omega
-        - validity: HTMT2; Latent correlations with confidence intervals
-        - invariance: Multiple-group confirmatory factor analysis; Configural,
-          metric, scalar, and strict sequence
-        - scores: Unit-weighted sum or mean score
-        - network: Nomological network of construct relations;
-          Measurement-then-structure modeling
-        - workflow: Staged scale-development workflow; Recorded decisions and
-          rationales
-        Full entries and references: nomo_methods(x).
+        Screen             9        0           1
+        Factors            5        1           3
+        EFA                3        1           1
+        CFA                9        1           3
+        Reliability        2        1           1
+        Validity           4        2           1
+        Invariance         4        2           0
+        Scores             5        1           1
+        Network            3        2           1
+        Workflow           4        2           1
       
-      Component decision and evidence-log rows retained: 93; see nomo_table(x,
-      "component_log").
+      Primary methods
+        - Factors: Common-factor parallel analysis
+        - EFA: MINRES common-factor extraction
+        - CFA: Maximum-likelihood confirmatory factor analysis
+        - Reliability: Model-based coefficient omega
+        - Validity: HTMT2; Latent correlations with confidence intervals
+        - Invariance: Multiple-group confirmatory factor analysis; Configural,
+          metric, scalar, and strict sequence
+        - Scores: Unit-weighted sum or mean score
+        - Network: Nomological network of construct relations;
+          Measurement-then-structure modeling
+        - Workflow: Staged scale-development workflow; Recorded decisions and
+          rationales
+      
+      Flagged
+        - Scores (Concern): Correlations among these scores do not reproduce the
+          correlations among the factors: the largest discrepancy is -0.077, between
+          Agency and Persistence. A relationship estimated from these scores carries
+          that much bias, and its direction is a property of the method and the
+          model rather than a constant that can be corrected for. Where the question
+          can be asked of the latent variables, ask it there. For a linear
+          regression among factors, Skrondal and Laake (2001) showed a scoring
+          design that gives consistent coefficients, and scores from one model
+          containing every factor, like these, are not it: the predictors need
+          regression-method scores and the outcome Bartlett scores, each from a
+          measurement model of its own.
+        - The Persistence factor retention (Review): The parallel-analysis rules
+          suggest 1 (percentile), 2 (mean), and 2 (Crawford).
+        - The SocialDesirability factor retention (Review): Parallel analysis
+          suggests 1 factor, while available criterion families differ between 0 and
+          1 factors. At the criterion-family level, MAP points to 0. Carry both
+          neighboring solutions into EFA and compare interpretability, simple
+          structure, and stability. Criterion families are related rather than
+          independent votes. Some criteria found no evidence of a common factor;
+          check item quality, coding, and sample size before relying on any EFA.
+        - The SocialDesirability EFA (Review): 1 factor on 3 items leaves 0 degrees
+          of freedom: the model reproduces the correlations exactly, so an RMSR near
+          0 is not evidence of fit.
+        - SocialDesirability in validity (Review): AVE is below the configured
+          convergent-evidence reference (0.5). Inspect standardized loadings,
+          indicator-specific error, and content coverage; do not automatically
+          delete items.
+        - Scores (Review): The parallel model that unit weighting assumes fits worse
+          than the model you fitted (chi-square difference 41.93 on 16 df,
+          p < .001). The items are not interchangeable in the way adding them
+          assumes. This does not forbid a sum score; it means the choice needs a
+          reason beyond convenience, and that `validity` and
+          `correlational_accuracy` describe what it costs.
+        - Scores (Review): Validity is below .90 for SocialDesirability. Gorsuch
+          (1983, p. 260) recommended at least .80, and above .90 if the scores are
+          to serve as adequate substitutes for the factors themselves. Reported as
+          his recommendation, not applied as a rule.
+        - Scores (Review): These scores also carry the other factors: the score for
+          Agency correlates +0.421 with a factor it does not represent (Grice,
+          2001). A score that is not univocal cannot be treated as though it
+          measured its own factor alone.
+        - Invariance (Review): 11 univariate equality-constraint score diagnostic(s)
+          were retained.
+      
+      Abbreviations
+        EFA -- Exploratory factor analysis.
+        CFA -- Confirmatory factor analysis.
+        MINRES -- Minimum residual.
+        HTMT2 -- Heterotrait-monotrait ratio of correlations, geometric-mean
+            version.
+        MAP -- Minimum average partial criterion (Velicer).
+        RMSR -- Root mean square of the off-diagonal residual correlations.
+        AVE -- Average variance extracted.
+        df -- Degrees of freedom.
+      
+      See nomo_table(x, "recipe") for each step's data role and researcher control,
+      nomo_methods(x) for every method with its references, and
+      nomo_table(x, "component_log") for the 93 rows of the component logs.
 

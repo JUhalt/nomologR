@@ -112,8 +112,14 @@ These columns differ from those of the components' decision logs, which
 \code{settings}.
 }
 
+\code{print()} shows where the run is, one line of key evidence per component,
+and the decision the run waits for or why it is blocked. \code{summary()} adds
+every stage, the scales, the recorded decisions, the component recipe,
+the methods used, and each flag the components raised.
+
 \code{\link[=nomo_table]{nomo_table()}} returns the run's tables, including the component recipe,
-the component decision logs, and the revision lineage. Other fields hold
+the settings with their values, the component decision logs, and the
+revision lineage. Other fields hold
 the source data and state needed to resume or revise the run. They may
 change between releases and are not part of the stable interface (see
 \code{?nomologR}).

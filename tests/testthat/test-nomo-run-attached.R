@@ -58,6 +58,11 @@ test_that("requested scores and missing-data sensitivity follow the CFA", {
   expect_identical(recipe$function_name[recipe$stage %in% c("scores", "missing")],
                    c("nomo_scores()", "nomo_missing()"))
   expect_true(all(recipe$status[recipe$stage %in% c("scores", "missing")] == "completed"))
+
+  evidence <- nomologR:::nomo_run_key_evidence(run)
+  expect_true("Scores: sum method" %in% evidence)
+  expect_true("Missing-data sensitivity: strategies compared for the measurement model" %in%
+                evidence)
 })
 
 

@@ -438,7 +438,9 @@ test_that("research-mode printing shows the revision count", {
   parent <- revise_parent_run()
   parent$mode <- "research"
   revised <- nomo_revise(parent, cfa_model = revised_residual_model, rationale = "Shared wording.")
-  expect_output(print(revised), "Revisions: 1 (post-hoc)", fixed = TRUE)
+  # "post hoc" takes no hyphen (#144).
+  expect_output(print(revised), "Revisions: 1 (post hoc)", fixed = TRUE)
+  expect_output(print(revised), "nomo_table(x, \"lineage\") for the revisions.", fixed = TRUE)
 })
 
 
