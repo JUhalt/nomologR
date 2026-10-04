@@ -165,3 +165,25 @@ test_that("a Fornell-Larcker pair is unavailable when an AVE has no square root"
   expect_true(all(pairs$attention[with_visual] == "unavailable"))
   expect_true(all(pairs$attention[!with_visual] %in% c("info", "review")))
 })
+
+
+test_that("?nomologR sets out the status words shared with contentvalidR (#144)", {
+  text <- nomo_test_rd_text("nomologR-package", "Status words shared with contentvalidR")
+
+  # Guide point 19: each contentvalidR status beside its nomologR word.
+  rows <- c(
+    "Supported" = "no flag", "Review" = "review", "(no counterpart)" = "concern",
+    "Insufficient data" = "not computed", "Descriptive only" = "note"
+  )
+  cells <- trimws(strsplit(text, "\\\\cr|\\\\tab|\\\\tabular\\{ll\\}\\{")[[1L]])
+  for (status in names(rows)) {
+    at <- match(status, cells)
+    expect_false(is.na(at), label = status)
+    expect_identical(cells[[at + 1L]], rows[[status]], label = status)
+  }
+  # Guide point 33: what `recommendation` means in each package.
+  expect_true(grepl("\\code{recommendation}", text, fixed = TRUE))
+  expect_true(grepl("prose advice", text, fixed = TRUE))
+  expect_true(grepl("decision word", text, fixed = TRUE))
+  expect_true(grepl("never delete", text, fixed = TRUE))
+})
