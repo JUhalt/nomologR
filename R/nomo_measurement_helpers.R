@@ -109,13 +109,17 @@ nomo_measurement_fit <- function(x, arg = "fit", allow_cross_loadings = FALSE) {
   )
 
   if (!is.null(pe) && length(lv)) {
+    # Shared by reliability and validity, so the messages name neither (#145).
     structural <- pe$op == "~" & pe$lhs %in% lv & pe$rhs %in% lv
     if (any(structural, na.rm = TRUE)) {
       stop(
-        paste(
-          "`fit` contains latent structural regressions.",
-          "Reliability is intentionally limited to CFA measurement models;",
-          "fit or pass the measurement model separately."
+        sprintf(
+          paste(
+            "`%s` contains latent structural regressions. Measurement evidence",
+            "is computed from CFA measurement models only; fit or pass the",
+            "measurement model separately."
+          ),
+          arg
         ),
         call. = FALSE
       )
@@ -124,11 +128,14 @@ nomo_measurement_fit <- function(x, arg = "fit", allow_cross_loadings = FALSE) {
     higher_order <- pe$op == "=~" & pe$rhs %in% lv
     if (any(higher_order, na.rm = TRUE)) {
       stop(
-        paste(
-          "`fit` contains a higher-order measurement model.",
-          "This function evaluates first-order CFA composites; use",
-          "`nomo_hierarchical()` for omega hierarchical, subscale omegas,",
-          "explained common variance, and PUC in higher-order and bifactor models."
+        sprintf(
+          paste(
+            "`%s` contains a higher-order measurement model.",
+            "This function evaluates first-order CFA composites; use",
+            "`nomo_hierarchical()` for omega hierarchical, subscale omegas,",
+            "explained common variance, and PUC in higher-order and bifactor models."
+          ),
+          arg
         ),
         call. = FALSE
       )
@@ -154,7 +161,7 @@ nomo_measurement_fit <- function(x, arg = "fit", allow_cross_loadings = FALSE) {
     if (length(cross_loaded_items) && !isTRUE(allow_cross_loadings)) {
       stop(
         paste0(
-          "`fit` contains cross-loaded indicator(s): ",
+          sprintf("`%s` contains cross-loaded indicator(s): ", arg),
           paste(cross_loaded_items, collapse = ", "),
           ". Reliability requires a simple first-order CFA so the target composite is unambiguous.",
           " If this is a bifactor model, use `nomo_hierarchical()`."
@@ -215,6 +222,17 @@ nomo_measurement_fit <- function(x, arg = "fit", allow_cross_loadings = FALSE) {
     ngroups = ngroups,
     nlevels = nlevels
   )
+}
+
+
+# Whether lavaan fitted ordered indicators with its theta parameterization,
+# which fixes the residual variances of the latent responses rather than their
+# total variances. semTools computes AVE and the latent-response coefficients
+# in that unstandardized metric, so they differ from those of a delta fit of
+# the same model (#145).
+nomo_measurement_theta <- function(fit_info) {
+  parameterization <- lavaan::lavInspect(fit_info$fit, "options")$parameterization
+  length(fit_info$ordered) > 0L && identical(tolower(paste(parameterization)), "theta")
 }
 
 
@@ -350,7 +368,9 @@ nomo_reliability_item_types <- function(fit_info) {
   if (!nrow(loads)) return(tibble::tibble())
 
   loads$ordered <- loads$rhs %in% fit_info$ordered
-  pieces <- split(loads, loads$lhs)
+  # In the order the model defines the constructs, as `omega` and the other
+  # tables list them; split() alone would sort them alphabetically (#145).
+  pieces <- split(loads, factor(loads$lhs, levels = unique(loads$lhs)))
 
   tibble::tibble(
     construct = names(pieces),
@@ -515,7 +535,10 @@ nomo_validity_htmt_inputs <- function(fit_info) {
     return(list(
       available = FALSE,
       reason = paste0(
-        "HTMT/HTMT2 was not computed because cross-loaded indicator(s) make simple trait membership ambiguous: ",
+        "HTMT/HTMT2 was not computed because ",
+        nomo_present_noun(length(fit_info$cross_loaded_items),
+                          "a cross-loaded indicator makes", "cross-loaded indicators make"),
+        " simple trait membership ambiguous: ",
         paste(fit_info$cross_loaded_items, collapse = ", "),
         "."
       )
@@ -530,13 +553,34 @@ nomo_validity_htmt_inputs <- function(fit_info) {
     ))
   }
 
-  loads <- pe[pe$op == "=~", c("lhs", "rhs"), drop = FALSE]
-  if (!nrow(loads) || length(unique(loads$lhs)) < 2L) {
+  # HTMT compares the correlations between two constructs' indicators with
+  # those within each construct. With one construct, or a construct with one
+  # indicator, it is not defined at all: that is not applicable, not a missing
+  # result (#145). Pairs with a single-indicator construct are left out, and the
+  # rest are computed.
+  loads <- unique(pe[pe$op == "=~", c("lhs", "rhs"), drop = FALSE])
+  constructs <- unique(loads$lhs)
+  if (length(constructs) < 2L) {
     return(list(
       available = FALSE,
-      reason = "HTMT/HTMT2 requires at least two latent constructs."
+      applicable = FALSE,
+      reason = "HTMT/HTMT2 compares two or more constructs, and this model has one."
     ))
   }
+  n_items <- vapply(constructs, function(f) sum(loads$lhs == f), integer(1))
+  single <- constructs[n_items < 2L]
+  if (length(constructs) - length(single) < 2L) {
+    return(list(
+      available = FALSE,
+      applicable = FALSE,
+      reason = paste0(
+        "HTMT/HTMT2 is not defined for a construct with one indicator (",
+        paste(single, collapse = ", "), "), which has no within-construct ",
+        "correlations, and fewer than two constructs have more than one."
+      )
+    ))
+  }
+  loads <- loads[!loads$lhs %in% single, , drop = FALSE]
 
   split_items <- split(loads$rhs, loads$lhs)
   model <- paste(
@@ -580,7 +624,8 @@ nomo_validity_htmt_inputs <- function(fit_info) {
     reason = "",
     model = model,
     data = dat[, required, drop = FALSE],
-    ordered = intersect(fit_info$ordered, required)
+    ordered = intersect(fit_info$ordered, required),
+    single = single
   )
 }
 

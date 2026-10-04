@@ -290,12 +290,15 @@
       print(rel)
     Output
       <nomo_reliability> Reliability
-      Constructs: 2 | Primary coefficient: model-based omega | Review reference: 0.7
-      Omega range: 0.784 to 0.835 | Flags: none
-      Alpha: 2 of 2 constructs available as a secondary coefficient
+      Constructs: 2 | Primary coefficient: model-based omega | Review reference: .70
+      Omega: .78 to .83 | Omega flags: none
+      Alpha: 2 of 2 constructs, as a secondary coefficient
       Uncertainty: point estimates only; use `ci = "bootstrap"` for interval
       estimates.
+      
       Reference values guide review; they are not pass/fail reliability rules.
+      
+      See summary(x) for each construct's omega and alpha.
 
 ---
 
@@ -303,17 +306,20 @@
       print(summary(rel))
     Output
       <nomo_reliability summary> Reliability
+      Constructs: 2 | Review reference: .70
       
       Coefficients
-        Construct  Indicators  Omega  Alpha  Omega scale
-        A          continuous  0.835  0.827  observed continuous
-        B          continuous  0.784  0.771  observed continuous
+        Construct  Indicators  Omega  Alpha
+        A          continuous    .83    .83
+        B          continuous    .78    .77
       
       Sampling uncertainty was not bootstrapped. For report-ready intervals, rerun
       with `ci = "bootstrap"`.
       Omega is primary for the congeneric CFA workflow; alpha is secondary and
       assumption-dependent. Reliability contributes score-precision evidence, not
       construct validity.
+      
+      See x$decision_log for the reasoning behind each coefficient.
 
 ---
 
@@ -321,11 +327,21 @@
       print(val)
     Output
       <nomo_validity> Convergent and discriminant evidence
-      Constructs: 2 | AVE review reference: 0.5 | HTMT-family review reference: 0.85
-      Convergent evidence: 2 review, 0 concern across 2 constructs
-      Construct separation: none across 1 pair
+      Constructs: 2 | AVE reference: .50 | HTMT reference: 0.85
+      Convergent flags: 2 review, 0 concern (2 constructs)
+      Separation flags: none (1 pair)
+      
+      Flagged
+        - A (Review): AVE .497 is below the review reference .50.
+        - B (Review): AVE .43 is below the review reference .50; 1 of 5 standardized
+          loadings is flagged (b5).
+      
+      AVE = average variance extracted; HTMT = heterotrait-monotrait ratio, HTMT2
+      its geometric-mean form.
       No single index is treated as a declaration that a construct is valid or
       invalid.
+      
+      See summary(x) for the evidence for each construct and pair.
 
 ---
 
@@ -333,19 +349,46 @@
       print(summary(val))
     Output
       <nomo_validity summary> Convergent and discriminant evidence
+      Constructs: 2 | AVE reference: .50 | HTMT reference: 0.85
+      Convergent flags: 2 review, 0 concern (2 constructs)
+      Separation flags: none (1 pair)
       
       Convergent evidence by construct
-        Construct    AVE  Min |loading|  Median |loading|  Loadings flagged  Flag
-        A          0.497          0.598             0.738                 0  review
-        B          0.434          0.337             0.695                 1  review
+        Construct   AVE  Min |loading|  Median |loading|  Loadings flagged  Flag
+        A          .497           0.60              0.74                 0  Review
+        B           .43           0.34              0.69                 1  Review
       
       Construct separation
-        Construct 1  Construct 2  Latent r  95% CI          HTMT2   HTMT
-        A            B               0.499  [0.413, 0.586]  0.533  0.540
+        Construct 1  Construct 2  Latent r  95% CI      HTMT2  HTMT
+        A            B                 .50  [.41, .59]   0.53  0.54
+      
+      Flagged
+        - b5 (Review): Standardized loading 0.34 is below the review reference 0.50
+          in absolute value; inspect item content, precision, and model
+          specification.
+        - A (Review): AVE (.497) is below the configured convergent-evidence
+          reference (.50). Inspect standardized loadings, indicator-specific error,
+          and content coverage; do not automatically delete items.
+        - B (Review): AVE (.43) is below the configured convergent-evidence
+          reference (.50). Inspect standardized loadings, indicator-specific error,
+          and content coverage; do not automatically delete items.
+      
+      What these columns mean
+        AVE -- Average variance extracted, the mean share of its indicators'
+            variance a construct explains.
+        |loading| -- Absolute standardized loading.
+        Latent r -- Correlation between two constructs in the CFA.
+        CI -- Confidence interval, as lavaan computes it.
+        HTMT2 -- Heterotrait-monotrait ratio with geometric means (Roemer et al.,
+            2021).
+        HTMT -- Heterotrait-monotrait ratio (Henseler et al., 2015).
       
       Standardized loadings and AVE address convergent evidence; latent correlations
       and HTMT-family statistics address construct separation. These are
       complementary questions, not interchangeable pass/fail tests.
+      
+      See nomo_table(x, "discriminant") for every value and x$decision_log for the
+      reasoning behind each flag.
 
 ---
 
@@ -488,60 +531,58 @@
       print(hier)
     Output
       <nomo_hierarchical> Hierarchical model evaluation
+      Rodriguez, Reise, and Haviland (2016).
       Bifactor model | General factor: G | Group factors: A, B, C
       Estimand: unit-weighted observed composite
       
       Total score
-        Index                        Estimate
-        omega total                     0.896
-        omega hierarchical              0.741
-        omega hierarchical relative     0.827
-        ECV                             0.609
-        PUC                             0.750
+        Index                         Estimate
+        Omega total                        .90
+        Omega hierarchical                 .74
+        Omega hierarchical, relative       .83
+      
+      Item set
+        Index  Estimate
+        ECV         .61
+        PUC         .75
       
       Subscales
         Subscale  Items  Omega subscale  Omega hierarchical subscale
-        A             3           0.798                        0.330
-        B             3           0.791                        0.354
-        C             3           0.799                        0.239
+        A             3             .80                          .33
+        B             3             .79                          .35
+        C             3             .80                          .24
       
       Factor scores
         Factor  Role     Determinacy  Min competing r  Replicability H
-        G       general        0.867            0.502            0.829
-        A       group          0.704           -0.009            0.489
-        B       group          0.715            0.023            0.501
-        C       group          0.641           -0.178            0.406
+        G       general          .87              .50              .83
+        A       group            .70             -.01              .49
+        B       group            .72              .02              .50
+        C       group            .64             -.18              .41
       
-      Notes
-        - Review: A bifactor model will usually fit at least as well as
-          correlated-factors or higher-order models of the same items, even when it
-          did not generate the data (Reise, 2012), and a higher-order model is a
-          constrained version of it (Yung, Thissen, & McLeod, 1999). Bonifay, Lane,
-          and Reise (2017) call the bifactor model's tendency to show superior
-          goodness of fit in model comparison studies a particular concern, and say
-          that superior fit may be a symptom of overfitting: modeling not only the
-          trends in the data but also unwanted noise. Murray and Johnson (2013)
-          compared these two structures directly and found the comparison biased in
-          favor of the bifactor model: unless there was essentially no unmodeled
-          complexity, their simulation favored the bifactor model even when a
-          higher-order model generated the data. They concluded that which model to
-          adopt should not rely on which is better fitting. Compare the alternatives
-          with nomo_compare() and choose on substantive grounds, not on fit alone.
-        - Review: Factor determinacy is at or below .90 for G, A, B, C. Gorsuch
-          (1983, p. 260) recommended using factor score estimates only above that
-          value. This is his recommendation reported as context, not a rule applied
-          here; the score may still be usable for some purposes.
+      Flagged
+        - Review: Factor determinacy is at or below .90 for G, A, B, C, the value
+          above which Gorsuch (1983) recommended using factor score estimates.
         - Review: Two equally valid sets of factor scores could correlate as low as
-          G (0.50), A (-0.01), B (0.02), C (-0.18). Gorsuch (1983, p. 260) suggested
-          this minimum be above .70. A negative value means two researchers scoring
-          the same data could rank people in opposite orders and both be consistent
-          with the model.
-        - Review: Construct replicability H is below .70 for A, B, C. Hancock and
-          Mueller (2001) proposed .70 as a standard; a factor below it is not well
-          defined by its own indicators and is expected to change across studies.
-          Reported as their standard, not applied as a rule.
+          G (.50), A (-.01), B (.02), C (-.18), below the .70 Gorsuch (1983)
+          suggested.
+        - Review: Construct replicability H is below .70, the standard Hancock and
+          Mueller (2001) proposed, for A, B, C.
       
-      No index is treated as a pass/fail threshold; see nomo_table(x, "indices").
+      What these abbreviations mean
+        ECV -- Explained common variance: the share of the items' common variance
+            that the general factor explains.
+        PUC -- Percentage of uncontaminated correlations, shown as a proportion: the
+            share of item correlations that reflect the general factor alone.
+        Min competing r -- The lowest correlation two equally valid sets of factor
+            scores could have, twice the squared determinacy minus one.
+        Replicability H -- Construct replicability (Hancock & Mueller, 2001): how
+            well a factor's own indicators, optimally weighted, define it.
+      
+      These indices do not choose between a bifactor and a higher-order structure,
+      and no value is treated as a pass/fail threshold.
+      
+      See summary(x) for each index's meaning with the notes in full and
+      nomo_table(x, "factors") for every factor-score value.
 
 ---
 
@@ -549,62 +590,48 @@
       print(summary(hier))
     Output
       <nomo_hierarchical summary> Hierarchical model evaluation
-      Bifactor model | General factor: G
+      Rodriguez, Reise, and Haviland (2016).
+      Bifactor model | General factor: G | Group factors: A, B, C
+      Estimand: unit-weighted observed composite
       
       Total score
-        - omega total = 0.896: Common sources explain 0.90 of the variance of the
+        - Omega total = .90: Common sources explain .90 of the variance of the
           unit-weighted total score.
-        - omega hierarchical = 0.741: The general factor (G) explains 0.74 of the
+        - Omega hierarchical = .74: The general factor (G) explains .74 of the
           variance of the unit-weighted total score.
-        - omega hierarchical relative = 0.827: Of the total score's reliable
-          variance, 0.83 reflects the general factor (G) and the rest reflects group
+        - Omega hierarchical, relative = .83: Of the total score's reliable
+          variance, .83 reflects the general factor (G) and the rest reflects group
           factors.
-        - ECV = 0.609: The general factor (G) explains 0.61 of the common variance
+      
+      Item set
+        - ECV = .61: The general factor (G) explains .61 of the common variance
           across items. Higher values indicate a stronger general factor relative to
           the group factors; no benchmark value establishes that the items are
           unidimensional.
-        - PUC = 0.750: 0.75 of item correlations are influenced only by the general
-          factor. When this is very high, even a modest ECV can yield relatively
-          unbiased estimates from a unidimensional model.
+        - PUC = .75: Of the item correlations, .75 are influenced only by the
+          general factor. When this share is very high, even a modest ECV can yield
+          relatively unbiased estimates from a unidimensional model.
       
       Subscales
         Subscale  Items  Omega subscale  Omega hierarchical subscale
-        A             3           0.798                        0.330
-        B             3           0.791                        0.354
-        C             3           0.799                        0.239
+        A             3             .80                          .33
+        B             3             .79                          .35
+        C             3             .80                          .24
       
-      Notes
-        - Bifactor model: G is measured by all 9 items, with 3 group factors (A, B,
-          C).
-        - Review: A bifactor model will usually fit at least as well as
-          correlated-factors or higher-order models of the same items, even when it
-          did not generate the data (Reise, 2012), and a higher-order model is a
-          constrained version of it (Yung, Thissen, & McLeod, 1999). Bonifay, Lane,
-          and Reise (2017) call the bifactor model's tendency to show superior
-          goodness of fit in model comparison studies a particular concern, and say
-          that superior fit may be a symptom of overfitting: modeling not only the
-          trends in the data but also unwanted noise. Murray and Johnson (2013)
-          compared these two structures directly and found the comparison biased in
-          favor of the bifactor model: unless there was essentially no unmodeled
-          complexity, their simulation favored the bifactor model even when a
-          higher-order model generated the data. They concluded that which model to
-          adopt should not rely on which is better fitting. Compare the alternatives
-          with nomo_compare() and choose on substantive grounds, not on fit alone.
-        - Factor determinacy is the correlation between a factor and its estimated
-          factor score (Beauducel, 2011; Rodriguez, Reise, & Haviland, 2016). It is
-          computed from the whole model-reproduced correlation matrix, so a group
-          factor's score can use the other items to partial out the general factor.
-          Construct replicability H (Hancock & Mueller, 2001) uses only that
-          factor's own loadings and treats the rest of each item as uncorrelated
-          residual. The two are equivalent when the data are unidimensional and can
-          differ under a bifactor model, which Rodriguez et al. note without
-          preferring either. Read each as the question it answers.
+      Factor scores
+        Factor  Role     Determinacy  Min competing r  Replicability H
+        G       general          .87              .50              .83
+        A       group            .70             -.01              .49
+        B       group            .72              .02              .50
+        C       group            .64             -.18              .41
+      
+      Flagged
         - Review: Factor determinacy is at or below .90 for G, A, B, C. Gorsuch
           (1983, p. 260) recommended using factor score estimates only above that
           value. This is his recommendation reported as context, not a rule applied
           here; the score may still be usable for some purposes.
         - Review: Two equally valid sets of factor scores could correlate as low as
-          G (0.50), A (-0.01), B (0.02), C (-0.18). Gorsuch (1983, p. 260) suggested
+          G (.50), A (-.01), B (.02), C (-.18). Gorsuch (1983, p. 260) suggested
           this minimum be above .70. A negative value means two researchers scoring
           the same data could rank people in opposite orders and both be consistent
           with the model.
@@ -612,8 +639,51 @@
           Mueller (2001) proposed .70 as a standard; a factor below it is not well
           defined by its own indicators and is expected to change across studies.
           Reported as their standard, not applied as a rule.
+      
+      Notes
+        - Bifactor model: G is measured by all 9 items, with 3 group factors (A, B,
+          C).
+        - A bifactor model will usually fit at least as well as correlated-factors
+          or higher-order models of the same items, even when it did not generate
+          the data (Reise, 2012), and a higher-order model is a constrained version
+          of it (Yung, Thissen, & McLeod, 1999). Bonifay, Lane, and Reise (2017)
+          call the bifactor model's tendency to show superior goodness of fit in
+          model comparison studies a particular concern, and say that superior fit
+          may be a symptom of overfitting: modeling not only the trends in the data
+          but also unwanted noise. Murray and Johnson (2013) compared these two
+          structures directly and found the comparison biased in favor of the
+          bifactor model: unless there was essentially no unmodeled complexity,
+          their simulation favored the bifactor model even when a higher-order model
+          generated the data. They concluded that which model to adopt should not
+          rely on which is better fitting. Compare the alternatives with
+          nomo_compare() and choose on substantive grounds, not on fit alone.
+        - Factor determinacy is the correlation between a factor and its estimated
+          factor score (Beauducel, 2011; Rodriguez, Reise, & Haviland, 2016). It is
+          computed from the whole model-reproduced correlation matrix, so a group
+          factor's score can use the other items to partial out the general factor.
+          Construct replicability H (Hancock & Mueller, 2001) uses only that
+          factor's own loadings and treats the rest of each item as uncorrelated
+          residual. When the data are unidimensional, H equals the squared
+          determinacy (`determinacy_r2`); under a bifactor model the two can differ,
+          which Rodriguez et al. note without preferring either. Read each as the
+          question it answers.
         - Each omega describes a unit-weighted observed composite, with observed
           covariances in the denominator.
+      
+      What these abbreviations mean
+        ECV -- Explained common variance: the share of the items' common variance
+            that the general factor explains.
+        PUC -- Percentage of uncontaminated correlations, shown as a proportion: the
+            share of item correlations that reflect the general factor alone.
+        Min competing r -- The lowest correlation two equally valid sets of factor
+            scores could have, twice the squared determinacy minus one.
+        Replicability H -- Construct replicability (Hancock & Mueller, 2001): how
+            well a factor's own indicators, optimally weighted, define it.
+      
+      These indices do not choose between a bifactor and a higher-order structure,
+      and no value is treated as a pass/fail threshold.
+      
+      See nomo_table(x, "decision_log") for the record of each index and note.
 
 # comparison, invariance, and network output read as designed (#89)
 

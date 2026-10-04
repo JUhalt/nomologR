@@ -41,9 +41,15 @@ test_that("a reliability is recorded with its coefficient, standard error, and s
 
   local_reproducible_output(width = 80)
   printed <- capture.output(print(si))
-  expect_match(printed, "Reliability: 0.850 (omega) | SE: 0.020", fixed = TRUE, all = FALSE)
+  # A reliability prints without its leading zero, to the three decimals it is
+  # fixed at, and SE is defined where it is shown (#144).
+  expect_match(printed, "Reliability: .850 (omega) | SE: .020", fixed = TRUE, all = FALSE)
   expect_match(printed, "Source: Test manual, Table 4", fixed = TRUE, all = FALSE)
-  expect_false(any(grepl("Source", capture.output(print(bare)), fixed = TRUE)))
+  expect_true("SE = standard error of the reliability." %in% printed)
+  expect_match(paste(printed, collapse = " "), "fixes the composite's error variance",
+               fixed = TRUE)
+  bare_printed <- capture.output(print(bare))
+  expect_false(any(grepl("Source|SE", bare_printed)))
 })
 
 
@@ -235,7 +241,7 @@ test_that("a reliability near 1 is shifted only within (0, 1)", {
   # One side of the reliability is enough for the rate of change.
   expect_gt(net$hypothesis_evidence$se_reliability_added, 0)
   flagged <- net$decision_log[net$decision_log$metric == "single_indicator_sensitivity", ]
-  expect_match(flagged$observation, "Across reliabilities from 0.870 to 0.970", fixed = TRUE)
+  expect_match(flagged$observation, "Across reliabilities from .870 to .970", fixed = TRUE)
   # Shifts past 1 are left empty in the summary.
   wide <- nomologR:::nomo_network_sensitivity_wide(s)
   expect_true(is.na(wide$plus_05) && is.na(wide$plus_10))
@@ -264,7 +270,7 @@ test_that("a reliability's standard error widens the interval by Oberski and Sat
 
   log <- uncertain$decision_log
   added <- log[log$metric == "single_indicator_uncertainty", ]
-  expect_match(added$observation, "add the uncertainty in the reliability of `persistence` (standard error 0.030)",
+  expect_match(added$observation, "add the uncertainty in the reliability of `persistence` (standard error .030)",
                fixed = TRUE)
 })
 
@@ -363,7 +369,7 @@ test_that("a refit that fails is recorded as not evaluable, and costs no rate of
     out$table
   )
   flagged <- log[log$metric == "single_indicator_sensitivity", ]
-  expect_match(flagged$observation, "not evaluable at 0.700, 0.750, 0.850, 0.900", fixed = TRUE)
+  expect_match(flagged$observation, "not evaluable at .700, .750, .850, .900", fixed = TRUE)
 })
 
 
@@ -425,4 +431,34 @@ test_that("prose lists join with and as well as or", {
   expect_identical(nomologR:::nomo_present_or(c("a", "b"), "and"), "a and b")
   expect_identical(nomologR:::nomo_present_or(c("a", "b", "c"), "and"), "a, b, and c")
   expect_identical(nomologR:::nomo_present_or(c("a", "b", "c")), "a, b, or c")
+})
+
+
+# Pre-RC findings (#145) ------------------------------------------------------------
+
+test_that("a latent-response omega for an ordered composite is taken with a warning (#145)", {
+  skip_on_cran()
+  model <- "A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4 + b5"
+  cfa <- nomo_cfa(model, data = nomo_demo_ordinal, ordered = names(nomo_demo_ordinal))
+  latent <- nomo_reliability(cfa, ordinal_scale = FALSE)
+  expect_warning(
+    si <- nomo_single_indicator(latent, construct = "B"),
+    "on the latent-response scale (`ordinal_scale = FALSE`)", fixed = TRUE
+  )
+  expect_identical(si$source, "this sample (nomo_reliability(), latent-response scale)")
+  # The observed-score omega is taken without one.
+  expect_no_warning(observed <- nomo_single_indicator(nomo_reliability(cfa), construct = "B"))
+  expect_identical(observed$source, "this sample (nomo_reliability())")
+  expect_lt(observed$reliability, si$reliability)
+})
+
+
+test_that("the help describes Savalei (2019) as the abstract does (#145)", {
+  rd <- testthat::test_path("..", "..", "man", "nomo_single_indicator.Rd")
+  skip_if_not(file.exists(rd))
+  text <- gsub("\\s+", " ", paste(readLines(rd, warn = FALSE), collapse = " "))
+  expect_match(text, "Path analysis and single indicators whose reliability was fixed a priori",
+               fixed = TRUE)
+  expect_match(text, "corresponds to the data-estimated variant", fixed = TRUE)
+  expect_false(grepl("single indicators gave the most accurate estimates", text, fixed = TRUE))
 })
