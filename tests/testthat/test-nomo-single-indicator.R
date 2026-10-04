@@ -222,7 +222,7 @@ test_that("each hypothesis is refitted across the reliability, and a change is f
                fixed = TRUE)
   local_reproducible_output(width = 80)
   summarized <- capture.output(print(summary(net)))
-  expect_match(summarized, "changes$", all = FALSE)
+  expect_match(summarized, "Changes$", all = FALSE)
 })
 
 
@@ -239,7 +239,7 @@ test_that("a reliability near 1 is shifted only within (0, 1)", {
   # Shifts past 1 are left empty in the summary.
   wide <- nomologR:::nomo_network_sensitivity_wide(s)
   expect_true(is.na(wide$plus_05) && is.na(wide$plus_10))
-  expect_identical(wide$concordance, "unchanged")
+  expect_identical(wide$concordance, "Unchanged")
 })
 
 
@@ -379,16 +379,16 @@ test_that("single indicators are shown in print, summary, tables, and the APA no
   ))
   local_reproducible_output(width = 80)
   printed <- capture.output(print(net))
-  expect_match(printed, "Single indicator: persistence (reliability 0.800, omega)",
+  expect_match(printed, "Single indicator: persistence (reliability .80, omega)",
                fixed = TRUE, all = FALSE)
   summarized <- capture.output(print(summary(net)))
   expect_true(any(grepl("Sensitivity to the reliability", summarized, fixed = TRUE)))
-  expect_true(any(grepl("Composite    ID   -.10", summarized, fixed = TRUE)))
+  expect_true(any(grepl("Composite    ID  -.10", summarized, fixed = TRUE)))
   # Reliabilities and standard errors are right-aligned numbers; a missing
   # standard error is shown as "--" (#89, #144).
   expect_true(any(grepl("^  Composite +Coefficient +Reliability +SE +Variance +Error variance$",
                         summarized)))
-  expect_true(any(grepl("^  sd_score +unspecified +0\\.620 +-- +[0-9.]+ +[0-9.]+$", summarized)))
+  expect_true(any(grepl("^  sd_score +unspecified +\\.62 +-- +[0-9.]+ +[0-9.]+$", summarized)))
   expect_false(any(nchar(summarized) > 80L))
 
   expect_identical(nomo_table(net, "single_indicators"), net$single_indicators)
