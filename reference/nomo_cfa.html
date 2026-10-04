@@ -151,7 +151,10 @@ values are preferred, then scaled ones, then standard ones. When
 every value is the standard one, and the decision log says so.</p></li>
 <li><p><code>standardized_loadings</code>: one row per loading, with its interval, flag,
 and explanation.</p></li>
-<li><p><code>factor_correlations</code>: latent correlations with intervals.</p></li>
+<li><p><code>factor_correlations</code>: latent correlations with intervals. A
+correlation the model fixes, such as the zero correlations of a
+bifactor model, is listed at its fixed value; <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> shows it as
+fixed rather than estimated.</p></li>
 <li><p><code>heywood</code>: improper-solution signals, if any.</p></li>
 <li><p><code>parameter_estimates</code> and <code>standardized_solution</code>: <code>lavaan</code>'s parameter
 tables, as tibbles.</p></li>
@@ -170,6 +173,12 @@ tables flag in different vocabularies: <code>attention</code> is <code>"info"</c
 <p>Other fields record the call, the settings used, and intermediate engine
 results. They may change between releases and are not part of the stable
 interface (see <code><a href="nomologR-package.html">?nomologR</a></code>).</p>
+<p><code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> shows the cases used, the estimator, convergence, the fit
+indices, and how many flags were raised. <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> adds the chi-square
+test, the fit indices with their references, the standardized loadings,
+the factor correlations, any improper solution, the largest residual
+correlations and modification indices, and each flag with its
+explanation; for a model that did not converge it shows only the flags.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -232,39 +241,34 @@ conditions. <em>Psychological Methods, 17</em>(3), 354-373.
 <span class="r-in"><span><span class="va">out</span> <span class="op">&lt;-</span> <span class="fu">nomo_cfa</span><span class="op">(</span><span class="va">model</span>, data <span class="op">=</span> <span class="fu">lavaan</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/lavaan/man/HolzingerSwineford1939.html" class="external-link">HolzingerSwineford1939</a></span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">out</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;nomo_cfa summary&gt; Confirmatory factor analysis</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Cases: 301 of 301 used | Estimator: ML | Converged: yes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Cases: 301 | Estimator: ML | Converged: yes</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Global fit</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   chi-square(24) = 85.31, p &lt; .001</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Index  Value  90% CI          Reference</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   CFI    0.931                      0.950</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   TLI    0.896                      0.950</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   RMSEA  0.092  [0.071, 0.114]      0.060</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   SRMR   0.065                      0.080</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Index  Value  Reference  90% CI          Flag</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   CFI     .931       .950                  Review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   TLI    0.896      0.950                  Review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   RMSEA  0.092      0.060  [0.071, 0.114]  Review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   SRMR   0.065      0.080</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   References are teaching values for review, not cutoffs.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Standardized loadings</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Factor   Item  Loading     SE  95% CI          Flag</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   visual   x1      0.772  0.055  [0.664, 0.880]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   visual   x2      0.424  0.060  [0.307, 0.540]  review</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   visual   x3      0.581  0.055  [0.473, 0.689]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   textual  x4      0.852  0.023  [0.807, 0.896]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   textual  x5      0.855  0.022  [0.811, 0.899]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   textual  x6      0.838  0.023  [0.792, 0.884]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   speed    x7      0.570  0.053  [0.465, 0.674]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   speed    x8      0.723  0.051  [0.624, 0.822]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   speed    x9      0.665  0.051  [0.565, 0.765]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Flagged loadings</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   - x2 on visual (review): Absolute standardized loading is below the</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     configured teaching reference of 0.5; inspect item content, precision, and</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     model specification.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Factor   Indicator  Loading    SE  95% CI        Flag</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   visual   x1            0.77  0.05  [0.66, 0.88]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   visual   x2            0.42  0.06  [0.31, 0.54]  Review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   visual   x3            0.58  0.06  [0.47, 0.69]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   textual  x4            0.85  0.02  [0.81, 0.90]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   textual  x5            0.86  0.02  [0.81, 0.90]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   textual  x6            0.84  0.02  [0.79, 0.88]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   speed    x7            0.57  0.05  [0.47, 0.67]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   speed    x8            0.72  0.05  [0.62, 0.82]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   speed    x9            0.67  0.05  [0.56, 0.77]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Factor correlations</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Factor 1  Factor 2      r  95% CI</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   visual    textual   0.459  [0.334, 0.584]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   visual    speed     0.471  [0.328, 0.613]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   textual   speed     0.283  [0.148, 0.418]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Factor 1  Factor 2    r  95% CI</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   visual    textual   .46  [.33, .58]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   visual    speed     .47  [.33, .61]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   textual   speed     .28  [.15, .42]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Improper solutions</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   No improper-solution signal, such as a negative residual variance, was</span>
@@ -272,24 +276,51 @@ conditions. <em>Psychological Methods, 17</em>(3), 354-373.
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Largest residual correlations</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Item 1  Item 2  Residual</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   x7      x2        -0.189</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   x5      x3        -0.151</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   x9      x1         0.149</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   x9      x3         0.147</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   x7      x1        -0.140</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   x7      x2         -0.19</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   x5      x3         -0.15</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   x9      x1          0.15</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   x9      x3          0.15</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   x7      x1         -0.14</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Modification indices (diagnostic only)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Parameter         MI     EPC  Std. EPC</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   visual =~ x9   36.41   0.577     0.515</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   x7 ~~ x8       34.15   0.536     0.859</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   visual =~ x7   18.63  -0.422    -0.349</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   x8 ~~ x9       14.95  -0.423    -0.805</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   textual =~ x3   9.15  -0.272    -0.238</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Parameter         MI    EPC  Std. EPC</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   visual =~ x9   36.41   0.58      0.52</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   x7 ~~ x8       34.15   0.54      0.86</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   visual =~ x7   18.63  -0.42     -0.35</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   x8 ~~ x9       14.95  -0.42     -0.81</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   textual =~ x3   9.15  -0.27     -0.24</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Modification indices locate strain. They do not authorize freeing a</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   parameter, and nomologR never does so automatically.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Flagged</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   - CFI (Review): The value, .931, is below the teaching reference of .950;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     inspect global and localized model strain.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   - TLI (Review): The value, 0.896, is below the teaching reference of 0.950;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     inspect global and localized model strain.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   - RMSEA (Review): The value, 0.092, is above the teaching reference of</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     0.060; inspect global and localized model strain.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   - x2 on visual (Review): Absolute standardized loading is below the</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     configured teaching reference of 0.50; inspect item content, precision,</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     and model specification.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> What these columns mean</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ML -- Maximum likelihood.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   CFI -- Comparative fit index.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   TLI -- Tucker-Lewis index.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   RMSEA -- Root mean square error of approximation.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   SRMR -- Standardized root mean square residual.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   CI -- Confidence interval.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   SE -- Standard error.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   MI -- Modification index, the expected drop in the chi-square if the</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       parameter were freed.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   EPC -- Expected parameter change if the parameter were freed.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Std. EPC -- The expected parameter change with all variables standardized.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Global fit, local strain, and parameter estimates are evidence to interpret</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> together; no single cutoff establishes model validity.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> See nomo_table(x, "decision_log") for the decision log and x$fit for lavaan's</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> full output.</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="co"># Declared ordered indicators request WLSMV rather than ML</span></span></span>

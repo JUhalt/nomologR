@@ -162,7 +162,9 @@ from the same list of subscales. The researcher chooses the structure;
 <span><span class="co">#&gt; Poise ~~ 1*Poise</span></span>
 <span><span class="co">#&gt; G ~~ 0*Focus + 0*Drive + 0*Poise</span></span>
 <span><span class="co">#&gt; Focus ~~ 0*Drive + 0*Poise</span></span>
-<span><span class="co">#&gt; Drive ~~ 0*Poise</span></span></code></pre></div>
+<span><span class="co">#&gt; Drive ~~ 0*Poise</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; See nomo_cfa(x, data) for a guided fit of this model.</span></span></code></pre></div>
 <p>The bifactor syntax states its identification explicitly: each
 factor’s first loading is freed, each factor’s variance is fixed to 1,
 and every covariance among factors is fixed to 0. A higher-order model
@@ -179,7 +181,9 @@ with three first-order factors carries a note that matters later:</p>
 <span><span class="co">#&gt; Identification notes</span></span>
 <span><span class="co">#&gt;   - Review: With three first-order factors the second-order part is just</span></span>
 <span><span class="co">#&gt;     identified: this model fits exactly as well as the correlated-factors</span></span>
-<span><span class="co">#&gt;     model, so model fit cannot distinguish the two.</span></span></code></pre></div>
+<span><span class="co">#&gt;     model, so model fit cannot distinguish the two.</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; See nomo_cfa(x, data) for a guided fit of this model.</span></span></code></pre></div>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">correlated</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_cfa.html">nomo_cfa</a></span><span class="op">(</span><span class="fu"><a href="../reference/nomo_model.html">nomo_model</a></span><span class="op">(</span><span class="va">subscales</span><span class="op">)</span>, data <span class="op">=</span> <span class="va">dat</span><span class="op">)</span></span>
 <span><span class="va">higher</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_cfa.html">nomo_cfa</a></span><span class="op">(</span><span class="fu"><a href="../reference/nomo_model.html">nomo_model</a></span><span class="op">(</span><span class="va">subscales</span>, <span class="st">"higher_order"</span><span class="op">)</span>, data <span class="op">=</span> <span class="va">dat</span><span class="op">)</span></span>

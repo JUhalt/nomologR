@@ -307,11 +307,17 @@ A confirmatory model with the panel’s structure locates the same strain:
 cfa <- nomo_cfa(nomo_model(handoff$scales), data = walk)
 cfa
 #> <nomo_cfa> Confirmatory factor analysis
-#> Cases: 400 of 400 used | Estimator: ML | Converged: yes
-#> Fit: CFI 0.941 | TLI 0.922 | RMSEA 0.058 | SRMR 0.056
-#> Loadings: 10 | Flags: 2 review, 0 concern
-#> No parameter was freed and no model was refit automatically. summary() shows
-#> the evidence.
+#> Cases: 400 | Estimator: ML | Converged: yes
+#> Fit: CFI .941 | TLI 0.922 | RMSEA 0.058 | SRMR 0.056
+#> Loadings: 10 | Flags: 4 review, 0 concern
+#> No parameter was freed and no model was refit automatically.
+#> 
+#> ML = maximum likelihood; CFI = comparative fit index; TLI = Tucker-Lewis
+#> index; RMSEA = root mean square error of approximation; SRMR = standardized
+#> root mean square residual.
+#> 
+#> See summary(x) for the evidence and each flag and nomo_table(x, "fit") for
+#> every fit index.
 head(nomo_table(cfa, "modification_indices"), 3)
 #> # A tibble: 3 × 8
 #>   lhs   op    rhs      mi    epc sepc.lv sepc.all sepc.nox

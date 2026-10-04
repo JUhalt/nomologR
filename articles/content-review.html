@@ -368,11 +368,17 @@ strain:</p>
 <code class="sourceCode R"><span><span class="va">cfa</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_cfa.html">nomo_cfa</a></span><span class="op">(</span><span class="fu"><a href="../reference/nomo_model.html">nomo_model</a></span><span class="op">(</span><span class="va">handoff</span><span class="op">$</span><span class="va">scales</span><span class="op">)</span>, data <span class="op">=</span> <span class="va">walk</span><span class="op">)</span></span>
 <span><span class="va">cfa</span></span>
 <span><span class="co">#&gt; &lt;nomo_cfa&gt; Confirmatory factor analysis</span></span>
-<span><span class="co">#&gt; Cases: 400 of 400 used | Estimator: ML | Converged: yes</span></span>
-<span><span class="co">#&gt; Fit: CFI 0.941 | TLI 0.922 | RMSEA 0.058 | SRMR 0.056</span></span>
-<span><span class="co">#&gt; Loadings: 10 | Flags: 2 review, 0 concern</span></span>
-<span><span class="co">#&gt; No parameter was freed and no model was refit automatically. summary() shows</span></span>
-<span><span class="co">#&gt; the evidence.</span></span>
+<span><span class="co">#&gt; Cases: 400 | Estimator: ML | Converged: yes</span></span>
+<span><span class="co">#&gt; Fit: CFI .941 | TLI 0.922 | RMSEA 0.058 | SRMR 0.056</span></span>
+<span><span class="co">#&gt; Loadings: 10 | Flags: 4 review, 0 concern</span></span>
+<span><span class="co">#&gt; No parameter was freed and no model was refit automatically.</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; ML = maximum likelihood; CFI = comparative fit index; TLI = Tucker-Lewis</span></span>
+<span><span class="co">#&gt; index; RMSEA = root mean square error of approximation; SRMR = standardized</span></span>
+<span><span class="co">#&gt; root mean square residual.</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; See summary(x) for the evidence and each flag and nomo_table(x, "fit") for</span></span>
+<span><span class="co">#&gt; every fit index.</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">cfa</span>, <span class="st">"modification_indices"</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 3 × 8</span></span></span>
 <span><span class="co">#&gt;   lhs   op    rhs      mi    epc sepc.lv sepc.all sepc.nox</span></span>

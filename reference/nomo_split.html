@@ -95,7 +95,8 @@ Must be strictly between 0 and 1.</p></dd>
 
 
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
-<dd><p>Integer seed used to make the split reproducible.</p></dd>
+<dd><p>Integer seed used, with the random-number generator recorded in
+<code>rng_kind</code>, to make the split reproducible.</p></dd>
 
 
 <dt id="arg-guidance">guidance<a class="anchor" aria-label="anchor" href="#arg-guidance"></a></dt>
@@ -108,15 +109,24 @@ Must be strictly between 0 and 1.</p></dd>
 <li><p><code>assignment</code>: which sample each row went to.</p></li>
 <li><p><code>n_total</code>, <code>n_calibration</code>, <code>n_validation</code>, and
 <code>validation_prop_realized</code>.</p></li>
-<li><p><code>seed</code> and <code>decision_log</code>.</p></li>
+<li><p><code>seed</code>, <code>rng_kind</code>, and <code>decision_log</code>. <code>rng_kind</code> is the
+random-number generator, normal, and sample kinds of <code><a href="https://rdrr.io/r/base/Random.html" class="external-link">RNGkind()</a></code> that
+drew the split.</p></li>
 </ul><p>Other fields record the call, the settings used, and intermediate engine
 results. They may change between releases and are not part of the stable
 interface (see <code><a href="nomologR-package.html">?nomologR</a></code>).</p>
+<p><code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> shows the sizes of the two samples, the proportion requested and
+realized, the seed, and the random-number generator.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>The caller's random-number-generator state is restored after the split so
 that using <code>nomo_split()</code> does not silently alter later stochastic analyses.</p>
+<p>The split depends on the seed and on the random-number generator in use,
+which <code>rng_kind</code> records: the same seed under another <code><a href="https://rdrr.io/r/base/Random.html" class="external-link">RNGkind()</a></code>, such as
+<code>"L'Ecuyer-CMRG"</code> or <code>sample.kind = "Rounding"</code>, gives a different split. To
+reproduce a split, set the recorded kinds with <code><a href="https://rdrr.io/r/base/Random.html" class="external-link">RNGkind()</a></code> before calling
+<code>nomo_split()</code> with the same seed, or keep <code>assignment</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
@@ -134,10 +144,14 @@ capitalization on chance. <em>Psychological Bulletin, 111</em>(3), 490-504.
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">split</span> <span class="op">&lt;-</span> <span class="fu">nomo_split</span><span class="op">(</span><span class="va">nomo_demo_continuous</span>, validation_prop <span class="op">=</span> <span class="fl">0.40</span>, seed <span class="op">=</span> <span class="fl">2026</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">split</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;nomo_split&gt; Calibration and validation split</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Rows: 500 total | 300 calibration | 200 validation</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Validation proportion: 0.400 requested | 0.400 realized | Seed: 2026</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Rows: 500 | Calibration: 300 | Validation: 200</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Validation proportion: .40 requested, .40 realized | Seed: 2026</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Generator: Mersenne-Twister, Inversion, Rejection</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Use splitting only when the gain in independence justifies the loss of</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> precision.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> See x$assignment for the sample each row went to.</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">split</span><span class="op">$</span><span class="va">calibration</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 300</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">split</span><span class="op">$</span><span class="va">validation</span><span class="op">)</span></span></span>

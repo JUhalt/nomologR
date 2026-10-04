@@ -481,17 +481,27 @@ cross_comparison
 ```
 
     ## <nomo_compare> Measurement-model comparison
-    ## Models: 2 | Reference: simple_structure | Estimator: ML | Cases: 473
-    ## Origin: post-hoc
+    ## Models: 2 | Reference: simple_structure | Estimator: ML
+    ## Cases: 473 of 500 used | Origin: post hoc
     ## Rationale: The largest modification index suggested that a5 also reflects
     ## factor B.
     ## 
-    ## Compared with `simple_structure`
-    ##   - cross_loading (nested, less constrained): chi-square difference = 48.72,
-    ##     df = 1, p < .001; CFI change +0.027, RMSEA change -0.051; AIC change -46.7
+    ## Compared with simple_structure
+    ##   - cross_loading (nested, less constrained): Delta chi-square(1) = 48.72,
+    ##     p < .001; CFI change +.027, RMSEA change -0.051; AIC change -46.72
     ## 
-    ## No model was selected automatically. summary() shows interpretations and
-    ## measurement evidence.
+    ## Flagged
+    ##   - Origin (Review): The comparison was specified after seeing results (for
+    ##     example, prompted by modification indices or residuals).
+    ## 
+    ## ML = maximum likelihood; CFI = comparative fit index; RMSEA = root mean square
+    ## error of approximation; AIC = Akaike information criterion.
+    ## 
+    ## No model was selected automatically; read the comparison with theory and the
+    ## recorded rationale.
+    ## 
+    ## See summary(x) for the interpretations and measurement evidence and
+    ## nomo_table(x, "comparisons") for every test.
 
 Estimating the cross-loading reduces misfit (chi-square difference =
 48.7, df = 1, p \< .001; CFI changes by +0.027). That is exactly the
@@ -528,66 +538,81 @@ summary(b5_comparison)
     ## <nomo_compare summary> Measurement-model comparison
     ## Rationale: Evaluate whether the weakly loading item b5 contributes to factor B
     ## before deciding whether to keep it.
-    ## Origin: a-priori | Reference model: full
+    ## Reference: full | Estimator: ML | Cases: 473 of 500 used | Origin: a priori
     ## 
     ## Model fit
-    ##   Model            Parameters  df  Chi-square    CFI    TLI  RMSEA   SRMR
-    ##   full                     21  34       75.83  0.973  0.965  0.051  0.052
-    ##   b5_loading_zero          20  35      122.75  0.944  0.928  0.073  0.093
+    ##   Model            Chi-square  df       p   CFI    TLI  RMSEA   SRMR  Parameters
+    ##   full                  75.83  34  < .001  .973  0.965  0.051  0.052          21
+    ##   b5_loading_zero      122.75  35  < .001  .944  0.928  0.073  0.093          20
     ## 
     ## Information criteria
-    ##   Model                AIC      BIC  Loadings fixed to zero
-    ##   full             11981.0  12068.4                       0
-    ##   b5_loading_zero  12025.9  12109.1                       1
+    ##   Model                 AIC       BIC  Loadings fixed to zero
+    ##   full             11981.02  12068.36                       0
+    ##   b5_loading_zero  12025.93  12109.11                       1
     ## 
     ## Difference tests against the reference model
-    ##   Model           Relation                 Check  Method   Chi-sq diff df      p
-    ##   b5_loading_zero nested, more constrained nested standard       46.91  1 < .001
+    ##   Model            Delta chi-square  df       p  Relation
+    ##   b5_loading_zero             46.91   1  < .001  nested, more constrained
     ## 
     ## Changes in fit (model minus reference)
-    ##   Model               CFI     TLI   RMSEA    SRMR    AIC    BIC
-    ##   b5_loading_zero  -0.029  -0.036  +0.022  +0.042  +44.9  +40.8
+    ##   Model              CFI     TLI   RMSEA    SRMR     AIC     BIC
+    ##   b5_loading_zero  -.029  -0.036  +0.022  +0.042  +44.91  +40.75
     ## 
     ## Interpretation
     ##   - `b5_loading_zero` is nested within `full` and has 1 more degree of freedom
-    ##     (additional constraints). Chi-Squared Difference Test: chi-square
-    ##     difference = 46.91, df = 1, p < .001. A small p-value indicates that the
-    ##     extra constraints are not fully consistent with the data; with large
-    ##     samples, even small misspecifications produce small p-values. Change in
-    ##     fit (`b5_loading_zero` minus `full`): CFI -0.029, TLI -0.036, RMSEA
-    ##     +0.022, SRMR +0.042. AIC +44.9 and BIC +40.8 (`b5_loading_zero` minus
-    ##     `full`); lower values favor a model for these data, and only differences
-    ##     are interpretable. No model is selected automatically; read this evidence
-    ##     with theory and the recorded rationale.
+    ##     (additional constraints). Delta chi-square(1) = 46.91, p < .001. A small p
+    ##     value indicates that the extra constraints are not fully consistent with
+    ##     the data; with large samples, even small misspecifications produce small p
+    ##     values. Change in fit (`b5_loading_zero` minus `full`): CFI -.029, TLI
+    ##     -0.036, RMSEA +0.022, SRMR +0.042. AIC +44.91 and BIC +40.75
+    ##     (`b5_loading_zero` minus `full`); lower values favor a model for these
+    ##     data, and only differences are interpretable. No model is selected
+    ##     automatically; read this evidence with theory and the recorded rationale.
     ## 
     ## Standardized loadings by model
-    ##   Factor  Item   full  b5_loading_zero
-    ##   A       a1    0.771            0.771
-    ##   A       a2    0.744            0.744
-    ##   A       a3    0.669            0.669
-    ##   A       a4    0.738            0.738
-    ##   A       a5    0.598            0.598
-    ##   B       b1    0.794            0.795
-    ##   B       b2    0.695            0.699
-    ##   B       b3    0.757            0.757
-    ##   B       b4    0.628            0.624
-    ##   B       b5    0.337            0.000
+    ##   Factor  Indicator  full  b5_loading_zero
+    ##   A       a1         0.77             0.77
+    ##   A       a2         0.74             0.74
+    ##   A       a3         0.67             0.67
+    ##   A       a4         0.74             0.74
+    ##   A       a5         0.60             0.60
+    ##   B       b1         0.79             0.79
+    ##   B       b2         0.69             0.70
+    ##   B       b3         0.76             0.76
+    ##   B       b4         0.63             0.62
+    ##   B       b5         0.34             0.00
     ## 
     ## Measurement evidence by model
-    ##   Construct  Metric   full  b5_loading_zero
-    ##   A          omega   0.835            0.835
-    ##   B          omega   0.784            0.622
-    ##   A          alpha   0.827            0.827
-    ##   B          alpha   0.771            0.771
-    ##   A          AVE     0.497            0.497
-    ##   B          AVE     0.434            0.521
-    ##   A vs B     HTMT2   0.533            0.533
-    ##   - The loading fixed to zero for b5 keeps that item in this composite; the
-    ##     coefficient does not describe a shortened scale.
+    ##   Construct  Metric  full  b5_loading_zero
+    ##   A          omega    .83              .83
+    ##   B          omega    .78              .62
+    ##   A          alpha    .83              .83
+    ##   B          alpha    .77              .77
+    ##   A          AVE      .50              .50
+    ##   B          AVE      .43              .52
+    ##   A vs. B    HTMT2   0.53             0.53
+    ##   - b5_loading_zero: The loading fixed to zero for b5 keeps that item in this
+    ##     composite; the coefficient does not describe a shortened scale.
+    ## 
+    ## What these columns mean
+    ##   ML -- Maximum likelihood.
+    ##   CFI -- Comparative fit index.
+    ##   TLI -- Tucker-Lewis index.
+    ##   RMSEA -- Root mean square error of approximation.
+    ##   SRMR -- Standardized root mean square residual.
+    ##   df -- Degrees of freedom.
+    ##   AIC -- Akaike information criterion.
+    ##   BIC -- Bayesian information criterion.
+    ##   AVE -- Average variance extracted.
+    ##   HTMT2 -- Heterotrait-monotrait ratio of correlations, geometric-mean
+    ##       version.
     ## 
     ## No model was selected automatically. Difference tests, changes in fit,
     ## information criteria, and measurement evidence answer different questions;
     ## read them together with theory and the recorded rationale.
+    ## 
+    ## See nomo_table(x, "decision_log") for the decision log and x$fits for each
+    ## model's own analysis.
 
 Fixing the loading to zero worsens fit (chi-square difference = 46.9, df
 = 1, p \< .001), so `b5` is statistically related to B. Its standardized
@@ -671,44 +696,64 @@ summary(esem)
 ```
 
     ## <nomo_esem summary> ESEM beside its CFA
-    ## Rotation: target | N = 473
+    ## Asparouhov and Muthén (2009); Marsh et al. (2014).
+    ## Rotation: target | Cases: 473 of 500 used | Factors: 2
     ## 
     ## Fit
-    ##   Model  Chi-square  df    CFI    TLI  RMSEA   SRMR
-    ##   ESEM        20.60  26  1.000  1.006  0.000  0.015
-    ##   CFA         75.83  34  0.973  0.965  0.051  0.052
-    ##   CFA vs. ESEM: chi-square difference 55.24 on 8 df, p < .001.
+    ##   Model  Chi-square  df       p    CFI    TLI  RMSEA   SRMR
+    ##   ESEM        20.60  26    .762  1.000  1.006  0.000  0.015
+    ##   CFA         75.83  34  < .001   .973  0.965  0.051  0.052
+    ##   CFA vs. ESEM: Delta chi-square(8) = 55.24, p < .001.
     ## 
     ## ESEM loadings (standardized), with the CFA's main loading
-    ##   Item      A       B    CFA
-    ##   a1    0.836  -0.102  0.771
-    ##   a2    0.725   0.023  0.744
-    ##   a3    0.675  -0.015  0.669
-    ##   a4    0.781  -0.070  0.738
-    ##   a5    0.432   0.315  0.598
-    ##   b1    0.037   0.771  0.794
-    ##   b2    0.007   0.691  0.695
-    ##   b3    0.003   0.764  0.757
-    ##   b4    0.005   0.626  0.628
-    ##   b5    0.057   0.300  0.337
+    ##   Item     A      B   CFA
+    ##   a1    0.84  -0.10  0.77
+    ##   a2    0.73   0.02  0.74
+    ##   a3    0.68  -0.02  0.67
+    ##   a4    0.78  -0.07  0.74
+    ##   a5    0.43   0.32  0.60
+    ##   b1    0.04   0.77  0.79
+    ##   b2    0.01   0.69  0.69
+    ##   b3    0.00   0.76  0.76
+    ##   b4    0.00   0.63  0.63
+    ##   b5    0.06   0.30  0.34
     ## 
     ## Factor correlations
-    ##   Factors    ESEM    CFA  Difference
-    ##   A with B  0.478  0.499      -0.021
+    ##   Factors   ESEM  CFA  Difference
+    ##   A with B   .48  .50        -.02
     ## 
     ## Flagged
+    ##   - Cases (Review): 473 of 500 input cases were used; 27 cases were not used
+    ##     by the fitted models. Confirm that case loss follows the intended
+    ##     missing-data strategy; `missing = "fiml"` uses incomplete cases with
+    ##     continuous indicators.
     ##   - ESEM vs. CFA (Review): ESEM: TLI 1.006, RMSEA 0.000. CFA: TLI 0.965, RMSEA
-    ##     0.051. Fixing the cross-loadings at zero costs chi-square 55.24 on 8 df,
+    ##     0.051. Fixing the cross-loadings at zero: Delta chi-square(8) = 55.24,
     ##     p < .001. The largest change in a factor correlation, ESEM minus CFA, is
-    ##     -0.02. ESEM fits better even on indices that penalize its extra
-    ##     parameters. Where its factor correlations are lower, the CFA's zero
-    ##     cross-loadings are inflating them; Marsh et al. (2014) then prefer the
-    ##     ESEM, or a CFA with the cross-loadings the items' content supports.
-    ##   - a5 (Review): Cross-loadings at or above 0.3: a5 on B 0.32. Read the item's
-    ##     content for both factors. A cross-loading is evidence about the item, not
-    ##     an instruction to remove it.
-    ##   - b5 (Review): Main loadings below 0.4: b5 on B 0.30. Inspect the item's
+    ##     -.02. ESEM fits better even on indices that penalize its extra parameters.
+    ##     Where its factor correlations are lower, the CFA's zero cross-loadings are
+    ##     inflating them; Marsh et al. (2014) then prefer the ESEM, or a CFA with
+    ##     the cross-loadings the items' content supports.
+    ##   - a5 (Review): Cross-loadings at or above 0.30: a5 on B, 0.32. Read the
+    ##     item's content for both factors. A cross-loading is evidence about the
+    ##     item, not an instruction to remove it.
+    ##   - b5 (Review): Main loadings below 0.40: b5 on B, 0.30. Inspect the item's
     ##     content and its cross-loadings together.
+    ## 
+    ## What these columns mean
+    ##   ESEM -- Exploratory structural equation modeling.
+    ##   CFA -- Confirmatory factor analysis.
+    ##   CFI -- Comparative fit index.
+    ##   TLI -- Tucker-Lewis index.
+    ##   RMSEA -- Root mean square error of approximation.
+    ##   SRMR -- Standardized root mean square residual.
+    ##   df -- Degrees of freedom.
+    ## 
+    ## Cross-loadings are estimated, not fixed at zero. The comparison is evidence
+    ## for choosing a model, not a verdict.
+    ## 
+    ## See nomo_table(x, "loadings") for each loading's standard error and p value
+    ## and nomo_table(x, "decision_log") for the decision log.
 
 The ESEM fits better even on TLI and RMSEA, which penalize its extra
 parameters (TLI 1.006 vs. 0.965, RMSEA 0.000 vs. 0.051). Without being
@@ -996,22 +1041,22 @@ mv
     ## 
     ## Model comparisons
     ##   Comparison             Question                  Chi-sq diff  df       p
-    ##   Baseline vs. Method-C  Method variance present?        11.89   1  < .001
-    ##   Method-C vs. Method-U  Method effects equal?            2.78   7    .905
-    ##   Method-C vs. Method-R  Correlations biased?             0.07   1    .790
+    ##   Baseline vs. Method-C  Method variance present?        11.84   1  < .001
+    ##   Method-C vs. Method-U  Method effects equal?            2.79   7    .904
+    ##   Method-C vs. Method-R  Correlations biased?             0.07   1    .791
     ## 
     ## Reliability decomposition
     ##   Factor  Total  Substantive  Method  Method share
-    ##   A       0.804        0.788   0.017          2.1%
-    ##   B       0.784        0.767   0.016          2.1%
+    ##   A       0.811        0.795   0.017          2.0%
+    ##   B       0.776        0.759   0.016          2.1%
     ## 
     ## Substantive correlations
     ##   Factors     CFA  Baseline  Method-C  Method-S(.05)  Method-S(.01)
-    ##   A with B  0.434     0.434     0.422          0.422          0.423
+    ##   A with B  0.436     0.436     0.424          0.424          0.425
     ## 
     ## Flagged
     ##   - Baseline vs. Method-C (Review): Marker-based method variance is present
-    ##     (chi-square difference 11.89 on 1 df, p < .001).
+    ##     (chi-square difference 11.84 on 1 df, p < .001).
     ## 
     ## Comprehensive CFA marker technique (Williams, Hartman, & Cavazotte, 2010).
     ## Baseline: the marker uncorrelated with the substantive factors. Method-C:

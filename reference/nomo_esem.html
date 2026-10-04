@@ -109,26 +109,36 @@ the items, and the target.</p></dd>
 
 <dt id="arg-guidance">guidance<a class="anchor" aria-label="anchor" href="#arg-guidance"></a></dt>
 <dd><p>Guidance settings from <code><a href="nomo_defaults.html">nomo_defaults()</a></code>; its
-<code>efa_loading_reference</code> and <code>efa_crossloading_reference</code> are used.</p></dd>
+<code>efa_loading_reference</code> and <code>efa_crossloading_reference</code> are used, and
+they are checked before any model is fitted.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A <code>nomo_esem</code> object. The fields to read are:</p><ul><li><p><code>loadings</code>: each item's standardized loading on each factor in the
 ESEM, whether it is the item's main loading or a cross-loading, its
-standard error and p-value, and the CFA's loading for main loadings.</p></li>
+standard error and p value, and the CFA's loading for main loadings.</p></li>
 <li><p><code>factor_correlations</code>: each pair of factors' correlation (<code>factor1</code>,
 <code>factor2</code>) in the ESEM and the CFA, and their difference.</p></li>
-<li><p><code>models</code>: both models' chi-square, degrees of freedom, p-value, CFI,
+<li><p><code>models</code>: both models' chi-square, degrees of freedom, p value, CFI,
 TLI, RMSEA, SRMR, AIC, and BIC. With a robust estimator, the chi-square
 is scaled and the indices are robust, as in <code><a href="nomo_cfa.html">nomo_cfa()</a></code>.</p></li>
-<li><p><code>comparisons</code>: the likelihood-ratio test of the CFA against the ESEM,
-with <code>chisq_diff</code>, <code>df_diff</code>, and <code>p_value</code>.</p></li>
+<li><p><code>comparisons</code>: the chi-square difference test of the CFA against the
+ESEM, with <code>chisq_diff</code>, <code>df_diff</code>, and <code>p_value</code>. It is the
+likelihood-ratio test under ML, the scaled difference test (Satorra &amp;
+Bentler, 2001) under a robust ML estimator, and the scaled-and-shifted
+test (Satorra, 2000) under WLSMV, as <code><a href="https://rdrr.io/pkg/lavaan/man/lavTestLRT.html" class="external-link">lavaan::lavTestLRT()</a></code> chooses.</p></li>
+<li><p><code>n</code> and <code>data_n</code>: the cases the models used and the rows of <code>data</code>.</p></li>
 <li><p><code>fits</code>: the fitted <code>lavaan</code> models, named <code>ESEM</code> and <code>CFA</code>.</p></li>
+<li><p><code>engine_warnings</code>: the warnings <code>lavaan</code> raised, as a list with elements
+<code>ESEM</code>, <code>CFA</code>, and <code>comparison</code> (the difference test).</p></li>
 <li><p><code>decision_log</code>.</p></li>
 </ul><p>Other fields record the call and the settings used. They may change
 between releases and are not part of the stable interface (see
 <code><a href="nomologR-package.html">?nomologR</a></code>).</p>
+<p><code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> shows both models' fit, the difference test, the factor
+correlations in each model, and the flags. <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> adds the ESEM
+loadings beside the CFA's and each flag's recommendation.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -151,10 +161,16 @@ it fits better and its factor correlations are lower, which shows that the
 CFA's zero cross-loadings distort the structure; otherwise the CFA is the
 more parsimonious account. Fit is compared on TLI and RMSEA, which penalize
 the ESEM's extra parameters, so the CFA can fit better on them. The CFA is
-nested in the ESEM, and their likelihood-ratio test is reported too, but in
-large samples it rejects trivial misfit. The decision log also flags
+nested in the ESEM, and their chi-square difference test is reported too,
+but in large samples it rejects trivial misfit. The decision log also flags
 cross-loadings at or above the guidance's cross-loading reference and main
 loadings below its loading reference.</p>
+<p><strong>Admissibility.</strong> Both models must converge; otherwise the function stops
+and names the model that did not. The warnings <code>lavaan</code> raises are kept, and
+a negative variance, a standardized loading above 1, or a latent correlation
+above 1 in either model is recorded as a concern, as <code><a href="nomo_cfa.html">nomo_cfa()</a></code> records
+it. Cases <code>lavaan</code> did not use, such as incomplete cases without
+<code>missing = "fiml"</code>, are reported.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
@@ -168,6 +184,13 @@ analysis. <em>Multivariate Behavioral Research, 36</em>(1), 111-150.
 structural equation modeling: An integration of the best features of
 exploratory and confirmatory factor analysis. <em>Annual Review of Clinical
 Psychology, 10</em>, 85-110. <a href="https://doi.org/10.1146/annurev-clinpsy-032813-153700" class="external-link">doi:10.1146/annurev-clinpsy-032813-153700</a></p>
+<p>Satorra, A. (2000). Scaled and adjusted restricted tests in multi-sample
+analysis of moment structures. In R. D. H. Heijmans, D. S. G. Pollock, &amp;
+A. Satorra (Eds.), <em>Innovations in multivariate statistical analysis</em> (pp.
+233-247). Springer. <a href="https://doi.org/10.1007/978-1-4615-4603-0_17" class="external-link">doi:10.1007/978-1-4615-4603-0_17</a></p>
+<p>Satorra, A., &amp; Bentler, P. M. (2001). A scaled difference chi-square test
+statistic for moment structure analysis. <em>Psychometrika, 66</em>(4), 507-514.
+<a href="https://doi.org/10.1007/BF02296192" class="external-link">doi:10.1007/BF02296192</a></p>
     </div>
 
     <div class="section level2">
@@ -180,20 +203,29 @@ Psychology, 10</em>, 85-110. <a href="https://doi.org/10.1146/annurev-clinpsy-03
 <span class="r-in"><span><span class="va">es</span> <span class="op">&lt;-</span> <span class="fu">nomo_esem</span><span class="op">(</span><span class="va">model</span>, <span class="va">nomo_demo_network</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">es</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;nomo_esem&gt; ESEM beside its CFA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Rotation: target | N = 800 | Factors: 2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Asparouhov and Muthén (2009); Marsh et al. (2014).</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Rotation: target | Cases: 800 | Factors: 2</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Fit</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Model  Chi-square  df    CFI    TLI  RMSEA   SRMR</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   ESEM        14.93  13  0.999  0.998  0.014  0.010</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   CFA         18.52  19  1.000  1.000  0.000  0.015</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   CFA vs. ESEM: chi-square difference 3.58 on 6 df, p = .733.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Model  Chi-square  df     p    CFI    TLI  RMSEA   SRMR</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ESEM        14.93  13  .312   .999  0.998  0.014  0.010</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   CFA         18.52  19  .488  1.000  1.000  0.000  0.015</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   CFA vs. ESEM: Delta chi-square(6) = 3.58, p = .733.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Factor correlations</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Factors                   ESEM    CFA  Difference</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Agency with Persistence  0.455  0.457      -0.003</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Factors                  ESEM  CFA  Difference</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Agency with Persistence   .45  .46         .00</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Cross-loadings are estimated, not fixed at zero (Asparouhov &amp; Muthén, 2009).</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> The comparison is evidence for choosing a model, not a verdict.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ESEM = exploratory structural equation modeling; CFA = confirmatory factor</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> analysis; CFI = comparative fit index; TLI = Tucker-Lewis index; RMSEA = root</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> mean square error of approximation; SRMR = standardized root mean square</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> residual; df = degrees of freedom.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Cross-loadings are estimated, not fixed at zero. The comparison is evidence</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> for choosing a model, not a verdict.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> See summary(x) for the loadings and each flag's recommendation and</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> nomo_table(x, "models") for every fit index.</span>
 <span class="r-in"><span><span class="fu"><a href="nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">es</span>, <span class="st">"factor_correlations"</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 5</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   factor1 factor2      esem   cfa difference</span>

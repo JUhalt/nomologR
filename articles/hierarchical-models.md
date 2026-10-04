@@ -88,6 +88,8 @@ nomo_model(subscales, structure = "bifactor", general = "G")
 #> G ~~ 0*Focus + 0*Drive + 0*Poise
 #> Focus ~~ 0*Drive + 0*Poise
 #> Drive ~~ 0*Poise
+#> 
+#> See nomo_cfa(x, data) for a guided fit of this model.
 ```
 
 The bifactor syntax states its identification explicitly: each factor’s
@@ -109,6 +111,8 @@ nomo_model(subscales, structure = "higher_order", general = "G")
 #>   - Review: With three first-order factors the second-order part is just
 #>     identified: this model fits exactly as well as the correlated-factors
 #>     model, so model fit cannot distinguish the two.
+#> 
+#> See nomo_cfa(x, data) for a guided fit of this model.
 ```
 
 ``` r

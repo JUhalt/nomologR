@@ -94,7 +94,8 @@ researcher rationale is required and recorded. The function never selects a
 
 <dl><dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Two or more <code>nomo_cfa</code> objects. Argument names become model
-labels, for example <code>nomo_compare(full = cfa_full, reduced = cfa_reduced, rationale = "...")</code>.</p></dd>
+labels, for example <code>nomo_compare(full = cfa_full, reduced = cfa_reduced, rationale = "...")</code>. A label must be unique and cannot be <code>factor</code> or
+<code>item</code>, which name the key columns of the loadings table.</p></dd>
 
 
 <dt id="arg-rationale">rationale<a class="anchor" aria-label="anchor" href="#arg-rationale"></a></dt>
@@ -105,7 +106,7 @@ compared (for example, the theoretical question each model represents).</p></dd>
 <dt id="arg-origin">origin<a class="anchor" aria-label="anchor" href="#arg-origin"></a></dt>
 <dd><p>Whether the comparison was planned before seeing results
 (<code>"a_priori"</code>) or prompted by results such as modification indices or
-residuals (<code>"post_hoc"</code>). Post-hoc comparisons are flagged in the decision
+residuals (<code>"post_hoc"</code>). Post hoc comparisons are flagged in the decision
 log.</p></dd>
 
 
@@ -161,13 +162,22 @@ warnings raised by the nesting check and the difference test.</p></li>
 </ul><p>Other fields record the call, the settings used, and intermediate engine
 results. They may change between releases and are not part of the stable
 interface (see <code><a href="nomologR-package.html">?nomologR</a></code>).</p>
+<p><code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> shows each comparison with the reference model in one line (the
+difference test, the changes in CFI and RMSEA, and the change in AIC) and
+any flags. <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> adds the fit of every model, the difference tests
+and changes in fit as tables, the interpretations, the loadings side by
+side, and the measurement evidence.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p><strong>Requirements.</strong> All models must be converged <code>nomo_cfa</code> objects fitted with
 the same estimator and missing-data handling to the same cases and data.
 Otherwise the comparison is refused with an explanation, because test
-statistics and fit indices would not be comparable.</p>
+statistics and fit indices would not be comparable. Missing-data handling is
+compared as <code>lavaan</code> applied it, so <code>missing = "fiml"</code> and <code>missing = "ml"</code>
+are the same handling. A model with an improper solution, such as a
+negative residual variance, is compared, and the decision log records a
+concern naming it (Kolenikov &amp; Bollen, 2012).</p>
 <p><strong>Nesting.</strong> With <code>nested = "auto"</code>, nesting is checked from the models'
 implied moments with <code><a href="https://rdrr.io/pkg/semTools/man/net.html" class="external-link">semTools::net()</a></code> (Bentler &amp; Satorra, 2010). The
 difference test is reported only for nested models. If the check cannot run
@@ -211,6 +221,9 @@ measurement invariance. <em>Structural Equation Modeling, 14</em>(3), 464-504.
 <p>Cheung, G. W., &amp; Rensvold, R. B. (2002). Evaluating goodness-of-fit indexes
 for testing measurement invariance. <em>Structural Equation Modeling, 9</em>(2),
 233-255. <a href="https://doi.org/10.1207/S15328007SEM0902_5" class="external-link">doi:10.1207/S15328007SEM0902_5</a></p>
+<p>Kolenikov, S., &amp; Bollen, K. A. (2012). Testing negative error variances: Is
+a Heywood case a symptom of misspecification? <em>Sociological Methods &amp;
+Research, 41</em>(1), 124-167. <a href="https://doi.org/10.1177/0049124112442138" class="external-link">doi:10.1177/0049124112442138</a></p>
 <p>MacCallum, R. C., Roznowski, M., &amp; Necowitz, L. B. (1992). Model
 modifications in covariance structure analysis: The problem of
 capitalization on chance. <em>Psychological Bulletin, 111</em>(3), 490-504.
@@ -218,8 +231,9 @@ capitalization on chance. <em>Psychological Bulletin, 111</em>(3), 490-504.
 <p>Raftery, A. E. (1995). Bayesian model selection in social research.
 <em>Sociological Methodology, 25</em>, 111-163. <a href="https://doi.org/10.2307/271063" class="external-link">doi:10.2307/271063</a></p>
 <p>Satorra, A. (2000). Scaled and adjusted restricted tests in multi-sample
-analysis of moment structures. In <em>Innovations in multivariate statistical
-analysis</em> (pp. 233-247). Springer. <a href="https://doi.org/10.1007/978-1-4615-4603-0_17" class="external-link">doi:10.1007/978-1-4615-4603-0_17</a></p>
+analysis of moment structures. In R. D. H. Heijmans, D. S. G. Pollock, &amp;
+A. Satorra (Eds.), <em>Innovations in multivariate statistical analysis</em> (pp.
+233-247). Springer. <a href="https://doi.org/10.1007/978-1-4615-4603-0_17" class="external-link">doi:10.1007/978-1-4615-4603-0_17</a></p>
 <p>Satorra, A., &amp; Bentler, P. M. (2001). A scaled difference chi-square test
 statistic for moment structure analysis. <em>Psychometrika, 66</em>(4), 507-514.
 <a href="https://doi.org/10.1007/BF02296192" class="external-link">doi:10.1007/BF02296192</a></p>
@@ -254,16 +268,23 @@ Statistics, 6</em>(2), 461-464. <a href="https://doi.org/10.1214/aos/1176344136"
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">cmp</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;nomo_compare&gt; Measurement-model comparison</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Models: 2 | Reference: full | Estimator: ML | Cases: 473 | Origin: a-priori</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Models: 2 | Reference: full | Estimator: ML | Cases: 473 of 500 used</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Origin: a priori</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Rationale: Evaluate whether the weakly loading item b5 contributes to factor</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> B.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Compared with `full`</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   - no_b5 (nested, more constrained): chi-square difference = 46.91, df = 1,</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     p &lt; .001; CFI change -0.029, RMSEA change +0.022; AIC change +44.9</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Compared with full</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   - no_b5 (nested, more constrained): Delta chi-square(1) = 46.91, p &lt; .001;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     CFI change -.029, RMSEA change +0.022; AIC change +44.91</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> No model was selected automatically. summary() shows interpretations and</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> measurement evidence.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ML = maximum likelihood; CFI = comparative fit index; RMSEA = root mean square</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> error of approximation; AIC = Akaike information criterion.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> No model was selected automatically; read the comparison with theory and the</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> recorded rationale.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> See summary(x) for the interpretations and measurement evidence and</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> nomo_table(x, "comparisons") for every test.</span>
 <span class="r-in"><span><span class="fu"><a href="nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">cmp</span>, <span class="st">"comparisons"</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 23</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   model reference relation    nested_declared nesting_check nested df_difference</span>
@@ -286,66 +307,81 @@ Statistics, 6</em>(2), 461-464. <a href="https://doi.org/10.1214/aos/1176344136"
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;nomo_compare summary&gt; Measurement-model comparison</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Rationale: Evaluate whether the weakly loading item b5 contributes to factor</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> B.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Origin: a-priori | Reference model: full</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Reference: full | Estimator: ML | Cases: 473 of 500 used | Origin: a priori</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Model fit</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Model  Parameters  df  Chi-square    CFI    TLI  RMSEA   SRMR</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   full           21  34       75.83  0.973  0.965  0.051  0.052</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   no_b5          20  35      122.75  0.944  0.928  0.073  0.093</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Model  Chi-square  df       p   CFI    TLI  RMSEA   SRMR  Parameters</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   full        75.83  34  &lt; .001  .973  0.965  0.051  0.052          21</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   no_b5      122.75  35  &lt; .001  .944  0.928  0.073  0.093          20</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Information criteria</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Model      AIC      BIC  Loadings fixed to zero</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   full   11981.0  12068.4                       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   no_b5  12025.9  12109.1                       1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Model       AIC       BIC  Loadings fixed to zero</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   full   11981.02  12068.36                       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   no_b5  12025.93  12109.11                       1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Difference tests against the reference model</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Model  Relation                  Check   Method    Chi-sq diff  df       p</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   no_b5  nested, more constrained  nested  standard        46.91   1  &lt; .001</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Model  Delta chi-square  df       p  Relation</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   no_b5             46.91   1  &lt; .001  nested, more constrained</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Changes in fit (model minus reference)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Model     CFI     TLI   RMSEA    SRMR    AIC    BIC</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   no_b5  -0.029  -0.036  +0.022  +0.042  +44.9  +40.8</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Model    CFI     TLI   RMSEA    SRMR     AIC     BIC</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   no_b5  -.029  -0.036  +0.022  +0.042  +44.91  +40.75</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Interpretation</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   - `no_b5` is nested within `full` and has 1 more degree of freedom</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     (additional constraints). Chi-Squared Difference Test: chi-square</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     difference = 46.91, df = 1, p &lt; .001. A small p-value indicates that the</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     extra constraints are not fully consistent with the data; with large</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     samples, even small misspecifications produce small p-values. Change in</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     fit (`no_b5` minus `full`): CFI -0.029, TLI -0.036, RMSEA +0.022, SRMR</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     +0.042. AIC +44.9 and BIC +40.8 (`no_b5` minus `full`); lower values favor</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     a model for these data, and only differences are interpretable. No model</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     is selected automatically; read this evidence with theory and the recorded</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     rationale.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     (additional constraints). Delta chi-square(1) = 46.91, p &lt; .001. A small p</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     value indicates that the extra constraints are not fully consistent with</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     the data; with large samples, even small misspecifications produce small p</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     values. Change in fit (`no_b5` minus `full`): CFI -.029, TLI -0.036, RMSEA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     +0.022, SRMR +0.042. AIC +44.91 and BIC +40.75 (`no_b5` minus `full`);</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     lower values favor a model for these data, and only differences are</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     interpretable. No model is selected automatically; read this evidence with</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     theory and the recorded rationale.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Standardized loadings by model</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Factor  Item   full  no_b5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   A       a1    0.771  0.771</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   A       a2    0.744  0.744</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   A       a3    0.669  0.669</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   A       a4    0.738  0.738</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   A       a5    0.598  0.598</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   B       b1    0.794  0.795</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   B       b2    0.695  0.699</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   B       b3    0.757  0.757</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   B       b4    0.628  0.624</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   B       b5    0.337  0.000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Factor  Indicator  full  no_b5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   A       a1         0.77   0.77</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   A       a2         0.74   0.74</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   A       a3         0.67   0.67</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   A       a4         0.74   0.74</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   A       a5         0.60   0.60</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   B       b1         0.79   0.79</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   B       b2         0.69   0.70</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   B       b3         0.76   0.76</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   B       b4         0.63   0.62</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   B       b5         0.34   0.00</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Measurement evidence by model</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Construct  Metric   full  no_b5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   A          omega   0.835  0.835</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   B          omega   0.784  0.622</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   A          alpha   0.827  0.827</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   B          alpha   0.771  0.771</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   A          AVE     0.497  0.497</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   B          AVE     0.434  0.521</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   A vs B     HTMT2   0.533  0.533</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   - The loading fixed to zero for b5 keeps that item in this composite; the</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     coefficient does not describe a shortened scale.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Construct  Metric  full  no_b5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   A          omega    .83    .83</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   B          omega    .78    .62</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   A          alpha    .83    .83</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   B          alpha    .77    .77</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   A          AVE      .50    .50</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   B          AVE      .43    .52</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   A vs. B    HTMT2   0.53   0.53</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   - no_b5: The loading fixed to zero for b5 keeps that item in this composite;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     the coefficient does not describe a shortened scale.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> What these columns mean</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ML -- Maximum likelihood.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   CFI -- Comparative fit index.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   TLI -- Tucker-Lewis index.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   RMSEA -- Root mean square error of approximation.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   SRMR -- Standardized root mean square residual.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   df -- Degrees of freedom.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   AIC -- Akaike information criterion.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   BIC -- Bayesian information criterion.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   AVE -- Average variance extracted.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   HTMT2 -- Heterotrait-monotrait ratio of correlations, geometric-mean</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       version.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> No model was selected automatically. Difference tests, changes in fit,</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> information criteria, and measurement evidence answer different questions;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> read them together with theory and the recorded rationale.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> See nomo_table(x, "decision_log") for the decision log and x$fits for each</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> model's own analysis.</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">cmp_evidence</span>, type <span class="op">=</span> <span class="st">"loadings"</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="nomo_compare-1.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span><span class="co"># }</span></span></span>

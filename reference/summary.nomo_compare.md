@@ -23,4 +23,5 @@ summary(object, ...)
 
 An object of class `summary_nomo_compare` containing model fit,
 comparisons with interpretations, side-by-side standardized loadings,
-and measurement evidence.
+and measurement evidence. Printing it shows these as tables, with each
+flag and its recommendation.

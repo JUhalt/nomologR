@@ -26,4 +26,6 @@ plot(x, type = c("loadings", "fit", "residuals", "modification_indices"), ...)
 
 ## Value
 
-A `ggplot2` object.
+A `ggplot2` object. Flags are drawn with the package's status shapes and
+colors (filled circle for no flag, open circle for review, filled square
+for concern), with a legend whenever a flag is drawn.

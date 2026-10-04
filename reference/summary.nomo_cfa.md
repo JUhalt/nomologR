@@ -21,4 +21,8 @@ summary(object, ...)
 
 ## Value
 
-An object of class `summary_nomo_cfa`.
+An object of class `summary_nomo_cfa`. Printing it shows the chi-square
+test and fit indices with their references, the standardized loadings,
+the factor correlations, any improper solution, the largest residual
+correlations and modification indices, and each flag with its
+explanation.

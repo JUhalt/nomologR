@@ -31,7 +31,8 @@ nomo_split(
 
 - seed:
 
-  Integer seed used to make the split reproducible.
+  Integer seed used, with the random-number generator recorded in
+  `rng_kind`, to make the split reproducible.
 
 - guidance:
 
@@ -49,18 +50,32 @@ A `nomo_split` object. The fields to read are:
 - `n_total`, `n_calibration`, `n_validation`, and
   `validation_prop_realized`.
 
-- `seed` and `decision_log`.
+- `seed`, `rng_kind`, and `decision_log`. `rng_kind` is the
+  random-number generator, normal, and sample kinds of
+  [`RNGkind()`](https://rdrr.io/r/base/Random.html) that drew the split.
 
 Other fields record the call, the settings used, and intermediate engine
 results. They may change between releases and are not part of the stable
 interface (see
 [`?nomologR`](https://juhalt.github.io/nomologR/reference/nomologR-package.md)).
 
+[`print()`](https://rdrr.io/r/base/print.html) shows the sizes of the
+two samples, the proportion requested and realized, the seed, and the
+random-number generator.
+
 ## Details
 
 The caller's random-number-generator state is restored after the split
 so that using `nomo_split()` does not silently alter later stochastic
 analyses.
+
+The split depends on the seed and on the random-number generator in use,
+which `rng_kind` records: the same seed under another
+[`RNGkind()`](https://rdrr.io/r/base/Random.html), such as
+`"L'Ecuyer-CMRG"` or `sample.kind = "Rounding"`, gives a different
+split. To reproduce a split, set the recorded kinds with
+[`RNGkind()`](https://rdrr.io/r/base/Random.html) before calling
+`nomo_split()` with the same seed, or keep `assignment`.
 
 ## References
 
@@ -80,10 +95,14 @@ capitalization on chance. *Psychological Bulletin, 111*(3), 490-504.
 split <- nomo_split(nomo_demo_continuous, validation_prop = 0.40, seed = 2026)
 split
 #> <nomo_split> Calibration and validation split
-#> Rows: 500 total | 300 calibration | 200 validation
-#> Validation proportion: 0.400 requested | 0.400 realized | Seed: 2026
+#> Rows: 500 | Calibration: 300 | Validation: 200
+#> Validation proportion: .40 requested, .40 realized | Seed: 2026
+#> Generator: Mersenne-Twister, Inversion, Rejection
+#> 
 #> Use splitting only when the gain in independence justifies the loss of
 #> precision.
+#> 
+#> See x$assignment for the sample each row went to.
 nrow(split$calibration)
 #> [1] 300
 nrow(split$validation)

@@ -104,7 +104,11 @@ A `nomo_cfa` object. The fields to read are:
 - `standardized_loadings`: one row per loading, with its interval, flag,
   and explanation.
 
-- `factor_correlations`: latent correlations with intervals.
+- `factor_correlations`: latent correlations with intervals. A
+  correlation the model fixes, such as the zero correlations of a
+  bifactor model, is listed at its fixed value;
+  [`summary()`](https://rdrr.io/r/base/summary.html) shows it as fixed
+  rather than estimated.
 
 - `heywood`: improper-solution signals, if any.
 
@@ -133,6 +137,14 @@ Other fields record the call, the settings used, and intermediate engine
 results. They may change between releases and are not part of the stable
 interface (see
 [`?nomologR`](https://juhalt.github.io/nomologR/reference/nomologR-package.md)).
+
+[`print()`](https://rdrr.io/r/base/print.html) shows the cases used, the
+estimator, convergence, the fit indices, and how many flags were raised.
+[`summary()`](https://rdrr.io/r/base/summary.html) adds the chi-square
+test, the fit indices with their references, the standardized loadings,
+the factor correlations, any improper solution, the largest residual
+correlations and modification indices, and each flag with its
+explanation; for a model that did not converge it shows only the flags.
 
 ## Details
 
@@ -213,39 +225,34 @@ model <- '
 out <- nomo_cfa(model, data = lavaan::HolzingerSwineford1939)
 summary(out)
 #> <nomo_cfa summary> Confirmatory factor analysis
-#> Cases: 301 of 301 used | Estimator: ML | Converged: yes
+#> Cases: 301 | Estimator: ML | Converged: yes
 #> 
 #> Global fit
 #>   chi-square(24) = 85.31, p < .001
-#>   Index  Value  90% CI          Reference
-#>   CFI    0.931                      0.950
-#>   TLI    0.896                      0.950
-#>   RMSEA  0.092  [0.071, 0.114]      0.060
-#>   SRMR   0.065                      0.080
+#>   Index  Value  Reference  90% CI          Flag
+#>   CFI     .931       .950                  Review
+#>   TLI    0.896      0.950                  Review
+#>   RMSEA  0.092      0.060  [0.071, 0.114]  Review
+#>   SRMR   0.065      0.080
 #>   References are teaching values for review, not cutoffs.
 #> 
 #> Standardized loadings
-#>   Factor   Item  Loading     SE  95% CI          Flag
-#>   visual   x1      0.772  0.055  [0.664, 0.880]
-#>   visual   x2      0.424  0.060  [0.307, 0.540]  review
-#>   visual   x3      0.581  0.055  [0.473, 0.689]
-#>   textual  x4      0.852  0.023  [0.807, 0.896]
-#>   textual  x5      0.855  0.022  [0.811, 0.899]
-#>   textual  x6      0.838  0.023  [0.792, 0.884]
-#>   speed    x7      0.570  0.053  [0.465, 0.674]
-#>   speed    x8      0.723  0.051  [0.624, 0.822]
-#>   speed    x9      0.665  0.051  [0.565, 0.765]
-#> 
-#> Flagged loadings
-#>   - x2 on visual (review): Absolute standardized loading is below the
-#>     configured teaching reference of 0.5; inspect item content, precision, and
-#>     model specification.
+#>   Factor   Indicator  Loading    SE  95% CI        Flag
+#>   visual   x1            0.77  0.05  [0.66, 0.88]
+#>   visual   x2            0.42  0.06  [0.31, 0.54]  Review
+#>   visual   x3            0.58  0.06  [0.47, 0.69]
+#>   textual  x4            0.85  0.02  [0.81, 0.90]
+#>   textual  x5            0.86  0.02  [0.81, 0.90]
+#>   textual  x6            0.84  0.02  [0.79, 0.88]
+#>   speed    x7            0.57  0.05  [0.47, 0.67]
+#>   speed    x8            0.72  0.05  [0.62, 0.82]
+#>   speed    x9            0.67  0.05  [0.56, 0.77]
 #> 
 #> Factor correlations
-#>   Factor 1  Factor 2      r  95% CI
-#>   visual    textual   0.459  [0.334, 0.584]
-#>   visual    speed     0.471  [0.328, 0.613]
-#>   textual   speed     0.283  [0.148, 0.418]
+#>   Factor 1  Factor 2    r  95% CI
+#>   visual    textual   .46  [.33, .58]
+#>   visual    speed     .47  [.33, .61]
+#>   textual   speed     .28  [.15, .42]
 #> 
 #> Improper solutions
 #>   No improper-solution signal, such as a negative residual variance, was
@@ -253,24 +260,51 @@ summary(out)
 #> 
 #> Largest residual correlations
 #>   Item 1  Item 2  Residual
-#>   x7      x2        -0.189
-#>   x5      x3        -0.151
-#>   x9      x1         0.149
-#>   x9      x3         0.147
-#>   x7      x1        -0.140
+#>   x7      x2         -0.19
+#>   x5      x3         -0.15
+#>   x9      x1          0.15
+#>   x9      x3          0.15
+#>   x7      x1         -0.14
 #> 
 #> Modification indices (diagnostic only)
-#>   Parameter         MI     EPC  Std. EPC
-#>   visual =~ x9   36.41   0.577     0.515
-#>   x7 ~~ x8       34.15   0.536     0.859
-#>   visual =~ x7   18.63  -0.422    -0.349
-#>   x8 ~~ x9       14.95  -0.423    -0.805
-#>   textual =~ x3   9.15  -0.272    -0.238
+#>   Parameter         MI    EPC  Std. EPC
+#>   visual =~ x9   36.41   0.58      0.52
+#>   x7 ~~ x8       34.15   0.54      0.86
+#>   visual =~ x7   18.63  -0.42     -0.35
+#>   x8 ~~ x9       14.95  -0.42     -0.81
+#>   textual =~ x3   9.15  -0.27     -0.24
 #>   Modification indices locate strain. They do not authorize freeing a
 #>   parameter, and nomologR never does so automatically.
 #> 
+#> Flagged
+#>   - CFI (Review): The value, .931, is below the teaching reference of .950;
+#>     inspect global and localized model strain.
+#>   - TLI (Review): The value, 0.896, is below the teaching reference of 0.950;
+#>     inspect global and localized model strain.
+#>   - RMSEA (Review): The value, 0.092, is above the teaching reference of
+#>     0.060; inspect global and localized model strain.
+#>   - x2 on visual (Review): Absolute standardized loading is below the
+#>     configured teaching reference of 0.50; inspect item content, precision,
+#>     and model specification.
+#> 
+#> What these columns mean
+#>   ML -- Maximum likelihood.
+#>   CFI -- Comparative fit index.
+#>   TLI -- Tucker-Lewis index.
+#>   RMSEA -- Root mean square error of approximation.
+#>   SRMR -- Standardized root mean square residual.
+#>   CI -- Confidence interval.
+#>   SE -- Standard error.
+#>   MI -- Modification index, the expected drop in the chi-square if the
+#>       parameter were freed.
+#>   EPC -- Expected parameter change if the parameter were freed.
+#>   Std. EPC -- The expected parameter change with all variables standardized.
+#> 
 #> Global fit, local strain, and parameter estimates are evidence to interpret
 #> together; no single cutoff establishes model validity.
+#> 
+#> See nomo_table(x, "decision_log") for the decision log and x$fit for lavaan's
+#> full output.
 
 # \donttest{
 # Declared ordered indicators request WLSMV rather than ML

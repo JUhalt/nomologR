@@ -27,4 +27,5 @@ plot(x, type = c("fit", "loadings"), ...)
 
 ## Value
 
-A `ggplot2` object.
+A `ggplot2` object. Models are told apart by color and by shapes that
+the package does not use for a status.

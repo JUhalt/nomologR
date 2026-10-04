@@ -3,7 +3,7 @@
 `nomo_model()` is a small convenience helper for reflective CFA models.
 It converts a named list of factor-to-indicator assignments into
 `lavaan` measurement-model syntax. It deliberately does not add residual
-covariances, cross-loadings, equality constraints, or other post-hoc
+covariances, cross-loadings, equality constraints, or other post hoc
 changes.
 
 ## Usage
@@ -23,6 +23,11 @@ nomo_model(
   A named list. Each element name is a latent-factor name and each
   element value is a character vector of observed indicators. For
   hierarchical structures these are the first-order or group factors.
+  Factor and indicator names must be names `lavaan` can read: letters,
+  digits, `.`, and `_`, starting with a letter, as
+  [`make.names()`](https://rdrr.io/r/base/make.names.html) leaves them.
+  A name such as `"self-efficacy"` is refused, because `lavaan` would
+  fit it as a factor called `efficacy`.
 
 - structure:
 
@@ -40,7 +45,8 @@ A character scalar of class `nomo_model` that can be passed directly to
 or to [`lavaan::cfa()`](https://rdrr.io/pkg/lavaan/man/cfa.html).
 Attributes record the `factors`, `structure`, `general` factor, and any
 identification `notes`, a character vector named by severity (`"review"`
-or `"concern"`).
+or `"concern"`). [`print()`](https://rdrr.io/r/base/print.html) shows
+the syntax as it can be copied, then any identification notes.
 
 ## Details
 
@@ -107,6 +113,8 @@ nomo_model(factors)
 #> engagement =~ e1 + e2 + e3
 #> belonging =~ b1 + b2 + b3
 #> efficacy =~ f1 + f2 + f3
+#> 
+#> See nomo_cfa(x, data) for a guided fit of this model.
 nomo_model(factors, structure = "higher_order", general = "Wellbeing")
 #> <nomo_model> Measurement model syntax
 #> engagement =~ e1 + e2 + e3
@@ -119,6 +127,8 @@ nomo_model(factors, structure = "higher_order", general = "Wellbeing")
 #>   - Review: With three first-order factors the second-order part is just
 #>     identified: this model fits exactly as well as the correlated-factors
 #>     model, so model fit cannot distinguish the two.
+#> 
+#> See nomo_cfa(x, data) for a guided fit of this model.
 nomo_model(factors, structure = "bifactor", general = "Wellbeing")
 #> <nomo_model> Measurement model syntax
 #> Wellbeing =~ NA*e1 + e2 + e3 + b1 + b2 + b3 + f1 + f2 + f3
@@ -132,4 +142,6 @@ nomo_model(factors, structure = "bifactor", general = "Wellbeing")
 #> Wellbeing ~~ 0*engagement + 0*belonging + 0*efficacy
 #> engagement ~~ 0*belonging + 0*efficacy
 #> belonging ~~ 0*efficacy
+#> 
+#> See nomo_cfa(x, data) for a guided fit of this model.
 ```
