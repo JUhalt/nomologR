@@ -242,8 +242,15 @@ test_that("WLSMV comparisons use lavaan's categorical difference test without in
   expect_match(cmp$ic_note, "not defined")
   # The print reports the difference test and leaves out the undefined AIC.
   txt <- paste(capture.output(print(out)), collapse = " ")
-  expect_match(txt, "chi-square difference", fixed = TRUE)
+  expect_match(txt, "Delta chi-square(1) = ", fixed = TRUE)
+  expect_match(txt, "scaled-and-shifted difference test (Satorra, 2000)", fixed = TRUE)
   expect_false(grepl("AIC change", txt, fixed = TRUE))
+  expect_false(grepl("AIC =", txt, fixed = TRUE))
+  # Information criteria are not defined, so the summary neither shows nor
+  # defines them.
+  summarized <- capture.output(print(summary(out)))
+  expect_false(any(grepl("AIC --", summarized, fixed = TRUE)))
+  expect_true(any(grepl("WLSMV -- Diagonally weighted least squares", summarized, fixed = TRUE)))
 })
 
 
@@ -706,8 +713,11 @@ test_that("side-by-side evidence reports a failed component instead of dropping 
   expect_s3_class(out, "tbl_df")
   expect_setequal(out$metric, c("reliability", "validity"))
   expect_true(all(is.na(out$estimate)))
-  expect_match(out$note[out$metric == "reliability"], "Unavailable: mocked reliability failure", fixed = TRUE)
-  expect_match(out$note[out$metric == "validity"], "Unavailable: mocked validity failure", fixed = TRUE)
+  expect_match(out$note[out$metric == "reliability"],
+               "Reliability is not available: mocked reliability failure", fixed = TRUE)
+  expect_match(out$note[out$metric == "validity"],
+               "Validity evidence (AVE and HTMT2) is not available: mocked validity failure",
+               fixed = TRUE)
 })
 
 
@@ -763,9 +773,15 @@ test_that("the interpretation omits sections that have nothing to report", {
 
   # The relation is still stated; the empty sections simply do not appear.
   expect_match(out, "are not nested", fixed = TRUE)
-  expect_no_match(out, "chi-square difference", fixed = TRUE)
+  expect_no_match(out, "chi-square", fixed = TRUE)
   expect_no_match(out, "Change in fit", fixed = TRUE)
   expect_no_match(out, "AIC", fixed = TRUE)
+
+  # An index without a change is named as unavailable beside those with one.
+  row$delta_cfi <- -0.0291
+  row$delta_rmsea <- 0.0004
+  out <- nomologR:::nomo_compare_interpretation(row)
+  expect_match(out, "CFI -.029, TLI unavailable, RMSEA 0.000, SRMR unavailable.", fixed = TRUE)
 })
 
 
@@ -875,4 +891,247 @@ test_that("an undeclared ordered fit compares with the declared one (#145)", {
                       rationale = "Item b5.", nested = "yes", evidence = FALSE)
   expect_identical(out$estimator, "WLSMV")
   expect_true(out$comparisons$test_available)
+})
+
+
+# Pre-RC fixes and the shared output style (#144, #145) ----------------------------
+
+hs_eight <- "visual =~ x1 + x2 + x3\ntextual =~ x4 + x5 + x6\nspeed =~ x7 + x8"
+
+
+test_that("a model with an improper solution is compared with a concern naming it (#145)", {
+  skip_on_cran()
+  hs <- lavaan::HolzingerSwineford1939
+  base <- nomo_cfa(hs_eight, hs, modification_indices = FALSE)
+  alt <- nomo_cfa(paste(hs_eight, "visual ~~ 0*textual", sep = "\n"), hs,
+                  modification_indices = FALSE)
+  expect_gt(nrow(base$heywood), 0L)
+  cmp <- nomo_compare(base = base, alt = alt, rationale = "x", evidence = FALSE)
+  log <- cmp$decision_log
+  improper <- log[log$metric == "improper_solution", , drop = FALSE]
+  expect_identical(improper$object, c("base", "alt"))
+  expect_identical(improper$severity, c("concern", "concern"))
+  expect_match(improper$observation[[1L]],
+               "Model `base` has an improper solution (x8: negative residual variance; speed =~ x8: standardized loading above 1)",
+               fixed = TRUE)
+  local_reproducible_output(width = 80)
+  printed <- capture.output(print(cmp))
+  expect_true("Flagged" %in% printed)
+  expect_match(printed, "^  - base \\(Concern\\): Model `base` has an improper solution", all = FALSE)
+
+  # A post-estimation warning alone also counts, and a clean model does not.
+  warned <- base
+  warned$heywood <- warned$heywood[0, , drop = FALSE]
+  expect_match(nomologR:::nomo_compare_improper(list(warned = warned))$warned,
+               "some estimated ov variances are negative", fixed = TRUE)
+  clean <- compare_fitted_pair()$full
+  expect_length(nomologR:::nomo_compare_improper(list(clean = clean)), 0L)
+})
+
+
+test_that("missing-data handling is compared as lavaan applied it (#145)", {
+  skip_on_cran()
+  hs <- lavaan::HolzingerSwineford1939
+  set.seed(3)
+  hs$x1[sample(nrow(hs), 30)] <- NA
+  three <- "visual =~ x1 + x2 + x3\ntextual =~ x4 + x5 + x6\nspeed =~ x7 + x8 + x9"
+  orth <- paste(three, "visual ~~ 0*speed", sep = "\n")
+  fiml <- nomo_cfa(three, hs, missing = "fiml", modification_indices = FALSE)
+  ml <- nomo_cfa(orth, hs, missing = "ml", modification_indices = FALSE)
+  expect_s3_class(nomo_compare(a = fiml, b = ml, rationale = "x", evidence = FALSE), "nomo_compare")
+
+  default <- nomo_cfa(three, hs, modification_indices = FALSE)
+  listwise <- nomo_cfa(orth, hs, missing = "Listwise", modification_indices = FALSE)
+  expect_s3_class(nomo_compare(a = default, b = listwise, rationale = "x", evidence = FALSE),
+                  "nomo_compare")
+
+  # When lavaan cannot report its options, the recorded setting is compared.
+  real <- lavaan::lavInspect
+  expect_error(
+    testthat::with_mocked_bindings(
+      nomo_compare(a = fiml, b = ml, rationale = "x", evidence = FALSE),
+      lavInspect = function(object, what, ...) {
+        if (identical(what, "options")) stop("mocked options failure")
+        real(object, what, ...)
+      },
+      .package = "lavaan"
+    ),
+    "same missing-data handling (a = fiml; b = ml)", fixed = TRUE
+  )
+})
+
+
+test_that("model labels that would overwrite the loadings keys are refused (#145)", {
+  pair <- compare_fitted_pair()
+  expect_error(
+    nomo_compare(item = pair$full, factor = pair$zero, rationale = "x", evidence = FALSE),
+    "Model labels cannot be `item` or `factor`", fixed = TRUE
+  )
+  expect_error(
+    nomo_compare(full = pair$full, factor = pair$zero, rationale = "x", evidence = FALSE),
+    "Model labels cannot be `factor`:", fixed = TRUE
+  )
+})
+
+
+test_that("a reference index beyond the integer range is refused by name (#145)", {
+  pair <- compare_fitted_pair()
+  expect_error(
+    nomo_compare(full = pair$full, zero = pair$zero, rationale = "x", reference = 1e10),
+    "`reference` must be one model index or label", fixed = TRUE
+  )
+})
+
+
+test_that("difference tests read one way, with df and p kept on a narrow console (#144, #145)", {
+  skip_on_cran()
+  pair <- compare_fitted_pair()
+  out <- nomo_compare(full = pair$full, zero_b5 = pair$zero, rationale = "Item b5.",
+                      evidence = FALSE)
+  cmp <- out$comparisons
+  expect_match(cmp$interpretation, "Delta chi-square(1) = 46.91, p < .001. A small p value",
+               fixed = TRUE)
+  expect_no_match(cmp$interpretation, "Chi-Squared Difference Test|p-value")
+  expect_match(cmp$interpretation, "CFI -.029, TLI -0.036, RMSEA +0.022", fixed = TRUE)
+
+  hs <- lavaan::HolzingerSwineford1939
+  three <- "visual =~ x1 + x2 + x3\ntextual =~ x4 + x5 + x6\nspeed =~ x7 + x8 + x9"
+  mlr <- nomo_compare(
+    base = nomo_cfa(three, hs, estimator = "MLR", modification_indices = FALSE),
+    orth = nomo_cfa(paste(three, "visual ~~ 0*textual", sep = "\n"), hs, estimator = "MLR",
+                    modification_indices = FALSE),
+    rationale = "x", evidence = FALSE
+  )
+  local_reproducible_output(width = 80)
+  txt <- capture.output(print(summary(mlr)))
+  expect_false(any(grepl("Not shown for width", txt, fixed = TRUE)))
+  expect_match(txt, "^  Model +Delta chi-square +df +p +Relation$", all = FALSE)
+  expect_true("  Method: scaled difference test (Satorra & Bentler, 2001)." %in% txt)
+  expect_match(paste(txt, collapse = " "),
+               "The chi-square is the Yuan-Bentler scaled test statistic", fixed = TRUE)
+  local_reproducible_output(width = 40)
+  narrow <- paste(capture.output(print(summary(mlr))), collapse = " ")
+  expect_match(narrow, "Model Delta chi-square df      p", fixed = TRUE)
+  expect_match(narrow, "Not shown for width: Relation.", fixed = TRUE)
+})
+
+
+test_that("an equivalent model shows no NA and no signed zero (#145)", {
+  skip_on_cran()
+  marker <- compare_fitted_pair()$full
+  std_lv <- nomo_cfa(compare_syntax$full, nomo_demo_continuous, std.lv = TRUE)
+  out <- nomo_compare(marker = marker, std_lv = std_lv, rationale = "x", evidence = FALSE)
+  local_reproducible_output(width = 80)
+  txt <- capture.output(print(summary(out)))
+  expect_false(any(grepl("\\bNA\\b|[-+]0\\.000|[-+]\\.000", txt)))
+  expect_match(txt, "^  std_lv +equivalent$", all = FALSE)
+  expect_match(out$comparisons$interpretation, "CFI .000, TLI 0.000", fixed = TRUE)
+})
+
+
+test_that("measurement evidence names the model it is missing for (#145)", {
+  skip_on_cran()
+  hs <- lavaan::HolzingerSwineford1939
+  factors <- list(visual = c("x1", "x2", "x3"), textual = c("x4", "x5", "x6"),
+                  speed = c("x7", "x8", "x9"))
+  base <- nomo_cfa(nomo_model(factors), hs, modification_indices = FALSE)
+  ho <- nomo_cfa(nomo_model(factors, structure = "higher_order"), hs,
+                 modification_indices = FALSE)
+  out <- nomo_compare(base = base, ho = ho, rationale = "x")
+  local_reproducible_output(width = 80)
+  txt <- capture.output(print(summary(out)))
+  expect_true(any(grepl("^  - ho: Reliability is not available: The model contains a",
+                        txt)))
+  expect_false(any(grepl("`fit`", txt, fixed = TRUE)))
+  expect_false(any(grepl("^  --", txt)))
+  expect_match(txt, "^  visual vs\\. textual +HTMT2 +0\\.", all = FALSE)
+  expect_match(txt, "^  visual +omega +\\.[0-9]{2}$", all = FALSE)
+})
+
+
+test_that("measurement evidence with no notes, the usual case, prints no empty bullet (#145)", {
+  skip_on_cran()
+  hs <- lavaan::HolzingerSwineford1939
+  m3 <- "visual =~ x1 + x2 + x3\ntextual =~ x4 + x5 + x6\nspeed =~ x7 + x8 + x9"
+  out <- nomo_compare(
+    full = nomo_cfa(m3, hs, modification_indices = FALSE),
+    orth = nomo_cfa(paste0(m3, "\nvisual ~~ 0*textual"), hs, modification_indices = FALSE),
+    rationale = "x"
+  )
+  expect_false(any(nzchar(out$evidence$note)))
+  local_reproducible_output(width = 80)
+  txt <- capture.output(print(summary(out)))
+  expect_false(any(grepl("^ *- *:? *$", txt)))
+  after <- txt[(which(txt == "Measurement evidence by model") + 1L):length(txt)]
+  # The table's last row is followed by the blank line that ends the section.
+  expect_match(after[[which(after == "")[[1L]] - 1L]], "HTMT2")
+})
+
+
+test_that("a flag's note ends with a full stop before its recommendation (#145)", {
+  pair <- compare_fitted_pair()
+  out <- testthat::with_mocked_bindings(
+    nomo_compare(full = pair$full, zero = pair$zero, rationale = "x", evidence = FALSE),
+    lavTestLRT = function(...) stop("mocked difference-test failure"),
+    .package = "lavaan"
+  )
+  expect_identical(out$decision_log$severity[out$decision_log$metric == "model_comparison"],
+                   "review")
+  local_reproducible_output(width = 80)
+  # The summary gives the note, which ends with lavaan's message, then the
+  # recommendation; print() gives the note alone.
+  summarized <- paste(trimws(capture.output(print(summary(out)))), collapse = " ")
+  expect_match(summarized, "mocked difference-test failure. Weigh the statistical evidence",
+               fixed = TRUE)
+  printed <- paste(trimws(capture.output(print(out))), collapse = " ")
+  expect_match(printed, "mocked difference-test failure.", fixed = TRUE)
+  expect_false(grepl("Weigh the statistical evidence", printed, fixed = TRUE))
+  expect_identical(
+    nomologR:::nomo_compare_then_recommend(c("Ends.", "Asks?", " No stop ", ""), "Do this."),
+    c("Ends. Do this.", "Asks? Do this.", "No stop. Do this.", " Do this.")
+  )
+})
+
+
+test_that("compare output shows the origin without a hyphen and points to its calls (#144)", {
+  pair <- compare_fitted_pair()
+  out <- nomo_compare(full = pair$full, zero_b5 = pair$zero, rationale = "From the MIs.",
+                      origin = "post_hoc", evidence = FALSE)
+  local_reproducible_output(width = 80)
+  printed <- capture.output(print(out))
+  expect_match(printed, "Origin: post hoc", all = FALSE, fixed = TRUE)
+  expect_match(printed, "^  - Origin \\(Review\\): The comparison was specified after", all = FALSE)
+  expect_identical(printed[[length(printed) - 1L]],
+                   "See summary(x) for the interpretations and measurement evidence and")
+  expect_match(out$decision_log$observation[[1L]], "(post hoc comparison)", fixed = TRUE)
+  summarized <- gsub("\\s+", " ", paste(capture.output(print(summary(out))), collapse = " "))
+  expect_match(summarized, "Origin (Review): The comparison was specified after seeing results",
+               fixed = TRUE)
+  expect_match(summarized, "Report the comparison as post hoc", fixed = TRUE)
+})
+
+
+test_that("p values and methods are written by the shared rules (#144)", {
+  expect_identical(nomologR:::nomo_compare_format_p(1), "p > .999")
+  words <- nomologR:::nomo_compare_method_words
+  expect_identical(words("standard"), "")
+  expect_identical(words(NA_character_), "")
+  expect_identical(words("satorra.2000"), "scaled-and-shifted difference test (Satorra, 2000)")
+  expect_identical(words("mean.var.adjusted.PLRT"),
+                   "difference test by method mean.var.adjusted.PLRT")
+  expect_identical(nomologR:::nomo_compare_method_note("standard"), "")
+})
+
+
+test_that("compare plots name their references and keep status shapes for status (#144)", {
+  skip_on_cran()
+  pair <- compare_fitted_pair()
+  out <- nomo_compare(full = pair$full, zero_b5 = pair$zero, rationale = "x", evidence = FALSE)
+  fit <- plot(out, type = "fit")
+  expect_match(gsub("\n", " ", fit$labels$subtitle),
+               "CFI .950, TLI 0.950, RMSEA 0.060, SRMR 0.080", fixed = TRUE)
+  loadings <- plot(out, type = "loadings")
+  shapes <- ggplot2::get_guide_data(loadings, "shape")$shape
+  expect_false(any(shapes %in% c(16, 1, 15, 4)))
+  expect_match(loadings$labels$subtitle, "0.50", fixed = TRUE)
 })

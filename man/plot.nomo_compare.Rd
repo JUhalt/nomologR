@@ -16,7 +16,8 @@ for each model side by side.}
 \item{...}{Unused.}
 }
 \value{
-A \code{ggplot2} object.
+A \code{ggplot2} object. Models are told apart by color and by shapes
+that the package does not use for a status.
 }
 \description{
 Plot a measurement-model comparison

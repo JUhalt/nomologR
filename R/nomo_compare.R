@@ -10,6 +10,24 @@ nomo_compare_labels <- function(models, exprs) {
   )
   labels[!nzchar(labels)] <- fallback[!nzchar(labels)]
 
+  # The loadings table keys its rows by `factor` and `item`, and each model's
+  # loadings are a column named by its label, so these two would overwrite the
+  # keys (#145).
+  reserved <- intersect(labels, c("factor", "item"))
+  if (length(reserved)) {
+    stop(
+      sprintf(
+        paste(
+          "Model labels cannot be %s: the loadings table uses `factor` and",
+          "`item` for its key columns. Name the models differently, for example",
+          "`nomo_compare(full = cfa_full, reduced = cfa_reduced, rationale = ...)`."
+        ),
+        nomo_present_or(sprintf("`%s`", reserved))
+      ),
+      call. = FALSE
+    )
+  }
+
   if (anyDuplicated(labels)) {
     stop(
       paste(
@@ -21,6 +39,29 @@ nomo_compare_labels <- function(models, exprs) {
   }
 
   labels
+}
+
+
+# The improper-solution signals of each model, in words, for the models that
+# have any: the rows of its `heywood` table, or the post-estimation warning
+# lavaan raised when the table has none.
+nomo_compare_improper <- function(models) {
+  issues <- c(
+    negative_observed_residual_variance = "negative residual variance",
+    negative_latent_variance = "negative latent variance",
+    standardized_loading_beyond_one = "standardized loading above 1",
+    latent_correlation_beyond_one = "latent correlation above 1"
+  )
+  out <- lapply(models, function(m) {
+    hey <- m$heywood
+    if (nrow(hey)) {
+      what <- ifelse(hey$issue %in% names(issues), issues[hey$issue], gsub("_", " ", hey$issue))
+      return(paste(sprintf("%s: %s", hey$object, what), collapse = "; "))
+    }
+    checked <- grep("post_check", m$engine_warnings, value = TRUE, fixed = TRUE)
+    if (length(checked)) paste(trimws(gsub("[[:space:]]+", " ", checked)), collapse = "; ") else NULL
+  })
+  Filter(Negate(is.null), out)
 }
 
 
@@ -93,7 +134,12 @@ nomo_compare_validate_models <- function(models) {
     )
   }
 
-  missing_modes <- vapply(models, function(m) as.character(m$missing)[1L], character(1))
+  # The handling lavaan applied, not the spelling the researcher used: "fiml"
+  # and "ml" are the same handling, as are NULL and "listwise" (#145).
+  missing_modes <- vapply(models, function(m) {
+    applied <- tryCatch(lavaan::lavInspect(m$fit, "options")$missing, error = function(e) NULL)
+    if (length(applied)) as.character(applied)[1L] else as.character(m$missing)[1L]
+  }, character(1))
   if (length(unique(missing_modes)) != 1L) {
     stop(
       sprintf(
@@ -371,6 +417,36 @@ nomo_compare_lrt_value <- function(row, pattern) {
 }
 
 
+# The method lavTestLRT() used, from the heading of its table: "standard" for
+# the ordinary difference test, or the scaled method it names.
+nomo_compare_lrt_method <- function(tab) {
+  heading <- paste(attr(tab, "heading"), collapse = " ")
+  hit <- regmatches(heading, regexpr('method = "[^"]+"', heading))
+  if (length(hit)) sub('method = "([^"]+)"', "\\1", hit) else "standard"
+}
+
+
+# The difference-test method in words: nothing for the ordinary test, and the
+# scaled test with its source otherwise (#145).
+nomo_compare_method_words <- function(method) {
+  if (length(method) != 1L || is.na(method) || method %in% c("standard", "")) return("")
+  words <- c(
+    satorra.bentler.2001 = "scaled difference test (Satorra & Bentler, 2001)",
+    satorra.bentler.2010 = "scaled difference test kept positive (Satorra & Bentler, 2010)",
+    satorra.2000 = "scaled-and-shifted difference test (Satorra, 2000)"
+  )
+  if (method %in% names(words)) words[[method]] else paste("difference test by method", method)
+}
+
+
+# The same words to follow a test: "Delta chi-square(1) = 22.02, p < .001,
+# scaled difference test (Satorra & Bentler, 2001)".
+nomo_compare_method_note <- function(method) {
+  words <- nomo_compare_method_words(method)
+  if (nzchar(words)) paste0(", ", words) else ""
+}
+
+
 nomo_compare_difference_test <- function(reference_fit, other_fit, method, estimator) {
   warnings <- character()
   args <- list(reference_fit, other_fit)
@@ -404,12 +480,7 @@ nomo_compare_difference_test <- function(reference_fit, other_fit, method, estim
   }
 
   heading <- paste(attr(tab, "heading"), collapse = " ")
-  method_hit <- regmatches(heading, regexpr('method = "[^"]+"', heading))
-  method_used <- if (length(method_hit)) {
-    sub('method = "([^"]+)"', "\\1", method_hit)
-  } else {
-    "standard"
-  }
+  method_used <- nomo_compare_lrt_method(tab)
   heading_lines <- trimws(strsplit(heading, "\n", fixed = TRUE)[[1L]])
   heading_lines <- heading_lines[nzchar(heading_lines)]
   label <- if (length(heading_lines)) heading_lines[[1L]] else "Chi-Squared Difference Test"
@@ -459,10 +530,11 @@ nomo_compare_difference_test <- function(reference_fit, other_fit, method, estim
 }
 
 
+# "p = .032", "p < .001", or "p > .999" through the shared formatter (#144);
+# "p unavailable" when there is none. Other components call it too.
 nomo_compare_format_p <- function(p) {
   if (!is.finite(p)) return("p unavailable")
-  if (p < 0.001) return("p < .001")
-  paste0("p = ", sub("^0", "", formatC(p, format = "f", digits = 3)))
+  nomo_present_p_clause(p)
 }
 
 
@@ -471,12 +543,12 @@ nomo_compare_interpretation <- function(row) {
     row$relation,
     more_constrained = sprintf(
       "`%s` is nested within `%s` and has %s more %s of freedom (additional constraints).",
-      row$model, row$reference, format(row$df_difference, trim = TRUE),
+      row$model, row$reference, nomo_present_stat(row$df_difference, "df"),
       nomo_present_noun(row$df_difference, "degree")
     ),
     less_constrained = sprintf(
       "`%s` has %s fewer %s of freedom than `%s` (it estimates additional parameters), and `%s` is nested within it.",
-      row$model, format(abs(row$df_difference), trim = TRUE),
+      row$model, nomo_present_stat(abs(row$df_difference), "df"),
       nomo_present_noun(abs(row$df_difference), "degree"), row$reference, row$reference
     ),
     equivalent = sprintf("`%s` and `%s` are equivalent models.", row$model, row$reference),
@@ -491,15 +563,15 @@ nomo_compare_interpretation <- function(row) {
     )
   )
 
+  # One wording for a difference test across the package (#144): "Delta
+  # chi-square(1) = 46.91, p < .001", with the scaled method named.
   test_text <- if (isTRUE(row$test_available)) {
     paste0(
-      row$test, ": chi-square difference = ",
-      formatC(row$chisq_diff, format = "f", digits = 2),
-      ", df = ", format(row$df_diff, trim = TRUE), ", ",
-      nomo_compare_format_p(row$p_value), ". ",
-      "A small p-value indicates that the extra constraints are not fully ",
+      nomo_present_chisq(row$chisq_diff, row$df_diff, row$p_value, delta = TRUE),
+      nomo_compare_method_note(row$method), ". ",
+      "A small p value indicates that the extra constraints are not fully ",
       "consistent with the data; with large samples, even small ",
-      "misspecifications produce small p-values."
+      "misspecifications produce small p values."
     )
   } else if (nzchar(row$test_note)) {
     row$test_note
@@ -508,11 +580,13 @@ nomo_compare_interpretation <- function(row) {
   }
 
   fit_text <- if (any(is.finite(c(row$delta_cfi, row$delta_tli, row$delta_rmsea, row$delta_srmr)))) {
-    fmt <- function(x) if (is.finite(x)) sprintf("%+.3f", x) else "unavailable"
+    fmt <- function(x, kind) {
+      if (is.finite(x)) nomo_present_stat(x, kind, signed = TRUE) else "unavailable"
+    }
     sprintf(
       "Change in fit (`%s` minus `%s`): CFI %s, TLI %s, RMSEA %s, SRMR %s.",
-      row$model, row$reference, fmt(row$delta_cfi), fmt(row$delta_tli),
-      fmt(row$delta_rmsea), fmt(row$delta_srmr)
+      row$model, row$reference, fmt(row$delta_cfi, "fit_bounded"), fmt(row$delta_tli, "fit"),
+      fmt(row$delta_rmsea, "fit"), fmt(row$delta_srmr, "fit")
     )
   } else {
     ""
@@ -520,8 +594,9 @@ nomo_compare_interpretation <- function(row) {
 
   ic_text <- if (isTRUE(row$ic_available)) {
     sprintf(
-      "AIC %+.1f and BIC %+.1f (`%s` minus `%s`); lower values favor a model for these data, and only differences are interpretable.",
-      row$delta_aic, row$delta_bic, row$model, row$reference
+      "AIC %s and BIC %s (`%s` minus `%s`); lower values favor a model for these data, and only differences are interpretable.",
+      nomo_present_stat(row$delta_aic, "ic", signed = TRUE),
+      nomo_present_stat(row$delta_bic, "ic", signed = TRUE), row$model, row$reference
     )
   } else if (nzchar(row$ic_note)) {
     row$ic_note
@@ -566,13 +641,20 @@ nomo_compare_evidence <- function(label, model, guidance) {
     )
   }
 
+  # The evidence functions name their argument, `fit`, which nomo_compare()
+  # does not have, so the note says "The model" instead (#145).
+  unavailable <- function(what, e) {
+    paste0(what, " is not available: ",
+           sub("^`fit` contains", "The model contains", conditionMessage(e)))
+  }
+
   rows <- list()
 
   rel <- nomo_compare_quietly(nomo_reliability(model, guidance = guidance))
   if (inherits(rel$value, "error")) {
     rows[[length(rows) + 1L]] <- tibble::tibble(
       model = label, construct = NA_character_, metric = "reliability",
-      estimate = NA_real_, note = paste("Unavailable:", conditionMessage(rel$value))
+      estimate = NA_real_, note = unavailable("Reliability", rel$value)
     )
   } else if (nrow(rel$value$evidence)) {
     ev <- rel$value$evidence
@@ -589,7 +671,7 @@ nomo_compare_evidence <- function(label, model, guidance) {
   if (inherits(val$value, "error")) {
     rows[[length(rows) + 1L]] <- tibble::tibble(
       model = label, construct = NA_character_, metric = "validity",
-      estimate = NA_real_, note = paste("Unavailable:", conditionMessage(val$value))
+      estimate = NA_real_, note = unavailable("Validity evidence (AVE and HTMT2)", val$value)
     )
   } else {
     if (nrow(val$value$ave)) {
@@ -692,7 +774,11 @@ nomo_compare_references <- function() {
 #' **Requirements.** All models must be converged `nomo_cfa` objects fitted with
 #' the same estimator and missing-data handling to the same cases and data.
 #' Otherwise the comparison is refused with an explanation, because test
-#' statistics and fit indices would not be comparable.
+#' statistics and fit indices would not be comparable. Missing-data handling is
+#' compared as `lavaan` applied it, so `missing = "fiml"` and `missing = "ml"`
+#' are the same handling. A model with an improper solution, such as a
+#' negative residual variance, is compared, and the decision log records a
+#' concern naming it (Kolenikov & Bollen, 2012).
 #'
 #' **Nesting.** With `nested = "auto"`, nesting is checked from the models'
 #' implied moments with [semTools::net()] (Bentler & Satorra, 2010). The
@@ -726,12 +812,13 @@ nomo_compare_references <- function() {
 #'
 #' @param ... Two or more `nomo_cfa` objects. Argument names become model
 #'   labels, for example `nomo_compare(full = cfa_full, reduced = cfa_reduced,
-#'   rationale = "...")`.
+#'   rationale = "...")`. A label must be unique and cannot be `factor` or
+#'   `item`, which name the key columns of the loadings table.
 #' @param rationale Required character scalar recording why these models are
 #'   compared (for example, the theoretical question each model represents).
 #' @param origin Whether the comparison was planned before seeing results
 #'   (`"a_priori"`) or prompted by results such as modification indices or
-#'   residuals (`"post_hoc"`). Post-hoc comparisons are flagged in the decision
+#'   residuals (`"post_hoc"`). Post hoc comparisons are flagged in the decision
 #'   log.
 #' @param nested `"auto"` (default) checks nesting automatically; `"yes"`
 #'   declares the models nested; `"no"` declares them non-nested and skips the
@@ -773,6 +860,12 @@ nomo_compare_references <- function() {
 #'   results. They may change between releases and are not part of the stable
 #'   interface (see `?nomologR`).
 #'
+#'   `print()` shows each comparison with the reference model in one line (the
+#'   difference test, the changes in CFI and RMSEA, and the change in AIC) and
+#'   any flags. `summary()` adds the fit of every model, the difference tests
+#'   and changes in fit as tables, the interpretations, the loadings side by
+#'   side, and the measurement evidence.
+#'
 #' @references
 #' Akaike, H. (1974). A new look at the statistical model identification.
 #' *IEEE Transactions on Automatic Control, 19*(6), 716-723.
@@ -793,6 +886,10 @@ nomo_compare_references <- function() {
 #' for testing measurement invariance. *Structural Equation Modeling, 9*(2),
 #' 233-255. \doi{10.1207/S15328007SEM0902_5}
 #'
+#' Kolenikov, S., & Bollen, K. A. (2012). Testing negative error variances: Is
+#' a Heywood case a symptom of misspecification? *Sociological Methods &
+#' Research, 41*(1), 124-167. \doi{10.1177/0049124112442138}
+#'
 #' MacCallum, R. C., Roznowski, M., & Necowitz, L. B. (1992). Model
 #' modifications in covariance structure analysis: The problem of
 #' capitalization on chance. *Psychological Bulletin, 111*(3), 490-504.
@@ -802,8 +899,9 @@ nomo_compare_references <- function() {
 #' *Sociological Methodology, 25*, 111-163. \doi{10.2307/271063}
 #'
 #' Satorra, A. (2000). Scaled and adjusted restricted tests in multi-sample
-#' analysis of moment structures. In *Innovations in multivariate statistical
-#' analysis* (pp. 233-247). Springer. \doi{10.1007/978-1-4615-4603-0_17}
+#' analysis of moment structures. In R. D. H. Heijmans, D. S. G. Pollock, &
+#' A. Satorra (Eds.), *Innovations in multivariate statistical analysis* (pp.
+#' 233-247). Springer. \doi{10.1007/978-1-4615-4603-0_17}
 #'
 #' Satorra, A., & Bentler, P. M. (2001). A scaled difference chi-square test
 #' statistic for moment structure analysis. *Psychometrika, 66*(4), 507-514.
@@ -888,8 +986,7 @@ nomo_compare <- function(...,
 
   reference_index <- if (is.character(reference) && length(reference) == 1L) {
     match(reference, labels)
-  } else if (is.numeric(reference) && length(reference) == 1L &&
-             is.finite(reference) && reference == as.integer(reference)) {
+  } else if (nomo_is_whole_number(reference)) {
     as.integer(reference)
   } else {
     NA_integer_
@@ -1013,7 +1110,7 @@ nomo_compare <- function(...,
     severity = "info",
     observation = sprintf(
       "%d models compared with reference `%s` (%s comparison).",
-      length(models), reference_label, gsub("_", "-", origin)
+      length(models), reference_label, nomo_present_origin(origin)
     ),
     recommendation = paste(
       "Interpret difference tests, changes in fit, information criteria, and",
@@ -1040,6 +1137,34 @@ nomo_compare <- function(...,
         "retained model in independent data (for example with `nomo_split()`)."
       ),
       rationale = "Data-driven respecification capitalizes on chance."
+    )
+  }
+
+  # A model with an improper solution is compared like any other, but every
+  # number that uses it describes an inadmissible solution (#145).
+  improper <- nomo_compare_improper(models)
+  for (nm in names(improper)) {
+    log <- nomo_log_add(
+      log,
+      stage = "compare",
+      object = nm,
+      metric = "improper_solution",
+      value = nrow(models[[nm]]$heywood),
+      reference = "Kolenikov & Bollen (2012)",
+      severity = "concern",
+      observation = sprintf(
+        paste(
+          "Model `%s` has an improper solution (%s), so its fit and every",
+          "comparison that uses it describe an inadmissible solution."
+        ),
+        nm, improper[[nm]]
+      ),
+      recommendation = paste(
+        "Read the model's own summary() before the comparison, and do not",
+        "repair the model mechanically; inspect identification, sampling",
+        "instability, and misspecification."
+      ),
+      rationale = "Proper solutions should not contain inadmissible variances, loadings, or latent correlations."
     )
   }
 
