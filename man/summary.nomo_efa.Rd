@@ -12,7 +12,10 @@
 \item{...}{Unused.}
 }
 \value{
-An object of class \code{summary_nomo_efa}.
+An object of class \code{summary_nomo_efa}. Printing it shows the
+settings, the supporting adequacy evidence, each item's loadings and
+communality with the reason for every flag, the factor correlations, any
+problem with the solution, and the largest residual correlations.
 }
 \description{
 Summarize a guided exploratory factor analysis

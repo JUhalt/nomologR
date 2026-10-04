@@ -35,8 +35,15 @@ selected items. Allowed values are \code{"continuous"}, \code{"ordinal"}, and
 \code{"binary"}. Explicit overrides are applied before default-type rejection,
 so researchers can intentionally model otherwise ambiguous storage (for
 example, an unordered factor whose levels already encode a substantive
-order). Overrides do not reorder, relabel, or recode the supplied data.
-For example, \code{c(item1 = "ordinal", item2 = "ordinal")}.}
+order). Overrides do not reorder or relabel categories, and the supplied
+data are not modified. Polychoric and mixed correlations score ordinal
+items by the rank of their observed values, in numeric order or a factor's
+level order, so codes such as 0/25/50/75/100 or 1/3/5, and factor levels
+nobody chose, are analyzed as consecutive categories. Pearson correlations
+use the values as coded (a factor's level positions). Binary items are
+coded 0/1. Polychoric correlations model at most 8 categories; an ordinal
+item with more is refused with the alternatives. For example,
+\code{c(item1 = "ordinal", item2 = "ordinal")}.}
 
 \item{missing}{Missing-data handling for correlation estimation. \code{"pairwise"}
 uses pairwise-complete observations; \code{"complete"} restricts the analysis to
@@ -50,18 +57,28 @@ assumptions are not compatible with the current data are explicitly marked
 as skipped rather than silently substituted.}
 
 \item{parallel_rule}{Parallel-analysis decision rule: \code{"percentile"}
-(default), \code{"mean"}, or \code{"crawford"}. All three rules are computed from
-the same null simulations and retained in the result as sensitivity evidence.}
+(default), \code{"mean"}, or \code{"crawford"}. A factor is retained while its
+observed eigenvalue exceeds the null reference. \code{"percentile"} compares
+every eigenvalue with the \code{quantile} of the null eigenvalues; \code{"mean"}
+compares it with their mean; \code{"crawford"} uses the \code{quantile} for the
+first eigenvalue and the mean for the rest (Crawford et al., 2010). All
+three rules are computed from the same null simulations and retained in
+the result as sensitivity evidence.}
 
 \item{n_iter}{Number of null-data iterations used for parallel analysis. If
-\code{NULL}, the value in \code{guidance$factor_parallel_iterations} is used.}
+\code{NULL}, the value in \code{guidance$factor_parallel_iterations} is used. It
+also sets the number of simulated data sets for NEST and Hull, which
+default to 1000 in \code{EFAtools}, so a small \code{n_iter} makes those criteria
+coarser too.}
 
 \item{quantile}{Quantile of null eigenvalues used as the parallel-analysis
 reference. If \code{NULL}, the value in
-\code{guidance$factor_parallel_quantile} is used.}
+\code{guidance$factor_parallel_quantile} is used. It also sets the percentile
+Hull compares its fit values with.}
 
-\item{max_factors}{Maximum number of factors/components evaluated for MAP. If
-\code{NULL}, up to 10 or \code{p - 1}, whichever is smaller, are evaluated.}
+\item{max_factors}{Maximum number of factors/components evaluated for MAP,
+and the largest factor count comparison data tries. If \code{NULL}, up to 10
+or \code{p - 1}, whichever is smaller, are evaluated.}
 
 \item{seed}{Integer seed for the null-data simulation. The caller's random
 number state is restored before return.}
@@ -131,6 +148,19 @@ their modeling type through \code{types}.
 The function does not claim that a scale "has exactly" a particular number of
 factors. It reports which factor counts deserve investigation and records
 disagreements among retention methods.
+
+Comparison data (\code{criterion_set = "all"}) simulates populations of known
+structure with the settings \code{factor_cd_population} (5000 cases),
+\code{factor_cd_samples} (100 samples per candidate structure), and
+\code{factor_cd_alpha} (.30) from \code{\link[=nomo_defaults]{nomo_defaults()}}. These are smaller than
+the 10000 cases and 500 samples \code{\link[EFAtools:efa_cd]{EFAtools::efa_cd()}} uses by default, to
+keep the run short; raise them in \code{guidance} for a final analysis. The
+settings used are recorded in the decision log.
+
+\code{print()} shows the count each main criterion suggests and the synthesis;
+\code{summary()} adds the evidence by method, the parallel-analysis rule
+sensitivity, the criteria that did not run and why, the concordance across
+criterion families, and the supporting adequacy evidence.
 }
 \examples{
 fac <- nomo_factors(nomo_demo_continuous, n_iter = 20, seed = 2026)

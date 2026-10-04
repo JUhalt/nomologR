@@ -108,10 +108,13 @@ nomo_methods_used.nomo_efa <- function(x, ...) {
   # rotation actually ran.
   rotated <- is.numeric(x$n_factors) && length(x$n_factors) == 1L &&
     !is.na(x$n_factors) && x$n_factors >= 2L
+  # The registry entries name oblimin and varimax, so they are credited only
+  # when that rotation ran; promax or an unrotated solution is not (#145,
+  # efa-4).
   if (rotated) {
-    if (isTRUE(x$oblique)) {
+    if (isTRUE(x$oblique) && identical(x$rotation, "oblimin")) {
       used <- c(used, "oblique_rotation")
-    } else {
+    } else if (!isTRUE(x$oblique) && identical(tolower(x$rotation), "varimax")) {
       used <- c(used, "orthogonal_rotation")
     }
   }

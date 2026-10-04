@@ -22,7 +22,8 @@
 eigenvalues with the selected parallel-analysis reference;
 \code{"parallel_rules"} compares PA factor counts under mean, percentile, and
 Crawford rules; \code{"scree"} displays component and common-factor eigenvalues;
-\code{"map"} displays original TR2 and revised TR4 MAP curves; \code{"evidence"}
+\code{"map"} displays the original TR2 MAP curve, and the revised TR4 curve when
+the criterion set includes revised MAP; \code{"evidence"}
 compares available retention criteria; \code{"concordance"} groups related
 variants into criterion families before showing support for each factor
 count; and \code{"kmo"} displays
