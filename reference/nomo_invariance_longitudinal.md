@@ -97,8 +97,11 @@ nomo_invariance_longitudinal(
 - ID.fac:
 
   Factor-identification method passed to
-  [`semTools::measEq.syntax()`](https://rdrr.io/pkg/semTools/man/measEq.syntax.html).
-  `"std.lv"` is the default.
+  [`semTools::measEq.syntax()`](https://rdrr.io/pkg/semTools/man/measEq.syntax.html):
+  `"std.lv"` (the default), `"UL"`, or `"effects.coding"`. semTools'
+  other spellings of each are accepted and treated alike:
+  `"unit.variance"`, `"UV"`, `"fixed.factor"`, and `"fixed-factor"` are
+  `"std.lv"`.
 
 - ID.cat:
 
@@ -127,9 +130,12 @@ A `nomo_invariance_longitudinal` object, which is also a
 [`nomo_table()`](https://juhalt.github.io/nomologR/reference/nomo_table.md),
 [`nomo_apa_table()`](https://juhalt.github.io/nomologR/reference/nomo_apa_table.md),
 and [`plot()`](https://rdrr.io/r/graphics/plot.default.html) work as
-they do for groups. The fields to read are those of
+they do for groups, and [`print()`](https://rdrr.io/r/base/print.html)
+and [`summary()`](https://rdrr.io/r/base/summary.html) show what they
+show for groups. The fields to read are those of
 [`nomo_invariance()`](https://juhalt.github.io/nomologR/reference/nomo_invariance.md),
-with `occasions` in place of `groups`, and:
+with `occasions` in place of `groups` and without `group_n`, since every
+occasion has the same people, and:
 
 - `latent_means`: at each level that holds intercepts equal, each later
   occasion's latent mean relative to the first, in the first occasion's
@@ -220,19 +226,31 @@ long <- nomo_invariance_longitudinal(
 )
 long
 #> <nomo_invariance_longitudinal> Measurement invariance across occasions
+#> Cases: 500 | Estimator: ML
 #> Occasions: t1, t2, t3 | Indicators: continuous
 #> Requested: configural -> metric -> scalar -> strict
 #> Completed: configural -> metric -> scalar -> strict
 #> 
+#> Fit by level
 #>   Level         CFI  RMSEA   SRMR  CFI change  RMSEA change   LRT p
 #>   configural  1.000  0.000  0.020          --            --      --
-#>   metric      0.999  0.012  0.030      -0.001        +0.012    .018
-#>   scalar      0.963  0.058  0.045      -0.036        +0.046  < .001
-#>   strict      0.964  0.053  0.047      +0.001        -0.005    .669
-#> Localized equality-constraint diagnostics retained: 48
+#>   metric       .999  0.012  0.030       -.001        +0.012    .018
+#>   scalar       .963  0.058  0.045       -.036        +0.046  < .001
+#>   strict       .964  0.053  0.047       +.001        -0.005    .669
 #> 
-#> Fit changes and score diagnostics are evidence. They are not pass/fail rules,
-#> and nomologR never frees a parameter because of them.
+#> Flagged
+#>   - Score diagnostics (Review): 48 univariate equality-constraint score
+#>     diagnostics were retained.
+#> 
+#> CFI = comparative fit index; RMSEA = root mean square error of approximation;
+#> SRMR = standardized root mean square residual; LRT = likelihood-ratio test of
+#> a level against the level before it; ML = maximum likelihood.
+#> 
+#> Fit changes and score diagnostics are evidence, not pass/fail rules, and
+#> nomologR never frees a parameter because of them.
+#> 
+#> See summary(x) for each level's chi-square test and
+#> nomo_table(x, "local_strain") for all 48 score diagnostics.
 head(nomo_table(long, "local_strain"))
 #> # A tibble: 6 × 8
 #>   level  constraint_index constraint    score_x2    df p_value diagnostic_only

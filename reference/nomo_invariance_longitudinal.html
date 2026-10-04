@@ -150,7 +150,10 @@ occasions only.</p></dd>
 
 <dt id="arg-id-fac">ID.fac<a class="anchor" aria-label="anchor" href="#arg-id-fac"></a></dt>
 <dd><p>Factor-identification method passed to
-<code><a href="https://rdrr.io/pkg/semTools/man/measEq.syntax.html" class="external-link">semTools::measEq.syntax()</a></code>. <code>"std.lv"</code> is the default.</p></dd>
+<code><a href="https://rdrr.io/pkg/semTools/man/measEq.syntax.html" class="external-link">semTools::measEq.syntax()</a></code>: <code>"std.lv"</code> (the default), <code>"UL"</code>, or
+<code>"effects.coding"</code>. semTools' other spellings of each are accepted and
+treated alike: <code>"unit.variance"</code>, <code>"UV"</code>, <code>"fixed.factor"</code>, and
+<code>"fixed-factor"</code> are <code>"std.lv"</code>.</p></dd>
 
 
 <dt id="arg-id-cat">ID.cat<a class="anchor" aria-label="anchor" href="#arg-id-cat"></a></dt>
@@ -175,8 +178,10 @@ the default for ordered indicators.</p></dd>
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A <code>nomo_invariance_longitudinal</code> object, which is also a
 <code>nomo_invariance</code> object, so <code><a href="nomo_table.html">nomo_table()</a></code>, <code><a href="nomo_apa_table.html">nomo_apa_table()</a></code>, and
-<code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> work as they do for groups. The fields to read are those of
-<code><a href="nomo_invariance.html">nomo_invariance()</a></code>, with <code>occasions</code> in place of <code>groups</code>, and:</p><ul><li><p><code>latent_means</code>: at each level that holds intercepts equal, each later
+<code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> work as they do for groups, and <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> show
+what they show for groups. The fields to read are those of
+<code><a href="nomo_invariance.html">nomo_invariance()</a></code>, with <code>occasions</code> in place of <code>groups</code> and without
+<code>group_n</code>, since every occasion has the same people, and:</p><ul><li><p><code>latent_means</code>: at each level that holds intercepts equal, each later
 occasion's latent mean relative to the first, in the first occasion's
 latent standard deviations, with its interval.</p></li>
 <li><p><code>longitudinal_model</code>: the configural model across occasions, before
@@ -251,19 +256,31 @@ researcher-specified releases.</p></div>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">long</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;nomo_invariance_longitudinal&gt; Measurement invariance across occasions</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Cases: 500 | Estimator: ML</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Occasions: t1, t2, t3 | Indicators: continuous</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Requested: configural -&gt; metric -&gt; scalar -&gt; strict</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Completed: configural -&gt; metric -&gt; scalar -&gt; strict</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Fit by level</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Level         CFI  RMSEA   SRMR  CFI change  RMSEA change   LRT p</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   configural  1.000  0.000  0.020          --            --      --</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   metric      0.999  0.012  0.030      -0.001        +0.012    .018</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   scalar      0.963  0.058  0.045      -0.036        +0.046  &lt; .001</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   strict      0.964  0.053  0.047      +0.001        -0.005    .669</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Localized equality-constraint diagnostics retained: 48</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   metric       .999  0.012  0.030       -.001        +0.012    .018</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   scalar       .963  0.058  0.045       -.036        +0.046  &lt; .001</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   strict       .964  0.053  0.047       +.001        -0.005    .669</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Fit changes and score diagnostics are evidence. They are not pass/fail rules,</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> and nomologR never frees a parameter because of them.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Flagged</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   - Score diagnostics (Review): 48 univariate equality-constraint score</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     diagnostics were retained.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CFI = comparative fit index; RMSEA = root mean square error of approximation;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SRMR = standardized root mean square residual; LRT = likelihood-ratio test of</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> a level against the level before it; ML = maximum likelihood.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Fit changes and score diagnostics are evidence, not pass/fail rules, and</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> nomologR never frees a parameter because of them.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> See summary(x) for each level's chi-square test and</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> nomo_table(x, "local_strain") for all 48 score diagnostics.</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">long</span>, <span class="st">"local_strain"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 6 × 8</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   level  constraint_index constraint    score_x2    df p_value diagnostic_only</span>

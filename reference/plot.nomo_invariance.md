@@ -25,4 +25,7 @@ plot(x, type = c("fit", "change", "local_strain"), ...)
 
 ## Value
 
-A `ggplot2` object.
+A `ggplot2` object. `"fit"` shows CFI, RMSEA, and SRMR at each level,
+`"change"` each one's change from the level before, and `"local_strain"`
+the 20 largest score diagnostics for the equality constraints, one panel
+per level.

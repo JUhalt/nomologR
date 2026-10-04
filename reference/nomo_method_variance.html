@@ -110,12 +110,14 @@ tests.</p></dd>
 
 
 <dt id="arg-marker-name">marker_name<a class="anchor" aria-label="anchor" href="#arg-marker-name"></a></dt>
-<dd><p>Name given to the marker factor. Default <code>"Marker"</code>.</p></dd>
+<dd><p>Name given to the marker factor. Default <code>"Marker"</code>. It
+names a factor in lavaan syntax, so it must be a syntactic name, such as
+<code>"SocialDesirability"</code>, without spaces.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A <code>nomo_method_variance</code> object. The fields to read are:</p><ul><li><p><code>models</code>: each model's chi-square, degrees of freedom, p-value
+    <p>A <code>nomo_method_variance</code> object. The fields to read are:</p><ul><li><p><code>models</code>: each model's chi-square, degrees of freedom, p value
 (<code>pvalue</code>), CFI, TLI, RMSEA, and SRMR. With a robust estimator, the
 chi-square is scaled and the indices are robust, as in <code><a href="nomo_cfa.html">nomo_cfa()</a></code>.</p></li>
 <li><p><code>comparisons</code>: the three model comparisons, with their chi-square
@@ -129,21 +131,27 @@ marker accounts for, and the method loading's <code>p_value</code>.</p></li>
 substantive and method parts, and <code>method_share</code>.</p></li>
 <li><p><code>correlations</code>: each pair of substantive factors (<code>factor1</code>, <code>factor2</code>)
 and their correlation in the CFA, Baseline, retained, Method-S(.05), and
-Method-S(.01) models, with p-values in the retained and sensitivity
+Method-S(.01) models, with p values in the retained and sensitivity
 models (<code>retained_p_value</code>, <code>method_s_05_p_value</code>,
 <code>method_s_01_p_value</code>).</p></li>
 <li><p><code>marker_correlations</code>: the marker's correlation with each substantive
 factor in the CFA model; <code>factor1</code> is the substantive factor and
 <code>factor2</code> the marker.</p></li>
+<li><p><code>engine_warnings</code>: the warnings lavaan raised, by model and for the
+comparisons.</p></li>
 <li><p><code>fits</code> and <code>decision_log</code>.</p></li>
-</ul><p>A table with one p-value for a test or an estimate names it <code>p_value</code>, as
+</ul><p>A table with one p value for a test or an estimate names it <code>p_value</code>, as
 the rest of the package does. <code>correlations</code> has one for each model, so
-each is named <code>&lt;model&gt;_p_value</code>. In <code>models</code>, <code>pvalue</code> is the p-value of
+each is named <code>&lt;model&gt;_p_value</code>. In <code>models</code>, <code>pvalue</code> is the p value of
 each model's chi-square test, named as in the fit tables of <code><a href="nomo_esem.html">nomo_esem()</a></code>
 and <code><a href="nomo_invariance.html">nomo_invariance()</a></code>.</p>
 <p>Other fields record the call, the settings used, and the syntax fitted.
 They may change between releases and are not part of the stable interface
 (see <code><a href="nomologR-package.html">?nomologR</a></code>).</p>
+<p><code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> shows the model comparisons, the reliability decomposition, the
+substantive correlations across the models, and any flag. <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> adds
+each model's fit, the loadings in the retained model, and each flag's
+recommendation.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -184,9 +192,20 @@ decomposed, using the retained method model, into a substantive part and a
 method part (Williams et al., 2010, equations 1-3). <code>method_share</code> is the
 method part as a proportion of the Baseline reliability.</p>
 <p><strong>Phase III: sensitivity.</strong> Because the method loadings are estimates, the
-retained model is refitted with them fixed at the upper ends of their 95%
-and 99% confidence intervals (Method-S(.05) and Method-S(.01)), and the
-substantive correlations are compared across the models.</p>
+retained model is refitted with them fixed at the ends of their 95% and 99%
+confidence intervals farther from zero (Method-S(.05) and Method-S(.01)), so
+a negative loading, as from a marker keyed opposite to the substantive
+items, becomes more negative. The substantive correlations are then compared
+across the models.</p>
+<p><strong>Checks.</strong> lavaan's warnings are kept for each model and comparison, in
+<code>engine_warnings</code> and as review rows of the decision log, and a model with
+an improper solution, such as a negative variance, is a concern. The marker's
+loadings and error variances from the CFA anchor every later model, so a CFA
+that does not converge, or gives the marker a negative error variance or no
+standard errors, stops the analysis, as does any model that does not
+converge. With two marker indicators, the marker's loadings are identified
+only through its correlations with the substantive factors, which the
+technique assumes are zero, so the decision log asks for review.</p>
 <p><strong>What the technique cannot do.</strong> It requires the marker to be orthogonal to
 the substantive factors. In simulations, with an ideal marker it did not
 find method variance that was absent. With a nonideal marker it sometimes
@@ -243,35 +262,49 @@ marker variables: A review and comprehensive CFA marker technique.
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">mv</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;nomo_method_variance&gt; Marker-based method variance</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Marker: m1, m2, m3 | N = 600 | Retained: Method-C</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Williams, Hartman, and Cavazotte (2010).</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Marker: m1, m2, m3 | Cases: 600 | Estimator: ML</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Retained: Method-C | Comparisons at alpha = .05</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Model comparisons</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Comparison             Question                  Chi-sq diff  df       p</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Baseline vs. Method-C  Method variance present?        11.89   1  &lt; .001</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Method-C vs. Method-U  Method effects equal?            2.78   7    .905</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Method-C vs. Method-R  Correlations biased?             0.07   1    .790</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Comparison             Question                  Delta chi-square  df       p</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Baseline vs. Method-C  Method variance present?             11.89   1  &lt; .001</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Method-C vs. Method-U  Method effects equal?                 2.78   7    .905</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Method-C vs. Method-R  Correlations biased?                  0.07   1    .790</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Reliability decomposition</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Factor  Total  Substantive  Method  Method share</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   A       0.804        0.788   0.017          2.1%</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   B       0.784        0.767   0.016          2.1%</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   A         .80          .79     .02          2.1%</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   B         .78          .77     .02          2.1%</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Substantive correlations</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Factors     CFA  Baseline  Method-C  Method-S(.05)  Method-S(.01)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   A with B  0.434     0.434     0.422          0.422          0.423</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Factors    CFA  Baseline  Method-C  Method-S(.05)  Method-S(.01)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   A with B  .434      .434      .422           .422           .423</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Flagged</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   - Baseline vs. Method-C (Review): Marker-based method variance is present</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     (chi-square difference 11.89 on 1 df, p &lt; .001).</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     (Delta chi-square(1) = 11.89, p &lt; .001).</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Comprehensive CFA marker technique (Williams, Hartman, &amp; Cavazotte, 2010).</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Baseline: the marker uncorrelated with the substantive factors. Method-C:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Baseline plus equal marker loadings on every substantive item; Method-U: those</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> loadings free to differ. Method-R: the retained model with the substantive</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> correlations fixed at their Baseline values. Method-S(.05), Method-S(.01): the</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> method loadings fixed at the upper ends of their 95% and 99% intervals. The</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> results describe the method variance this marker captures; they are not</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Models</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   CFA -- Confirmatory factor analysis of the substantive factors and the</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       marker, all correlated, with no method loadings; it gives the marker's</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       loadings and error variances.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Baseline -- The marker uncorrelated with the substantive factors, its</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       loadings and error variances fixed at their CFA values.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Method-C -- Baseline plus equal marker loadings on every substantive item.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Method-U -- Baseline plus marker loadings free to differ.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Method-R -- The retained model with the substantive correlations fixed at</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       their Baseline values.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Method-S(.05), Method-S(.01) -- The retained method loadings fixed at the</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       ends of their 95% and 99% intervals farther from zero.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> df = degrees of freedom; ML = maximum likelihood.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> The results describe the method variance this marker captures; they are not</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> corrected estimates, and other sources of method variance may remain.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> See summary(x) for each model's fit and the method loadings and</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> nomo_table(x, "decision_log") for every recorded decision.</span>
 <span class="r-in"><span><span class="fu"><a href="nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">mv</span>, <span class="st">"reliability"</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 2 × 5</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   factor reliability_total reliability_substantive reliability_method</span>

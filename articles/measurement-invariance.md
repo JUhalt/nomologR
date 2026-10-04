@@ -64,20 +64,32 @@ inv <- nomo_invariance(
 )
 
 inv
-#> <nomo_invariance> Measurement invariance
-#> Grouping variable: group (2 groups: online, paper) | Indicators: continuous
+#> <nomo_invariance> Measurement invariance across groups
+#> Cases: 800 (online n = 400, paper n = 400) | Estimator: ML
+#> Grouping variable: group | Indicators: continuous
 #> Requested: configural -> metric -> scalar -> strict
 #> Completed: configural -> metric -> scalar -> strict
 #> 
+#> Fit by level
 #>   Level         CFI  RMSEA   SRMR  CFI change  RMSEA change   LRT p
 #>   configural  1.000  0.000  0.002          --            --      --
-#>   metric      1.000  0.000  0.028       0.000         0.000    .146
-#>   scalar      0.954  0.121  0.065      -0.046        +0.121  < .001
-#>   strict      0.954  0.102  0.066       0.000        -0.019    .483
-#> Localized equality-constraint diagnostics retained: 24
+#>   metric      1.000  0.000  0.028        .000         0.000    .146
+#>   scalar       .954  0.121  0.065       -.046        +0.121  < .001
+#>   strict       .954  0.102  0.066        .000        -0.019    .483
 #> 
-#> Fit changes and score diagnostics are evidence. They are not pass/fail rules,
-#> and nomologR never frees a parameter because of them.
+#> Flagged
+#>   - Score diagnostics (Review): 24 univariate equality-constraint score
+#>     diagnostics were retained.
+#> 
+#> CFI = comparative fit index; RMSEA = root mean square error of approximation;
+#> SRMR = standardized root mean square residual; LRT = likelihood-ratio test of
+#> a level against the level before it; ML = maximum likelihood.
+#> 
+#> Fit changes and score diagnostics are evidence, not pass/fail rules, and
+#> nomologR never frees a parameter because of them.
+#> 
+#> See summary(x) for each level's chi-square test and
+#> nomo_table(x, "local_strain") for all 24 score diagnostics.
 ```
 
 The conventional continuous sequence is:
@@ -294,8 +306,8 @@ fit_ord[, c("level", "constraints", "cfi", "rmsea", "delta_cfi")]
 #> # A tibble: 5 × 5
 #>   level      constraints                                   cfi  rmsea  delta_cfi
 #>   <chr>      <chr>                                       <dbl>  <dbl>      <dbl>
-#> 1 configural none                                        0.992 0.0743 NA        
-#> 2 thresholds thresholds                                  0.997 0.0372  0.00439  
+#> 1 configural none                                        0.998 0.0522 NA        
+#> 2 thresholds thresholds                                  0.997 0.0372 -0.00119  
 #> 3 metric     thresholds, loadings                        0.997 0.0331  0.0000218
 #> 4 scalar     thresholds, loadings, intercepts            0.998 0.0227  0.00150  
 #> 5 strict     thresholds, loadings, intercepts, residuals 1     0       0.00193
@@ -331,7 +343,8 @@ long <- nomo_invariance_longitudinal(
 )
 summary(long)
 #> <nomo_invariance_longitudinal summary> Measurement invariance across occasions
-#> Indicators: continuous | Occasions: t1, t2, t3
+#> Cases: 500 | Estimator: ML
+#> Occasions: t1, t2, t3 | Indicators: continuous
 #> Levels completed: configural -> metric -> scalar
 #> 
 #> Identification and sequence
@@ -341,36 +354,57 @@ summary(long)
 #> Fit by level
 #>   Level       Chi-square  df       p    CFI  RMSEA   SRMR
 #>   configural       32.78  39    .748  1.000  0.000  0.020
-#>   metric           48.13  45    .347  0.999  0.012  0.030
-#>   scalar          137.20  51  < .001  0.963  0.058  0.045
+#>   metric           48.13  45    .347   .999  0.012  0.030
+#>   scalar          137.20  51  < .001   .963  0.058  0.045
 #>   Held equal: loadings from metric; intercepts from scalar.
 #> 
 #> Changes from the preceding level
-#>   Level   CFI change  RMSEA change  SRMR change  LRT chi-square  df       p
-#>   metric      -0.001        +0.012       +0.010           15.35   6    .018
-#>   scalar      -0.036        +0.046       +0.015           89.07   6  < .001
+#>   Level   CFI change  RMSEA change  SRMR change  Delta chi-square  df       p
+#>   metric       -.001        +0.012       +0.010             15.35   6    .018
+#>   scalar       -.036        +0.046       +0.015             89.07   6  < .001
 #> 
-#> Latent change from t1 (its latent SD)
+#> Latent change from t1, in its latent standard deviations
 #>   Level   Occasion  Factor     Change  95% CI             p
 #>   scalar  t2        Wellbeing    0.41  [0.31, 0.51]  < .001
 #>   scalar  t3        Wellbeing    0.66  [0.54, 0.78]  < .001
 #>   Comparable only with invariant intercepts, full or partial.
 #> 
-#> Largest equality-constraint score diagnostics (diagnostic only)
-#>   Level   Constraint                            Score  df       p
-#>   scalar  Intercept: w3 (t1 vs. t3)             22.93   1  < .001
-#>   scalar  Intercept: w3 (t1 vs. t2)             10.85   1  < .001
-#>   scalar  Intercept: w4 (t1 vs. t3)              7.97   1    .005
-#>   scalar  Intercept: w1 (t1 vs. t3)              5.47   1    .019
-#>   metric  Loading: Wellbeing -> w4 (t1 vs. t3)   4.23   1    .040
-#>   metric  Loading: Wellbeing -> w3 (t1 vs. t3)   4.13   1    .042
-#>   metric  Loading: Wellbeing -> w1 (t1 vs. t2)   3.52   1    .061
-#>   metric  Loading: Wellbeing -> w4 (t1 vs. t2)   3.21   1    .073
-#>   scalar  Intercept: w2 (t1 vs. t2)              2.85   1    .091
-#>   scalar  Loading: Wellbeing -> w1 (t1 vs. t2)   2.76   1    .097
+#> Largest score diagnostics for equality constraints
+#>   Level   Constraint                                Score chi-square  df       p
+#>   scalar  Intercept: w3 (t3 vs. others)                        22.93   1  < .001
+#>   scalar  Intercept: w3 (t2 vs. others)                        10.85   1  < .001
+#>   scalar  Intercept: w4 (t3 vs. others)                         7.97   1    .005
+#>   scalar  Intercept: w1 (t3 vs. others)                         5.47   1    .019
+#>   metric  Loading: Wellbeing -> w4 (t3 vs. others)              4.23   1    .040
+#>   metric  Loading: Wellbeing -> w3 (t3 vs. others)              4.13   1    .042
+#>   metric  Loading: Wellbeing -> w1 (t2 vs. others)              3.52   1    .061
+#>   metric  Loading: Wellbeing -> w4 (t2 vs. others)              3.21   1    .073
+#>   scalar  Intercept: w2 (t2 vs. others)                         2.85   1    .091
+#>   scalar  Loading: Wellbeing -> w1 (t2 vs. others)              2.76   1    .097
+#>   Each diagnostic frees one occasion's parameter while the other occasions
+#>   stay equal: "vs. others" names the occasion freed. The first occasion (t1)
+#>   is the reference and is never freed on its own, so when it alone differs,
+#>   every other occasion shows similar strain on that parameter.
 #> 
-#> No single delta-CFI, delta-RMSEA, delta-SRMR, chi-square difference, or score
-#> diagnostic is treated as a universal invariance rule.
+#> Flagged
+#>   - Score diagnostics (Review): 24 univariate equality-constraint score
+#>     diagnostics were retained. Use these diagnostics to localize strain, not
+#>     to authorize automatic constraint release. Partial invariance requires an
+#>     explicit researcher specification and rationale.
+#> 
+#> What these columns mean
+#>   CFI -- Comparative fit index.
+#>   RMSEA -- Root mean square error of approximation.
+#>   SRMR -- Standardized root mean square residual.
+#>   df -- Degrees of freedom.
+#>   CI -- Confidence interval.
+#>   ML -- Maximum likelihood.
+#> 
+#> No single CFI change, RMSEA change, SRMR change, chi-square difference, or
+#> score diagnostic is treated as a universal invariance rule.
+#> 
+#> See nomo_table(x, "local_strain") for all 24 score diagnostics and
+#> nomo_table(x, "decision_log") for every recorded decision.
 ```
 
 Fit holds up with the loadings equal and drops once the intercepts are

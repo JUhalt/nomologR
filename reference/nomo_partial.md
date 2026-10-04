@@ -36,7 +36,8 @@ nomo_partial(level, syntax, rationale)
 
 A `nomo_partial` object whose `releases` field is one row per release:
 its identifier, level, syntax, and rationale. `n` is the number of
-releases.
+releases. [`print()`](https://rdrr.io/r/base/print.html) lists each
+release with its level and rationale.
 
 ## Details
 
@@ -86,11 +87,16 @@ partial <- nomo_partial(
 )
 partial
 #> <nomo_partial> Partial invariance releases
-#> 2 researcher-specified releases
+#> Releases: 2 (researcher specified)
 #> 
+#> Releases
 #>   - P1 (metric): F =~ x2. Loading difference was theoretically anticipated.
 #>   - P2 (scalar): x3 ~ 1. Intercept difference was prespecified from prior
 #>     evidence.
 #> 
-#> No release was selected automatically by nomologR.
+#> No release was selected automatically by nomologR. Each applies from the level
+#> that first holds its parameter equal.
+#> 
+#> See nomo_invariance(..., partial = x) for the models fitted with these
+#> releases.
 ```

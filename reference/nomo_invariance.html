@@ -95,7 +95,8 @@ an object created by <code><a href="nomo_model.html">nomo_model()</a></code>.</p
 
 
 <dt id="arg-group">group<a class="anchor" aria-label="anchor" href="#arg-group"></a></dt>
-<dd><p>Character scalar naming the grouping variable in <code>data</code>.</p></dd>
+<dd><p>Character scalar naming the grouping variable in <code>data</code>. The
+group that appears first in <code>data</code> is the reference for latent means.</p></dd>
 
 
 <dt id="arg-ordered">ordered<a class="anchor" aria-label="anchor" href="#arg-ordered"></a></dt>
@@ -134,7 +135,10 @@ diagnostic evidence. Diagnostics never trigger automatic release/refitting.</p><
 
 <dt id="arg-id-fac">ID.fac<a class="anchor" aria-label="anchor" href="#arg-id-fac"></a></dt>
 <dd><p>Factor-identification method passed to
-<code><a href="https://rdrr.io/pkg/semTools/man/measEq.syntax.html" class="external-link">semTools::measEq.syntax()</a></code>. <code>"std.lv"</code> is the default.</p></dd>
+<code><a href="https://rdrr.io/pkg/semTools/man/measEq.syntax.html" class="external-link">semTools::measEq.syntax()</a></code>: <code>"std.lv"</code> (the default), <code>"UL"</code>, or
+<code>"effects.coding"</code>. semTools' other spellings of each are accepted and
+treated alike: <code>"unit.variance"</code>, <code>"UV"</code>, <code>"fixed.factor"</code>, and
+<code>"fixed-factor"</code> are <code>"std.lv"</code>.</p></dd>
 
 
 <dt id="arg-id-cat">ID.cat<a class="anchor" aria-label="anchor" href="#arg-id-cat"></a></dt>
@@ -162,7 +166,13 @@ the default for ordered indicators.</p></dd>
 Fitting stops at the first level that fails or does not converge; that
 level is in <code>fit_evidence</code> but not here.</p></li>
 <li><p><code>fit_evidence</code>: one row per level, with its fit, its change from the
-level before, the likelihood-ratio test, and any warning or error.</p></li>
+level before, the likelihood-ratio test, and any warning or error. With
+a robust estimator the chi-square, <code>df</code>, and <code>pvalue</code> are scaled and
+<code>cfi</code> and <code>rmsea</code> robust, the same version at every level.</p></li>
+<li><p><code>fit_variants</code>: the <code><a href="https://rdrr.io/pkg/lavaan/man/fitMeasures.html" class="external-link">lavaan::fitMeasures()</a></code> measure behind each column
+of <code>fit_evidence</code>, such as <code>c(chisq = "chisq.scaled", cfi = "cfi.robust", ...)</code>.</p></li>
+<li><p><code>n_used</code>: the number of cases the models used, and <code>group_n</code> each
+group's (<code>group</code>, <code>n</code>).</p></li>
 <li><p><code>local_strain</code>: score diagnostics for each equality constraint, which
 localize strain without releasing anything.</p></li>
 <li><p><code>partial</code>: the researcher-specified releases, when given, each at the
@@ -177,6 +187,10 @@ latent standard deviations, with their intervals. See <strong>Latent means</stro
 </ul><p>Other fields record the call, the settings used, and intermediate engine
 results. They may change between releases and are not part of the stable
 interface (see <code><a href="nomologR-package.html">?nomologR</a></code>).</p>
+<p><code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> shows the cases, the fit at each level with its change from the
+level before, and any flag. <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> adds the chi-square tests, what
+each level holds equal, the releases, the latent means, the largest score
+diagnostics, and each flag's recommendation.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -206,7 +220,22 @@ level, it is an error, because the earlier model would hold the parameter
 equal and the later one free it, so the two would not be nested.</p>
 <p>When <code>localize = TRUE</code>, univariate score tests for equality constraints are
 retained as diagnostic evidence. They are explicitly not used to modify the
-fitted model.</p>
+fitted model. Each test frees one equality constraint. With two groups it
+compares them; with three or more, it frees one group's parameter while the
+other groups stay equal, so the output labels it "(three vs. others)", not
+as a comparison of two groups. The first group is the reference and is
+never freed on its own, so when it alone differs, every other group shows
+similar strain on that parameter.</p>
+<p>With a robust estimator, such as MLR or the WLSMV default for ordered
+indicators, the chi-square, its degrees of freedom, and its p value are
+lavaan's scaled versions, and the likelihood-ratio tests are scaled
+difference tests. CFI and RMSEA are the robust versions, or the scaled ones
+where a level has no robust value. One version is used at every level, so a
+change in fit never compares two versions; <code>fit_variants</code> names it, and
+<code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> say which is shown.</p>
+<p>lavaan deletes incomplete cases listwise unless <code>missing</code> says otherwise.
+<code>n_used</code> gives the cases the models used, and the decision log flags any
+left out for review.</p>
     </div>
     <div class="section level2">
     <h2 id="latent-means">Latent means<a class="anchor" aria-label="anchor" href="#latent-means"></a></h2>
@@ -217,8 +246,11 @@ releases, groups can be compared on the construct itself (Byrne, Shavelson,
 &amp; Muthén, 1989). This is the structured-means form of known-groups evidence:
 a difference theory predicts between groups that differ on the construct.
 At each level that holds intercepts equal, <code>latent_means</code> gives each group's
-latent means relative to the reference group, the first group, which the
-default <code>ID.fac = "std.lv"</code> fixes at a mean of 0 and a variance of 1. Each
+latent means relative to the reference group, which the default
+<code>ID.fac = "std.lv"</code> fixes at a mean of 0 and a variance of 1. The reference
+is the group that appears first in <code>data</code>, in the order of the rows rather
+than of a factor's levels, as lavaan orders the groups; sort the rows to
+choose it. <code>reference_group</code> names it. Each
 mean is then a difference in the reference group's latent standard
 deviations, the effect size Hancock (2001) describes. The fitted model
 decides which means are reported: only those of factors whose reference
@@ -236,16 +268,21 @@ comparable until the non-invariant intercepts are released with
     <p>Historical foundations:</p>
 <p>Jöreskog, K. G. (1971). Simultaneous factor analysis in several
 populations. <em>Psychometrika, 36</em>(4), 409-426. <a href="https://doi.org/10.1007/BF02291366" class="external-link">doi:10.1007/BF02291366</a></p>
-<p>Hancock, G. R. (2001). Effect size, power, and sample size determination
-for structured means modeling and MIMIC approaches to between-groups
-hypothesis testing of means on a single latent construct. <em>Psychometrika,
-66</em>(3), 373-388. <a href="https://doi.org/10.1007/BF02294440" class="external-link">doi:10.1007/BF02294440</a></p>
 <p>Meredith, W. (1993). Measurement invariance, factor analysis and factorial
 invariance. <em>Psychometrika, 58</em>(4), 525-543. <a href="https://doi.org/10.1007/BF02294825" class="external-link">doi:10.1007/BF02294825</a></p>
 <p>Vandenberg, R. J., &amp; Lance, C. E. (2000). A review and synthesis of the
 measurement invariance literature: Suggestions, practices, and
 recommendations for organizational research. <em>Organizational Research
 Methods, 3</em>(1), 4-70. <a href="https://doi.org/10.1177/109442810031002" class="external-link">doi:10.1177/109442810031002</a></p>
+<p>Latent means and partial invariance:</p>
+<p>Byrne, B. M., Shavelson, R. J., &amp; Muthén, B. (1989). Testing for the
+equivalence of factor covariance and mean structures: The issue of partial
+measurement invariance. <em>Psychological Bulletin, 105</em>(3), 456-466.
+<a href="https://doi.org/10.1037/0033-2909.105.3.456" class="external-link">doi:10.1037/0033-2909.105.3.456</a></p>
+<p>Hancock, G. R. (2001). Effect size, power, and sample size determination
+for structured means modeling and MIMIC approaches to between-groups
+hypothesis testing of means on a single latent construct. <em>Psychometrika,
+66</em>(3), 373-388. <a href="https://doi.org/10.1007/BF02294440" class="external-link">doi:10.1007/BF02294440</a></p>
 <p>Change-in-fit evidence:</p>
 <p>Chen, F. F. (2007). Sensitivity of goodness of fit indexes to lack of
 measurement invariance. <em>Structural Equation Modeling, 14</em>(3), 464-504.
@@ -281,19 +318,31 @@ outcomes. <em>Psychometrika, 81</em>(4), 1014-1045.
 <span class="r-in"><span>  levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"configural"</span>, <span class="st">"metric"</span>, <span class="st">"scalar"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">inv</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;nomo_invariance&gt; Measurement invariance</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Grouping variable: group (2 groups: online, paper) | Indicators: continuous</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;nomo_invariance&gt; Measurement invariance across groups</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Cases: 800 (online n = 400, paper n = 400) | Estimator: ML</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Grouping variable: group | Indicators: continuous</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Requested: configural -&gt; metric -&gt; scalar</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Completed: configural -&gt; metric -&gt; scalar</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Fit by level</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Level         CFI  RMSEA   SRMR  CFI change  RMSEA change   LRT p</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   configural  1.000  0.000  0.002          --            --      --</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   metric      1.000  0.000  0.028       0.000         0.000    .146</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   scalar      0.954  0.121  0.065      -0.046        +0.121  &lt; .001</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Localized equality-constraint diagnostics retained: 12</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   metric      1.000  0.000  0.028        .000         0.000    .146</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   scalar       .954  0.121  0.065       -.046        +0.121  &lt; .001</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Fit changes and score diagnostics are evidence. They are not pass/fail rules,</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> and nomologR never frees a parameter because of them.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Flagged</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   - Score diagnostics (Review): 12 univariate equality-constraint score</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     diagnostics were retained.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CFI = comparative fit index; RMSEA = root mean square error of approximation;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SRMR = standardized root mean square residual; LRT = likelihood-ratio test of</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> a level against the level before it; ML = maximum likelihood.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Fit changes and score diagnostics are evidence, not pass/fail rules, and</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> nomologR never frees a parameter because of them.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> See summary(x) for each level's chi-square test and</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> nomo_table(x, "local_strain") for all 12 score diagnostics.</span>
 <span class="r-in"><span><span class="fu"><a href="nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">inv</span>, <span class="st">"fit"</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 3 × 19</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   level     constraints partial_requested status converged  chisq    df   pvalue</span>

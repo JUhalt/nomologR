@@ -1093,7 +1093,7 @@ it biases the substantive correlations.</li>
 factor’s reliability the method accounts for.</li>
 <li>
 <strong>Sensitivity models</strong> fix the method loadings at the
-upper ends of their intervals.</li>
+ends of their intervals farther from zero.</li>
 </ul>
 <p>Here, two constructs and a three-item marker are simulated sharing a
 method factor that loads .30 on every item:</p>
@@ -1117,35 +1117,49 @@ method factor that loads .30 on every item:</p>
 <span><span class="op">)</span></span>
 <span><span class="va">mv</span></span></code></pre></div>
 <pre><code><span><span class="co">## &lt;nomo_method_variance&gt; Marker-based method variance</span></span>
-<span><span class="co">## Marker: m1, m2, m3 | N = 600 | Retained: Method-C</span></span>
+<span><span class="co">## Williams, Hartman, and Cavazotte (2010).</span></span>
+<span><span class="co">## Marker: m1, m2, m3 | Cases: 600 | Estimator: ML</span></span>
+<span><span class="co">## Retained: Method-C | Comparisons at alpha = .05</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Model comparisons</span></span>
-<span><span class="co">##   Comparison             Question                  Chi-sq diff  df       p</span></span>
-<span><span class="co">##   Baseline vs. Method-C  Method variance present?        11.89   1  &lt; .001</span></span>
-<span><span class="co">##   Method-C vs. Method-U  Method effects equal?            2.78   7    .905</span></span>
-<span><span class="co">##   Method-C vs. Method-R  Correlations biased?             0.07   1    .790</span></span>
+<span><span class="co">##   Comparison             Question                  Delta chi-square  df       p</span></span>
+<span><span class="co">##   Baseline vs. Method-C  Method variance present?             11.89   1  &lt; .001</span></span>
+<span><span class="co">##   Method-C vs. Method-U  Method effects equal?                 2.78   7    .905</span></span>
+<span><span class="co">##   Method-C vs. Method-R  Correlations biased?                  0.07   1    .790</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Reliability decomposition</span></span>
 <span><span class="co">##   Factor  Total  Substantive  Method  Method share</span></span>
-<span><span class="co">##   A       0.804        0.788   0.017          2.1%</span></span>
-<span><span class="co">##   B       0.784        0.767   0.016          2.1%</span></span>
+<span><span class="co">##   A         .80          .79     .02          2.1%</span></span>
+<span><span class="co">##   B         .78          .77     .02          2.1%</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Substantive correlations</span></span>
-<span><span class="co">##   Factors     CFA  Baseline  Method-C  Method-S(.05)  Method-S(.01)</span></span>
-<span><span class="co">##   A with B  0.434     0.434     0.422          0.422          0.423</span></span>
+<span><span class="co">##   Factors    CFA  Baseline  Method-C  Method-S(.05)  Method-S(.01)</span></span>
+<span><span class="co">##   A with B  .434      .434      .422           .422           .423</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Flagged</span></span>
 <span><span class="co">##   - Baseline vs. Method-C (Review): Marker-based method variance is present</span></span>
-<span><span class="co">##     (chi-square difference 11.89 on 1 df, p &lt; .001).</span></span>
+<span><span class="co">##     (Delta chi-square(1) = 11.89, p &lt; .001).</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Comprehensive CFA marker technique (Williams, Hartman, &amp; Cavazotte, 2010).</span></span>
-<span><span class="co">## Baseline: the marker uncorrelated with the substantive factors. Method-C:</span></span>
-<span><span class="co">## Baseline plus equal marker loadings on every substantive item; Method-U: those</span></span>
-<span><span class="co">## loadings free to differ. Method-R: the retained model with the substantive</span></span>
-<span><span class="co">## correlations fixed at their Baseline values. Method-S(.05), Method-S(.01): the</span></span>
-<span><span class="co">## method loadings fixed at the upper ends of their 95% and 99% intervals. The</span></span>
-<span><span class="co">## results describe the method variance this marker captures; they are not</span></span>
-<span><span class="co">## corrected estimates, and other sources of method variance may remain.</span></span></code></pre>
+<span><span class="co">## Models</span></span>
+<span><span class="co">##   CFA -- Confirmatory factor analysis of the substantive factors and the</span></span>
+<span><span class="co">##       marker, all correlated, with no method loadings; it gives the marker's</span></span>
+<span><span class="co">##       loadings and error variances.</span></span>
+<span><span class="co">##   Baseline -- The marker uncorrelated with the substantive factors, its</span></span>
+<span><span class="co">##       loadings and error variances fixed at their CFA values.</span></span>
+<span><span class="co">##   Method-C -- Baseline plus equal marker loadings on every substantive item.</span></span>
+<span><span class="co">##   Method-U -- Baseline plus marker loadings free to differ.</span></span>
+<span><span class="co">##   Method-R -- The retained model with the substantive correlations fixed at</span></span>
+<span><span class="co">##       their Baseline values.</span></span>
+<span><span class="co">##   Method-S(.05), Method-S(.01) -- The retained method loadings fixed at the</span></span>
+<span><span class="co">##       ends of their 95% and 99% intervals farther from zero.</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## df = degrees of freedom; ML = maximum likelihood.</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## The results describe the method variance this marker captures; they are not</span></span>
+<span><span class="co">## corrected estimates, and other sources of method variance may remain.</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## See summary(x) for each model's fit and the method loadings and</span></span>
+<span><span class="co">## nomo_table(x, "decision_log") for every recorded decision.</span></span></code></pre>
 <p>The marker detects the method variance, and the effects are
 consistent with being equal, so Method-C is retained. The correlation
 between A and B barely moves, and the sensitivity models do not change

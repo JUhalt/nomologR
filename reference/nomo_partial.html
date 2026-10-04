@@ -94,7 +94,7 @@ A single rationale may be recycled across multiple releases.</p></dd>
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A <code>nomo_partial</code> object whose <code>releases</code> field is one row per
 release: its identifier, level, syntax, and rationale. <code>n</code> is the number
-of releases.</p>
+of releases. <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> lists each release with its level and rationale.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -136,13 +136,18 @@ psychological research. <em>Developmental Review, 41</em>, 71-90.
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">partial</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;nomo_partial&gt; Partial invariance releases</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 researcher-specified releases</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Releases: 2 (researcher specified)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Releases</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   - P1 (metric): F =~ x2. Loading difference was theoretically anticipated.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   - P2 (scalar): x3 ~ 1. Intercept difference was prespecified from prior</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     evidence.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> No release was selected automatically by nomologR.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> No release was selected automatically by nomologR. Each applies from the level</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> that first holds its parameter equal.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> See nomo_invariance(..., partial = x) for the models fitted with these</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> releases.</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

@@ -49,13 +49,15 @@ nomo_method_variance(
 
 - marker_name:
 
-  Name given to the marker factor. Default `"Marker"`.
+  Name given to the marker factor. Default `"Marker"`. It names a factor
+  in lavaan syntax, so it must be a syntactic name, such as
+  `"SocialDesirability"`, without spaces.
 
 ## Value
 
 A `nomo_method_variance` object. The fields to read are:
 
-- `models`: each model's chi-square, degrees of freedom, p-value
+- `models`: each model's chi-square, degrees of freedom, p value
   (`pvalue`), CFI, TLI, RMSEA, and SRMR. With a robust estimator, the
   chi-square is scaled and the indices are robust, as in
   [`nomo_cfa()`](https://juhalt.github.io/nomologR/reference/nomo_cfa.md).
@@ -76,7 +78,7 @@ A `nomo_method_variance` object. The fields to read are:
 
 - `correlations`: each pair of substantive factors (`factor1`,
   `factor2`) and their correlation in the CFA, Baseline, retained,
-  Method-S(.05), and Method-S(.01) models, with p-values in the retained
+  Method-S(.05), and Method-S(.01) models, with p values in the retained
   and sensitivity models (`retained_p_value`, `method_s_05_p_value`,
   `method_s_01_p_value`).
 
@@ -84,11 +86,14 @@ A `nomo_method_variance` object. The fields to read are:
   factor in the CFA model; `factor1` is the substantive factor and
   `factor2` the marker.
 
+- `engine_warnings`: the warnings lavaan raised, by model and for the
+  comparisons.
+
 - `fits` and `decision_log`.
 
-A table with one p-value for a test or an estimate names it `p_value`,
+A table with one p value for a test or an estimate names it `p_value`,
 as the rest of the package does. `correlations` has one for each model,
-so each is named `<model>_p_value`. In `models`, `pvalue` is the p-value
+so each is named `<model>_p_value`. In `models`, `pvalue` is the p value
 of each model's chi-square test, named as in the fit tables of
 [`nomo_esem()`](https://juhalt.github.io/nomologR/reference/nomo_esem.md)
 and
@@ -98,6 +103,12 @@ Other fields record the call, the settings used, and the syntax fitted.
 They may change between releases and are not part of the stable
 interface (see
 [`?nomologR`](https://juhalt.github.io/nomologR/reference/nomologR-package.md)).
+
+[`print()`](https://rdrr.io/r/base/print.html) shows the model
+comparisons, the reliability decomposition, the substantive correlations
+across the models, and any flag.
+[`summary()`](https://rdrr.io/r/base/summary.html) adds each model's
+fit, the loadings in the retained model, and each flag's recommendation.
 
 ## Details
 
@@ -152,10 +163,22 @@ substantive part and a method part (Williams et al., 2010, equations
 reliability.
 
 **Phase III: sensitivity.** Because the method loadings are estimates,
-the retained model is refitted with them fixed at the upper ends of
-their 95% and 99% confidence intervals (Method-S(.05) and
-Method-S(.01)), and the substantive correlations are compared across the
-models.
+the retained model is refitted with them fixed at the ends of their 95%
+and 99% confidence intervals farther from zero (Method-S(.05) and
+Method-S(.01)), so a negative loading, as from a marker keyed opposite
+to the substantive items, becomes more negative. The substantive
+correlations are then compared across the models.
+
+**Checks.** lavaan's warnings are kept for each model and comparison, in
+`engine_warnings` and as review rows of the decision log, and a model
+with an improper solution, such as a negative variance, is a concern.
+The marker's loadings and error variances from the CFA anchor every
+later model, so a CFA that does not converge, or gives the marker a
+negative error variance or no standard errors, stops the analysis, as
+does any model that does not converge. With two marker indicators, the
+marker's loadings are identified only through its correlations with the
+substantive factors, which the technique assumes are zero, so the
+decision log asks for review.
 
 **What the technique cannot do.** It requires the marker to be
 orthogonal to the substantive factors. In simulations, with an ideal
@@ -220,35 +243,49 @@ mv <- nomo_method_variance(
 )
 mv
 #> <nomo_method_variance> Marker-based method variance
-#> Marker: m1, m2, m3 | N = 600 | Retained: Method-C
+#> Williams, Hartman, and Cavazotte (2010).
+#> Marker: m1, m2, m3 | Cases: 600 | Estimator: ML
+#> Retained: Method-C | Comparisons at alpha = .05
 #> 
 #> Model comparisons
-#>   Comparison             Question                  Chi-sq diff  df       p
-#>   Baseline vs. Method-C  Method variance present?        11.89   1  < .001
-#>   Method-C vs. Method-U  Method effects equal?            2.78   7    .905
-#>   Method-C vs. Method-R  Correlations biased?             0.07   1    .790
+#>   Comparison             Question                  Delta chi-square  df       p
+#>   Baseline vs. Method-C  Method variance present?             11.89   1  < .001
+#>   Method-C vs. Method-U  Method effects equal?                 2.78   7    .905
+#>   Method-C vs. Method-R  Correlations biased?                  0.07   1    .790
 #> 
 #> Reliability decomposition
 #>   Factor  Total  Substantive  Method  Method share
-#>   A       0.804        0.788   0.017          2.1%
-#>   B       0.784        0.767   0.016          2.1%
+#>   A         .80          .79     .02          2.1%
+#>   B         .78          .77     .02          2.1%
 #> 
 #> Substantive correlations
-#>   Factors     CFA  Baseline  Method-C  Method-S(.05)  Method-S(.01)
-#>   A with B  0.434     0.434     0.422          0.422          0.423
+#>   Factors    CFA  Baseline  Method-C  Method-S(.05)  Method-S(.01)
+#>   A with B  .434      .434      .422           .422           .423
 #> 
 #> Flagged
 #>   - Baseline vs. Method-C (Review): Marker-based method variance is present
-#>     (chi-square difference 11.89 on 1 df, p < .001).
+#>     (Delta chi-square(1) = 11.89, p < .001).
 #> 
-#> Comprehensive CFA marker technique (Williams, Hartman, & Cavazotte, 2010).
-#> Baseline: the marker uncorrelated with the substantive factors. Method-C:
-#> Baseline plus equal marker loadings on every substantive item; Method-U: those
-#> loadings free to differ. Method-R: the retained model with the substantive
-#> correlations fixed at their Baseline values. Method-S(.05), Method-S(.01): the
-#> method loadings fixed at the upper ends of their 95% and 99% intervals. The
-#> results describe the method variance this marker captures; they are not
+#> Models
+#>   CFA -- Confirmatory factor analysis of the substantive factors and the
+#>       marker, all correlated, with no method loadings; it gives the marker's
+#>       loadings and error variances.
+#>   Baseline -- The marker uncorrelated with the substantive factors, its
+#>       loadings and error variances fixed at their CFA values.
+#>   Method-C -- Baseline plus equal marker loadings on every substantive item.
+#>   Method-U -- Baseline plus marker loadings free to differ.
+#>   Method-R -- The retained model with the substantive correlations fixed at
+#>       their Baseline values.
+#>   Method-S(.05), Method-S(.01) -- The retained method loadings fixed at the
+#>       ends of their 95% and 99% intervals farther from zero.
+#> 
+#> df = degrees of freedom; ML = maximum likelihood.
+#> 
+#> The results describe the method variance this marker captures; they are not
 #> corrected estimates, and other sources of method variance may remain.
+#> 
+#> See summary(x) for each model's fit and the method loadings and
+#> nomo_table(x, "decision_log") for every recorded decision.
 nomo_table(mv, "reliability")
 #> # A tibble: 2 × 5
 #>   factor reliability_total reliability_substantive reliability_method

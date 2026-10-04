@@ -370,8 +370,9 @@ inv <- nomo_invariance(
   levels = c("configural", "metric", "scalar")
 )
 summary(inv)
-#> <nomo_invariance summary> Measurement invariance
-#> Indicators: continuous | Groups: A, B
+#> <nomo_invariance summary> Measurement invariance across groups
+#> Cases: 400 (A n = 200, B n = 200) | Estimator: ML
+#> Grouping variable: cohort | Indicators: continuous
 #> Levels completed: configural -> metric -> scalar
 #> 
 #> Identification and sequence
@@ -379,38 +380,55 @@ summary(inv)
 #>   strict sequence.
 #> 
 #> Fit by level
-#>   Level       Chi-square  df       p    CFI  RMSEA   SRMR
-#>   configural      114.09  68  < .001  0.941  0.058  0.057
-#>   metric          121.68  76  < .001  0.941  0.055  0.064
-#>   scalar          153.60  84  < .001  0.911  0.064  0.071
+#>   Level       Chi-square  df       p   CFI  RMSEA   SRMR
+#>   configural      114.09  68  < .001  .941  0.058  0.057
+#>   metric          121.68  76  < .001  .941  0.055  0.064
+#>   scalar          153.60  84  < .001  .911  0.064  0.071
 #>   Held equal: loadings from metric; intercepts from scalar.
 #> 
 #> Changes from the preceding level
-#>   Level   CFI change  RMSEA change  SRMR change  LRT chi-square  df       p
-#>   metric      +0.001        -0.003       +0.007            7.58   8    .475
-#>   scalar      -0.031        +0.010       +0.008           31.92   8  < .001
+#>   Level   CFI change  RMSEA change  SRMR change  Delta chi-square  df       p
+#>   metric       +.001        -0.003       +0.007              7.58   8    .475
+#>   scalar       -.031        +0.010       +0.008             31.92   8  < .001
 #> 
-#> Latent means relative to A (its latent SD)
+#> Latent means relative to A, in its latent standard deviations
 #>   Level   Group  Factor  Difference  95% CI            p
 #>   scalar  B      EF           -0.14  [-0.36, 0.08]  .218
 #>   scalar  B      TF            0.22  [0.00, 0.44]   .054
 #>   Comparable only with invariant intercepts, full or partial.
 #> 
-#> Largest equality-constraint score diagnostics (diagnostic only)
-#>   Level   Constraint                    Score  df       p
-#>   scalar  Intercept: TF6 (A vs. B)      24.30   1  < .001
-#>   scalar  Intercept: TF4 (A vs. B)       6.40   1    .011
-#>   metric  Loading: TF -> TF6 (A vs. B)   2.71   1    .100
-#>   scalar  Intercept: EF1 (A vs. B)       2.55   1    .110
-#>   metric  Loading: EF -> EF3 (A vs. B)   2.32   1    .127
-#>   scalar  Intercept: TF2 (A vs. B)       2.24   1    .135
-#>   scalar  Loading: EF -> EF3 (A vs. B)   2.23   1    .136
-#>   metric  Loading: TF -> TF1 (A vs. B)   2.07   1    .150
-#>   scalar  Loading: TF -> TF1 (A vs. B)   1.69   1    .194
-#>   scalar  Intercept: EF2 (A vs. B)       1.49   1    .222
+#> Largest score diagnostics for equality constraints
+#>   Level   Constraint                    Score chi-square  df       p
+#>   scalar  Intercept: TF6 (A vs. B)                 24.30   1  < .001
+#>   scalar  Intercept: TF4 (A vs. B)                  6.40   1    .011
+#>   metric  Loading: TF -> TF6 (A vs. B)              2.71   1    .100
+#>   scalar  Intercept: EF1 (A vs. B)                  2.55   1    .110
+#>   metric  Loading: EF -> EF3 (A vs. B)              2.32   1    .127
+#>   scalar  Intercept: TF2 (A vs. B)                  2.24   1    .135
+#>   scalar  Loading: EF -> EF3 (A vs. B)              2.23   1    .136
+#>   metric  Loading: TF -> TF1 (A vs. B)              2.07   1    .150
+#>   scalar  Loading: TF -> TF1 (A vs. B)              1.69   1    .194
+#>   scalar  Intercept: EF2 (A vs. B)                  1.49   1    .222
 #> 
-#> No single delta-CFI, delta-RMSEA, delta-SRMR, chi-square difference, or score
-#> diagnostic is treated as a universal invariance rule.
+#> Flagged
+#>   - Score diagnostics (Review): 30 univariate equality-constraint score
+#>     diagnostics were retained. Use these diagnostics to localize strain, not
+#>     to authorize automatic constraint release. Partial invariance requires an
+#>     explicit researcher specification and rationale.
+#> 
+#> What these columns mean
+#>   CFI -- Comparative fit index.
+#>   RMSEA -- Root mean square error of approximation.
+#>   SRMR -- Standardized root mean square residual.
+#>   df -- Degrees of freedom.
+#>   CI -- Confidence interval.
+#>   ML -- Maximum likelihood.
+#> 
+#> No single CFI change, RMSEA change, SRMR change, chi-square difference, or
+#> score diagnostic is treated as a universal invariance rule.
+#> 
+#> See nomo_table(x, "local_strain") for all 30 score diagnostics and
+#> nomo_table(x, "decision_log") for every recorded decision.
 ```
 
 Equal loadings hold; equal intercepts cost fit. The largest score

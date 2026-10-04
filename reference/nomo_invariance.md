@@ -39,7 +39,8 @@ nomo_invariance(
 
 - group:
 
-  Character scalar naming the grouping variable in `data`.
+  Character scalar naming the grouping variable in `data`. The group
+  that appears first in `data` is the reference for latent means.
 
 - ordered:
 
@@ -79,8 +80,11 @@ nomo_invariance(
 - ID.fac:
 
   Factor-identification method passed to
-  [`semTools::measEq.syntax()`](https://rdrr.io/pkg/semTools/man/measEq.syntax.html).
-  `"std.lv"` is the default.
+  [`semTools::measEq.syntax()`](https://rdrr.io/pkg/semTools/man/measEq.syntax.html):
+  `"std.lv"` (the default), `"UL"`, or `"effects.coding"`. semTools'
+  other spellings of each are accepted and treated alike:
+  `"unit.variance"`, `"UV"`, `"fixed.factor"`, and `"fixed-factor"` are
+  `"std.lv"`.
 
 - ID.cat:
 
@@ -114,6 +118,16 @@ A `nomo_invariance` object. The fields to read are:
 
 - `fit_evidence`: one row per level, with its fit, its change from the
   level before, the likelihood-ratio test, and any warning or error.
+  With a robust estimator the chi-square, `df`, and `pvalue` are scaled
+  and `cfi` and `rmsea` robust, the same version at every level.
+
+- `fit_variants`: the
+  [`lavaan::fitMeasures()`](https://rdrr.io/pkg/lavaan/man/fitMeasures.html)
+  measure behind each column of `fit_evidence`, such as
+  `c(chisq = "chisq.scaled", cfi = "cfi.robust", ...)`.
+
+- `n_used`: the number of cases the models used, and `group_n` each
+  group's (`group`, `n`).
 
 - `local_strain`: score diagnostics for each equality constraint, which
   localize strain without releasing anything.
@@ -138,6 +152,12 @@ Other fields record the call, the settings used, and intermediate engine
 results. They may change between releases and are not part of the stable
 interface (see
 [`?nomologR`](https://juhalt.github.io/nomologR/reference/nomologR-package.md)).
+
+[`print()`](https://rdrr.io/r/base/print.html) shows the cases, the fit
+at each level with its change from the level before, and any flag.
+[`summary()`](https://rdrr.io/r/base/summary.html) adds the chi-square
+tests, what each level holds equal, the releases, the latent means, the
+largest score diagnostics, and each flag's recommendation.
 
 ## Details
 
@@ -173,7 +193,25 @@ later one free it, so the two would not be nested.
 
 When `localize = TRUE`, univariate score tests for equality constraints
 are retained as diagnostic evidence. They are explicitly not used to
-modify the fitted model.
+modify the fitted model. Each test frees one equality constraint. With
+two groups it compares them; with three or more, it frees one group's
+parameter while the other groups stay equal, so the output labels it
+"(three vs. others)", not as a comparison of two groups. The first group
+is the reference and is never freed on its own, so when it alone
+differs, every other group shows similar strain on that parameter.
+
+With a robust estimator, such as MLR or the WLSMV default for ordered
+indicators, the chi-square, its degrees of freedom, and its p value are
+lavaan's scaled versions, and the likelihood-ratio tests are scaled
+difference tests. CFI and RMSEA are the robust versions, or the scaled
+ones where a level has no robust value. One version is used at every
+level, so a change in fit never compares two versions; `fit_variants`
+names it, and [`print()`](https://rdrr.io/r/base/print.html) and
+[`summary()`](https://rdrr.io/r/base/summary.html) say which is shown.
+
+lavaan deletes incomplete cases listwise unless `missing` says
+otherwise. `n_used` gives the cases the models used, and the decision
+log flags any left out for review.
 
 ## Latent means
 
@@ -183,14 +221,16 @@ Shavelson, & Muthén, 1989). This is the structured-means form of
 known-groups evidence: a difference theory predicts between groups that
 differ on the construct. At each level that holds intercepts equal,
 `latent_means` gives each group's latent means relative to the reference
-group, the first group, which the default `ID.fac = "std.lv"` fixes at a
-mean of 0 and a variance of 1. Each mean is then a difference in the
-reference group's latent standard deviations, the effect size Hancock
-(2001) describes. The fitted model decides which means are reported:
-only those of factors whose reference mean is fixed at 0 and variance at
-1, and only where the compared group's mean is estimated. So the table
-is empty under another identification, and for a model with higher-order
-factors, which
+group, which the default `ID.fac = "std.lv"` fixes at a mean of 0 and a
+variance of 1. The reference is the group that appears first in `data`,
+in the order of the rows rather than of a factor's levels, as lavaan
+orders the groups; sort the rows to choose it. `reference_group` names
+it. Each mean is then a difference in the reference group's latent
+standard deviations, the effect size Hancock (2001) describes. The
+fitted model decides which means are reported: only those of factors
+whose reference mean is fixed at 0 and variance at 1, and only where the
+compared group's mean is estimated. So the table is empty under another
+identification, and for a model with higher-order factors, which
 [`semTools::measEq.syntax()`](https://rdrr.io/pkg/semTools/man/measEq.syntax.html)
 identifies by unit loadings (the decision log records the switch). A
 factor whose intercepts are all released has no estimated difference;
@@ -208,12 +248,6 @@ Jöreskog, K. G. (1971). Simultaneous factor analysis in several
 populations. *Psychometrika, 36*(4), 409-426.
 [doi:10.1007/BF02291366](https://doi.org/10.1007/BF02291366)
 
-Hancock, G. R. (2001). Effect size, power, and sample size determination
-for structured means modeling and MIMIC approaches to between-groups
-hypothesis testing of means on a single latent construct.
-*Psychometrika, 66*(3), 373-388.
-[doi:10.1007/BF02294440](https://doi.org/10.1007/BF02294440)
-
 Meredith, W. (1993). Measurement invariance, factor analysis and
 factorial invariance. *Psychometrika, 58*(4), 525-543.
 [doi:10.1007/BF02294825](https://doi.org/10.1007/BF02294825)
@@ -223,6 +257,20 @@ measurement invariance literature: Suggestions, practices, and
 recommendations for organizational research. *Organizational Research
 Methods, 3*(1), 4-70.
 [doi:10.1177/109442810031002](https://doi.org/10.1177/109442810031002)
+
+Latent means and partial invariance:
+
+Byrne, B. M., Shavelson, R. J., & Muthén, B. (1989). Testing for the
+equivalence of factor covariance and mean structures: The issue of
+partial measurement invariance. *Psychological Bulletin, 105*(3),
+456-466.
+[doi:10.1037/0033-2909.105.3.456](https://doi.org/10.1037/0033-2909.105.3.456)
+
+Hancock, G. R. (2001). Effect size, power, and sample size determination
+for structured means modeling and MIMIC approaches to between-groups
+hypothesis testing of means on a single latent construct.
+*Psychometrika, 66*(3), 373-388.
+[doi:10.1007/BF02294440](https://doi.org/10.1007/BF02294440)
 
 Change-in-fit evidence:
 
@@ -268,19 +316,31 @@ inv <- nomo_invariance(
   levels = c("configural", "metric", "scalar")
 )
 inv
-#> <nomo_invariance> Measurement invariance
-#> Grouping variable: group (2 groups: online, paper) | Indicators: continuous
+#> <nomo_invariance> Measurement invariance across groups
+#> Cases: 800 (online n = 400, paper n = 400) | Estimator: ML
+#> Grouping variable: group | Indicators: continuous
 #> Requested: configural -> metric -> scalar
 #> Completed: configural -> metric -> scalar
 #> 
+#> Fit by level
 #>   Level         CFI  RMSEA   SRMR  CFI change  RMSEA change   LRT p
 #>   configural  1.000  0.000  0.002          --            --      --
-#>   metric      1.000  0.000  0.028       0.000         0.000    .146
-#>   scalar      0.954  0.121  0.065      -0.046        +0.121  < .001
-#> Localized equality-constraint diagnostics retained: 12
+#>   metric      1.000  0.000  0.028        .000         0.000    .146
+#>   scalar       .954  0.121  0.065       -.046        +0.121  < .001
 #> 
-#> Fit changes and score diagnostics are evidence. They are not pass/fail rules,
-#> and nomologR never frees a parameter because of them.
+#> Flagged
+#>   - Score diagnostics (Review): 12 univariate equality-constraint score
+#>     diagnostics were retained.
+#> 
+#> CFI = comparative fit index; RMSEA = root mean square error of approximation;
+#> SRMR = standardized root mean square residual; LRT = likelihood-ratio test of
+#> a level against the level before it; ML = maximum likelihood.
+#> 
+#> Fit changes and score diagnostics are evidence, not pass/fail rules, and
+#> nomologR never frees a parameter because of them.
+#> 
+#> See summary(x) for each level's chi-square test and
+#> nomo_table(x, "local_strain") for all 12 score diagnostics.
 nomo_table(inv, "fit")
 #> # A tibble: 3 × 19
 #>   level     constraints partial_requested status converged  chisq    df   pvalue

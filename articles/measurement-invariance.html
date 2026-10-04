@@ -142,20 +142,32 @@ the job of the invariance sequence.</p>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">inv</span></span>
-<span><span class="co">#&gt; &lt;nomo_invariance&gt; Measurement invariance</span></span>
-<span><span class="co">#&gt; Grouping variable: group (2 groups: online, paper) | Indicators: continuous</span></span>
+<span><span class="co">#&gt; &lt;nomo_invariance&gt; Measurement invariance across groups</span></span>
+<span><span class="co">#&gt; Cases: 800 (online n = 400, paper n = 400) | Estimator: ML</span></span>
+<span><span class="co">#&gt; Grouping variable: group | Indicators: continuous</span></span>
 <span><span class="co">#&gt; Requested: configural -&gt; metric -&gt; scalar -&gt; strict</span></span>
 <span><span class="co">#&gt; Completed: configural -&gt; metric -&gt; scalar -&gt; strict</span></span>
 <span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Fit by level</span></span>
 <span><span class="co">#&gt;   Level         CFI  RMSEA   SRMR  CFI change  RMSEA change   LRT p</span></span>
 <span><span class="co">#&gt;   configural  1.000  0.000  0.002          --            --      --</span></span>
-<span><span class="co">#&gt;   metric      1.000  0.000  0.028       0.000         0.000    .146</span></span>
-<span><span class="co">#&gt;   scalar      0.954  0.121  0.065      -0.046        +0.121  &lt; .001</span></span>
-<span><span class="co">#&gt;   strict      0.954  0.102  0.066       0.000        -0.019    .483</span></span>
-<span><span class="co">#&gt; Localized equality-constraint diagnostics retained: 24</span></span>
+<span><span class="co">#&gt;   metric      1.000  0.000  0.028        .000         0.000    .146</span></span>
+<span><span class="co">#&gt;   scalar       .954  0.121  0.065       -.046        +0.121  &lt; .001</span></span>
+<span><span class="co">#&gt;   strict       .954  0.102  0.066        .000        -0.019    .483</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Fit changes and score diagnostics are evidence. They are not pass/fail rules,</span></span>
-<span><span class="co">#&gt; and nomologR never frees a parameter because of them.</span></span></code></pre></div>
+<span><span class="co">#&gt; Flagged</span></span>
+<span><span class="co">#&gt;   - Score diagnostics (Review): 24 univariate equality-constraint score</span></span>
+<span><span class="co">#&gt;     diagnostics were retained.</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; CFI = comparative fit index; RMSEA = root mean square error of approximation;</span></span>
+<span><span class="co">#&gt; SRMR = standardized root mean square residual; LRT = likelihood-ratio test of</span></span>
+<span><span class="co">#&gt; a level against the level before it; ML = maximum likelihood.</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Fit changes and score diagnostics are evidence, not pass/fail rules, and</span></span>
+<span><span class="co">#&gt; nomologR never frees a parameter because of them.</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; See summary(x) for each level's chi-square test and</span></span>
+<span><span class="co">#&gt; nomo_table(x, "local_strain") for all 24 score diagnostics.</span></span></code></pre></div>
 <p>The conventional continuous sequence is:</p>
 <pre class="text"><code><span><span class="va">configural</span> <span class="op">-&gt;</span> <span class="va">metric</span> <span class="op">-&gt;</span> <span class="va">scalar</span> <span class="op">-&gt;</span> <span class="va">strict</span></span></code></pre>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
@@ -336,8 +348,8 @@ non-invariance was built into these groups.</p>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 5 × 5</span></span></span>
 <span><span class="co">#&gt;   level      constraints                                   cfi  rmsea  delta_cfi</span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                                       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> configural none                                        0.992 0.074<span style="text-decoration: underline;">3</span> <span style="color: #BB0000;">NA</span>        </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> thresholds thresholds                                  0.997 0.037<span style="text-decoration: underline;">2</span>  0.004<span style="text-decoration: underline;">39</span>  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> configural none                                        0.998 0.052<span style="text-decoration: underline;">2</span> <span style="color: #BB0000;">NA</span>        </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> thresholds thresholds                                  0.997 0.037<span style="text-decoration: underline;">2</span> -<span style="color: #BB0000;">0.001</span><span style="color: #BB0000; text-decoration: underline;">19</span>  </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> metric     thresholds, loadings                        0.997 0.033<span style="text-decoration: underline;">1</span>  0.000<span style="text-decoration: underline;">021</span>8</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> scalar     thresholds, loadings, intercepts            0.998 0.022<span style="text-decoration: underline;">7</span>  0.001<span style="text-decoration: underline;">50</span>  </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> strict     thresholds, loadings, intercepts, residuals 1     0       0.001<span style="text-decoration: underline;">93</span></span></span></code></pre></div>
@@ -371,7 +383,8 @@ the construct is usually stable too.</p>
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">long</span><span class="op">)</span></span>
 <span><span class="co">#&gt; &lt;nomo_invariance_longitudinal summary&gt; Measurement invariance across occasions</span></span>
-<span><span class="co">#&gt; Indicators: continuous | Occasions: t1, t2, t3</span></span>
+<span><span class="co">#&gt; Cases: 500 | Estimator: ML</span></span>
+<span><span class="co">#&gt; Occasions: t1, t2, t3 | Indicators: continuous</span></span>
 <span><span class="co">#&gt; Levels completed: configural -&gt; metric -&gt; scalar</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Identification and sequence</span></span>
@@ -381,36 +394,57 @@ the construct is usually stable too.</p>
 <span><span class="co">#&gt; Fit by level</span></span>
 <span><span class="co">#&gt;   Level       Chi-square  df       p    CFI  RMSEA   SRMR</span></span>
 <span><span class="co">#&gt;   configural       32.78  39    .748  1.000  0.000  0.020</span></span>
-<span><span class="co">#&gt;   metric           48.13  45    .347  0.999  0.012  0.030</span></span>
-<span><span class="co">#&gt;   scalar          137.20  51  &lt; .001  0.963  0.058  0.045</span></span>
+<span><span class="co">#&gt;   metric           48.13  45    .347   .999  0.012  0.030</span></span>
+<span><span class="co">#&gt;   scalar          137.20  51  &lt; .001   .963  0.058  0.045</span></span>
 <span><span class="co">#&gt;   Held equal: loadings from metric; intercepts from scalar.</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Changes from the preceding level</span></span>
-<span><span class="co">#&gt;   Level   CFI change  RMSEA change  SRMR change  LRT chi-square  df       p</span></span>
-<span><span class="co">#&gt;   metric      -0.001        +0.012       +0.010           15.35   6    .018</span></span>
-<span><span class="co">#&gt;   scalar      -0.036        +0.046       +0.015           89.07   6  &lt; .001</span></span>
+<span><span class="co">#&gt;   Level   CFI change  RMSEA change  SRMR change  Delta chi-square  df       p</span></span>
+<span><span class="co">#&gt;   metric       -.001        +0.012       +0.010             15.35   6    .018</span></span>
+<span><span class="co">#&gt;   scalar       -.036        +0.046       +0.015             89.07   6  &lt; .001</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Latent change from t1 (its latent SD)</span></span>
+<span><span class="co">#&gt; Latent change from t1, in its latent standard deviations</span></span>
 <span><span class="co">#&gt;   Level   Occasion  Factor     Change  95% CI             p</span></span>
 <span><span class="co">#&gt;   scalar  t2        Wellbeing    0.41  [0.31, 0.51]  &lt; .001</span></span>
 <span><span class="co">#&gt;   scalar  t3        Wellbeing    0.66  [0.54, 0.78]  &lt; .001</span></span>
 <span><span class="co">#&gt;   Comparable only with invariant intercepts, full or partial.</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Largest equality-constraint score diagnostics (diagnostic only)</span></span>
-<span><span class="co">#&gt;   Level   Constraint                            Score  df       p</span></span>
-<span><span class="co">#&gt;   scalar  Intercept: w3 (t1 vs. t3)             22.93   1  &lt; .001</span></span>
-<span><span class="co">#&gt;   scalar  Intercept: w3 (t1 vs. t2)             10.85   1  &lt; .001</span></span>
-<span><span class="co">#&gt;   scalar  Intercept: w4 (t1 vs. t3)              7.97   1    .005</span></span>
-<span><span class="co">#&gt;   scalar  Intercept: w1 (t1 vs. t3)              5.47   1    .019</span></span>
-<span><span class="co">#&gt;   metric  Loading: Wellbeing -&gt; w4 (t1 vs. t3)   4.23   1    .040</span></span>
-<span><span class="co">#&gt;   metric  Loading: Wellbeing -&gt; w3 (t1 vs. t3)   4.13   1    .042</span></span>
-<span><span class="co">#&gt;   metric  Loading: Wellbeing -&gt; w1 (t1 vs. t2)   3.52   1    .061</span></span>
-<span><span class="co">#&gt;   metric  Loading: Wellbeing -&gt; w4 (t1 vs. t2)   3.21   1    .073</span></span>
-<span><span class="co">#&gt;   scalar  Intercept: w2 (t1 vs. t2)              2.85   1    .091</span></span>
-<span><span class="co">#&gt;   scalar  Loading: Wellbeing -&gt; w1 (t1 vs. t2)   2.76   1    .097</span></span>
+<span><span class="co">#&gt; Largest score diagnostics for equality constraints</span></span>
+<span><span class="co">#&gt;   Level   Constraint                                Score chi-square  df       p</span></span>
+<span><span class="co">#&gt;   scalar  Intercept: w3 (t3 vs. others)                        22.93   1  &lt; .001</span></span>
+<span><span class="co">#&gt;   scalar  Intercept: w3 (t2 vs. others)                        10.85   1  &lt; .001</span></span>
+<span><span class="co">#&gt;   scalar  Intercept: w4 (t3 vs. others)                         7.97   1    .005</span></span>
+<span><span class="co">#&gt;   scalar  Intercept: w1 (t3 vs. others)                         5.47   1    .019</span></span>
+<span><span class="co">#&gt;   metric  Loading: Wellbeing -&gt; w4 (t3 vs. others)              4.23   1    .040</span></span>
+<span><span class="co">#&gt;   metric  Loading: Wellbeing -&gt; w3 (t3 vs. others)              4.13   1    .042</span></span>
+<span><span class="co">#&gt;   metric  Loading: Wellbeing -&gt; w1 (t2 vs. others)              3.52   1    .061</span></span>
+<span><span class="co">#&gt;   metric  Loading: Wellbeing -&gt; w4 (t2 vs. others)              3.21   1    .073</span></span>
+<span><span class="co">#&gt;   scalar  Intercept: w2 (t2 vs. others)                         2.85   1    .091</span></span>
+<span><span class="co">#&gt;   scalar  Loading: Wellbeing -&gt; w1 (t2 vs. others)              2.76   1    .097</span></span>
+<span><span class="co">#&gt;   Each diagnostic frees one occasion's parameter while the other occasions</span></span>
+<span><span class="co">#&gt;   stay equal: "vs. others" names the occasion freed. The first occasion (t1)</span></span>
+<span><span class="co">#&gt;   is the reference and is never freed on its own, so when it alone differs,</span></span>
+<span><span class="co">#&gt;   every other occasion shows similar strain on that parameter.</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; No single delta-CFI, delta-RMSEA, delta-SRMR, chi-square difference, or score</span></span>
-<span><span class="co">#&gt; diagnostic is treated as a universal invariance rule.</span></span></code></pre></div>
+<span><span class="co">#&gt; Flagged</span></span>
+<span><span class="co">#&gt;   - Score diagnostics (Review): 24 univariate equality-constraint score</span></span>
+<span><span class="co">#&gt;     diagnostics were retained. Use these diagnostics to localize strain, not</span></span>
+<span><span class="co">#&gt;     to authorize automatic constraint release. Partial invariance requires an</span></span>
+<span><span class="co">#&gt;     explicit researcher specification and rationale.</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; What these columns mean</span></span>
+<span><span class="co">#&gt;   CFI -- Comparative fit index.</span></span>
+<span><span class="co">#&gt;   RMSEA -- Root mean square error of approximation.</span></span>
+<span><span class="co">#&gt;   SRMR -- Standardized root mean square residual.</span></span>
+<span><span class="co">#&gt;   df -- Degrees of freedom.</span></span>
+<span><span class="co">#&gt;   CI -- Confidence interval.</span></span>
+<span><span class="co">#&gt;   ML -- Maximum likelihood.</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; No single CFI change, RMSEA change, SRMR change, chi-square difference, or</span></span>
+<span><span class="co">#&gt; score diagnostic is treated as a universal invariance rule.</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; See nomo_table(x, "local_strain") for all 24 score diagnostics and</span></span>
+<span><span class="co">#&gt; nomo_table(x, "decision_log") for every recorded decision.</span></span></code></pre></div>
 <p>Fit holds up with the loadings equal and drops once the intercepts
 are too (CFI change -0.036), and the largest score diagnostics point to
 the <code>w3</code> intercept. Held equal, that intercept inflates the
