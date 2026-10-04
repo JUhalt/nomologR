@@ -417,10 +417,11 @@ nomo_network_log_severity <- function(log, metric) {
 }
 
 
-# A stream's status in words: "review", "concern", or "no flags".
-nomo_network_stream_status <- function(severity, none = "no flags") {
+# A stream's status in words: "review", "concern", or "no flags", the same in
+# print() and summary().
+nomo_network_stream_status <- function(severity) {
   flag <- nomo_present_flag(severity)
-  ifelse(nzchar(flag), flag, none)
+  ifelse(nzchar(flag), flag, "no flags")
 }
 
 
@@ -668,7 +669,7 @@ print.summary_nomo_network <- function(x, ...) {
   nomo_present_section("Measurement context")
   mc <- x$measurement_context$summary[1L, , drop = FALSE]
   nomo_network_section_facts(c(
-    paste0("Flag: ", nomo_network_stream_status(mc$attention[[1L]], "none")),
+    paste0("Status: ", nomo_network_stream_status(mc$attention[[1L]])),
     sprintf("Constructs: %s", format(mc$latent_constructs, trim = TRUE)),
     sprintf("Loading flags: %s", format(mc$loading_review_flags, trim = TRUE)),
     sprintf("Negative variances: %s", format(mc$negative_variance_flags, trim = TRUE)),
@@ -695,7 +696,12 @@ print.summary_nomo_network <- function(x, ...) {
     nomo_present_bullets(paste0(changes$relation, ": ", ifelse(
       changes$change == "fixed_to_zero",
       "fixed to zero, although the model as given estimates it.",
-      "estimated as a residual covariance of two outcomes that neither the model nor the hypotheses name."
+      ifelse(
+        changes$change == "not_estimated",
+        paste0("fixed to zero; the model as given does not contain ",
+               gsub(" and ", " or ", changes$new_variable, fixed = TRUE), "."),
+        "estimated as a residual covariance of two outcomes that neither the model nor the hypotheses name."
+      )
     )))
   }
 

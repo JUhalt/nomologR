@@ -182,11 +182,7 @@ nomo_network_prepare_model <- function(model, hypotheses, add_missing) {
   )
 
   full_model <- nomo_network_compose_model(model, syntax[added])
-  changes <- nomo_network_model_changes(
-    suppressWarnings(nomo_network_model_table(model, fixed.x = TRUE)),
-    suppressWarnings(nomo_network_model_table(full_model, fixed.x = TRUE)),
-    h
-  )
+  changes <- nomo_network_model_changes(model, full_model, h)
 
   list(
     full_model = full_model,
@@ -215,38 +211,80 @@ nomo_network_covariance_pairs <- function(partable) {
 
 
 # Relations the added paths change beyond the hypotheses themselves (#145).
-# lavaan::sem() covaries exogenous factors and the residuals of outcomes, not
-# an exogenous variable with an outcome. So a path that makes a variable an
-# outcome fixes to zero each covariance it had with an exogenous variable the
-# path does not come from, and two outcomes gain a residual covariance nobody
-# wrote. Both change the model the hypotheses are tested in, so both are
-# recorded; the relations the hypotheses name are not.
-nomo_network_model_changes <- function(given_table, fitted_table, h) {
+# lavaan::sem() covaries exogenous factors with one another, holds observed
+# exogenous predictors' covariances at their sample values, and covaries the
+# residuals of outcomes that predict no other variable. It relates no other
+# pair that the syntax does not join: not a factor and an observed
+# predictor, not an outcome and an exogenous variable, and not an outcome that
+# predicts another variable and a variable it does not predict. So a path that
+# makes a variable an outcome fixes to zero each covariance it had with an
+# exogenous variable the path does not come from, two outcomes can gain a
+# residual covariance nobody wrote, and a variable the hypotheses bring into
+# the model is related only as those rules allow. Each
+# changes the model the hypotheses are tested in, and the test of the
+# structural restrictions counts each zero, so all are recorded; the relations
+# the hypotheses name are not. A composite modeled as a single indicator is a
+# factor in the model fitted, related as lavaan relates any factor, so
+# `composites` are read as factors in both models.
+nomo_network_model_changes <- function(model, full_model, h, composites = character()) {
+  structure_of <- function(syntax) {
+    table <- suppressWarnings(nomo_network_model_table(syntax, fixed.x = TRUE))
+    observed <- lavaan::lavNames(table, "ov")
+    used <- intersect(composites, observed)
+    if (!length(used)) return(table)
+    indicators <- vapply(used, nomo_network_single_name, character(1), taken = observed)
+    suppressWarnings(nomo_network_model_table(
+      paste(c(syntax, sprintf("%s =~ %s", used, indicators)), collapse = "\n"),
+      fixed.x = TRUE
+    ))
+  }
+  given_table <- structure_of(model)
+  fitted_table <- structure_of(full_model)
+
   given <- nomo_network_covariance_pairs(given_table)
   fitted <- nomo_network_covariance_pairs(fitted_table)
   hypothesized <- vapply(seq_len(nrow(h)), function(i) {
     paste(sort(c(h$source[[i]], h$target[[i]])), collapse = "\r")
   }, character(1))
 
-  dropped <- given[!given$key %in% c(fitted$key, hypothesized), , drop = FALSE]
-  freed <- fitted[!fitted$key %in% c(given$key, hypothesized), , drop = FALSE]
-
   # The outcomes of the fitted model, named in the explanation: a covariance
-  # lavaan no longer adds has one at an end.
+  # lavaan no longer adds has one at an end. A covariance lavaan adds is
+  # recorded when it joins two outcomes' residuals; one between a variable the
+  # hypotheses bring in and another exogenous variable is the unrestricted
+  # treatment of exogenous variables, not a change.
   outcomes <- unique(fitted_table$lhs[fitted_table$op == "~"])
+  dropped <- given[!given$key %in% c(fitted$key, hypothesized), , drop = FALSE]
+  freed <- fitted[!fitted$key %in% c(given$key, hypothesized) &
+                    fitted$lhs %in% outcomes & fitted$rhs %in% outcomes, , drop = FALSE]
+
+  # The pairs the fitted model does not join that the model as given could
+  # not restrict, because a variable of the pair is not in it. A pair of the
+  # model's own variables that is not joined is its own restriction, or one
+  # dropped above.
+  given_variables <- nomo_network_open_pairs(given_table)$structural
+  open <- nomo_network_open_pairs(fitted_table)$pairs
+  new_ends <- lapply(seq_len(nrow(open)), function(i) {
+    setdiff(c(open$lhs[[i]], open$rhs[[i]]), given_variables)
+  })
+  unrelated <- open[lengths(new_ends) > 0L & !open$key %in% hypothesized, , drop = FALSE]
+  new_ends <- new_ends[lengths(new_ends) > 0L & !open$key %in% hypothesized]
+
+  lhs <- c(dropped$lhs, unrelated$lhs, freed$lhs)
+  rhs <- c(dropped$rhs, unrelated$rhs, freed$rhs)
 
   tibble::tibble(
-    relation = sprintf("%s <-> %s", c(dropped$lhs, freed$lhs), c(dropped$rhs, freed$rhs)),
-    lhs = c(dropped$lhs, freed$lhs),
-    rhs = c(dropped$rhs, freed$rhs),
-    change = rep(c("fixed_to_zero", "added_by_lavaan"), c(nrow(dropped), nrow(freed))),
-    outcome = c(
-      vapply(seq_len(nrow(dropped)), function(i) {
-        paste(intersect(c(dropped$lhs[[i]], dropped$rhs[[i]]), outcomes), collapse = " and ")
-      }, character(1)),
-      vapply(seq_len(nrow(freed)), function(i) {
-        paste(intersect(c(freed$lhs[[i]], freed$rhs[[i]]), outcomes), collapse = " and ")
-      }, character(1))
+    relation = sprintf("%s <-> %s", lhs, rhs),
+    lhs = lhs,
+    rhs = rhs,
+    change = rep(c("fixed_to_zero", "not_estimated", "added_by_lavaan"),
+                 c(nrow(dropped), nrow(unrelated), nrow(freed))),
+    outcome = vapply(seq_along(lhs), function(i) {
+      paste(intersect(c(lhs[[i]], rhs[[i]]), outcomes), collapse = " and ")
+    }, character(1)),
+    new_variable = c(
+      rep("", nrow(dropped)),
+      vapply(new_ends, paste, character(1), collapse = " and "),
+      rep("", nrow(freed))
     )
   )
 }
@@ -926,6 +964,16 @@ nomo_network_fit_flags <- function(fit_evidence, refs) {
 # Everything else in the model, its labels and constraints included, is kept
 # as written.
 nomo_network_saturating_lines <- function(partable) {
+  open <- nomo_network_open_pairs(partable)$pairs
+  sprintf("%s ~~ %s", open$lhs, open$rhs)
+}
+
+
+# The structural variables of a parameter table, and the pairs of them that no
+# path or covariance joins, sorted within and across pairs. A covariance held
+# at its sample value or fixed in the syntax joins its pair: only a pair the
+# model says nothing about is open.
+nomo_network_open_pairs <- function(partable) {
   partable <- as.data.frame(partable)
   indicators <- unique(partable$rhs[partable$op == "=~"])
   factors <- unique(partable$lhs[partable$op == "=~"])
@@ -933,14 +981,24 @@ nomo_network_saturating_lines <- function(partable) {
   variables <- unique(c(partable$lhs[partable$op %in% c("~", "~~")],
                         partable$rhs[partable$op %in% c("~", "~~")]))
   structural <- setdiff(unique(c(factors, variables)), indicators)
-  if (length(structural) < 2L) return(character())
+  pairs <- if (length(structural) < 2L) {
+    matrix(character(), nrow = 2L)
+  } else {
+    utils::combn(sort(structural), 2L)
+  }
 
   lhs <- partable$lhs[joined_rows]
   rhs <- partable$rhs[joined_rows]
   joined <- c(paste(lhs, rhs), paste(rhs, lhs))
-  pairs <- utils::combn(sort(structural), 2L)
   open <- !paste(pairs[1L, ], pairs[2L, ]) %in% joined
-  sprintf("%s ~~ %s", pairs[1L, open], pairs[2L, open])
+  list(
+    structural = structural,
+    pairs = data.frame(
+      lhs = pairs[1L, open], rhs = pairs[2L, open],
+      key = paste(pairs[1L, open], pairs[2L, open], sep = "\r"),
+      stringsAsFactors = FALSE
+    )
+  )
 }
 
 
@@ -1066,10 +1124,53 @@ nomo_network_model_fit_context <- function(fit_evidence, measurement, guidance) 
     ))
   }
 
+  # The advice follows the attribution: only misfit the measurement model
+  # does not share is strain on the theory's structure.
+  recommendation <- if (!length(flags)) {
+    paste(
+      "Report the fit of the network model beside that of the measurement",
+      "model alone, so that misfit of either kind stays visible."
+    )
+  } else {
+    switch(
+      measurement$status,
+      fitted = if (length(measurement_flags)) {
+        paste(
+          "Review the measurement context first: misfit the measurement model",
+          "alone shows is a measurement problem. Only the misfit the structural",
+          "restrictions add is strain on the theory's structure (Anderson &",
+          "Gerbing, 1988)."
+        )
+      } else {
+        paste(
+          "Misfit beyond the measurement model's comes from the structural",
+          "restrictions, such as the relations the hypothesized paths fix to zero.",
+          "Read it as strain on the theory's structure, not as a measurement",
+          "problem (Anderson & Gerbing, 1988)."
+        )
+      },
+      same = paste(
+        "Review the measurement context before the hypotheses: this misfit is a",
+        "measurement problem, not strain on the theory's structure."
+      ),
+      no_latent = paste(
+        "Check the relations the model fixes to zero, those the hypothesized",
+        "paths fix included, against the theory before interpreting the",
+        "estimates."
+      ),
+      paste(
+        "Fit the measurement model alone, for example with nomo_cfa(), before",
+        "reading the misfit as a measurement problem or as strain on the",
+        "theory's structure."
+      )
+    )
+  }
+
   list(
     attention = if (length(flags)) "review" else "info",
     flags = flags,
-    observation = observation
+    observation = observation,
+    recommendation = recommendation
   )
 }
 
@@ -1874,19 +1975,16 @@ nomo_network_decision_log <- function(model_additions,
       reference = "Fit references in nomo_defaults()$fit_reference",
       severity = model_fit$attention,
       observation = model_fit$observation,
-      recommendation = paste(
-        "Misfit beyond the measurement model's comes from the structural",
-        "restrictions, such as the relations the hypothesized paths fix to zero.",
-        "Read it as strain on the theory's structure, not as a measurement",
-        "problem (Anderson & Gerbing, 1988)."
-      )
+      recommendation = model_fit$recommendation
     )
   }
 
-  # Relations the added paths fixed to zero or lavaan added (#145).
+  # Relations the added paths fixed to zero or lavaan added (#145). A relation
+  # of a variable the hypotheses bring into the model is a restriction too.
   changes <- if (is.null(model_changes)) data.frame() else model_changes
   for (i in seq_len(nrow(changes))) {
-    fixed <- identical(changes$change[[i]], "fixed_to_zero")
+    kind <- changes$change[[i]]
+    fixed <- kind %in% c("fixed_to_zero", "not_estimated")
     outcome <- strsplit(changes$outcome[[i]], " and ", fixed = TRUE)[[1L]]
     log <- nomo_log_add(
       log,
@@ -1894,9 +1992,14 @@ nomo_network_decision_log <- function(model_additions,
       object = changes$relation[[i]],
       metric = if (fixed) "relation_constrained" else "relation_auto_freed",
       value = 0,
-      reference = if (fixed) "Free in the model as given" else "In neither the model nor the hypotheses",
+      reference = switch(
+        kind,
+        fixed_to_zero = "Free in the model as given",
+        not_estimated = "Absent from the model as given",
+        "In neither the model nor the hypotheses"
+      ),
       severity = if (fixed) "review" else "info",
-      observation = if (fixed) {
+      observation = if (identical(kind, "fixed_to_zero")) {
         sprintf(
           paste(
             "`%s`, estimated in the model as given, is fixed to zero in the fitted",
@@ -1907,6 +2010,18 @@ nomo_network_decision_log <- function(model_additions,
           changes$relation[[i]],
           nomo_present_or(paste0("`", outcome, "`"), "and"),
           nomo_present_noun(length(outcome), "is an outcome", "are outcomes")
+        )
+      } else if (fixed) {
+        sprintf(
+          paste(
+            "`%s` is fixed to zero in the fitted model: the hypotheses bring %s",
+            "into the model, and neither they nor lavaan's defaults relate the",
+            "two."
+          ),
+          changes$relation[[i]],
+          nomo_present_or(paste0(
+            "`", strsplit(changes$new_variable[[i]], " and ", fixed = TRUE)[[1L]], "`"
+          ), "and")
         )
       } else {
         sprintf(
@@ -2110,18 +2225,25 @@ nomo_network_validate_data <- function(data, label) {
 #' model and which were added.
 #'
 #' An added path changes more than its own relation. `lavaan::sem()` covaries
-#' exogenous variables with one another and the residuals of outcomes with one
-#' another, but not an exogenous variable with an outcome. So once a path
-#' makes a variable an outcome, every relation it had with an exogenous
-#' variable other than its predictors is fixed to zero, although `model`
-#' estimated it, and two outcomes gain a residual covariance that neither
-#' `model` nor the hypotheses name. The relations of the variables the
-#' hypotheses make outcomes that no hypothesis names are therefore
-#' restrictions of the network, and their misfit counts against the theory's
-#' structure. `model_changes` lists
-#' each relation fixed to zero (`"fixed_to_zero"`) or added by lavaan
-#' (`"added_by_lavaan"`), and the decision log records the first for review
-#' (`relation_constrained`) and the second for information
+#' exogenous factors with one another, holds the covariances of observed
+#' exogenous predictors at their sample values, and covaries the residuals of
+#' outcomes that predict no other variable. It relates no other pair of
+#' variables that neither `model` nor the hypotheses join: not a factor and
+#' an observed predictor, not an outcome and an exogenous variable, and not an
+#' outcome that predicts another variable and a variable it does not predict.
+#' So once a path makes a variable an outcome, every relation it had with an
+#' exogenous variable other than its predictors is fixed to zero, although
+#' `model` estimated it, and two outcomes can gain a residual covariance that
+#' neither `model` nor the hypotheses name. A variable the hypotheses bring
+#' into the model is related only as these rules allow: an observed predictor
+#' of a factor is uncorrelated with the exogenous factors, for example. These
+#' zeros are restrictions of the network, and their misfit counts against the
+#' theory's structure. `model_changes` lists each relation fixed to zero
+#' although `model` estimated it (`"fixed_to_zero"`), each relation of a
+#' variable the hypotheses bring in that the fitted model fixes to zero
+#' (`"not_estimated"`), and each residual covariance of two outcomes that
+#' lavaan added (`"added_by_lavaan"`). The decision log records the first two
+#' for review (`relation_constrained`) and the third for information
 #' (`relation_auto_freed`). A relation the theory allows belongs in the
 #' hypotheses or in `model`.
 #'
@@ -2185,8 +2307,10 @@ nomo_network_validate_data <- function(data, label) {
 #' meets the references, attributes the misfit to the structural part. The
 #' difference test between the two (`structural_test`, a Delta chi-square from
 #' `lavaan::lavTestLRT()`, scaled as the estimator requires) tests the
-#' structural restrictions. A model without latent variables has no
-#' measurement model to judge.
+#' structural restrictions: the pairs the measurement model alone frees, those
+#' `model` itself leaves out as well as those `model_changes` lists as fixed
+#' to zero. A model without latent variables has no measurement model to
+#' judge.
 #'
 #' The fit indices are the robust versions when lavaan reports them, and the
 #' chi-square is the scaled one; `chisq_version` and `index_version` in
@@ -2427,7 +2551,9 @@ nomo_network_validate_data <- function(data, label) {
 #'     hypothesis whether its relation was already in the model to be fitted
 #'     (`already_in_model`) or was added (`added_from_hypothesis`).
 #'   * `model_changes`: each relation the added paths fixed to zero or lavaan
-#'     added (`change`), with the outcome responsible.
+#'     added (`change`), with the outcomes among its variables (`outcome`)
+#'     and the variables the hypotheses brought into the model
+#'     (`new_variable`).
 #'   * `data_n` and `n_used`: the rows of the primary sample and the cases the
 #'     fit analyzed; `validation_n` and `validation_n_used` for the validation
 #'     sample.
@@ -2745,6 +2871,13 @@ nomo_network <- function(model,
     ordered = ordered_named,
     prepared = prepared
   )
+  # A composite modeled as a single indicator becomes a factor, which changes
+  # the relations lavaan adds for it.
+  if (nrow(single)) {
+    prepared$changes <- nomo_network_model_changes(
+      model, prepared$full_model, hypotheses$hypotheses, single$variable
+    )
+  }
 
   estimator_requested <- estimator
   estimator_source <- if (length(ordered) && is.null(estimator_requested)) {

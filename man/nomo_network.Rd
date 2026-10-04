@@ -99,7 +99,9 @@ structural evidence. See \strong{Measurement context and model fit}.
 hypothesis whether its relation was already in the model to be fitted
 (\code{already_in_model}) or was added (\code{added_from_hypothesis}).
 \item \code{model_changes}: each relation the added paths fixed to zero or lavaan
-added (\code{change}), with the outcome responsible.
+added (\code{change}), with the outcomes among its variables (\code{outcome})
+and the variables the hypotheses brought into the model
+(\code{new_variable}).
 \item \code{data_n} and \code{n_used}: the rows of the primary sample and the cases the
 fit analyzed; \code{validation_n} and \code{validation_n_used} for the validation
 sample.
@@ -142,18 +144,25 @@ factors. \code{model_relations} records which relations were already in the
 model and which were added.
 
 An added path changes more than its own relation. \code{lavaan::sem()} covaries
-exogenous variables with one another and the residuals of outcomes with one
-another, but not an exogenous variable with an outcome. So once a path
-makes a variable an outcome, every relation it had with an exogenous
-variable other than its predictors is fixed to zero, although \code{model}
-estimated it, and two outcomes gain a residual covariance that neither
-\code{model} nor the hypotheses name. The relations of the variables the
-hypotheses make outcomes that no hypothesis names are therefore
-restrictions of the network, and their misfit counts against the theory's
-structure. \code{model_changes} lists
-each relation fixed to zero (\code{"fixed_to_zero"}) or added by lavaan
-(\code{"added_by_lavaan"}), and the decision log records the first for review
-(\code{relation_constrained}) and the second for information
+exogenous factors with one another, holds the covariances of observed
+exogenous predictors at their sample values, and covaries the residuals of
+outcomes that predict no other variable. It relates no other pair of
+variables that neither \code{model} nor the hypotheses join: not a factor and
+an observed predictor, not an outcome and an exogenous variable, and not an
+outcome that predicts another variable and a variable it does not predict.
+So once a path makes a variable an outcome, every relation it had with an
+exogenous variable other than its predictors is fixed to zero, although
+\code{model} estimated it, and two outcomes can gain a residual covariance that
+neither \code{model} nor the hypotheses name. A variable the hypotheses bring
+into the model is related only as these rules allow: an observed predictor
+of a factor is uncorrelated with the exogenous factors, for example. These
+zeros are restrictions of the network, and their misfit counts against the
+theory's structure. \code{model_changes} lists each relation fixed to zero
+although \code{model} estimated it (\code{"fixed_to_zero"}), each relation of a
+variable the hypotheses bring in that the fitted model fixes to zero
+(\code{"not_estimated"}), and each residual covariance of two outcomes that
+lavaan added (\code{"added_by_lavaan"}). The decision log records the first two
+for review (\code{relation_constrained}) and the third for information
 (\code{relation_auto_freed}). A relation the theory allows belongs in the
 hypotheses or in \code{model}.
 
@@ -218,8 +227,10 @@ with its loadings and variances. The model fit, a separate decision-log row
 meets the references, attributes the misfit to the structural part. The
 difference test between the two (\code{structural_test}, a Delta chi-square from
 \code{lavaan::lavTestLRT()}, scaled as the estimator requires) tests the
-structural restrictions. A model without latent variables has no
-measurement model to judge.
+structural restrictions: the pairs the measurement model alone frees, those
+\code{model} itself leaves out as well as those \code{model_changes} lists as fixed
+to zero. A model without latent variables has no measurement model to
+judge.
 
 The fit indices are the robust versions when lavaan reports them, and the
 chi-square is the scaled one; \code{chisq_version} and \code{index_version} in

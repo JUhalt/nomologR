@@ -795,6 +795,9 @@
           given, is fixed to zero in the fitted model: with the hypothesized paths,
           `Persistence` is an outcome, and lavaan does not covary an outcome's
           residual with a variable that does not predict it.
+        - Review: `Performance <-> SocialDesirability` is fixed to zero in the
+          fitted model: the hypotheses bring `Performance` into the model, and
+          neither they nor lavaan's defaults relate the two.
       
       Theory concordance, uncertainty, measurement quality, and replication are
       distinct evidence streams. Statistical significance alone is not a validity
@@ -813,7 +816,7 @@
       Estimator: ML
       
       Measurement context
-        Flag: none | Constructs: 3 | Loading flags: 0 | Negative variances: 0
+        Status: no flags | Constructs: 3 | Loading flags: 0 | Negative variances: 0
         Fit flags: 0 | Engine warnings: 0
         No measurement-context flag was raised.
       
@@ -827,6 +830,8 @@
       Relations the hypothesized paths changed
         - Persistence <-> SocialDesirability: fixed to zero, although the model as
           given estimates it.
+        - Performance <-> SocialDesirability: fixed to zero; the model as given does
+          not contain Performance.
         - Persistence <-> Performance: estimated as a residual covariance of two
           outcomes that neither the model nor the hypotheses name.
       
@@ -853,6 +858,12 @@
           given, is fixed to zero in the fitted model: with the hypothesized paths,
           `Persistence` is an outcome, and lavaan does not covary an outcome's
           residual with a variable that does not predict it. Fixing a relation to
+          zero is a restriction of the network, and its misfit counts against the
+          theory's structure. If the theory allows the relation, add it as a
+          hypothesis or write it in `model`.
+        - Review: `Performance <-> SocialDesirability` is fixed to zero in the
+          fitted model: the hypotheses bring `Performance` into the model, and
+          neither they nor lavaan's defaults relate the two. Fixing a relation to
           zero is a restriction of the network, and its misfit counts against the
           theory's structure. If the theory allows the relation, add it as a
           hypothesis or write it in `model`.

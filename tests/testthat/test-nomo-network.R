@@ -2489,9 +2489,12 @@ test_that("relations the added paths fix to zero or lavaan adds are disclosed (#
   expect_match(rg_text(dropped), "Review: `Agency <-> Persistence`, estimated in the model", fixed = TRUE)
 
   # Two outcomes gain a residual covariance nobody wrote, disclosed for
-  # information, and summary() lists both kinds.
+  # information, and summary() lists each kind. Performance, which only the
+  # hypotheses bring in, is unrelated to SocialDesirability.
   net <- rg_default()
-  expect_setequal(net$model_changes$change, c("fixed_to_zero", "added_by_lavaan"))
+  expect_identical(net$model_changes$change, c("fixed_to_zero", "not_estimated", "added_by_lavaan"))
+  expect_identical(net$model_changes$relation[[2L]], "Performance <-> SocialDesirability")
+  expect_equal(net$measurement_context$structural_test$df_diff, 2)
   freed <- net$decision_log[net$decision_log$metric == "relation_auto_freed", ]
   expect_identical(freed$object, "Persistence <-> Performance")
   expect_identical(freed$severity, "info")
@@ -2505,11 +2508,89 @@ test_that("relations the added paths fix to zero or lavaan adds are disclosed (#
     rg_three(), nomo_hypotheses("Agency -> Persistence" = positive()), add_missing = FALSE
   )
   expect_identical(nrow(as_given$changes), 0L)
-  expect_named(as_given$changes, c("relation", "lhs", "rhs", "change", "outcome"))
+  expect_named(as_given$changes, c("relation", "lhs", "rhs", "change", "outcome", "new_variable"))
 
   doc <- nomo_test_rd_text("nomo_network", "\\details")
   expect_match(doc, "every relation it had with an exogenous variable other than its predictors is fixed to zero",
                fixed = TRUE)
+})
+
+
+test_that("relations of a variable the hypotheses bring in are disclosed as restrictions (#145)", {
+  # Performance is not in the model as given. lavaan covaries no factor with
+  # an observed predictor, so the path fixes Performance's relations with the
+  # exogenous factors to zero, beside Persistence's own.
+  net <- nomo_network(rg_three(), nomo_demo_network,
+                      nomo_hypotheses("Performance -> Persistence" = positive()))
+  changes <- net$model_changes
+  expect_identical(changes$change,
+                   c("fixed_to_zero", "fixed_to_zero", "not_estimated", "not_estimated"))
+  new <- changes[changes$change == "not_estimated", ]
+  expect_identical(new$relation, c("Agency <-> Performance", "Performance <-> SocialDesirability"))
+  expect_identical(new$new_variable, c("Performance", "Performance"))
+  expect_identical(new$outcome, c("", ""))
+  expect_identical(changes$new_variable[changes$change == "fixed_to_zero"], c("", ""))
+  # Each restriction the structural test counts is named.
+  expect_equal(net$measurement_context$structural_test$df_diff, nrow(changes))
+
+  rows <- net$decision_log[net$decision_log$metric == "relation_constrained", ]
+  expect_identical(nrow(rows), 4L)
+  row <- rows[rows$object == "Agency <-> Performance", ]
+  expect_identical(row$severity, "review")
+  expect_identical(row$reference, "Absent from the model as given")
+  expect_match(row$observation, paste(
+    "`Agency <-> Performance` is fixed to zero in the fitted model: the hypotheses bring",
+    "`Performance` into the model, and neither they nor lavaan's defaults relate the two."
+  ), fixed = TRUE)
+  expect_match(rg_flat(net), "Review: `Agency <-> Performance` is fixed to zero", fixed = TRUE)
+  expect_match(rg_flat(summary(net)), paste(
+    "Agency <-> Performance: fixed to zero; the model as given does not contain Performance."
+  ), fixed = TRUE)
+
+  # Two variables new to the model, which nothing relates, are both named.
+  # Two new observed predictors are covaried at their sample values, which
+  # restricts nothing and is not recorded.
+  both <- nomologR:::nomo_network_model_changes(
+    rg_three(), paste(rg_three(), "Persistence ~ X", "Y ~ Agency", "SocialDesirability ~ Z", sep = "\n"),
+    data.frame(source = c("X", "Agency", "Z"), target = c("Persistence", "Y", "SocialDesirability"))
+  )
+  pair <- both[both$relation == "X <-> Y", ]
+  expect_identical(pair$change, "not_estimated")
+  expect_identical(pair$new_variable, "X and Y")
+  expect_identical(pair$outcome, "Y")
+  expect_false("X <-> Z" %in% both$relation)
+  log <- nomologR:::nomo_network_decision_log(
+    model_additions = tibble::tibble(relation = "A -> B", syntax = "B ~ A",
+                                     added_from_hypothesis = FALSE),
+    hypotheses_evidence = net$hypothesis_evidence[0, ],
+    converged = TRUE, warnings = character(), estimator = NULL, ordered = character(),
+    measurement_context = list(summary = tibble::tibble(
+      loading_review_flags = 0L, attention = "info", observation = "Synthetic."
+    )),
+    model_changes = pair
+  )
+  expect_match(log$observation[log$object == "X <-> Y"],
+               "the hypotheses bring `X` and `Y` into the model", fixed = TRUE)
+  shown <- summary(net)
+  shown$model_changes <- pair
+  expect_match(rg_flat(shown), "X <-> Y: fixed to zero; the model as given does not contain X or Y.",
+               fixed = TRUE)
+
+  # A composite modeled as a single indicator is a factor, which lavaan
+  # covaries with the other exogenous factors: only Persistence's relations
+  # are restricted, and those covariances are not recorded as changes.
+  single <- nomo_network(rg_three(), nomo_demo_network,
+                         nomo_hypotheses("Performance -> Persistence" = positive()),
+                         single_indicators = list(Performance = .80))
+  expect_identical(single$model_changes$change, c("fixed_to_zero", "fixed_to_zero"))
+  expect_equal(single$measurement_context$structural_test$df_diff, 2)
+
+  doc <- nomo_test_rd_text("nomo_network", "\\details")
+  expect_match(doc, paste(
+    "not a factor and an observed predictor, not an outcome and an exogenous variable,",
+    "and not an outcome that predicts another variable and a variable it does not predict."
+  ), fixed = TRUE)
+  expect_match(doc, "(\\code{\"not_estimated\"})", fixed = TRUE)
 })
 
 
@@ -2537,6 +2618,7 @@ test_that("misfit of the structural restrictions is not attributed to measuremen
   expect_match(fit_row$observation, "so the misfit is in the structural part of the network",
                fixed = TRUE)
   expect_match(fit_row$observation, "Delta chi-square(1) = 126.67, p < .001", fixed = TRUE)
+  expect_match(fit_row$recommendation, "Read it as strain on the theory's structure", fixed = TRUE)
   printed <- rg_text(dropped)
   expect_match(printed, "Measurement context: no flags | Model fit: review", fixed = TRUE)
   # The indices the flag names are defined once, and only those.
@@ -2554,8 +2636,9 @@ test_that("misfit of the structural restrictions is not attributed to measuremen
   expect_identical(observed$measurement_context$fit_status, "no_latent")
   expect_identical(observed$measurement_context$summary$attention, "info")
   expect_match(observed$measurement_context$summary$observation, "no latent variables", fixed = TRUE)
-  expect_match(observed$decision_log$observation[observed$decision_log$metric == "model_fit"],
-               "misfit is in its structural restrictions", fixed = TRUE)
+  observed_fit <- observed$decision_log[observed$decision_log$metric == "model_fit", ]
+  expect_match(observed_fit$observation, "misfit is in its structural restrictions", fixed = TRUE)
+  expect_no_match(observed_fit$recommendation, "measurement", fixed = TRUE)
   expect_match(rg_text(observed), "Measurement context: no latent variables | Model fit: review",
                fixed = TRUE)
   expect_match(rg_text(summary(observed)), "Measurement model alone: none, as the model has no",
@@ -2667,12 +2750,44 @@ test_that("the model-fit stream attributes misfit only when it can (#145)", {
   expect_match(context("failed")$observation, "is not attributed", fixed = TRUE)
   expect_identical(context("failed")$attention, "review")
 
+  # The advice follows the attribution: strain on the theory's structure only
+  # when the measurement model alone meets the references.
+  strain <- "Read it as strain on the theory's structure, not as a measurement problem"
+  expect_match(context("fitted")$recommendation, strain, fixed = TRUE)
+  expect_match(context("fitted", fit = poor)$recommendation,
+               "Review the measurement context first: misfit the measurement model alone shows",
+               fixed = TRUE)
+  expect_match(context("same")$recommendation,
+               "Review the measurement context before the hypotheses: this misfit is a measurement problem",
+               fixed = TRUE)
+  expect_match(context("no_latent")$recommendation, "Check the relations the model fixes to zero",
+               fixed = TRUE)
+  expect_match(context("failed")$recommendation, "Fit the measurement model alone, for example with nomo_cfa()",
+               fixed = TRUE)
+  for (status in c("same", "no_latent", "failed")) {
+    expect_no_match(context(status)$recommendation, strain, fixed = TRUE)
+  }
+  expect_no_match(context("fitted", fit = poor)$recommendation, strain, fixed = TRUE)
+
   quiet <- nomologR:::nomo_network_model_fit_context(
     good, list(status = "fitted", fit_evidence = good, structural_test = test), refs
   )
   expect_identical(quiet$attention, "info")
   expect_identical(quiet$observation,
                    "No fit index of the network model is beyond its review reference.")
+  expect_match(quiet$recommendation, "Report the fit of the network model beside", fixed = TRUE)
+
+  # A network whose structural part adds no restriction misfits as its
+  # measurement model does, and summary() says so without contradiction.
+  same <- nomo_network("G =~ ag1 + ag2 + ag3 + ag4 + pe1 + pe2 + pe3 + pe4", nomo_demo_network,
+                       nomo_hypotheses("G <-> Performance" = positive()))
+  expect_identical(same$measurement_context$fit_status, "same")
+  same_text <- rg_flat(summary(same))
+  expect_match(same_text, paste(
+    "so the misfit is in the measurement model. Review the measurement context before the",
+    "hypotheses: this misfit is a measurement problem, not strain on the theory's structure."
+  ), fixed = TRUE)
+  expect_no_match(same_text, "not as a measurement problem", fixed = TRUE)
 
   # A reference that is missing or a fit that is empty raises nothing.
   expect_identical(nomologR:::nomo_network_fit_flags(poor, list(cfi = NA)), character())
@@ -3013,7 +3128,7 @@ test_that("flags name the values and references they compare (#145)", {
     observation,
     "Standardized loading below the review reference of 0.50 in absolute value: b5 (0.34)."
   )
-  expect_match(rg_text(summary(weak)), "Flag: review | Constructs: 2 | Loading flags: 1", fixed = TRUE)
+  expect_match(rg_text(summary(weak)), "Status: review | Constructs: 2 | Loading flags: 1", fixed = TRUE)
   # The replication table heads its first column with the sample's role.
   expect_match(rg_text(rg_split()), "Replication  Calibration  Validation", fixed = TRUE)
   expect_match(rg_text(summary(rg_split())), "Calibration sample, network model: chi-square(51)",
@@ -3059,7 +3174,9 @@ test_that("the summary counts and facts read as label: value (#145)", {
                fixed = TRUE)
   summary_text <- rg_text(summary(rg_default()))
   expect_match(summary_text, "Concordance\n  Concordant: 3\n", fixed = TRUE)
-  expect_match(summary_text, "Flag: none | Constructs: 3", fixed = TRUE)
+  # The stream reads in the same words as in print(), never the word "none".
+  expect_match(summary_text, "Status: no flags | Constructs: 3", fixed = TRUE)
+  expect_no_match(summary_text, ": none", fixed = TRUE)
   expect_match(rg_text(summary(rg_split())), "Replication\n  Mixed: 1 | Replicated: 2\n", fixed = TRUE)
   expect_match(summary_text, "\nSee nomo_table(x, \"decision_log\") for every decision-log row",
                fixed = TRUE)
