@@ -10,7 +10,8 @@
 #'
 #' @return An object of class `summary_nomo_screen` containing an overview,
 #'   integrated item-review table, decision log, relationship-method note, and
-#'   guidance settings.
+#'   guidance settings. Printed, it shows the item review table and a Flagged
+#'   section giving the reason for each flag in the decision log's words.
 #' @export
 summary.nomo_screen <- function(object, ...) {
   if (!inherits(object, "nomo_screen")) {
@@ -39,11 +40,29 @@ summary.nomo_screen <- function(object, ...) {
     item_review = item_review,
     decision_log = object$decision_log,
     relationship_method = object$relationship_method,
-    guidance = object$guidance
+    guidance = object$guidance,
+    # The reviewed negative pairs, so the Flagged section can name the items an
+    # item correlates negatively with (#145).
+    negative_pairs = nomo_screen_reviewed_negative_pairs(object)
   )
 
   class(out) <- c("summary_nomo_screen", "list")
   out
+}
+
+
+# The inter-item correlations the review reads as negative: within a declared
+# scale, or with an item outside every declared scale, or all of them when no
+# scales were declared.
+nomo_screen_reviewed_negative_pairs <- function(x) {
+  pairs <- x$inter_item_correlations
+  rel <- x$relationship_summary
+  scale <- rel[["scale"]]
+  if (is.null(scale)) scale <- rep(NA_character_, nrow(rel))
+  s1 <- scale[match(pairs$item1, rel$item)]
+  s2 <- scale[match(pairs$item2, rel$item)]
+  reviewed <- is.na(s1) | is.na(s2) | s1 == s2
+  pairs[!is.na(pairs$r) & pairs$r < 0 & reviewed, c("item1", "item2", "r"), drop = FALSE]
 }
 
 
@@ -61,72 +80,221 @@ print.summary_nomo_screen <- function(x, ...) {
   nomo_present_facts(c(
     sprintf("Cases: %d", overview$n_cases),
     sprintf("Items: %d", overview$n_items),
-    paste0("Flags: ", nomo_present_flag_counts(x$item_review$attention))
+    paste0("Item flags: ", nomo_present_flag_counts(x$item_review$attention))
   ))
   nomo_present_facts(c(
     sprintf("Items with missing responses: %d", overview$n_items_with_missing),
     sprintf("Constant: %d", overview$n_constant),
     sprintf("All missing: %d", overview$n_all_missing),
-    sprintf("Relationship eligible: %d", overview$n_relationship_eligible)
+    paste0("Items in correlation diagnostics: ",
+           nomo_screen_of(overview$n_relationship_eligible, overview$n_items))
   ))
 
   review <- x$item_review
+  nomo_screen_present_skipped(review, review)
   # A column with one observed value is stored as "binary" (two or fewer
   # values), but on screen it is what it is: constant.
   review$type <- ifelse(review$constant %in% TRUE, "constant",
                         sub("^numeric_", "", review$item_type))
-  review$flag <- nomo_present_flag(review$attention)
+  review$flag <- nomo_present_status(review$attention)
   review$item_rest <- nomo_screen_review_item_rest(review)
-  percent <- function(v) ifelse(is.finite(v), sprintf("%.1f%%", 100 * v), nomo_present_missing)
+  reference <- nomo_screen_item_rest_reference(x$guidance)
   nomo_present_section("Item review")
   nomo_present_table(
     review,
     c("Item" = "item", "Scale" = "scale", "Type" = "type",
       "Missing" = "pct_missing", "Top share" = "mode_prop",
       "Item-rest r" = "item_rest", "Flag" = "flag"),
-    formats = list(pct_missing = percent, mode_prop = percent),
-    more = "nomo_table(x, \"items\")"
-  )
-  nomo_present_text(
-    c(
-      "Top share is the proportion of responses in the most common category.",
-      if (any(!is.na(review[["scale_item_rest_r"]]))) {
-        paste(
-          "Item-rest r is within the item's scale; the pooled value is",
-          "kept as corrected_item_rest_r."
-        )
-      }
+    formats = list(
+      pct_missing = function(v) nomo_present_percent(v, base = review$n),
+      mode_prop = function(v) nomo_present_percent(v, base = review$n_observed),
+      item_rest = function(v) nomo_present_stat(v, "r", reference = reference)
     ),
-    indent = 2L
+    more = "summary(x)$item_review"
   )
+  nomo_present_text(nomo_screen_review_notes(review), indent = 2L)
 
-  flagged <- review[nzchar(review$flag), , drop = FALSE]
-  if (nrow(flagged)) {
-    nomo_present_section("Flagged items")
-    log <- x$decision_log
-    nomo_present_bullets(vapply(seq_len(nrow(flagged)), function(i) {
-      reasons <- log$observation[
-        log$object == flagged$item[[i]] & log$severity %in% c("review", "concern")
-      ]
-      # A flag added from the relationship table, such as negative inter-item
-      # pairs, has no log row of its own; its metric names stand in.
-      if (!length(reasons)) {
-        reasons <- if (nzchar(flagged$review_metrics[[i]])) {
-          paste0("flagged by ", gsub("_", " ", flagged$review_metrics[[i]]), ".")
-        } else {
-          "see the decision log."
-        }
-      }
-      sprintf("%s (%s): %s", flagged$item[[i]], flagged$flag[[i]],
-              paste(reasons, collapse = " "))
-    }, character(1)))
-  }
+  # Items first, then the log's other flagged entries, such as negative pairs
+  # or careless-responding counts, each under a plain name.
+  log <- x$decision_log
+  other <- log[!log$object %in% review$item & log$severity %in% c("review", "concern"), ,
+               drop = FALSE]
+  nomo_present_flagged(
+    unit = c(review$item, nomo_screen_unit_label(other$object)),
+    status = c(as.character(review$attention), other$severity),
+    text = c(
+      nomo_screen_flag_text(review, log, x$negative_pairs, nomo_screen_unrecoded_items(log)),
+      other$observation
+    )
+  )
 
   cat("\n")
   nomo_present_text(
     "Flags are review aids, not decisions to keep or delete an item."
   )
+  nomo_present_pointer(
+    c("nomo_table(x, \"decision_log\")", "plot(x)"),
+    c("every log entry", "the item evidence map")
+  )
   invisible(x)
+}
+
+
+# The teaching reference for item-rest correlations, or NA when the guidance
+# has no usable one.
+nomo_screen_item_rest_reference <- function(guidance) {
+  reference <- guidance$item_total_reference
+  if (is.numeric(reference) && length(reference) == 1L && is.finite(reference)) {
+    reference
+  } else {
+    NA_real_
+  }
+}
+
+
+# The notes under the item review table: what Top share and Item-rest r are,
+# and what each "--" marks (guide point 13). An item in no declared scale is
+# read on the pooled value even when scales were declared, and the note says so
+# (#145).
+nomo_screen_review_notes <- function(review) {
+  scale <- review[["scale"]]
+  if (is.null(scale)) scale <- rep(NA_character_, nrow(review))
+  shown <- is.finite(review$item_rest)
+  any_scale <- any(!is.na(scale))
+  unscaled <- any_scale && any(is.na(scale))
+  rest_note <- if (any(shown & !is.na(scale)) && any(shown & is.na(scale))) {
+    paste(
+      "Item-rest r is the correlation of an item with the sum of the other",
+      "items of its scale, or of all the other items for an item in no declared",
+      "scale; the pooled value is kept as corrected_item_rest_r."
+    )
+  } else if (any(shown & !is.na(scale))) {
+    paste(
+      "Item-rest r is the correlation of an item with the sum of the other",
+      "items of its scale; the pooled value is kept as corrected_item_rest_r."
+    )
+  } else if (any(shown) && any_scale) {
+    paste(
+      "Item-rest r is the correlation of an item in no declared scale with the",
+      "sum of all the other items."
+    )
+  } else if (any(shown)) {
+    "Item-rest r is the correlation of an item with the sum of the other items."
+  }
+  # An item left out of the correlation diagnostics has no scale here either,
+  # whether or not one was declared for it.
+  scale_note <- if (unscaled) {
+    left_out <- is.na(scale) & !review$relationship_eligible %in% TRUE
+    paste0(
+      "In Scale, -- marks an item in no declared scale",
+      if (any(left_out)) " or left out of the correlation diagnostics",
+      "."
+    )
+  }
+  value_dash <- any(!is.finite(review$mode_prop)) || (any(shown) && any(!shown))
+  value_note <- if (value_dash) {
+    paste0(
+      if (unscaled) "In other columns, it marks " else "-- marks ",
+      "a value that was not computed; the decision log says why."
+    )
+  }
+  c(
+    "Top share is the share of observed responses in the most common category.",
+    rest_note,
+    scale_note,
+    value_note
+  )
+}
+
+
+# The declared reverse-keyed items that read as not yet recoded: their keyed
+# note in the decision log says so (#145).
+nomo_screen_unrecoded_items <- function(log) {
+  rows <- log$metric %in% "corrected_item_rest" &
+    grepl(nomo_screen_unrecoded_phrase, log$observation, fixed = TRUE)
+  unique(log$object[rows])
+}
+
+
+# Each item's reasons for its flag: the decision log's own explanations, then
+# what the item review adds without a log row of its own, negative inter-item
+# pairs and unused response categories, as complete sentences. A negative pair
+# with an item not yet recoded says so, unless the item's own log row already
+# named that item in its rest score: those of its scale, or every item when it
+# has none (#145).
+nomo_screen_flag_text <- function(review, log, negative_pairs = NULL,
+                                  unrecoded = character()) {
+  scale <- review[["scale"]]
+  if (is.null(scale)) scale <- rep(NA_character_, nrow(review))
+  rest_noted <- log$object[log$metric %in% "corrected_item_rest"]
+  vapply(seq_len(nrow(review)), function(i) {
+    item <- review$item[[i]]
+    reasons <- log$observation[log$object == item & log$severity %in% c("review", "concern")]
+    metrics <- strsplit(review$review_metrics[[i]], ", ", fixed = TRUE)[[1L]]
+    if ("negative_interitem_pairs" %in% metrics) {
+      told <- if (item %in% rest_noted && !item %in% unrecoded) {
+        if (is.na(scale[[i]])) review$item else review$item[scale %in% scale[[i]]]
+      }
+      reasons <- c(reasons, nomo_screen_pair_text(item, negative_pairs,
+                                                  setdiff(unrecoded, told)))
+    }
+    if ("unused_response_categories" %in% metrics) {
+      reasons <- c(reasons, sprintf(
+        "It leaves %s unused.",
+        nomo_present_count(review$n_unused_response_categories[[i]],
+                           "declared response category", "declared response categories")
+      ))
+    }
+    if (!length(reasons)) reasons <- "The decision log has the details."
+    paste(reasons, collapse = " ")
+  }, character(1))
+}
+
+
+# "Its correlation with TF2 is negative." The partners are named, up to four.
+# A partner among `unrecoded`, declared reverse-keyed and not yet recoded, is
+# named as the known cause, with the advice to recode it first (#145).
+nomo_screen_pair_text <- function(item, pairs, unrecoded = character()) {
+  # A summary made before the pairs were kept, or edited, has none to name.
+  mine <- if (!is.null(pairs)) pairs[pairs$item1 == item | pairs$item2 == item, , drop = FALSE]
+  if (!NROW(mine)) {
+    return("Some of its inter-item correlations are negative; see x$inter_item_correlations.")
+  }
+  partners <- ifelse(mine$item1 == item, mine$item2, mine$item1)
+  shown <- if (length(partners) > 4L) {
+    c(partners[1:3], sprintf("%d other items", length(partners) - 3L))
+  } else {
+    partners
+  }
+  text <- if (length(partners) == 1L) {
+    sprintf("Its correlation with %s is negative.", partners)
+  } else {
+    sprintf("Its correlations with %s are negative.", nomo_present_or(shown, "and"))
+  }
+  cause <- intersect(partners, unrecoded)
+  if (!length(cause)) return(text)
+  one <- length(cause) == 1L
+  paste(text, sprintf(
+    "%s %s declared reverse-keyed and not yet recoded in the data, so recode %s first and read %s again.",
+    nomo_present_or(cause, "and"),
+    if (one) "is" else "are",
+    if (one) "it" else "them",
+    if (length(partners) == 1L) "this correlation" else "these correlations"
+  ))
+}
+
+
+# A decision-log object that is not an item, as a unit in the Flagged section.
+nomo_screen_unit_label <- function(object) {
+  labels <- c(
+    cases = "Cases",
+    inter_item_correlations = "Inter-item correlations",
+    content_review = "Content review",
+    relationship_diagnostics = "Correlation diagnostics"
+  )
+  out <- unname(labels[object])
+  plain <- gsub("_", " ", object)
+  ifelse(is.na(out), paste0(toupper(substr(plain, 1L, 1L)), substring(plain, 2L)), out)
 }
 
 
@@ -135,7 +303,10 @@ print.summary_nomo_screen <- function(x, ...) {
 #' Visual diagnostics complement the numerical screening output. The default
 #' evidence map integrates multiple diagnostic signals without converting them
 #' into a pass/fail scale. Additional plot types display item-rest relationships,
-#' inter-item correlations, response-category use, or missingness.
+#' inter-item correlations, response-category use, or missingness. The evidence
+#' map and the item-rest plot show each flag by shape, with color repeating it:
+#' a filled circle for no flag, an open circle for review, a filled square for
+#' concern, and a cross where a diagnostic was not computed.
 #'
 #' @param x A `nomo_screen` object.
 #' @param y Ignored; included for compatibility with the base `plot()` generic.
@@ -343,6 +514,7 @@ nomo_screen_evidence_data <- function(x, items) {
     "constant",
     "missingness",
     "item_type",
+    "coding",
     "response_concentration",
     "near_zero_variance",
     "corrected_item_rest",
@@ -358,25 +530,29 @@ nomo_screen_evidence_data <- function(x, items) {
 
   grid$severity <- "none"
 
+  # Several log metrics share one column: floor and ceiling concentration are
+  # response concentration, and values outside the declared scale or not
+  # finite are both coding problems. An item-rest value that could not be
+  # computed within the item's scale is a not-computed item-rest cell.
+  aliases <- c(
+    floor_concentration = "response_concentration",
+    ceiling_concentration = "response_concentration",
+    non_finite_scores = "coding",
+    out_of_range = "coding",
+    item_rest_not_computed = "corrected_item_rest"
+  )
   map_metric <- function(metric) {
-    if (
-      metric %in% c(
-        "response_concentration",
-        "floor_concentration",
-        "ceiling_concentration"
-      )
-    ) {
-      return("response_concentration")
-    }
-
-    metric
+    if (metric %in% names(aliases)) aliases[[metric]] else metric
   }
 
+  # "unavailable" is a cell whose diagnostic was not computed; it outranks an
+  # informational entry but never a flag.
   severity_rank <- c(
     none = 0L,
     info = 1L,
-    review = 2L,
-    concern = 3L
+    unavailable = 2L,
+    review = 3L,
+    concern = 4L
   )
 
   item_log <- x$decision_log[
@@ -384,6 +560,7 @@ nomo_screen_evidence_data <- function(x, items) {
     ,
     drop = FALSE
   ]
+  item_log$severity[item_log$metric == "item_rest_not_computed"] <- "unavailable"
 
   if (nrow(item_log) > 0L) {
     for (i in seq_len(nrow(item_log))) {
@@ -434,6 +611,15 @@ nomo_screen_evidence_data <- function(x, items) {
           grid$metric == "unused_response_categories"
       ] <- "review"
     }
+
+    # An item left out of the correlation diagnostics has neither value, and
+    # the map says so rather than showing it as unflagged (#145).
+    if (isFALSE(review$relationship_eligible[[i]])) {
+      cells <- grid$item == item &
+        grid$metric %in% c("corrected_item_rest", "negative_interitem_pairs") &
+        grid$severity %in% c("none", "info")
+      grid$severity[cells] <- "unavailable"
+    }
   }
 
   labels <- c(
@@ -441,6 +627,7 @@ nomo_screen_evidence_data <- function(x, items) {
     constant = "Constant",
     missingness = "Missingness",
     item_type = "Item type",
+    coding = "Coding",
     response_concentration = "Response concentration",
     near_zero_variance = "Near-zero variance",
     corrected_item_rest = "Item-rest",
@@ -456,62 +643,51 @@ nomo_screen_evidence_data <- function(x, items) {
   )
   grid$severity <- factor(
     grid$severity,
-    levels = c("none", "info", "review", "concern")
+    levels = names(severity_rank)
   )
+  # The status the plot draws: an informational entry is not a flag.
+  grid$status <- nomo_plot_status(grid$severity)
 
   grid
 }
 
 
+# One status per cell, drawn with the shared status shapes and colors (guide
+# point 27): a small gray dot where nothing was flagged, so the flags stand out
+# while every cell still shows that it was checked (#145, cons-4, clarity-14).
 nomo_screen_plot_evidence <- function(x, items) {
   dat <- nomo_screen_evidence_data(x, items)
-  # Display wording (#89): an informational signal is a note, not a flag.
-  shown <- function(severity) {
-    severity <- as.character(severity)
-    ifelse(severity == "info", "note", severity)
-  }
+  dat$point_size <- ifelse(dat$status == "none", 1.2, 3)
 
   ggplot2::ggplot(
     dat,
     ggplot2::aes(
       x = metric_label,
-      y = item,
-      fill = severity
+      y = item
     )
   ) +
     ggplot2::geom_tile(
+      fill = "#f2f2f2",
       linewidth = 0.4,
       colour = "white"
     ) +
-    ggplot2::geom_text(
-      ggplot2::aes(
-        label = ifelse(
-          severity == "none",
-          "",
-          toupper(substr(shown(severity), 1L, 1L))
-        )
-      ),
-      size = 3
+    ggplot2::geom_point(
+      ggplot2::aes(shape = status, colour = status, size = point_size)
     ) +
-    ggplot2::scale_fill_manual(
-      values = c(
-        none = "#f2f2f2",
-        info = "#56B4E9",
-        review = "#E69F00",
-        concern = "#D55E00"
-      ),
-      labels = shown,
-      drop = TRUE
-    ) +
+    ggplot2::scale_size_identity() +
+    nomo_plot_status_scales(dat$status, name = "Flag") +
     nomo_plot_labs(
-      title = "nomologR item evidence map",
+      title = "Item evidence map",
       subtitle = paste(
         "Cells summarize diagnostic attention;",
         "they are not retention decisions."
       ),
+      caption = paste(
+        "Informational log entries are not flags. summary(x) gives the reason",
+        "for each flag."
+      ),
       x = NULL,
-      y = NULL,
-      fill = "Flag"
+      y = NULL
     ) +
     ggplot2::theme_minimal(base_size = 11) +
     ggplot2::theme(
@@ -525,11 +701,15 @@ nomo_screen_plot_evidence <- function(x, items) {
 
 
 # The item-rest value a review reads: within the item's scale when two or more
-# scales were declared, otherwise the pooled one.
+# scales were declared, otherwise the pooled one. An item in a declared scale
+# with no value there, such as the only item of its scale, has none: the
+# pooled value would judge it against other constructs (#145).
 nomo_screen_review_item_rest <- function(review) {
   within <- review[["scale_item_rest_r"]]
   if (is.null(within)) return(review$corrected_item_rest_r)
-  ifelse(is.na(within), review$corrected_item_rest_r, within)
+  scale <- review[["scale"]]
+  in_scale <- if (is.null(scale)) !is.na(within) else !is.na(scale)
+  ifelse(in_scale, within, review$corrected_item_rest_r)
 }
 
 
@@ -556,7 +736,8 @@ nomo_screen_plot_item_rest <- function(x, items, show_values) {
     stop(
       paste(
         "No corrected item-rest correlations are available",
-        "for the selected items."
+        "for the selected items. Items stored as categories, constant, or with",
+        "non-finite values are left out; nomo_table(x, \"decision_log\") says which."
       ),
       call. = FALSE
     )
@@ -584,46 +765,65 @@ nomo_screen_plot_item_rest <- function(x, items, show_values) {
     levels = c("none", "review", "concern"),
     ordered = TRUE
   )
+  # The flag is carried by the point's shape, with color repeating it, so it
+  # reads in grayscale (guide point 27; #145, pres-6).
+  dat$status <- nomo_plot_status(dat$item_rest_attention)
   dat$item <- factor(dat$item, levels = rev(dat$item))
+
+  reference <- nomo_screen_item_rest_reference(x$guidance)
+  has_reference <- is.finite(reference)
+  within <- any(!is.na(dat[["scale_item_rest_r"]]))
+  # An item in no declared scale is drawn with its pooled value (#145).
+  pooled <- within && any(is.na(dat[["scale"]]))
 
   p <- ggplot2::ggplot(
     dat,
     ggplot2::aes(
       x = item,
-      y = item_rest,
-      fill = item_rest_attention
+      y = item_rest
     )
   ) +
-    ggplot2::geom_col(width = 0.72) +
     ggplot2::geom_hline(
       yintercept = 0,
       linewidth = 0.4
     ) +
-    ggplot2::coord_flip() +
-    ggplot2::scale_fill_manual(
-      values = c(
-        none = "#009E73",
-        review = "#E69F00",
-        concern = "#D55E00"
-      ),
-      drop = TRUE
+    ggplot2::geom_segment(
+      ggplot2::aes(xend = item, y = 0, yend = item_rest),
+      colour = "#BFBFBF",
+      linewidth = 0.7
     ) +
+    ggplot2::geom_point(
+      ggplot2::aes(shape = status, colour = status),
+      size = 2.8
+    ) +
+    ggplot2::coord_flip() +
+    nomo_plot_status_scales(dat$status, name = "Flag") +
+    ggplot2::scale_y_continuous(labels = nomo_plot_bounded_labels) +
     nomo_plot_labs(
       title = "Corrected item-rest relationships",
-      subtitle = paste(
-        "Reference lines guide inspection;",
-        "they do not determine item retention."
-      ),
+      subtitle = if (pooled) {
+        paste(
+          "Each item against the sum of the other items of its declared scale,",
+          "or of all the other items for an item in no declared scale."
+        )
+      } else if (within) {
+        "Each item against the sum of the other items of its declared scale."
+      } else {
+        "Each item against the sum of the other items."
+      },
+      caption = if (has_reference) {
+        sprintf(
+          paste(
+            "The dashed line marks the %s teaching reference, which prompts",
+            "review and does not determine item retention."
+          ),
+          nomo_present_stat(reference, "r")
+        )
+      },
       x = NULL,
-      y = "Corrected item-rest correlation",
-      fill = "Flag"
+      y = "Corrected item-rest correlation"
     ) +
     ggplot2::theme_minimal(base_size = 11)
-
-  reference <- x$guidance$item_total_reference
-  has_reference <- is.numeric(reference) &&
-    length(reference) == 1L &&
-    is.finite(reference)
 
   if (has_reference) {
     p <- p + ggplot2::geom_hline(
@@ -640,7 +840,7 @@ nomo_screen_plot_item_rest <- function(x, items, show_values) {
     label_at <- max(c(dat$item_rest, if (has_reference) reference, 0)) + 0.03
     p <- p +
       ggplot2::geom_text(
-        ggplot2::aes(label = sprintf("%.2f", item_rest)),
+        ggplot2::aes(label = nomo_present_stat(item_rest, "r", reference = reference)),
         y = label_at,
         hjust = 0,
         size = 3
@@ -713,6 +913,7 @@ nomo_screen_plot_interitem <- function(x, items, show_values) {
       high = "#2166ac",
       midpoint = 0,
       limits = c(-1, 1),
+      labels = nomo_plot_bounded_labels,
       na.value = "#eeeeee"
     ) +
     ggplot2::coord_fixed() +
@@ -721,7 +922,7 @@ nomo_screen_plot_interitem <- function(x, items, show_values) {
       subtitle = "Pearson relationships are descriptive screening evidence.",
       x = NULL,
       y = NULL,
-      fill = "r"
+      fill = "Pearson r"
     ) +
     ggplot2::theme_minimal(base_size = 11) +
     ggplot2::theme(
@@ -735,11 +936,7 @@ nomo_screen_plot_interitem <- function(x, items, show_values) {
   if (isTRUE(show_values)) {
     p <- p + ggplot2::geom_text(
       ggplot2::aes(
-        label = ifelse(
-          is.na(r),
-          "",
-          sprintf("%.2f", r)
-        )
+        label = nomo_present_stat(r, "r")
       ),
       size = 3
     )
@@ -778,6 +975,12 @@ nomo_screen_plot_responses <- function(x, items, show_values) {
     )
   }
 
+  # Each share is a percentage of the item's observed responses, with one
+  # precision for the whole plot, set by those bases (guide point 14).
+  dat$value_label <- nomo_present_percent(
+    dat$proportion_observed,
+    base = x$item_summary$n_observed[match(dat$item, x$item_summary$item)]
+  )
   dat$item <- factor(dat$item, levels = items)
   response_key <- paste0(
     seq_len(nrow(dat)),
@@ -822,11 +1025,10 @@ nomo_screen_plot_responses <- function(x, items, show_values) {
 
   if (isTRUE(show_values)) {
     p <- p + ggplot2::geom_text(
-      ggplot2::aes(
-        label = sprintf("%.0f%%", 100 * proportion_observed)
-      ),
+      ggplot2::aes(label = value_label),
       vjust = -0.35,
-      size = 3
+      # A one-decimal share is wider; it stays clear of its neighbors.
+      size = 2.6
     )
   }
 
@@ -935,7 +1137,7 @@ nomo_screen_plot_missingness <- function(x, items, show_values) {
     p <- p + ggplot2::geom_text(
       ggplot2::aes(
         y = missingness_label_position,
-        label = sprintf("%.1f%%", 100 * pct_missing)
+        label = nomo_present_percent(pct_missing, base = n)
       ),
       hjust = 0,
       size = 3
@@ -947,6 +1149,8 @@ nomo_screen_plot_missingness <- function(x, items, show_values) {
 
 utils::globalVariables(c(
   "metric_label",
+  "status",
+  "point_size",
   "item",
   "severity",
   "item_rest",
@@ -958,6 +1162,7 @@ utils::globalVariables(c(
   "response",
   "response_key",
   "proportion_observed",
+  "value_label",
   "pct_missing",
   "missingness_label_position",
   "value",

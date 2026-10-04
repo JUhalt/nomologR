@@ -112,7 +112,8 @@ nomo_reliability_bootstrap_ci <- function(fit_info,
                                           level,
                                           R,
                                           seed,
-                                          ncpus = 1L) {
+                                          ncpus = 1L,
+                                          raw_data = TRUE) {
   expected_keys <- paste(
     evidence$metric, evidence$construct, evidence$block, sep = "::"
   )
@@ -137,6 +138,18 @@ nomo_reliability_bootstrap_ci <- function(fit_info,
       workers = as.integer(ncpus),
       reason = reason
     )
+  }
+
+  # A model fitted from a covariance matrix has no cases to resample. lavaan
+  # would fail with a message about an argument it uses internally (#145).
+  if (!isTRUE(raw_data)) {
+    return(list(
+      intervals = empty_intervals,
+      status = status(
+        FALSE, NA_integer_,
+        "Bootstrap intervals need the raw data; this model was fitted from a covariance matrix."
+      )
+    ))
   }
 
   draws <- tryCatch(
