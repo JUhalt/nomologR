@@ -14,7 +14,8 @@
 \value{
 An object of class \code{summary_nomo_screen} containing an overview,
 integrated item-review table, decision log, relationship-method note, and
-guidance settings.
+guidance settings. Printed, it shows the item review table and a Flagged
+section giving the reason for each flag in the decision log's words.
 }
 \description{
 \code{summary.nomo_screen()} integrates the descriptive, relationship, and

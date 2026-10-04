@@ -15,5 +15,7 @@
 \code{x}, invisibly.
 }
 \description{
-Print a nomo_screen object
+\code{print()} shows the counts of cases and items by data condition, how many
+items entered the correlation diagnostics, and how many decision-log
+entries are flagged; \code{\link[=summary.nomo_screen]{summary.nomo_screen()}} shows each item's review.
 }
