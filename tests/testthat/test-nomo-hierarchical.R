@@ -686,6 +686,9 @@ test_that("the variance decomposition shares sum to one", {
   shares <- plot(h)$data
   totals <- as.numeric(tapply(shares$share, shares$composite, sum))
   expect_equal(totals, rep(1, length(totals)), tolerance = 1e-10)
+  # A proper solution draws every composite and loading, with no caption.
+  expect_null(plot(h)$labels$caption)
+  expect_null(plot(h, type = "loadings")$labels$caption)
 })
 
 
@@ -963,9 +966,32 @@ test_that("a negative disturbance variance gives NA indices and a concern, not a
   expect_true("  Omega total                         --" %in% printed)
   expect_match(printed, "^  - Concern: Negative disturbance variance for A", all = FALSE)
   expect_no_error(capture.output(print(summary(h))))
-  # The variance plot leaves out a composite it cannot divide.
-  expect_setequal(as.character(unique(plot(h)$data$composite)), c("B", "C"))
-  expect_false(anyNA(plot(h, type = "loadings")$data$loading))
+  # The variance plot leaves out a composite it cannot divide, and the
+  # loadings plot a loading it cannot standardize; each caption says which.
+  p <- plot(h)
+  expect_setequal(as.character(unique(p$data$composite)), c("B", "C"))
+  expect_identical(
+    gsub("\\s+", " ", p$labels$caption),
+    "Not drawn: Total score and A, whose shares rest on a negative variance estimate (see x$notes)."
+  )
+  p <- plot(h, type = "loadings")
+  expect_false(anyNA(p$data$loading))
+  expect_identical(
+    gsub("\\s+", " ", p$labels$caption),
+    "Not drawn: group loadings of x1, x2, x3, which rest on a negative variance estimate (see x$notes)."
+  )
+  # Both sources, and nothing at all to draw.
+  both <- h
+  both$loadings$general_loading[1:2] <- NA_real_
+  expect_match(gsub("\\s+", " ", plot(both, type = "loadings")$labels$caption),
+               "Not drawn: general loadings of x1, x2 and group loadings of x1, x2, x3,",
+               fixed = TRUE)
+  both$loadings$general_loading <- NA_real_
+  both$loadings$group_loading <- NA_real_
+  expect_error(plot(both, type = "loadings"), "No finite standardized loadings", fixed = TRUE)
+  both$indices$estimate[both$indices$index == "omega_hierarchical"] <- NA_real_
+  both$subscales$omega_subscale <- NA_real_
+  expect_error(plot(both), "No composite's variance shares can be drawn", fixed = TRUE)
 
   # In a bifactor model a negative factor variance is named as one.
   notes <- nomologR:::nomo_hierarchical_notes(

@@ -216,7 +216,9 @@ print.summary_nomo_hierarchical <- function(x, ...) {
 #' @param ... Unused.
 #'
 #' @return A `ggplot` object. A composite whose shares rest on a negative
-#'   variance estimate is left out of the variance plot.
+#'   variance estimate is left out of the variance plot, and a loading that
+#'   rests on one is left out of the loadings plot; the caption names what was
+#'   left out.
 #' @export
 plot.nomo_hierarchical <- function(x, type = c("variance", "loadings"), ...) {
   type <- nomo_match_arg(type)
@@ -227,9 +229,26 @@ plot.nomo_hierarchical <- function(x, type = c("variance", "loadings"), ...) {
       data.frame(item = dat$item, source = "General", loading = dat$general_loading),
       data.frame(item = dat$item, source = "Group", loading = dat$group_loading)
     )
+    # A loading that rests on a negative variance is NA; the caption names
+    # what is left out, so nothing is dropped silently (#145).
+    left_out <- long[!is.finite(long$loading), , drop = FALSE]
     long <- long[is.finite(long$loading), , drop = FALSE]
+    if (!nrow(long)) {
+      stop("No finite standardized loadings are available to plot; see `x$notes`.",
+           call. = FALSE)
+    }
     long$item <- factor(long$item, levels = rev(dat$item))
     long$source <- factor(long$source, levels = c("General", "Group"))
+    caption <- if (nrow(left_out)) {
+      pieces <- vapply(c("General", "Group"), function(s) {
+        items <- left_out$item[left_out$source == s]
+        if (length(items)) paste(tolower(s), "loadings of", paste(items, collapse = ", ")) else ""
+      }, character(1))
+      paste0(
+        "Not drawn: ", nomo_present_or(pieces[nzchar(pieces)], "and"),
+        ", which rest on a negative variance estimate (see x$notes)."
+      )
+    }
 
     return(
       ggplot2::ggplot(long, ggplot2::aes(x = loading, y = item, shape = source)) +
@@ -241,7 +260,8 @@ plot.nomo_hierarchical <- function(x, type = c("variance", "loadings"), ...) {
                              nomo_hierarchical_structure_label(x), x$general),
           x = "Standardized loading",
           y = NULL,
-          shape = "Source"
+          shape = "Source",
+          caption = caption
         ) +
         ggplot2::theme_minimal()
     )
@@ -253,8 +273,22 @@ plot.nomo_hierarchical <- function(x, type = c("variance", "loadings"), ...) {
   general <- c(omega_h, x$subscales$omega_subscale - x$subscales$omega_hierarchical_subscale)
   group <- c(omega_t - omega_h, x$subscales$omega_hierarchical_subscale)
   other <- 1 - general - group
-  # A composite with a share that rests on a negative variance is not drawn.
+  # A composite with a share that rests on a negative variance is not drawn,
+  # and the caption names it (#145).
   drawn <- is.finite(general) & is.finite(group)
+  if (!any(drawn)) {
+    stop(
+      "No composite's variance shares can be drawn: each rests on a negative ",
+      "variance estimate; see `x$notes`.",
+      call. = FALSE
+    )
+  }
+  caption <- if (!all(drawn)) {
+    paste0(
+      "Not drawn: ", nomo_present_or(composites[!drawn], "and"), ", whose ",
+      "shares rest on a negative variance estimate (see x$notes)."
+    )
+  }
 
   long <- data.frame(
     composite = rep(composites[drawn], 3L),
@@ -286,7 +320,8 @@ plot.nomo_hierarchical <- function(x, type = c("variance", "loadings"), ...) {
       ),
       x = "Proportion of composite variance",
       y = NULL,
-      fill = NULL
+      fill = NULL,
+      caption = caption
     ) +
     ggplot2::theme_minimal()
 }
