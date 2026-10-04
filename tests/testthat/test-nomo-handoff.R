@@ -67,18 +67,21 @@ test_that("every producer version agrees on the carry decisions of the original 
       expect_identical(later$scales, first$scales)
       expect_identical(later$evidence[, decision], first$evidence[, decision])
     }
-    # The rule text is prose the schema leaves free to change; 0.8.0 rewrote
-    # it in counts, citing Lynn (1986). 0.9.0, 0.10.0, and 0.10.1 changed only
-    # what is printed, and every later version must hand off the same evidence.
+    # The rule text is prose the schema leaves free to change: 0.8.0 rewrote
+    # it in counts, citing Lynn (1986), and 0.99.0 rewrites it again. So it is
+    # left out of the comparison, and every later version must hand off the
+    # same evidence in every other column, each decision column included.
     expect_identical(
       nomologR:::nomo_handoff_read(handoff_fixture(fit, "0.7.0"))$evidence$rule,
       first$evidence$rule
     )
+    without_rule <- function(version) {
+      evidence <- nomologR:::nomo_handoff_read(handoff_fixture(fit, version))$evidence
+      evidence[setdiff(names(evidence), "rule")]
+    }
     for (version in handoff_versions_after("0.8.0")) {
-      expect_identical(
-        nomologR:::nomo_handoff_read(handoff_fixture(fit, version))$evidence,
-        nomologR:::nomo_handoff_read(handoff_fixture(fit, "0.8.0"))$evidence
-      )
+      expect_identical(without_rule(version), without_rule("0.8.0"))
+      expect_true(all(decision %in% names(without_rule(version))))
     }
   }
 })
@@ -210,10 +213,171 @@ test_that("keying supplied in the call is the researcher's and is recorded as su
 })
 
 
+test_that("the keying rows say what was used, from the handoff or the call (#145)", {
+  data <- handoff_responses(walkthrough_items)
+  rows <- function(out, metric) {
+    out$decision_log[out$decision_log$metric == metric, , drop = FALSE]
+  }
+
+  # Keying declared without a range, completed by the call's range: the items
+  # are recoded, and nothing declared was set aside.
+  h <- handoff_fixture("walkthrough-sort", "0.7.0")
+  h$item_evidence$response_min <- NA_integer_
+  h$item_evidence$response_max <- NA_integer_
+  completed <- nomo_screen(data, items = h, effort = TRUE, scale_range = c(1, 5))
+  expect_identical(completed$effort_settings$reverse, c("EF2", "TF2"))
+  keying <- rows(completed, "keying")$observation
+  expect_identical(keying,
+                   "Content review declared reverse-keyed items EF2, TF2, without the response scale.")
+  expect_match(rows(completed, "keying_completed")$observation,
+               "`scale_range` (1 to 5) was supplied in the call.", fixed = TRUE)
+  expect_false("keying_override" %in% completed$decision_log$metric)
+  # Without the call's range, the same handoff cannot be recoded, and says so.
+  alone <- nomo_screen(data, items = h)
+  expect_match(rows(alone, "keying")$observation, "so they cannot be recoded here", fixed = TRUE)
+  expect_false("keying_completed" %in% alone$decision_log$metric)
+
+  # Keying given to match the handoff replaces nothing.
+  full <- handoff_fixture("walkthrough-sort", "0.7.0")
+  same <- nomo_screen(data, items = full, reverse = c("TF2", "EF2"), scale_range = c(1, 5))
+  expect_false(any(c("keying_override", "keying_completed") %in% same$decision_log$metric))
+
+  # A replaced `reverse` and a replaced range are each named with both values.
+  replaced <- nomo_screen(data, items = full, reverse = "EF2", scale_range = c(0, 6))
+  override <- rows(replaced, "keying_override")
+  expect_match(override$observation,
+               "`reverse` (EF2) was supplied in the call, so it was used in place of the reverse-keyed items the handoff declared (EF2, TF2).",
+               fixed = TRUE)
+  expect_match(override$observation,
+               "`scale_range` (0 to 6) was supplied in the call, so it was used in place of the response scale the handoff declared (1 to 5).",
+               fixed = TRUE)
+  expect_identical(override$recommendation, "Record why the declared keying was set aside.")
+  none <- nomo_screen(data, items = full, reverse = character(0))
+  expect_match(rows(none, "keying_override")$observation, "`reverse` (none) was supplied",
+               fixed = TRUE)
+})
+
+
+test_that("responses outside the handoff's response scale are a concern, never recoded (#145)", {
+  # The handoff declares a 1 to 5 scale; these data are coded 0 to 4.
+  h <- handoff_fixture("walkthrough-sort", "0.10.1")
+  data <- handoff_responses(walkthrough_items) - 1
+  out <- nomo_screen(data, items = h)
+  rows <- out$decision_log[out$decision_log$metric == "out_of_range", ]
+  expect_identical(rows$object, h$items)
+  expect_true(all(rows$severity == "concern"))
+  expect_match(rows$observation[rows$object == "EF2"],
+               "outside the declared response scale of 1 to 5 (observed 0 to 4).", fixed = TRUE)
+  expect_match(rows$recommendation[rows$object == "EF2"], "declared reverse-keyed", fixed = TRUE)
+  expect_no_match(rows$recommendation[rows$object == "EF1"], "declared reverse-keyed",
+                  fixed = TRUE)
+  expect_true(all(summary(out)$item_review$attention == "concern"))
+  # The indices would recode EF2 and TF2 on the wrong scale, so they are refused.
+  expect_error(nomo_screen(data, items = h, effort = TRUE),
+               "Outside it: EF2 (observed 0 to 4), TF2 (observed 0 to 4).", fixed = TRUE)
+  # The researcher's range in the call is the one compared.
+  expect_false("out_of_range" %in%
+                 nomo_screen(data, items = h, scale_range = c(0, 4))$decision_log$metric)
+})
+
+
+test_that("construct membership is credited to content review only when it made one (#145)", {
+  provenance <- function(out) {
+    out$decision_log$observation[out$decision_log$metric == "content_review_provenance"]
+  }
+  # A review with no construct mapping supplied items only.
+  delphi <- nomo_screen(handoff_responses(paste0("S", 1:5)),
+                        items = handoff_fixture("delphi", "0.10.1"))
+  expect_match(provenance(delphi), "^Items came from content review in contentvalidR 0\\.10\\.1")
+  expect_false("scales_override" %in% delphi$decision_log$metric)
+
+  h <- handoff_fixture("walkthrough-sort", "0.10.1")
+  data <- handoff_responses(walkthrough_items)
+  declared <- nomo_screen(data, items = h)
+  expect_match(provenance(declared), "^Items and their construct membership came from")
+
+  # Scales given in the call replace the review's, and a row says so.
+  mine <- nomo_screen(data, items = h, scales = list(X = c("EF1", "EF2"), Y = c("TF1", "TF2")))
+  expect_match(provenance(mine), "^Items came from content review")
+  row <- mine$decision_log[mine$decision_log$metric == "scales_override", ]
+  expect_identical(row$severity, "info")
+  expect_match(row$observation,
+               "used in place of the construct membership the handoff declared (EF and TF).",
+               fixed = TRUE)
+  expect_identical(row$recommendation, "Record why the declared construct membership was set aside.")
+
+  # The handoff's own scales, in any order, replace nothing.
+  echoed <- nomo_screen(data, items = h, scales = rev(lapply(h$scales, rev)))
+  expect_false("scales_override" %in% echoed$decision_log$metric)
+  expect_match(provenance(echoed), "^Items and their construct membership")
+  expect_false(nomologR:::nomo_handoff_same_scales(list(EF = "EF1"), h$scales))
+  expect_false(nomologR:::nomo_handoff_same_scales("EF1", h$scales))
+  wrong_items <- h$scales
+  wrong_items$EF <- wrong_items$EF[-1L]
+  expect_false(nomologR:::nomo_handoff_same_scales(wrong_items, h$scales))
+})
+
+
+test_that("a held-back item's missing status or recommendation is not quoted as NA (#145)", {
+  h <- handoff_fixture("walkthrough-sort", "0.10.1")
+  ev <- h$item_evidence
+  ev$recommendation[ev$item == "EF5"] <- NA_character_
+  ev$status[ev$item == "TF5"] <- NA_character_
+  ev$recommendation[ev$item == "TF5"] <- NA_character_
+  h$item_evidence <- ev
+  log <- nomo_screen(handoff_responses(walkthrough_items), items = h)$decision_log
+  held <- log$observation[log$metric == "held_back_item"]
+  expect_identical(held, c(
+    "EF5 was held back by content review: status \"Review\".",
+    "TF5 was held back by content review."
+  ))
+  expect_false(any(grepl("\"NA\"", log$observation, fixed = TRUE)))
+
+  ev$status[ev$item == "TF5"] <- "Review"
+  ev$recommendation[ev$item == "EF5"] <- "Revise"
+  h$item_evidence <- ev
+  log <- nomo_screen(handoff_responses(walkthrough_items), items = h)$decision_log
+  expect_identical(log$observation[log$metric == "held_back_item"], c(
+    "EF5 was held back by content review: status \"Review\", recommendation \"Revise\".",
+    "TF5 was held back by content review: status \"Review\"."
+  ))
+})
+
+
+test_that("a handoff that carries no items is refused with what content review decided (#145)", {
+  h <- handoff_fixture("walkthrough-sort", "0.10.1")
+  h$item_evidence$carried <- FALSE
+  h$items <- character(0)
+  h$scales <- stats::setNames(list(), character(0))
+  data <- handoff_responses(walkthrough_items)
+  message <- paste(
+    "This handoff carries no items: content review held back all 12 reviewed",
+    "items (status counts: Review 2, Supported 10) under the carry rule",
+    "keep = \"Supported\"."
+  )
+  expect_error(nomo_screen(data, items = h), message, fixed = TRUE)
+  expect_error(nomo_screen(data, items = h), "naming the statuses to carry in `keep`",
+               fixed = TRUE)
+  expect_error(nomo_run(data, scales = h), message, fixed = TRUE)
+
+  # Without a recorded carry rule, or with no reviewed items, it still says so.
+  h$provenance$keep <- NULL
+  expect_error(nomologR:::nomo_handoff_read(h),
+               "(status counts: Review 2, Supported 10). nomologR analyzes", fixed = TRUE)
+  h$item_evidence <- h$item_evidence[0, , drop = FALSE]
+  expect_error(nomologR:::nomo_handoff_read(h),
+               "held back all 0 reviewed items (status counts: none recorded)", fixed = TRUE)
+})
+
+
 test_that("a carried item missing from the data is refused, not dropped", {
   h <- handoff_fixture("walkthrough-sort", "0.7.0")
   data <- handoff_responses(setdiff(walkthrough_items, c("EF1", "TF6")))
-  expect_error(nomo_screen(data, items = h), "not columns of `data`: EF1, TF6", fixed = TRUE)
+  expect_error(nomo_screen(data, items = h), "carried items that are not columns of `data`: EF1, TF6",
+               fixed = TRUE)
+  data <- handoff_responses(setdiff(walkthrough_items, "EF1"))
+  expect_error(nomo_screen(data, items = h), "carried an item that is not a column of `data`: EF1.",
+               fixed = TRUE)
 })
 
 
@@ -291,6 +455,31 @@ test_that("an unknown schema version is refused, naming both package versions", 
 })
 
 
+test_that("a schema version is read only as a single whole number (#145)", {
+  version <- function(v) {
+    h <- handoff_fixture("walkthrough-sort", "0.7.0")
+    h$provenance$schema_version <- v
+    h
+  }
+  # Each of these was truncated to version 1 and read.
+  expect_error(nomologR:::nomo_handoff_read(version(1.9)), "uses schema version 1.9,",
+               fixed = TRUE)
+  expect_error(nomologR:::nomo_handoff_read(version("1.5")), "uses schema version 1.5,",
+               fixed = TRUE)
+  expect_error(nomologR:::nomo_handoff_read(version(1:2)), "uses schema version c(1, 2),",
+               fixed = TRUE)
+  expect_error(nomologR:::nomo_handoff_read(version(TRUE)), "uses schema version TRUE,",
+               fixed = TRUE)
+  expect_error(nomologR:::nomo_handoff_read(version(NULL)), "uses schema version (none),",
+               fixed = TRUE)
+  expect_error(nomologR:::nomo_handoff_read(version(1e12)), "This handoff uses schema version",
+               fixed = TRUE)
+  # One whole number is read, however it is stored.
+  expect_identical(nomologR:::nomo_handoff_read(version(1))$provenance$schema_version, 1L)
+  expect_identical(nomologR:::nomo_handoff_read(version("1"))$provenance$schema_version, 1L)
+})
+
+
 test_that("fields this release does not know are ignored", {
   h <- handoff_fixture("walkthrough-sort", "0.7.0")
   h$future_field <- "added in a later minor release"
@@ -336,6 +525,31 @@ test_that("objects content_handoff() could not have produced are refused as malf
   delphi <- handoff_fixture("delphi", "0.7.0")
   delphi$scales <- list(A = delphi$items)
   malformed(delphi)
+
+  # Keying is 1 or -1. A word or another number was read as forward keyed,
+  # so a declared reverse-keyed item was silently treated as forward (#145).
+  h <- base
+  h$item_evidence$keying <- ifelse(h$item_evidence$keying == -1L, "reverse", "forward")
+  expect_error(nomologR:::nomo_handoff_read(h),
+               "`keying` must be 1 (forward) or -1 (reverse) for each item", fixed = TRUE)
+  h <- base; h$item_evidence$keying <- 0L
+  malformed(h)
+
+  # One row per item: a second row could hold back an item that is screened.
+  h <- base
+  extra <- h$item_evidence[h$item_evidence$item == "EF1", ]
+  extra$carried <- FALSE
+  h$item_evidence <- rbind(h$item_evidence, extra)
+  expect_error(nomologR:::nomo_handoff_read(h), "`item_evidence` lists EF1 more than once",
+               fixed = TRUE)
+
+  # Something that is not a list is refused with the same explanation, not a
+  # raw R error.
+  expect_error(nomologR:::nomo_handoff_read(structure("x", class = "cv_handoff")),
+               "This handoff is malformed: it is not a list", fixed = TRUE)
+  expect_error(nomo_screen(handoff_responses(walkthrough_items),
+                           items = structure("x", class = "cv_handoff")),
+               "This handoff is malformed", fixed = TRUE)
 })
 
 
@@ -345,7 +559,16 @@ test_that("an item placed in two scales is noted before it becomes a cross-loadi
   out <- nomo_screen(handoff_responses(walkthrough_items), items = h)
   shared <- out$decision_log[out$decision_log$metric == "shared_items", ]
   expect_identical(shared$severity, "review")
-  expect_match(shared$observation, "TF1 belong to more than one scale", fixed = TRUE)
+  expect_match(shared$observation, "Item TF1 belongs to more than one scale", fixed = TRUE)
+
+  h$scales$EF <- c(h$scales$EF, "TF3")
+  out <- nomo_screen(handoff_responses(walkthrough_items), items = h)
+  shared <- out$decision_log[out$decision_log$metric == "shared_items", ]
+  expect_match(shared$observation, "Items TF1, TF3 belong to more than one scale", fixed = TRUE)
+  # The summary lists it with the items' flags, under a plain name.
+  local_reproducible_output(width = 80)
+  printed <- paste(capture.output(print(summary(out))), collapse = " ")
+  expect_match(printed, "- Content review (Review): Items TF1, TF3 belong", fixed = TRUE)
 })
 
 
@@ -430,7 +653,7 @@ test_that("the handoff and the keying the screen reports are the same, whatever 
   # keying went unused (#145).
   audit <- nomo_screen(handoff_responses(walkthrough_items), items = h)
   unused <- audit$decision_log[audit$decision_log$metric == "keying_not_used", ]
-  expect_match(unused$observation, "Reverse-keyed item(s) EF2, TF2 were declared without",
+  expect_match(unused$observation, "Reverse-keyed items EF2, TF2 were declared without",
                fixed = TRUE)
 })
 
@@ -442,6 +665,10 @@ test_that("declared keying explains a negative item-rest correlation, without re
   data <- handoff_responses(walkthrough_items)
   data$EF2 <- 6 - data$EF2
   data$TF2 <- 6 - data$TF2
+
+  # The declared range is compared with the data: these responses are inside
+  # it, so nothing is out of range.
+  expect_false("out_of_range" %in% nomo_screen(data, items = h)$decision_log$metric)
 
   entry <- function(log, item) {
     log[log$object == item & log$metric == "corrected_item_rest", , drop = FALSE]

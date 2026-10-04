@@ -1,4 +1,11 @@
-nomo_screen_descriptives <- function(selected, item_summary, guidance) {
+# Item descriptives and the concentration and near-zero-variance rows. The
+# floor and ceiling of a numeric-discrete item are the ends of the declared
+# response scale when `scale_range` is given. Otherwise they are the lowest and
+# highest observed values, since a numeric item shows only the values used: a
+# pile-up in the middle of a scale whose lower categories went unused would
+# read as a floor effect (#145).
+nomo_screen_descriptives <- function(selected, item_summary, guidance,
+                                     scale_range = NULL) {
   items <- names(selected)
 
   get_scalar_guidance <- function(name, fallback) {
@@ -87,15 +94,10 @@ nomo_screen_descriptives <- function(selected, item_summary, guidance) {
         is.numeric(x) &&
         n_unique > 2L
     ) {
-      finite_observed <- observed[is.finite(observed)]
-
-      if (length(finite_observed) > 0L) {
-        item_summary$floor_prop[[idx]] <-
-          mean(finite_observed == min(finite_observed))
-
-        item_summary$ceiling_prop[[idx]] <-
-          mean(finite_observed == max(finite_observed))
-      }
+      # A numeric-discrete item's values are all finite.
+      ends <- if (is.null(scale_range)) range(observed) else scale_range
+      item_summary$floor_prop[[idx]] <- mean(observed == ends[[1L]])
+      item_summary$ceiling_prop[[idx]] <- mean(observed == ends[[2L]])
     }
 
     if (
@@ -141,19 +143,30 @@ nomo_screen_descriptives <- function(selected, item_summary, guidance) {
 
       metric <- "response_concentration"
       boundary_note <- ""
+      # Where the ends come from: a numeric-discrete item's declared scale or
+      # only the values observed; any other item's own categories. Only a
+      # numeric-discrete item has ends taken from `scale_range`, so only its
+      # recommendation asks for it (#145).
+      end_word <- if (item_type != "numeric_discrete") {
+        "response category"
+      } else if (is.null(scale_range)) {
+        "observed value"
+      } else {
+        "category of the declared response scale"
+      }
 
       if (
         is.finite(floor_prop) &&
           floor_prop >= concentration_reference
       ) {
         metric <- "floor_concentration"
-        boundary_note <- " at the lowest response category"
+        boundary_note <- sprintf(" at the lowest %s", end_word)
       } else if (
         is.finite(ceiling_prop) &&
           ceiling_prop >= concentration_reference
       ) {
         metric <- "ceiling_concentration"
-        boundary_note <- " at the highest response category"
+        boundary_note <- sprintf(" at the highest %s", end_word)
       }
 
       decision_log <- nomo_log_add(
@@ -163,20 +176,27 @@ nomo_screen_descriptives <- function(selected, item_summary, guidance) {
         metric = metric,
         value = item_summary$mode_prop[[idx]],
         reference = sprintf(
-          "Teaching/reference concentration %.0f%%; not a deletion rule",
-          100 * concentration_reference
+          "Teaching reference %s of responses in one category; not a deletion rule",
+          nomo_present_percent(concentration_reference, base = n_observed)
         ),
         severity = "review",
         observation = sprintf(
-          "`%s` places %.1f%% of observed responses in one category%s.",
+          "`%s` places %s of observed responses in one category%s.",
           item,
-          100 * item_summary$mode_prop[[idx]],
+          nomo_present_percent(item_summary$mode_prop[[idx]], base = n_observed),
           boundary_note
         ),
         recommendation = paste(
           "Inspect response-option use, item wording, sample range restriction,",
           "skip/display logic, and construct targeting. High concentration can",
-          "reduce information, but it does not by itself justify deleting an item."
+          "reduce information, but it does not by itself justify deleting an item.",
+          if (identical(end_word, "observed value")) {
+            paste(
+              "A numeric item shows only the values used, so an unused end",
+              "category is not visible; supply `scale_range` to compare with the",
+              "ends of the response scale."
+            )
+          }
         )
       )
     }
@@ -188,23 +208,25 @@ nomo_screen_descriptives <- function(selected, item_summary, guidance) {
         object = item,
         metric = "near_zero_variance",
         value = item_summary$frequency_ratio[[idx]],
+        # The ratio and the percentage print as their references do, each
+        # with one precision.
         reference = sprintf(
           paste0(
-            "Screening heuristic: frequency ratio >= %.1f and ",
-            "percent unique <= %.1f%%; not a psychometric law"
+            "Screening heuristic: frequency ratio >= %s and ",
+            "percent unique <= %s; not a psychometric law"
           ),
-          nzv_frequency_reference,
-          nzv_percent_unique_reference
+          nomo_present_stat(nzv_frequency_reference, "estimate"),
+          nomo_present_percent(nzv_percent_unique_reference / 100)
         ),
         severity = "review",
         observation = sprintf(
           paste0(
             "`%s` has highly imbalanced observed responses ",
-            "(frequency ratio %.2f; %.1f%% unique values)."
+            "(frequency ratio %s; %s unique values)."
           ),
           item,
-          item_summary$frequency_ratio[[idx]],
-          item_summary$percent_unique[[idx]]
+          nomo_present_stat(item_summary$frequency_ratio[[idx]], "estimate"),
+          nomo_present_percent(item_summary$percent_unique[[idx]] / 100)
         ),
         recommendation = paste(
           "Inspect coding, sampling, item targeting, and whether this response",

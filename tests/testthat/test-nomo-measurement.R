@@ -313,7 +313,19 @@ test_that("HTMT and Fornell-Larcker helpers disclose unavailable cases", {
     parameter_estimates = one_factor_pe
   ))
   expect_false(unavailable_one$available)
-  expect_match(unavailable_one$reason, "at least two latent constructs")
+  # Not computable with one construct is not applicable, not missing (#145).
+  expect_false(unavailable_one$applicable)
+  expect_match(unavailable_one$reason, "two or more constructs, and this model has one")
+  # Nor with only one construct that has more than one indicator.
+  single_pe <- data.frame(
+    lhs = c("F", "F", "S"), op = "=~", rhs = c("x1", "x2", "x3")
+  )
+  unavailable_single <- nomo_validity_htmt_inputs(list(
+    ngroups = 1L, nlevels = 1L, cross_loaded_items = character(),
+    parameter_estimates = single_pe
+  ))
+  expect_false(unavailable_single$applicable)
+  expect_match(unavailable_single$reason, "construct with one indicator (S)", fixed = TRUE)
 
   fl_bad_fit <- nomo_validity_fornell_larcker(
     structure(list(), class = "not_lavaan"),

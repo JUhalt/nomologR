@@ -316,6 +316,13 @@ nomo_effort_screen <- function(selected, long_string_min_items, scales = NULL,
     long_string_limit = long_limit,
     long_string_min_items = long_string_min_items,
     long_string_rule_applied = long_applied,
+    # What the log needs to say why an index has no value (#145).
+    n_items = n_items,
+    n_complete = sum(stats::complete.cases(responses)),
+    scales_declared = !is.null(scales) && length(scales) > 0L,
+    n_scales_usable = sum(vapply(scales, function(items) {
+      length(intersect(items, colnames(responses))) >= 2L
+    }, logical(1))),
     # NULL means nobody said; character(0) means someone checked and nothing is
     # reversed. Those are different facts and are reported differently.
     keying_declared = !is.null(reverse),
@@ -331,7 +338,7 @@ nomo_effort_log <- function(result, n_items) {
   log <- nomo_log_new()
   e <- result$effort
   n <- nrow(e)
-  pct <- function(k) sprintf("%.1f%%", 100 * k / max(n, 1L))
+  pct <- function(k) nomo_present_percent(k / max(n, 1L), base = n)
 
   long_limit <- result$long_string_limit
   if (isTRUE(result$long_string_rule_applied)) {
@@ -346,10 +353,11 @@ nomo_effort_log <- function(result, n_items) {
       severity = if (n_long > 0L) "review" else "info",
       observation = sprintf(
         paste(
-          "%d of %d cases (%s) gave the same response to at least %d consecutive",
-          "items, half of the %d items screened."
+          "%d of %d cases (%s) gave the same response to at least %s, half of",
+          "the %s screened."
         ),
-        n_long, n, pct(n_long), long_limit, n_items
+        n_long, n, pct(n_long), nomo_present_count(long_limit, "consecutive item"),
+        nomo_present_count(n_items, "item")
       ),
       recommendation = paste(
         "Curran offers half the scale length as a conservative starting point and",
@@ -407,8 +415,12 @@ nomo_effort_log <- function(result, n_items) {
         reference = "Curran (2016); Meade & Craig (2012)",
         severity = "info",
         observation = sprintf(
-          "Only %d psychometric %s pair%s met the correlation threshold, so the index was not computed.",
-          n_pairs, kind, if (n_pairs == 1L) "" else "s"
+          "%s met the correlation threshold, so the index was not computed.",
+          if (n_pairs) {
+            sprintf("Only %s", nomo_present_count(n_pairs, paste("psychometric", kind, "pair")))
+          } else {
+            sprintf("No psychometric %s pair", kind)
+          }
         ),
         recommendation = paste(
           "Each respondent's value is a correlation across the pairs, so it needs",
@@ -437,8 +449,8 @@ nomo_effort_log <- function(result, n_items) {
       ),
       severity = if (n_flag > 0L) "review" else "info",
       observation = sprintf(
-        "%d case%s (%s) showed %s.",
-        n_flag, if (n_flag == 1L) "" else "s", pct(n_flag), rule
+        "%s (%s) showed %s.",
+        nomo_present_count(n_flag, "case"), pct(n_flag), rule
       ),
       recommendation = if (coarse) {
         sprintf(paste(
@@ -456,16 +468,32 @@ nomo_effort_log <- function(result, n_items) {
     )
   }
 
+  # An index with no value for some or all cases says why, so an NA column is
+  # not left to read as a data problem, a missing argument, or a fault (#145).
+  log <- nomo_effort_coverage_log(log, result)
+
   if (any(is.finite(e$even_odd))) {
     negative <- sum(is.finite(e$even_odd) & e$even_odd < 0)
+    n_value <- sum(is.finite(e$even_odd))
     log <- nomo_log_add(
       log, stage = "screen", object = "cases", metric = "even_odd",
       value = negative,
       reference = "Meade & Craig (2012); Curran (2016); no stated cut score",
       severity = "info",
-      observation = sprintf(
-        "%d case%s had a negative even-odd consistency, meaning the halves of each scale disagreed.",
-        negative, if (negative == 1L) "" else "s"
+      observation = paste0(
+        sprintf(
+          "%s a negative even-odd consistency, meaning the halves of each scale disagreed.",
+          nomo_present_count(negative, "case had", "cases had")
+        ),
+        if (n_value < n) {
+          sprintf(
+            paste(
+              " %d of %d cases have a value; the others did not answer both",
+              "halves of at least three scales, or their half means did not vary."
+            ),
+            n_value, n
+          )
+        }
       ),
       recommendation = paste(
         "No source states a cut score, so no case is flagged on this index.",
@@ -503,12 +531,12 @@ nomo_effort_log <- function(result, n_items) {
         severity = "review",
         observation = sprintf(
           paste(
-            "%d case%s flagged by long-string %s among the lowest tenth on",
+            "%s flagged by long-string %s among the lowest tenth on",
             "inter-item standard deviation, which rates them as the most",
             "consistent respondents in the sample."
           ),
-          inverted, if (inverted == 1L) "" else "s",
-          if (inverted == 1L) "is" else "are"
+          nomo_present_count(inverted, "case"),
+          nomo_present_noun(inverted, "is", "are")
         ),
         recommendation = paste(
           "The indices disagree because they detect different failures.",
@@ -519,6 +547,122 @@ nomo_effort_log <- function(result, n_items) {
         )
       )
     }
+  }
+
+  log
+}
+
+
+# Rows saying why an index has no value: how many cases have a Mahalanobis
+# distance when some lack one, and why; why even-odd consistency was not
+# computed when no case has it; and why the per-scale means were not computed
+# (#145). The antonym and synonym rows say the same for their indices. An
+# index every case has needs no row.
+nomo_effort_coverage_log <- function(log, result) {
+  e <- result$effort
+  n <- nrow(e)
+  n_items <- result$n_items
+  n_complete <- result$n_complete
+
+  n_distance <- sum(is.finite(e$mahalanobis))
+  if (n_distance < n) {
+    log <- nomo_log_add(
+      log, stage = "screen", object = "cases", metric = "mahalanobis",
+      value = n_distance,
+      reference = "Curran (2016); no stated cut score",
+      severity = "info",
+      observation = if (n_distance > 0L) {
+        sprintf(
+          paste(
+            "Mahalanobis distance was computed for %d of %d cases, those complete",
+            "on all %d items; the others have no value."
+          ),
+          n_distance, n, n_items
+        )
+      } else if (n_complete <= n_items) {
+        sprintf(
+          paste(
+            "Mahalanobis distance was not computed: %s complete on all %d items,",
+            "and the covariance matrix needs more complete cases than items."
+          ),
+          nomo_present_count(n_complete, "case is", "cases are"), n_items
+        )
+      } else {
+        sprintf(
+          paste(
+            "Mahalanobis distance was not computed: the covariance matrix of the",
+            "%d items is singular among the %d complete cases, because an item is",
+            "constant or a linear combination of others."
+          ),
+          n_items, n_complete
+        )
+      },
+      recommendation = paste(
+        "No source states a cut score, so no case is flagged on this index. A",
+        "large distance marks an unusual response pattern, of which careless",
+        "responding is only one cause; read it alongside the other indices."
+      )
+    )
+  }
+
+  no_scales <- if (!isTRUE(result$scales_declared)) {
+    "no `scales` were declared"
+  } else if (!result$n_scales_usable) {
+    "no declared scale has two or more items"
+  } else {
+    sprintf("only %s two or more items", nomo_present_count(
+      result$n_scales_usable, "declared scale has", "declared scales have"
+    ))
+  }
+
+  if (!any(is.finite(e$even_odd))) {
+    log <- nomo_log_add(
+      log, stage = "screen", object = "cases", metric = "even_odd",
+      value = NA_real_,
+      reference = "Meade & Craig (2012); Curran (2016); no stated cut score",
+      severity = "info",
+      observation = paste0(
+        "Even-odd consistency was not computed. ",
+        if (result$n_scales_usable < 3L) {
+          sprintf(
+            paste(
+              "It correlates the halves of each scale across scales, so it needs",
+              "at least three scales with two or more items each, and %s."
+            ),
+            no_scales
+          )
+        } else {
+          paste(
+            "No case answered both halves of at least three scales with half",
+            "means that varied across scales."
+          )
+        }
+      ),
+      recommendation = paste(
+        "Declare the instrument's scales with `scales` to compute it. No case",
+        "is flagged on this index in any event."
+      )
+    )
+  }
+
+  if (all(is.na(e$long_string_mean)) && all(is.na(e$inter_item_sd_mean))) {
+    log <- nomo_log_add(
+      log, stage = "screen", object = "cases", metric = "per_scale_indices",
+      value = NA_real_,
+      reference = "Marjanovic et al. (2015); Curran (2016)",
+      severity = "info",
+      observation = sprintf(
+        paste(
+          "The per-scale means of long-string and inter-item standard deviation",
+          "were not computed: they need a scale with two or more items, and %s."
+        ),
+        no_scales
+      ),
+      recommendation = paste(
+        "Declare the instrument's scales with `scales` to compute them; the",
+        "indices over all items are reported either way."
+      )
+    )
   }
 
   log

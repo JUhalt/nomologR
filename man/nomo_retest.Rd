@@ -24,18 +24,30 @@ A \code{nomo_retest} object. The fields to read are:
 occasions, ICC(A,1) with its 95\% interval and Koo and Li's description
 of that interval (\code{koo_li}), ICC(C,1) with its interval, the mean change
 from the first to the last occasion with its interval, the pooled
-standard deviation, the standard error of measurement (\code{sem}, the
-square root of the residual mean square), and the smallest detectable
-change (\code{sdc}).
+standard deviation (\code{sd}, the standard deviation of the scores pooled
+over occasions, not of the change), the standard error of measurement
+(\code{sem}, the square root of the residual mean square), and the smallest
+detectable change (\code{sdc}).
 \item \code{reliable_change}: one row per person and composite, with the first and
 last scores, the change, the reliable change index (\code{rci}), and whether
-the change is a reliable increase, a reliable decrease, or neither.
+the change is a reliable increase, a reliable decrease, or neither. A
+person whose score did not change has an \code{rci} of 0, even when there is
+no measurement error at all.
 \item \code{interval} and \code{decision_log}.
 }
+
+A case without a score on every occasion of a composite is left out of
+that composite, and the decision log says how many were. Scores must be
+finite numbers or \code{NA}.
 
 Other fields record the call and the columns used (\code{scores}). They may
 change between releases and are not part of the stable interface (see
 \code{?nomologR}).
+
+\code{print()} shows each composite's ICC(A,1) with its interval and Koo and
+Li's description, the measurement error, and how many people changed
+reliably; \code{summary()} adds the consistency form ICC(C,1) and the mean
+change with its interval, and the full reason for each flag.
 }
 \description{
 \code{nomo_retest()} estimates how stable a composite's scores are when the same

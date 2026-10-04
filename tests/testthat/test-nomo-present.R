@@ -76,11 +76,11 @@ test_that("plot legends use the same flag wording (#89)", {
   expect_identical(legend(plot(cfa, type = "fit"), "shape"), c("No flag", "Review"))
 
   val$ave$attention <- c("info", "concern")
-  expect_identical(legend(plot(val, type = "ave"), "shape"), c("none", "concern"))
+  expect_identical(legend(plot(val, type = "ave"), "shape"), c("No flag", "Concern"))
 
   p <- plot(nomo_screen(nomo_demo_continuous), type = "evidence")
-  expect_identical(p$labels$fill, "Flag")
-  expect_identical(legend(p, "fill"), c("none", "note", "review"))
+  expect_identical(p$scales$get_scales("shape")$name, "Flag")
+  expect_identical(legend(p, "shape"), c("No flag", "Review"))
 })
 
 
@@ -381,9 +381,10 @@ test_that("a flag without a log row of its own still gives a reason (#89)", {
   s$item_review$attention[[2L]] <- "concern"
   s$item_review$review_metrics[[2L]] <- ""
   s$decision_log <- s$decision_log[0, , drop = FALSE]
-  txt <- utils::capture.output(print(s))
-  expect_true(any(grepl("a (review): flagged by negative interitem pairs.", txt, fixed = TRUE)))
-  expect_true(any(grepl("b (concern): see the decision log.", txt, fixed = TRUE)))
+  txt <- paste(utils::capture.output(print(s)), collapse = " ")
+  expect_match(txt, "a (Review): Some of its inter-item correlations are negative;",
+               fixed = TRUE)
+  expect_match(txt, "b (Concern): The decision log has the details.", fixed = TRUE)
 })
 
 
