@@ -701,7 +701,7 @@ test_that("summary print says what triggered each flag instead of hiding it (#89
   s <- summary(nomo_screen(dat))
 
   # Each flagged item is listed with the decision log's own explanation.
-  expect_output(print(s), "Flagged items")
+  expect_output(print(s), "Flagged")
   expect_output(print(s), "item-rest correlation")
 })
 
@@ -816,17 +816,19 @@ test_that("plot legends show only attention levels that are actually present", {
 
   out <- nomo_screen(dat)
 
+  # Status is drawn by shape, with color repeating it, from the shared status
+  # scales; an informational entry is not a flag (#145).
   evidence <- plot(out, type = "evidence")
   evidence_built <- ggplot2::ggplot_build(evidence)
-  evidence_scale <- evidence_built$plot$scales$get_scales("fill")
+  evidence_scale <- evidence_built$plot$scales$get_scales("shape")
   evidence_breaks <- as.character(evidence_scale$get_breaks())
 
-  expect_true(all(c("none", "info", "review") %in% evidence_breaks))
-  expect_false("concern" %in% evidence_breaks)
+  expect_identical(evidence_breaks, c("none", "review"))
+  expect_null(evidence_built$plot$scales$get_scales("fill"))
 
   item_rest <- plot(out, type = "item_rest")
   item_rest_built <- ggplot2::ggplot_build(item_rest)
-  item_rest_scale <- item_rest_built$plot$scales$get_scales("fill")
+  item_rest_scale <- item_rest_built$plot$scales$get_scales("shape")
   item_rest_breaks <- as.character(item_rest_scale$get_breaks())
 
   # In this toy data, every estimable item-rest value is itself a review
@@ -847,7 +849,7 @@ test_that("evidence legend restores concern when concern-level evidence exists",
   evidence <- plot(out, type = "evidence")
 
   built <- ggplot2::ggplot_build(evidence)
-  scale <- built$plot$scales$get_scales("fill")
+  scale <- built$plot$scales$get_scales("shape")
   breaks <- as.character(scale$get_breaks())
 
   expect_true("concern" %in% breaks)
@@ -865,7 +867,7 @@ test_that("item-rest legend includes none when no-review item-rest evidence is p
   p <- plot(out, type = "item_rest")
 
   built <- ggplot2::ggplot_build(p)
-  scale <- built$plot$scales$get_scales("fill")
+  scale <- built$plot$scales$get_scales("shape")
   breaks <- as.character(scale$get_breaks())
 
   expect_true("none" %in% breaks)
@@ -1138,7 +1140,7 @@ test_that("a negative item-rest correlation the declared keying does not explain
   expect_identical(unused$severity, "info")
   expect_identical(unused$value, 1)
   expect_match(unused$observation,
-               "Reverse-keyed item(s) z were declared without `scale_range`", fixed = TRUE)
+               "Reverse-keyed item z was declared without `scale_range`", fixed = TRUE)
   expect_match(unused$recommendation, "scale_range = c(min, max)", fixed = TRUE)
 
   # Usable keying, no keying, and keying declared with nothing reversed leave
@@ -1215,12 +1217,12 @@ test_that("declared scales give each item its within-scale item-rest correlation
   log <- out$decision_log[out$decision_log$metric == "corrected_item_rest", ]
   expect_identical(log$object, "EF4")
   expect_equal(log$value, rel$scale_item_rest_r[rel$item == "EF4"])
-  expect_match(log$observation, "within its scale `EF` of r = 0.23", fixed = TRUE)
+  expect_match(log$observation, "within its scale `EF` of r = .23", fixed = TRUE)
 
   local_reproducible_output(width = 80)
   printed <- capture.output(print(summary(out)))
   expect_true(any(grepl("Scale", printed, fixed = TRUE)))
-  expect_true(any(grepl("Item-rest r is within the item's scale", printed, fixed = TRUE)))
+  expect_true(any(grepl("sum of the other items of", printed, fixed = TRUE)))
   p <- plot(out, type = "item_rest")
   expect_equal(p$data$item_rest, rel$scale_item_rest_r[match(p$data$item, rel$item)])
 })
@@ -1268,8 +1270,8 @@ test_that("keying notes on a declared scale use the within-scale value (#113)", 
   expect_match(ef2, "within its scale `EF`", fixed = TRUE)
   expect_match(
     ef2,
-    sprintf("item-rest correlation is r = %.2f",
-            recoded$scale_item_rest_r[recoded$item == "EF2"]),
+    sprintf("item-rest correlation is r = %s",
+            nomologR:::nomo_present_stat(recoded$scale_item_rest_r[recoded$item == "EF2"], "r")),
     fixed = TRUE
   )
 })
@@ -1391,4 +1393,449 @@ test_that("screens saved before within-scale pair counts still review negative p
   out$relationship_summary$scale_negative_interitem_n <- NULL
   expect_no_warning(review <- summary(out)$item_review)
   expect_true(all(grepl("negative_interitem_pairs", review$review_metrics[review$item != "EF2"])))
+})
+
+
+# The pre-1.0 audit (#145) -----------------------------------------------------
+
+# Two correlated factors and an item of a third construct, on 300 cases.
+audit_scales_data <- function(seed = 1) {
+  set.seed(seed)
+  f1 <- stats::rnorm(300)
+  f2 <- stats::rnorm(300)
+  data.frame(
+    a1 = f1 + stats::rnorm(300), a2 = f1 + stats::rnorm(300), a3 = f1 + stats::rnorm(300),
+    b1 = f2 + stats::rnorm(300), b2 = f2 + stats::rnorm(300), b3 = f2 + stats::rnorm(300),
+    c1 = -0.2 * f1 + stats::rnorm(300)
+  )
+}
+
+
+test_that("a guidance list that asks for automatic deletion is refused", {
+  dat <- data.frame(x = 1:5, y = c(2, 1, 4, 3, 5))
+  for (field in c("auto_delete", "auto_respecify")) {
+    guidance <- nomo_defaults()
+    guidance[[field]] <- TRUE
+    expect_error(nomo_screen(dat, guidance = guidance),
+                 sprintf("`guidance$%s` cannot be `TRUE`", field), fixed = TRUE)
+  }
+})
+
+
+test_that("responses outside the declared scale_range are a concern (#145)", {
+  dat <- data.frame(
+    x = c(0, 1, 2, 3, 4, 4), y = c(1, 2, 3, 4, 5, 9), z = c(5, 4, 3, 2, 1, 1),
+    label = factor(c("a", "b", "c", "a", "b", "c"))
+  )
+  out <- nomo_screen(dat, reverse = "x", scale_range = c(1, 5))
+  rows <- out$decision_log[out$decision_log$metric == "out_of_range", ]
+  expect_identical(rows$object, c("x", "y"))
+  expect_identical(rows$value, c(1, 1))
+  expect_identical(rows$reference, rep("Declared response scale 1 to 5", 2L))
+  expect_identical(
+    rows$observation,
+    c("`x` has 1 response outside the declared response scale of 1 to 5 (observed 0 to 4).",
+      "`y` has 1 response outside the declared response scale of 1 to 5 (observed 1 to 9).")
+  )
+  expect_match(rows$recommendation[[1L]], "this item is declared reverse-keyed", fixed = TRUE)
+  expect_match(rows$recommendation[[2L]], "value computed from the scale.$")
+  review <- summary(out)$item_review
+  expect_identical(as.character(review$attention[review$item %in% c("x", "y")]),
+                   c("concern", "concern"))
+
+  # A range that holds every response, or no range, adds nothing.
+  expect_false("out_of_range" %in% nomo_screen(dat, scale_range = c(0, 9))$decision_log$metric)
+  expect_false("out_of_range" %in% nomo_screen(dat)$decision_log$metric)
+  expect_identical(nrow(nomologR:::nomo_screen_out_of_range(dat[0], c(1, 5))), 0L)
+
+  # The careless-responding indices would recode x on the wrong scale.
+  numeric_items <- c("x", "y", "z")
+  expect_error(
+    nomo_screen(dat, items = numeric_items, effort = TRUE, reverse = "x", scale_range = c(1, 5)),
+    "Outside it: x (observed 0 to 4).", fixed = TRUE
+  )
+  # A forward-keyed item outside the range is not recoded, so it is logged
+  # rather than refused.
+  ok <- nomo_screen(dat, items = numeric_items, effort = TRUE, reverse = "z",
+                    scale_range = c(1, 5))
+  expect_identical(ok$decision_log$object[ok$decision_log$metric == "out_of_range"], c("x", "y"))
+  expect_identical(nomologR:::nomo_screen_range_text(c(0, 1.5), c(4, 7)),
+                   c("0 to 4", "1.5 to 7"))
+})
+
+
+test_that("an item alone in its declared scale is not reviewed on the pooled value (#145)", {
+  dat <- audit_scales_data()
+  out <- nomo_screen(dat, scales = list(A = c("a1", "a2", "a3"), B = c("b1", "b2", "b3"),
+                                        C = "c1"))
+  rel <- out$relationship_summary
+  expect_lt(rel$corrected_item_rest_r[rel$item == "c1"], 0)
+  expect_true(is.na(rel$scale_item_rest_r[rel$item == "c1"]))
+
+  log <- out$decision_log[out$decision_log$object == "c1", ]
+  expect_false("corrected_item_rest" %in% log$metric)
+  row <- log[log$metric == "item_rest_not_computed", ]
+  expect_identical(row$severity, "info")
+  expect_match(row$observation,
+               "`c1` is the only item of its scale `C` in the relationship diagnostics",
+               fixed = TRUE)
+  expect_match(row$recommendation, "not reviewed on the pooled item-rest value", fixed = TRUE)
+
+  # The summary shows no value for it, and the plots leave it out.
+  review <- summary(out)$item_review
+  expect_identical(as.character(review$attention[review$item == "c1"]), "none")
+  local_reproducible_output(width = 80)
+  printed <- capture.output(print(summary(out)))
+  expect_true(any(grepl("^  c1\\s+C\\s+continuous\\s+0\\.0%\\s+0\\.3%\\s+--\\s*$", printed)))
+  expect_true(any(grepl("-- marks a value that was not computed", printed, fixed = TRUE)))
+  expect_false("c1" %in% as.character(plot(out, type = "item_rest")$data$item))
+  ev <- nomologR:::nomo_screen_evidence_data(out, out$items)
+  expect_identical(as.character(ev$status[ev$item == "c1" & ev$metric == "corrected_item_rest"]),
+                   "not computed")
+
+  # A scale whose cases are too few, or that does not vary, says so too.
+  few <- data.frame(
+    a1 = c(1, 2, 3, 4, 5, 2), a2 = c(2, 2, 3, 5, 4, 1), a3 = c(1, 3, 3, 4, 5, 2),
+    b1 = c(1, 5, NA, NA, NA, NA), b2 = c(2, 4, NA, NA, NA, 3)
+  )
+  few_out <- nomo_screen(few, scales = list(A = c("a1", "a2", "a3"), B = c("b1", "b2")))
+  few_rows <- few_out$decision_log[few_out$decision_log$metric == "item_rest_not_computed", ]
+  expect_identical(few_rows$object, c("b1", "b2"))
+  expect_match(few_rows$observation[[1L]], "2 cases are complete on the scale's items",
+               fixed = TRUE)
+  flat <- data.frame(
+    a1 = c(1, 2, 3, 4, 5, 2), a2 = c(2, 2, 3, 5, 4, 1),
+    b1 = c(1, 1, 1, 1, 2, NA), b2 = c(2, 2, 2, 2, NA, 3)
+  )
+  flat_out <- nomo_screen(flat, scales = list(A = c("a1", "a2"), B = c("b1", "b2")))
+  flat_rows <- flat_out$decision_log[flat_out$decision_log$metric == "item_rest_not_computed", ]
+  expect_match(flat_rows$observation[[1L]], "does not vary among the 4 cases complete",
+               fixed = TRUE)
+})
+
+
+test_that("negative pairs with an item outside every scale are named as such (#145)", {
+  set.seed(5)
+  f1 <- stats::rnorm(300)
+  f2 <- stats::rnorm(300)
+  dat <- data.frame(
+    a1 = f1 + stats::rnorm(300), a2 = f1 + stats::rnorm(300), a3 = f1 + stats::rnorm(300),
+    b1 = f2 + stats::rnorm(300), b2 = f2 + stats::rnorm(300), b3 = f2 + stats::rnorm(300),
+    u1 = -f1 - f2 + stats::rnorm(300)
+  )
+  scales <- list(A = c("a1", "a2", "a3"), B = c("b1", "b2", "b3"))
+  out <- nomo_screen(dat, scales = scales)
+  row <- out$decision_log[out$decision_log$metric == "negative_pairs", ]
+  expect_identical(
+    row$observation,
+    "6 estimable inter-item correlations involving an item with no declared scale are negative."
+  )
+  expect_identical(out$relationship_summary$scale_negative_interitem_n[1:6], rep(1L, 6L))
+
+  # Within a scale and with an unscaled item, each kind is counted.
+  dat$a3 <- -dat$a3
+  mixed <- nomo_screen(dat, scales = scales)
+  row <- mixed$decision_log[mixed$decision_log$metric == "negative_pairs", ]
+  expect_match(row$observation,
+               "^2 estimable inter-item correlations within a declared scale and [0-9]+ involving an item with no declared scale are negative\\.$")
+})
+
+
+test_that("forward items flagged by an unrecoded reverse-keyed item are told so (#145)", {
+  handoff <- readRDS(system.file("extdata", "content-handoff-walkthrough.rds",
+                                 package = "nomologR"))
+  out <- nomo_screen(nomo_demo_walkthrough, items = handoff)
+  log <- out$decision_log
+  ef1 <- log[log$object == "EF1" & log$metric == "corrected_item_rest", ]
+  expect_match(ef1$observation,
+               "Its rest score includes EF2, declared reverse-keyed and not yet recoded in the data; with EF2 recoded as declared, its item-rest correlation is r = .",
+               fixed = TRUE)
+  expect_match(ef1$recommendation, "Recode the declared reverse-keyed items in the data first",
+               fixed = TRUE)
+  # The value given is the item's own value with EF2 recoded.
+  walk <- nomo_demo_walkthrough
+  walk$EF2 <- 6L - walk$EF2
+  recoded <- nomo_screen(walk, items = handoff)$relationship_summary
+  expect_match(ef1$observation, sprintf(
+    "is r = %s.", nomologR:::nomo_present_stat(recoded$scale_item_rest_r[recoded$item == "EF1"], "r")
+  ), fixed = TRUE)
+
+  pairs <- log[log$metric == "negative_pairs", ]
+  expect_match(pairs$observation,
+               "All involve EF2 or TF2, declared reverse-keyed and not yet recoded in the data.",
+               fixed = TRUE)
+  expect_match(pairs$recommendation, "^Recode the declared reverse-keyed items")
+
+  # The summary names the item each forward item correlates with negatively.
+  local_reproducible_output(width = 80)
+  printed <- paste(capture.output(print(summary(out))), collapse = " ")
+  expect_match(printed, "- TF1, TF3, TF4, TF6 (Review): Its correlation with TF2 is negative.",
+               fixed = TRUE)
+  expect_match(printed, "- Inter-item correlations (Review): 8 estimable", fixed = TRUE)
+})
+
+
+test_that("a negative forward item and a lone unrecoded pair are explained (#145)", {
+  set.seed(145)
+  f <- stats::rnorm(300)
+  item <- function(sign = 1) pmin(5, pmax(1, round(3 + sign * f + stats::rnorm(300, sd = .9))))
+  dat <- data.frame(x1 = item(), x2 = item(), x3 = item(-1), x4 = item(-1))
+  # x3 is declared and not yet recoded; x4 is reversed but undeclared.
+  out <- nomo_screen(dat, reverse = "x3", scale_range = c(1, 5))
+  log <- out$decision_log
+  x4 <- log[log$object == "x4" & log$metric == "corrected_item_rest", ]
+  expect_match(x4$observation, "Its rest score includes x3", fixed = TRUE)
+  expect_identical(
+    x4$recommendation,
+    paste("Recode the declared reverse-keyed items in the data first, then read",
+          "this item again; do not reverse-score or delete it from this value.")
+  )
+  pairs <- log[log$metric == "negative_pairs", ]
+  expect_match(pairs$observation,
+               "4 estimable inter-item correlations are negative. 2 of them involve x3, declared reverse-keyed",
+               fixed = TRUE)
+
+  # One negative pair, involving the unrecoded item: y3 runs against y1 and
+  # shares its error with y2.
+  set.seed(3)
+  g <- stats::rnorm(300)
+  e <- stats::rnorm(300)
+  one <- data.frame(y1 = g, y2 = e + 0.3 * g, y3 = -g + e)
+  scr <- nomo_screen(one, reverse = "y3", scale_range = c(-100, 100))
+  pair <- scr$decision_log[scr$decision_log$metric == "negative_pairs", ]
+  expect_identical(
+    pair$observation,
+    "1 estimable inter-item correlation is negative. It involves y3, declared reverse-keyed and not yet recoded in the data."
+  )
+  others <- nomo_screen(one, reverse = "y2", scale_range = c(-100, 100))
+  expect_match(others$decision_log$observation[others$decision_log$metric == "negative_pairs"],
+               "^1 estimable inter-item correlation is negative\\.$")
+  expect_identical(nomologR:::nomo_screen_unrecoded_note(character(0), NA_real_), "")
+})
+
+
+test_that("an item with non-finite values is flagged in the item review (#145)", {
+  dat <- audit_scales_data()
+  dat$a1[1] <- Inf
+  dat$b1[1:2] <- -Inf
+  out <- nomo_screen(dat)
+  rows <- out$decision_log[out$decision_log$metric == "non_finite_scores", ]
+  expect_identical(rows$object, c("a1", "b1"))
+  expect_identical(rows$value, c(1, 2))
+  expect_identical(rows$severity, c("concern", "concern"))
+  expect_match(rows$observation[[2L]], "`b1` contains 2 non-finite values (Inf or -Inf)",
+               fixed = TRUE)
+  review <- summary(out)$item_review
+  expect_identical(as.character(review$attention[review$item %in% c("a1", "b1")]),
+                   c("concern", "concern"))
+  ev <- nomologR:::nomo_screen_evidence_data(out, out$items)
+  expect_identical(as.character(ev$severity[ev$item == "a1" & ev$metric == "coding"]), "concern")
+  expect_identical(as.character(ev$status[ev$item == "a1" & ev$metric == "corrected_item_rest"]),
+                   "not computed")
+})
+
+
+test_that("floor and ceiling use the declared scale, or say they are observed (#145)", {
+  set.seed(3)
+  dat <- data.frame(a1 = sample(3:5, 300, TRUE, prob = c(.9, .05, .05)),
+                    a2 = sample(1:5, 300, TRUE), a3 = sample(1:5, 300, TRUE))
+  observed <- nomo_screen(dat)
+  row <- observed$decision_log[observed$decision_log$object == "a1" &
+                                 observed$decision_log$metric == "floor_concentration", ]
+  expect_match(row$observation, "in one category at the lowest observed value.", fixed = TRUE)
+  expect_match(row$recommendation, "supply `scale_range`", fixed = TRUE)
+  expect_equal(observed$item_summary$floor_prop[[1L]], mean(dat$a1 == 3))
+
+  # On the declared 1 to 5 scale, a pile-up at 3 is concentration, not a floor.
+  declared <- nomo_screen(dat, scale_range = c(1, 5))
+  expect_identical(declared$item_summary$floor_prop[[1L]], 0)
+  expect_equal(declared$item_summary$ceiling_prop[[1L]], mean(dat$a1 == 5))
+  row <- declared$decision_log[declared$decision_log$object == "a1", ]
+  expect_true("response_concentration" %in% row$metric)
+  expect_false(any(c("floor_concentration", "ceiling_concentration") %in% row$metric))
+
+  dat$a1 <- sample(c(1, 4, 5), 300, TRUE, prob = c(.9, .05, .05))
+  top <- nomo_screen(dat, scale_range = c(1, 5))
+  row <- top$decision_log[top$decision_log$object == "a1" &
+                            top$decision_log$metric == "floor_concentration", ]
+  expect_match(row$observation, "at the lowest category of the declared response scale.",
+               fixed = TRUE)
+  expect_no_match(row$recommendation, "supply `scale_range`", fixed = TRUE)
+})
+
+
+test_that("response distributions count numeric values, not their labels (#145)", {
+  dist <- nomologR:::nomo_screen_distribution(c(0.3, 0.1 + 0.2, 1, 2, 2.5, 3.7, NA), "x")
+  observed <- dist[!dist$missing, ]
+  expect_identical(sum(observed$n), 6L)
+  expect_equal(sum(observed$proportion_observed), 1)
+  expect_identical(observed$n, rep(1L, 6L))
+})
+
+
+test_that("duplicated column names are refused, whether or not items are named (#145)", {
+  dat <- data.frame(a1 = 1:5, a1 = c(2, 1, 4, 3, 5), a3 = c(1, 3, 2, 5, 4),
+                    check.names = FALSE)
+  expect_error(nomo_screen(dat), "`data` has more than one column named `a1`", fixed = TRUE)
+  expect_error(nomo_screen(dat, items = c("a1", "a3")), "more than one column named `a1`",
+               fixed = TRUE)
+  # A duplicate outside the items is no obstacle.
+  expect_s3_class(nomo_screen(dat, items = "a3"), "nomo_screen")
+})
+
+
+test_that("log rows and printed counts agree in number (#145)", {
+  dat <- data.frame(a = c(1, 2, 3, NA), b = factor(c("x", "y", "z", NA)), d = c(1, Inf, 2, NA))
+  out <- nomo_screen(dat)
+  obs <- out$decision_log$observation
+  expect_true("1 case has no observed responses on the selected candidate items." %in% obs)
+  expect_true("1 candidate item was not included in item-rest/inter-item diagnostics: b." %in% obs)
+  expect_true("Only 1 candidate item is eligible for relationship diagnostics." %in% obs)
+  expect_true("`a` has 1 missing response (25%)." %in% obs)
+  none <- nomo_screen(data.frame(b = factor(c("x", "y", "z"))))
+  expect_true("No candidate item is eligible for relationship diagnostics." %in%
+                none$decision_log$observation)
+  two <- nomo_screen(data.frame(a = c(1, 2, NA, NA), b = c(2, 1, NA, NA)))
+  expect_true("2 cases have no observed responses on the selected candidate items." %in%
+                two$decision_log$observation)
+
+  local_reproducible_output(width = 80)
+  printed <- capture.output(print(out))
+  expect_true("Items in correlation diagnostics: 1 of 3 | Item-rest correlations: 0" %in% printed)
+  expect_true("Decision log: 10 entries | Flagged: 1 review, 2 concern" %in% printed)
+})
+
+
+test_that("correlations in the log are written without a leading zero (#145)", {
+  out <- nomo_screen(nomo_demo_continuous)
+  row <- out$decision_log[out$decision_log$metric == "corrected_item_rest", ]
+  expect_identical(
+    row$observation,
+    "`b5` has a corrected item-rest correlation of r = .28 (n = 473), below the teaching reference of .30."
+  )
+  expect_identical(row$reference, "Teaching reference .30; not a retention rule")
+})
+
+
+test_that("the print says why category items have no correlations (#145)", {
+  local_reproducible_output(width = 80)
+  printed <- capture.output(print(nomo_screen(nomo_demo_ordinal)))
+  expect_true("Items in correlation diagnostics: 0 of 10 | Item-rest correlations: 0" %in% printed)
+  expect_true(any(grepl(
+    "Correlations were not computed for 10 ordered items: nomologR does not turn",
+    printed, fixed = TRUE
+  )))
+  text <- paste(printed, collapse = " ")
+  expect_match(text, "Supply numeric scores to include them.", fixed = TRUE)
+  expect_match(text, "Decision log: 3 entries | Flagged: none", fixed = TRUE)
+  mixed <- nomo_screen(data.frame(x = 1:6, y = c(2, 1, 4, 3, 6, 5),
+                                  t = c("a", "b", "c", "d", "e", "f"),
+                                  o = ordered(c(1, 2, 3, 1, 2, 3))))
+  text <- paste(capture.output(print(mixed)), collapse = " ")
+  expect_match(text, "not computed for 1 text and 1 ordered items", fixed = TRUE)
+  one <- nomo_screen(data.frame(x = 1:6, y = c(2, 1, 4, 3, 6, 5), t = letters[1:6]))
+  text <- paste(capture.output(print(one)), collapse = " ")
+  expect_match(text, "for 1 text item: nomologR", fixed = TRUE)
+  expect_match(text, "Supply numeric scores to include it.", fixed = TRUE)
+
+  # The summary says the same, and shows no item-rest column.
+  printed <- capture.output(print(summary(nomo_screen(nomo_demo_ordinal))))
+  expect_true("Items in correlation diagnostics: 0 of 10" %in% printed)
+  expect_false(any(grepl("Item-rest r", printed, fixed = TRUE)))
+})
+
+
+test_that("print and summary follow the shared output style (#144)", {
+  local_reproducible_output(width = 80)
+  scr <- nomo_screen(nomo_demo_continuous)
+  printed <- capture.output(print(scr))
+  expect_identical(printed[[1L]], "<nomo_screen> Item and data audit")
+  expect_match(paste(printed, collapse = " "),
+               "See summary(x) for each item's review and nomo_table(x, \"decision_log\") for every log entry.",
+               fixed = TRUE)
+  summary_printed <- capture.output(print(summary(scr)))
+  expect_identical(summary_printed[[1L]], "<nomo_screen summary> Item and data audit")
+  expect_true("Cases: 500 | Items: 10 | Item flags: 1 review, 0 concern" %in% summary_printed)
+  expect_true(any(grepl("^  b5\\s+continuous\\s+0\\.0%\\s+1\\.4%\\s+\\.28  Review$", summary_printed)))
+  expect_true("Flagged" %in% summary_printed)
+  expect_match(paste(summary_printed, collapse = " "),
+               "See nomo_table(x, \"decision_log\") for every log entry and plot(x) for the item evidence map.",
+               fixed = TRUE)
+  for (width in c(40, 80)) {
+    local_reproducible_output(width = width)
+    lines <- c(capture.output(print(scr)), capture.output(print(summary(scr))))
+    expect_true(all(nchar(lines) <= width))
+  }
+
+  # A small sample gives whole percentages; no item is flagged.
+  local_reproducible_output(width = 80)
+  small <- capture.output(print(summary(nomo_screen(data.frame(
+    x = c(1, 2, 3, NA, 5), y = c(1, 2, 3, 4, 5), z = c(2, 2, 3, 4, 5)
+  )))))
+  expect_true(any(grepl("^  x\\s+discrete\\s+20%", small)))
+  expect_false("Flagged" %in% small)
+
+  # With the careless-responding indices, the pointer names their table.
+  effort <- capture.output(print(nomo_screen(nomo_demo_continuous, effort = TRUE)))
+  expect_match(paste(effort, collapse = " "), "nomo_table(x, \"effort\") for each case's indices",
+               fixed = TRUE)
+  expect_true(any(grepl("Long-string: not applied | Antonym: ", effort, fixed = TRUE)))
+})
+
+
+test_that("the summary explains every flag in a sentence (#145)", {
+  pairs <- data.frame(item1 = c("a", "a", "a", "a", "a"),
+                      item2 = c("p", "q", "r", "s", "t"), r = -0.1)
+  expect_identical(nomologR:::nomo_screen_pair_text("a", pairs),
+                   "Its correlations with p, q, r, and 2 other items are negative.")
+  expect_identical(nomologR:::nomo_screen_pair_text("a", pairs[1:2, ]),
+                   "Its correlations with p and q are negative.")
+  expect_match(nomologR:::nomo_screen_pair_text("a", NULL), "see x$inter_item_correlations",
+               fixed = TRUE)
+  expect_match(nomologR:::nomo_screen_pair_text("z", pairs), "Some of its inter-item",
+               fixed = TRUE)
+  expect_identical(nomologR:::nomo_screen_unit_label(c("cases", "item_keying")),
+                   c("Cases", "Item keying"))
+
+  # Unused categories of an ordered item.
+  local_reproducible_output(width = 80)
+  ord <- ordered(c("low", "high", "low", "high", "low", "high"), levels = c("low", "mid", "high"))
+  text <- paste(capture.output(print(summary(nomo_screen(data.frame(ord = ord, x = 1:6))))),
+                collapse = " ")
+  expect_match(text, "- ord (Review): It leaves 1 declared response category unused.",
+               fixed = TRUE)
+})
+
+
+test_that("the review's item-rest value reads old and new screens alike", {
+  review <- data.frame(corrected_item_rest_r = c(.5, .4, -.1),
+                       scale_item_rest_r = c(.6, NA, NA),
+                       scale = c("A", "C", NA))
+  expect_identical(nomologR:::nomo_screen_review_item_rest(review), c(.6, NA, -.1))
+  review$scale <- NULL
+  expect_identical(nomologR:::nomo_screen_review_item_rest(review), c(.6, .4, -.1))
+})
+
+
+test_that("plots draw status by shape and color, with plain titles (#145)", {
+  out <- nomo_screen(data.frame(item1 = 1:6, item2 = c(1, 2, 2, 4, 5, 6),
+                                reverse_candidate = 6:1))
+  evidence <- plot(out)
+  expect_identical(evidence$labels$title, "Item evidence map")
+  expect_true(all(c("status", "point_size") %in% names(evidence$data)))
+  expect_identical(levels(evidence$data$status),
+                   c("none", "review", "concern", "not computed"))
+  expect_true("Coding" %in% levels(evidence$data$metric_label))
+
+  item_rest <- plot(out, type = "item_rest")
+  expect_true(any(vapply(item_rest$layers, function(l) inherits(l$geom, "GeomPoint"), logical(1))))
+  expect_identical(item_rest$labels$subtitle, "Each item against the sum of the other items.")
+  expect_match(plot_text(item_rest$labels$caption), "dashed line marks the .30 teaching reference",
+               fixed = TRUE)
+  bare <- out
+  bare$guidance$item_total_reference <- NULL
+  expect_null(plot(bare, type = "item_rest")$labels$caption)
+
+  inter <- plot(out, type = "interitem")
+  expect_identical(inter$labels$fill, "Pearson r")
 })

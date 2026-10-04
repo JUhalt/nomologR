@@ -24,7 +24,9 @@ identifiers, demographics, and other non-item columns were not included.
 May also be a handoff from \code{contentvalidR}'s \code{content_handoff()}; see
 \strong{Items from content review}.}
 
-\item{guidance}{Guidance settings from \code{\link[=nomo_defaults]{nomo_defaults()}}.}
+\item{guidance}{Guidance settings from \code{\link[=nomo_defaults]{nomo_defaults()}}. A list that sets
+\code{auto_delete} or \code{auto_respecify} to \code{TRUE} is refused, since nomologR
+never deletes an item on its own.}
 
 \item{effort}{Logical. If \code{TRUE}, case-level indices of careless or
 insufficient-effort responding are added. See \strong{Careless responding}.}
@@ -48,7 +50,12 @@ recoding. The data is never recoded.}
 below \code{max}. It is needed to use \code{reverse} and is never inferred from the
 data. With \code{effort = TRUE}, naming reverse-keyed items without it is
 refused. With \code{effort = FALSE} the audit runs, and the decision log
-records that the declared keying was not used.}
+records that the declared keying was not used. When it is given, each
+numeric item's responses are compared with it: an item with responses
+outside it gets a concern in the decision log, and with \code{effort = TRUE} a
+reverse-keyed item with responses outside it is refused, since recoding
+it on that scale would give wrong values. It also sets the floor and
+ceiling of numeric items (see Details).}
 
 \item{pair_magnitude}{Minimum absolute between-person correlation for an
 item pair to count as a psychometric antonym or synonym. Curran (2016)
@@ -68,8 +75,9 @@ near-zero-variance indicators.
 summary of its inter-item correlations. With two or more declared
 scales, \code{scale}, \code{scale_item_rest_r}, and \code{scale_item_rest_n} give each
 item's scale and its item-rest correlation within that scale, and
-\code{scale_negative_interitem_n} counts its negative correlations with items
-of the same scale; otherwise they are \code{NA}.
+\code{scale_negative_interitem_n} counts the negative correlations the review
+reads: with items of the same scale, and with any screened item that is
+outside every declared scale. Otherwise they are \code{NA}.
 \item \code{inter_item_correlations}: one row per item pair.
 \item \code{decision_log}: the evidence and its explanations (see \code{\link[=nomo_table]{nomo_table()}}).
 \item \code{effort}, \code{effort_pairs}, and \code{effort_settings}: the careless-responding
@@ -88,6 +96,11 @@ states it. See \strong{Conventions in returned tables} in \code{?nomologR}.
 Other fields record the call, the settings used, and intermediate engine
 results. They may change between releases and are not part of the stable
 interface (see \code{?nomologR}).
+
+Printed, the object shows the counts of cases and items by data
+condition and how many decision-log entries are flagged. \code{\link[=summary]{summary()}}
+shows each item's review in a table, with the reason for each flag in a
+Flagged section.
 }
 \description{
 \code{nomo_screen()} performs a conservative audit of candidate item data before
@@ -113,8 +126,20 @@ Response concentration and near-zero-variance flags use configurable
 teaching references from \code{\link[=nomo_defaults]{nomo_defaults()}}. They are screening heuristics,
 not psychometric laws or automatic item-retention rules. Ordered and
 numeric-discrete items also receive descriptive boundary concentration
-summaries. Continuous-like numeric indicators receive descriptive skewness
-and excess-kurtosis summaries without a pass/fail normality judgment.
+summaries, \code{floor_prop} and \code{ceiling_prop}. An ordered item's boundaries are
+its first and last levels. A numeric item's are the ends of \code{scale_range}
+when it is given, and otherwise its lowest and highest observed values,
+since a numeric item shows only the values used: a pile-up in the middle of
+a scale whose lower categories went unused would read as a floor effect, and
+the decision log says so. Continuous-like numeric indicators receive
+descriptive skewness and excess-kurtosis summaries without a pass/fail
+normality judgment.
+
+An item in a declared scale is reviewed on its item-rest correlation within
+that scale. When it has none there, because it is the only item of its scale
+in the diagnostics or too few cases are complete on the scale's items, it is
+not reviewed on the pooled value, which would judge it against other
+constructs; the decision log says why there is no value.
 
 \strong{Careless responding.} With \code{effort = TRUE}, each case receives the indices
 Meade and Craig (2012), Huang et al. (2012), and Curran (2016) describe:
@@ -138,6 +163,12 @@ without a flag. Huang et al. found the indices they recommended identified
 attentive respondents well and random responders poorly, so an unflagged case
 is not thereby shown to be attentive.
 
+Long-string reads the items in the order given: the order of \code{items}, or
+of the columns of \code{data} when \code{items} is \code{NULL}, which should be the order
+in which they were administered. A \code{contentvalidR} handoff of schema version
+1 records no administration order, so its carried items are read in the
+order the handoff lists them, which need not be the order of administration.
+
 The long-string rule is applied only when at least
 \code{guidance$long_string_min_items} items are screened (20 in
 \code{\link[=nomo_defaults]{nomo_defaults()}}). Half the length of a shorter item set is a run of a few
@@ -160,14 +191,19 @@ and 1. Cases are flagged, never removed.
 items it marks as carried are screened. Every item it held back is listed in
 the decision log with its status and recommendation quoted in
 \code{contentvalidR}'s own words, and is never analyzed or reinstated here. The log
-also records the producing version, workflow, and carry rule, and that item
-membership came from content review rather than from these data.
+also records the producing version, workflow, and carry rule, and that the
+items came from content review rather than from these data, as did their
+construct membership when the review assigned one.
 
-A carried item that is not a column of \code{data} is refused, never dropped.
+A carried item that is not a column of \code{data} is refused, never dropped, and
+a handoff that carries no items is refused with the review's status counts.
 Where the call leaves \code{scales}, \code{reverse}, or \code{scale_range} unset, the
-handoff's scales and declared keying fill them. An item is never treated as
-forward keyed because keying was undeclared, and a response scale the
-handoff did not record is never inferred. A handoff with a schema version
+handoff's scales and declared keying fill them. The log records what the
+call changed: \code{scales} that replace the handoff's, a \code{reverse} or
+\code{scale_range} that replaces the declared keying, and a \code{scale_range} that
+completes keying declared without a response scale. An item is never
+treated as forward keyed because keying was undeclared, and a response scale
+the handoff did not record is never inferred. A handoff with a schema version
 this release does not read is refused, naming both package versions. The
 interface is specified in nomologR issue #46, and \code{contentvalidR} is not
 needed to read it.

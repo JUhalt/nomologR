@@ -84,9 +84,9 @@ nomo_screen_relationships <- function(selected, item_summary, guidance,
       reference = "Relationship diagnostics require intentional numeric scoring",
       severity = "info",
       observation = sprintf(
-        "%d candidate item%s were not included in item-rest/inter-item diagnostics: %s.",
-        length(skipped),
-        if (length(skipped) == 1L) "" else "s",
+        "%s %s not included in item-rest/inter-item diagnostics: %s.",
+        nomo_present_count(length(skipped), "candidate item"),
+        nomo_present_noun(length(skipped), "was", "were"),
         paste(skipped, collapse = ", ")
       ),
       recommendation = paste(
@@ -97,22 +97,26 @@ nomo_screen_relationships <- function(selected, item_summary, guidance,
     )
   }
 
-  non_finite <- items[reasons == "non_finite_values"]
-
-  if (length(non_finite) > 0L) {
+  # One row per item, named by the item as `constant` and `all_missing` rows
+  # are, so the item review and the evidence map show the item's concern
+  # (#145). A pooled row left the one item with a hard data problem unflagged.
+  for (item in items[reasons == "non_finite_values"]) {
+    x <- selected[[item]]
+    n_bad <- sum(!is.na(x) & !is.finite(x))
     decision_log <- nomo_log_add(
       decision_log,
       stage = "screen",
-      object = "relationship_diagnostics",
+      object = item,
       metric = "non_finite_scores",
-      value = length(non_finite),
+      value = n_bad,
       reference = "Finite numeric scores required",
       severity = "concern",
       observation = sprintf(
-        "%d candidate item%s contain non-finite numeric values: %s.",
-        length(non_finite),
-        if (length(non_finite) == 1L) "" else "s",
-        paste(non_finite, collapse = ", ")
+        paste(
+          "`%s` contains %s (Inf or -Inf), so it was left out of the item-rest",
+          "and inter-item diagnostics."
+        ),
+        item, nomo_present_count(n_bad, "non-finite value")
       ),
       recommendation = paste(
         "Inspect data import and coding for Inf/-Inf values.",
@@ -130,11 +134,11 @@ nomo_screen_relationships <- function(selected, item_summary, guidance,
       value = length(eligible_items),
       reference = "At least two explicitly scored, nonconstant items",
       severity = "info",
-      observation = sprintf(
-        "Only %d candidate item%s are eligible for relationship diagnostics.",
-        length(eligible_items),
-        if (length(eligible_items) == 1L) "" else "s"
-      ),
+      observation = if (length(eligible_items)) {
+        "Only 1 candidate item is eligible for relationship diagnostics."
+      } else {
+        "No candidate item is eligible for relationship diagnostics."
+      },
       recommendation = paste(
         "Relationship diagnostics were not estimated.",
         "Verify item selection and intentional scoring."
@@ -299,8 +303,13 @@ nomo_screen_relationships <- function(selected, item_summary, guidance,
   # Declared keying never recodes the data. When an item is declared
   # reverse-keyed, its item-rest correlation is also computed on an internal
   # copy recoded as declared, so a negative sign can be told apart from a coding
-  # error (#60). Only the log's wording uses it; no returned value changes.
-  keyed_r <- nomo_screen_keyed_item_rest(scores, reverse, scale_range, sets)
+  # error (#60). The same copy gives every other item its item-rest value with
+  # the declared items recoded, so an item whose rest score holds a declared
+  # item not yet recoded is told so, rather than sent to inspect its own content
+  # (#145). Only the log's wording uses these values; no returned value changes.
+  keyed_all <- nomo_screen_keyed_item_rest(scores, reverse, scale_range, sets)
+  declared <- intersect(if (is.character(reverse)) reverse else character(), eligible_items)
+  keyed_r <- keyed_all[intersect(names(keyed_all), declared)]
 
   item_total_reference <- guidance$item_total_reference
 
@@ -312,22 +321,56 @@ nomo_screen_relationships <- function(selected, item_summary, guidance,
     item_total_reference <- NA_real_
   }
 
-  for (item in eligible_items) {
-    row <- relationship_summary[
-      relationship_summary$item == item,
-      ,
-      drop = FALSE
-    ]
+  # The value each item's review reads: within its declared scale when two or
+  # more scales were declared, otherwise the pooled one. An item alone in its
+  # scale, or in a scale with too few complete cases, has no within-scale value,
+  # and it is not judged on the pooled one instead, which mixes in the items of
+  # other constructs (#113, #145).
+  review <- relationship_summary[match(eligible_items, relationship_summary$item), ]
+  in_scale <- stats::setNames(!is.na(review$scale), eligible_items)
+  review_r <- stats::setNames(
+    ifelse(in_scale, review$scale_item_rest_r, review$corrected_item_rest_r), eligible_items
+  )
+  review_n <- stats::setNames(
+    ifelse(in_scale, review$scale_item_rest_n, review$item_rest_n), eligible_items
+  )
+  # Declared items showing the sign of an item not yet recoded: negative as
+  # answered, positive once recoded as declared.
+  unrecoded <- declared[vapply(declared, function(item) {
+    isTRUE(review_r[[item]] < 0 && keyed_r[item] > 0)
+  }, logical(1))]
+  r_text <- function(value) {
+    nomo_present_stat(value, "r", reference = item_total_reference)
+  }
+  recode_first <- paste(
+    "Recode the declared reverse-keyed items in the data first, then read",
+    "this item again; do not reverse-score or delete it from this value."
+  )
 
-    # The within-scale value, when the item's scale was declared.
-    in_scale <- !is.na(row$scale_item_rest_r[[1L]])
-    item_rest_r <- if (in_scale) row$scale_item_rest_r[[1L]] else row$corrected_item_rest_r[[1L]]
-    item_rest_n <- if (in_scale) row$scale_item_rest_n[[1L]] else row$item_rest_n[[1L]]
-    within_text <- if (in_scale) sprintf(" within its scale `%s`", row$scale[[1L]]) else ""
+  for (item in eligible_items) {
+    i <- match(item, review$item)
+    item_rest_r <- review_r[[item]]
+    item_rest_n <- review_n[[item]]
+    scale <- review$scale[[i]]
+    within_text <- if (in_scale[[item]]) sprintf(" within its scale `%s`", scale) else ""
 
     if (is.na(item_rest_r)) {
+      if (in_scale[[item]]) {
+        decision_log <- nomo_screen_no_scale_rest_row(
+          decision_log, item, scale, sum(review$scale %in% scale), item_rest_n
+        )
+      }
       next
     }
+
+    # The unrecoded declared items in this item's rest score.
+    rest_items <- if (in_scale[[item]]) {
+      review$item[review$scale %in% scale]
+    } else {
+      eligible_items
+    }
+    partners <- setdiff(intersect(unrecoded, rest_items), item)
+    unrecoded_note <- nomo_screen_unrecoded_note(partners, keyed_all[item])
 
     if (item_rest_r < 0) {
       decision_log <- nomo_log_add(
@@ -340,20 +383,21 @@ nomo_screen_relationships <- function(selected, item_summary, guidance,
           "Negative sign requires coding/structure review"
         } else {
           sprintf(
-            "Teaching reference %.2f; negative sign requires coding/structure review",
-            item_total_reference
+            "Teaching reference %s; negative sign requires coding/structure review",
+            nomo_present_stat(item_total_reference, "r")
           )
         },
         severity = "review",
         observation = paste0(
           sprintf(
-            "`%s` has a negative corrected item-rest correlation%s (r = %.2f, n = %d).",
+            "`%s` has a negative corrected item-rest correlation%s (r = %s, n = %d).",
             item,
             within_text,
-            item_rest_r,
+            r_text(item_rest_r),
             item_rest_n
           ),
-          nomo_screen_keyed_note(item, keyed_r, scale_range)
+          nomo_screen_keyed_note(item, keyed_r, scale_range),
+          unrecoded_note
         ),
         recommendation = if (item %in% names(keyed_r)) {
           paste(
@@ -362,6 +406,8 @@ nomo_screen_relationships <- function(selected, item_summary, guidance,
             "recoded, the declared keying and the data disagree, and one of",
             "them is wrong."
           )
+        } else if (length(partners)) {
+          recode_first
         } else {
           paste(
             "Inspect intended keying, reverse-worded item coding, data entry,",
@@ -381,34 +427,62 @@ nomo_screen_relationships <- function(selected, item_summary, guidance,
         metric = "corrected_item_rest",
         value = item_rest_r,
         reference = sprintf(
-          "Teaching/reference value %.2f; not a retention rule",
-          item_total_reference
+          "Teaching reference %s; not a retention rule",
+          nomo_present_stat(item_total_reference, "r")
         ),
         severity = "review",
-        observation = sprintf(
-          "`%s` has a corrected item-rest correlation%s of r = %.2f (n = %d), below the teaching reference.",
-          item,
-          within_text,
-          item_rest_r,
-          item_rest_n
+        observation = paste0(
+          sprintf(
+            paste(
+              "`%s` has a corrected item-rest correlation%s of r = %s (n = %d),",
+              "below the teaching reference of %s."
+            ),
+            item,
+            within_text,
+            r_text(item_rest_r),
+            item_rest_n,
+            nomo_present_stat(item_total_reference, "r")
+          ),
+          unrecoded_note
         ),
-        recommendation = paste(
-          "Inspect item content, scoring, and anticipated dimensional structure.",
-          "A low item-rest value can reflect multidimensionality as well as weak",
-          "alignment; do not delete the item automatically."
-        )
+        recommendation = if (length(partners)) {
+          recode_first
+        } else {
+          paste(
+            "Inspect item content, scoring, and anticipated dimensional structure.",
+            "A low item-rest value can reflect multidimensionality as well as weak",
+            "alignment; do not delete the item automatically."
+          )
+        }
       )
     }
   }
 
-  negative_pairs <- inter_item_correlations[
-    negative_pair & reviewed_pair,
-    ,
-    drop = FALSE
-  ]
+  # Negative pairs within a declared scale and pairs with an item outside every
+  # declared scale are both reviewed, and each kind is named as what it is
+  # (#145): a pair with an undeclared item is no evidence about a declared
+  # scale's keying.
+  reviewed_negative <- negative_pair & reviewed_pair
+  negative_pairs <- inter_item_correlations[reviewed_negative, , drop = FALSE]
   n_between <- sum(negative_pair & !reviewed_pair)
 
   if (nrow(negative_pairs) > 0L) {
+    unscaled <- is.na(pair_scale_1) | is.na(pair_scale_2)
+    n_within <- sum(reviewed_negative & !unscaled)
+    n_unscaled <- sum(reviewed_negative & unscaled)
+    pairs_text <- function(n) nomo_present_count(n, "estimable inter-item correlation")
+    kinds <- if (!length(sets)) {
+      pairs_text(nrow(negative_pairs))
+    } else if (!n_unscaled) {
+      paste(pairs_text(n_within), "within a declared scale")
+    } else if (!n_within) {
+      paste(pairs_text(n_unscaled), "involving an item with no declared scale")
+    } else {
+      sprintf("%s within a declared scale and %d involving an item with no declared scale",
+              pairs_text(n_within), n_unscaled)
+    }
+    with_unrecoded <- sum(negative_pairs$item1 %in% unrecoded |
+                            negative_pairs$item2 %in% unrecoded)
     decision_log <- nomo_log_add(
       decision_log,
       stage = "screen",
@@ -420,18 +494,33 @@ nomo_screen_relationships <- function(selected, item_summary, guidance,
         "and dimensional structure"
       ),
       severity = "review",
-      observation = sprintf(
-        "%d estimable inter-item correlation%s%s %s negative.",
-        nrow(negative_pairs),
-        if (nrow(negative_pairs) == 1L) "" else "s",
-        if (length(sets)) " within a declared scale" else "",
-        if (nrow(negative_pairs) == 1L) "is" else "are"
+      observation = paste0(
+        sprintf("%s %s negative.", kinds,
+                nomo_present_noun(nrow(negative_pairs), "is", "are")),
+        if (with_unrecoded) {
+          sprintf(
+            " %s %s, declared reverse-keyed and not yet recoded in the data.",
+            if (with_unrecoded == nrow(negative_pairs)) {
+              if (with_unrecoded == 1L) "It involves" else "All involve"
+            } else {
+              sprintf("%d of them %s", with_unrecoded,
+                      nomo_present_noun(with_unrecoded, "involves", "involve"))
+            },
+            nomo_present_or(unrecoded)
+          )
+        }
       ),
       recommendation = paste(
-        "Inspect reverse-keying, miscoding, item wording, and whether",
-        "the selected pool contains more than one dimension.",
-        "Negative pairs are diagnostic clues, not automatic instructions",
-        "to reverse or remove items."
+        c(
+          if (with_unrecoded) {
+            "Recode the declared reverse-keyed items in the data first, then read the pairs again."
+          },
+          "Inspect reverse-keying, miscoding, item wording, and whether",
+          "the selected pool contains more than one dimension.",
+          "Negative pairs are diagnostic clues, not automatic instructions",
+          "to reverse or remove items."
+        ),
+        collapse = " "
       )
     )
   }
@@ -447,12 +536,11 @@ nomo_screen_relationships <- function(selected, item_summary, guidance,
       severity = "info",
       observation = sprintf(
         paste(
-          "%d correlation%s between items of different declared scales %s",
+          "%s between items of different declared scales %s",
           "negative. They are not reviewed as keying clues."
         ),
-        n_between,
-        if (n_between == 1L) "" else "s",
-        if (n_between == 1L) "is" else "are"
+        nomo_present_count(n_between, "correlation"),
+        nomo_present_noun(n_between, "is", "are")
       ),
       recommendation = paste(
         "Read correlations between scales as evidence about how the",
@@ -469,10 +557,12 @@ nomo_screen_relationships <- function(selected, item_summary, guidance,
   )
 }
 
-# Corrected item-rest correlations of the items declared reverse-keyed, on a
-# copy recoded as declared: the scale's minimum plus its maximum, minus the
-# response. Empty unless the keying is usable, meaning item names and a
-# two-number response range.
+# Corrected item-rest correlations on a copy with the items declared
+# reverse-keyed recoded as declared: the scale's minimum plus its maximum, minus
+# the response. Every item gets its value, across all the items and then within
+# its declared scale where that value exists, matching the value the review
+# reads. Empty unless the keying is usable, meaning item names and a two-number
+# response range.
 nomo_screen_keyed_item_rest <- function(scores, reverse, scale_range, sets = list()) {
   declared <- intersect(if (is.character(reverse)) reverse else character(), names(scores))
   usable <- length(declared) > 0L && is.numeric(scale_range) &&
@@ -480,11 +570,9 @@ nomo_screen_keyed_item_rest <- function(scores, reverse, scale_range, sets = lis
   if (!usable) return(numeric())
   keyed <- scores
   keyed[declared] <- lapply(keyed[declared], function(v) sum(scale_range) - v)
-  # Across all the items, then within each declared scale where that value
-  # exists, matching the value the review reads.
-  out <- nomo_screen_item_rest(keyed, names(keyed))$r[declared]
+  out <- nomo_screen_item_rest(keyed, names(keyed))$r
   for (items in sets) {
-    within <- nomo_screen_item_rest(keyed, items)$r[intersect(declared, items)]
+    within <- nomo_screen_item_rest(keyed, items)$r
     within <- within[is.finite(within)]
     out[names(within)] <- within
   }
@@ -541,13 +629,79 @@ nomo_screen_keyed_note <- function(item, keyed_r, scale_range) {
   if (r > 0) {
     sprintf(paste(
       " It is declared reverse-keyed, and this is the sign such an item shows",
-      "before it is recoded: recoded on the declared %s to %s scale, its",
-      "item-rest correlation is r = %.2f. The data were not recoded."
-    ), format(min(scale_range)), format(max(scale_range)), r)
+      "before it is recoded: recoded on the declared %s scale, its",
+      "item-rest correlation is r = %s. The data were not recoded."
+    ), nomo_handoff_range_text(scale_range), nomo_present_stat(r, "r"))
   } else {
     sprintf(paste(
       " It is declared reverse-keyed, but recoded as declared its item-rest",
-      "correlation is still r = %.2f, so the keying does not explain the sign."
-    ), r)
+      "correlation is still r = %s, so the keying does not explain the sign."
+    ), nomo_present_stat(r, "r"))
   }
+}
+
+
+# What an item's low or negative item-rest value means when its rest score
+# holds declared reverse-keyed items that read as not yet recoded: the value
+# with them recoded as declared. Empty when there are none.
+nomo_screen_unrecoded_note <- function(partners, keyed) {
+  if (!length(partners)) return("")
+  one <- length(partners) == 1L
+  sprintf(
+    paste(
+      " Its rest score includes %s, declared reverse-keyed and not yet recoded",
+      "in the data; with %s recoded as declared, its item-rest correlation is",
+      "r = %s."
+    ),
+    nomo_present_or(partners, "and"),
+    if (one) partners else "them",
+    nomo_present_stat(keyed[[1L]], "r")
+  )
+}
+
+
+# An item in a declared scale with no item-rest value within it is not reviewed
+# on the pooled value; the log says why there is none: it is the scale's only
+# item in the diagnostics, or too few cases are complete on the scale's items.
+nomo_screen_no_scale_rest_row <- function(log, item, scale, n_items, n_complete) {
+  nomo_log_add(
+    log,
+    stage = "screen",
+    object = item,
+    metric = "item_rest_not_computed",
+    value = n_complete,
+    reference = "Within-scale item-rest correlation; needs a rest score and three complete cases",
+    severity = "info",
+    observation = if (n_items < 2L) {
+      sprintf(
+        paste(
+          "`%s` is the only item of its scale `%s` in the relationship",
+          "diagnostics, so it has no rest score and no item-rest correlation."
+        ),
+        item, scale
+      )
+    } else if (n_complete < 3L) {
+      sprintf(
+        paste(
+          "`%s` has no item-rest correlation within its scale `%s`: %s",
+          "complete on the scale's items, and at least three are needed."
+        ),
+        item, scale, nomo_present_count(n_complete, "case is", "cases are")
+      )
+    } else {
+      sprintf(
+        paste(
+          "`%s` has no item-rest correlation within its scale `%s`: the item",
+          "or the rest of its scale does not vary among the %d cases complete",
+          "on the scale's items."
+        ),
+        item, scale, n_complete
+      )
+    },
+    recommendation = paste(
+      "It is not reviewed on the pooled item-rest value instead, which mixes in",
+      "the items of other constructs. Read the item against its construct in",
+      "the measurement model."
+    )
+  )
 }

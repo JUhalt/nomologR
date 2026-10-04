@@ -18,11 +18,12 @@ nomo_handoff_is <- function(x) inherits(x, "cv_handoff")
 # content_handoff() (hand-built, or edited afterwards) stops with that
 # explanation rather than being guessed at.
 nomo_handoff_read <- function(x) {
+  if (!is.list(x)) nomo_handoff_malformed("it is not a list")
   prov <- if (is.list(x$provenance)) x$provenance else list()
   producer <- nomo_handoff_scalar(prov$package_version, "an unknown version")
   ours <- as.character(utils::packageVersion("nomologR"))
 
-  version <- suppressWarnings(as.integer(nomo_handoff_scalar(prov$schema_version, NA)))
+  version <- nomo_handoff_schema_version(prov$schema_version)
   if (is.na(version) || !version %in% nomo_handoff_schema_supported) {
     stop(
       sprintf(
@@ -31,7 +32,7 @@ nomo_handoff_read <- function(x) {
           "nomologR %s reads schema version %s. Update nomologR, or produce the",
           "handoff with a contentvalidR release that writes a supported version."
         ),
-        nomo_handoff_scalar(prov$schema_version, "(none)"), producer, ours,
+        nomo_handoff_version_text(prov$schema_version), producer, ours,
         paste(nomo_handoff_schema_supported, collapse = ", ")
       ),
       call. = FALSE
@@ -52,12 +53,48 @@ nomo_handoff_read <- function(x) {
   if (!is.logical(evidence$carried) || anyNA(evidence$carried)) {
     nomo_handoff_malformed("`carried` must be TRUE or FALSE for every reviewed item")
   }
+  # One row per reviewed item: a second row could carry an item and hold it
+  # back at once.
+  repeated <- unique(as.character(evidence$item[duplicated(evidence$item)]))
+  if (length(repeated)) {
+    nomo_handoff_malformed(sprintf(
+      "`item_evidence` lists %s more than once", paste(repeated, collapse = ", ")
+    ))
+  }
 
   # `carried` is the only field that decides what is analyzed, and `items` must
   # be exactly the carried items. A disagreement cannot come from the producer.
   carried <- as.character(evidence$item[evidence$carried])
   if (!identical(sort(unique(as.character(x$items))), sort(unique(carried)))) {
     nomo_handoff_malformed("`items` does not match the items marked `carried`")
+  }
+
+  # content_handoff() does not stop when no item meets its carry rule, so an
+  # empty handoff is a real producer object. It is refused here, before either
+  # reader asks for `items` or `scales`, with what content review decided.
+  if (!length(carried)) {
+    keep <- as.character(unlist(prov$keep))
+    stop(
+      sprintf(
+        paste0(
+          "This handoff carries no items: content review held back all %s ",
+          "(status counts: %s)%s. nomologR analyzes only carried items, so ",
+          "there is nothing to screen. To analyze items the review did not ",
+          "carry, produce the handoff again with contentvalidR's ",
+          "content_handoff(), naming the statuses to carry in `keep`, and ",
+          "record why."
+        ),
+        nomo_present_count(nrow(evidence), "reviewed item"),
+        nomo_handoff_status_counts(evidence$status),
+        if (length(keep)) {
+          sprintf(" under the carry rule keep = %s",
+                  paste0("\"", keep, "\"", collapse = ", "))
+        } else {
+          ""
+        }
+      ),
+      call. = FALSE
+    )
   }
 
   scales <- nomo_handoff_scales(x$scales, evidence, carried)
@@ -98,6 +135,34 @@ nomo_handoff_read <- function(x) {
 nomo_handoff_scalar <- function(x, default) {
   if (!length(x) || is.na(x[[1L]])) return(default)
   as.character(x[[1L]])
+}
+
+
+# The schema version as a whole number, or NA. contentvalidR writes one integer;
+# a version that is not a single whole number (1.9, "1.5", c(1, 2)) is refused
+# rather than truncated to one this release reads.
+nomo_handoff_schema_version <- function(x) {
+  if (length(x) != 1L || !(is.numeric(x) || is.character(x))) return(NA_integer_)
+  value <- suppressWarnings(as.numeric(x))
+  if (!is.finite(value) || value != round(value)) return(NA_integer_)
+  suppressWarnings(as.integer(value))
+}
+
+
+# The recorded schema version as the refusal quotes it.
+nomo_handoff_version_text <- function(x) {
+  if (!length(x)) return("(none)")
+  shown <- as.character(unlist(x))
+  if (length(shown) == 1L) shown else sprintf("c(%s)", paste(shown, collapse = ", "))
+}
+
+
+# "Review 10, Not supported 3": how many reviewed items had each status, in
+# contentvalidR's own words.
+nomo_handoff_status_counts <- function(status) {
+  counts <- table(as.character(status))
+  if (!length(counts)) return("none recorded")
+  paste(sprintf("%s %d", names(counts), as.integer(counts)), collapse = ", ")
 }
 
 
@@ -152,9 +217,10 @@ nomo_handoff_scales <- function(scales, evidence, carried) {
 #   `scale_range` if it was recorded. A missing range is never inferred, so the
 #   screen refuses to recode rather than guess one.
 #
-# Two invariants are asserted, not handled: keying is NA for every item or for
-# none, and response_min and response_max follow the same rule and are NA
-# together.
+# Three invariants are asserted, not handled: keying is NA for every item or for
+# none; a recorded keying is 1 or -1, never a word or another number, since an
+# unreadable value would otherwise read as forward keyed; and response_min and
+# response_max follow the same rule and are NA together.
 nomo_handoff_keying <- function(evidence, carried) {
   out <- list(recorded = FALSE, declared = FALSE, reverse = NULL, scale_range = NULL)
   if (!"keying" %in% names(evidence)) return(out)
@@ -163,6 +229,9 @@ nomo_handoff_keying <- function(evidence, carried) {
   keying <- evidence$keying
   if (anyNA(keying) && !all(is.na(keying))) {
     nomo_handoff_malformed("`keying` is missing for some items but not others")
+  }
+  if (!all(is.na(keying)) && !(is.numeric(keying) && all(keying %in% c(1, -1)))) {
+    nomo_handoff_malformed("`keying` must be 1 (forward) or -1 (reverse) for each item")
   }
 
   has_range <- all(c("response_min", "response_max") %in% names(evidence))
@@ -196,7 +265,13 @@ nomo_handoff_keying <- function(evidence, carried) {
 # Decision-log rows recording what content review decided and that item
 # membership came from it rather than from these data. Held-back items are
 # reported in the producer's own words, quoted, and are never re-worded.
-nomo_handoff_log <- function(h, stage = "screen") {
+#
+# `given` holds the `scales`, `reverse`, and `scale_range` the call supplied
+# alongside the handoff. The rows say what was actually used: construct
+# membership is credited to content review only when the review made one and
+# the call did not replace it, and keying the call replaced or completed is
+# recorded as such (#145).
+nomo_handoff_log <- function(h, stage = "screen", given = list()) {
   log <- nomo_log_new()
   p <- h$provenance
   ev <- h$evidence
@@ -211,13 +286,20 @@ nomo_handoff_log <- function(h, stage = "screen") {
     describe("method", p$method)
   ), collapse = "; ")
 
+  scales_replaced <- !is.null(given$scales) && !is.null(h$scales) &&
+    !nomo_handoff_same_scales(given$scales, h$scales)
   log <- nomo_log_add(
     log, stage = stage, object = "content_review", metric = "content_review_provenance",
     value = length(h$items),
     reference = paste(p$citation, collapse = "; "),
     severity = "info",
     observation = sprintf(
-      "Items and their construct membership came from content review in %s %s (%s), not from these data.",
+      "%s came from content review in %s %s (%s), not from these data.",
+      if (!is.null(h$scales) && !scales_replaced) {
+        "Items and their construct membership"
+      } else {
+        "Items"
+      },
       p$package, p$package_version, context
     ),
     recommendation = paste(
@@ -225,8 +307,21 @@ nomo_handoff_log <- function(h, stage = "screen") {
       "decision to record with its rationale; nomologR does not re-decide it."
     )
   )
+  if (scales_replaced) {
+    log <- nomo_log_add(
+      log, stage = stage, object = "content_review", metric = "scales_override",
+      severity = "info",
+      observation = sprintf(
+        paste(
+          "`scales` was supplied in the call, so it was used in place of the",
+          "construct membership the handoff declared (%s)."
+        ),
+        nomo_present_or(names(h$scales), "and")
+      ),
+      recommendation = "Record why the declared construct membership was set aside."
+    )
+  }
 
-  status_counts <- table(as.character(ev$status))
   log <- nomo_log_add(
     log, stage = stage, object = "content_review", metric = "carry_decisions",
     value = sum(ev$carried),
@@ -235,21 +330,29 @@ nomo_handoff_log <- function(h, stage = "screen") {
       "%d of %s %s carried and %d held back. Status counts: %s.",
       sum(ev$carried), nomo_present_count(nrow(ev), "reviewed item"),
       nomo_present_noun(sum(ev$carried), "was", "were"), sum(!ev$carried),
-      paste(sprintf("%s %d", names(status_counts), as.integer(status_counts)),
-            collapse = ", ")
+      nomo_handoff_status_counts(ev$status)
     ),
     recommendation = "Only carried items are analyzed."
   )
 
   held <- ev[!ev$carried, , drop = FALSE]
   for (i in seq_len(nrow(held))) {
+    # A review whose results had no recommendation records NA; it is left out
+    # rather than quoted as the word "NA".
+    quoted <- c(
+      if (!is.na(held$status[[i]])) sprintf("status \"%s\"", held$status[[i]]),
+      if (!is.na(held$recommendation[[i]])) {
+        sprintf("recommendation \"%s\"", held$recommendation[[i]])
+      }
+    )
     log <- nomo_log_add(
       log, stage = stage, object = as.character(held$item[[i]]),
       metric = "held_back_item",
       severity = "info",
       observation = sprintf(
-        "%s was held back by content review: status \"%s\", recommendation \"%s\".",
-        held$item[[i]], held$status[[i]], held$recommendation[[i]]
+        "%s was held back by content review%s.",
+        held$item[[i]],
+        if (length(quoted)) paste0(": ", paste(quoted, collapse = ", ")) else ""
       ),
       recommendation = paste(
         "Not analyzed here. Reinstating it is a researcher decision to record",
@@ -259,6 +362,7 @@ nomo_handoff_log <- function(h, stage = "screen") {
   }
 
   k <- h$keying
+  used <- nomo_keying_resolve(given$reverse, given$scale_range, h$items, h)
   keying_note <- if (!k$recorded) {
     paste(
       "This handoff predates keying fields (contentvalidR 0.7.0), so reverse",
@@ -270,12 +374,15 @@ nomo_handoff_log <- function(h, stage = "screen") {
     "Content review declared keying with no reverse-keyed item among those carried."
   } else {
     sprintf(
-      "Content review declared reverse-keyed item(s) %s, %s.",
+      "Content review declared reverse-keyed %s %s, %s.",
+      nomo_present_noun(length(k$reverse), "item", "items"),
       paste(k$reverse, collapse = ", "),
-      if (is.null(k$scale_range)) {
+      if (!is.null(k$scale_range)) {
+        sprintf("on a %s response scale", nomo_handoff_range_text(k$scale_range))
+      } else if (is.null(used$scale_range)) {
         "without the response scale, so they cannot be recoded here"
       } else {
-        sprintf("on a %g to %g response scale", k$scale_range[[1L]], k$scale_range[[2L]])
+        "without the response scale"
       }
     )
   }
@@ -287,14 +394,17 @@ nomo_handoff_log <- function(h, stage = "screen") {
       "forward keyed, and a response scale is never inferred from the data."
     )
   )
+  log <- nomo_handoff_keying_rows(log, used, stage)
 
   if (length(h$shared)) {
+    one <- length(h$shared) == 1L
     log <- nomo_log_add(
       log, stage = stage, object = "content_review", metric = "shared_items",
       value = length(h$shared), severity = "review",
       observation = sprintf(
-        "Item(s) %s belong to more than one scale in the handoff.",
-        paste(h$shared, collapse = ", ")
+        "%s %s %s to more than one scale in the handoff.",
+        if (one) "Item" else "Items", paste(h$shared, collapse = ", "),
+        if (one) "belongs" else "belong"
       ),
       recommendation = paste(
         "A measurement model written from these scales would make each a",
@@ -307,16 +417,81 @@ nomo_handoff_log <- function(h, stage = "screen") {
 }
 
 
+# Whether the `scales` a call supplied are the handoff's own: the same scale
+# names, each with the same items in any order.
+nomo_handoff_same_scales <- function(given, declared) {
+  if (!is.list(given) || !identical(sort(names(given)), sort(names(declared)))) {
+    return(FALSE)
+  }
+  all(vapply(names(declared), function(s) {
+    setequal(as.character(unlist(given[[s]])), declared[[s]])
+  }, logical(1)))
+}
+
+
+# A response scale as the log writes it: "1 to 5".
+nomo_handoff_range_text <- function(range) {
+  nomo_screen_range_text(range[[1L]], range[[2L]])
+}
+
+
+# Rows for keying the call supplied alongside a handoff that declared keying:
+# a response scale that completes keying the handoff recorded without one, and
+# a `reverse` or `scale_range` that replaces what the handoff declared. Keying
+# given to match the handoff, or to a handoff that declared none, needs no row.
+nomo_handoff_keying_rows <- function(log, used, stage) {
+  origin <- used$origin
+  shown <- function(value) {
+    if (is.numeric(value)) return(nomo_handoff_range_text(value))
+    if (length(value)) paste(value, collapse = ", ") else "none"
+  }
+  if (identical(origin[["scale_range"]], "completed")) {
+    log <- nomo_log_add(
+      log, stage = stage, object = "content_review", metric = "keying_completed",
+      severity = "info",
+      observation = sprintf(
+        paste(
+          "`scale_range` (%s) was supplied in the call. The handoff declared",
+          "the keying without a response scale, so the call's range completes",
+          "it, and the declared reverse-keyed items are recoded on it where an",
+          "index needs them recoded."
+        ),
+        shown(used$scale_range)
+      ),
+      recommendation = "Record where the response scale came from."
+    )
+  }
+  replaced <- names(origin)[origin == "override"]
+  if (length(replaced)) {
+    what <- c(reverse = "the reverse-keyed items", scale_range = "the response scale")
+    log <- nomo_log_add(
+      log, stage = stage, object = "content_review", metric = "keying_override",
+      severity = "info",
+      observation = paste(vapply(replaced, function(arg) {
+        sprintf(
+          "`%s` (%s) was supplied in the call, so it was used in place of %s the handoff declared (%s).",
+          arg, shown(used$given[[arg]]), what[[arg]], shown(used$recorded[[arg]])
+        )
+      }, character(1)), collapse = " "),
+      recommendation = "Record why the declared keying was set aside."
+    )
+  }
+  log
+}
+
+
 nomo_handoff_check_data <- function(h, data_names) {
   absent <- setdiff(h$items, data_names)
   if (length(absent)) {
     stop(
       sprintf(
         paste(
-          "Content review carried item(s) that are not columns of `data`: %s.",
+          "Content review carried %s not %s of `data`: %s.",
           "Check the item names in the response data against the handoff;",
           "nomologR does not drop carried items."
         ),
+        if (length(absent) == 1L) "an item that is" else "items that are",
+        if (length(absent) == 1L) "a column" else "columns",
         paste(absent, collapse = ", ")
       ),
       call. = FALSE

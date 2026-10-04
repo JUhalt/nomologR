@@ -46,11 +46,19 @@ nomo_run_check_reverse <- function(settings, scales) {
 # "none".
 nomo_run_screen_keying <- function(settings, scales, handoff = NULL) {
   s <- settings$screen
+  nomo_keying_resolve(s$reverse, s$scale_range, unlist(scales, use.names = FALSE),
+                      handoff)
+}
+
+
+# The same resolution for any caller: `reverse` and `scale_range` as given (NULL
+# when not), the items in use, and the handoff. nomo_screen() uses it to record
+# keying given in the call alongside a handoff (#145).
+nomo_keying_resolve <- function(reverse, scale_range, items, handoff = NULL) {
   declared <- !is.null(handoff) && isTRUE(handoff$keying$declared)
   ev <- handoff$evidence
-  items <- unlist(scales, use.names = FALSE)
 
-  given <- list(reverse = s$reverse, scale_range = s$scale_range)
+  given <- list(reverse = reverse, scale_range = scale_range)
   recorded <- list(
     reverse = if (declared) intersect(as.character(ev$item[ev$keying %in% -1]), items),
     scale_range = handoff$keying$scale_range

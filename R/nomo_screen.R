@@ -15,7 +15,9 @@
 #'   identifiers, demographics, and other non-item columns were not included.
 #'   May also be a handoff from `contentvalidR`'s `content_handoff()`; see
 #'   **Items from content review**.
-#' @param guidance Guidance settings from [nomo_defaults()].
+#' @param guidance Guidance settings from [nomo_defaults()]. A list that sets
+#'   `auto_delete` or `auto_respecify` to `TRUE` is refused, since nomologR
+#'   never deletes an item on its own.
 #' @param effort Logical. If `TRUE`, case-level indices of careless or
 #'   insufficient-effort responding are added. See **Careless responding**.
 #' @param scales Optional named list of character vectors assigning items to
@@ -35,7 +37,12 @@
 #'   below `max`. It is needed to use `reverse` and is never inferred from the
 #'   data. With `effort = TRUE`, naming reverse-keyed items without it is
 #'   refused. With `effort = FALSE` the audit runs, and the decision log
-#'   records that the declared keying was not used.
+#'   records that the declared keying was not used. When it is given, each
+#'   numeric item's responses are compared with it: an item with responses
+#'   outside it gets a concern in the decision log, and with `effort = TRUE` a
+#'   reverse-keyed item with responses outside it is refused, since recoding
+#'   it on that scale would give wrong values. It also sets the floor and
+#'   ceiling of numeric items (see Details).
 #' @param pair_magnitude Minimum absolute between-person correlation for an
 #'   item pair to count as a psychometric antonym or synonym. Curran (2016)
 #'   suggests .60 while saying there is no firm basis for it, so it is an
@@ -55,8 +62,20 @@
 #' teaching references from [nomo_defaults()]. They are screening heuristics,
 #' not psychometric laws or automatic item-retention rules. Ordered and
 #' numeric-discrete items also receive descriptive boundary concentration
-#' summaries. Continuous-like numeric indicators receive descriptive skewness
-#' and excess-kurtosis summaries without a pass/fail normality judgment.
+#' summaries, `floor_prop` and `ceiling_prop`. An ordered item's boundaries are
+#' its first and last levels. A numeric item's are the ends of `scale_range`
+#' when it is given, and otherwise its lowest and highest observed values,
+#' since a numeric item shows only the values used: a pile-up in the middle of
+#' a scale whose lower categories went unused would read as a floor effect, and
+#' the decision log says so. Continuous-like numeric indicators receive
+#' descriptive skewness and excess-kurtosis summaries without a pass/fail
+#' normality judgment.
+#'
+#' An item in a declared scale is reviewed on its item-rest correlation within
+#' that scale. When it has none there, because it is the only item of its scale
+#' in the diagnostics or too few cases are complete on the scale's items, it is
+#' not reviewed on the pooled value, which would judge it against other
+#' constructs; the decision log says why there is no value.
 #'
 #' **Careless responding.** With `effort = TRUE`, each case receives the indices
 #' Meade and Craig (2012), Huang et al. (2012), and Curran (2016) describe:
@@ -80,6 +99,12 @@
 #' attentive respondents well and random responders poorly, so an unflagged case
 #' is not thereby shown to be attentive.
 #'
+#' Long-string reads the items in the order given: the order of `items`, or
+#' of the columns of `data` when `items` is `NULL`, which should be the order
+#' in which they were administered. A `contentvalidR` handoff of schema version
+#' 1 records no administration order, so its carried items are read in the
+#' order the handoff lists them, which need not be the order of administration.
+#'
 #' The long-string rule is applied only when at least
 #' `guidance$long_string_min_items` items are screened (20 in
 #' [nomo_defaults()]). Half the length of a shorter item set is a run of a few
@@ -102,14 +127,19 @@
 #' items it marks as carried are screened. Every item it held back is listed in
 #' the decision log with its status and recommendation quoted in
 #' `contentvalidR`'s own words, and is never analyzed or reinstated here. The log
-#' also records the producing version, workflow, and carry rule, and that item
-#' membership came from content review rather than from these data.
+#' also records the producing version, workflow, and carry rule, and that the
+#' items came from content review rather than from these data, as did their
+#' construct membership when the review assigned one.
 #'
-#' A carried item that is not a column of `data` is refused, never dropped.
+#' A carried item that is not a column of `data` is refused, never dropped, and
+#' a handoff that carries no items is refused with the review's status counts.
 #' Where the call leaves `scales`, `reverse`, or `scale_range` unset, the
-#' handoff's scales and declared keying fill them. An item is never treated as
-#' forward keyed because keying was undeclared, and a response scale the
-#' handoff did not record is never inferred. A handoff with a schema version
+#' handoff's scales and declared keying fill them. The log records what the
+#' call changed: `scales` that replace the handoff's, a `reverse` or
+#' `scale_range` that replaces the declared keying, and a `scale_range` that
+#' completes keying declared without a response scale. An item is never
+#' treated as forward keyed because keying was undeclared, and a response scale
+#' the handoff did not record is never inferred. A handoff with a schema version
 #' this release does not read is refused, naming both package versions. The
 #' interface is specified in nomologR issue #46, and `contentvalidR` is not
 #' needed to read it.
@@ -126,8 +156,9 @@
 #'     summary of its inter-item correlations. With two or more declared
 #'     scales, `scale`, `scale_item_rest_r`, and `scale_item_rest_n` give each
 #'     item's scale and its item-rest correlation within that scale, and
-#'     `scale_negative_interitem_n` counts its negative correlations with items
-#'     of the same scale; otherwise they are `NA`.
+#'     `scale_negative_interitem_n` counts the negative correlations the review
+#'     reads: with items of the same scale, and with any screened item that is
+#'     outside every declared scale. Otherwise they are `NA`.
 #'   * `inter_item_correlations`: one row per item pair.
 #'   * `decision_log`: the evidence and its explanations (see [nomo_table()]).
 #'   * `effort`, `effort_pairs`, and `effort_settings`: the careless-responding
@@ -145,6 +176,11 @@
 #'   Other fields record the call, the settings used, and intermediate engine
 #'   results. They may change between releases and are not part of the stable
 #'   interface (see `?nomologR`).
+#'
+#'   Printed, the object shows the counts of cases and items by data
+#'   condition and how many decision-log entries are flagged. [summary()]
+#'   shows each item's review in a table, with the reason for each flag in a
+#'   Flagged section.
 #'
 #' @references
 #' Curran, P. G. (2016). Methods for the detection of carelessly invalid
@@ -214,19 +250,19 @@ nomo_screen <- function(data,
   if (!is.list(guidance)) {
     stop("`guidance` must be a list, typically returned by `nomo_defaults()`.", call. = FALSE)
   }
+  nomo_defaults_check_safeguards(guidance)
 
   # A contentvalidR handoff supplies the carried items, and, where the call
   # leaves them unset, its scales and declared keying (#46). Arguments given in
-  # the call are the researcher's and take precedence; the log says so.
+  # the call are the researcher's and take precedence; the log records which
+  # were replaced or completed, from what was actually used (#145).
   handoff <- NULL
-  keying_override <- FALSE
+  given <- list(scales = scales, reverse = reverse, scale_range = scale_range)
   if (nomo_handoff_is(items)) {
     handoff <- nomo_handoff_read(items)
     nomo_handoff_check_data(handoff, names(data))
     items <- handoff$items
     if (is.null(scales)) scales <- handoff$scales
-    keying_override <- handoff$keying$declared &&
-      (!is.null(reverse) || !is.null(scale_range))
     if (is.null(reverse)) reverse <- handoff$keying$reverse
     if (is.null(scale_range)) scale_range <- handoff$keying$scale_range
   }
@@ -261,6 +297,22 @@ nomo_screen <- function(data,
     }
   }
 
+  # A name shared by two columns cannot say which column is the item, whether
+  # the items were selected or every column was (#145).
+  repeated <- intersect(items, names(data)[duplicated(names(data))])
+  if (length(repeated)) {
+    stop(
+      sprintf(
+        paste(
+          "`data` has more than one column named %s. Give each column a unique",
+          "name before screening; nomologR does not choose between them."
+        ),
+        nomo_present_or(paste0("`", repeated, "`"))
+      ),
+      call. = FALSE
+    )
+  }
+
   selected <- data[items]
 
   effort_args <- nomo_screen_effort_args(
@@ -285,7 +337,8 @@ nomo_screen <- function(data,
   descriptives <- nomo_screen_descriptives(
     selected = selected,
     item_summary = item_summary,
-    guidance = guidance
+    guidance = guidance,
+    scale_range = scale_range
   )
   item_summary <- descriptives$item_summary
 
@@ -346,11 +399,13 @@ nomo_screen <- function(data,
       severity = "info",
       observation = sprintf(
         paste(
-          "Reverse-keyed item(s) %s were declared without `scale_range`, so the",
+          "%s %s %s declared without `scale_range`, so the",
           "declared keying was not used: a negative item-rest correlation of",
           "such an item is reported without the keying explanation."
         ),
-        paste(reverse, collapse = ", ")
+        nomo_present_noun(length(reverse), "Reverse-keyed item", "Reverse-keyed items"),
+        paste(reverse, collapse = ", "),
+        nomo_present_noun(length(reverse), "was", "were")
       ),
       recommendation = paste(
         "Supply `scale_range = c(min, max)` to have a declared item's negative",
@@ -359,6 +414,13 @@ nomo_screen <- function(data,
       )
     )
   }
+
+  # The declared response scale is compared with the data. A 0-based coding, a
+  # missing-value code, or a different response format puts responses outside
+  # it, and every value recoded on the wrong scale is wrong (#145).
+  decision_log <- dplyr::bind_rows(
+    decision_log, nomo_screen_range_log(selected, scale_range, reverse)
+  )
 
   for (i in seq_len(nrow(item_summary))) {
     row <- item_summary[i, , drop = FALSE]
@@ -412,11 +474,10 @@ nomo_screen <- function(data,
         reference = "Descriptive only; no universal deletion threshold",
         severity = "info",
         observation = sprintf(
-          "`%s` has %d missing response%s (%.1f%%).",
+          "`%s` has %s (%s).",
           item,
-          row$n_missing[[1L]],
-          if (row$n_missing[[1L]] == 1L) "" else "s",
-          100 * row$pct_missing[[1L]]
+          nomo_present_count(row$n_missing[[1L]], "missing response"),
+          nomo_present_percent(row$pct_missing[[1L]], base = row$n[[1L]])
         ),
         recommendation = paste(
           "Inspect the pattern and cause of missingness before choosing a later",
@@ -480,9 +541,8 @@ nomo_screen <- function(data,
       reference = "No observed candidate-item responses",
       severity = "concern",
       observation = sprintf(
-        "%d case%s have no observed responses on the selected candidate items.",
-        n_all_missing_cases,
-        if (n_all_missing_cases == 1L) "" else "s"
+        "%s no observed responses on the selected candidate items.",
+        nomo_present_count(n_all_missing_cases, "case has", "cases have")
       ),
       recommendation = paste(
         "Inspect these cases and their study-flow context before deciding whether",
@@ -507,18 +567,7 @@ nomo_screen <- function(data,
 
   handoff_log <- NULL
   if (!is.null(handoff)) {
-    handoff_log <- nomo_handoff_log(handoff)
-    if (keying_override) {
-      handoff_log <- nomo_log_add(
-        handoff_log, stage = "screen", object = "content_review",
-        metric = "keying_override", severity = "info",
-        observation = paste(
-          "`reverse` or `scale_range` was supplied in the call, so it was used",
-          "in place of the keying declared in the handoff."
-        ),
-        recommendation = "Record why the declared keying was set aside."
-      )
-    }
+    handoff_log <- nomo_handoff_log(handoff, given = given)
   }
 
   decision_log <- dplyr::bind_rows(
@@ -584,6 +633,10 @@ nomo_screen <- function(data,
 
 #' Print a nomo_screen object
 #'
+#' `print()` shows the counts of cases and items by data condition, how many
+#' items entered the correlation diagnostics, and how many decision-log
+#' entries are flagged; [summary.nomo_screen()] shows each item's review.
+#'
 #' @param x A `nomo_screen` object.
 #' @param ... Additional arguments, currently ignored.
 #'
@@ -607,12 +660,13 @@ print.nomo_screen <- function(x, ...) {
   ))
 
   if (!is.null(x$relationship_summary)) {
+    rel <- x$relationship_summary
     nomo_present_facts(c(
-      sprintf("Relationship diagnostics: %d eligible items",
-              sum(x$relationship_summary$relationship_eligible)),
-      sprintf("%d item-rest estimates",
-              sum(!is.na(x$relationship_summary$corrected_item_rest_r)))
+      paste0("Items in correlation diagnostics: ",
+             nomo_screen_of(sum(rel$relationship_eligible), n_items)),
+      sprintf("Item-rest correlations: %d", sum(!is.na(rel$corrected_item_rest_r)))
     ))
+    nomo_screen_present_skipped(x$item_summary, rel)
   }
 
   n_concentration <- sum(
@@ -635,15 +689,10 @@ print.nomo_screen <- function(x, ...) {
     # setting existed applied the rule.
     long_applied <- !isFALSE(x$effort_settings$long_string_rule_applied)
     nomo_present_facts(c(
-      sprintf("Careless-responding flags: %d case%s", flagged,
-              if (flagged == 1L) "" else "s"),
-      if (long_applied) {
-        sprintf("long-string %d", sum(e$flag_long_string))
-      } else {
-        "long-string not applied"
-      },
-      sprintf("antonym %d", sum(e$flag_antonym)),
-      sprintf("synonym %d", sum(e$flag_synonym))
+      paste0("Careless-responding flags: ", nomo_present_count(flagged, "case")),
+      paste0("Long-string: ", if (long_applied) sum(e$flag_long_string) else "not applied"),
+      sprintf("Antonym: %d", sum(e$flag_antonym)),
+      sprintf("Synonym: %d", sum(e$flag_synonym))
     ))
     nomo_present_text(
       "Cases are flagged, never removed. Indices disagree by design; see the ",
@@ -651,19 +700,54 @@ print.nomo_screen <- function(x, ...) {
     )
   }
 
-  if (nrow(x$decision_log) > 0L) {
-    severity <- factor(x$decision_log$severity, levels = c("info", "review", "concern"))
-    counts <- table(severity)
-    nomo_present_facts(sprintf(
-      "Decision log: %d info, %d review, %d concern",
-      counts[["info"]], counts[["review"]], counts[["concern"]]
-    ))
-  } else {
-    nomo_present_facts("Decision log: no entries")
-  }
+  # Entries are counted by the display vocabulary: an informational entry is
+  # not a flag (#145, cons-4).
+  n_log <- nrow(x$decision_log)
+  nomo_present_facts(c(
+    paste0("Decision log: ", if (n_log) nomo_present_count(n_log, "entry", "entries") else "no entries"),
+    if (n_log) paste0("Flagged: ", nomo_present_flag_counts(x$decision_log$severity))
+  ))
 
   nomo_present_text("No rows or items were removed or modified.")
+  nomo_present_pointer(
+    c("summary(x)", "nomo_table(x, \"decision_log\")",
+      if (!is.null(x$effort)) "nomo_table(x, \"effort\")"),
+    c("each item's review", "every log entry",
+      if (!is.null(x$effort)) "each case's indices")
+  )
   invisible(x)
+}
+
+
+# "10", or "8 of 10" when not all were used.
+nomo_screen_of <- function(k, n) {
+  if (k < n) sprintf("%d of %d", k, n) else as.character(k)
+}
+
+
+# One line saying why items were left out of the correlation diagnostics when
+# they are stored as categories: nomologR does not turn labels into scores, and
+# without the line the counts read as a fault (#145, clarity-30).
+nomo_screen_present_skipped <- function(item_summary, relationships) {
+  skipped <- relationships$item[
+    relationships$relationship_reason %in% "not_explicitly_scored_numeric"
+  ]
+  if (!length(skipped)) return(invisible(NULL))
+  types <- item_summary$item_type[match(skipped, item_summary$item)]
+  counts <- table(factor(types, levels = unique(types)))
+  kinds <- nomo_present_or(paste(as.integer(counts), names(counts)), "and")
+  nomo_present_text(
+    sprintf(
+      paste(
+        "Correlations were not computed for %s %s: nomologR does not turn",
+        "category labels into scores. Supply numeric scores to include %s."
+      ),
+      kinds,
+      nomo_present_noun(length(skipped), "item", "items"),
+      nomo_present_noun(length(skipped), "it", "them")
+    ),
+    indent = 2L
+  )
 }
 
 
@@ -798,25 +882,26 @@ nomo_screen_distribution <- function(x, item) {
       )
     } else {
       response_chr <- as.character(observed)
-      response_levels <- unique(response_chr)
 
+      # Numeric responses are counted on their values and labeled afterwards:
+      # two values that differ only past the 15 digits as.character() keeps
+      # (0.3 and 0.1 + 0.2) would otherwise each be counted twice (#145).
       if (is.numeric(x)) {
         numeric_levels <- sort(unique(observed))
+        counts <- tabulate(match(observed, numeric_levels), length(numeric_levels))
         response_levels <- as.character(numeric_levels)
-      } else if (is.logical(x)) {
-        response_levels <- intersect(
-          c("FALSE", "TRUE"),
-          unique(response_chr)
-        )
       } else {
-        response_levels <- sort(response_levels)
+        response_levels <- if (is.logical(x)) {
+          intersect(c("FALSE", "TRUE"), unique(response_chr))
+        } else {
+          sort(unique(response_chr))
+        }
+        counts <- vapply(
+          response_levels,
+          function(value) sum(response_chr == value),
+          integer(1)
+        )
       }
-
-      counts <- vapply(
-        response_levels,
-        function(value) sum(response_chr == value),
-        integer(1)
-      )
 
       out <- tibble::tibble(
         item = item,
@@ -936,7 +1021,98 @@ nomo_screen_effort_args <- function(effort, selected, items, scales, reverse,
     )
   }
 
+  # A reverse-keyed response outside the declared scale has no recoded value on
+  # it: recoding 0 on a 1 to 5 scale gives 6. Either the data or the range is
+  # wrong, and the indices are not computed from a guess about which (#145).
+  outside <- nomo_screen_out_of_range(selected[reverse], scale_range)
+  if (nrow(outside)) {
+    stop(
+      sprintf(
+        paste(
+          "Recoding reverse-keyed items needs every response inside the declared",
+          "response scale, %s. Outside it: %s. Correct `scale_range`, or recode",
+          "the data (a 0-based coding, or a missing-value code to `NA`), before",
+          "computing the careless-responding indices."
+        ),
+        nomo_handoff_range_text(scale_range),
+        paste(sprintf("%s (observed %s)", outside$item,
+                      nomo_screen_range_text(outside$min, outside$max)),
+              collapse = ", ")
+      ),
+      call. = FALSE
+    )
+  }
+
   list(scales = scales, reverse = reverse, scale_range = scale_range)
+}
+
+
+# A range of response values as prose: "1 to 5", "0 to 4.5". Each value keeps
+# the digits it has, since a response code is not a statistic to round.
+nomo_screen_range_text <- function(lo, hi) {
+  value <- function(v) {
+    vapply(v, function(a) format(a, digits = 15L, trim = TRUE, drop0trailing = TRUE),
+           character(1))
+  }
+  paste(value(lo), "to", value(hi))
+}
+
+
+# The numeric items with a finite response outside the declared response
+# scale: the count outside, and the lowest and highest observed values.
+nomo_screen_out_of_range <- function(selected, scale_range) {
+  empty <- data.frame(item = character(), n_outside = integer(), min = numeric(),
+                      max = numeric(), stringsAsFactors = FALSE)
+  if (is.null(scale_range) || !length(selected)) return(empty)
+  rows <- lapply(names(selected), function(item) {
+    x <- selected[[item]]
+    if (!is.numeric(x)) return(NULL)
+    x <- x[is.finite(x)]
+    outside <- x < scale_range[[1L]] | x > scale_range[[2L]]
+    if (!any(outside)) return(NULL)
+    data.frame(item = item, n_outside = sum(outside), min = min(x), max = max(x),
+               stringsAsFactors = FALSE)
+  })
+  out <- do.call(rbind, rows)
+  if (is.null(out)) empty else out
+}
+
+
+# A concern row for each item with responses outside the declared response
+# scale. Every index or note computed on a recoded copy assumes the scale.
+nomo_screen_range_log <- function(selected, scale_range, reverse = NULL) {
+  log <- nomo_log_new()
+  outside <- nomo_screen_out_of_range(selected, scale_range)
+  for (i in seq_len(nrow(outside))) {
+    item <- outside$item[[i]]
+    log <- nomo_log_add(
+      log,
+      stage = "screen",
+      object = item,
+      metric = "out_of_range",
+      value = outside$n_outside[[i]],
+      reference = sprintf("Declared response scale %s", nomo_handoff_range_text(scale_range)),
+      severity = "concern",
+      observation = sprintf(
+        "`%s` has %s outside the declared response scale of %s (observed %s).",
+        item, nomo_present_count(outside$n_outside[[i]], "response"),
+        nomo_handoff_range_text(scale_range),
+        nomo_screen_range_text(outside$min[[i]], outside$max[[i]])
+      ),
+      recommendation = paste0(
+        "Check the coding against the declared scale: a 0-based coding, a ",
+        "missing-value code, or a different response format puts responses ",
+        "outside it. Correct the data or `scale_range` before relying on any ",
+        "value computed from the scale",
+        if (item %in% reverse) {
+          "; this item is declared reverse-keyed, and recoded on the wrong scale every recoded value is wrong."
+        } else {
+          "."
+        }
+      )
+    )
+  }
+  log
 }
 
 
