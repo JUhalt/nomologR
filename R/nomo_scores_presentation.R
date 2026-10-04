@@ -146,16 +146,24 @@ nomo_scores_present_parallel <- function(parallel) {
 
 
 # The Flagged section: each review or concern note under the unit it is
-# about, its first sentence in print() and in full in summary().
+# about, its first sentence in print() and in full in summary(). A unit gets
+# one bullet (guide point 22), so notes on the same unit, such as the
+# parallel-model test and the loading ratio under unit weighting, are joined in
+# the order they were raised, under the more severe of their statuses.
 nomo_scores_present_flagged <- function(notes, full = FALSE) {
   flagged <- notes[notes$severity %in% c("review", "concern"), , drop = FALSE]
   if (!nrow(flagged)) return(invisible(NULL))
+  unit <- unname(nomo_scores_units[flagged$topic])
+  text <- if (isTRUE(full)) flagged$note else nomo_scores_first_sentence(flagged$note)
+  units <- unique(unit)
   nomo_present_flagged(
-    unit = unname(nomo_scores_units[flagged$topic]),
-    status = flagged$severity,
-    text = nomo_scores_bind(
-      if (isTRUE(full)) flagged$note else nomo_scores_first_sentence(flagged$note)
-    )
+    unit = units,
+    status = vapply(units, function(u) {
+      c("review", "concern")[[1L + any(flagged$severity[unit == u] == "concern")]]
+    }, character(1), USE.NAMES = FALSE),
+    text = nomo_scores_bind(vapply(units, function(u) {
+      paste(text[unit == u], collapse = " ")
+    }, character(1), USE.NAMES = FALSE))
   )
 }
 

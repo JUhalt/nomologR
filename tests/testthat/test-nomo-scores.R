@@ -1000,6 +1000,49 @@ test_that("the print explains its columns and states the parallel test once (#14
 })
 
 
+test_that("a unit flagged by two notes has one bullet in the Flagged section (#145)", {
+  # The teaching data rejects the parallel model, and B's loadings differ
+  # twofold: two review notes on unit weighting.
+  summed <- nomo_scores(
+    nomo_cfa("A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4 + b5",
+             data = nomo_demo_continuous),
+    method = "sum"
+  )
+  notes <- summed$notes
+  expect_identical(sum(notes$topic == "unit_weighting" & notes$severity == "review"), 2L)
+
+  local_reproducible_output(width = 80)
+  printed <- capture.output(print(summed))
+  detail <- capture.output(print(summary(summed)))
+  for (out in list(printed, detail)) {
+    expect_identical(sum(grepl("^  - Unit weighting \\(", out)), 1L)
+  }
+  # Joined in the order raised: the parallel-model test, then the loading ratio.
+  bullet <- function(out) {
+    from <- grep("^  - Unit weighting \\(Review\\): ", out)
+    ends <- c(grep("^  - ", out), which(out == ""))
+    flat_text(out[from:(min(ends[ends > from]) - 1L)])
+  }
+  expect_true(endsWith(bullet(printed), paste(
+    "fits worse than the model you fitted (Delta chi-square(16) = 171.84, p < .001).",
+    "The strongest standardized loading is at least twice the weakest for B."
+  )))
+  expect_match(bullet(detail), "describe what it costs. The strongest standardized loading",
+               fixed = TRUE)
+  expect_true(endsWith(bullet(detail), "by having endorsed different items."))
+
+  # Two statuses on one unit print once, under the more severe.
+  mixed <- tibble::tibble(
+    topic = c("unit_weighting", "validity", "unit_weighting"),
+    severity = c("review", "review", "concern"),
+    note = c("First finding. More.", "Low validity.", "Second finding. More.")
+  )
+  shown <- capture.output(nomologR:::nomo_scores_present_flagged(mixed))
+  expect_identical(shown[3:4], c("  - Unit weighting (Concern): First finding. Second finding.",
+                                 "  - Validity (Review): Low validity."))
+})
+
+
 test_that("a one-factor score cites only the properties it has (#145)", {
   dat <- scores_sample(scores_population()$sigma)
   fit <- lavaan::cfa(paste("F =~", paste(scores_items, collapse = " + ")), data = dat,

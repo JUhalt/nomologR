@@ -374,10 +374,9 @@
           -.10, between A and B.
         - Unit weighting (Review): The parallel model that unit weighting assumes
           fits worse than the model you fitted (Delta chi-square(16) = 171.84,
-          p < .001).
+          p < .001). The strongest standardized loading is at least twice the
+          weakest for B.
         - Validity (Review): Validity is below .90 for B.
-        - Unit weighting (Review): The strongest standardized loading is at least
-          twice the weakest for B.
       
       No value here is a pass/fail threshold, and no scoring method is chosen for
       you.
@@ -432,15 +431,15 @@
           p < .001). The items are not interchangeable in the way adding them
           assumes. This does not forbid a sum score; it means the choice needs a
           reason beyond convenience, and that `validity` and
-          `correlational_accuracy` describe what it costs.
+          `correlational_accuracy` describe what it costs. The strongest
+          standardized loading is at least twice the weakest for B. Adding those
+          items gives the weakest indicator the same say as the strongest, so two
+          people with the same total can differ on the construct by having endorsed
+          different items.
         - Validity (Review): Validity is below .90 for B. Gorsuch (1983, p. 260)
           recommended at least .80, and above .90 if the scores are to serve as
           adequate substitutes for the factors themselves. Reported as his
           recommendation, not applied as a rule.
-        - Unit weighting (Review): The strongest standardized loading is at least
-          twice the weakest for B. Adding those items gives the weakest indicator
-          the same say as the strongest, so two people with the same total can
-          differ on the construct by having endorsed different items.
       
       Notes
         - A score is not the latent variable. Every method here produces an estimate
