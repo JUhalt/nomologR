@@ -198,7 +198,8 @@ test_that("a model's syntax prints under a header, with its notes wrapped (#145)
   expect_match(printed, "^  - Concern: Group factor A has two indicators", all = FALSE)
   expect_true(all(nchar(printed) <= 79L))
   plain <- utils::capture.output(print(nomo_model(list(A = c("a1", "a2", "a3")))))
-  expect_identical(plain, c("<nomo_model> Measurement model syntax", "A =~ a1 + a2 + a3"))
+  expect_identical(plain, c("<nomo_model> Measurement model syntax", "A =~ a1 + a2 + a3", "",
+                            "See nomo_cfa(x, data) for a guided fit of this model."))
   unnamed <- nomo_model(list(A = c("a1", "a2", "a3")))
   attr(unnamed, "notes") <- "A note without a severity."
   expect_identical(utils::capture.output(print(unnamed))[5L], "  - A note without a severity.")

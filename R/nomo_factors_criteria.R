@@ -118,6 +118,7 @@ nomo_factors_build_criteria <- function(criterion_set,
   evidence_rows <- list()
   status_rows <- list()
   details <- list()
+  cd_settings <- NULL
 
   add_available <- function(id, n_factors, detail = NULL, qualification = "") {
     meta <- nomo_factors_criterion_metadata(id)
@@ -295,6 +296,10 @@ nomo_factors_build_criteria <- function(criterion_set,
       cd_alpha <- as.numeric(
         nomo_null_default(guidance$factor_cd_alpha, 0.30)
       )
+      # Recorded with the result: the defaults are smaller than the engine's
+      # own (#145, factors-12).
+      cd_settings <- list(population = cd_population, samples = cd_samples,
+                          alpha = cd_alpha)
 
       result <- nomo_factors_cd(
         x = analysis_data,
@@ -327,7 +332,8 @@ nomo_factors_build_criteria <- function(criterion_set,
     evidence = evidence,
     status = status,
     details = details,
-    plan = plan
+    plan = plan,
+    cd_settings = cd_settings
   )
 }
 
@@ -558,9 +564,11 @@ nomo_factors_synthesis <- function(evidence, parallel_n, status = NULL) {
     0L
   }
 
+  # The reason is in nomo_table(x, "criteria") and in summary(x) under
+  # "Criteria requested but not run" (#145, clarity-28).
   skipped_note <- if (skipped_n > 0L) {
     sprintf(
-      " %d requested method%s %s not evaluated; see criterion status for the documented reason%s.",
+      " %d requested method%s %s not evaluated; nomo_table(x, \"criteria\") gives the reason%s.",
       skipped_n,
       if (skipped_n == 1L) "" else "s",
       if (skipped_n == 1L) "was" else "were",
@@ -569,6 +577,13 @@ nomo_factors_synthesis <- function(evidence, parallel_n, status = NULL) {
   } else {
     ""
   }
+
+  # No criterion found a common factor (#145, factors-8): "investigating that
+  # solution" has no meaning for 0 factors.
+  no_factor_note <- paste(
+    "No criterion found evidence of a common factor; check item quality,",
+    "coding, and sample size before fitting an EFA."
+  )
 
   if (!is.data.frame(evidence) || nrow(evidence) == 0L) {
     concordance <- tibble::tibble(
@@ -604,16 +619,24 @@ nomo_factors_synthesis <- function(evidence, parallel_n, status = NULL) {
       family_concordance = concordance,
       method_concordance = method_concordance,
       family_evidence = family_evidence,
-      text = paste0(
-        sprintf(
-          "Parallel analysis suggests investigating %d factor%s. ",
-          parallel_n,
-          if (parallel_n == 1L) "" else "s"
-        ),
-        "No additional recommended criterion families were available for triangulation, ",
-        "so treat this as a primary candidate rather than a dimensionality verdict.",
-        skipped_note
-      )
+      text = if (parallel_n < 1L) {
+        paste0(
+          "Parallel analysis suggests 0 factors, and no additional recommended ",
+          "criterion families were available for triangulation. ",
+          no_factor_note, skipped_note
+        )
+      } else {
+        paste0(
+          sprintf(
+            "Parallel analysis suggests investigating %d factor%s. ",
+            parallel_n,
+            if (parallel_n == 1L) "" else "s"
+          ),
+          "No additional recommended criterion families were available for triangulation, ",
+          "so treat this as a primary candidate rather than a dimensionality verdict.",
+          skipped_note
+        )
+      }
     ))
   }
 
@@ -755,21 +778,58 @@ nomo_factors_synthesis <- function(evidence, parallel_n, status = NULL) {
     nrow(resolved_families) == n_families &&
     length(unique(resolved_families$n_factors)) == 1L
 
-  if (fully_convergent) {
-    text <- paste0(
-      sprintf(
-        "All %d available criterion famil%s (%d method%s) point to %d factor%s. ",
-        n_families,
-        if (n_families == 1L) "y" else "ies",
-        n_methods,
-        if (n_methods == 1L) "" else "s",
-        min_n,
-        if (min_n == 1L) "" else "s"
-      ),
-      "Related methods within a family are grouped before concordance is summarized; ",
-      "this is strong converging evidence for investigating that solution, not proof of dimensionality.",
-      skipped_note
+  zero_note <- if (min_n < 1L) {
+    paste(
+      " Some criteria found no evidence of a common factor; check item quality,",
+      "coding, and sample size before relying on any EFA."
     )
+  } else {
+    ""
+  }
+
+  if (fully_convergent) {
+    # The wording follows how much agreement there is to describe (#145,
+    # factors-8): agreement between two criteria is not the evidence that six
+    # agreeing families are.
+    families_text <- switch(
+      as.character(min(n_families, 3L)),
+      "1" = "The one available criterion family",
+      "2" = "Both available criterion families",
+      sprintf("All %d available criterion families", n_families)
+    )
+    count_text <- sprintf(
+      "%s (%d method%s) point%s to %d factor%s.",
+      families_text,
+      n_methods,
+      if (n_methods == 1L) "" else "s",
+      if (n_families == 1L) "s" else "",
+      min_n,
+      if (min_n == 1L) "" else "s"
+    )
+    text <- if (min_n < 1L) {
+      paste0(count_text, " ", no_factor_note, skipped_note)
+    } else {
+      paste0(
+        count_text,
+        switch(
+          as.character(min(n_families, 3L)),
+          "1" = paste(
+            " A single criterion family is limited evidence for investigating",
+            "that solution, not proof of dimensionality."
+          ),
+          "2" = paste(
+            " Agreement between two criterion families is limited evidence for",
+            "investigating that solution, not proof of dimensionality."
+          ),
+          paste(
+            " Related methods within a family are grouped before concordance is",
+            "summarized; this is converging evidence for investigating that",
+            "solution, not proof of dimensionality."
+          )
+        ),
+        skipped_note
+      )
+    }
     agreement <- "convergent"
   } else if (support_primary > n_families / 2) {
     text <- paste0(
@@ -783,6 +843,7 @@ nomo_factors_synthesis <- function(evidence, parallel_n, status = NULL) {
       sprintf("family-level suggestions range from %d to %d.", min_n, max_n),
       contrast_note,
       " This is converging but not unanimous evidence. Criterion families are related rather than independent votes; compare plausible neighboring EFA solutions.",
+      zero_note,
       skipped_note
     )
     agreement <- "primary_majority"
@@ -797,6 +858,7 @@ nomo_factors_synthesis <- function(evidence, parallel_n, status = NULL) {
       ),
       contrast_note,
       " Carry both neighboring solutions into EFA and compare interpretability, simple structure, and stability. Criterion families are related rather than independent votes.",
+      zero_note,
       skipped_note
     )
     agreement <- "near"
@@ -812,6 +874,7 @@ nomo_factors_synthesis <- function(evidence, parallel_n, status = NULL) {
       ),
       contrast_note,
       " Retention evidence is materially divergent; inspect criterion-specific assumptions and compare multiple theoretically plausible EFA solutions. Criterion families are related rather than independent votes.",
+      zero_note,
       skipped_note
     )
     agreement <- "divergent"
