@@ -71,3 +71,26 @@ nomo_defaults <- function(profile = "teaching") {
     )
   )
 }
+
+
+# `auto_delete` and `auto_respecify` are not switches: nomologR never deletes
+# an item or respecifies a model. A guidance list that sets either to TRUE
+# would otherwise be accepted and silently ignored (#145, defaults-dead-fields).
+nomo_defaults_check_safeguards <- function(guidance) {
+  set <- c("auto_delete", "auto_respecify")[c(
+    isTRUE(guidance$auto_delete), isTRUE(guidance$auto_respecify)
+  )]
+  if (length(set)) {
+    stop(
+      sprintf(
+        paste(
+          "%s cannot be `TRUE`: nomologR never deletes an item or respecifies",
+          "a model on its own. Flags in the results mark what to review."
+        ),
+        nomo_present_or(sprintf("`guidance$%s`", set))
+      ),
+      call. = FALSE
+    )
+  }
+  invisible(guidance)
+}
