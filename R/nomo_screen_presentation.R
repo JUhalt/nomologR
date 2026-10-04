@@ -112,27 +112,7 @@ print.summary_nomo_screen <- function(x, ...) {
     ),
     more = "summary(x)$item_review"
   )
-  shown_rest <- any(is.finite(review$item_rest))
-  nomo_present_text(
-    c(
-      "Top share is the share of observed responses in the most common category.",
-      if (shown_rest) {
-        paste0(
-          "Item-rest r is the correlation of an item with the sum of the other ",
-          if (any(!is.na(review[["scale_item_rest_r"]]))) {
-            "items of its scale; the pooled value is kept as corrected_item_rest_r."
-          } else {
-            "items."
-          }
-        )
-      },
-      if (any(!is.finite(review$mode_prop)) ||
-            (shown_rest && any(!is.finite(review$item_rest)))) {
-        "-- marks a value that was not computed; the decision log says why."
-      }
-    ),
-    indent = 2L
-  )
+  nomo_present_text(nomo_screen_review_notes(review), indent = 2L)
 
   # Items first, then the log's other flagged entries, such as negative pairs
   # or careless-responding counts, each under a plain name.
@@ -142,7 +122,10 @@ print.summary_nomo_screen <- function(x, ...) {
   nomo_present_flagged(
     unit = c(review$item, nomo_screen_unit_label(other$object)),
     status = c(as.character(review$attention), other$severity),
-    text = c(nomo_screen_flag_text(review, log, x$negative_pairs), other$observation)
+    text = c(
+      nomo_screen_flag_text(review, log, x$negative_pairs, nomo_screen_unrecoded_items(log)),
+      other$observation
+    )
   )
 
   cat("\n")
@@ -169,16 +152,91 @@ nomo_screen_item_rest_reference <- function(guidance) {
 }
 
 
+# The notes under the item review table: what Top share and Item-rest r are,
+# and what each "--" marks (guide point 13). An item in no declared scale is
+# read on the pooled value even when scales were declared, and the note says so
+# (#145).
+nomo_screen_review_notes <- function(review) {
+  scale <- review[["scale"]]
+  if (is.null(scale)) scale <- rep(NA_character_, nrow(review))
+  shown <- is.finite(review$item_rest)
+  any_scale <- any(!is.na(scale))
+  unscaled <- any_scale && any(is.na(scale))
+  rest_note <- if (any(shown & !is.na(scale)) && any(shown & is.na(scale))) {
+    paste(
+      "Item-rest r is the correlation of an item with the sum of the other",
+      "items of its scale, or of all the other items for an item in no declared",
+      "scale; the pooled value is kept as corrected_item_rest_r."
+    )
+  } else if (any(shown & !is.na(scale))) {
+    paste(
+      "Item-rest r is the correlation of an item with the sum of the other",
+      "items of its scale; the pooled value is kept as corrected_item_rest_r."
+    )
+  } else if (any(shown) && any_scale) {
+    paste(
+      "Item-rest r is the correlation of an item in no declared scale with the",
+      "sum of all the other items."
+    )
+  } else if (any(shown)) {
+    "Item-rest r is the correlation of an item with the sum of the other items."
+  }
+  # An item left out of the correlation diagnostics has no scale here either,
+  # whether or not one was declared for it.
+  scale_note <- if (unscaled) {
+    left_out <- is.na(scale) & !review$relationship_eligible %in% TRUE
+    paste0(
+      "In Scale, -- marks an item in no declared scale",
+      if (any(left_out)) " or left out of the correlation diagnostics",
+      "."
+    )
+  }
+  value_dash <- any(!is.finite(review$mode_prop)) || (any(shown) && any(!shown))
+  value_note <- if (value_dash) {
+    paste0(
+      if (unscaled) "In other columns, it marks " else "-- marks ",
+      "a value that was not computed; the decision log says why."
+    )
+  }
+  c(
+    "Top share is the share of observed responses in the most common category.",
+    rest_note,
+    scale_note,
+    value_note
+  )
+}
+
+
+# The declared reverse-keyed items that read as not yet recoded: their keyed
+# note in the decision log says so (#145).
+nomo_screen_unrecoded_items <- function(log) {
+  rows <- log$metric %in% "corrected_item_rest" &
+    grepl(nomo_screen_unrecoded_phrase, log$observation, fixed = TRUE)
+  unique(log$object[rows])
+}
+
+
 # Each item's reasons for its flag: the decision log's own explanations, then
 # what the item review adds without a log row of its own, negative inter-item
-# pairs and unused response categories, as complete sentences.
-nomo_screen_flag_text <- function(review, log, negative_pairs = NULL) {
+# pairs and unused response categories, as complete sentences. A negative pair
+# with an item not yet recoded says so, unless the item's own log row already
+# named that item in its rest score: those of its scale, or every item when it
+# has none (#145).
+nomo_screen_flag_text <- function(review, log, negative_pairs = NULL,
+                                  unrecoded = character()) {
+  scale <- review[["scale"]]
+  if (is.null(scale)) scale <- rep(NA_character_, nrow(review))
+  rest_noted <- log$object[log$metric %in% "corrected_item_rest"]
   vapply(seq_len(nrow(review)), function(i) {
     item <- review$item[[i]]
     reasons <- log$observation[log$object == item & log$severity %in% c("review", "concern")]
     metrics <- strsplit(review$review_metrics[[i]], ", ", fixed = TRUE)[[1L]]
     if ("negative_interitem_pairs" %in% metrics) {
-      reasons <- c(reasons, nomo_screen_pair_text(item, negative_pairs))
+      told <- if (item %in% rest_noted && !item %in% unrecoded) {
+        if (is.na(scale[[i]])) review$item else review$item[scale %in% scale[[i]]]
+      }
+      reasons <- c(reasons, nomo_screen_pair_text(item, negative_pairs,
+                                                  setdiff(unrecoded, told)))
     }
     if ("unused_response_categories" %in% metrics) {
       reasons <- c(reasons, sprintf(
@@ -194,7 +252,9 @@ nomo_screen_flag_text <- function(review, log, negative_pairs = NULL) {
 
 
 # "Its correlation with TF2 is negative." The partners are named, up to four.
-nomo_screen_pair_text <- function(item, pairs) {
+# A partner among `unrecoded`, declared reverse-keyed and not yet recoded, is
+# named as the known cause, with the advice to recode it first (#145).
+nomo_screen_pair_text <- function(item, pairs, unrecoded = character()) {
   # A summary made before the pairs were kept, or edited, has none to name.
   mine <- if (!is.null(pairs)) pairs[pairs$item1 == item | pairs$item2 == item, , drop = FALSE]
   if (!NROW(mine)) {
@@ -206,11 +266,21 @@ nomo_screen_pair_text <- function(item, pairs) {
   } else {
     partners
   }
-  if (length(partners) == 1L) {
+  text <- if (length(partners) == 1L) {
     sprintf("Its correlation with %s is negative.", partners)
   } else {
     sprintf("Its correlations with %s are negative.", nomo_present_or(shown, "and"))
   }
+  cause <- intersect(partners, unrecoded)
+  if (!length(cause)) return(text)
+  one <- length(cause) == 1L
+  paste(text, sprintf(
+    "%s %s declared reverse-keyed and not yet recoded in the data, so recode %s first and read %s again.",
+    nomo_present_or(cause, "and"),
+    if (one) "is" else "are",
+    if (one) "it" else "them",
+    if (length(partners) == 1L) "this correlation" else "these correlations"
+  ))
 }
 
 
@@ -703,6 +773,8 @@ nomo_screen_plot_item_rest <- function(x, items, show_values) {
   reference <- nomo_screen_item_rest_reference(x$guidance)
   has_reference <- is.finite(reference)
   within <- any(!is.na(dat[["scale_item_rest_r"]]))
+  # An item in no declared scale is drawn with its pooled value (#145).
+  pooled <- within && any(is.na(dat[["scale"]]))
 
   p <- ggplot2::ggplot(
     dat,
@@ -729,7 +801,12 @@ nomo_screen_plot_item_rest <- function(x, items, show_values) {
     ggplot2::scale_y_continuous(labels = nomo_plot_bounded_labels) +
     nomo_plot_labs(
       title = "Corrected item-rest relationships",
-      subtitle = if (within) {
+      subtitle = if (pooled) {
+        paste(
+          "Each item against the sum of the other items of its declared scale,",
+          "or of all the other items for an item in no declared scale."
+        )
+      } else if (within) {
         "Each item against the sum of the other items of its declared scale."
       } else {
         "Each item against the sum of the other items."
@@ -898,6 +975,12 @@ nomo_screen_plot_responses <- function(x, items, show_values) {
     )
   }
 
+  # Each share is a percentage of the item's observed responses, with one
+  # precision for the whole plot, set by those bases (guide point 14).
+  dat$value_label <- nomo_present_percent(
+    dat$proportion_observed,
+    base = x$item_summary$n_observed[match(dat$item, x$item_summary$item)]
+  )
   dat$item <- factor(dat$item, levels = items)
   response_key <- paste0(
     seq_len(nrow(dat)),
@@ -942,11 +1025,10 @@ nomo_screen_plot_responses <- function(x, items, show_values) {
 
   if (isTRUE(show_values)) {
     p <- p + ggplot2::geom_text(
-      ggplot2::aes(
-        label = sprintf("%.0f%%", 100 * proportion_observed)
-      ),
+      ggplot2::aes(label = value_label),
       vjust = -0.35,
-      size = 3
+      # A one-decimal share is wider; it stays clear of its neighbors.
+      size = 2.6
     )
   }
 
@@ -1080,6 +1162,7 @@ utils::globalVariables(c(
   "response",
   "response_key",
   "proportion_observed",
+  "value_label",
   "pct_missing",
   "missingness_label_position",
   "value",

@@ -42,7 +42,7 @@
 #'   outside it gets a concern in the decision log, and with `effort = TRUE` a
 #'   reverse-keyed item with responses outside it is refused, since recoding
 #'   it on that scale would give wrong values. It also sets the floor and
-#'   ceiling of numeric items (see Details).
+#'   ceiling of numeric-discrete items (see Details).
 #' @param pair_magnitude Minimum absolute between-person correlation for an
 #'   item pair to count as a psychometric antonym or synonym. Curran (2016)
 #'   suggests .60 while saying there is no firm basis for it, so it is an
@@ -63,13 +63,13 @@
 #' not psychometric laws or automatic item-retention rules. Ordered and
 #' numeric-discrete items also receive descriptive boundary concentration
 #' summaries, `floor_prop` and `ceiling_prop`. An ordered item's boundaries are
-#' its first and last levels. A numeric item's are the ends of `scale_range`
-#' when it is given, and otherwise its lowest and highest observed values,
-#' since a numeric item shows only the values used: a pile-up in the middle of
-#' a scale whose lower categories went unused would read as a floor effect, and
-#' the decision log says so. Continuous-like numeric indicators receive
-#' descriptive skewness and excess-kurtosis summaries without a pass/fail
-#' normality judgment.
+#' its first and last levels. A numeric-discrete item's are the ends of
+#' `scale_range` when it is given, and otherwise its lowest and highest observed
+#' values, since a numeric item shows only the values used: a pile-up in the
+#' middle of a scale whose lower categories went unused would read as a floor
+#' effect, and the decision log says so. Continuous-like numeric indicators
+#' receive descriptive skewness and excess-kurtosis summaries without a
+#' pass/fail normality judgment.
 #'
 #' An item in a declared scale is reviewed on its item-rest correlation within
 #' that scale. When it has none there, because it is the only item of its scale

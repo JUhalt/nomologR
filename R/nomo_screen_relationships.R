@@ -339,6 +339,11 @@ nomo_screen_relationships <- function(selected, item_summary, guidance,
   unrecoded <- declared[vapply(declared, function(item) {
     isTRUE(review_r[[item]] < 0 && keyed_r[item] > 0)
   }, logical(1))]
+  # Each other item's value with exactly those items recoded and itself as
+  # answered, the value its note describes. A declared item already recoded
+  # in the data is left as it is here, and an item not yet recoded has the
+  # keyed note instead, whose value recodes it too.
+  keyed_unrecoded <- nomo_screen_keyed_item_rest(scores, unrecoded, scale_range, sets)
   r_text <- function(value) {
     nomo_present_stat(value, "r", reference = item_total_reference)
   }
@@ -363,14 +368,20 @@ nomo_screen_relationships <- function(selected, item_summary, guidance,
       next
     }
 
-    # The unrecoded declared items in this item's rest score.
+    # The unrecoded declared items in this item's rest score. An item not yet
+    # recoded itself is described by its keyed note, which names the other
+    # declared items its value recodes (#145).
     rest_items <- if (in_scale[[item]]) {
       review$item[review$scale %in% scale]
     } else {
       eligible_items
     }
-    partners <- setdiff(intersect(unrecoded, rest_items), item)
-    unrecoded_note <- nomo_screen_unrecoded_note(partners, keyed_all[item])
+    partners <- if (item %in% unrecoded) {
+      character()
+    } else {
+      setdiff(intersect(unrecoded, rest_items), item)
+    }
+    unrecoded_note <- nomo_screen_unrecoded_note(partners, keyed_unrecoded[item])
 
     if (item_rest_r < 0) {
       decision_log <- nomo_log_add(
@@ -396,7 +407,8 @@ nomo_screen_relationships <- function(selected, item_summary, guidance,
             r_text(item_rest_r),
             item_rest_n
           ),
-          nomo_screen_keyed_note(item, keyed_r, scale_range),
+          nomo_screen_keyed_note(item, keyed_r, scale_range,
+                                 setdiff(intersect(declared, rest_items), item)),
           unrecoded_note
         ),
         recommendation = if (item %in% names(keyed_r)) {
@@ -623,22 +635,35 @@ nomo_screen_scale_sets <- function(scales, eligible) {
 # What a negative item-rest correlation means for an item declared
 # reverse-keyed: the expected sign of an item not yet recoded, or, if the
 # recoded correlation is still negative, a sign the keying does not explain.
-nomo_screen_keyed_note <- function(item, keyed_r, scale_range) {
+# The value recodes every declared item, so `others`, the declared items in
+# its rest score, are named with it (#145). The summary finds the items not
+# yet recoded by `nomo_screen_unrecoded_phrase`.
+nomo_screen_keyed_note <- function(item, keyed_r, scale_range, others = character()) {
   if (!item %in% names(keyed_r)) return("")
   r <- keyed_r[[item]]
+  with_others <- if (length(others)) {
+    sprintf("with %s recoded", nomo_present_or(c("it", others), "and"))
+  } else {
+    "recoded"
+  }
   if (r > 0) {
     sprintf(paste(
-      " It is declared reverse-keyed, and this is the sign such an item shows",
-      "before it is recoded: recoded on the declared %s scale, its",
+      " It is declared reverse-keyed, and %s: %s on the declared %s scale, its",
       "item-rest correlation is r = %s. The data were not recoded."
-    ), nomo_handoff_range_text(scale_range), nomo_present_stat(r, "r"))
+    ), nomo_screen_unrecoded_phrase, with_others, nomo_handoff_range_text(scale_range),
+    nomo_present_stat(r, "r"))
   } else {
     sprintf(paste(
-      " It is declared reverse-keyed, but recoded as declared its item-rest",
+      " It is declared reverse-keyed, but %s as declared, its item-rest",
       "correlation is still r = %s, so the keying does not explain the sign."
-    ), nomo_present_stat(r, "r"))
+    ), with_others, nomo_present_stat(r, "r"))
   }
 }
+
+
+# The words the keyed note uses for a declared item that reads as not yet
+# recoded; the summary names those items by them (#145).
+nomo_screen_unrecoded_phrase <- "this is the sign such an item shows before it is recoded"
 
 
 # What an item's low or negative item-rest value means when its rest score

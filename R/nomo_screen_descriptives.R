@@ -1,9 +1,9 @@
 # Item descriptives and the concentration and near-zero-variance rows. The
-# floor and ceiling of a numeric item are the ends of the declared response
-# scale when `scale_range` is given. Otherwise they are the lowest and highest
-# observed values, since a numeric item shows only the values used: a pile-up
-# in the middle of a scale whose lower categories went unused would read as a
-# floor effect (#145).
+# floor and ceiling of a numeric-discrete item are the ends of the declared
+# response scale when `scale_range` is given. Otherwise they are the lowest and
+# highest observed values, since a numeric item shows only the values used: a
+# pile-up in the middle of a scale whose lower categories went unused would
+# read as a floor effect (#145).
 nomo_screen_descriptives <- function(selected, item_summary, guidance,
                                      scale_range = NULL) {
   items <- names(selected)
@@ -143,9 +143,11 @@ nomo_screen_descriptives <- function(selected, item_summary, guidance,
 
       metric <- "response_concentration"
       boundary_note <- ""
-      # Where the ends come from: an ordered item's levels, the declared
-      # scale, or only the values observed.
-      end_word <- if (item_type == "ordered") {
+      # Where the ends come from: a numeric-discrete item's declared scale or
+      # only the values observed; any other item's own categories. Only a
+      # numeric-discrete item has ends taken from `scale_range`, so only its
+      # recommendation asks for it (#145).
+      end_word <- if (item_type != "numeric_discrete") {
         "response category"
       } else if (is.null(scale_range)) {
         "observed value"

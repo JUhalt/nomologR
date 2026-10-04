@@ -55,7 +55,7 @@ numeric item's responses are compared with it: an item with responses
 outside it gets a concern in the decision log, and with \code{effort = TRUE} a
 reverse-keyed item with responses outside it is refused, since recoding
 it on that scale would give wrong values. It also sets the floor and
-ceiling of numeric items (see Details).}
+ceiling of numeric-discrete items (see Details).}
 
 \item{pair_magnitude}{Minimum absolute between-person correlation for an
 item pair to count as a psychometric antonym or synonym. Curran (2016)
@@ -127,13 +127,13 @@ teaching references from \code{\link[=nomo_defaults]{nomo_defaults()}}. They are
 not psychometric laws or automatic item-retention rules. Ordered and
 numeric-discrete items also receive descriptive boundary concentration
 summaries, \code{floor_prop} and \code{ceiling_prop}. An ordered item's boundaries are
-its first and last levels. A numeric item's are the ends of \code{scale_range}
-when it is given, and otherwise its lowest and highest observed values,
-since a numeric item shows only the values used: a pile-up in the middle of
-a scale whose lower categories went unused would read as a floor effect, and
-the decision log says so. Continuous-like numeric indicators receive
-descriptive skewness and excess-kurtosis summaries without a pass/fail
-normality judgment.
+its first and last levels. A numeric-discrete item's are the ends of
+\code{scale_range} when it is given, and otherwise its lowest and highest observed
+values, since a numeric item shows only the values used: a pile-up in the
+middle of a scale whose lower categories went unused would read as a floor
+effect, and the decision log says so. Continuous-like numeric indicators
+receive descriptive skewness and excess-kurtosis summaries without a
+pass/fail normality judgment.
 
 An item in a declared scale is reviewed on its item-rest correlation within
 that scale. When it has none there, because it is the only item of its scale
