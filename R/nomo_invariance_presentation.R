@@ -199,7 +199,8 @@ nomo_invariance_fit_formats <- function() {
 # ratio tests are scaled difference tests; CFI and RMSEA are robust values."
 # Empty when every value is the standard one. With `chisq = FALSE`, for
 # print(), which shows no chi-square, only the tests are named. `tests` names
-# the difference tests and `indices` the indices shown, by display name.
+# the difference tests shown, NULL when none is, and `indices` the indices
+# shown, by display name.
 nomo_invariance_versions_note <- function(variants, test = "scaled", chisq = TRUE,
                                           tests = "the likelihood-ratio tests",
                                           indices = c(CFI = "cfi", RMSEA = "rmsea")) {
@@ -216,10 +217,10 @@ nomo_invariance_versions_note <- function(variants, test = "scaled", chisq = TRU
   }
   parts <- character()
   if (nzchar(version("chisq"))) {
-    parts <- paste0(
-      if (chisq) sprintf("the chi-square is the %s test statistic, and ", test),
-      tests, " are scaled difference tests"
-    )
+    parts <- paste(c(
+      if (chisq) sprintf("the chi-square is the %s test statistic", test),
+      if (length(tests)) paste(tests, "are scaled difference tests")
+    ), collapse = ", and ")
   }
   indices <- vapply(indices, version, character(1))
   indices <- indices[nzchar(indices)]
@@ -230,15 +231,27 @@ nomo_invariance_versions_note <- function(variants, test = "scaled", chisq = TRU
       nomo_present_noun(length(named), paste("is a", v, "value"), paste("are", v, "values"))
     ))
   }
+  parts <- parts[nzchar(parts)]
   if (!length(parts)) return("")
   text <- paste(parts, collapse = "; ")
   paste0(toupper(substr(text, 1L, 1L)), substring(text, 2L), ".")
 }
 
 
-nomo_invariance_present_versions <- function(x, chisq = TRUE) {
-  note <- nomo_invariance_versions_note(x$fit_variants, x$test_label, chisq)
+nomo_invariance_present_versions <- function(x, chisq = TRUE, tests = TRUE) {
+  note <- nomo_invariance_versions_note(
+    x$fit_variants, x$test_label, chisq,
+    tests = if (isTRUE(tests)) "the likelihood-ratio tests"
+  )
   if (nzchar(note)) nomo_present_text(note, indent = 2L)
+}
+
+
+# Whether any level has a change or a difference test to show: none when the
+# second level did not converge (#145).
+nomo_invariance_has_changes <- function(fit) {
+  later <- fit[-1L, , drop = FALSE]
+  any(is.finite(unlist(later[c("delta_cfi", "delta_rmsea", "delta_srmr", "lrt_p")])))
 }
 
 
@@ -521,10 +534,11 @@ print.nomo_invariance <- function(x, ...) {
     formats = nomo_invariance_fit_formats(),
     more = "nomo_table(x, \"fit\")"
   )
-  nomo_invariance_present_versions(x, chisq = FALSE)
+  tested <- any(is.finite(x$fit_evidence$lrt_p))
+  nomo_invariance_present_versions(x, chisq = FALSE, tests = tested)
   nomo_invariance_present_flagged(x$decision_log)
 
-  nomo_invariance_key_note(c("CFI", "RMSEA", "SRMR", "LRT", x$estimator_shown))
+  nomo_invariance_key_note(c("CFI", "RMSEA", "SRMR", if (tested) "LRT", x$estimator_shown))
   cat("\n")
   nomo_present_text(
     "Fit changes and score diagnostics are evidence, not pass/fail rules, and ",
@@ -617,9 +631,11 @@ print.summary_nomo_invariance <- function(x, ...) {
     more = "nomo_table(x, \"fit\")"
   )
   nomo_invariance_present_constraints(fit)
-  nomo_invariance_present_versions(x)
-  # A single level has no change to show (#145).
-  if (nrow(fit) > 1L) {
+  # A single level, or a second that did not converge, has no change to show
+  # (#145).
+  changes <- nomo_invariance_has_changes(fit)
+  nomo_invariance_present_versions(x, tests = changes)
+  if (changes) {
     nomo_present_section("Changes from the preceding level")
     nomo_present_table(
       fit[-1L, , drop = FALSE],

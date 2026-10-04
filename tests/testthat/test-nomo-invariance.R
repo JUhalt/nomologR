@@ -2192,6 +2192,18 @@ test_that("completed_levels leaves out a level that did not converge (#145)", {
   expect_identical(out$fit_evidence$status, c("estimated", "not_converged"))
   expect_identical(out$completed_levels, "configural")
   expect_output(print(out), "Completed: configural\n", fixed = TRUE)
+
+  # The level is flagged, and nothing is said of tests or changes that were
+  # never computed (#144, #145).
+  local_reproducible_output(width = 80)
+  printed <- capture.output(print(out))
+  expect_match(printed, "  - strong (Concern): The strong model did not converge.", fixed = TRUE,
+               all = FALSE)
+  expect_false(any(grepl("LRT|difference tests", printed)))
+  summarized <- capture.output(print(summary(out)))
+  expect_false(any(grepl("Changes from the preceding level|difference tests", summarized)))
+  expect_match(summarized, "The chi-square is the scaled and shifted test statistic; CFI and",
+               fixed = TRUE, all = FALSE)
 })
 
 

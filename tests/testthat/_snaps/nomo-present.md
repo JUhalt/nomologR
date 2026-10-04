@@ -784,8 +784,8 @@
       No release was selected automatically by nomologR. Each applies from the level
       that first holds its parameter equal.
       
-      See nomo_invariance(model, data, group, partial = x) for the models fitted
-      with these releases.
+      See nomo_invariance(..., partial = x) for the models fitted with these
+      releases.
 
 ---
 

@@ -137,7 +137,7 @@ print.nomo_partial <- function(x, ...) {
     "level that first holds its parameter equal."
   )
   nomo_present_pointer(
-    "nomo_invariance(model, data, group, partial = x)",
+    "nomo_invariance(..., partial = x)",
     "the models fitted with these releases"
   )
   invisible(x)
