@@ -144,7 +144,9 @@ retained as diagnostic evidence. They are explicitly not used to modify the
 fitted model. Each test frees one equality constraint. With two groups it
 compares them; with three or more, it frees one group's parameter while the
 other groups stay equal, so the output labels it "(three vs. others)", not
-as a comparison of two groups.
+as a comparison of two groups. The first group is the reference and is
+never freed on its own, so when it alone differs, every other group shows
+similar strain on that parameter.
 
 With a robust estimator, such as MLR or the WLSMV default for ordered
 indicators, the chi-square, its degrees of freedom, and its p value are

@@ -282,11 +282,27 @@ nomo_invariance_cases <- function(fits, data_n) {
 }
 
 
-# lavaan's warning as a sentence for the log: its whitespace collapsed and the
-# internal function name it starts with removed.
-nomo_invariance_warning_text <- function(x) {
+# lavaan's warning or error as a sentence for the log: its whitespace
+# collapsed and the internal function name it starts with removed. Its
+# jargon is spelled out ("ov variances" reads "observed-variable variances";
+# guide point 23), its capitals and exclamation marks are calmed ("has NOT
+# been found!" reads "has not been found."; guide point 18), and it ends with
+# a period, so a recommendation can follow it (#145). With `period = FALSE`,
+# for messages joined into one sentence, it ends without one.
+nomo_invariance_warning_text <- function(x, period = TRUE) {
   x <- trimws(gsub("\\s+", " ", x))
-  sub("^lavaan( WARNING)?(->[A-Za-z0-9_.]+\\(\\))?:\\s*", "", x)
+  x <- sub("^lavaan( WARNING| ERROR)?(->[A-Za-z0-9_.]+\\(\\))?:\\s*", "", x)
+  # A whole word only: "ov.names" and "cov.lv" are R names and stay as written.
+  word <- function(w) sprintf("(?<![[:alnum:]_.])%s(?![[:alnum:]_.])", w)
+  spelled <- c(ov = "observed-variable", lv = "latent-variable",
+               ovs = "observed variables", lvs = "latent variables")
+  for (w in names(spelled)) x <- gsub(word(w), spelled[[w]], x, perl = TRUE)
+  x <- gsub(word("(NOT|ALL|ONLY|NEVER|NO)"), "\\L\\1", x, perl = TRUE)
+  # "!=" is code and stays.
+  x <- gsub("!(?=\\s|$)", ".", x, perl = TRUE)
+  x <- sub("[[:space:];:,.]+$", "", x)
+  if (isTRUE(period)) x <- ifelse(nzchar(x) & !grepl("[?]$", x), paste0(x, "."), x)
+  x
 }
 
 
@@ -959,14 +975,11 @@ nomo_invariance_decision_log <- function(group,
       } else if (identical(row$status[[1L]], "not_converged")) {
         sprintf("The %s model did not converge.", row$level[[1L]])
       } else {
+        reason <- nomo_invariance_warning_text(row$error[[1L]])
         sprintf(
           "The %s model could not be fitted%s",
           row$level[[1L]],
-          if (nzchar(row$error[[1L]])) {
-            paste0(": ", nomo_invariance_warning_text(row$error[[1L]]))
-          } else {
-            "."
-          }
+          if (nzchar(reason)) paste0(": ", reason) else "."
         )
       },
       recommendation = if (identical(row$status[[1L]], "estimated")) {
@@ -1533,7 +1546,9 @@ nomo_invariance_engine_args <- function(syntax_base,
 #' fitted model. Each test frees one equality constraint. With two groups it
 #' compares them; with three or more, it frees one group's parameter while the
 #' other groups stay equal, so the output labels it "(three vs. others)", not
-#' as a comparison of two groups.
+#' as a comparison of two groups. The first group is the reference and is
+#' never freed on its own, so when it alone differs, every other group shows
+#' similar strain on that parameter.
 #'
 #' With a robust estimator, such as MLR or the WLSMV default for ordered
 #' indicators, the chi-square, its degrees of freedom, and its p value are

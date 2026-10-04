@@ -255,6 +255,26 @@ nomo_invariance_has_changes <- function(fit) {
 }
 
 
+# Whether any level has fit to show: none when the configural model did not
+# converge or could not be fitted, and then the outputs show no fit table, no
+# key to its columns, and no pointer to its tests (#145).
+nomo_invariance_has_fit <- function(fit) {
+  any(is.finite(unlist(fit[intersect(c("chisq", "cfi", "rmsea", "srmr"), names(fit))])))
+}
+
+
+# The abbreviations of the fit columns given that have a value in some level,
+# in the glossary's order, so a key defines only what a table shows (guide
+# point 23; #145).
+nomo_invariance_fit_abbr <- function(fit, columns) {
+  abbr <- c(cfi = "CFI", delta_cfi = "CFI", rmsea = "RMSEA", delta_rmsea = "RMSEA",
+            srmr = "SRMR", delta_srmr = "SRMR", df = "df", lrt_df = "df")
+  columns <- intersect(columns, names(fit))
+  shown <- columns[vapply(columns, function(col) any(is.finite(fit[[col]])), logical(1))]
+  intersect(c("CFI", "RMSEA", "SRMR", "df"), abbr[shown])
+}
+
+
 # Labels ----------------------------------------------------------------------------
 
 # Labels use ASCII so figures render on every graphics device. Non-ASCII
@@ -450,14 +470,23 @@ nomo_invariance_local_strain_display <- function(x) {
 }
 
 
-# With three or more groups or occasions, the sentence that says what a label
-# such as "(three vs. others)" tests; empty with two.
+# With three or more groups or occasions, the sentences that say what a label
+# such as "(three vs. others)" tests; empty with two. The first group or
+# occasion is the reference that every constraint holds the others equal to,
+# so no label frees it: when it alone differs, every other one shows similar
+# strain on that parameter, and the note says so (#145).
 nomo_invariance_others_note <- function(x) {
   if (length(x$groups) < 3L) return("")
   unit <- if (identical(x$design, "occasions")) "occasion" else "group"
-  sprintf(
-    "Each diagnostic frees one %s's parameter while the other %ss stay equal: \"vs. others\" names the %s freed.",
-    unit, unit, unit
+  paste(
+    sprintf(
+      "Each diagnostic frees one %s's parameter while the other %ss stay equal: \"vs. others\" names the %s freed.",
+      unit, unit, unit
+    ),
+    sprintf(
+      "The first %s (%s) is the reference and is never freed on its own, so when it alone differs, every other %s shows similar strain on that parameter.",
+      unit, x$groups[[1L]], unit
+    )
   )
 }
 
@@ -525,32 +554,60 @@ print.nomo_invariance <- function(x, ...) {
   nomo_present_facts(sprintf("Requested: %s", paste(x$requested_levels, collapse = " -> ")))
   nomo_present_facts(sprintf("Completed: %s", nomo_invariance_level_path(x$completed_levels)))
 
-  nomo_present_section("Fit by level")
-  nomo_present_table(
-    x$fit_evidence,
-    c("Level" = "level", "CFI" = "cfi", "RMSEA" = "rmsea", "SRMR" = "srmr",
-      "CFI change" = "delta_cfi", "RMSEA change" = "delta_rmsea",
-      "LRT p" = "lrt_p"),
-    formats = nomo_invariance_fit_formats(),
-    more = "nomo_table(x, \"fit\")"
-  )
-  tested <- any(is.finite(x$fit_evidence$lrt_p))
-  nomo_invariance_present_versions(x, chisq = FALSE, tests = tested)
+  # A configural model that did not converge leaves no fit to show; the
+  # Flagged section says so (#145).
+  fit <- x$fit_evidence
+  has_fit <- nomo_invariance_has_fit(fit)
+  tested <- any(is.finite(fit$lrt_p))
+  if (has_fit) {
+    nomo_present_section("Fit by level")
+    nomo_present_table(
+      fit,
+      c("Level" = "level", "CFI" = "cfi", "RMSEA" = "rmsea", "SRMR" = "srmr",
+        "CFI change" = "delta_cfi", "RMSEA change" = "delta_rmsea",
+        "LRT p" = "lrt_p"),
+      formats = nomo_invariance_fit_formats(),
+      more = "nomo_table(x, \"fit\")"
+    )
+    nomo_invariance_present_versions(x, chisq = FALSE, tests = tested)
+  }
   nomo_invariance_present_flagged(x$decision_log)
 
-  nomo_invariance_key_note(c("CFI", "RMSEA", "SRMR", if (tested) "LRT", x$estimator_shown))
+  nomo_invariance_key_note(c(
+    nomo_invariance_fit_abbr(fit, c("cfi", "rmsea", "srmr", "delta_cfi", "delta_rmsea")),
+    if (tested) "LRT", x$estimator_shown
+  ))
   cat("\n")
-  nomo_present_text(
-    "Fit changes and score diagnostics are evidence, not pass/fail rules, and ",
-    "nomologR never frees a parameter because of them."
-  )
+  nomo_present_text(nomo_invariance_caveat(has_fit))
   n_local <- nrow(x$local_strain)
+  tests <- any(is.finite(fit$chisq))
   nomo_present_pointer(
-    c("summary(x)", if (n_local) "nomo_table(x, \"local_strain\")"),
-    c("each level's chi-square test",
+    c(if (tests) "summary(x)" else "nomo_table(x, \"decision_log\")",
+      if (n_local) "nomo_table(x, \"local_strain\")"),
+    c(if (tests) "each level's chi-square test" else "every recorded decision",
       if (n_local) sprintf("all %s", nomo_present_count(n_local, "score diagnostic")))
   )
   invisible(object)
+}
+
+
+# The closing caveat (guide point 7). With no level's fit to show, it says
+# that the output decides nothing about invariance, rather than how to read
+# fit changes that were not computed (#145).
+nomo_invariance_caveat <- function(has_fit, summary = FALSE) {
+  if (!has_fit) {
+    "No level has fit to report, so this output says nothing for or against invariance."
+  } else if (summary) {
+    paste(
+      "No single CFI change, RMSEA change, SRMR change, chi-square difference,",
+      "or score diagnostic is treated as a universal invariance rule."
+    )
+  } else {
+    paste(
+      "Fit changes and score diagnostics are evidence, not pass/fail rules, and",
+      "nomologR never frees a parameter because of them."
+    )
+  }
 }
 
 
@@ -592,10 +649,7 @@ summary.nomo_invariance <- function(object, ...) {
     n_local_strain = nrow(local_display),
     latent_means = object[["latent_means"]],
     decision_log = object$decision_log,
-    note = paste(
-      "No single CFI change, RMSEA change, SRMR change, chi-square difference,",
-      "or score diagnostic is treated as a universal invariance rule."
-    )
+    note = nomo_invariance_caveat(nomo_invariance_has_fit(object$fit_evidence), summary = TRUE)
   )
   class(out) <- c("summary_nomo_invariance", "list")
   out
@@ -622,19 +676,24 @@ print.summary_nomo_invariance <- function(x, ...) {
   }
 
   fit <- x$fit_evidence
-  nomo_present_section("Fit by level")
-  nomo_present_table(
-    fit,
-    c("Level" = "level", "Chi-square" = "chisq", "df" = "df", "p" = "pvalue",
-      "CFI" = "cfi", "RMSEA" = "rmsea", "SRMR" = "srmr"),
-    formats = formats,
-    more = "nomo_table(x, \"fit\")"
-  )
-  nomo_invariance_present_constraints(fit)
+  # A configural model that did not converge leaves no fit to show; the
+  # Flagged section says so (#145).
+  has_fit <- nomo_invariance_has_fit(fit)
   # A single level, or a second that did not converge, has no change to show
   # (#145).
   changes <- nomo_invariance_has_changes(fit)
-  nomo_invariance_present_versions(x, tests = changes)
+  if (has_fit) {
+    nomo_present_section("Fit by level")
+    nomo_present_table(
+      fit,
+      c("Level" = "level", "Chi-square" = "chisq", "df" = "df", "p" = "pvalue",
+        "CFI" = "cfi", "RMSEA" = "rmsea", "SRMR" = "srmr"),
+      formats = formats,
+      more = "nomo_table(x, \"fit\")"
+    )
+    nomo_invariance_present_constraints(fit)
+    nomo_invariance_present_versions(x, tests = changes)
+  }
   if (changes) {
     nomo_present_section("Changes from the preceding level")
     nomo_present_table(
@@ -696,9 +755,17 @@ print.summary_nomo_invariance <- function(x, ...) {
   }
 
   nomo_invariance_present_flagged(x$decision_log, recommendation = TRUE)
-  nomo_present_key(nomo_invariance_key_entries(c(
-    "CFI", "RMSEA", "SRMR", "df", if (has_means) "CI", x$estimator_shown
-  )))
+  # Only the columns shown are defined (#145): the score diagnostics have df
+  # too.
+  shown <- nomo_invariance_fit_abbr(fit, c(
+    "cfi", "rmsea", "srmr", "df",
+    if (changes) c("delta_cfi", "delta_rmsea", "delta_srmr", "lrt_df")
+  ))
+  if (nrow(x$top_local_strain)) shown <- union(shown, "df")
+  nomo_present_key(
+    nomo_invariance_key_entries(c(shown, if (has_means) "CI", x$estimator_shown)),
+    title = if (has_fit) "What these columns mean" else "Abbreviations"
+  )
 
   cat("\n")
   nomo_present_text(x$note)

@@ -2209,17 +2209,17 @@ test_that("completed_levels leaves out a level that did not converge (#145)", {
 
 # Pre-RC fixes and the shared output style (#144, #145) -----------------------------
 
-make_three_group_fixture <- function(n = 300L, seed = 44L) {
+make_three_group_fixture <- function(n = 300L, seed = 44L, shifted = "two") {
   set.seed(seed)
-  one_group <- function(shift) {
+  one_group <- function(group) {
     f <- rnorm(n)
     data.frame(
       y1 = .80 * f + rnorm(n, sd = .6), y2 = .78 * f + rnorm(n, sd = .6),
-      y3 = .74 * f + rnorm(n, sd = .6) + shift, y4 = .76 * f + rnorm(n, sd = .6)
+      y3 = .74 * f + rnorm(n, sd = .6) + if (group == shifted) .6 else 0,
+      y4 = .76 * f + rnorm(n, sd = .6), g = group
     )
   }
-  rbind(transform(one_group(0), g = "one"), transform(one_group(.6), g = "two"),
-        transform(one_group(0), g = "three"))
+  rbind(one_group("one"), one_group("two"), one_group("three"))
 }
 
 
@@ -2239,13 +2239,33 @@ test_that("with three groups, a score test is labeled by the group it frees (#14
 
   local_reproducible_output(width = 80)
   summarized <- capture.output(print(summary(out)))
-  expect_match(gsub("[[:space:]]+", " ", paste(summarized, collapse = " ")),
-               "Each diagnostic frees one group's parameter while the other groups stay equal",
+  flat <- gsub("[[:space:]]+", " ", paste(summarized, collapse = " "))
+  expect_match(flat, "Each diagnostic frees one group's parameter while the other groups stay equal",
+               fixed = TRUE)
+  expect_match(flat, "The first group (one) is the reference and is never freed on its own",
                fixed = TRUE)
   expect_false(any(nchar(summarized) > 80L))
   p <- plot(out, "local_strain")
   expect_match(p$labels$caption, "frees one group's parameter", fixed = TRUE)
+  expect_match(gsub("\n", " ", p$labels$caption, fixed = TRUE), "The first group (one) is the",
+               fixed = TRUE)
   expect_true(all(nchar(strsplit(p$labels$caption, "\n", fixed = TRUE)[[1L]]) <= 85L))
+
+  # When the first group alone differs, no label names it: both others show
+  # the strain, as the note says.
+  reference <- nomo_invariance("F =~ y1 + y2 + y3 + y4",
+                               make_three_group_fixture(shifted = "one"), "g",
+                               levels = c("configural", "metric", "scalar"))
+  strain <- nomo_table(reference, "local_strain")
+  y3 <- strain[strain$level == "scalar" & grepl("^Intercept: y3", strain$constraint_display), ]
+  expect_setequal(y3$constraint_display,
+                  c("Intercept: y3 (two vs. others)", "Intercept: y3 (three vs. others)"))
+  expect_true(all(y3$p_value < .001))
+
+  # Across occasions the first occasion is the reference.
+  occasions <- list(groups = c("t1", "t2", "t3"), design = "occasions")
+  expect_match(nomologR:::nomo_invariance_others_note(occasions),
+               "The first occasion (t1) is the reference", fixed = TRUE)
 
   # Two groups are still compared as a pair.
   two <- nomo_invariance("Agency =~ ag1 + ag2 + ag3 + ag4", nomo_demo_network, "group",
@@ -2486,16 +2506,18 @@ test_that("lavaan's warnings and a failed level become flags (#145)", {
                            metric = character()),
     comparison_warnings = list(metric = "lavaan WARNING: some restricted models fit better")
   )
+  # lavaan's message ends with a period, so summary()'s recommendation after
+  # it is a sentence of its own.
   levels <- log[log$metric == "invariance_level", ]
   expect_identical(levels$observation[2:3], c(
     "The metric model did not converge.",
-    "The scalar model could not be fitted: model is not identified"
+    "The scalar model could not be fitted: model is not identified."
   ))
   warned <- log[log$metric %in% c("engine_warning", "comparison_warning"), ]
   expect_identical(warned$severity, c("review", "review"))
   expect_identical(warned$observation, c(
-    "lavaan warned when fitting the configural model: some observed variances are large",
-    "lavaan warned when comparing the metric model with the one before it: some restricted models fit better"
+    "lavaan warned when fitting the configural model: some observed variances are large.",
+    "lavaan warned when comparing the metric model with the one before it: some restricted models fit better."
   ))
   no_error <- fit_evidence
   no_error$error[[3L]] <- ""
@@ -2521,6 +2543,90 @@ test_that("lavaan's warnings and a failed level become flags (#145)", {
   expect_identical(flagged, c("", "Flagged", "  - metric (Concern): The metric model did not converge.",
                               "  - Score diagnostics (Review): 3 diagnostics were retained."))
   expect_null(nomologR:::nomo_invariance_present_flagged(tibble::tibble()))
+})
+
+
+test_that("lavaan's messages read as plain sentences (#145)", {
+  text <- function(x, ...) nomologR:::nomo_invariance_warning_text(x, ...)
+  # Its jargon is spelled out and its capitals calmed (guide points 18, 23).
+  expect_identical(
+    text("lavaan->lav_object_post_check():\n   some estimated ov variances are negative"),
+    "some estimated observed-variable variances are negative."
+  )
+  expect_identical(text("lavaan WARNING: some estimated lv variances are negative"),
+                   "some estimated latent-variable variances are negative.")
+  expect_identical(text("the optimizer warns that a solution has NOT been found!"),
+                   "the optimizer warns that a solution has not been found.")
+  expect_identical(
+    text("Could not compute standard errors! The information matrix could not be inverted."),
+    "Could not compute standard errors. The information matrix could not be inverted."
+  )
+  # R names and code stay as written.
+  expect_identical(text("use lavInspect(fit, \"cov.lv\") and ov.names; type != free"),
+                   "use lavInspect(fit, \"cov.lv\") and ov.names; type != free.")
+  expect_identical(text("lavaan ERROR: a failure;"), "a failure.")
+  expect_identical(text("is the model identified?"), "is the model identified?")
+  expect_identical(text(c("one.", "two"), period = FALSE), c("one", "two"))
+  expect_identical(text("lavaan WARNING:"), "")
+})
+
+
+test_that("a configural model that is not fitted leaves no fit to report (#145)", {
+  skip_on_cran()
+  skip_if_not(
+    exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
+  )
+  # One iteration: the configural model does not converge, and lavaan says so.
+  real_cfa <- lavaan::cfa
+  testthat::local_mocked_bindings(
+    cfa = function(...) real_cfa(..., control = list(iter.max = 1L)),
+    .package = "lavaan"
+  )
+  out <- nomo_invariance("Agency =~ ag1 + ag2 + ag3 + ag4", nomo_demo_network, "group")
+  expect_identical(out$fit_evidence$status, "not_converged")
+  expect_false(nomologR:::nomo_invariance_has_fit(out$fit_evidence))
+
+  for (width in c(80, 40)) {
+    local_reproducible_output(width = width)
+    printed <- capture.output(print(out))
+    summarized <- capture.output(print(summary(out)))
+    both <- c(printed, summarized)
+    expect_false(any(nchar(both) > width))
+    # No stub-only table, no key to columns that are not shown, and no
+    # pointer to tests that were not computed.
+    expect_false(any(grepl("Fit by level|CFI|RMSEA|SRMR|chi-square|df --|NOT|!", both)))
+    expect_match(gsub("[[:space:]]+", " ", paste(printed, collapse = " ")),
+                 "The configural model did not converge.", fixed = TRUE)
+    flat <- gsub("[[:space:]]+", " ", paste(summarized, collapse = " "))
+    expect_match(flat, "has not been found. Inspect the warning", fixed = TRUE)
+    expect_match(flat, "Abbreviations ML -- Maximum likelihood.", fixed = TRUE)
+    expect_false(grepl("What these columns mean", flat, fixed = TRUE))
+    for (shown in list(printed, summarized)) {
+      flat <- gsub("[[:space:]]+", " ", paste(shown, collapse = " "))
+      expect_match(flat, "No level has fit to report", fixed = TRUE)
+      expect_match(flat, "See nomo_table(x, \"decision_log\") for every recorded decision.",
+                   fixed = TRUE)
+    }
+  }
+  local_reproducible_output(width = 80)
+  printed <- capture.output(print(out))
+  expect_identical(printed[grep("^ML = ", printed)], "ML = maximum likelihood.")
+
+  # A configural model that cannot be fitted at all reads the same way.
+  testthat::local_mocked_bindings(
+    cfa = function(...) {
+      if (isFALSE(list(...)$do.fit)) return(real_cfa(...))
+      stop("lavaan ERROR: synthetic failure")
+    },
+    .package = "lavaan"
+  )
+  failed <- nomo_invariance("Agency =~ ag1 + ag2 + ag3 + ag4", nomo_demo_network, "group")
+  expect_identical(failed$fit_evidence$status, "fit_error")
+  printed <- capture.output(print(failed))
+  expect_match(printed, "  - configural (Concern): The configural model could not be fitted:",
+               fixed = TRUE, all = FALSE)
+  expect_false(any(grepl("Fit by level|CFI|ERROR", printed)))
+  expect_match(summary(failed)$note, "No level has fit to report", fixed = TRUE)
 })
 
 

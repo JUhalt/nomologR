@@ -866,7 +866,9 @@ nomo_method_variance_log <- function(marker, comparisons, retained, reliability,
 # lavaan's warnings as review rows, and a model whose solution fails lavaan's
 # admissibility check (a negative variance, a covariance matrix that is not
 # positive definite) as a concern (#145): both had been suppressed. The
-# check's own warning is reported in the concern.
+# check's own warning is reported in the concern. Each message is a sentence
+# in plain words, as nomo_invariance_warning_text() gives it, so the
+# recommendation that follows it in summary() is a sentence of its own.
 nomo_method_variance_engine_log <- function(engine_warnings, admissible) {
   log <- nomo_log_new()
   for (label in names(engine_warnings)) {
@@ -881,7 +883,8 @@ nomo_method_variance_engine_log <- function(engine_warnings, admissible) {
         observation = sprintf(
           "The %s solution is improper: %s.", label,
           if (any(checked)) {
-            paste(nomo_invariance_warning_text(found[checked]), collapse = "; ")
+            paste(nomo_invariance_warning_text(found[checked], period = FALSE),
+                  collapse = "; ")
           } else {
             "lavaan's admissibility check failed"
           }

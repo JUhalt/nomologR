@@ -450,11 +450,25 @@ test_that("lavaan warnings reach the log, and an improper model is a concern (#1
     c(Baseline = FALSE, `Method-U` = FALSE)
   )
   expect_identical(log$severity, c("concern", "review", "concern", "review"))
-  expect_identical(log$observation[[1L]],
-                   "The Baseline solution is improper: some estimated ov variances are negative.")
-  expect_match(log$observation[[2L]], "fitting the Baseline model: another warning", fixed = TRUE)
+  # In plain words, each a sentence of its own (#145).
+  expect_identical(
+    log$observation[[1L]],
+    "The Baseline solution is improper: some estimated observed-variable variances are negative."
+  )
+  expect_identical(log$observation[[2L]],
+                   "lavaan warned when fitting the Baseline model: another warning.")
   expect_match(log$observation[[3L]], "admissibility check failed", fixed = TRUE)
   expect_match(log$observation[[4L]], "fitting the comparison Baseline vs. Method-C", fixed = TRUE)
+  # Two failed checks make one sentence.
+  both <- nomologR:::nomo_method_variance_engine_log(
+    list(CFA = c("lavaan->lav_object_post_check():\n   some estimated ov variances are negative",
+                 "lavaan->lav_object_post_check():\n   some estimated lv variances are negative")),
+    c(CFA = FALSE)
+  )
+  expect_identical(both$observation, paste(
+    "The CFA solution is improper: some estimated observed-variable variances are negative;",
+    "some estimated latent-variable variances are negative."
+  ))
 })
 
 
