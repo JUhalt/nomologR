@@ -118,6 +118,36 @@ nomo_reliability_flag_text <- function(metric, estimate, reference) {
 }
 
 
+# The print's one sentence for a flagged log row that is not a coefficient's.
+# The bootstrap's availability and the CFA's strain have their own print lines.
+nomo_reliability_brief <- c(
+  parameterization = paste(
+    "The latent-response omega and alpha depend on lavaan's theta",
+    "parameterization; a delta fit of the same model gives different values."
+  ),
+  bootstrap_reproducibility = "No seed was set, so the bootstrap intervals cannot be reproduced exactly."
+)
+
+
+# The flagged decision-log rows that are not a coefficient's, such as a
+# parameterization or intervals that could not be computed, so that print()
+# and summary() show every review and concern the log holds (#145).
+nomo_reliability_other_flags <- function(log, brief = FALSE) {
+  rows <- log[log$severity %in% c("review", "concern") &
+                !log$metric %in% c("omega", "alpha"), , drop = FALSE]
+  if (isTRUE(brief)) rows <- rows[rows$metric %in% names(nomo_reliability_brief), , drop = FALSE]
+  list(
+    unit = ifelse(rows$object %in% c("measurement_model", "uncertainty"), "", rows$object),
+    status = rows$severity,
+    text = if (isTRUE(brief)) {
+      unname(nomo_reliability_brief[rows$metric])
+    } else {
+      paste(rows$observation, rows$recommendation)
+    }
+  )
+}
+
+
 #' @export
 print.nomo_reliability <- function(x, ...) {
   tab <- nomo_reliability_summary_table(x)
@@ -181,11 +211,17 @@ print.nomo_reliability <- function(x, ...) {
     )
   }
 
-  # Omega's flags, as counted above; alpha's are in summary().
+  # Omega's flags, as counted above, and the other flags that qualify the
+  # coefficients, such as a theta parameterization; alpha's are in summary().
   flagged <- tab[tab$signal %in% c("review", "concern"), , drop = FALSE]
+  other <- nomo_reliability_other_flags(x$decision_log, brief = TRUE)
   nomo_present_flagged(
-    unit = nomo_reliability_unit(flagged$construct, flagged$block), status = flagged$signal,
-    text = nomo_reliability_flag_text(rep("omega", nrow(flagged)), flagged$omega, reference)
+    unit = c(nomo_reliability_unit(flagged$construct, flagged$block), other$unit),
+    status = c(flagged$signal, other$status),
+    text = c(
+      nomo_reliability_flag_text(rep("omega", nrow(flagged)), flagged$omega, reference),
+      other$text
+    )
   )
 
   cat("\n")
@@ -201,7 +237,9 @@ print.nomo_reliability <- function(x, ...) {
 #' @param ... Unused.
 #' @return An object of class `summary_nomo_reliability`. Printed, it shows each
 #'   construct's omega and alpha with their intervals, score scale, and flag,
-#'   why any alpha was not computed, and the reason for each flag.
+#'   why any alpha was not computed, and the reason for each flag in the
+#'   decision log, including those that qualify the coefficients, such as a
+#'   theta parameterization or intervals that could not be computed.
 #' @export
 summary.nomo_reliability <- function(object, ...) {
   out <- list(
@@ -273,23 +311,32 @@ print.summary_nomo_reliability <- function(x, ...) {
     ))
   }
 
-  # Each flagged coefficient, with what to look at; omega's and alpha's.
+  # Each flagged coefficient, with what to look at; omega's and alpha's. Then
+  # every other flagged log row, such as a theta parameterization, intervals
+  # that could not be computed, or the CFA's strain, as the validity summary
+  # shows them (#145).
+  log <- x$decision_log
+  unit <- character()
+  status <- character()
+  text <- character()
   evidence <- x$evidence
   if (is.data.frame(evidence) && nrow(evidence)) {
-    log <- x$decision_log
     advice <- log$recommendation[match(
       paste(evidence$construct, evidence$metric),
       paste(log$object, log$metric)
     )]
-    nomo_present_flagged(
-      unit = nomo_reliability_unit(evidence$construct, evidence$block),
-      status = evidence$attention,
-      text = paste(
-        nomo_reliability_flag_text(evidence$metric, evidence$estimate, reference),
-        ifelse(is.na(advice), "", advice)
-      )
+    unit <- nomo_reliability_unit(evidence$construct, evidence$block)
+    status <- evidence$attention
+    text <- paste(
+      nomo_reliability_flag_text(evidence$metric, evidence$estimate, reference),
+      ifelse(is.na(advice), "", advice)
     )
   }
+  other <- nomo_reliability_other_flags(log)
+  nomo_present_flagged(
+    unit = c(unit, other$unit), status = c(status, other$status),
+    text = c(text, other$text)
+  )
 
   if (any(is.finite(x$table$omega_ci_lower) | is.finite(x$table$alpha_ci_lower))) {
     nomo_present_key(stats::setNames(
@@ -307,13 +354,7 @@ print.summary_nomo_reliability <- function(x, ...) {
     )
   }
 
-  if (isTRUE(x$model_strain) || isTRUE(x$improper_solution)) {
-    nomo_present_text(
-      "Measurement-model context requires review: reliability is conditional ",
-      "on the fitted CFA."
-    )
-  }
-
+  # The CFA's strain is listed under Flagged, from its decision-log row.
   nomo_present_text(
     "Omega is primary for the congeneric CFA workflow; alpha is secondary and ",
     "assumption-dependent. Reliability contributes score-precision evidence, ",

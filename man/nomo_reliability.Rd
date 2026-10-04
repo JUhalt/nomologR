@@ -85,8 +85,9 @@ interface (see \code{?nomologR}).
 
 \code{print()} shows the range of omega, the flags it raised against the review
 reference, and how uncertainty was handled; \code{summary()} adds each
-construct's omega and alpha with their intervals and score scales, and
-the reason any alpha was not computed.
+construct's omega and alpha with their intervals and score scales, the
+reason any alpha was not computed, and every flag in the decision log
+with its reason.
 }
 \description{
 \code{nomo_reliability()} estimates score reliability from a fitted first-order

@@ -428,12 +428,24 @@ test_that("reliability print methods cover point, bootstrap, strain, and empty b
   empty$alpha_status$requested[] <- TRUE
   empty$alpha_status$available[] <- FALSE
   empty$alpha_status$reason[] <- "Synthetic unavailable alpha."
+  # The CFA's strain is shown under Flagged, from its decision-log row.
+  strain <- empty$decision_log[1L, ]
+  strain$object <- "measurement_model"
+  strain$metric <- "model_dependence"
+  strain$severity <- "review"
+  strain$observation <- "At least one CFA fit reference is flagged for review."
+  strain$recommendation <- "Investigate the CFA."
+  empty$decision_log <- rbind(empty$decision_log, strain)
 
   txt3 <- paste(capture.output(print(empty)), collapse = "\n")
   expect_match(txt3, "No reliability coefficients", fixed = TRUE)
   expect_match(txt3, "Alpha not computed", fixed = TRUE)
   expect_match(txt3, "Sampling uncertainty was not bootstrapped", fixed = TRUE)
-  expect_match(txt3, "requires review", fixed = TRUE)
+  expect_match(
+    gsub("\\s+", " ", txt3),
+    "Flagged - Review: At least one CFA fit reference is flagged for review. Investigate the CFA.",
+    fixed = TRUE
+  )
 })
 
 
@@ -1152,6 +1164,34 @@ test_that("bootstrapping a covariance-matrix fit says that raw data are needed (
   printed <- capture.output(print(rel))
   expect_false(any(grepl("Fewest usable draws", printed, fixed = TRUE)))
   expect_match(printed, "Bootstrap note: Bootstrap intervals need the raw data", all = FALSE)
+  # The summary lists the unavailable intervals under Flagged, from the log.
+  summarized <- gsub("\\s+", " ", paste(capture.output(print(summary(rel))), collapse = " "))
+  expect_match(summarized, "- Review: Bootstrap intervals were requested but are not available: Bootstrap intervals need the raw data",
+               fixed = TRUE)
+})
+
+
+test_that("every flag in the reliability log reaches print or summary (#145)", {
+  skip_on_cran()
+  rel <- nomo_reliability(reliability_boot_fit(), ci = "bootstrap", ci_boot = 20)
+  # No seed: the draws cannot be reproduced, which the print says in a sentence
+  # and the summary in full.
+  expect_identical(
+    rel$decision_log$severity[rel$decision_log$metric == "bootstrap_reproducibility"], "review"
+  )
+  local_reproducible_output(width = 80)
+  printed <- gsub("\\s+", " ", paste(capture.output(print(rel)), collapse = " "))
+  expect_match(printed, "- Review: No seed was set, so the bootstrap intervals cannot be reproduced exactly.",
+               fixed = TRUE)
+  summarized <- gsub("\\s+", " ", paste(capture.output(print(summary(rel))), collapse = " "))
+  expect_match(summarized, "- Review: 20 bootstrap resamples were drawn with no seed, serially. No seed was set",
+               fixed = TRUE)
+  # A flagged row that has no sentence of its own for print stays in summary().
+  other <- nomologR:::nomo_reliability_other_flags(rel$decision_log, brief = TRUE)
+  expect_identical(other$status, "review")
+  rel$decision_log$metric[rel$decision_log$metric == "bootstrap_reproducibility"] <- "other"
+  expect_length(nomologR:::nomo_reliability_other_flags(rel$decision_log, brief = TRUE)$text, 0L)
+  expect_length(nomologR:::nomo_reliability_other_flags(rel$decision_log)$text, 1L)
 })
 
 
@@ -1165,6 +1205,16 @@ test_that("a theta-parameterized fit says that latent-response omega depends on 
   expect_identical(entry$severity, "review")
   expect_identical(entry$object, "A, B")
   expect_match(entry$recommendation, "`parameterization = \"delta\"`", fixed = TRUE)
+  # print() and summary() both show it, though no coefficient is flagged.
+  local_reproducible_output(width = 80)
+  printed <- gsub("\\s+", " ", paste(capture.output(print(latent)), collapse = " "))
+  expect_match(printed, "Omega flags: none", fixed = TRUE)
+  expect_match(printed, "- A, B (Review): The latent-response omega and alpha depend on lavaan's theta parameterization",
+               fixed = TRUE)
+  summarized <- gsub("\\s+", " ", paste(capture.output(print(summary(latent))), collapse = " "))
+  expect_match(summarized, "- A, B (Review): The model was fitted with lavaan's theta parameterization.",
+               fixed = TRUE)
+  expect_match(summarized, "Refit with `parameterization = \"delta\"`", fixed = TRUE)
   # The observed-score omega is the same under either parameterization.
   expect_false("parameterization" %in% nomo_reliability(theta)$decision_log$metric)
   delta <- lavaan::cfa(model, data = nomo_demo_ordinal, ordered = TRUE)
