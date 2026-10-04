@@ -202,12 +202,18 @@ test_that("the results print, summarize, report methods, and form an APA table",
   local_reproducible_output(width = 80)
   printed <- capture.output(print(rt))
   expect_match(printed, "Interval: two weeks", fixed = TRUE, all = FALSE)
-  expect_match(printed, "ICC(A,1) [95% CI]", fixed = TRUE, all = FALSE)
+  expect_match(printed, "ICC\\(A,1\\) +95% CI", all = FALSE)
   expect_match(printed, "composite: ", fixed = TRUE, all = FALSE)
-  # The shift is flagged in the print too, and the table keeps two decimals (#89).
+  # The shift is flagged in the print too. The ICC is a reliability, without a
+  # leading zero, and score-unit values keep two decimals (#89, #144).
   expect_match(printed, "Flagged", fixed = TRUE, all = FALSE)
-  expect_match(printed, "^  composite +[0-9]+ +0\\.[0-9]{2} \\[.*\\] +[a-z ]+ +[0-9]+\\.[0-9]{2} +[0-9]+\\.[0-9]{2}$",
-               all = FALSE)
+  expect_match(
+    printed,
+    "^  composite +[0-9]+ +\\.[0-9]{2} +\\[\\.[0-9]{2}, \\.[0-9]{2}\\] +[a-z ]+ +[0-9]+\\.[0-9]{2} +[0-9]+\\.[0-9]{2} +[0-9]+\\.[0-9]{2}$",
+    all = FALSE
+  )
+  expect_identical(printed[[2L]], "McGraw and Wong (1996); Koo and Li (2016).")
+  expect_match(printed, "^See summary\\(x\\) for the consistency form", all = FALSE)
   expect_false(any(nchar(printed) > 80L))
 
   summarized <- capture.output(print(summary(rt)))
@@ -229,4 +235,66 @@ test_that("the results print, summarize, report methods, and form an APA table",
                fixed = TRUE)
   expect_false(grepl("Interval between",
                      paste(nomo_apa_table(steady)$notes$general, collapse = " "), fixed = TRUE))
+})
+
+
+# Pre-RC findings (#145) and the shared output style (#144) ---------------------
+
+test_that("an infinite score names its column, and dropped cases are recorded (#145)", {
+  dat <- retest_data()
+  dat$agency_t2[[5L]] <- Inf
+  expect_error(nomo_retest(dat, c("agency_t1", "agency_t2")),
+               "`scores` columns must hold finite numbers or NA. Infinite values in: agency_t2.",
+               fixed = TRUE)
+
+  dat <- retest_data()
+  dat$agency_t2[1:2] <- NA
+  rt <- nomo_retest(dat, c("agency_t1", "agency_t2"))
+  expect_identical(rt$n_cases, 150L)
+  entry <- rt$decision_log[rt$decision_log$metric == "incomplete_cases", ]
+  expect_identical(entry$severity, "info")
+  expect_identical(entry$value, 2)
+  expect_match(entry$observation, "2 of 150 cases were left out", fixed = TRUE)
+  local_reproducible_output(width = 80)
+  printed <- capture.output(print(rt))
+  expect_match(printed, "Cases without a score on every occasion are left out: 2 of 150 for",
+               fixed = TRUE, all = FALSE)
+  # Nothing is recorded when every case is complete.
+  expect_false("incomplete_cases" %in% nomo_retest(retest_data(), c("agency_t1", "agency_t2"))$decision_log$metric)
+  # An object saved before the count was recorded still prints.
+  rt$n_cases <- NULL
+  expect_false(any(grepl("left out", capture.output(print(rt)), fixed = TRUE)))
+})
+
+
+test_that("perfect agreement and a value near zero print cleanly (#145)", {
+  set.seed(1)
+  x <- stats::rnorm(50)
+  perfect <- nomo_retest(data.frame(a = x, b = x), c("a", "b"))
+  local_reproducible_output(width = 80)
+  printed <- capture.output(print(perfect))
+  expect_true("  - composite: 0 up, 0 down, and 50 within measurement error, of 50 people." %in%
+                printed)
+  expect_false(any(grepl("NA", printed, fixed = TRUE)))
+
+  # A mean change that rounds to zero carries no sign and no negative zero.
+  flat <- data.frame(a = c(x, 0), b = c(x + c(stats::rnorm(50, sd = .3)), 0))
+  flat$b <- flat$b - mean(flat$b - flat$a) - 1e-5
+  summarized <- capture.output(print(summary(nomo_retest(flat, c("a", "b")))))
+  expect_false(any(grepl("-0\\.00|-\\.00|\\+0\\.00", summarized)))
+})
+
+
+test_that("the pooled SD is labeled as such, beside the SEM (#145)", {
+  rt <- nomo_retest(retest_data(shift = .5), c("agency_t1", "agency_t2"))
+  local_reproducible_output(width = 80)
+  printed <- capture.output(print(rt))
+  header <- printed[grepl("^  Composite", printed)][[1L]]
+  expect_match(header, "Pooled SD +SEM +SDC$")
+  expect_match(printed, "Pooled SD -- Standard deviation of the scores pooled over occasions",
+               fixed = TRUE, all = FALSE)
+  summarized <- capture.output(print(summary(rt)))
+  change <- summarized[grepl("Mean change", summarized)]
+  expect_match(change, "ICC\\(C,1\\) +95% CI +Mean change +95% CI$")
+  expect_false(any(grepl("  SD$", summarized)))
 })

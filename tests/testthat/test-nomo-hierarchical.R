@@ -579,7 +579,8 @@ test_that("mixed-sign group loadings and improper solutions are noted", {
   mixed <- notes[notes$topic == "group_loadings", ]
   expect_equal(nrow(mixed), 1L)
   expect_equal(mixed$severity, "review")
-  expect_match(mixed$note, "Group factor\\(s\\) A have loadings of mixed sign")
+  expect_match(mixed$note, "Group factor A has loadings of mixed sign", fixed = TRUE)
+  expect_match(mixed$brief, "so what it represents beyond the general factor", fixed = TRUE)
 
   improper <- notes[notes$topic == "improper_solution", ]
   expect_equal(improper$severity, "concern")
@@ -598,8 +599,10 @@ test_that("identification and model-choice notes are recorded", {
   expect_match(h$notes$note[h$notes$topic == "identification"], "just\\s+identified")
   expect_match(h$notes$note[h$notes$topic == "model_choice"], "Reise, 2012")
   expect_match(h$notes$note[h$notes$topic == "structure"], "Schmid-Leiman")
-  expect_true(all(c("identification", "model_choice") %in%
-                    h$decision_log$metric[h$decision_log$severity == "review"]))
+  expect_true("identification" %in% h$decision_log$metric[h$decision_log$severity == "review"])
+  # The model-choice caution holds for every model, whatever the data, so it is
+  # information, not a flag (#145).
+  expect_identical(h$decision_log$severity[h$decision_log$metric == "model_choice"], "info")
 })
 
 
@@ -653,8 +656,8 @@ test_that("print, summary, plot, and nomo_table present the evidence", {
 
   printed <- paste(capture.output(print(h)), collapse = "\n")
   expect_match(printed, "Bifactor model | General factor: G", fixed = TRUE)
-  expect_match(printed, "omega hierarchical")
-  expect_match(printed, "No index is treated as a pass/fail threshold")
+  expect_match(printed, "Omega hierarchical")
+  expect_match(printed, "no value is treated as a pass/fail threshold")
 
   s <- summary(h)
   expect_s3_class(s, "summary_nomo_hierarchical")
@@ -683,6 +686,9 @@ test_that("the variance decomposition shares sum to one", {
   shares <- plot(h)$data
   totals <- as.numeric(tapply(shares$share, shares$composite, sum))
   expect_equal(totals, rep(1, length(totals)), tolerance = 1e-10)
+  # A proper solution draws every composite and loading, with no caption.
+  expect_null(plot(h)$labels$caption)
+  expect_null(plot(h, type = "loadings")$labels$caption)
 })
 
 
@@ -889,7 +895,7 @@ test_that("undefined determinacy and replicability are NA with a note, not guess
 
   notes <- nomologR:::nomo_hierarchical_factor_score_notes(
     tibble::tibble(topic = character(), severity = character(), note = character()),
-    function(notes, topic, severity, note) {
+    function(notes, topic, severity, note, brief = note) {
       tibble::add_row(notes, topic = topic, severity = severity, note = note)
     },
     out
@@ -897,7 +903,204 @@ test_that("undefined determinacy and replicability are NA with a note, not guess
   expect_true(any(notes$severity == "concern"))
   expect_match(
     paste(notes$note, collapse = " "),
-    "NA rather than guessed",
+    "left missing (shown as --) rather than guessed",
     fixed = TRUE
   )
+})
+
+
+# Pre-RC findings (#145) and the shared output style (#144) ---------------------
+
+hier_negative_disturbance_fit <- function() {
+  # A first-order factor nearly collinear with the second-order factor: its
+  # disturbance variance is estimated below zero.
+  pop <- "
+    A =~ .7*x1 + .7*x2 + .7*x3
+    B =~ .7*x4 + .7*x5 + .7*x6
+    C =~ .7*x7 + .7*x8 + .7*x9
+    A ~~ .8*B
+    A ~~ .8*C
+    B ~~ .6*C
+  "
+  set.seed(1)
+  dat <- lavaan::simulateData(pop, sample.nobs = 600, standardized = TRUE)
+  suppressWarnings(lavaan::cfa(
+    "A =~ x1 + x2 + x3\nB =~ x4 + x5 + x6\nC =~ x7 + x8 + x9\nG =~ A + B + C",
+    data = dat
+  ))
+}
+
+
+test_that("a negative disturbance variance gives NA indices and a concern, not a crash (#145)", {
+  fit <- hier_negative_disturbance_fit()
+  expect_true(lavaan::lavInspect(fit, "converged"))
+  expect_lt(lavaan::lavInspect(fit, "est")$psi["A", "A"], 0)
+
+  expect_no_warning(h <- nomo_hierarchical(fit))
+  index <- function(name) h$indices$estimate[h$indices$index == name]
+  # The total score includes A's negative contribution; the general factor's
+  # share does not.
+  expect_true(is.na(index("omega_total")))
+  expect_true(is.na(index("ecv")))
+  expect_true(is.finite(index("omega_hierarchical")))
+  expect_true(is.finite(index("puc")))
+  expect_true(is.na(h$subscales$omega_subscale[h$subscales$subscale == "A"]))
+  expect_true(is.finite(h$subscales$omega_subscale[h$subscales$subscale == "B"]))
+  expect_true(all(is.na(h$loadings$group_loading[h$loadings$subscale == "A"])))
+  expect_true(is.na(h$factors$construct_replicability[h$factors$factor == "A"]))
+  expect_true(is.finite(h$factors$factor_determinacy[h$factors$factor == "G"]))
+
+  improper <- h$notes[h$notes$topic == "improper_solution", ]
+  expect_identical(improper$severity, "concern")
+  expect_match(improper$note, "Negative disturbance variance for A.", fixed = TRUE)
+  expect_match(h$indices$interpretation[h$indices$index == "omega_total"],
+               "Not computed: a variance estimate this index depends on is negative", fixed = TRUE)
+  expect_match(
+    h$decision_log$observation[h$decision_log$metric == "omega_hierarchical_subscale" &
+                                 h$decision_log$object == "A"],
+    "is not computed", fixed = TRUE
+  )
+
+  local_reproducible_output(width = 80)
+  printed <- capture.output(print(h))
+  expect_true("  Omega total                         --" %in% printed)
+  expect_match(printed, "^  - Concern: Negative disturbance variance for A", all = FALSE)
+  summarized <- capture.output(print(summary(h)))
+  # A page citation is never broken after "p." (#144).
+  expect_true(any(grepl("Gorsuch (1983, p. 260)", summarized, fixed = TRUE)))
+  expect_false(any(grepl("\\bp\\.$", summarized)))
+  expect_true(all(nchar(summarized) <= 80L))
+  expect_identical(nomologR:::nomo_hierarchical_bind_pages("pp. 6-47 and p. 3"),
+                   "pp.\u00a06-47 and p.\u00a03")
+  # The variance plot leaves out a composite it cannot divide, and the
+  # loadings plot a loading it cannot standardize; each caption says which.
+  p <- plot(h)
+  expect_setequal(as.character(unique(p$data$composite)), c("B", "C"))
+  expect_identical(
+    gsub("\\s+", " ", p$labels$caption),
+    "Not drawn: Total score and A, whose shares rest on a negative variance estimate (see x$notes)."
+  )
+  p <- plot(h, type = "loadings")
+  expect_false(anyNA(p$data$loading))
+  expect_identical(
+    gsub("\\s+", " ", p$labels$caption),
+    "Not drawn: group loadings of x1, x2, x3, which rest on a negative variance estimate (see x$notes)."
+  )
+  # Both sources, and nothing at all to draw.
+  both <- h
+  both$loadings$general_loading[1:2] <- NA_real_
+  expect_match(gsub("\\s+", " ", plot(both, type = "loadings")$labels$caption),
+               "Not drawn: general loadings of x1, x2 and group loadings of x1, x2, x3,",
+               fixed = TRUE)
+  both$loadings$general_loading <- NA_real_
+  both$loadings$group_loading <- NA_real_
+  expect_error(plot(both, type = "loadings"), "No finite standardized loadings", fixed = TRUE)
+  both$indices$estimate[both$indices$index == "omega_hierarchical"] <- NA_real_
+  both$subscales$omega_subscale <- NA_real_
+  expect_error(plot(both), "No composite's variance shares can be drawn", fixed = TRUE)
+
+  # In a bifactor model a negative factor variance is named as one.
+  notes <- nomologR:::nomo_hierarchical_notes(
+    list(ordered = character()),
+    list(type = "bifactor", general = "G", groups = list(A = c("x1", "x2"), B = c("x3", "x4")),
+         items = paste0("x", 1:4)),
+    list(theta = diag(4), psi = structure(diag(c(1, -.1, .2)), dimnames = list(c("G", "A", "B"), c("G", "A", "B"))),
+         sources = c("G", "A", "B")),
+    list(loadings = tibble::tibble(subscale = c("A", "A", "B", "B"),
+                                   group_loading = c(NA, NA, .4, -.3)),
+         factors = NULL),
+    TRUE
+  )
+  expect_match(notes$note[notes$topic == "improper_solution"], "Negative factor variance for A.",
+               fixed = TRUE)
+  expect_match(notes$brief[notes$topic == "group_loadings"],
+               "Group factor B has loadings of mixed sign", fixed = TRUE)
+})
+
+
+test_that("print gives one sentence per flag and summary the full notes (#145)", {
+  dat <- hier_sample(hier_bifactor_population()$sigma, 600, 1201)
+  h <- nomo_hierarchical(nomo_cfa(nomo_model(hier_groups, "bifactor"), data = dat))
+  local_reproducible_output(width = 80)
+  printed <- capture.output(print(h))
+  expect_identical(printed[[1L]], "<nomo_hierarchical> Hierarchical model evaluation")
+  expect_identical(printed[[2L]], "Rodriguez, Reise, and Haviland (2016).")
+  # The model-choice paragraph is a caution for every model, not a flag.
+  expect_false(any(grepl("Bonifay", printed, fixed = TRUE)))
+  expect_false(any(grepl("^Notes$", printed)))
+  expect_true("Item set" %in% printed)
+  expect_match(printed, "^  ECV +\\.[0-9]{2}$", all = FALSE)
+  expect_match(printed, "Min competing r -- The lowest correlation", fixed = TRUE, all = FALSE)
+  expect_match(printed, "do not choose between a bifactor and a higher-order", fixed = TRUE,
+               all = FALSE)
+  expect_true(all(nchar(printed) <= 80L))
+
+  summarized <- capture.output(print(summary(h)))
+  expect_true("Factor scores" %in% summarized)
+  expect_true("Notes" %in% summarized)
+  expect_match(summarized, "Bonifay, Lane, and Reise (2017)", fixed = TRUE, all = FALSE)
+  expect_match(summarized, "^  - Omega total = \\.[0-9]{2}: Common sources explain \\.[0-9]{2}",
+               all = FALSE)
+  # Each note's brief form is one sentence; its full form is longer.
+  expect_true(all(nchar(h$notes$brief) <= nchar(h$notes$note)))
+
+  # A digits argument still sets the precision.
+  expect_match(capture.output(print(h, digits = 3L)), "^  Omega total +\\.[0-9]{3}$", all = FALSE)
+
+  # A saved object from before the brief notes and factor scores still prints.
+  old <- h
+  old$notes$brief <- NULL
+  old$factors <- NULL
+  out <- capture.output(print(old))
+  expect_false(any(grepl("Min competing r", out, fixed = TRUE)))
+  expect_match(out, "^  - Review:", all = FALSE)
+})
+
+
+test_that("H is the squared determinacy for unidimensional data, as the notes say (#145)", {
+  dat <- hier_sample(hier_bifactor_population()$sigma, 600, 1201)
+  h <- nomo_hierarchical(nomo_cfa(nomo_model(hier_groups, "bifactor"), data = dat))
+  note <- h$notes$note[h$notes$topic == "factor_scores" & h$notes$severity == "info"]
+  expect_match(note, "H equals the squared determinacy (`determinacy_r2`)", fixed = TRUE)
+  expect_false(grepl("equivalent when the data are unidimensional", note, fixed = TRUE))
+})
+
+
+test_that("plurals agree with their counts, and the plot legend says group factors (#145)", {
+  structure <- list(
+    type = "bifactor", general = "G",
+    groups = list(A = c("x1", "x2"), B = c("x3", "x4")), items = paste0("x", 1:5)
+  )
+  computed <- list(loadings = tibble::tibble(
+    subscale = c("A", "A", "B", "B", NA), group_loading = c(.4, -.3, .4, -.3, 0)
+  ), factors = NULL)
+  notes <- nomologR:::nomo_hierarchical_notes(
+    list(ordered = character()), structure,
+    list(theta = structure(diag(5), dimnames = list(paste0("x", 1:5), paste0("x", 1:5))),
+         psi = structure(diag(3), dimnames = list(c("G", "A", "B"), c("G", "A", "B"))),
+         sources = c("G", "A", "B")),
+    computed, TRUE
+  )
+  expect_match(notes$note[notes$topic == "structure"], "Item x5 loads on the general factor only.",
+               fixed = TRUE)
+  expect_match(notes$note[notes$topic == "group_loadings"], "Group factors A, B have loadings",
+               fixed = TRUE)
+  expect_false(any(grepl("(s)", notes$note, fixed = TRUE)))
+
+  dat <- hier_sample(hier_bifactor_population()$sigma, 600, 1201)
+  h <- nomo_hierarchical(nomo_cfa(nomo_model(hier_groups, "bifactor"), data = dat))
+  p <- plot(h)
+  expect_true("Group factors" %in% levels(p$data$source))
+  expect_identical(p$scales$get_scales("x")$labels(c(0, .5, 1)), c("0", ".50", "1.00"))
+})
+
+
+test_that("guidance must be a list, and automatic changes are refused (#145)", {
+  dat <- hier_sample(hier_bifactor_population()$sigma, 600, 1201)
+  bf <- nomo_cfa(nomo_model(hier_groups, "bifactor"), data = dat)
+  expect_error(nomo_hierarchical(bf, guidance = "teaching"), "`guidance` must be a list")
+  guidance <- nomo_defaults()
+  guidance$auto_respecify <- TRUE
+  expect_error(nomo_hierarchical(bf, guidance = guidance), "guidance$auto_respecify",
+               fixed = TRUE)
 })

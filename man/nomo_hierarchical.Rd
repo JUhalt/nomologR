@@ -45,12 +45,17 @@ determinacy, its square, the minimum correlation between competing sets
 of factor scores, and construct replicability H (see \strong{Factor scores}).
 \item \code{loadings}: each item's standardized general and group loadings,
 communality, and share of common variance that is general.
-\item \code{notes} and \code{decision_log}.
+\item \code{notes}: each note's \code{topic}, \code{severity}, and full text (\code{note}), with
+a one-sentence version (\code{brief}); and \code{decision_log}.
 }
 
 Other fields record the call, the settings used, and the fitted model.
 They may change between releases and are not part of the stable interface
 (see \code{?nomologR}).
+
+\code{print()} shows the indices for the total score and the item set, the
+subscale and factor-score tables, and one sentence for each flagged note;
+\code{summary()} adds each index's interpretation and every note in full.
 }
 \description{
 \code{nomo_hierarchical()} answers the question behind many published scales that
@@ -130,10 +135,11 @@ variance in a factor explainable by its own indicators when optimally
 weighted. It uses only that factor's loadings and treats the remainder of
 each item as uncorrelated residual.
 
-The two are the same quantity when the data are unidimensional, and can
-differ under a bifactor model, where an item's residual with respect to one
-factor contains the other factors and is correlated across items. Rodriguez
-et al. (2016) state this and decline to prefer either, so both are reported.
+When the data are unidimensional, H equals \code{determinacy_r2}, the squared
+determinacy. The two can differ under a bifactor model, where an item's
+residual with respect to one factor contains the other factors and is
+correlated across items. Rodriguez et al. (2016) state this and decline to
+prefer either, so both are reported.
 Determinacy is always computed from the model-reproduced matrix, whatever
 \code{obs.var} is set to, because that is what the formula is defined on.
 
@@ -143,6 +149,12 @@ Hancock and Mueller (2001) proposed .70 as a standard for H. These are
 reported as their authors' recommendations where a value falls below them,
 as with fixed fit-index cutoffs elsewhere in the package, and are never
 applied as rules.
+
+\strong{Improper solutions.} A negative variance estimate, a residual variance or
+the variance of a general or group source (in a higher-order model, a
+first-order factor's disturbance), makes the solution improper. The
+indices that depend on a negative source variance are \code{NA}, and a concern
+note says which variance is negative.
 }
 \examples{
 set.seed(2026)

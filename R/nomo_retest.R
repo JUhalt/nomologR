@@ -60,17 +60,29 @@
 #'     occasions, ICC(A,1) with its 95% interval and Koo and Li's description
 #'     of that interval (`koo_li`), ICC(C,1) with its interval, the mean change
 #'     from the first to the last occasion with its interval, the pooled
-#'     standard deviation, the standard error of measurement (`sem`, the
-#'     square root of the residual mean square), and the smallest detectable
-#'     change (`sdc`).
+#'     standard deviation (`sd`, the standard deviation of the scores pooled
+#'     over occasions, not of the change), the standard error of measurement
+#'     (`sem`, the square root of the residual mean square), and the smallest
+#'     detectable change (`sdc`).
 #'   * `reliable_change`: one row per person and composite, with the first and
 #'     last scores, the change, the reliable change index (`rci`), and whether
-#'     the change is a reliable increase, a reliable decrease, or neither.
+#'     the change is a reliable increase, a reliable decrease, or neither. A
+#'     person whose score did not change has an `rci` of 0, even when there is
+#'     no measurement error at all.
 #'   * `interval` and `decision_log`.
+#'
+#'   A case without a score on every occasion of a composite is left out of
+#'   that composite, and the decision log says how many were. Scores must be
+#'   finite numbers or `NA`.
 #'
 #'   Other fields record the call and the columns used (`scores`). They may
 #'   change between releases and are not part of the stable interface (see
 #'   `?nomologR`).
+#'
+#'   `print()` shows each composite's ICC(A,1) with its interval and Koo and
+#'   Li's description, the measurement error, and how many people changed
+#'   reliably; `summary()` adds the consistency form ICC(C,1) and the mean
+#'   change with its interval, and the full reason for each flag.
 #'
 #' @references
 #' Jacobson, N. S., & Truax, P. (1991). Clinical significance: A statistical
@@ -130,10 +142,11 @@ nomo_retest <- function(data, scores, interval = NULL) {
   out <- list(
     call = match.call(),
     scores = sets,
+    n_cases = nrow(data),
     interval = if (is.null(interval)) NA_character_ else trimws(interval),
     icc = icc,
     reliable_change = reliable_change,
-    decision_log = nomo_retest_log(icc, reliable_change, interval)
+    decision_log = nomo_retest_log(icc, reliable_change, interval, nrow(data))
   )
   class(out) <- c("nomo_retest", "list")
   out
@@ -184,6 +197,18 @@ nomo_retest_sets <- function(scores, data) {
         sprintf(
           "`scores` columns must be numeric. Not numeric: %s.",
           paste(cols[!numeric], collapse = ", ")
+        ),
+        call. = FALSE
+      )
+    }
+    # An infinite score is not missing, so it would reach the ICC and fail
+    # there with a message that names no column (#145).
+    infinite <- vapply(data[cols], function(v) any(is.infinite(v)), logical(1))
+    if (any(infinite)) {
+      stop(
+        sprintf(
+          "`scores` columns must hold finite numbers or NA. Infinite values in: %s.",
+          paste(cols[infinite], collapse = ", ")
         ),
         call. = FALSE
       )
@@ -300,9 +325,12 @@ nomo_retest_koo_li <- function(lower, upper) {
 }
 
 
-nomo_retest_log <- function(icc, reliable_change, interval) {
+nomo_retest_log <- function(icc, reliable_change, interval, n_cases = NA_integer_) {
   log <- nomo_log_new()
-  number <- function(x) nomo_present_number(x, 2L)
+  # Each quantity prints as its kind does (#144): an ICC as a reliability,
+  # score-unit quantities as estimates.
+  icc_text <- function(x) nomo_present_stat(x, "reliability")
+  score <- function(x) nomo_present_stat(x, "estimate")
 
   if (is.null(interval)) {
     log <- nomo_log_add(
@@ -320,6 +348,28 @@ nomo_retest_log <- function(icc, reliable_change, interval) {
   for (k in seq_len(nrow(icc))) {
     row <- icc[k, , drop = FALSE]
     label <- row$composite[[1L]]
+
+    # Listwise deletion is recorded, not silent (#145).
+    dropped <- n_cases - row$n[[1L]]
+    if (is.finite(dropped) && dropped > 0L) {
+      log <- nomo_log_add(
+        log, stage = "retest", object = label,
+        metric = "incomplete_cases",
+        value = dropped,
+        reference = "Listwise deletion across the composite's occasions",
+        severity = "info",
+        observation = sprintf(
+          "`%s`: %d of %d cases were left out because they lack a score on at least one occasion; n = %d.",
+          label, dropped, n_cases, row$n[[1L]]
+        ),
+        recommendation = paste(
+          "Report the number of cases used. If the missing scores are not",
+          "missing completely at random, the reliability describes the cases",
+          "that remained."
+        )
+      )
+    }
+
     poor_possible <- is.finite(row$agreement_ci_lower) && row$agreement_ci_lower < 0.50
     log <- nomo_log_add(
       log, stage = "retest", object = label,
@@ -332,13 +382,13 @@ nomo_retest_log <- function(icc, reliable_change, interval) {
       severity = if (poor_possible) "review" else "info",
       observation = sprintf(
         paste(
-          "`%s`: ICC(A,1) = %s, 95%% CI [%s, %s], which Koo and Li (2016)",
+          "`%s`: ICC(A,1) = %s, 95%% CI %s, which Koo and Li (2016)",
           "would describe as %s (two-way mixed effects, absolute agreement,",
           "single measurement; n = %d, %d occasions)."
         ),
-        label, number(row$icc_agreement), number(row$agreement_ci_lower),
-        number(row$agreement_ci_upper), row$koo_li[[1L]], row$n[[1L]],
-        row$n_occasions[[1L]]
+        label, icc_text(row$icc_agreement),
+        nomo_present_ci(row$agreement_ci_lower, row$agreement_ci_upper, kind = "reliability"),
+        row$koo_li[[1L]], row$n[[1L]], row$n_occasions[[1L]]
       ),
       recommendation = paste(
         if (poor_possible) {
@@ -360,15 +410,16 @@ nomo_retest_log <- function(icc, reliable_change, interval) {
       reference = "Systematic change between occasions (Weir, 2005)",
       severity = if (shifted) "review" else "info",
       observation = sprintf(
-        "`%s` changed by %s on average from `%s` to `%s`, 95%% CI [%s, %s].",
-        label, number(row$mean_change), row$first[[1L]], row$last[[1L]],
-        number(row$change_ci_lower), number(row$change_ci_upper)
+        "`%s` changed by %s on average from `%s` to `%s`, 95%% CI %s.",
+        label, nomo_present_stat(row$mean_change, "estimate", signed = TRUE),
+        row$first[[1L]], row$last[[1L]],
+        nomo_present_ci(row$change_ci_lower, row$change_ci_upper, kind = "estimate")
       ),
       recommendation = if (shifted) {
         paste(
           "Scores shifted systematically, as practice or real change would",
           "make them. ICC(A,1) counts the shift as disagreement and ICC(C,1)",
-          "does not; ICC(C,1) is", number(row$icc_consistency), "here.",
+          "does not; ICC(C,1) is", icc_text(row$icc_consistency), "here.",
           "The SEM leaves the shift out, so the shift counts toward each",
           "person's change when reliable change is classified."
         )
@@ -390,7 +441,7 @@ nomo_retest_log <- function(icc, reliable_change, interval) {
           "smaller than %s is within measurement error. %d of %d people",
           "changed reliably: %d up and %d down."
         ),
-        label, number(row$sem), number(row$sdc),
+        label, score(row$sem), score(row$sdc),
         sum(rc$status != "no_reliable_change"), nrow(rc),
         sum(rc$status == "reliable_increase"), sum(rc$status == "reliable_decrease")
       ),
@@ -406,15 +457,16 @@ nomo_retest_log <- function(icc, reliable_change, interval) {
 
 #' @export
 print.nomo_retest <- function(x, ...) {
-  nomo_present_header("nomo_retest", "Test-retest reliability")
-  nomo_present_facts(c(
-    sprintf("Composites: %d", nrow(x$icc)),
-    if (is.na(x$interval)) "Interval: not recorded" else paste0("Interval: ", x$interval)
-  ))
+  nomo_retest_present_header(x, summary = FALSE)
   nomo_retest_present_table(x$icc)
   nomo_retest_present_change(x$reliable_change)
   nomo_present_flagged(x$decision_log)
+  nomo_retest_present_key(summary = FALSE)
   nomo_retest_present_note()
+  nomo_present_pointer(
+    c("summary(x)", "nomo_table(x, \"reliable_change\")"),
+    c("the consistency form and the mean change", "each person's change")
+  )
   invisible(x)
 }
 
@@ -425,6 +477,7 @@ summary.nomo_retest <- function(object, ...) {
     icc = object$icc,
     reliable_change = object$reliable_change,
     interval = object$interval,
+    n_cases = object$n_cases,
     decision_log = object$decision_log
   )
   class(out) <- c("summary_nomo_retest", "list")
@@ -434,52 +487,75 @@ summary.nomo_retest <- function(object, ...) {
 
 #' @export
 print.summary_nomo_retest <- function(x, ...) {
-  nomo_present_header("nomo_retest", "Test-retest reliability", summary = TRUE)
-  nomo_present_facts(c(
-    sprintf("Composites: %d", nrow(x$icc)),
-    if (is.na(x$interval)) "Interval: not recorded" else paste0("Interval: ", x$interval)
-  ))
+  nomo_retest_present_header(x, summary = TRUE)
   nomo_retest_present_table(x$icc)
 
   show <- x$icc
-  show$consistency <- paste(
-    nomo_present_number(show$icc_consistency, 2L),
-    nomo_present_ci(show$consistency_ci_lower, show$consistency_ci_upper, 2L)
-  )
-  show$change <- paste(
-    nomo_present_signed(show$mean_change, 2L),
-    nomo_present_ci(show$change_ci_lower, show$change_ci_upper, 2L)
-  )
+  show$consistency_ci <- nomo_present_ci(show$consistency_ci_lower, show$consistency_ci_upper,
+                                         kind = "reliability")
+  show$change_ci <- nomo_present_ci(show$change_ci_lower, show$change_ci_upper,
+                                    kind = "estimate")
   nomo_present_section("Consistency and change")
   nomo_present_table(
     show,
-    c("Composite" = "composite", "ICC(C,1) [95% CI]" = "consistency",
-      "Mean change [95% CI]" = "change", "SD" = "sd"),
-    formats = list(sd = function(v) nomo_present_number(v, 2L)),
+    c("Composite" = "composite", "ICC(C,1)" = "icc_consistency", "95% CI" = "consistency_ci",
+      "Mean change" = "mean_change", "95% CI" = "change_ci"),
+    formats = list(
+      icc_consistency = function(v) nomo_present_stat(v, "reliability"),
+      mean_change = function(v) nomo_present_stat(v, "estimate", signed = TRUE)
+    ),
     more = "nomo_table(x, \"icc\")"
   )
 
   nomo_retest_present_change(x$reliable_change)
   nomo_present_flagged(x$decision_log, recommendation = TRUE)
+  nomo_retest_present_key(summary = TRUE)
   nomo_retest_present_note()
+  nomo_present_pointer("nomo_table(x, \"reliable_change\")", "each person's change")
   invisible(x)
+}
+
+
+nomo_retest_present_header <- function(x, summary) {
+  nomo_present_header("nomo_retest", "Test-retest reliability", summary = summary,
+                      source = "McGraw & Wong (1996); Koo & Li (2016)")
+  nomo_present_facts(c(
+    sprintf("Composites: %d", nrow(x$icc)),
+    # Absent from an object made before the count was recorded.
+    if (length(x$n_cases)) sprintf("Cases: %d", x$n_cases) else "",
+    if (is.na(x$interval)) "Interval: not recorded" else paste0("Interval: ", x$interval)
+  ))
+  # Cases without a score on every occasion are left out, and the print says
+  # how many (#145).
+  dropped <- if (length(x$n_cases)) x$n_cases - x$icc$n else integer()
+  if (any(dropped > 0L)) {
+    nomo_present_text(
+      "Cases without a score on every occasion are left out: ",
+      nomo_present_or(sprintf(
+        "%d of %d for %s", dropped[dropped > 0L], x$n_cases,
+        x$icc$composite[dropped > 0L]
+      ), "and"),
+      "."
+    )
+  }
 }
 
 
 nomo_retest_present_table <- function(icc) {
   show <- icc
-  show$agreement <- paste(
-    nomo_present_number(show$icc_agreement, 2L),
-    nomo_present_ci(show$agreement_ci_lower, show$agreement_ci_upper, 2L)
-  )
+  show$agreement_ci <- nomo_present_ci(show$agreement_ci_lower, show$agreement_ci_upper,
+                                       kind = "reliability")
+  score <- function(v) nomo_present_stat(v, "estimate")
   nomo_present_section("Reliability across occasions")
+  # The pooled SD sits beside the SEM it is compared with; it is the scores'
+  # spread, not the change scores' (#145).
   nomo_present_table(
     show,
-    c("Composite" = "composite", "n" = "n", "ICC(A,1) [95% CI]" = "agreement",
-      "Koo & Li" = "koo_li", "SEM" = "sem", "SDC" = "sdc"),
-    # Two decimals throughout, as the intervals and the decision log give them.
-    formats = list(sem = function(v) nomo_present_number(v, 2L),
-                   sdc = function(v) nomo_present_number(v, 2L)),
+    c("Composite" = "composite", "n" = "n", "ICC(A,1)" = "icc_agreement",
+      "95% CI" = "agreement_ci", "Koo and Li" = "koo_li", "Pooled SD" = "sd",
+      "SEM" = "sem", "SDC" = "sdc"),
+    formats = list(icc_agreement = function(v) nomo_present_stat(v, "reliability"),
+                   sd = score, sem = score, sdc = score),
     more = "nomo_table(x, \"icc\")"
   )
 }
@@ -491,22 +567,38 @@ nomo_retest_present_change <- function(reliable_change) {
   nomo_present_bullets(vapply(composites, function(label) {
     rc <- reliable_change[reliable_change$composite == label, , drop = FALSE]
     sprintf(
-      "%s: %s up, %s down, %d within measurement error.",
+      "%s: %d up, %d down, and %d within measurement error, of %s.",
       label,
-      nomo_present_count(sum(rc$status == "reliable_increase"), "person", "people"),
+      sum(rc$status == "reliable_increase"),
       sum(rc$status == "reliable_decrease"),
-      sum(rc$status == "no_reliable_change")
+      sum(rc$status == "no_reliable_change"),
+      nomo_present_count(nrow(rc), "person", "people")
     )
   }, character(1)))
+}
+
+
+nomo_retest_present_key <- function(summary = FALSE) {
+  key <- c(
+    n = "Cases with a score on every occasion",
+    "ICC(A,1)" = "Intraclass correlation from a two-way mixed-effects model, absolute agreement, single measurement",
+    "ICC(C,1)" = "The same with consistency, which ignores a shift in the mean between occasions",
+    CI = "Confidence interval",
+    "Koo and Li" = "Their description of the ICC(A,1) interval: poor below .50, moderate to .75, good to .90, excellent above",
+    "Pooled SD" = "Standard deviation of the scores pooled over occasions, not of the change",
+    SEM = "Standard error of measurement, the square root of the residual mean square (Weir, 2005)",
+    SDC = "Smallest detectable change, 1.96 x sqrt(2) x SEM (Weir, 2005)"
+  )
+  if (!isTRUE(summary)) key <- key[names(key) != "ICC(C,1)"]
+  nomo_present_key(key)
 }
 
 
 nomo_retest_present_note <- function() {
   cat("\n")
   nomo_present_text(
-    "ICC(A,1): two-way mixed effects, absolute agreement, single measurement ",
-    "(Koo & Li, 2016). SEM: standard error of measurement, sqrt(MS error). ",
-    "SDC: smallest detectable change, 1.96 x sqrt(2) x SEM (Weir, 2005). Reference ranges ",
-    "describe the interval; they are not a pass or a fail."
+    "Reference ranges describe the interval; they are not a pass or a fail. ",
+    "A reliable change is larger than measurement error, which does not make ",
+    "it a meaningful one."
   )
 }

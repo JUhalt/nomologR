@@ -12,7 +12,11 @@
 \item{...}{Unused.}
 }
 \value{
-An object of class \code{summary_nomo_reliability}.
+An object of class \code{summary_nomo_reliability}. Printed, it shows each
+construct's omega and alpha with their intervals, score scale, and flag,
+why any alpha was not computed, and the reason for each flag in the
+decision log, including those that qualify the coefficients, such as a
+theta parameterization or intervals that could not be computed.
 }
 \description{
 Summarize model-based reliability evidence
