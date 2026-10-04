@@ -35,7 +35,10 @@ results, or \code{"a_priori"} when it was planned in advance.}
 
 \item{decisions}{Optional named list of decisions for the child workflow,
 for example \code{list(factor_count = c(WellBeing = 1))}. Supplied decisions
-override inherited ones.}
+override inherited ones; a supplied \code{factor_count} is used in place of the
+parent's, which is then not checked against the revised items. The
+revised model is given in \code{cfa_model}, not here, so that the model fitted
+is the one the lineage records.}
 
 \item{compare}{Logical. If \code{TRUE} (default), compare the parent and revised
 measurement models with \code{\link[=nomo_compare]{nomo_compare()}}.}
@@ -43,7 +46,9 @@ measurement models with \code{\link[=nomo_compare]{nomo_compare()}}.}
 \value{
 A new \code{nomo_run} object for the revised workflow, carrying
 \verb{$lineage} (one row per revision), \verb{$revision_comparison} (the
-\code{nomo_compare()} result, when available), and \verb{$parent_summary}.
+\code{nomo_compare()} result, when available), and \verb{$parent_summary}. It
+prints as any guided run does (see \code{\link[=nomo_run]{nomo_run()}}), with the number of
+revisions among its facts.
 }
 \description{
 \code{nomo_revise()} creates a child workflow from a parent \code{nomo_run()} with a
@@ -74,7 +79,9 @@ or carried item it removes, gets its own row with the revision's rationale.
 Because a revision prompted by results is evaluated on the data that
 prompted it, the decision log records whether the change was \code{"post_hoc"}
 and recommends confirming the revised model in independent data (Simmons,
-Nelson, & Simonsohn, 2011; Wicherts et al., 2016; Flake & Fried, 2020).
+Nelson, & Simonsohn, 2011; Wicherts et al., 2016; Flake & Fried, 2020). A
+prespecified (\code{"a_priori"}) revision is still judged on the same sample as
+its parent, and the log says so.
 
 Removing an item changes the observed variables, so parent and revised
 models are not nested and \code{nomo_compare()} reports descriptive evidence

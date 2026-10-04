@@ -22,7 +22,8 @@ object so the same prespecified network can be evaluated across calibration
 and validation samples.}
 
 \item{scales}{A non-empty named list. Each element is a character vector of
-candidate item-column names for one scale/construct. May also be a handoff
+candidate item-column names for one scale/construct, at least three per
+scale, since factor-retention evidence needs three. May also be a handoff
 from \code{contentvalidR}'s \code{content_handoff()}, whose carried items and
 construct mapping then define the scales, as described for
 \code{\link[=nomo_screen]{nomo_screen()}}. A handoff from a review with no construct mapping is
@@ -32,7 +33,9 @@ them.}
 \item{mode}{Presentation mode: \code{"teaching"} or \code{"research"}. Mode changes
 presentation, not statistical behavior.}
 
-\item{guidance}{Guidance settings from \code{\link[=nomo_defaults]{nomo_defaults()}}.}
+\item{guidance}{Guidance settings from \code{\link[=nomo_defaults]{nomo_defaults()}}. \code{auto_delete} and
+\code{auto_respecify} cannot be \code{TRUE}, since nomologR never deletes an item or
+respecifies a model.}
 
 \item{decisions}{Named list of explicit researcher decisions. Decisions may
 be supplied one pause at a time or all at once for a fully prespecified
@@ -44,8 +47,9 @@ one-call run. A structured decision can be written as
 \code{list(invariance = list(group = "group"))}, or
 \code{list(network = list(hypotheses = h))}. Pipeline-controlled arguments such
 as component data/model inputs cannot be overridden through \code{settings}.
-When resuming, settings for future stages may be supplied without
-recomputing completed stages.
+\code{settings$invariance$group} must name a column of the data the
+confirmatory stages use. When resuming, settings for future stages may be
+supplied without recomputing completed stages.
 
 \code{list(screen = list(effort = TRUE))} adds careless-responding indices (see
 \code{\link[=nomo_screen]{nomo_screen()}}). They describe a respondent across the whole instrument,
@@ -72,8 +76,9 @@ Two further requests attach evidence to the measurement model:
 \item \code{list(scores = list(method = "sum"))} scores it with \code{\link[=nomo_scores]{nomo_scores()}},
 using a method the researcher names; nomologR does not choose one.
 \item \code{list(missing = list())} compares missing-data strategies with
-\code{\link[=nomo_missing]{nomo_missing()}}. \code{strategies} and \code{reliability} may be given. The
-comparison covers the network too when one is requested.
+\code{\link[=nomo_missing]{nomo_missing()}}. \code{strategies}, lavaan \code{missing} options such as
+\code{"listwise"} or \code{"ml"}, and \code{reliability} may be given. The comparison
+covers the network too when one is requested.
 }
 
 Both run after convergent and discriminant evidence, so they are in view
@@ -123,7 +128,13 @@ construct a CFA model, free parameters, or respecify a model.
 \details{
 The guided workflow is resumable. Completed component objects are retained
 rather than recomputed. Future-stage settings may be added or revised until
-that stage has completed; settings for completed/blocked stages are locked.
+that stage runs. Settings given when resuming are merged argument by
+argument: a named argument is added or replaces the earlier value, the
+others keep theirs, and the decision log records the change. Settings are
+locked for a stage that has completed or blocked, for an invariance or
+network branch a completed run marked not requested, and for \code{scores} and
+\code{missing} once the CFA has been fitted, since they would never run; a new
+\code{nomo_run()} is then the way to request them.
 
 Consequential decisions are currently:
 \enumerate{

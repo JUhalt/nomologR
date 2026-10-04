@@ -184,9 +184,25 @@ nomo_run_validate_scales <- function(scales, roles) {
     if (length(absent)) {
       stop(
         sprintf(
-          "Scale `%s` contains item column(s) unavailable in the workflow data: %s.",
+          "Scale `%s` contains %s unavailable in the workflow data: %s.",
           nm,
+          nomo_present_noun(length(absent), "an item column", "item columns"),
           paste(absent, collapse = ", ")
+        ),
+        call. = FALSE
+      )
+    }
+
+    # Factor-retention evidence needs three items, so a shorter scale would
+    # only block the run after its item audit (#145).
+    if (length(items) < 3L) {
+      stop(
+        sprintf(
+          paste(
+            "Scale `%s` has %s; a guided run needs at least three items per",
+            "scale, since `nomo_factors()` needs three candidate items."
+          ),
+          nm, nomo_present_count(length(items), "item")
         ),
         call. = FALSE
       )
@@ -220,7 +236,10 @@ nomo_run_reserved_settings <- function() {
 }
 
 
-nomo_run_validate_settings <- function(settings, scales) {
+# The shape of a settings list: unique, known stage names, each holding a list
+# of uniquely named arguments. Checked on its own when resuming, before the
+# given arguments are merged into those already set.
+nomo_run_check_settings_shape <- function(settings) {
   if (!is.list(settings)) {
     stop("`settings` must be a named list of stage-specific argument lists.", call. = FALSE)
   }
@@ -239,14 +258,13 @@ nomo_run_validate_settings <- function(settings, scales) {
   if (length(bad)) {
     stop(
       sprintf(
-        "Unknown workflow setting stage(s): %s.",
+        "Unknown workflow setting %s: %s.",
+        nomo_present_noun(length(bad), "stage", "stages"),
         paste(bad, collapse = ", ")
       ),
       call. = FALSE
     )
   }
-
-  reserved <- nomo_run_reserved_settings()
 
   for (stage in nm) {
     x <- settings[[stage]]
@@ -267,15 +285,39 @@ nomo_run_validate_settings <- function(settings, scales) {
         call. = FALSE
       )
     }
+  }
 
-    conflict <- intersect(names(x), reserved[[stage]])
+  settings
+}
+
+
+# The lavaan `missing` options, with lavaan's aliases, that a missing-data
+# comparison can request. A name outside them would otherwise be accepted and
+# reported as a strategy compared (#145).
+nomo_run_missing_options <- function() {
+  c("listwise", "pairwise", "available.cases", "ml", "fiml", "direct", "ml.x",
+    "fiml.x", "direct.x", "two.stage", "two.step", "robust.two.stage",
+    "robust.two.step", "doubly.robust", "default")
+}
+
+
+# `roles`, when given, are the run's data roles, so a setting that names a
+# column is checked against the data before any stage runs (#145).
+nomo_run_validate_settings <- function(settings, scales, roles = NULL) {
+  settings <- nomo_run_check_settings_shape(settings)
+  if (!length(settings)) return(settings)
+
+  nm <- names(settings)
+  reserved <- nomo_run_reserved_settings()
+
+  for (stage in nm) {
+    conflict <- intersect(names(settings[[stage]]), reserved[[stage]])
     if (length(conflict)) {
       stop(
         sprintf(
-          paste(
-            "`settings$%s` cannot override pipeline-controlled argument(s): %s."
-          ),
+          "`settings$%s` cannot override pipeline-controlled %s: %s.",
           stage,
+          nomo_present_noun(length(conflict), "argument", "arguments"),
           paste(conflict, collapse = ", ")
         ),
         call. = FALSE
@@ -344,6 +386,17 @@ nomo_run_validate_settings <- function(settings, scales) {
                                    anyNA(strategies))) {
       stop("`settings$missing$strategies` must be a character vector.", call. = FALSE)
     }
+    unknown <- setdiff(strategies, nomo_run_missing_options())
+    if (length(unknown)) {
+      stop(
+        sprintf(
+          "`settings$missing$strategies` must name lavaan `missing` options, %s, not %s.",
+          nomo_present_or(paste0("\"", nomo_run_missing_options(), "\"")),
+          nomo_present_or(paste0("\"", unknown, "\""), "and")
+        ),
+        call. = FALSE
+      )
+    }
     reliability <- settings$missing$reliability
     if (!is.null(reliability) &&
           (!is.logical(reliability) || length(reliability) != 1L || is.na(reliability))) {
@@ -362,6 +415,20 @@ nomo_run_validate_settings <- function(settings, scales) {
         paste(
           "A requested invariance branch requires one grouping variable in",
           "`settings$invariance$group`."
+        ),
+        call. = FALSE
+      )
+    }
+    # A misspelled group would otherwise surface only after every stage and
+    # every decision before it (#145).
+    if (!is.null(roles) && !group %in% names(roles$confirmatory)) {
+      stop(
+        sprintf(
+          paste(
+            "`settings$invariance$group` is \"%s\", which is not a column of the",
+            "data the confirmatory stages use."
+          ),
+          group
         ),
         call. = FALSE
       )
@@ -405,7 +472,8 @@ nomo_run_validate_decisions <- function(decisions) {
   if (length(bad)) {
     stop(
       sprintf(
-        "Unsupported workflow decision name(s): %s.",
+        "Unsupported workflow decision %s: %s.",
+        nomo_present_noun(length(bad), "name", "names"),
         paste(bad, collapse = ", ")
       ),
       call. = FALSE
@@ -416,40 +484,112 @@ nomo_run_validate_decisions <- function(decisions) {
 }
 
 
+# The status of one stage, or "" for a run without a stage table.
+nomo_run_stage_state <- function(x, stage) {
+  status <- x$stage_status$status[x$stage_status$stage == stage]
+  if (length(status)) status[[1L]] else ""
+}
+
+
+# Why settings for `stage` can no longer change when a run is resumed, or NULL
+# while they can. Settings stored after their stage's moment has passed would
+# never run (#145): a stage that completed or blocked, a branch the completed
+# run marked not requested, and scores or missing-data sensitivity once the
+# CFA they run with has been fitted.
+nomo_run_settings_lock <- function(x, stage) {
+  if (stage %in% nomo_run_attached_settings()) {
+    if (!is.null(x$results[[stage]]) ||
+        nomo_run_stage_state(x, "cfa") %in% c("completed", "blocked")) {
+      return("they run with the CFA, which has already been fitted, so they would never run")
+    }
+    return(NULL)
+  }
+  state <- nomo_run_stage_state(x, stage)
+  if (state %in% c("completed", "blocked")) {
+    return(if (state == "blocked") "the stage is blocked" else "the stage has already completed")
+  }
+  if (identical(state, "not_requested")) {
+    return("the completed workflow marked the stage not requested, so they would never run")
+  }
+  NULL
+}
+
+
+# One setting as R code, for the decision log: `levels = "configural"`, and an
+# object by its class, such as `hypotheses = <nomo_hypotheses>`.
+nomo_run_settings_text <- function(setting) {
+  if (!length(setting)) return("list()")
+  paste(vapply(names(setting), function(arg) {
+    value <- setting[[arg]]
+    shown <- if (is.object(value)) {
+      sprintf("<%s>", class(value)[[1L]])
+    } else {
+      paste(deparse(value, width.cutoff = 500L), collapse = " ")
+    }
+    sprintf("%s = %s", arg, shown)
+  }, character(1)), collapse = ", ")
+}
+
+
+# Settings given when resuming are merged into those already set, argument by
+# argument (#145): a named argument is added or replaced, and the others keep
+# their values. A change is recorded in the decision log.
 nomo_run_merge_future_settings <- function(x, settings) {
   if (!length(settings)) return(x)
 
-  settings <- nomo_run_validate_settings(settings, x$scales)
+  settings <- nomo_run_check_settings_shape(settings)
+  merged <- x$settings
+  if (is.null(merged)) merged <- list()
+  for (stage in names(settings)) {
+    current <- merged[[stage]]
+    if (is.null(current)) current <- list()
+    # Single brackets keep an argument given as NULL, which asks a component
+    # for its default.
+    current[names(settings[[stage]])] <- settings[[stage]]
+    merged[[stage]] <- current
+  }
+  roles <- if (is.null(x$source_data)) NULL else nomo_run_data_roles(x$source_data)
+  merged <- nomo_run_validate_settings(merged, x$scales, roles)
 
   for (stage in names(settings)) {
     current <- x$settings[[stage]]
-    new <- settings[[stage]]
+    new <- merged[[stage]]
+    if (identical(current, new)) next
 
-    # Attached evidence has no stage status; it is locked once computed.
-    locked <- if (stage %in% nomo_run_attached_settings()) {
-      !is.null(x$results[[stage]])
-    } else {
-      x$stage_status$status[x$stage_status$stage == stage][[1L]] %in%
-        c("completed", "blocked")
-    }
-    changed <- !identical(current, new)
-
-    if (locked && changed) {
+    lock <- nomo_run_settings_lock(x, stage)
+    if (!is.null(lock)) {
       stop(
         sprintf(
-          paste(
-            "Settings for completed/blocked stage `%s` cannot be changed while",
-            "resuming. Start a new `nomo_run()` to change them."
-          ),
-          stage
+          "Settings for `%s` cannot be changed while resuming: %s. Start a new `nomo_run()` to change them.",
+          stage, lock
         ),
         call. = FALSE
       )
     }
 
-    if (!locked) {
-      x$settings[[stage]] <- new
-    }
+    x$settings[[stage]] <- new
+    given <- settings[[stage]]
+    x$decision_log <- nomo_run_workflow_log_add(
+      x$decision_log,
+      id = paste0("settings:", stage),
+      stage = if (stage %in% nomo_run_attached_settings()) "cfa" else stage,
+      scope = "settings",
+      observation = sprintf(
+        "The workflow was resumed with `settings$%s`: %s.",
+        stage, nomo_run_settings_text(given)
+      ),
+      reason = paste(
+        "Settings given when a workflow is resumed change how a later stage",
+        "runs, so the change is recorded."
+      ),
+      options = paste(
+        "Arguments given when resuming are added or replace earlier values;",
+        "arguments not named keep theirs."
+      ),
+      consequence = sprintf("`settings$%s` is now: %s.", stage, nomo_run_settings_text(new)),
+      decision = nomo_run_settings_text(new),
+      source = "researcher_input"
+    )
   }
 
   x

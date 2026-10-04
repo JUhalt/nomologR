@@ -6,8 +6,9 @@ nomo_run_component_call <- function(fun, fixed, extra, stage) {
     if (length(overlap)) {
       stop(
         sprintf(
-          "`settings$%s` cannot override pipeline-controlled argument(s): %s.",
+          "`settings$%s` cannot override pipeline-controlled %s: %s.",
           stage,
+          nomo_present_noun(length(overlap), "argument", "arguments"),
           paste(overlap, collapse = ", ")
         ),
         call. = FALSE

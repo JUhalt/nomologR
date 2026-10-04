@@ -462,7 +462,11 @@ test_that("recipe settings and component log expose reproducibility provenance",
     "data_role",
     "researcher_control"
   ) %in% names(recipe)))
-  expect_equal(nrow(settings), 8L)
+  # One row per stage, then scores and missing-data sensitivity (#145).
+  expect_identical(settings$stage, c(nomologR:::nomo_run_stage_order(), "scores", "missing"))
+  expect_identical(settings$values[settings$stage == "factors"],
+                   "criterion_set = \"minimal\", n_iter = 10L, seed = 2026L")
+  expect_false(any(settings$configured[settings$stage %in% c("scores", "missing")]))
   expect_gt(nrow(component_log), 0L)
 
   s <- summary(run)
@@ -1267,7 +1271,13 @@ test_that("closeout: measurement request handles components without decision log
 
   req <- nomologR:::nomo_run_measurement_request(x)
   expect_equal(nrow(req), 1L)
-  expect_match(req$observation, "0 concern and 0 review", fixed = TRUE)
+  expect_match(req$observation, "Their logs hold 0 concern entries and 0 review entries.",
+               fixed = TRUE)
+
+  # Counts agree in number (#145).
+  x$results$cfa$decision_log <- tibble::tibble(severity = c("concern", "review", "review"))
+  req <- nomologR:::nomo_run_measurement_request(x)
+  expect_match(req$observation, "1 concern entry and 2 review entries.", fixed = TRUE)
 })
 
 
@@ -1524,8 +1534,8 @@ test_that("closeout B: fresh workflows block transparently when initial screenin
   )
 
   out <- nomo_run(
-    data = data.frame(i1 = 1:8, i2 = 8:1),
-    scales = list(S = c("i1", "i2"))
+    data = data.frame(i1 = 1:8, i2 = 8:1, i3 = c(2:8, 1)),
+    scales = list(S = c("i1", "i2", "i3"))
   )
   expect_identical(out$status, "blocked")
   expect_identical(out$blocked$stage, "screen")
@@ -1538,4 +1548,383 @@ test_that("closeout C: workflow decision validation rejects non-list inputs", {
     "`decisions` must be a named list",
     fixed = TRUE
   )
+})
+
+
+# Pre-RC fixes (#145) ----------------------------------------------------------
+
+test_that("settings given when resuming merge argument by argument and are logged (#145)", {
+  dat <- make_m8_full_data(seed = 8510L)
+  run <- nomo_run(
+    data = dat,
+    scales = list(WellBeing = c("i1", "i2", "i3", "i4")),
+    settings = c(m8_full_settings(), list(cfa = list(estimator = "MLR", std.lv = TRUE)))
+  )
+  resumed <- nomo_run(resume = run, settings = list(cfa = list(missing = "fiml")))
+  # The estimator and std.lv given at the start are kept.
+  expect_identical(resumed$settings$cfa, list(estimator = "MLR", std.lv = TRUE, missing = "fiml"))
+  row <- resumed$decision_log[resumed$decision_log$id == "settings:cfa", ]
+  expect_identical(nrow(row), 1L)
+  expect_identical(row$source, "researcher_input")
+  expect_identical(row$observation,
+                   "The workflow was resumed with `settings$cfa`: missing = \"fiml\".")
+  expect_identical(row$decision, "estimator = \"MLR\", std.lv = TRUE, missing = \"fiml\"")
+
+  # Giving the same settings again changes nothing and adds no row.
+  again <- nomo_run(resume = resumed, settings = list(cfa = list(missing = "fiml")))
+  expect_identical(again$decision_log, resumed$decision_log)
+
+  # NULL asks a component for its default, so it is kept rather than dropped.
+  reset <- nomo_run(resume = resumed, settings = list(cfa = list(std.lv = NULL)))
+  expect_true("std.lv" %in% names(reset$settings$cfa))
+  expect_null(reset$settings$cfa$std.lv)
+
+  # Attached evidence is logged at the CFA, and an object by its class.
+  attached <- nomo_run(resume = run, settings = list(missing = list()))
+  row <- attached$decision_log[attached$decision_log$id == "settings:missing", ]
+  expect_identical(row$stage, "cfa")
+  expect_identical(row$decision, "list()")
+  h <- nomo_hypotheses("WellBeing -> criterion" = positive())
+  network <- nomo_run(resume = run, settings = list(network = list(hypotheses = h)))
+  expect_identical(network$decision_log$decision[network$decision_log$id == "settings:network"],
+                   "hypotheses = <nomo_hypotheses>")
+
+  # The merged settings are validated as a whole.
+  expect_error(nomo_run(resume = run, settings = list(cfa = list(data = dat))),
+               "cannot override pipeline-controlled argument: data.", fixed = TRUE)
+  expect_error(nomo_run(resume = run, settings = list(bogus = list())),
+               "Unknown workflow setting stage: bogus.", fixed = TRUE)
+})
+
+
+test_that("settings whose stage has passed are refused rather than stored unused (#145)", {
+  skip_on_cran()
+  dat <- make_m8_full_data(seed = 8511L)
+  scales <- list(WellBeing = c("i1", "i2", "i3", "i4"))
+  review <- nomo_run(
+    data = dat, scales = scales, settings = m8_full_settings(),
+    decisions = list(factor_count = 1L, cfa_model = m8_model())
+  )
+  # Scores and missing-data sensitivity run with the CFA, which has been fitted.
+  expect_error(
+    nomo_run(resume = review, settings = list(scores = list(method = "sum"))),
+    "Settings for `scores` cannot be changed while resuming: they run with the CFA",
+    fixed = TRUE
+  )
+  expect_error(
+    nomo_run(resume = review, settings = list(missing = list())),
+    "Settings for `missing` cannot be changed while resuming", fixed = TRUE
+  )
+
+  # A branch the completed run marked not requested would never run.
+  done <- nomo_run(resume = review, decisions = list(measurement_model = "proceed"))
+  expect_error(
+    nomo_run(resume = done, settings = list(invariance = list(group = "group"))),
+    "the completed workflow marked the stage not requested, so they would never run",
+    fixed = TRUE
+  )
+  expect_error(
+    nomo_run(resume = done, settings = list(efa = list(rotation = "varimax"))),
+    "Settings for `efa` cannot be changed while resuming: the stage has already completed.",
+    fixed = TRUE
+  )
+
+  lock <- nomologR:::nomo_run_settings_lock
+  blocked <- list(stage_status = tibble::tibble(stage = "cfa", status = "blocked"))
+  expect_identical(lock(blocked, "cfa"), "the stage is blocked")
+  expect_match(lock(blocked, "scores"), "they run with the CFA", fixed = TRUE)
+  expect_match(lock(list(results = list(scores = list())), "scores"), "they run with the CFA",
+               fixed = TRUE)
+  expect_null(lock(list(), "scores"))
+  expect_null(lock(list(), "invariance"))
+})
+
+
+test_that("inputs that cannot work are refused before any stage runs (#145)", {
+  dat <- make_m8_full_data(seed = 8512L)
+  expect_error(
+    nomo_run(data = dat, scales = list(Pair = c("i1", "i2"), WellBeing = c("i1", "i2", "i3"))),
+    "Scale `Pair` has 2 items; a guided run needs at least three items per scale",
+    fixed = TRUE
+  )
+  expect_error(
+    nomo_run(data = dat, scales = list(WellBeing = c("i1", "nope", "gone"))),
+    "contains item columns unavailable in the workflow data: nope, gone.", fixed = TRUE
+  )
+  expect_error(
+    nomo_run(data = dat, scales = list(WellBeing = c("i1", "i2", "nope"))),
+    "contains an item column unavailable in the workflow data: nope.", fixed = TRUE
+  )
+  expect_error(
+    nomo_run(data = dat, scales = list(WellBeing = c("i1", "i2", "i3", "i4")),
+             settings = list(invariance = list(group = "grp"))),
+    "`settings$invariance$group` is \"grp\", which is not a column of the data",
+    fixed = TRUE
+  )
+  expect_error(
+    nomo_run(data = dat, scales = list(WellBeing = c("i1", "i2", "i3", "i4")),
+             settings = list(missing = list(strategies = c("listwise", "bogus")))),
+    "must name lavaan `missing` options, \"listwise\",", fixed = TRUE
+  )
+  expect_error(
+    nomo_run(data = dat, scales = list(WellBeing = c("i1", "i2", "i3", "i4")),
+             settings = list(missing = list(strategies = "bogus"))),
+    "or \"default\", not \"bogus\".", fixed = TRUE
+  )
+  expect_error(
+    nomo_run(data = dat, scales = list(WellBeing = c("i1", "i2", "i3", "i4")),
+             settings = list(cfa = list(model = "x", data = dat))),
+    "cannot override pipeline-controlled arguments: model, data.", fixed = TRUE
+  )
+  expect_error(
+    nomologR:::nomo_run_validate_settings(list(a = list(), b = list()), list()),
+    "Unknown workflow setting stages: a, b.", fixed = TRUE
+  )
+  expect_error(nomologR:::nomo_run_validate_decisions(list(a = 1, b = 2)),
+               "Unsupported workflow decision names: a, b.", fixed = TRUE)
+  expect_error(nomologR:::nomo_run_validate_decisions(list(a = 1)),
+               "Unsupported workflow decision name: a.", fixed = TRUE)
+  # Without the data roles, the group is checked only for its form.
+  expect_identical(
+    nomologR:::nomo_run_validate_settings(list(invariance = list(group = "grp")), list())$invariance,
+    list(group = "grp")
+  )
+  # The stage-level guard names its arguments in the same way.
+  expect_error(
+    nomologR:::nomo_run_component_call(function(...) NULL, list(a = 1, b = 2),
+                                       list(a = 1, b = 2), "efa"),
+    "cannot override pipeline-controlled arguments: a, b.", fixed = TRUE
+  )
+})
+
+
+test_that("a guidance list that asks for automatic deletion is refused (#145)", {
+  dat <- make_m8_full_data(seed = 8513L)
+  g <- nomo_defaults()
+  g$auto_delete <- TRUE
+  expect_error(
+    nomo_run(data = dat, scales = list(WellBeing = c("i1", "i2", "i3", "i4")), guidance = g),
+    "`guidance$auto_delete` cannot be `TRUE`: nomologR never deletes an item", fixed = TRUE
+  )
+})
+
+
+test_that("decisions left over at a pause are named in number (#145)", {
+  dat <- make_m8_full_data(seed = 8514L)
+  run <- nomo_run(data = dat, scales = list(WellBeing = c("i1", "i2", "i3", "i4")),
+                  settings = m8_full_settings())
+  expect_error(nomo_run(resume = run, decisions = list(cfa_model = m8_model())),
+               "A decision could not be consumed", fixed = TRUE)
+  expect_error(
+    nomo_run(resume = run, decisions = list(cfa_model = m8_model(), measurement_model = "proceed")),
+    "Decisions could not be consumed", fixed = TRUE
+  )
+})
+
+
+test_that("a measurement model whose items differ from the scales is recorded (#145)", {
+  dat <- make_m8_full_data(seed = 8515L)
+  run <- nomo_run(
+    data = dat,
+    scales = list(WellBeing = c("i1", "i2", "i3", "i4")),
+    settings = m8_full_settings(),
+    decisions = list(
+      factor_count = 1L,
+      cfa_model = list(value = "WellBeing =~ i1 + i2 + i3 + criterion",
+                       rationale = "i4 is a pilot item; criterion is a marker.")
+    )
+  )
+  # The run is not blocked: the difference is the researcher's decision.
+  expect_identical(run$next_stage, "measurement_review")
+  row <- run$decision_log[run$decision_log$id == "cfa_item_set", ]
+  expect_identical(
+    row$observation,
+    paste("The measurement model leaves out i4, which the earlier stages screened and",
+          "explored, and includes criterion, which no supplied scale contains, so no item",
+          "audit, retention, or EFA evidence covers it.")
+  )
+  expect_identical(row$decision, "left out: i4; added: criterion")
+  expect_identical(row$rationale, "i4 is a pilot item; criterion is a marker.")
+  expect_identical(row$source, "researcher_decision")
+  expect_match(run$decision_requests$observation, "decision-log row cfa_item_set", fixed = TRUE)
+
+  set <- nomologR:::nomo_run_model_item_set
+  expect_null(set("this is not lavaan syntax ~~~ =~", list(A = "a1")))
+  expect_identical(set("A =~ a1 + a2 + a3", list(A = c("a1", "a2", "a3"))),
+                   list(omitted = character(), added = character()))
+  added_only <- nomologR:::nomo_run_cfa_model_log(
+    list(scales = list(A = c("a1", "a2", "a3")), decision_log = NULL, results = list(),
+         settings = list()),
+    "A =~ a1 + a2 + a3 + b1 + b2", ""
+  )
+  expect_identical(
+    added_only$decision_log$observation,
+    paste("The measurement model includes b1, b2, which no supplied scale contains, so no",
+          "item audit, retention, or EFA evidence covers them.")
+  )
+})
+
+
+test_that("items the exploratory stages treated as categorical are flagged before a continuous CFA (#145)", {
+  skip_on_cran()
+  dat <- make_m8_full_data(seed = 8516L)
+  items <- c("i1", "i2", "i3", "i4")
+  for (i in items) dat[[i]] <- as.integer(dat[[i]] > stats::median(dat[[i]]))
+
+  # The tetrachoric parallel analysis prints nothing to the console (#145).
+  printed <- utils::capture.output(
+    run <- nomo_run(data = dat, scales = list(WellBeing = items), settings = m8_full_settings(),
+                    decisions = list(factor_count = 1L))
+  )
+  expect_identical(printed, character())
+  expect_match(run$decision_requests$observation,
+               "The exploratory stages treated i1, i2, i3, i4 as categorical (tetrachoric correlations)",
+               fixed = TRUE)
+  expect_match(run$decision_requests$options, "`settings = list(cfa = list(ordered = ...))`",
+               fixed = TRUE)
+
+  fitted <- nomo_run(resume = run, decisions = list(cfa_model = m8_model()))
+  row <- fitted$decision_log[fitted$decision_log$id == "item_types", ]
+  expect_identical(row$source, "pipeline")
+  expect_identical(row$decision, "")
+  expect_match(row$observation, "while the CFA treats every indicator as continuous", fixed = TRUE)
+  expect_match(fitted$decision_requests$observation, "decision-log row item_types", fixed = TRUE)
+
+  # Declaring them ordered keeps the two halves consistent, and nothing is flagged.
+  ordered <- nomo_run(resume = run, settings = list(cfa = list(ordered = items)),
+                      decisions = list(cfa_model = m8_model()))
+  expect_false("item_types" %in% ordered$decision_log$id)
+  expect_false(grepl("item_types", ordered$decision_requests$observation, fixed = TRUE))
+})
+
+
+test_that("the item-type note names every categorical item and method (#145)", {
+  x <- make_m9_minimal_run()
+  types <- function(item, type) tibble::tibble(item = item, model_type = type)
+  x$results$factors <- list(
+    A = list(correlation = "mixed", modeling_types = types(c("a1", "a2"), c("binary", "continuous"))),
+    B = list(correlation = "pearson", modeling_types = types("b1", "continuous"))
+  )
+  x$results$efa <- list(C = list(correlation = "polychoric", modeling_types = types("c1", "ordinal")))
+  expect_identical(nomologR:::nomo_run_categorical_items(x),
+                   list(items = c("a1", "c1"), methods = c("mixed", "polychoric")))
+  expect_match(nomologR:::nomo_run_item_type_note(x),
+               "treated a1, c1 as categorical (mixed and polychoric correlations)", fixed = TRUE)
+  x$settings$cfa$ordered <- "a1"
+  expect_identical(nomologR:::nomo_run_item_type_note(x), "")
+})
+
+
+test_that("a parallel-analysis count of 0 gets its own request and a usable example (#145)", {
+  x <- make_m9_minimal_run()
+  x$scales <- list(Noise = c("n1", "n2", "n3"))
+  x$results$factors <- list(Noise = list(parallel = list(n_factors = 0L), plausible_factors = integer()))
+  req <- nomologR:::nomo_run_factor_requests(x)
+  expect_identical(
+    req$observation,
+    paste("Parallel analysis suggests 0 factors: it found no factor above the null reference,",
+          "so there is no count to adopt. To fit an EFA anyway, give the count in",
+          "`factor_count`, with the substantive reason as its rationale. The pipeline has not",
+          "adopted a factor count.")
+  )
+  expect_identical(req$example, "decisions = list(factor_count = 1L)")
+
+  x$results$factors$Noise$plausible_factors <- 2L
+  req <- nomologR:::nomo_run_factor_requests(x)
+  expect_match(req$observation, "so there is no count to adopt; the retained plausible set is 2.",
+               fixed = TRUE)
+})
+
+
+test_that("a run on noise items can fit the count the request suggests (#145)", {
+  skip_on_cran()
+  set.seed(1)
+  noise <- as.data.frame(matrix(stats::rnorm(300 * 5), 300, 5))
+  names(noise) <- paste0("n", 1:5)
+  run <- nomo_run(noise, list(Noise = names(noise)),
+                  settings = list(factors = list(n_iter = 20L, seed = 1L)))
+  expect_identical(run$results$factors$Noise$parallel$n_factors, 0L)
+  expect_match(run$decision_requests$observation, "Parallel analysis suggests 0 factors", fixed = TRUE)
+  expect_false(grepl("plausible set is 0", run$decision_requests$observation, fixed = TRUE))
+  resumed <- nomo_run(resume = run, decisions = list(factor_count = 1L))
+  expect_identical(resumed$next_stage, "cfa")
+})
+
+
+test_that("a held-back item's missing status or recommendation is not quoted as NA (#145)", {
+  h <- readRDS(test_path("fixtures", "contentvalidR", "handoff-walkthrough-sort-v0.10.1.rds"))
+  ev <- h$item_evidence
+  ev$recommendation[ev$item == "EF5"] <- NA_character_
+  ev$status[ev$item == "TF5"] <- NA_character_
+  ev$recommendation[ev$item == "TF5"] <- NA_character_
+  h$item_evidence <- ev
+  log <- nomologR:::nomo_run_handoff_log(nomologR:::nomo_run_workflow_log_new(),
+                                         nomologR:::nomo_handoff_read(h))
+  expect_identical(log$observation[log$id == "held_back:EF5"],
+                   "EF5 was held back by content review: status \"Review\".")
+  expect_identical(log$observation[log$id == "held_back:TF5"],
+                   "TF5 was held back by content review.")
+})
+
+
+test_that("the recipe names attached evidence with its own status (#145)", {
+  x <- make_m9_minimal_run()
+  x$settings <- list(screen = list(effort = TRUE), scores = list(method = "sum"),
+                     missing = list(), network = list(hypotheses = list()))
+  recipe <- nomologR:::nomo_run_recipe_table(x)
+  attached <- recipe[recipe$scope %in% c("careless_responding", "theory_network") |
+                       recipe$stage %in% c("scores", "missing"), ]
+  expect_identical(attached$function_name, c("nomo_screen(effort = TRUE)", "nomo_scores()",
+                                             "nomo_missing()", "nomo_missing()"))
+  expect_identical(attached$status, c("completed", "not_started", "not_started", "not_started"))
+
+  x$results$effort <- list()
+  x$results$scores <- list()
+  x$decision_log <- nomologR:::nomo_run_workflow_log_add(
+    x$decision_log, id = "missing_data_cfa", stage = "cfa", scope = "measurement_model",
+    decision = "not computed"
+  )
+  recipe <- nomologR:::nomo_run_recipe_table(x)
+  expect_identical(recipe$status[recipe$stage == "scores"], "completed")
+  expect_identical(recipe$status[recipe$stage == "missing" & recipe$scope == "measurement_model"],
+                   "not_computed")
+})
+
+
+test_that("the missing-data log names only the strategies that were fitted (#145)", {
+  observe <- nomologR:::nomo_run_missing_observation
+  strategies <- tibble::tibble(
+    strategy = c("listwise", "ml", "pairwise"),
+    available = c(TRUE, FALSE, FALSE),
+    note = c("", "Not fitted: no modeled variable has missing values.", "lavaan refused it.")
+  )
+  out <- observe(strategies, "measurement model")
+  expect_false(out$compared)
+  expect_identical(
+    out$text,
+    paste("The measurement model could be fitted under listwise deletion only, so no",
+          "missing-data strategies were compared. Not fitted: FIML (no modeled variable has",
+          "missing values); pairwise deletion (lavaan refused it).")
+  )
+  strategies$available <- TRUE
+  out <- observe(strategies, "network")
+  expect_true(out$compared)
+  expect_identical(
+    out$text,
+    paste("The network was fitted under listwise deletion, FIML, and pairwise deletion to",
+          "show how much its results depend on missing-data handling.")
+  )
+  strategies$available <- FALSE
+  expect_match(observe(strategies, "network")$text, "under no strategy only", fixed = TRUE)
+
+  skip_on_cran()
+  # Complete data leave nothing to compare, and the log no longer claims a refit.
+  dat <- make_m8_full_data(seed = 8517L)
+  run <- nomo_run(data = dat, scales = list(WellBeing = c("i1", "i2", "i3", "i4")),
+                  settings = c(m8_full_settings(), list(missing = list(reliability = FALSE))),
+                  decisions = list(factor_count = 1L, cfa_model = m8_model()))
+  row <- run$decision_log[run$decision_log$id == "missing_data_cfa", ]
+  expect_match(row$observation, "could be fitted under listwise deletion only", fixed = TRUE)
+  expect_identical(row$consequence,
+                   "The fitted model and its results are unchanged, and there is no refit to compare.")
 })
