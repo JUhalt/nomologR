@@ -65,11 +65,11 @@ socioeconomic status. They need not correlate, and dropping one changes what
 is measured (Diamantopoulos & Winklhofer, 2001). The tools here do not apply
 to such a measure, and applying them misleads: low internal consistency is
 expected, and deleting a "weak" indicator removes part of the construct.
-Decide which model a measure follows before choosing tools; Jarvis,
-MacKenzie, and Podsakoff (2003) and MacKenzie, Podsakoff, and Jarvis (2005)
-give criteria. Whether formative latent variables are meaningful at all is
-still debated (Howell, Breivik, & Wilcox, 2007; Edwards, 2011; Bollen &
-Diamantopoulos, 2017), and `nomologR` does not fit them. A formative index can
+Decide which model a measure follows before choosing tools; Jarvis et al.
+(2003) and MacKenzie et al. (2005) give criteria. Whether formative latent
+variables are meaningful at all is still debated (Howell et al., 2007;
+Edwards, 2011; Bollen & Diamantopoulos, 2017), and `nomologR` does not fit
+them. A formative index can
 still enter a nomological network as an observed variable in `nomo_network()`,
 and its content can still be reviewed with `contentvalidR`.
 
@@ -136,15 +136,17 @@ two factors.
   found, why it may matter, what defensible choices exist, and what each choice
   changes downstream.
 - **Reference values are prompts, not verdicts.** Familiar numbers such as a
-  loading of .40 or a CFI of .95 flag evidence for review. Items receive
-  `KEEP`, `REVIEW`, or `STRONG REVIEW`, never `DELETE`. The references live in
+  loading of 0.40 or a CFI of .95 flag evidence for review. An item can be
+  flagged for review or concern, never for deletion. The references live in
   `nomo_defaults()`, and changing them is a visible researcher choice.
 - **One flag wording on screen.** Printed output, plots, and reports use one
-  flag wording: "review", then "concern", and no flag when no reference fired
-  (a plot legend calls that "none"). The returned tables keep each analysis's
-  own values (`KEEP`, `REVIEW`, and `STRONG REVIEW` for loadings; `info`,
-  `review`, and `concern` for evidence), so code that filters on them is
-  unaffected.
+  flag wording: "review", then "concern", "not computed" for a value that could
+  not be computed, and no flag when no reference fired (a plot legend calls
+  that "No flag"). Plots show each by shape as well as color. The returned
+  tables keep each analysis's own values (`KEEP`, `REVIEW`, and
+  `STRONG REVIEW` for loadings; `info`, `review`, and `concern` for evidence),
+  so code that filters on them is unaffected. `?nomologR` sets out how these
+  words correspond to the statuses `contentvalidR` reports.
 - **Historical methods are labeled.** Techniques you will meet in published
   work — eigenvalues greater than one, coefficient alpha, the Fornell–Larcker
   comparison — are shown as context where useful, qualified, and kept separate

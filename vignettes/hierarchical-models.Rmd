@@ -44,8 +44,8 @@ The bifactor model dates to Holzinger and Swineford (1937), and Schmid and
 Leiman (1957) showed how to re-express a higher-order solution in bifactor
 form. Bifactor models were later rediscovered as a way to evaluate
 multidimensional measures (Reise, 2012), with indices for judging total and
-subscale scores (Reise, Bonifay, & Haviland, 2013; Rodriguez, Reise, &
-Haviland, 2016). The [research basis](research-basis.html) article places these
+subscale scores (Reise et al., 2013; Rodriguez et al., 2016). The
+[research basis](research-basis.html) article places these
 methods in context.
 
 # An example with a general factor
@@ -120,7 +120,13 @@ h
 
 ```{r values, include=FALSE}
 idx <- function(x, name) x$indices$estimate[x$indices$index == name]
-f2 <- function(x) sprintf("%.2f", x)
+# Omegas, ECV, and PUC are proportions that cannot exceed 1, so the prose
+# writes them as the package prints them: two decimals, rounded half away from
+# zero, without a leading zero.
+f2 <- function(x) {
+  r <- floor(x * 100 + 0.5 + 1e-9) / 100
+  sub("^0[.]", ".", formatC(r, format = "f", digits = 2))
+}
 sub <- h$subscales
 hs <- function(name) f2(sub$omega_hierarchical_subscale[sub$subscale == name])
 os <- function(name) f2(sub$omega_subscale[sub$subscale == name])
@@ -152,8 +158,8 @@ Focus has an omega of `r os("Focus")`, which looks like a reliable subscale.
 But its **omega hierarchical subscale** is `r hs("Focus")`: once the general
 factor is removed, that is the reliable variance specific to Focus. Only
 `r rel("Focus")` of a Focus score's reliable variance is specific to Focus; the
-rest is the general factor, which the total score already measures. Reise,
-Bonifay, and Haviland (2013) frame exactly this question: whether subscale
+rest is the general factor, which the total score already measures. Reise et
+al. (2013) frame exactly this question: whether subscale
 scores are justified, and how much reliable variance they add after
 controlling for the general factor.
 
@@ -180,10 +186,10 @@ nomo_table(h, "factors")
 ```
 
 `factor_determinacy` is the correlation between a factor and its estimated
-factor score (Beauducel, 2011; Rodriguez, Reise, & Haviland, 2016). Gorsuch
-(1983) recommended using factor score estimates only above .90. `min_competing_r`
-is the lowest correlation two equally valid sets of scores could have. When it
-is negative, two researchers scoring the same data with equally defensible
+factor score (Beauducel, 2011; Rodriguez et al., 2016). Gorsuch (1983)
+recommended using factor score estimates only above .90. `min_competing_r` is
+the lowest correlation two equally valid sets of scores could have. When it is
+negative, two researchers scoring the same data with equally defensible
 methods could rank people in opposite orders, and both would be consistent with
 the model.
 
@@ -192,8 +198,9 @@ variance in a factor its own indicators could explain if optimally weighted.
 They proposed .70 as a standard.
 
 The two indices answer different questions, and the difference is easy to miss.
-They are the same quantity when a construct is unidimensional. Under a bifactor
-model they are not: determinacy is computed from the whole reproduced
+When a construct is unidimensional, H equals the squared determinacy,
+`determinacy_r2`. Under a bifactor model the two need not agree: determinacy
+is computed from the whole reproduced
 correlation matrix, so a group factor's score can borrow the other items to
 partial out the general factor, while H sees only that factor's own loadings
 and treats the rest of each item as uncorrelated residual. Rodriguez et al.
@@ -231,12 +238,12 @@ dfree <- function(x) unname(lavaan::fitMeasures(x$fit, "df"))
 Two features of this table are structural rather than empirical:
 
 - The higher-order model is **equivalent** to the correlated-factors model:
-  both have chi-square = `r sprintf("%.2f", chisq(higher))` on
-  `r dfree(higher)` degrees of freedom. With three first-order factors, the
+  both have chi-square(`r dfree(higher)`) =
+  `r sprintf("%.2f", chisq(higher))`. With three first-order factors, the
   second-order part is just identified, so it imposes no testable constraint.
   Fit cannot distinguish the two, which is what the note on the syntax warned.
 - The bifactor model is **less constrained**. A higher-order model is a
-  constrained version of the bifactor model (Yung, Thissen, & McLeod, 1999), so
+  constrained version of the bifactor model (Yung et al., 1999), so
   the bifactor model can only fit as well or better.
 
 # Why fit cannot choose the structure
@@ -262,10 +269,10 @@ bifactor_model <- nomo_cfa(nomo_model(subscales, "bifactor"), data = dat_higher)
 ```
 
 The higher-order model generated these data, yet the bifactor model fits better:
-chi-square = `r sprintf("%.2f", chisq(bifactor_model))` on
-`r dfree(bifactor_model)` degrees of freedom, against
-`r sprintf("%.2f", chisq(true_model))` on `r dfree(true_model)` for the true
-model. That is not a sign that the bifactor model is correct. Its extra
+chi-square(`r dfree(bifactor_model)`) =
+`r sprintf("%.2f", chisq(bifactor_model))`, against
+chi-square(`r dfree(true_model)`) = `r sprintf("%.2f", chisq(true_model))` for
+the true model. That is not a sign that the bifactor model is correct. Its extra
 parameters absorb sampling noise, and it will usually fit at least as well as
 correlated-factors or higher-order models of the same items (Reise, 2012).
 
@@ -320,6 +327,17 @@ nomo_methods(h)[, c("method", "lineage", "role")]
 ```
 
 # References
+
+Beauducel, A. (2011). Indeterminacy of factor score estimates in slightly
+misspecified confirmatory factor models. *Journal of Modern Applied Statistical
+Methods, 10*(2), 583–598. https://doi.org/10.22237/jmasm/1320120900
+
+Gorsuch, R. L. (1983). *Factor analysis* (2nd ed.). Lawrence Erlbaum.
+
+Hancock, G. R., & Mueller, R. O. (2001). Rethinking construct reliability within
+latent variable systems. In R. Cudeck, S. du Toit, & D. Sörbom (Eds.),
+*Structural equation modeling: Present and future* (pp. 195–216). Scientific
+Software International.
 
 Holzinger, K. J., & Swineford, F. (1937). The bi-factor method.
 *Psychometrika, 2*(1), 41–54. https://doi.org/10.1007/BF02287965

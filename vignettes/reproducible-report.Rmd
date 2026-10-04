@@ -196,7 +196,7 @@ The report mirrors the full guided workflow:
 8. invariance, if requested;
 9. nomological-network evidence, if requested;
 10. workflow decisions and outstanding decisions;
-11. deviations and post-hoc decisions;
+11. deviations and post hoc decisions;
 12. methods and citations: the methods this workflow actually used, each with
     its lineage and role, a reference list for those methods, and software
     citations;

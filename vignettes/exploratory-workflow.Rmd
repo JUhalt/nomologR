@@ -45,9 +45,9 @@ package's evidence can be checked against the truth:
 
 - two factors, A and B, correlated .40;
 - items `a1`–`a4` and `b1`–`b4` are ordinary indicators (population loadings
-  .70 to .80);
-- `a5` **cross-loads** on both factors (.45 on A and .35 on B);
-- `b5` is a **weak** indicator (.30 on B);
+  0.70 to 0.80);
+- `a5` **cross-loads** on both factors (0.45 on A and 0.35 on B);
+- `b5` is a **weak** indicator (0.30 on B);
 - `a2` and `b3` contain a small amount of missing data.
 
 ```{r data}
@@ -221,20 +221,42 @@ row_of <- function(item) efa$item_summary[efa$item_summary$item == item, ]
 a5 <- row_of("a5")
 b5 <- row_of("b5")
 b4 <- row_of("b4")
+
+# The flag as print() and summary() word it, and the value the table stores.
+shown <- function(row) {
+  c(KEEP = "no flag", REVIEW = "review", "STRONG REVIEW" = "concern")[[row$attention]]
+}
+stored <- function(row) paste0("`", row$attention, "`")
+
+# Numbers as the package prints them, rounded half away from zero: a loading
+# keeps its leading zero, and a communality, which cannot exceed 1 here, drops
+# it and takes the decimals that tell it apart from its reference.
+half_up <- function(x, digits) floor(abs(x) * 10^digits + 0.5 + 1e-9) / 10^digits
+loading <- function(x) {
+  paste0(if (x < 0) "-" else "", formatC(half_up(x, 2), format = "f", digits = 2))
+}
+proportion <- function(x, reference = NULL) {
+  digits <- 2
+  while (!is.null(reference) && digits < 5 && half_up(x, digits) == reference) {
+    digits <- digits + 1
+  }
+  sub("^0[.]", ".", formatC(half_up(x, digits), format = "f", digits = digits))
+}
 ```
 
 Compare the table with the known population model:
 
-- `a5` receives **`r a5$attention`**. Its secondary loading of
-  `r sprintf("%.2f", a5$secondary_loading)` reaches the cross-loading reference,
-  exactly the feature built into the data.
-- `b5` receives **`r b5$attention`**. Its primary loading of
-  `r sprintf("%.2f", b5$primary_loading)` and communality of
-  `r sprintf("%.2f", b5$communality)` reflect the weak population loading.
-- `b4` receives **`r b4$attention`** even though its population loading is .70.
-  Its sample communality of `r sprintf("%.3f", b4$communality)` sits essentially
-  at the .40 reference. This is sampling variability around a teaching
-  reference — a reminder that references are prompts, not cliffs.
+- `a5` is flagged for `r shown(a5)` (`attention` is `r stored(a5)`). Its
+  secondary loading of `r loading(a5$secondary_loading)` reaches the
+  cross-loading reference, exactly the feature built into the data.
+- `b5` is flagged for `r shown(b5)` (`r stored(b5)`). Its primary loading of
+  `r loading(b5$primary_loading)` and communality of
+  `r proportion(b5$communality)` reflect the weak population loading.
+- `b4` is flagged for `r shown(b4)` (`r stored(b4)`) even though its population
+  loading is 0.70. Its sample communality of
+  `r proportion(b4$communality, reference = .40)` sits essentially at the .40
+  reference. This is sampling variability around a teaching reference — a
+  reminder that references are prompts, not cliffs.
 
 `KEEP` means that no configured numerical teaching reference fired. It does
 **not** mean that theory, wording, content coverage, redundancy, or external
