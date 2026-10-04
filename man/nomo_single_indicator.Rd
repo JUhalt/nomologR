@@ -35,7 +35,8 @@ omega is used.}
 A \code{nomo_single_indicator} object. The fields to read are
 \code{reliability}, \code{se} (\code{NA} when not supplied), \code{coefficient}, \code{source}
 (\code{NA} when not supplied), and \code{construct} (\code{NA} unless taken from a
-\code{\link[=nomo_reliability]{nomo_reliability()}} result).
+\code{\link[=nomo_reliability]{nomo_reliability()}} result). \code{print()} shows the reliability, its
+standard error, and where it comes from.
 }
 \description{
 \code{nomo_single_indicator()} records the reliability of an observed composite,
@@ -60,11 +61,15 @@ Heatherton (1994) called it the "total aggregation" model.
 
 \strong{Does it work?} Savalei (2019) compared single indicators with path
 analysis, which ignores measurement error, and with full multiple-indicator
-SEM, in samples of 30 to 200. With the reliability fixed at or slightly above
-its true value, single indicators gave the most accurate estimates and the
-most power; misestimating the reliability by more cost accuracy. Where the
-items are available and the sample is large enough, modeling them as
-indicators remains the fuller correction.
+SEM, in samples of 30 to 200. Path analysis and single indicators whose
+reliability was fixed a priori, at a value that slightly overestimated the
+true one, gave the most accurate estimates and the most power. Single
+indicators whose reliability was estimated from the same data (coefficient
+alpha) and full SEM performed in between, and she recommended a
+fixed-reliability single indicator in small samples. An omega estimated from
+the same sample, as from \code{\link[=nomo_reliability]{nomo_reliability()}} on these data, corresponds to
+the data-estimated variant. Where the items are available and the sample is
+large enough, modeling them as indicators remains the fuller correction.
 
 \strong{Which reliability.} A coefficient corrects only the error its design can
 see: internal consistency, for example, leaves transient error in, and the
@@ -72,7 +77,11 @@ coefficient chosen decides what the correction means (DeShon, 1998). Omega
 from the composite's own measurement model (\code{\link[=nomo_reliability]{nomo_reliability()}}) is the
 default. Coefficient alpha understates reliability when loadings differ, so
 it fixes too large an error variance and overcorrects; \code{\link[=nomo_network]{nomo_network()}} flags
-it for review.
+it for review. The single indicator is the observed sum or mean, so with
+ordered items the omega should be the observed-score one
+(\code{ordinal_scale = TRUE}, the default); a latent-response omega
+(\code{ordinal_scale = FALSE}) describes a hypothetical continuous composite, and
+taking it brings a warning and is recorded in \code{source}.
 
 \strong{Uncertainty.} A reliability is itself an estimate. Standard errors that
 treat it as known are too small, and Oberski and Satorra (2013) derived the

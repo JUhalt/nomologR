@@ -72,6 +72,13 @@ nomo_reliability_summary_table <- function(x) {
     ifelse(omega_attention == "review", "review", "info")
   )
 
+  # In the order the model defines the constructs, as `omega` lists them;
+  # merge() does not keep it (#145).
+  out <- out[order(
+    match(out$construct, constructs$construct),
+    match(out$block, unique(out$block))
+  ), , drop = FALSE]
+
   tibble::as_tibble(out[, c(
     "construct", "block", "indicator_type",
     "omega", "omega_ci_lower", "omega_ci_upper", "omega_ci_n_success",
@@ -81,38 +88,93 @@ nomo_reliability_summary_table <- function(x) {
 }
 
 
-nomo_reliability_ci_string <- function(est, lo, hi) {
-  if (!is.finite(est)) return(NA_character_)
-  if (is.finite(lo) && is.finite(hi)) {
-    sprintf("%.3f [%.3f, %.3f]", est, lo, hi)
-  } else sprintf("%.3f", est)
+# A bootstrap interval's heading: "95% CI", the level from the object.
+nomo_reliability_ci_label <- function(ci_status) {
+  level <- if (is.data.frame(ci_status) && nrow(ci_status)) ci_status$level[[1L]] else 0.95
+  nomo_present_ci_label(level)
+}
+
+
+# A construct as a flagged unit, with its group or level when there are several.
+nomo_reliability_unit <- function(construct, block) {
+  ifelse(block == "overall", construct, paste0(construct, " in ", block))
+}
+
+
+# One sentence per flagged coefficient: "Omega .68 is below the review
+# reference .70."
+nomo_reliability_flag_text <- function(metric, estimate, reference) {
+  label <- ifelse(metric == "alpha", "Alpha", "Omega")
+  shown <- nomo_present_stat(estimate, "reliability", reference = reference)
+  ifelse(
+    !is.finite(estimate), paste(label, "could not be computed."),
+    ifelse(
+      estimate < 0 | estimate > 1,
+      sprintf("%s %s is outside the 0 to 1 range of a reliability.", label, shown),
+      sprintf("%s %s is below the review reference %s.", label, shown,
+              nomo_present_stat(reference, "reliability"))
+    )
+  )
+}
+
+
+# The print's one sentence for a flagged log row that is not a coefficient's.
+# The bootstrap's availability and the CFA's strain have their own print lines.
+nomo_reliability_brief <- c(
+  parameterization = paste(
+    "The latent-response omega and alpha depend on lavaan's theta",
+    "parameterization; a delta fit of the same model gives different values."
+  ),
+  bootstrap_reproducibility = "No seed was set, so the bootstrap intervals cannot be reproduced exactly."
+)
+
+
+# The flagged decision-log rows that are not a coefficient's, such as a
+# parameterization or intervals that could not be computed, so that print()
+# and summary() show every review and concern the log holds (#145).
+nomo_reliability_other_flags <- function(log, brief = FALSE) {
+  rows <- log[log$severity %in% c("review", "concern") &
+                !log$metric %in% c("omega", "alpha"), , drop = FALSE]
+  if (isTRUE(brief)) rows <- rows[rows$metric %in% names(nomo_reliability_brief), , drop = FALSE]
+  list(
+    unit = ifelse(rows$object %in% c("measurement_model", "uncertainty"), "", rows$object),
+    status = rows$severity,
+    text = if (isTRUE(brief)) {
+      unname(nomo_reliability_brief[rows$metric])
+    } else {
+      paste(rows$observation, rows$recommendation)
+    }
+  )
 }
 
 
 #' @export
 print.nomo_reliability <- function(x, ...) {
   tab <- nomo_reliability_summary_table(x)
+  reference <- x$guidance$reliability_reference
   nomo_present_header("nomo_reliability", "Reliability")
   nomo_present_facts(c(
     sprintf("Constructs: %d", length(unique(tab$construct))),
     "Primary coefficient: model-based omega",
-    sprintf("Review reference: %s", format(x$guidance$reliability_reference, trim = TRUE))
+    paste0("Review reference: ", nomo_present_stat(reference, "reliability"))
   ))
 
-  if (nrow(tab)) {
-    finite_omega <- tab$omega[is.finite(tab$omega)]
-    if (length(finite_omega)) {
-      nomo_present_facts(c(
-        sprintf("Omega range: %s to %s", nomo_present_number(min(finite_omega)),
-                nomo_present_number(max(finite_omega))),
-        paste0("Flags: ", nomo_present_flag_counts(tab$signal))
-      ))
-    }
+  finite_omega <- tab$omega[is.finite(tab$omega)]
+  if (length(finite_omega)) {
+    range <- nomo_present_stat(range(finite_omega), "reliability")
+    nomo_present_facts(c(
+      paste0("Omega: ", if (identical(range[[1L]], range[[2L]])) {
+        range[[1L]]
+      } else {
+        paste(range, collapse = " to ")
+      }),
+      paste0("Omega flags: ", nomo_present_flag_counts(tab$signal))
+    ))
   }
 
   if (isTRUE(x$include_alpha)) {
     nomo_present_facts(sprintf(
-      "Alpha: %d of %s available as a secondary coefficient",
+      "Alpha: %d of %s, as a secondary coefficient",
       sum(x$alpha_status$available), nomo_present_count(nrow(x$alpha_status), "construct")
     ))
   }
@@ -121,16 +183,15 @@ print.nomo_reliability <- function(x, ...) {
     # Absent from status tables created before worker counts were recorded,
     # such as a saved object from an earlier version.
     workers <- if ("workers" %in% names(x$ci_status)) x$ci_status$workers else NULL
+    used <- x$ci_status$min_successful_draws[[1L]]
+    # Spelled out, as the print has no key to define "CI".
     nomo_present_facts(c(
-      sprintf("Uncertainty: %.1f%% percentile bootstrap CI", 100 * x$ci_status$level[[1L]]),
-      sprintf("%d requested draws", x$ci_status$requested_draws[[1L]]),
-      if (is.finite(x$ci_status$min_successful_draws[[1L]])) {
-        sprintf("minimum successful draws: %d", x$ci_status$min_successful_draws[[1L]])
-      } else {
-        ""
-      },
+      paste0("Uncertainty: ", sub(" CI$", "", nomo_reliability_ci_label(x$ci_status)),
+             " percentile bootstrap intervals"),
+      sprintf("Draws: %d requested", x$ci_status$requested_draws[[1L]]),
+      if (is.finite(used)) sprintf("Fewest usable draws: %d", used) else "",
       if (length(workers) && is.finite(workers[[1L]]) && workers[[1L]] > 1L) {
-        sprintf("%d workers", workers[[1L]])
+        sprintf("Workers: %d", workers[[1L]])
       } else {
         ""
       }
@@ -146,10 +207,26 @@ print.nomo_reliability <- function(x, ...) {
 
   if (isTRUE(x$model_strain) || isTRUE(x$improper_solution)) {
     nomo_present_text(
-      "Measurement-model context: review before treating reliability as stable evidence."
+      "Measurement-model context: review the CFA before treating reliability as stable evidence."
     )
   }
+
+  # Omega's flags, as counted above, and the other flags that qualify the
+  # coefficients, such as a theta parameterization; alpha's are in summary().
+  flagged <- tab[tab$signal %in% c("review", "concern"), , drop = FALSE]
+  other <- nomo_reliability_other_flags(x$decision_log, brief = TRUE)
+  nomo_present_flagged(
+    unit = c(nomo_reliability_unit(flagged$construct, flagged$block), other$unit),
+    status = c(flagged$signal, other$status),
+    text = c(
+      nomo_reliability_flag_text(rep("omega", nrow(flagged)), flagged$omega, reference),
+      other$text
+    )
+  )
+
+  cat("\n")
   nomo_present_text("Reference values guide review; they are not pass/fail reliability rules.")
+  nomo_present_pointer("summary(x)", "each construct's omega and alpha")
   invisible(x)
 }
 
@@ -158,13 +235,19 @@ print.nomo_reliability <- function(x, ...) {
 #'
 #' @param object A `nomo_reliability` object.
 #' @param ... Unused.
-#' @return An object of class `summary_nomo_reliability`.
+#' @return An object of class `summary_nomo_reliability`. Printed, it shows each
+#'   construct's omega and alpha with their intervals, score scale, and flag,
+#'   why any alpha was not computed, and the reason for each flag in the
+#'   decision log, including those that qualify the coefficients, such as a
+#'   theta parameterization or intervals that could not be computed.
 #' @export
 summary.nomo_reliability <- function(object, ...) {
   out <- list(
     table = nomo_reliability_summary_table(object),
     alpha_status = object$alpha_status,
     ci_status = object$ci_status,
+    reference = object$guidance$reliability_reference,
+    evidence = object$evidence,
     model_strain = object$model_strain,
     improper_solution = object$improper_solution,
     fit_context = object$fit_context,
@@ -178,32 +261,39 @@ summary.nomo_reliability <- function(object, ...) {
 
 #' @export
 print.summary_nomo_reliability <- function(x, ...) {
+  reference <- x$reference
   nomo_present_header("nomo_reliability", "Reliability", summary = TRUE)
+  nomo_present_facts(c(
+    sprintf("Constructs: %d", length(unique(x$table$construct))),
+    paste0("Review reference: ", nomo_present_stat(reference, "reliability"))
+  ))
   nomo_present_section("Coefficients")
+  ci_label <- nomo_reliability_ci_label(x$ci_status)
   if (nrow(x$table)) {
     show <- x$table
-    show$omega_shown <- mapply(
-      nomo_reliability_ci_string,
-      show$omega, show$omega_ci_lower, show$omega_ci_upper,
-      USE.NAMES = FALSE
-    )
-    show$alpha_shown <- mapply(
-      nomo_reliability_ci_string,
-      show$alpha, show$alpha_ci_lower, show$alpha_ci_upper,
-      USE.NAMES = FALSE
-    )
+    coefficient <- function(v) nomo_present_stat(v, "reliability", reference = reference)
+    show$omega_ci <- nomo_present_ci(show$omega_ci_lower, show$omega_ci_upper,
+                                     kind = "reliability")
+    show$alpha_ci <- nomo_present_ci(show$alpha_ci_lower, show$alpha_ci_upper,
+                                     kind = "reliability")
     show$scale_shown <- gsub("_", " ", show$omega_scale)
-    show$flag <- nomo_present_flag(show$signal)
-    columns <- nomo_present_drop_constant(
-      c("Construct" = "construct", "Block" = "block",
-        "Indicators" = "indicator_type", "Omega" = "omega_shown",
-        "Alpha" = "alpha_shown", "Omega scale" = "scale_shown", "Flag" = "flag"),
-      "Block", show$block
+    show$flag <- nomo_present_status(show$signal)
+    columns <- c("Construct" = "construct", "Block" = "block",
+                 "Indicators" = "indicator_type", "Omega" = "omega", "CI" = "omega_ci",
+                 "Alpha" = "alpha", "CI" = "alpha_ci", "Omega scale" = "scale_shown",
+                 "Flag" = "flag")
+    names(columns)[names(columns) == "CI"] <- ci_label
+    # A construct without omega, such as a single-indicator factor, has no block.
+    columns <- nomo_present_drop_constant(columns, "Block", stats::na.omit(show$block))
+    # With continuous indicators the scale is always the observed score's, as
+    # the Indicators column already says; ordered indicators keep it.
+    continuous <- all(show$omega_scale == "observed_continuous")
+    columns <- columns[!(names(columns) == "Omega scale" & continuous)]
+    nomo_present_table(
+      show, columns,
+      formats = list(omega = coefficient, alpha = coefficient),
+      more = "nomo_table(x, \"coefficients\")"
     )
-    nomo_present_table(show, columns, more = "nomo_table(x, \"coefficients\")")
-    if (any(is.finite(show$omega_ci_lower) & is.finite(show$omega_ci_upper))) {
-      nomo_present_text("Bracketed values are bootstrap confidence intervals.", indent = 2L)
-    }
   } else {
     nomo_present_text("No reliability coefficients are available.", indent = 2L)
   }
@@ -213,11 +303,45 @@ print.summary_nomo_reliability <- function(x, ...) {
     , drop = FALSE
   ]
   if (nrow(unavailable)) {
-    nomo_present_section("Secondary alpha unavailable for")
+    nomo_present_section("Alpha not computed")
     nomo_present_bullets(sprintf(
       "%s (%s indicators, %s scale): %s", unavailable$construct,
       unavailable$indicator_type, gsub("_", " ", unavailable$score_scale),
       unavailable$reason
+    ))
+  }
+
+  # Each flagged coefficient, with what to look at; omega's and alpha's. Then
+  # every other flagged log row, such as a theta parameterization, intervals
+  # that could not be computed, or the CFA's strain, as the validity summary
+  # shows them (#145).
+  log <- x$decision_log
+  unit <- character()
+  status <- character()
+  text <- character()
+  evidence <- x$evidence
+  if (is.data.frame(evidence) && nrow(evidence)) {
+    advice <- log$recommendation[match(
+      paste(evidence$construct, evidence$metric),
+      paste(log$object, log$metric)
+    )]
+    unit <- nomo_reliability_unit(evidence$construct, evidence$block)
+    status <- evidence$attention
+    text <- paste(
+      nomo_reliability_flag_text(evidence$metric, evidence$estimate, reference),
+      ifelse(is.na(advice), "", advice)
+    )
+  }
+  other <- nomo_reliability_other_flags(log)
+  nomo_present_flagged(
+    unit = c(unit, other$unit), status = c(status, other$status),
+    text = c(text, other$text)
+  )
+
+  if (any(is.finite(x$table$omega_ci_lower) | is.finite(x$table$alpha_ci_lower))) {
+    nomo_present_key(stats::setNames(
+      "Percentile bootstrap confidence interval",
+      sub("^[0-9.]+% ", "", ci_label)
     ))
   }
 
@@ -230,18 +354,13 @@ print.summary_nomo_reliability <- function(x, ...) {
     )
   }
 
-  if (isTRUE(x$model_strain) || isTRUE(x$improper_solution)) {
-    nomo_present_text(
-      "Measurement-model context requires review: reliability is conditional ",
-      "on the fitted CFA."
-    )
-  }
-
+  # The CFA's strain is listed under Flagged, from its decision-log row.
   nomo_present_text(
     "Omega is primary for the congeneric CFA workflow; alpha is secondary and ",
     "assumption-dependent. Reliability contributes score-precision evidence, ",
     "not construct validity."
   )
+  nomo_present_pointer("x$decision_log", "the reasoning behind each coefficient")
   invisible(x)
 }
 
@@ -263,11 +382,18 @@ nomo_plot_x_limits <- function(values, conceptual = c(0, 1), step = 0.05) {
 #' Plot model-based reliability evidence
 #'
 #' @param x A `nomo_reliability` object.
+#' @param type Plot type. `"coefficients"`, the only one, shows omega and alpha
+#'   for each construct.
 #' @param ... Unused.
-#' @return A `ggplot2` object. The conceptual 0-to-1 reliability range is shown
-#'   by default and expands only if an estimate or interval lies outside it.
+#' @return A `ggplot2` object with one row per construct and coefficient, omega
+#'   drawn larger than alpha. Each point's shape and color show its flag, with
+#'   a legend whenever a coefficient is flagged. The conceptual 0-to-1
+#'   reliability range is shown by default and expands only if an estimate or
+#'   interval lies outside it.
 #' @export
-plot.nomo_reliability <- function(x, ...) {
+plot.nomo_reliability <- function(x, type = "coefficients", ...) {
+  # Every plot method takes `type`, as the shared style asks (#144).
+  type <- nomo_match_arg(type, "coefficients")
   dat <- x$evidence
   dat <- dat[is.finite(dat$estimate), , drop = FALSE]
   if (!nrow(dat)) {
@@ -277,10 +403,15 @@ plot.nomo_reliability <- function(x, ...) {
   if (!"ci_lower" %in% names(dat)) dat$ci_lower <- NA_real_
   if (!"ci_upper" %in% names(dat)) dat$ci_upper <- NA_real_
 
+  # One row per construct and coefficient, named on the axis, so the shape is
+  # free to carry the flag (#144).
   dat$metric <- factor(dat$metric, levels = c("omega", "alpha"))
-  levels_y <- rev(unique(as.character(dat$construct)))
-  dat$y_base <- match(as.character(dat$construct), levels_y)
-  dat$y_plot <- dat$y_base + ifelse(as.character(dat$metric) == "omega", 0.09, -0.09)
+  constructs <- unique(as.character(dat$construct))
+  rows <- as.vector(t(outer(constructs, c("omega", "alpha"), paste, sep = ": ")))
+  rows <- rows[rows %in% paste(dat$construct, dat$metric, sep = ": ")]
+  levels_y <- rev(rows)
+  dat$y_plot <- match(paste(dat$construct, dat$metric, sep = ": "), levels_y)
+  dat$flag <- nomo_plot_status(dat$attention)
 
   ref <- x$guidance$reliability_reference
   xlim <- nomo_plot_x_limits(c(dat$estimate, dat$ci_lower, dat$ci_upper))
@@ -298,6 +429,7 @@ plot.nomo_reliability <- function(x, ...) {
     ,
     drop = FALSE
   ]
+  reference_shown <- nomo_present_stat(ref, "reliability")
 
   p <- ggplot2::ggplot() +
     ggplot2::geom_vline(xintercept = ref, linetype = 2) +
@@ -313,37 +445,38 @@ plot.nomo_reliability <- function(x, ...) {
     ) +
     ggplot2::geom_point(
       data = omega_dat,
-      ggplot2::aes(x = estimate, y = y_plot, shape = metric),
+      ggplot2::aes(x = estimate, y = y_plot, shape = flag, colour = flag),
       size = 3.4
     ) +
     ggplot2::geom_point(
       data = alpha_dat,
-      ggplot2::aes(x = estimate, y = y_plot, shape = metric),
+      ggplot2::aes(x = estimate, y = y_plot, shape = flag, colour = flag),
       size = 2.5
     ) +
+    nomo_plot_status_scales(dat$flag) +
     ggplot2::scale_y_continuous(
       breaks = seq_along(levels_y),
       labels = levels_y
     ) +
+    ggplot2::scale_x_continuous(labels = nomo_plot_bounded_labels) +
     ggplot2::coord_cartesian(xlim = xlim) +
     nomo_plot_labs(
       title = "Reliability evidence",
       subtitle = if (any(is.finite(dat$ci_lower) & is.finite(dat$ci_upper))) {
         paste0(
-          format(100 * x$ci_level, trim = TRUE),
-          "% bootstrap CIs; dashed line = review reference (",
-          format(ref, trim = TRUE), ")."
+          nomo_reliability_ci_label(x$ci_status),
+          " (percentile bootstrap); dashed line = review reference (",
+          reference_shown, ")."
         )
       } else {
         paste0(
-          "Dashed line = review reference (", format(ref, trim = TRUE),
+          "Dashed line = review reference (", reference_shown,
           "); bootstrap CIs are optional."
         )
       },
       x = "Reliability coefficient",
       y = NULL,
-      shape = "Coefficient",
-      caption = "Reference values guide review; they are not pass/fail rules."
+      caption = "Omega is primary and drawn larger; alpha is secondary. Reference values guide review; they are not pass/fail rules."
     ) +
     ggplot2::theme_minimal() +
     ggplot2::theme(
@@ -351,9 +484,6 @@ plot.nomo_reliability <- function(x, ...) {
       panel.grid.major.y = ggplot2::element_line()
     )
 
-  if (length(unique(as.character(dat$metric))) == 1L) {
-    p <- p + ggplot2::guides(shape = "none")
-  }
   if (length(unique(dat$block)) > 1L) {
     p <- p + ggplot2::facet_wrap(stats::as.formula("~ block"))
   }
@@ -362,5 +492,5 @@ plot.nomo_reliability <- function(x, ...) {
 
 
 utils::globalVariables(c(
-  "estimate", "construct", "metric", "block", "ci_lower", "ci_upper", "y_plot"
+  "estimate", "construct", "metric", "block", "ci_lower", "ci_upper", "y_plot", "flag"
 ))

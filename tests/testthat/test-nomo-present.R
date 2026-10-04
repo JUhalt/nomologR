@@ -76,7 +76,7 @@ test_that("plot legends use the same flag wording (#89)", {
   expect_identical(legend(plot(cfa, type = "fit"), "shape"), c("No flag", "Review"))
 
   val$ave$attention <- c("info", "concern")
-  expect_identical(legend(plot(val, type = "ave"), "shape"), c("none", "concern"))
+  expect_identical(legend(plot(val, type = "ave"), "shape"), c("No flag", "Concern"))
 
   p <- plot(nomo_screen(nomo_demo_continuous), type = "evidence")
   expect_identical(p$scales$get_scales("shape")$name, "Flag")

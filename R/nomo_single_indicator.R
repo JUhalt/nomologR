@@ -24,11 +24,15 @@
 #'
 #' **Does it work?** Savalei (2019) compared single indicators with path
 #' analysis, which ignores measurement error, and with full multiple-indicator
-#' SEM, in samples of 30 to 200. With the reliability fixed at or slightly above
-#' its true value, single indicators gave the most accurate estimates and the
-#' most power; misestimating the reliability by more cost accuracy. Where the
-#' items are available and the sample is large enough, modeling them as
-#' indicators remains the fuller correction.
+#' SEM, in samples of 30 to 200. Path analysis and single indicators whose
+#' reliability was fixed a priori, at a value that slightly overestimated the
+#' true one, gave the most accurate estimates and the most power. Single
+#' indicators whose reliability was estimated from the same data (coefficient
+#' alpha) and full SEM performed in between, and she recommended a
+#' fixed-reliability single indicator in small samples. An omega estimated from
+#' the same sample, as from [nomo_reliability()] on these data, corresponds to
+#' the data-estimated variant. Where the items are available and the sample is
+#' large enough, modeling them as indicators remains the fuller correction.
 #'
 #' **Which reliability.** A coefficient corrects only the error its design can
 #' see: internal consistency, for example, leaves transient error in, and the
@@ -36,7 +40,11 @@
 #' from the composite's own measurement model ([nomo_reliability()]) is the
 #' default. Coefficient alpha understates reliability when loadings differ, so
 #' it fixes too large an error variance and overcorrects; [nomo_network()] flags
-#' it for review.
+#' it for review. The single indicator is the observed sum or mean, so with
+#' ordered items the omega should be the observed-score one
+#' (`ordinal_scale = TRUE`, the default); a latent-response omega
+#' (`ordinal_scale = FALSE`) describes a hypothetical continuous composite, and
+#' taking it brings a warning and is recorded in `source`.
 #'
 #' **Uncertainty.** A reliability is itself an estimate. Standard errors that
 #' treat it as known are too small, and Oberski and Satorra (2013) derived the
@@ -61,7 +69,8 @@
 #' @return A `nomo_single_indicator` object. The fields to read are
 #'   `reliability`, `se` (`NA` when not supplied), `coefficient`, `source`
 #'   (`NA` when not supplied), and `construct` (`NA` unless taken from a
-#'   [nomo_reliability()] result).
+#'   [nomo_reliability()] result). `print()` shows the reliability, its
+#'   standard error, and where it comes from.
 #'
 #' @references
 #' Bagozzi, R. P., & Heatherton, T. F. (1994). A general approach to
@@ -131,7 +140,13 @@ nomo_single_indicator <- function(reliability,
     reliability <- taken$reliability
     if (is.null(se)) se <- taken$se
     construct <- taken$construct
-    if (is.null(source)) source <- "this sample (nomo_reliability())"
+    if (is.null(source)) {
+      source <- if (taken$latent_response) {
+        "this sample (nomo_reliability(), latent-response scale)"
+      } else {
+        "this sample (nomo_reliability())"
+      }
+    }
   } else if (!is.null(construct)) {
     stop(
       "`construct` is used only when `reliability` is a `nomo_reliability()` result.",
@@ -214,20 +229,56 @@ nomo_single_indicator_from_reliability <- function(x, construct) {
   } else {
     NULL
   }
-  list(reliability = row$estimate[[1L]], se = se, construct = construct)
+
+  # The single indicator is the observed sum or mean. With ordered items, a
+  # latent-response omega describes a hypothetical continuous composite and
+  # fixes too small an error variance for the observed one (#145).
+  types <- x$item_type_context
+  ordered <- is.data.frame(types) &&
+    isTRUE(types$indicator_type[match(construct, types$construct)] == "ordered")
+  latent_response <- ordered && isFALSE(x$ordinal_scale)
+  if (latent_response) {
+    warning(
+      sprintf(
+        paste(
+          "Omega for `%s` is on the latent-response scale (`ordinal_scale =",
+          "FALSE`), which describes a hypothetical continuous composite, not",
+          "the observed sum or mean a single indicator models. Rerun",
+          "nomo_reliability() with `ordinal_scale = TRUE` for the observed-score",
+          "omega."
+        ),
+        construct
+      ),
+      call. = FALSE
+    )
+  }
+  list(
+    reliability = row$estimate[[1L]], se = se, construct = construct,
+    latent_response = latent_response
+  )
 }
 
 
 #' @export
 print.nomo_single_indicator <- function(x, ...) {
   nomo_present_header("nomo_single_indicator", "Reliability for a single indicator")
+  # Three decimals: the value is fixed in the model as given (#144).
   nomo_present_facts(c(
-    sprintf("Reliability: %s (%s)", nomo_present_number(x$reliability, 3L),
+    sprintf("Reliability: %s (%s)", nomo_present_stat(x$reliability, "reliability", digits = 3L),
             x$coefficient),
-    if (is.finite(x$se)) sprintf("SE: %s", nomo_present_number(x$se, 3L)) else "",
+    if (is.finite(x$se)) {
+      sprintf("SE: %s", nomo_present_stat(x$se, "reliability", digits = 3L))
+    } else {
+      ""
+    },
     if (!is.na(x$construct)) sprintf("Construct: %s", x$construct) else ""
   ))
   if (!is.na(x$source)) nomo_present_text("Source: ", x$source)
+  if (is.finite(x$se)) nomo_present_text("SE = standard error of the reliability.")
+  nomo_present_pointer(
+    "?nomo_network",
+    "how x in `single_indicators` fixes the composite's error variance"
+  )
   invisible(x)
 }
 
@@ -546,7 +597,10 @@ nomo_network_single_reevaluate <- function(sample, hypotheses, data, extra,
 # whether any hypothesis's evidence depends on the reliability assumed.
 nomo_network_single_log <- function(table, sensitivity) {
   log <- nomo_log_new()
-  number <- function(x) nomo_present_number(x, 3L)
+  # A reliability and its standard error print as reliabilities do, and a
+  # variance as an estimate, each to three decimals (#144).
+  number <- function(x) nomo_present_stat(x, "reliability", digits = 3L)
+  variance <- function(x) nomo_present_stat(x, "estimate", digits = 3L)
 
   for (k in seq_len(nrow(table))) {
     row <- table[k, , drop = FALSE]
@@ -568,8 +622,8 @@ nomo_network_single_log <- function(table, sensitivity) {
           "variance is fixed at (1 - %s) x %s = %s, from a reliability of %s",
           "(%s; %s)."
         ),
-        v, number(rel), number(row$variance[[1L]]),
-        number(row$error_variance[[1L]]), number(rel),
+        v, number(rel), variance(row$variance[[1L]]),
+        variance(row$error_variance[[1L]]), number(rel),
         if (identical(row$coefficient[[1L]], "unspecified")) {
           "coefficient not stated"
         } else {

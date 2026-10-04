@@ -17,7 +17,10 @@ standardized general and group loadings.}
 \item{...}{Unused.}
 }
 \value{
-A \code{ggplot} object.
+A \code{ggplot} object. A composite whose shares rest on a negative
+variance estimate is left out of the variance plot, and a loading that
+rests on one is left out of the loadings plot; the caption names what was
+left out.
 }
 \description{
 Plot hierarchical measurement evidence
