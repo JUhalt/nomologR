@@ -1839,3 +1839,14 @@ test_that("plots draw status by shape and color, with plain titles (#145)", {
   inter <- plot(out, type = "interitem")
   expect_identical(inter$labels$fill, "Pearson r")
 })
+
+
+test_that("a screen saved before declared scales still names its negative pairs", {
+  out <- nomo_screen(data.frame(item1 = 1:6, item2 = c(1, 2, 2, 4, 5, 6),
+                                reverse_candidate = 6:1))
+  out$relationship_summary$scale <- NULL
+  out$relationship_summary$scale_item_rest_r <- NULL
+  pairs <- summary(out)$negative_pairs
+  expect_identical(nrow(pairs), 2L)
+  expect_true(all(pairs$r < 0))
+})
