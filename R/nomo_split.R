@@ -99,8 +99,10 @@ nomo_split <- function(data,
 
   set.seed(as.integer(seed))
   # The seed reproduces the split only under the same generator, so the
-  # generator is recorded with it (#145).
-  rng_kind <- RNGkind()
+  # generator is recorded with it (#145). The first three kinds are the
+  # documented ones; R-devel's RNGkind() adds a fourth that sample.int() does
+  # not use.
+  rng_kind <- RNGkind()[1:3]
   validation_rows <- sort(sample.int(n, size = n_validation, replace = FALSE))
   calibration_rows <- setdiff(seq_len(n), validation_rows)
 

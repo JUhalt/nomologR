@@ -89,7 +89,8 @@ test_that("a seed beyond the integer range gets the argument's own message (#145
 test_that("the split records the random-number generator its seed depends on (#145)", {
   dat <- data.frame(x = 1:120)
   default <- nomo_split(dat, seed = 7)
-  expect_identical(default$rng_kind, RNGkind())
+  # The three documented kinds, on every R version (R-devel adds a fourth).
+  expect_identical(default$rng_kind, RNGkind()[1:3])
   expect_match(default$decision_log$observation[[1L]], "using seed 7 with RNGkind() Mersenne-Twister",
                fixed = TRUE)
   expect_output(print(default), "Generator: Mersenne-Twister, Inversion, Rejection", fixed = TRUE)
