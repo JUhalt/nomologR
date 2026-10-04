@@ -60,7 +60,8 @@ declared and \code{estimator = NULL}, WLSMV is requested.}
 an unstandardized estimate that involves a latent variable: with \code{TRUE},
 each factor's variance, or residual variance for an outcome, is 1; with
 \code{FALSE}, each factor takes the units of its first indicator. See \code{scale}
-in \link{nomo_expectations}.}
+in \link{nomo_expectations}. The decision log names the identification for
+each such hypothesis (\code{unstandardized_metric}).}
 
 \item{control}{Optional optimizer-control list passed to \code{lavaan::sem()}.}
 

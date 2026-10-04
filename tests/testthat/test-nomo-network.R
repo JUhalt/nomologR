@@ -2909,7 +2909,21 @@ test_that("the scale of the estimates is stated, row by row when it differs (#14
                    "Estimate (standardized or unstandardized, as each hypothesis specifies)")
   expect_identical(plot(rg_default(), "effects")$labels$x, "Standardized estimate")
 
-  # The metric of an unstandardized latent estimate is documented.
+  # The metric of an unstandardized latent estimate is logged with the
+  # identification that set it, and documented.
+  row <- mixed$decision_log[mixed$decision_log$metric == "unstandardized_metric", ]
+  expect_identical(row$object, "Agency -> Performance")
+  expect_identical(row$reference, "std.lv = TRUE")
+  expect_match(row$observation, "whose metric for `Agency` is set by the identification: with std.lv = TRUE",
+               fixed = TRUE)
+  marker <- nomo_network(demo_network_model(), nomo_demo_network, std.lv = FALSE, nomo_hypotheses(
+    "Agency -> Persistence" = positive(min = .3, scale = "unstandardized")
+  ))
+  row <- marker$decision_log[marker$decision_log$metric == "unstandardized_metric", ]
+  expect_match(row$observation, "metric for `Agency` and `Persistence` is set by the identification: with std.lv = FALSE, each factor takes the units of its first indicator.",
+               fixed = TRUE)
+  expect_false("unstandardized_metric" %in% rg_default()$decision_log$metric)
+  expect_identical(nrow(nomologR:::nomo_network_metric_log(marker$hypotheses, NULL, TRUE)), 0L)
   expect_match(nomo_test_rd_text("nomo_expectations", "\\arguments"),
                "the same unstandardized bound can be met under", fixed = TRUE)
   expect_match(nomo_test_rd_text("nomo_network", "\\arguments"),

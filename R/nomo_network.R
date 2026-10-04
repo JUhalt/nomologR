@@ -2332,7 +2332,8 @@ nomo_network_validate_data <- function(data, label) {
 #'   an unstandardized estimate that involves a latent variable: with `TRUE`,
 #'   each factor's variance, or residual variance for an outcome, is 1; with
 #'   `FALSE`, each factor takes the units of its first indicator. See `scale`
-#'   in [nomo_expectations].
+#'   in [nomo_expectations]. The decision log names the identification for
+#'   each such hypothesis (`unstandardized_metric`).
 #' @param control Optional optimizer-control list passed to `lavaan::sem()`.
 #' @param equivalence_alpha One number strictly between 0 and .5. For
 #'   quantitative negligible predictions, the equivalence confidence level is
@@ -2848,6 +2849,7 @@ nomo_network <- function(model,
     decision_log,
     nomo_network_residual_log(primary$hypothesis_evidence),
     nomo_network_endpoint_log(hypotheses, primary$fit),
+    nomo_network_metric_log(hypotheses, primary$fit, std.lv),
     nomo_network_single_log(primary_sample$table, sensitivity$table)
   )
 
@@ -2961,6 +2963,46 @@ nomo_network_residual_log <- function(hypothesis_evidence) {
     )
   }
 
+  log
+}
+
+
+# The metric of an unstandardized latent estimate (#145) ------------------------
+#
+# A latent variable has no raw units: an unstandardized bound on a relation
+# that involves one is judged in the metric its identification sets, which
+# `std.lv` chooses. The same bound can be met under one identification and
+# missed under the other, so the log names the one used.
+nomo_network_metric_log <- function(hypotheses, fit, std.lv) {
+  log <- nomo_log_new()
+  latent <- tryCatch(
+    as.character(lavaan::lavNames(fit, type = "lv")),
+    error = function(e) character()
+  )
+  h <- hypotheses$hypotheses
+  rows <- which(h$scale == "unstandardized" & (h$source %in% latent | h$target %in% latent))
+  for (i in rows) {
+    nodes <- intersect(c(h$source[[i]], h$target[[i]]), latent)
+    log <- nomo_log_add(
+      log, stage = "network", object = h$relation[[i]],
+      metric = "unstandardized_metric",
+      reference = sprintf("std.lv = %s", isTRUE(std.lv)),
+      severity = "info",
+      observation = sprintf(
+        "`%s` is judged on the unstandardized scale, whose metric for %s is set by the identification: %s.",
+        h$relation[[i]], nomo_present_or(paste0("`", nodes, "`"), "and"),
+        if (isTRUE(std.lv)) {
+          "with std.lv = TRUE, a factor's variance, or an outcome's residual variance, is 1"
+        } else {
+          "with std.lv = FALSE, each factor takes the units of its first indicator"
+        }
+      ),
+      recommendation = paste(
+        "Report the identification with an unstandardized bound: the same bound",
+        "can be met under one identification and missed under the other."
+      )
+    )
+  }
   log
 }
 
