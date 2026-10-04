@@ -236,49 +236,58 @@ efa <- nomo_efa(walk[handoff$items], factors = 2)
 summary(efa)
 #> <nomo_efa summary> Exploratory factor analysis
 #> Cases: 400 | Items: 10 | Factors: 2 (researcher specified)
-#> Correlation: pearson | Extraction: minres | Rotation: oblimin
-#> Supporting adequacy: KMO 0.839 | Bartlett chi-square(45) = 810.20, p < .001
+#> Correlation: Pearson | Extraction: minres | Rotation: oblimin (oblique)
+#> KMO: .84 | Bartlett's test: chi-square(45) = 810.20, p < .001
 #> 
 #> Item structure
 #>   Item  Factor  Loading  Next factor  Loading  Communality  Flag
-#>   EF1   F1        0.778  F2            -0.067        0.564
-#>   EF2   F1        0.654  F2             0.014        0.436
-#>   EF3   F1        0.370  F2             0.081        0.170  concern
-#>   EF4   F1        0.279  F2             0.021        0.084  concern
-#>   EF6   F1        0.567  F2             0.045        0.346  review
-#>   TF1   F2        0.695  F1             0.020        0.495
-#>   TF2   F2        0.561  F1             0.095        0.370  review
-#>   TF3   F2        0.600  F1            -0.013        0.354  review
-#>   TF4   F1        0.444  F2             0.320        0.425  review
-#>   TF6   F2        0.640  F1            -0.084        0.369  review
+#>   EF1   F1         0.78  F2             -0.07          .56
+#>   EF2   F1         0.65  F2              0.01          .44
+#>   EF3   F1         0.37  F2              0.08          .17  Concern
+#>   EF4   F1         0.28  F2              0.02          .08  Concern
+#>   EF6   F1         0.57  F2              0.05          .35  Review
+#>   TF1   F2         0.69  F1              0.02          .50
+#>   TF2   F2         0.56  F1              0.09          .37  Review
+#>   TF3   F2         0.60  F1             -0.01          .35  Review
+#>   TF4   F1         0.44  F2              0.32          .42  Review
+#>   TF6   F2         0.64  F1             -0.08          .37  Review
 #> 
-#> Flagged items
-#>   - EF3 (concern): primary loading |0.37| is below the 0.40 teaching
-#>     reference; communality 0.17 is below the 0.40 teaching reference
-#>   - EF4 (concern): primary loading |0.28| is below the 0.40 teaching
-#>     reference; communality 0.08 is below the 0.40 teaching reference
-#>   - EF6 (review): communality 0.35 is below the 0.40 teaching reference
-#>   - TF2 (review): communality 0.37 is below the 0.40 teaching reference
-#>   - TF3 (review): communality 0.35 is below the 0.40 teaching reference
-#>   - TF4 (review): secondary loading |0.32| meets/exceeds the 0.30
-#>     cross-loading reference
-#>   - TF6 (review): communality 0.37 is below the 0.40 teaching reference
+#> Flagged
+#>   - EF3 (Concern): The primary loading, 0.37 in absolute value, is below the
+#>     0.40 teaching reference. The communality, .17, is below the .40 teaching
+#>     reference.
+#>   - EF4 (Concern): The primary loading, 0.28 in absolute value, is below the
+#>     0.40 teaching reference. The communality, .08, is below the .40 teaching
+#>     reference.
+#>   - EF6, TF3 (Review): The communality, .35, is below the .40 teaching
+#>     reference.
+#>   - TF2, TF6 (Review): The communality, .37, is below the .40 teaching
+#>     reference.
+#>   - TF4 (Review): The secondary loading, 0.32 in absolute value, is at or
+#>     above the 0.30 cross-loading reference.
 #> 
 #> Factor correlations
-#>   Factor 1  Factor 2      r
-#>   F1        F2        0.441
+#>   Factor 1  Factor 2    r
+#>   F1        F2        .44
 #> 
 #> Largest residual correlations
-#>   Off-diagonal RMSR: 0.021
+#>   RMSR: 0.021
 #>   Item 1  Item 2  Residual
-#>   EF4     TF6       -0.063
-#>   EF2     TF2       -0.046
-#>   EF4     TF4        0.040
-#>   TF3     TF4        0.037
-#>   EF2     TF6        0.035
+#>   EF4     TF6        -.063
+#>   EF2     TF2        -.046
+#>   EF4     TF4         .040
+#>   TF3     TF4         .037
+#>   EF2     TF6         .035
+#> 
+#> Abbreviations
+#>   KMO -- Kaiser-Meyer-Olkin measure of sampling adequacy.
+#>   RMSR -- Root mean square of the off-diagonal residual correlations.
 #> 
 #> Numerical references trigger inspection, not automatic deletion or hidden
 #> refitting.
+#> 
+#> See nomo_table(x, "pattern") for the full pattern matrix and
+#> nomo_table(x, "decision_log") for every recorded decision.
 ```
 
 Three items stand apart:

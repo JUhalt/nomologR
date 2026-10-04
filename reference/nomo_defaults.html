@@ -72,8 +72,8 @@ explanation in downstream <code>nomologR</code> functions.</p>
 
 
 <dl><dt id="arg-profile">profile<a class="anchor" aria-label="anchor" href="#arg-profile"></a></dt>
-<dd><p>Guidance profile. Only <code>"teaching"</code> is implemented during the
-initial development series.</p></dd>
+<dd><p>Guidance profile. <code>"teaching"</code>, the only profile, holds
+reference values commonly taught in measurement courses.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -91,6 +91,17 @@ items, respecifies models, or declares validity.</p>
 statistic: <code><a href="nomo_screen.html">nomo_screen()</a></code> flags a case on long-string only when at least
 that many items are screened, because half the length of a shorter item set
 is a run that attentive respondents give often.</p>
+<p><code>factor_cd_population</code>, <code>factor_cd_samples</code>, and <code>factor_cd_alpha</code> are the
+simulation settings for the comparison-data criterion of <code><a href="nomo_factors.html">nomo_factors()</a></code>:
+the size of each simulated population, the number of samples drawn per
+candidate structure, and the significance level of the test that stops
+adding factors. The defaults (5000 cases, 100 samples, .30) are smaller than
+those of <code><a href="https://mdsteiner.github.io/EFAtools/reference/efa_cd.html" class="external-link">EFAtools::efa_cd()</a></code> (10000 cases, 500 samples) to keep the run
+short; raise them for a final analysis.</p>
+<p><code>auto_delete</code> and <code>auto_respecify</code> are always <code>FALSE</code>. They record a design
+rule rather than switch a feature: nomologR never deletes an item or
+respecifies a model on its own. <code><a href="nomo_factors.html">nomo_factors()</a></code> and <code><a href="nomo_efa.html">nomo_efa()</a></code> stop with
+an explanation when either is set to <code>TRUE</code>.</p>
     </div>
 
     <div class="section level2">

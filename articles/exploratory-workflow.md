@@ -207,20 +207,20 @@ fac <- nomo_factors(
 )
 summary(fac)
 #> <nomo_factors summary> Factor-retention evidence
-#> Cases: 500 (minimum pairwise N: 473) | Items: 10 | Correlation: pearson
-#> Criteria: core
+#> Cases: 500 (minimum pairwise N: 473) | Items: 10 | Correlation: Pearson
+#> Criterion set: core
 #> 
 #> Retention evidence
 #>   Method              Factors  Role
-#>   Parallel analysis         2  primary
-#>   MAP (original TR2)        2  complementary
-#>   MAP (revised TR4)         2  complementary
+#>   Parallel analysis         2  Primary
+#>   MAP (original TR2)        2  Complementary
+#>   MAP (revised TR4)         2  Complementary
 #> 
 #> Parallel-analysis rule sensitivity
 #>   Rule        Factors  Used
-#>   percentile        2  selected
-#>   mean              2
-#>   crawford          2
+#>   Percentile        2  Selected
+#>   Mean              2
+#>   Crawford          2
 #> 
 #> Criteria requested but not run
 #>   - Empirical Kaiser criterion: EKC needs one common sample size for the
@@ -232,20 +232,28 @@ summary(fac)
 #>         2         2  Parallel analysis; MAP
 #> 
 #> Supporting adequacy evidence
-#>   - KMO: 0.874
-#>   - Bartlett: Bartlett's test was not computed because pairwise missing-data
-#>     handling does not provide one common sample size for the full matrix.
+#>   - KMO: .87
+#>   - Bartlett's test was not computed because pairwise missing-data handling
+#>     does not provide one common sample size for the full matrix.
 #> 
 #> Synthesis
-#>   All 2 available criterion families (3 methods) point to 2 factors. Related
-#>   methods within a family are grouped before concordance is summarized; this
-#>   is strong converging evidence for investigating that solution, not proof of
-#>   dimensionality. 1 requested method was not evaluated; see criterion status
-#>   for the documented reason.
+#>   Both available criterion families (3 methods) point to 2 factors. Agreement
+#>   between two criterion families is limited evidence for investigating that
+#>   solution, not proof of dimensionality. 1 requested method was not evaluated;
+#>   nomo_table(x, "criteria") gives the reason.
+#> 
+#> Abbreviations
+#>   MAP -- Minimum average partial criterion (Velicer). TR2, the original,
+#>       averages squared partial correlations; TR4, the revised, averages fourth
+#>       powers.
+#>   KMO -- Kaiser-Meyer-Olkin measure of sampling adequacy.
+#>   EKC -- Empirical Kaiser criterion.
 #> 
 #> Factor counts are candidates for investigation, not automatic dimensionality
 #> verdicts. Common-factor eigenvalues come from a reduced common-variance
 #> matrix; later values can be negative.
+#> 
+#> See nomo_table(x, "criteria") for the status of every requested criterion.
 ```
 
 Parallel analysis is the primary retention evidence, with MAP and the
@@ -294,44 +302,52 @@ summary(efa)
 #> <nomo_efa summary> Exploratory factor analysis
 #> Cases: 500 (minimum pairwise N: 473) | Items: 10
 #> Factors: 2 (from nomo_factors())
-#> Correlation: pearson | Extraction: minres | Rotation: oblimin
-#> Supporting adequacy: KMO 0.874
+#> Correlation: Pearson | Extraction: minres | Rotation: oblimin (oblique)
+#> KMO: .87
 #> 
 #> Item structure
 #>   Item  Factor  Loading  Next factor  Loading  Communality  Flag
-#>   a1    F1        0.808  F2            -0.044        0.624
-#>   a2    F1        0.709  F2             0.064        0.547
-#>   a3    F1        0.667  F2             0.015        0.454
-#>   a4    F1        0.770  F2            -0.038        0.569
-#>   a5    F1        0.414  F2             0.335        0.406  review
-#>   b1    F2        0.783  F1             0.014        0.623
-#>   b2    F2        0.693  F1            -0.020        0.469
-#>   b3    F2        0.783  F1            -0.007        0.608
-#>   b4    F2        0.637  F1            -0.012        0.400  review
-#>   b5    F2        0.332  F1             0.029        0.120  concern
+#>   a1    F1         0.81  F2             -0.04          .62
+#>   a2    F1         0.71  F2              0.06          .55
+#>   a3    F1         0.67  F2              0.02          .45
+#>   a4    F1         0.77  F2             -0.04          .57
+#>   a5    F1         0.41  F2              0.34          .41  Review
+#>   b1    F2         0.78  F1              0.01          .62
+#>   b2    F2         0.69  F1             -0.02          .47
+#>   b3    F2         0.78  F1             -0.01          .61
+#>   b4    F2         0.64  F1             -0.01        .3997  Review
+#>   b5    F2         0.33  F1              0.03          .12  Concern
 #> 
-#> Flagged items
-#>   - a5 (review): secondary loading |0.34| meets/exceeds the 0.30 cross-loading
-#>     reference
-#>   - b4 (review): communality 0.40 is below the 0.40 teaching reference
-#>   - b5 (concern): primary loading |0.33| is below the 0.40 teaching reference;
-#>     communality 0.12 is below the 0.40 teaching reference
+#> Flagged
+#>   - b5 (Concern): The primary loading, 0.33 in absolute value, is below the
+#>     0.40 teaching reference. The communality, .12, is below the .40 teaching
+#>     reference.
+#>   - a5 (Review): The secondary loading, 0.34 in absolute value, is at or above
+#>     the 0.30 cross-loading reference.
+#>   - b4 (Review): The communality, .3997, is below the .40 teaching reference.
 #> 
 #> Factor correlations
-#>   Factor 1  Factor 2      r
-#>   F1        F2        0.439
+#>   Factor 1  Factor 2    r
+#>   F1        F2        .44
 #> 
 #> Largest residual correlations
-#>   Off-diagonal RMSR: 0.018
+#>   RMSR: 0.018
 #>   Item 1  Item 2  Residual
-#>   b4      b5         0.042
-#>   a5      b5        -0.039
-#>   a4      b5         0.038
-#>   a2      a5         0.030
-#>   b2      b5        -0.028
+#>   b4      b5          .042
+#>   a5      b5         -.039
+#>   a4      b5          .038
+#>   a2      a5          .030
+#>   b2      b5         -.028
+#> 
+#> Abbreviations
+#>   KMO -- Kaiser-Meyer-Olkin measure of sampling adequacy.
+#>   RMSR -- Root mean square of the off-diagonal residual correlations.
 #> 
 #> Numerical references trigger inspection, not automatic deletion or hidden
 #> refitting.
+#> 
+#> See nomo_table(x, "pattern") for the full pattern matrix and
+#> nomo_table(x, "decision_log") for every recorded decision.
 ```
 
 Passing the `nomo_factors` object carries forward the item set, modeling

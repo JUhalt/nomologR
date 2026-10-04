@@ -14,8 +14,8 @@ nomo_defaults(profile = "teaching")
 
 - profile:
 
-  Guidance profile. Only `"teaching"` is implemented during the initial
-  development series.
+  Guidance profile. `"teaching"`, the only profile, holds reference
+  values commonly taught in measurement courses.
 
 ## Value
 
@@ -39,6 +39,25 @@ statistic:
 flags a case on long-string only when at least that many items are
 screened, because half the length of a shorter item set is a run that
 attentive respondents give often.
+
+`factor_cd_population`, `factor_cd_samples`, and `factor_cd_alpha` are
+the simulation settings for the comparison-data criterion of
+[`nomo_factors()`](https://juhalt.github.io/nomologR/reference/nomo_factors.md):
+the size of each simulated population, the number of samples drawn per
+candidate structure, and the significance level of the test that stops
+adding factors. The defaults (5000 cases, 100 samples, .30) are smaller
+than those of
+[`EFAtools::efa_cd()`](https://mdsteiner.github.io/EFAtools/reference/efa_cd.html)
+(10000 cases, 500 samples) to keep the run short; raise them for a final
+analysis.
+
+`auto_delete` and `auto_respecify` are always `FALSE`. They record a
+design rule rather than switch a feature: nomologR never deletes an item
+or respecifies a model on its own.
+[`nomo_factors()`](https://juhalt.github.io/nomologR/reference/nomo_factors.md)
+and
+[`nomo_efa()`](https://juhalt.github.io/nomologR/reference/nomo_efa.md)
+stop with an explanation when either is set to `TRUE`.
 
 ## Examples
 

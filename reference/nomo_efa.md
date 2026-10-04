@@ -48,14 +48,28 @@ nomo_efa(
   a `nomo_factors` object. It keeps that result's items, modeling types,
   correlations, and missing-data handling while recording a
   researcher-selected factor count, rather than implying that the
-  parallel-analysis suggestion was adopted.
+  parallel-analysis suggestion was adopted. It is required when parallel
+  analysis suggested 0 factors, since there is then no count to adopt.
 
 - rotation:
 
   Rotation passed to
   [`psych::fa()`](https://rdrr.io/pkg/psych/man/fa.html). The default is
-  `"oblimin"`. Orthogonal rotations are allowed but are recorded as a
-  researcher choice.
+  `"oblimin"`. The oblique rotations are `"oblimin"`, `"quartimin"`,
+  `"simplimax"`, `"geominQ"`, `"bentlerQ"`, `"promax"`, `"Promax"`, and
+  `"cluster"`; the orthogonal ones are `"varimax"`, `"Varimax"`,
+  `"quartimax"`, `"equamax"`, `"varimin"`, `"geominT"`, and
+  `"bentlerT"`; `"none"` keeps the extracted solution without rotation.
+  Orthogonal rotations and `"none"` are allowed but are recorded as a
+  researcher choice for review. Target rotations are not available,
+  because `nomo_efa()` does not pass a target matrix. `"bifactor"` and
+  `"biquartimin"` are not available either, because
+  [`psych::fa()`](https://rdrr.io/pkg/psych/man/fa.html) runs them
+  through `GPArotation` only when `psych` is attached and only for three
+  or more factors; a general factor is tested with
+  `nomo_model(structure = "bifactor")` and
+  [`nomo_hierarchical()`](https://juhalt.github.io/nomologR/reference/nomo_hierarchical.md).
+  A one-factor solution is not rotated.
 
 - fm:
 
@@ -105,6 +119,8 @@ nomo_efa(
 - guidance:
 
   Guidance settings from
+  [`nomo_defaults()`](https://juhalt.github.io/nomologR/reference/nomo_defaults.md).
+  A list holding only the settings to change is completed from
   [`nomo_defaults()`](https://juhalt.github.io/nomologR/reference/nomo_defaults.md).
 
 ## Value
@@ -160,6 +176,21 @@ requested EFA factor count and, unless overridden, its item set,
 modeling types, correlation model, and missing-data strategy are carried
 forward.
 
+The decision log also records what can make a solution improper or hard
+to interpret, as concerns or prompts for review: a communality of .995
+or more, which leaves a unique variance at or near 0 (a Heywood case;
+psych's extractions often stop just short of 1), a model with more
+parameters than the correlations can identify (negative degrees of
+freedom) or exactly as many (zero), an extraction that did not converge,
+and any warning or message from
+[`psych::fa()`](https://rdrr.io/pkg/psych/man/fa.html).
+
+[`print()`](https://rdrr.io/r/base/print.html) shows the settings, the
+residual misfit, the item flags, and any problem with the solution;
+[`summary()`](https://rdrr.io/r/base/summary.html) adds the item
+loadings and communalities with an explanation of every flag, the factor
+correlations, and the largest residual correlations.
+
 ## References
 
 Browne, M. W. (2001). An overview of analytic rotation in exploratory
@@ -197,9 +228,12 @@ efa
 #> <nomo_efa> Exploratory factor analysis
 #> Cases: 500 (minimum pairwise N: 473) | Items: 10
 #> Factors: 2 (researcher specified)
-#> Correlation: pearson | Extraction: minres | Rotation: oblimin
-#> Off-diagonal RMSR: 0.018 | Flags: 2 review, 1 concern
-#> No items were automatically deleted or refit.
+#> Correlation: Pearson | Extraction: minres | Rotation: oblimin (oblique)
+#> RMSR: 0.018 | Item flags: 2 review, 1 concern
+#> RMSR = root mean square of the off-diagonal residual correlations. No item was
+#> deleted and no model was refit automatically.
+#> 
+#> See summary(x) for the loadings and the reason for each flag.
 efa$item_summary[, c("item", "primary_loading", "secondary_loading", "attention")]
 #> # A tibble: 10 × 4
 #>    item  primary_loading secondary_loading attention    
@@ -222,42 +256,50 @@ summary(efa_from_evidence)
 #> <nomo_efa summary> Exploratory factor analysis
 #> Cases: 500 (minimum pairwise N: 473) | Items: 10
 #> Factors: 2 (from nomo_factors())
-#> Correlation: pearson | Extraction: minres | Rotation: oblimin
-#> Supporting adequacy: KMO 0.874
+#> Correlation: Pearson | Extraction: minres | Rotation: oblimin (oblique)
+#> KMO: .87
 #> 
 #> Item structure
 #>   Item  Factor  Loading  Next factor  Loading  Communality  Flag
-#>   a1    F1        0.808  F2            -0.044        0.624
-#>   a2    F1        0.709  F2             0.064        0.547
-#>   a3    F1        0.667  F2             0.015        0.454
-#>   a4    F1        0.770  F2            -0.038        0.569
-#>   a5    F1        0.414  F2             0.335        0.406  review
-#>   b1    F2        0.783  F1             0.014        0.623
-#>   b2    F2        0.693  F1            -0.020        0.469
-#>   b3    F2        0.783  F1            -0.007        0.608
-#>   b4    F2        0.637  F1            -0.012        0.400  review
-#>   b5    F2        0.332  F1             0.029        0.120  concern
+#>   a1    F1         0.81  F2             -0.04          .62
+#>   a2    F1         0.71  F2              0.06          .55
+#>   a3    F1         0.67  F2              0.02          .45
+#>   a4    F1         0.77  F2             -0.04          .57
+#>   a5    F1         0.41  F2              0.34          .41  Review
+#>   b1    F2         0.78  F1              0.01          .62
+#>   b2    F2         0.69  F1             -0.02          .47
+#>   b3    F2         0.78  F1             -0.01          .61
+#>   b4    F2         0.64  F1             -0.01        .3997  Review
+#>   b5    F2         0.33  F1              0.03          .12  Concern
 #> 
-#> Flagged items
-#>   - a5 (review): secondary loading |0.34| meets/exceeds the 0.30 cross-loading
-#>     reference
-#>   - b4 (review): communality 0.40 is below the 0.40 teaching reference
-#>   - b5 (concern): primary loading |0.33| is below the 0.40 teaching reference;
-#>     communality 0.12 is below the 0.40 teaching reference
+#> Flagged
+#>   - b5 (Concern): The primary loading, 0.33 in absolute value, is below the
+#>     0.40 teaching reference. The communality, .12, is below the .40 teaching
+#>     reference.
+#>   - a5 (Review): The secondary loading, 0.34 in absolute value, is at or above
+#>     the 0.30 cross-loading reference.
+#>   - b4 (Review): The communality, .3997, is below the .40 teaching reference.
 #> 
 #> Factor correlations
-#>   Factor 1  Factor 2      r
-#>   F1        F2        0.439
+#>   Factor 1  Factor 2    r
+#>   F1        F2        .44
 #> 
 #> Largest residual correlations
-#>   Off-diagonal RMSR: 0.018
+#>   RMSR: 0.018
 #>   Item 1  Item 2  Residual
-#>   b4      b5         0.042
-#>   a5      b5        -0.039
-#>   a4      b5         0.038
-#>   a2      a5         0.030
-#>   b2      b5        -0.028
+#>   b4      b5          .042
+#>   a5      b5         -.039
+#>   a4      b5          .038
+#>   a2      a5          .030
+#>   b2      b5         -.028
+#> 
+#> Abbreviations
+#>   KMO -- Kaiser-Meyer-Olkin measure of sampling adequacy.
+#>   RMSR -- Root mean square of the off-diagonal residual correlations.
 #> 
 #> Numerical references trigger inspection, not automatic deletion or hidden
 #> refitting.
+#> 
+#> See nomo_table(x, "pattern") for the full pattern matrix and
+#> nomo_table(x, "decision_log") for every recorded decision.
 ```

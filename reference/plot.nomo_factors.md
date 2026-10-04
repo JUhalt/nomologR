@@ -33,10 +33,11 @@ plot(
   with the selected parallel-analysis reference; `"parallel_rules"`
   compares PA factor counts under mean, percentile, and Crawford rules;
   `"scree"` displays component and common-factor eigenvalues; `"map"`
-  displays original TR2 and revised TR4 MAP curves; `"evidence"`
-  compares available retention criteria; `"concordance"` groups related
-  variants into criterion families before showing support for each
-  factor count; and `"kmo"` displays item-level KMO/MSA values.
+  displays the original TR2 MAP curve, and the revised TR4 curve when
+  the criterion set includes revised MAP; `"evidence"` compares
+  available retention criteria; `"concordance"` groups related variants
+  into criterion families before showing support for each factor count;
+  and `"kmo"` displays item-level KMO/MSA values.
 
 - show_values:
 

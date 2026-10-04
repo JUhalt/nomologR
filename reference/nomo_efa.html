@@ -107,12 +107,24 @@ parallel-analysis factor count is used unless <code>factor_count</code> is suppl
 <code>factors</code> is a <code>nomo_factors</code> object. It keeps that result's items,
 modeling types, correlations, and missing-data handling while recording a
 researcher-selected factor count, rather than implying that the
-parallel-analysis suggestion was adopted.</p></dd>
+parallel-analysis suggestion was adopted. It is required when parallel
+analysis suggested 0 factors, since there is then no count to adopt.</p></dd>
 
 
 <dt id="arg-rotation">rotation<a class="anchor" aria-label="anchor" href="#arg-rotation"></a></dt>
 <dd><p>Rotation passed to <code><a href="https://rdrr.io/pkg/psych/man/fa.html" class="external-link">psych::fa()</a></code>. The default is <code>"oblimin"</code>.
-Orthogonal rotations are allowed but are recorded as a researcher choice.</p></dd>
+The oblique rotations are <code>"oblimin"</code>, <code>"quartimin"</code>, <code>"simplimax"</code>,
+<code>"geominQ"</code>, <code>"bentlerQ"</code>, <code>"promax"</code>, <code>"Promax"</code>, and <code>"cluster"</code>; the
+orthogonal ones are <code>"varimax"</code>, <code>"Varimax"</code>, <code>"quartimax"</code>,
+<code>"equamax"</code>, <code>"varimin"</code>, <code>"geominT"</code>, and <code>"bentlerT"</code>; <code>"none"</code> keeps
+the extracted solution without rotation. Orthogonal rotations and
+<code>"none"</code> are allowed but are recorded as a researcher choice for review.
+Target rotations are not available, because <code>nomo_efa()</code> does not pass a
+target matrix. <code>"bifactor"</code> and <code>"biquartimin"</code> are not available either,
+because <code><a href="https://rdrr.io/pkg/psych/man/fa.html" class="external-link">psych::fa()</a></code> runs them through <code>GPArotation</code> only when <code>psych</code> is
+attached and only for three or more factors; a general factor is tested
+with <code>nomo_model(structure = "bifactor")</code> and <code><a href="nomo_hierarchical.html">nomo_hierarchical()</a></code>. A
+one-factor solution is not rotated.</p></dd>
 
 
 <dt id="arg-fm">fm<a class="anchor" aria-label="anchor" href="#arg-fm"></a></dt>
@@ -155,7 +167,8 @@ used explicitly and the intervention is recorded.</p></dd>
 
 
 <dt id="arg-guidance">guidance<a class="anchor" aria-label="anchor" href="#arg-guidance"></a></dt>
-<dd><p>Guidance settings from <code><a href="nomo_defaults.html">nomo_defaults()</a></code>.</p></dd>
+<dd><p>Guidance settings from <code><a href="nomo_defaults.html">nomo_defaults()</a></code>. A list holding
+only the settings to change is completed from <code><a href="nomo_defaults.html">nomo_defaults()</a></code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -192,6 +205,17 @@ a <code>nomo_factors</code> object. When a <code>nomo_factors</code> object is s
 parallel-analysis suggestion is used as the requested EFA factor count and,
 unless overridden, its item set, modeling types, correlation model, and
 missing-data strategy are carried forward.</p>
+<p>The decision log also records what can make a solution improper or hard to
+interpret, as concerns or prompts for review: a communality of .995 or more,
+which leaves a unique variance at or near 0 (a Heywood case; psych's
+extractions often stop just short of 1), a model with more parameters than
+the correlations can identify (negative degrees of freedom) or exactly as
+many (zero), an extraction that did not converge, and any warning or message
+from <code><a href="https://rdrr.io/pkg/psych/man/fa.html" class="external-link">psych::fa()</a></code>.</p>
+<p><code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> shows the settings, the residual misfit, the item flags, and any
+problem with the solution; <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> adds the item loadings and
+communalities with an explanation of every flag, the factor correlations,
+and the largest residual correlations.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
@@ -223,9 +247,12 @@ practice. <em>Journal of Black Psychology, 44</em>(3), 219-246.
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;nomo_efa&gt; Exploratory factor analysis</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Cases: 500 (minimum pairwise N: 473) | Items: 10</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Factors: 2 (researcher specified)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Correlation: pearson | Extraction: minres | Rotation: oblimin</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Off-diagonal RMSR: 0.018 | Flags: 2 review, 1 concern</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> No items were automatically deleted or refit.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Correlation: Pearson | Extraction: minres | Rotation: oblimin (oblique)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> RMSR: 0.018 | Item flags: 2 review, 1 concern</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> RMSR = root mean square of the off-diagonal residual correlations. No item was</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> deleted and no model was refit automatically.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> See summary(x) for the loadings and the reason for each flag.</span>
 <span class="r-in"><span><span class="va">efa</span><span class="op">$</span><span class="va">item_summary</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"item"</span>, <span class="st">"primary_loading"</span>, <span class="st">"secondary_loading"</span>, <span class="st">"attention"</span><span class="op">)</span><span class="op">]</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 10 × 4</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    item  primary_loading secondary_loading attention    </span>
@@ -248,44 +275,52 @@ practice. <em>Journal of Black Psychology, 44</em>(3), 219-246.
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;nomo_efa summary&gt; Exploratory factor analysis</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Cases: 500 (minimum pairwise N: 473) | Items: 10</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Factors: 2 (from nomo_factors())</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Correlation: pearson | Extraction: minres | Rotation: oblimin</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Supporting adequacy: KMO 0.874</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Correlation: Pearson | Extraction: minres | Rotation: oblimin (oblique)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> KMO: .87</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Item structure</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Item  Factor  Loading  Next factor  Loading  Communality  Flag</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   a1    F1        0.808  F2            -0.044        0.624</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   a2    F1        0.709  F2             0.064        0.547</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   a3    F1        0.667  F2             0.015        0.454</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   a4    F1        0.770  F2            -0.038        0.569</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   a5    F1        0.414  F2             0.335        0.406  review</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   b1    F2        0.783  F1             0.014        0.623</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   b2    F2        0.693  F1            -0.020        0.469</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   b3    F2        0.783  F1            -0.007        0.608</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   b4    F2        0.637  F1            -0.012        0.400  review</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   b5    F2        0.332  F1             0.029        0.120  concern</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   a1    F1         0.81  F2             -0.04          .62</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   a2    F1         0.71  F2              0.06          .55</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   a3    F1         0.67  F2              0.02          .45</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   a4    F1         0.77  F2             -0.04          .57</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   a5    F1         0.41  F2              0.34          .41  Review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   b1    F2         0.78  F1              0.01          .62</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   b2    F2         0.69  F1             -0.02          .47</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   b3    F2         0.78  F1             -0.01          .61</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   b4    F2         0.64  F1             -0.01        .3997  Review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   b5    F2         0.33  F1              0.03          .12  Concern</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Flagged items</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   - a5 (review): secondary loading |0.34| meets/exceeds the 0.30 cross-loading</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     reference</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   - b4 (review): communality 0.40 is below the 0.40 teaching reference</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   - b5 (concern): primary loading |0.33| is below the 0.40 teaching reference;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     communality 0.12 is below the 0.40 teaching reference</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Flagged</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   - b5 (Concern): The primary loading, 0.33 in absolute value, is below the</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     0.40 teaching reference. The communality, .12, is below the .40 teaching</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     reference.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   - a5 (Review): The secondary loading, 0.34 in absolute value, is at or above</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     the 0.30 cross-loading reference.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   - b4 (Review): The communality, .3997, is below the .40 teaching reference.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Factor correlations</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Factor 1  Factor 2      r</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   F1        F2        0.439</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Factor 1  Factor 2    r</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   F1        F2        .44</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Largest residual correlations</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Off-diagonal RMSR: 0.018</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   RMSR: 0.018</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Item 1  Item 2  Residual</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   b4      b5         0.042</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   a5      b5        -0.039</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   a4      b5         0.038</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   a2      a5         0.030</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   b2      b5        -0.028</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   b4      b5          .042</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   a5      b5         -.039</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   a4      b5          .038</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   a2      a5          .030</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   b2      b5         -.028</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Abbreviations</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   KMO -- Kaiser-Meyer-Olkin measure of sampling adequacy.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   RMSR -- Root mean square of the off-diagonal residual correlations.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Numerical references trigger inspection, not automatic deletion or hidden</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> refitting.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> See nomo_table(x, "pattern") for the full pattern matrix and</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> nomo_table(x, "decision_log") for every recorded decision.</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

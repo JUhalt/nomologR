@@ -123,14 +123,18 @@ trusting a single rule:
 fac <- nomo_factors(nomo_demo_continuous, seed = 2026)
 fac
 #> <nomo_factors> Factor-retention evidence
-#> Cases: 500 (minimum pairwise N: 473) | Items: 10 | Correlation: pearson
-#> Criterion set: core | Available methods: 3 | Families: 2 | Skipped: 1
-#> Parallel analysis (percentile): 2 | MAP TR2/TR4: 2/2 | KMO: 0.874
-#> All 2 available criterion families (3 methods) point to 2 factors. Related
-#> methods within a family are grouped before concordance is summarized; this is
-#> strong converging evidence for investigating that solution, not proof of
-#> dimensionality. 1 requested method was not evaluated; see criterion status for
-#> the documented reason.
+#> Cases: 500 (minimum pairwise N: 473) | Items: 10 | Correlation: Pearson
+#> Criterion set: core | Methods run: 3 | Families: 2 | Not run: 1 | Flags: none
+#> Parallel analysis (percentile rule): 2 | MAP: 2 (TR2), 2 (TR4) | KMO: .87
+#> MAP = Velicer's minimum average partial criterion, original (TR2) and revised
+#> (TR4); KMO = Kaiser-Meyer-Olkin measure of sampling adequacy.
+#> 
+#> Both available criterion families (3 methods) point to 2 factors. Agreement
+#> between two criterion families is limited evidence for investigating that
+#> solution, not proof of dimensionality. 1 requested method was not evaluated;
+#> nomo_table(x, "criteria") gives the reason.
+#> 
+#> See summary(x) for the evidence by method and the criteria that did not run.
 ```
 
 The population model for these data has two factors, and the retention

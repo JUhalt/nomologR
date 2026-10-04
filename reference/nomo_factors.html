@@ -124,8 +124,15 @@ selected items. Allowed values are <code>"continuous"</code>, <code>"ordinal"</c
 <code>"binary"</code>. Explicit overrides are applied before default-type rejection,
 so researchers can intentionally model otherwise ambiguous storage (for
 example, an unordered factor whose levels already encode a substantive
-order). Overrides do not reorder, relabel, or recode the supplied data.
-For example, <code>c(item1 = "ordinal", item2 = "ordinal")</code>.</p></dd>
+order). Overrides do not reorder or relabel categories, and the supplied
+data are not modified. Polychoric and mixed correlations score ordinal
+items by the rank of their observed values, in numeric order or a factor's
+level order, so codes such as 0/25/50/75/100 or 1/3/5, and factor levels
+nobody chose, are analyzed as consecutive categories. Pearson correlations
+use the values as coded (a factor's level positions). Binary items are
+coded 0/1. Polychoric correlations model at most 8 categories; an ordinal
+item with more is refused with the alternatives. For example,
+<code>c(item1 = "ordinal", item2 = "ordinal")</code>.</p></dd>
 
 
 <dt id="arg-missing">missing<a class="anchor" aria-label="anchor" href="#arg-missing"></a></dt>
@@ -145,24 +152,34 @@ as skipped rather than silently substituted.</p></dd>
 
 <dt id="arg-parallel-rule">parallel_rule<a class="anchor" aria-label="anchor" href="#arg-parallel-rule"></a></dt>
 <dd><p>Parallel-analysis decision rule: <code>"percentile"</code>
-(default), <code>"mean"</code>, or <code>"crawford"</code>. All three rules are computed from
-the same null simulations and retained in the result as sensitivity evidence.</p></dd>
+(default), <code>"mean"</code>, or <code>"crawford"</code>. A factor is retained while its
+observed eigenvalue exceeds the null reference. <code>"percentile"</code> compares
+every eigenvalue with the <code>quantile</code> of the null eigenvalues; <code>"mean"</code>
+compares it with their mean; <code>"crawford"</code> uses the <code>quantile</code> for the
+first eigenvalue and the mean for the rest (Crawford et al., 2010). All
+three rules are computed from the same null simulations and retained in
+the result as sensitivity evidence.</p></dd>
 
 
 <dt id="arg-n-iter">n_iter<a class="anchor" aria-label="anchor" href="#arg-n-iter"></a></dt>
 <dd><p>Number of null-data iterations used for parallel analysis. If
-<code>NULL</code>, the value in <code>guidance$factor_parallel_iterations</code> is used.</p></dd>
+<code>NULL</code>, the value in <code>guidance$factor_parallel_iterations</code> is used. It
+also sets the number of simulated data sets for NEST and Hull, which
+default to 1000 in <code>EFAtools</code>, so a small <code>n_iter</code> makes those criteria
+coarser too.</p></dd>
 
 
 <dt id="arg-quantile">quantile<a class="anchor" aria-label="anchor" href="#arg-quantile"></a></dt>
 <dd><p>Quantile of null eigenvalues used as the parallel-analysis
 reference. If <code>NULL</code>, the value in
-<code>guidance$factor_parallel_quantile</code> is used.</p></dd>
+<code>guidance$factor_parallel_quantile</code> is used. It also sets the percentile
+Hull compares its fit values with.</p></dd>
 
 
 <dt id="arg-max-factors">max_factors<a class="anchor" aria-label="anchor" href="#arg-max-factors"></a></dt>
-<dd><p>Maximum number of factors/components evaluated for MAP. If
-<code>NULL</code>, up to 10 or <code>p - 1</code>, whichever is smaller, are evaluated.</p></dd>
+<dd><p>Maximum number of factors/components evaluated for MAP,
+and the largest factor count comparison data tries. If <code>NULL</code>, up to 10
+or <code>p - 1</code>, whichever is smaller, are evaluated.</p></dd>
 
 
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
@@ -227,6 +244,17 @@ their modeling type through <code>types</code>.</p>
 <p>The function does not claim that a scale "has exactly" a particular number of
 factors. It reports which factor counts deserve investigation and records
 disagreements among retention methods.</p>
+<p>Comparison data (<code>criterion_set = "all"</code>) simulates populations of known
+structure with the settings <code>factor_cd_population</code> (5000 cases),
+<code>factor_cd_samples</code> (100 samples per candidate structure), and
+<code>factor_cd_alpha</code> (.30) from <code><a href="nomo_defaults.html">nomo_defaults()</a></code>. These are smaller than
+the 10000 cases and 500 samples <code><a href="https://mdsteiner.github.io/EFAtools/reference/efa_cd.html" class="external-link">EFAtools::efa_cd()</a></code> uses by default, to
+keep the run short; raise them in <code>guidance</code> for a final analysis. The
+settings used are recorded in the decision log.</p>
+<p><code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> shows the count each main criterion suggests and the synthesis;
+<code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> adds the evidence by method, the parallel-analysis rule
+sensitivity, the criteria that did not run and why, the concordance across
+criterion families, and the supporting adequacy evidence.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
@@ -280,30 +308,34 @@ Journal of Statistical Psychology, 3</em>(2), 77-85.
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">fac</span> <span class="op">&lt;-</span> <span class="fu">nomo_factors</span><span class="op">(</span><span class="va">nomo_demo_continuous</span>, n_iter <span class="op">=</span> <span class="fl">20</span>, seed <span class="op">=</span> <span class="fl">2026</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fac</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;nomo_factors&gt; Factor-retention evidence</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Cases: 500 (minimum pairwise N: 473) | Items: 10 | Correlation: pearson</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Criterion set: core | Available methods: 3 | Families: 2 | Skipped: 1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Parallel analysis (percentile): 2 | MAP TR2/TR4: 2/2 | KMO: 0.874</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> All 2 available criterion families (3 methods) point to 2 factors. Related</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> methods within a family are grouped before concordance is summarized; this is</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> strong converging evidence for investigating that solution, not proof of</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> dimensionality. 1 requested method was not evaluated; see criterion status for</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> the documented reason.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Cases: 500 (minimum pairwise N: 473) | Items: 10 | Correlation: Pearson</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Criterion set: core | Methods run: 3 | Families: 2 | Not run: 1 | Flags: none</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Parallel analysis (percentile rule): 2 | MAP: 2 (TR2), 2 (TR4) | KMO: .87</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> MAP = Velicer's minimum average partial criterion, original (TR2) and revised</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> (TR4); KMO = Kaiser-Meyer-Olkin measure of sampling adequacy.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Both available criterion families (3 methods) point to 2 factors. Agreement</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> between two criterion families is limited evidence for investigating that</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> solution, not proof of dimensionality. 1 requested method was not evaluated;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> nomo_table(x, "criteria") gives the reason.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> See summary(x) for the evidence by method and the criteria that did not run.</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fac</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;nomo_factors summary&gt; Factor-retention evidence</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Cases: 500 (minimum pairwise N: 473) | Items: 10 | Correlation: pearson</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Criteria: core</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Cases: 500 (minimum pairwise N: 473) | Items: 10 | Correlation: Pearson</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Criterion set: core</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Retention evidence</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Method              Factors  Role</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Parallel analysis         2  primary</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   MAP (original TR2)        2  complementary</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   MAP (revised TR4)         2  complementary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Parallel analysis         2  Primary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   MAP (original TR2)        2  Complementary</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   MAP (revised TR4)         2  Complementary</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Parallel-analysis rule sensitivity</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Rule        Factors  Used</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   percentile        2  selected</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   mean              2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   crawford          2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Percentile        2  Selected</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Mean              2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Crawford          2</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Criteria requested but not run</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   - Empirical Kaiser criterion: EKC needs one common sample size for the</span>
@@ -315,20 +347,28 @@ Journal of Statistical Psychology, 3</em>(2), 77-85.
 <span class="r-out co"><span class="r-pr">#&gt;</span>         2         2  Parallel analysis; MAP</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Supporting adequacy evidence</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   - KMO: 0.874</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   - Bartlett: Bartlett's test was not computed because pairwise missing-data</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     handling does not provide one common sample size for the full matrix.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   - KMO: .87</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   - Bartlett's test was not computed because pairwise missing-data handling</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     does not provide one common sample size for the full matrix.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Synthesis</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   All 2 available criterion families (3 methods) point to 2 factors. Related</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   methods within a family are grouped before concordance is summarized; this</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   is strong converging evidence for investigating that solution, not proof of</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   dimensionality. 1 requested method was not evaluated; see criterion status</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   for the documented reason.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Both available criterion families (3 methods) point to 2 factors. Agreement</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   between two criterion families is limited evidence for investigating that</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   solution, not proof of dimensionality. 1 requested method was not evaluated;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   nomo_table(x, "criteria") gives the reason.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Abbreviations</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   MAP -- Minimum average partial criterion (Velicer). TR2, the original,</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       averages squared partial correlations; TR4, the revised, averages fourth</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       powers.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   KMO -- Kaiser-Meyer-Olkin measure of sampling adequacy.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   EKC -- Empirical Kaiser criterion.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Factor counts are candidates for investigation, not automatic dimensionality</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> verdicts. Common-factor eigenvalues come from a reduced common-variance</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> matrix; later values can be negative.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> See nomo_table(x, "criteria") for the status of every requested criterion.</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="co"># Ordered five-category items are analyzed with polychoric correlations</span></span></span>

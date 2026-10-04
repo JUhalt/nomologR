@@ -54,8 +54,16 @@ nomo_factors(
   Explicit overrides are applied before default-type rejection, so
   researchers can intentionally model otherwise ambiguous storage (for
   example, an unordered factor whose levels already encode a substantive
-  order). Overrides do not reorder, relabel, or recode the supplied
-  data. For example, `c(item1 = "ordinal", item2 = "ordinal")`.
+  order). Overrides do not reorder or relabel categories, and the
+  supplied data are not modified. Polychoric and mixed correlations
+  score ordinal items by the rank of their observed values, in numeric
+  order or a factor's level order, so codes such as 0/25/50/75/100 or
+  1/3/5, and factor levels nobody chose, are analyzed as consecutive
+  categories. Pearson correlations use the values as coded (a factor's
+  level positions). Binary items are coded 0/1. Polychoric correlations
+  model at most 8 categories; an ordinal item with more is refused with
+  the alternatives. For example,
+  `c(item1 = "ordinal", item2 = "ordinal")`.
 
 - missing:
 
@@ -75,23 +83,33 @@ nomo_factors(
 - parallel_rule:
 
   Parallel-analysis decision rule: `"percentile"` (default), `"mean"`,
-  or `"crawford"`. All three rules are computed from the same null
-  simulations and retained in the result as sensitivity evidence.
+  or `"crawford"`. A factor is retained while its observed eigenvalue
+  exceeds the null reference. `"percentile"` compares every eigenvalue
+  with the `quantile` of the null eigenvalues; `"mean"` compares it with
+  their mean; `"crawford"` uses the `quantile` for the first eigenvalue
+  and the mean for the rest (Crawford et al., 2010). All three rules are
+  computed from the same null simulations and retained in the result as
+  sensitivity evidence.
 
 - n_iter:
 
   Number of null-data iterations used for parallel analysis. If `NULL`,
-  the value in `guidance$factor_parallel_iterations` is used.
+  the value in `guidance$factor_parallel_iterations` is used. It also
+  sets the number of simulated data sets for NEST and Hull, which
+  default to 1000 in `EFAtools`, so a small `n_iter` makes those
+  criteria coarser too.
 
 - quantile:
 
   Quantile of null eigenvalues used as the parallel-analysis reference.
   If `NULL`, the value in `guidance$factor_parallel_quantile` is used.
+  It also sets the percentile Hull compares its fit values with.
 
 - max_factors:
 
-  Maximum number of factors/components evaluated for MAP. If `NULL`, up
-  to 10 or `p - 1`, whichever is smaller, are evaluated.
+  Maximum number of factors/components evaluated for MAP, and the
+  largest factor count comparison data tries. If `NULL`, up to 10 or
+  `p - 1`, whichever is smaller, are evaluated.
 
 - seed:
 
@@ -179,6 +197,23 @@ The function does not claim that a scale "has exactly" a particular
 number of factors. It reports which factor counts deserve investigation
 and records disagreements among retention methods.
 
+Comparison data (`criterion_set = "all"`) simulates populations of known
+structure with the settings `factor_cd_population` (5000 cases),
+`factor_cd_samples` (100 samples per candidate structure), and
+`factor_cd_alpha` (.30) from
+[`nomo_defaults()`](https://juhalt.github.io/nomologR/reference/nomo_defaults.md).
+These are smaller than the 10000 cases and 500 samples
+[`EFAtools::efa_cd()`](https://mdsteiner.github.io/EFAtools/reference/efa_cd.html)
+uses by default, to keep the run short; raise them in `guidance` for a
+final analysis. The settings used are recorded in the decision log.
+
+[`print()`](https://rdrr.io/r/base/print.html) shows the count each main
+criterion suggests and the synthesis;
+[`summary()`](https://rdrr.io/r/base/summary.html) adds the evidence by
+method, the parallel-analysis rule sensitivity, the criteria that did
+not run and why, the concordance across criterion families, and the
+supporting adequacy evidence.
+
 ## References
 
 Historical retention rules shown as context:
@@ -253,30 +288,34 @@ Kaiser, H. F. (1974). An index of factorial simplicity. *Psychometrika,
 fac <- nomo_factors(nomo_demo_continuous, n_iter = 20, seed = 2026)
 fac
 #> <nomo_factors> Factor-retention evidence
-#> Cases: 500 (minimum pairwise N: 473) | Items: 10 | Correlation: pearson
-#> Criterion set: core | Available methods: 3 | Families: 2 | Skipped: 1
-#> Parallel analysis (percentile): 2 | MAP TR2/TR4: 2/2 | KMO: 0.874
-#> All 2 available criterion families (3 methods) point to 2 factors. Related
-#> methods within a family are grouped before concordance is summarized; this is
-#> strong converging evidence for investigating that solution, not proof of
-#> dimensionality. 1 requested method was not evaluated; see criterion status for
-#> the documented reason.
+#> Cases: 500 (minimum pairwise N: 473) | Items: 10 | Correlation: Pearson
+#> Criterion set: core | Methods run: 3 | Families: 2 | Not run: 1 | Flags: none
+#> Parallel analysis (percentile rule): 2 | MAP: 2 (TR2), 2 (TR4) | KMO: .87
+#> MAP = Velicer's minimum average partial criterion, original (TR2) and revised
+#> (TR4); KMO = Kaiser-Meyer-Olkin measure of sampling adequacy.
+#> 
+#> Both available criterion families (3 methods) point to 2 factors. Agreement
+#> between two criterion families is limited evidence for investigating that
+#> solution, not proof of dimensionality. 1 requested method was not evaluated;
+#> nomo_table(x, "criteria") gives the reason.
+#> 
+#> See summary(x) for the evidence by method and the criteria that did not run.
 summary(fac)
 #> <nomo_factors summary> Factor-retention evidence
-#> Cases: 500 (minimum pairwise N: 473) | Items: 10 | Correlation: pearson
-#> Criteria: core
+#> Cases: 500 (minimum pairwise N: 473) | Items: 10 | Correlation: Pearson
+#> Criterion set: core
 #> 
 #> Retention evidence
 #>   Method              Factors  Role
-#>   Parallel analysis         2  primary
-#>   MAP (original TR2)        2  complementary
-#>   MAP (revised TR4)         2  complementary
+#>   Parallel analysis         2  Primary
+#>   MAP (original TR2)        2  Complementary
+#>   MAP (revised TR4)         2  Complementary
 #> 
 #> Parallel-analysis rule sensitivity
 #>   Rule        Factors  Used
-#>   percentile        2  selected
-#>   mean              2
-#>   crawford          2
+#>   Percentile        2  Selected
+#>   Mean              2
+#>   Crawford          2
 #> 
 #> Criteria requested but not run
 #>   - Empirical Kaiser criterion: EKC needs one common sample size for the
@@ -288,20 +327,28 @@ summary(fac)
 #>         2         2  Parallel analysis; MAP
 #> 
 #> Supporting adequacy evidence
-#>   - KMO: 0.874
-#>   - Bartlett: Bartlett's test was not computed because pairwise missing-data
-#>     handling does not provide one common sample size for the full matrix.
+#>   - KMO: .87
+#>   - Bartlett's test was not computed because pairwise missing-data handling
+#>     does not provide one common sample size for the full matrix.
 #> 
 #> Synthesis
-#>   All 2 available criterion families (3 methods) point to 2 factors. Related
-#>   methods within a family are grouped before concordance is summarized; this
-#>   is strong converging evidence for investigating that solution, not proof of
-#>   dimensionality. 1 requested method was not evaluated; see criterion status
-#>   for the documented reason.
+#>   Both available criterion families (3 methods) point to 2 factors. Agreement
+#>   between two criterion families is limited evidence for investigating that
+#>   solution, not proof of dimensionality. 1 requested method was not evaluated;
+#>   nomo_table(x, "criteria") gives the reason.
+#> 
+#> Abbreviations
+#>   MAP -- Minimum average partial criterion (Velicer). TR2, the original,
+#>       averages squared partial correlations; TR4, the revised, averages fourth
+#>       powers.
+#>   KMO -- Kaiser-Meyer-Olkin measure of sampling adequacy.
+#>   EKC -- Empirical Kaiser criterion.
 #> 
 #> Factor counts are candidates for investigation, not automatic dimensionality
 #> verdicts. Common-factor eigenvalues come from a reduced common-variance
 #> matrix; later values can be negative.
+#> 
+#> See nomo_table(x, "criteria") for the status of every requested criterion.
 
 # \donttest{
 # Ordered five-category items are analyzed with polychoric correlations
