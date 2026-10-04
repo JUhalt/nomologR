@@ -140,7 +140,10 @@ others keep theirs, and the decision log records the change. Settings are
 locked for a stage that has completed or blocked, for an invariance or
 network branch a completed run marked not requested, and for \code{scores} and
 \code{missing} once the CFA has been fitted, since they would never run; a new
-\code{nomo_run()} is then the way to request them.
+\code{nomo_run()} is then the way to request them. At the pause after a
+\code{"revise"} decision, settings for invariance, the network, \code{scores}, or
+\code{missing} may still be given when this run has not computed that evidence:
+\code{\link[=nomo_revise]{nomo_revise()}} carries the settings into the revision, which runs it.
 
 Consequential decisions are currently:
 \enumerate{

@@ -381,7 +381,10 @@ nomo_revise_content_review_log <- function(log, handoff, scales, lineage) {
 #' The factor-count decision is inherited from the parent unless `decisions`
 #' supplies a new one, so the revision changes only what the researcher
 #' changed. The parent's settings carry over too, except that reverse keying
-#' set for an item the revision removes is dropped with the item.
+#' set for an item the revision removes is dropped with the item. Settings for
+#' evidence the parent has not computed, such as invariance or scores, can be
+#' added by resuming the parent at the pause after its `"revise"` decision, as
+#' described in [nomo_run()].
 #'
 #' When the parent's scales came from a `contentvalidR` handoff, the child
 #' keeps it: its declared keying, the content-review rows of the decision

@@ -1637,6 +1637,33 @@ test_that("settings whose stage has passed are refused rather than stored unused
                fixed = TRUE)
   expect_null(lock(list(), "scores"))
   expect_null(lock(list(), "invariance"))
+
+  # At the pause after "revise", the run goes no further, but nomo_revise()
+  # carries its settings into the revision. Evidence this run has not computed
+  # may still be requested, scores and missing-data sensitivity as much as the
+  # downstream branches; evidence it computed keeps its settings (#145).
+  fitted <- list(next_stage = "restart",
+                 stage_status = tibble::tibble(stage = "cfa", status = "completed"))
+  expect_null(lock(fitted, "scores"))
+  expect_null(lock(fitted, "missing"))
+  expect_identical(lock(fitted, "cfa"), "the stage has already completed")
+  fitted$results <- list(scores = list(), missing = list(cfa = list()))
+  expect_identical(
+    lock(fitted, "scores"),
+    "this run's scores were computed with them, and `nomo_revise()` carries them into a revision as they are"
+  )
+  expect_match(lock(fitted, "missing"), "this run's missing-data comparison was computed with them",
+               fixed = TRUE)
+
+  restart <- nomo_run(resume = review, decisions = list(measurement_model = "revise"))
+  added <- nomo_run(resume = restart, settings = list(scores = list(method = "sum"),
+                                                      invariance = list(group = "group")))
+  expect_identical(added$next_stage, "restart")
+  expect_true(all(c("settings:scores", "settings:invariance") %in% added$decision_log$id))
+  revised <- nomo_revise(added, cfa_model = paste(m8_model(), "\ni1 ~~ i2"),
+                         rationale = "i1 and i2 share wording.", compare = FALSE)
+  expect_identical(revised$settings$scores, list(method = "sum"))
+  expect_s3_class(revised$results$scores, "nomo_scores")
 })
 
 

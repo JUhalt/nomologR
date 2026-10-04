@@ -282,7 +282,10 @@ nomo_run_resume <- function(resume,
 #' locked for a stage that has completed or blocked, for an invariance or
 #' network branch a completed run marked not requested, and for `scores` and
 #' `missing` once the CFA has been fitted, since they would never run; a new
-#' `nomo_run()` is then the way to request them.
+#' `nomo_run()` is then the way to request them. At the pause after a
+#' `"revise"` decision, settings for invariance, the network, `scores`, or
+#' `missing` may still be given when this run has not computed that evidence:
+#' [nomo_revise()] carries the settings into the revision, which runs it.
 #'
 #' Consequential decisions are currently:
 #'

@@ -495,11 +495,23 @@ nomo_run_stage_state <- function(x, stage) {
 # while they can. Settings stored after their stage's moment has passed would
 # never run (#145): a stage that completed or blocked, a branch the completed
 # run marked not requested, and scores or missing-data sensitivity once the
-# CFA they run with has been fitted.
+# CFA they run with has been fitted. At the pause after a "revise" decision,
+# the run itself goes no further, but nomo_revise() carries its settings into
+# the revision, which runs every stage again. Evidence this run has not
+# computed may then still be requested; evidence it computed keeps the
+# settings it was computed with.
 nomo_run_settings_lock <- function(x, stage) {
+  restart <- identical(x$next_stage, "restart")
   if (stage %in% nomo_run_attached_settings()) {
-    if (!is.null(x$results[[stage]]) ||
-        nomo_run_stage_state(x, "cfa") %in% c("completed", "blocked")) {
+    if (restart && !is.null(x$results[[stage]])) {
+      what <- c(scores = "scores were", missing = "missing-data comparison was")[[stage]]
+      return(sprintf(
+        "this run's %s computed with them, and `nomo_revise()` carries them into a revision as they are",
+        what
+      ))
+    }
+    if (!restart && (!is.null(x$results[[stage]]) ||
+                     nomo_run_stage_state(x, "cfa") %in% c("completed", "blocked"))) {
       return("they run with the CFA, which has already been fitted, so they would never run")
     }
     return(NULL)
