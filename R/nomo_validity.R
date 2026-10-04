@@ -50,11 +50,10 @@
 #'     indicator; its row has an `NA` estimate and the attention
 #'     `"unavailable"`.
 #'   * `latent_correlations`: construct correlations with intervals, and their
-#'     `reference` and `attention`. A pair is flagged for review when its
-#'     correlation could exceed the HTMT-family reference: the upper limit of
-#'     its interval (Rönkkö & Cho, 2022), or the estimate when there is no
-#'     interval, is above it. A correlation beyond 1 in absolute value is a
-#'     concern.
+#'     `reference` and `attention`. A correlation is flagged for review when it
+#'     could exceed the HTMT-family reference: the upper limit of its interval
+#'     (Rönkkö & Cho, 2022), or the estimate when there is no interval, is
+#'     above it. A correlation beyond 1 in absolute value is a concern.
 #'   * `htmt2` and `htmt`: heterotrait-monotrait ratios per pair.
 #'   * `discriminant`: each pair's separation evidence with its reference and
 #'     interpretation.
@@ -77,10 +76,14 @@
 #'   be computed, as when an AVE is missing or negative and so has no square
 #'   root. See **Conventions in returned tables** in `?nomologR`.
 #'
-#'   In the `"discriminant"` table of [nomo_table()], `signal` is the more
-#'   severe of the HTMT-family flag (HTMT2, or HTMT when HTMT2 was not
-#'   computed) and the latent correlation's `attention`, so a pair is still
-#'   evaluated when no HTMT value exists.
+#'   In the `"discriminant"` table of [nomo_table()], `signal` is the
+#'   HTMT-family flag (HTMT2, or HTMT when HTMT2 was not computed). Where
+#'   neither was computed, as with several groups, a cross-loading, or
+#'   `htmt = "none"`, it is the latent correlation's `attention`, so the pair
+#'   is still evaluated; a latent correlation beyond 1 is a concern either way.
+#'   Beside an HTMT-family value, a latent correlation flagged for review is
+#'   recorded in the decision log as information, and the summary names the
+#'   pair.
 #'
 #'   Other fields record the call, the settings used, and intermediate engine
 #'   results. They may change between releases and are not part of the stable
@@ -463,6 +466,29 @@ nomo_validity <- function(fit,
     loadings
   }
   if (nrow(weak_loadings)) {
+    # The observation states the loading beside its reference, both formatted
+    # as loadings (#144); a loading that is not finite keeps the CFA's text.
+    extreme <- weak_loadings$attention == "STRONG REVIEW"
+    loading_shown <- nomo_present_stat(
+      weak_loadings$loading, "loading",
+      reference = sign(weak_loadings$loading) * ifelse(extreme, 1, loading_reference)
+    )
+    loading_observation <- ifelse(
+      !is.finite(weak_loadings$loading), weak_loadings$explanation,
+      ifelse(
+        extreme,
+        paste0(
+          "Standardized loading ", loading_shown, " exceeds 1 in absolute value; ",
+          "inspect for a Heywood case or improper solution, model misspecification, ",
+          "sampling instability, or identification issues."
+        ),
+        paste0(
+          "Standardized loading ", loading_shown, " is below the review reference ",
+          nomo_present_stat(loading_reference, "loading"), " in absolute value; ",
+          "inspect item content, precision, and model specification."
+        )
+      )
+    )
     for (i in seq_len(nrow(weak_loadings))) {
       log <- nomo_log_add(
         log,
@@ -474,7 +500,7 @@ nomo_validity <- function(fit,
           "configured review reference = ", nomo_present_stat(loading_reference, "loading")
         ),
         severity = if (weak_loadings$attention[[i]] == "STRONG REVIEW") "concern" else "review",
-        observation = weak_loadings$explanation[[i]],
+        observation = loading_observation[[i]],
         recommendation = "Inspect item content, precision, and model specification; do not automatically delete the indicator.",
         rationale = "Loading strength is one component of convergent evidence and must be interpreted in context."
       )
@@ -549,25 +575,47 @@ nomo_validity <- function(fit,
     )
   }
 
-  # A latent correlation is logged when it is flagged, or when its pair has no
-  # HTMT-family value and so no other record of its separation (#145).
+  # A latent correlation is logged when its pair has no HTMT-family value, and
+  # so no other record of its separation, or when it is flagged. It sets the
+  # pair's flag only in the first case, as the fix plan has it: beside an
+  # HTMT-family value, which sets the flag, a flagged latent correlation is
+  # recorded as information, unless it is beyond 1 and so inadmissible (#145).
   if (nrow(latent_correlations)) {
     pair_key <- function(a, b, block) {
       paste(pmin(a, b), pmax(a, b), block, sep = "\r")
     }
-    with_htmt <- if (nrow(discriminant)) {
-      pair_key(discriminant$construct_1, discriminant$construct_2, discriminant$block)
-    } else {
-      character()
+    latent_keys <- pair_key(latent_correlations$construct_1,
+                            latent_correlations$construct_2, latent_correlations$block)
+    htmt_value <- rep(NA_real_, nrow(latent_correlations))
+    htmt_method <- rep(NA_character_, nrow(latent_correlations))
+    if (nrow(discriminant)) {
+      keys <- pair_key(discriminant$construct_1, discriminant$construct_2, discriminant$block)
+      # HTMT2 leads, so it is matched last and replaces HTMT.
+      for (method in c("HTMT", "HTMT2")) {
+        hit <- discriminant$method == method & is.finite(discriminant$estimate)
+        pos <- match(latent_keys, keys[hit])
+        found <- !is.na(pos)
+        htmt_value[found] <- discriminant$estimate[hit][pos[found]]
+        htmt_method[found] <- method
+      }
     }
+    with_htmt <- is.finite(htmt_value)
     logged <- is.finite(latent_correlations$correlation) & (
-      latent_correlations$attention != "info" |
-        !pair_key(latent_correlations$construct_1, latent_correlations$construct_2,
-                  latent_correlations$block) %in% with_htmt
+      latent_correlations$attention != "info" | !with_htmt
     )
     for (i in which(logged)) {
       row <- latent_correlations[i, , drop = FALSE]
-      severity <- row$attention
+      sets_flag <- !with_htmt[[i]] || row$attention == "concern"
+      severity <- if (sets_flag) row$attention else "info"
+      observation <- row$interpretation
+      if (!sets_flag) {
+        observation <- paste0(
+          observation, " ", htmt_method[[i]], " (",
+          nomo_present_stat(htmt_value[[i]], "htmt", reference = htmt_reference), ") is ",
+          if (htmt_value[[i]] > htmt_reference) "above the reference as well" else "within the reference",
+          ", and the HTMT-family value sets this pair's flag."
+        )
+      }
       log <- nomo_log_add(
         log,
         stage = "validity",
@@ -579,9 +627,18 @@ nomo_validity <- function(fit,
           ", read from the interval's limit farthest from zero (R\u00f6nkk\u00f6 & Cho, 2022)"
         ),
         severity = severity,
-        observation = row$interpretation,
-        recommendation = if (severity == "info") {
-          "Interpret this alongside HTMT-family evidence and theoretical distinctiveness."
+        observation = observation,
+        recommendation = if (!sets_flag) {
+          paste(
+            "Report the latent correlation's interval beside the HTMT-family",
+            "value; the pair's flag follows the HTMT-family value."
+          )
+        } else if (severity == "info") {
+          paste(
+            "No HTMT-family value was computed for this pair, so this is its",
+            "construct-separation evidence; interpret it with theory and the",
+            "intended distinction between the constructs."
+          )
         } else {
           paste(
             "Investigate construct overlap, item content, and theory; do not",

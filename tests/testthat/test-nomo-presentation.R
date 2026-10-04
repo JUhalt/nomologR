@@ -689,9 +689,11 @@ test_that("validity plots cover empty, faceted, and HTMT fallback paths", {
     block = character(),
     estimate = numeric()
   )
+  # This run has one construct, so with no HTMT row there is no pair; without
+  # HTMT a pair's latent correlation is drawn instead (#145).
   expect_error(
     plot(empty_htmt, type = "discriminant"),
-    "No finite HTMT-family estimates"
+    "No construct pairs are available to plot"
   )
 })
 

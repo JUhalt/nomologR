@@ -804,7 +804,10 @@ test_that("each flagged construct and pair gets one sentence in print (#145)", {
   expect_match(printed, "B (Concern): AVE 1.20 is outside 0 to 1; 1 of 5", fixed = TRUE)
   expect_match(printed, "A vs. B (Concern): Latent r 1.02 is beyond 1.", fixed = TRUE)
 
+  # A latent correlation sets the flag only where no HTMT value exists.
   no_interval <- val
+  no_interval$htmt2 <- tibble::tibble()
+  no_interval$htmt <- tibble::tibble()
   no_interval$latent_correlations$correlation <- .90
   no_interval$latent_correlations$ci_lower <- NA_real_
   no_interval$latent_correlations$ci_upper <- NA_real_
@@ -816,4 +819,193 @@ test_that("each flagged construct and pair gets one sentence in print (#145)", {
   levels <- val
   levels$nlevels <- 2L
   expect_match(capture.output(print(levels)), "^Constructs: 2 \\| Levels: 2", all = FALSE)
+})
+
+
+# Two factors whose population correlation is .80, with n = 120: HTMT2 (0.84)
+# is within the .85 reference, while the latent correlation's interval reaches
+# .93 (#145).
+validity_moderate_fit <- function() {
+  set.seed(2)
+  n <- 120
+  f1 <- rnorm(n)
+  f2 <- .80 * f1 + sqrt(1 - .80^2) * rnorm(n)
+  dat <- data.frame(
+    p1 = .8 * f1 + rnorm(n, sd = .6), p2 = .8 * f1 + rnorm(n, sd = .6),
+    p3 = .8 * f1 + rnorm(n, sd = .6), q1 = .8 * f2 + rnorm(n, sd = .6),
+    q2 = .8 * f2 + rnorm(n, sd = .6), q3 = .8 * f2 + rnorm(n, sd = .6)
+  )
+  lavaan::cfa("P =~ p1 + p2 + p3\nQ =~ q1 + q2 + q3", data = dat)
+}
+
+
+test_that("a latent correlation sets a pair's flag only where no HTMT value exists (#145)", {
+  fit <- validity_moderate_fit()
+  val <- nomo_validity(fit)
+  tab <- nomo_table(val, "discriminant")
+  expect_lt(tab$HTMT2, .85)
+  expect_gt(tab$latent_r_ci_upper, .85)
+  # The latent correlation keeps its own reading, but HTMT2 sets the pair's
+  # flag, as the fix plan has it, and every output agrees.
+  expect_identical(val$latent_correlations$attention, "review")
+  expect_identical(tab$signal, "info")
+  entry <- val$decision_log[val$decision_log$metric == "latent_correlation", ]
+  expect_identical(entry$severity, "info")
+  expect_match(entry$observation,
+               "HTMT2 (0.84) is within the reference, and the HTMT-family value sets this pair's flag.",
+               fixed = TRUE)
+  expect_match(entry$recommendation, "the pair's flag follows the HTMT-family value", fixed = TRUE)
+
+  local_reproducible_output(width = 80)
+  printed <- capture.output(print(val))
+  expect_true(any(grepl("Separation flags: none (1 pair)", printed, fixed = TRUE)))
+  expect_false("Flagged" %in% printed)
+  summarized <- capture.output(print(summary(val)))
+  expect_false("Flagged" %in% summarized)
+  expect_match(
+    gsub("\\s+", " ", paste(summarized, collapse = " ")),
+    "P vs. Q is not flagged: its HTMT-family value is within the reference, although its latent correlation could exceed it.",
+    fixed = TRUE
+  )
+  expect_true(all(nchar(summarized) <= 80L))
+  p <- plot(val, type = "discriminant")
+  expect_identical(as.character(p$data$flag), "none")
+  expect_null(ggplot2::get_guide_data(p, "shape"))
+
+  # Several pairs share one sentence.
+  s <- summary(val)
+  s$latent_beside <- c("P vs. Q", "P vs. R")
+  expect_match(
+    gsub("\\s+", " ", paste(capture.output(print(s)), collapse = " ")),
+    "P vs. Q, P vs. R are not flagged: their HTMT-family values are within the reference, although their latent correlations could exceed it.",
+    fixed = TRUE
+  )
+
+  # Without HTMT, the latent correlation sets the flag, and the plot draws it
+  # with its interval rather than stopping.
+  none <- nomo_validity(fit, htmt = "none")
+  expect_identical(nomo_table(none, "discriminant")$signal, "review")
+  entry <- none$decision_log[none$decision_log$metric == "latent_correlation", ]
+  expect_identical(entry$severity, "review")
+  expect_length(summary(none)$latent_beside, 0L)
+  p <- plot(none, type = "discriminant")
+  expect_identical(as.character(p$data$flag), "review")
+  expect_identical(ggplot2::get_guide_data(p, "shape")$.label, "Review")
+  expect_identical(p$labels$title, "Construct separation: latent r")
+  expect_identical(p$labels$x, "Latent r")
+  subtitle <- gsub("\\s+", " ", p$labels$subtitle)
+  expect_match(subtitle, "review reference (.85). Bars = 95% confidence interval of latent r",
+               fixed = TRUE)
+  expect_equal(nrow(p$layers[[2L]]$data), 1L)
+  expect_identical(p$scales$get_scales("x")$labels(c(0, .5, 1)), c("0", ".50", "1.00"))
+
+  # Beside HTMT2 above the reference, the latent correlation agrees and is
+  # recorded as information.
+  redundant <- nomo_validity(validity_redundant_fit())
+  entry <- redundant$decision_log[redundant$decision_log$metric == "latent_correlation", ]
+  expect_identical(entry$severity, "info")
+  expect_match(entry$observation, "is above the reference as well", fixed = TRUE)
+  expect_identical(nomo_table(redundant, "discriminant")$signal, "review")
+})
+
+
+test_that("a pair's flag follows HTMT, then the latent correlation, and a latent r beyond 1 is a concern (#145)", {
+  flag <- nomologR:::nomo_validity_separation_flag
+  expect_identical(
+    flag(c(.90, NA, NA, .50, NA, .50), c(NA, .90, NA, NA, NA, .40),
+         c("info", "info", "review", "concern", "unavailable", "review"), .85),
+    c("review", "review", "review", "concern", "unavailable", "info")
+  )
+
+  cfa <- nomo_cfa(nomo_model(list(A = paste0("a", 1:5), B = paste0("b", 1:5))),
+                  data = nomo_demo_continuous)
+  odd <- nomo_validity(cfa)
+  odd$latent_correlations$correlation <- 1.02
+  odd$latent_correlations$attention <- "concern"
+  expect_identical(nomo_table(odd, "discriminant")$signal, "concern")
+  expect_identical(as.character(plot(odd, type = "discriminant")$data$flag), "concern")
+})
+
+
+test_that("the discriminant plot mixes HTMT and latent r, reads both signs, and names what it leaves out (#145)", {
+  fit <- lavaan::cfa("A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3\nS =~ b5",
+                     data = nomo_demo_continuous)
+  val <- nomo_validity(fit)
+  p <- plot(val, type = "discriminant")
+  expect_identical(p$labels$title, "Construct separation: HTMT2 and latent r")
+  expect_identical(p$labels$x, "HTMT2 or latent r")
+  expect_identical(levels(p$data$pair),
+                   rev(c("A vs. B", "A vs. S (latent r)", "B vs. S (latent r)")))
+  expect_identical(
+    as.character(p$data$flag),
+    as.character(nomologR:::nomo_plot_status(nomo_table(val, "discriminant")$signal))
+  )
+  expect_match(p$labels$subtitle, "review reference (0.85)", fixed = TRUE)
+  expect_identical(p$layers[[1L]]$data$xintercept, .85)
+
+  # A negative latent correlation is read by its size, on both sides.
+  negative <- val
+  first <- negative$latent_correlations$construct_2 == "S"
+  negative$latent_correlations$correlation[first] <- -negative$latent_correlations$correlation[first]
+  bounds <- negative$latent_correlations[first, c("ci_lower", "ci_upper")]
+  negative$latent_correlations$ci_lower[first] <- -bounds$ci_upper
+  negative$latent_correlations$ci_upper[first] <- -bounds$ci_lower
+  expect_identical(plot(negative, type = "discriminant")$layers[[1L]]$data$xintercept,
+                   c(-.85, .85))
+
+  # A pair with no value at all is named in the caption.
+  gap <- val
+  gap$latent_correlations$correlation[gap$latent_correlations$construct_1 == "B"] <- NA_real_
+  caption <- gsub("\\s+", " ", plot(gap, type = "discriminant")$labels$caption)
+  expect_match(caption, "Not drawn: B vs. S, with no value computed.", fixed = TRUE)
+
+  # Nothing to draw, or no pairs at all, stops with a reason.
+  none <- nomo_validity(fit, htmt = "none")
+  none$latent_correlations$correlation <- NA_real_
+  expect_error(plot(none, type = "discriminant"),
+               "No HTMT-family value or latent correlation is available to plot", fixed = TRUE)
+  one <- nomo_validity(lavaan::cfa("A =~ a1 + a2 + a3 + a4", data = nomo_demo_continuous))
+  expect_error(plot(one, type = "discriminant"), "No construct pairs are available to plot",
+               fixed = TRUE)
+})
+
+
+test_that("a flagged loading's log row states it beside its reference (#144, #145)", {
+  cfa <- nomo_cfa(nomo_model(list(A = paste0("a", 1:5), B = paste0("b", 1:5))),
+                  data = nomo_demo_continuous)
+  val <- nomo_validity(cfa)
+  entry <- val$decision_log[val$decision_log$metric == "standardized_loading", ]
+  expect_identical(entry$object, "b5")
+  expect_identical(
+    entry$observation,
+    paste("Standardized loading 0.34 is below the review reference 0.50 in absolute value;",
+          "inspect item content, precision, and model specification.")
+  )
+
+  skip_if_not(
+    exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
+  )
+  original <- nomologR:::nomo_validity_standardized_loadings
+  testthat::local_mocked_bindings(
+    nomo_validity_standardized_loadings = function(...) {
+      z <- original(...)
+      odd <- match(c("a1", "a2", "a3"), z$item)
+      z$loading[odd] <- c(1.04, NA, -.4996)
+      z$attention[odd] <- c("STRONG REVIEW", "REVIEW", "REVIEW")
+      z$explanation[odd[[2L]]] <- "A finite standardized loading was not available."
+      z
+    },
+    .package = "nomologR"
+  )
+  odd <- nomo_validity(cfa, htmt = "none")
+  log <- odd$decision_log[odd$decision_log$metric == "standardized_loading", ]
+  expect_identical(log$severity[log$object == "a1"], "concern")
+  expect_match(log$observation[log$object == "a1"],
+               "Standardized loading 1.04 exceeds 1 in absolute value", fixed = TRUE)
+  expect_identical(log$observation[log$object == "a2"],
+                   "A finite standardized loading was not available.")
+  # A negative loading is compared by its size, with the decimals that tell it
+  # from the reference.
+  expect_match(log$observation[log$object == "a3"],
+               "Standardized loading -0.4996 is below the review reference 0.50", fixed = TRUE)
 })

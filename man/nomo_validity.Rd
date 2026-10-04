@@ -53,11 +53,10 @@ evidence. AVE is not defined for a factor with a cross-loaded
 indicator; its row has an \code{NA} estimate and the attention
 \code{"unavailable"}.
 \item \code{latent_correlations}: construct correlations with intervals, and their
-\code{reference} and \code{attention}. A pair is flagged for review when its
-correlation could exceed the HTMT-family reference: the upper limit of
-its interval (Rönkkö & Cho, 2022), or the estimate when there is no
-interval, is above it. A correlation beyond 1 in absolute value is a
-concern.
+\code{reference} and \code{attention}. A correlation is flagged for review when it
+could exceed the HTMT-family reference: the upper limit of its interval
+(Rönkkö & Cho, 2022), or the estimate when there is no interval, is
+above it. A correlation beyond 1 in absolute value is a concern.
 \item \code{htmt2} and \code{htmt}: heterotrait-monotrait ratios per pair.
 \item \code{discriminant}: each pair's separation evidence with its reference and
 interpretation.
@@ -81,10 +80,14 @@ as information rather than as missing evidence.
 be computed, as when an AVE is missing or negative and so has no square
 root. See \strong{Conventions in returned tables} in \code{?nomologR}.
 
-In the \code{"discriminant"} table of \code{\link[=nomo_table]{nomo_table()}}, \code{signal} is the more
-severe of the HTMT-family flag (HTMT2, or HTMT when HTMT2 was not
-computed) and the latent correlation's \code{attention}, so a pair is still
-evaluated when no HTMT value exists.
+In the \code{"discriminant"} table of \code{\link[=nomo_table]{nomo_table()}}, \code{signal} is the
+HTMT-family flag (HTMT2, or HTMT when HTMT2 was not computed). Where
+neither was computed, as with several groups, a cross-loading, or
+\code{htmt = "none"}, it is the latent correlation's \code{attention}, so the pair
+is still evaluated; a latent correlation beyond 1 is a concern either way.
+Beside an HTMT-family value, a latent correlation flagged for review is
+recorded in the decision log as information, and the summary names the
+pair.
 
 Other fields record the call, the settings used, and intermediate engine
 results. They may change between releases and are not part of the stable

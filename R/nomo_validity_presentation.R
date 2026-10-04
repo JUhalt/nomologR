@@ -118,18 +118,23 @@ nomo_validity_orient_pairs <- function(tab, order) {
 }
 
 
-# The more severe of two flags; "unavailable" only when neither was evaluated.
-nomo_validity_worse_flag <- function(a, b) {
-  rank <- c(unavailable = 0L, info = 1L, review = 2L, concern = 3L)
-  ra <- rank[a]
-  rb <- rank[b]
-  ra[is.na(ra)] <- 0L
-  rb[is.na(rb)] <- 0L
-  names(rank)[pmax(ra, rb) + 1L]
+# A pair's separation flag. HTMT2 leads and HTMT stands in for it, as before;
+# the latent correlation sets the flag only where neither was computed, as the
+# fix plan has it, so a pair is evaluated whenever either exists. A latent
+# correlation beyond 1 is inadmissible, a concern whatever HTMT says (#145).
+nomo_validity_separation_flag <- function(htmt2, htmt, latent_attention, reference) {
+  primary <- ifelse(is.finite(htmt2), htmt2, htmt)
+  ifelse(
+    !is.finite(primary), latent_attention,
+    ifelse(latent_attention %in% "concern", "concern",
+           ifelse(primary > reference, "review", "info"))
+  )
 }
 
 
-nomo_validity_discriminant_table <- function(x) {
+# `attention = TRUE` keeps the latent correlation's own flag, which the summary
+# reads to say when it and the HTMT-family value disagree.
+nomo_validity_discriminant_table <- function(x, attention = FALSE) {
   order <- nomo_validity_construct_order(x)
   latent <- nomo_validity_orient_pairs(x$latent_correlations, order)
   if (nrow(latent)) {
@@ -180,22 +185,30 @@ nomo_validity_discriminant_table <- function(x) {
   if (!"HTMT2" %in% names(out)) out$HTMT2 <- NA_real_
   if (!"HTMT" %in% names(out)) out$HTMT <- NA_real_
 
-  # HTMT2 leads, HTMT stands in for it, and the latent correlation is read
-  # beside them: a pair is evaluated whenever either exists (#145).
-  primary <- ifelse(is.finite(out$HTMT2), out$HTMT2, out$HTMT)
-  htmt_signal <- ifelse(
-    !is.finite(primary), "unavailable",
-    ifelse(primary > x$htmt_reference, "review", "info")
+  out$latent_r_attention[is.na(out$latent_r_attention)] <- "unavailable"
+  out$signal <- nomo_validity_separation_flag(
+    out$HTMT2, out$HTMT, out$latent_r_attention, x$htmt_reference
   )
-  out$signal <- nomo_validity_worse_flag(htmt_signal, out$latent_r_attention)
   out <- out[order(
     match(out$construct_1, order), match(out$construct_2, order), out$block
   ), , drop = FALSE]
 
   tibble::as_tibble(out[, c(
     keys, "latent_r", "latent_r_ci_lower", "latent_r_ci_upper",
-    "HTMT2", "HTMT", "signal"
+    "HTMT2", "HTMT", "signal", if (isTRUE(attention)) "latent_r_attention"
   ), drop = FALSE])
+}
+
+
+# Pairs left unflagged by their HTMT-family value although their latent
+# correlation could exceed the reference. The flag follows HTMT (#145), so the
+# summary says so rather than showing a blank flag beside a flagged log row.
+nomo_validity_latent_beside <- function(x) {
+  tab <- nomo_validity_discriminant_table(x, attention = TRUE)
+  if (!nrow(tab)) return(character())
+  beside <- tab[tab$latent_r_attention == "review" & tab$signal == "info", , drop = FALSE]
+  nomo_validity_unit(paste(beside$construct_1, beside$construct_2, sep = " vs. "),
+                     beside$block)
 }
 
 
@@ -404,6 +417,7 @@ summary.nomo_validity <- function(object, ...) {
   out <- list(
     convergent = nomo_validity_convergent_table(object),
     discriminant = nomo_validity_discriminant_table(object),
+    latent_beside = nomo_validity_latent_beside(object),
     htmt_status = object$htmt_status,
     htmt_applicable = object$htmt_applicable,
     ngroups = object$ngroups,
@@ -485,6 +499,19 @@ print.summary_nomo_validity <- function(x, ...) {
         "An interval that runs past 1 is lavaan's symmetric interval; a ",
         "correlation cannot reach 1, and the limit beyond the reference is what ",
         "flags the pair.",
+        indent = 2L
+      )
+    }
+    beside <- x$latent_beside
+    if (length(beside)) {
+      n <- length(beside)
+      nomo_present_text(
+        paste(beside, collapse = ", "), " ", nomo_present_noun(n, "is", "are"),
+        " not flagged: ", nomo_present_noun(n, "its HTMT-family value is", "their HTMT-family values are"),
+        " within the reference, although ",
+        nomo_present_noun(n, "its latent correlation", "their latent correlations"),
+        " could exceed it. The flag follows HTMT2 or HTMT, and the latent ",
+        "correlation only where neither was computed.",
         indent = 2L
       )
     }
@@ -574,12 +601,15 @@ print.summary_nomo_validity <- function(x, ...) {
 #' Plot convergent or discriminant validity evidence
 #'
 #' @param x A `nomo_validity` object.
-#' @param type Plot type: `"ave"` or `"discriminant"`.
+#' @param type Plot type: `"ave"` or `"discriminant"`. The discriminant plot
+#'   draws each pair at the value that sets its flag: HTMT2, HTMT when HTMT2
+#'   was not computed, and the latent correlation with its interval when
+#'   neither was.
 #' @param ... Unused.
 #' @return A `ggplot2` object. The conceptual 0-to-1 coefficient range is shown
 #'   by default and expands only if an empirical value lies outside it. Each
-#'   point's shape and color show its flag, with a legend whenever a point is
-#'   flagged.
+#'   point's shape and color show its flag, the same flag as in `summary()` and
+#'   [nomo_table()], with a legend whenever a point is flagged.
 #' @export
 plot.nomo_validity <- function(x, type = c("ave", "discriminant"), ...) {
   type <- nomo_match_arg(type)
@@ -618,43 +648,88 @@ plot.nomo_validity <- function(x, type = c("ave", "discriminant"), ...) {
     return(p)
   }
 
-  dat <- x$htmt2
-  method <- "HTMT2"
+  # Each pair is drawn at the value that sets its flag, with the flag the
+  # summary and nomo_table() show: HTMT2, HTMT where HTMT2 is missing, and the
+  # latent correlation with its interval where neither was computed (#145).
+  dat <- nomo_validity_discriminant_table(x)
   if (!nrow(dat)) {
-    dat <- x$htmt
-    method <- "HTMT"
+    stop(
+      "No construct pairs are available to plot; inspect `x$latent_correlations` ",
+      "and `x$htmt_status`.",
+      call. = FALSE
+    )
   }
+  dat$source <- ifelse(is.finite(dat$HTMT2), "HTMT2",
+                       ifelse(is.finite(dat$HTMT), "HTMT", "latent r"))
+  dat$estimate <- ifelse(dat$source == "HTMT2", dat$HTMT2,
+                         ifelse(dat$source == "HTMT", dat$HTMT, dat$latent_r))
+  dat$pair <- paste(dat$construct_1, dat$construct_2, sep = " vs. ")
+  missing <- dat[!is.finite(dat$estimate), , drop = FALSE]
   dat <- dat[is.finite(dat$estimate), , drop = FALSE]
   if (!nrow(dat)) {
     stop(
-      "No finite HTMT-family estimates are available to plot; inspect `x$htmt_status`.",
+      "No HTMT-family value or latent correlation is available to plot; inspect ",
+      "`x$htmt_status` and `x$latent_correlations`.",
       call. = FALSE
     )
   }
 
-  ref <- x$htmt_reference
-  dat <- nomo_validity_orient_pairs(dat, nomo_validity_construct_order(x))
-  dat$pair <- paste(dat$construct_1, dat$construct_2, sep = " vs. ")
-  dat$flag <- nomo_plot_status(ifelse(
-    dat$estimate < 0, "concern", ifelse(dat$estimate > ref, "review", "info")
-  ))
+  sources <- intersect(c("HTMT2", "HTMT", "latent r"), dat$source)
+  latent <- dat$source == "latent r"
+  # With mixed sources, the pairs read from the latent correlation say so.
+  if (length(sources) > 1L) dat$pair[latent] <- paste0(dat$pair[latent], " (latent r)")
   dat$pair <- factor(dat$pair, levels = rev(unique(dat$pair)))
+  dat$flag <- nomo_plot_status(dat$signal)
+  dat$ci_lower <- ifelse(latent, dat$latent_r_ci_lower, NA_real_)
+  dat$ci_upper <- ifelse(latent, dat$latent_r_ci_upper, NA_real_)
+  intervals <- dat[is.finite(dat$ci_lower) & is.finite(dat$ci_upper), , drop = FALSE]
 
-  p <- ggplot2::ggplot(dat, ggplot2::aes(x = estimate, y = pair, shape = flag, colour = flag)) +
-    ggplot2::geom_vline(xintercept = ref, linetype = 2) +
-    ggplot2::geom_point(size = 3) +
+  ref <- x$htmt_reference
+  only_latent <- identical(sources, "latent r")
+  kind <- if (only_latent) "r" else "htmt"
+  # A negative latent correlation is read by its size, so the reference is
+  # drawn on both sides.
+  lines <- if (any(dat$estimate[latent] < 0)) c(-ref, ref) else ref
+  subtitle <- paste0("Dashed line = review reference (", nomo_present_stat(ref, kind), ").")
+  if (nrow(intervals)) {
+    subtitle <- paste(
+      subtitle,
+      "Bars = 95% confidence interval of latent r; its limit farthest from zero",
+      "is compared with the reference."
+    )
+  }
+  caption <- "Values past the line prompt investigation; they do not mandate merging."
+  if (nrow(missing)) {
+    caption <- paste0(
+      caption, " Not drawn: ", paste(unique(missing$pair), collapse = ", "),
+      ", with no value computed."
+    )
+  }
+  label <- nomo_validity_capitalize(nomo_present_or(sources))
+
+  p <- ggplot2::ggplot(dat, ggplot2::aes(x = estimate, y = pair)) +
+    ggplot2::geom_vline(xintercept = lines, linetype = 2) +
+    ggplot2::geom_segment(
+      data = intervals,
+      ggplot2::aes(x = ci_lower, xend = ci_upper, y = pair, yend = pair),
+      colour = "grey60", linewidth = 0.7
+    ) +
+    ggplot2::geom_point(ggplot2::aes(shape = flag, colour = flag), size = 3) +
     nomo_plot_status_scales(dat$flag) +
-    ggplot2::coord_cartesian(xlim = nomo_plot_x_limits(dat$estimate)) +
+    ggplot2::coord_cartesian(
+      xlim = nomo_plot_x_limits(c(dat$estimate, intervals$ci_lower, intervals$ci_upper))
+    ) +
     nomo_plot_labs(
-      title = paste0("Construct separation: ", method),
-      subtitle = paste0(
-        "Dashed line = review reference (", nomo_present_stat(ref, "htmt"), ")."
-      ),
-      x = method,
+      title = paste0("Construct separation: ", nomo_present_or(sources, "and")),
+      subtitle = subtitle,
+      x = label,
       y = NULL,
-      caption = "Values above the line prompt investigation; they do not mandate merging."
+      caption = caption
     ) +
     ggplot2::theme_minimal()
+  if (only_latent) {
+    p <- p + ggplot2::scale_x_continuous(labels = nomo_plot_bounded_labels)
+  }
 
   if (length(unique(dat$block)) > 1L) {
     p <- p + ggplot2::facet_wrap(stats::as.formula("~ block"))
@@ -663,5 +738,5 @@ plot.nomo_validity <- function(x, type = c("ave", "discriminant"), ...) {
 }
 
 utils::globalVariables(c(
-  "estimate", "construct", "flag", "block", "pair"
+  "estimate", "construct", "flag", "block", "pair", "ci_lower", "ci_upper"
 ))

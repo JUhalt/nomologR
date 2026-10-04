@@ -316,8 +316,8 @@
         A            B                 .50  [.41, .59]   0.53  0.54
       
       Flagged
-        - b5 (Review): Absolute standardized loading is below the configured
-          teaching reference of 0.5; inspect item content, precision, and model
+        - b5 (Review): Standardized loading 0.34 is below the review reference 0.50
+          in absolute value; inspect item content, precision, and model
           specification.
         - A (Review): AVE (.497) is below the configured convergent-evidence
           reference (.50). Inspect standardized loadings, indicator-specific error,
