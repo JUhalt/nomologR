@@ -1184,8 +1184,8 @@
         - The SocialDesirability EFA (Review): 1 factor on 3 items leaves 0 degrees
           of freedom: the model reproduces the correlations exactly, so an RMSR near
           0 is not evidence of fit.
-        - SocialDesirability in validity (Review): AVE is below the configured
-          convergent-evidence reference (0.5). Inspect standardized loadings,
+        - SocialDesirability in validity (Review): AVE (.47) is below the configured
+          convergent-evidence reference (.50). Inspect standardized loadings,
           indicator-specific error, and content coverage; do not automatically
           delete items.
         - Scores (Review): The parallel model that unit weighting assumes fits worse
