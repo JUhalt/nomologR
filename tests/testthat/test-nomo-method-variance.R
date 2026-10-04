@@ -390,14 +390,20 @@ test_that("an improper or unconverged CFA stops the technique with its reason (#
     "M =~ 0.7*m1 + 0.7*m2", "A ~~ 0.4*B", "A ~~ 0*M", "B ~~ 0*M", sep = "
 "
   ), n = 300, seed = 68)
+  # Some platforms' optimizers (macOS) stop short of convergence on these data
+  # instead of reaching the negative variance; either way the technique stops
+  # with its reason.
   expect_error(
     nomo_method_variance(mv_model, two, marker = c("m1", "m2")),
-    "The CFA model gives the marker a negative error variance for m1", fixed = TRUE
+    "The CFA model (gives the marker a negative error variance for m1|did not converge)"
   )
-  expect_error(
-    nomo_method_variance(mv_model, two, marker = c("m1", "m2")),
-    "identified only through its correlations", fixed = TRUE
-  )
+  # The negative-variance message itself, on fixed estimates.
+  negative <- data.frame(lhs = c("Marker", "Marker", "m1", "m2"), op = c("=~", "=~", "~~", "~~"),
+                         rhs = c("m1", "m2", "m1", "m2"), est = c(.9, .4, -.05, .5), se = .1)
+  expect_error(nomologR:::nomo_method_variance_check_cfa(negative, c("m1", "m2"), "Marker"),
+               "The CFA model gives the marker a negative error variance for m1", fixed = TRUE)
+  expect_error(nomologR:::nomo_method_variance_check_cfa(negative, c("m1", "m2"), "Marker"),
+               "identified only through its correlations", fixed = TRUE)
   # Forty cases: the CFA does not converge, and that is said.
   small <- mv_data(mv_population(), n = 40, seed = 7)
   expect_error(
