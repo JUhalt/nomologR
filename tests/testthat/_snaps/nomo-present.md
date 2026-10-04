@@ -82,10 +82,13 @@
       <nomo_screen> Item and data audit
       Cases: 500 | Candidate items: 10
       Items with missing responses: 2 | Constant: 0 | All missing: 0
-      Relationship diagnostics: 10 eligible items | 10 item-rest estimates
+      Items in correlation diagnostics: 10 | Item-rest correlations: 10
       Response concentration flags: 0 | Near-zero variance: 0
-      Decision log: 3 info, 1 review, 0 concern
+      Decision log: 4 entries | Flagged: 1 review, 0 concern
       No rows or items were removed or modified.
+      
+      See summary(x) for each item's review and nomo_table(x, "decision_log") for
+      every log entry.
 
 ---
 
@@ -93,29 +96,33 @@
       print(summary(scr))
     Output
       <nomo_screen summary> Item and data audit
-      Cases: 500 | Items: 10 | Flags: 1 review, 0 concern
+      Cases: 500 | Items: 10 | Item flags: 1 review, 0 concern
       Items with missing responses: 2 | Constant: 0 | All missing: 0
-      Relationship eligible: 10
+      Items in correlation diagnostics: 10
       
       Item review
         Item  Type        Missing  Top share  Item-rest r  Flag
-        a1    continuous     0.0%       1.0%        0.559
-        a2    continuous     3.0%       1.2%        0.580
-        a3    continuous     0.0%       1.0%        0.511
-        a4    continuous     0.0%       1.2%        0.549
-        a5    continuous     0.0%       1.6%        0.588
-        b1    continuous     0.0%       1.6%        0.602
-        b2    continuous     0.0%       1.4%        0.513
-        b3    continuous     2.4%       1.0%        0.571
-        b4    continuous     0.0%       1.2%        0.481
-        b5    continuous     0.0%       1.4%        0.279  review
-        Top share is the proportion of responses in the most common category.
+        a1    continuous     0.0%       1.0%          .56
+        a2    continuous     3.0%       1.2%          .58
+        a3    continuous     0.0%       1.0%          .51
+        a4    continuous     0.0%       1.2%          .55
+        a5    continuous     0.0%       1.6%          .59
+        b1    continuous     0.0%       1.6%          .60
+        b2    continuous     0.0%       1.4%          .51
+        b3    continuous     2.4%       1.0%          .57
+        b4    continuous     0.0%       1.2%          .48
+        b5    continuous     0.0%       1.4%          .28  Review
+        Top share is the share of observed responses in the most common category.
+        Item-rest r is the correlation of an item with the sum of the other items.
       
-      Flagged items
-        - b5 (review): `b5` has a corrected item-rest correlation of r = 0.28
-          (n = 473), below the teaching reference.
+      Flagged
+        - b5 (Review): `b5` has a corrected item-rest correlation of r = .28
+          (n = 473), below the teaching reference of .30.
       
       Flags are review aids, not decisions to keep or delete an item.
+      
+      See nomo_table(x, "decision_log") for every log entry and plot(x) for the item
+      evidence map.
 
 ---
 
