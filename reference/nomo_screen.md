@@ -39,6 +39,8 @@ nomo_screen(
 
   Guidance settings from
   [`nomo_defaults()`](https://juhalt.github.io/nomologR/reference/nomo_defaults.md).
+  A list that sets `auto_delete` or `auto_respecify` to `TRUE` is
+  refused, since nomologR never deletes an item on its own.
 
 - effort:
 
@@ -70,7 +72,13 @@ nomo_screen(
   It is needed to use `reverse` and is never inferred from the data.
   With `effort = TRUE`, naming reverse-keyed items without it is
   refused. With `effort = FALSE` the audit runs, and the decision log
-  records that the declared keying was not used.
+  records that the declared keying was not used. When it is given, each
+  numeric item's responses are compared with it: an item with responses
+  outside it gets a concern in the decision log, and with
+  `effort = TRUE` a reverse-keyed item with responses outside it is
+  refused, since recoding it on that scale would give wrong values. It
+  also sets the floor and ceiling of numeric-discrete items (see
+  Details).
 
 - pair_magnitude:
 
@@ -97,8 +105,9 @@ An object of class `nomo_screen`. The fields to read are:
   and summary of its inter-item correlations. With two or more declared
   scales, `scale`, `scale_item_rest_r`, and `scale_item_rest_n` give
   each item's scale and its item-rest correlation within that scale, and
-  `scale_negative_interitem_n` counts its negative correlations with
-  items of the same scale; otherwise they are `NA`.
+  `scale_negative_interitem_n` counts the negative correlations the
+  review reads: with items of the same scale, and with any screened item
+  that is outside every declared scale. Otherwise they are `NA`.
 
 - `inter_item_correlations`: one row per item pair.
 
@@ -125,6 +134,11 @@ results. They may change between releases and are not part of the stable
 interface (see
 [`?nomologR`](https://juhalt.github.io/nomologR/reference/nomologR-package.md)).
 
+Printed, the object shows the counts of cases and items by data
+condition and how many decision-log entries are flagged.
+[`summary()`](https://rdrr.io/r/base/summary.html) shows each item's
+review in a table, with the reason for each flag in a Flagged section.
+
 ## Details
 
 The function never removes rows or items, changes scores, reverse-keys
@@ -145,9 +159,22 @@ teaching references from
 [`nomo_defaults()`](https://juhalt.github.io/nomologR/reference/nomo_defaults.md).
 They are screening heuristics, not psychometric laws or automatic
 item-retention rules. Ordered and numeric-discrete items also receive
-descriptive boundary concentration summaries. Continuous-like numeric
-indicators receive descriptive skewness and excess-kurtosis summaries
-without a pass/fail normality judgment.
+descriptive boundary concentration summaries, `floor_prop` and
+`ceiling_prop`. An ordered item's boundaries are its first and last
+levels. A numeric-discrete item's are the ends of `scale_range` when it
+is given, and otherwise its lowest and highest observed values, since a
+numeric item shows only the values used: a pile-up in the middle of a
+scale whose lower categories went unused would read as a floor effect,
+and the decision log says so. Continuous-like numeric indicators receive
+descriptive skewness and excess-kurtosis summaries without a pass/fail
+normality judgment.
+
+An item in a declared scale is reviewed on its item-rest correlation
+within that scale. When it has none there, because it is the only item
+of its scale in the diagnostics or too few cases are complete on the
+scale's items, it is not reviewed on the pooled value, which would judge
+it against other constructs; the decision log says why there is no
+value.
 
 **Careless responding.** With `effort = TRUE`, each case receives the
 indices Meade and Craig (2012), Huang et al. (2012), and Curran (2016)
@@ -170,6 +197,13 @@ negative synonym correlation. The other indices have no stated cut score
 and are reported without a flag. Huang et al. found the indices they
 recommended identified attentive respondents well and random responders
 poorly, so an unflagged case is not thereby shown to be attentive.
+
+Long-string reads the items in the order given: the order of `items`, or
+of the columns of `data` when `items` is `NULL`, which should be the
+order in which they were administered. A `contentvalidR` handoff of
+schema version 1 records no administration order, so its carried items
+are read in the order the handoff lists them, which need not be the
+order of administration.
 
 The long-string rule is applied only when at least
 `guidance$long_string_min_items` items are screened (20 in
@@ -196,17 +230,21 @@ Only items it marks as carried are screened. Every item it held back is
 listed in the decision log with its status and recommendation quoted in
 `contentvalidR`'s own words, and is never analyzed or reinstated here.
 The log also records the producing version, workflow, and carry rule,
-and that item membership came from content review rather than from these
-data.
+and that the items came from content review rather than from these data,
+as did their construct membership when the review assigned one.
 
-A carried item that is not a column of `data` is refused, never dropped.
-Where the call leaves `scales`, `reverse`, or `scale_range` unset, the
-handoff's scales and declared keying fill them. An item is never treated
-as forward keyed because keying was undeclared, and a response scale the
-handoff did not record is never inferred. A handoff with a schema
-version this release does not read is refused, naming both package
-versions. The interface is specified in nomologR issue \#46, and
-`contentvalidR` is not needed to read it.
+A carried item that is not a column of `data` is refused, never dropped,
+and a handoff that carries no items is refused with the review's status
+counts. Where the call leaves `scales`, `reverse`, or `scale_range`
+unset, the handoff's scales and declared keying fill them. The log
+records what the call changed: `scales` that replace the handoff's, a
+`reverse` or `scale_range` that replaces the declared keying, and a
+`scale_range` that completes keying declared without a response scale.
+An item is never treated as forward keyed because keying was undeclared,
+and a response scale the handoff did not record is never inferred. A
+handoff with a schema version this release does not read is refused,
+naming both package versions. The interface is specified in nomologR
+issue \#46, and `contentvalidR` is not needed to read it.
 
 ## References
 
@@ -277,27 +315,31 @@ out$decision_log
 scr <- nomo_screen(nomo_demo_continuous)
 summary(scr)
 #> <nomo_screen summary> Item and data audit
-#> Cases: 500 | Items: 10 | Flags: 1 review, 0 concern
+#> Cases: 500 | Items: 10 | Item flags: 1 review, 0 concern
 #> Items with missing responses: 2 | Constant: 0 | All missing: 0
-#> Relationship eligible: 10
+#> Items in correlation diagnostics: 10
 #> 
 #> Item review
 #>   Item  Type        Missing  Top share  Item-rest r  Flag
-#>   a1    continuous     0.0%       1.0%        0.559
-#>   a2    continuous     3.0%       1.2%        0.580
-#>   a3    continuous     0.0%       1.0%        0.511
-#>   a4    continuous     0.0%       1.2%        0.549
-#>   a5    continuous     0.0%       1.6%        0.588
-#>   b1    continuous     0.0%       1.6%        0.602
-#>   b2    continuous     0.0%       1.4%        0.513
-#>   b3    continuous     2.4%       1.0%        0.571
-#>   b4    continuous     0.0%       1.2%        0.481
-#>   b5    continuous     0.0%       1.4%        0.279  review
-#>   Top share is the proportion of responses in the most common category.
+#>   a1    continuous     0.0%       1.0%          .56
+#>   a2    continuous     3.0%       1.2%          .58
+#>   a3    continuous     0.0%       1.0%          .51
+#>   a4    continuous     0.0%       1.2%          .55
+#>   a5    continuous     0.0%       1.6%          .59
+#>   b1    continuous     0.0%       1.6%          .60
+#>   b2    continuous     0.0%       1.4%          .51
+#>   b3    continuous     2.4%       1.0%          .57
+#>   b4    continuous     0.0%       1.2%          .48
+#>   b5    continuous     0.0%       1.4%          .28  Review
+#>   Top share is the share of observed responses in the most common category.
+#>   Item-rest r is the correlation of an item with the sum of the other items.
 #> 
-#> Flagged items
-#>   - b5 (review): `b5` has a corrected item-rest correlation of r = 0.28
-#>     (n = 473), below the teaching reference.
+#> Flagged
+#>   - b5 (Review): `b5` has a corrected item-rest correlation of r = .28
+#>     (n = 473), below the teaching reference of .30.
 #> 
 #> Flags are review aids, not decisions to keep or delete an item.
+#> 
+#> See nomo_table(x, "decision_log") for every log entry and plot(x) for the item
+#> evidence map.
 ```

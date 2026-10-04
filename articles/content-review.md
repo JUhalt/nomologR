@@ -122,34 +122,54 @@ Every item is flagged. The Effort Regulation audit shows why:
 
 summary(run$results$screen$EF)
 #> <nomo_screen summary> Item and data audit
-#> Cases: 400 | Items: 5 | Flags: 5 review, 0 concern
+#> Cases: 400 | Items: 5 | Item flags: 5 review, 0 concern
 #> Items with missing responses: 0 | Constant: 0 | All missing: 0
-#> Relationship eligible: 5
+#> Items in correlation diagnostics: 5
 #> 
 #> Item review
 #>   Item  Type      Missing  Top share  Item-rest r  Flag
-#>   EF1   discrete     0.0%      34.8%        0.173  review
-#>   EF2   discrete     0.0%      28.5%       -0.505  review
-#>   EF3   discrete     0.0%      78.5%        0.210  review
-#>   EF4   discrete     0.0%      33.8%        0.168  review
-#>   EF6   discrete     0.0%      32.5%        0.175  review
-#>   Top share is the proportion of responses in the most common category.
+#>   EF1   discrete     0.0%      34.8%          .17  Review
+#>   EF2   discrete     0.0%      28.5%         -.50  Review
+#>   EF3   discrete     0.0%      78.5%          .21  Review
+#>   EF4   discrete     0.0%      33.8%          .17  Review
+#>   EF6   discrete     0.0%      32.5%          .18  Review
+#>   Top share is the share of observed responses in the most common category.
+#>   Item-rest r is the correlation of an item with the sum of the other items.
 #> 
-#> Flagged items
-#>   - EF1 (review): `EF1` has a corrected item-rest correlation of r = 0.17
-#>     (n = 400), below the teaching reference.
-#>   - EF2 (review): `EF2` has a negative corrected item-rest correlation
-#>     (r = -0.50, n = 400). It is declared reverse-keyed, and this is the sign
+#> Flagged
+#>   - EF1 (Review): `EF1` has a corrected item-rest correlation of r = .17
+#>     (n = 400), below the teaching reference of .30. Its rest score includes
+#>     EF2, declared reverse-keyed and not yet recoded in the data; with EF2
+#>     recoded as declared, its item-rest correlation is r = .56. Its correlation
+#>     with EF2 is negative.
+#>   - EF2 (Review): `EF2` has a negative corrected item-rest correlation
+#>     (r = -.50, n = 400). It is declared reverse-keyed, and this is the sign
 #>     such an item shows before it is recoded: recoded on the declared 1 to 5
-#>     scale, its item-rest correlation is r = 0.50. The data were not recoded.
-#>   - EF3 (review): `EF3` has a corrected item-rest correlation of r = 0.21
-#>     (n = 400), below the teaching reference.
-#>   - EF4 (review): `EF4` has a corrected item-rest correlation of r = 0.17
-#>     (n = 400), below the teaching reference.
-#>   - EF6 (review): `EF6` has a corrected item-rest correlation of r = 0.18
-#>     (n = 400), below the teaching reference.
+#>     scale, its item-rest correlation is r = .50. The data were not recoded.
+#>     Its correlations with EF1, EF3, EF4, and EF6 are negative.
+#>   - EF3 (Review): `EF3` has a corrected item-rest correlation of r = .21
+#>     (n = 400), below the teaching reference of .30. Its rest score includes
+#>     EF2, declared reverse-keyed and not yet recoded in the data; with EF2
+#>     recoded as declared, its item-rest correlation is r = .34. Its correlation
+#>     with EF2 is negative.
+#>   - EF4 (Review): `EF4` has a corrected item-rest correlation of r = .17
+#>     (n = 400), below the teaching reference of .30. Its rest score includes
+#>     EF2, declared reverse-keyed and not yet recoded in the data; with EF2
+#>     recoded as declared, its item-rest correlation is r = .23. Its correlation
+#>     with EF2 is negative.
+#>   - EF6 (Review): `EF6` has a corrected item-rest correlation of r = .18
+#>     (n = 400), below the teaching reference of .30. Its rest score includes
+#>     EF2, declared reverse-keyed and not yet recoded in the data; with EF2
+#>     recoded as declared, its item-rest correlation is r = .47. Its correlation
+#>     with EF2 is negative.
+#>   - Inter-item correlations (Review): 4 estimable inter-item correlations are
+#>     negative. All involve EF2, declared reverse-keyed and not yet recoded in
+#>     the data.
 #> 
 #> Flags are review aids, not decisions to keep or delete an item.
+#> 
+#> See nomo_table(x, "decision_log") for every log entry and plot(x) for the item
+#> evidence map.
 ```
 
 `EF2` correlates negatively with the rest of its facet. The audit says
@@ -193,24 +213,28 @@ run$decision_log$observation[run$decision_log$id == "keying"]
 ef <- run$results$screen$EF
 summary(ef)
 #> <nomo_screen summary> Item and data audit
-#> Cases: 400 | Items: 5 | Flags: 1 review, 0 concern
+#> Cases: 400 | Items: 5 | Item flags: 1 review, 0 concern
 #> Items with missing responses: 0 | Constant: 0 | All missing: 0
-#> Relationship eligible: 5
+#> Items in correlation diagnostics: 5
 #> 
 #> Item review
 #>   Item  Type      Missing  Top share  Item-rest r  Flag
-#>   EF1   discrete     0.0%      34.8%        0.559
-#>   EF2   discrete     0.0%      28.5%        0.505
-#>   EF3   discrete     0.0%      78.5%        0.339
-#>   EF4   discrete     0.0%      33.8%        0.228  review
-#>   EF6   discrete     0.0%      32.5%        0.470
-#>   Top share is the proportion of responses in the most common category.
+#>   EF1   discrete     0.0%      34.8%          .56
+#>   EF2   discrete     0.0%      28.5%          .50
+#>   EF3   discrete     0.0%      78.5%          .34
+#>   EF4   discrete     0.0%      33.8%          .23  Review
+#>   EF6   discrete     0.0%      32.5%          .47
+#>   Top share is the share of observed responses in the most common category.
+#>   Item-rest r is the correlation of an item with the sum of the other items.
 #> 
-#> Flagged items
-#>   - EF4 (review): `EF4` has a corrected item-rest correlation of r = 0.23
-#>     (n = 400), below the teaching reference.
+#> Flagged
+#>   - EF4 (Review): `EF4` has a corrected item-rest correlation of r = .23
+#>     (n = 400), below the teaching reference of .30.
 #> 
 #> Flags are review aids, not decisions to keep or delete an item.
+#> 
+#> See nomo_table(x, "decision_log") for every log entry and plot(x) for the item
+#> evidence map.
 ```
 
 Recoded, `EF2` correlates 0.50 with the rest of its facet, and one EF

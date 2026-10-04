@@ -109,10 +109,13 @@ scr
 #> <nomo_screen> Item and data audit
 #> Cases: 500 | Candidate items: 10
 #> Items with missing responses: 2 | Constant: 0 | All missing: 0
-#> Relationship diagnostics: 10 eligible items | 10 item-rest estimates
+#> Items in correlation diagnostics: 10 | Item-rest correlations: 10
 #> Response concentration flags: 0 | Near-zero variance: 0
-#> Decision log: 3 info, 1 review, 0 concern
+#> Decision log: 4 entries | Flagged: 1 review, 0 concern
 #> No rows or items were removed or modified.
+#> 
+#> See summary(x) for each item's review and nomo_table(x, "decision_log") for
+#> every log entry.
 ```
 
 Factor-retention evidence triangulates several criteria rather than

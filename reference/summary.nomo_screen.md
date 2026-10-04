@@ -28,4 +28,6 @@ summary(object, ...)
 
 An object of class `summary_nomo_screen` containing an overview,
 integrated item-review table, decision log, relationship-method note,
-and guidance settings.
+and guidance settings. Printed, it shows the item review table and a
+Flagged section giving the reason for each flag in the decision log's
+words.

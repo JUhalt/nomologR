@@ -99,7 +99,9 @@ May also be a handoff from <code>contentvalidR</code>'s <code>content_handoff()<
 
 
 <dt id="arg-guidance">guidance<a class="anchor" aria-label="anchor" href="#arg-guidance"></a></dt>
-<dd><p>Guidance settings from <code><a href="nomo_defaults.html">nomo_defaults()</a></code>.</p></dd>
+<dd><p>Guidance settings from <code><a href="nomo_defaults.html">nomo_defaults()</a></code>. A list that sets
+<code>auto_delete</code> or <code>auto_respecify</code> to <code>TRUE</code> is refused, since nomologR
+never deletes an item on its own.</p></dd>
 
 
 <dt id="arg-effort">effort<a class="anchor" aria-label="anchor" href="#arg-effort"></a></dt>
@@ -131,7 +133,12 @@ recoding. The data is never recoded.</p></dd>
 below <code>max</code>. It is needed to use <code>reverse</code> and is never inferred from the
 data. With <code>effort = TRUE</code>, naming reverse-keyed items without it is
 refused. With <code>effort = FALSE</code> the audit runs, and the decision log
-records that the declared keying was not used.</p></dd>
+records that the declared keying was not used. When it is given, each
+numeric item's responses are compared with it: an item with responses
+outside it gets a concern in the decision log, and with <code>effort = TRUE</code> a
+reverse-keyed item with responses outside it is refused, since recoding
+it on that scale would give wrong values. It also sets the floor and
+ceiling of numeric-discrete items (see Details).</p></dd>
 
 
 <dt id="arg-pair-magnitude">pair_magnitude<a class="anchor" aria-label="anchor" href="#arg-pair-magnitude"></a></dt>
@@ -153,8 +160,9 @@ near-zero-variance indicators.</p></li>
 summary of its inter-item correlations. With two or more declared
 scales, <code>scale</code>, <code>scale_item_rest_r</code>, and <code>scale_item_rest_n</code> give each
 item's scale and its item-rest correlation within that scale, and
-<code>scale_negative_interitem_n</code> counts its negative correlations with items
-of the same scale; otherwise they are <code>NA</code>.</p></li>
+<code>scale_negative_interitem_n</code> counts the negative correlations the review
+reads: with items of the same scale, and with any screened item that is
+outside every declared scale. Otherwise they are <code>NA</code>.</p></li>
 <li><p><code>inter_item_correlations</code>: one row per item pair.</p></li>
 <li><p><code>decision_log</code>: the evidence and its explanations (see <code><a href="nomo_table.html">nomo_table()</a></code>).</p></li>
 <li><p><code>effort</code>, <code>effort_pairs</code>, and <code>effort_settings</code>: the careless-responding
@@ -170,6 +178,10 @@ states it. See <strong>Conventions in returned tables</strong> in <code><a href=
 <p>Other fields record the call, the settings used, and intermediate engine
 results. They may change between releases and are not part of the stable
 interface (see <code><a href="nomologR-package.html">?nomologR</a></code>).</p>
+<p>Printed, the object shows the counts of cases and items by data
+condition and how many decision-log entries are flagged. <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>
+shows each item's review in a table, with the reason for each flag in a
+Flagged section.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -186,8 +198,19 @@ psychometric cutoff rules.</p>
 teaching references from <code><a href="nomo_defaults.html">nomo_defaults()</a></code>. They are screening heuristics,
 not psychometric laws or automatic item-retention rules. Ordered and
 numeric-discrete items also receive descriptive boundary concentration
-summaries. Continuous-like numeric indicators receive descriptive skewness
-and excess-kurtosis summaries without a pass/fail normality judgment.</p>
+summaries, <code>floor_prop</code> and <code>ceiling_prop</code>. An ordered item's boundaries are
+its first and last levels. A numeric-discrete item's are the ends of
+<code>scale_range</code> when it is given, and otherwise its lowest and highest observed
+values, since a numeric item shows only the values used: a pile-up in the
+middle of a scale whose lower categories went unused would read as a floor
+effect, and the decision log says so. Continuous-like numeric indicators
+receive descriptive skewness and excess-kurtosis summaries without a
+pass/fail normality judgment.</p>
+<p>An item in a declared scale is reviewed on its item-rest correlation within
+that scale. When it has none there, because it is the only item of its scale
+in the diagnostics or too few cases are complete on the scale's items, it is
+not reviewed on the pooled value, which would judge it against other
+constructs; the decision log says why there is no value.</p>
 <p><strong>Careless responding.</strong> With <code>effort = TRUE</code>, each case receives the indices
 Meade and Craig (2012), Huang et al. (2012), and Curran (2016) describe:
 long-string, inter-item standard deviation (Marjanovic et al., 2015),
@@ -207,6 +230,11 @@ correlation. The other indices have no stated cut score and are reported
 without a flag. Huang et al. found the indices they recommended identified
 attentive respondents well and random responders poorly, so an unflagged case
 is not thereby shown to be attentive.</p>
+<p>Long-string reads the items in the order given: the order of <code>items</code>, or
+of the columns of <code>data</code> when <code>items</code> is <code>NULL</code>, which should be the order
+in which they were administered. A <code>contentvalidR</code> handoff of schema version
+1 records no administration order, so its carried items are read in the
+order the handoff lists them, which need not be the order of administration.</p>
 <p>The long-string rule is applied only when at least
 <code>guidance$long_string_min_items</code> items are screened (20 in
 <code><a href="nomo_defaults.html">nomo_defaults()</a></code>). Half the length of a shorter item set is a run of a few
@@ -227,13 +255,18 @@ and 1. Cases are flagged, never removed.</p>
 items it marks as carried are screened. Every item it held back is listed in
 the decision log with its status and recommendation quoted in
 <code>contentvalidR</code>'s own words, and is never analyzed or reinstated here. The log
-also records the producing version, workflow, and carry rule, and that item
-membership came from content review rather than from these data.</p>
-<p>A carried item that is not a column of <code>data</code> is refused, never dropped.
+also records the producing version, workflow, and carry rule, and that the
+items came from content review rather than from these data, as did their
+construct membership when the review assigned one.</p>
+<p>A carried item that is not a column of <code>data</code> is refused, never dropped, and
+a handoff that carries no items is refused with the review's status counts.
 Where the call leaves <code>scales</code>, <code>reverse</code>, or <code>scale_range</code> unset, the
-handoff's scales and declared keying fill them. An item is never treated as
-forward keyed because keying was undeclared, and a response scale the
-handoff did not record is never inferred. A handoff with a schema version
+handoff's scales and declared keying fill them. The log records what the
+call changed: <code>scales</code> that replace the handoff's, a <code>reverse</code> or
+<code>scale_range</code> that replaces the declared keying, and a <code>scale_range</code> that
+completes keying declared without a response scale. An item is never
+treated as forward keyed because keying was undeclared, and a response scale
+the handoff did not record is never inferred. A handoff with a schema version
 this release does not read is refused, naming both package versions. The
 interface is specified in nomologR issue #46, and <code>contentvalidR</code> is not
 needed to read it.</p>
@@ -298,29 +331,33 @@ McGraw-Hill.</p>
 <span class="r-in"><span><span class="va">scr</span> <span class="op">&lt;-</span> <span class="fu">nomo_screen</span><span class="op">(</span><span class="va">nomo_demo_continuous</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">scr</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;nomo_screen summary&gt; Item and data audit</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Cases: 500 | Items: 10 | Flags: 1 review, 0 concern</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Cases: 500 | Items: 10 | Item flags: 1 review, 0 concern</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Items with missing responses: 2 | Constant: 0 | All missing: 0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Relationship eligible: 10</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Items in correlation diagnostics: 10</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Item review</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Item  Type        Missing  Top share  Item-rest r  Flag</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   a1    continuous     0.0%       1.0%        0.559</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   a2    continuous     3.0%       1.2%        0.580</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   a3    continuous     0.0%       1.0%        0.511</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   a4    continuous     0.0%       1.2%        0.549</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   a5    continuous     0.0%       1.6%        0.588</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   b1    continuous     0.0%       1.6%        0.602</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   b2    continuous     0.0%       1.4%        0.513</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   b3    continuous     2.4%       1.0%        0.571</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   b4    continuous     0.0%       1.2%        0.481</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   b5    continuous     0.0%       1.4%        0.279  review</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Top share is the proportion of responses in the most common category.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   a1    continuous     0.0%       1.0%          .56</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   a2    continuous     3.0%       1.2%          .58</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   a3    continuous     0.0%       1.0%          .51</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   a4    continuous     0.0%       1.2%          .55</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   a5    continuous     0.0%       1.6%          .59</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   b1    continuous     0.0%       1.6%          .60</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   b2    continuous     0.0%       1.4%          .51</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   b3    continuous     2.4%       1.0%          .57</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   b4    continuous     0.0%       1.2%          .48</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   b5    continuous     0.0%       1.4%          .28  Review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Top share is the share of observed responses in the most common category.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Item-rest r is the correlation of an item with the sum of the other items.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Flagged items</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   - b5 (review): `b5` has a corrected item-rest correlation of r = 0.28</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     (n = 473), below the teaching reference.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Flagged</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   - b5 (Review): `b5` has a corrected item-rest correlation of r = .28</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     (n = 473), below the teaching reference of .30.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Flags are review aids, not decisions to keep or delete an item.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> See nomo_table(x, "decision_log") for every log entry and plot(x) for the item</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> evidence map.</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

@@ -169,8 +169,8 @@ pw
 #> 
 #> By sample size
 #>     N Converged Improper Min power Max bias Max SE bias Coverage     Meets
-#>   100    100.0%     0.0%      0.64     2.4%       12.2% 0.91 to 0.98 no
-#>   200    100.0%     0.0%      0.93     3.6%       14.2% 0.91 to 0.94 no
+#>   100    100.0%     0.0%      0.64     2.9%       13.2% 0.90 to 0.99 no
+#>   200    100.0%     0.0%      0.91     3.9%       14.3% 0.90 to 0.95 no
 #>   No simulated N meets the references; try larger ones.
 #> 
 #> Max bias and Max SE bias are the largest absolute relative biases across the

@@ -580,7 +580,7 @@ cat(review_log$observation[review_log$object %in% c("content_review", "EF5", "TF
 #> 10 of 12 reviewed items were carried and 2 held back. Status counts: Review 2, Supported 10.
 #> EF5 was held back by content review: status "Review", recommendation "Review".
 #> TF5 was held back by content review: status "Review", recommendation "Review".
-#> Content review declared reverse-keyed item(s) EF2, TF2, on a 1 to 5 response scale.
+#> Content review declared reverse-keyed items EF2, TF2, on a 1 to 5 response scale.
 ```
 
 EF5 and TF5 were held back by the item sort. They are not analyzed, and

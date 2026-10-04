@@ -155,29 +155,33 @@ when you <em>do</em> know what is true.</p>
 <code class="sourceCode R"><span><span class="va">scr</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_screen.html">nomo_screen</a></span><span class="op">(</span><span class="va">nomo_demo_continuous</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">scr</span><span class="op">)</span></span>
 <span><span class="co">#&gt; &lt;nomo_screen summary&gt; Item and data audit</span></span>
-<span><span class="co">#&gt; Cases: 500 | Items: 10 | Flags: 1 review, 0 concern</span></span>
+<span><span class="co">#&gt; Cases: 500 | Items: 10 | Item flags: 1 review, 0 concern</span></span>
 <span><span class="co">#&gt; Items with missing responses: 2 | Constant: 0 | All missing: 0</span></span>
-<span><span class="co">#&gt; Relationship eligible: 10</span></span>
+<span><span class="co">#&gt; Items in correlation diagnostics: 10</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Item review</span></span>
 <span><span class="co">#&gt;   Item  Type        Missing  Top share  Item-rest r  Flag</span></span>
-<span><span class="co">#&gt;   a1    continuous     0.0%       1.0%        0.559</span></span>
-<span><span class="co">#&gt;   a2    continuous     3.0%       1.2%        0.580</span></span>
-<span><span class="co">#&gt;   a3    continuous     0.0%       1.0%        0.511</span></span>
-<span><span class="co">#&gt;   a4    continuous     0.0%       1.2%        0.549</span></span>
-<span><span class="co">#&gt;   a5    continuous     0.0%       1.6%        0.588</span></span>
-<span><span class="co">#&gt;   b1    continuous     0.0%       1.6%        0.602</span></span>
-<span><span class="co">#&gt;   b2    continuous     0.0%       1.4%        0.513</span></span>
-<span><span class="co">#&gt;   b3    continuous     2.4%       1.0%        0.571</span></span>
-<span><span class="co">#&gt;   b4    continuous     0.0%       1.2%        0.481</span></span>
-<span><span class="co">#&gt;   b5    continuous     0.0%       1.4%        0.279  review</span></span>
-<span><span class="co">#&gt;   Top share is the proportion of responses in the most common category.</span></span>
+<span><span class="co">#&gt;   a1    continuous     0.0%       1.0%          .56</span></span>
+<span><span class="co">#&gt;   a2    continuous     3.0%       1.2%          .58</span></span>
+<span><span class="co">#&gt;   a3    continuous     0.0%       1.0%          .51</span></span>
+<span><span class="co">#&gt;   a4    continuous     0.0%       1.2%          .55</span></span>
+<span><span class="co">#&gt;   a5    continuous     0.0%       1.6%          .59</span></span>
+<span><span class="co">#&gt;   b1    continuous     0.0%       1.6%          .60</span></span>
+<span><span class="co">#&gt;   b2    continuous     0.0%       1.4%          .51</span></span>
+<span><span class="co">#&gt;   b3    continuous     2.4%       1.0%          .57</span></span>
+<span><span class="co">#&gt;   b4    continuous     0.0%       1.2%          .48</span></span>
+<span><span class="co">#&gt;   b5    continuous     0.0%       1.4%          .28  Review</span></span>
+<span><span class="co">#&gt;   Top share is the share of observed responses in the most common category.</span></span>
+<span><span class="co">#&gt;   Item-rest r is the correlation of an item with the sum of the other items.</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Flagged items</span></span>
-<span><span class="co">#&gt;   - b5 (review): `b5` has a corrected item-rest correlation of r = 0.28</span></span>
-<span><span class="co">#&gt;     (n = 473), below the teaching reference.</span></span>
+<span><span class="co">#&gt; Flagged</span></span>
+<span><span class="co">#&gt;   - b5 (Review): `b5` has a corrected item-rest correlation of r = .28</span></span>
+<span><span class="co">#&gt;     (n = 473), below the teaching reference of .30.</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Flags are review aids, not decisions to keep or delete an item.</span></span></code></pre></div>
+<span><span class="co">#&gt; Flags are review aids, not decisions to keep or delete an item.</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; See nomo_table(x, "decision_log") for every log entry and plot(x) for the item</span></span>
+<span><span class="co">#&gt; evidence map.</span></span></code></pre></div>
 <p>The screening object is descriptive and diagnostic. The missing
 values in <code>a2</code> and <code>b3</code> are visible here, before
 any model decides how to handle them. A flag is a reason to inspect an
@@ -233,13 +237,17 @@ is wrong whenever a category went unused:</p>
 <span><span class="co">#&gt; &lt;nomo_screen&gt; Item and data audit</span></span>
 <span><span class="co">#&gt; Cases: 400 | Candidate items: 24</span></span>
 <span><span class="co">#&gt; Items with missing responses: 0 | Constant: 0 | All missing: 0</span></span>
-<span><span class="co">#&gt; Relationship diagnostics: 24 eligible items | 24 item-rest estimates</span></span>
+<span><span class="co">#&gt; Items in correlation diagnostics: 24 | Item-rest correlations: 24</span></span>
 <span><span class="co">#&gt; Response concentration flags: 0 | Near-zero variance: 0</span></span>
-<span><span class="co">#&gt; Careless-responding flags: 75 cases | long-string 15 | antonym 27 | synonym 36</span></span>
+<span><span class="co">#&gt; Careless-responding flags: 75 cases | Long-string: 15 | Antonym: 27</span></span>
+<span><span class="co">#&gt; Synonym: 36</span></span>
 <span><span class="co">#&gt;   Cases are flagged, never removed. Indices disagree by design; see the</span></span>
 <span><span class="co">#&gt;   decision log.</span></span>
-<span><span class="co">#&gt; Decision log: 27 info, 16 review, 0 concern</span></span>
-<span><span class="co">#&gt; No rows or items were removed or modified.</span></span></code></pre></div>
+<span><span class="co">#&gt; Decision log: 43 entries | Flagged: 16 review, 0 concern</span></span>
+<span><span class="co">#&gt; No rows or items were removed or modified.</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; See summary(x) for each item's review, nomo_table(x, "decision_log") for every</span></span>
+<span><span class="co">#&gt; log entry, and nomo_table(x, "effort") for each case's indices.</span></span></code></pre></div>
 <p>The indices do not agree, and they are not supposed to. Compare what
 two of them say about the respondents who answered identically
 throughout:</p>

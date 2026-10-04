@@ -4,7 +4,10 @@ Visual diagnostics complement the numerical screening output. The
 default evidence map integrates multiple diagnostic signals without
 converting them into a pass/fail scale. Additional plot types display
 item-rest relationships, inter-item correlations, response-category use,
-or missingness.
+or missingness. The evidence map and the item-rest plot show each flag
+by shape, with color repeating it: a filled circle for no flag, an open
+circle for review, a filled square for concern, and a cross where a
+diagnostic was not computed.
 
 ## Usage
 

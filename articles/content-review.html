@@ -192,34 +192,54 @@ own.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">run</span><span class="op">$</span><span class="va">results</span><span class="op">$</span><span class="va">screen</span><span class="op">$</span><span class="va">EF</span><span class="op">)</span></span>
 <span><span class="co">#&gt; &lt;nomo_screen summary&gt; Item and data audit</span></span>
-<span><span class="co">#&gt; Cases: 400 | Items: 5 | Flags: 5 review, 0 concern</span></span>
+<span><span class="co">#&gt; Cases: 400 | Items: 5 | Item flags: 5 review, 0 concern</span></span>
 <span><span class="co">#&gt; Items with missing responses: 0 | Constant: 0 | All missing: 0</span></span>
-<span><span class="co">#&gt; Relationship eligible: 5</span></span>
+<span><span class="co">#&gt; Items in correlation diagnostics: 5</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Item review</span></span>
 <span><span class="co">#&gt;   Item  Type      Missing  Top share  Item-rest r  Flag</span></span>
-<span><span class="co">#&gt;   EF1   discrete     0.0%      34.8%        0.173  review</span></span>
-<span><span class="co">#&gt;   EF2   discrete     0.0%      28.5%       -0.505  review</span></span>
-<span><span class="co">#&gt;   EF3   discrete     0.0%      78.5%        0.210  review</span></span>
-<span><span class="co">#&gt;   EF4   discrete     0.0%      33.8%        0.168  review</span></span>
-<span><span class="co">#&gt;   EF6   discrete     0.0%      32.5%        0.175  review</span></span>
-<span><span class="co">#&gt;   Top share is the proportion of responses in the most common category.</span></span>
+<span><span class="co">#&gt;   EF1   discrete     0.0%      34.8%          .17  Review</span></span>
+<span><span class="co">#&gt;   EF2   discrete     0.0%      28.5%         -.50  Review</span></span>
+<span><span class="co">#&gt;   EF3   discrete     0.0%      78.5%          .21  Review</span></span>
+<span><span class="co">#&gt;   EF4   discrete     0.0%      33.8%          .17  Review</span></span>
+<span><span class="co">#&gt;   EF6   discrete     0.0%      32.5%          .18  Review</span></span>
+<span><span class="co">#&gt;   Top share is the share of observed responses in the most common category.</span></span>
+<span><span class="co">#&gt;   Item-rest r is the correlation of an item with the sum of the other items.</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Flagged items</span></span>
-<span><span class="co">#&gt;   - EF1 (review): `EF1` has a corrected item-rest correlation of r = 0.17</span></span>
-<span><span class="co">#&gt;     (n = 400), below the teaching reference.</span></span>
-<span><span class="co">#&gt;   - EF2 (review): `EF2` has a negative corrected item-rest correlation</span></span>
-<span><span class="co">#&gt;     (r = -0.50, n = 400). It is declared reverse-keyed, and this is the sign</span></span>
+<span><span class="co">#&gt; Flagged</span></span>
+<span><span class="co">#&gt;   - EF1 (Review): `EF1` has a corrected item-rest correlation of r = .17</span></span>
+<span><span class="co">#&gt;     (n = 400), below the teaching reference of .30. Its rest score includes</span></span>
+<span><span class="co">#&gt;     EF2, declared reverse-keyed and not yet recoded in the data; with EF2</span></span>
+<span><span class="co">#&gt;     recoded as declared, its item-rest correlation is r = .56. Its correlation</span></span>
+<span><span class="co">#&gt;     with EF2 is negative.</span></span>
+<span><span class="co">#&gt;   - EF2 (Review): `EF2` has a negative corrected item-rest correlation</span></span>
+<span><span class="co">#&gt;     (r = -.50, n = 400). It is declared reverse-keyed, and this is the sign</span></span>
 <span><span class="co">#&gt;     such an item shows before it is recoded: recoded on the declared 1 to 5</span></span>
-<span><span class="co">#&gt;     scale, its item-rest correlation is r = 0.50. The data were not recoded.</span></span>
-<span><span class="co">#&gt;   - EF3 (review): `EF3` has a corrected item-rest correlation of r = 0.21</span></span>
-<span><span class="co">#&gt;     (n = 400), below the teaching reference.</span></span>
-<span><span class="co">#&gt;   - EF4 (review): `EF4` has a corrected item-rest correlation of r = 0.17</span></span>
-<span><span class="co">#&gt;     (n = 400), below the teaching reference.</span></span>
-<span><span class="co">#&gt;   - EF6 (review): `EF6` has a corrected item-rest correlation of r = 0.18</span></span>
-<span><span class="co">#&gt;     (n = 400), below the teaching reference.</span></span>
+<span><span class="co">#&gt;     scale, its item-rest correlation is r = .50. The data were not recoded.</span></span>
+<span><span class="co">#&gt;     Its correlations with EF1, EF3, EF4, and EF6 are negative.</span></span>
+<span><span class="co">#&gt;   - EF3 (Review): `EF3` has a corrected item-rest correlation of r = .21</span></span>
+<span><span class="co">#&gt;     (n = 400), below the teaching reference of .30. Its rest score includes</span></span>
+<span><span class="co">#&gt;     EF2, declared reverse-keyed and not yet recoded in the data; with EF2</span></span>
+<span><span class="co">#&gt;     recoded as declared, its item-rest correlation is r = .34. Its correlation</span></span>
+<span><span class="co">#&gt;     with EF2 is negative.</span></span>
+<span><span class="co">#&gt;   - EF4 (Review): `EF4` has a corrected item-rest correlation of r = .17</span></span>
+<span><span class="co">#&gt;     (n = 400), below the teaching reference of .30. Its rest score includes</span></span>
+<span><span class="co">#&gt;     EF2, declared reverse-keyed and not yet recoded in the data; with EF2</span></span>
+<span><span class="co">#&gt;     recoded as declared, its item-rest correlation is r = .23. Its correlation</span></span>
+<span><span class="co">#&gt;     with EF2 is negative.</span></span>
+<span><span class="co">#&gt;   - EF6 (Review): `EF6` has a corrected item-rest correlation of r = .18</span></span>
+<span><span class="co">#&gt;     (n = 400), below the teaching reference of .30. Its rest score includes</span></span>
+<span><span class="co">#&gt;     EF2, declared reverse-keyed and not yet recoded in the data; with EF2</span></span>
+<span><span class="co">#&gt;     recoded as declared, its item-rest correlation is r = .47. Its correlation</span></span>
+<span><span class="co">#&gt;     with EF2 is negative.</span></span>
+<span><span class="co">#&gt;   - Inter-item correlations (Review): 4 estimable inter-item correlations are</span></span>
+<span><span class="co">#&gt;     negative. All involve EF2, declared reverse-keyed and not yet recoded in</span></span>
+<span><span class="co">#&gt;     the data.</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Flags are review aids, not decisions to keep or delete an item.</span></span></code></pre></div>
+<span><span class="co">#&gt; Flags are review aids, not decisions to keep or delete an item.</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; See nomo_table(x, "decision_log") for every log entry and plot(x) for the item</span></span>
+<span><span class="co">#&gt; evidence map.</span></span></code></pre></div>
 <p><code>EF2</code> correlates negatively with the rest of its facet.
 The audit says what that most likely means: the item is declared
 reverse-keyed, and recoded as declared its correlation would be
@@ -257,24 +277,28 @@ the handoff, and the run’s decision log records the change.</p>
 <span><span class="va">ef</span> <span class="op">&lt;-</span> <span class="va">run</span><span class="op">$</span><span class="va">results</span><span class="op">$</span><span class="va">screen</span><span class="op">$</span><span class="va">EF</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">ef</span><span class="op">)</span></span>
 <span><span class="co">#&gt; &lt;nomo_screen summary&gt; Item and data audit</span></span>
-<span><span class="co">#&gt; Cases: 400 | Items: 5 | Flags: 1 review, 0 concern</span></span>
+<span><span class="co">#&gt; Cases: 400 | Items: 5 | Item flags: 1 review, 0 concern</span></span>
 <span><span class="co">#&gt; Items with missing responses: 0 | Constant: 0 | All missing: 0</span></span>
-<span><span class="co">#&gt; Relationship eligible: 5</span></span>
+<span><span class="co">#&gt; Items in correlation diagnostics: 5</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Item review</span></span>
 <span><span class="co">#&gt;   Item  Type      Missing  Top share  Item-rest r  Flag</span></span>
-<span><span class="co">#&gt;   EF1   discrete     0.0%      34.8%        0.559</span></span>
-<span><span class="co">#&gt;   EF2   discrete     0.0%      28.5%        0.505</span></span>
-<span><span class="co">#&gt;   EF3   discrete     0.0%      78.5%        0.339</span></span>
-<span><span class="co">#&gt;   EF4   discrete     0.0%      33.8%        0.228  review</span></span>
-<span><span class="co">#&gt;   EF6   discrete     0.0%      32.5%        0.470</span></span>
-<span><span class="co">#&gt;   Top share is the proportion of responses in the most common category.</span></span>
+<span><span class="co">#&gt;   EF1   discrete     0.0%      34.8%          .56</span></span>
+<span><span class="co">#&gt;   EF2   discrete     0.0%      28.5%          .50</span></span>
+<span><span class="co">#&gt;   EF3   discrete     0.0%      78.5%          .34</span></span>
+<span><span class="co">#&gt;   EF4   discrete     0.0%      33.8%          .23  Review</span></span>
+<span><span class="co">#&gt;   EF6   discrete     0.0%      32.5%          .47</span></span>
+<span><span class="co">#&gt;   Top share is the share of observed responses in the most common category.</span></span>
+<span><span class="co">#&gt;   Item-rest r is the correlation of an item with the sum of the other items.</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Flagged items</span></span>
-<span><span class="co">#&gt;   - EF4 (review): `EF4` has a corrected item-rest correlation of r = 0.23</span></span>
-<span><span class="co">#&gt;     (n = 400), below the teaching reference.</span></span>
+<span><span class="co">#&gt; Flagged</span></span>
+<span><span class="co">#&gt;   - EF4 (Review): `EF4` has a corrected item-rest correlation of r = .23</span></span>
+<span><span class="co">#&gt;     (n = 400), below the teaching reference of .30.</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Flags are review aids, not decisions to keep or delete an item.</span></span></code></pre></div>
+<span><span class="co">#&gt; Flags are review aids, not decisions to keep or delete an item.</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; See nomo_table(x, "decision_log") for every log entry and plot(x) for the item</span></span>
+<span><span class="co">#&gt; evidence map.</span></span></code></pre></div>
 <p>Recoded, <code>EF2</code> correlates 0.50 with the rest of its facet,
 and one EF item remains flagged: <code>EF4</code>, at 0.23. Eighteen of
 twenty judges placed <code>EF4</code> in Effort Regulation, and they
