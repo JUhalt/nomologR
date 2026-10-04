@@ -587,8 +587,8 @@ marker technique:
   correlations.
 - **A reliability decomposition** says how much of each factor's reliability the
   method accounts for.
-- **Sensitivity models** fix the method loadings at the upper ends of their
-  intervals.
+- **Sensitivity models** fix the method loadings at the ends of their
+  intervals farther from zero.
 
 Here, two constructs and a three-item marker are simulated sharing a method
 factor that loads .30 on every item:

@@ -60,7 +60,10 @@ occasions only.}
 \item{missing}{Optional lavaan missing-data option.}
 
 \item{ID.fac}{Factor-identification method passed to
-\code{semTools::measEq.syntax()}. \code{"std.lv"} is the default.}
+\code{semTools::measEq.syntax()}: \code{"std.lv"} (the default), \code{"UL"}, or
+\code{"effects.coding"}. semTools' other spellings of each are accepted and
+treated alike: \code{"unit.variance"}, \code{"UV"}, \code{"fixed.factor"}, and
+\code{"fixed-factor"} are \code{"std.lv"}.}
 
 \item{ID.cat}{Ordered-indicator identification passed to
 \code{semTools::measEq.syntax()}. Only Wu and Estabrook's (2016) identification
@@ -77,8 +80,10 @@ the default for ordered indicators.}
 \value{
 A \code{nomo_invariance_longitudinal} object, which is also a
 \code{nomo_invariance} object, so \code{\link[=nomo_table]{nomo_table()}}, \code{\link[=nomo_apa_table]{nomo_apa_table()}}, and
-\code{plot()} work as they do for groups. The fields to read are those of
-\code{\link[=nomo_invariance]{nomo_invariance()}}, with \code{occasions} in place of \code{groups}, and:
+\code{plot()} work as they do for groups, and \code{print()} and \code{summary()} show
+what they show for groups. The fields to read are those of
+\code{\link[=nomo_invariance]{nomo_invariance()}}, with \code{occasions} in place of \code{groups} and without
+\code{group_n}, since every occasion has the same people, and:
 \itemize{
 \item \code{latent_means}: at each level that holds intercepts equal, each later
 occasion's latent mean relative to the first, in the first occasion's

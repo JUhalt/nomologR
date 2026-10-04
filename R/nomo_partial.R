@@ -35,7 +35,7 @@
 #'
 #' @return A `nomo_partial` object whose `releases` field is one row per
 #'   release: its identifier, level, syntax, and rationale. `n` is the number
-#'   of releases.
+#'   of releases. `print()` lists each release with its level and rationale.
 #'
 #' @references
 #' Byrne, B. M., Shavelson, R. J., & Muthén, B. (1989). Testing for the
@@ -128,15 +128,27 @@ nomo_partial <- function(level, syntax, rationale) {
 #' @export
 print.nomo_partial <- function(x, ...) {
   nomo_present_header("nomo_partial", "Partial invariance releases")
-  nomo_present_facts(nomo_present_count(x$n, "researcher-specified release"))
-  rel <- x$releases
-  if (nrow(rel)) {
-    cat("\n")
-    nomo_present_bullets(sprintf(
-      "%s (%s): %s. %s", rel$release_id, rel$level, rel$syntax, rel$rationale
-    ))
-  }
+  nomo_present_facts(sprintf("Releases: %d (researcher specified)", x$n))
+  nomo_present_section("Releases")
+  nomo_partial_present_releases(x$releases)
   cat("\n")
-  nomo_present_text("No release was selected automatically by nomologR.")
+  nomo_present_text(
+    "No release was selected automatically by nomologR. Each applies from the ",
+    "level that first holds its parameter equal."
+  )
+  nomo_present_pointer(
+    "nomo_invariance(..., partial = x)",
+    "the models fitted with these releases"
+  )
   invisible(x)
+}
+
+
+# One bullet per release, "P1 (scalar): ag3 ~ 1. Rationale.", with the release
+# kept on one line. The invariance summary lists them the same way.
+nomo_partial_present_releases <- function(releases) {
+  nomo_present_bullets(sprintf(
+    "%s (%s): %s. %s", releases$release_id, releases$level,
+    gsub(" ", nomo_present_nbsp, releases$syntax, fixed = TRUE), releases$rationale
+  ))
 }

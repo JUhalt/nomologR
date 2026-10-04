@@ -307,21 +307,27 @@ test_that("comparison, invariance, and network output read as designed (#89)", {
 })
 
 
-test_that("invariance lists the levels to review with what went wrong (#89)", {
-  fit <- tibble::tibble(
-    level = c("configural", "metric", "scalar"),
-    status = c("estimated", "estimated", "failed"),
-    converged = c(TRUE, FALSE, FALSE),
-    warnings = c("", "a lavaan warning", ""),
-    error = c("", "", "model could not be identified")
+test_that("invariance flags the levels with what went wrong (#89, #144)", {
+  # A level that failed or raised a warning is a flag in the decision log, and
+  # the Flagged section names it with what went wrong.
+  log <- tibble::tibble(
+    object = c("metric", "metric", "scalar"),
+    metric = c("invariance_level", "engine_warning", "invariance_level"),
+    severity = c("info", "review", "concern"),
+    observation = c("Metric model estimated.", "lavaan warned when fitting the metric model: a lavaan warning",
+                    "The scalar model could not be fitted: model could not be identified"),
+    recommendation = "Inspect it."
   )
-  txt <- utils::capture.output(nomologR:::nomo_invariance_present_problems(fit))
-  expect_true(any(grepl("metric: estimated; did not converge; warnings: a lavaan warning",
-                        txt, fixed = TRUE)))
-  expect_true(any(grepl("scalar: failed; did not converge; model could not be identified",
-                        txt, fixed = TRUE)))
-  fit_ok <- fit[1L, , drop = FALSE]
-  expect_identical(utils::capture.output(nomologR:::nomo_invariance_present_problems(fit_ok)),
+  local_reproducible_output(width = 80)
+  txt <- utils::capture.output(nomologR:::nomo_invariance_present_flagged(log))
+  expect_identical(txt, c(
+    "", "Flagged",
+    "  - scalar (Concern): The scalar model could not be fitted: model could not be",
+    "    identified.",
+    "  - metric (Review): lavaan warned when fitting the metric model: a lavaan",
+    "    warning."
+  ))
+  expect_identical(utils::capture.output(nomologR:::nomo_invariance_present_flagged(log[1L, ])),
                    character())
 })
 
