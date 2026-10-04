@@ -17,14 +17,15 @@ nomo_compare(
 }
 \arguments{
 \item{...}{Two or more \code{nomo_cfa} objects. Argument names become model
-labels, for example \code{nomo_compare(full = cfa_full, reduced = cfa_reduced, rationale = "...")}.}
+labels, for example \code{nomo_compare(full = cfa_full, reduced = cfa_reduced, rationale = "...")}. A label must be unique and cannot be \code{factor} or
+\code{item}, which name the key columns of the loadings table.}
 
 \item{rationale}{Required character scalar recording why these models are
 compared (for example, the theoretical question each model represents).}
 
 \item{origin}{Whether the comparison was planned before seeing results
 (\code{"a_priori"}) or prompted by results such as modification indices or
-residuals (\code{"post_hoc"}). Post-hoc comparisons are flagged in the decision
+residuals (\code{"post_hoc"}). Post hoc comparisons are flagged in the decision
 log.}
 
 \item{nested}{\code{"auto"} (default) checks nesting automatically; \code{"yes"}
@@ -72,6 +73,12 @@ warnings raised by the nesting check and the difference test.
 Other fields record the call, the settings used, and intermediate engine
 results. They may change between releases and are not part of the stable
 interface (see \code{?nomologR}).
+
+\code{print()} shows each comparison with the reference model in one line (the
+difference test, the changes in CFI and RMSEA, and the change in AIC) and
+any flags. \code{summary()} adds the fit of every model, the difference tests
+and changes in fit as tables, the interpretations, the loadings side by
+side, and the measurement evidence.
 }
 \description{
 \code{nomo_compare()} places two or more fitted \code{\link[=nomo_cfa]{nomo_cfa()}} models side by side
@@ -86,7 +93,11 @@ researcher rationale is required and recorded. The function never selects a
 \strong{Requirements.} All models must be converged \code{nomo_cfa} objects fitted with
 the same estimator and missing-data handling to the same cases and data.
 Otherwise the comparison is refused with an explanation, because test
-statistics and fit indices would not be comparable.
+statistics and fit indices would not be comparable. Missing-data handling is
+compared as \code{lavaan} applied it, so \code{missing = "fiml"} and \code{missing = "ml"}
+are the same handling. A model with an improper solution, such as a
+negative residual variance, is compared, and the decision log records a
+concern naming it (Kolenikov & Bollen, 2012).
 
 \strong{Nesting.} With \code{nested = "auto"}, nesting is checked from the models'
 implied moments with \code{\link[semTools:net]{semTools::net()}} (Bentler & Satorra, 2010). The
@@ -169,6 +180,10 @@ Cheung, G. W., & Rensvold, R. B. (2002). Evaluating goodness-of-fit indexes
 for testing measurement invariance. \emph{Structural Equation Modeling, 9}(2),
 233-255. \doi{10.1207/S15328007SEM0902_5}
 
+Kolenikov, S., & Bollen, K. A. (2012). Testing negative error variances: Is
+a Heywood case a symptom of misspecification? \emph{Sociological Methods &
+Research, 41}(1), 124-167. \doi{10.1177/0049124112442138}
+
 MacCallum, R. C., Roznowski, M., & Necowitz, L. B. (1992). Model
 modifications in covariance structure analysis: The problem of
 capitalization on chance. \emph{Psychological Bulletin, 111}(3), 490-504.
@@ -178,8 +193,9 @@ Raftery, A. E. (1995). Bayesian model selection in social research.
 \emph{Sociological Methodology, 25}, 111-163. \doi{10.2307/271063}
 
 Satorra, A. (2000). Scaled and adjusted restricted tests in multi-sample
-analysis of moment structures. In \emph{Innovations in multivariate statistical
-analysis} (pp. 233-247). Springer. \doi{10.1007/978-1-4615-4603-0_17}
+analysis of moment structures. In R. D. H. Heijmans, D. S. G. Pollock, &
+A. Satorra (Eds.), \emph{Innovations in multivariate statistical analysis} (pp.
+233-247). Springer. \doi{10.1007/978-1-4615-4603-0_17}
 
 Satorra, A., & Bentler, P. M. (2001). A scaled difference chi-square test
 statistic for moment structure analysis. \emph{Psychometrika, 66}(4), 507-514.

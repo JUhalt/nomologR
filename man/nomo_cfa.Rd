@@ -65,7 +65,10 @@ values are preferred, then scaled ones, then standard ones. When
 every value is the standard one, and the decision log says so.
 \item \code{standardized_loadings}: one row per loading, with its interval, flag,
 and explanation.
-\item \code{factor_correlations}: latent correlations with intervals.
+\item \code{factor_correlations}: latent correlations with intervals. A
+correlation the model fixes, such as the zero correlations of a
+bifactor model, is listed at its fixed value; \code{summary()} shows it as
+fixed rather than estimated.
 \item \code{heywood}: improper-solution signals, if any.
 \item \code{parameter_estimates} and \code{standardized_solution}: \code{lavaan}'s parameter
 tables, as tibbles.
@@ -87,6 +90,13 @@ tables flag in different vocabularies: \code{attention} is \code{"info"},
 Other fields record the call, the settings used, and intermediate engine
 results. They may change between releases and are not part of the stable
 interface (see \code{?nomologR}).
+
+\code{print()} shows the cases used, the estimator, convergence, the fit
+indices, and how many flags were raised. \code{summary()} adds the chi-square
+test, the fit indices with their references, the standardized loadings,
+the factor correlations, any improper solution, the largest residual
+correlations and modification indices, and each flag with its
+explanation; for a model that did not converge it shows only the flags.
 }
 \description{
 \code{nomo_cfa()} fits a researcher-specified confirmatory factor model with

@@ -13,7 +13,11 @@ nomo_model(
 \arguments{
 \item{factors}{A named list. Each element name is a latent-factor name and
 each element value is a character vector of observed indicators. For
-hierarchical structures these are the first-order or group factors.}
+hierarchical structures these are the first-order or group factors.
+Factor and indicator names must be names \code{lavaan} can read: letters,
+digits, \code{.}, and \verb{_}, starting with a letter, as \code{\link[=make.names]{make.names()}} leaves
+them. A name such as \code{"self-efficacy"} is refused, because \code{lavaan} would
+fit it as a factor called \code{efficacy}.}
 
 \item{structure}{One of \code{"correlated"}, \code{"higher_order"}, or \code{"bifactor"}.}
 
@@ -24,13 +28,14 @@ hierarchical structures these are the first-order or group factors.}
 A character scalar of class \code{nomo_model} that can be passed directly
 to \code{\link[=nomo_cfa]{nomo_cfa()}} or to \code{lavaan::cfa()}. Attributes record the \code{factors},
 \code{structure}, \code{general} factor, and any identification \code{notes}, a character
-vector named by severity (\code{"review"} or \code{"concern"}).
+vector named by severity (\code{"review"} or \code{"concern"}). \code{print()} shows the
+syntax as it can be copied, then any identification notes.
 }
 \description{
 \code{nomo_model()} is a small convenience helper for reflective CFA models. It
 converts a named list of factor-to-indicator assignments into \code{lavaan}
 measurement-model syntax. It deliberately does not add residual covariances,
-cross-loadings, equality constraints, or other post-hoc changes.
+cross-loadings, equality constraints, or other post hoc changes.
 }
 \details{
 Three structures are available, and the researcher chooses among them. The
