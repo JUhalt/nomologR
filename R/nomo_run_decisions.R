@@ -54,9 +54,11 @@ nomo_run_factor_requests <- function(x) {
         "))"
       )
     } else {
+      # A suggestion of 0 factors is not a count nomo_efa() can fit (#145,
+      # efa-2), so the example then shows 1.
       sprintf(
         "decisions = list(factor_count = %dL)",
-        if (is.finite(primary)) primary else 1L
+        if (is.finite(primary) && primary >= 1L) primary else 1L
       )
     }
 

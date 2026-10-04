@@ -7,8 +7,8 @@
 nomo_defaults(profile = "teaching")
 }
 \arguments{
-\item{profile}{Guidance profile. Only \code{"teaching"} is implemented during the
-initial development series.}
+\item{profile}{Guidance profile. \code{"teaching"}, the only profile, holds
+reference values commonly taught in measurement courses.}
 }
 \value{
 A named list of guidance settings.
@@ -29,6 +29,19 @@ items, respecifies models, or declares validity.
 statistic: \code{\link[=nomo_screen]{nomo_screen()}} flags a case on long-string only when at least
 that many items are screened, because half the length of a shorter item set
 is a run that attentive respondents give often.
+
+\code{factor_cd_population}, \code{factor_cd_samples}, and \code{factor_cd_alpha} are the
+simulation settings for the comparison-data criterion of \code{\link[=nomo_factors]{nomo_factors()}}:
+the size of each simulated population, the number of samples drawn per
+candidate structure, and the significance level of the test that stops
+adding factors. The defaults (5000 cases, 100 samples, .30) are smaller than
+those of \code{\link[EFAtools:efa_cd]{EFAtools::efa_cd()}} (10000 cases, 500 samples) to keep the run
+short; raise them for a final analysis.
+
+\code{auto_delete} and \code{auto_respecify} are always \code{FALSE}. They record a design
+rule rather than switch a feature: nomologR never deletes an item or
+respecifies a model on its own. \code{\link[=nomo_factors]{nomo_factors()}} and \code{\link[=nomo_efa]{nomo_efa()}} stop with
+an explanation when either is set to \code{TRUE}.
 }
 \examples{
 guidance <- nomo_defaults()

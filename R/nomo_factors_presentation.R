@@ -4,6 +4,11 @@
 
 #' Print factor-retention evidence
 #'
+#' `print()` shows the count each main criterion suggests, the sampling
+#' adequacy, and the synthesis; `summary()` adds the evidence by method, the
+#' parallel-analysis rule sensitivity, the criteria that did not run and why,
+#' and the concordance across criterion families.
+#'
 #' @param x A `nomo_factors` object.
 #' @param ... Additional arguments, currently ignored.
 #'
@@ -14,35 +19,105 @@ print.nomo_factors <- function(x, ...) {
   nomo_present_facts(c(
     nomo_factors_cases_text(x$n_cases, x$min_pairwise_n),
     sprintf("Items: %d", x$n_items),
-    sprintf("Correlation: %s", x$correlation_method)
+    sprintf("Correlation: %s", nomo_factors_correlation_label(x$correlation_method))
   ))
 
-  n_available <- sum(x$criterion_status$status == "available")
-  n_skipped <- sum(x$criterion_status$status == "skipped")
-  n_families <- if (!is.null(x$family_evidence)) nrow(x$family_evidence) else n_available
+  counts <- nomo_factors_method_counts(x)
   nomo_present_facts(c(
     sprintf("Criterion set: %s", x$criterion_set),
-    sprintf("Available methods: %d", n_available),
-    sprintf("Families: %d", n_families),
-    sprintf("Skipped: %d", n_skipped)
+    sprintf("Methods run: %s", counts$methods),
+    sprintf("Families: %d", counts$families),
+    sprintf("Not run: %d", counts$skipped),
+    paste0("Flags: ", nomo_present_flag_counts(nomo_factors_flag_rows(x$decision_log)$severity))
   ))
 
+  # Revised MAP is shown only when the criterion set asked for it (#145,
+  # factors-7).
+  revised <- nomo_factors_ran(x, "map_revised")
   nomo_present_facts(c(
-    sprintf("Parallel analysis (%s): %d", x$parallel$rule, x$parallel$n_factors),
-    sprintf("MAP TR2/TR4: %d/%d", x$map$n_factors_original, x$map$n_factors_revised),
-    paste0("KMO: ", if (isTRUE(x$kmo$available)) {
-      nomo_present_number(x$kmo$overall)
+    sprintf("Parallel analysis (%s rule): %d", x$parallel$rule, x$parallel$n_factors),
+    if (revised) {
+      sprintf("MAP: %d (TR2), %d (TR4)", x$map$n_factors_original, x$map$n_factors_revised)
     } else {
-      "unavailable"
-    })
+      sprintf("MAP: %d (TR2)", x$map$n_factors_original)
+    },
+    paste0("KMO: ", nomo_factors_kmo_text(x$kmo))
   ))
 
   if (isTRUE(x$smoothed)) {
-    nomo_present_text("Correlation matrix: explicitly smoothed after non-PD diagnosis.")
+    nomo_present_text(
+      "The correlation matrix was explicitly smoothed because it was not ",
+      "positive definite."
+    )
   }
+  nomo_present_text(paste(
+    "MAP = Velicer's minimum average partial criterion,",
+    if (revised) "original (TR2) and revised (TR4);" else "original (TR2);",
+    "KMO = Kaiser-Meyer-Olkin measure of sampling adequacy."
+  ))
 
-  nomo_present_text(x$recommendation)
+  cat("\n")
+  nomo_present_text(nomo_factors_bind_calls(x$recommendation))
+  nomo_present_pointer("summary(x)", "the evidence by method and the criteria that did not run")
   invisible(x)
+}
+
+
+# The decision-log rows a reader should look at again: review and concern
+# rows, except those the summary already shows in their own section (the
+# synthesis, the EKC qualification, and the legacy Kaiser rule).
+nomo_factors_flag_rows <- function(log) {
+  empty <- data.frame(metric = character(), severity = character(),
+                      observation = character(), recommendation = character())
+  if (!is.data.frame(log) || !all(names(empty) %in% names(log))) return(empty)
+  shown <- c("retention_family_concordance", "ekc", "kaiser")
+  log[log$severity %in% c("review", "concern") & !log$metric %in% shown, , drop = FALSE]
+}
+
+
+# Whether a criterion ran (status "available"). An object without a status
+# table counts it as run.
+nomo_factors_ran <- function(x, criterion) {
+  status <- x$criterion_status
+  if (!is.data.frame(status) || !nrow(status)) return(TRUE)
+  any(status$criterion == criterion & status$status == "available")
+}
+
+
+# The counts in the print: the methods that ran, with a legacy rule counted
+# apart because the synthesis leaves it out (#145, efa-7), the criterion
+# families, and the methods requested but not run.
+nomo_factors_method_counts <- function(x) {
+  status <- x$criterion_status
+  ran <- status$criterion[status$status == "available"]
+  legacy <- sum(x$evidence$role[x$evidence$criterion %in% ran] == "legacy")
+  recommended <- length(ran) - legacy
+  list(
+    methods = if (legacy > 0L) {
+      sprintf("%d (+%d legacy)", recommended, legacy)
+    } else {
+      as.character(recommended)
+    },
+    families = if (is.null(x$family_evidence)) recommended else nrow(x$family_evidence),
+    skipped = sum(status$status == "skipped")
+  )
+}
+
+
+# A call named in the synthesis, such as nomo_table(x, "criteria"), is kept on
+# one line when the text is wrapped.
+nomo_factors_bind_calls <- function(text) {
+  gsub("(\\w+\\(x,) ", paste0("\\1", nomo_present_nbsp), text)
+}
+
+
+# The overall KMO as printed: two decimals, without the leading zero.
+nomo_factors_kmo_text <- function(kmo) {
+  if (isTRUE(kmo$available)) {
+    nomo_present_stat(kmo$overall, "proportion")
+  } else {
+    "not computed"
+  }
 }
 
 
@@ -51,21 +126,23 @@ print.nomo_factors <- function(x, ...) {
 #' @param object A `nomo_factors` object.
 #' @param ... Additional arguments, currently ignored.
 #'
-#' @return An object of class `summary_nomo_factors`.
+#' @return An object of class `summary_nomo_factors`. Printing it shows the
+#'   evidence by method, the parallel-analysis rule sensitivity, the criteria
+#'   that ran with a qualification or did not run, the concordance across
+#'   criterion families, the supporting adequacy evidence, and the synthesis.
 #' @export
 summary.nomo_factors <- function(object, ...) {
   kmo_display <- if (isTRUE(object$kmo$available)) {
-    sprintf("%.3f", object$kmo$overall)
+    nomo_present_stat(object$kmo$overall, "proportion")
   } else {
     "unavailable"
   }
 
   bartlett_display <- if (isTRUE(object$bartlett$available)) {
-    sprintf(
-      "chi-square(%d) = %.2f, p %s",
-      as.integer(object$bartlett$df),
-      object$bartlett$chisq,
-      nomo_format_p(object$bartlett$p_value)
+    paste0(
+      nomo_present_chisq(object$bartlett$chisq, object$bartlett$df,
+                         object$bartlett$p_value),
+      nomo_factors_bartlett_qualifier(object$correlation_method)
     )
   } else {
     object$bartlett$reason
@@ -125,41 +202,40 @@ print.summary_nomo_factors <- function(x, ...) {
   nomo_present_facts(c(
     nomo_factors_cases_text(x$n_cases, x$min_pairwise_n),
     sprintf("Items: %d", x$n_items),
-    sprintf("Correlation: %s", x$correlation_method),
-    sprintf("Criteria: %s", x$criterion_set),
-    if (isTRUE(x$smoothed)) "Correlation matrix smoothed" else ""
+    sprintf("Correlation: %s", nomo_factors_correlation_label(x$correlation_method)),
+    sprintf("Criterion set: %s", x$criterion_set),
+    if (isTRUE(x$smoothed)) "Correlation matrix: smoothed" else ""
   ))
 
   nomo_present_section("Retention evidence")
+  evidence <- x$evidence
+  evidence$role_shown <- nomo_present_status(evidence$role)
   nomo_present_table(
-    x$evidence,
-    c("Method" = "method", "Factors" = "n_factors", "Role" = "role"),
+    evidence,
+    c("Method" = "method", "Factors" = "n_factors", "Role" = "role_shown"),
     more = "nomo_table(x, \"evidence\")"
   )
 
   sensitivity <- x$parallel_sensitivity
   if (is.data.frame(sensitivity) && nrow(sensitivity)) {
     nomo_present_section("Parallel-analysis rule sensitivity")
-    sensitivity$chosen <- ifelse(sensitivity$selected, "selected", "")
+    sensitivity$rule_shown <- nomo_present_status(sensitivity$rule)
+    sensitivity$chosen <- ifelse(sensitivity$selected, "Selected", "")
     nomo_present_table(
       sensitivity,
-      c("Rule" = "rule", "Factors" = "n_factors", "Used" = "chosen"),
+      c("Rule" = "rule_shown", "Factors" = "n_factors", "Used" = "chosen"),
       more = "x$parallel$sensitivity"
     )
   }
 
-  qualified <- x$criterion_status[
-    x$criterion_status$status == "available" &
-      nzchar(x$criterion_status$qualification),
-    ,
-    drop = FALSE
-  ]
+  status <- x$criterion_status
+  qualified <- status[status$status == "available" & nzchar(status$qualification), , drop = FALSE]
   if (nrow(qualified) > 0L) {
     nomo_present_section("Criteria available with qualification")
     nomo_present_bullets(paste0(qualified$method, ": ", qualified$qualification))
   }
 
-  skipped <- x$criterion_status[x$criterion_status$status == "skipped", , drop = FALSE]
+  skipped <- status[status$status == "skipped", , drop = FALSE]
   if (nrow(skipped) > 0L) {
     nomo_present_section("Criteria requested but not run")
     nomo_present_bullets(paste0(skipped$method, ": ", skipped$reason))
@@ -174,11 +250,27 @@ print.summary_nomo_factors <- function(x, ...) {
     )
   }
 
+  # Bartlett's reason for not running is a sentence of its own.
   nomo_present_section("Supporting adequacy evidence")
-  nomo_present_bullets(paste0(x$adequacy$metric, ": ", x$adequacy$display))
+  adequacy <- x$adequacy
+  kmo <- adequacy$metric == "KMO"
+  nomo_present_bullets(ifelse(
+    kmo,
+    paste0("KMO: ", ifelse(adequacy$available, adequacy$display,
+                           "not computed; the correlation matrix could not be inverted.")),
+    ifelse(adequacy$available, paste0("Bartlett's test: ", adequacy$display),
+           adequacy$display)
+  ))
+
+  # Review and concern rows of the decision log, with what to do about each.
+  flags <- nomo_factors_flag_rows(x$decision_log)
+  nomo_present_flagged(unit = NULL, status = flags$severity,
+                       text = paste(flags$observation, flags$recommendation))
 
   nomo_present_section("Synthesis")
-  nomo_present_text(x$recommendation, indent = 2L)
+  nomo_present_text(nomo_factors_bind_calls(x$recommendation), indent = 2L)
+
+  nomo_present_key(nomo_factors_key(status), title = "Abbreviations")
 
   cat("\n")
   nomo_present_text(
@@ -186,8 +278,47 @@ print.summary_nomo_factors <- function(x, ...) {
     "dimensionality verdicts. Common-factor eigenvalues come from a reduced ",
     "common-variance matrix; later values can be negative."
   )
-
+  nomo_present_pointer("nomo_table(x, \"criteria\")", "the status of every requested criterion")
   invisible(x)
+}
+
+
+# The MAP plot's y-axis labels, panel by panel. TR2 averages squared partial
+# correlations, so its axis is bounded and drops the leading zero (guide point
+# 29); TR4 uses fourth matrix powers and can run far above 1, so a panel with
+# a break above 1 keeps plain numbers.
+nomo_factors_map_labels <- function(breaks) {
+  finite <- breaks[is.finite(breaks)]
+  if (all(abs(finite) <= 1)) {
+    nomo_plot_bounded_labels(breaks)
+  } else {
+    ifelse(is.finite(breaks), format(breaks, trim = TRUE, scientific = FALSE), NA_character_)
+  }
+}
+
+
+# The abbreviations a factor-retention summary shows, each defined once
+# (guide point 23): MAP and KMO always, the others when their criterion was
+# requested. TR4 is defined only when revised MAP was requested (#145,
+# factors-7).
+nomo_factors_key <- function(status) {
+  requested <- if (is.data.frame(status)) status$criterion else character()
+  entries <- c(
+    MAP = paste(
+      "Minimum average partial criterion (Velicer). TR2, the original, averages",
+      if ("map_revised" %in% requested) {
+        "squared partial correlations; TR4, the revised, averages fourth powers."
+      } else {
+        "squared partial correlations."
+      }
+    ),
+    KMO = "Kaiser-Meyer-Olkin measure of sampling adequacy.",
+    EKC = "Empirical Kaiser criterion.",
+    NEST = "Next eigenvalue sufficiency test.",
+    CAF = "Common part accounted for, the fit index Hull compares."
+  )
+  shown <- c("MAP", "KMO", c("EKC", "NEST", "CAF")[c("ekc", "nest", "hull") %in% requested])
+  entries[shown]
 }
 
 
@@ -199,7 +330,8 @@ print.summary_nomo_factors <- function(x, ...) {
 #'   eigenvalues with the selected parallel-analysis reference;
 #'   `"parallel_rules"` compares PA factor counts under mean, percentile, and
 #'   Crawford rules; `"scree"` displays component and common-factor eigenvalues;
-#'   `"map"` displays original TR2 and revised TR4 MAP curves; `"evidence"`
+#'   `"map"` displays the original TR2 MAP curve, and the revised TR4 curve when
+#'   the criterion set includes revised MAP; `"evidence"`
 #'   compares available retention criteria; `"concordance"` groups related
 #'   variants into criterion families before showing support for each factor
 #'   count; and `"kmo"` displays
@@ -228,17 +360,19 @@ plot.nomo_factors <- function(x,
     stop("`show_values` must be `TRUE` or `FALSE`.", call. = FALSE)
   }
 
+  # One base size for every plot in the package (#145, clarity-17); the text
+  # is wrapped by nomo_plot_labs(), so no label carries a hard line break.
+  theme <- ggplot2::theme_minimal(base_size = 11)
+
   if (type == "retention") {
     d <- x$parallel$table
     observed_label <- "Observed common-factor eigenvalue"
+    percentile <- nomo_factors_percentile(x$parallel$quantile)
     rule_label <- switch(
       x$parallel$rule,
-      percentile = sprintf("Null %.0fth percentile", 100 * x$parallel$quantile),
+      percentile = paste("Null", percentile),
       mean = "Null mean",
-      crawford = sprintf(
-        "Crawford: %.0fth percentile first, mean thereafter",
-        100 * x$parallel$quantile
-      )
+      crawford = sprintf("Crawford: null %s first, mean thereafter", percentile)
     )
 
     long <- dplyr::bind_rows(
@@ -278,21 +412,20 @@ plot.nomo_factors <- function(x,
         nomo_plot_labs(
           title = "Parallel-analysis retention evidence",
           subtitle = sprintf(
-            "%d factor%s retained by the %s stopping rule",
-            x$parallel$n_factors,
-            if (x$parallel$n_factors == 1L) "" else "s",
+            "%s retained by the %s stopping rule",
+            nomo_present_count(x$parallel$n_factors, "factor"),
             x$parallel$rule
           ),
-          caption = paste0(
-            "Observed common-factor eigenvalues are compared with the selected null reference.\n",
-            "Later common-factor eigenvalues can be negative."
+          caption = paste(
+            "Observed common-factor eigenvalues are compared with the selected null",
+            "reference. Later common-factor eigenvalues can be negative."
           ),
           x = "Factor index",
           y = "Eigenvalue",
           linetype = NULL,
           shape = NULL
         ) +
-        ggplot2::theme_minimal(base_size = 12) +
+        theme +
         ggplot2::theme(legend.position = "bottom")
     )
   }
@@ -320,11 +453,14 @@ plot.nomo_factors <- function(x,
       nomo_plot_labs(
         title = "Parallel-analysis rule sensitivity",
         subtitle = sprintf("Selected rule: %s", x$parallel$rule),
-        caption = "The selected rule is labeled; alternatives are sensitivity evidence, not competing p-values.",
+        caption = paste(
+          "The selected rule is labeled; the alternatives are sensitivity evidence,",
+          "not competing p values."
+        ),
         x = NULL,
         y = "Suggested factor count"
       ) +
-      ggplot2::theme_minimal(base_size = 12)
+      theme
 
     if (show_values) {
       p <- p + ggplot2::geom_text(
@@ -377,22 +513,25 @@ plot.nomo_factors <- function(x,
         nomo_plot_labs(
           title = "Observed scree information",
           subtitle = "Use the shape as complementary evidence; do not automate the elbow",
-          caption = paste0(
-            "Common-factor and component eigenvalues answer related but different questions.\n",
-            "Parallel analysis uses the common-factor series."
+          caption = paste(
+            "Common-factor and component eigenvalues answer related but different",
+            "questions. Parallel analysis uses the common-factor series."
           ),
           x = "Index",
           y = "Eigenvalue",
           linetype = NULL,
           shape = NULL
         ) +
-        ggplot2::theme_minimal(base_size = 12) +
+        theme +
         ggplot2::theme(legend.position = "bottom")
     )
   }
 
   if (type == "map") {
     d <- x$map$table
+    # Revised MAP is drawn only when the criterion set asked for it, as print()
+    # shows it (#145, factors-7).
+    revised <- nomo_factors_ran(x, "map_revised")
     long <- dplyr::bind_rows(
       tibble::tibble(
         n_factors = d$n_factors,
@@ -400,16 +539,18 @@ plot.nomo_factors <- function(x,
         value = d$map_original,
         minimum = d$minimum_original
       ),
-      tibble::tibble(
-        n_factors = d$n_factors,
-        criterion = "Revised MAP (TR4)",
-        value = d$map_revised,
-        minimum = d$minimum_revised
-      )
+      if (revised) {
+        tibble::tibble(
+          n_factors = d$n_factors,
+          criterion = "Revised MAP (TR4)",
+          value = d$map_revised,
+          minimum = d$minimum_revised
+        )
+      }
     )
     long$criterion <- factor(
       long$criterion,
-      levels = c("Original MAP (TR2)", "Revised MAP (TR4)")
+      levels = c("Original MAP (TR2)", if (revised) "Revised MAP (TR4)")
     )
 
     p <- ggplot2::ggplot(
@@ -433,21 +574,39 @@ plot.nomo_factors <- function(x,
         scales = "free_y"
       ) +
       ggplot2::scale_x_continuous(breaks = d$n_factors) +
+      ggplot2::scale_y_continuous(labels = nomo_factors_map_labels) +
       nomo_plot_labs(
-        title = "Velicer MAP sensitivity",
-        subtitle = sprintf(
-          "Original TR2 minimum: %d | Revised TR4 minimum: %d",
-          x$map$n_factors_original,
-          x$map$n_factors_revised
-        ),
-        caption = paste0(
-          "The highlighted minimum is the suggested count for each MAP variant; smaller values are preferred.\n",
-          "TR2 and TR4 have different numerical scales, so the panels use separate y-axes."
-        ),
+        title = if (revised) {
+          "Velicer's minimum average partial (MAP) criteria"
+        } else {
+          "Velicer's minimum average partial (MAP) criterion"
+        },
+        subtitle = if (revised) {
+          sprintf(
+            "Original TR2 minimum: %d | Revised TR4 minimum: %d",
+            x$map$n_factors_original,
+            x$map$n_factors_revised
+          )
+        } else {
+          sprintf("Original TR2 minimum: %d", x$map$n_factors_original)
+        },
+        caption = if (revised) {
+          paste(
+            "TR2 averages the squared partial correlations and TR4 their fourth powers.",
+            "The highlighted minimum is the count each variant suggests; smaller values",
+            "are preferred. The two have different scales, so the panels use separate",
+            "y-axes."
+          )
+        } else {
+          paste(
+            "TR2 averages the squared partial correlations. The highlighted minimum is",
+            "the count it suggests; smaller values are preferred."
+          )
+        },
         x = "Partialled components / candidate factor count",
         y = "MAP criterion value"
       ) +
-      ggplot2::theme_minimal(base_size = 12)
+      theme
 
     return(p)
   }
@@ -459,17 +618,25 @@ plot.nomo_factors <- function(x,
     display <- d$method
     d$method_display <- factor(display, levels = rev(display))
 
-    evidence_caption <- if (any(d$role == "legacy")) {
-      paste0(
-        "Parallel analysis is primary; other displayed methods are complementary or extended evidence.\n",
-        "Legacy criteria are context only. Related variants are grouped by family in concordance; methods are not independent votes."
-      )
-    } else {
-      paste0(
-        "Parallel analysis is primary; other displayed methods are complementary or extended evidence.\n",
-        "Related variants are grouped by family in concordance; methods are not independent votes."
-      )
-    }
+    # TR4 is defined only when revised MAP ran (#145, factors-7). The parts
+    # are joined with collapse, so a part left out leaves no double space.
+    abbreviations <- c(
+      if (any(d$criterion == "map_revised")) {
+        "MAP = minimum average partial (TR2, original; TR4, revised)"
+      } else {
+        "MAP = minimum average partial (TR2, original)"
+      },
+      if (any(d$criterion == "nest")) "NEST = next eigenvalue sufficiency test",
+      if (any(d$criterion == "hull")) "CAF = common part accounted for"
+    )
+    evidence_caption <- paste(c(
+      "Parallel analysis is primary; the other methods are complementary or extended",
+      "evidence.",
+      if (any(d$role == "legacy")) "Legacy criteria are context only.",
+      "Related variants are grouped by family in concordance; methods are not",
+      "independent votes.",
+      paste0(paste(abbreviations, collapse = "; "), ".")
+    ), collapse = " ")
 
     p <- ggplot2::ggplot(
       d,
@@ -482,18 +649,20 @@ plot.nomo_factors <- function(x,
       ) +
       nomo_plot_labs(
         title = "Factor-retention evidence by method",
-        subtitle = paste0(
-          "Agreement strengthens a candidate solution;\n",
-          "disagreement invites comparison rather than averaging"
+        subtitle = paste(
+          "Agreement strengthens a candidate solution; disagreement invites",
+          "comparison rather than averaging"
         ),
         caption = evidence_caption,
         x = "Suggested factor count",
         y = NULL
       ) +
-      ggplot2::theme_minimal(base_size = 12) +
+      theme +
       ggplot2::theme(
         plot.caption = ggplot2::element_text(hjust = 0),
-        plot.subtitle = ggplot2::element_text(hjust = 0)
+        plot.subtitle = ggplot2::element_text(hjust = 0),
+        plot.caption.position = "plot",
+        plot.title.position = "plot"
       )
 
     if (show_values) {
@@ -528,21 +697,25 @@ plot.nomo_factors <- function(x,
       ) +
       nomo_plot_labs(
         title = "Retention-evidence concordance by criterion family",
-        subtitle = paste0(
-          "Related variants such as MAP TR2/TR4 are grouped before concordance is summarized;\n",
-          "internally split families remain visible in the tables rather than being forced into one count"
+        subtitle = paste(
+          "Related variants, such as the two minimum average partial (MAP)",
+          "criteria, are grouped before concordance is summarized; a family split",
+          "between counts stays in the tables rather than being forced into one"
         ),
-        caption = paste0(
-          "Family counts summarize convergence without double-counting closely related variants.\n",
-          "Criterion families are related evidence, not independent votes or proof of dimensionality."
+        caption = paste(
+          "Family counts summarize convergence without double-counting closely",
+          "related variants. Criterion families are related evidence, not",
+          "independent votes or proof of dimensionality."
         ),
         x = "Suggested factor count",
         y = "Number of criterion families"
       ) +
-      ggplot2::theme_minimal(base_size = 12) +
+      theme +
       ggplot2::theme(
         plot.caption = ggplot2::element_text(hjust = 0),
-        plot.subtitle = ggplot2::element_text(hjust = 0)
+        plot.subtitle = ggplot2::element_text(hjust = 0),
+        plot.caption.position = "plot",
+        plot.title.position = "plot"
       )
 
     if (show_values) {
@@ -558,7 +731,10 @@ plot.nomo_factors <- function(x,
     stop("Item-level KMO/MSA values are unavailable for this object.", call. = FALSE)
   }
 
+  # The values sit in a column past the longest bar and the reference line, so
+  # the dashed line never strikes through them (#145, clarity-32).
   d <- x$kmo$item
+  label_at <- max(c(d$msa, x$kmo$overall), na.rm = TRUE) + 0.04
   p <- ggplot2::ggplot(
     d,
     ggplot2::aes(
@@ -573,35 +749,28 @@ plot.nomo_factors <- function(x,
       linewidth = 0.6
     ) +
     ggplot2::coord_flip() +
+    ggplot2::scale_y_continuous(
+      limits = c(0, max(1, label_at + 0.1)),
+      labels = nomo_plot_bounded_labels
+    ) +
     nomo_plot_labs(
-      title = "Item-level KMO / measure of sampling adequacy",
-      subtitle = sprintf("Dashed line = overall KMO (%.3f)", x$kmo$overall),
+      title = "Measure of sampling adequacy (MSA) by item",
+      subtitle = sprintf(
+        "Dashed line: the overall Kaiser-Meyer-Olkin (KMO) value, %s",
+        nomo_present_stat(x$kmo$overall, "proportion")
+      ),
       x = NULL,
       y = "MSA"
     ) +
-    ggplot2::theme_minimal(base_size = 12)
+    theme
 
   if (show_values) {
     p <- p + ggplot2::geom_text(
-      ggplot2::aes(label = sprintf("%.2f", .data$msa)),
-      hjust = -0.15,
+      ggplot2::aes(y = label_at, label = nomo_present_stat(.data$msa, "proportion")),
+      hjust = 0,
       size = 3.3
-    ) +
-      ggplot2::scale_y_continuous(
-        limits = c(0, max(1, max(d$msa, na.rm = TRUE) * 1.08))
-      )
+    )
   }
 
   p
-}
-
-
-nomo_format_p <- function(p) {
-  if (length(p) != 1L || is.na(p)) {
-    return("unavailable")
-  }
-  if (p < 0.001) {
-    return("< .001")
-  }
-  paste0("= ", formatC(p, format = "f", digits = 3))
 }
