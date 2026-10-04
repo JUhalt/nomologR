@@ -680,27 +680,40 @@
     Code
       print(inv)
     Output
-      <nomo_invariance> Measurement invariance
-      Grouping variable: group (2 groups: online, paper) | Indicators: continuous
+      <nomo_invariance> Measurement invariance across groups
+      Cases: 800 (online n = 400, paper n = 400) | Estimator: ML
+      Grouping variable: group | Indicators: continuous
       Requested: configural -> metric -> scalar
       Completed: configural -> metric -> scalar
       
+      Fit by level
         Level         CFI  RMSEA   SRMR  CFI change  RMSEA change   LRT p
         configural  1.000  0.000  0.002          --            --      --
-        metric      1.000  0.000  0.028       0.000         0.000    .146
-        scalar      0.954  0.121  0.065      -0.046        +0.121  < .001
-      Localized equality-constraint diagnostics retained: 12
+        metric      1.000  0.000  0.028        .000         0.000    .146
+        scalar       .954  0.121  0.065       -.046        +0.121  < .001
       
-      Fit changes and score diagnostics are evidence. They are not pass/fail rules,
-      and nomologR never frees a parameter because of them.
+      Flagged
+        - Score diagnostics (Review): 12 univariate equality-constraint score
+          diagnostics were retained.
+      
+      CFI = comparative fit index; RMSEA = root mean square error of approximation;
+      SRMR = standardized root mean square residual; LRT = likelihood-ratio test of
+      a level against the level before it; ML = maximum likelihood.
+      
+      Fit changes and score diagnostics are evidence, not pass/fail rules, and
+      nomologR never frees a parameter because of them.
+      
+      See summary(x) for each level's chi-square test and
+      nomo_table(x, "local_strain") for all 12 score diagnostics.
 
 ---
 
     Code
       print(summary(inv))
     Output
-      <nomo_invariance summary> Measurement invariance
-      Indicators: continuous | Groups: online, paper
+      <nomo_invariance summary> Measurement invariance across groups
+      Cases: 800 (online n = 400, paper n = 400) | Estimator: ML
+      Grouping variable: group | Indicators: continuous
       Levels completed: configural -> metric -> scalar
       
       Identification and sequence
@@ -711,34 +724,51 @@
         Level       Chi-square  df       p    CFI  RMSEA   SRMR
         configural        0.33   4    .988  1.000  0.000  0.002
         metric            5.71   7    .575  1.000  0.000  0.028
-        scalar           68.93  10  < .001  0.954  0.121  0.065
+        scalar           68.93  10  < .001   .954  0.121  0.065
         Held equal: loadings from metric; intercepts from scalar.
       
       Changes from the preceding level
-        Level   CFI change  RMSEA change  SRMR change  LRT chi-square  df       p
-        metric       0.000         0.000       +0.026            5.38   3    .146
-        scalar      -0.046        +0.121       +0.037           63.23   3  < .001
+        Level   CFI change  RMSEA change  SRMR change  Delta chi-square  df       p
+        metric        .000         0.000       +0.026              5.38   3    .146
+        scalar       -.046        +0.121       +0.037             63.23   3  < .001
       
-      Latent means relative to online (its latent SD)
+      Latent means relative to online, in its latent standard deviations
         Level   Group  Factor  Difference  95% CI             p
         scalar  paper  Agency        0.44  [0.29, 0.60]  < .001
         Comparable only with invariant intercepts, full or partial.
       
-      Largest equality-constraint score diagnostics (diagnostic only)
-        Level   Constraint                                 Score  df       p
-        scalar  Intercept: ag3 (online vs. paper)          61.12   1  < .001
-        scalar  Intercept: ag1 (online vs. paper)          11.32   1  < .001
-        scalar  Intercept: ag4 (online vs. paper)           5.56   1    .018
-        metric  Loading: Agency -> ag3 (online vs. paper)   4.92   1    .027
-        metric  Loading: Agency -> ag2 (online vs. paper)   1.03   1    .310
-        scalar  Intercept: ag2 (online vs. paper)           0.98   1    .323
-        metric  Loading: Agency -> ag4 (online vs. paper)   0.69   1    .406
-        scalar  Loading: Agency -> ag2 (online vs. paper)   0.55   1    .460
-        scalar  Loading: Agency -> ag1 (online vs. paper)   0.32   1    .574
-        scalar  Loading: Agency -> ag3 (online vs. paper)   0.19   1    .664
+      Largest score diagnostics for equality constraints
+        Level  Constraint                                Score chi-square df      p
+        scalar Intercept: ag3 (online vs. paper)                    61.12  1 < .001
+        scalar Intercept: ag1 (online vs. paper)                    11.32  1 < .001
+        scalar Intercept: ag4 (online vs. paper)                     5.56  1   .018
+        metric Loading: Agency -> ag3 (online vs. paper)             4.92  1   .027
+        metric Loading: Agency -> ag2 (online vs. paper)             1.03  1   .310
+        scalar Intercept: ag2 (online vs. paper)                     0.98  1   .323
+        metric Loading: Agency -> ag4 (online vs. paper)             0.69  1   .406
+        scalar Loading: Agency -> ag2 (online vs. paper)             0.55  1   .460
+        scalar Loading: Agency -> ag1 (online vs. paper)             0.32  1   .574
+        scalar Loading: Agency -> ag3 (online vs. paper)             0.19  1   .664
       
-      No single delta-CFI, delta-RMSEA, delta-SRMR, chi-square difference, or score
-      diagnostic is treated as a universal invariance rule.
+      Flagged
+        - Score diagnostics (Review): 12 univariate equality-constraint score
+          diagnostics were retained. Use these diagnostics to localize strain, not
+          to authorize automatic constraint release. Partial invariance requires an
+          explicit researcher specification and rationale.
+      
+      What these columns mean
+        CFI -- Comparative fit index.
+        RMSEA -- Root mean square error of approximation.
+        SRMR -- Standardized root mean square residual.
+        df -- Degrees of freedom.
+        CI -- Confidence interval.
+        ML -- Maximum likelihood.
+      
+      No single CFI change, RMSEA change, SRMR change, chi-square difference, or
+      score diagnostic is treated as a universal invariance rule.
+      
+      See nomo_table(x, "local_strain") for all 12 score diagnostics and
+      nomo_table(x, "decision_log") for every recorded decision.
 
 ---
 
@@ -746,11 +776,16 @@
       print(nomo_partial(level = "scalar", syntax = "ag3 ~ 1", rationale = "Anticipated mode difference."))
     Output
       <nomo_partial> Partial invariance releases
-      1 researcher-specified release
+      Releases: 1 (researcher specified)
       
+      Releases
         - P1 (scalar): ag3 ~ 1. Anticipated mode difference.
       
-      No release was selected automatically by nomologR.
+      No release was selected automatically by nomologR. Each applies from the level
+      that first holds its parameter equal.
+      
+      See nomo_invariance(model, data, group, partial = x) for the models fitted
+      with these releases.
 
 ---
 

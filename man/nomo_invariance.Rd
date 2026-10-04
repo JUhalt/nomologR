@@ -26,7 +26,8 @@ an object created by \code{nomo_model()}.}
 
 \item{data}{A non-empty data frame.}
 
-\item{group}{Character scalar naming the grouping variable in \code{data}.}
+\item{group}{Character scalar naming the grouping variable in \code{data}. The
+group that appears first in \code{data} is the reference for latent means.}
 
 \item{ordered}{Optional character vector naming ordered indicators. Model
 indicators stored as ordered factors are modeled as ordered whether or not
@@ -51,7 +52,10 @@ diagnostic evidence. Diagnostics never trigger automatic release/refitting.}
 \item{missing}{Optional lavaan missing-data option.}
 
 \item{ID.fac}{Factor-identification method passed to
-\code{semTools::measEq.syntax()}. \code{"std.lv"} is the default.}
+\code{semTools::measEq.syntax()}: \code{"std.lv"} (the default), \code{"UL"}, or
+\code{"effects.coding"}. semTools' other spellings of each are accepted and
+treated alike: \code{"unit.variance"}, \code{"UV"}, \code{"fixed.factor"}, and
+\code{"fixed-factor"} are \code{"std.lv"}.}
 
 \item{ID.cat}{Ordered-indicator identification passed to
 \code{semTools::measEq.syntax()}. Only Wu and Estabrook's (2016) identification
@@ -73,7 +77,13 @@ A \code{nomo_invariance} object. The fields to read are:
 Fitting stops at the first level that fails or does not converge; that
 level is in \code{fit_evidence} but not here.
 \item \code{fit_evidence}: one row per level, with its fit, its change from the
-level before, the likelihood-ratio test, and any warning or error.
+level before, the likelihood-ratio test, and any warning or error. With
+a robust estimator the chi-square, \code{df}, and \code{pvalue} are scaled and
+\code{cfi} and \code{rmsea} robust, the same version at every level.
+\item \code{fit_variants}: the \code{lavaan::fitMeasures()} measure behind each column
+of \code{fit_evidence}, such as \code{c(chisq = "chisq.scaled", cfi = "cfi.robust", ...)}.
+\item \code{n_used}: the number of cases the models used, and \code{group_n} each
+group's (\code{group}, \code{n}).
 \item \code{local_strain}: score diagnostics for each equality constraint, which
 localize strain without releasing anything.
 \item \code{partial}: the researcher-specified releases, when given, each at the
@@ -90,6 +100,11 @@ latent standard deviations, with their intervals. See \strong{Latent means}.
 Other fields record the call, the settings used, and intermediate engine
 results. They may change between releases and are not part of the stable
 interface (see \code{?nomologR}).
+
+\code{print()} shows the cases, the fit at each level with its change from the
+level before, and any flag. \code{summary()} adds the chi-square tests, what
+each level holds equal, the releases, the latent means, the largest score
+diagnostics, and each flag's recommendation.
 }
 \description{
 \code{nomo_invariance()} evaluates increasingly constrained multi-group CFA models
@@ -126,7 +141,22 @@ equal and the later one free it, so the two would not be nested.
 
 When \code{localize = TRUE}, univariate score tests for equality constraints are
 retained as diagnostic evidence. They are explicitly not used to modify the
-fitted model.
+fitted model. Each test frees one equality constraint. With two groups it
+compares them; with three or more, it frees one group's parameter while the
+other groups stay equal, so the output labels it "(three vs. others)", not
+as a comparison of two groups.
+
+With a robust estimator, such as MLR or the WLSMV default for ordered
+indicators, the chi-square, its degrees of freedom, and its p value are
+lavaan's scaled versions, and the likelihood-ratio tests are scaled
+difference tests. CFI and RMSEA are the robust versions, or the scaled ones
+where a level has no robust value. One version is used at every level, so a
+change in fit never compares two versions; \code{fit_variants} names it, and
+\code{print()} and \code{summary()} say which is shown.
+
+lavaan deletes incomplete cases listwise unless \code{missing} says otherwise.
+\code{n_used} gives the cases the models used, and the decision log flags any
+left out for review.
 }
 \section{Latent means}{
 
@@ -135,8 +165,11 @@ releases, groups can be compared on the construct itself (Byrne, Shavelson,
 & Muthén, 1989). This is the structured-means form of known-groups evidence:
 a difference theory predicts between groups that differ on the construct.
 At each level that holds intercepts equal, \code{latent_means} gives each group's
-latent means relative to the reference group, the first group, which the
-default \code{ID.fac = "std.lv"} fixes at a mean of 0 and a variance of 1. Each
+latent means relative to the reference group, which the default
+\code{ID.fac = "std.lv"} fixes at a mean of 0 and a variance of 1. The reference
+is the group that appears first in \code{data}, in the order of the rows rather
+than of a factor's levels, as lavaan orders the groups; sort the rows to
+choose it. \code{reference_group} names it. Each
 mean is then a difference in the reference group's latent standard
 deviations, the effect size Hancock (2001) describes. The fitted model
 decides which means are reported: only those of factors whose reference
@@ -185,11 +218,6 @@ Historical foundations:
 Jöreskog, K. G. (1971). Simultaneous factor analysis in several
 populations. \emph{Psychometrika, 36}(4), 409-426. \doi{10.1007/BF02291366}
 
-Hancock, G. R. (2001). Effect size, power, and sample size determination
-for structured means modeling and MIMIC approaches to between-groups
-hypothesis testing of means on a single latent construct. \emph{Psychometrika,
-66}(3), 373-388. \doi{10.1007/BF02294440}
-
 Meredith, W. (1993). Measurement invariance, factor analysis and factorial
 invariance. \emph{Psychometrika, 58}(4), 525-543. \doi{10.1007/BF02294825}
 
@@ -197,6 +225,18 @@ Vandenberg, R. J., & Lance, C. E. (2000). A review and synthesis of the
 measurement invariance literature: Suggestions, practices, and
 recommendations for organizational research. \emph{Organizational Research
 Methods, 3}(1), 4-70. \doi{10.1177/109442810031002}
+
+Latent means and partial invariance:
+
+Byrne, B. M., Shavelson, R. J., & Muthén, B. (1989). Testing for the
+equivalence of factor covariance and mean structures: The issue of partial
+measurement invariance. \emph{Psychological Bulletin, 105}(3), 456-466.
+\doi{10.1037/0033-2909.105.3.456}
+
+Hancock, G. R. (2001). Effect size, power, and sample size determination
+for structured means modeling and MIMIC approaches to between-groups
+hypothesis testing of means on a single latent construct. \emph{Psychometrika,
+66}(3), 373-388. \doi{10.1007/BF02294440}
 
 Change-in-fit evidence:
 
