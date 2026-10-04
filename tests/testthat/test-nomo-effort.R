@@ -301,7 +301,7 @@ test_that("long-string is reported but not flagged on a short item set", {
   # printed count does not read as a finding about the sample.
   expect_false("index_disagreement" %in% out$decision_log$metric)
   printed <- paste(utils::capture.output(print(out)), collapse = " ")
-  expect_match(printed, "long-string not applied", fixed = TRUE)
+  expect_match(printed, "Long-string: not applied", fixed = TRUE)
 
   # One and two items made the rule a tautology: every case reached a run of 1.
   for (k in 1:2) {
@@ -335,7 +335,7 @@ test_that("long-string is flagged from the minimum item count in the guidance", 
     fixed = TRUE
   )
   expect_match(paste(utils::capture.output(print(out)), collapse = " "),
-               sprintf("long-string %d", flagged), fixed = TRUE)
+               sprintf("Long-string: %d", flagged), fixed = TRUE)
 
   # Nineteen is one short.
   expect_false(nomo_screen(short_effort_data(19), effort = TRUE)$effort_settings$long_string_rule_applied)
@@ -388,7 +388,7 @@ test_that("the report states when the long-string rule was not applied", {
   expect_match(nomologR:::nomo_report_effort(old)$indices$rule[[1L]],
                "a run of 10 or more", fixed = TRUE)
   expect_match(paste(utils::capture.output(print(old)), collapse = " "),
-               "long-string [0-9]+")
+               "Long-string: [0-9]+")
 })
 
 
@@ -675,4 +675,118 @@ test_that("effort arguments are validated, and every screen table is returned", 
   out <- nomo_screen(fx$data)
   expect_identical(nomo_table(out, "distribution"), out$response_distribution)
   expect_identical(nomo_table(out, "relationships"), out$relationship_summary)
+})
+
+
+# Indices with no value say why (#145) -----------------------------------------
+
+test_that("Mahalanobis distance says how many cases have it, and why any do not", {
+  entry <- function(out, metric) {
+    out$decision_log[out$decision_log$metric == metric, , drop = FALSE]
+  }
+  dat <- short_effort_data(6)
+  # A distance for every case needs no explanation.
+  expect_identical(nrow(entry(nomo_screen(dat, effort = TRUE), "mahalanobis")), 0L)
+
+  holes <- dat
+  holes$i1[1:40] <- NA
+  some <- entry(nomo_screen(holes, effort = TRUE), "mahalanobis")
+  expect_identical(
+    some$observation,
+    "Mahalanobis distance was computed for 260 of 300 cases, those complete on all 6 items; the others have no value."
+  )
+  expect_identical(some$value, 260)
+  expect_identical(some$severity, "info")
+  expect_match(some$recommendation, "No source states a cut score", fixed = TRUE)
+
+  few <- dat[1:8, ]
+  few[1:4, "i2"] <- NA
+  expect_match(entry(nomo_screen(few, effort = TRUE), "mahalanobis")$observation,
+               "not computed: 4 cases are complete on all 6 items", fixed = TRUE)
+  one <- dat[1:7, ]
+  one[1:6, "i2"] <- NA
+  expect_match(entry(nomo_screen(one, effort = TRUE), "mahalanobis")$observation,
+               "1 case is complete on all 6 items", fixed = TRUE)
+
+  constant <- dat
+  constant$i3 <- 3
+  expect_match(entry(nomo_screen(constant, effort = TRUE), "mahalanobis")$observation,
+               "the covariance matrix of the 6 items is singular among the 300 complete cases",
+               fixed = TRUE)
+})
+
+
+test_that("even-odd consistency and the per-scale means say why they are missing", {
+  entry <- function(out, metric) {
+    out$decision_log[out$decision_log$metric == metric, , drop = FALSE]
+  }
+  dat <- short_effort_data(6)
+
+  # No scales: neither is computed, and both say so.
+  plain <- nomo_screen(dat, effort = TRUE)
+  expect_match(entry(plain, "even_odd")$observation,
+               "at least three scales with two or more items each, and no `scales` were declared.",
+               fixed = TRUE)
+  expect_true(is.na(entry(plain, "even_odd")$value))
+  expect_match(entry(plain, "per_scale_indices")$observation,
+               "they need a scale with two or more items, and no `scales` were declared.",
+               fixed = TRUE)
+
+  # Two scales: the per-scale means exist, even-odd does not.
+  two <- nomo_screen(dat, effort = TRUE, scales = list(A = c("i1", "i2", "i3"),
+                                                       B = c("i4", "i5", "i6")))
+  expect_match(entry(two, "even_odd")$observation,
+               "and only 2 declared scales have two or more items.", fixed = TRUE)
+  expect_false("per_scale_indices" %in% two$decision_log$metric)
+  single <- nomo_screen(dat, effort = TRUE, scales = list(A = c("i1", "i2", "i3"),
+                                                          B = "i4", C = "i5"))
+  expect_match(entry(single, "even_odd")$observation,
+               "and only 1 declared scale has two or more items.", fixed = TRUE)
+
+  # Scales of one item each: nothing per scale.
+  ones <- nomo_screen(dat, effort = TRUE, scales = list(A = "i1", B = "i2"))
+  expect_match(entry(ones, "per_scale_indices")$observation,
+               "and no declared scale has two or more items.", fixed = TRUE)
+
+  # Three usable scales, but no case varies across them.
+  flat <- dat
+  flat[] <- 3
+  flat$i1 <- rep(c(1, 5), 150)
+  flat_out <- nomo_screen(flat, effort = TRUE, scales = list(A = c("i1", "i2"),
+                                                              B = c("i3", "i4"),
+                                                              C = c("i5", "i6")))
+  expect_match(entry(flat_out, "even_odd")$observation,
+               "No case answered both halves of at least three scales", fixed = TRUE)
+})
+
+
+test_that("even-odd consistency says how many cases have a value", {
+  skip_on_cran()
+  fx <- effort_data()
+  dat <- fx$data
+  dat[31:40, c("s1_1", "s1_3", "s1_5")] <- NA
+  dat[31:40, c("s2_1", "s2_3", "s2_5")] <- NA
+  out <- nomo_screen(dat, effort = TRUE, scales = fx$scales, reverse = fx$reverse,
+                     scale_range = c(1, 5))
+  entry <- out$decision_log[out$decision_log$metric == "even_odd", ]
+  n_value <- sum(is.finite(out$effort$even_odd))
+  expect_lt(n_value, 400L)
+  expect_match(entry$observation, sprintf("%d of 400 cases have a value", n_value),
+               fixed = TRUE)
+})
+
+
+test_that("pair counts read in the right number (#145)", {
+  # Six uncorrelated items: no pair reaches the threshold.
+  set.seed(9)
+  dat <- as.data.frame(matrix(sample(1:5, 6 * 200, TRUE), 200, 6))
+  out <- nomo_screen(dat, effort = TRUE)
+  obs <- out$decision_log$observation[out$decision_log$metric == "psychometric_antonym"]
+  expect_identical(obs,
+                   "No psychometric antonym pair met the correlation threshold, so the index was not computed.")
+  lower <- nomo_defaults()
+  lower$long_string_min_items <- 1
+  short <- nomo_screen(short_effort_data(1), effort = TRUE, guidance = lower)
+  long <- short$decision_log$observation[short$decision_log$metric == "long_string"]
+  expect_match(long, "at least 1 consecutive item, half of the 1 item screened.", fixed = TRUE)
 })

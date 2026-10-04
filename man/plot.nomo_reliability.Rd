@@ -4,16 +4,22 @@
 \alias{plot.nomo_reliability}
 \title{Plot model-based reliability evidence}
 \usage{
-\method{plot}{nomo_reliability}(x, ...)
+\method{plot}{nomo_reliability}(x, type = "coefficients", ...)
 }
 \arguments{
 \item{x}{A \code{nomo_reliability} object.}
 
+\item{type}{Plot type. \code{"coefficients"}, the only one, shows omega and alpha
+for each construct.}
+
 \item{...}{Unused.}
 }
 \value{
-A \code{ggplot2} object. The conceptual 0-to-1 reliability range is shown
-by default and expands only if an estimate or interval lies outside it.
+A \code{ggplot2} object with one row per construct and coefficient, omega
+drawn larger than alpha. Each point's shape and color show its flag, with
+a legend whenever a coefficient is flagged. The conceptual 0-to-1
+reliability range is shown by default and expands only if an estimate or
+interval lies outside it.
 }
 \description{
 Plot model-based reliability evidence
