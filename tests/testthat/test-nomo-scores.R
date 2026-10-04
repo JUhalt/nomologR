@@ -833,13 +833,43 @@ test_that("higher-order factors and structural paths are refused, each with its 
   covariate <- lavaan::sem(paste(scores_hs_model, "visual ~ ageyr", sep = "\n"), data = hs)
   for (method in c("sum", "regression")) {
     expect_error(nomo_scores(covariate, method = method),
-                 "`fit` contains structural paths (visual ~ ageyr)", fixed = TRUE)
+                 "`fit` contains structural paths or covariates (visual ~ ageyr)", fixed = TRUE)
   }
   observed <- lavaan::sem(paste(scores_hs_model, "x1 ~ ageyr", sep = "\n"), data = hs)
-  expect_error(nomo_scores(observed), "structural paths (x1 ~ ageyr)", fixed = TRUE)
+  expect_error(nomo_scores(observed), "structural paths or covariates (x1 ~ ageyr)", fixed = TRUE)
   nested <- lavaan::cfa("visual =~ x1 + x2 + x3 + textual\ntextual =~ x4 + x5 + x6",
                         data = hs)
-  expect_error(nomo_scores(nested), "structural paths (visual =~ textual)", fixed = TRUE)
+  expect_error(nomo_scores(nested), "structural paths or covariates (visual =~ textual)",
+               fixed = TRUE)
+
+  # A covariance between a factor and an observed variable makes lavaan carry
+  # the variable as a latent variable of its own, which had stopped with an
+  # internal vapply() error (sum), a singular matrix (Bartlett), or a "factor"
+  # row for it (regression).
+  linked <- lavaan::cfa(paste(scores_hs_model, "visual ~~ ageyr", sep = "\n"), data = hs)
+  expect_true("ageyr" %in% colnames(lavaan::lavInspect(linked, "est")$lambda))
+  for (method in c("sum", "regression", "bartlett")) {
+    expect_error(nomo_scores(linked, method = method),
+                 "`fit` contains structural paths or covariates (visual ~~ ageyr)",
+                 fixed = TRUE)
+  }
+  expect_error(nomo_scores(linked), "fit the paths and covariates on the latent variables",
+               fixed = TRUE)
+  two <- lavaan::cfa(paste(scores_hs_model, "ageyr ~~ visual + textual", sep = "\n"),
+                     data = hs)
+  expect_error(nomo_scores(two), "(visual ~~ ageyr, textual ~~ ageyr)", fixed = TRUE)
+  # An item of another factor is linked the same way.
+  item <- lavaan::cfa(paste(scores_hs_model, "visual ~~ x4", sep = "\n"), data = hs)
+  expect_error(nomo_scores(item), "(visual ~~ x4)", fixed = TRUE)
+
+  # A residual covariance between an item and an observed variable outside the
+  # factors adds no latent variable, and the scores are lavaan's own.
+  residual <- lavaan::cfa(paste(scores_hs_model, "x1 ~~ ageyr", sep = "\n"), data = hs)
+  kept <- nomo_scores(residual, method = "regression")
+  expect_equal(unname(as.matrix(kept$scores)),
+               unname(as.matrix(lavaan::lavPredict(residual))[, kept$diagnostics$factor]),
+               tolerance = 1e-10)
+  expect_identical(kept$diagnostics$factor, c("visual", "textual", "speed"))
 })
 
 

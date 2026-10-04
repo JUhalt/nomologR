@@ -372,7 +372,8 @@ nomo_scores_ordered_note <- function(method, k) {
 #'
 #' @param fit A `nomo_cfa` object or fitted `lavaan` measurement model.
 #'   Single-group and single-level, with every factor measured by observed
-#'   items and no structural paths: no regressions, covariates, or
+#'   items and no structural paths or covariates: no regressions, no
+#'   covariance between a factor and an observed variable, and no
 #'   higher-order factors.
 #' @param method Scoring method. `"sum"` and `"mean"` are unit weighted;
 #'   `"regression"` and `"bartlett"` are model weighted.

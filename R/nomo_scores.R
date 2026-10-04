@@ -70,18 +70,29 @@ nomo_scores_input <- function(x) {
   # Any other regression, such as a factor on an observed covariate, or a
   # factor loading on another factor, puts a structural part (lavaan's beta
   # matrix) into the model, and the scores' weights are written for a
-  # measurement model alone (#145).
-  structural <- pe[pe$op == "~" | (pe$op == "=~" & pe$rhs %in% lv), , drop = FALSE]
-  if (nrow(structural)) {
+  # measurement model alone (#145). So does a covariance between a factor and
+  # an observed variable: lavaan then carries the variable as a latent variable
+  # of its own (a phantom), a column of the loading matrix that is not one of
+  # the model's factors, and the weights would score it as a factor with no
+  # items. Any phantom column not already named by a parameter is named too.
+  linked <- pe$op == "~~" & xor(pe$lhs %in% lv, pe$rhs %in% lv)
+  structural <- pe[pe$op == "~" | (pe$op == "=~" & pe$rhs %in% lv) | linked, , drop = FALSE]
+  phantom <- setdiff(colnames(lavaan::lavInspect(fit, "est")$lambda), lv)
+  named <- c(
+    unique(paste(structural$lhs, structural$op, structural$rhs)),
+    setdiff(phantom, c(structural$lhs, structural$rhs))
+  )
+  if (length(named)) {
     stop(
       sprintf(
         paste(
-          "`fit` contains structural paths (%s). `nomo_scores()` scores a",
-          "measurement model, in which each factor is measured by its items",
-          "and nothing is regressed; score the measurement model and fit the",
-          "structural paths on the latent variables instead."
+          "`fit` contains structural paths or covariates (%s). `nomo_scores()`",
+          "scores a measurement model, in which each factor is measured by its",
+          "items and related only to the other factors; score the measurement",
+          "model and fit the paths and covariates on the latent variables",
+          "instead."
         ),
-        paste(unique(paste(structural$lhs, structural$op, structural$rhs)), collapse = ", ")
+        paste(named, collapse = ", ")
       ),
       call. = FALSE
     )

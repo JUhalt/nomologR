@@ -13,7 +13,8 @@ nomo_scores(
 \arguments{
 \item{fit}{A \code{nomo_cfa} object or fitted \code{lavaan} measurement model.
 Single-group and single-level, with every factor measured by observed
-items and no structural paths: no regressions, covariates, or
+items and no structural paths or covariates: no regressions, no
+covariance between a factor and an observed variable, and no
 higher-order factors.}
 
 \item{method}{Scoring method. \code{"sum"} and \code{"mean"} are unit weighted;
