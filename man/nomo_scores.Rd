@@ -12,12 +12,16 @@ nomo_scores(
 }
 \arguments{
 \item{fit}{A \code{nomo_cfa} object or fitted \code{lavaan} measurement model.
-Single-group, single-level, with no regressions among latent variables.}
+Single-group and single-level, with every factor measured by observed
+items and no structural paths: no regressions, covariates, or
+higher-order factors.}
 
 \item{method}{Scoring method. \code{"sum"} and \code{"mean"} are unit weighted;
 \code{"regression"} and \code{"bartlett"} are model weighted.}
 
-\item{guidance}{A \code{nomo_guidance} object from \code{\link[=nomo_defaults]{nomo_defaults()}}.}
+\item{guidance}{A \code{nomo_guidance} object from \code{\link[=nomo_defaults]{nomo_defaults()}}. It is
+checked and recorded with the result; the references the notes apply are
+fixed values from the literature (see Details), not settings read from it.}
 }
 \value{
 An object of class \code{nomo_scores}. The fields to read are:
@@ -65,9 +69,12 @@ on three criteria, all reported here and all computed from the fitted model:
 \item \code{validity}, the correlation between a score and the factor it estimates.
 For \code{method = "regression"} this equals the factor determinacy coefficient
 reported by \code{\link[=nomo_hierarchical]{nomo_hierarchical()}}, because that method maximizes it.
-\item \code{univocality}, its correlation with the factors it does not represent.
+\item \code{univocality}, its largest correlation with a factor it does not
+represent.
 \item \code{correlational_accuracy}, how far correlations among scores sit from the
-correlations among the factors they stand in for.
+correlations among the factors they stand in for: for each factor, the
+score correlation minus the factor correlation for the pair where the two
+differ most, so 0 is best.
 }
 
 The third deserves attention before scores are used in later analyses. A
@@ -76,6 +83,23 @@ direction depends on the scoring method and the model rather than being a
 constant that can be corrected for. Where a question can be asked of the
 latent variables instead, asking it of scores replaces an unbiased answer
 with a biased one.
+
+\strong{Univocality is judged against the factor correlations.} When factors
+correlate, a score correlates with the other factors through its own: by
+the factor correlation times its validity. Bartlett scores, and sum scores
+of items that each load on one factor, correlate with the other factors by
+exactly that much. Only a departure from it is something a score takes from
+another factor directly, so a note is raised when a score's correlation
+with another factor departs from the factor correlation times its validity
+by .05 or more, and not merely because factors correlate (Grice, 2001).
+
+\strong{Ordered indicators.} With ordered indicators lavaan computes
+\code{"regression"} scores as empirical Bayes modal scores, and \code{"bartlett"}
+scores as maximum-likelihood scores, from the categorical model; \code{"sum"} and
+\code{"mean"} add the observed category numbers. The
+diagnostics are computed from linear weights on the continuous latent
+responses underlying the items, so for ordered indicators they approximate
+the properties of the scores returned, and a note says so.
 
 \strong{One design recovers a regression.} For a linear regression among
 factors, Skrondal and Laake (2001) proved that regression-method scores for
@@ -90,11 +114,21 @@ works through the design.
 \strong{Thresholds are context.} Gorsuch's (1983) recommendation that validity
 reach .80, and above .90 for scores serving as substitutes for the factors
 themselves, is reported where a value falls below it and is never applied as
-a rule.
+a rule. These references, and the .05 for a discrepancy between
+correlations, are fixed values from the literature; they are not read from
+\code{guidance}.
 
 The supplied data is never modified, and scores are computed only for the
 cases the model used. \code{rows} records which rows of the data those are, so
-the scores can be matched to the data when some cases were dropped.
+the scores can be matched to the data when some cases were dropped. A
+unit-weighted score needs every item of its factor: under FIML a case the
+model used can lack an item, and its sum or mean is then \code{NA}, which a note
+counts. Regression and Bartlett scores use the items a case has.
+
+\code{print()} shows the score properties with a key to their columns, each
+flagged note's first sentence, and the parallel-model test when it is not
+flagged; \code{summary()} adds the loading spread and every note in full.
+\code{plot()} draws each score's validity against Gorsuch's references.
 }
 \examples{
 model <- '
