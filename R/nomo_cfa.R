@@ -536,6 +536,7 @@ nomo_cfa_validate_guidance <- function(guidance) {
       any(!fit_needed %in% names(guidance$fit_reference))) {
     stop("`guidance$fit_reference` must contain cfi, tli, rmsea, and srmr.", call. = FALSE)
   }
+  nomo_defaults_check_safeguards(guidance)
   invisible(TRUE)
 }
 

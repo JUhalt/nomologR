@@ -79,6 +79,7 @@ nomo_split <- function(data,
       call. = FALSE
     )
   }
+  nomo_defaults_check_safeguards(guidance)
 
   n <- nrow(data)
   n_validation <- as.integer(round(n * validation_prop))

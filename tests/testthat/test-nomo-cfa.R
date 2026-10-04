@@ -1756,3 +1756,22 @@ test_that("nomo_model() refuses names lavaan would rename or cannot read (#145)"
   fitted <- nomo_cfa(model, lavaan::HolzingerSwineford1939, modification_indices = FALSE)
   expect_identical(unique(fitted$standardized_loadings$factor), c("self.efficacy", "self_worth"))
 })
+
+
+test_that("CFA, comparison, ESEM, and split refuse auto_delete and auto_respecify (#145)", {
+  # The safeguards record a design rule; setting either to TRUE is refused
+  # before anything is fitted, as in nomo_factors() and nomo_efa().
+  guidance <- nomo_defaults()
+  guidance$auto_respecify <- TRUE
+  hs <- lavaan::HolzingerSwineford1939
+  model <- "visual =~ x1 + x2 + x3\ntextual =~ x4 + x5 + x6"
+  expect_error(nomo_cfa(model, hs, guidance = guidance),
+               "`guidance$auto_respecify` cannot be `TRUE`", fixed = TRUE)
+  fit <- nomo_cfa(model, hs, modification_indices = FALSE)
+  expect_error(nomo_compare(a = fit, b = fit, rationale = "Same model.", guidance = guidance),
+               "never deletes an item or respecifies", fixed = TRUE)
+  expect_error(nomo_esem(model, hs, guidance = guidance),
+               "`guidance$auto_respecify` cannot be `TRUE`", fixed = TRUE)
+  expect_error(nomo_split(hs, guidance = guidance),
+               "`guidance$auto_respecify` cannot be `TRUE`", fixed = TRUE)
+})

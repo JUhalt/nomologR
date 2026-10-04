@@ -166,6 +166,7 @@ nomo_esem <- function(model,
     cross = nomo_guidance_value(guidance, "efa_crossloading_reference"),
     main = nomo_guidance_value(guidance, "efa_loading_reference")
   )
+  nomo_defaults_check_safeguards(guidance)
 
   items <- structure$items$item
   factors <- structure$factors
