@@ -1774,11 +1774,28 @@ test_that("a measurement model whose items differ from the scales is recorded (#
   expect_identical(row$rationale, "i4 is a pilot item; criterion is a marker.")
   expect_identical(row$source, "researcher_decision")
   expect_match(run$decision_requests$observation, "decision-log row cfa_item_set", fixed = TRUE)
+  # The row does not claim that the run went on, which a later stage may stop.
+  expect_identical(
+    row$consequence,
+    paste("The difference does not block the run: leaving out or adding items at the CFA is",
+          "the researcher's decision, and nomologR changes neither the model nor the scales.")
+  )
+
+  # A model lavaan refuses blocks the CFA, and no item-set row is recorded for it.
+  paused <- nomo_run(data = dat, scales = list(WellBeing = c("i1", "i2", "i3", "i4")),
+                     settings = m8_full_settings(), decisions = list(factor_count = 1L))
+  refused <- nomo_run(resume = paused,
+                      decisions = list(cfa_model = "WellBeing =~ i1 + i2 + nope"))
+  expect_identical(refused$status, "blocked")
+  expect_false(any(c("cfa_item_set", "item_types") %in% refused$decision_log$id))
 
   set <- nomologR:::nomo_run_model_item_set
   expect_null(set("this is not lavaan syntax ~~~ =~", list(A = "a1")))
   expect_identical(set("A =~ a1 + a2 + a3", list(A = c("a1", "a2", "a3"))),
-                   list(omitted = character(), added = character()))
+                   list(omitted = character(), added = character(),
+                        indicators = c("a1", "a2", "a3")))
+  expect_identical(nomologR:::nomo_run_model_names("A =~ a1 + a2 + a3\nB =~ b1 + b2 + b3"),
+                   list(indicators = c("a1", "a2", "a3", "b1", "b2", "b3"), factors = c("A", "B")))
   added_only <- nomologR:::nomo_run_cfa_model_log(
     list(scales = list(A = c("a1", "a2", "a3")), decision_log = NULL, results = list(),
          settings = list()),
@@ -1807,15 +1824,30 @@ test_that("items the exploratory stages treated as categorical are flagged befor
   expect_match(run$decision_requests$observation,
                "The exploratory stages treated i1, i2, i3, i4 as categorical (tetrachoric correlations)",
                fixed = TRUE)
-  expect_match(run$decision_requests$options, "`settings = list(cfa = list(ordered = ...))`",
+  expect_match(run$decision_requests$options,
+               "name the categorical items in `ordered` within `settings$cfa` when supplying",
                fixed = TRUE)
+  # The request wraps within a narrow console: no line of code outruns it (#145).
+  old <- options(width = 40L)
+  narrow <- list(utils::capture.output(print(run)), utils::capture.output(print(summary(run))))
+  options(old)
+  expect_true(all(nchar(narrow[[1L]]) <= 39L))
+  expect_true(all(nchar(narrow[[2L]]) <= 40L))
+  expect_true("  within `settings$cfa` when supplying" %in% narrow[[1L]])
 
   fitted <- nomo_run(resume = run, decisions = list(cfa_model = m8_model()))
   row <- fitted$decision_log[fitted$decision_log$id == "item_types", ]
   expect_identical(row$source, "pipeline")
   expect_identical(row$decision, "")
   expect_match(row$observation, "while the CFA treats every indicator as continuous", fixed = TRUE)
+  expect_match(row$options, "Start a new run that names them in `ordered` within `settings$cfa`",
+               fixed = TRUE)
   expect_match(fitted$decision_requests$observation, "decision-log row item_types", fixed = TRUE)
+
+  # The row names only the categorical items the measurement model contains.
+  part <- nomo_run(resume = run, decisions = list(cfa_model = "WellBeing =~ i1 + i2 + criterion"))
+  expect_match(part$decision_log$observation[part$decision_log$id == "item_types"],
+               "The exploratory stages treated i1, i2 as categorical", fixed = TRUE)
 
   # Declaring them ordered keeps the two halves consistent, and nothing is flagged.
   ordered <- nomo_run(resume = run, settings = list(cfa = list(ordered = items)),
@@ -1837,6 +1869,15 @@ test_that("the item-type note names every categorical item and method (#145)", {
                    list(items = c("a1", "c1"), methods = c("mixed", "polychoric")))
   expect_match(nomologR:::nomo_run_item_type_note(x),
                "treated a1, c1 as categorical (mixed and polychoric correlations)", fixed = TRUE)
+  # Once the model is known, only its indicators are named, with their methods.
+  expect_match(nomologR:::nomo_run_item_type_note(x, indicators = c("c1", "b1")),
+               "treated c1 as categorical (polychoric correlations)", fixed = TRUE)
+  expect_identical(nomologR:::nomo_run_item_type_note(x, indicators = c("a2", "b1")), "")
+  logged <- nomologR:::nomo_run_cfa_model_log(x, "A =~ a1 + a2\nB =~ b1 + b2", "")
+  expect_match(logged$decision_log$observation[logged$decision_log$id == "item_types"],
+               "treated a1 as categorical (mixed correlations)", fixed = TRUE)
+  logged <- nomologR:::nomo_run_cfa_model_log(x, "B =~ b1 + b2 + a2", "")
+  expect_false("item_types" %in% logged$decision_log$id)
   x$settings$cfa$ordered <- "a1"
   expect_identical(nomologR:::nomo_run_item_type_note(x), "")
 })

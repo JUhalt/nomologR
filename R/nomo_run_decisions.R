@@ -113,14 +113,18 @@ nomo_run_factor_requests <- function(x) {
 
 # The items the exploratory stages treated as categorical (#145): those
 # modeled as binary or ordinal where nomo_factors() or nomo_efa() used
-# tetrachoric, polychoric, or mixed correlations, with those methods.
-nomo_run_categorical_items <- function(x) {
+# tetrachoric, polychoric, or mixed correlations, with those methods. `only`
+# keeps the items a measurement model contains, and the methods used for them.
+nomo_run_categorical_items <- function(x, only = NULL) {
   items <- character()
   methods <- character()
   for (r in c(unname(x$results$factors), unname(x$results$efa))) {
     if (is.null(r$correlation) || identical(r$correlation, "pearson")) next
     types <- r$modeling_types
-    items <- c(items, types$item[types$model_type %in% c("binary", "ordinal")])
+    found <- types$item[types$model_type %in% c("binary", "ordinal")]
+    if (!is.null(only)) found <- intersect(found, only)
+    if (!length(found)) next
+    items <- c(items, found)
     methods <- c(methods, r$correlation)
   }
   list(items = unique(items), methods = unique(methods))
@@ -129,9 +133,11 @@ nomo_run_categorical_items <- function(x) {
 
 # A sentence for the CFA request when the exploratory stages treated items as
 # categorical and the CFA, as configured, would treat them as continuous; ""
-# otherwise. nomologR does not choose for the researcher.
-nomo_run_item_type_note <- function(x) {
-  categorical <- nomo_run_categorical_items(x)
+# otherwise. nomologR does not choose for the researcher. Before a model is
+# given, every such item is named; `indicators`, the model's once it is, keeps
+# those the CFA contains (#145).
+nomo_run_item_type_note <- function(x, indicators = NULL) {
+  categorical <- nomo_run_categorical_items(x, only = indicators)
   if (!length(categorical$items) || !is.null(x$settings$cfa$ordered)) return("")
   sprintf(
     paste(
@@ -145,23 +151,34 @@ nomo_run_item_type_note <- function(x) {
 }
 
 
-# The items of the measurement model compared with the screened scales (#145):
-# screened items it leaves out, and indicators no scale supplied, which no
-# item audit, retention, or EFA evidence covers. NULL when the model cannot be
-# parsed; the CFA then reports lavaan's own error.
-nomo_run_model_item_set <- function(model, scales) {
+# The indicators and factors a measurement model names, or NULL when it cannot
+# be parsed; the CFA then reports lavaan's own error.
+nomo_run_model_names <- function(model) {
   pt <- tryCatch(suppressWarnings(lavaan::lavaanify(model)), error = function(e) NULL)
   if (is.null(pt)) return(NULL)
-  indicators <- lavaan::lavNames(pt, "ov.ind")
-  screened <- unique(unlist(scales, use.names = FALSE))
-  list(omitted = setdiff(screened, indicators), added = setdiff(indicators, screened))
+  list(indicators = lavaan::lavNames(pt, "ov.ind"), factors = lavaan::lavNames(pt, "lv"))
 }
 
 
-# Design-log rows recorded when the CFA is fitted: a measurement model whose
-# items differ from the screened scales, and items the exploratory stages
-# treated as categorical that the CFA treats as continuous (#145). Neither
-# blocks the run.
+# The items of the measurement model compared with the screened scales (#145):
+# screened items it leaves out, and indicators no scale supplied, which no
+# item audit, retention, or EFA evidence covers. NULL when the model cannot be
+# parsed.
+nomo_run_model_item_set <- function(model, scales) {
+  parsed <- nomo_run_model_names(model)
+  if (is.null(parsed)) return(NULL)
+  indicators <- parsed$indicators
+  screened <- unique(unlist(scales, use.names = FALSE))
+  list(omitted = setdiff(screened, indicators), added = setdiff(indicators, screened),
+       indicators = indicators)
+}
+
+
+# Design-log rows recorded once the CFA has been fitted, so never for a model
+# lavaan refused: a measurement model whose items differ from the screened
+# scales, and items of the model that the exploratory stages treated as
+# categorical while the CFA treats them as continuous (#145). Neither blocks
+# the run.
 nomo_run_cfa_model_log <- function(x, model, rationale) {
   set <- nomo_run_model_item_set(model, x$scales)
   if (!is.null(set) && (length(set$omitted) || length(set$added))) {
@@ -193,8 +210,9 @@ nomo_run_cfa_model_log <- function(x, model, rationale) {
         "scales match the measurement model."
       ),
       consequence = paste(
-        "The run continues: leaving out or adding items at the CFA is the",
-        "researcher's decision, and nomologR changes neither the model nor the scales."
+        "The difference does not block the run: leaving out or adding items at the",
+        "CFA is the researcher's decision, and nomologR changes neither the model",
+        "nor the scales."
       ),
       decision = paste(c(
         if (length(set$omitted)) paste("left out:", paste(set$omitted, collapse = ", ")),
@@ -205,7 +223,7 @@ nomo_run_cfa_model_log <- function(x, model, rationale) {
     )
   }
 
-  note <- nomo_run_item_type_note(x)
+  note <- nomo_run_item_type_note(x, indicators = set$indicators)
   if (nzchar(note)) {
     x$decision_log <- nomo_run_workflow_log_add(
       x$decision_log,
@@ -219,9 +237,9 @@ nomo_run_cfa_model_log <- function(x, model, rationale) {
         "would rest on different assumptions about the same items."
       ),
       options = paste(
-        "Start a new run with `settings = list(cfa = list(ordered = ...))` to treat",
-        "them as the exploratory stages did, or record why continuous treatment is",
-        "defensible for these items."
+        "Start a new run that names them in `ordered` within `settings$cfa` to",
+        "treat them as the exploratory stages did, or record why continuous",
+        "treatment is defensible for these items."
       ),
       consequence = paste(
         "The CFA, reliability, and validity evidence treat as continuous items",
@@ -467,8 +485,8 @@ nomo_run_apply_factor_decision <- function(x, decision) {
       if (nzchar(item_types)) {
         paste(
           " To keep the CFA consistent with the exploratory evidence, name the",
-          "categorical items with `settings = list(cfa = list(ordered = ...))` when",
-          "supplying the model."
+          "categorical items in `ordered` within `settings$cfa` when supplying the",
+          "model."
         )
       } else {
         ""
@@ -623,7 +641,6 @@ nomo_run_apply_cfa_model <- function(x, decision) {
     rationale = rationale,
     source = "researcher_decision"
   )
-  x <- nomo_run_cfa_model_log(x, model, rationale)
 
   x$decision_requests <- nomo_run_empty_requests()
   roles <- nomo_run_data_roles(x$source_data)
@@ -643,6 +660,8 @@ nomo_run_apply_cfa_model <- function(x, decision) {
     return(nomo_run_block(x, "cfa", "measurement_model", cfa_result))
   }
 
+  # Recorded for the model lavaan fitted, not for one it refused (#145).
+  x <- nomo_run_cfa_model_log(x, model, rationale)
   x$results$cfa <- cfa_result$value
 
   if (!isTRUE(x$results$cfa$converged)) {
