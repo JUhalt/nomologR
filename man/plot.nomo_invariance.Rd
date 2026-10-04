@@ -14,7 +14,10 @@
 \item{...}{Unused.}
 }
 \value{
-A \code{ggplot2} object.
+A \code{ggplot2} object. \code{"fit"} shows CFI, RMSEA, and SRMR at each
+level, \code{"change"} each one's change from the level before, and
+\code{"local_strain"} the 20 largest score diagnostics for the equality
+constraints, one panel per level.
 }
 \description{
 Plot measurement-invariance evidence

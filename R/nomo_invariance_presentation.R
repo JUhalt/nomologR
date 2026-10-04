@@ -1,13 +1,291 @@
 # Measurement-invariance presentation -----------------------------------------
+#
+# print() gives the cases, the sequence, the fit at each level with its change
+# from the level before, and every flag; summary() adds the chi-square tests,
+# what each level holds equal, the researcher's releases, the latent means, the
+# largest score diagnostics, and each flag's recommendation. Both follow the
+# output style shared with contentvalidR (#144).
+
+
+# Abbreviations ------------------------------------------------------------------
+
+# Every abbreviation an output shows is defined once in it (guide point 23).
+# Each definition reads after "CFI = " in a note; a key starts it with a
+# capital. The estimators are lavaan's. nomo_method_variance() uses these too.
+nomo_invariance_glossary <- c(
+  CFA = "confirmatory factor analysis",
+  CFI = "comparative fit index",
+  TLI = "Tucker-Lewis index",
+  RMSEA = "root mean square error of approximation",
+  SRMR = "standardized root mean square residual",
+  LRT = "likelihood-ratio test of a level against the level before it",
+  df = "degrees of freedom",
+  CI = "confidence interval",
+  ML = "maximum likelihood",
+  MLR = "maximum likelihood with robust standard errors and a scaled test statistic",
+  MLM = paste("maximum likelihood with robust standard errors and the",
+              "Satorra-Bentler scaled test statistic"),
+  MLMV = paste("maximum likelihood with robust standard errors and a mean- and",
+               "variance-adjusted test statistic"),
+  MLMVS = paste("maximum likelihood with robust standard errors and a mean- and",
+                "variance-adjusted (Satterthwaite) test statistic"),
+  MLF = "maximum likelihood with first-order standard errors",
+  WLSMV = paste("diagonally weighted least squares with robust standard errors",
+                "and a mean- and variance-adjusted test statistic"),
+  WLSM = paste("diagonally weighted least squares with robust standard errors",
+               "and a mean-adjusted test statistic"),
+  DWLS = "diagonally weighted least squares",
+  WLS = "weighted least squares",
+  ULS = "unweighted least squares",
+  ULSMV = paste("unweighted least squares with robust standard errors and a",
+                "mean- and variance-adjusted test statistic"),
+  GLS = "generalized least squares"
+)
+
+
+# The definitions of the abbreviations given, in that order, for
+# nomo_present_key(). Unknown abbreviations are left out.
+nomo_invariance_key_entries <- function(abbr) {
+  abbr <- unique(abbr[abbr %in% names(nomo_invariance_glossary)])
+  text <- unname(nomo_invariance_glossary[abbr])
+  stats::setNames(paste0(toupper(substr(text, 1L, 1L)), substring(text, 2L)), abbr)
+}
+
+
+# The same definitions as one note after a blank line, as print() gives them:
+# "CFI = comparative fit index; RMSEA = root mean square error of
+# approximation."
+nomo_invariance_key_note <- function(abbr) {
+  abbr <- unique(abbr[abbr %in% names(nomo_invariance_glossary)])
+  if (!length(abbr)) return(invisible(NULL))
+  cat("\n")
+  nomo_present_text(paste(abbr, "=", nomo_invariance_glossary[abbr], collapse = "; "), ".")
+}
+
+
+# Facts ---------------------------------------------------------------------------
+
+# The estimator: the researcher's or the ordered default, else the one lavaan
+# chose, which the result does not record.
+nomo_invariance_estimator <- function(x) {
+  if (length(x$estimator) == 1L && !is.na(x$estimator)) return(x$estimator)
+  fit <- Find(Negate(is.null), x$fits)
+  estimator <- if (!is.null(fit)) {
+    tryCatch(lavaan::lavInspect(fit, "options")$estimator, error = function(e) NULL)
+  }
+  if (is.character(estimator) && length(estimator) == 1L) estimator else NA_character_
+}
+
+
+# The scaled test lavaan computed, in words: "Yuan-Bentler scaled" for MLR,
+# "scaled and shifted" for WLSMV; "scaled" when lavaan does not say.
+nomo_invariance_test_label <- function(x) {
+  fit <- Find(Negate(is.null), x$fits)
+  test <- if (!is.null(fit)) {
+    tryCatch(as.character(lavaan::lavInspect(fit, "options")$test), error = function(e) NULL)
+  }
+  nomo_invariance_test_words(test)
+}
+
+
+nomo_invariance_test_words <- function(test) {
+  test <- setdiff(test, c("standard", "none", "default"))
+  if (!length(test)) return("scaled")
+  words <- c(
+    satorra.bentler = "Satorra-Bentler scaled",
+    yuan.bentler = "Yuan-Bentler scaled",
+    yuan.bentler.mplus = "Yuan-Bentler scaled",
+    mean.var.adjusted = "mean- and variance-adjusted",
+    scaled.shifted = "scaled and shifted",
+    mean.adjusted = "mean-adjusted"
+  )
+  if (test[[1L]] %in% names(words)) words[[test[[1L]]]] else gsub(".", " ", test[[1L]], fixed = TRUE)
+}
+
+
+# "Cases: 800 (online n = 400, paper n = 400)", or "Cases: 447 of 800 used
+# (...)" when lavaan left cases out (guide point 2; #145). Across occasions
+# every occasion has the same people, so there are no group sizes.
+nomo_invariance_cases_fact <- function(x) {
+  count <- function(v) nomo_present_stat(v, "count")
+  n_used <- x[["n_used"]]
+  text <- if (length(n_used) != 1L || !is.finite(n_used)) {
+    sprintf("Cases: %s in the data", count(x$data_n))
+  } else if (n_used < x$data_n) {
+    sprintf("Cases: %s of %s used", count(n_used), count(x$data_n))
+  } else {
+    sprintf("Cases: %s", count(n_used))
+  }
+  sizes <- x[["group_n"]]
+  if (is.data.frame(sizes) && nrow(sizes)) {
+    # A group stays on the line with its size.
+    text <- sprintf("%s (%s)", text, paste0(sizes$group, nomo_present_nbsp, "n = ",
+                                            count(sizes$n), collapse = ", "))
+  }
+  text
+}
+
+
+nomo_invariance_present_header <- function(x, summary = FALSE) {
+  if (identical(x$design, "occasions")) {
+    nomo_present_header("nomo_invariance_longitudinal",
+                        "Measurement invariance across occasions", summary = summary)
+  } else {
+    nomo_present_header("nomo_invariance", "Measurement invariance across groups",
+                        summary = summary)
+  }
+}
+
+
+# Shared by print() and summary(): the sample, the estimator, the design, the
+# indicators, and any researcher-specified releases.
+nomo_invariance_present_facts <- function(x) {
+  estimator <- x$estimator_shown
+  nomo_present_facts(c(
+    nomo_invariance_cases_fact(x),
+    if (!is.na(estimator)) paste("Estimator:", estimator) else ""
+  ))
+  sizes <- x[["group_n"]]
+  nomo_present_facts(c(
+    if (identical(x$design, "occasions")) {
+      sprintf("Occasions: %s", paste(x$groups, collapse = ", "))
+    } else if (is.data.frame(sizes) && nrow(sizes)) {
+      sprintf("Grouping variable: %s", x$group)
+    } else {
+      sprintf("Grouping variable: %s (%s)", x$group, paste(x$groups, collapse = ", "))
+    },
+    sprintf("Indicators: %s", gsub("_", " ", x$indicator_type, fixed = TRUE))
+  ))
+  if (length(x$ordered)) {
+    nomo_present_facts(c(
+      sprintf("Ordered identification: %s", x$ID.cat),
+      sprintf("Parameterization: %s", x$parameterization)
+    ))
+  }
+  if (!is.null(x$partial) && x$partial$n > 0L) {
+    nomo_present_facts(sprintf("Partial releases: %d (researcher specified)", x$partial$n))
+  }
+}
+
+
+# What print() and summary() need beyond the stored fields, read once.
+nomo_invariance_display_fields <- function(x) {
+  x$estimator_shown <- nomo_invariance_estimator(x)
+  x$test_label <- nomo_invariance_test_label(x)
+  x
+}
+
+
+# Fit tables ----------------------------------------------------------------------
+
+# Each column in its kind (guide points 8 and 9): CFI and its change are
+# bounded and lose the leading zero; RMSEA and SRMR keep it.
+nomo_invariance_fit_formats <- function() {
+  stat <- function(kind, signed = FALSE) {
+    function(v) nomo_present_stat(v, kind, signed = signed)
+  }
+  list(
+    chisq = stat("stat"), df = stat("df"), pvalue = nomo_present_p,
+    cfi = stat("fit_bounded"), rmsea = stat("fit"), srmr = stat("fit"),
+    delta_cfi = stat("fit_bounded", TRUE), delta_rmsea = stat("fit", TRUE),
+    delta_srmr = stat("fit", TRUE),
+    lrt_chisq = stat("stat"), lrt_df = stat("df"), lrt_p = nomo_present_p
+  )
+}
+
+
+# One sentence on the versions of the fit statistics shown (#145): "The
+# chi-square is the Yuan-Bentler scaled test statistic, and the likelihood-
+# ratio tests are scaled difference tests; CFI and RMSEA are robust values."
+# Empty when every value is the standard one. With `chisq = FALSE`, for
+# print(), which shows no chi-square, only the tests are named. `tests` names
+# the difference tests shown, NULL when none is, and `indices` the indices
+# shown, by display name.
+nomo_invariance_versions_note <- function(variants, test = "scaled", chisq = TRUE,
+                                          tests = "the likelihood-ratio tests",
+                                          indices = c(CFI = "cfi", RMSEA = "rmsea")) {
+  if (!length(variants)) return("")
+  version <- function(name) {
+    v <- if (name %in% names(variants)) variants[[name]] else NA_character_
+    if (isTRUE(grepl("robust", v, fixed = TRUE))) {
+      "robust"
+    } else if (isTRUE(grepl("scaled", v, fixed = TRUE))) {
+      "scaled"
+    } else {
+      ""
+    }
+  }
+  parts <- character()
+  if (nzchar(version("chisq"))) {
+    parts <- paste(c(
+      if (chisq) sprintf("the chi-square is the %s test statistic", test),
+      if (length(tests)) paste(tests, "are scaled difference tests")
+    ), collapse = ", and ")
+  }
+  indices <- vapply(indices, version, character(1))
+  indices <- indices[nzchar(indices)]
+  for (v in unique(indices)) {
+    named <- names(indices)[indices == v]
+    parts <- c(parts, sprintf(
+      "%s %s", nomo_present_or(named, "and"),
+      nomo_present_noun(length(named), paste("is a", v, "value"), paste("are", v, "values"))
+    ))
+  }
+  parts <- parts[nzchar(parts)]
+  if (!length(parts)) return("")
+  text <- paste(parts, collapse = "; ")
+  paste0(toupper(substr(text, 1L, 1L)), substring(text, 2L), ".")
+}
+
+
+nomo_invariance_present_versions <- function(x, chisq = TRUE, tests = TRUE) {
+  note <- nomo_invariance_versions_note(
+    x$fit_variants, x$test_label, chisq,
+    tests = if (isTRUE(tests)) "the likelihood-ratio tests"
+  )
+  if (nzchar(note)) nomo_present_text(note, indent = 2L)
+}
+
+
+# Whether any level has a change or a difference test to show: none when the
+# second level did not converge (#145).
+nomo_invariance_has_changes <- function(fit) {
+  later <- fit[-1L, , drop = FALSE]
+  any(is.finite(unlist(later[c("delta_cfi", "delta_rmsea", "delta_srmr", "lrt_p")])))
+}
+
+
+# Whether any level has fit to show: none when the configural model did not
+# converge or could not be fitted, and then the outputs show no fit table, no
+# key to its columns, and no pointer to its tests (#145).
+nomo_invariance_has_fit <- function(fit) {
+  any(is.finite(unlist(fit[intersect(c("chisq", "cfi", "rmsea", "srmr"), names(fit))])))
+}
+
+
+# The abbreviations of the fit columns given that have a value in some level,
+# in the glossary's order, so a key defines only what a table shows (guide
+# point 23; #145).
+nomo_invariance_fit_abbr <- function(fit, columns) {
+  abbr <- c(cfi = "CFI", delta_cfi = "CFI", rmsea = "RMSEA", delta_rmsea = "RMSEA",
+            srmr = "SRMR", delta_srmr = "SRMR", df = "df", lrt_df = "df")
+  columns <- intersect(columns, names(fit))
+  shown <- columns[vapply(columns, function(col) any(is.finite(fit[[col]])), logical(1))]
+  intersect(c("CFI", "RMSEA", "SRMR", "df"), abbr[shown])
+}
+
+
+# Labels ----------------------------------------------------------------------------
 
 # Labels use ASCII so figures render on every graphics device. Non-ASCII
 # symbols such as the Greek capital delta or arrows are dropped or mangled by
-# the default pdf() device, and R CMD check treats that as an error.
+# the default pdf() device, and R CMD check treats that as an error. A change
+# is named as the tables name it (#145).
 nomo_invariance_metric_label <- function(x) {
   lookup <- c(
-    delta_cfi = "Delta CFI",
-    delta_rmsea = "Delta RMSEA",
-    delta_srmr = "Delta SRMR"
+    delta_cfi = "CFI change",
+    delta_rmsea = "RMSEA change",
+    delta_srmr = "SRMR change"
   )
   out <- unname(lookup[as.character(x)])
   missing <- is.na(out)
@@ -67,6 +345,12 @@ nomo_invariance_parameter_label <- function(pt, row, group_labels, occasion_map 
 }
 
 
+# An equality constraint in words. lavaan writes each as the first group's (or
+# occasion's) parameter equal to another's, and a score test frees that one
+# constraint. With two groups it compares them; with three or more, the other
+# groups stay equal to the first, so the test frees the named group from the
+# value the rest share: "Intercept: y3 (three vs. others)", not "(one vs.
+# three)", which read as a comparison of two groups (#145).
 nomo_invariance_pretty_constraint <- function(constraint, fit, occasion_map = NULL) {
   if (is.null(fit) ||
       !is.character(constraint) ||
@@ -126,10 +410,16 @@ nomo_invariance_pretty_constraint <- function(constraint, fit, occasion_map = NU
 
   if (identical(a$base, b$base)) {
     if (nzchar(a$group) || nzchar(b$group)) {
-      group_text <- paste(
-        c(a$group, b$group)[nzchar(c(a$group, b$group))],
-        collapse = " vs. "
-      )
+      units <- if (is.null(occasion_map)) {
+        length(group_labels)
+      } else {
+        length(unique(occasion_map$occasion))
+      }
+      group_text <- if (units > 2L && nzchar(b$group)) {
+        paste(b$group, "vs. others")
+      } else {
+        paste(c(a$group, b$group)[nzchar(c(a$group, b$group))], collapse = " vs. ")
+      }
       return(paste0(a$base, " (", group_text, ")"))
     }
     return(a$base)
@@ -180,6 +470,27 @@ nomo_invariance_local_strain_display <- function(x) {
 }
 
 
+# With three or more groups or occasions, the sentences that say what a label
+# such as "(three vs. others)" tests; empty with two. The first group or
+# occasion is the reference that every constraint holds the others equal to,
+# so no label frees it: when it alone differs, every other one shows similar
+# strain on that parameter, and the note says so (#145).
+nomo_invariance_others_note <- function(x) {
+  if (length(x$groups) < 3L) return("")
+  unit <- if (identical(x$design, "occasions")) "occasion" else "group"
+  paste(
+    sprintf(
+      "Each diagnostic frees one %s's parameter while the other %ss stay equal: \"vs. others\" names the %s freed.",
+      unit, unit, unit
+    ),
+    sprintf(
+      "The first %s (%s) is the reference and is never freed on its own, so when it alone differs, every other %s shows similar strain on that parameter.",
+      unit, x$groups[[1L]], unit
+    )
+  )
+}
+
+
 # What each level holds equal beyond the level before it, as a line under the
 # fit table. A column of the cumulative constraints was too wide for the
 # console once a strict level held loadings, intercepts, and residuals equal,
@@ -197,6 +508,8 @@ nomo_invariance_present_constraints <- function(fit) {
     new <- setdiff(held[[i]], if (i > 1L) held[[i - 1L]])
     if (!length(new)) return("")
     freed <- setdiff(released[[i]], c("", if (i > 1L) released[[i - 1L]]))
+    # A release such as "ag3 ~ 1" is kept on one line.
+    freed <- gsub(" ", nomo_present_nbsp, freed, fixed = TRUE)
     paste0(
       paste(nomo_present_or(new, "and"), "from", fit$level[[i]]),
       if (length(freed)) paste(", except", nomo_present_or(freed, "and"))
@@ -209,78 +522,92 @@ nomo_invariance_present_constraints <- function(fit) {
 }
 
 
-# Levels that were not estimated, did not converge, or raised warnings, named
-# with what went wrong; a table column would only say that something did.
-nomo_invariance_present_problems <- function(fit) {
-  bad <- fit[
-    fit$status != "estimated" | !fit$converged | nzchar(fit$warnings) | nzchar(fit$error),
-    , drop = FALSE
-  ]
-  if (!nrow(bad)) return(invisible(NULL))
-  nomo_present_section("Levels to review")
-  nomo_present_bullets(vapply(seq_len(nrow(bad)), function(i) {
-    parts <- c(
-      bad$status[[i]],
-      if (isFALSE(bad$converged[[i]])) "did not converge" else "",
-      bad$error[[i]],
-      if (nzchar(bad$warnings[[i]])) paste("warnings:", bad$warnings[[i]]) else ""
-    )
-    paste0(bad$level[[i]], ": ", paste(parts[nzchar(parts)], collapse = "; "))
-  }, character(1)))
+# Flags ---------------------------------------------------------------------------
+
+# Each flag in the decision log under the unit it concerns (guide point 22): a
+# level, the cases, the score diagnostics, the identification, or the items
+# and factors named. A level that failed, did not converge, or raised a lavaan
+# warning is flagged with what went wrong.
+nomo_invariance_flag_units <- function(log) {
+  units <- c(score_diagnostics = "Score diagnostics",
+             factor_identification = "Identification", cases_used = "Cases")
+  out <- unname(units[log$metric])
+  ifelse(is.na(out), log$object, out)
 }
 
 
+nomo_invariance_present_flagged <- function(log, recommendation = FALSE) {
+  if (!is.data.frame(log) || !nrow(log)) return(invisible(NULL))
+  nomo_present_flagged(log, recommendation = recommendation,
+                       unit = nomo_invariance_flag_units(log))
+}
+
+
+# print() and summary() ---------------------------------------------------------------
+
 #' @export
 print.nomo_invariance <- function(x, ...) {
-  if (identical(x$design, "occasions")) {
-    nomo_present_header("nomo_invariance_longitudinal", "Measurement invariance across occasions")
-    across <- sprintf("Occasions: %s", paste(x$occasions, collapse = ", "))
-  } else {
-    nomo_present_header("nomo_invariance", "Measurement invariance")
-    across <- sprintf("Grouping variable: %s (%d groups: %s)", x$group, length(x$groups),
-                      paste(x$groups, collapse = ", "))
-  }
-  nomo_present_facts(c(across, sprintf("Indicators: %s", x$indicator_type)))
-
-  if (length(x$ordered)) {
-    nomo_present_facts(c(
-      sprintf("Ordered identification: %s", x$ID.cat),
-      sprintf("parameterization: %s", x$parameterization)
-    ))
-  }
-
+  object <- x
+  x <- nomo_invariance_display_fields(x)
+  nomo_invariance_present_header(x)
+  nomo_invariance_present_facts(x)
   nomo_present_facts(sprintf("Requested: %s", paste(x$requested_levels, collapse = " -> ")))
   nomo_present_facts(sprintf("Completed: %s", nomo_invariance_level_path(x$completed_levels)))
 
-  if (!is.null(x$partial) && x$partial$n > 0L) {
-    nomo_present_facts(sprintf("Researcher-specified partial releases: %d", x$partial$n))
+  # A configural model that did not converge leaves no fit to show; the
+  # Flagged section says so (#145).
+  fit <- x$fit_evidence
+  has_fit <- nomo_invariance_has_fit(fit)
+  tested <- any(is.finite(fit$lrt_p))
+  if (has_fit) {
+    nomo_present_section("Fit by level")
+    nomo_present_table(
+      fit,
+      c("Level" = "level", "CFI" = "cfi", "RMSEA" = "rmsea", "SRMR" = "srmr",
+        "CFI change" = "delta_cfi", "RMSEA change" = "delta_rmsea",
+        "LRT p" = "lrt_p"),
+      formats = nomo_invariance_fit_formats(),
+      more = "nomo_table(x, \"fit\")"
+    )
+    nomo_invariance_present_versions(x, chisq = FALSE, tests = tested)
   }
+  nomo_invariance_present_flagged(x$decision_log)
 
-  signed <- function(v) nomo_present_signed(v)
+  nomo_invariance_key_note(c(
+    nomo_invariance_fit_abbr(fit, c("cfi", "rmsea", "srmr", "delta_cfi", "delta_rmsea")),
+    if (tested) "LRT", x$estimator_shown
+  ))
   cat("\n")
-  nomo_present_table(
-    x$fit_evidence,
-    c("Level" = "level", "CFI" = "cfi", "RMSEA" = "rmsea", "SRMR" = "srmr",
-      "CFI change" = "delta_cfi", "RMSEA change" = "delta_rmsea",
-      "LRT p" = "lrt_p"),
-    formats = list(delta_cfi = signed, delta_rmsea = signed, lrt_p = nomo_present_p),
-    more = "nomo_table(x, \"fit\")"
+  nomo_present_text(nomo_invariance_caveat(has_fit))
+  n_local <- nrow(x$local_strain)
+  tests <- any(is.finite(fit$chisq))
+  nomo_present_pointer(
+    c(if (tests) "summary(x)" else "nomo_table(x, \"decision_log\")",
+      if (n_local) "nomo_table(x, \"local_strain\")"),
+    c(if (tests) "each level's chi-square test" else "every recorded decision",
+      if (n_local) sprintf("all %s", nomo_present_count(n_local, "score diagnostic")))
   )
-  nomo_invariance_present_problems(x$fit_evidence)
+  invisible(object)
+}
 
-  if (nrow(x$local_strain)) {
-    nomo_present_text(
-      sprintf("Localized equality-constraint diagnostics retained: %d", nrow(x$local_strain))
+
+# The closing caveat (guide point 7). With no level's fit to show, it says
+# that the output decides nothing about invariance, rather than how to read
+# fit changes that were not computed (#145).
+nomo_invariance_caveat <- function(has_fit, summary = FALSE) {
+  if (!has_fit) {
+    "No level has fit to report, so this output says nothing for or against invariance."
+  } else if (summary) {
+    paste(
+      "No single CFI change, RMSEA change, SRMR change, chi-square difference,",
+      "or score diagnostic is treated as a universal invariance rule."
+    )
+  } else {
+    paste(
+      "Fit changes and score diagnostics are evidence, not pass/fail rules, and",
+      "nomologR never frees a parameter because of them."
     )
   }
-
-  cat("\n")
-  nomo_present_text(
-    "Fit changes and score diagnostics are evidence. They are not pass/fail ",
-    "rules, and nomologR never frees a parameter because of them."
-  )
-
-  invisible(x)
 }
 
 
@@ -295,27 +622,34 @@ summary.nomo_invariance <- function(object, ...) {
   } else {
     tibble::tibble()
   }
+  shown <- nomo_invariance_display_fields(object)
 
   out <- list(
     design = object$design,
     group = object$group,
     groups = object$groups,
+    data_n = object$data_n,
+    n_used = object[["n_used"]],
+    group_n = object[["group_n"]],
+    estimator_shown = shown$estimator_shown,
+    test_label = shown$test_label,
+    fit_variants = object[["fit_variants"]],
     indicator_type = object$indicator_type,
     identification_note = object$identification_note,
     ordered = object$ordered,
     ordered_categories = object$ordered_categories,
+    ID.cat = object$ID.cat,
+    parameterization = object$parameterization,
     requested_levels = object$requested_levels,
     completed_levels = object$completed_levels,
     fit_evidence = object$fit_evidence,
     partial = object$partial,
     partial_requested = object$partial_requested,
     top_local_strain = top_local,
+    n_local_strain = nrow(local_display),
     latent_means = object[["latent_means"]],
     decision_log = object$decision_log,
-    note = paste(
-      "No single delta-CFI, delta-RMSEA, delta-SRMR, chi-square difference,",
-      "or score diagnostic is treated as a universal invariance rule."
-    )
+    note = nomo_invariance_caveat(nomo_invariance_has_fit(object$fit_evidence), summary = TRUE)
   )
   class(out) <- c("summary_nomo_invariance", "list")
   out
@@ -325,19 +659,9 @@ summary.nomo_invariance <- function(object, ...) {
 #' @export
 print.summary_nomo_invariance <- function(x, ...) {
   across_occasions <- identical(x$design, "occasions")
-  if (across_occasions) {
-    nomo_present_header(
-      "nomo_invariance_longitudinal", "Measurement invariance across occasions",
-      summary = TRUE
-    )
-  } else {
-    nomo_present_header("nomo_invariance", "Measurement invariance", summary = TRUE)
-  }
-  nomo_present_facts(c(
-    sprintf("Indicators: %s", x$indicator_type),
-    sprintf(if (across_occasions) "Occasions: %s" else "Groups: %s",
-            paste(x$groups, collapse = ", "))
-  ))
+  formats <- nomo_invariance_fit_formats()
+  nomo_invariance_present_header(x, summary = TRUE)
+  nomo_invariance_present_facts(x)
   nomo_present_facts(sprintf(
     "Levels completed: %s", nomo_invariance_level_path(x$completed_levels)
   ))
@@ -347,52 +671,57 @@ print.summary_nomo_invariance <- function(x, ...) {
 
   if (nrow(x$ordered_categories)) {
     nomo_present_section("Observed ordered categories")
-    cats <- x$ordered_categories
-    nomo_present_table(cats, stats::setNames(names(cats), gsub("_", " ", names(cats))),
+    nomo_present_table(x$ordered_categories, c("Item" = "item", "Categories" = "categories"),
                        more = "nomo_table(x, \"categories\")")
   }
 
   fit <- x$fit_evidence
-  nomo_present_section("Fit by level")
-  nomo_present_table(
-    fit,
-    c("Level" = "level", "Chi-square" = "chisq", "df" = "df", "p" = "pvalue",
-      "CFI" = "cfi", "RMSEA" = "rmsea", "SRMR" = "srmr"),
-    formats = list(chisq = function(v) nomo_present_number(v, 2L),
-                   df = function(v) format(v, trim = TRUE), pvalue = nomo_present_p),
-    more = "nomo_table(x, \"fit\")"
-  )
-  nomo_invariance_present_constraints(fit)
-  signed <- function(v) nomo_present_signed(v)
-  nomo_present_section("Changes from the preceding level")
-  nomo_present_table(
-    fit[-1L, , drop = FALSE],
-    c("Level" = "level", "CFI change" = "delta_cfi", "RMSEA change" = "delta_rmsea",
-      "SRMR change" = "delta_srmr", "LRT chi-square" = "lrt_chisq", "df" = "lrt_df",
-      "p" = "lrt_p"),
-    formats = list(delta_cfi = signed, delta_rmsea = signed, delta_srmr = signed,
-                   lrt_chisq = function(v) nomo_present_number(v, 2L),
-                   lrt_df = function(v) format(v, trim = TRUE), lrt_p = nomo_present_p),
-    more = "nomo_table(x, \"fit\")"
-  )
-  nomo_invariance_present_problems(fit)
+  # A configural model that did not converge leaves no fit to show; the
+  # Flagged section says so (#145).
+  has_fit <- nomo_invariance_has_fit(fit)
+  # A single level, or a second that did not converge, has no change to show
+  # (#145).
+  changes <- nomo_invariance_has_changes(fit)
+  if (has_fit) {
+    nomo_present_section("Fit by level")
+    nomo_present_table(
+      fit,
+      c("Level" = "level", "Chi-square" = "chisq", "df" = "df", "p" = "pvalue",
+        "CFI" = "cfi", "RMSEA" = "rmsea", "SRMR" = "srmr"),
+      formats = formats,
+      more = "nomo_table(x, \"fit\")"
+    )
+    nomo_invariance_present_constraints(fit)
+    nomo_invariance_present_versions(x, tests = changes)
+  }
+  if (changes) {
+    nomo_present_section("Changes from the preceding level")
+    nomo_present_table(
+      fit[-1L, , drop = FALSE],
+      c("Level" = "level", "CFI change" = "delta_cfi", "RMSEA change" = "delta_rmsea",
+        "SRMR change" = "delta_srmr", "Delta chi-square" = "lrt_chisq", "df" = "lrt_df",
+        "p" = "lrt_p"),
+      formats = formats,
+      more = "nomo_table(x, \"fit\")"
+    )
+  }
 
   if (!is.null(x$partial) && x$partial$n > 0L) {
     nomo_present_section("Researcher-specified partial invariance")
-    rel <- x$partial$releases
-    nomo_present_bullets(sprintf(
-      "%s (%s): %s. %s", rel$release_id, rel$level, rel$syntax, rel$rationale
-    ))
+    nomo_partial_present_releases(x$partial$releases)
   }
 
   means <- x[["latent_means"]]
-  if (is.data.frame(means) && nrow(means)) {
+  has_means <- is.data.frame(means) && nrow(means) > 0L
+  if (has_means) {
     shown <- means
-    shown$interval <- nomo_present_ci(shown$ci_lower, shown$ci_upper, 2L)
+    shown$interval <- nomo_present_ci(shown$ci_lower, shown$ci_upper, kind = "estimate")
     nomo_present_section(if (across_occasions) {
-      sprintf("Latent change from %s (its latent SD)", shown$reference_occasion[[1L]])
+      sprintf("Latent change from %s, in its latent standard deviations",
+              shown$reference_occasion[[1L]])
     } else {
-      sprintf("Latent means relative to %s (its latent SD)", shown$reference_group[[1L]])
+      sprintf("Latent means relative to %s, in its latent standard deviations",
+              shown$reference_group[[1L]])
     })
     columns <- c("Level" = "level", "Group" = "group", "Occasion" = "occasion",
                  "Factor" = "factor", "Difference" = "estimate", "95% CI" = "interval",
@@ -402,7 +731,7 @@ print.summary_nomo_invariance <- function(x, ...) {
     nomo_present_table(
       shown,
       columns,
-      formats = list(estimate = function(v) nomo_present_number(v, 2L),
+      formats = list(estimate = function(v) nomo_present_stat(v, "estimate"),
                      p_value = nomo_present_p),
       more = "nomo_table(x, \"latent_means\")"
     )
@@ -412,22 +741,47 @@ print.summary_nomo_invariance <- function(x, ...) {
   }
 
   if (nrow(x$top_local_strain)) {
-    nomo_present_section("Largest equality-constraint score diagnostics (diagnostic only)")
+    nomo_present_section("Largest score diagnostics for equality constraints")
     nomo_present_table(
       x$top_local_strain,
       c("Level" = "level", "Constraint" = "constraint_display",
-        "Score" = "score_x2", "df" = "df", "p" = "p_value"),
-      formats = list(score_x2 = function(v) nomo_present_number(v, 2L),
-                     df = function(v) format(v, trim = TRUE), p_value = nomo_present_p),
+        "Score chi-square" = "score_x2", "df" = "df", "p" = "p_value"),
+      formats = list(score_x2 = function(v) nomo_present_stat(v, "stat"),
+                     df = function(v) nomo_present_stat(v, "df"), p_value = nomo_present_p),
       more = "nomo_table(x, \"local_strain\")"
     )
+    others <- nomo_invariance_others_note(x)
+    if (nzchar(others)) nomo_present_text(others, indent = 2L)
   }
+
+  nomo_invariance_present_flagged(x$decision_log, recommendation = TRUE)
+  # Only the columns shown are defined (#145): the score diagnostics have df
+  # too.
+  shown <- nomo_invariance_fit_abbr(fit, c(
+    "cfi", "rmsea", "srmr", "df",
+    if (changes) c("delta_cfi", "delta_rmsea", "delta_srmr", "lrt_df")
+  ))
+  if (nrow(x$top_local_strain)) shown <- union(shown, "df")
+  nomo_present_key(
+    nomo_invariance_key_entries(c(shown, if (has_means) "CI", x$estimator_shown)),
+    title = if (has_fit) "What these columns mean" else "Abbreviations"
+  )
 
   cat("\n")
   nomo_present_text(x$note)
+  n_local <- x[["n_local_strain"]]
+  nomo_present_pointer(
+    c(if (length(n_local) && n_local > 0L) "nomo_table(x, \"local_strain\")",
+      "nomo_table(x, \"decision_log\")"),
+    c(if (length(n_local) && n_local > 0L) {
+      sprintf("all %s", nomo_present_count(n_local, "score diagnostic"))
+    }, "every recorded decision")
+  )
   invisible(x)
 }
 
+
+# Plots --------------------------------------------------------------------------------
 
 # The level names along the x-axis of each facet, angled: three facets share a
 # 7-inch plot, so four or more level names such as "configural" and "metric"
@@ -443,7 +797,10 @@ nomo_invariance_level_axis <- function() {
 #' @param type Plot type: `"fit"`, `"change"`, or `"local_strain"`.
 #' @param ... Unused.
 #'
-#' @return A `ggplot2` object.
+#' @return A `ggplot2` object. `"fit"` shows CFI, RMSEA, and SRMR at each
+#'   level, `"change"` each one's change from the level before, and
+#'   `"local_strain"` the 20 largest score diagnostics for the equality
+#'   constraints, one panel per level.
 #' @export
 plot.nomo_invariance <- function(
     x,
@@ -494,7 +851,11 @@ plot.nomo_invariance <- function(
           ),
           x = "Invariance level",
           y = "Fit index",
-          caption = "No single fit index determines invariance."
+          caption = paste(
+            "No single fit index determines invariance. CFI = comparative fit index;",
+            "RMSEA = root mean square error of approximation; SRMR = standardized",
+            "root mean square residual."
+          )
         ) +
         ggplot2::theme_minimal() +
         nomo_invariance_level_axis()
@@ -524,7 +885,7 @@ plot.nomo_invariance <- function(
 
     dat$metric <- factor(
       dat$metric,
-      levels = c("Delta CFI", "Delta RMSEA", "Delta SRMR")
+      levels = nomo_invariance_metric_label(c("delta_cfi", "delta_rmsea", "delta_srmr"))
     )
     dat$level <- factor(dat$level, levels = x$completed_levels)
 
@@ -546,13 +907,14 @@ plot.nomo_invariance <- function(
         ) +
         nomo_plot_labs(
           title = "Change in fit as equality constraints accumulate",
-          subtitle = "Zero means no change from the preceding fitted level.",
+          subtitle = "The dashed line marks no change from the preceding fitted level.",
           x = "Invariance level",
           y = "Change in fit index",
           caption = paste(
-            "For CFI, decreases indicate worsening fit; for RMSEA/SRMR,",
-            "increases indicate worsening fit.",
-            "\nInterpret magnitude contextually; no universal cutoff is imposed."
+            "A decrease in CFI and an increase in RMSEA or SRMR indicate worse",
+            "fit. Interpret magnitude in context; no universal cutoff is imposed.",
+            "CFI = comparative fit index; RMSEA = root mean square error of",
+            "approximation; SRMR = standardized root mean square residual."
           )
         ) +
         ggplot2::theme_minimal() +
@@ -561,7 +923,8 @@ plot.nomo_invariance <- function(
   }
 
   dat <- nomo_invariance_local_strain_display(x)
-  dat <- dat[is.finite(dat$score_x2), , drop = FALSE]
+  # Without diagnostics the table has no score column to read (#145).
+  if (nrow(dat)) dat <- dat[is.finite(dat$score_x2), , drop = FALSE]
 
   if (!nrow(dat)) {
     stop(
@@ -582,6 +945,7 @@ plot.nomo_invariance <- function(
     dat$level,
     levels = unique(c(x$completed_levels, as.character(dat$level)))
   )
+  others <- nomo_invariance_others_note(x)
 
   # One panel per level, the constraints sharing rows across them. With one
   # shape per level in a single panel, a level's point sat on another's when
@@ -598,17 +962,19 @@ plot.nomo_invariance <- function(
     ggplot2::facet_wrap(stats::as.formula("~ level"), nrow = 1L) +
     ggplot2::expand_limits(x = 0) +
     nomo_plot_labs(
-      title = "Largest equality-constraint score diagnostics",
+      title = "Largest score diagnostics for equality constraints",
       subtitle = paste(
-        "Higher score statistics localize strain in fitted equality constraints.",
+        "Larger score chi-squares localize strain in equality constraints.",
         "\nThey do not authorize automatic partial invariance."
       ),
-      x = "Score-test chi-square",
+      x = "Score chi-square",
       y = NULL,
-      caption = paste(
-        "Any constraint release must be explicitly researcher specified",
-        "\nand documented with a rationale."
-      )
+      # Wrapped here, since a caption with a line break is left as written.
+      caption = paste(unlist(lapply(
+        c(others[nzchar(others)],
+          "Any release must be specified by the researcher and documented with a rationale."),
+        strwrap, width = 85L
+      )), collapse = "\n")
     ) +
     ggplot2::theme_minimal() +
     ggplot2::theme(
