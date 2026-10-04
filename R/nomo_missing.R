@@ -2,8 +2,18 @@
 
 # Schafer and Graham (2002, p. 157) treat a bias larger than about half the
 # estimate's standard error as practically important, because beyond that it
-# noticeably degrades the coverage of 95% confidence intervals.
+# noticeably degrades the coverage of 95% confidence intervals. They judged a
+# bias, the gap between an estimator's average over simulated samples and the
+# true value. Here the same size is a reference for a difference between two
+# estimates from one sample, which also holds sampling variability, so it marks
+# a difference to review rather than a bias found (#145).
 nomo_missing_half_se <- 0.5
+
+# The log's reference for that rule, worded as the adaptation it is.
+nomo_missing_half_se_reference <- paste(
+  "Half a reference standard error, adapted from Schafer & Graham (2002), who",
+  "treat a bias of that size as practically important"
+)
 
 
 #' Missing-data sensitivity: does a result depend on how missing data were handled?
@@ -48,7 +58,7 @@ nomo_missing_half_se <- 0.5
 #' standard error. Schafer and Graham (2002) treat a bias larger than about half
 #' a standard error as practically important. Beyond that size it noticeably
 #' degrades the coverage of confidence intervals. A difference of that size is
-#' flagged for review, with two qualifications:
+#' flagged for review, with three qualifications:
 #'
 #' * The difference estimates listwise deletion's bias only if the data are MAR
 #'   and the model is correct, since only then is FIML consistent. With ordered
@@ -56,14 +66,30 @@ nomo_missing_half_se <- 0.5
 #'   attributed to either one.
 #' * The strategies analyze different cases, so part of any difference is
 #'   sampling variability.
+#' * Schafer and Graham's half a standard error judges a bias, measured over
+#'   simulated samples. Here it is applied to a difference within one sample,
+#'   so under MCAR, where listwise deletion is unbiased, sampling variability
+#'   alone can exceed it, and does so more often the more cases are
+#'   incomplete. A flag marks a difference to review, not a bias found.
 #'
 #' A hypothesis whose concordance with its prediction differs between
 #' strategies is also flagged for review.
 #'
-#' **The flagging rule** follows Schafer and Graham (2002, p. 157): a bias
-#' beyond about half a standard error is practically important, because it
+#' **The flagging rule** is adapted from Schafer and Graham (2002, p. 157): a
+#' bias beyond about half a standard error is practically important, because it
 #' degrades interval coverage. Separating sampling variability from bias would
 #' be new output, added alongside this rule rather than replacing it.
+#'
+#' **What lavaan estimated.** A strategy is labeled by the method lavaan used.
+#' When lavaan substitutes one method for another, as it runs two-stage ML when
+#' FIML is requested with ULS, the label names both, such as "Two-stage ML
+#' (requested FIML)", and a difference from it is attributed to no strategy.
+#'
+#' `print()` shows the missingness, the strategies compared, the largest
+#' differences from the reference, and each flag's observation; `summary()`
+#' adds missing values by variable, fit and reliability by strategy, every
+#' difference, and each recorded decision with its recommendation. `plot()`
+#' draws each difference from the reference in reference standard errors.
 #'
 #' **Not implemented.** Mean substitution is not offered. It understates
 #' variances and distorts covariances. Schafer and Graham (2002) show that even
@@ -275,7 +301,7 @@ nomo_missing_run <- function(x, lavaan_fit, data, ordered, strategies, refit,
 
   any_missing <- pattern$summary$n_incomplete > 0L
   fits <- stats::setNames(vector("list", length(plan$strategies)), plan$strategies)
-  # With no missing values every strategy analyses the same cases, so only the
+  # With no missing values every strategy analyzes the same cases, so only the
   # original is kept. `[<-` with list(NULL) keeps the slot; `[[<-` would drop it.
   for (s in plan$strategies) {
     fits[s] <- list(if (identical(s, fitted_as)) {
@@ -340,7 +366,8 @@ nomo_missing_run <- function(x, lavaan_fit, data, ordered, strategies, refit,
   )
   if (!identical(intended_reference, plan$reference)) {
     decision_log <- nomo_missing_reference_log(
-      decision_log, intended_reference, plan$reference, kind
+      decision_log, intended_reference, plan$reference, kind,
+      engine = strategy_table$lavaan_missing[strategy_table$strategy == plan$reference]
     )
   }
 
@@ -367,17 +394,17 @@ nomo_missing_run <- function(x, lavaan_fit, data, ordered, strategies, refit,
 # Records that the intended reference could not be fitted and which strategy
 # took its place. Whether a difference still estimates bias depends on what the
 # replacement assumes, so the recommendation says which case this is.
-nomo_missing_reference_log <- function(log, intended, actual, kind) {
+nomo_missing_reference_log <- function(log, intended, actual, kind, engine = actual) {
   nomo_log_add(
     log, stage = "missing_data",
     object = if (identical(kind, "nomo_network")) "network" else "cfa",
     metric = "reference_substituted", severity = "info",
     observation = sprintf(
       "%s could not be fitted, so %s is the reference instead.",
-      nomo_missing_label(intended), nomo_missing_label_inline(actual)
+      nomo_missing_label(intended), nomo_missing_inline(nomo_missing_engine_label(actual, engine))
     ),
     recommendation = if (identical(nomo_missing_requires(intended), "MAR") &&
-                         identical(nomo_missing_requires(actual), "MCAR")) {
+                         identical(nomo_missing_requires(engine), "MCAR")) {
       paste(
         "The reference now requires data missing completely at random, a",
         "stronger assumption than FIML's, so a difference from it no longer",
@@ -495,8 +522,30 @@ nomo_missing_label <- function(strategy) {
 
 # The same label for use inside a sentence: "listwise deletion", but "FIML".
 nomo_missing_label_inline <- function(strategy) {
-  label <- nomo_missing_label(strategy)
+  nomo_missing_inline(nomo_missing_label(strategy))
+}
+
+nomo_missing_inline <- function(label) {
   ifelse(grepl("^[A-Z][a-z]", label), paste0(tolower(substr(label, 1L, 1L)), substring(label, 2L)), label)
+}
+
+
+# A strategy is labeled by the method lavaan used, and by the one requested
+# too when lavaan substituted another: "Two-stage ML (requested FIML)" (#145).
+nomo_missing_engine_label <- function(strategy, engine) {
+  substituted <- !is.na(engine) & engine != strategy
+  out <- nomo_missing_label(strategy)
+  out[substituted] <- paste0(
+    nomo_missing_label(engine[substituted]), " (requested ",
+    nomo_missing_label_inline(strategy[substituted]), ")"
+  )
+  out
+}
+
+
+# A strategy's label as its row of the strategies table gives it.
+nomo_missing_table_label <- function(strategy, strategies) {
+  strategies$label[match(strategy, strategies$strategy)]
 }
 
 
@@ -587,7 +636,7 @@ nomo_missing_strategy_table <- function(plan, fits, fit_of, fitted_as, pattern,
 
     tibble::tibble(
       strategy = s,
-      label = nomo_missing_label(s),
+      label = nomo_missing_engine_label(s, engine),
       lavaan_missing = engine,
       requires = nomo_missing_requires(if (is.na(engine)) s else engine),
       role = if (identical(s, plan$reference)) "reference" else "comparison",
@@ -745,7 +794,7 @@ nomo_missing_log <- function(pattern, strategies, estimates, reference, ordered,
   log <- nomo_log_new()
   s <- pattern$summary
   object <- if (identical(kind, "nomo_network")) "network" else "cfa"
-  ref_label <- nomo_missing_label_inline(reference)
+  ref_label <- nomo_missing_inline(nomo_missing_table_label(reference, strategies))
 
   if (s$n_incomplete == 0L) {
     return(nomo_log_add(
@@ -755,7 +804,7 @@ nomo_missing_log <- function(pattern, strategies, estimates, reference, ordered,
         "None of the %d cases is missing a modeled variable.", s$n_cases
       ),
       recommendation = paste(
-        "Every strategy analyses the same cases, so the choice of missing-data",
+        "Every strategy analyzes the same cases, so the choice of missing-data",
         "strategy cannot change these results and there is nothing to compare."
       )
     ))
@@ -767,8 +816,9 @@ nomo_missing_log <- function(pattern, strategies, estimates, reference, ordered,
     reference = "Enders & Bandalos (2001); Schafer & Graham (2002)",
     severity = "info",
     observation = sprintf(
-      "%d of %d cases (%.1f%%) are missing at least one modeled variable, in %s.",
-      s$n_incomplete, s$n_cases, 100 * s$pct_incomplete, nomo_present_count(s$n_patterns, "pattern")
+      "%d of %d cases (%s) are missing at least one modeled variable, in %s.",
+      s$n_incomplete, s$n_cases, nomo_present_percent(s$pct_incomplete, base = s$n_cases),
+      nomo_present_count(s$n_patterns, "pattern")
     ),
     recommendation = paste(
       "Which strategy is appropriate depends on why the data are missing.",
@@ -809,9 +859,9 @@ nomo_missing_log <- function(pattern, strategies, estimates, reference, ordered,
         log, stage = "missing_data", object = object,
         metric = "cases_discarded", value = row$n_discarded, severity = "info",
         observation = sprintf(
-          "Listwise deletion analyses %d of %d cases, discarding %d (%.1f%%).",
+          "Listwise deletion analyzes %d of %d cases, discarding %d (%s).",
           as.integer(row$n_used), s$n_cases, as.integer(row$n_discarded),
-          100 * row$n_discarded / s$n_cases
+          nomo_present_percent(row$n_discarded / s$n_cases, base = s$n_cases)
         ),
         recommendation = paste(
           "Under MCAR, discarding cases costs efficiency rather than accuracy;",
@@ -867,7 +917,7 @@ nomo_missing_log <- function(pattern, strategies, estimates, reference, ordered,
           "%s (%s) is %s under %s and %s under %s.",
           row$parameter, row$relation,
           row$reference_concordance, ref_label,
-          row$concordance, nomo_missing_label_inline(row$strategy)
+          row$concordance, nomo_missing_inline(nomo_missing_table_label(row$strategy, strategies))
         ),
         recommendation = paste(
           "The theory evidence for this hypothesis depends on how missing data",
@@ -885,22 +935,50 @@ nomo_missing_log <- function(pattern, strategies, estimates, reference, ordered,
 nomo_missing_true <- function(x) !is.na(x) & x
 
 
+# The kind of nomo_present_stat() an estimate of each type takes: standardized
+# loadings keep their leading zero, factor correlations drop it, and a
+# hypothesis estimate, which can be a standardized regression coefficient
+# beyond 1, keeps it.
+nomo_missing_estimate_kind <- function(type) {
+  ifelse(type == "loading", "loading", ifelse(type == "factor_correlation", "r", "estimate"))
+}
+
+# Estimates compared across strategies differ by fractions of a standard error
+# and often agree to two decimals, so they are shown with three, in the log and
+# in print() alike: one precision for the quantity in the output.
+nomo_missing_estimate_digits <- 3L
+
+
 nomo_missing_difference_log <- function(log, estimates, strategies, reference,
                                         ref_label, object) {
   comparisons <- setdiff(unique(estimates$strategy), reference)
   n_cases <- max(strategies$n_used, na.rm = TRUE)
 
+  # What each strategy's estimates rest on is what lavaan estimated, which can
+  # differ from what was requested (#145).
+  engine_of <- function(strategy) {
+    engine <- strategies$lavaan_missing[match(strategy, strategies$strategy)]
+    ifelse(is.na(engine), strategy, engine)
+  }
+  ref_engine <- engine_of(reference)
+
   for (s in comparisons) {
     rows <- estimates[estimates$strategy == s & is.finite(estimates$difference_in_se), , drop = FALSE]
     if (!nrow(rows)) next
-    label <- nomo_missing_label(s)
-    inline <- nomo_missing_label_inline(s)
-    ref_inline <- nomo_missing_label_inline(reference)
+    label <- nomo_missing_table_label(s, strategies)
+    inline <- nomo_missing_inline(label)
+    ref_inline <- ref_label
     worst <- rows[which.max(abs(rows$difference_in_se)), ]
     flagged <- nomo_missing_true(rows$beyond_half_se)
+    # Each estimate in its own kind: a loading keeps its leading zero, and a
+    # correlation does not.
+    kind <- nomo_missing_estimate_kind(worst$type)
     largest <- sprintf(
-      "%s: %.3f against %.3f (%+.2f SE)",
-      worst$parameter, worst$estimate, worst$reference_estimate, worst$difference_in_se
+      "%s, %s against %s (%s SE)", worst$parameter,
+      nomo_present_stat(worst$estimate, kind, digits = nomo_missing_estimate_digits,
+                        reference = worst$reference_estimate),
+      nomo_present_stat(worst$reference_estimate, kind, digits = nomo_missing_estimate_digits),
+      nomo_present_stat(worst$difference_in_se, "stat", signed = TRUE)
     )
 
     # How many fewer cases this strategy analyzed than the fullest one. The
@@ -910,24 +988,28 @@ nomo_missing_difference_log <- function(log, estimates, strategies, reference,
     sampling <- if (length(n_here) == 1L && is.finite(n_here) && n_here < n_cases) {
       sprintf(
         paste(
-          "%s analyses %d fewer cases than the fullest strategy (%.1f%%), and",
+          "%s analyzes %d fewer cases than the fullest strategy (%s), and",
           "the more cases a strategy discards, the larger the differences that",
           "sampling variability alone produces."
         ),
-        label, as.integer(n_cases - n_here), 100 * (n_cases - n_here) / n_cases
+        label, as.integer(n_cases - n_here),
+        nomo_present_percent((n_cases - n_here) / n_cases, base = n_cases)
       )
     } else {
       "The strategies analyze different cases, so part of any difference is sampling variability."
     }
 
     if (any(flagged)) {
-      attribution <- if (identical(reference, "ml") || identical(reference, "ml.x")) {
+      attribution <- if (ref_engine %in% c("ml", "ml.x")) {
         paste(
           "If the data are MAR and the model is correct, FIML is consistent and",
-          "this difference estimates the bias", inline, "introduces; Schafer and",
-          "Graham (2002) treat a bias of this size as practically important."
+          "this difference estimates the bias", inline, "introduces, together",
+          "with sampling variability. Half a standard error is the size of bias",
+          "Schafer and Graham (2002) treat as practically important; applied to",
+          "a difference within one sample it is a reference for review, which",
+          "sampling variability alone can exceed when data are MCAR."
         )
-      } else if (identical(reference, "pairwise") && identical(s, "listwise")) {
+      } else if (identical(ref_engine, "pairwise") && identical(engine_of(s), "listwise")) {
         paste(
           "Listwise and pairwise deletion both require MCAR (Enders & Bandalos,",
           "2001), so this difference cannot be attributed to either; it shows",
@@ -940,11 +1022,12 @@ nomo_missing_difference_log <- function(log, estimates, strategies, reference,
         log, stage = "missing_data", object = object,
         metric = "estimate_difference",
         value = abs(worst$difference_in_se),
-        reference = "Schafer & Graham (2002): bias beyond about half a standard error is practically important",
+        reference = nomo_missing_half_se_reference,
         severity = "review",
         observation = sprintf(
-          "%d of %d estimates under %s differ from the %s estimate by more than half its standard error. Largest: %s.",
-          sum(flagged), nrow(rows), inline, ref_inline, largest
+          "%d of %d %s under %s %s from the %s estimate by more than half its standard error. Largest: %s.",
+          sum(flagged), nrow(rows), nomo_present_noun(nrow(rows), "estimate", "estimates"),
+          inline, nomo_present_noun(sum(flagged), "differs", "differ"), ref_inline, largest
         ),
         recommendation = paste(
           attribution, sampling,
@@ -956,7 +1039,7 @@ nomo_missing_difference_log <- function(log, estimates, strategies, reference,
         log, stage = "missing_data", object = object,
         metric = "estimates_agree",
         value = abs(worst$difference_in_se),
-        reference = "Schafer & Graham (2002): bias beyond about half a standard error is practically important",
+        reference = nomo_missing_half_se_reference,
         severity = "info",
         observation = sprintf(
           "No estimate under %s differs from the %s estimate by more than half its standard error. Largest: %s.",
