@@ -102,13 +102,21 @@ than zero. For <code>negative()</code> it must be less than zero.</p></dd>
 <dt id="arg-scale">scale<a class="anchor" aria-label="anchor" href="#arg-scale"></a></dt>
 <dd><p>Scale on which the expectation is defined. Standardized
 coefficients are the default because magnitude expectations such as <code>.20</code>
-are otherwise not portable across arbitrary raw units.</p></dd>
+are otherwise not portable across arbitrary raw units. For an observed
+variable, <code>"unstandardized"</code> is its raw units. A latent variable has no
+raw units: its metric is set by the identification <code><a href="nomo_network.html">nomo_network()</a></code> fits
+with. With the default <code>std.lv = TRUE</code>, an exogenous factor has variance
+1 and an endogenous factor has residual variance 1, so the same
+unstandardized bound can be met under <code>std.lv = TRUE</code> and missed under
+<code>std.lv = FALSE</code>, which scales each factor by its first indicator.</p></dd>
 
 
 <dt id="arg-origin">origin<a class="anchor" aria-label="anchor" href="#arg-origin"></a></dt>
 <dd><p>Whether the expectation was specified <code>a_priori</code> or added
-<code>post_hoc</code>. Post-hoc expectations remain machine-readable but are never
-presented as confirmatory evidence.</p></dd>
+<code>post_hoc</code>. Post hoc expectations remain machine-readable but are never
+presented as confirmatory evidence: <code><a href="nomo_network.html">nomo_network()</a></code> marks them
+"(post hoc)" wherever their concordance is printed or plotted, and its
+interpretation calls them exploratory.</p></dd>
 
 
 <dt id="arg-within">within<a class="anchor" aria-label="anchor" href="#arg-within"></a></dt>
@@ -127,7 +135,7 @@ researcher-specified magnitude boundary. <code>negligible()</code> deliberately
 distinguishes an unquantified null-like expectation from a quantitative
 smallest effect size of interest (SESOI) region.</p>
 <p>A bare <code>negligible()</code> expectation is <strong>not confirmable as negligible</strong> from a
-non-significant p-value. Supply <code>within = c(lower, upper)</code> when theory or the
+non-significant p value. Supply <code>within = c(lower, upper)</code> when theory or the
 study design provides a defensible negligible-effect region.</p>
     </div>
 

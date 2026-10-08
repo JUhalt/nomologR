@@ -50,14 +50,19 @@ h <- nomo_hypotheses(
 
 h
 #> <nomo_hypotheses> Theory-specified relations
-#> 4 theory-specified relations
+#> Relations: 4 | A priori: 4 | Post hoc: 0
 #> 
-#> Every relation is on the standardized scale.
-#>   ID  Relation                       Prediction  Region         Origin
-#>   H1  Agency -> Persistence          positive    [0.2, +Inf)    a priori
-#>   H2  Agency <-> SocialDesirability  negligible  [-0.15, 0.15]  a priori
-#>   H3  Agency -> Performance          positive    (0, +Inf)      a priori
-#>   H4  Persistence -> Performance     positive    [0.2, +Inf)    a priori
+#>   ID  Relation                       Prediction  Region       Origin
+#>   H1  Agency -> Persistence          positive    >= 0.20      A priori
+#>   H2  Agency <-> SocialDesirability  negligible  [-.15, .15]  A priori
+#>   H3  Agency -> Performance          positive    > 0          A priori
+#>   H4  Persistence -> Performance     positive    >= 0.20      A priori
+#>   Every relation is on the standardized scale.
+#> 
+#> The relations record theory; only nomo_network() evaluates them against data.
+#> 
+#> See nomo_table(x) for every column and nomo_network(model, data, x) for the
+#> evidence.
 ```
 
 `A -> B` means a directed structural path. `A <-> B` means an
@@ -93,26 +98,40 @@ net <- nomo_network(
 
 net
 #> <nomo_network> Nomological network
-#> Primary sample: N = 800 | Converged: yes
+#> Cases: 800 | Converged: yes
 #> Theory relations: 4 | Added to the model from hypotheses: 3
-#> Measurement context: no configured measurement-context review signal was
-#> triggered
+#> Measurement context: no flags | Model fit: no flags
 #> 
 #> Hypothesis evidence
-#>   ID  Relation                       Estimate  95% CI           Concordance
-#>   H1  Agency -> Persistence             0.458  [0.389, 0.526]   Concordant
-#>   H2  Agency <-> SocialDesirability     0.008  [-0.079, 0.095]  Concordant
-#>   H3  Agency -> Performance             0.418  [0.341, 0.495]   Concordant
-#>   H4  Persistence -> Performance       -0.062  [-0.146, 0.022]  Inconsistent
+#>   ID  Relation                       Concordance   Estimate  CI
+#>   H1  Agency -> Persistence          Concordant        0.46  [0.39, 0.53]
+#>   H2  Agency <-> SocialDesirability  Concordant         .01  [-.07, .08]
+#>   H3  Agency -> Performance          Concordant        0.42  [0.34, 0.49]
+#>   H4  Persistence -> Performance     Inconsistent     -0.06  [-0.15, 0.02]
+#>   Estimates are standardized. CI = confidence interval (95%); for H2, a
+#>   negligible() prediction, it is the 90% equivalence interval the concordance
+#>   is judged on.
+#> 
+#> Flagged
+#>   - Review: `Persistence <-> SocialDesirability`, estimated in the model as
+#>     given, is fixed to zero in the fitted model: with the hypothesized paths,
+#>     `Persistence` is an outcome, and lavaan does not covary an outcome's
+#>     residual with a variable that does not predict it.
+#>   - Review: `Performance <-> SocialDesirability` is fixed to zero in the
+#>     fitted model: the hypotheses bring `Performance` into the model, and
+#>     neither they nor lavaan's defaults relate the two.
 #> 
 #> Theory concordance, uncertainty, measurement quality, and replication are
 #> distinct evidence streams. Statistical significance alone is not a validity
 #> verdict.
+#> 
+#> See summary(x) for the fit and the flagged evidence in full and
+#> nomo_table(x, "hypotheses") for every column.
 nomo_table(net, "fit")
-#> # A tibble: 1 × 7
-#>   chisq    df pvalue   cfi   tli  rmsea   srmr
-#>   <dbl> <dbl>  <dbl> <dbl> <dbl>  <dbl>  <dbl>
-#> 1  61.6    51  0.147 0.997 0.996 0.0161 0.0205
+#> # A tibble: 1 × 9
+#>   chisq    df pvalue   cfi   tli  rmsea   srmr chisq_version index_version
+#>   <dbl> <dbl>  <dbl> <dbl> <dbl>  <dbl>  <dbl> <chr>         <chr>        
+#> 1  61.6    51  0.147 0.997 0.996 0.0161 0.0205 standard      standard
 ```
 
 The measurement model supplies only the factor definitions.

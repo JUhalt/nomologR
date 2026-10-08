@@ -31,6 +31,12 @@ A `nomo_hypotheses` object whose `hypotheses` field is one row per
 hypothesis: its relation, prediction, theoretical region, scale, and
 origin. `n` is the number of hypotheses.
 
+[`print()`](https://rdrr.io/r/base/print.html) shows the relations with
+each predicted region in words, their scale, and their origin.
+[`summary()`](https://rdrr.io/r/base/summary.html) adds the counts by
+origin, how many predictions can be confirmed as specified, and what
+each prediction claims.
+
 ## Details
 
 The function records theory; it does not inspect data, fit a model, or
@@ -77,11 +83,16 @@ h <- nomo_hypotheses(
 )
 h
 #> <nomo_hypotheses> Theory-specified relations
-#> 3 theory-specified relations
+#> Relations: 3 | A priori: 3 | Post hoc: 0
 #> 
-#> Every relation is on the standardized scale.
-#>   ID  Relation                      Prediction  Region       Origin
-#>   H1  GSE -> Spirituality           positive    (0, +Inf)    a priori
-#>   H2  GSE -> Religiosity            negligible  [-0.1, 0.1]  a priori
-#>   H3  Religiosity <-> Spirituality  positive    [0.2, +Inf)  a priori
+#>   ID  Relation                      Prediction  Region         Origin
+#>   H1  GSE -> Spirituality           positive    > 0            A priori
+#>   H2  GSE -> Religiosity            negligible  [-0.10, 0.10]  A priori
+#>   H3  Religiosity <-> Spirituality  positive    >= .20         A priori
+#>   Every relation is on the standardized scale.
+#> 
+#> The relations record theory; only nomo_network() evaluates them against data.
+#> 
+#> See nomo_table(x) for every column and nomo_network(model, data, x) for the
+#> evidence.
 ```

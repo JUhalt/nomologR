@@ -46,13 +46,24 @@ negligible(
 
   Scale on which the expectation is defined. Standardized coefficients
   are the default because magnitude expectations such as `.20` are
-  otherwise not portable across arbitrary raw units.
+  otherwise not portable across arbitrary raw units. For an observed
+  variable, `"unstandardized"` is its raw units. A latent variable has
+  no raw units: its metric is set by the identification
+  [`nomo_network()`](https://juhalt.github.io/nomologR/reference/nomo_network.md)
+  fits with. With the default `std.lv = TRUE`, an exogenous factor has
+  variance 1 and an endogenous factor has residual variance 1, so the
+  same unstandardized bound can be met under `std.lv = TRUE` and missed
+  under `std.lv = FALSE`, which scales each factor by its first
+  indicator.
 
 - origin:
 
   Whether the expectation was specified `a_priori` or added `post_hoc`.
-  Post-hoc expectations remain machine-readable but are never presented
-  as confirmatory evidence.
+  Post hoc expectations remain machine-readable but are never presented
+  as confirmatory evidence:
+  [`nomo_network()`](https://juhalt.github.io/nomologR/reference/nomo_network.md)
+  marks them "(post hoc)" wherever their concordance is printed or
+  plotted, and its interpretation calls them exploratory.
 
 - within:
 
@@ -71,7 +82,7 @@ distinguishes an unquantified null-like expectation from a quantitative
 smallest effect size of interest (SESOI) region.
 
 A bare `negligible()` expectation is **not confirmable as negligible**
-from a non-significant p-value. Supply `within = c(lower, upper)` when
+from a non-significant p value. Supply `within = c(lower, upper)` when
 theory or the study design provides a defensible negligible-effect
 region.
 

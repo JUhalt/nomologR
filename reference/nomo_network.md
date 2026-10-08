@@ -4,8 +4,9 @@
 with a machine-readable object from
 [`nomo_hypotheses()`](https://juhalt.github.io/nomologR/reference/nomo_hypotheses.md).
 Hypothesized relations that are not already present in `model` can be
-added transparently before fitting, so the theory object itself can
-define the structural portion of the network.
+added before fitting, so the theory object itself can define the
+structural portion of the network. Each addition, and each relation the
+additions change, is recorded.
 
 ## Usage
 
@@ -84,7 +85,14 @@ nomo_network(
 - std.lv:
 
   Logical passed to
-  [`lavaan::sem()`](https://rdrr.io/pkg/lavaan/man/sem.html).
+  [`lavaan::sem()`](https://rdrr.io/pkg/lavaan/man/sem.html). It also
+  sets the metric of an unstandardized estimate that involves a latent
+  variable: with `TRUE`, each factor's variance, or residual variance
+  for an outcome, is 1; with `FALSE`, each factor takes the units of its
+  first indicator. See `scale` in
+  [nomo_expectations](https://juhalt.github.io/nomologR/reference/nomo_expectations.md).
+  The decision log names the identification for each such hypothesis
+  (`unstandardized_metric`).
 
 - control:
 
@@ -123,17 +131,30 @@ A `nomo_network` object. The fields to read are:
 - `replication_evidence`: the same comparison in `validation_data`, when
   given, with its `replication_status` (see **Replication status**).
 
-- `fit_evidence`: global fit of the fitted model.
+- `fit_evidence`: global fit of the fitted model, with `chisq_version`
+  and `index_version` naming the version of the chi-square and of CFI,
+  TLI, and RMSEA reported: `"standard"`, `"scaled"`, or `"robust"`.
 
 - `parameter_estimates` and `standardized_solution`: `lavaan`'s
   parameter tables, as tibbles.
 
-- `measurement_context`: the measurement model's loadings and fit, which
-  qualify the structural evidence.
+- `measurement_context`: the loadings, the variances, and the fit of the
+  measurement model alone (`fit`), with the test of the structural
+  restrictions against it (`structural_test`), which qualify the
+  structural evidence. See **Measurement context and model fit**.
 
 - `model_fitted` and `model_relations`: the syntax fitted, and for each
   hypothesis whether its relation was already in the model to be fitted
   (`already_in_model`) or was added (`added_from_hypothesis`).
+
+- `model_changes`: each relation the added paths fixed to zero or lavaan
+  added (`change`), with the outcomes among its variables (`outcome`)
+  and the variables the hypotheses brought into the model
+  (`new_variable`).
+
+- `data_n` and `n_used`: the rows of the primary sample and the cases
+  the fit analyzed; `validation_n` and `validation_n_used` for the
+  validation sample.
 
 - `fit`: the `lavaan` fit, and `validation`, the validation fit, when
   given.
@@ -172,6 +193,31 @@ the hypothesized directed paths in place: it is in the model when
 between exogenous factors. `model_relations` records which relations
 were already in the model and which were added.
 
+An added path changes more than its own relation.
+[`lavaan::sem()`](https://rdrr.io/pkg/lavaan/man/sem.html) covaries
+exogenous factors with one another, holds the covariances of observed
+exogenous predictors at their sample values, and covaries the residuals
+of outcomes that predict no other variable. It relates no other pair of
+variables that neither `model` nor the hypotheses join: not a factor and
+an observed predictor, not an outcome and an exogenous variable, and not
+an outcome that predicts another variable and a variable it does not
+predict. So once a path makes a variable an outcome, every relation it
+had with an exogenous variable other than its predictors is fixed to
+zero, although `model` estimated it, and two outcomes can gain a
+residual covariance that neither `model` nor the hypotheses name. A
+variable the hypotheses bring into the model is related only as these
+rules allow: an observed predictor of a factor is uncorrelated with the
+exogenous factors, for example. These zeros are restrictions of the
+network, and their misfit counts against the theory's structure.
+`model_changes` lists each relation fixed to zero although `model`
+estimated it (`"fixed_to_zero"`), each relation of a variable the
+hypotheses bring in that the fitted model fixes to zero
+(`"not_estimated"`), and each residual covariance of two outcomes that
+lavaan added (`"added_by_lavaan"`). The decision log records the first
+two for review (`relation_constrained`) and the third for information
+(`relation_auto_freed`). A relation the theory allows belongs in the
+hypotheses or in `model`.
+
 When the fitted model also predicts an endpoint of an association,
 `A ~~ B` is a covariance between residuals. The model predicts a
 variable when a directed path points to it, and when it is an indicator
@@ -205,7 +251,50 @@ prediction remains non-confirmable from `p > .05`.
 The function can also fit the same prespecified model in a validation
 sample. Pass `validation_data` explicitly, or pass a `nomo_split` object
 as `data` to use its calibration and validation subsets. No model
-relation is added or removed on the basis of validation results.
+relation is added or removed on the basis of validation results. The
+validation sample's rows in the decision log have the stage
+`"network_validation"`, so they are never read as a second entry for the
+same relation.
+
+Rows with a missing value are dropped by lavaan's default listwise
+deletion. `n_used` records the cases analyzed, the output reports them
+beside the rows supplied ("Cases: 479 of 800"), and the decision log
+flags the loss for review (`cases_used`). With continuous indicators,
+`missing = "fiml"` uses every case that has data.
+
+[`print()`](https://rdrr.io/r/base/print.html) shows each hypothesis's
+concordance, estimate, and the interval its concordance was judged on,
+the replication evidence, and what is flagged about the cases, the
+measurement context, the model fit, and the relations the added paths
+changed. [`summary()`](https://rdrr.io/r/base/summary.html) adds the fit
+of the network and of the measurement model alone, the changed
+relations, each prediction in full, the concordance counts, and every
+flag with its recommendation.
+
+## Measurement context and model fit
+
+The fit of the network model mixes two sources of misfit, the
+measurement model and the structural restrictions, which Anderson and
+Gerbing (1988) separate by fitting the measurement model first.
+`nomo_network()` also fits the measurement model alone: the network with
+its structural part saturated, in which every pair of factors and
+observed variables outside the factor definitions that no path or
+covariance joins is allowed to covary. The measurement context judges
+the measurement model's own fit, with its loadings and variances. The
+model fit, a separate decision-log row (`model_fit`), judges the
+network's fit and, when the measurement model meets the references,
+attributes the misfit to the structural part. The difference test
+between the two (`structural_test`, a Delta chi-square from
+[`lavaan::lavTestLRT()`](https://rdrr.io/pkg/lavaan/man/lavTestLRT.html),
+scaled as the estimator requires) tests the structural restrictions: the
+pairs the measurement model alone frees, those `model` itself leaves out
+as well as those `model_changes` lists as fixed to zero. A model without
+latent variables has no measurement model to judge.
+
+The fit indices are the robust versions when lavaan reports them, and
+the chi-square is the scaled one; `chisq_version` and `index_version` in
+`fit_evidence` say which, and
+[`summary()`](https://rdrr.io/r/base/summary.html) prints them.
 
 ## Concordance
 
@@ -259,7 +348,11 @@ The decision log records `"concordant"` for information,
 `"inconsistent"` and `"not_evaluable"` as concerns, and the other values
 for review. None is a verdict on validity: each is one piece of
 evidence, read with the measurement context, the fit, and whether the
-prediction was made a priori.
+prediction was made a priori. Printed output and plots show the values
+in short words, such as "In region, imprecise" for
+`"directionally_concordant_imprecise"`, which also reads for a
+[`negligible()`](https://juhalt.github.io/nomologR/reference/nomo_expectations.md)
+prediction; the stored values do not change.
 
 ## Evidence scope
 
@@ -308,14 +401,17 @@ order the rules are applied:
   or
   [`negative()`](https://juhalt.github.io/nomologR/reference/nomo_expectations.md)
   prediction whose estimates have the same sign in both samples, without
-  meeting a rule above.
+  meeting a rule above. When that shared sign is the opposite of the
+  prediction, the interpretation says so, and printed output labels it
+  "Opposite in both" rather than "Same direction".
 
 - `"mixed_or_inconclusive"`: any other pattern.
 
 The decision log records `"replicated_concordance"` for information;
 `"sign_reversal"`, `"direction_not_replicated"`, `"not_replicated"`,
-`"unstable"`, and `"replicated_inconsistency"` as concerns; and the
-other values for review.
+`"unstable"`, `"replicated_inconsistency"`, and a
+`"direction_replicated_but_uncertain"` opposite to the prediction as
+concerns; and the other values for review.
 
 ## Replication status when the sign changes
 
@@ -478,20 +574,34 @@ h <- nomo_hypotheses(
 net <- nomo_network(model, data = nomo_demo_network, hypotheses = h)
 net
 #> <nomo_network> Nomological network
-#> Primary sample: N = 800 | Converged: yes
+#> Cases: 800 | Converged: yes
 #> Theory relations: 3 | Added to the model from hypotheses: 2
-#> Measurement context: no configured measurement-context review signal was
-#> triggered
+#> Measurement context: no flags | Model fit: no flags
 #> 
 #> Hypothesis evidence
-#>   ID  Relation                       Estimate  95% CI           Concordance
-#>   H1  Agency -> Persistence             0.458  [0.389, 0.526]   Concordant
-#>   H2  Agency <-> SocialDesirability     0.008  [-0.079, 0.095]  Concordant
-#>   H3  Agency -> Performance             0.389  [0.325, 0.454]   Concordant
+#>   ID  Relation                       Concordance  Estimate  CI
+#>   H1  Agency -> Persistence          Concordant       0.46  [0.39, 0.53]
+#>   H2  Agency <-> SocialDesirability  Concordant        .01  [-.07, .08]
+#>   H3  Agency -> Performance          Concordant       0.39  [0.32, 0.45]
+#>   Estimates are standardized. CI = confidence interval (95%); for H2, a
+#>   negligible() prediction, it is the 90% equivalence interval the concordance
+#>   is judged on.
+#> 
+#> Flagged
+#>   - Review: `Persistence <-> SocialDesirability`, estimated in the model as
+#>     given, is fixed to zero in the fitted model: with the hypothesized paths,
+#>     `Persistence` is an outcome, and lavaan does not covary an outcome's
+#>     residual with a variable that does not predict it.
+#>   - Review: `Performance <-> SocialDesirability` is fixed to zero in the
+#>     fitted model: the hypotheses bring `Performance` into the model, and
+#>     neither they nor lavaan's defaults relate the two.
 #> 
 #> Theory concordance, uncertainty, measurement quality, and replication are
 #> distinct evidence streams. Statistical significance alone is not a validity
 #> verdict.
+#> 
+#> See summary(x) for the fit and the flagged evidence in full and
+#> nomo_table(x, "hypotheses") for every column.
 nomo_table(net, "hypotheses")
 #> # A tibble: 3 × 17
 #>   id    relation    prediction theoretical_region scale estimate     se ci_lower
