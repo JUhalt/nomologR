@@ -16,7 +16,8 @@ nomo_apa_table(x, type = NULL, number = NULL, title = NULL, ...)
 objects have one table each, so \code{type} is left \code{NULL} for them; any other
 value is an error.}
 
-\item{number}{Optional table number, printed in bold as "Table 1".}
+\item{number}{Optional table number, printed in bold as "Table 1". Without
+one, the number line is left out, for the document to supply.}
 
 \item{title}{Optional title, one string; a descriptive default is supplied.}
 
@@ -41,8 +42,11 @@ printed. Any of them may be empty.
 }
 
 Headings, cells, and notes are written in Markdown, as pandoc reads it:
-italics as \verb{*p*} and a superscript as \verb{^a^}. Printing in the console drops
-these marks from the headings and notes; knitting renders them.
+italics as \verb{*p*} and a superscript as \verb{^a^}. \code{print()} shows the table as
+aligned text under its number and title, with its notes, the italics
+dropped, and a note marker written \code{(a)}; a table wider than the console
+wraps its long headings and text cells, and names any column it still
+cannot fit.
 }
 \description{
 Formats the evidence in a \code{nomologR} result as a table ready for a thesis,
@@ -57,10 +61,25 @@ correlations, reliability coefficients, and CFI are written \code{.95}, while TL
 RMSEA, SRMR, and standardized loadings keep it, \code{0.95}, because each can
 exceed 1 in principle: TLI is not bounded above, and a standardized loading
 does in an improper (Heywood) solution. Many published tables print
-standardized loadings without the zero; this follows the rule as written.
+standardized loadings without the zero; this follows the rule as written,
+as the output style shared with \code{contentvalidR} does.
 
 \strong{No verdicts.} Table notes keep the package's reference-value language.
 No cell reads PASS or FAIL, and fit indices are not labeled good or poor.
+
+\strong{Notes say what the table shows.} The general note defines each
+abbreviation, gives the estimator and the number of cases analyzed, and
+says when the chi-square is a scaled test statistic and the fit indices are
+robust or scaled values. An interval's heading carries its level, such as
+"90\% CI" for a reliability interval bootstrapped at that level. A cell left
+empty is an em dash, explained in the note; a cell that does not apply, such
+as the change in fit of the first invariance model, is blank. Specific notes,
+marked with superscript letters, name the parameters a partial invariance
+model frees, the hypotheses specified post hoc, the estimates whose interval
+is the equivalence interval a \code{negligible()} prediction is judged on, and
+the estimates on another scale than the rest. A correlation the model fixes,
+such as the zero correlations of a bifactor model, is not tabled as an
+estimate.
 
 \strong{Discriminant evidence without the Fornell-Larcker matrix.} For a
 \code{nomo_validity} result, the \code{"discriminant"} table gives each pair of
@@ -71,6 +90,12 @@ not print the correlation matrix with the square root of AVE on its
 diagonal, because that comparison often misses discriminant-validity
 problems (Henseler et al., 2015). AVE is convergent evidence and has its own
 \code{"convergent"} table.
+
+\strong{Knitting.} In an R Markdown or Quarto document the table renders as a
+table with its number, title, and notes. Each column's share of the page
+follows its widest entry. Knitted to PDF, the Greek letters and math
+symbols are written as TeX math, so the default \code{pdflatex} engine compiles
+them.
 
 The rules come from the \emph{Publication Manual of the American Psychological
 Association} (7th ed.), checked against Purdue OWL's APA 7 guides.
@@ -102,6 +127,10 @@ American Psychological Association} (7th ed.).
 Fornell, C., & Larcker, D. F. (1981). Evaluating structural equation models
 with unobservable variables and measurement error. \emph{Journal of Marketing
 Research, 18}(1), 39-50. \doi{10.2307/3151312}
+
+Green, S. B., & Yang, Y. (2009). Reliability of summed item scores using
+structural equation modeling: An alternative to coefficient alpha.
+\emph{Psychometrika, 74}(1), 155-167. \doi{10.1007/s11336-008-9099-3}
 
 Henseler, J., Ringle, C. M., & Sarstedt, M. (2015). A new criterion for
 assessing discriminant validity in variance-based structural equation

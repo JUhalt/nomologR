@@ -44,7 +44,8 @@ the latent correlation and the HTMT-family values together; see
 \code{"notes"}; see \code{\link[=nomo_scores]{nomo_scores()}}.
 \item \code{nomo_power}: \code{"power"} from \code{\link[=nomo_power_rmsea]{nomo_power_rmsea()}}; \code{"summary"} (default)
 and \code{"parameters"} from \code{\link[=nomo_power_simulate]{nomo_power_simulate()}}.
-\item \code{nomo_hypotheses}: the machine-readable hypothesis table (no \code{type}).
+\item \code{nomo_hypotheses}: the machine-readable hypothesis table (no \code{type};
+any \code{type} given is an error).
 \item \code{nomo_network}: \code{"hypotheses"} (default), \code{"fit"}, \code{"measurement"},
 \code{"relations"}, \code{"replication"}, \code{"single_indicators"}, \code{"sensitivity"},
 \code{"decision_log"}. \code{"single_indicators"} and \code{"sensitivity"} describe the
@@ -96,7 +97,7 @@ The \code{nomo_cfa} and \code{nomo_missing} tables spell them \code{chi_square},
 \code{df}, \code{pvalue}, \code{cfi}, \code{tli}, \code{rmsea}, and \code{srmr}.
 \item \code{nomo_compare}, \code{"models"}: one row per \code{model}, with \code{npar}, \code{df},
 \code{chisq}, \code{cfi}, \code{tli}, \code{rmsea}, \code{srmr}, \code{aic}, and \code{bic}. The difference
-tests and their p-values are in \code{"comparisons"}.
+tests and their p values are in \code{"comparisons"}.
 \item \code{nomo_invariance}, \code{"fit"}: one row per \code{level}, with \code{chisq}, \code{df},
 \code{pvalue}, \code{cfi}, \code{rmsea}, and \code{srmr}, the changes from the level before
 (\code{delta_cfi}, \code{delta_rmsea}, \code{delta_srmr}), and the likelihood-ratio test
@@ -104,6 +105,11 @@ against it (\code{lrt_chisq}, \code{lrt_df}, \code{lrt_p}).
 \item \code{nomo_network}, \code{"fit"}: one row, with \code{chisq}, \code{df}, \code{pvalue}, \code{cfi},
 \code{tli}, \code{rmsea}, and \code{srmr}.
 }
+
+A table the object has no rows for, such as \code{"partial"} for an invariance
+analysis without releases or \code{"replication"} for a network without
+validation data, is a tibble with no rows and the table's usual columns.
+An object of another class is refused with the list of supported classes.
 }
 
 \examples{

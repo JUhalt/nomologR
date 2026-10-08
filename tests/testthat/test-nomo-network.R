@@ -2230,7 +2230,7 @@ test_that("the above-magnitude value reaches the output, the log and replication
   expect_false(anyNA(plot(out, type = "concordance")$data$concordance_display))
   expect_identical(
     nomo_apa_concordance("direction_concordant_above_magnitude"),
-    "Direction concordant, above predicted magnitude"
+    "Larger than predicted"
   )
 
   sample <- function(estimate, concordance) {
