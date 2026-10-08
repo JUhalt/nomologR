@@ -38,8 +38,11 @@ test_that("the drifting w3 intercept shows up at the scalar level", {
 
   strain <- nomo_table(long, "local_strain")
   top <- strain[order(-strain$score_x2), , drop = FALSE]
-  expect_identical(top$constraint_display[[1L]], "Intercept: w3 (t1 vs. t3)")
-  expect_true("Loading: Wellbeing -> w4 (t1 vs. t3)" %in% strain$constraint_display)
+  # Across three occasions each test frees one occasion from the value the
+  # others share, and the label names that occasion (#145).
+  expect_identical(top$constraint_display[[1L]], "Intercept: w3 (t3 vs. others)")
+  expect_true("Loading: Wellbeing -> w4 (t3 vs. others)" %in% strain$constraint_display)
+  expect_false(any(grepl("t1 vs.", strain$constraint_display, fixed = TRUE)))
 
   # Holding the drifting intercept equal inflates the latent change.
   means <- nomo_table(long, "latent_means")
@@ -248,7 +251,12 @@ test_that("the results print and summarize within 80 columns", {
   expect_true(all(nchar(summarized) <= 80))
   expect_match(summarized[[1L]], "<nomo_invariance_longitudinal summary>")
   expect_true(any(grepl("Latent change from t1", summarized)))
-  expect_true(any(grepl("Intercept: w3 (t1 vs. t3)", summarized, fixed = TRUE)))
+  expect_true(any(grepl("Intercept: w3 (t3 vs. others)", summarized, fixed = TRUE)))
+  expect_true(any(grepl("frees one occasion's", summarized, fixed = TRUE)))
+  # Every occasion has the same people: one count, no group sizes (#145).
+  expect_true(any(grepl("Cases: 500 | Estimator: ML", printed, fixed = TRUE)))
+  expect_null(long$group_n)
+  expect_identical(long$n_used, 500L)
   # With a strict level, the fit table still has room for RMSEA and SRMR, and
   # the constraints each level adds are named beneath it (#89).
   expect_true(any(grepl("^  Level +Chi-square +df +p +CFI +RMSEA +SRMR$", summarized)))
@@ -295,6 +303,10 @@ test_that("arguments and models are checked", {
     "cannot fix or label"
   )
   expect_error(
+    nomo_invariance_longitudinal("F =~ a*w1 + w2 + w3", d, long_occasions),
+    "cannot fix or label"
+  )
+  expect_error(
     nomo_invariance_longitudinal(long_model, d, long_occasions, ordered = 1),
     "`ordered` must be NULL"
   )
@@ -315,5 +327,27 @@ test_that("arguments and models are checked", {
   expect_error(
     nomo_invariance_longitudinal(long_model, d, c("t1", "t2", "t4")),
     "w1_t4"
+  )
+})
+
+
+test_that("a \"*\" in a comment is not taken for a fixed loading (#145)", {
+  skip_on_cran()
+  commented <- nomo_invariance_longitudinal(
+    "# wellbeing * scale
+Wellbeing =~ w1 + w2 + w3 + w4 # four * items",
+    nomo_demo_longitudinal, c("t1", "t2"), levels = "configural", localize = FALSE
+  )
+  expect_identical(commented$completed_levels, "configural")
+})
+
+
+test_that("a guidance list asking to delete or respecify is refused across occasions (#145)", {
+  guidance <- nomo_defaults()
+  guidance$auto_delete <- TRUE
+  expect_error(
+    nomo_invariance_longitudinal(long_model, nomo_demo_longitudinal, c("t1", "t2"),
+                                 levels = "configural", guidance = guidance),
+    "`guidance$auto_delete` cannot be `TRUE`", fixed = TRUE
   )
 })

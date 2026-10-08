@@ -208,6 +208,104 @@ nomo_invariance_first_measure <- function(measures, candidates) {
 }
 
 
+# The version of each fit statistic shown, one for every level (#145): the
+# chi-square, its df, and its p value are scaled where every fitted level has a
+# scaled test, and CFI and RMSEA are robust, else scaled, else standard, as
+# every fitted level reports them. Chosen level by level, a change in CFI could
+# compare a robust value with a standard one. Named by fit_evidence column.
+nomo_invariance_fit_variants <- function(fit_measures) {
+  measured <- Filter(length, fit_measures)
+  available <- function(candidate) {
+    length(measured) > 0L && all(vapply(measured, function(m) {
+      is.finite(nomo_invariance_first_measure(m, candidate))
+    }, logical(1)))
+  }
+  pick <- function(candidates) {
+    found <- Filter(available, candidates)
+    if (length(found)) found[[1L]] else candidates[[length(candidates)]]
+  }
+  scaled <- identical(pick(c("chisq.scaled", "chisq")), "chisq.scaled")
+  c(
+    chisq = if (scaled) "chisq.scaled" else "chisq",
+    df = if (scaled) "df.scaled" else "df",
+    pvalue = if (scaled) "pvalue.scaled" else "pvalue",
+    cfi = pick(c("cfi.robust", "cfi.scaled", "cfi")),
+    rmsea = pick(c("rmsea.robust", "rmsea.scaled", "rmsea")),
+    srmr = "srmr"
+  )
+}
+
+
+# The fit evidence in the versions chosen above, with each change recomputed
+# from them. A change is shown only where both levels converged, and fitting
+# stops at the first level that does not, so the level before is the row above.
+nomo_invariance_apply_variants <- function(evidence, fit_measures, variants) {
+  if (!NROW(evidence)) return(evidence)
+  for (column in names(variants)) {
+    evidence[[column]] <- vapply(evidence$level, function(level) {
+      nomo_invariance_first_measure(fit_measures[[level]], variants[[column]])
+    }, numeric(1), USE.NAMES = FALSE)
+  }
+  n <- nrow(evidence)
+  if (n > 1L) {
+    now <- seq.int(2L, n)
+    both <- evidence$converged[now] %in% TRUE & evidence$converged[now - 1L] %in% TRUE
+    for (index in c("cfi", "rmsea", "srmr")) {
+      change <- evidence[[index]][now] - evidence[[index]][now - 1L]
+      evidence[[paste0("delta_", index)]][now] <- ifelse(both, change, NA_real_)
+    }
+  }
+  evidence
+}
+
+
+# The cases the models used (#145). lavaan deletes incomplete cases listwise
+# unless `missing` says otherwise, and the output had shown no sample size at
+# all. Every level fits the same variables to the same rows, so the first
+# fitted level gives the count, and each group's across groups.
+nomo_invariance_cases <- function(fits, data_n) {
+  fit <- Find(Negate(is.null), fits)
+  inspect <- function(what) {
+    if (is.null(fit)) return(NULL)
+    tryCatch(lavaan::lavInspect(fit, what), error = function(e) NULL)
+  }
+  nobs <- inspect("nobs")
+  nobs <- if (is.numeric(nobs) && length(nobs)) as.integer(nobs) else NA_integer_
+  labels <- as.character(inspect("group.label"))
+  list(
+    data_n = as.integer(data_n),
+    n_used = sum(nobs),
+    group_n = if (length(labels) > 1L && length(labels) == length(nobs)) {
+      tibble::tibble(group = labels, n = nobs)
+    }
+  )
+}
+
+
+# lavaan's warning or error as a sentence for the log: its whitespace
+# collapsed and the internal function name it starts with removed. Its
+# jargon is spelled out ("ov variances" reads "observed-variable variances";
+# guide point 23), its capitals and exclamation marks are calmed ("has NOT
+# been found!" reads "has not been found."; guide point 18), and it ends with
+# a period, so a recommendation can follow it (#145). With `period = FALSE`,
+# for messages joined into one sentence, it ends without one.
+nomo_invariance_warning_text <- function(x, period = TRUE) {
+  x <- trimws(gsub("\\s+", " ", x))
+  x <- sub("^lavaan( WARNING| ERROR)?(->[A-Za-z0-9_.]+\\(\\))?:\\s*", "", x)
+  # A whole word only: "ov.names" and "cov.lv" are R names and stay as written.
+  word <- function(w) sprintf("(?<![[:alnum:]_.])%s(?![[:alnum:]_.])", w)
+  spelled <- c(ov = "observed-variable", lv = "latent-variable",
+               ovs = "observed variables", lvs = "latent variables")
+  for (w in names(spelled)) x <- gsub(word(w), spelled[[w]], x, perl = TRUE)
+  x <- gsub(word("(NOT|ALL|ONLY|NEVER|NO)"), "\\L\\1", x, perl = TRUE)
+  # "!=" is code and stays.
+  x <- gsub("!(?=\\s|$)", ".", x, perl = TRUE)
+  x <- sub("[[:space:];:,.]+$", "", x)
+  if (isTRUE(period)) x <- ifelse(nzchar(x) & !grepl("[?]$", x), paste0(x, "."), x)
+  x
+}
+
+
 nomo_invariance_fit_row <- function(level,
                                     constraints,
                                     fit,
@@ -683,7 +781,10 @@ nomo_invariance_decision_log <- function(group,
                                          design = "groups",
                                          ordered_detected = character(),
                                          ID.fac_requested = ID.fac,
-                                         partial_declared = partial$releases$level) {
+                                         partial_declared = partial$releases$level,
+                                         cases = NULL,
+                                         engine_warnings = list(),
+                                         comparison_warnings = list()) {
   log <- nomo_log_new()
   across_occasions <- identical(design, "occasions")
 
@@ -789,6 +890,8 @@ nomo_invariance_decision_log <- function(group,
     )
   }
 
+  log <- nomo_invariance_cases_log(log, cases, missing, ordered)
+
   switched <- !identical(ID.fac, ID.fac_requested)
   log <- nomo_log_add(
     log,
@@ -869,11 +972,14 @@ nomo_invariance_decision_log <- function(group,
           tools::toTitleCase(row$level[[1L]]),
           row$constraints[[1L]]
         )
+      } else if (identical(row$status[[1L]], "not_converged")) {
+        sprintf("The %s model did not converge.", row$level[[1L]])
       } else {
+        reason <- nomo_invariance_warning_text(row$error[[1L]])
         sprintf(
-          "%s model status: %s.",
-          tools::toTitleCase(row$level[[1L]]),
-          row$status[[1L]]
+          "The %s model could not be fitted%s",
+          row$level[[1L]],
+          if (nzchar(reason)) paste0(": ", reason) else "."
         )
       },
       recommendation = if (identical(row$status[[1L]], "estimated")) {
@@ -888,6 +994,34 @@ nomo_invariance_decision_log <- function(group,
         )
       }
     )
+  }
+
+  # lavaan's warnings stay visible as review rows (#145): before, they were
+  # kept only in `engine_warnings` and the fit table's `warnings` column.
+  warned <- list(
+    list(found = engine_warnings, metric = "engine_warning",
+         text = "lavaan warned when fitting the %s model: %s"),
+    list(found = comparison_warnings, metric = "comparison_warning",
+         text = "lavaan warned when comparing the %s model with the one before it: %s")
+  )
+  for (kind in warned) {
+    for (level in names(kind$found)) {
+      for (message in unique(kind$found[[level]])) {
+        log <- nomo_log_add(
+          log,
+          stage = "invariance",
+          object = level,
+          metric = kind$metric,
+          reference = "Engine warnings must remain visible",
+          severity = "review",
+          observation = sprintf(kind$text, level, nomo_invariance_warning_text(message)),
+          recommendation = paste(
+            "Inspect the warning before interpreting this level's fit and its",
+            "change from the level before."
+          )
+        )
+      }
+    }
   }
 
   if (isTRUE(localize) && !is.null(score_diagnostics)) {
@@ -906,8 +1040,9 @@ nomo_invariance_decision_log <- function(group,
       reference = "diagnostic only",
       severity = if (n_local > 0L) "review" else "info",
       observation = sprintf(
-        "%d univariate equality-constraint score diagnostic(s) were retained.",
-        n_local
+        "%s %s retained.",
+        nomo_present_count(n_local, "univariate equality-constraint score diagnostic"),
+        nomo_present_noun(n_local, "was", "were")
       ),
       recommendation = paste(
         "Use these diagnostics to localize strain, not to authorize automatic",
@@ -918,6 +1053,71 @@ nomo_invariance_decision_log <- function(group,
   }
 
   log
+}
+
+
+# The analyzed sample in the log (#145): a review row when lavaan left cases
+# out, which it does listwise unless `missing` says otherwise. With every case
+# used there is nothing to review, and print() and summary() give the count.
+# nomo_method_variance() logs its sample with it too.
+nomo_invariance_cases_log <- function(log, cases, missing, ordered, stage = "invariance") {
+  if (is.null(cases) || !is.finite(cases$n_used)) return(log)
+  dropped <- cases$data_n - cases$n_used
+  if (dropped <= 0) return(log)
+  sizes <- if (is.null(cases$group_n)) {
+    ""
+  } else {
+    sprintf(" (%s)", paste(cases$group_n$group, "n =", cases$group_n$n, collapse = ", "))
+  }
+  nomo_log_add(
+    log,
+    stage = stage,
+    object = "sample",
+    metric = "cases_used",
+    value = cases$n_used,
+    reference = "The analyzed sample should remain visible, since missing-data handling can change it",
+    severity = "review",
+    observation = sprintf(
+      "%d of %d input cases were used%s; %s with missing values %s left out.",
+      cases$n_used, cases$data_n, sizes, nomo_present_count(dropped, "case"),
+      nomo_present_noun(dropped, "was", "were")
+    ),
+    recommendation = if (!is.null(missing)) {
+      sprintf(
+        "Confirm that the case loss follows the intended missing-data strategy (`missing = \"%s\"`).",
+        missing
+      )
+    } else {
+      paste(
+        "lavaan deletes incomplete cases listwise unless `missing` says otherwise.",
+        "Confirm that this is the intended missing-data strategy;",
+        if (length(ordered)) {
+          "with ordered indicators, `missing = \"pairwise\"` keeps the available pairs of responses."
+        } else {
+          "`missing = \"fiml\"` uses incomplete cases with continuous indicators."
+        }
+      )
+    }
+  )
+}
+
+
+# semTools' spellings of its three ways to identify a factor, lowercased, as
+# semTools::measEq.syntax() reads them (#145): fixing the factor's variance
+# ("std.lv"), a unit loading ("UL"), or effects coding.
+nomo_invariance_id_fac_methods <- list(
+  std.lv = c("std.lv", "unit.variance", "uv", "fixed.factor", "fixed-factor"),
+  ul = c("auto.fix.first", "unit.loading", "ul", "marker", "ref", "marker.variable",
+         "marker-variable", "ref.indicator", "reference.indicator", "reference-indicator"),
+  effects.coding = c("fx", "ec", "effects", "effects.coding", "effects-coding",
+                     "effects.code", "effects-code")
+)
+
+# The method an `ID.fac` spelling names, or NA for one semTools does not know.
+nomo_invariance_id_fac_method <- function(ID.fac) {
+  hit <- vapply(nomo_invariance_id_fac_methods, function(set) tolower(ID.fac) %in% set,
+                logical(1))
+  if (any(hit)) names(nomo_invariance_id_fac_methods)[hit][[1L]] else NA_character_
 }
 
 
@@ -1013,6 +1213,21 @@ nomo_invariance_prepare <- function(data,
     stop("`ID.fac` must be one non-empty character value.", call. = FALSE)
   }
   ID.fac <- trimws(ID.fac)
+  # Every spelling semTools accepts names one of its three methods, so the
+  # checks below test the method, not the spelling (#145).
+  ID.fac_method <- nomo_invariance_id_fac_method(ID.fac)
+  if (is.na(ID.fac_method)) {
+    stop(
+      sprintf(
+        paste0(
+          "`ID.fac` must be one of \"std.lv\", \"UL\", or \"effects.coding\", ",
+          "or a semTools alias for one of them, not \"%s\"."
+        ),
+        ID.fac
+      ),
+      call. = FALSE
+    )
+  }
 
   # The level sequences and their notes are built for Wu and Estabrook's (2016)
   # identification. Under semTools' other choices the levels would not
@@ -1041,11 +1256,13 @@ nomo_invariance_prepare <- function(data,
   if (!is.list(guidance)) {
     stop("`guidance` must be a list returned by `nomo_defaults()`.", call. = FALSE)
   }
+  nomo_defaults_check_safeguards(guidance)
 
-  if (length(ordered) && !identical(tolower(ID.fac), "std.lv")) {
+  if (length(ordered) && !identical(ID.fac_method, "std.lv")) {
     stop(
       paste0(
-        "Wu-Estabrook categorical identification should use `ID.fac = \"std.lv\"`.",
+        "Wu-Estabrook categorical identification should use `ID.fac = \"std.lv\"` ",
+        "or a semTools alias for it, such as \"UV\" or \"fixed.factor\".",
         detected_note
       ),
       call. = FALSE
@@ -1252,6 +1469,7 @@ nomo_invariance_fit_levels <- function(levels,
     previous_level <- level
   }
 
+  variants <- nomo_invariance_fit_variants(fit_measures)
   list(
     syntax = syntax,
     syntax_text = syntax_text,
@@ -1260,7 +1478,10 @@ nomo_invariance_fit_levels <- function(levels,
     engine_warnings = engine_warnings,
     comparison_warnings = comparison_warnings,
     score_diagnostics = score_diagnostics,
-    fit_evidence = dplyr::bind_rows(evidence_rows),
+    fit_evidence = nomo_invariance_apply_variants(
+      dplyr::bind_rows(evidence_rows), fit_measures, variants
+    ),
+    fit_variants = variants,
     ID.fac = ID.fac_used
   )
 }
@@ -1322,12 +1543,30 @@ nomo_invariance_engine_args <- function(syntax_base,
 #'
 #' When `localize = TRUE`, univariate score tests for equality constraints are
 #' retained as diagnostic evidence. They are explicitly not used to modify the
-#' fitted model.
+#' fitted model. Each test frees one equality constraint. With two groups it
+#' compares them; with three or more, it frees one group's parameter while the
+#' other groups stay equal, so the output labels it "(three vs. others)", not
+#' as a comparison of two groups. The first group is the reference and is
+#' never freed on its own, so when it alone differs, every other group shows
+#' similar strain on that parameter.
+#'
+#' With a robust estimator, such as MLR or the WLSMV default for ordered
+#' indicators, the chi-square, its degrees of freedom, and its p value are
+#' lavaan's scaled versions, and the likelihood-ratio tests are scaled
+#' difference tests. CFI and RMSEA are the robust versions, or the scaled ones
+#' where a level has no robust value. One version is used at every level, so a
+#' change in fit never compares two versions; `fit_variants` names it, and
+#' `print()` and `summary()` say which is shown.
+#'
+#' lavaan deletes incomplete cases listwise unless `missing` says otherwise.
+#' `n_used` gives the cases the models used, and the decision log flags any
+#' left out for review.
 #'
 #' @param model A researcher-specified lavaan measurement-model syntax string or
 #'   an object created by `nomo_model()`.
 #' @param data A non-empty data frame.
-#' @param group Character scalar naming the grouping variable in `data`.
+#' @param group Character scalar naming the grouping variable in `data`. The
+#'   group that appears first in `data` is the reference for latent means.
 #' @param ordered Optional character vector naming ordered indicators. Model
 #'   indicators stored as ordered factors are modeled as ordered whether or not
 #'   they are named here, since lavaan fits them as categorical; the result's
@@ -1350,8 +1589,11 @@ nomo_invariance_engine_args <- function(syntax_base,
 #' & Muthén, 1989). This is the structured-means form of known-groups evidence:
 #' a difference theory predicts between groups that differ on the construct.
 #' At each level that holds intercepts equal, `latent_means` gives each group's
-#' latent means relative to the reference group, the first group, which the
-#' default `ID.fac = "std.lv"` fixes at a mean of 0 and a variance of 1. Each
+#' latent means relative to the reference group, which the default
+#' `ID.fac = "std.lv"` fixes at a mean of 0 and a variance of 1. The reference
+#' is the group that appears first in `data`, in the order of the rows rather
+#' than of a factor's levels, as lavaan orders the groups; sort the rows to
+#' choose it. `reference_group` names it. Each
 #' mean is then a difference in the reference group's latent standard
 #' deviations, the effect size Hancock (2001) describes. The fitted model
 #' decides which means are reported: only those of factors whose reference
@@ -1365,7 +1607,10 @@ nomo_invariance_engine_args <- function(syntax_base,
 #' [nomo_partial()] (Vandenberg & Lance, 2000).
 #'
 #' @param ID.fac Factor-identification method passed to
-#'   `semTools::measEq.syntax()`. `"std.lv"` is the default.
+#'   `semTools::measEq.syntax()`: `"std.lv"` (the default), `"UL"`, or
+#'   `"effects.coding"`. semTools' other spellings of each are accepted and
+#'   treated alike: `"unit.variance"`, `"UV"`, `"fixed.factor"`, and
+#'   `"fixed-factor"` are `"std.lv"`.
 #' @param ID.cat Ordered-indicator identification passed to
 #'   `semTools::measEq.syntax()`. Only Wu and Estabrook's (2016) identification
 #'   is supported, as `"Wu.Estabrook.2016"` (the default) or a semTools alias
@@ -1383,7 +1628,14 @@ nomo_invariance_engine_args <- function(syntax_base,
 #'     Fitting stops at the first level that fails or does not converge; that
 #'     level is in `fit_evidence` but not here.
 #'   * `fit_evidence`: one row per level, with its fit, its change from the
-#'     level before, the likelihood-ratio test, and any warning or error.
+#'     level before, the likelihood-ratio test, and any warning or error. With
+#'     a robust estimator the chi-square, `df`, and `pvalue` are scaled and
+#'     `cfi` and `rmsea` robust, the same version at every level.
+#'   * `fit_variants`: the `lavaan::fitMeasures()` measure behind each column
+#'     of `fit_evidence`, such as `c(chisq = "chisq.scaled", cfi =
+#'     "cfi.robust", ...)`.
+#'   * `n_used`: the number of cases the models used, and `group_n` each
+#'     group's (`group`, `n`).
 #'   * `local_strain`: score diagnostics for each equality constraint, which
 #'     localize strain without releasing anything.
 #'   * `partial`: the researcher-specified releases, when given, each at the
@@ -1400,16 +1652,16 @@ nomo_invariance_engine_args <- function(syntax_base,
 #'   results. They may change between releases and are not part of the stable
 #'   interface (see `?nomologR`).
 #'
+#'   `print()` shows the cases, the fit at each level with its change from the
+#'   level before, and any flag. `summary()` adds the chi-square tests, what
+#'   each level holds equal, the releases, the latent means, the largest score
+#'   diagnostics, and each flag's recommendation.
+#'
 #' @references
 #' Historical foundations:
 #'
 #' Jöreskog, K. G. (1971). Simultaneous factor analysis in several
 #' populations. *Psychometrika, 36*(4), 409-426. \doi{10.1007/BF02291366}
-#'
-#' Hancock, G. R. (2001). Effect size, power, and sample size determination
-#' for structured means modeling and MIMIC approaches to between-groups
-#' hypothesis testing of means on a single latent construct. *Psychometrika,
-#' 66*(3), 373-388. \doi{10.1007/BF02294440}
 #'
 #' Meredith, W. (1993). Measurement invariance, factor analysis and factorial
 #' invariance. *Psychometrika, 58*(4), 525-543. \doi{10.1007/BF02294825}
@@ -1418,6 +1670,18 @@ nomo_invariance_engine_args <- function(syntax_base,
 #' measurement invariance literature: Suggestions, practices, and
 #' recommendations for organizational research. *Organizational Research
 #' Methods, 3*(1), 4-70. \doi{10.1177/109442810031002}
+#'
+#' Latent means and partial invariance:
+#'
+#' Byrne, B. M., Shavelson, R. J., & Muthén, B. (1989). Testing for the
+#' equivalence of factor covariance and mean structures: The issue of partial
+#' measurement invariance. *Psychological Bulletin, 105*(3), 456-466.
+#' \doi{10.1037/0033-2909.105.3.456}
+#'
+#' Hancock, G. R. (2001). Effect size, power, and sample size determination
+#' for structured means modeling and MIMIC approaches to between-groups
+#' hypothesis testing of means on a single latent construct. *Psychometrika,
+#' 66*(3), 373-388. \doi{10.1007/BF02294440}
 #'
 #' Change-in-fit evidence:
 #'
@@ -1602,6 +1866,7 @@ nomo_invariance <- function(model,
   local_strain <- dplyr::bind_rows(
     lapply(score_diagnostics, function(x) x$table)
   )
+  cases <- nomo_invariance_cases(fits, nrow(data))
 
   decision_log <- nomo_invariance_decision_log(
     group = group,
@@ -1625,7 +1890,10 @@ nomo_invariance <- function(model,
     score_diagnostics = score_diagnostics,
     ordered_detected = prepared$ordered_detected,
     ID.fac_requested = ID.fac_requested,
-    partial_declared = prepared$partial_declared
+    partial_declared = prepared$partial_declared,
+    cases = cases,
+    engine_warnings = engine_warnings,
+    comparison_warnings = comparison_warnings
   )
 
   means <- nomo_invariance_latent_means(
@@ -1644,6 +1912,8 @@ nomo_invariance <- function(model,
     call = match.call(),
     model = model,
     data_n = nrow(data),
+    n_used = cases$n_used,
+    group_n = cases$group_n,
     group = group,
     groups = groups,
     indicator_type = sequence_info$type,
@@ -1679,6 +1949,7 @@ nomo_invariance <- function(model,
     fits = fits,
     fit_measures = fit_measures,
     fit_evidence = fit_evidence,
+    fit_variants = run$fit_variants,
     latent_means = latent_means,
     engine_warnings = engine_warnings,
     comparison_warnings = comparison_warnings,
@@ -1696,7 +1967,7 @@ nomo_invariance <- function(model,
 # The structured-means comparison of groups on the construct: at each level
 # whose intercepts are held equal, fully or with the researcher's partial
 # releases, the groups' latent means can be compared (Byrne, Shavelson, &
-# Muthén, 1989). Where the reference group's latent mean is fixed at 0 and its
+# Muthen, 1989). Where the reference group's latent mean is fixed at 0 and its
 # variance at 1, as std.lv identification fixes them, each mean is a difference
 # in the reference group's latent standard deviations, the effect size Hancock
 # (2001) describes.

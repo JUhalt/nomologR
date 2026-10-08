@@ -18,5 +18,8 @@
 A \code{ggplot2} object.
 }
 \description{
-Plot nomological-network evidence
+Every plot marks status the same way: a filled circle for no flag, an open
+circle for review, a filled square for concern, and a cross where nothing
+could be decided, with a legend whenever a flag is drawn. Post hoc
+hypotheses are labeled as such.
 }
