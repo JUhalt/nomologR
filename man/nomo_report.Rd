@@ -57,13 +57,22 @@ The normalized report file path, invisibly.
 object. The report archives researcher inputs, sample roles, item and factor
 evidence, EFA/CFA results, reliability, convergent/discriminant evidence,
 optional invariance and nomological-network results, researcher decisions,
-deviations/post-hoc decisions, method citations, an evidence trace, and
+deviations and post hoc decisions, method citations, an evidence trace, and
 session information.
 }
 \details{
 The report is a presentation and provenance layer. It does not refit models,
 alter data, free parameters, remove items, or manufacture additional
 statistical conclusions.
+
+Its tables are the ones \code{\link[=nomo_table]{nomo_table()}} returns, with values rounded for
+display by the rules printed output follows (p values to three decimals and
+"< .001" below that, proportions stored as \verb{pct_*} shown as percentages,
+counts as whole numbers), flags in the shared wording ("Review", "Concern",
+"Not computed", blank for no flag), and each cell shown exactly as written,
+so lavaan syntax such as \verb{~~} and \code{a*x1} survives. The workflow's calls are
+printed as R code, and a table at the end defines every abbreviation the
+report shows.
 
 Reports can be rendered from complete, paused, or blocked \code{nomo_run} objects.
 Incomplete stages are labeled as such rather than silently omitted.
@@ -78,8 +87,10 @@ report, and rendering the report does not change the calling document.
 }
 \examples{
 \donttest{
-# Rendering requires pandoc, which RStudio and Quarto installations include.
-if (rmarkdown::pandoc_available()) {
+# Rendering requires the rmarkdown package and pandoc, which RStudio and
+# Quarto installations include.
+if (requireNamespace("rmarkdown", quietly = TRUE) &&
+    rmarkdown::pandoc_available()) {
   run <- nomo_run(
     data = nomo_demo_network,
     scales = list(Agency = c("ag1", "ag2", "ag3", "ag4")),

@@ -138,12 +138,12 @@ test_that("matrix and list columns are converted to report-ready tables", {
 })
 
 
-test_that("report tables read as words, with the console's flags and a dash for blanks (#89)", {
+test_that("report tables read as words, with the shared flags and a dash for blanks (#89, #144)", {
   labels <- nomologR:::nomo_report_column_labels
   expect_identical(
     labels(c("omega_ci_lower", "delta_cfi", "pct_missing", "p_value", "df", "n_items",
              "median_interitem_r", "sepc.all", "attention")),
-    c("Omega CI lower", "Change in CFI", "% missing", "p", "df", "Items",
+    c("Omega CI lower", "Change in CFI", "% missing", "p", "df", "Number of items",
       "Median inter-item r", "Standardized EPC (all)", "Flag")
   )
   # Names that are not the package's own are left as written: a capital letter
@@ -161,11 +161,13 @@ test_that("report tables read as words, with the console's flags and a dash for 
   shown <- nomologR:::nomo_report_display_table(tab)
   dash <- nomologR:::nomo_report_blank
   expect_identical(names(shown), c("Item", "Flag", "Loading", "Note", "Converged"))
-  expect_identical(shown$Flag, c(dash, "review", "concern"))
+  # Flags in sentence case, as in a printed table; no flag is a blank cell.
+  expect_identical(shown$Flag, c("", "Review", "Concern"))
   expect_identical(shown$Note, c(dash, dash, "low"))
   expect_identical(shown$Converged, c("yes", "no", dash))
-  # Numbers stay numbers, for the table writer to round.
-  expect_identical(shown$Loading, c(.8, NA, .3))
+  # Numbers are rounded for display by their kind, with the dash for missing.
+  expect_identical(shown$Loading, c("0.80", dash, "0.30"))
+  expect_identical(attr(shown, "role"), c("text", "status", "numeric", "text", "text"))
 })
 
 
@@ -254,7 +256,7 @@ test_that("deviation helper identifies explicit partial and post-hoc evidence", 
   devs <- nomologR:::nomo_report_deviations(run)
   expect_equal(nrow(devs), 2L)
   expect_true(any(grepl("partial", devs$type)))
-  expect_true(any(grepl("post-hoc", devs$type)))
+  expect_true(any(grepl("post hoc", devs$type)))
 })
 
 
@@ -290,7 +292,8 @@ test_that("report template preparation injects a safe dynamic title", {
   )
 
   out <- paste(readLines(input, warn = FALSE), collapse = "\n")
-  expect_match(out, 'title: "A \\"quoted\\" report title"', fixed = TRUE)
+  # Punctuation is written as character references, which pandoc reads back.
+  expect_match(out, 'title: "A &#34;quoted&#34; report title"', fixed = TRUE)
   expect_false(grepl("__NOMO_REPORT_TITLE__", out, fixed = TRUE))
 })
 
@@ -960,7 +963,7 @@ test_that("closeout: report deviations cover sparse post-hoc and workflow-decisi
   )
 
   dev <- nomologR:::nomo_report_deviations(run)
-  expect_true(any(dev$type == "post-hoc nomological relation"))
+  expect_true(any(dev$type == "post hoc nomological relation"))
   expect_true(any(dev$type == "workflow deviation/revision decision"))
 })
 
@@ -1039,6 +1042,10 @@ test_that("closeout: report template preparation fails closed when copy is impos
 
 
 test_that("closeout: report rendering dependency and output-directory guards are explicit", {
+  # The directory is created after the rmarkdown, knitr, and pandoc checks.
+  skip_if_not_installed("rmarkdown")
+  skip_if_not_installed("knitr")
+  skip_if_not(rmarkdown::pandoc_available())
   run <- make_m9_report_run()
 
   bad_parent <- tempfile()
@@ -1088,6 +1095,8 @@ test_that("closeout B: report deviation extraction handles sparse partial and wo
 
 
 test_that("closeout B: report package metadata helpers can represent unavailable packages and citation failures", {
+  # nomo_report_pandoc_available() asks rmarkdown, a suggested package.
+  skip_if_not_installed("rmarkdown")
   missing <- nomologR:::nomo_report_package_versions(
     packages = "definitely_not_a_real_nomologr_package",
     namespace_available = function(pkg) FALSE
@@ -1309,6 +1318,8 @@ caller_state <- list(
 # Word output (#35) ------------------------------------------------------------
 
 test_that("the output format follows the file extension", {
+  # A Word format comes from rmarkdown, a suggested package.
+  skip_if_not_installed("rmarkdown")
   expect_null(nomologR:::nomo_report_output_format("report.html"))
   expect_null(nomologR:::nomo_report_output_format("report.HTM"))
 
@@ -1451,4 +1462,389 @@ test_that("the HTML report is unchanged by Word support", {
   expect_match(html, 'class="nomo-banner"', fixed = TRUE)
   expect_match(html, "<details>", fixed = TRUE)
   expect_match(html, "Show full evidence trace", fixed = TRUE)
+})
+
+
+# Content defects and the shared style (#144, #145) ----------------------------
+
+test_that("component summaries are printed at 80 columns whatever the console (#144)", {
+  run <- make_m9_report_run()
+  old <- options(width = 200L)
+  on.exit(options(old), add = TRUE)
+  txt <- nomologR:::nomo_report_component_summary_text(run$results$cfa)
+  expect_true(all(nchar(strsplit(txt, "\n", fixed = TRUE)[[1L]], type = "width") <= 80L))
+  expect_equal(getOption("width"), 200L)
+})
+
+
+test_that("report cells are escaped so pandoc shows them as written (#145)", {
+  escape <- nomologR:::nomo_report_escape
+  syntax <- "F =~ a*i1 + a*i2\ni1 ~~ i2"
+
+  # Character references, which pandoc reads as the characters they stand for
+  # and never as markup: `~~` is not a subscript, `*` not emphasis, and a quote
+  # is not made typographic.
+  expect_identical(escape(syntax, "html"),
+                   "F =&#126; a&#42;i1 + a&#42;i2<br>i1 &#126;&#126; i2")
+  # A Word table cell holds one line; "; " keeps the lavaan syntax valid.
+  expect_identical(escape(syntax, "markdown"),
+                   "F =&#126; a&#42;i1 + a&#42;i2; i1 &#126;&#126; i2")
+  expect_identical(escape('method = "sum", it\'s', "html"),
+                   "method = &#34;sum&#34;, it&#39;s")
+  # The characters HTML and pandoc's TeX math would read; "\[" would open math.
+  expect_identical(escape("C:\\Users <b>x</b> & [a]", "markdown"),
+                   "C:&#92;Users &#60;b&#62;x&#60;/b&#62; &#38; &#91;a&#93;")
+  # Dashes, an ellipsis, and a leading list marker stay as typed.
+  expect_identical(escape("x -- y ... z", "html"), "x &#45;&#45; y &#46;&#46;&#46; z")
+  expect_identical(escape(c("- a", "+ b", "1. c", "-0.5"), "html"),
+                   c("&#45; a", "&#43; b", "1&#46; c", "-0.5"))
+  # R names in backticks stay code, as the console writes them.
+  expect_identical(escape("Scale `Agency` has x_y", "html"), "Scale `Agency` has x&#95;y")
+  expect_identical(escape("`a_b` then c|d", "markdown"), "`a_b` then c&#124;d")
+  expect_identical(escape(c(NA, ""), "html"), c(NA, ""))
+})
+
+
+test_that("report tables write escaped cells, keep trusted markdown, and note what they leave out", {
+  skip_if_not_installed("knitr")
+  tab <- tibble::tibble(
+    id = c("cfa_model", "sample_design", "x"),
+    decision = c("F =~ a*i1 + a*i2\ni1 ~~ i2", "same_sample", "x"),
+    rationale = c("", NA, ""),
+    severity = c("info", "review", "concern")
+  )
+
+  html <- nomologR:::nomo_report_table(tab)
+  expect_match(html$markup, "F =&#126; a&#42;i1 + a&#42;i2<br>i1 &#126;&#126; i2", fixed = TRUE)
+  expect_match(html$markup, 'class="table table-striped table-condensed nomo-table"', fixed = TRUE)
+  # A column with no value in any row is left out, and the note names it; the
+  # flag column stays even where it is blank.
+  expect_false(grepl("Rationale", html$markup, fixed = TRUE))
+  expect_identical(html$notes, "Columns with no value in any row are left out: Rationale.")
+  expect_identical(html$labels, c("ID", "Decision", "Flag"))
+  expect_true(all(c("Review", "Concern", "same_sample") %in% html$cells))
+
+  word <- nomologR:::nomo_report_table(tab, word = TRUE, max_rows = 2)
+  expect_match(word$markup, "|F =&#126; a&#42;i1 + a&#42;i2; i1 &#126;&#126; i2", fixed = TRUE)
+  expect_identical(
+    word$notes[[2L]],
+    "Showing 2 of 3 rows. The underlying nomo_run object retains all rows."
+  )
+
+  # Numbers are right-aligned.
+  numbers <- nomologR:::nomo_report_table(tibble::tibble(item = "a", p_value = 0))
+  expect_match(numbers$markup, 'text-align:right;">\\s*&#60; .001', perl = TRUE)
+
+  # Trusted markdown, such as R's citations, keeps its italics.
+  cite <- tibble::tibble(citation = "Rosseel Y (2012). _lavaan_ <x> & *48*|1.")
+  kept <- nomologR:::nomo_report_table(cite, markdown = TRUE)
+  expect_match(kept$markup, "_lavaan_ &lt;x&gt; &amp; *48*|1.", fixed = TRUE)
+  kept_word <- nomologR:::nomo_report_table(cite, word = TRUE, markdown = TRUE)
+  # kable writes the bar as a character reference, so it cannot end the cell.
+  expect_match(kept_word$markup, "_lavaan_ <x> & *48*&#124;1.", fixed = TRUE)
+
+  expect_null(nomologR:::nomo_report_table(tibble::tibble()))
+  expect_null(nomologR:::nomo_report_table(tibble::tibble(a = character())))
+})
+
+
+test_that("report numbers follow the console's kinds: p, percentages, counts, and statistics (#144, #145)", {
+  shown <- nomologR:::nomo_report_display_table(tibble::tibble(
+    item = c("a2", "a3"),
+    n = c(500L, 500L),
+    n_used = c(800, 799),
+    pct_missing = c(0.03, 0.1234),
+    percent_unique = c(56.24, 3),
+    mode_prop = c(0.0112, 0.5),
+    mean = c(4.1134, 4),
+    p_value = c(0, 1),
+    lrt_p = c(0.0432, NA),
+    df = c(41, 33.471),
+    cfi = c(0.9957, 0.9),
+    rmsea = c(0.0198, 0.08),
+    latent_r = c(0.4574, -0.002),
+    omega = c(0.849, 0.7),
+    loading = c(0.822, 1.04),
+    HTMT2 = c(0.4527, 1.01),
+    chi_square = c(53.909, 3),
+    complexity = c(1, 1)
+  ))
+  dash <- nomologR:::nomo_report_blank
+  # A proportion stored under `pct` is shown as the percentage its heading says.
+  expect_identical(names(shown)[[4L]], "% missing")
+  expect_identical(shown[["% missing"]], c("3.0", "12.3"))
+  expect_identical(shown[["Percent unique"]], c("56.2", "3.0"))
+  # p values in APA style, never 0 or 1.000.
+  expect_identical(shown$p, c("< .001", "> .999"))
+  expect_identical(shown[["LRT p"]], c(".043", dash))
+  # Counts and degrees of freedom are whole numbers.
+  expect_identical(shown$N, c("500", "500"))
+  expect_identical(shown[["N used"]], c("800", "799"))
+  expect_identical(shown$df, c("41", "33.47"))
+  # An estimate keeps its precision when it happens to be whole, so a quantity
+  # reads the same in every table of the report.
+  expect_identical(shown$Complexity, c("1.00", "1.00"))
+  # Leading zeros by bound, one precision per quantity.
+  expect_identical(shown[["Mode proportion"]], c(".01", ".50"))
+  expect_identical(shown$Mean, c("4.11", "4.00"))
+  expect_identical(shown$CFI, c(".996", ".900"))
+  expect_identical(shown$RMSEA, c("0.020", "0.080"))
+  expect_identical(shown[["Latent r"]], c(".46", ".00"))
+  expect_identical(shown$Omega, c(".85", ".70"))
+  expect_identical(shown$Loading, c("0.82", "1.04"))
+  expect_identical(shown$HTMT2, c("0.45", "1.01"))
+  expect_identical(shown[["Chi-square"]], c("53.91", "3.00"))
+
+  # A table of metric and value rows takes each row's kind from its metric, and
+  # a value just off its reference shows the decimals that tell them apart.
+  fit <- nomologR:::nomo_report_display_table(tibble::tibble(
+    metric = c("chi_square", "df", "p_value", "CFI", "TLI", "KMO", "Bartlett", "pairs"),
+    value = c(53.909, 41, 0.0853, 0.9957, 0.9496, 0.8206, 1e-200, 13),
+    reference = c(NA, NA, NA, 0.95, 0.95, NA, NA, NA)
+  ))
+  expect_identical(fit$Value, c("53.91", "41", ".085", ".996", "0.9496", ".82", "< .001", "13"))
+  expect_identical(fit$Reference, c(dash, dash, dash, ".950", "0.950", dash, dash, dash))
+
+  expect_identical(
+    nomologR:::nomo_report_number_kind(c("aic", "power", "lambda", "estimate", "", "omega_ci_n_success")),
+    c("ic", "power", "loading", "estimate", "estimate", "count")
+  )
+})
+
+
+test_that("report status and origin cells use the shared words (#144)", {
+  skip_if_not_installed("knitr")
+  shown <- nomologR:::nomo_report_display_table(tibble::tibble(
+    stage = c("efa", "network"),
+    status = c("awaiting_decision", NA),
+    origin = c("a_priori", "post_hoc"),
+    measurement_attention = c("unavailable", NA)
+  ))
+  expect_identical(shown$Status, c("Awaiting decision", ""))
+  expect_identical(shown$Origin, c("A priori", "Post hoc"))
+  expect_identical(shown[["Measurement flag"]], c("Not computed", ""))
+  # A status column is kept when it is blank in every row.
+  kept <- nomologR:::nomo_report_table(tibble::tibble(stage = "efa", severity = "info"))
+  expect_identical(kept$labels, c("Stage", "Flag"))
+})
+
+
+test_that("the scale definitions table has one heading per column (#145)", {
+  expect_identical(
+    nomologR:::nomo_report_column_labels(c("scale", "n_items", "items")),
+    c("Scale", "Number of items", "Items")
+  )
+})
+
+
+test_that("a scale named Post... is not reported as a deviation (#145)", {
+  run <- make_m9_minimal_run()
+  run$decision_log <- tibble::tibble(
+    id = c("scale_definition:PostpartumDepression", "factor_count:PartialScale",
+           "revision", "post_decision:Agency"),
+    stage = c("design", "efa", "workflow", "workflow"),
+    scope = c("PostpartumDepression", "PartialScale", "measurement_model", "Agency"),
+    decision = c("pp1, pp2", "1", "revised measurement model: F =~ a", "keep"),
+    rationale = ""
+  )
+  devs <- nomologR:::nomo_report_deviations(run)
+  # The package's own prefixes still count; the researcher's names do not.
+  expect_identical(devs$detail, c("revised measurement model: F =~ a", "keep"))
+  expect_identical(devs$scope, c("measurement_model", "Agency"))
+})
+
+
+test_that("the missing-data section says when the reference was not fitted (#145)", {
+  strategies <- function(available) {
+    tibble::tibble(
+      strategy = c("listwise", "ml"), label = c("Listwise deletion", "FIML"),
+      lavaan_missing = c("listwise", NA), requires = c("MCAR", "MAR"),
+      role = c("comparison", "reference"), available = available,
+      n_used = c(800, NA), converged = c(TRUE, NA), admissible = c(TRUE, NA)
+    )
+  }
+  m <- list(
+    pattern = list(n_incomplete = 0L, n_cases = 800L, pct_incomplete = 0),
+    strategies = strategies(c(TRUE, FALSE)),
+    estimates = tibble::tibble(parameter = character(), strategy = character(),
+                               role = character(), estimate = numeric(),
+                               reference_estimate = numeric(),
+                               difference_in_se = numeric()),
+    reference = "ml", fit = tibble::tibble(), reliability = NULL,
+    decision_log = tibble::tibble()
+  )
+  complete <- nomologR:::nomo_report_missing(m)
+  expect_match(complete$summary, "None of the 800 cases is missing", fixed = TRUE)
+  expect_match(complete$summary, "the reference strategy (FIML) was not fitted", fixed = TRUE)
+  expect_false(grepl("The reference is FIML", complete$summary, fixed = TRUE))
+  expect_identical(complete$differences_empty,
+                   "The reference strategy was not fitted, so there are no differences to show.")
+
+  m$pattern <- list(n_incomplete = 15L, n_cases = 500L, pct_incomplete = 0.03)
+  failed <- nomologR:::nomo_report_missing(m)
+  expect_match(failed$summary, "15 of 500 cases (3.0%) are missing", fixed = TRUE)
+  expect_match(failed$summary, "The reference strategy (FIML) could not be fitted.", fixed = TRUE)
+
+  m$strategies <- strategies(c(TRUE, TRUE))
+  fitted <- nomologR:::nomo_report_missing(m)
+  expect_match(fitted$summary, "The reference is FIML.", fixed = TRUE)
+  expect_identical(fitted$differences_empty, "No comparison strategy was fitted.")
+})
+
+
+test_that("the scores summary writes the parallel-model test in APA form (#144)", {
+  scores <- list(
+    weighting = "unit", method = "sum",
+    scores = tibble::tibble(a = 1:3), diagnostics = tibble::tibble(factor = "A"),
+    notes = tibble::tibble(),
+    parallel_test = list(available = TRUE, chisq_diff = 41.934, df_diff = 16,
+                         p_value = 0.0004, note = "")
+  )
+  text <- nomologR:::nomo_report_scores(scores)$summary
+  expect_match(text, "fitted model: Delta chi-square(16) = 41.93, p < .001.", fixed = TRUE)
+  scores$parallel_test <- list(available = FALSE, note = "Not tested: one item.")
+  expect_match(nomologR:::nomo_report_scores(scores)$summary, "Not tested: one item.", fixed = TRUE)
+})
+
+
+test_that("the careless-responding section keeps the rows saying why an index has no value (#145)", {
+  # No `scales`, and missing values: no per-scale means, and a Mahalanobis
+  # distance only for the complete cases.
+  screen <- nomo_screen(nomo_demo_continuous, effort = TRUE)
+  expect_true(all(c("mahalanobis", "per_scale_indices") %in% screen$decision_log$metric))
+  log <- nomologR:::nomo_report_effort(screen)$log
+  expect_true(all(c("mahalanobis", "per_scale_indices", "long_string") %in% log$metric))
+  # Item rows are not careless-responding evidence.
+  expect_true(all(log$object == "cases"))
+})
+
+
+test_that("review and concern rows are listed concern first (#144)", {
+  log <- tibble::tibble(
+    object = c("a", "b", "c", "d"),
+    severity = c("review", "info", "concern", "review")
+  )
+  flagged <- nomologR:::nomo_report_flagged_rows(log)
+  expect_identical(flagged$object, c("c", "a", "d"))
+  expect_identical(nrow(nomologR:::nomo_report_flagged_rows(tibble::tibble())), 0L)
+  no_severity <- tibble::tibble(object = "a")
+  expect_identical(nomologR:::nomo_report_flagged_rows(no_severity), no_severity)
+})
+
+
+test_that("the call history is R code with straight quotes (#145)", {
+  run <- make_m9_minimal_run()
+  code <- nomologR:::nomo_report_call_code(run)
+  expect_identical(code, 'nomo_run(data = dat, scales = list(S = c("i1", "i2")))')
+
+  run$call_history <- list(run$call, quote(nomo_run(resume = run, mode = "research")))
+  two <- nomologR:::nomo_report_call_code(run)
+  expect_match(two, "^# Step 1\nnomo_run\\(data = dat")
+  expect_match(two, '\n\n# Step 2\nnomo_run(resume = run, mode = "research")', fixed = TRUE)
+
+  run$call_history <- NULL
+  run$call <- NULL
+  expect_identical(nomologR:::nomo_report_call_code(run), "")
+})
+
+
+test_that("the report title is written so the render shows it as given (#145)", {
+  yaml <- nomologR:::nomo_report_title_yaml('50% \\ done `r 1+1` <b>x</b> "C:\\Users"')
+  # No backtick for knitr, no quote or backslash for YAML, no markup for pandoc.
+  expect_false(grepl("[`\\\\<]", substring(yaml, 2L, nchar(yaml) - 1L)))
+  expect_identical(
+    yaml,
+    '"50&#37; &#92; done &#96;r 1&#43;1&#96; &#60;b&#62;x&#60;&#47;b&#62; &#34;C&#58;&#92;Users&#34;"'
+  )
+  expect_identical(nomologR:::nomo_report_title_yaml("Plain title"), '"Plain title"')
+})
+
+
+test_that("software citations give each DOI once, as a working address (#145)", {
+  clean <- nomologR:::nomo_report_sanitize_citation_text(c(
+    "Rosseel Y (2012). _JSS_, *48*(2). doi:10.18637/jss.v048.i02 https://doi.org/10.18637/jss.v048.i02.",
+    "Steiner M (2020). JOSS. doi:10.21105/joss.02521 https://doi.org/10.21105/joss.02521. https://doi.org/10.21105/joss.02521.",
+    "Only a DOI (2020). doi:10.1/abc."
+  ))
+  expect_identical(clean, c(
+    "Rosseel Y (2012). _JSS_, *48*(2). https://doi.org/10.18637/jss.v048.i02.",
+    "Steiner M (2020). JOSS. https://doi.org/10.21105/joss.02521.",
+    "Only a DOI (2020). https://doi.org/10.1/abc."
+  ))
+})
+
+
+test_that("every abbreviation the report shows is defined once at its end (#144)", {
+  abbr <- nomologR:::nomo_report_abbreviations(
+    labels = c("Factor", "Loading", "SE", "p", "CI lower", "Number of items"),
+    text = c("CFI", "FIML and MCAR", "ag1", "p < .001", "N = 40")
+  )
+  expect_identical(abbr$abbreviation, c("CFI", "CI", "FIML", "MCAR", "SE", "p"))
+  expect_identical(abbr$meaning[abbr$abbreviation == "p"], "p value")
+  expect_identical(nrow(nomologR:::nomo_report_abbreviations()), 0L)
+
+  note <- nomologR:::nomo_report_reading_note()
+  expect_match(note, nomologR:::nomo_report_blank, fixed = TRUE)
+  expect_match(note, "blank for no flag", fixed = TRUE)
+  expect_match(note, "never an instruction to delete", fixed = TRUE)
+})
+
+
+test_that("a rendered report keeps model syntax, quotes, and the title as written (#145)", {
+  skip_on_cran()
+  skip_if_not_installed("rmarkdown")
+  skip_if_not_installed("knitr")
+  skip_if_not(rmarkdown::pandoc_available())
+
+  run <- make_m9_minimal_run()
+  run$decision_log <- dplyr::bind_rows(run$decision_log, tibble::tibble(
+    id = "cfa_model", stage = "cfa", scope = "measurement_model",
+    observation = "Model supplied.", reason = "", options = "", consequence = "",
+    decision = "F =~ a*i1 + a*i2\ni1 ~~ i2",
+    rationale = "Equal loadings, and a residual covariance from item wording.",
+    source = "researcher_decision"
+  ))
+  title <- 'Scale "A" -- C:\\Users\\data & <b>x</b>'
+  dir <- tempfile("nomo-escape-")
+  dir.create(dir)
+  on.exit(unlink(dir, recursive = TRUE), add = TRUE)
+
+  html_file <- nomo_report(run, file = file.path(dir, "report.html"), title = title,
+                           include_plots = FALSE, include_session = FALSE, quiet = TRUE)
+  html <- paste(readLines(html_file, warn = FALSE, encoding = "UTF-8"), collapse = "\n")
+  html <- gsub("(?s)<script[^>]*>.*?</script>", "", html, perl = TRUE)
+  # grepl() rather than expect_match(), whose failure message would print the
+  # whole self-contained report.
+  expect_true(grepl("F =~ a*i1 + a*i2<br>i1 ~~ i2", html, fixed = TRUE))
+  expect_false(grepl("<sub></sub>", html, fixed = TRUE))
+  expect_false(grepl("a<em>i1", html, fixed = TRUE))
+  # The call is code with straight quotes, not a table cell with curly ones.
+  expect_true(grepl(
+    "<pre><code>nomo_run(data = dat, scales = list(S = c(&quot;i1&quot;, &quot;i2&quot;)))",
+    html, fixed = TRUE
+  ))
+  expect_false(grepl(paste0("c(", intToUtf8(0x201c), "i1"), html, fixed = TRUE))
+  expect_true(grepl(
+    "<title>Scale &quot;A&quot; -- C:\\Users\\data &amp; &lt;b&gt;x&lt;/b&gt;</title>",
+    html, fixed = TRUE
+  ))
+  expect_true(grepl('id="abbreviations"', html, fixed = TRUE))
+  # The facts under the title, each on its line, with the status in sentence
+  # case and the design in words (#144).
+  expect_true(grepl(
+    "<strong>Workflow status:</strong> Paused<br /> <strong>Sample design:</strong> same sample",
+    gsub("\\s+", " ", html), fixed = TRUE
+  ))
+
+  docx <- nomo_report(run, file = file.path(dir, "report.docx"), title = title,
+                      include_plots = FALSE, include_session = FALSE, quiet = TRUE)
+  unz <- file.path(dir, "unz")
+  utils::unzip(docx, exdir = unz)
+  xml <- paste(readLines(file.path(unz, "word", "document.xml"), warn = FALSE,
+                         encoding = "UTF-8"), collapse = "")
+  text <- gsub("<[^>]+>", "", xml)
+  expect_true(grepl("F =~ a*i1 + a*i2; i1 ~~ i2", text, fixed = TRUE))
+  expect_true(grepl("scales = list(S = c(&quot;i1&quot;, &quot;i2&quot;))", text, fixed = TRUE))
+  expect_true(grepl("Scale &quot;A&quot; -- C:\\Users\\data &amp; &lt;b&gt;x&lt;/b&gt;", text,
+                    fixed = TRUE))
 })
