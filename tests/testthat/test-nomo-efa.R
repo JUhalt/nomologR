@@ -1378,12 +1378,15 @@ test_that("rotation is checked, and the log and methods describe the solution fi
   expect_true(promax$oblique)
   expect_identical(rotation_row(promax)$severity, "info")
 
-  # The methods registry names oblimin and varimax, so only they are credited.
-  used <- function(fit) nomo_methods_used(fit)
-  expect_false(any(c("oblique_rotation", "orthogonal_rotation") %in% used(promax)))
-  expect_false(any(c("oblique_rotation", "orthogonal_rotation") %in% used(none)))
-  expect_false(any(c("oblique_rotation", "orthogonal_rotation") %in% used(geomin)))
-  expect_true("oblique_rotation" %in% used(nomo_efa(dat, factors = 2)))
+  # The methods registry credits the rotation recorded: any oblique rotation
+  # as "Oblique rotation", varimax by name, another orthogonal rotation by its
+  # own entry, and an unrotated solution with none (#145, methods-efa-credit).
+  rotations <- c("oblique_rotation", "orthogonal_rotation", "orthogonal_rotation_other")
+  used <- function(fit) intersect(nomo_methods_used(fit), rotations)
+  expect_identical(used(promax), "oblique_rotation")
+  expect_identical(used(none), character())
+  expect_identical(used(geomin), "orthogonal_rotation_other")
+  expect_identical(used(nomo_efa(dat, factors = 2)), "oblique_rotation")
 
   # The console and plots say what was fitted (#145, efa-7).
   expect_output(print(one), "Rotation: not applicable (one factor)", fixed = TRUE)
