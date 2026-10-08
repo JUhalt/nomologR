@@ -916,13 +916,18 @@
       print(h)
     Output
       <nomo_hypotheses> Theory-specified relations
-      3 theory-specified relations
+      Relations: 3 | A priori: 3 | Post hoc: 0
       
-      Every relation is on the standardized scale.
-        ID  Relation                       Prediction  Region         Origin
-        H1  Agency -> Persistence          positive    [0.2, +Inf)    a priori
-        H2  Agency <-> SocialDesirability  negligible  [-0.15, 0.15]  a priori
-        H3  Agency -> Performance          positive    (0, +Inf)      a priori
+        ID  Relation                       Prediction  Region       Origin
+        H1  Agency -> Persistence          positive    >= 0.20      A priori
+        H2  Agency <-> SocialDesirability  negligible  [-.15, .15]  A priori
+        H3  Agency -> Performance          positive    > 0          A priori
+        Every relation is on the standardized scale.
+      
+      The relations record theory; only nomo_network() evaluates them against data.
+      
+      See nomo_table(x) for every column and nomo_network(model, data, x) for the
+      evidence.
 
 ---
 
@@ -931,13 +936,21 @@
     Output
       <nomo_hypotheses summary> Theory-specified relations
       Relations: 3 | A priori: 3 | Post hoc: 0
-      Quantitatively confirmable with the supplied specification: 3/3
+      Confirmable as specified: 3 of 3
       
-      Every relation is on the standardized scale.
-        ID  Relation                       Prediction  Region         Origin
-        H1  Agency -> Persistence          positive    [0.2, +Inf)    a priori
-        H2  Agency <-> SocialDesirability  negligible  [-0.15, 0.15]  a priori
-        H3  Agency -> Performance          positive    (0, +Inf)      a priori
+        ID  Relation                       Prediction  Region       Origin
+        H1  Agency -> Persistence          positive    >= 0.20      A priori
+        H2  Agency <-> SocialDesirability  negligible  [-.15, .15]  A priori
+        H3  Agency -> Performance          positive    > 0          A priori
+        Every relation is on the standardized scale.
+      
+      What each prediction claims
+        - H1 Agency -> Persistence: a positive relation (region: >= 0.20).
+        - H2 Agency <-> SocialDesirability: a negligible relation (region:
+          [-.15, .15]).
+        - H3 Agency -> Performance: a positive relation of any size.
+      
+      See nomo_table(x) for every column.
 
 ---
 
@@ -945,20 +958,34 @@
       print(net)
     Output
       <nomo_network> Nomological network
-      Primary sample: N = 800 | Converged: yes
+      Cases: 800 | Converged: yes
       Theory relations: 3 | Added to the model from hypotheses: 2
-      Measurement context: no configured measurement-context review signal was
-      triggered
+      Measurement context: no flags | Model fit: no flags
       
       Hypothesis evidence
-        ID  Relation                       Estimate  95% CI           Concordance
-        H1  Agency -> Persistence             0.458  [0.389, 0.526]   Concordant
-        H2  Agency <-> SocialDesirability     0.008  [-0.079, 0.095]  Concordant
-        H3  Agency -> Performance             0.389  [0.325, 0.454]   Concordant
+        ID  Relation                       Concordance  Estimate  CI
+        H1  Agency -> Persistence          Concordant       0.46  [0.39, 0.53]
+        H2  Agency <-> SocialDesirability  Concordant        .01  [-.07, .08]
+        H3  Agency -> Performance          Concordant       0.39  [0.32, 0.45]
+        Estimates are standardized. CI = confidence interval (95%); for H2, a
+        negligible() prediction, it is the 90% equivalence interval the concordance
+        is judged on.
+      
+      Flagged
+        - Review: `Persistence <-> SocialDesirability`, estimated in the model as
+          given, is fixed to zero in the fitted model: with the hypothesized paths,
+          `Persistence` is an outcome, and lavaan does not covary an outcome's
+          residual with a variable that does not predict it.
+        - Review: `Performance <-> SocialDesirability` is fixed to zero in the
+          fitted model: the hypotheses bring `Performance` into the model, and
+          neither they nor lavaan's defaults relate the two.
       
       Theory concordance, uncertainty, measurement quality, and replication are
       distinct evidence streams. Statistical significance alone is not a validity
       verdict.
+      
+      See summary(x) for the fit and the flagged evidence in full and
+      nomo_table(x, "hypotheses") for every column.
 
 ---
 
@@ -966,31 +993,74 @@
       print(summary(net))
     Output
       <nomo_network summary> Nomological network
-      Primary sample: N = 800 | Converged: yes
+      Cases: 800 | Converged: yes
+      Estimator: ML
       
       Measurement context
-        Flag: none | Constructs: 3 | Loading flags: 0 | Negative variances: 0 |
-        Global-fit flags: 0 | Engine warnings: 0
-        no configured measurement-context review signal was triggered
+        Status: no flags | Constructs: 3 | Loading flags: 0 | Negative variances: 0
+        Fit flags: 0 | Engine warnings: 0
+        No measurement-context flag was raised.
       
       Model fit
-        chi-square(51) = 61.62, p = .147
-        CFI 0.997 | TLI 0.996 | RMSEA 0.016 | SRMR 0.020
+        Network model: chi-square(51) = 61.62, p = .147
+          CFI .997 | TLI 0.996 | RMSEA 0.016 | SRMR 0.020
+        Measurement model alone: chi-square(49) = 61.60, p = .107
+          CFI .996 | TLI 0.994 | RMSEA 0.018 | SRMR 0.020
+        Structural restrictions: Delta chi-square(2) = 0.02, p = .991
+      
+      Relations the hypothesized paths changed
+        - Persistence <-> SocialDesirability: fixed to zero, although the model as
+          given estimates it.
+        - Performance <-> SocialDesirability: fixed to zero; the model as given does
+          not contain Performance.
+        - Persistence <-> Performance: estimated as a residual covariance of two
+          outcomes that neither the model nor the hypotheses name.
       
       Hypothesis evidence
-        ID  Relation                       Estimate  95% CI           Concordance
-        H1  Agency -> Persistence             0.458  [0.389, 0.526]   Concordant
-        H2  Agency <-> SocialDesirability     0.008  [-0.079, 0.095]  Concordant
-        H3  Agency -> Performance             0.389  [0.325, 0.454]   Concordant
+        ID  Relation                       Concordance  Estimate  CI
+        H1  Agency -> Persistence          Concordant       0.46  [0.39, 0.53]
+        H2  Agency <-> SocialDesirability  Concordant        .01  [-.07, .08]
+        H3  Agency -> Performance          Concordant       0.39  [0.32, 0.45]
+        Estimates are standardized. CI = confidence interval (95%); for H2, a
+        negligible() prediction, it is the 90% equivalence interval the concordance
+        is judged on.
       
       Predictions and context
-        ID  Prediction  Region         Evidence scope              Status
-        H1  positive    [0.2, +Inf)    latent structural           A priori
-        H2  negligible  [-0.15, 0.15]  latent association          A priori
-        H3  positive    (0, +Inf)      latent to observed outcome  A priori
+        ID  Prediction  Region       Evidence scope              Origin
+        H1  positive    >= 0.20      latent structural           A priori
+        H2  negligible  [-.15, .15]  latent association          A priori
+        H3  positive    > 0          latent to observed outcome  A priori
       
       Concordance
-        Concordant 3
+        Concordant: 3
+      
+      Flagged
+        - Review: `Persistence <-> SocialDesirability`, estimated in the model as
+          given, is fixed to zero in the fitted model: with the hypothesized paths,
+          `Persistence` is an outcome, and lavaan does not covary an outcome's
+          residual with a variable that does not predict it. Fixing a relation to
+          zero is a restriction of the network, and its misfit counts against the
+          theory's structure. If the theory allows the relation, add it as a
+          hypothesis or write it in `model`.
+        - Review: `Performance <-> SocialDesirability` is fixed to zero in the
+          fitted model: the hypotheses bring `Performance` into the model, and
+          neither they nor lavaan's defaults relate the two. Fixing a relation to
+          zero is a restriction of the network, and its misfit counts against the
+          theory's structure. If the theory allows the relation, add it as a
+          hypothesis or write it in `model`.
+      
+      Abbreviations
+        CFI -- comparative fit index.
+        TLI -- Tucker-Lewis index.
+        RMSEA -- root mean square error of approximation.
+        SRMR -- standardized root mean square residual.
+        ML -- maximum likelihood.
+      
+      Theory concordance, uncertainty, measurement quality, model fit, and
+      replication are distinct evidence streams; none is a validity verdict.
+      
+      See nomo_table(x, "decision_log") for every decision-log row and plot(x) for
+      the evidence.
 
 ---
 
@@ -1177,6 +1247,6 @@
           rationales
         Full entries and references: nomo_methods(x).
       
-      Component decision and evidence-log rows retained: 93; see nomo_table(x,
+      Component decision and evidence-log rows retained: 96; see nomo_table(x,
       "component_log").
 
