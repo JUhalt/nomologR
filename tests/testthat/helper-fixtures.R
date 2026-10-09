@@ -223,7 +223,7 @@ plot_text <- function(x) gsub("\\s+", " ", x)
 # ---- simulated fixtures ----
 # No fixture is drawn with lavaan::simulateData(): the same seed gives
 # different data from one lavaan version to the next (0.7-3 changed its
-# default generator), and lavaan lists the function as deprecated. The two
+# default generator), and lavaan lists the function as deprecated. The
 # functions below use lavaan only to read the population syntax, and base R
 # for everything else, so a fixture is the same data under every lavaan
 # version.
@@ -279,6 +279,12 @@ nomo_test_population_cov <- function(population) {
 nomo_test_simulate <- function(population, n, seed, exact = FALSE) {
   sigma <- nomo_test_population_cov(population)
   set.seed(seed)
+  nomo_test_draw(sigma, n, exact)
+}
+
+
+# The draw itself, from the session's random stream as it stands.
+nomo_test_draw <- function(sigma, n, exact = FALSE) {
   z <- matrix(stats::rnorm(n * ncol(sigma)), nrow = n)
   if (exact) {
     z <- scale(z, center = TRUE, scale = FALSE)
@@ -288,4 +294,29 @@ nomo_test_simulate <- function(population, n, seed, exact = FALSE) {
   data <- as.data.frame(z %*% chol(sigma))
   names(data) <- colnames(sigma)
   data
+}
+
+
+# For a test of code that draws its own samples, as nomo_power_simulate() does
+# with lavaan::simulateData(): until the calling test ends, that function is
+# replaced by the base-R draw above. The samples come from the session's random
+# stream, so a seed set by the code under test gives the same samples under
+# every lavaan version, and what the test asserts about them cannot change with
+# lavaan's generator.
+#
+# The stand-in serves a standardized population of the kind
+# nomo_test_population_cov() reads. As in lavaan, `empirical = TRUE` gives data
+# whose maximum-likelihood covariance matrix (divisor n) is the population
+# matrix. Any other argument stops, rather than being ignored.
+local_base_r_simulate_data <- function(env = parent.frame()) {
+  testthat::local_mocked_bindings(
+    simulateData = function(model, sample.nobs, standardized = FALSE,
+                            empirical = FALSE, ...) {
+      stopifnot(...length() == 0L, isTRUE(standardized))
+      data <- nomo_test_draw(nomo_test_population_cov(model), sample.nobs, exact = empirical)
+      if (empirical) data <- data * sqrt(sample.nobs / (sample.nobs - 1))
+      data
+    },
+    .package = "lavaan", .env = env
+  )
 }

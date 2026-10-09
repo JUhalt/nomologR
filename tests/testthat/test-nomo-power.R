@@ -104,6 +104,12 @@ A ~~ 0.3*B
 
 test_that("a Monte Carlo study reports recovery and power at each sample size", {
   skip_on_cran()
+  # The samples of this test are drawn with base R (helper-fixtures.R), because
+  # lavaan's generator gives different samples for one seed from one lavaan
+  # version to the next. What is asserted below about power, convergence, and
+  # coverage holds for these samples under every lavaan version. The tests
+  # after this one draw with lavaan::simulateData() itself.
+  local_base_r_simulate_data()
   pw <- nomo_power_simulate(pw_population, n = c(300, 60), reps = 12,
                             focus = "B ~~ A", seed = 11)
   expect_s3_class(pw, "nomo_power")
