@@ -2704,8 +2704,16 @@ test_that("the invariance display helpers cover their edge cases (#144)", {
                    "scaled")
   expect_identical(nomologR:::nomo_invariance_test_words(c("standard", "scaled.shifted")),
                    "scaled and shifted")
-  expect_identical(nomologR:::nomo_invariance_test_words("browne.residual.adf"),
-                   "browne residual adf")
+  expect_identical(nomologR:::nomo_invariance_test_words("some.new.test"),
+                   "some new test")
+  # A residual-based test is not a scaling of the chi-square shown; lavaan
+  # 0.7-3 computes Browne's for every ML fit.
+  expect_identical(nomologR:::nomo_invariance_test_words(c("standard", "browne.residual.nt.model")),
+                   "scaled")
+  expect_identical(
+    nomologR:::nomo_invariance_test_words(c("standard", "browne.residual.nt.model", "yuan.bentler.mplus")),
+    "Yuan-Bentler scaled"
+  )
   broken <- nomologR:::nomo_invariance_cases(list(configural = "not a fit"), 10L)
   expect_identical(broken$n_used, NA_integer_)
   expect_null(broken$group_n)

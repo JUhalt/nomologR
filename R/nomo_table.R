@@ -31,7 +31,8 @@
 #'   `"notes"`; see [nomo_scores()].
 #' * `nomo_power`: `"power"` from [nomo_power_rmsea()]; `"summary"` (default)
 #'   and `"parameters"` from [nomo_power_simulate()].
-#' * `nomo_hypotheses`: the machine-readable hypothesis table (no `type`).
+#' * `nomo_hypotheses`: the machine-readable hypothesis table (no `type`;
+#'   any `type` given is an error).
 #' * `nomo_network`: `"hypotheses"` (default), `"fit"`, `"measurement"`,
 #'   `"relations"`, `"replication"`, `"single_indicators"`, `"sensitivity"`,
 #'   `"decision_log"`. `"single_indicators"` and `"sensitivity"` describe the
@@ -82,7 +83,7 @@
 #'   `df`, `pvalue`, `cfi`, `tli`, `rmsea`, and `srmr`.
 #' * `nomo_compare`, `"models"`: one row per `model`, with `npar`, `df`,
 #'   `chisq`, `cfi`, `tli`, `rmsea`, `srmr`, `aic`, and `bic`. The difference
-#'   tests and their p-values are in `"comparisons"`.
+#'   tests and their p values are in `"comparisons"`.
 #' * `nomo_invariance`, `"fit"`: one row per `level`, with `chisq`, `df`,
 #'   `pvalue`, `cfi`, `rmsea`, and `srmr`, the changes from the level before
 #'   (`delta_cfi`, `delta_rmsea`, `delta_srmr`), and the likelihood-ratio test
@@ -90,10 +91,14 @@
 #' * `nomo_network`, `"fit"`: one row, with `chisq`, `df`, `pvalue`, `cfi`,
 #'   `tli`, `rmsea`, and `srmr`.
 #'
-#' @param x A supported `nomologR` result object.
+#' @param x A supported `nomologR` result object. An object of any other class
+#'   is refused with the list of supported classes.
 #' @param ... Additional arguments passed to methods, usually `type`.
 #'
-#' @return A tibble.
+#' @return A tibble. A table the object has no rows for, such as `"partial"`
+#'   for an invariance analysis without releases or `"replication"` for a
+#'   network without validation data, has no rows and the table's usual
+#'   columns.
 #' @export
 #'
 #' @examples
@@ -117,7 +122,28 @@ nomo_table <- function(x, ...) {
 
 
 #' @export
-nomo_table.nomo_hypotheses <- function(x, ...) {
+nomo_table.default <- function(x, ...) {
+  # The supported classes are read from the methods, so the list never goes
+  # stale (#145).
+  supported <- sub("nomo_table.", "", fixed = TRUE,
+                   ls(asNamespace("nomologR"), pattern = "^nomo_table[.]nomo_"))
+  stop(sprintf(
+    "No nomo_table() is available for an object of class `%s`. Supported: %s.",
+    class(x)[[1L]], paste(supported, collapse = ", ")
+  ), call. = FALSE)
+}
+
+
+# A hypothesis set has one table, so a `type` given is refused rather than
+# ignored (#145).
+#' @export
+nomo_table.nomo_hypotheses <- function(x, type = NULL, ...) {
+  if (!is.null(type)) {
+    stop(sprintf(
+      "`type` must be NULL for a `nomo_hypotheses` object, which has one table, not %s.",
+      paste(sprintf('"%s"', as.character(type)), collapse = ", ")
+    ), call. = FALSE)
+  }
   x$hypotheses
 }
 
@@ -158,8 +184,16 @@ nomo_table.nomo_network <- function(
   if (type == "relations") return(x$model_relations)
 
   if (type == "replication") {
-    if (!nrow(x$replication_evidence)) {
-      return(tibble::tibble())
+    # Without validation data the table has no rows but keeps its columns, so
+    # code that selects or binds them still works (#145).
+    if (!NROW(x$replication_evidence)) {
+      return(tibble::tibble(
+        id = character(), relation = character(), prediction = character(),
+        primary_estimate = numeric(), validation_estimate = numeric(),
+        estimate_shift = numeric(), primary_concordance = character(),
+        validation_concordance = character(), replication_status = character(),
+        interpretation = character()
+      ))
     }
     return(x$replication_evidence)
   }
@@ -222,7 +256,11 @@ nomo_table.nomo_invariance <- function(
   if (type == "latent_means") return(x[["latent_means"]])
 
   if (type == "partial") {
-    if (is.null(x$partial)) return(tibble::tibble())
+    # Without releases, the columns of nomo_partial()'s table with no rows.
+    if (is.null(x$partial)) {
+      return(tibble::tibble(release_id = character(), level = character(),
+                            syntax = character(), rationale = character()))
+    }
     return(x$partial$releases)
   }
 

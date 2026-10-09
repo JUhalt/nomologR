@@ -73,12 +73,17 @@ test_that("empty invariance local-strain tables are returned unchanged", {
 # pre-v0.1 hardening and exercise defensive branches, sometimes through
 # internal helpers directly.
 
-test_that("report-ready table generic refuses unsupported classes normally", {
+test_that("report-ready table generic refuses unsupported classes by name (#145)", {
   expect_error(
     nomo_table(list(a = 1)),
-    "no applicable method",
-    ignore.case = TRUE
+    "No nomo_table() is available for an object of class `list`. Supported: ",
+    fixed = TRUE
   )
+  # An object without tables names the classes that have them.
+  partial <- nomo_partial(level = "scalar", syntax = "ag3 ~ 1", rationale = "x")
+  expect_error(nomo_table(partial), "class `nomo_partial`", fixed = TRUE)
+  expect_error(nomo_table(partial), "nomo_cfa, ", fixed = TRUE)
+  expect_error(nomo_table(partial), "nomo_validity.", fixed = TRUE)
 })
 
 
@@ -92,12 +97,41 @@ test_that("nomo_table generic covers hypothesis and unsupported-object behavior"
     nomo_table(h),
     h$hypotheses
   )
-
+  # One table, so a `type` is refused rather than ignored (#145).
   expect_error(
-    nomo_table(list(a = 1)),
-    "no applicable method",
-    ignore.case = TRUE
+    nomo_table(h, "nope"),
+    '`type` must be NULL for a `nomo_hypotheses` object, which has one table, not "nope".',
+    fixed = TRUE
   )
+
+  expect_error(nomo_table(list(a = 1)), "No nomo_table() is available", fixed = TRUE)
+})
+
+
+test_that("a table without rows keeps its columns (#145)", {
+  skip_on_cran()
+  inv <- nomo_invariance("Agency =~ ag1 + ag2 + ag3 + ag4", data = nomo_demo_network,
+                         group = "group", levels = c("configural", "metric"))
+  empty <- nomo_table(inv, "partial")
+  expect_identical(nrow(empty), 0L)
+  partial <- nomo_partial(level = "scalar", syntax = "ag3 ~ 1", rationale = "x")
+  expect_identical(names(empty), names(partial$releases))
+  expect_identical(vapply(empty, class, character(1)),
+                   vapply(partial$releases, class, character(1)))
+
+  model <- paste("Agency =~ ag1 + ag2 + ag3 + ag4",
+                 "Persistence =~ pe1 + pe2 + pe3 + pe4", sep = "\n")
+  h <- nomo_hypotheses("Agency -> Persistence" = positive())
+  net <- nomo_network(model, data = nomo_demo_network, hypotheses = h)
+  empty <- nomo_table(net, "replication")
+  expect_identical(nrow(empty), 0L)
+  rows <- seq_len(nrow(nomo_demo_network)) <= 400L
+  validated <- nomo_network(model, data = nomo_demo_network[rows, ], hypotheses = h,
+                            validation_data = nomo_demo_network[!rows, ])
+  replication <- nomo_table(validated, "replication")
+  expect_gt(nrow(replication), 0L)
+  expect_identical(names(empty), names(replication))
+  expect_identical(vapply(empty, class, character(1)), vapply(replication, class, character(1)))
 })
 
 
@@ -122,6 +156,14 @@ test_that("?nomo_table lists every type each method accepts, and no other (#145)
     documented <- unique(gsub('^\\\\code\\{"|"\\}$', "", documented))
     expect_setequal(documented, as.character(accepted))
   }
+})
+
+
+test_that("?nomo_table says what an empty table and an unsupported object give (#145)", {
+  expect_true(grepl("has no rows and the table's usual columns",
+                    nomo_test_rd_text("nomo_table", "\\value"), fixed = TRUE))
+  expect_true(grepl("is refused with the list of supported classes",
+                    nomo_test_rd_text("nomo_table", "\\arguments"), fixed = TRUE))
 })
 
 
