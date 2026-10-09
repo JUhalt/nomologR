@@ -154,6 +154,9 @@ run <- nomo_run(
 run
 nomo_table(run, "requests")
 
+\donttest{
+# Each decision resumes the run, which computes the next evidence and pauses
+# again.
 run <- nomo_run(
   resume = run,
   decisions = list(
@@ -184,6 +187,7 @@ run <- nomo_run(
   )
 )
 nomo_table(run, "stages")
+}
 
 }
 \references{

@@ -82,6 +82,7 @@ only. To test whether an item is needed, keep it and fix its loading to zero
 in the revised model; see \code{\link[=nomo_compare]{nomo_compare()}}.
 }
 \examples{
+\donttest{
 scales <- list(Agency = c("ag1", "ag2", "ag3", "ag4"))
 
 run <- nomo_run(
@@ -93,30 +94,18 @@ run <- nomo_run(
     cfa_model = "Agency =~ ag1 + ag2 + ag3 + ag4"
   )
 )
-revised_model <- "Agency =~ ag1 + ag2 + ag3 + ag4\nag1 ~~ ag2"
-rationale <- paste(
-  "Residual diagnostics and item wording suggest ag1 and ag2 share",
-  "method variance beyond the common factor."
-)
 
-# The revision alone, without the comparison of parent and revised models.
 revised <- nomo_revise(
   run,
-  cfa_model = revised_model,
-  rationale = rationale,
-  origin = "post_hoc",
-  compare = FALSE
-)
-nomo_table(revised, "lineage")
-
-\donttest{
-# By default the two models are also compared.
-revised <- nomo_revise(
-  run,
-  cfa_model = revised_model,
-  rationale = rationale,
+  cfa_model = "Agency =~ ag1 + ag2 + ag3 + ag4\nag1 ~~ ag2",
+  rationale = paste(
+    "Residual diagnostics and item wording suggest ag1 and ag2 share",
+    "method variance beyond the common factor."
+  ),
   origin = "post_hoc"
 )
+
+nomo_table(revised, "lineage")
 nomo_table(revised$revision_comparison, "comparisons")
 }
 }

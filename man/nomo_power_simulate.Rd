@@ -110,9 +110,9 @@ population <- "
   B =~ 0.7*b1 + 0.6*b2 + 0.6*b3 + 0.5*b4
   A ~~ 0.3*B
 "
-# Ten replications run quickly and show the result; they are far too few to
+# Five replications run quickly and show the result; they are far too few to
 # estimate power.
-quick <- nomo_power_simulate(population, n = 100, reps = 10,
+quick <- nomo_power_simulate(population, n = 100, reps = 5,
                              focus = "A~~B", seed = 2026)
 nomo_table(quick, "summary")
 

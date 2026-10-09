@@ -423,6 +423,9 @@ nomo_run_resume <- function(resume,
 #' run
 #' nomo_table(run, "requests")
 #'
+#' \donttest{
+#' # Each decision resumes the run, which computes the next evidence and pauses
+#' # again.
 #' run <- nomo_run(
 #'   resume = run,
 #'   decisions = list(
@@ -453,6 +456,7 @@ nomo_run_resume <- function(resume,
 #'   )
 #' )
 #' nomo_table(run, "stages")
+#' }
 #'
 #' @export
 nomo_run <- function(data = NULL,
