@@ -229,17 +229,17 @@ the [v1.0.0 milestone](https://github.com/JUhalt/nomologR/milestone/5).
 citation("nomologR")
 #> To cite nomologR in publications, please use:
 #> 
-#>   Uhalt J (2026). _nomologR: Guided Scale Development and Construct
-#>   Validation_. R package version 0.9.0,
-#>   <https://github.com/JUhalt/nomologR>.
+#>   Uhalt, J. (2026). nomologR: Guided scale development and construct
+#>   validation (Version 0.9.0) [Computer software].
+#>   https://github.com/JUhalt/nomologR
 #> 
 #> A BibTeX entry for LaTeX users is
 #> 
 #>   @Manual{,
-#>     title = {nomologR: Guided Scale Development and Construct Validation},
+#>     title = {{nomologR}: Guided Scale Development and Construct Validation},
 #>     author = {Joshua Uhalt},
 #>     year = {2026},
-#>     note = {R package version 0.9.0},
+#>     note = {(Version 0.9.0) [Computer software]},
 #>     url = {https://github.com/JUhalt/nomologR},
 #>   }
 ```

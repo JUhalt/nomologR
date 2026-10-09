@@ -5,16 +5,23 @@
 These changes lead to 1.0.0, the stable release planned jointly with
 `contentvalidR` ([\#53](https://github.com/JUhalt/nomologR/issues/53)).
 Its first release candidate, `v1.0.0-rc.1` (version 0.99.0), is planned
-for 2026-10-17.
+for 2026-10-17, after the feature freeze on 2026-10-13.
 
 - **New methods.** The gap review
   ([\#129](https://github.com/JUhalt/nomologR/issues/129)) added the
   methods social-science scale developers were missing, each taken from
   its literature.
 - **Fixes.** A verified audit of every module
-  ([\#145](https://github.com/JUhalt/nomologR/issues/145)) fixed the
-  defects that changed returned values, documented defaults, or the
-  documented interface, before the 1.0 freeze.
+  ([\#145](https://github.com/JUhalt/nomologR/issues/145)) found about
+  110 distinct defects, none critical. The fixes are listed by area:
+  returned values, documented defaults, input checks, decision logs, APA
+  tables, and the report.
+- **One output style.** Printed output, plots, APA tables, and the
+  report follow one style, shared with `contentvalidR`
+  ([\#144](https://github.com/JUhalt/nomologR/issues/144)).
+- **The CRAN review.** CRAN returned 0.3.0 with two requests. Both are
+  met: no function writes a file unless it is given the path, and no
+  code in the package writes to the global environment.
 - **The 1.0 contract.** The contract is now settled: the stability
   policy covers every exported function and documented field except
   [`nomo_method_variance()`](https://juhalt.github.io/nomologR/reference/nomo_method_variance.md)
@@ -22,69 +29,230 @@ for 2026-10-17.
   [`nomo_power_simulate()`](https://juhalt.github.io/nomologR/reference/nomo_power_simulate.md),
   which stay experimental into 1.x.
 
-Calls whose results or behavior change are listed first.
+Calls whose results or behavior change are listed first. A function that
+is new since 0.9.0 is described once, as it is now, under “New methods”
+or “Invariance across groups and occasions”.
 
-### Fixes from the pre-1.0 audit ([\#145](https://github.com/JUhalt/nomologR/issues/145))
+### Calls that now behave differently
 
-The audit found about 110 distinct defects; none critical. These fixes
-change results or the interface, so they land before the freeze. The
-remaining corrections (validation, log rows, APA tables, and
-presentation) follow before the release candidate.
+This section lists what a call written for 0.9.0 can run into. The
+sections after it give the details.
 
-#### Calls that now behave differently
+#### Errors where calls used to be accepted
+
+These calls ran in 0.9.0. Most of them returned a result that was wrong,
+or one that had ignored the argument.
 
 - [`nomo_report()`](https://juhalt.github.io/nomologR/reference/nomo_report.md)
   requires `file`. It no longer writes `nomologR-report.html` to the
   working directory by default.
+- **`guidance` with `auto_delete` or `auto_respecify` set to `TRUE`** is
+  refused by the 13 functions that took `guidance` in 0.9.0:
+  [`nomo_screen()`](https://juhalt.github.io/nomologR/reference/nomo_screen.md),
+  [`nomo_factors()`](https://juhalt.github.io/nomologR/reference/nomo_factors.md),
+  [`nomo_efa()`](https://juhalt.github.io/nomologR/reference/nomo_efa.md),
+  [`nomo_cfa()`](https://juhalt.github.io/nomologR/reference/nomo_cfa.md),
+  [`nomo_compare()`](https://juhalt.github.io/nomologR/reference/nomo_compare.md),
+  [`nomo_split()`](https://juhalt.github.io/nomologR/reference/nomo_split.md),
+  [`nomo_reliability()`](https://juhalt.github.io/nomologR/reference/nomo_reliability.md),
+  [`nomo_validity()`](https://juhalt.github.io/nomologR/reference/nomo_validity.md),
+  [`nomo_hierarchical()`](https://juhalt.github.io/nomologR/reference/nomo_hierarchical.md),
+  [`nomo_scores()`](https://juhalt.github.io/nomologR/reference/nomo_scores.md),
+  [`nomo_invariance()`](https://juhalt.github.io/nomologR/reference/nomo_invariance.md),
+  [`nomo_network()`](https://juhalt.github.io/nomologR/reference/nomo_network.md),
+  and
+  [`nomo_run()`](https://juhalt.github.io/nomologR/reference/nomo_run.md).
+  The two settings record that nomologR never deletes an item or
+  respecifies a model. Set to `TRUE`, they had been accepted and
+  ignored. The new
+  [`nomo_esem()`](https://juhalt.github.io/nomologR/reference/nomo_esem.md)
+  and
+  [`nomo_invariance_longitudinal()`](https://juhalt.github.io/nomologR/reference/nomo_invariance_longitudinal.md)
+  refuse it too.
 - **Columns stored as ordered factors** are treated as ordered
   indicators, whether or not `ordered` names them, because lavaan
   already fitted them that way. This applies in
   [`nomo_cfa()`](https://juhalt.github.io/nomologR/reference/nomo_cfa.md),
   [`nomo_invariance()`](https://juhalt.github.io/nomologR/reference/nomo_invariance.md),
-  [`nomo_invariance_longitudinal()`](https://juhalt.github.io/nomologR/reference/nomo_invariance_longitudinal.md),
   [`nomo_network()`](https://juhalt.github.io/nomologR/reference/nomo_network.md),
   [`nomo_reliability()`](https://juhalt.github.io/nomologR/reference/nomo_reliability.md),
   [`nomo_validity()`](https://juhalt.github.io/nomologR/reference/nomo_validity.md),
   and
   [`nomo_hierarchical()`](https://juhalt.github.io/nomologR/reference/nomo_hierarchical.md).
-  Calls that relied on these columns being treated as continuous can now
-  stop: an ML-family estimator, FIML, or a continuous invariance
-  sequence.
-- **Errors where calls used to be accepted silently.**
-  - A partial-invariance release that matches no parameter, or that
-    would break nesting, is an error.
+  The calls that newly stop are
+  [`nomo_invariance()`](https://juhalt.github.io/nomologR/reference/nomo_invariance.md)
+  calls written for continuous indicators: `levels` from the continuous
+  sequence, `ID.fac = "UL"`, an ML-family `estimator`, or
+  `missing = "fiml"`. In
+  [`nomo_cfa()`](https://juhalt.github.io/nomologR/reference/nomo_cfa.md)
+  and
+  [`nomo_network()`](https://juhalt.github.io/nomologR/reference/nomo_network.md),
+  an ML-family estimator or FIML with such columns already stopped, with
+  lavaan’s error; the message now names the columns.
+- [`nomo_invariance()`](https://juhalt.github.io/nomologR/reference/nomo_invariance.md):
+  - A partial-invariance release that matches no parameter, that the
+    model already fixes, or that would break nesting is an error.
   - `ID.cat` accepts only Wu and Estabrook’s identification.
-  - [`nomo_efa()`](https://juhalt.github.io/nomologR/reference/nomo_efa.md)
-    no longer offers `fm = "minrank"`.
-  - [`nomo_hypotheses()`](https://juhalt.github.io/nomologR/reference/nomo_hypotheses.md)
-    and
-    [`nomo_network()`](https://juhalt.github.io/nomologR/reference/nomo_network.md)
-    refuse a directed path and an association for the same pair, and
-    [`nomo_network()`](https://juhalt.github.io/nomologR/reference/nomo_network.md)
-    refuses an ordered-factor covariate.
-  - [`nomo_screen()`](https://juhalt.github.io/nomologR/reference/nomo_screen.md)
-    checks `reverse` and `scale_range` in every mode, and
-    [`nomo_run()`](https://juhalt.github.io/nomologR/reference/nomo_run.md)
-    refuses an unknown `reverse` item.
-  - [`nomo_apa_table()`](https://juhalt.github.io/nomologR/reference/nomo_apa_table.md)
-    refuses a `type` for one-table results and a title that is not one
-    string.
-- **Results that change.**
-  - [`nomo_retest()`](https://juhalt.github.io/nomologR/reference/nomo_retest.md)’s
-    SEM, SDC, and reliable change under a shift between occasions.
-  - [`nomo_scores()`](https://juhalt.github.io/nomologR/reference/nomo_scores.md)’s
-    parallel-model test.
-  - [`nomo_network()`](https://juhalt.github.io/nomologR/reference/nomo_network.md)’s
-    concordance values and, for some networks, the fitted model.
+- [`nomo_efa()`](https://juhalt.github.io/nomologR/reference/nomo_efa.md)
+  and
+  [`nomo_factors()`](https://juhalt.github.io/nomologR/reference/nomo_factors.md)
+  no longer accept `fm = "minrank"`. psych needs the `Rcsdp` package for
+  it, which nomologR does not declare, so the call ran only where that
+  package was installed.
+- [`nomo_efa()`](https://juhalt.github.io/nomologR/reference/nomo_efa.md)
+  refuses `rotation = "targetQ"`, for which psych had silently used
+  `"Promax"`.
+- [`nomo_factors()`](https://juhalt.github.io/nomologR/reference/nomo_factors.md)
+  refuses an `fm` it does not know. An unknown value had been accepted
+  and recorded, and psych ran `minres` in its place.
+- [`nomo_hypotheses()`](https://juhalt.github.io/nomologR/reference/nomo_hypotheses.md)
+  and
+  [`nomo_network()`](https://juhalt.github.io/nomologR/reference/nomo_network.md)
+  refuse a directed path and an association for the same pair.
+  [`nomo_network()`](https://juhalt.github.io/nomologR/reference/nomo_network.md)
+  also refuses a hypothesis that adds a path opposite to another, and an
+  ordered-factor covariate.
+- [`nomo_screen()`](https://juhalt.github.io/nomologR/reference/nomo_screen.md)
+  checks `reverse` and `scale_range` in every mode. With `effort = TRUE`
+  it refuses a reverse-keyed item whose responses fall outside
+  `scale_range`.
+  [`nomo_run()`](https://juhalt.github.io/nomologR/reference/nomo_run.md)
+  refuses an unknown `reverse` item.
+- The content-review reader refuses a handoff whose schema version is
+  not one whole number, whose keying is not 1 or -1, or that lists an
+  item twice.
+- [`nomo_compare()`](https://juhalt.github.io/nomologR/reference/nomo_compare.md)
+  refuses the model labels `factor` and `item`.
+- [`nomo_model()`](https://juhalt.github.io/nomologR/reference/nomo_model.md)
+  refuses a factor, indicator, or general-factor name that lavaan would
+  rename or cannot read.
+- [`nomo_reliability()`](https://juhalt.github.io/nomologR/reference/nomo_reliability.md)
+  refuses a `ci_level`, `ci_boot`, or `ci_seed` that is not one valid
+  value.
+- [`nomo_scores()`](https://juhalt.github.io/nomologR/reference/nomo_scores.md)
+  refuses a `guidance` that is not a list.
+- [`nomo_run()`](https://juhalt.github.io/nomologR/reference/nomo_run.md)
+  refuses at the start what used to surface at a later stage: a scale
+  with fewer than three items, an invariance `group` that is not a
+  column, and a missing-data strategy lavaan does not have. When a run
+  is resumed, it refuses two kinds of settings it used to store unused:
+  those for an invariance or network branch that a complete run marked
+  not requested, and those for `scores` or `missing` once the CFA is
+  fitted. Settings for a completed or blocked stage were already
+  refused.
+- [`nomo_revise()`](https://juhalt.github.io/nomologR/reference/nomo_revise.md)
+  refuses `cfa_model` inside `decisions`.
+- [`nomo_apa_table()`](https://juhalt.github.io/nomologR/reference/nomo_apa_table.md)
+  refuses a `type` for a result that has one table and a `title` that is
+  not one string. `nomo_apa_table(x, "factor_correlations")` stops for a
+  model that fixes every factor correlation, such as a bifactor model;
+  it had tabled the fixed zeros as estimates.
+  [`nomo_table()`](https://juhalt.github.io/nomologR/reference/nomo_table.md)
+  refuses a `type` for a `nomo_hypotheses` object.
+
+#### Results that change
+
+- **Item screening.**
+  - The careless-responding indices of `nomo_screen(effort = TRUE)` on
+    short item sets.
+  - `floor_prop` and `ceiling_prop` when `scale_range` is given.
+  - Which items of a declared scale are reviewed on an item-rest
+    correlation.
+- **Factor retention and EFA.** `fm = "minchi"` in
+  [`nomo_efa()`](https://juhalt.github.io/nomologR/reference/nomo_efa.md)
+  and
+  [`nomo_factors()`](https://juhalt.github.io/nomologR/reference/nomo_factors.md),
+  and
+  [`nomo_efa()`](https://juhalt.github.io/nomologR/reference/nomo_efa.md)’s
+  cases per item when item values are missing.
+- **CFA and model comparison.**
+  - [`nomo_cfa()`](https://juhalt.github.io/nomologR/reference/nomo_cfa.md)’s
+    `fit_evidence` when lavaan cannot compute a scaled test, and its
+    `ordered`.
+  - [`nomo_compare()`](https://juhalt.github.io/nomologR/reference/nomo_compare.md)’s
+    `relation` when nesting cannot be checked, `models$df` for adjusted
+    tests, and the pair names in `evidence`. Models whose missing-data
+    handling lavaan applied alike are now compared.
+- **Reliability and validity.**
+  - [`nomo_reliability()`](https://juhalt.github.io/nomologR/reference/nomo_reliability.md)
+    for a multi-group fit and beside a single-indicator factor.
   - [`nomo_validity()`](https://juhalt.github.io/nomologR/reference/nomo_validity.md)’s
-    HTMT cases under FIML.
-  - [`nomo_hierarchical()`](https://juhalt.github.io/nomologR/reference/nomo_hierarchical.md)
-    under the theta parameterization.
-  - The single-indicator error variance after listwise deletion.
-  - The careless-responding indices on short item sets.
-  - `nomo_efa(fm = "minchi")`.
-  - [`nomo_run()`](https://juhalt.github.io/nomologR/reference/nomo_run.md)’s
-    downstream stages, which now inherit the CFA’s settings.
+    HTMT cases under FIML, its `ave` when indicators cross-load, and the
+    flag of a construct pair that has no HTMT.
+- **Hierarchical models.**
+  [`nomo_hierarchical()`](https://juhalt.github.io/nomologR/reference/nomo_hierarchical.md)
+  under the theta parameterization, and with a negative variance.
+- **Scores.**
+  [`nomo_scores()`](https://juhalt.github.io/nomologR/reference/nomo_scores.md)’s
+  parallel-model test, when its univocality note appears, and the class
+  of its [`summary()`](https://rdrr.io/r/base/summary.html).
+- **Invariance.** In
+  [`nomo_invariance()`](https://juhalt.github.io/nomologR/reference/nomo_invariance.md):
+  the sequence for ordered-factor columns, the level a release applies
+  from, `completed_levels`, and the version of the fit statistics under
+  a robust estimator.
+- **Nomological network.**
+  [`nomo_network()`](https://juhalt.github.io/nomologR/reference/nomo_network.md)’s
+  concordance values, what its measurement context is judged on, the
+  `estimator` it records and, for some networks, the fitted model.
+- **Missing data.** The label of a
+  [`nomo_missing()`](https://juhalt.github.io/nomologR/reference/nomo_missing.md)
+  strategy when lavaan ran another method than the one requested.
+- **Guided workflow.** The settings the downstream stages of
+  [`nomo_run()`](https://juhalt.github.io/nomologR/reference/nomo_run.md)
+  are fitted with, the keying a run takes from a `contentvalidR`
+  handoff, and what
+  [`nomo_revise()`](https://juhalt.github.io/nomologR/reference/nomo_revise.md)
+  keeps of that handoff.
+- **Methods.** What `nomo_methods(x)` credits, and the text, dates, and
+  references of the registry.
+- **Tables.** The headings and cells of
+  [`nomo_apa_table()`](https://juhalt.github.io/nomologR/reference/nomo_apa_table.md),
+  and the columns of an empty
+  [`nomo_table()`](https://juhalt.github.io/nomologR/reference/nomo_table.md).
+- **Printed numbers.** Display rounds half away from zero. Returned
+  values are unchanged.
+
+#### New refusals
+
+Input that used to fail inside lavaan, psych, or nomologR, with an error
+that named neither the function nor the argument, now stops early with a
+message that does. A call that worked is not affected.
+
+- [`nomo_screen()`](https://juhalt.github.io/nomologR/reference/nomo_screen.md):
+  data with two columns of one name, and a handoff that carries no items
+  or is not a list.
+- [`nomo_factors()`](https://juhalt.github.io/nomologR/reference/nomo_factors.md)
+  and
+  [`nomo_efa()`](https://juhalt.github.io/nomologR/reference/nomo_efa.md):
+  `fm = "alpha"` where psych cannot fit it (in
+  [`nomo_factors()`](https://juhalt.github.io/nomologR/reference/nomo_factors.md),
+  and with one factor in
+  [`nomo_efa()`](https://juhalt.github.io/nomologR/reference/nomo_efa.md)),
+  `fm = "minrank"` without the `Rcsdp` package, a misspelled `rotation`,
+  `"bifactor"` and `"biquartimin"`, an ordinal item with more than 8
+  categories under polychoric or mixed correlations, and a `types`
+  vector with a missing name.
+- [`nomo_cfa()`](https://juhalt.github.io/nomologR/reference/nomo_cfa.md),
+  [`nomo_split()`](https://juhalt.github.io/nomologR/reference/nomo_split.md),
+  and
+  [`nomo_compare()`](https://juhalt.github.io/nomologR/reference/nomo_compare.md):
+  an `mi_top`, `seed`, or `reference` beyond R’s integer range.
+- [`nomo_invariance()`](https://juhalt.github.io/nomologR/reference/nomo_invariance.md):
+  an unknown `ID.fac`.
+- [`nomo_network()`](https://juhalt.github.io/nomologR/reference/nomo_network.md):
+  a hypothesis that names a variable lavaan cannot read.
+- [`nomo_scores()`](https://juhalt.github.io/nomologR/reference/nomo_scores.md):
+  a factor with no observed indicators, a path from an observed
+  covariate to a factor, and a covariance between a factor and an
+  observed variable.
+- [`nomo_table()`](https://juhalt.github.io/nomologR/reference/nomo_table.md):
+  an object that has no tables.
+- [`nomo_apa_table()`](https://juhalt.github.io/nomologR/reference/nomo_apa_table.md):
+  factor correlations for a higher-order model. The error had said that
+  the model has one factor.
+
+### Fixes from the audit, by area ([\#145](https://github.com/JUhalt/nomologR/issues/145))
 
 #### Item screening and careless responding
 
@@ -110,24 +278,57 @@ presentation) follow before the release candidate.
     the number of items and the share of cases that reached half the
     length. Before, the rule flagged every case at one or two items and
     about a third of attentive respondents at six. `effort_settings`
-    gains `long_string_min_items` and `long_string_rule_applied`, the
-    print reads “long-string not applied”, and the report’s rule column
-    says the same. Results are unchanged at 20 or more items; set
-    `guidance$long_string_min_items` lower to apply the rule to a
-    shorter set.
+    gains `long_string_min_items` and `long_string_rule_applied`, and
+    the print reads “Long-string: not applied”. Results are unchanged at
+    20 or more items; set `guidance$long_string_min_items` lower to
+    apply the rule to a shorter set.
+  - **An index without a value.** The decision log says why: the
+    `mahalanobis` and `per_scale_indices` rows, and `even_odd` when it
+    is not computed.
 - [`nomo_screen()`](https://juhalt.github.io/nomologR/reference/nomo_screen.md)
-  checks `reverse` and `scale_range` whether or not `effort = TRUE`
-  ([\#145](https://github.com/JUhalt/nomologR/issues/145)). With
-  `effort = FALSE`, a `reverse` naming an item that is not screened, a
-  `reverse` that is not character, and a `scale_range` that is not
-  `c(min, max)` with min below max were accepted silently, although both
-  arguments feed the item audit’s keying explanation. They are now
-  errors, as with `effort = TRUE`. A non-finite `scale_range` is refused
-  in both modes. Naming reverse-keyed items without `scale_range` is
-  still refused with `effort = TRUE`; with `effort = FALSE` the audit
-  runs, and a new `keying_not_used` row in the decision log says the
-  declared keying was not used. The help page now says what each mode
-  does, in place of “Required whenever `reverse` is supplied”.
+  checks the declared response scale and keying
+  ([\#145](https://github.com/JUhalt/nomologR/issues/145)).
+  - **In both modes.** With `effort = FALSE`, a `reverse` naming an item
+    that is not screened, a `reverse` that is not character, and a
+    `scale_range` that is not `c(min, max)` with min below max were
+    accepted silently, although both arguments feed the item audit’s
+    keying explanation. They are now errors, as with `effort = TRUE`. A
+    non-finite `scale_range` is refused in both modes.
+  - **Keying without a range.** Naming reverse-keyed items without
+    `scale_range` is still refused with `effort = TRUE`. With
+    `effort = FALSE` the audit runs, and a `keying_not_used` row says
+    the declared keying was not used.
+  - **Responses outside the range.** They get an `out_of_range` row, a
+    concern. With `effort = TRUE`, a reverse-keyed item with such
+    responses is refused; it had been recoded on the wrong scale.
+  - **Floor and ceiling.** `floor_prop` and `ceiling_prop` of a
+    numeric-discrete item use the ends of `scale_range` when it is
+    given. The row for a concentrated item suggests `scale_range` only
+    for a numeric-discrete item.
+- The item audit within declared scales
+  ([\#145](https://github.com/JUhalt/nomologR/issues/145)).
+  - An item that is the only one of its declared scale, or is in a scale
+    with too few complete cases, is no longer reviewed on the pooled
+    item-rest correlation. An `item_rest_not_computed` row says so.
+  - A forward-keyed item whose rest score holds a declared reverse-keyed
+    item not yet recoded says so, and gives the item-rest value with
+    exactly those items recoded. So does the row for negative inter-item
+    correlations.
+  - A negative pair with an item outside every declared scale is named
+    as such.
+  - `non_finite_scores` is one row per item, named by the item, so the
+    item review flags it.
+- `response_distribution` counts numeric values that differ only past 15
+  digits once ([\#145](https://github.com/JUhalt/nomologR/issues/145)).
+- The content-review reader says what it took from a `contentvalidR`
+  handoff ([\#145](https://github.com/JUhalt/nomologR/issues/145)).
+  - **Decision-log rows.** `keying_completed` and `scales_override` are
+    new. `keying_override` appears only when the call replaced declared
+    keying. The provenance row credits construct membership to content
+    review only when the review made one, and a held-back item with no
+    recommendation is no longer quoted as “NA”.
+  - **A handoff without items.** The error gives the review’s status
+    counts and its carry rule.
 
 #### Factor retention and EFA
 
@@ -138,7 +339,7 @@ presentation) follow before the release candidate.
   ([\#145](https://github.com/JUhalt/nomologR/issues/145)). Under the
   default `missing = "pairwise"`, `n_cases` counts every row, including
   rows with no item data, so it can overstate the information in the
-  correlations. Both now print “Cases: 500 (minimum pairwise N: 280)”
+  correlations. Both now print “Cases: 500 (minimum pairwise N: 473)”
   when the two differ, and
   [`nomo_factors()`](https://juhalt.github.io/nomologR/reference/nomo_factors.md)
   returns `min_pairwise_n`, as
@@ -151,31 +352,93 @@ presentation) follow before the release candidate.
   prompt already did, so the two functions agree on whether a sample is
   small. Nothing changes without missing item values or with
   `missing = "complete"`.
-  [`?nomo_efa`](https://juhalt.github.io/nomologR/reference/nomo_efa.md)
-  and
-  [`?nomo_factors`](https://juhalt.github.io/nomologR/reference/nomo_factors.md)
-  document `n_cases`, `min_pairwise_n`, and the `sample_adequacy`
-  fields.
 - Every `fm` value
   [`nomo_efa()`](https://juhalt.github.io/nomologR/reference/nomo_efa.md)
   and
   [`nomo_factors()`](https://juhalt.github.io/nomologR/reference/nomo_factors.md)
   document now runs as documented
   ([\#145](https://github.com/JUhalt/nomologR/issues/145)).
-  [`nomo_efa()`](https://juhalt.github.io/nomologR/reference/nomo_efa.md)
-  no longer lists or accepts `"minrank"`: psych needs the `Rcsdp`
-  package for it, which nomologR does not declare, so it failed on a
-  default install. `nomo_efa(fm = "alpha")` with one factor stops with a
-  clear message, because psych cannot fit a one-factor alpha solution.
+  - **`"minrank"`.**
+    [`nomo_efa()`](https://juhalt.github.io/nomologR/reference/nomo_efa.md)
+    no longer lists or accepts it: psych needs the `Rcsdp` package for
+    it, which nomologR does not declare, so it failed on a default
+    install.
+  - **`"alpha"`.** `nomo_efa(fm = "alpha")` with one factor stops with a
+    clear message, because psych cannot fit a one-factor alpha solution.
+  - **[`nomo_factors()`](https://juhalt.github.io/nomologR/reference/nomo_factors.md).**
+    It now checks `fm` and lists the values that work for parallel
+    analysis; `"alpha"` and `"minrank"` stop with that list. So does a
+    value it does not know, for which psych had run `minres` while the
+    result recorded the value as given.
+  - **`"minchi"`.** It now runs `minchi` in both functions. psych had
+    quietly fitted `minres` instead, because nomologR did not pass the
+    pairwise sample sizes `minchi` needs. Results with `fm = "minchi"`
+    change.
+- [`nomo_efa()`](https://juhalt.github.io/nomologR/reference/nomo_efa.md)
+  records a solution that is improper or did not converge; it had
+  discarded psych’s warnings
+  ([\#145](https://github.com/JUhalt/nomologR/issues/145)).
+  - **Heywood cases.** An item with a communality of .995 or more gets a
+    concern row in the decision log, which states the item’s unique
+    variance, because psych’s extractions often stop just short of 1. A
+    communality above 1 is reported as an ultra-Heywood case.
+  - **Convergence and identification.** An extraction that stops at its
+    iteration limit gets a concern row, and so does a model with more
+    factors than its items can identify (negative degrees of freedom).
+    Zero degrees of freedom is a prompt for review.
+  - **Other messages.** Any other psych warning or message is recorded
+    in the decision log for review.
+  - **Display.** [`print()`](https://rdrr.io/r/base/print.html) lists
+    these under “Solution checks” and counts a Heywood item among the
+    item flags. [`summary()`](https://rdrr.io/r/base/summary.html) and
+    the items plot show it as a concern. Stored item flags are
+    unchanged.
+- [`nomo_efa()`](https://juhalt.github.io/nomologR/reference/nomo_efa.md)
+  checks `rotation`
+  ([\#145](https://github.com/JUhalt/nomologR/issues/145)).
+  - A misspelled name stops with the list of accepted rotations.
+  - A target rotation stops with the reason:
+    [`nomo_efa()`](https://juhalt.github.io/nomologR/reference/nomo_efa.md)
+    passes no target matrix, and psych had silently used `"Promax"` for
+    `"targetQ"`.
+  - `"bifactor"` and `"biquartimin"` also stop with the reason: psych
+    runs them through `GPArotation` only when psych is attached, and
+    only for three or more factors.
+  - The decision log describes the solution that was fitted. A
+    one-factor solution is not rotated, and `"none"` and orthogonal
+    rotations are prompts for review. Only an oblique solution asks for
+    its factor correlations.
+- `nomo_efa(factors = <nomo_factors>, factor_count = k)` runs when
+  parallel analysis suggested 0 factors
+  ([\#145](https://github.com/JUhalt/nomologR/issues/145)). Without
+  `factor_count`, the error says that parallel analysis suggested 0 and
+  gives an example.
+- [`nomo_efa()`](https://juhalt.github.io/nomologR/reference/nomo_efa.md)
+  completes a partial `guidance` list from
+  [`nomo_defaults()`](https://juhalt.github.io/nomologR/reference/nomo_defaults.md);
+  it had failed with “argument is of length zero”
+  ([\#145](https://github.com/JUhalt/nomologR/issues/145)).
+- For polychoric and mixed correlations,
   [`nomo_factors()`](https://juhalt.github.io/nomologR/reference/nomo_factors.md)
-  now checks `fm` and lists the values that work for parallel analysis;
-  `"alpha"` and `"minrank"` stop with that list rather than an engine
-  error. `fm = "minchi"` now runs `minchi` in both functions: psych had
-  quietly fitted `minres` instead, because nomologR did not pass the
-  pairwise sample sizes `minchi` needs. Results with `fm = "minchi"`
-  change.
+  and
+  [`nomo_efa()`](https://juhalt.github.io/nomologR/reference/nomo_efa.md)
+  score ordinal items by the rank of their observed values
+  ([\#145](https://github.com/JUhalt/nomologR/issues/145)). Items coded
+  0/25/50/75/100 or 1/3/5, and factors with a level nobody chose, no
+  longer fail in psych. Items coded 1, 2, 3, … give the same results as
+  before, and Pearson correlations still use the values as coded.
+- With tetrachoric or mixed correlations,
+  [`nomo_factors()`](https://juhalt.github.io/nomologR/reference/nomo_factors.md)
+  and
+  [`nomo_efa()`](https://juhalt.github.io/nomologR/reference/nomo_efa.md)
+  no longer print a blank line for every simulated data set
+  ([\#145](https://github.com/JUhalt/nomologR/issues/145)). psych’s
+  warning for each smoothed matrix is replaced by one decision-log row.
+- `nomo_factors(criterion_set = "minimal")` no longer prints, plots,
+  defines, or logs revised MAP, which that set does not include
+  ([\#145](https://github.com/JUhalt/nomologR/issues/145)).
 
-#### CFA, model comparison, and model syntax
+#### CFA, model comparison, model syntax, and sample splitting
 
 - [`nomo_cfa()`](https://juhalt.github.io/nomologR/reference/nomo_cfa.md)
   treats model indicators stored as ordered factors as declared, whether
@@ -184,7 +447,7 @@ presentation) follow before the release candidate.
   already fitted such columns as categorical. The result, though,
   recorded no ordered indicators, gave the estimator as `DWLS`, and
   logged that lavaan’s continuous-data default was retained. As a result
-  `nomo_methods_used()` credited ML,
+  `nomo_methods(x)` credited ML,
   [`nomo_reliability()`](https://juhalt.github.io/nomologR/reference/nomo_reliability.md)
   stopped with a semTools error, and
   [`nomo_compare()`](https://juhalt.github.io/nomologR/reference/nomo_compare.md)
@@ -193,12 +456,12 @@ presentation) follow before the release candidate.
   and the decision log flags them for review. On `nomo_demo_ordinal` the
   fit is unchanged, and a guided run without `ordered` no longer stops
   at the reliability stage. With an ML-family estimator or FIML, such
-  columns now stop the fit with a message that names them, rather than
-  lavaan’s error.
+  columns stop the fit with a message that names them, where lavaan’s
+  error used to appear.
 - [`nomo_cfa()`](https://juhalt.github.io/nomologR/reference/nomo_cfa.md)
   counts only the model’s own variables in `ordered`
   ([\#145](https://github.com/JUhalt/nomologR/issues/145)). Declared
-  names that are not in the model are left out of `ordered`, the print
+  names that are not in the model are left out of `ordered`, the print,
   and the count, and the decision log lists them.
 - [`nomo_cfa()`](https://juhalt.github.io/nomologR/reference/nomo_cfa.md)’s
   `fit_evidence` no longer mixes versions of a fit when lavaan cannot
@@ -209,47 +472,64 @@ presentation) follow before the release candidate.
   chi-square and CFI. In that case every value is now the standard one,
   and the decision log says so for review. Otherwise the order is
   unchanged (robust, then scaled, then standard values), so ML with FIML
-  still reports lavaan’s robust CFI, TLI and RMSEA beside the standard
+  still reports lavaan’s robust CFI, TLI, and RMSEA beside the standard
   chi-square. The RMSEA interval is always the one around the RMSEA
   reported.
 - In a higher-order model,
   [`nomo_cfa()`](https://juhalt.github.io/nomologR/reference/nomo_cfa.md)
   reports a negative first-order disturbance once, as a negative latent
-  variance, rather than also as a negative observed residual variance
-  ([\#145](https://github.com/JUhalt/nomologR/issues/145)). A weak
-  second-order loading now asks for the first-order factor’s definition
-  to be inspected, not item content.
+  variance; it had also been reported as a negative observed residual
+  variance ([\#145](https://github.com/JUhalt/nomologR/issues/145)). A
+  weak second-order loading now asks for the first-order factor’s
+  definition to be inspected, not item content.
 - [`nomo_compare()`](https://juhalt.github.io/nomologR/reference/nomo_compare.md)
   ([\#145](https://github.com/JUhalt/nomologR/issues/145)):
-  - When the nesting check cannot run and nesting was not declared,
-    `relation` is `"undetermined"`, printed “nesting not determined”,
-    and the comparison is logged for review. Before, it read “not
-    nested” at severity info. The help lists every `relation` and
-    `nesting_check` value.
-  - `models$df` is the degrees of freedom of the chi-square beside it.
-    For mean-and-variance adjusted tests such as `MLMVS`, it had paired
-    the scaled chi-square with the model’s degrees of freedom. Nesting
-    and `df_difference` still count the models’ degrees of freedom.
-  - HTMT2 rows of `evidence` name a pair in model order (“A vs B”), as
+  - **Nesting.** When the nesting check cannot run and nesting was not
+    declared, `relation` is `"undetermined"`, printed “nesting not
+    determined”, and the comparison is logged for review. Before, it
+    read “not nested” at severity info. The help lists every `relation`
+    and `nesting_check` value.
+  - **Degrees of freedom.** `models$df` is the degrees of freedom of the
+    chi-square beside it. For mean-and-variance adjusted tests such as
+    `MLMVS`, it had paired the scaled chi-square with the model’s
+    degrees of freedom. Nesting and `df_difference` still count the
+    models’ degrees of freedom.
+  - **Pairs.** HTMT2 rows of `evidence` name a pair in model order (“A
+    vs B”), as
     [`nomo_validity()`](https://juhalt.github.io/nomologR/reference/nomo_validity.md)
-    does, rather than “B vs A”.
-  - The help now says what `engine_warnings` holds: the warnings from
-    the nesting check and the difference test for each compared model.
-    Each fit keeps its own lavaan warnings in `fits`.
+    does.
+  - **Missing data.** Models are compared by the missing-data handling
+    lavaan applied, so `missing = "fiml"` against `"ml"`, or the default
+    against `"listwise"`, is no longer refused as different handling.
+  - **Improper solutions.** An `improper_solution` row, a concern, names
+    each compared model that has one.
+  - **Warnings.** The help says what `engine_warnings` holds: the
+    warnings from the nesting check and the difference test for each
+    compared model. Each fit keeps its own lavaan warnings in `fits`.
 - [`nomo_model()`](https://juhalt.github.io/nomologR/reference/nomo_model.md)
-  ([\#145](https://github.com/JUhalt/nomologR/issues/145)): two bifactor
-  structures it accepts are not identified without an added constraint.
-  One is a group factor with two indicators, whose loadings enter the
-  covariances only through their product. The other is two group factors
-  with no more than three indicators each. The help and notes had called
-  them weakly identified or possibly unstable. The notes now say they
-  are not identified, at severity concern; lavaan may still report
-  convergence, but the loadings are arbitrary. `notes` is named by
-  severity (“review” or “concern”), and the print prefixes each note
-  with it. These structures are still accepted, and no constraint is
-  added.
+  ([\#145](https://github.com/JUhalt/nomologR/issues/145)):
+  - **Bifactor structures that are not identified.** Two structures it
+    accepts are not identified without an added constraint. One is a
+    group factor with two indicators, whose loadings enter the
+    covariances only through their product. The other is two group
+    factors with no more than three indicators each. The help and notes
+    had called them weakly identified or possibly unstable. The notes
+    now say they are not identified, at severity concern; lavaan may
+    still report convergence, but the loadings are arbitrary. `notes` is
+    named by severity (“review” or “concern”), and the print prefixes
+    each note with it. These structures are still accepted, and no
+    constraint is added.
+  - **Names.** A name lavaan would rename or cannot read stops with a
+    suggested replacement. lavaan had fitted “self-efficacy” as a factor
+    called `efficacy`.
+- [`nomo_split()`](https://juhalt.github.io/nomologR/reference/nomo_split.md)
+  records the random-number generator its seed depends on, in a new
+  `rng_kind` field, the decision log, and the print
+  ([\#145](https://github.com/JUhalt/nomologR/issues/145)). The same
+  seed under another [`RNGkind()`](https://rdrr.io/r/base/Random.html)
+  gives a different split.
 
-#### Reliability, validity, retest, and single indicators
+#### Reliability, validity, and hierarchical models
 
 - Reliability and validity now read semTools’ results by construct and
   group ([\#145](https://github.com/JUhalt/nomologR/issues/145)).
@@ -261,36 +541,55 @@ presentation) follow before the release candidate.
     `block` now names each coefficient’s group, and
     [`summary()`](https://rdrr.io/r/base/summary.html),
     [`nomo_table()`](https://juhalt.github.io/nomologR/reference/nomo_table.md),
-    the bootstrap intervals and
+    the bootstrap intervals, and
     [`nomo_apa_table()`](https://juhalt.github.io/nomologR/reference/nomo_apa_table.md)
     follow it; the APA table has one row per construct and group.
   - **Single-indicator factors.** In a model with a single-indicator
     factor beside one scale, the scale’s omega and alpha were filed
     under the invented name “construct_1”. They now keep the scale’s
     name. The single-indicator factor’s `alpha_status` and a
-    decision-log entry say that no reliability is estimated for it. The
-    reason given for an unavailable alpha now depends on whether alpha
-    was returned.
+    decision-log entry say that no reliability is estimated for it.
   - **Cross-loaded indicators.** When every factor had a cross-loaded
     indicator,
     [`nomo_validity()`](https://juhalt.github.io/nomologR/reference/nomo_validity.md)’s
     `ave` was empty and [`print()`](https://rdrr.io/r/base/print.html),
-    [`summary()`](https://rdrr.io/r/base/summary.html) and
+    [`summary()`](https://rdrr.io/r/base/summary.html), and
     [`nomo_table()`](https://juhalt.github.io/nomologR/reference/nomo_table.md)
     failed. Each factor now keeps its row. An AVE that a cross-loading
     leaves undefined is `NA` with attention “unavailable”, and the log
-    records it as information rather than a concern.
+    records it as information.
 - [`nomo_reliability()`](https://juhalt.github.io/nomologR/reference/nomo_reliability.md),
-  [`nomo_validity()`](https://juhalt.github.io/nomologR/reference/nomo_validity.md)
+  [`nomo_validity()`](https://juhalt.github.io/nomologR/reference/nomo_validity.md),
   and
   [`nomo_hierarchical()`](https://juhalt.github.io/nomologR/reference/nomo_hierarchical.md)
-  now treat columns stored as ordered factors as ordered indicators, as
-  lavaan fitted them, even when `ordered =` does not name them
+  treat columns stored as ordered factors as ordered indicators, as
+  lavaan fitted them, even when `ordered` does not name them
   ([\#145](https://github.com/JUhalt/nomologR/issues/145)).
   [`nomo_reliability()`](https://juhalt.github.io/nomologR/reference/nomo_reliability.md)
   had treated them as continuous and failed at the alpha step.
+- [`nomo_validity()`](https://juhalt.github.io/nomologR/reference/nomo_validity.md)
+  flags a latent correlation against the HTMT-family reference, reading
+  the limit of its interval farthest from zero (Rönkkö & Cho, 2022)
+  ([\#145](https://github.com/JUhalt/nomologR/issues/145)).
+  `latent_correlations` gains `reference` and `attention`, and the
+  decision log gains `latent_correlation` rows.
+  - **Pairs with HTMT.** The `signal` of `nomo_table(x, "discriminant")`
+    is still the HTMT2 (or HTMT) flag where one was computed. When the
+    latent correlation’s interval reaches past the reference but HTMT2
+    does not, the pair is not flagged: the log records it as
+    information, and the summary names the pair.
+  - **Pairs without HTMT.** Where neither was computed (several groups,
+    a cross-loading, a covariance-matrix fit, or `htmt = "none"`),
+    `signal` comes from the latent correlation; it used to be
+    “unavailable”. A latent correlation near 1 is therefore flagged in
+    those cases too, and `plot(x, type = "discriminant")` draws the
+    latent correlation with its interval; it had stopped.
+  - **Beyond 1.** A latent correlation beyond 1 is a concern either way.
+  - **An HTMT that cannot exist.** With one construct, or for a
+    construct with one indicator, it is logged as information, not as a
+    review or concern flag.
 - [`nomo_validity()`](https://juhalt.github.io/nomologR/reference/nomo_validity.md)’s
-  `htmt_missing = "default"` now follows the fitted model’s missing-data
+  `htmt_missing = "default"` follows the fitted model’s missing-data
   handling: FIML when the CFA used it, pairwise deletion when it used
   that, and listwise deletion otherwise
   ([\#145](https://github.com/JUhalt/nomologR/issues/145)). Despite its
@@ -299,47 +598,51 @@ presentation) follow before the release candidate.
   and `n`, and a decision-log entry records the cases HTMT used. The
   entry is for review only when a different handling leaves HTMT with
   fewer cases than the CFA.
-- [`nomo_retest()`](https://juhalt.github.io/nomologR/reference/nomo_retest.md)’s
-  standard error of measurement is now the square root of the residual
-  mean square (Weir, 2005), which leaves out any shift between occasions
-  ([\#145](https://github.com/JUhalt/nomologR/issues/145)). It had been
-  the pooled SD x sqrt(1 - ICC(A,1)), which counts a shift as error.
-  Under a shift, `sem`, `sdc` and `rci` therefore overstated measurement
-  error and missed reliable change. Without a shift the values are
-  nearly unchanged.
+- [`nomo_reliability()`](https://juhalt.github.io/nomologR/reference/nomo_reliability.md)
+  checks `ci_level`, `ci_boot`, and `ci_seed` before using them
+  ([\#145](https://github.com/JUhalt/nomologR/issues/145)). It had cut a
+  vector to its first element and truncated a fraction. A bootstrap
+  request for a model fitted from a covariance matrix says that raw data
+  are needed, and requested intervals that are not available get a
+  review row.
 - [`nomo_hierarchical()`](https://juhalt.github.io/nomologR/reference/nomo_hierarchical.md)
-  gives the same indices for an ordered model fitted with lavaan’s theta
-  parameterization as with delta
-  ([\#145](https://github.com/JUhalt/nomologR/issues/145)). Under theta,
-  omega had exceeded 1, and every index except PUC was wrong. The help
-  page now lists the `factors` and `estimand` fields, and
-  [`?nomo_table`](https://juhalt.github.io/nomologR/reference/nomo_table.md)
-  lists the `"factors"` type.
-- [`nomo_network()`](https://juhalt.github.io/nomologR/reference/nomo_network.md)
-  now fixes a single indicator’s error variance from the composite’s
-  variance on the rows lavaan analyzes, with lavaan’s denominator, so
-  the fitted model’s reliability is the one supplied
-  ([\#145](https://github.com/JUhalt/nomologR/issues/145)). It had used
-  every available row, which differed whenever listwise deletion dropped
-  cases. `single_indicators$n` is now the number of those rows.
+  ([\#145](https://github.com/JUhalt/nomologR/issues/145)):
+  - **Theta parameterization.** It gives the same indices for an ordered
+    model fitted with lavaan’s theta parameterization as with delta.
+    Under theta, omega had exceeded 1, and every index except PUC was
+    wrong.
+  - **Negative variances.** It no longer fails with “missing value where
+    TRUE/FALSE needed” on a negative disturbance or factor variance. The
+    indices that depend on it are `NA`, and a concern note names the
+    variance.
+  - **Plots.** The caption names any composite or loading a plot leaves
+    out.
+- With lavaan’s theta parameterization and ordered indicators,
+  [`nomo_validity()`](https://juhalt.github.io/nomologR/reference/nomo_validity.md)
+  adds a review row that gives the mean squared standardized loading,
+  the AVE of the delta fit, and
+  `nomo_reliability(ordinal_scale = FALSE)` adds one for the
+  latent-response omega and alpha
+  ([\#145](https://github.com/JUhalt/nomologR/issues/145)).
+- [`plot()`](https://rdrr.io/r/graphics/plot.default.html) for a
+  `nomo_reliability` object takes `type`, as the other plot methods do;
+  `"coefficients"` is the one type
+  ([\#145](https://github.com/JUhalt/nomologR/issues/145)).
 
 #### Measurement invariance
 
 - [`nomo_invariance()`](https://juhalt.github.io/nomologR/reference/nomo_invariance.md)
-  and
-  [`nomo_invariance_longitudinal()`](https://juhalt.github.io/nomologR/reference/nomo_invariance_longitudinal.md)
-  model indicators stored as ordered factors as ordered, whether or not
+  models indicators stored as ordered factors as ordered, whether or not
   `ordered` names them
   ([\#145](https://github.com/JUhalt/nomologR/issues/145)). lavaan
   already fitted such columns as categorical, but nomologR recorded them
   as continuous and used the continuous sequence. The scalar model was
   then unidentified, and a population latent difference of .50 SD was
-  reported as 0.00. They now get the threshold-aware sequence, WLSMV and
-  the theta parameterization. `ordered` includes them,
-  `ordered_detected` lists them, and the decision log flags them for
-  review. Across occasions, an item whose columns are ordered factors is
-  ordered on every occasion. Calls written for continuous indicators can
-  therefore stop: `levels` from the continuous sequence (such as
+  reported as 0.00. They now get the threshold-aware sequence, WLSMV,
+  and the theta parameterization. `ordered` includes them, a new
+  `ordered_detected` field lists them, and the decision log flags them
+  for review. Calls written for continuous indicators can therefore
+  stop: `levels` from the continuous sequence (such as
   `c("configural", "metric", "scalar")`, where the ordered sequence adds
   `"thresholds"`), `ID.fac = "UL"`, an ML-family `estimator`, or
   `missing = "fiml"`. Each such error names the detected indicators and
@@ -348,8 +651,7 @@ presentation) follow before the release candidate.
   threshold, or residual variance of an indicator in the model, and must
   free it ([\#145](https://github.com/JUhalt/nomologR/issues/145)).
   semTools ignores a release it cannot match. A misspelled item
-  (`"ag9 ~ 1"`), a factor name with the wrong case, or a column name
-  across occasions (`"w3_t2 ~ 1"` for `"w3 ~ 1"`) had left the model
+  (`"ag9 ~ 1"`) or a factor name with the wrong case had left the model
   fully constrained while the fit table, summary, and decision log
   reported the release. Such releases are now errors, as is one the
   generated model fixes, such as a marker loading under `ID.fac = "UL"`.
@@ -362,25 +664,16 @@ presentation) follow before the release candidate.
   loading equal and the scalar model freed it, so the two were not
   nested, yet their likelihood-ratio test and fit changes were reported
   as usual.
-- `latent_means` is decided from the fitted model
-  ([\#145](https://github.com/JUhalt/nomologR/issues/145)). It reports
-  only factors whose reference latent mean is fixed at 0 and variance at
-  1, and only estimated means. For a model with higher-order factors,
-  semTools uses unit loadings whatever `ID.fac` asks for, and the table
-  had reported a group’s own mean as a standardized difference. The
-  table is now empty, and `ID.fac` and the log record `"ul"`. A mean
-  fixed at 0 because every intercept of a factor was released had been
-  reported as 0.00 \[0.00, 0.00\]. It is now left out, and the log says
-  why.
 - `ID.cat` accepts only Wu and Estabrook’s (2016) identification,
   `"Wu.Estabrook.2016"`, or a semTools alias for it
   ([\#145](https://github.com/JUhalt/nomologR/issues/145)). Under
-  `"millsap"` (which
-  [`?nomo_invariance_longitudinal`](https://juhalt.github.io/nomologR/reference/nomo_invariance_longitudinal.md)
-  had suggested) or `"mplus"`, the levels kept the Wu-Estabrook sequence
+  `"millsap"` or `"mplus"`, the levels kept the Wu-Estabrook sequence
   and notes. The thresholds step then also constrained the intercepts,
-  and the scalar step added nothing. The Millsap sentence is removed
-  from the help.
+  and the scalar step added nothing.
+- `ID.fac` accepts semTools’ spellings (“UV”, “fixed.factor”, …) as the
+  method they name, so ordered indicators accept them
+  ([\#145](https://github.com/JUhalt/nomologR/issues/145)). An unknown
+  spelling is refused with the choices.
 - `completed_levels` holds only the levels that were estimated and
   converged ([\#145](https://github.com/JUhalt/nomologR/issues/145)). A
   level that failed stays in `fit_evidence`. When the first level
@@ -388,25 +681,54 @@ presentation) follow before the release candidate.
   [`summary()`](https://rdrr.io/r/base/summary.html), and the invariance
   line of
   [`nomo_run()`](https://juhalt.github.io/nomologR/reference/nomo_run.md)’s
-  key evidence say “none” instead of leaving the path blank.
+  key evidence say “none”; the output has no empty fit table and points
+  to the decision log.
+- The analyzed sample is reported
+  ([\#145](https://github.com/JUhalt/nomologR/issues/145)). New fields
+  `n_used` and `group_n` hold it, and
+  [`print()`](https://rdrr.io/r/base/print.html) and
+  [`summary()`](https://rdrr.io/r/base/summary.html) show it, such as
+  “Cases: 447 of 800 used (A n = 232, B n = 215)”. When lavaan’s
+  listwise deletion leaves cases out, the decision log gets a review
+  row.
+- Every level shows one version of each fit statistic
+  ([\#145](https://github.com/JUhalt/nomologR/issues/145)). The
+  chi-square is scaled, and CFI and RMSEA are robust, where every level
+  has those versions. A new `fit_variants` field names the version, and
+  the output says which is shown.
+- Engine problems are flagged
+  ([\#145](https://github.com/JUhalt/nomologR/issues/145)). lavaan’s
+  warnings at each level, and a level that fails or does not converge,
+  become decision-log rows and appear under “Flagged”. lavaan’s messages
+  are quoted as sentences in plain words, such as “observed-variable
+  variances” where lavaan abbreviates.
+- With three or more groups, each score diagnostic frees one group’s
+  parameter from the value the others share
+  ([\#145](https://github.com/JUhalt/nomologR/issues/145)). It is
+  labeled by the group it frees, as in “Intercept: y3 (three
+  vs. others)”, no longer “(one vs. three)”, which read as a comparison
+  of two groups. The first group, the reference, is never freed on its
+  own: when it alone differs, every other group shows similar strain. A
+  note and the help say so.
+- `plot(x, type = "local_strain")` without diagnostics no longer warns,
+  and [`summary()`](https://rdrr.io/r/base/summary.html) has no empty
+  section of changes
+  ([\#145](https://github.com/JUhalt/nomologR/issues/145)).
 
 #### Nomological network
 
 - [`nomo_network()`](https://juhalt.github.io/nomologR/reference/nomo_network.md)
-  and
-  [`nomo_hypotheses()`](https://juhalt.github.io/nomologR/reference/nomo_hypotheses.md)
-  were audited before the freeze
+  judges associations against the model that is fitted
   ([\#145](https://github.com/JUhalt/nomologR/issues/145)).
-  - **Associations are judged against the model that is fitted.** An
-    `A <-> B` hypothesis was called “already in model” from `model`
-    alone, where lavaan covaries exogenous factors by itself. When
-    another hypothesis made A or B an outcome, lavaan no longer added
-    that covariance, so the hypothesis ended “Not evaluable” while
-    `model_relations` said the relation was in the model. The
-    hypothesized directed paths are now put in place first, and each
-    association is added when the model to be fitted lacks it. For such
-    networks the fitted model changes, and a hypothesis that could not
-    be evaluated is now estimated.
+  - **Associations.** An `A <-> B` hypothesis was called “already in
+    model” from `model` alone, where lavaan covaries exogenous factors
+    by itself. When another hypothesis made A or B an outcome, lavaan no
+    longer added that covariance, so the hypothesis ended “Not
+    evaluable” while `model_relations` said the relation was in the
+    model. The hypothesized directed paths are now put in place first,
+    and each association is added when the model to be fitted lacks it.
+    For such networks the fitted model changes, and a hypothesis that
+    could not be evaluated is now estimated.
   - **A directed path or an association, not both.**
     [`nomo_hypotheses()`](https://juhalt.github.io/nomologR/reference/nomo_hypotheses.md)
     refuses a set that gives the same two variables both a directed path
@@ -431,46 +753,91 @@ presentation) follow before the release candidate.
     `evidence_scope` is now `"residual_association"`, its interpretation
     says so, and the decision log has a `residual_association` row for
     review.
-  - **Concordance values.** New value
-    `"direction_concordant_above_magnitude"`: an estimate with the
-    predicted sign that is larger than the region allows had been
-    labeled “below magnitude”. An estimate whose whole interval lies
-    outside the region is now `"inconsistent"` even when its sign is as
-    predicted; before, a prediction with a magnitude could fail only on
-    sign. The below- and above-magnitude values now apply only when the
-    interval still reaches the region. An estimate without a standard
-    error is `"not_evaluable"` rather than “directionally concordant /
-    imprecise”, and the measurement context is a concern when no
-    standard error could be computed. In replication, the
-    above-magnitude value counts as compatible with the prediction, as
-    the below-magnitude value does.
-  - **Ordered factors.** Variables of the fitted model stored as ordered
-    factors, in `data` or `validation_data`, are treated as declared in
-    `ordered`. The result’s `ordered` lists them (`ordered_detected`
-    holds the ones found), the log has an `ordered_detected` row for
-    review, WLSMV is recorded as the estimator, and the ML-family and
-    FIML checks apply. Estimates are unchanged when the sample’s own
-    columns are ordered factors, because lavaan already fitted such
-    columns as categorical. When a column is an ordered factor in only
-    one of `data` and `validation_data`, both samples are now fitted
-    with it declared ordered, which changes the other sample’s estimator
-    and estimates. An exogenous covariate stored as an ordered factor is
-    refused, with a message asking for a numeric or dummy-coded column:
-    lavaan does not model a covariate as ordered-categorical. Such a
-    call ended without convergence when the outcomes were continuous,
-    and used the factor’s codes as numbers when the model also had
-    ordered outcomes. The result’s `estimator` holds the estimator
-    lavaan used, such as `"ML"`, when none was requested, instead of
-    `NA`.
-  - **Documentation.**
+- [`nomo_network()`](https://juhalt.github.io/nomologR/reference/nomo_network.md)
+  records the relations that the hypothesized paths change
+  ([\#145](https://github.com/JUhalt/nomologR/issues/145)). The new
+  field `model_changes` lists three kinds of change, the decision log
+  records each one (`relation_constrained` for review,
+  `relation_auto_freed` for information), and
+  [`?nomo_network`](https://juhalt.github.io/nomologR/reference/nomo_network.md)
+  states lavaan’s rule.
+  - A path that makes a variable an outcome fixes to zero its
+    covariances with exogenous variables other than its predictors
+    (`"fixed_to_zero"`).
+  - A variable that only the hypotheses bring into the model is related
+    only as lavaan’s defaults allow: an observed predictor of a factor
+    is uncorrelated with the exogenous factors (`"not_estimated"`, with
+    the variable in `new_variable`).
+  - Two outcomes gain a residual covariance nobody wrote
+    (`"added_by_lavaan"`).
+- [`nomo_network()`](https://juhalt.github.io/nomologR/reference/nomo_network.md)
+  judges the measurement context on the fit of the measurement model
+  alone, which is the network with its structural part saturated
+  ([\#145](https://github.com/JUhalt/nomologR/issues/145)). It had used
+  the fit of the whole network.
+  - The network’s own fit is a separate `model_fit` row of the decision
+    log. It reports the Delta chi-square test of the structural
+    restrictions (`measurement_context$fit`,
+    `measurement_context$structural_test`).
+  - The row calls misfit strain on the theory’s structure only when the
+    measurement model alone meets the references. Otherwise it points to
+    the measurement context.
+  - A network whose structural restrictions misfit no longer marks its
+    measurement context, or each hypothesis’s `measurement_attention`,
+    for review.
+- Concordance values
+  ([\#145](https://github.com/JUhalt/nomologR/issues/145)).
+  - New value `"direction_concordant_above_magnitude"`: an estimate with
+    the predicted sign that is larger than the region allows had been
+    labeled “below magnitude”.
+  - An estimate whose whole interval lies outside the region is now
+    `"inconsistent"` even when its sign is as predicted; before, a
+    prediction with a magnitude could fail only on sign. The below- and
+    above-magnitude values now apply only when the interval still
+    reaches the region.
+  - An estimate without a standard error is `"not_evaluable"`, and the
+    measurement context is a concern when no standard error could be
+    computed.
+  - In replication, the above-magnitude value counts as compatible with
+    the prediction, as the below-magnitude value does. A direction that
+    both samples share against the prediction is described as such and
+    logged as a concern.
+- Ordered factors
+  ([\#145](https://github.com/JUhalt/nomologR/issues/145)). Variables of
+  the fitted model stored as ordered factors, in `data` or
+  `validation_data`, are treated as declared in `ordered`. The result’s
+  `ordered` lists them, the log has an `ordered_detected` row for
+  review, WLSMV is recorded as the estimator, and the ML-family and FIML
+  checks apply. Estimates are unchanged when the sample’s own columns
+  are ordered factors. When a column is an ordered factor in only one of
+  `data` and `validation_data`, both samples are now fitted with it
+  declared ordered, which changes the other sample’s estimator and
+  estimates. An exogenous covariate stored as an ordered factor is
+  refused, with a message asking for a numeric or dummy-coded column:
+  lavaan does not model a covariate as ordered-categorical.
+- [`nomo_network()`](https://juhalt.github.io/nomologR/reference/nomo_network.md)
+  reports what was analyzed
+  ([\#145](https://github.com/JUhalt/nomologR/issues/145)).
+  - **Cases.** `n_used` and `validation_n_used` hold the cases each
+    sample analyzed. Output reads “Cases: 479 of 800”, and a
+    `cases_used` row flags rows dropped by listwise deletion for review.
+  - **Estimator.** `estimator` holds the estimator lavaan used, such as
+    `"ML"`, when none was requested; it had been `NA`.
+  - **Fit statistics.** `fit_evidence` names the version of its
+    statistics (`chisq_version`, `index_version`), and
+    [`summary()`](https://rdrr.io/r/base/summary.html) prints it with
+    the estimator.
+  - **The validation sample.** Its decision-log rows have the stage
+    `"network_validation"`.
+  - **Unstandardized bounds.** An `unstandardized_metric` row names the
+    identification behind an unstandardized bound on a latent variable,
+    which
+    [`?nomo_expectations`](https://juhalt.github.io/nomologR/reference/nomo_expectations.md)
+    and
     [`?nomo_network`](https://juhalt.github.io/nomologR/reference/nomo_network.md)
-    defines every `concordance`, `evidence_scope`, and
-    `replication_status` value, with its rule and the interval it uses.
-    It spells out SESOI (smallest effect size of interest), as does the
-    note [`print()`](https://rdrr.io/r/base/print.html) gives for a bare
-    [`negligible()`](https://juhalt.github.io/nomologR/reference/nomo_expectations.md).
+    now explain.
 
-#### Scores, power, and missing data
+#### Scores and missing data
 
 - [`nomo_scores()`](https://juhalt.github.io/nomologR/reference/nomo_scores.md)
   tests the parallel model that unit weighting assumes against a model
@@ -504,211 +871,731 @@ presentation) follow before the release candidate.
     (`test = "none"`). `parallel_test$note` gives the reason, with
     lavaan’s message where it gave one.
 - [`nomo_scores()`](https://juhalt.github.io/nomologR/reference/nomo_scores.md)
-  results gain `rows`, the row of the fitted data each score belongs to
-  ([\#145](https://github.com/JUhalt/nomologR/issues/145)). After
-  listwise deletion `scores` has fewer rows than the data, and nothing
-  said which cases were missing from it. `scores` itself is unchanged:
-  `data[x$rows, names(x$scores)] <- x$scores` joins the scores to the
-  data.
+  says what the scores are
+  ([\#145](https://github.com/JUhalt/nomologR/issues/145)).
+  - **Which case.** Results gain `rows`, the row of the fitted data each
+    score belongs to. After listwise deletion `scores` has fewer rows
+    than the data, and nothing said which cases were missing from it.
+    `scores` itself is unchanged:
+    `data[x$rows, names(x$scores)] <- x$scores` joins the scores to the
+    data.
+  - **Cases with no score.** Under FIML a case the model used can lack
+    an item, and its sum or mean is `NA`. A review note now gives the
+    cases scored on each factor, and the print adds a Scored column.
+  - **Ordered indicators.** lavaan’s `"regression"` scores are then
+    empirical Bayes modal scores and its `"bartlett"` scores are
+    maximum-likelihood scores from the categorical model, while `"sum"`
+    and `"mean"` add category numbers. The note had said the scores
+    treat the latent responses as continuous. Values are unchanged.
+  - **Fits it cannot score.** Three kinds of fit are refused with the
+    reason: a factor with no observed indicators, such as a second-order
+    factor; a path from an observed covariate to a factor; and a
+    covariance between a factor and an observed variable. They had
+    stopped with an internal error.
+- [`nomo_scores()`](https://juhalt.github.io/nomologR/reference/nomo_scores.md)’s
+  notes ([\#145](https://github.com/JUhalt/nomologR/issues/145)).
+  - **Univocality.** A score correlates with another factor through its
+    own, by the factor correlation times its validity. The note had
+    fired whenever a score correlated .30 or more with another factor,
+    so it flagged every correlated-factor model. It now fires when the
+    correlation departs from the factor correlation times the validity
+    by .05 or more, and it names both values. The `univocality` column
+    is unchanged.
+  - **Opposite signs.** A concern is raised when a unit-weighted score
+    adds an item whose standardized loading has the opposite sign to its
+    factor’s strongest loading, and it names the item.
+  - **Reliability.** The note points a sum score to omega from the
+    fitted model; alpha equals omega only under essential
+    tau-equivalence.
 - [`summary()`](https://rdrr.io/r/base/summary.html) of a `nomo_scores`
   object has class `summary_nomo_scores`, matching the other summary
   classes ([\#145](https://github.com/JUhalt/nomologR/issues/145)). It
   was `summary.nomo_scores`, which is kept as a second class for one
   release and then removed.
-- [`nomo_table()`](https://juhalt.github.io/nomologR/reference/nomo_table.md)
-  and [`summary()`](https://rdrr.io/r/base/summary.html) work on
-  `nomo_power` objects
-  ([\#145](https://github.com/JUhalt/nomologR/issues/145)).
-  [`nomo_table()`](https://juhalt.github.io/nomologR/reference/nomo_table.md)
-  had stopped with “no applicable method”, and
-  [`summary()`](https://rdrr.io/r/base/summary.html) printed base R’s
-  listing.
-  - **[`nomo_table()`](https://juhalt.github.io/nomologR/reference/nomo_table.md).**
-    It returns `"power"` for
-    [`nomo_power_rmsea()`](https://juhalt.github.io/nomologR/reference/nomo_power_rmsea.md),
-    and `"summary"` (the default) or `"parameters"` for
-    [`nomo_power_simulate()`](https://juhalt.github.io/nomologR/reference/nomo_power_simulate.md).
-    [`?nomo_table`](https://juhalt.github.io/nomologR/reference/nomo_table.md)
-    lists the types.
-  - **[`summary()`](https://rdrr.io/r/base/summary.html).** For a
-    simulation it prints every parameter at every sample size; for the
-    RMSEA tests it prints what
-    [`print()`](https://rdrr.io/r/base/print.html) shows.
-  - **The width hint.** When the simulation table is cut for width, the
-    print names `nomo_table(x, "summary")` rather than `x$parameters`.
-- [`?nomo_missing`](https://juhalt.github.io/nomologR/reference/nomo_missing.md)
-  gives its result in the “fields to read” form the other result pages
-  use ([\#145](https://github.com/JUhalt/nomologR/issues/145)).
-  `reference` and `fitted_as` are now documented, and so covered by the
-  stability policy. `fits`, the refitted models, had been listed as a
-  result field; it is now named with `call`, `object`, and `ordered` as
-  outside the stable interface. The page also states that
-  `pct_incomplete` and `pct_missing` are proportions. The object itself
-  is unchanged.
+- [`nomo_missing()`](https://juhalt.github.io/nomologR/reference/nomo_missing.md)
+  ([\#145](https://github.com/JUhalt/nomologR/issues/145)):
+  - **Strategy labels.** A strategy is labeled by the method lavaan
+    used. When lavaan runs two-stage ML where FIML was requested, as
+    with ULS, the strategy reads “Two-stage ML (requested FIML)” in
+    `strategies$label`, the print, and the decision log.
+  - **The flagging rule.** The half-standard-error flag is described as
+    adapted from Schafer and Graham (2002), who judged bias over
+    simulated samples. Applied to a difference within one sample, it
+    marks a difference to review; sampling variability alone can exceed
+    it. The rule is unchanged.
+  - **[`summary()`](https://rdrr.io/r/base/summary.html).** It prints
+    missing values by variable, fit and reliability by strategy, every
+    difference from the reference, and each decision’s recommendation.
+    It had printed base R’s listing.
+  - **Several strategies.** With more than one comparison strategy, the
+    print and summary give each strategy’s differences a table of its
+    own. A narrow console had dropped the Strategy column and left rows
+    that could not be told apart.
+  - **Help.**
+    [`?nomo_missing`](https://juhalt.github.io/nomologR/reference/nomo_missing.md)
+    gives its result in the “fields to read” form the other result pages
+    use. `reference` and `fitted_as` are now documented, and so covered
+    by the stability policy. `fits`, the refitted models, is named with
+    `call`, `object`, and `ordered` as outside the stable interface.
+- New [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods,
+  each taking `type`
+  ([\#145](https://github.com/JUhalt/nomologR/issues/145)): for
+  `nomo_scores`, each score’s validity against Gorsuch’s references; for
+  `nomo_missing`, each difference from the reference, in reference
+  standard errors.
 
 #### Guided workflow
 
-- [`nomo_revise()`](https://juhalt.github.io/nomologR/reference/nomo_revise.md)
-  keeps the `contentvalidR` handoff of a run whose scales came from
-  content review
-  ([\#145](https://github.com/JUhalt/nomologR/issues/145)). The revised
-  run was built from the plain scale list, so it lost the handoff’s
-  declared reverse keying: careless-responding indices were computed
-  without recoding and the item audits lost their keying explanation. It
-  also lost the content-review and held-back rows of the decision log
-  and the report’s content-review section, and relabeled item membership
-  as researcher input. The revised run now carries all of these, and
-  declared keying follows its items. Where a revision departs from
-  content review, the decision log says so. A scale whose items differ
-  from those content review carried is recorded as the researcher’s
-  definition. Each held-back item a revision reinstates, or carried item
-  it removes, gets its own row (`reinstated:<item>`, `removed:<item>`)
-  with the rationale of the revision that made the change. The
-  content-review and held-back rows no longer claim that held-back items
-  are not analyzed. Reverse keying set in `settings$screen` for an item
-  a revision removes is dropped with the item.
-- [`nomo_run()`](https://juhalt.github.io/nomologR/reference/nomo_run.md)
-  resolves `settings$screen$reverse` and `scale_range` one at a time, as
-  [`nomo_screen()`](https://juhalt.github.io/nomologR/reference/nomo_screen.md)
-  does ([\#145](https://github.com/JUhalt/nomologR/issues/145)). Giving
-  either one used to replace a `contentvalidR` handoff’s declared keying
-  entirely. Supplying the response scale a handoff had not recorded,
-  which the run asks for, silently dropped the handoff’s reverse-keyed
-  items, and supplying `reverse` alone blocked the run for want of a
-  range the handoff had. Now each comes from the settings if given
-  there, else from the handoff. A new `keying` row of the decision log
-  records a declared value replaced, or a response scale supplied,
-  whether or not `effort = TRUE`. Results change for calls that gave
-  only one of the two with a handoff that declares keying.
-- [`nomo_run()`](https://juhalt.github.io/nomologR/reference/nomo_run.md)
-  refuses a `settings$screen$reverse` that names an item outside the
-  run’s scales, in both effort modes
-  ([\#145](https://github.com/JUhalt/nomologR/issues/145)). With
-  `effort = FALSE`, the per-scale item audits used to drop a misspelled
-  name without a word.
-- The invariance and network stages of
+- The stages of
   [`nomo_run()`](https://juhalt.github.io/nomologR/reference/nomo_run.md)
-  refit the measurement model with the CFA stage’s `ordered`,
-  `estimator`, and `missing` from `settings$cfa`, unless their own
-  settings name them
-  ([\#145](https://github.com/JUhalt/nomologR/issues/145)). A CFA
-  estimated with FIML, a robust estimator, or ordinal indicators used to
-  be refitted downstream as listwise, normal-theory, continuous ML, on a
-  different N, with nothing in the log. An `estimation_settings:<stage>`
-  row records what was inherited and any setting of the stage’s own that
-  differs from the CFA’s; naming one as `NULL` in a stage’s settings
-  asks for the default. Results change for calls that set any of the
-  three for the CFA and request invariance or a network.
-- Resuming a run with `guidance = nomo_defaults()` no longer fails
-  because
-  [`nomo_defaults()`](https://juhalt.github.io/nomologR/reference/nomo_defaults.md)
-  has gained an element since the run was saved; only a changed value
-  stops the resume
+  agree with one another
   ([\#145](https://github.com/JUhalt/nomologR/issues/145)).
-- [`?nomo_run`](https://juhalt.github.io/nomologR/reference/nomo_run.md)
-  lists the columns of the run’s own decision log (`id`, `stage`,
-  `scope`, `observation`, `reason`, `options`, `consequence`,
-  `decision`, `rationale`, `source`) and the values of `source`. It also
-  says that the component logs, with the columns other decision logs
-  have, are in `nomo_table(x, "component_log")`
+  - **Estimation settings.** The invariance and network stages refit the
+    measurement model with the CFA stage’s `ordered`, `estimator`, and
+    `missing` from `settings$cfa`, unless their own settings name them.
+    A CFA estimated with FIML, a robust estimator, or ordinal indicators
+    used to be refitted downstream as listwise, normal-theory,
+    continuous ML, on a different N, with nothing in the log. An
+    `estimation_settings:<stage>` row records what was inherited and any
+    setting of the stage’s own that differs from the CFA’s; naming one
+    as `NULL` in a stage’s settings asks for the default.
+  - **Item sets and item types.** Once the CFA is fitted, a
+    `cfa_item_set` row says when the measurement model’s items differ
+    from the screened scales. An `item_types` row says when the
+    exploratory stages treated items as categorical and the CFA treats
+    them as continuous.
+- [`nomo_run()`](https://juhalt.github.io/nomologR/reference/nomo_run.md)
+  and a `contentvalidR` handoff
   ([\#145](https://github.com/JUhalt/nomologR/issues/145)).
+  - **Keying.** `settings$screen$reverse` and `scale_range` are resolved
+    one at a time, as
+    [`nomo_screen()`](https://juhalt.github.io/nomologR/reference/nomo_screen.md)
+    does. Giving either one used to replace the handoff’s declared
+    keying entirely. Supplying the response scale a handoff had not
+    recorded, which the run asks for, silently dropped the handoff’s
+    reverse-keyed items, and supplying `reverse` alone blocked the run
+    for want of a range the handoff had. Now each comes from the
+    settings if given there, else from the handoff, and a `keying` row
+    records a declared value replaced or a response scale supplied.
+  - **Unknown items.** A `settings$screen$reverse` that names an item
+    outside the run’s scales is refused in both effort modes. With
+    `effort = FALSE`, the per-scale item audits used to drop a
+    misspelled name without a word.
+- [`nomo_run()`](https://juhalt.github.io/nomologR/reference/nomo_run.md)
+  checks what it is given before any stage runs
+  ([\#145](https://github.com/JUhalt/nomologR/issues/145)): a scale with
+  fewer than three items, an invariance `group` that is not a column of
+  the confirmatory data, and a `settings$missing$strategies` name that
+  is not a lavaan `missing` option.
+- Resuming a run
+  ([\#145](https://github.com/JUhalt/nomologR/issues/145)).
+  - **Settings.** Settings given when resuming are merged argument by
+    argument, and a `settings:<stage>` row records the change. Settings
+    for a completed or blocked stage were already refused. The refusal
+    now also covers an invariance or network branch that a complete run
+    marked not requested, and `scores` or `missing` once the CFA is
+    fitted; those settings had been stored unused. At the pause after a
+    `"revise"` decision, settings for evidence the run has not computed
+    are accepted, since
+    [`nomo_revise()`](https://juhalt.github.io/nomologR/reference/nomo_revise.md)
+    carries them into the revision.
+  - **Guidance.** Resuming with `guidance = nomo_defaults()` no longer
+    fails because
+    [`nomo_defaults()`](https://juhalt.github.io/nomologR/reference/nomo_defaults.md)
+    has gained an element since the run was saved; only a changed value
+    stops the resume.
+- [`nomo_revise()`](https://juhalt.github.io/nomologR/reference/nomo_revise.md)
+  ([\#145](https://github.com/JUhalt/nomologR/issues/145)):
+  - **The handoff is kept.** A revision of a run whose scales came from
+    content review keeps the `contentvalidR` handoff. The revised run
+    was built from the plain scale list, so it lost the handoff’s
+    declared reverse keying, the content-review and held-back rows of
+    the decision log, and the report’s content-review section, and
+    relabeled item membership as researcher input. The revised run now
+    carries all of these, and declared keying follows its items.
+  - **Departures from content review.** A scale whose items differ from
+    those content review carried is recorded as the researcher’s
+    definition. Each held-back item a revision reinstates, or carried
+    item it removes, gets its own row (`reinstated:<item>`,
+    `removed:<item>`) with the rationale of the revision that made the
+    change.
+  - **Decisions.** A `factor_count` given in `decisions` is used; the
+    revision had been refused when the inherited count no longer fitted
+    the revised items. `cfa_model` inside `decisions` is refused, since
+    the fitted model is the one the `cfa_model` argument gives and the
+    lineage records. `decisions` is validated before it is merged, and
+    each scale keeps its own inherited rationale.
+  - **A priori revisions.** The `revision` row of the log no longer says
+    that an a priori revision was evaluated on the sample that motivated
+    it. It says that the parent and the revision are evaluated on the
+    same sample, or on the same validation rows, so the model that is
+    retained still needs confirming in independent data.
+- [`nomo_table()`](https://juhalt.github.io/nomologR/reference/nomo_table.md)
+  for a guided run
+  ([\#145](https://github.com/JUhalt/nomologR/issues/145)).
+  `nomo_table(run, "settings")` gains rows for `scores` and `missing`
+  and a `values` column. `nomo_table(run, "recipe")` names
+  [`nomo_scores()`](https://juhalt.github.io/nomologR/reference/nomo_scores.md),
+  [`nomo_missing()`](https://juhalt.github.io/nomologR/reference/nomo_missing.md),
+  and the careless-responding screen when they were requested.
+- The run’s own decision log
+  ([\#145](https://github.com/JUhalt/nomologR/issues/145)). The
+  missing-data row names only the strategies that were fitted, a
+  held-back item’s missing status or recommendation is no longer quoted
+  as “NA”, and a parallel-analysis count of 0 gets its own request with
+  a usable example.
+  [`?nomo_run`](https://juhalt.github.io/nomologR/reference/nomo_run.md)
+  lists the log’s columns and the values of `source`.
 
 #### Report
 
 - **Breaking:**
   [`nomo_report()`](https://juhalt.github.io/nomologR/reference/nomo_report.md)
-  now requires `file`
+  requires `file`
   ([\#145](https://github.com/JUhalt/nomologR/issues/145)). It used to
   default to `"nomologR-report.html"` in the working directory, and CRAN
   policy asks packages not to write to the user’s file space by default.
   A call without `file` now stops with an error that names the argument
   and suggests a path, before anything is written. Calls that give
   `file` are unchanged; to keep the old behavior, pass
-  `file = "nomologR-report.html"`. The hint that
-  [`print()`](https://rdrr.io/r/base/print.html) shows for a complete
-  [`nomo_run()`](https://juhalt.github.io/nomologR/reference/nomo_run.md)
-  now reads `nomo_report(x, file = "report.html")`, and the README and
-  the reproducible-report article show calls with a path.
+  `file = "nomologR-report.html"`.
+- [`nomo_report()`](https://juhalt.github.io/nomologR/reference/nomo_report.md)
+  writes the report and nothing else
+  ([\#145](https://github.com/JUhalt/nomologR/issues/145)). It renders
+  in a scratch directory under
+  [`tempdir()`](https://rdrr.io/r/base/tempfile.html), which holds the
+  copy of the template, the intermediate files, and the figures and is
+  removed when the call returns; the finished report is then copied to
+  `file`. A render that stopped part-way had left a directory of figures
+  beside `file`, and every call left a copy of the template in
+  [`tempdir()`](https://rdrr.io/r/base/tempfile.html). The report’s code
+  runs in an environment whose parent is the base environment, so
+  objects in the workspace are neither read nor changed. The working
+  directory, options, and graphics device are left as they were.
+- [`nomo_report()`](https://juhalt.github.io/nomologR/reference/nomo_report.md)
+  shows what the run holds, as written
+  ([\#145](https://github.com/JUhalt/nomologR/issues/145)).
+  - **Model syntax and quotes.** Pandoc reads Markdown inside table
+    cells, so lavaan’s `~~` vanished from the modification-index,
+    network, and decision tables, `a*x1 + a*x2` lost its asterisks, and
+    straight quotes became typographic. Cells, headings, and notes built
+    from data are now escaped, including the content-review table of a
+    `contentvalidR` handoff.
+  - **Text that starts like a list.** A rationale beginning “1) …” or
+    “(a) …” became a numbered list in the HTML report, which lost the
+    typed marker and ran on through the rows after it. Such cells are
+    shown as typed.
+  - **Call history.** The workflow’s calls are printed as R code, so a
+    copied call parses.
+  - **Numbers.** p values read “\< .001” where they read 0, counts and
+    degrees of freedom are whole numbers, and each statistic has the
+    precision and leading zero printed output gives it. Proportions
+    stored as `pct_*` are shown as percentages: 3% missing had read
+    0.03. Residual correlations have three decimals; with two, every row
+    of the EFA residual table read 0.00.
+  - **Deviations.** A scale whose name contains “post”, “partial”,
+    “deviation”, or “revision”, such as `PostpartumDepression`, no
+    longer has its scale definition and factor count listed under
+    “Deviations and post hoc decisions”.
+  - **Missing data.** With complete data the section says the reference
+    strategy was not fitted; it had said “No comparison strategy was
+    fitted” under a table showing one. Strategies are named (“FIML”, not
+    `ml`) in every table.
+  - **Title.** The title is shown as given. Inline R code in it had been
+    run, backslashes dropped, and HTML interpreted.
+  - **Software citations.** Each DOI is given once, as its
+    `https://doi.org/` address.
+  - **Careless responding.** The evidence table keeps the rows that say
+    why an index has no value.
 
-#### The documented interface
+#### APA tables and `nomo_table()`
 
 - [`nomo_apa_table()`](https://juhalt.github.io/nomologR/reference/nomo_apa_table.md)
-  now refuses invalid arguments it used to ignore
+  no longer misreports what a table shows
+  ([\#145](https://github.com/JUhalt/nomologR/issues/145)).
+  - **Reliability.** The interval heading carries the level the
+    intervals were computed at, such as `ω [90% CI]`, and the note gives
+    the method and the number of bootstrap draws. The alpha column and
+    its sentence are left out when no alpha was computed. Omega for
+    ordered indicators is named: categorical omega for the observed
+    ordinal scores (Green & Yang, 2009), or omega for the latent
+    responses.
+  - **Invariance.** A level fitted with releases is labeled “Partial
+    scalar”, and a specific note names the freed parameters. The note
+    gives the group sizes, *N*, and the estimator, and says when the
+    chi-squares are scaled statistics and CFI and RMSEA robust values.
+    The first model’s change cells are blank, because no model precedes
+    it.
+  - **Fit.** The note spells out the estimator, such as “maximum
+    likelihood with robust standard errors and a scaled test statistic
+    (MLR)”. The network fit table reports the cases analyzed, not the
+    rows supplied, and mentions the validation sample when there is one.
+    Degrees of freedom that are not whole keep two decimals.
+  - **Hypotheses.** Each prediction is given with its region, such as
+    “Negligible, \[-.15, .15\]”. A
+    [`negligible()`](https://juhalt.github.io/nomologR/reference/nomo_expectations.md)
+    prediction shows the equivalence interval its concordance is judged
+    on. The evidence labels are the ones the console prints, such as “In
+    region, imprecise”, and the note defines each label the table shows.
+  - **Factor correlations.** A correlation the model fixes, such as one
+    set by `A ~~ 0*B`, is no longer tabled as an estimate with a \[.00,
+    .00\] interval; the note lists the pairs left out. A model that
+    estimates no factor correlation stops with the reason. For a
+    bifactor model, which fixes every one, the call had returned a table
+    of zeros; for a higher-order model, the error had said that the
+    model has one factor.
+- [`nomo_apa_table()`](https://juhalt.github.io/nomologR/reference/nomo_apa_table.md)
+  notes and layout follow APA style more closely
+  ([\#145](https://github.com/JUhalt/nomologR/issues/145)). Some
+  headings and cells change, so code that reads `body` by column name
+  may need updating.
+  - Every abbreviation in a heading is defined in the note, CI and *r*
+    among them, and an em dash is explained wherever one appears.
+  - Without `number`, the number line is left out; it had been printed
+    as a bare “Table”.
+  - Knitted, the general, specific, and probability notes are separate
+    paragraphs, and each column’s share of the width follows its widest
+    entry.
+  - Knitted to PDF, Greek letters and math symbols are written as TeX
+    math, so the default `pdflatex` engine compiles the tables. It used
+    to stop at the first `χ`.
+- [`nomo_apa_table()`](https://juhalt.github.io/nomologR/reference/nomo_apa_table.md)
+  refuses invalid arguments it used to ignore
+  ([\#145](https://github.com/JUhalt/nomologR/issues/145)): a `type` for
+  a result that has one table
+  ([`nomo_reliability()`](https://juhalt.github.io/nomologR/reference/nomo_reliability.md),
+  [`nomo_invariance()`](https://juhalt.github.io/nomologR/reference/nomo_invariance.md)),
+  and a `title` that is not a single string, which was pasted together.
+- [`nomo_table()`](https://juhalt.github.io/nomologR/reference/nomo_table.md)
   ([\#145](https://github.com/JUhalt/nomologR/issues/145)):
-  - a `type` for a result that has one table
-    ([`nomo_reliability()`](https://juhalt.github.io/nomologR/reference/nomo_reliability.md),
-    [`nomo_invariance()`](https://juhalt.github.io/nomologR/reference/nomo_invariance.md),
-    [`nomo_retest()`](https://juhalt.github.io/nomologR/reference/nomo_retest.md));
-  - a `title` that is not a single string, which was pasted together.
-- The interface frozen at 1.0 is now written down where it was missing
-  ([\#145](https://github.com/JUhalt/nomologR/issues/145)). No value,
-  name, or behavior changes.
-  - **Conventions in returned tables.** A new section of
-    [`?nomologR`](https://juhalt.github.io/nomologR/reference/nomologR-package.md)
-    records three differences between tables that are kept as they are:
-    - **Proportions.** Columns named `pct_*` (`pct_missing` in
-      [`nomo_screen()`](https://juhalt.github.io/nomologR/reference/nomo_screen.md)
-      and
-      [`nomo_missing()`](https://juhalt.github.io/nomologR/reference/nomo_missing.md),
-      `pct_incomplete`, `pct_dropped`) hold proportions from 0 to 1, as
-      do `*_prop` and `proportion_*` columns. `percent_unique` in
-      [`nomo_screen()`](https://juhalt.github.io/nomologR/reference/nomo_screen.md),
-      and its reference in
-      [`nomo_defaults()`](https://juhalt.github.io/nomologR/reference/nomo_defaults.md),
-      are percentages.
-    - **Flags.** Stored flags use three vocabularies:
-      - `KEEP`, `REVIEW`, and `STRONG REVIEW` in the loading tables of
-        [`nomo_efa()`](https://juhalt.github.io/nomologR/reference/nomo_efa.md),
-        [`nomo_cfa()`](https://juhalt.github.io/nomologR/reference/nomo_cfa.md),
-        and
-        [`nomo_validity()`](https://juhalt.github.io/nomologR/reference/nomo_validity.md);
-      - `none`, `review`, and `concern` in the item review of
-        [`summary()`](https://rdrr.io/r/base/summary.html) for
-        [`nomo_screen()`](https://juhalt.github.io/nomologR/reference/nomo_screen.md);
-      - `info`, `review`, and `concern` in decision logs and the other
-        evidence tables, which may also mark a value that could not be
-        computed as `unavailable`. The section gives the one wording
-        that printed output, plots, and reports use for each.
-    - **P-values.** A p-value is `p_value`, with two exceptions:
-      - lavaan’s parameter tables use `pvalue`;
-      - the fit tables that keep
-        [`lavaan::fitMeasures()`](https://rdrr.io/pkg/lavaan/man/fitMeasures.html)
-        names (`chisq`, `pvalue`, `cfi`, …) do too. These are the
-        `models` of
-        [`nomo_esem()`](https://juhalt.github.io/nomologR/reference/nomo_esem.md),
-        [`nomo_method_variance()`](https://juhalt.github.io/nomologR/reference/nomo_method_variance.md),
-        and
-        [`nomo_compare()`](https://juhalt.github.io/nomologR/reference/nomo_compare.md),
-        and the fit of
-        [`nomo_invariance()`](https://juhalt.github.io/nomologR/reference/nomo_invariance.md)
-        and
-        [`nomo_network()`](https://juhalt.github.io/nomologR/reference/nomo_network.md).
-        The fit tables of
-        [`nomo_cfa()`](https://juhalt.github.io/nomologR/reference/nomo_cfa.md)
-        (long by design) and
-        [`nomo_missing()`](https://juhalt.github.io/nomologR/reference/nomo_missing.md)
-        use `chi_square`, `p_value`, `CFI`, ….
-  - **Help pages.** The pages of
-    [`nomo_screen()`](https://juhalt.github.io/nomologR/reference/nomo_screen.md),
-    [`nomo_cfa()`](https://juhalt.github.io/nomologR/reference/nomo_cfa.md),
-    [`nomo_efa()`](https://juhalt.github.io/nomologR/reference/nomo_efa.md),
-    [`nomo_validity()`](https://juhalt.github.io/nomologR/reference/nomo_validity.md),
-    [`nomo_reliability()`](https://juhalt.github.io/nomologR/reference/nomo_reliability.md),
+  - **Other objects.** An object without tables is refused with the list
+    of supported classes; the error had been base R’s “no applicable
+    method”.
+  - **Hypotheses.** A `nomo_hypotheses` object has one table, so a
+    `type` is an error; it used to be ignored.
+  - **Empty tables.** `"partial"` for an invariance analysis without
+    releases and `"replication"` for a network without validation data
+    return a tibble with no rows and the table’s usual columns. They had
+    returned a tibble with no columns.
+
+#### Methods registry
+
+- `nomo_methods(x)`, and so the methods section of
+  [`nomo_report()`](https://juhalt.github.io/nomologR/reference/nomo_report.md),
+  credits what ran
+  ([\#145](https://github.com/JUhalt/nomologR/issues/145)).
+  - **Estimator.** A CFA is credited from the estimator the result
+    records. ML and its robust forms are maximum likelihood, and WLSMV
+    is credited only for ordered indicators. `ULS`, `GLS`, `WLS`,
+    `DWLS`, and `ULSMV` had been credited as maximum likelihood, or as
+    WLSMV when indicators were ordered; a new registry entry,
+    `cfa_other_estimator`, now credits them.
+  - **Extraction and rotation.** An EFA is credited with its extraction
+    for every `fm`: MINRES for `minres`, `uls`, `ols`, and `old.min`,
+    and a new entry, `common_factor_extraction`, for `ml`, `pa`, `wls`,
+    `gls`, `minchi`, and `alpha`, which had been credited with none. Any
+    oblique rotation is credited as “Oblique rotation”, varimax as
+    before, another orthogonal rotation by a new entry,
+    `orthogonal_rotation_other`, and a solution that was not rotated
+    with no rotation; it had been credited with varimax.
+  - **Equivalence testing.** It is credited only where a test could run:
+    in
     [`nomo_network()`](https://juhalt.github.io/nomologR/reference/nomo_network.md),
+    when a hypothesis has an equivalence interval; in
+    [`nomo_hypotheses()`](https://juhalt.github.io/nomologR/reference/nomo_hypotheses.md),
+    when a negligible prediction states its region. A bare
+    [`negligible()`](https://juhalt.github.io/nomologR/reference/nomo_expectations.md)
+    had credited it.
+- The registry’s text, dates, and references are corrected
+  ([\#145](https://github.com/JUhalt/nomologR/issues/145)). Values in
+  [`nomo_methods()`](https://juhalt.github.io/nomologR/reference/nomo_methods.md)
+  change; its columns do not.
+  - **What each method estimates.** Revised MAP is the trace of the
+    fourth power of the partial-correlation matrix, not a mean of
+    fourth-power correlations. Coefficient alpha equals reliability
+    under essential tau-equivalence and is a lower bound when loadings
+    differ. KMO is the sum of squared correlations divided by that sum
+    plus the squared partial correlations. The scaled-and-shifted
+    difference test is shifted to match a chi-square’s mean and
+    variance, not to stay positive.
+  - **Dates.** Change-in-fit evidence for invariance cites Cheung and
+    Rensvold (2002) and is dated 2002, not 2007. Bootstrap intervals for
+    reliability are no longer dated 2016 from a later evaluation;
+    `introduced` is `NA`.
+  - **References.** Short citations follow APA 7, with “et al.” for
+    three or more authors. Rönkkö and Cho (2022) has its pages,
+    Satorra (2000) its editors, and Fokkema and Greiff (2017) its
+    subtitle.
+- A wrong `stage` or `lineage` in
+  [`nomo_methods()`](https://juhalt.github.io/nomologR/reference/nomo_methods.md)
+  is reported in the package’s form for a wrong choice, “`stage` must be
+  one or more of …”
+  ([\#144](https://github.com/JUhalt/nomologR/issues/144)).
+
+### Output style shared with contentvalidR ([\#144](https://github.com/JUhalt/nomologR/issues/144))
+
+nomologR and `contentvalidR` now print, plot, and tabulate in one style,
+so a project that uses both reads as one. The changes are to what is
+shown. No field, argument,
+[`nomo_table()`](https://juhalt.github.io/nomologR/reference/nomo_table.md)
+type, or decision-log column changes for it; the observations in
+decision logs follow the same number rules.
+
+- **Headers.** Every [`print()`](https://rdrr.io/r/base/print.html) and
+  [`summary()`](https://rdrr.io/r/base/summary.html) begins with its
+  class and a title, such as `<nomo_cfa> Confirmatory factor analysis`
+  and `<nomo_cfa summary> Confirmatory factor analysis`. A technique
+  taken from one source names it on the next line.
+- **Numbers by kind.** Each statistic has one precision and one
+  leading-zero rule wherever it is printed.
+  - **Leading zeros.** A statistic bounded by 1 drops the zero, such as
+    “CFI .973”, a factor correlation, omega, AVE, power, or a *p* value.
+    One that can exceed 1 keeps it, such as “TLI 0.965”, RMSEA, HTMT, or
+    a loading.
+  - **References.** A reference is written like the value it is compared
+    with (“.950” beside CFI). A flagged value shows the decimals that
+    tell it from its reference: “The communality, .3997, is below the
+    .40 teaching reference.”
+  - **Rounding.** Display rounds half away from zero, as `contentvalidR`
+    does, so .625 prints .63. A value that rounds to zero never prints
+    with a sign.
+  - **Tests.** A test reads “chi-square(34) = 75.83, p \< .001”, and a
+    difference test “Delta chi-square(1) = 46.91, p \< .001”. A *p*
+    value that would round to 1.000 prints “p \> .999”, in the console,
+    in
+    [`nomo_apa_table()`](https://juhalt.github.io/nomologR/reference/nomo_apa_table.md)
+    cells, and in decision-log observations.
+  - **Missing values.** A missing value prints “–” in console tables;
+    APA tables keep the em dash. An interval with a missing bound prints
+    “–”, never half of it.
+- **Width.** Prose stops at 79 columns on a wide console, and wrapped
+  text never breaks inside a statistical clause such as “p \< .001” or
+  “\[0.28, 0.51\]”. On a narrow console a table first narrows the space
+  between its columns, then drops columns from the right. It never drops
+  a status or *p* column, and a line beneath it names each dropped
+  column and the call that shows it.
+- **Flagged sections.** Each output has one “Flagged” section, with
+  concern before review. A bullet names the unit and its status, as in
+  “- b5 (Review): …”, and units with the same explanation are listed
+  together.
+- **Status words.** A flag reads “Review”, “Concern”, or “Not computed”
+  in a table and at the start of a line, and a cell without a flag is
+  blank. Other statuses are in sentence case (“Converged: yes”, “Origin:
+  a priori”), and “a priori” and “post hoc” take no hyphen.
+- **Abbreviation keys.** Every abbreviation an output shows is defined
+  in it, under “What these columns mean” or “Abbreviations”.
+- **Pointer lines.** Each [`print()`](https://rdrr.io/r/base/print.html)
+  ends with a line that names where the rest is, such as `summary(x)` or
+  `nomo_table(x, "fit")`.
+- **Plot symbols.** A plot draws a status by shape, and repeats it in
+  color: a filled circle for no flag, an open circle for review (it was
+  a triangle), a filled square for concern, and a cross for not
+  computed. A legend appears whenever a point is flagged. Reference
+  lines are dashed and named, an axis for a statistic that cannot exceed
+  1 drops the leading zero, and captions wrap to the plot.
+- **APA tables.** [`print()`](https://rdrr.io/r/base/print.html) of an
+  APA table opens with the `<nomo_apa_table>` header and fits the
+  console: a table too wide wraps its long headings and text cells, then
+  drops columns from the right and names them. A note marker prints as
+  “(a)” in the cell and before its note. In the HTML report, the
+  manuscript tables have APA rules (above the table, beneath the
+  headings, below the table) and no rule under each row.
+- **The report.** Flags, statuses, and origins use the words above. A
+  note at the top says how values are rounded and what the dash and the
+  flag words mean, and a closing “Abbreviations” table defines every
+  abbreviation the report shows. Evidence flagged for review or concern
+  is under “Flagged”, concern first. Columns with no value in any row
+  are left out, and a note names them. Component summaries are printed
+  at 80 columns whatever the width of the console that rendered the
+  report.
+
+Where one class changes more than that:
+
+- **[`nomo_screen()`](https://juhalt.github.io/nomologR/reference/nomo_screen.md).**
+  “Items in correlation diagnostics” replaces “Relationship eligible”,
+  and one line says why category items have no correlations. The
+  item-rest plot is now a dot plot. The evidence map and the item-rest
+  plot no longer have a “note” level or green bars.
+- **[`nomo_factors()`](https://juhalt.github.io/nomologR/reference/nomo_factors.md)
+  and
+  [`nomo_efa()`](https://juhalt.github.io/nomologR/reference/nomo_efa.md).**
+  Agreement between two criteria is no longer called “strong converging
+  evidence”, and zero factors has its own text. Bartlett’s test is
+  written as other tests are, and is marked approximate for non-Pearson
+  correlations. Percentiles read as ordinals (“93rd”).
+- **[`nomo_cfa()`](https://juhalt.github.io/nomologR/reference/nomo_cfa.md)
+  and
+  [`nomo_compare()`](https://juhalt.github.io/nomologR/reference/nomo_compare.md).**
+  The chi-square line says which test it is, such as the Yuan-Bentler
+  scaled test statistic. The summary of a CFA that did not converge
+  shows no loadings, correlations, or fit. Correlations a model fixes,
+  such as a bifactor model’s zeros, are named as fixed. Pairs read “A
+  vs. B”.
+- **[`nomo_model()`](https://juhalt.github.io/nomologR/reference/nomo_model.md).**
+  [`print()`](https://rdrr.io/r/base/print.html) starts with a
+  `<nomo_model>` header and wraps its identification notes.
+- **[`nomo_reliability()`](https://juhalt.github.io/nomologR/reference/nomo_reliability.md),
+  [`nomo_validity()`](https://juhalt.github.io/nomologR/reference/nomo_validity.md),
+  and
+  [`nomo_hierarchical()`](https://juhalt.github.io/nomologR/reference/nomo_hierarchical.md).**
+  Intervals are in a column of their own. The validity print counts
+  flags by name (“Separation flags: none (1 pair)”). The hierarchical
+  model-choice caution is information shown in the summary, not a review
+  flag on every model, and
+  [`summary()`](https://rdrr.io/r/base/summary.html) includes the
+  factor-score table.
+- **[`nomo_invariance()`](https://juhalt.github.io/nomologR/reference/nomo_invariance.md).**
+  The tables are headed “Fit by level”, “CFI change”, and “Delta
+  chi-square”. The fit table has no cumulative “Constraints” column,
+  which had pushed RMSEA and SRMR out at 80 columns; a line beneath it
+  says what each level adds, such as
+  `Held equal: loadings from metric; intercepts from scalar, except ag3 ~ 1.`
+  The fit and change plots angle the level names, and the local-strain
+  plot gives each level its own panel.
+- **[`nomo_network()`](https://juhalt.github.io/nomologR/reference/nomo_network.md)
+  and
+  [`nomo_hypotheses()`](https://juhalt.github.io/nomologR/reference/nomo_hypotheses.md).**
+  Shorter status words, such as “In region, imprecise” and “Replicated”,
+  keep the status columns on an 80-column console. A
+  [`negligible()`](https://juhalt.github.io/nomologR/reference/nomo_expectations.md)
+  prediction shows the equivalence interval its concordance is judged
+  on, post hoc predictions are marked “(post hoc)”, and a bare
+  [`negligible()`](https://juhalt.github.io/nomologR/reference/nomo_expectations.md)
+  draws no theory-compatible band.
+- **[`nomo_scores()`](https://juhalt.github.io/nomologR/reference/nomo_scores.md)
+  and
+  [`nomo_missing()`](https://juhalt.github.io/nomologR/reference/nomo_missing.md).**
+  The parallel-model test is printed once, as in “Delta chi-square(16) =
+  171.84, p \< .001”, and each note is one bullet per factor under
+  “Flagged”.
+- **[`nomo_run()`](https://juhalt.github.io/nomologR/reference/nomo_run.md).**
+  Statuses are in sentence case and stages in words. A blocked run is
+  shown as one block that says what failed and what to do.
+  [`summary()`](https://rdrr.io/r/base/summary.html) lists each
+  component flag under “Flagged”, where it was raised, and names each
+  fit index’s version.
+
+### Additions to the documented interface
+
+Everything below is new since 0.9.0. The stability policy covers the
+functions, arguments, fields, and table types as it covers the rest of
+the interface. The exception is the two experimental functions,
+[`nomo_method_variance()`](https://juhalt.github.io/nomologR/reference/nomo_method_variance.md)
+and
+[`nomo_power_simulate()`](https://juhalt.github.io/nomologR/reference/nomo_power_simulate.md),
+whose output may change during 1.x without a deprecation period.
+
+- **New functions.**
+  [`nomo_esem()`](https://juhalt.github.io/nomologR/reference/nomo_esem.md),
+  [`nomo_invariance_longitudinal()`](https://juhalt.github.io/nomologR/reference/nomo_invariance_longitudinal.md),
+  [`nomo_method_variance()`](https://juhalt.github.io/nomologR/reference/nomo_method_variance.md)
+  (experimental),
+  [`nomo_power_rmsea()`](https://juhalt.github.io/nomologR/reference/nomo_power_rmsea.md),
+  [`nomo_power_simulate()`](https://juhalt.github.io/nomologR/reference/nomo_power_simulate.md)
+  (experimental),
+  [`nomo_retest()`](https://juhalt.github.io/nomologR/reference/nomo_retest.md),
+  and
+  [`nomo_single_indicator()`](https://juhalt.github.io/nomologR/reference/nomo_single_indicator.md).
+  Each has [`print()`](https://rdrr.io/r/base/print.html), and each but
+  the last has [`summary()`](https://rdrr.io/r/base/summary.html),
+  [`nomo_table()`](https://juhalt.github.io/nomologR/reference/nomo_table.md),
+  and
+  [`nomo_methods()`](https://juhalt.github.io/nomologR/reference/nomo_methods.md).
+  New dataset `nomo_demo_longitudinal`.
+- **New arguments.** `single_indicators` in
+  [`nomo_network()`](https://juhalt.github.io/nomologR/reference/nomo_network.md),
+  and `type` in [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
+  for a `nomo_reliability` object. `file` in
+  [`nomo_report()`](https://juhalt.github.io/nomologR/reference/nomo_report.md)
+  has no default.
+- **New settings.** `long_string_min_items` in
+  [`nomo_defaults()`](https://juhalt.github.io/nomologR/reference/nomo_defaults.md).
+- **New result fields.**
+  - [`nomo_screen()`](https://juhalt.github.io/nomologR/reference/nomo_screen.md):
+    `long_string_min_items` and `long_string_rule_applied` in
+    `effort_settings`.
+  - [`nomo_factors()`](https://juhalt.github.io/nomologR/reference/nomo_factors.md):
+    `min_pairwise_n`.
+  - [`nomo_split()`](https://juhalt.github.io/nomologR/reference/nomo_split.md):
+    `rng_kind`.
+  - [`nomo_validity()`](https://juhalt.github.io/nomologR/reference/nomo_validity.md):
+    `reference` and `attention` in `latent_correlations`; `missing` and
+    `n` in `htmt_status`.
+  - [`nomo_hierarchical()`](https://juhalt.github.io/nomologR/reference/nomo_hierarchical.md):
+    `brief` in `notes`, a one-sentence version of each note.
+  - [`nomo_scores()`](https://juhalt.github.io/nomologR/reference/nomo_scores.md):
+    `rows`.
+  - [`nomo_invariance()`](https://juhalt.github.io/nomologR/reference/nomo_invariance.md):
+    `n_used`, `group_n`, `ordered_detected`, `fit_variants`, and
+    `latent_means`.
+  - [`nomo_network()`](https://juhalt.github.io/nomologR/reference/nomo_network.md):
+    `model_changes`, `n_used`, `validation_n_used`, `single_indicators`,
+    and `single_indicator_sensitivity`; `chisq_version` and
+    `index_version` in `fit_evidence`; `fit` and `structural_test` in
+    `measurement_context`.
+- **New values.** `"undetermined"` in
+  [`nomo_compare()`](https://juhalt.github.io/nomologR/reference/nomo_compare.md)’s
+  `relation`; `"direction_concordant_above_magnitude"` in
+  [`nomo_network()`](https://juhalt.github.io/nomologR/reference/nomo_network.md)’s
+  `concordance`; `"residual_association"` in its `evidence_scope`;
+  `"network_validation"` in the `stage` of its decision log.
+- **New
+  [`nomo_table()`](https://juhalt.github.io/nomologR/reference/nomo_table.md)
+  types and columns.** `"latent_means"` for
+  [`nomo_invariance()`](https://juhalt.github.io/nomologR/reference/nomo_invariance.md);
+  `"single_indicators"` and `"sensitivity"` for
+  [`nomo_network()`](https://juhalt.github.io/nomologR/reference/nomo_network.md),
+  whose `"fit"` table gains `chisq_version` and `index_version`;
+  `missing` and `n` in `"htmt_status"` for
+  [`nomo_validity()`](https://juhalt.github.io/nomologR/reference/nomo_validity.md);
+  `brief` in `"notes"` for
+  [`nomo_hierarchical()`](https://juhalt.github.io/nomologR/reference/nomo_hierarchical.md).
+  [`nomo_table()`](https://juhalt.github.io/nomologR/reference/nomo_table.md)
+  has a method for every other object, which stops with the supported
+  classes.
+- **New
+  [`nomo_apa_table()`](https://juhalt.github.io/nomologR/reference/nomo_apa_table.md)
+  method.** For
+  [`nomo_retest()`](https://juhalt.github.io/nomologR/reference/nomo_retest.md)
+  results.
+- **New [`plot()`](https://rdrr.io/r/graphics/plot.default.html) and
+  [`summary()`](https://rdrr.io/r/base/summary.html) methods.**
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) for
+  `nomo_scores`, `nomo_missing`, and `nomo_power` objects, and
+  [`summary()`](https://rdrr.io/r/base/summary.html) for `nomo_missing`
+  objects. [`summary()`](https://rdrr.io/r/base/summary.html) of a
+  `nomo_scores` object has class `summary_nomo_scores`.
+- **New decision-log rows**, named by their `metric`, or by their `id`
+  in a guided run’s own log.
+  - [`nomo_screen()`](https://juhalt.github.io/nomologR/reference/nomo_screen.md):
+    `keying_not_used`, `out_of_range`, `item_rest_not_computed`,
+    `mahalanobis`, `per_scale_indices`, `keying_completed`, and
+    `scales_override`.
+  - [`nomo_compare()`](https://juhalt.github.io/nomologR/reference/nomo_compare.md):
+    `improper_solution`.
+  - [`nomo_validity()`](https://juhalt.github.io/nomologR/reference/nomo_validity.md):
+    `latent_correlation` and `htmt_missing_data`.
+  - [`nomo_cfa()`](https://juhalt.github.io/nomologR/reference/nomo_cfa.md),
+    [`nomo_invariance()`](https://juhalt.github.io/nomologR/reference/nomo_invariance.md),
     and
+    [`nomo_network()`](https://juhalt.github.io/nomologR/reference/nomo_network.md):
+    `ordered_detected`;
+    [`nomo_network()`](https://juhalt.github.io/nomologR/reference/nomo_network.md)
+    also `cases_used`, `model_fit`, `relation_constrained`,
+    `relation_auto_freed`, `residual_association`, and
+    `unstandardized_metric`.
+  - [`nomo_run()`](https://juhalt.github.io/nomologR/reference/nomo_run.md):
+    `keying`, `estimation_settings:<stage>`, `settings:<stage>`,
+    `cfa_item_set`, and `item_types`;
+    [`nomo_revise()`](https://juhalt.github.io/nomologR/reference/nomo_revise.md):
+    `reinstated:<item>` and `removed:<item>`.
+- **Conventions in returned tables.** A new section of
+  [`?nomologR`](https://juhalt.github.io/nomologR/reference/nomologR-package.md)
+  records three differences between tables that are kept as they are
+  ([\#145](https://github.com/JUhalt/nomologR/issues/145)).
+  - **Proportions.** Columns named `pct_*` (`pct_missing` in
+    [`nomo_screen()`](https://juhalt.github.io/nomologR/reference/nomo_screen.md)
+    and
+    [`nomo_missing()`](https://juhalt.github.io/nomologR/reference/nomo_missing.md),
+    `pct_incomplete`, `pct_dropped`) hold proportions from 0 to 1, as do
+    `*_prop` and `proportion_*` columns. `percent_unique` in
+    [`nomo_screen()`](https://juhalt.github.io/nomologR/reference/nomo_screen.md),
+    and its reference in
+    [`nomo_defaults()`](https://juhalt.github.io/nomologR/reference/nomo_defaults.md),
+    are percentages.
+  - **Flags.** Stored flags use three vocabularies: `KEEP`, `REVIEW`,
+    and `STRONG REVIEW` in the loading tables of
+    [`nomo_efa()`](https://juhalt.github.io/nomologR/reference/nomo_efa.md),
+    [`nomo_cfa()`](https://juhalt.github.io/nomologR/reference/nomo_cfa.md),
+    and
+    [`nomo_validity()`](https://juhalt.github.io/nomologR/reference/nomo_validity.md);
+    `none`, `review`, and `concern` in the item review of
+    [`summary()`](https://rdrr.io/r/base/summary.html) for
+    [`nomo_screen()`](https://juhalt.github.io/nomologR/reference/nomo_screen.md);
+    and `info`, `review`, and `concern` in decision logs and the other
+    evidence tables, which may also mark a value that could not be
+    computed as `unavailable`. The section gives the one wording that
+    printed output, plots, and reports use for each.
+  - **P-values.** A p-value is `p_value`, with two exceptions that keep
+    `pvalue`: lavaan’s parameter tables, and the fit tables that keep
+    [`lavaan::fitMeasures()`](https://rdrr.io/pkg/lavaan/man/fitMeasures.html)
+    names (`chisq`, `pvalue`, `cfi`, …). These are the `models` of
+    [`nomo_esem()`](https://juhalt.github.io/nomologR/reference/nomo_esem.md),
+    [`nomo_method_variance()`](https://juhalt.github.io/nomologR/reference/nomo_method_variance.md),
+    and
+    [`nomo_compare()`](https://juhalt.github.io/nomologR/reference/nomo_compare.md),
+    and the fit of
+    [`nomo_invariance()`](https://juhalt.github.io/nomologR/reference/nomo_invariance.md)
+    and
+    [`nomo_network()`](https://juhalt.github.io/nomologR/reference/nomo_network.md).
+    The fit tables of
+    [`nomo_cfa()`](https://juhalt.github.io/nomologR/reference/nomo_cfa.md)
+    (long by design) and
     [`nomo_missing()`](https://juhalt.github.io/nomologR/reference/nomo_missing.md)
-    name the units and flag values of their own tables. The stability
-    policy lists the columns of each analysis’s decision log.
-  - **[`nomo_table()`](https://juhalt.github.io/nomologR/reference/nomo_table.md).**
-    Its help page lists the `"factors"` type of `nomo_hierarchical`, and
-    a new “Fit tables” section names the index columns of each fit
-    table.
-  - **[`nomo_apa_table()`](https://juhalt.github.io/nomologR/reference/nomo_apa_table.md).**
-    Its help page lists the fields of the returned table (`number`,
-    `title`, `body`, `stub`, `notes`, `source`) and says that headings,
-    cells, and notes are written in Markdown.
-  - **[`nomo_methods()`](https://juhalt.github.io/nomologR/reference/nomo_methods.md).**
-    The help for `stage` lists `"scores"`.
+    use `chi_square`, `p_value`, `CFI`, ….
+
+### The CRAN review and a new lavaan
+
+CRAN returned 0.3.0 with two requests: not to write to the user’s file
+space by default, and not to modify the global environment.
+
+- **No default write path.**
+  [`nomo_report()`](https://juhalt.github.io/nomologR/reference/nomo_report.md)
+  requires `file`, and writes the report and nothing else (see
+  “Report”).
+- **Random-number state.**
+  [`nomo_factors()`](https://juhalt.github.io/nomologR/reference/nomo_factors.md),
+  [`nomo_split()`](https://juhalt.github.io/nomologR/reference/nomo_split.md),
+  [`nomo_power_simulate()`](https://juhalt.github.io/nomologR/reference/nomo_power_simulate.md),
+  and
+  [`nomo_reliability()`](https://juhalt.github.io/nomologR/reference/nomo_reliability.md)
+  set their seed with
+  [`withr::with_seed()`](https://withr.r-lib.org/reference/with_seed.html).
+  The check
+  [`nomo_power_simulate()`](https://juhalt.github.io/nomologR/reference/nomo_power_simulate.md)
+  makes of the population’s variances under `standardized = TRUE` draws
+  its data inside
+  [`withr::with_preserve_seed()`](https://withr.r-lib.org/reference/with_seed.html).
+  Results for a given seed are unchanged, and the caller’s random-number
+  state is left as it was. No code in the package assigns or removes
+  `.Random.seed` in the global environment any more, or writes anything
+  else there; `withr` saves and restores the state. `withr` (\>= 3.0.2)
+  joins `Imports`; ggplot2 already imports it, so it is not a new
+  package among the dependencies.
+- **`nomo_reliability(ci_seed = )`.** lavaan still seeds the bootstrap
+  draws, so intervals for a given seed and worker count are the same.
+  Two cases are fixed. A seeded bootstrap on more than one worker
+  (`ci_ncpus`), in a session that had not yet drawn a random number,
+  left the session on the `"L'Ecuyer-CMRG"` generator. A bootstrap that
+  failed part-way could leave the session on the bootstrap’s seed.
+- **Examples.** Every exported function has examples that run in the
+  ordinary check, except
+  [`nomo_report()`](https://juhalt.github.io/nomologR/reference/nomo_report.md)
+  and
+  [`nomo_revise()`](https://juhalt.github.io/nomologR/reference/nomo_revise.md),
+  whose examples stay in `\donttest{}`.
+- **Suggested packages.** The examples and tests that need `rmarkdown`
+  are skipped without it, and `covr`, which no package code uses, is no
+  longer in `Suggests`.
+
+lavaan 0.7-3 changed the default generator of
+[`lavaan::simulateData()`](https://rdrr.io/pkg/lavaan/man/simulateData.html),
+so the same seed gives other data than under earlier versions.
+Estimation is not affected.
+
+- **Examples and articles.** None draws data with
+  [`lavaan::simulateData()`](https://rdrr.io/pkg/lavaan/man/simulateData.html)
+  any more. The example of
+  [`nomo_method_variance()`](https://juhalt.github.io/nomologR/reference/nomo_method_variance.md)
+  uses the social-desirability items of `nomo_demo_network` as the
+  marker, and the measurement-evidence article simulates its marker
+  example with base R, so both give the same output under every lavaan
+  version. The test fixtures are drawn with base R too.
+- **[`nomo_power_simulate()`](https://juhalt.github.io/nomologR/reference/nomo_power_simulate.md).**
+  It still generates its samples with
+  [`lavaan::simulateData()`](https://rdrr.io/pkg/lavaan/man/simulateData.html),
+  so a `seed` reproduces a study only under the same lavaan version. Its
+  help page says so.
 
 ### New methods ([\#129](https://github.com/JUhalt/nomologR/issues/129))
 
@@ -722,7 +1609,10 @@ presentation) follow before the release candidate.
     freedom come from a model string,
     [`nomo_model()`](https://juhalt.github.io/nomologR/reference/nomo_model.md),
     [`nomo_cfa()`](https://juhalt.github.io/nomologR/reference/nomo_cfa.md),
-    or lavaan fit.
+    or a single-group lavaan fit. A multi-group fit is refused, because
+    lavaan’s RMSEA for several groups carries a factor of the square
+    root of their number. So is a `rmsea_null` that contradicts `test`:
+    the test of exact fit needs a null of 0.
   - [`nomo_power_simulate()`](https://juhalt.github.io/nomologR/reference/nomo_power_simulate.md)
     is Muthén and Muthén’s (2002) Monte Carlo approach. It generates
     data from a population model with values, fits the analysis model at
@@ -730,13 +1620,26 @@ presentation) follow before the release candidate.
     2013), parameter and standard-error bias, coverage, and power. It
     also gives the smallest simulated N meeting their references: biases
     within 10%, coverage .91 to .98, and power .80 for the focus
-    parameters. The result records the `seed` and the call. Estimates
-    are in the metric `lavaan::sem(std.lv = TRUE)` sets, so a latent
-    regression is not a standardized coefficient; the help page shows
-    how the two differ.
+    parameters. The references hold for every parameter given a
+    population value. The result records the `seed` and the call.
+    Estimates are in the metric `lavaan::sem(std.lv = TRUE)` sets, so a
+    latent regression is not a standardized coefficient; the help page
+    shows how the two differ. It warns when `standardized = TRUE` cannot
+    give the observed variables unit variance, and names the variances
+    the population implies.
     [`nomo_power_simulate()`](https://juhalt.github.io/nomologR/reference/nomo_power_simulate.md)
     is experimental: it may change during 1.x without a deprecation
     period.
+  - **Other outputs.**
+    [`summary()`](https://rdrr.io/r/base/summary.html),
+    [`plot()`](https://rdrr.io/r/graphics/plot.default.html) (the RMSEA
+    power curve, or a simulation’s power by sample size for each focus
+    parameter), and
+    [`nomo_table()`](https://juhalt.github.io/nomologR/reference/nomo_table.md):
+    `"power"` for
+    [`nomo_power_rmsea()`](https://juhalt.github.io/nomologR/reference/nomo_power_rmsea.md),
+    and `"summary"` or `"parameters"` for
+    [`nomo_power_simulate()`](https://juhalt.github.io/nomologR/reference/nomo_power_simulate.md).
 - New
   [`nomo_esem()`](https://juhalt.github.io/nomologR/reference/nomo_esem.md)
   fits a measurement model as exploratory structural equation modeling
@@ -751,14 +1654,22 @@ presentation) follow before the release candidate.
     rotated towards zero. Geomin is available too.
   - **The comparison.** It reports both models’ fit (`models`), their
     factor correlations and the change between them
-    (`factor_correlations`), and their likelihood-ratio test
-    (`comparisons`); the two lavaan fits are in `fits`. The ESEM is
-    flagged for review when it fits better on TLI and RMSEA, which
-    penalize its extra parameters; lower ESEM factor correlations then
-    show that the CFA’s zero cross-loadings are inflating them.
-    Cross-loadings at or above `efa_crossloading_reference` and main
-    loadings below `efa_loading_reference` are flagged as evidence about
-    items, not instructions.
+    (`factor_correlations`), and their difference test (`comparisons`);
+    the two lavaan fits are in `fits`. The ESEM is flagged for review
+    when it fits better on TLI and RMSEA, which penalize its extra
+    parameters; lower ESEM factor correlations then show that the CFA’s
+    zero cross-loadings are inflating them. Cross-loadings at or above
+    `efa_crossloading_reference` and main loadings below
+    `efa_loading_reference` are flagged as evidence about items, not
+    instructions.
+  - **Problems are kept.** lavaan’s warnings are in `engine_warnings` (a
+    list with `ESEM`, `CFA`, and `comparison`) and in the decision log.
+    A negative variance, a standardized loading above 1, or a latent
+    correlation above 1 in either model is logged as a concern and shown
+    under “Flagged”. A model that does not converge stops the call with
+    a message that names it and quotes lavaan. Cases lavaan did not use
+    are reported: `data_n`, a line such as “Cases: 473 of 500 used” in
+    the print and summary, and a `cases_used` row for review.
   - **Other outputs.** [`print()`](https://rdrr.io/r/base/print.html),
     [`summary()`](https://rdrr.io/r/base/summary.html),
     [`nomo_table()`](https://juhalt.github.io/nomologR/reference/nomo_table.md),
@@ -781,14 +1692,23 @@ presentation) follow before the release candidate.
     [`nomo_cfa()`](https://juhalt.github.io/nomologR/reference/nomo_cfa.md)
     reports them), and compares them (`comparisons`) to test whether
     marker-based method variance is present, whether its effects are
-    equal, and whether it biases the substantive correlations.
+    equal, and whether it biases the substantive correlations. With
+    Method-U retained, a presence test that is not significant under
+    equal effects is qualified, flagged for review, and reported with
+    its test against Method-U.
   - **Reliability decomposition.** It splits each factor’s reliability
     into substantive and method parts (`reliability`).
   - **Sensitivity.** It fits the Method-S(.05) and Method-S(.01) models,
-    with the method loadings at the upper ends of their intervals.
-    `correlations` gives each pair of factors’ correlation in every
-    model, with p-values named `retained_p_value`,
+    with each method loading fixed at the end of its interval farther
+    from zero. `correlations` gives each pair of factors’ correlation in
+    every model, with p-values named `retained_p_value`,
     `method_s_05_p_value`, and `method_s_01_p_value`.
+  - **Problems are kept.** lavaan’s warnings are in `engine_warnings`
+    and logged for review, and an improper solution is a concern. A
+    model that does not converge, and a CFA that gives the marker a
+    negative error variance or no standard errors, stop the analysis
+    with the reason. A two-indicator marker is flagged for review, and
+    cases left out are counted.
 
   The log explains what the marker must be: theoretically unrelated to
   the constructs, and tapping the biases the measurement context
@@ -816,11 +1736,15 @@ presentation) follow before the release candidate.
     interval as they ask, and an interval that reaches “poor” is
     flagged.
   - **Measurement error.** It reports the standard error of measurement,
-    SD x sqrt(1 - ICC), and the smallest detectable change, 1.96 x
+    the square root of the residual mean square, which leaves out any
+    shift between occasions, and the smallest detectable change, 1.96 x
     sqrt(2) x SEM (Weir, 2005).
   - **Reliable change.** Each person’s reliable change index follows
     Jacobson and Truax (1991); it exceeds 1.96 exactly when the change
     exceeds the smallest detectable change.
+  - **Input.** An infinite score is refused with a message naming the
+    column, and cases left out by listwise deletion are recorded in the
+    decision log and the print.
   - **Other outputs.**
     [`nomo_table()`](https://juhalt.github.io/nomologR/reference/nomo_table.md),
     [`nomo_apa_table()`](https://juhalt.github.io/nomologR/reference/nomo_apa_table.md),
@@ -835,13 +1759,16 @@ presentation) follow before the release candidate.
   [`nomo_single_indicator()`](https://juhalt.github.io/nomologR/reference/nomo_single_indicator.md)
   record. The record can take omega and its bootstrap uncertainty from a
   [`nomo_reliability()`](https://juhalt.github.io/nomologR/reference/nomo_reliability.md)
-  result. The composite becomes the one indicator of a latent variable
-  of the same name, with its error variance fixed at (1 - reliability) x
-  its variance, so the model syntax and hypotheses are unchanged. The
-  method goes back to Spearman’s (1904) correction for attenuation and
-  the SEM textbooks (Hayduk, 1987; Bollen, 1989), and Savalei (2019)
-  found it the most accurate option in samples of 30 to 200 when the
-  reliability is close to its true value. So nomologR:
+  result; it warns when that omega is a latent-response omega for an
+  ordered composite, and records the scale in `source`. The composite
+  becomes the one indicator of a latent variable of the same name, so
+  the model syntax and hypotheses are unchanged. Its error variance is
+  fixed at (1 - reliability) x its variance on the rows lavaan analyzes,
+  so the fitted model’s reliability is the one supplied. The method goes
+  back to Spearman’s (1904) correction for attenuation and the SEM
+  textbooks (Hayduk, 1987; Bollen, 1989), and Savalei (2019) found it
+  the most accurate option in samples of 30 to 200 when the reliability
+  is close to its true value. So nomologR:
   - refits each hypothesis with each reliability .05 and .10 lower and
     higher, records the result in `single_indicator_sensitivity`, and
     flags any hypothesis whose concordance changes across that range;
@@ -852,13 +1779,11 @@ presentation) follow before the release candidate.
   - flags coefficient alpha for review, since it understates reliability
     when loadings differ and so overcorrects.
 
-  `hypothesis_evidence` gains `se_reliability_added`,
   [`nomo_table()`](https://juhalt.github.io/nomologR/reference/nomo_table.md)
   gains the `"single_indicators"` and `"sensitivity"` types, and the APA
   hypotheses table notes the correction. The nomological-network article
   shows the correction recovering the population path (.45) from the
-  Persistence mean (.41 uncorrected, .46 corrected). The
-  observed-endpoint note in the log now names the option.
+  Persistence mean (.41 uncorrected, .46 corrected).
 
 ### Invariance across groups and occasions ([\#129](https://github.com/JUhalt/nomologR/issues/129))
 
@@ -877,6 +1802,13 @@ presentation) follow before the release candidate.
   between modes to .44 SD. Releasing it gives .33 \[.17, .49\], which
   covers the population’s .25. The measurement-invariance article walks
   through this.
+  - **Which means are reported.** The table is decided from the fitted
+    model. It reports only factors whose reference latent mean is fixed
+    at 0 and variance at 1, and only estimated means. For a model with
+    higher-order factors, semTools uses unit loadings whatever `ID.fac`
+    asks for, so the table is empty, and `ID.fac` and the log record
+    `"ul"`. A mean fixed at 0 because every intercept of a factor was
+    released is left out, and the log says why.
 - New
   [`nomo_invariance_longitudinal()`](https://juhalt.github.io/nomologR/reference/nomo_invariance_longitudinal.md)
   for measurement invariance across occasions
@@ -897,7 +1829,8 @@ presentation) follow before the release candidate.
     applied across occasions through semTools’ longitudinal arguments. A
     release names the item as in the one-occasion model, such as
     `"w3 ~ 1"`, and the diagnostics are labeled by item and occasions,
-    such as `Intercept: w3 (t1 vs. t3)`.
+    such as `Intercept: w3 (t1 vs. t3)`. An item whose columns are
+    ordered factors is ordered on every occasion.
   - **Latent change.** Once intercepts are invariant, fully or
     partially, `latent_means` gives each later occasion’s latent mean in
     the first occasion’s latent standard deviations, with intervals.
@@ -916,67 +1849,8 @@ presentation) follow before the release candidate.
   In the measurement-invariance article, holding that intercept equal
   inflates the change at the third occasion to .66 SD. Releasing it
   gives .55 \[.43, .67\], which covers the population’s .50.
-- [`nomo_invariance()`](https://juhalt.github.io/nomologR/reference/nomo_invariance.md)’s
-  option checks and level fitting are now shared with
-  [`nomo_invariance_longitudinal()`](https://juhalt.github.io/nomologR/reference/nomo_invariance_longitudinal.md).
-  Its results are unchanged.
 
-### Presentation ([\#89](https://github.com/JUhalt/nomologR/issues/89))
-
-- The output gallery in `dev/output-gallery.R`
-  ([\#89](https://github.com/JUhalt/nomologR/issues/89)) now covers the
-  features added for 1.0
-  ([\#129](https://github.com/JUhalt/nomologR/issues/129)): ESEM, method
-  variance, test-retest reliability, power, latent means, longitudinal
-  invariance, and single indicators. Reading their output as a user
-  would led to these display changes. Computed values, decision-log
-  text, and
-  [`nomo_table()`](https://juhalt.github.io/nomologR/reference/nomo_table.md)
-  output are unchanged.
-  - **Invariance.** A summary with a strict level had lost RMSEA and
-    SRMR at 80 columns, pushed out by the cumulative “Constraints”
-    column. The fit table now leaves that column out, and a line beneath
-    it says what each level adds: “Held equal: loadings from metric;
-    intercepts from scalar; residuals from strict.” A
-    researcher-specified release is named beside its level, as in
-    “intercepts from scalar, except `ag3 ~ 1`”, so the line does not say
-    that the released intercept is held equal. Across occasions, the
-    latent-change column is headed “Change”. The fit and change plots
-    angle the level names, which ran together with four levels. The
-    local-strain plot gives each level its own panel, with the score
-    axis from zero: in one panel, close scores at two levels had been
-    drawn on one spot, hiding one of the levels.
-  - **Method variance.** Each comparison says what it asks, such as
-    “Method variance present?”, in a short form of the question
-    `comparisons` stores. The closing note defines the Baseline,
-    Method-C, Method-U, Method-R, and Method-S models. The correlations
-    are headed by the models’ names, such as “Method-C” and
-    “Method-S(.05)”, rather than “Retained” and “S(.05)”. The method
-    loading’s p-value is headed “Method p”. The print and summary list
-    the decision log’s flagged entries, as
-    [`nomo_esem()`](https://juhalt.github.io/nomologR/reference/nomo_esem.md)’s
-    do.
-  - **Test-retest reliability.** The print lists the flagged entries
-    too. SEM, SDC, and SD have two decimals, like the intervals beside
-    them.
-  - **Alignment.** Percentages are right-aligned like the numbers beside
-    them, in the method-variance tables and in
-    [`nomo_power_simulate()`](https://juhalt.github.io/nomologR/reference/nomo_power_simulate.md)’s
-    print. So are the reliability and its standard error in the network
-    summary’s single-indicator table.
-  - **Power.** In
-    [`nomo_power_simulate()`](https://juhalt.github.io/nomologR/reference/nomo_power_simulate.md)’s
-    print, convergence, improper solutions, and the biases are
-    percentages with one decimal, as the bias references are, so 499
-    converged replications of 500 no longer round to 100%. The note says
-    what “Max bias” and “Max SE bias” are.
-    [`nomo_power_rmsea()`](https://juhalt.github.io/nomologR/reference/nomo_power_rmsea.md)’s
-    print gives power to two decimals, as
-    [`nomo_power_simulate()`](https://juhalt.github.io/nomologR/reference/nomo_power_simulate.md)’s
-    does, and its target as “0.80” rather than “0.8”; the smallest N is
-    a line of its own under the header.
-
-### The 1.0 contract ([\#113](https://github.com/JUhalt/nomologR/issues/113))
+### The stability contract ([\#113](https://github.com/JUhalt/nomologR/issues/113))
 
 - [`nomo_missing()`](https://juhalt.github.io/nomologR/reference/nomo_missing.md)
   and
@@ -984,10 +1858,10 @@ presentation) follow before the release candidate.
   leave the experimental list and are covered by the stability policy
   ([\#113](https://github.com/JUhalt/nomologR/issues/113)).
   [`nomo_missing()`](https://juhalt.github.io/nomologR/reference/nomo_missing.md)’s
-  flagging rule rests on Schafer and Graham (2002, p. 157): a bias
-  beyond about half a standard error is practically important, because
-  it degrades interval coverage. Separating sampling variability from
-  bias would be new output, added alongside the rule.
+  flagging rule is adapted from Schafer and Graham (2002, p. 157), who
+  judged a bias beyond about half a standard error practically
+  important, because it degrades interval coverage. Separating sampling
+  variability from bias would be new output, added alongside the rule.
   [`nomo_apa_table()`](https://juhalt.github.io/nomologR/reference/nomo_apa_table.md)’s
   `type` values and returned structure are covered. A table’s formatting
   (headings, number formats, notes) may still be corrected where it
@@ -1001,7 +1875,7 @@ presentation) follow before the release candidate.
   are identical to 0.9.0’s apart from the producer version and date, and
   the reader needed no change.
 
-### Documentation ([\#129](https://github.com/JUhalt/nomologR/issues/129), [\#138](https://github.com/JUhalt/nomologR/issues/138))
+### Documentation ([\#129](https://github.com/JUhalt/nomologR/issues/129), [\#138](https://github.com/JUhalt/nomologR/issues/138), [\#144](https://github.com/JUhalt/nomologR/issues/144), [\#145](https://github.com/JUhalt/nomologR/issues/145))
 
 - Documentation for 1.0
   ([\#129](https://github.com/JUhalt/nomologR/issues/129),
@@ -1026,10 +1900,79 @@ presentation) follow before the release candidate.
   records the feature freeze on 2026-10-13. The README and the
   exploratory-workflow article read the documented `correlation_method`
   and `item_types` of
-  [`nomo_factors()`](https://juhalt.github.io/nomologR/reference/nomo_factors.md)
-  rather than their undocumented aliases, and headings that pandoc had
-  rendered as text in NEWS and the measurement-evidence article are
-  fixed.
+  [`nomo_factors()`](https://juhalt.github.io/nomologR/reference/nomo_factors.md),
+  not their undocumented aliases.
+- The interface frozen at 1.0 is written down where it was missing
+  ([\#145](https://github.com/JUhalt/nomologR/issues/145)). No value,
+  name, or behavior changes for it.
+  - **Help pages.** The pages of
+    [`nomo_screen()`](https://juhalt.github.io/nomologR/reference/nomo_screen.md),
+    [`nomo_cfa()`](https://juhalt.github.io/nomologR/reference/nomo_cfa.md),
+    [`nomo_efa()`](https://juhalt.github.io/nomologR/reference/nomo_efa.md),
+    [`nomo_validity()`](https://juhalt.github.io/nomologR/reference/nomo_validity.md),
+    [`nomo_reliability()`](https://juhalt.github.io/nomologR/reference/nomo_reliability.md),
+    [`nomo_network()`](https://juhalt.github.io/nomologR/reference/nomo_network.md),
+    and
+    [`nomo_missing()`](https://juhalt.github.io/nomologR/reference/nomo_missing.md)
+    name the units and flag values of their own tables. The stability
+    policy lists the columns of each analysis’s decision log, and
+    [`?nomo_run`](https://juhalt.github.io/nomologR/reference/nomo_run.md)
+    those of the run’s own log.
+  - **[`nomo_table()`](https://juhalt.github.io/nomologR/reference/nomo_table.md).**
+    Its help page lists the `"factors"` type of `nomo_hierarchical`, and
+    a new “Fit tables” section names the index columns of each fit
+    table.
+  - **[`nomo_apa_table()`](https://juhalt.github.io/nomologR/reference/nomo_apa_table.md).**
+    Its help page lists the fields of the returned table (`number`,
+    `title`, `body`, `stub`, `notes`, `source`) and says that headings,
+    cells, and notes are written in Markdown.
+  - **[`nomo_network()`](https://juhalt.github.io/nomologR/reference/nomo_network.md).**
+    [`?nomo_network`](https://juhalt.github.io/nomologR/reference/nomo_network.md)
+    defines every `concordance`, `evidence_scope`, and
+    `replication_status` value, with its rule and the interval it uses,
+    and spells out SESOI (smallest effect size of interest).
+  - **[`nomo_defaults()`](https://juhalt.github.io/nomologR/reference/nomo_defaults.md).**
+    It documents `auto_delete` and `auto_respecify` as fixed safeguards,
+    and the comparison-data settings and how they differ from the
+    `EFAtools` defaults.
+  - **Other pages.**
+    [`?nomo_factors`](https://juhalt.github.io/nomologR/reference/nomo_factors.md)
+    defines the three parallel-analysis rules and TR2 and TR4, and
+    [`?nomo_efa`](https://juhalt.github.io/nomologR/reference/nomo_efa.md)
+    lists the rotations it accepts.
+    [`?nomo_invariance`](https://juhalt.github.io/nomologR/reference/nomo_invariance.md)
+    says that the reference group is the one that appears first in
+    `data`.
+    [`?nomo_hierarchical`](https://juhalt.github.io/nomologR/reference/nomo_hierarchical.md)
+    says that H equals the squared determinacy for unidimensional data.
+    [`?nomo_methods`](https://juhalt.github.io/nomologR/reference/nomo_methods.md)
+    lists `"scores"` among its stages and says that the result is an
+    ordinary tibble.
+- [`?nomologR`](https://juhalt.github.io/nomologR/reference/nomologR-package.md)
+  gains “Status words shared with contentvalidR”
+  ([\#144](https://github.com/JUhalt/nomologR/issues/144)): how
+  nomologR’s flags correspond to `contentvalidR`’s statuses, that
+  “review” never means delete, and that `recommendation` is prose advice
+  in nomologR’s decision logs and a decision word in `contentvalidR`.
+- The dataset help pages and the articles write population values as the
+  output prints them
+  ([\#144](https://github.com/JUhalt/nomologR/issues/144)): a loading, a
+  path, or a difference in means keeps its leading zero (0.45), and a
+  correlation drops it (.40).
+- Articles ([\#144](https://github.com/JUhalt/nomologR/issues/144),
+  [\#145](https://github.com/JUhalt/nomologR/issues/145)).
+  - **Wording.** Numbers in the prose are rounded and written as the
+    printed output is. Tests read “Delta chi-square(df) = x, p = .xxx”.
+    Three or more authors are cited with “et al.”.
+  - **Hierarchical models** lists Beauducel (2011), Gorsuch (1983), and
+    Hancock and Mueller (2001), which it cites, and shows H beside the
+    squared determinacy.
+  - **Nomological network** shows each prediction’s classification, its
+    equivalence interval, and its replication status, which had been
+    hidden at 80 columns. It credits the “total aggregation” name to
+    Bagozzi and Heatherton (1994).
+  - **Research basis** gives Koo and Li’s (2016) recommendation as a
+    two-way mixed-effects model with absolute agreement.
 
 ## nomologR 0.9.0
 
