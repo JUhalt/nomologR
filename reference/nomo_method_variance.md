@@ -222,49 +222,35 @@ and marker variables: A review and comprehensive CFA marker technique.
 
 ``` r
 # \donttest{
-# Two substantive factors and a marker, all sharing a method factor
-# (simulated).
-population <- "
-  A =~ 0.7*a1 + 0.7*a2 + 0.6*a3 + 0.6*a4
-  B =~ 0.7*b1 + 0.6*b2 + 0.6*b3 + 0.5*b4
-  M =~ 0.7*m1 + 0.7*m2 + 0.6*m3
-  CMV =~ 0.3*a1 + 0.3*a2 + 0.3*a3 + 0.3*a4 + 0.3*b1 + 0.3*b2 + 0.3*b3 +
-         0.3*b4 + 0.3*m1 + 0.3*m2 + 0.3*m3
-  A ~~ 0.4*B
-  A ~~ 0*M
-  B ~~ 0*M
-  CMV ~~ 0*A + 0*B + 0*M
-"
-set.seed(2010)
-dat <- lavaan::simulateData(population, sample.nobs = 600, standardized = TRUE)
-mv <- nomo_method_variance(
-  "A =~ a1 + a2 + a3 + a4\nB =~ b1 + b2 + b3 + b4",
-  data = dat, marker = c("m1", "m2", "m3")
-)
+# Social desirability as the marker for the Agency and Persistence items of
+# the simulated validation study. In its population the marker shares
+# nothing with those items, so no method variance should be detected.
+model <- nomo_model(list(
+  Agency = paste0("ag", 1:4),
+  Persistence = paste0("pe", 1:4)
+))
+mv <- nomo_method_variance(model, data = nomo_demo_network,
+                           marker = c("sd1", "sd2", "sd3"))
 mv
 #> <nomo_method_variance> Marker-based method variance
 #> Williams, Hartman, and Cavazotte (2010).
-#> Marker: m1, m2, m3 | Cases: 600 | Estimator: ML
+#> Marker: sd1, sd2, sd3 | Cases: 800 | Estimator: ML
 #> Retained: Method-C | Comparisons at alpha = .05
 #> 
 #> Model comparisons
 #>   Comparison             Question                  Delta chi-square  df       p
-#>   Baseline vs. Method-C  Method variance present?             11.89   1  < .001
-#>   Method-C vs. Method-U  Method effects equal?                 2.78   7    .905
-#>   Method-C vs. Method-R  Correlations biased?                  0.07   1    .790
+#>   Baseline vs. Method-C  Method variance present?              0.00   1    .954
+#>   Method-C vs. Method-U  Method effects equal?                 2.37   7    .937
+#>   Method-C vs. Method-R  Correlations biased?                  0.00   1  > .999
 #> 
 #> Reliability decomposition
-#>   Factor  Total  Substantive  Method  Method share
-#>   A         .80          .79     .02          2.1%
-#>   B         .78          .77     .02          2.1%
+#>   Factor       Total  Substantive  Method  Method share
+#>   Agency         .85          .85     .00          0.0%
+#>   Persistence    .82          .82     .00          0.0%
 #> 
 #> Substantive correlations
-#>   Factors    CFA  Baseline  Method-C  Method-S(.05)  Method-S(.01)
-#>   A with B  .434      .434      .422           .422           .423
-#> 
-#> Flagged
-#>   - Baseline vs. Method-C (Review): Marker-based method variance is present
-#>     (Delta chi-square(1) = 11.89, p < .001).
+#>   Factors                  CFA Baseline Method-C Method-S(.05) Method-S(.01)
+#>   Agency with Persistence .457     .457     .457          .459          .460
 #> 
 #> Models
 #>   CFA -- Confirmatory factor analysis of the substantive factors and the
@@ -288,10 +274,10 @@ mv
 #> nomo_table(x, "decision_log") for every recorded decision.
 nomo_table(mv, "reliability")
 #> # A tibble: 2 × 5
-#>   factor reliability_total reliability_substantive reliability_method
-#>   <chr>              <dbl>                   <dbl>              <dbl>
-#> 1 A                  0.804                   0.788             0.0166
-#> 2 B                  0.784                   0.767             0.0162
+#>   factor      reliability_total reliability_substantive reliability_method
+#>   <chr>                   <dbl>                   <dbl>              <dbl>
+#> 1 Agency                  0.849                   0.849         0.00000374
+#> 2 Persistence             0.816                   0.816         0.00000413
 #> # ℹ 1 more variable: method_share <dbl>
 # }
 ```

@@ -1129,19 +1129,26 @@ method factor that loads .30 on every item:
 
 ``` r
 
-population <- "
-  A =~ 0.7*a1 + 0.7*a2 + 0.6*a3 + 0.6*a4
-  B =~ 0.7*b1 + 0.6*b2 + 0.6*b3 + 0.5*b4
-  M =~ 0.7*m1 + 0.7*m2 + 0.6*m3
-  CMV =~ 0.3*a1 + 0.3*a2 + 0.3*a3 + 0.3*a4 + 0.3*b1 + 0.3*b2 + 0.3*b3 +
-         0.3*b4 + 0.3*m1 + 0.3*m2 + 0.3*m3
-  A ~~ 0.4*B
-  A ~~ 0*M
-  B ~~ 0*M
-  CMV ~~ 0*A + 0*B + 0*M
-"
 set.seed(2010)
-survey <- lavaan::simulateData(population, sample.nobs = 600, standardized = TRUE)
+n <- 600
+
+A <- rnorm(n)
+B <- .40 * A + sqrt(1 - .40^2) * rnorm(n)
+M <- rnorm(n)
+method <- rnorm(n)
+
+# An item is its factor, the method factor, and an error that leaves it with
+# unit variance.
+item <- function(factor, loading) {
+  loading * factor + .30 * method + rnorm(n, sd = sqrt(1 - loading^2 - .30^2))
+}
+
+survey <- data.frame(
+  a1 = item(A, .70), a2 = item(A, .70), a3 = item(A, .60), a4 = item(A, .60),
+  b1 = item(B, .70), b2 = item(B, .60), b3 = item(B, .60), b4 = item(B, .50),
+  m1 = item(M, .70), m2 = item(M, .70), m3 = item(M, .60)
+)
+
 mv <- nomo_method_variance(
   "A =~ a1 + a2 + a3 + a4\nB =~ b1 + b2 + b3 + b4",
   data = survey, marker = c("m1", "m2", "m3")
@@ -1155,23 +1162,23 @@ mv
     ## Retained: Method-C | Comparisons at alpha = .05
     ## 
     ## Model comparisons
-    ##   Comparison             Question                  Delta chi-square  df       p
-    ##   Baseline vs. Method-C  Method variance present?             11.89   1  < .001
-    ##   Method-C vs. Method-U  Method effects equal?                 2.78   7    .905
-    ##   Method-C vs. Method-R  Correlations biased?                  0.07   1    .790
+    ##   Comparison             Question                  Delta chi-square  df     p
+    ##   Baseline vs. Method-C  Method variance present?              9.87   1  .002
+    ##   Method-C vs. Method-U  Method effects equal?                 4.16   7  .762
+    ##   Method-C vs. Method-R  Correlations biased?                  0.03   1  .863
     ## 
     ## Reliability decomposition
     ##   Factor  Total  Substantive  Method  Method share
-    ##   A         .80          .79     .02          2.1%
-    ##   B         .78          .77     .02          2.1%
+    ##   A         .80          .79     .01          1.6%
+    ##   B         .77          .76     .01          1.8%
     ## 
     ## Substantive correlations
     ##   Factors    CFA  Baseline  Method-C  Method-S(.05)  Method-S(.01)
-    ##   A with B  .434      .434      .422           .422           .423
+    ##   A with B  .465      .465      .458           .459           .460
     ## 
     ## Flagged
     ##   - Baseline vs. Method-C (Review): Marker-based method variance is present
-    ##     (Delta chi-square(1) = 11.89, p < .001).
+    ##     (Delta chi-square(1) = 9.87, p = .002).
     ## 
     ## Models
     ##   CFA -- Confirmatory factor analysis of the substantive factors and the

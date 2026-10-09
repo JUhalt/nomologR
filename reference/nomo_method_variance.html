@@ -241,49 +241,35 @@ marker variables: A review and comprehensive CFA marker technique.
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
-<span class="r-in"><span><span class="co"># Two substantive factors and a marker, all sharing a method factor</span></span></span>
-<span class="r-in"><span><span class="co"># (simulated).</span></span></span>
-<span class="r-in"><span><span class="va">population</span> <span class="op">&lt;-</span> <span class="st">"</span></span></span>
-<span class="r-in"><span><span class="st">  A =~ 0.7*a1 + 0.7*a2 + 0.6*a3 + 0.6*a4</span></span></span>
-<span class="r-in"><span><span class="st">  B =~ 0.7*b1 + 0.6*b2 + 0.6*b3 + 0.5*b4</span></span></span>
-<span class="r-in"><span><span class="st">  M =~ 0.7*m1 + 0.7*m2 + 0.6*m3</span></span></span>
-<span class="r-in"><span><span class="st">  CMV =~ 0.3*a1 + 0.3*a2 + 0.3*a3 + 0.3*a4 + 0.3*b1 + 0.3*b2 + 0.3*b3 +</span></span></span>
-<span class="r-in"><span><span class="st">         0.3*b4 + 0.3*m1 + 0.3*m2 + 0.3*m3</span></span></span>
-<span class="r-in"><span><span class="st">  A ~~ 0.4*B</span></span></span>
-<span class="r-in"><span><span class="st">  A ~~ 0*M</span></span></span>
-<span class="r-in"><span><span class="st">  B ~~ 0*M</span></span></span>
-<span class="r-in"><span><span class="st">  CMV ~~ 0*A + 0*B + 0*M</span></span></span>
-<span class="r-in"><span><span class="st">"</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2010</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu">lavaan</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/lavaan/man/simulateData.html" class="external-link">simulateData</a></span><span class="op">(</span><span class="va">population</span>, sample.nobs <span class="op">=</span> <span class="fl">600</span>, standardized <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">mv</span> <span class="op">&lt;-</span> <span class="fu">nomo_method_variance</span><span class="op">(</span></span></span>
-<span class="r-in"><span>  <span class="st">"A =~ a1 + a2 + a3 + a4\nB =~ b1 + b2 + b3 + b4"</span>,</span></span>
-<span class="r-in"><span>  data <span class="op">=</span> <span class="va">dat</span>, marker <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"m1"</span>, <span class="st">"m2"</span>, <span class="st">"m3"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># Social desirability as the marker for the Agency and Persistence items of</span></span></span>
+<span class="r-in"><span><span class="co"># the simulated validation study. In its population the marker shares</span></span></span>
+<span class="r-in"><span><span class="co"># nothing with those items, so no method variance should be detected.</span></span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="nomo_model.html">nomo_model</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  Agency <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"ag"</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  Persistence <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"pe"</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">mv</span> <span class="op">&lt;-</span> <span class="fu">nomo_method_variance</span><span class="op">(</span><span class="va">model</span>, data <span class="op">=</span> <span class="va">nomo_demo_network</span>,</span></span>
+<span class="r-in"><span>                           marker <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"sd1"</span>, <span class="st">"sd2"</span>, <span class="st">"sd3"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">mv</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;nomo_method_variance&gt; Marker-based method variance</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Williams, Hartman, and Cavazotte (2010).</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Marker: m1, m2, m3 | Cases: 600 | Estimator: ML</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Marker: sd1, sd2, sd3 | Cases: 800 | Estimator: ML</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Retained: Method-C | Comparisons at alpha = .05</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Model comparisons</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Comparison             Question                  Delta chi-square  df       p</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Baseline vs. Method-C  Method variance present?             11.89   1  &lt; .001</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Method-C vs. Method-U  Method effects equal?                 2.78   7    .905</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Method-C vs. Method-R  Correlations biased?                  0.07   1    .790</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Baseline vs. Method-C  Method variance present?              0.00   1    .954</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Method-C vs. Method-U  Method effects equal?                 2.37   7    .937</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Method-C vs. Method-R  Correlations biased?                  0.00   1  &gt; .999</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Reliability decomposition</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Factor  Total  Substantive  Method  Method share</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   A         .80          .79     .02          2.1%</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   B         .78          .77     .02          2.1%</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Factor       Total  Substantive  Method  Method share</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Agency         .85          .85     .00          0.0%</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Persistence    .82          .82     .00          0.0%</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Substantive correlations</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Factors    CFA  Baseline  Method-C  Method-S(.05)  Method-S(.01)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   A with B  .434      .434      .422           .422           .423</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Flagged</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   - Baseline vs. Method-C (Review): Marker-based method variance is present</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     (Delta chi-square(1) = 11.89, p &lt; .001).</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Factors                  CFA Baseline Method-C Method-S(.05) Method-S(.01)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Agency with Persistence .457     .457     .457          .459          .460</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Models</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   CFA -- Confirmatory factor analysis of the substantive factors and the</span>
@@ -307,10 +293,10 @@ marker variables: A review and comprehensive CFA marker technique.
 <span class="r-out co"><span class="r-pr">#&gt;</span> nomo_table(x, "decision_log") for every recorded decision.</span>
 <span class="r-in"><span><span class="fu"><a href="nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">mv</span>, <span class="st">"reliability"</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 2 × 5</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   factor reliability_total reliability_substantive reliability_method</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>                   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> A                  0.804                   0.788             0.016<span style="text-decoration: underline;">6</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> B                  0.784                   0.767             0.016<span style="text-decoration: underline;">2</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   factor      reliability_total reliability_substantive reliability_method</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>                   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Agency                  0.849                   0.849         0.000<span style="text-decoration: underline;">003</span>74</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> Persistence             0.816                   0.816         0.000<span style="text-decoration: underline;">004</span>13</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 1 more variable: method_share &lt;dbl&gt;</span></span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
