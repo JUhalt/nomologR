@@ -19,7 +19,8 @@ These changes lead to 1.0.0, the stable release planned jointly with
   and `nomo_power_simulate()`, which stay experimental into 1.x.
 
 Calls whose results or behavior change are listed first. A function that is new
-since 0.9.0 is described once, as it is now, under "New methods".
+since 0.9.0 is described once, as it is now, under "New methods" or "Invariance
+across groups and occasions".
 
 ## Calls that now behave differently
 
@@ -34,25 +35,32 @@ that had ignored the argument.
 - `nomo_report()` requires `file`. It no longer writes `nomologR-report.html`
   to the working directory by default.
 - **`guidance` with `auto_delete` or `auto_respecify` set to `TRUE`** is refused
-  by every function that takes `guidance`: `nomo_screen()`, `nomo_factors()`,
-  `nomo_efa()`, `nomo_cfa()`, `nomo_esem()`, `nomo_compare()`, `nomo_split()`,
-  `nomo_reliability()`, `nomo_validity()`, `nomo_hierarchical()`,
-  `nomo_scores()`, `nomo_invariance()`, `nomo_invariance_longitudinal()`,
+  by the 13 functions that took `guidance` in 0.9.0: `nomo_screen()`,
+  `nomo_factors()`, `nomo_efa()`, `nomo_cfa()`, `nomo_compare()`,
+  `nomo_split()`, `nomo_reliability()`, `nomo_validity()`,
+  `nomo_hierarchical()`, `nomo_scores()`, `nomo_invariance()`,
   `nomo_network()`, and `nomo_run()`. The two settings record that nomologR
   never deletes an item or respecifies a model. Set to `TRUE`, they had been
-  accepted and ignored.
+  accepted and ignored. The new `nomo_esem()` and
+  `nomo_invariance_longitudinal()` refuse it too.
 - **Columns stored as ordered factors** are treated as ordered indicators,
   whether or not `ordered` names them, because lavaan already fitted them that
   way. This applies in `nomo_cfa()`, `nomo_invariance()`, `nomo_network()`,
-  `nomo_reliability()`, `nomo_validity()`, and `nomo_hierarchical()`. Calls that
-  relied on these columns being treated as continuous can now stop: an
-  ML-family estimator, FIML, or a continuous invariance sequence.
+  `nomo_reliability()`, `nomo_validity()`, and `nomo_hierarchical()`. The calls
+  that newly stop are `nomo_invariance()` calls written for continuous
+  indicators: `levels` from the continuous sequence, `ID.fac = "UL"`, an
+  ML-family `estimator`, or `missing = "fiml"`. In `nomo_cfa()` and
+  `nomo_network()`, an ML-family estimator or FIML with such columns already
+  stopped, with lavaan's error; the message now names the columns.
 - `nomo_invariance()`:
   - A partial-invariance release that matches no parameter, that the model
     already fixes, or that would break nesting is an error.
   - `ID.cat` accepts only Wu and Estabrook's identification.
-- `nomo_efa()` no longer offers `fm = "minrank"`, and refuses
-  `rotation = "targetQ"`, for which psych had silently used `"Promax"`.
+- `nomo_efa()` no longer offers `fm = "minrank"`, which ran only where the
+  `Rcsdp` package was installed, and refuses `rotation = "targetQ"`, for which
+  psych had silently used `"Promax"`.
+- `nomo_factors()` refuses an `fm` it does not know. An unknown value had been
+  accepted and recorded, and psych ran `minres` in its place.
 - `nomo_hypotheses()` and `nomo_network()` refuse a directed path and an
   association for the same pair. `nomo_network()` also refuses a hypothesis
   that adds a path opposite to another, and an ordered-factor covariate.
@@ -70,11 +78,16 @@ that had ignored the argument.
 - `nomo_run()` refuses at the start what used to surface at a later stage: a
   scale with fewer than three items, an invariance `group` that is not a
   column, and a missing-data strategy lavaan does not have. When a run is
-  resumed, it refuses settings for a stage that can no longer run.
+  resumed, it refuses two kinds of settings it used to store unused: those for
+  an invariance or network branch that a complete run marked not requested,
+  and those for `scores` or `missing` once the CFA is fitted. Settings for a
+  completed or blocked stage were already refused.
 - `nomo_revise()` refuses `cfa_model` inside `decisions`.
 - `nomo_apa_table()` refuses a `type` for a result that has one table and a
-  `title` that is not one string. `nomo_table()` refuses a `type` for a
-  `nomo_hypotheses` object.
+  `title` that is not one string. `nomo_apa_table(x, "factor_correlations")`
+  stops for a model that fixes every factor correlation, such as a bifactor
+  model; it had tabled the fixed zeros as estimates. `nomo_table()` refuses a
+  `type` for a `nomo_hypotheses` object.
 
 ### Results that change
 
@@ -127,8 +140,9 @@ that does. A call that worked is not affected.
 
 - `nomo_screen()`: data with two columns of one name, and a handoff that
   carries no items or is not a list.
-- `nomo_factors()` and `nomo_efa()`: an `fm` the function cannot run, a
-  misspelled `rotation`, `"bifactor"` and `"biquartimin"`, an ordinal item
+- `nomo_factors()` and `nomo_efa()`: an `fm` psych could not run (`"alpha"` or
+  `"minrank"` in `nomo_factors()`, `"alpha"` with one factor in `nomo_efa()`),
+  a misspelled `rotation`, `"bifactor"` and `"biquartimin"`, an ordinal item
   with more than 8 categories under polychoric or mixed correlations, and a
   `types` vector with a missing name.
 - `nomo_cfa()`, `nomo_split()`, and `nomo_compare()`: an `mi_top`, `seed`, or
@@ -139,7 +153,8 @@ that does. A call that worked is not affected.
   observed covariate to a factor, and a covariance between a factor and an
   observed variable.
 - `nomo_table()`: an object that has no tables.
-- `nomo_apa_table()`: factor correlations for a model that estimates none.
+- `nomo_apa_table()`: factor correlations for a higher-order model. The error
+  had said that the model has one factor.
 
 ## Fixes from the audit, by area (#145)
 
@@ -171,7 +186,7 @@ that does. A call that worked is not affected.
 - Every `fm` value `nomo_efa()` and `nomo_factors()` document now runs as documented (#145).
   - **`"minrank"`.** `nomo_efa()` no longer lists or accepts it: psych needs the `Rcsdp` package for it, which nomologR does not declare, so it failed on a default install.
   - **`"alpha"`.** `nomo_efa(fm = "alpha")` with one factor stops with a clear message, because psych cannot fit a one-factor alpha solution.
-  - **`nomo_factors()`.** It now checks `fm` and lists the values that work for parallel analysis; `"alpha"` and `"minrank"` stop with that list.
+  - **`nomo_factors()`.** It now checks `fm` and lists the values that work for parallel analysis; `"alpha"` and `"minrank"` stop with that list. So does a value it does not know, for which psych had run `minres` while the result recorded the value as given.
   - **`"minchi"`.** It now runs `minchi` in both functions. psych had quietly fitted `minres` instead, because nomologR did not pass the pairwise sample sizes `minchi` needs. Results with `fm = "minchi"` change.
 - `nomo_efa()` records a solution that is improper or did not converge; it had discarded psych's warnings (#145).
   - **Heywood cases.** An item with a communality of .995 or more gets a concern row in the decision log, which states the item's unique variance, because psych's extractions often stop just short of 1. A communality above 1 is reported as an ultra-Heywood case.
@@ -191,7 +206,7 @@ that does. A call that worked is not affected.
 
 ### CFA, model comparison, model syntax, and sample splitting
 
-- `nomo_cfa()` treats model indicators stored as ordered factors as declared, whether or not `ordered` names them (#145). lavaan already fitted such columns as categorical. The result, though, recorded no ordered indicators, gave the estimator as `DWLS`, and logged that lavaan's continuous-data default was retained. As a result `nomo_methods(x)` credited ML, `nomo_reliability()` stopped with a semTools error, and `nomo_compare()` refused the same model fitted with `ordered`. WLSMV is now requested explicitly, the indicators are recorded in `ordered` and the print, and the decision log flags them for review. On `nomo_demo_ordinal` the fit is unchanged, and a guided run without `ordered` no longer stops at the reliability stage. With an ML-family estimator or FIML, such columns now stop the fit with a message that names them.
+- `nomo_cfa()` treats model indicators stored as ordered factors as declared, whether or not `ordered` names them (#145). lavaan already fitted such columns as categorical. The result, though, recorded no ordered indicators, gave the estimator as `DWLS`, and logged that lavaan's continuous-data default was retained. As a result `nomo_methods(x)` credited ML, `nomo_reliability()` stopped with a semTools error, and `nomo_compare()` refused the same model fitted with `ordered`. WLSMV is now requested explicitly, the indicators are recorded in `ordered` and the print, and the decision log flags them for review. On `nomo_demo_ordinal` the fit is unchanged, and a guided run without `ordered` no longer stops at the reliability stage. With an ML-family estimator or FIML, such columns stop the fit with a message that names them, where lavaan's error used to appear.
 - `nomo_cfa()` counts only the model's own variables in `ordered` (#145). Declared names that are not in the model are left out of `ordered`, the print, and the count, and the decision log lists them.
 - `nomo_cfa()`'s `fit_evidence` no longer mixes versions of a fit when lavaan cannot compute a requested scaled test statistic (#145). lavaan can then still report a scaled RMSEA, such as 0 for a model whose standard RMSEA is 0.22, and that value had been shown beside the standard chi-square and CFI. In that case every value is now the standard one, and the decision log says so for review. Otherwise the order is unchanged (robust, then scaled, then standard values), so ML with FIML still reports lavaan's robust CFI, TLI, and RMSEA beside the standard chi-square. The RMSEA interval is always the one around the RMSEA reported.
 - In a higher-order model, `nomo_cfa()` reports a negative first-order disturbance once, as a negative latent variance; it had also been reported as a negative observed residual variance (#145). A weak second-order loading now asks for the first-order factor's definition to be inspected, not item content.
@@ -304,7 +319,7 @@ that does. A call that worked is not affected.
   - **Unknown items.** A `settings$screen$reverse` that names an item outside the run's scales is refused in both effort modes. With `effort = FALSE`, the per-scale item audits used to drop a misspelled name without a word.
 - `nomo_run()` checks what it is given before any stage runs (#145): a scale with fewer than three items, an invariance `group` that is not a column of the confirmatory data, and a `settings$missing$strategies` name that is not a lavaan `missing` option.
 - Resuming a run (#145).
-  - **Settings.** Settings given when resuming are merged argument by argument, and a `settings:<stage>` row records the change. Settings for a stage that can no longer run are refused; they had been stored unused. That covers a completed or blocked stage, an invariance or network branch a complete run marked not requested, and `scores` or `missing` once the CFA is fitted. At the pause after a `"revise"` decision, settings for evidence the run has not computed are accepted, since `nomo_revise()` carries them into the revision.
+  - **Settings.** Settings given when resuming are merged argument by argument, and a `settings:<stage>` row records the change. Settings for a completed or blocked stage were already refused. The refusal now also covers an invariance or network branch that a complete run marked not requested, and `scores` or `missing` once the CFA is fitted; those settings had been stored unused. At the pause after a `"revise"` decision, settings for evidence the run has not computed are accepted, since `nomo_revise()` carries them into the revision.
   - **Guidance.** Resuming with `guidance = nomo_defaults()` no longer fails because `nomo_defaults()` has gained an element since the run was saved; only a changed value stops the resume.
 - `nomo_revise()` (#145):
   - **The handoff is kept.** A revision of a run whose scales came from content review keeps the `contentvalidR` handoff. The revised run was built from the plain scale list, so it lost the handoff's declared reverse keying, the content-review and held-back rows of the decision log, and the report's content-review section, and relabeled item membership as researcher input. The revised run now carries all of these, and declared keying follows its items.
@@ -335,7 +350,7 @@ that does. A call that worked is not affected.
   - **Invariance.** A level fitted with releases is labeled "Partial scalar", and a specific note names the freed parameters. The note gives the group sizes, *N*, and the estimator, and says when the chi-squares are scaled statistics and CFI and RMSEA robust values. The first model's change cells are blank, because no model precedes it.
   - **Fit.** The note spells out the estimator, such as "maximum likelihood with robust standard errors and a scaled test statistic (MLR)". The network fit table reports the cases analyzed, not the rows supplied, and mentions the validation sample when there is one. Degrees of freedom that are not whole keep two decimals.
   - **Hypotheses.** Each prediction is given with its region, such as "Negligible, [-.15, .15]". A `negligible()` prediction shows the equivalence interval its concordance is judged on. The evidence labels are the ones the console prints, such as "In region, imprecise", and the note defines each label the table shows.
-  - **Factor correlations.** A correlation the model fixes, such as the zeros of a bifactor model, is no longer tabled as an estimate with a [.00, .00] interval; the note lists the pairs left out.
+  - **Factor correlations.** A correlation the model fixes, such as one set by `A ~~ 0*B`, is no longer tabled as an estimate with a [.00, .00] interval; the note lists the pairs left out. A model that estimates no factor correlation stops with the reason. For a bifactor model, which fixes every one, the call had returned a table of zeros; for a higher-order model, the error had said that the model has one factor.
 - `nomo_apa_table()` notes and layout follow APA style more closely (#145). Some headings and cells change, so code that reads `body` by column name may need updating.
   - Every abbreviation in a heading is defined in the note, CI and *r* among them, and an em dash is explained wherever one appears.
   - Without `number`, the number line is left out; it had been printed as a bare "Table".
