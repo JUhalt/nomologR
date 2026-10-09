@@ -57,7 +57,10 @@ nomo_revise(
 
   Optional named list of decisions for the child workflow, for example
   `list(factor_count = c(WellBeing = 1))`. Supplied decisions override
-  inherited ones.
+  inherited ones; a supplied `factor_count` is used in place of the
+  parent's, which is then not checked against the revised items. The
+  revised model is given in `cfa_model`, not here, so that the model
+  fitted is the one the lineage records.
 
 - compare:
 
@@ -70,7 +73,10 @@ nomo_revise(
 A new `nomo_run` object for the revised workflow, carrying `$lineage`
 (one row per revision), `$revision_comparison` (the
 [`nomo_compare()`](https://juhalt.github.io/nomologR/reference/nomo_compare.md)
-result, when available), and `$parent_summary`.
+result, when available), and `$parent_summary`. It prints as any guided
+run does (see
+[`nomo_run()`](https://juhalt.github.io/nomologR/reference/nomo_run.md)),
+with the number of revisions among its facts.
 
 ## Details
 
@@ -84,7 +90,10 @@ The factor-count decision is inherited from the parent unless
 `decisions` supplies a new one, so the revision changes only what the
 researcher changed. The parent's settings carry over too, except that
 reverse keying set for an item the revision removes is dropped with the
-item.
+item. Settings for evidence the parent has not computed, such as
+invariance or scores, can be added by resuming the parent at the pause
+after its `"revise"` decision, as described in
+[`nomo_run()`](https://juhalt.github.io/nomologR/reference/nomo_run.md).
 
 When the parent's scales came from a `contentvalidR` handoff, the child
 keeps it: its declared keying, the content-review rows of the decision
@@ -98,7 +107,8 @@ Because a revision prompted by results is evaluated on the data that
 prompted it, the decision log records whether the change was
 `"post_hoc"` and recommends confirming the revised model in independent
 data (Simmons, Nelson, & Simonsohn, 2011; Wicherts et al., 2016; Flake &
-Fried, 2020).
+Fried, 2020). A prespecified (`"a_priori"`) revision is still judged on
+the same sample as its parent, and the log says so.
 
 Removing an item changes the observed variables, so parent and revised
 models are not nested and

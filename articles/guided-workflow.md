@@ -31,15 +31,15 @@ run <- nomo_run(
 
 run
 #> <nomo_run> Guided workflow
-#> Status: PAUSED | Mode: teaching | Sample design: same sample
-#> Exploratory N = 800 | Confirmatory N = 800 | Scales: 3
-#> Completed: screen -> factors | Next: efa
+#> Status: Paused | Mode: teaching | Sample design: same sample
+#> Exploratory cases: 800 | Confirmatory cases: 800 | Scales: 3
+#> Completed: screen -> factors | Next: EFA
 #> 
 #> Key evidence
 #>   - Item audit: 11 items; flags: none
 #>   - Parallel analysis suggests: Agency 1, Persistence 1, SocialDesirability 1
 #> 
-#> Researcher decision required: efa (Agency, Persistence, SocialDesirability)
+#> Researcher decision required on the factor counts
 #>   Reason: The EFA factor count changes the fitted model. Retention evidence
 #>   can inform that choice, but it does not authorize the pipeline to choose for
 #>   the researcher.
@@ -59,6 +59,11 @@ run
 #> 
 #> No later stage has been run automatically while this consequential decision is
 #> unresolved.
+#> 
+#> EFA = exploratory factor analysis.
+#> 
+#> See summary(x) for the stages and recorded decisions and
+#> nomo_table(x, "requests") for the decision requests.
 ```
 
 The initial run audits each scale’s items and computes factor-retention
@@ -102,16 +107,16 @@ run <- nomo_run(
 
 run
 #> <nomo_run> Guided workflow
-#> Status: PAUSED | Mode: teaching | Sample design: same sample
-#> Exploratory N = 800 | Confirmatory N = 800 | Scales: 3
-#> Completed: screen -> factors -> efa | Next: cfa
+#> Status: Paused | Mode: teaching | Sample design: same sample
+#> Exploratory cases: 800 | Confirmatory cases: 800 | Scales: 3
+#> Completed: screen -> factors -> EFA | Next: CFA
 #> 
 #> Key evidence
 #>   - Item audit: 11 items; flags: none
 #>   - Parallel analysis suggests: Agency 1, Persistence 1, SocialDesirability 1
 #>   - EFA item flags: none
 #> 
-#> Researcher decision required: cfa (measurement_model)
+#> Researcher decision required on the measurement model
 #>   Reason: CFA syntax encodes consequential choices about item retention,
 #>   factor membership, cross-loadings, and correlated residuals; these cannot be
 #>   chosen silently.
@@ -120,13 +125,18 @@ run
 #>   Consequence: The CFA will use the same sample unless a new workflow is
 #>   started with a holdout/external design. Same-sample confirmation must remain
 #>   labeled as such.
-#>   - measurement_model: EFA has completed for every supplied scale. No
-#>     confirmatory measurement model has been constructed or fitted.
+#>   - EFA has completed for every supplied scale. No confirmatory measurement
+#>     model has been constructed or fitted.
 #>   Example: decisions = list(cfa_model = list(value = model,
 #>   rationale = "Prespecified measurement model"))
 #> 
 #> No later stage has been run automatically while this consequential decision is
 #> unresolved.
+#> 
+#> EFA = exploratory factor analysis; CFA = confirmatory factor analysis.
+#> 
+#> See summary(x) for the stages and recorded decisions and
+#> nomo_table(x, "requests") for the decision requests.
 ```
 
 The completed screening and factor-retention objects are reused. EFA is
@@ -150,20 +160,20 @@ run <- nomo_run(
 
 run
 #> <nomo_run> Guided workflow
-#> Status: PAUSED | Mode: teaching | Sample design: same sample
-#> Exploratory N = 800 | Confirmatory N = 800 | Scales: 3
-#> Completed: screen -> factors -> efa -> cfa -> reliability -> validity
-#> Next: measurement_review
+#> Status: Paused | Mode: teaching | Sample design: same sample
+#> Exploratory cases: 800 | Confirmatory cases: 800 | Scales: 3
+#> Completed: screen -> factors -> EFA -> CFA -> reliability -> validity
+#> Next: measurement review
 #> 
 #> Key evidence
 #>   - Item audit: 11 items; flags: none
 #>   - Parallel analysis suggests: Agency 1, Persistence 1, SocialDesirability 1
 #>   - EFA item flags: none
-#>   - CFA: CFI 0.996, RMSEA 0.020, SRMR 0.021; loading flags: none
-#>   - Reliability: omega 0.729 to 0.849
+#>   - CFA: CFI .996, RMSEA 0.020, SRMR 0.021; loading flags: none
+#>   - Reliability: omega .73 to .85
 #>   - Validity: convergent flags 1 review, 0 concern; separation flags none
 #> 
-#> Researcher decision required: measurement_review (measurement_model)
+#> Researcher decision required after the measurement review
 #>   Reason: Invariance and nomological-network interpretations inherit the
 #>   measurement model. Continuing downstream is therefore a researcher decision,
 #>   not a fit-index side effect.
@@ -174,14 +184,20 @@ run
 #>   Consequence: Proceeding does not declare the model valid and does not remove
 #>   any review flags. Revising triggers no automatic parameter freeing, item
 #>   deletion, or respecification.
-#>   - measurement_model: CFA converged and reliability/validity evidence was
-#>     computed. Across these components, 0 concern and 1 review log entries are
-#>     retained.
+#>   - CFA converged and reliability and validity evidence was computed. Their
+#>     logs hold 0 concern entries and 1 review entry.
 #>   Example: decisions = list(measurement_model = list(value = "proceed",
 #>   rationale = "Evidence reviewed; model retained for the planned analyses."))
 #> 
 #> No later stage has been run automatically while this consequential decision is
 #> unresolved.
+#> 
+#> EFA = exploratory factor analysis; CFA = confirmatory factor analysis;
+#> CFI = comparative fit index; RMSEA = root mean square error of approximation;
+#> SRMR = standardized root mean square residual.
+#> 
+#> See summary(x) for the stages and recorded decisions and
+#> nomo_table(x, "requests") for the decision requests.
 ```
 
 [`nomo_run()`](https://juhalt.github.io/nomologR/reference/nomo_run.md)
@@ -273,26 +289,31 @@ run <- nomo_run(
 
 run
 #> <nomo_run> Guided workflow
-#> Status: COMPLETE | Mode: teaching | Sample design: same sample
-#> Exploratory N = 800 | Confirmatory N = 800 | Scales: 3
-#> Completed: screen -> factors -> efa -> cfa -> reliability -> validity ->
+#> Status: Complete | Mode: teaching | Sample design: same sample
+#> Exploratory cases: 800 | Confirmatory cases: 800 | Scales: 3
+#> Completed: screen -> factors -> EFA -> CFA -> reliability -> validity ->
 #>   invariance -> network
-#> Next: none
 #> 
 #> Key evidence
 #>   - Item audit: 11 items; flags: none
 #>   - Parallel analysis suggests: Agency 1, Persistence 1, SocialDesirability 1
 #>   - EFA item flags: none
-#>   - CFA: CFI 0.996, RMSEA 0.020, SRMR 0.021; loading flags: none
-#>   - Reliability: omega 0.729 to 0.849
+#>   - CFA: CFI .996, RMSEA 0.020, SRMR 0.021; loading flags: none
+#>   - Reliability: omega .73 to .85
 #>   - Validity: convergent flags 1 review, 0 concern; separation flags none
 #>   - Invariance: completed configural -> metric -> scalar
 #>   - Network: 3 hypotheses; 3 concordant
 #> 
 #> All requested stages are complete or explicitly marked not requested. No
 #> hidden item deletion, model respecification, parameter freeing, or validity
-#> verdict was performed. summary(x) shows the stages and decisions, and
-#> nomo_report(x, file = "report.html") archives the evidence.
+#> verdict was performed.
+#> 
+#> EFA = exploratory factor analysis; CFA = confirmatory factor analysis;
+#> CFI = comparative fit index; RMSEA = root mean square error of approximation;
+#> SRMR = standardized root mean square residual.
+#> 
+#> See summary(x) for the stages and recorded decisions and
+#> nomo_report(x, file = "report.html") for an archived report.
 nomo_table(run, "stages")
 #> # A tibble: 8 × 3
 #>   stage       status    detail                                                  
@@ -362,23 +383,28 @@ run_prespecified <- nomo_run(
 
 run_prespecified
 #> <nomo_run> Guided workflow
-#> Status: COMPLETE | Mode: research | Sample design: same sample
-#> Exploratory N = 800 | Confirmatory N = 800 | Scales: 3
-#> Completed: screen -> factors -> efa -> cfa -> reliability -> validity ->
+#> Status: Complete | Mode: research | Sample design: same sample
+#> Exploratory cases: 800 | Confirmatory cases: 800 | Scales: 3
+#> Completed: screen -> factors -> EFA -> CFA -> reliability -> validity ->
 #>   network
-#> Next: none
 #> 
 #> Key evidence
 #>   - Item audit: 11 items; flags: none
 #>   - Parallel analysis suggests: Agency 1, Persistence 1, SocialDesirability 1
 #>   - EFA item flags: none
-#>   - CFA: CFI 0.996, RMSEA 0.020, SRMR 0.021; loading flags: none
-#>   - Reliability: omega 0.729 to 0.849
+#>   - CFA: CFI .996, RMSEA 0.020, SRMR 0.021; loading flags: none
+#>   - Reliability: omega .73 to .85
 #>   - Validity: convergent flags 1 review, 0 concern; separation flags none
 #>   - Network: 3 hypotheses; 3 concordant
 #> 
-#> Requested workflow complete. summary(x) shows the stages and decisions;
-#> nomo_table(x, "recipe") maps the components.
+#> Requested workflow complete; no item was deleted and no model respecified.
+#> 
+#> EFA = exploratory factor analysis; CFA = confirmatory factor analysis;
+#> CFI = comparative fit index; RMSEA = root mean square error of approximation;
+#> SRMR = standardized root mean square residual.
+#> 
+#> See summary(x) for the stages and recorded decisions and
+#> nomo_report(x, file = "report.html") for an archived report.
 ```
 
 This is still not hidden automation: every consequential decision was
@@ -411,21 +437,21 @@ revised <- nomo_revise(
 
 revised
 #> <nomo_run> Guided workflow
-#> Status: PAUSED | Mode: teaching | Sample design: same sample
-#> Exploratory N = 800 | Confirmatory N = 800 | Scales: 3
-#> Completed: screen -> factors -> efa -> cfa -> reliability -> validity
-#> Next: measurement_review
-#> Revisions: 1 (post-hoc); see nomo_table(x, "lineage")
+#> Status: Paused | Mode: teaching | Sample design: same sample
+#> Exploratory cases: 800 | Confirmatory cases: 800 | Scales: 3
+#> Completed: screen -> factors -> EFA -> CFA -> reliability -> validity
+#> Next: measurement review
+#> Revisions: 1 (post hoc)
 #> 
 #> Key evidence
 #>   - Item audit: 11 items; flags: none
 #>   - Parallel analysis suggests: Agency 1, Persistence 1, SocialDesirability 1
 #>   - EFA item flags: none
-#>   - CFA: CFI 0.995, RMSEA 0.021, SRMR 0.021; loading flags: none
-#>   - Reliability: omega 0.729 to 0.848
+#>   - CFA: CFI .995, RMSEA 0.021, SRMR 0.021; loading flags: none
+#>   - Reliability: omega .73 to .85
 #>   - Validity: convergent flags 1 review, 0 concern; separation flags none
 #> 
-#> Researcher decision required: measurement_review (measurement_model)
+#> Researcher decision required after the measurement review
 #>   Reason: Invariance and nomological-network interpretations inherit the
 #>   measurement model. Continuing downstream is therefore a researcher decision,
 #>   not a fit-index side effect.
@@ -436,14 +462,21 @@ revised
 #>   Consequence: Proceeding does not declare the model valid and does not remove
 #>   any review flags. Revising triggers no automatic parameter freeing, item
 #>   deletion, or respecification.
-#>   - measurement_model: CFA converged and reliability/validity evidence was
-#>     computed. Across these components, 0 concern and 1 review log entries are
-#>     retained.
+#>   - CFA converged and reliability and validity evidence was computed. Their
+#>     logs hold 0 concern entries and 1 review entry.
 #>   Example: decisions = list(measurement_model = list(value = "proceed",
 #>   rationale = "Evidence reviewed; model retained for the planned analyses."))
 #> 
 #> No later stage has been run automatically while this consequential decision is
 #> unresolved.
+#> 
+#> EFA = exploratory factor analysis; CFA = confirmatory factor analysis;
+#> CFI = comparative fit index; RMSEA = root mean square error of approximation;
+#> SRMR = standardized root mean square residual.
+#> 
+#> See summary(x) for the stages and recorded decisions,
+#> nomo_table(x, "requests") for the decision requests, and
+#> nomo_table(x, "lineage") for the revisions.
 ```
 
 The child reruns the staged evidence with the revised model and pauses
@@ -459,7 +492,7 @@ nomo_table(revised, "lineage")[, c(
 #> # A tibble: 1 × 5
 #>   revision change_type origin   rationale                             comparison
 #>      <int> <chr>       <chr>    <chr>                                 <chr>     
-#> 1        1 model       post_hoc Items ag1 and ag2 use nearly identic… Chi-Squar…
+#> 1        1 model       post_hoc Items ag1 and ag2 use nearly identic… Delta chi…
 ```
 
 Because a revision is a claim that one model is preferable to another,
@@ -635,32 +668,36 @@ read, is refused with both package versions named.
 ``` r
 
 nomo_table(run, "decisions")
-#> # A tibble: 10 × 10
+#> # A tibble: 12 × 10
 #>    id      stage scope observation reason options consequence decision rationale
 #>    <chr>   <chr> <chr> <chr>       <chr>  <chr>   <chr>       <chr>    <chr>    
-#>  1 sample… desi… samp… 800 rows a… Sampl… Contin… Later CFA … "same_s… ""       
-#>  2 scale_… desi… Agen… Scale `Age… Item … Review… Screening,… "ag1, a… ""       
-#>  3 scale_… desi… Pers… Scale `Per… Item … Review… Screening,… "pe1, p… ""       
-#>  4 scale_… desi… Soci… Scale `Soc… Item … Review… Screening,… "sd1, s… ""       
-#>  5 factor… efa   Agen… Parallel a… The E… Inspec… A 1-factor… "1"      "Each sc…
-#>  6 factor… efa   Pers… Parallel a… The E… Inspec… A 1-factor… "1"      "Each sc…
-#>  7 factor… efa   Soci… Parallel a… The E… Inspec… A 1-factor… "1"      "Each sc…
-#>  8 cfa_mo… cfa   meas… EFA has co… CFA s… Inspec… The CFA wi… "Agency… "Prespec…
-#>  9 measur… meas… meas… CFA conver… Invar… Choose… Proceeding… "procee… "Measure…
-#> 10 workfl… work… pipe… All reques… The p… Inspec… No additio… "comple… ""       
+#>  1 sample… desi… samp… "800 rows … Sampl… Contin… "Later CFA… "same_s… ""       
+#>  2 scale_… desi… Agen… "Scale `Ag… Item … Review… "Screening… "ag1, a… ""       
+#>  3 scale_… desi… Pers… "Scale `Pe… Item … Review… "Screening… "pe1, p… ""       
+#>  4 scale_… desi… Soci… "Scale `So… Item … Review… "Screening… "sd1, s… ""       
+#>  5 factor… efa   Agen… "Parallel … The E… Inspec… "A 1-facto… "1"      "Each sc…
+#>  6 factor… efa   Pers… "Parallel … The E… Inspec… "A 1-facto… "1"      "Each sc…
+#>  7 factor… efa   Soci… "Parallel … The E… Inspec… "A 1-facto… "1"      "Each sc…
+#>  8 cfa_mo… cfa   meas… "EFA has c… CFA s… Inspec… "The CFA w… "Agency… "Prespec…
+#>  9 settin… inva… sett… "The workf… Setti… Argume… "`settings… "group … ""       
+#> 10 settin… netw… sett… "The workf… Setti… Argume… "`settings… "hypoth… ""       
+#> 11 measur… meas… meas… "CFA conve… Invar… Choose… "Proceedin… "procee… "Measure…
+#> 12 workfl… work… pipe… "All reque… The p… Inspec… "No additi… "comple… ""       
 #> # ℹ 1 more variable: source <chr>
 nomo_table(run, "settings")
-#> # A tibble: 8 × 3
-#>   stage       configured setting_names            
-#>   <chr>       <lgl>      <chr>                    
-#> 1 screen      FALSE      ""                       
-#> 2 factors     TRUE       "seed"                   
-#> 3 efa         FALSE      ""                       
-#> 4 cfa         FALSE      ""                       
-#> 5 reliability FALSE      ""                       
-#> 6 validity    FALSE      ""                       
-#> 7 invariance  TRUE       "group, levels, localize"
-#> 8 network     TRUE       "hypotheses"
+#> # A tibble: 10 × 4
+#>    stage       configured setting_names             values                      
+#>    <chr>       <lgl>      <chr>                     <chr>                       
+#>  1 screen      FALSE      ""                        ""                          
+#>  2 factors     TRUE       "seed"                    "seed = 2026"               
+#>  3 efa         FALSE      ""                        ""                          
+#>  4 cfa         FALSE      ""                        ""                          
+#>  5 reliability FALSE      ""                        ""                          
+#>  6 validity    FALSE      ""                        ""                          
+#>  7 invariance  TRUE       "group, levels, localize" "group = \"group\", levels …
+#>  8 network     TRUE       "hypotheses"              "hypotheses = <nomo_hypothe…
+#>  9 scores      FALSE      ""                        ""                          
+#> 10 missing     FALSE      ""                        ""
 nomo_table(run, "recipe")
 #> # A tibble: 14 × 6
 #>    stage       scope           function_name data_role status researcher_control

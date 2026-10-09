@@ -95,7 +95,8 @@ and validation samples.</p></dd>
 
 <dt id="arg-scales">scales<a class="anchor" aria-label="anchor" href="#arg-scales"></a></dt>
 <dd><p>A non-empty named list. Each element is a character vector of
-candidate item-column names for one scale/construct. May also be a handoff
+candidate item-column names for one scale/construct, at least three per
+scale, since factor-retention evidence needs three. May also be a handoff
 from <code>contentvalidR</code>'s <code>content_handoff()</code>, whose carried items and
 construct mapping then define the scales, as described for
 <code><a href="nomo_screen.html">nomo_screen()</a></code>. A handoff from a review with no construct mapping is
@@ -109,7 +110,9 @@ presentation, not statistical behavior.</p></dd>
 
 
 <dt id="arg-guidance">guidance<a class="anchor" aria-label="anchor" href="#arg-guidance"></a></dt>
-<dd><p>Guidance settings from <code><a href="nomo_defaults.html">nomo_defaults()</a></code>.</p></dd>
+<dd><p>Guidance settings from <code><a href="nomo_defaults.html">nomo_defaults()</a></code>. <code>auto_delete</code> and
+<code>auto_respecify</code> cannot be <code>TRUE</code>, since nomologR never deletes an item or
+respecifies a model.</p></dd>
 
 
 <dt id="arg-decisions">decisions<a class="anchor" aria-label="anchor" href="#arg-decisions"></a></dt>
@@ -125,8 +128,9 @@ one-call run. A structured decision can be written as
 <code>list(invariance = list(group = "group"))</code>, or
 <code>list(network = list(hypotheses = h))</code>. Pipeline-controlled arguments such
 as component data/model inputs cannot be overridden through <code>settings</code>.
-When resuming, settings for future stages may be supplied without
-recomputing completed stages.</p>
+<code>settings$invariance$group</code> must name a column of the data the
+confirmatory stages use. When resuming, settings for future stages may be
+supplied without recomputing completed stages.</p>
 <p><code>list(screen = list(effort = TRUE))</code> adds careless-responding indices (see
 <code><a href="nomo_screen.html">nomo_screen()</a></code>). They describe a respondent across the whole instrument,
 and even-odd consistency cannot be computed within one scale. So they are
@@ -148,8 +152,9 @@ value that differs from the CFA's.</p>
 <p>Two further requests attach evidence to the measurement model:</p><ul><li><p><code>list(scores = list(method = "sum"))</code> scores it with <code><a href="nomo_scores.html">nomo_scores()</a></code>,
 using a method the researcher names; nomologR does not choose one.</p></li>
 <li><p><code>list(missing = list())</code> compares missing-data strategies with
-<code><a href="nomo_missing.html">nomo_missing()</a></code>. <code>strategies</code> and <code>reliability</code> may be given. The
-comparison covers the network too when one is requested.</p></li>
+<code><a href="nomo_missing.html">nomo_missing()</a></code>. <code>strategies</code>, lavaan <code>missing</code> options such as
+<code>"listwise"</code> or <code>"ml"</code>, and <code>reliability</code> may be given. The comparison
+covers the network too when one is requested.</p></li>
 </ul><p>Both run after convergent and discriminant evidence, so they are in view
 when the researcher decides whether to carry the model forward. Neither is
 a stage of its own. Requested evidence that cannot be computed is recorded
@@ -181,8 +186,13 @@ These columns differ from those of the components' decision logs, which
 <code>nomo_table(x, "component_log")</code> returns with their own columns.</p></li>
 <li><p><code>scales</code>, <code>mode</code>, <code>sample_design</code>, <code>sample_n</code>, <code>decisions</code>, and
 <code>settings</code>.</p></li>
-</ul><p><code><a href="nomo_table.html">nomo_table()</a></code> returns the run's tables, including the component recipe,
-the component decision logs, and the revision lineage. Other fields hold
+</ul><p><code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> shows where the run is, one line of key evidence per component,
+and the decision the run waits for or why it is blocked. <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> adds
+every stage, the scales, the recorded decisions, the component recipe,
+the methods used, and each flag the components raised.</p>
+<p><code><a href="nomo_table.html">nomo_table()</a></code> returns the run's tables, including the component recipe,
+the settings with their values, the component decision logs, and the
+revision lineage. Other fields hold
 the source data and state needed to resume or revise the run. They may
 change between releases and are not part of the stable interface (see
 <code><a href="nomologR-package.html">?nomologR</a></code>).</p>
@@ -191,7 +201,16 @@ change between releases and are not part of the stable interface (see
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>The guided workflow is resumable. Completed component objects are retained
 rather than recomputed. Future-stage settings may be added or revised until
-that stage has completed; settings for completed/blocked stages are locked.</p>
+that stage runs. Settings given when resuming are merged argument by
+argument: a named argument is added or replaces the earlier value, the
+others keep theirs, and the decision log records the change. Settings are
+locked for a stage that has completed or blocked, for an invariance or
+network branch a completed run marked not requested, and for <code>scores</code> and
+<code>missing</code> once the CFA has been fitted, since they would never run; a new
+<code>nomo_run()</code> is then the way to request them. At the pause after a
+<code>"revise"</code> decision, settings for invariance, the network, <code>scores</code>, or
+<code>missing</code> may still be given when this run has not computed that evidence:
+<code><a href="nomo_revise.html">nomo_revise()</a></code> carries the settings into the revision, which runs it.</p>
 <p>Consequential decisions are currently:</p><ol><li><p><code>factor_count</code>: the EFA factor count for each named scale;</p></li>
 <li><p><code>cfa_model</code>: the prespecified confirmatory measurement model;</p></li>
 <li><p><code>measurement_model</code>: <code>"proceed"</code> or <code>"revise"</code> after reviewing CFA,
@@ -244,15 +263,15 @@ presenting anything as significant. <em>Psychological Science, 22</em>(11),
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">run</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;nomo_run&gt; Guided workflow</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Status: PAUSED | Mode: teaching | Sample design: same sample</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Exploratory N = 800 | Confirmatory N = 800 | Scales: 2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Completed: screen -&gt; factors | Next: efa</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Status: Paused | Mode: teaching | Sample design: same sample</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Exploratory cases: 800 | Confirmatory cases: 800 | Scales: 2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Completed: screen -&gt; factors | Next: EFA</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Key evidence</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   - Item audit: 8 items; flags: none</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   - Parallel analysis suggests: Agency 1, Persistence 1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Researcher decision required: efa (Agency, Persistence)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Researcher decision required on the factor counts</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Reason: The EFA factor count changes the fitted model. Retention evidence</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   can inform that choice, but it does not authorize the pipeline to choose for</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   the researcher.</span>
@@ -270,6 +289,11 @@ presenting anything as significant. <em>Psychological Science, 22</em>(11),
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> No later stage has been run automatically while this consequential decision is</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> unresolved.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> EFA = exploratory factor analysis.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> See summary(x) for the stages and recorded decisions and</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> nomo_table(x, "requests") for the decision requests.</span>
 <span class="r-in"><span><span class="fu"><a href="nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">run</span>, <span class="st">"requests"</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 2 × 8</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   id                  stage scope observation reason options consequence example</span>

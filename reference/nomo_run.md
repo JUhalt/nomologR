@@ -34,7 +34,8 @@ nomo_run(
 - scales:
 
   A non-empty named list. Each element is a character vector of
-  candidate item-column names for one scale/construct. May also be a
+  candidate item-column names for one scale/construct, at least three
+  per scale, since factor-retention evidence needs three. May also be a
   handoff from `contentvalidR`'s `content_handoff()`, whose carried
   items and construct mapping then define the scales, as described for
   [`nomo_screen()`](https://juhalt.github.io/nomologR/reference/nomo_screen.md).
@@ -50,6 +51,8 @@ nomo_run(
 
   Guidance settings from
   [`nomo_defaults()`](https://juhalt.github.io/nomologR/reference/nomo_defaults.md).
+  `auto_delete` and `auto_respecify` cannot be `TRUE`, since nomologR
+  never deletes an item or respecifies a model.
 
 - decisions:
 
@@ -65,8 +68,9 @@ nomo_run(
   `list(invariance = list(group = "group"))`, or
   `list(network = list(hypotheses = h))`. Pipeline-controlled arguments
   such as component data/model inputs cannot be overridden through
-  `settings`. When resuming, settings for future stages may be supplied
-  without recomputing completed stages.
+  `settings`. `settings$invariance$group` must name a column of the data
+  the confirmatory stages use. When resuming, settings for future stages
+  may be supplied without recomputing completed stages.
 
   `list(screen = list(effort = TRUE))` adds careless-responding indices
   (see
@@ -100,8 +104,9 @@ nomo_run(
 
   - `list(missing = list())` compares missing-data strategies with
     [`nomo_missing()`](https://juhalt.github.io/nomologR/reference/nomo_missing.md).
-    `strategies` and `reliability` may be given. The comparison covers
-    the network too when one is requested.
+    `strategies`, lavaan `missing` options such as `"listwise"` or
+    `"ml"`, and `reliability` may be given. The comparison covers the
+    network too when one is requested.
 
   Both run after convergent and discriminant evidence, so they are in
   view when the researcher decides whether to carry the model forward.
@@ -141,19 +146,37 @@ A `nomo_run` object. The fields to read are:
 - `scales`, `mode`, `sample_design`, `sample_n`, `decisions`, and
   `settings`.
 
+[`print()`](https://rdrr.io/r/base/print.html) shows where the run is,
+one line of key evidence per component, and the decision the run waits
+for or why it is blocked.
+[`summary()`](https://rdrr.io/r/base/summary.html) adds every stage, the
+scales, the recorded decisions, the component recipe, the methods used,
+and each flag the components raised.
+
 [`nomo_table()`](https://juhalt.github.io/nomologR/reference/nomo_table.md)
-returns the run's tables, including the component recipe, the component
-decision logs, and the revision lineage. Other fields hold the source
-data and state needed to resume or revise the run. They may change
-between releases and are not part of the stable interface (see
+returns the run's tables, including the component recipe, the settings
+with their values, the component decision logs, and the revision
+lineage. Other fields hold the source data and state needed to resume or
+revise the run. They may change between releases and are not part of the
+stable interface (see
 [`?nomologR`](https://juhalt.github.io/nomologR/reference/nomologR-package.md)).
 
 ## Details
 
 The guided workflow is resumable. Completed component objects are
 retained rather than recomputed. Future-stage settings may be added or
-revised until that stage has completed; settings for completed/blocked
-stages are locked.
+revised until that stage runs. Settings given when resuming are merged
+argument by argument: a named argument is added or replaces the earlier
+value, the others keep theirs, and the decision log records the change.
+Settings are locked for a stage that has completed or blocked, for an
+invariance or network branch a completed run marked not requested, and
+for `scores` and `missing` once the CFA has been fitted, since they
+would never run; a new `nomo_run()` is then the way to request them. At
+the pause after a `"revise"` decision, settings for invariance, the
+network, `scores`, or `missing` may still be given when this run has not
+computed that evidence:
+[`nomo_revise()`](https://juhalt.github.io/nomologR/reference/nomo_revise.md)
+carries the settings into the revision, which runs it.
 
 Consequential decisions are currently:
 
@@ -221,15 +244,15 @@ run <- nomo_run(
 )
 run
 #> <nomo_run> Guided workflow
-#> Status: PAUSED | Mode: teaching | Sample design: same sample
-#> Exploratory N = 800 | Confirmatory N = 800 | Scales: 2
-#> Completed: screen -> factors | Next: efa
+#> Status: Paused | Mode: teaching | Sample design: same sample
+#> Exploratory cases: 800 | Confirmatory cases: 800 | Scales: 2
+#> Completed: screen -> factors | Next: EFA
 #> 
 #> Key evidence
 #>   - Item audit: 8 items; flags: none
 #>   - Parallel analysis suggests: Agency 1, Persistence 1
 #> 
-#> Researcher decision required: efa (Agency, Persistence)
+#> Researcher decision required on the factor counts
 #>   Reason: The EFA factor count changes the fitted model. Retention evidence
 #>   can inform that choice, but it does not authorize the pipeline to choose for
 #>   the researcher.
@@ -247,6 +270,11 @@ run
 #> 
 #> No later stage has been run automatically while this consequential decision is
 #> unresolved.
+#> 
+#> EFA = exploratory factor analysis.
+#> 
+#> See summary(x) for the stages and recorded decisions and
+#> nomo_table(x, "requests") for the decision requests.
 nomo_table(run, "requests")
 #> # A tibble: 2 × 8
 #>   id                  stage scope observation reason options consequence example

@@ -109,15 +109,15 @@ groups. See <code><a href="../reference/nomo_demo_network.html">?nomo_demo_netwo
 <span></span>
 <span><span class="va">run</span></span>
 <span><span class="co">#&gt; &lt;nomo_run&gt; Guided workflow</span></span>
-<span><span class="co">#&gt; Status: PAUSED | Mode: teaching | Sample design: same sample</span></span>
-<span><span class="co">#&gt; Exploratory N = 800 | Confirmatory N = 800 | Scales: 3</span></span>
-<span><span class="co">#&gt; Completed: screen -&gt; factors | Next: efa</span></span>
+<span><span class="co">#&gt; Status: Paused | Mode: teaching | Sample design: same sample</span></span>
+<span><span class="co">#&gt; Exploratory cases: 800 | Confirmatory cases: 800 | Scales: 3</span></span>
+<span><span class="co">#&gt; Completed: screen -&gt; factors | Next: EFA</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Key evidence</span></span>
 <span><span class="co">#&gt;   - Item audit: 11 items; flags: none</span></span>
 <span><span class="co">#&gt;   - Parallel analysis suggests: Agency 1, Persistence 1, SocialDesirability 1</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Researcher decision required: efa (Agency, Persistence, SocialDesirability)</span></span>
+<span><span class="co">#&gt; Researcher decision required on the factor counts</span></span>
 <span><span class="co">#&gt;   Reason: The EFA factor count changes the fitted model. Retention evidence</span></span>
 <span><span class="co">#&gt;   can inform that choice, but it does not authorize the pipeline to choose for</span></span>
 <span><span class="co">#&gt;   the researcher.</span></span>
@@ -136,7 +136,12 @@ groups. See <code><a href="../reference/nomo_demo_network.html">?nomo_demo_netwo
 <span><span class="co">#&gt;   Persistence = &lt;integer&gt;, SocialDesirability = &lt;integer&gt;))</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; No later stage has been run automatically while this consequential decision is</span></span>
-<span><span class="co">#&gt; unresolved.</span></span></code></pre></div>
+<span><span class="co">#&gt; unresolved.</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; EFA = exploratory factor analysis.</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; See summary(x) for the stages and recorded decisions and</span></span>
+<span><span class="co">#&gt; nomo_table(x, "requests") for the decision requests.</span></span></code></pre></div>
 <p>The initial run audits each scale’s items and computes
 factor-retention evidence. It then pauses before EFA. The factor count
 is not silently copied from parallel analysis.</p>
@@ -180,16 +185,16 @@ required;</li>
 <span></span>
 <span><span class="va">run</span></span>
 <span><span class="co">#&gt; &lt;nomo_run&gt; Guided workflow</span></span>
-<span><span class="co">#&gt; Status: PAUSED | Mode: teaching | Sample design: same sample</span></span>
-<span><span class="co">#&gt; Exploratory N = 800 | Confirmatory N = 800 | Scales: 3</span></span>
-<span><span class="co">#&gt; Completed: screen -&gt; factors -&gt; efa | Next: cfa</span></span>
+<span><span class="co">#&gt; Status: Paused | Mode: teaching | Sample design: same sample</span></span>
+<span><span class="co">#&gt; Exploratory cases: 800 | Confirmatory cases: 800 | Scales: 3</span></span>
+<span><span class="co">#&gt; Completed: screen -&gt; factors -&gt; EFA | Next: CFA</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Key evidence</span></span>
 <span><span class="co">#&gt;   - Item audit: 11 items; flags: none</span></span>
 <span><span class="co">#&gt;   - Parallel analysis suggests: Agency 1, Persistence 1, SocialDesirability 1</span></span>
 <span><span class="co">#&gt;   - EFA item flags: none</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Researcher decision required: cfa (measurement_model)</span></span>
+<span><span class="co">#&gt; Researcher decision required on the measurement model</span></span>
 <span><span class="co">#&gt;   Reason: CFA syntax encodes consequential choices about item retention,</span></span>
 <span><span class="co">#&gt;   factor membership, cross-loadings, and correlated residuals; these cannot be</span></span>
 <span><span class="co">#&gt;   chosen silently.</span></span>
@@ -198,13 +203,18 @@ required;</li>
 <span><span class="co">#&gt;   Consequence: The CFA will use the same sample unless a new workflow is</span></span>
 <span><span class="co">#&gt;   started with a holdout/external design. Same-sample confirmation must remain</span></span>
 <span><span class="co">#&gt;   labeled as such.</span></span>
-<span><span class="co">#&gt;   - measurement_model: EFA has completed for every supplied scale. No</span></span>
-<span><span class="co">#&gt;     confirmatory measurement model has been constructed or fitted.</span></span>
+<span><span class="co">#&gt;   - EFA has completed for every supplied scale. No confirmatory measurement</span></span>
+<span><span class="co">#&gt;     model has been constructed or fitted.</span></span>
 <span><span class="co">#&gt;   Example: decisions = list(cfa_model = list(value = model,</span></span>
 <span><span class="co">#&gt;   rationale = "Prespecified measurement model"))</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; No later stage has been run automatically while this consequential decision is</span></span>
-<span><span class="co">#&gt; unresolved.</span></span></code></pre></div>
+<span><span class="co">#&gt; unresolved.</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; EFA = exploratory factor analysis; CFA = confirmatory factor analysis.</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; See summary(x) for the stages and recorded decisions and</span></span>
+<span><span class="co">#&gt; nomo_table(x, "requests") for the decision requests.</span></span></code></pre></div>
 <p>The completed screening and factor-retention objects are reused. EFA
 is fitted using the explicit factor-count decision, with the retention
 stage’s correlation and modeling context retained. The workflow then
@@ -226,20 +236,20 @@ pauses before CFA model specification.</p>
 <span></span>
 <span><span class="va">run</span></span>
 <span><span class="co">#&gt; &lt;nomo_run&gt; Guided workflow</span></span>
-<span><span class="co">#&gt; Status: PAUSED | Mode: teaching | Sample design: same sample</span></span>
-<span><span class="co">#&gt; Exploratory N = 800 | Confirmatory N = 800 | Scales: 3</span></span>
-<span><span class="co">#&gt; Completed: screen -&gt; factors -&gt; efa -&gt; cfa -&gt; reliability -&gt; validity</span></span>
-<span><span class="co">#&gt; Next: measurement_review</span></span>
+<span><span class="co">#&gt; Status: Paused | Mode: teaching | Sample design: same sample</span></span>
+<span><span class="co">#&gt; Exploratory cases: 800 | Confirmatory cases: 800 | Scales: 3</span></span>
+<span><span class="co">#&gt; Completed: screen -&gt; factors -&gt; EFA -&gt; CFA -&gt; reliability -&gt; validity</span></span>
+<span><span class="co">#&gt; Next: measurement review</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Key evidence</span></span>
 <span><span class="co">#&gt;   - Item audit: 11 items; flags: none</span></span>
 <span><span class="co">#&gt;   - Parallel analysis suggests: Agency 1, Persistence 1, SocialDesirability 1</span></span>
 <span><span class="co">#&gt;   - EFA item flags: none</span></span>
-<span><span class="co">#&gt;   - CFA: CFI 0.996, RMSEA 0.020, SRMR 0.021; loading flags: none</span></span>
-<span><span class="co">#&gt;   - Reliability: omega 0.729 to 0.849</span></span>
+<span><span class="co">#&gt;   - CFA: CFI .996, RMSEA 0.020, SRMR 0.021; loading flags: none</span></span>
+<span><span class="co">#&gt;   - Reliability: omega .73 to .85</span></span>
 <span><span class="co">#&gt;   - Validity: convergent flags 1 review, 0 concern; separation flags none</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Researcher decision required: measurement_review (measurement_model)</span></span>
+<span><span class="co">#&gt; Researcher decision required after the measurement review</span></span>
 <span><span class="co">#&gt;   Reason: Invariance and nomological-network interpretations inherit the</span></span>
 <span><span class="co">#&gt;   measurement model. Continuing downstream is therefore a researcher decision,</span></span>
 <span><span class="co">#&gt;   not a fit-index side effect.</span></span>
@@ -250,14 +260,20 @@ pauses before CFA model specification.</p>
 <span><span class="co">#&gt;   Consequence: Proceeding does not declare the model valid and does not remove</span></span>
 <span><span class="co">#&gt;   any review flags. Revising triggers no automatic parameter freeing, item</span></span>
 <span><span class="co">#&gt;   deletion, or respecification.</span></span>
-<span><span class="co">#&gt;   - measurement_model: CFA converged and reliability/validity evidence was</span></span>
-<span><span class="co">#&gt;     computed. Across these components, 0 concern and 1 review log entries are</span></span>
-<span><span class="co">#&gt;     retained.</span></span>
+<span><span class="co">#&gt;   - CFA converged and reliability and validity evidence was computed. Their</span></span>
+<span><span class="co">#&gt;     logs hold 0 concern entries and 1 review entry.</span></span>
 <span><span class="co">#&gt;   Example: decisions = list(measurement_model = list(value = "proceed",</span></span>
 <span><span class="co">#&gt;   rationale = "Evidence reviewed; model retained for the planned analyses."))</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; No later stage has been run automatically while this consequential decision is</span></span>
-<span><span class="co">#&gt; unresolved.</span></span></code></pre></div>
+<span><span class="co">#&gt; unresolved.</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; EFA = exploratory factor analysis; CFA = confirmatory factor analysis;</span></span>
+<span><span class="co">#&gt; CFI = comparative fit index; RMSEA = root mean square error of approximation;</span></span>
+<span><span class="co">#&gt; SRMR = standardized root mean square residual.</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; See summary(x) for the stages and recorded decisions and</span></span>
+<span><span class="co">#&gt; nomo_table(x, "requests") for the decision requests.</span></span></code></pre></div>
 <p><code><a href="../reference/nomo_run.html">nomo_run()</a></code> does not translate the EFA into CFA syntax.
 The researcher owns the confirmatory model; <code><a href="../reference/nomo_model.html">nomo_model()</a></code>
 simply writes the simple-structure syntax for the scales that were
@@ -332,26 +348,31 @@ completed stages.</p>
 <span></span>
 <span><span class="va">run</span></span>
 <span><span class="co">#&gt; &lt;nomo_run&gt; Guided workflow</span></span>
-<span><span class="co">#&gt; Status: COMPLETE | Mode: teaching | Sample design: same sample</span></span>
-<span><span class="co">#&gt; Exploratory N = 800 | Confirmatory N = 800 | Scales: 3</span></span>
-<span><span class="co">#&gt; Completed: screen -&gt; factors -&gt; efa -&gt; cfa -&gt; reliability -&gt; validity -&gt;</span></span>
+<span><span class="co">#&gt; Status: Complete | Mode: teaching | Sample design: same sample</span></span>
+<span><span class="co">#&gt; Exploratory cases: 800 | Confirmatory cases: 800 | Scales: 3</span></span>
+<span><span class="co">#&gt; Completed: screen -&gt; factors -&gt; EFA -&gt; CFA -&gt; reliability -&gt; validity -&gt;</span></span>
 <span><span class="co">#&gt;   invariance -&gt; network</span></span>
-<span><span class="co">#&gt; Next: none</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Key evidence</span></span>
 <span><span class="co">#&gt;   - Item audit: 11 items; flags: none</span></span>
 <span><span class="co">#&gt;   - Parallel analysis suggests: Agency 1, Persistence 1, SocialDesirability 1</span></span>
 <span><span class="co">#&gt;   - EFA item flags: none</span></span>
-<span><span class="co">#&gt;   - CFA: CFI 0.996, RMSEA 0.020, SRMR 0.021; loading flags: none</span></span>
-<span><span class="co">#&gt;   - Reliability: omega 0.729 to 0.849</span></span>
+<span><span class="co">#&gt;   - CFA: CFI .996, RMSEA 0.020, SRMR 0.021; loading flags: none</span></span>
+<span><span class="co">#&gt;   - Reliability: omega .73 to .85</span></span>
 <span><span class="co">#&gt;   - Validity: convergent flags 1 review, 0 concern; separation flags none</span></span>
 <span><span class="co">#&gt;   - Invariance: completed configural -&gt; metric -&gt; scalar</span></span>
 <span><span class="co">#&gt;   - Network: 3 hypotheses; 3 concordant</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; All requested stages are complete or explicitly marked not requested. No</span></span>
 <span><span class="co">#&gt; hidden item deletion, model respecification, parameter freeing, or validity</span></span>
-<span><span class="co">#&gt; verdict was performed. summary(x) shows the stages and decisions, and</span></span>
-<span><span class="co">#&gt; nomo_report(x, file = "report.html") archives the evidence.</span></span>
+<span><span class="co">#&gt; verdict was performed.</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; EFA = exploratory factor analysis; CFA = confirmatory factor analysis;</span></span>
+<span><span class="co">#&gt; CFI = comparative fit index; RMSEA = root mean square error of approximation;</span></span>
+<span><span class="co">#&gt; SRMR = standardized root mean square residual.</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; See summary(x) for the stages and recorded decisions and</span></span>
+<span><span class="co">#&gt; nomo_report(x, file = "report.html") for an archived report.</span></span>
 <span><span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">run</span>, <span class="st">"stages"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 8 × 3</span></span></span>
 <span><span class="co">#&gt;   stage       status    detail                                                  </span></span>
@@ -414,23 +435,28 @@ same statistical behavior:</p>
 <span></span>
 <span><span class="va">run_prespecified</span></span>
 <span><span class="co">#&gt; &lt;nomo_run&gt; Guided workflow</span></span>
-<span><span class="co">#&gt; Status: COMPLETE | Mode: research | Sample design: same sample</span></span>
-<span><span class="co">#&gt; Exploratory N = 800 | Confirmatory N = 800 | Scales: 3</span></span>
-<span><span class="co">#&gt; Completed: screen -&gt; factors -&gt; efa -&gt; cfa -&gt; reliability -&gt; validity -&gt;</span></span>
+<span><span class="co">#&gt; Status: Complete | Mode: research | Sample design: same sample</span></span>
+<span><span class="co">#&gt; Exploratory cases: 800 | Confirmatory cases: 800 | Scales: 3</span></span>
+<span><span class="co">#&gt; Completed: screen -&gt; factors -&gt; EFA -&gt; CFA -&gt; reliability -&gt; validity -&gt;</span></span>
 <span><span class="co">#&gt;   network</span></span>
-<span><span class="co">#&gt; Next: none</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Key evidence</span></span>
 <span><span class="co">#&gt;   - Item audit: 11 items; flags: none</span></span>
 <span><span class="co">#&gt;   - Parallel analysis suggests: Agency 1, Persistence 1, SocialDesirability 1</span></span>
 <span><span class="co">#&gt;   - EFA item flags: none</span></span>
-<span><span class="co">#&gt;   - CFA: CFI 0.996, RMSEA 0.020, SRMR 0.021; loading flags: none</span></span>
-<span><span class="co">#&gt;   - Reliability: omega 0.729 to 0.849</span></span>
+<span><span class="co">#&gt;   - CFA: CFI .996, RMSEA 0.020, SRMR 0.021; loading flags: none</span></span>
+<span><span class="co">#&gt;   - Reliability: omega .73 to .85</span></span>
 <span><span class="co">#&gt;   - Validity: convergent flags 1 review, 0 concern; separation flags none</span></span>
 <span><span class="co">#&gt;   - Network: 3 hypotheses; 3 concordant</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Requested workflow complete. summary(x) shows the stages and decisions;</span></span>
-<span><span class="co">#&gt; nomo_table(x, "recipe") maps the components.</span></span></code></pre></div>
+<span><span class="co">#&gt; Requested workflow complete; no item was deleted and no model respecified.</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; EFA = exploratory factor analysis; CFA = confirmatory factor analysis;</span></span>
+<span><span class="co">#&gt; CFI = comparative fit index; RMSEA = root mean square error of approximation;</span></span>
+<span><span class="co">#&gt; SRMR = standardized root mean square residual.</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; See summary(x) for the stages and recorded decisions and</span></span>
+<span><span class="co">#&gt; nomo_report(x, file = "report.html") for an archived report.</span></span></code></pre></div>
 <p>This is still not hidden automation: every consequential decision was
 explicit before the run began.</p>
 </div>
@@ -460,21 +486,21 @@ run:</p>
 <span></span>
 <span><span class="va">revised</span></span>
 <span><span class="co">#&gt; &lt;nomo_run&gt; Guided workflow</span></span>
-<span><span class="co">#&gt; Status: PAUSED | Mode: teaching | Sample design: same sample</span></span>
-<span><span class="co">#&gt; Exploratory N = 800 | Confirmatory N = 800 | Scales: 3</span></span>
-<span><span class="co">#&gt; Completed: screen -&gt; factors -&gt; efa -&gt; cfa -&gt; reliability -&gt; validity</span></span>
-<span><span class="co">#&gt; Next: measurement_review</span></span>
-<span><span class="co">#&gt; Revisions: 1 (post-hoc); see nomo_table(x, "lineage")</span></span>
+<span><span class="co">#&gt; Status: Paused | Mode: teaching | Sample design: same sample</span></span>
+<span><span class="co">#&gt; Exploratory cases: 800 | Confirmatory cases: 800 | Scales: 3</span></span>
+<span><span class="co">#&gt; Completed: screen -&gt; factors -&gt; EFA -&gt; CFA -&gt; reliability -&gt; validity</span></span>
+<span><span class="co">#&gt; Next: measurement review</span></span>
+<span><span class="co">#&gt; Revisions: 1 (post hoc)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Key evidence</span></span>
 <span><span class="co">#&gt;   - Item audit: 11 items; flags: none</span></span>
 <span><span class="co">#&gt;   - Parallel analysis suggests: Agency 1, Persistence 1, SocialDesirability 1</span></span>
 <span><span class="co">#&gt;   - EFA item flags: none</span></span>
-<span><span class="co">#&gt;   - CFA: CFI 0.995, RMSEA 0.021, SRMR 0.021; loading flags: none</span></span>
-<span><span class="co">#&gt;   - Reliability: omega 0.729 to 0.848</span></span>
+<span><span class="co">#&gt;   - CFA: CFI .995, RMSEA 0.021, SRMR 0.021; loading flags: none</span></span>
+<span><span class="co">#&gt;   - Reliability: omega .73 to .85</span></span>
 <span><span class="co">#&gt;   - Validity: convergent flags 1 review, 0 concern; separation flags none</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Researcher decision required: measurement_review (measurement_model)</span></span>
+<span><span class="co">#&gt; Researcher decision required after the measurement review</span></span>
 <span><span class="co">#&gt;   Reason: Invariance and nomological-network interpretations inherit the</span></span>
 <span><span class="co">#&gt;   measurement model. Continuing downstream is therefore a researcher decision,</span></span>
 <span><span class="co">#&gt;   not a fit-index side effect.</span></span>
@@ -485,14 +511,21 @@ run:</p>
 <span><span class="co">#&gt;   Consequence: Proceeding does not declare the model valid and does not remove</span></span>
 <span><span class="co">#&gt;   any review flags. Revising triggers no automatic parameter freeing, item</span></span>
 <span><span class="co">#&gt;   deletion, or respecification.</span></span>
-<span><span class="co">#&gt;   - measurement_model: CFA converged and reliability/validity evidence was</span></span>
-<span><span class="co">#&gt;     computed. Across these components, 0 concern and 1 review log entries are</span></span>
-<span><span class="co">#&gt;     retained.</span></span>
+<span><span class="co">#&gt;   - CFA converged and reliability and validity evidence was computed. Their</span></span>
+<span><span class="co">#&gt;     logs hold 0 concern entries and 1 review entry.</span></span>
 <span><span class="co">#&gt;   Example: decisions = list(measurement_model = list(value = "proceed",</span></span>
 <span><span class="co">#&gt;   rationale = "Evidence reviewed; model retained for the planned analyses."))</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; No later stage has been run automatically while this consequential decision is</span></span>
-<span><span class="co">#&gt; unresolved.</span></span></code></pre></div>
+<span><span class="co">#&gt; unresolved.</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; EFA = exploratory factor analysis; CFA = confirmatory factor analysis;</span></span>
+<span><span class="co">#&gt; CFI = comparative fit index; RMSEA = root mean square error of approximation;</span></span>
+<span><span class="co">#&gt; SRMR = standardized root mean square residual.</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; See summary(x) for the stages and recorded decisions,</span></span>
+<span><span class="co">#&gt; nomo_table(x, "requests") for the decision requests, and</span></span>
+<span><span class="co">#&gt; nomo_table(x, "lineage") for the revisions.</span></span></code></pre></div>
 <p>The child reruns the staged evidence with the revised model and
 pauses at the measurement review, so the revised evidence is inspected
 before any downstream branch runs. The parent object is unchanged and
@@ -504,7 +537,7 @@ remains a complete record.</p>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 5</span></span></span>
 <span><span class="co">#&gt;   revision change_type origin   rationale                             comparison</span></span>
 <span><span class="co">#&gt;      <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                                 <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>        1 model       post_hoc Items ag1 and ag2 use nearly identic… Chi-Squar…</span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>        1 model       post_hoc Items ag1 and ag2 use nearly identic… Delta chi…</span></span></code></pre></div>
 <p>Because a revision is a claim that one model is preferable to
 another, <code><a href="../reference/nomo_revise.html">nomo_revise()</a></code> compares them with
 <code><a href="../reference/nomo_compare.html">nomo_compare()</a></code>:</p>
@@ -646,32 +679,36 @@ named.</p>
 </h2>
 <div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">run</span>, <span class="st">"decisions"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 10 × 10</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 12 × 10</span></span></span>
 <span><span class="co">#&gt;    id      stage scope observation reason options consequence decision rationale</span></span>
 <span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> sample… desi… samp… 800 rows a… Sampl… Contin… Later CFA … <span style="color: #949494;">"</span>same_s… <span style="color: #949494;">""</span>       </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> scale_… desi… Agen… Scale `Age… Item … Review… Screening,… <span style="color: #949494;">"</span>ag1, a… <span style="color: #949494;">""</span>       </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> scale_… desi… Pers… Scale `Per… Item … Review… Screening,… <span style="color: #949494;">"</span>pe1, p… <span style="color: #949494;">""</span>       </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> scale_… desi… Soci… Scale `Soc… Item … Review… Screening,… <span style="color: #949494;">"</span>sd1, s… <span style="color: #949494;">""</span>       </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> factor… efa   Agen… Parallel a… The E… Inspec… A 1-factor… <span style="color: #949494;">"</span>1<span style="color: #949494;">"</span>      <span style="color: #949494;">"</span>Each sc…</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> factor… efa   Pers… Parallel a… The E… Inspec… A 1-factor… <span style="color: #949494;">"</span>1<span style="color: #949494;">"</span>      <span style="color: #949494;">"</span>Each sc…</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> factor… efa   Soci… Parallel a… The E… Inspec… A 1-factor… <span style="color: #949494;">"</span>1<span style="color: #949494;">"</span>      <span style="color: #949494;">"</span>Each sc…</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> cfa_mo… cfa   meas… EFA has co… CFA s… Inspec… The CFA wi… <span style="color: #949494;">"</span>Agency… <span style="color: #949494;">"</span>Prespec…</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> measur… meas… meas… CFA conver… Invar… Choose… Proceeding… <span style="color: #949494;">"</span>procee… <span style="color: #949494;">"</span>Measure…</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> workfl… work… pipe… All reques… The p… Inspec… No additio… <span style="color: #949494;">"</span>comple… <span style="color: #949494;">""</span>       </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> sample… desi… samp… <span style="color: #949494;">"</span>800 rows … Sampl… Contin… <span style="color: #949494;">"</span>Later CFA… <span style="color: #949494;">"</span>same_s… <span style="color: #949494;">""</span>       </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> scale_… desi… Agen… <span style="color: #949494;">"</span>Scale `Ag… Item … Review… <span style="color: #949494;">"</span>Screening… <span style="color: #949494;">"</span>ag1, a… <span style="color: #949494;">""</span>       </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> scale_… desi… Pers… <span style="color: #949494;">"</span>Scale `Pe… Item … Review… <span style="color: #949494;">"</span>Screening… <span style="color: #949494;">"</span>pe1, p… <span style="color: #949494;">""</span>       </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> scale_… desi… Soci… <span style="color: #949494;">"</span>Scale `So… Item … Review… <span style="color: #949494;">"</span>Screening… <span style="color: #949494;">"</span>sd1, s… <span style="color: #949494;">""</span>       </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> factor… efa   Agen… <span style="color: #949494;">"</span>Parallel … The E… Inspec… <span style="color: #949494;">"</span>A 1-facto… <span style="color: #949494;">"</span>1<span style="color: #949494;">"</span>      <span style="color: #949494;">"</span>Each sc…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> factor… efa   Pers… <span style="color: #949494;">"</span>Parallel … The E… Inspec… <span style="color: #949494;">"</span>A 1-facto… <span style="color: #949494;">"</span>1<span style="color: #949494;">"</span>      <span style="color: #949494;">"</span>Each sc…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> factor… efa   Soci… <span style="color: #949494;">"</span>Parallel … The E… Inspec… <span style="color: #949494;">"</span>A 1-facto… <span style="color: #949494;">"</span>1<span style="color: #949494;">"</span>      <span style="color: #949494;">"</span>Each sc…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> cfa_mo… cfa   meas… <span style="color: #949494;">"</span>EFA has c… CFA s… Inspec… <span style="color: #949494;">"</span>The CFA w… <span style="color: #949494;">"</span>Agency… <span style="color: #949494;">"</span>Prespec…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> settin… inva… sett… <span style="color: #949494;">"</span>The workf… Setti… Argume… <span style="color: #949494;">"</span>`settings… <span style="color: #949494;">"</span>group … <span style="color: #949494;">""</span>       </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> settin… netw… sett… <span style="color: #949494;">"</span>The workf… Setti… Argume… <span style="color: #949494;">"</span>`settings… <span style="color: #949494;">"</span>hypoth… <span style="color: #949494;">""</span>       </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">11</span> measur… meas… meas… <span style="color: #949494;">"</span>CFA conve… Invar… Choose… <span style="color: #949494;">"</span>Proceedin… <span style="color: #949494;">"</span>procee… <span style="color: #949494;">"</span>Measure…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">12</span> workfl… work… pipe… <span style="color: #949494;">"</span>All reque… The p… Inspec… <span style="color: #949494;">"</span>No additi… <span style="color: #949494;">"</span>comple… <span style="color: #949494;">""</span>       </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ 1 more variable: source &lt;chr&gt;</span></span></span>
 <span><span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">run</span>, <span class="st">"settings"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 8 × 3</span></span></span>
-<span><span class="co">#&gt;   stage       configured setting_names            </span></span>
-<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> screen      FALSE      <span style="color: #949494;">""</span>                       </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> factors     TRUE       <span style="color: #949494;">"</span>seed<span style="color: #949494;">"</span>                   </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> efa         FALSE      <span style="color: #949494;">""</span>                       </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> cfa         FALSE      <span style="color: #949494;">""</span>                       </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> reliability FALSE      <span style="color: #949494;">""</span>                       </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> validity    FALSE      <span style="color: #949494;">""</span>                       </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">7</span> invariance  TRUE       <span style="color: #949494;">"</span>group, levels, localize<span style="color: #949494;">"</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">8</span> network     TRUE       <span style="color: #949494;">"</span>hypotheses<span style="color: #949494;">"</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 10 × 4</span></span></span>
+<span><span class="co">#&gt;    stage       configured setting_names             values                      </span></span>
+<span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                       </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> screen      FALSE      <span style="color: #949494;">""</span>                        <span style="color: #949494;">""</span>                          </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> factors     TRUE       <span style="color: #949494;">"</span>seed<span style="color: #949494;">"</span>                    <span style="color: #949494;">"</span>seed = 2026<span style="color: #949494;">"</span>               </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> efa         FALSE      <span style="color: #949494;">""</span>                        <span style="color: #949494;">""</span>                          </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> cfa         FALSE      <span style="color: #949494;">""</span>                        <span style="color: #949494;">""</span>                          </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> reliability FALSE      <span style="color: #949494;">""</span>                        <span style="color: #949494;">""</span>                          </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> validity    FALSE      <span style="color: #949494;">""</span>                        <span style="color: #949494;">""</span>                          </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> invariance  TRUE       <span style="color: #949494;">"</span>group, levels, localize<span style="color: #949494;">"</span> <span style="color: #949494;">"</span>group = \"group\", levels …</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> network     TRUE       <span style="color: #949494;">"</span>hypotheses<span style="color: #949494;">"</span>              <span style="color: #949494;">"</span>hypotheses = &lt;nomo_hypothe…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> scores      FALSE      <span style="color: #949494;">""</span>                        <span style="color: #949494;">""</span>                          </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> missing     FALSE      <span style="color: #949494;">""</span>                        <span style="color: #949494;">""</span></span></span>
 <span><span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">run</span>, <span class="st">"recipe"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 14 × 6</span></span></span>
 <span><span class="co">#&gt;    stage       scope           function_name data_role status researcher_control</span></span>

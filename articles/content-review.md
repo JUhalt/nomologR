@@ -89,15 +89,15 @@ scales, and each facet is screened on its own.
 run <- nomo_run(nomo_demo_walkthrough, scales = handoff)
 run
 #> <nomo_run> Guided workflow
-#> Status: PAUSED | Mode: teaching | Sample design: same sample
-#> Exploratory N = 400 | Confirmatory N = 400 | Scales: 2
-#> Completed: screen -> factors | Next: efa
+#> Status: Paused | Mode: teaching | Sample design: same sample
+#> Exploratory cases: 400 | Confirmatory cases: 400 | Scales: 2
+#> Completed: screen -> factors | Next: EFA
 #> 
 #> Key evidence
 #>   - Item audit: 10 items; flags: 10 review, 0 concern
 #>   - Parallel analysis suggests: EF 1, TF 1
 #> 
-#> Researcher decision required: efa (EF, TF)
+#> Researcher decision required on the factor counts
 #>   Reason: The EFA factor count changes the fitted model. Retention evidence
 #>   can inform that choice, but it does not authorize the pipeline to choose for
 #>   the researcher.
@@ -114,6 +114,11 @@ run
 #> 
 #> No later stage has been run automatically while this consequential decision is
 #> unresolved.
+#> 
+#> EFA = exploratory factor analysis.
+#> 
+#> See summary(x) for the stages and recorded decisions and
+#> nomo_table(x, "requests") for the decision requests.
 ```
 
 Every item is flagged. The Effort Regulation audit shows why:
