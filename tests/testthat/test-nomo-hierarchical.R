@@ -912,8 +912,10 @@ test_that("undefined determinacy and replicability are NA with a note, not guess
 # Pre-RC findings (#145) and the shared output style (#144) ---------------------
 
 hier_negative_disturbance_fit <- function() {
-  # A first-order factor nearly collinear with the second-order factor: its
-  # disturbance variance is estimated below zero.
+  # A's correlations with B and C ask for a loading on the second-order factor
+  # above 1: its square is .8 * .8 / .6. A's disturbance variance is therefore
+  # negative in the population, and the data reproduce the population
+  # covariance matrix exactly, so it is estimated below zero.
   pop <- "
     A =~ .7*x1 + .7*x2 + .7*x3
     B =~ .7*x4 + .7*x5 + .7*x6
@@ -922,8 +924,7 @@ hier_negative_disturbance_fit <- function() {
     A ~~ .8*C
     B ~~ .6*C
   "
-  set.seed(1)
-  dat <- lavaan::simulateData(pop, sample.nobs = 600, standardized = TRUE)
+  dat <- nomo_test_simulate(pop, n = 600, seed = 1, exact = TRUE)
   suppressWarnings(lavaan::cfa(
     "A =~ x1 + x2 + x3\nB =~ x4 + x5 + x6\nC =~ x7 + x8 + x9\nG =~ A + B + C",
     data = dat
