@@ -120,8 +120,10 @@ nomo_methods_used.nomo_efa <- function(x, ...) {
     !is.na(x$n_factors) && x$n_factors >= 2L
   # Credited from the rotation recorded: any oblique rotation, varimax by its
   # own entry, any other orthogonal rotation by the entry for those, and
-  # nothing for an unrotated solution (#145, efa-4, methods-efa-credit).
-  if (rotated && !identical(x$rotation, "none")) {
+  # nothing for an unrotated solution or one that records no rotation (#145,
+  # efa-4, methods-efa-credit).
+  recorded <- is.character(x$rotation) && length(x$rotation) == 1L && !is.na(x$rotation)
+  if (rotated && recorded && !identical(x$rotation, "none")) {
     used <- c(used, if (isTRUE(x$oblique)) {
       "oblique_rotation"
     } else if (identical(tolower(x$rotation), "varimax")) {

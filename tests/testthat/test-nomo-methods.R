@@ -169,9 +169,26 @@ test_that("nomo_methods() filters by stage and lineage", {
 
 
 test_that("nomo_methods() refuses unknown filters by name", {
-  expect_error(nomo_methods(stage = "nonsense"), "Unknown `stage`")
-  expect_error(nomo_methods(stage = "nonsense"), "nonsense")
-  expect_error(nomo_methods(lineage = "modern"), "Unknown `lineage`")
+  # The shared form for a wrong choice: the argument, the choices, and what was
+  # given (#144, guide point 26).
+  expect_error(
+    nomo_methods(stage = "nonsense"),
+    paste0(
+      "`stage` must be one or more of \"screen\", \"factors\", \"efa\", \"cfa\", ",
+      "\"compare\", \"reliability\", \"validity\", \"invariance\", \"scores\", ",
+      "\"network\", or \"workflow\", not \"nonsense\"."
+    ),
+    fixed = TRUE
+  )
+  expect_error(
+    nomo_methods(stage = c("cfa", "nonsense", "more")),
+    "not \"nonsense\", \"more\".", fixed = TRUE
+  )
+  expect_error(
+    nomo_methods(lineage = "modern"),
+    "`lineage` must be one or more of \"historical\", \"contemporary\", or \"emerging\", not \"modern\".",
+    fixed = TRUE
+  )
   expect_error(nomo_methods(references = "yes"), "must be TRUE or FALSE")
 })
 
@@ -746,6 +763,11 @@ test_that("an EFA is credited with its extraction and the rotation it records (#
   # An unrotated solution, and a one-factor solution, credit no rotation.
   expect_identical(rotations("none"), character())
   expect_identical(rotations("oblimin", n_factors = 1), character())
+  # Neither does a solution that records no rotation.
+  unrecorded <- structure(list(fm = "minres", n_factors = 2, oblique = FALSE),
+                          class = c("nomo_efa", "list"))
+  expect_identical(nomo_methods_used(unrecorded), "minres_extraction")
+  expect_identical(rotations(NA_character_), character())
 
   registry <- nomo_methods_registry()
   expect_identical(registry$method[registry$id == "oblique_rotation"], "Oblique rotation")
@@ -871,4 +893,18 @@ test_that("registry references are complete (#145, lit-9, lit-11)", {
   expect_false(grepl("Sorbom", cite("hancock_mueller_2001"), fixed = TRUE))
   expect_match(cite("hancock_mueller_2001"), "rbom (Eds.)", fixed = TRUE)
   expect_match(cite("fokkema_greiff_2017"), "equals trouble: Overfitting", fixed = TRUE)
+
+  # The help pages that repeat these references give them as the registry does.
+  refs <- function(topic) nomo_test_rd_text(topic, "\\references")
+  for (topic in c("nomo_apa_table", "nomo_validity")) {
+    expect_match(refs(topic), "Organizational Research Methods, 25}(1), 6-47.", fixed = TRUE,
+                 info = topic)
+  }
+  for (topic in c("nomo_compare", "nomo_esem")) {
+    expect_match(refs(topic), "In R. D. H. Heijmans, D. S. G. Pollock, & A. Satorra (Eds.)",
+                 fixed = TRUE, info = topic)
+  }
+  expect_match(refs("nomo_cfa"), "Hu, L.-T., & Bentler", fixed = TRUE)
+  expect_false(grepl("Sorbom", refs("nomo_hierarchical"), fixed = TRUE))
+  expect_match(refs("nomo_split"), "equals trouble: Overfitting in the assessment", fixed = TRUE)
 })

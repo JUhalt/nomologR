@@ -2574,6 +2574,19 @@ nomo_methods_roles <- function() {
 }
 
 
+# The error for a `stage` or `lineage` value the registry does not have, in the
+# package's form for a wrong choice: the argument, the choices, and what was
+# given (#144, guide point 26). Both arguments take one or more values.
+nomo_methods_choice_error <- function(arg, valid, bad) {
+  sprintf(
+    "`%s` must be one or more of %s, not %s.",
+    arg,
+    nomo_present_or(sprintf('"%s"', valid)),
+    paste(sprintf('"%s"', bad), collapse = ", ")
+  )
+}
+
+
 # Collapse citation keys into the short in-text form used in compact output.
 nomo_methods_short_citations <- function(keys, bib) {
   vapply(
@@ -2631,7 +2644,10 @@ nomo_methods_short_citations <- function(keys, bib) {
 #' `nomo_methods(run)` can never credit a run with a method it did not use.
 #'
 #' Passing a `nomologR` result object returns only the methods that object
-#' actually used, which is what [nomo_report()] cites.
+#' actually used, which is what [nomo_report()] cites. They are read from what
+#' the object records: the estimator that ran, the extraction and rotation of
+#' an exploratory solution, and an equivalence test only where one could be
+#' computed.
 #'
 #' @param x Optional `nomologR` result object. If supplied, only the methods
 #'   actually used in producing that object are returned, in registry order. If
@@ -2653,11 +2669,19 @@ nomo_methods_short_citations <- function(keys, bib) {
 #'   method, and `references` holds short in-text citations. With
 #'   `references = TRUE` there is one row per method-reference pair, with
 #'   `citation_key`, `citation`, and `doi`.
+#'
+#'   The result is an ordinary tibble with no `print()` or `summary()` method
+#'   of its own, so the console shortens its long text columns; select columns,
+#'   or call `as.list()` on one row, to read an entry in full.
 #' @export
 #'
 #' @examples
-#' # The whole registry
-#' nomo_methods()
+#' # The whole registry, one row per method
+#' methods <- nomo_methods()
+#' methods[, c("method", "lineage", "role")]
+#'
+#' # Everything the registry records about one method
+#' as.list(methods[methods$id == "omega", ])
 #'
 #' # What is shown only as historical context, and why
 #' nomo_methods(lineage = "historical")[, c("method", "role", "assumptions")]
@@ -2696,26 +2720,14 @@ nomo_methods <- function(x = NULL,
   if (!is.null(stage)) {
     valid <- nomo_methods_stages()
     bad <- setdiff(stage, valid)
-    if (length(bad)) {
-      stop(
-        "Unknown `stage` value(s): ", paste(bad, collapse = ", "),
-        ". Valid stages are: ", paste(valid, collapse = ", "), ".",
-        call. = FALSE
-      )
-    }
+    if (length(bad)) stop(nomo_methods_choice_error("stage", valid, bad), call. = FALSE)
     registry <- registry[registry$stage %in% stage, , drop = FALSE]
   }
 
   if (!is.null(lineage)) {
     valid <- nomo_methods_lineages()
     bad <- setdiff(lineage, valid)
-    if (length(bad)) {
-      stop(
-        "Unknown `lineage` value(s): ", paste(bad, collapse = ", "),
-        ". Valid values are: ", paste(valid, collapse = ", "), ".",
-        call. = FALSE
-      )
-    }
+    if (length(bad)) stop(nomo_methods_choice_error("lineage", valid, bad), call. = FALSE)
     registry <- registry[registry$lineage %in% lineage, , drop = FALSE]
   }
 

@@ -42,8 +42,9 @@
 #'
 #' @references
 #' Fokkema, M., & Greiff, S. (2017). How performing PCA and CFA on the same
-#' data equals trouble. *European Journal of Psychological Assessment, 33*(6),
-#' 399-402. \doi{10.1027/1015-5759/a000460}
+#' data equals trouble: Overfitting in the assessment of internal structure and
+#' some editorial thoughts on it. *European Journal of Psychological
+#' Assessment, 33*(6), 399-402. \doi{10.1027/1015-5759/a000460}
 #'
 #' MacCallum, R. C., Roznowski, M., & Necowitz, L. B. (1992). Model
 #' modifications in covariance structure analysis: The problem of
