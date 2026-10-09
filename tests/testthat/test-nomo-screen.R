@@ -921,23 +921,13 @@ test_that("closeout: screen and split cover empty, binary, other, and RNG cleanu
   txt <- paste(capture.output(print(scr)), collapse = "\n")
   expect_match(txt, "Decision log: no entries", fixed = TRUE)
 
-  had_seed <- exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
-  if (had_seed) {
-    old_seed <- get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
-  }
-  on.exit({
-    if (had_seed) {
-      assign(".Random.seed", old_seed, envir = .GlobalEnv)
-    } else if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
-      rm(".Random.seed", envir = .GlobalEnv)
-    }
-  }, add = TRUE)
-
-  if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
-    rm(".Random.seed", envir = .GlobalEnv)
-  }
-  invisible(nomo_split(data.frame(x = 1:10), seed = 2026L))
-  expect_false(exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE))
+  # A split leaves the caller's random-number state as it was.
+  # test-nomo-global-state.R covers a session that has no state.
+  withr::with_seed(8104, {
+    before <- nomo_test_rng_state()
+    invisible(nomo_split(data.frame(x = 1:10), seed = 2026L))
+    expect_identical(nomo_test_rng_state(), before)
+  })
 })
 
 

@@ -106,7 +106,6 @@
 #' \doi{10.1007/BF02296192}
 #'
 #' @examples
-#' \donttest{
 #' model <- nomo_model(list(
 #'   Agency = paste0("ag", 1:4),
 #'   Persistence = paste0("pe", 1:4)
@@ -114,7 +113,6 @@
 #' es <- nomo_esem(model, nomo_demo_network)
 #' es
 #' nomo_table(es, "factor_correlations")
-#' }
 #' @export
 nomo_esem <- function(model,
                       data,

@@ -160,7 +160,6 @@ parameters automatically, and network results never collapse to a one-number
 validity score.
 }
 \examples{
-\donttest{
 scales <- list(
   Agency = c("ag1", "ag2", "ag3", "ag4"),
   Persistence = c("pe1", "pe2", "pe3", "pe4")
@@ -175,6 +174,9 @@ run <- nomo_run(
 run
 nomo_table(run, "requests")
 
+\donttest{
+# Each decision resumes the run, which computes the next evidence and pauses
+# again.
 run <- nomo_run(
   resume = run,
   decisions = list(
