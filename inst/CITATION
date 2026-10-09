@@ -1,12 +1,57 @@
-citHeader(
-  "To cite nomologR in publications, please use:"
-)
+# How to cite nomologR, in the form APA Style (7th ed.) gives for software:
+#
+#   Author, A. A. (Year). Title of the software (Version x.y.z)
+#   [Computer software]. URL
+#
+# Neither the year nor the version is typed here, so a release never has to
+# edit this file (#145). R reads the file with `meta`, the fields of the
+# package's DESCRIPTION, which differ with where the package is read from.
+
+# The year of the first date found, looking in this order:
+#   Date/Publication  the date CRAN published the build;
+#   Date              a date DESCRIPTION declares (nomologR's declares none);
+#   Packaged          the date the source package was built, which a built
+#                     tarball, an installed package, and the copy that
+#                     R CMD check installs all have;
+#   Built             the date an installed package was installed.
+# A source checkout has none of the four, so it takes the current year: that
+# is when `devtools::load_all()` or `readCitationFile("inst/CITATION")` runs.
+nomologR_year <- local({
+  fields <- c("Date/Publication", "Date", "Packaged", "Built")
+  dates <- as.character(unlist(lapply(fields, function(field) meta[[field]])))
+  dates <- dates[!is.na(dates)]
+  pattern <- "[0-9]{4}(?=-[0-9]{2}-[0-9]{2})"
+  years <- regmatches(dates, regexpr(pattern, dates, perl = TRUE))
+  if (length(years)) years[[1L]] else format(Sys.Date(), "%Y")
+})
+
+# The version, left out when the file is read without DESCRIPTION.
+nomologR_version <- local({
+  version <- as.character(meta[["Version"]])
+  if (length(version) && !is.na(version[[1L]]) && nzchar(version[[1L]])) {
+    sprintf("(Version %s) ", version[[1L]])
+  } else {
+    ""
+  }
+})
+
+nomologR_url <- "https://github.com/JUhalt/nomologR"
+
+citHeader("To cite nomologR in publications, please use:")
 
 bibentry(
   bibtype = "Manual",
-  title = "nomologR: Guided Scale Development and Construct Validation",
+  title = "{nomologR}: Guided Scale Development and Construct Validation",
   author = person("Joshua", "Uhalt"),
-  year = "2026",
-  note = paste("R package version", meta$Version),
-  url = "https://github.com/JUhalt/nomologR"
+  year = nomologR_year,
+  note = paste0(nomologR_version, "[Computer software]"),
+  url = nomologR_url,
+  # Once CRAN has accepted the package, add its DOI on the next line, and put
+  # it in `textVersion` in place of the URL, as https://doi.org/<the DOI>:
+  # doi = "10.32614/CRAN.package.nomologR",
+  textVersion = paste0(
+    "Uhalt, J. (", nomologR_year, "). ",
+    "nomologR: Guided scale development and construct validation ",
+    nomologR_version, "[Computer software]. ", nomologR_url
+  )
 )
