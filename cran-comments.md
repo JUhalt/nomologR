@@ -4,7 +4,8 @@ TODO (maintainer, before submission): this file holds four TODO paragraphs,
 this one included. Each says what to refresh; delete all four before
 submitting. If a patched 0.3.0 is resubmitted in place of the current version,
 also drop the sentence about the version number below and the mention of
-`nomo_power_simulate()`, which 0.3.0 does not have.
+`nomo_power_simulate()`, which 0.3.0 does not have; the functions that take a
+seed are then three, not four.
 
 This is a resubmission. nomologR is not on CRAN yet. Version 0.3.0 was
 reviewed on 2026-10-08 and returned with two requests, which are answered
@@ -34,18 +35,26 @@ while 0.3.0 was under review; `NEWS.md` lists the changes.
 
 * In 0.3.0, `nomo_factors()` and `nomo_split()` saved the user's
   `.Random.seed` before setting a seed and put it back on exit with `assign()`
-  and `rm()` on `.GlobalEnv`. That code is removed. The three functions that
-  take a seed, `nomo_factors()`, `nomo_split()`, and `nomo_power_simulate()`
-  (new since 0.3.0), now set it with `withr::with_seed()`, and withr is in
-  `Imports`.
+  and `rm()` on `.GlobalEnv`. That code is removed. The four functions that
+  take a seed now set it with `withr::with_seed()`, and withr is in `Imports`:
+  `nomo_factors()`, `nomo_split()`, `nomo_power_simulate()` (new since 0.3.0),
+  and `nomo_reliability()`.
+* `nomo_reliability()` had no such code of its own. It passes its `ci_seed`
+  to `lavaan::bootstrapLavaan()` as `iseed`, and that call now runs inside
+  `withr::with_seed()` as well, so the user's random-number state is put back
+  whatever the installed version of lavaan does, also when the bootstrap
+  fails.
 * The package's code no longer names `.GlobalEnv` and has no call to
   `set.seed()`, `assign()`, or `rm()`. `globalenv()` appears once, in
   `nomo_report()`, as the parent of the new environment in which the report
   template is evaluated (`new.env(parent = globalenv())`); nothing is assigned
   into it. Every `<<-` in the package sets a variable that an enclosing
   function created.
-* The tests no longer assign or remove `.Random.seed`. They read the
-  random-number state before and after a call, inside `withr::with_seed()`.
+* No test calls `assign()` or `rm()` on the global environment any more. The
+  tests of the restore run inside `withr::with_seed()` and compare the
+  random-number state read before a seeded call with the state read after it.
+  A session that has no random-number state is tested in a fresh R process.
+  Test fixtures that simulate data are still seeded with `set.seed()`.
 * A test now fails if a file in `R/` names `.GlobalEnv`, calls `set.seed()`,
   uses `globalenv()` for anything but the parent of a new environment, or uses
   `<<-` on a variable that no enclosing function holds.
@@ -107,9 +116,9 @@ run on this version yet.
   comparison). Each is fully runnable, and all pass under `--run-donttest`.
 * Files. `nomo_report()` is the only function that writes a file, and only
   when given a path: its `file` argument is required and has no default.
-* Random numbers. A function that takes a seed sets it with
+* Random numbers. Each of the four functions that take a seed sets it with
   `withr::with_seed()`, which leaves the user's random-number state as it was.
-  The package does not write to the global environment.
+  The package's own code does not write to the global environment.
 
 ## Downstream dependencies
 
