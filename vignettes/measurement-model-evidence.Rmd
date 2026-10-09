@@ -609,7 +609,7 @@ marker technique:
   intervals.
 
 Here, two constructs and a three-item marker are simulated sharing a method
-factor that loads .30 on every item:
+factor that loads 0.30 on every item:
 
 ```{r method-variance}
 population <- "

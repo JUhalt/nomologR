@@ -104,9 +104,10 @@ syntax and unchanged `lavaan` fit remain available in the returned object.
 
 ```{r evidence}
 evidence <- nomo_table(net, "hypotheses")
+evidence[, c("id", "relation", "theoretical_region", "concordance")]
 evidence[, c(
-  "id", "relation", "theoretical_region", "estimate",
-  "ci_lower", "ci_upper", "equivalence_supported", "concordance"
+  "id", "estimate", "ci_lower", "ci_upper",
+  "equivalence_ci_lower", "equivalence_ci_upper"
 )]
 ```
 
@@ -124,7 +125,8 @@ fmt <- function(x, correlation = FALSE) {
 }
 ```
 
-Reading each row:
+The first table gives each prediction and how the evidence was classified, and
+the second the estimates behind it. Reading each relation:
 
 - **H1** (`Agency -> Persistence`): estimate `r fmt(ev("H1", "estimate"))`,
   interval [`r fmt(ev("H1", "ci_lower"))`, `r fmt(ev("H1", "ci_upper"))`],
@@ -221,7 +223,9 @@ corrected <- nomo_network(
   "Agency =~ ag1 + ag2 + ag3 + ag4", dat, h_si,
   single_indicators = list(persistence = nomo_single_indicator(rel))
 )
-nomo_table(corrected, "single_indicators")
+nomo_table(corrected, "single_indicators")[, c(
+  "variable", "coefficient", "reliability", "variance", "error_variance"
+)]
 ```
 
 The population path is 0.45. The observed composite gives
@@ -277,13 +281,19 @@ net_rep <- nomo_network(
 
 replication <- nomo_table(net_rep, "replication")
 replication[, c(
-  "id", "relation", "primary_estimate", "validation_estimate",
-  "validation_concordance", "replication_status"
+  "id", "primary_estimate", "validation_estimate", "replication_status"
 )]
 ```
 
 ```{r replication-values, include=FALSE}
 rs <- function(id) replication$replication_status[replication$id == id]
+# A stored status in code font, as the table shows it.
+rs_code <- function(id) paste0("`", rs(id), "`")
+h1_h3 <- if (identical(rs("H1"), rs("H3"))) {
+  paste("both", rs_code("H1"))
+} else {
+  paste(rs_code("H1"), "and", rs_code("H3"))
+}
 
 h4_reading <- switch(
   rs("H4"),
@@ -307,11 +317,11 @@ The calibration and validation subsets receive the **same prespecified fitted
 model**; `nomologR` does not respecify the validation model to rescue a primary
 result. Reading the statuses:
 
-- H1 and H3 are **`r rs("H1")`** and **`r rs("H3")`**.
-- H2 is **`r rs("H2")`**: with only `r nrow(s$validation)` validation cases, the
+- H1 and H3 are `r h1_h3`.
+- H2 is `r rs_code("H2")`: with only `r nrow(s$validation)` validation cases, the
   equivalence interval is too wide to confirm negligibility. Splitting a sample
   buys independence at the cost of precision.
-- H4 is **`r rs("H4")`**. The population path is zero, and the two point
+- H4 is `r rs_code("H4")`. The population path is zero, and the two point
   estimates happen to differ in sign. Here `r h4_reading`.
 
 A change in sign between samples needs care. Estimates scattered around a null

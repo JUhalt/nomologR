@@ -210,8 +210,7 @@ context and recommend comparing them rather than treating the handoff as proof.
 
 ```{r item-table}
 item_view <- efa$item_summary[, c(
-  "item", "primary_factor", "primary_loading", "secondary_loading",
-  "communality", "attention"
+  "item", "primary_loading", "secondary_loading", "communality", "attention"
 )]
 item_view
 ```
