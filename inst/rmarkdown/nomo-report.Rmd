@@ -41,17 +41,15 @@ protected_names <- unique(c(names(run$scales), unlist(run$scales, use.names = FA
 # report is unchanged.
 word_output <- isTRUE(knitr::pandoc_to("docx"))
 
-md_escape <- function(x) {
-  x <- as.character(x)
-  # The backslash first, so the escapes added afterwards are not escaped again.
-  for (ch in c("\\", "`", "*", "_", "[", "]", "<", ">", "#", "|")) {
-    x <- gsub(ch, paste0("\\", ch), x, fixed = TRUE)
-  }
-  x
+# Pandoc reads markdown wherever text is written, even inside an HTML table, so
+# every heading, note, and cell built from data is escaped to show exactly as
+# written (#145): lavaan's `~~` would otherwise vanish and `a*x1` lose its
+# asterisk.
+text_escape <- function(x) {
+  nomologR:::nomo_report_escape(x, if (word_output) "markdown" else "html")
 }
 
-text_escape <- function(x) if (word_output) md_escape(x) else html_escape(x)
-
+# For the verbatim blocks, which pandoc does not read as markdown.
 html_escape <- function(x) {
   x <- as.character(x)
   x <- gsub("&", "&amp;", x, fixed = TRUE)
@@ -61,14 +59,33 @@ html_escape <- function(x) {
   x
 }
 
+# The headings, cells, and notes the report writes, so the closing table can
+# define every abbreviation it shows (#144).
+shown <- new.env()
+shown$labels <- character()
+shown$text <- character()
+remember <- function(labels = character(), text = character()) {
+  shown$labels <- c(shown$labels, labels)
+  shown$text <- c(shown$text, text)
+  invisible(NULL)
+}
+
+emit_heading <- function(text, level = 2L) {
+  remember(text = text)
+  cat("\n", strrep("#", level), " ", text_escape(text), "\n\n", sep = "")
+}
+
 emit_note <- function(text) {
+  # Leading spaces would make the note an indented block, or a bullet in Word.
+  text <- trimws(text)
+  remember(text = text)
   if (word_output) {
-    cat("\n*", md_escape(text), "*\n\n", sep = "")
+    cat("\n*", text_escape(text), "*\n\n", sep = "")
     return(invisible(NULL))
   }
   cat(
     '<div class="nomo-note">',
-    html_escape(text),
+    text_escape(text),
     "</div>\n",
     sep = ""
   )
@@ -91,55 +108,37 @@ emit_summary <- function(obj) {
   )
 }
 
+# Values are rounded and labelled by nomo_report_table(), which also escapes
+# each cell. `markdown = TRUE` keeps the markdown of trusted text, such as the
+# italics in R's citations.
 emit_table <- function(x,
                        max_rows = params$max_table_rows,
                        empty = "No rows are available for this section.",
-                       truncate = TRUE) {
-  x <- nomologR:::nomo_report_display_table(x, protected = protected_names)
-  # A missing number is shown as a dash too, as a missing text cell is.
-  old <- options(knitr.kable.NA = nomologR:::nomo_report_blank)
-  on.exit(options(old), add = TRUE)
+                       truncate = TRUE,
+                       markdown = FALSE) {
+  table <- nomologR:::nomo_report_table(
+    x,
+    protected = protected_names,
+    word = word_output,
+    max_rows = if (isTRUE(truncate)) max_rows else Inf,
+    markdown = markdown
+  )
 
-  if (!nrow(x)) {
+  if (is.null(table)) {
     emit_note(empty)
     return(invisible(NULL))
   }
-
-  n_total <- nrow(x)
-  if (isTRUE(truncate) && is.finite(max_rows) && n_total > max_rows) {
-    x <- utils::head(x, max_rows)
-  }
+  remember(table$labels, table$cells)
 
   if (word_output) {
-    # A pipe or a line break inside a cell would end the row early.
-    chr <- vapply(x, is.character, logical(1))
-    x[chr] <- lapply(x[chr], function(col) {
-      col <- gsub("|", "\\|", col, fixed = TRUE)
-      gsub("[\r\n]+", " ", col)
-    })
-    md <- knitr::kable(x, format = "pipe", digits = 3, row.names = FALSE)
-    cat("\n", paste(md, collapse = "\n"), "\n\n", sep = "")
+    cat("\n", table$markup, "\n\n", sep = "")
   } else {
-  html <- knitr::kable(
-    x,
-    format = "html",
-    digits = 3,
-    escape = TRUE,
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-condensed nomo-table"'
-  )
-  cat('<div class="table-responsive">\n')
-  cat(paste(html, collapse = "\n"), "\n")
-  cat("</div>\n")
+    cat('<div class="table-responsive">\n')
+    cat(table$markup, "\n")
+    cat("</div>\n")
   }
 
-  if (isTRUE(truncate) && n_total > nrow(x)) {
-    emit_note(sprintf(
-      "Showing %d of %d rows. The underlying nomo_run object retains all rows.",
-      nrow(x),
-      n_total
-    ))
-  }
+  for (note in table$notes) emit_note(note)
 
   invisible(NULL)
 }
@@ -232,12 +231,29 @@ body { max-width: 1250px; }
 details {
   margin: 1em 0;
 }
+/* APA 7 tables (#145): a rule above the table, one beneath the column
+   headings, and one below the table, and none between body rows. The page
+   script gives every table Bootstrap's classes, whose row borders these
+   replace. */
+.nomo-apa table {
+  width: auto;
+  border-top: 2px solid #000;
+  border-bottom: 2px solid #000;
+  margin-bottom: 0.5em;
+}
+.nomo-apa table > thead > tr > th {
+  border-top: none !important;
+  border-bottom: 1px solid #000 !important;
+}
+.nomo-apa table > tbody > tr > td {
+  border-top: none !important;
+}
 </style>
 
 **Generated:** `r params$generated_at`  
 **nomologR version:** `r as.character(utils::packageVersion("nomologR"))`  
-**Workflow status:** `r run$status`  
-**Sample design:** `r run$sample_design`
+**Workflow status:** `r nomologR:::nomo_present_status(run$status)`  
+**Sample design:** `r gsub("_", " ", run$sample_design, fixed = TRUE)`
 
 ```{r interpretation-contract}
 contract <- paste(
@@ -254,6 +270,7 @@ if (word_output) {
     sep = ""
   )
 }
+emit_note(nomologR:::nomo_report_reading_note())
 ```
 
 # Researcher inputs and data characteristics
@@ -326,12 +343,11 @@ if (!length(screen)) {
       empty = "No relationship diagnostics are available."
     )
 
-    log <- nomologR:::nomo_report_component_table(obj, "screen", "decision_log")
-    if (nrow(log) && "severity" %in% names(log)) {
-      log <- log[tolower(log$severity) %in% c("review", "concern"), , drop = FALSE]
-    }
-    cat("\n### Review/concern evidence\n\n")
-    emit_table(log, empty = "No screening review/concern rows were recorded.")
+    log <- nomologR:::nomo_report_flagged_rows(
+      nomologR:::nomo_report_component_table(obj, "screen", "decision_log")
+    )
+    cat("\n### Flagged\n\n")
+    emit_table(log, empty = "Nothing in this screen was flagged for review or concern.")
 
     emit_plot(obj, "evidence")
   }
@@ -425,7 +441,7 @@ if (!length(cfa_list)) {
   emit_summary(cfa)
 
   if (!is.null(run$decisions$cfa_model$value)) {
-    cat("\n## Researcher-specified CFA syntax\n\n")
+    emit_heading("Researcher-specified CFA syntax")
     emit_code(run$decisions$cfa_model$value)
   }
 
@@ -457,7 +473,7 @@ if (!length(cfa_list)) {
     empty = "No modification-index table is available."
   )
   emit_note(
-    "Modification indices are post-hoc diagnostic evidence. They do not authorize automatic model respecification."
+    "Modification indices are post hoc diagnostic evidence. They do not authorize automatic model respecification."
   )
 
   emit_plot(cfa, "fit")
@@ -513,7 +529,7 @@ if (!length(val_list)) {
     empty = "No pairwise construct-separation table is available."
   )
 
-  cat("\n## HTMT-family availability\n\n")
+  emit_heading("HTMT-family availability")
   emit_table(
     nomologR:::nomo_report_component_table(val, "validity", "htmt_status"),
     empty = "No HTMT-family status table is available."
@@ -628,7 +644,7 @@ if (length(run$results$missing)) {
     cat("\n### Strategies\n\n")
     emit_table(missing_report$strategies, truncate = FALSE)
     cat("\n### Largest differences from the reference\n\n")
-    emit_table(missing_report$differences, empty = "No comparison strategy was fitted.")
+    emit_table(missing_report$differences, empty = missing_report$differences_empty)
     cat("\n### Fit by strategy\n\n")
     emit_table(missing_report$fit, truncate = FALSE)
     if (!is.null(missing_report$reliability) && nrow(missing_report$reliability)) {
@@ -661,16 +677,17 @@ emit_table(
 )
 ```
 
-## Review and concern evidence
+## Flagged
 
-Each row below carries a stable report-local **evidence ID**. The metric,
-reference, observation, and recommendation remain together so autogenerated
-guidance can be traced back to the evidence that produced it.
+This table lists the evidence flagged for review or concern anywhere in the
+workflow, concern first. Each row carries a stable report-local **evidence
+ID**. The metric, reference, observation, and recommendation remain together
+so autogenerated guidance can be traced back to the evidence that produced it.
 
 ```{r}
 emit_table(
   flagged_trace,
-  empty = "No component review/concern evidence rows were recorded."
+  empty = "No evidence in this workflow was flagged for review or concern."
 )
 ```
 
@@ -689,13 +706,13 @@ between the parent and revised measurement models. A revision prompted by the
 results is evaluated on the data that prompted it, so independent confirmation
 is recommended.
 
-# Deviations and post-hoc decisions
+# Deviations and post hoc decisions
 
 ```{r}
 emit_table(
   deviations,
   empty = paste(
-    "No researcher-specified partial-invariance releases, post-hoc network",
+    "No researcher-specified partial-invariance releases, post hoc network",
     "relations, or explicit workflow revision decisions were identified."
   )
 )
@@ -712,12 +729,12 @@ Every method below was used in producing this run. Methods the package can
 perform but this workflow did not use are deliberately absent, so this table
 describes what happened rather than what the package is capable of.
 
-`lineage` places a method in the literature: `contemporary` is current
-recommended practice, `historical` is a technique retained so published work
-can be recognized and interpreted, and `emerging` is a recent proposal with a
-smaller evidence base. `role` says how the evidence was used: `primary`,
-`supporting`, or `context`. A `context` method was displayed for recognition
-only and took no part in any synthesis or decision.
+The Lineage column places a method in the literature: a contemporary method is
+current recommended practice, a historical one is a technique retained so
+published work can be recognized and interpreted, and an emerging one is a
+recent proposal with a smaller evidence base. The Role column says how the
+evidence was used: primary, supporting, or context. A context method was
+displayed for recognition only and took no part in any synthesis or decision.
 
 ```{r}
 emit_table(
@@ -733,19 +750,20 @@ emit_table(
 emit_table(
   nomologR:::nomo_report_method_references(run),
   max_rows = Inf,
-  empty = "No method references are available."
+  empty = "No method references are available.",
+  markdown = TRUE
 )
 ```
 
 ## Software
 
 The report reflects `nomologR` orchestration plus established statistical
-engines. `installed_version` records the package version used in this rendering
-session; package-provided citation text may identify a different citation
+engines. The Installed version column gives the version used in the session
+that rendered this report; a package's own citation text may name a different
 release.
 
 ```{r}
-emit_table(nomologR:::nomo_report_citations(), max_rows = Inf)
+emit_table(nomologR:::nomo_report_citations(), max_rows = Inf, markdown = TRUE)
 ```
 
 ```{r manuscript-tables, results='asis'}
@@ -760,9 +778,13 @@ if (isTRUE(params$apa_tables)) {
       "manuscript. They follow the reference-value language of the report:",
       "no cell reads pass or fail."
     ))
+    # In HTML the tables carry APA rules (top, beneath the headings, bottom)
+    # rather than the page's rule under every row.
+    if (!word_output) cat("\n::: {.nomo-apa}\n\n")
     for (tab in apa) {
       cat("\n", paste(nomologR:::nomo_apa_markdown(tab), collapse = "\n"), "\n\n", sep = "")
     }
+    if (!word_output) cat("\n:::\n\n")
   }
 }
 ```
@@ -772,11 +794,13 @@ if (isTRUE(params$apa_tables)) {
 ## Workflow call history
 
 ```{r}
-emit_table(
-  nomologR:::nomo_report_call_history(run),
-  max_rows = Inf,
-  empty = "No call history is available."
-)
+# As R code: in a table its quotes became typographic ones (#145).
+call_code <- nomologR:::nomo_report_call_code(run)
+if (nzchar(call_code)) {
+  emit_code(call_code)
+} else {
+  emit_note("No call history is available.")
+}
 ```
 
 ## Package versions
@@ -789,7 +813,7 @@ emit_table(nomologR:::nomo_report_package_versions(), max_rows = Inf)
 
 This appendix is intentionally **not truncated**. Each autogenerated
 recommendation remains on the same row as its evidence ID, component, metric,
-reference, severity, and observation.
+reference, flag, and observation.
 
 ```{r evidence-trace-open}
 if (!word_output) cat("<details>\n<summary>Show full evidence trace</summary>\n")
@@ -823,6 +847,16 @@ if (isTRUE(params$include_session) && word_output) {
 } else {
   emit_note("Full session information was disabled for this report.")
 }
+```
+
+# Abbreviations
+
+```{r abbreviations}
+emit_table(
+  nomologR:::nomo_report_abbreviations(shown$labels, shown$text),
+  max_rows = Inf,
+  empty = "The report's tables use no abbreviation."
+)
 ```
 
 ---
