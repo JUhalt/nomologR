@@ -205,3 +205,41 @@ test_that("walkthrough teaching data have the documented structure and features"
   }, numeric(1))
   expect_identical(names(which.max(with_ef)), "TF4")
 })
+
+
+test_that("dataset help pages write population values as the output prints them (#144)", {
+  # A standardized loading, a path coefficient, and a difference in means or
+  # intercepts can exceed 1, so they keep the leading zero; a correlation and a
+  # probability cannot, so they drop it (guide point 8).
+  page <- function(topic) {
+    paste(vapply(c("\\description", "\\format", "\\details"),
+                 function(section) nomo_test_rd_text(topic, section), character(1)),
+          collapse = " ")
+  }
+
+  continuous <- page("nomo_demo_continuous")
+  expect_match(continuous, "(population loadings 0.45 and 0.35)", fixed = TRUE)
+  expect_match(continuous, "loadings are 0.80, 0.75, 0.70, 0.72, and 0.45", fixed = TRUE)
+  expect_match(continuous, "with correlation .40", fixed = TRUE)
+
+  network <- page("nomo_demo_network")
+  expect_match(network, "standardized coefficient of 0.45", fixed = TRUE)
+  expect_match(network, "regressed on Agency (0.40)", fixed = TRUE)
+  expect_match(network, "mean is 0.25 SD higher", fixed = TRUE)
+  expect_match(network, "is 0.50 higher", fixed = TRUE)
+  expect_match(network, "(about .18 in the population)", fixed = TRUE)
+
+  longitudinal <- page("nomo_demo_longitudinal")
+  expect_match(longitudinal, "are 0.80, 0.75, 0.70, and 0.65", fixed = TRUE)
+  expect_match(longitudinal, "to 0.30 at", fixed = TRUE)
+  expect_match(longitudinal, "correlates .60 between adjacent occasions", fixed = TRUE)
+
+  walkthrough <- page("nomo_demo_walkthrough")
+  expect_match(walkthrough, "\\code{EF1} 0.72", fixed = TRUE)
+  expect_match(walkthrough, "quantiles .10, .30, .60, and .85", fixed = TRUE)
+
+  # No loading is left without its leading zero on any of the pages.
+  pages <- c(continuous, network, longitudinal, walkthrough)
+  expect_false(any(grepl("loadings?( are)? [.][0-9]", pages)))
+  expect_false(any(grepl("[A-Z]{2}[0-9][}] [.][0-9]", pages)))
+})

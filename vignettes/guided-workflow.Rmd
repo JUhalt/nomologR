@@ -271,16 +271,31 @@ nomo_table(revised$revision_comparison, "comparisons")[, c(
 ```{r revise-values, include=FALSE}
 rev_cmp <- revised$revision_comparison$comparisons
 rev_log <- revised$decision_log[revised$decision_log$id == "revision", ]
-fmt_rev_p <- if (rev_cmp$p_value < .001) {
-  "< .001"
-} else {
-  paste("=", formatC(rev_cmp$p_value, format = "f", digits = 3))
+
+# Numbers as the package prints them: rounded half away from zero, no leading
+# zero for p or a CFI change, and a change signed unless it rounds to zero.
+half_up <- function(x, digits) {
+  s <- 10^digits
+  sign(x) * floor(abs(x) * s + 0.5 + 1e-9) / s
+}
+num <- function(x, digits = 2, bounded = FALSE, signed = FALSE) {
+  r <- half_up(x, digits)
+  out <- formatC(abs(r), format = "f", digits = digits)
+  if (bounded) out <- sub("^0[.]", ".", out)
+  sign_text <- if (r < 0) "-" else if (signed && r > 0) "+" else ""
+  paste0(sign_text, out)
+}
+p_clause <- function(p) {
+  if (p < .001) return("*p* < .001")
+  if (p > .999) return("*p* > .999")
+  paste("*p* =", num(p, 3, bounded = TRUE))
 }
 ```
 
-Here the revision changes almost nothing (chi-square difference =
-`r sprintf("%.2f", rev_cmp$chisq_diff)`, df = `r rev_cmp$df_diff`,
-p `r fmt_rev_p`; CFI changes by `r sprintf("%+.4f", rev_cmp$delta_cfi)`). Once
+Here the revision changes almost nothing (Delta
+chi-square(`r rev_cmp$df_diff`) = `r num(rev_cmp$chisq_diff)`,
+`r p_clause(rev_cmp$p_value)`; CFI change
+`r num(rev_cmp$delta_cfi, 3, bounded = TRUE, signed = TRUE)`). Once
 the common factor is accounted for, the residual association these two items
 were expected to share is close to zero, so the data give no reason to prefer
 the revised model over its parent. A revision is not automatically an
@@ -426,6 +441,6 @@ This structure feeds the reproducible report described in
 Staged scale development with explicit decisions follows guidance such as Clark
 and Watson (1995, 2019), Hinkin (1998), and Boateng et al. (2018). Recording
 decisions and rationales responds to evidence that undisclosed analytic
-flexibility undermines measurement claims (Simmons, Nelson, & Simonsohn, 2011;
-Flake, Pek, & Hehman, 2017; Flake & Fried, 2020). Full references are in
+flexibility undermines measurement claims (Simmons et al., 2011; Flake et al.,
+2017; Flake & Fried, 2020). Full references are in
 `?nomo_run` and the [research basis](research-basis.html) article.

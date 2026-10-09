@@ -8,10 +8,10 @@
 A data frame with 500 rows and 10 numeric columns:
 \describe{
 \item{a1, a2, a3, a4, a5}{Indicators written for factor A. Population
-standardized loadings are .80, .75, .70, .72, and .45 (with a .35
-cross-loading on factor B for \code{a5}).}
+standardized loadings are 0.80, 0.75, 0.70, 0.72, and 0.45 (with a
+0.35 cross-loading on factor B for \code{a5}).}
 \item{b1, b2, b3, b4, b5}{Indicators written for factor B. Population
-standardized loadings are .78, .74, .80, .70, and .30.}
+standardized loadings are 0.78, 0.74, 0.80, 0.70, and 0.30.}
 }
 }
 \source{
@@ -31,8 +31,8 @@ generated the data.
 The data are deliberately imperfect in ways that scale developers routinely
 encounter:
 \itemize{
-\item \code{a5} cross-loads on both factors (population loadings .45 and .35);
-\item \code{b5} is a weak indicator (population loading .30);
+\item \code{a5} cross-loads on both factors (population loadings 0.45 and 0.35);
+\item \code{b5} is a weak indicator (population loading 0.30);
 \item \code{a2} (15 cases) and \code{b3} (12 cases) contain values missing completely at
 random.
 }

@@ -9,6 +9,10 @@
 #' network. Numerical reference values are prompts for investigation rather than
 #' universal deletion or validity rules.
 #'
+#' `print()` shows a result's main evidence and any flags and ends with a
+#' pointer to where to look next; `summary()` shows the full evidence, with the
+#' reason for every flag.
+#'
 #' @section Stability and deprecation:
 #' From version 0.3.0, the first release submitted to CRAN, the public interface
 #' changes only after a deprecation period. Code written against one release
@@ -96,8 +100,10 @@
 #' for `"REVIEW"` and `"review"`; "concern" for `"STRONG REVIEW"` and
 #' `"concern"`; and "not computed" for `"unavailable"`. The stored values do
 #' not change, so code that filters a table uses that table's own values.
+#' **Status words shared with contentvalidR** below relates these words to
+#' that package's.
 #'
-#' **P-values and fit indices.** A p-value is named `p_value`, or
+#' **p values and fit indices.** A *p* value is named `p_value`, or
 #' `<model>_p_value` where a table holds one for each model. Three kinds of
 #' table differ:
 #'
@@ -116,6 +122,25 @@
 #'
 #' The **Fit tables** section of [nomo_table()] names the index columns of
 #' each fit table.
+#'
+#' @section Status words shared with contentvalidR:
+#' `nomologR` and `contentvalidR`, which reviews item content before the
+#' analyses here, show status in words that correspond, so an item can be
+#' followed from one package to the other:
+#'
+#' | `contentvalidR` | `nomologR` |
+#' |---|---|
+#' | Supported | no flag |
+#' | Review | review |
+#' | (no counterpart) | concern |
+#' | Insufficient data | not computed |
+#' | Descriptive only | note |
+#'
+#' In both, "review" means look at the item again, never delete it.
+#'
+#' The field `recommendation` means different things in the two packages. In
+#' a `nomologR` decision log it is prose advice about what to examine next; in
+#' `contentvalidR`'s results and handoff it is a decision word.
 #'
 #' @keywords internal
 "_PACKAGE"

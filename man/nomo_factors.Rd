@@ -145,6 +145,15 @@ Numeric variables with a small number of integer-like response values are
 treated conservatively as continuous unless the user explicitly overrides
 their modeling type through \code{types}.
 
+Velicer's minimum average partial (MAP) criterion appears in two forms.
+TR2, the original (Velicer, 1976), is the average squared partial
+correlation among the items once the first m components are removed.
+TR4, the revised form (Velicer et al., 2000), is the trace of the
+fourth power of that partial-correlation matrix, less the number of items p,
+divided by p(p - 1): a matrix power, not the average of fourth-power
+correlations, so it can exceed 1. Each suggests the m at which it is
+smallest.
+
 The function does not claim that a scale "has exactly" a particular number of
 factors. It reports which factor counts deserve investigation and records
 disagreements among retention methods.

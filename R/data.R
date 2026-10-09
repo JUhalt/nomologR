@@ -10,8 +10,8 @@
 #' The data are deliberately imperfect in ways that scale developers routinely
 #' encounter:
 #'
-#' * `a5` cross-loads on both factors (population loadings .45 and .35);
-#' * `b5` is a weak indicator (population loading .30);
+#' * `a5` cross-loads on both factors (population loadings 0.45 and 0.35);
+#' * `b5` is a weak indicator (population loading 0.30);
 #' * `a2` (15 cases) and `b3` (12 cases) contain values missing completely at
 #'   random.
 #'
@@ -23,10 +23,10 @@
 #' @format A data frame with 500 rows and 10 numeric columns:
 #' \describe{
 #'   \item{a1, a2, a3, a4, a5}{Indicators written for factor A. Population
-#'     standardized loadings are .80, .75, .70, .72, and .45 (with a .35
-#'     cross-loading on factor B for `a5`).}
+#'     standardized loadings are 0.80, 0.75, 0.70, 0.72, and 0.45 (with a
+#'     0.35 cross-loading on factor B for `a5`).}
 #'   \item{b1, b2, b3, b4, b5}{Indicators written for factor B. Population
-#'     standardized loadings are .78, .74, .80, .70, and .30.}
+#'     standardized loadings are 0.78, 0.74, 0.80, 0.70, and 0.30.}
 #' }
 #'
 #' @details
@@ -99,11 +99,11 @@
 #' @format A data frame with 800 rows and 13 columns:
 #' \describe{
 #'   \item{ag1, ag2, ag3, ag4}{Agency indicators. Population standardized
-#'     loadings .80, .75, .70, .78.}
+#'     loadings 0.80, 0.75, 0.70, 0.78.}
 #'   \item{pe1, pe2, pe3, pe4}{Persistence indicators. Population standardized
-#'     loadings .78, .72, .76, .70.}
+#'     loadings 0.78, 0.72, 0.76, 0.70.}
 #'   \item{sd1, sd2, sd3}{Social desirability indicators. Population
-#'     standardized loadings .70, .75, .65.}
+#'     standardized loadings 0.70, 0.75, 0.65.}
 #'   \item{Performance}{Observed outcome score (population mean 70, SD 10).}
 #'   \item{group}{Administration group: a factor with levels `"online"` and
 #'     `"paper"` (400 cases each).}
@@ -112,8 +112,8 @@
 #' @details
 #' Within each group, the population structural model is:
 #'
-#' * Persistence is regressed on Agency with a standardized coefficient of .45;
-#' * Performance is regressed on Agency (.40) and **not** on Persistence (0);
+#' * Persistence is regressed on Agency with a standardized coefficient of 0.45;
+#' * Performance is regressed on Agency (0.40) and **not** on Persistence (0);
 #' * Agency and Social desirability are uncorrelated (0).
 #'
 #' Because Persistence is correlated with Agency, Persistence and Performance
@@ -123,8 +123,8 @@
 #' theory-specified structural path.
 #'
 #' Measurement-invariance teaching features: all loadings are equal across
-#' groups, the latent Agency mean is .25 SD higher in the `paper` group, and the
-#' intercept of `ag3` is .50 higher in the `paper` group. The `ag3` intercept is
+#' groups, the latent Agency mean is 0.25 SD higher in the `paper` group, and the
+#' intercept of `ag3` is 0.50 higher in the `paper` group. The `ag3` intercept is
 #' therefore a known source of scalar non-invariance. Indicators are reported
 #' on a continuous rating metric (population mean 4, SD 1 in the `online`
 #' group) and rounded to two decimals.
@@ -147,17 +147,17 @@
 #'
 #' @format A data frame with 500 rows and 12 columns, `w1_t1` to `w4_t3`: items
 #'   `w1` to `w4` at occasions `t1`, `t2`, and `t3`. Population standardized
-#'   loadings at `t1` are .80, .75, .70, and .65, and the loadings are equal
+#'   loadings at `t1` are 0.80, 0.75, 0.70, and 0.65, and the loadings are equal
 #'   across occasions.
 #'
 #' @details
 #' Wellbeing has a latent variance of 1 at every occasion. Its mean rises from
-#' 0 at `t1` to .30 at `t2` and .50 at `t3`, in `t1` standard deviations, and
+#' 0 at `t1` to 0.30 at `t2` and 0.50 at `t3`, in `t1` standard deviations, and
 #' it correlates .60 between adjacent occasions and .45 between `t1` and `t3`.
 #'
 #' Longitudinal teaching features: each item's unique factor correlates .20
 #' with the same item's unique factor on the other occasions, and the intercept
-#' of `w3` is .40 higher at `t2` and `t3` than at `t1`. The `w3` intercept is
+#' of `w3` is 0.40 higher at `t2` and `t3` than at `t1`. The `w3` intercept is
 #' therefore a known source of scalar non-invariance over time, and holding it
 #' equal inflates the apparent change in Wellbeing. Indicators are on a
 #' continuous rating metric (population mean 4 at `t1`) and rounded to two
@@ -225,11 +225,11 @@
 #' * Each item's latent response is its loadings times the facets plus normal
 #'   error, scaled to unit variance, and cut into five categories at the normal
 #'   quantiles .10, .30, .60, and .85.
-#' * Standardized loadings on EF: `EF1` .72, `EF2` .68, `EF3` .60, `EF4` .15,
-#'   `EF5` .55, `EF6` .60, and `TF4` .45.
-#' * Loadings on TF: `TF1` .70, `TF2` .66, `TF3` .62, `TF4` .40, `TF5` .58,
-#'   `TF6` .64.
-#' * `EF3`'s latent response is shifted up by 1.75, and `TF6`'s by .35 in
+#' * Standardized loadings on EF: `EF1` 0.72, `EF2` 0.68, `EF3` 0.60, `EF4` 0.15,
+#'   `EF5` 0.55, `EF6` 0.60, and `TF4` 0.45.
+#' * Loadings on TF: `TF1` 0.70, `TF2` 0.66, `TF3` 0.62, `TF4` 0.40, `TF5` 0.58,
+#'   `TF6` 0.64.
+#' * `EF3`'s latent response is shifted up by 1.75, and `TF6`'s by 0.35 in
 #'   cohort B. `EF2` and `TF2` are answered in the opposite direction
 #'   (6 minus the category).
 #'

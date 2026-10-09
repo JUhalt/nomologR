@@ -99,7 +99,17 @@ nomo_methods_used.nomo_factors <- function(x, ...) {
 nomo_methods_used.nomo_efa <- function(x, ...) {
   used <- character()
 
-  if (identical(x$fm, "minres")) used <- c(used, "minres_extraction")
+  # psych::fa() fits the same minimum-residual (unweighted least squares)
+  # criterion under "minres", "uls", "ols", and "old.min"; every other
+  # supported `fm` is a different common-factor extraction, credited by the
+  # entry that names them (#145, methods-efa-credit).
+  if (length(x$fm) == 1L && !is.na(x$fm)) {
+    used <- c(used, if (x$fm %in% c("minres", "uls", "ols", "old.min")) {
+      "minres_extraction"
+    } else {
+      "common_factor_extraction"
+    })
+  }
 
   # A one-factor solution is not rotated at all, and `oblique` is then FALSE
   # because no factor correlation matrix was produced -- not because an
@@ -108,15 +118,19 @@ nomo_methods_used.nomo_efa <- function(x, ...) {
   # rotation actually ran.
   rotated <- is.numeric(x$n_factors) && length(x$n_factors) == 1L &&
     !is.na(x$n_factors) && x$n_factors >= 2L
-  # The registry entries name oblimin and varimax, so they are credited only
-  # when that rotation ran; promax or an unrotated solution is not (#145,
-  # efa-4).
-  if (rotated) {
-    if (isTRUE(x$oblique) && identical(x$rotation, "oblimin")) {
-      used <- c(used, "oblique_rotation")
-    } else if (!isTRUE(x$oblique) && identical(tolower(x$rotation), "varimax")) {
-      used <- c(used, "orthogonal_rotation")
-    }
+  # Credited from the rotation recorded: any oblique rotation, varimax by its
+  # own entry, any other orthogonal rotation by the entry for those, and
+  # nothing for an unrotated solution or one that records no rotation (#145,
+  # efa-4, methods-efa-credit).
+  recorded <- is.character(x$rotation) && length(x$rotation) == 1L && !is.na(x$rotation)
+  if (rotated && recorded && !identical(x$rotation, "none")) {
+    used <- c(used, if (isTRUE(x$oblique)) {
+      "oblique_rotation"
+    } else if (identical(tolower(x$rotation), "varimax")) {
+      "orthogonal_rotation"
+    } else {
+      "orthogonal_rotation_other"
+    })
   }
 
   if (is.data.frame(x$item_summary) && nrow(x$item_summary)) {
@@ -139,14 +153,7 @@ nomo_methods_used.nomo_efa <- function(x, ...) {
 
 #' @export
 nomo_methods_used.nomo_cfa <- function(x, ...) {
-  used <- character()
-
-  ordered_used <- length(x$ordered) > 0L
-  if (ordered_used) {
-    used <- c(used, "wlsmv_cfa", "categorical_correlations")
-  } else {
-    used <- c(used, "ml_cfa")
-  }
+  used <- nomo_methods_estimator_ids(x$estimator, x$ordered)
 
   fit <- x$fit_evidence
   if (is.data.frame(fit) && nrow(fit)) {
@@ -179,6 +186,40 @@ nomo_methods_used.nomo_cfa <- function(x, ...) {
   if (identical(structure, "higher_order")) used <- c(used, "higher_order_model")
 
   used
+}
+
+
+# The estimation method, credited from the estimator that ran rather than from
+# the indicators alone (#145, methods-estimator-credit). Maximum likelihood
+# covers ML and its robust forms (MLM, MLMV, MLMVS, MLF, MLR), the family
+# nomo_cfa() itself treats as ML; WLSMV is credited only for ordered
+# indicators, the case its entry describes. Any other estimator, such as ULS,
+# GLS, WLS, DWLS, or ULSMV, is credited by the entry for those. A missing
+# estimator, or lavaan's own name for it, "default", in any case, is lavaan's
+# default: WLSMV with ordered indicators and ML otherwise. nomo_cfa() records
+# that request as "DEFAULT", and nomo_esem() and nomo_method_variance() as
+# typed, so the name is resolved here and never read as another estimator.
+# Ordered indicators also credit their polychoric correlations.
+nomo_methods_estimator_ids <- function(estimator, ordered) {
+  ordered <- length(ordered) > 0L
+  estimator <- if (length(estimator) == 1L && !is.na(estimator)) {
+    toupper(estimator)
+  } else {
+    "DEFAULT"
+  }
+  if (identical(estimator, "DEFAULT")) {
+    estimator <- if (ordered) "WLSMV" else "ML"
+  }
+  c(
+    if (grepl("^ML", estimator)) {
+      "ml_cfa"
+    } else if (ordered && identical(estimator, "WLSMV")) {
+      "wlsmv_cfa"
+    } else {
+      "cfa_other_estimator"
+    },
+    if (ordered) "categorical_correlations"
+  )
 }
 
 
@@ -485,16 +526,11 @@ nomo_methods_used.nomo_power <- function(x, ...) {
 
 # ESEM --------------------------------------------------------------------------
 
-# Credited as nomo_cfa() is: the estimator follows the indicators, and FIML
-# only when it was requested.
+# Credited as nomo_cfa() is: by the estimator that ran, and FIML only when it
+# was requested.
 #' @export
 nomo_methods_used.nomo_esem <- function(x, ...) {
-  used <- "esem"
-  if (length(x$ordered) > 0L) {
-    used <- c(used, "wlsmv_cfa", "categorical_correlations")
-  } else {
-    used <- c(used, "ml_cfa")
-  }
+  used <- c("esem", nomo_methods_estimator_ids(x$estimator, x$ordered))
   if (nomo_methods_is_fiml(x$missing)) used <- c(used, "fiml")
   used
 }
@@ -506,7 +542,10 @@ nomo_methods_used.nomo_esem <- function(x, ...) {
 # continuous indicators, credited as nomo_cfa() credits them.
 #' @export
 nomo_methods_used.nomo_method_variance <- function(x, ...) {
-  used <- c("cfa_marker_technique", "ml_cfa")
+  used <- c(
+    "cfa_marker_technique",
+    nomo_methods_estimator_ids(x$estimator, character())
+  )
   if (nomo_methods_is_fiml(x$missing)) used <- c(used, "fiml")
   used
 }
@@ -518,15 +557,23 @@ nomo_methods_used.nomo_method_variance <- function(x, ...) {
 nomo_methods_used.nomo_network <- function(x, ...) {
   used <- c("nomological_network", "two_step_sem")
 
+  # An equivalence test ran only where a negligible prediction had its region
+  # and an estimate, which is when its equivalence interval is finite. A bare
+  # negligible() records an expectation that could not be tested (#145,
+  # methods-equivalence-credit).
+  evidence <- x$hypothesis_evidence
+  if (is.data.frame(evidence) &&
+      all(c("equivalence_ci_lower", "equivalence_ci_upper") %in% names(evidence)) &&
+      any(is.finite(evidence$equivalence_ci_lower) &
+            is.finite(evidence$equivalence_ci_upper))) {
+    used <- c(used, "equivalence_testing")
+  }
+
   hypotheses <- x$hypotheses
   if (inherits(hypotheses, "nomo_hypotheses")) {
     hypotheses <- hypotheses$hypotheses
   }
   if (is.data.frame(hypotheses) && nrow(hypotheses)) {
-    if ("prediction" %in% names(hypotheses) &&
-        any(hypotheses$prediction == "negligible", na.rm = TRUE)) {
-      used <- c(used, "equivalence_testing")
-    }
     if ("confirmatory_status" %in% names(hypotheses) ||
         "origin" %in% names(hypotheses)) {
       used <- c(used, "prediction_provenance")
@@ -551,10 +598,14 @@ nomo_methods_used.nomo_network <- function(x, ...) {
 nomo_methods_used.nomo_hypotheses <- function(x, ...) {
   used <- "nomological_network"
 
+  # A specification credits the equivalence test only for a negligible
+  # prediction that states its region; without one no test can run (#145,
+  # methods-equivalence-credit).
   hypotheses <- x$hypotheses
   if (is.data.frame(hypotheses) && nrow(hypotheses)) {
-    if ("prediction" %in% names(hypotheses) &&
-        any(hypotheses$prediction == "negligible", na.rm = TRUE)) {
+    if (all(c("prediction", "magnitude_specified") %in% names(hypotheses)) &&
+        any(hypotheses$prediction == "negligible" &
+              hypotheses$magnitude_specified %in% TRUE, na.rm = TRUE)) {
       used <- c(used, "equivalence_testing")
     }
     used <- c(used, "prediction_provenance")

@@ -71,11 +71,11 @@ correlation .45.
 \item Each item's latent response is its loadings times the facets plus normal
 error, scaled to unit variance, and cut into five categories at the normal
 quantiles .10, .30, .60, and .85.
-\item Standardized loadings on EF: \code{EF1} .72, \code{EF2} .68, \code{EF3} .60, \code{EF4} .15,
-\code{EF5} .55, \code{EF6} .60, and \code{TF4} .45.
-\item Loadings on TF: \code{TF1} .70, \code{TF2} .66, \code{TF3} .62, \code{TF4} .40, \code{TF5} .58,
-\code{TF6} .64.
-\item \code{EF3}'s latent response is shifted up by 1.75, and \code{TF6}'s by .35 in
+\item Standardized loadings on EF: \code{EF1} 0.72, \code{EF2} 0.68, \code{EF3} 0.60, \code{EF4} 0.15,
+\code{EF5} 0.55, \code{EF6} 0.60, and \code{TF4} 0.45.
+\item Loadings on TF: \code{TF1} 0.70, \code{TF2} 0.66, \code{TF3} 0.62, \code{TF4} 0.40, \code{TF5} 0.58,
+\code{TF6} 0.64.
+\item \code{EF3}'s latent response is shifted up by 1.75, and \code{TF6}'s by 0.35 in
 cohort B. \code{EF2} and \code{TF2} are answered in the opposite direction
 (6 minus the category).
 }
