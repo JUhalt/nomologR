@@ -527,6 +527,8 @@ test_that("each difference is attributed only as far as the strategies allow", {
   renamed$strategy[renamed$strategy == "listwise"] <- "two.stage"
   strategies <- out$strategies
   strategies$strategy <- c("two.stage", "pairwise")
+  strategies$lavaan_missing <- strategies$strategy
+  strategies$label <- nomologR:::nomo_missing_label(strategies$strategy)
   entry <- difference_log(renamed, strategies, "pairwise")
   expect_match(entry$recommendation, "depends on the choice of strategy", fixed = TRUE)
 })
@@ -549,4 +551,260 @@ test_that("reliability that cannot be computed leaves an empty comparison, not a
     out <- nomo_missing(fit, data = nomo_demo_continuous)
     expect_identical(nrow(out$reliability), 0L)
   })
+})
+
+
+# Pre-RC fixes (#145) ----------------------------------------------------------
+
+# Text as printed, with line breaks and runs of spaces read as one space.
+flat_text <- function(x) gsub("[[:space:]]+", " ", paste(x, collapse = " "))
+
+
+test_that("a strategy lavaan substituted is labeled and attributed by what ran (#145)", {
+  skip_on_cran()
+  uls <- nomo_missing(
+    nomo_cfa(missing_demo_model, data = nomo_demo_continuous, estimator = "ULS"),
+    data = nomo_demo_continuous, reliability = FALSE
+  )
+  row <- uls$strategies[uls$strategies$strategy == "ml", ]
+  skip_if_not(isTRUE(row$available), "this lavaan refuses FIML with ULS")
+  expect_identical(row$lavaan_missing, "two.stage")
+  expect_identical(row$label, "Two-stage ML (requested FIML)")
+
+  local_reproducible_output(width = 80)
+  printed <- capture.output(print(uls))
+  expect_match(printed, "Reference: Two-stage ML (requested FIML)", fixed = TRUE, all = FALSE)
+  expect_false(any(grepl("the FIML estimate", printed, fixed = TRUE)))
+  expect_true(any(grepl("ML -- Maximum likelihood.", printed, fixed = TRUE)))
+
+  # A difference from it is attributed to no strategy, whether or not it is
+  # flagged: FIML was never fitted.
+  log <- uls$decision_log
+  difference <- log[log$metric %in% c("estimate_difference", "estimates_agree"), ]
+  expect_match(difference$observation, "two-stage ML (requested FIML) estimate", fixed = TRUE)
+  expect_false(grepl("FIML is consistent", difference$recommendation, fixed = TRUE))
+})
+
+
+test_that("each difference is attributed by the method lavaan used for the reference (#145)", {
+  out <- nomo_missing(nomo_cfa(missing_demo_model, data = nomo_demo_continuous),
+                      data = nomo_demo_continuous, reliability = FALSE)
+  flagged <- out$estimates
+  comparison <- flagged$role == "comparison"
+  flagged$difference_in_se[comparison] <- 2
+  flagged$beyond_half_se[comparison] <- TRUE
+  difference_log <- function(strategies) {
+    nomologR:::nomo_missing_difference_log(
+      nomologR:::nomo_log_new(), flagged, strategies, "ml",
+      nomologR:::nomo_missing_inline(nomologR:::nomo_missing_table_label("ml", strategies)), "cfa"
+    )
+  }
+
+  # FIML ran: the difference estimates listwise deletion's bias, with the
+  # half-SE rule worded as the adaptation it is.
+  entry <- difference_log(out$strategies)
+  expect_match(entry$recommendation, "FIML is consistent", fixed = TRUE)
+  expect_match(entry$recommendation, "sampling variability alone can exceed when data are MCAR",
+               fixed = TRUE)
+  expect_match(entry$reference, "adapted from Schafer & Graham (2002)", fixed = TRUE)
+  expect_match(entry$observation, "11 of 11 estimates under listwise deletion differ from",
+               fixed = TRUE)
+
+  # Two-stage ML ran in its place: no attribution to FIML.
+  substituted <- out$strategies
+  substituted$lavaan_missing[substituted$strategy == "ml"] <- "two.stage"
+  substituted$label <- nomologR:::nomo_missing_engine_label(substituted$strategy,
+                                                            substituted$lavaan_missing)
+  entry <- difference_log(substituted)
+  expect_match(entry$recommendation, "depends on the choice of strategy", fixed = TRUE)
+  expect_match(entry$observation, "the two-stage ML (requested FIML) estimate", fixed = TRUE)
+
+  # One estimate that differs takes the singular.
+  one <- flagged[flagged$parameter == "A ~~ B", ]
+  entry <- nomologR:::nomo_missing_difference_log(
+    nomologR:::nomo_log_new(), one, out$strategies, "ml", "FIML", "cfa"
+  )
+  expect_match(entry$observation, "1 of 1 estimate under listwise deletion differs from",
+               fixed = TRUE)
+
+  # A substituted reference is named by what lavaan used.
+  log <- nomologR:::nomo_missing_reference_log(
+    nomologR:::nomo_log_new(), "ml", "pairwise", "nomo_cfa", engine = "listwise"
+  )
+  expect_match(log$observation, "listwise deletion (requested pairwise deletion) is the reference",
+               fixed = TRUE)
+  expect_match(log$recommendation, "no longer", fixed = TRUE)
+})
+
+
+test_that("the print defines its terms and puts flags in one Flagged section (#145)", {
+  skip_on_cran()
+  out <- missing_results()$mar
+  local_reproducible_output(width = 80)
+  printed <- capture.output(print(out))
+  text <- gsub("[[:space:]]+", " ", paste(printed, collapse = " "))
+
+  expect_identical(printed[[2L]], "Model: CFA | Reference: FIML | Fitted with: Listwise deletion")
+  expect_match(text, "Largest differences from the reference (standardized estimates)",
+               fixed = TRUE)
+  for (term in c("MCAR, missing completely at random", "MAR, missing at random",
+                 "FIML -- Full-information maximum likelihood.",
+                 "Covariance coverage -- Proportion of cases with both variables",
+                 "Difference (SE) -- The estimate minus")) {
+    expect_match(text, term, fixed = TRUE)
+  }
+  expect_false(grepl("For review", text, fixed = TRUE))
+  expect_match(printed, "^  - Estimates \\(Review\\): [0-9]+ of [0-9]+ estimates under", all = FALSE)
+  # A correlation has no leading zero, a loading keeps it, and both have three
+  # decimals, as the log gives them.
+  expect_match(printed, "^  A ~~ B +Listwise deletion +[.][0-9]{3} +[.][0-9]{3} +[-+][0-9]",
+               all = FALSE)
+  expect_match(printed, "^  [AB] =~ [ab][0-9] +Listwise deletion +0[.][0-9]{3} +0[.][0-9]{3} ",
+               all = FALSE)
+  expect_false(any(nchar(printed) > 80L))
+  expect_match(printed[[length(printed)]], "for every recorded decision.", fixed = TRUE)
+})
+
+
+test_that("summary() shows every comparison and each recommendation (#145)", {
+  skip_on_cran()
+  out <- missing_results()$mar
+  s <- summary(out)
+  expect_identical(class(s), c("summary_nomo_missing", "list"))
+  expect_identical(s$estimates, out$estimates)
+  expect_null(s$fits)
+
+  local_reproducible_output(width = 80)
+  printed <- capture.output(returned <- print(s))
+  expect_identical(returned, s)
+  expect_identical(printed[[1L]], "<nomo_missing summary> Missing-data sensitivity")
+  for (section in c("Missing values by variable", "Strategies", "Fit by strategy",
+                    "Differences from the reference (standardized estimates)",
+                    "Reliability by strategy", "Flagged", "Notes")) {
+    expect_true(section %in% printed, label = section)
+  }
+  # Every comparison, not only the five largest.
+  compared <- sum(out$estimates$role == "comparison")
+  table_rows <- grep("^  [AB] (=~|~~) ", printed, value = TRUE)
+  expect_identical(length(table_rows), compared)
+  # The flag's recommendation, which print() leaves out.
+  expect_match(gsub("[[:space:]]+", " ", paste(printed, collapse = " ")),
+               "Report which strategy the results rest on", fixed = TRUE)
+  expect_true(any(grepl("CFI -- Comparative fit index.", printed, fixed = TRUE)))
+  expect_false(any(nchar(printed) > 80L))
+
+  # Nothing missing: the summary says so, with no comparison to show.
+  complete <- stats::na.omit(nomo_demo_continuous)
+  none <- summary(nomo_missing(nomo_cfa(missing_demo_model, data = complete), data = complete,
+                               reliability = FALSE))
+  shown <- capture.output(print(none))
+  expect_true(any(grepl("Lowest covariance coverage: 1.00$", shown)))
+  expect_false("Missing values by variable" %in% shown)
+  expect_false("Flagged" %in% shown)
+  expect_true(any(grepl("None of the 473 cases is missing a modeled variable.", shown,
+                        fixed = TRUE)))
+
+  # A network has no reliability and is named as one.
+  mar <- missing_samples()$mar
+  net <- nomo_network(paste(missing_model, "B ~ A", sep = "\n"), data = mar,
+                      hypotheses = nomo_hypotheses("A -> B" = positive()), std.lv = TRUE)
+  network <- capture.output(print(summary(nomo_missing(net, data = mar))))
+  expect_match(network[[2L]], "^Model: Network", all = FALSE)
+  expect_false("Reliability by strategy" %in% network)
+  expect_false(any(grepl("CFA -- ", network, fixed = TRUE)))
+})
+
+
+test_that("with several comparison strategies, each has a table of its own at any width (#145)", {
+  skip_on_cran()
+  fit <- nomo_cfa(missing_demo_model, data = nomo_demo_continuous)
+  out <- nomo_missing(fit, data = nomo_demo_continuous,
+                      strategies = c("listwise", "pairwise", "fiml"))
+  differences <- out$estimates[out$estimates$role == "comparison", ]
+  reliability <- out$reliability[out$reliability$role == "comparison", ]
+
+  for (width in c(80L, 40L)) {
+    local_reproducible_output(width = width)
+    printed <- capture.output(print(out))
+    detail <- capture.output(print(summary(out)))
+    expect_false(any(nchar(c(printed, detail)) > width), label = paste("width", width))
+
+    # Each strategy heads its own rows, in the order of the strategies table,
+    # and no table needs a Strategy column to tell them apart.
+    for (shown in list(printed, detail)) {
+      expect_identical(grep("^  (Listwise|Pairwise) deletion$", shown, value = TRUE)[1:2],
+                       c("  Listwise deletion", "  Pairwise deletion"))
+      expect_false(any(grepl("Strategy +Estimate", shown)))
+    }
+    # In the summary, every difference and every coefficient sits under its
+    # strategy: listwise rows before the pairwise heading, pairwise rows after.
+    part <- function(from, to) {
+      detail[seq(grep(from, detail)[[1L]], grep(to, detail)[[1L]])]
+    }
+    for (table in list(
+      list(lines = part("^Differences from the reference", "^Reliability by strategy$"),
+           row = "^    [AB] (=~|~~) ", strategy = differences$strategy),
+      list(lines = part("^Reliability by strategy$", "^What these terms mean$"),
+           row = "^    [AB] +(omega|alpha) ", strategy = reliability$strategy)
+    )) {
+      at <- grep("^  (Listwise|Pairwise) deletion$", table$lines)
+      rows <- grep(table$row, table$lines)
+      expect_length(at, 2L)
+      expect_identical(length(rows), length(table$strategy))
+      expect_identical(sum(rows > at[[1L]] & rows < at[[2L]]),
+                       sum(table$strategy == "listwise"))
+      expect_identical(sum(rows > at[[2L]]), sum(table$strategy == "pairwise"))
+    }
+  }
+
+  # At 40 columns the difference is still shown for each strategy's rows.
+  local_reproducible_output(width = 40)
+  printed <- capture.output(print(out))
+  expect_match(printed, "^    Parameter +Estimate +Difference \\(SE\\)$", all = FALSE)
+  expect_match(printed, "^    B =~ b3 +0[.]772 +[+]0[.]41$", all = FALSE)
+
+  # With one comparison strategy, one table names it in a column.
+  local_reproducible_output(width = 80)
+  one <- capture.output(print(missing_results()$mar))
+  expect_false(any(grepl("^  Listwise deletion$", one)))
+  expect_match(one, "^  Parameter +Strategy +Estimate +Reference +Difference \\(SE\\)$",
+               all = FALSE)
+})
+
+
+test_that("plot() draws each difference against half a reference standard error (#145)", {
+  out <- nomo_missing(nomo_cfa(missing_demo_model, data = nomo_demo_continuous),
+                      data = nomo_demo_continuous, reliability = FALSE)
+  p <- plot(out)
+  expect_s3_class(p, "ggplot")
+  expect_identical(nrow(p$data), sum(out$estimates$role == "comparison"))
+  # Nothing is flagged, so every point has no flag and no legend is needed.
+  expect_true(all(as.character(p$data$status) == "none"))
+  built <- ggplot2::ggplot_build(p)
+  expect_equal(sort(built$data[[2L]]$xintercept), c(-.5, .5))
+  expect_match(flat_text(p$labels$subtitle), "compared with FIML.", fixed = TRUE)
+  expect_match(flat_text(p$labels$caption), "adapted from Schafer and Graham (2002)", fixed = TRUE)
+  expect_error(plot(out, type = "estimates"), "`type` must be one of", fixed = TRUE)
+
+  # Two comparison strategies are drawn in a panel each, with a flag marked.
+  two <- out
+  extra <- out$estimates[out$estimates$role == "comparison", ]
+  extra$strategy <- "pairwise"
+  extra$difference_in_se <- extra$difference_in_se * 3
+  extra$beyond_half_se <- abs(extra$difference_in_se) > .5
+  two$estimates <- rbind(out$estimates, extra)
+  added <- out$strategies[out$strategies$strategy == "listwise", ]
+  added$strategy <- "pairwise"
+  added$label <- "Pairwise deletion"
+  two$strategies <- rbind(out$strategies, added)
+  p <- plot(two)
+  expect_s3_class(p$facet, "FacetWrap")
+  expect_true("review" %in% as.character(p$data$status))
+
+  # With nothing compared there is nothing to draw.
+  complete <- stats::na.omit(nomo_demo_continuous)
+  none <- nomo_missing(nomo_cfa(missing_demo_model, data = complete), data = complete,
+                       reliability = FALSE)
+  expect_error(plot(none), "No difference from the reference is available to plot",
+               fixed = TRUE)
 })

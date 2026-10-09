@@ -53,9 +53,21 @@
 #' method part as a proportion of the Baseline reliability.
 #'
 #' **Phase III: sensitivity.** Because the method loadings are estimates, the
-#' retained model is refitted with them fixed at the upper ends of their 95%
-#' and 99% confidence intervals (Method-S(.05) and Method-S(.01)), and the
-#' substantive correlations are compared across the models.
+#' retained model is refitted with them fixed at the ends of their 95% and 99%
+#' confidence intervals farther from zero (Method-S(.05) and Method-S(.01)), so
+#' a negative loading, as from a marker keyed opposite to the substantive
+#' items, becomes more negative. The substantive correlations are then compared
+#' across the models.
+#'
+#' **Checks.** lavaan's warnings are kept for each model and comparison, in
+#' `engine_warnings` and as review rows of the decision log, and a model with
+#' an improper solution, such as a negative variance, is a concern. The marker's
+#' loadings and error variances from the CFA anchor every later model, so a CFA
+#' that does not converge, or gives the marker a negative error variance or no
+#' standard errors, stops the analysis, as does any model that does not
+#' converge. With two marker indicators, the marker's loadings are identified
+#' only through its correlations with the substantive factors, which the
+#' technique assumes are zero, so the decision log asks for review.
 #'
 #' **What the technique cannot do.** It requires the marker to be orthogonal to
 #' the substantive factors. In simulations, with an ideal marker it did not
@@ -75,11 +87,13 @@
 #' @param estimator,missing Optional lavaan `estimator` and `missing` options.
 #'   With a robust estimator, the comparisons use lavaan's scaled difference
 #'   tests.
-#' @param marker_name Name given to the marker factor. Default `"Marker"`.
+#' @param marker_name Name given to the marker factor. Default `"Marker"`. It
+#'   names a factor in lavaan syntax, so it must be a syntactic name, such as
+#'   `"SocialDesirability"`, without spaces.
 #'
 #' @return A `nomo_method_variance` object. The fields to read are:
 #'
-#'   * `models`: each model's chi-square, degrees of freedom, p-value
+#'   * `models`: each model's chi-square, degrees of freedom, p value
 #'     (`pvalue`), CFI, TLI, RMSEA, and SRMR. With a robust estimator, the
 #'     chi-square is scaled and the indices are robust, as in [nomo_cfa()].
 #'   * `comparisons`: the three model comparisons, with their chi-square
@@ -93,23 +107,30 @@
 #'     substantive and method parts, and `method_share`.
 #'   * `correlations`: each pair of substantive factors (`factor1`, `factor2`)
 #'     and their correlation in the CFA, Baseline, retained, Method-S(.05), and
-#'     Method-S(.01) models, with p-values in the retained and sensitivity
+#'     Method-S(.01) models, with p values in the retained and sensitivity
 #'     models (`retained_p_value`, `method_s_05_p_value`,
 #'     `method_s_01_p_value`).
 #'   * `marker_correlations`: the marker's correlation with each substantive
 #'     factor in the CFA model; `factor1` is the substantive factor and
 #'     `factor2` the marker.
+#'   * `engine_warnings`: the warnings lavaan raised, by model and for the
+#'     comparisons.
 #'   * `fits` and `decision_log`.
 #'
-#'   A table with one p-value for a test or an estimate names it `p_value`, as
+#'   A table with one p value for a test or an estimate names it `p_value`, as
 #'   the rest of the package does. `correlations` has one for each model, so
-#'   each is named `<model>_p_value`. In `models`, `pvalue` is the p-value of
+#'   each is named `<model>_p_value`. In `models`, `pvalue` is the p value of
 #'   each model's chi-square test, named as in the fit tables of [nomo_esem()]
 #'   and [nomo_invariance()].
 #'
 #'   Other fields record the call, the settings used, and the syntax fitted.
 #'   They may change between releases and are not part of the stable interface
 #'   (see `?nomologR`).
+#'
+#'   `print()` shows the model comparisons, the reliability decomposition, the
+#'   substantive correlations across the models, and any flag. `summary()` adds
+#'   each model's fit, the loadings in the retained model, and each flag's
+#'   recommendation.
 #'
 #' @references
 #' Lindell, M. K., & Whitney, D. J. (2001). Accounting for common method
@@ -138,25 +159,15 @@
 #'
 #' @examples
 #' \donttest{
-#' # Two substantive factors and a marker, all sharing a method factor
-#' # (simulated).
-#' population <- "
-#'   A =~ 0.7*a1 + 0.7*a2 + 0.6*a3 + 0.6*a4
-#'   B =~ 0.7*b1 + 0.6*b2 + 0.6*b3 + 0.5*b4
-#'   M =~ 0.7*m1 + 0.7*m2 + 0.6*m3
-#'   CMV =~ 0.3*a1 + 0.3*a2 + 0.3*a3 + 0.3*a4 + 0.3*b1 + 0.3*b2 + 0.3*b3 +
-#'          0.3*b4 + 0.3*m1 + 0.3*m2 + 0.3*m3
-#'   A ~~ 0.4*B
-#'   A ~~ 0*M
-#'   B ~~ 0*M
-#'   CMV ~~ 0*A + 0*B + 0*M
-#' "
-#' set.seed(2010)
-#' dat <- lavaan::simulateData(population, sample.nobs = 600, standardized = TRUE)
-#' mv <- nomo_method_variance(
-#'   "A =~ a1 + a2 + a3 + a4\nB =~ b1 + b2 + b3 + b4",
-#'   data = dat, marker = c("m1", "m2", "m3")
-#' )
+#' # Social desirability as the marker for the Agency and Persistence items of
+#' # the simulated validation study. In its population the marker shares
+#' # nothing with those items, so no method variance should be detected.
+#' model <- nomo_model(list(
+#'   Agency = paste0("ag", 1:4),
+#'   Persistence = paste0("pe", 1:4)
+#' ))
+#' mv <- nomo_method_variance(model, data = nomo_demo_network,
+#'                            marker = c("sd1", "sd2", "sd3"))
 #' mv
 #' nomo_table(mv, "reliability")
 #' }
@@ -184,18 +195,37 @@ nomo_method_variance <- function(model,
         is.na(marker_name) || !nzchar(marker_name)) {
     stop("`marker_name` must be one non-empty name.", call. = FALSE)
   }
+  # The name is written into lavaan syntax, where a space or a symbol breaks
+  # the model with a parser error about syntax the user never wrote (#145).
+  if (!identical(make.names(marker_name), marker_name)) {
+    stop(
+      sprintf(
+        paste0(
+          "`marker_name` must be a syntactic name, such as \"%s\", because it ",
+          "names the marker factor in lavaan syntax; \"%s\" is not."
+        ),
+        make.names(gsub("[^A-Za-z0-9_.]+", "", marker_name)), marker_name
+      ),
+      call. = FALSE
+    )
+  }
 
   structure <- nomo_method_variance_structure(model)
   nomo_method_variance_check(structure, data, marker, marker_name)
 
+  # Each model's lavaan warnings are kept, by model (#145).
+  engine_warnings <- list()
   fit <- function(lines, label) {
-    nomo_method_variance_fit(lines, data, estimator, missing, label)
+    out <- nomo_method_variance_fit(lines, data, estimator, missing, label)
+    engine_warnings[[label]] <<- out$warnings
+    out$fit
   }
 
   # Phase I ----------------------------------------------------------------------
   marker_line <- paste0(marker_name, " =~ ", paste(marker, collapse = " + "))
   cfa <- fit(c(model, marker_line), "CFA")
   pe_cfa <- lavaan::parameterEstimates(cfa)
+  nomo_method_variance_check_cfa(pe_cfa, marker, marker_name)
   loadings <- pe_cfa$est[pe_cfa$op == "=~" & pe_cfa$lhs == marker_name]
   errors <- vapply(marker, function(m) {
     pe_cfa$est[pe_cfa$op == "~~" & pe_cfa$lhs == m & pe_cfa$rhs == m]
@@ -223,7 +253,9 @@ nomo_method_variance <- function(model,
   method_u <- fit(method_u_lines, "Method-U")
 
   compare <- function(restricted, free, label, question) {
-    test <- suppressWarnings(lavaan::lavTestLRT(free, restricted))
+    out <- nomo_method_variance_capture(lavaan::lavTestLRT(free, restricted))
+    engine_warnings[[label]] <<- out$warnings
+    test <- out$value
     tibble::tibble(
       comparison = label,
       question = question,
@@ -237,10 +269,16 @@ nomo_method_variance <- function(model,
                       questions[["presence", "question"]])
   equality <- compare(method_c, method_u, "Method-C vs. Method-U",
                       questions[["equality", "question"]])
-  unequal <- equality$p_value < alpha
+  unequal <- isTRUE(equality$p_value < alpha)
   retained_label <- if (unequal) "Method-U" else "Method-C"
   retained <- if (unequal) method_u else method_c
   retained_lines <- if (unequal) method_u_lines else method_c_lines
+  # With unequal effects, method loadings of opposite signs can cancel under
+  # Method-C's equality constraint, so the presence test is repeated against
+  # Method-U for the log (#145). `comparisons` keeps the published sequence.
+  presence_unequal <- if (unequal) {
+    compare(baseline, method_u, "Baseline vs. Method-U", questions[["presence", "question"]])
+  }
 
   pe_base <- lavaan::parameterEstimates(baseline, standardized = TRUE)
   pairs <- nomo_method_variance_pairs(structure$factors)
@@ -268,15 +306,18 @@ nomo_method_variance <- function(model,
   comparisons <- dplyr::bind_rows(presence, equality, bias)
 
   # Phase III ----------------------------------------------------------------------
+  # Each method loading moves away from zero, to the end of its interval
+  # farther from zero: est + z * se had weakened a negative loading, so the
+  # sensitivity models tested less method variance than the retained one (#145).
   pe_ret <- lavaan::parameterEstimates(retained, standardized = TRUE)
   method_rows <- pe_ret[pe_ret$op == "=~" & pe_ret$lhs == marker_name &
                           pe_ret$rhs %in% items, , drop = FALSE]
   sensitivity <- lapply(c(`Method-S(.05)` = 0.05, `Method-S(.01)` = 0.01), function(level) {
-    upper <- method_rows$est + stats::qnorm(1 - level / 2) * method_rows$se
+    farther <- method_rows$est + sign(method_rows$est) * stats::qnorm(1 - level / 2) * method_rows$se
     fit(c(
       baseline_lines,
-      paste0(marker_name, " =~ ", paste0(number(upper), "*", method_rows$rhs, collapse = " + "))
-    ), sprintf("Method-S(%s)", sub("^0", "", format(level))))
+      paste0(marker_name, " =~ ", paste0(number(farther), "*", method_rows$rhs, collapse = " + "))
+    ), sprintf("Method-S(%s)", nomo_present_level(level)))
   })
 
   fits <- c(
@@ -286,19 +327,27 @@ nomo_method_variance <- function(model,
   )
   # Scaled or robust fit where the estimator provides it, as nomo_cfa() and
   # nomo_esem() report it.
+  variants <- NULL
   models <- dplyr::bind_rows(lapply(names(fits), function(label) {
     m <- suppressWarnings(lavaan::fitMeasures(fits[[label]]))
-    get <- function(...) nomo_cfa_first_measure(m, c(...))$value
-    tibble::tibble(
+    picked <- list()
+    get <- function(name, ...) {
+      found <- nomo_cfa_first_measure(m, c(...))
+      picked[[name]] <<- found$variant
+      found$value
+    }
+    row <- tibble::tibble(
       model = label,
-      chisq = get("chisq.scaled", "chisq"),
-      df = as.integer(get("df.scaled", "df")),
-      pvalue = get("pvalue.scaled", "pvalue"),
-      cfi = get("cfi.robust", "cfi.scaled", "cfi"),
-      tli = get("tli.robust", "tli.scaled", "tli"),
-      rmsea = get("rmsea.robust", "rmsea.scaled", "rmsea"),
-      srmr = get("srmr")
+      chisq = get("chisq", "chisq.scaled", "chisq"),
+      df = as.integer(get("df", "df.scaled", "df")),
+      pvalue = get("pvalue", "pvalue.scaled", "pvalue"),
+      cfi = get("cfi", "cfi.robust", "cfi.scaled", "cfi"),
+      tli = get("tli", "tli.robust", "tli.scaled", "tli"),
+      rmsea = get("rmsea", "rmsea.robust", "rmsea.scaled", "rmsea"),
+      srmr = get("srmr", "srmr")
     )
+    if (is.null(variants)) variants <<- unlist(picked)
+    row
   }))
 
   # Loadings and Phase II -----------------------------------------------------------
@@ -332,6 +381,24 @@ nomo_method_variance <- function(model,
       nomo_method_variance_value(pe_cfa_std, f, "~~", marker_name, "std.all")
     }, numeric(1), USE.NAMES = FALSE)
   )
+  admissible <- vapply(fits, function(f) {
+    isTRUE(suppressWarnings(lavaan::lavInspect(f, "post.check")))
+  }, logical(1))
+  n_used <- lavaan::lavInspect(cfa, "nobs")
+
+  log <- nomo_method_variance_log(
+    marker, comparisons, retained_label, reliability, correlations, alpha,
+    presence_unequal = presence_unequal
+  )
+  log <- dplyr::bind_rows(
+    log[1L, , drop = FALSE],
+    nomo_invariance_cases_log(
+      nomo_log_new(), list(data_n = nrow(data), n_used = n_used, group_n = NULL),
+      missing, ordered = character(), stage = "method_variance"
+    ),
+    log[-1L, , drop = FALSE],
+    nomo_method_variance_engine_log(engine_warnings, admissible)
+  )
 
   out <- list(
     call = match.call(),
@@ -341,18 +408,19 @@ nomo_method_variance <- function(model,
     alpha = alpha,
     estimator = if (is.null(estimator)) NA_character_ else estimator,
     missing = if (is.null(missing)) NA_character_ else missing,
-    n = lavaan::lavInspect(cfa, "nobs"),
+    data_n = nrow(data),
+    n = n_used,
     models = models,
+    fit_variants = variants,
     comparisons = comparisons,
     retained = retained_label,
     method_loadings = method_loadings,
     reliability = reliability,
     correlations = correlations,
     marker_correlations = marker_correlations,
+    engine_warnings = engine_warnings,
     fits = fits,
-    decision_log = nomo_method_variance_log(
-      marker, comparisons, retained_label, reliability, correlations, alpha
-    )
+    decision_log = log
   )
   class(out) <- c("nomo_method_variance", "list")
   out
@@ -431,18 +499,87 @@ nomo_method_variance_check <- function(structure, data, marker, marker_name) {
 }
 
 
+# A model fitted with its warnings kept rather than suppressed (#145). A model
+# that does not converge stops the analysis: the later models and comparisons
+# build on each one.
 nomo_method_variance_fit <- function(lines, data, estimator, missing, label) {
   args <- list(model = paste(lines, collapse = "\n"), data = data, std.lv = TRUE)
   if (!is.null(estimator)) args$estimator <- estimator
   if (!is.null(missing)) args$missing <- missing
-  tryCatch(
-    suppressWarnings(do.call(lavaan::cfa, args)),
+  out <- tryCatch(
+    nomo_method_variance_capture(do.call(lavaan::cfa, args)),
     error = function(e) {
       stop(
         sprintf("The %s model could not be fitted: %s", label, conditionMessage(e)),
         call. = FALSE
       )
     }
+  )
+  fit <- out$value
+  if (!isTRUE(lavaan::lavInspect(fit, "converged"))) {
+    stop(
+      sprintf(
+        paste(
+          "The %s model did not converge, so the marker technique cannot be",
+          "completed. Check the marker's indicators and the sample size."
+        ),
+        label
+      ),
+      call. = FALSE
+    )
+  }
+  list(fit = fit, warnings = out$warnings)
+}
+
+
+# An engine call's value with the warnings it raised, kept rather than shown or
+# suppressed.
+nomo_method_variance_capture <- function(expr) {
+  warnings <- character()
+  value <- withCallingHandlers(
+    expr,
+    warning = function(w) {
+      warnings <<- unique(c(warnings, conditionMessage(w)))
+      invokeRestart("muffleWarning")
+    }
+  )
+  list(value = value, warnings = warnings)
+}
+
+
+# The CFA's marker loadings and error variances are fixed into every later
+# model, so they must be proper estimates (#145): a negative error variance or
+# a loading without a standard error had been carried into the Baseline model
+# unflagged, or had stopped a later model with an unrelated error.
+nomo_method_variance_check_cfa <- function(pe, marker, marker_name) {
+  loadings <- pe[pe$op == "=~" & pe$lhs == marker_name, , drop = FALSE]
+  errors <- pe[pe$op == "~~" & pe$lhs %in% marker & pe$lhs == pe$rhs, , drop = FALSE]
+  negative <- errors$lhs[!is.finite(errors$est) | errors$est <= 0]
+  problems <- c(
+    if (length(negative)) {
+      sprintf("a negative error variance for %s", nomo_present_or(negative, "and"))
+    },
+    if (!all(is.finite(c(loadings$se, errors$se)))) "no standard errors for its parameters"
+  )
+  if (!length(problems)) return(invisible(TRUE))
+  stop(
+    sprintf(
+      paste(
+        "The CFA model gives the marker %s, so its loadings and error variances",
+        "cannot anchor the later models. %s"
+      ),
+      nomo_present_or(problems, "and"),
+      if (length(marker) < 3L) {
+        paste(
+          "With two indicators, the marker's loadings are identified only",
+          "through its correlations with the substantive factors, which the",
+          "technique assumes are zero; measure it with three or more."
+        )
+      } else {
+        "Check the marker's indicators and the sample size."
+      }
+    ),
+    call. = FALSE
   )
 }
 
@@ -508,8 +645,8 @@ nomo_method_variance_reliability <- function(structure, pe_base, pe_ret, marker_
 }
 
 
-# A table with one p-value calls it `p_value`, as the rest of the package does;
-# this one has a p-value for each model, so each is `<model>_p_value`.
+# A table with one p value calls it `p_value`, as the rest of the package does;
+# this one has a p value for each model, so each is `<model>_p_value`.
 nomo_method_variance_correlations <- function(pairs, fits, retained_label, sensitivity) {
   if (!nrow(pairs)) {
     return(tibble::tibble(
@@ -543,25 +680,37 @@ nomo_method_variance_correlations <- function(pairs, fits, retained_label, sensi
 
 
 nomo_method_variance_log <- function(marker, comparisons, retained, reliability,
-                                     correlations, alpha) {
+                                     correlations, alpha, presence_unequal = NULL) {
   log <- nomo_log_new()
-  number <- function(x) nomo_present_number(x, 2L)
   test_text <- function(row) {
-    sprintf(
-      "chi-square difference %s on %d df, p %s",
-      number(row$chisq_diff), row$df_diff, nomo_present_p_text(row$p_value)
-    )
+    nomo_present_chisq(row$chisq_diff, row$df_diff, row$p_value, delta = TRUE)
   }
+  alpha_text <- nomo_present_level(alpha)
+  two <- length(marker) < 3L
 
+  # With two indicators the marker's loadings are identified only through its
+  # correlations with the substantive factors, which the technique assumes are
+  # zero, so they rest on little information (#145).
   log <- nomo_log_add(
     log, stage = "method_variance", object = "marker",
     metric = "marker_assumption",
     value = length(marker),
     reference = "Williams, Hartman, & Cavazotte (2010)",
-    severity = "info",
-    observation = sprintf(
-      "The marker is measured by %s and is assumed orthogonal to the substantive factors.",
-      paste(marker, collapse = ", ")
+    severity = if (two) "review" else "info",
+    observation = paste0(
+      sprintf(
+        "The marker is measured by %s and is assumed orthogonal to the substantive factors.",
+        paste(marker, collapse = ", ")
+      ),
+      if (two) {
+        paste(
+          " With two indicators, its loadings are identified only through its",
+          "correlations with the substantive factors, which the technique assumes",
+          "are zero, so they may be unstable."
+        )
+      } else {
+        ""
+      }
     ),
     recommendation = paste(
       "State why the marker is theoretically unrelated to the substantive",
@@ -569,7 +718,7 @@ nomo_method_variance_log <- function(marker, comparisons, retained, reliability,
       "nonideal marker the technique can find method variance that is not",
       "there, and it does not recover substantive correlations accurately",
       "(Richardson, Simmering, & Sturman, 2009).",
-      if (length(marker) < 3L) {
+      if (two) {
         "Williams et al. recommend three or more marker indicators."
       } else {
         ""
@@ -578,18 +727,39 @@ nomo_method_variance_log <- function(marker, comparisons, retained, reliability,
   )
 
   presence <- comparisons[1L, , drop = FALSE]
-  present <- presence$p_value < alpha
+  present <- isTRUE(presence$p_value < alpha)
+  # Method-C's equal loadings can hide unequal ones of opposite signs, which
+  # cancel; with Method-U retained, "not detected" had contradicted the rest of
+  # the log (#145).
+  hidden <- !present && !is.null(presence_unequal)
   log <- nomo_log_add(
     log, stage = "method_variance", object = "Baseline vs. Method-C",
     metric = "method_variance_presence",
     value = presence$p_value,
-    reference = sprintf("Likelihood-ratio test at alpha = %s", format(alpha)),
-    severity = if (present) "review" else "info",
-    observation = sprintf(
-      "Marker-based method variance is %s (%s).",
-      if (present) "present" else "not detected", test_text(presence)
-    ),
-    recommendation = if (present) {
+    reference = sprintf("Likelihood-ratio test at alpha = %s", alpha_text),
+    severity = if (present || hidden) "review" else "info",
+    observation = if (hidden) {
+      sprintf(
+        paste(
+          "Marker-based method variance is not detected under equal effects (%s),",
+          "but the effects are unequal and Method-U is retained; against",
+          "Baseline, Method-U's method loadings give %s."
+        ),
+        test_text(presence), test_text(presence_unequal)
+      )
+    } else {
+      sprintf(
+        "Marker-based method variance is %s (%s).",
+        if (present) "present" else "not detected", test_text(presence)
+      )
+    },
+    recommendation = if (hidden) {
+      paste(
+        "Method loadings of opposite signs cancel under Method-C's equality",
+        "constraint. Read the Method-U loadings and the reliability",
+        "decomposition rather than the equal-effects test."
+      )
+    } else if (present) {
       paste(
         "Report the method loadings and the reliability decomposition, and",
         "whether the method variance biases the substantive correlations."
@@ -648,18 +818,18 @@ nomo_method_variance_log <- function(marker, comparisons, retained, reliability,
       log, stage = "method_variance", object = "sensitivity",
       metric = "method_variance_sensitivity",
       value = sum(changed),
-      reference = "Method loadings at the upper ends of their 95% and 99% intervals",
+      reference = "Method loadings at the ends of their 95% and 99% intervals farther from zero",
       severity = if (any(changed)) "review" else "info",
       observation = if (any(changed)) {
         sprintf(
-          "With larger method loadings, the significance of %s changes.",
+          "With the method loadings farther from zero, the significance of %s changes.",
           paste(correlations$factor1[changed], correlations$factor2[changed],
                 sep = " with ", collapse = "; ")
         )
       } else {
         paste(
-          "With the method loadings at the upper ends of their intervals, no",
-          "substantive correlation changes its significance."
+          "With the method loadings at the ends of their intervals farther from",
+          "zero, no substantive correlation changes its significance."
         )
       },
       recommendation = "Report the sensitivity models beside the retained model."
@@ -674,11 +844,67 @@ nomo_method_variance_log <- function(marker, comparisons, retained, reliability,
     severity = "info",
     observation = sprintf(
       "Share of each factor's reliability due to the marker: %s.",
-      paste0(reliability$factor, " ", sprintf("%.1f%%", 100 * reliability$method_share),
+      paste0(reliability$factor, " ", nomo_present_percent(reliability$method_share),
              collapse = "; ")
     ),
     recommendation = "The rest is substantive; neither part corrects the other."
   )
+  log
+}
+
+
+# lavaan's warnings as review rows, and a model whose solution fails lavaan's
+# admissibility check (a negative variance, a covariance matrix that is not
+# positive definite) as a concern (#145): both had been suppressed. The
+# check's own warning is reported in the concern. Each message is a sentence
+# in plain words, as nomo_invariance_warning_text() gives it, so the
+# recommendation that follows it in summary() is a sentence of its own.
+nomo_method_variance_engine_log <- function(engine_warnings, admissible) {
+  log <- nomo_log_new()
+  for (label in names(engine_warnings)) {
+    found <- engine_warnings[[label]]
+    checked <- grepl("post_check", found, fixed = TRUE)
+    if (label %in% names(admissible) && !admissible[[label]]) {
+      log <- nomo_log_add(
+        log, stage = "method_variance", object = label,
+        metric = "improper_solution",
+        reference = "lavaan's admissibility check of the solution",
+        severity = "concern",
+        observation = sprintf(
+          "The %s solution is improper: %s.", label,
+          if (any(checked)) {
+            paste(nomo_invariance_warning_text(found[checked], period = FALSE),
+                  collapse = "; ")
+          } else {
+            "lavaan's admissibility check failed"
+          }
+        ),
+        recommendation = paste(
+          "Do not interpret this model's estimates. Check the marker's",
+          "indicators and the sample size."
+        )
+      )
+      found <- found[!checked]
+    }
+    for (message in found) {
+      log <- nomo_log_add(
+        log, stage = "method_variance", object = label,
+        metric = "engine_warning",
+        reference = "Engine warnings must remain visible",
+        severity = "review",
+        observation = sprintf(
+          "lavaan warned when fitting %s: %s",
+          if (grepl(" vs. ", label, fixed = TRUE)) {
+            paste("the comparison", label)
+          } else {
+            paste("the", label, "model")
+          },
+          nomo_invariance_warning_text(message)
+        ),
+        recommendation = "Inspect the warning before interpreting this model."
+      )
+    }
+  }
   log
 }
 
@@ -689,28 +915,121 @@ nomo_present_p_text <- function(p) {
 }
 
 
-#' @export
-print.nomo_method_variance <- function(x, ...) {
-  nomo_present_header("nomo_method_variance", "Marker-based method variance")
+# Presentation ----------------------------------------------------------------------
+#
+# print() gives the comparisons, the reliability decomposition, the
+# substantive correlations across the models, and the flags; summary() adds
+# each model's fit, the loadings in the retained model, and each flag's
+# recommendation. Both define the models they name (#144).
+
+nomo_method_variance_present_facts <- function(x) {
+  nomo_present_header(
+    "nomo_method_variance", "Marker-based method variance",
+    summary = inherits(x, "summary_nomo_method_variance"),
+    source = "Williams, Hartman, & Cavazotte (2010)"
+  )
+  count <- function(v) nomo_present_stat(v, "count")
+  data_n <- x[["data_n"]]
+  cases <- if (length(data_n) && isTRUE(x$n < data_n)) {
+    sprintf("Cases: %s of %s used", count(x$n), count(data_n))
+  } else {
+    sprintf("Cases: %s", count(x$n))
+  }
+  estimator <- x$estimator_shown
   nomo_present_facts(c(
     sprintf("Marker: %s", paste(x$marker, collapse = ", ")),
-    sprintf("N = %d", as.integer(x$n)),
-    sprintf("Retained: %s", x$retained)
+    cases,
+    if (!is.na(estimator)) paste("Estimator:", estimator) else ""
   ))
-  nomo_method_variance_present_comparisons(x$comparisons)
+  nomo_present_facts(c(
+    sprintf("Retained: %s", x$retained),
+    sprintf("Comparisons at alpha = %s", nomo_present_level(x$alpha))
+  ))
+}
+
+
+# The flags, each under the unit it concerns: the marker, the cases, a
+# comparison, a model, or the sensitivity check.
+nomo_method_variance_present_flagged <- function(log, recommendation = FALSE) {
+  if (!is.data.frame(log) || !nrow(log)) return(invisible(NULL))
+  unit <- ifelse(log$metric == "cases_used", "Cases", log$object)
+  unit <- paste0(toupper(substr(unit, 1L, 1L)), substring(unit, 2L))
+  nomo_present_flagged(log, recommendation = recommendation, unit = unit)
+}
+
+
+# The models every table names, defined as a key (guide point 23).
+nomo_method_variance_present_models <- function(method_r = TRUE) {
+  nomo_present_key(c(
+    CFA = paste(
+      "Confirmatory factor analysis of the substantive factors and the marker,",
+      "all correlated, with no method loadings; it gives the marker's loadings",
+      "and error variances."
+    ),
+    Baseline = paste(
+      "The marker uncorrelated with the substantive factors, its loadings and",
+      "error variances fixed at their CFA values."
+    ),
+    "Method-C" = "Baseline plus equal marker loadings on every substantive item.",
+    "Method-U" = "Baseline plus marker loadings free to differ.",
+    "Method-R" = if (isTRUE(method_r)) {
+      "The retained model with the substantive correlations fixed at their Baseline values."
+    } else {
+      ""
+    },
+    "Method-S(.05), Method-S(.01)" = paste(
+      "The retained method loadings fixed at the ends of their 95% and 99%",
+      "intervals farther from zero."
+    )
+  ), title = "Models")
+}
+
+
+nomo_method_variance_present_closing <- function() {
+  cat("\n")
+  nomo_present_text(
+    "The results describe the method variance this marker captures; they are ",
+    "not corrected estimates, and other sources of method variance may remain."
+  )
+}
+
+
+# What print() and summary() need beyond the stored fields.
+nomo_method_variance_display_fields <- function(x) {
+  x$estimator_shown <- nomo_invariance_estimator(x)
+  x$test_label <- nomo_invariance_test_label(x)
+  x
+}
+
+
+#' @export
+print.nomo_method_variance <- function(x, ...) {
+  shown <- nomo_method_variance_display_fields(x)
+  nomo_method_variance_present_facts(shown)
+  nomo_method_variance_present_comparisons(x$comparisons, single_factor = !nrow(x$correlations))
   nomo_method_variance_present_reliability(x$reliability)
   nomo_method_variance_present_correlations(x$correlations, x$retained)
-  nomo_present_flagged(x$decision_log)
-  nomo_method_variance_present_note()
+  nomo_method_variance_present_flagged(x$decision_log)
+  nomo_method_variance_present_models("Method-R" %in% names(x$fits))
+  nomo_invariance_key_note(c("df", shown$estimator_shown))
+  nomo_method_variance_present_closing()
+  nomo_present_pointer(
+    c("summary(x)", "nomo_table(x, \"decision_log\")"),
+    c("each model's fit and the method loadings", "every recorded decision")
+  )
   invisible(x)
 }
 
 
 #' @export
 summary.nomo_method_variance <- function(object, ...) {
-  out <- object[c("marker", "n", "retained", "models", "comparisons",
+  out <- object[c("marker", "data_n", "n", "alpha", "retained", "models", "comparisons",
                   "method_loadings", "reliability", "correlations",
-                  "marker_correlations", "decision_log")]
+                  "marker_correlations", "fit_variants", "decision_log")]
+  shown <- nomo_method_variance_display_fields(object)
+  out$estimator_shown <- shown$estimator_shown
+  out$test_label <- shown$test_label
+  out$method_r <- "Method-R" %in% names(object$fits)
   class(out) <- c("summary_nomo_method_variance", "list")
   out
 }
@@ -718,79 +1037,107 @@ summary.nomo_method_variance <- function(object, ...) {
 
 #' @export
 print.summary_nomo_method_variance <- function(x, ...) {
-  nomo_present_header("nomo_method_variance", "Marker-based method variance", summary = TRUE)
-  nomo_present_facts(c(
-    sprintf("Marker: %s", paste(x$marker, collapse = ", ")),
-    sprintf("N = %d", as.integer(x$n)),
-    sprintf("Retained: %s", x$retained)
-  ))
+  nomo_method_variance_present_facts(x)
+  fit <- function(kind) function(v) nomo_present_stat(v, kind)
   nomo_present_section("Models")
   nomo_present_table(
     x$models,
-    c("Model" = "model", "Chi-square" = "chisq", "df" = "df", "CFI" = "cfi",
-      "TLI" = "tli", "RMSEA" = "rmsea", "SRMR" = "srmr"),
-    formats = list(chisq = function(v) nomo_present_number(v, 2L),
-                   df = function(v) format(v, trim = TRUE)),
+    c("Model" = "model", "Chi-square" = "chisq", "df" = "df", "p" = "pvalue",
+      "CFI" = "cfi", "TLI" = "tli", "RMSEA" = "rmsea", "SRMR" = "srmr"),
+    formats = list(chisq = fit("stat"), df = fit("df"), pvalue = nomo_present_p,
+                   cfi = fit("fit_bounded"), tli = fit("fit"), rmsea = fit("fit"),
+                   srmr = fit("fit")),
     more = "nomo_table(x, \"models\")"
   )
-  nomo_method_variance_present_comparisons(x$comparisons)
+  note <- nomo_invariance_versions_note(
+    x$fit_variants, x$test_label, tests = "the model comparisons",
+    indices = c(CFI = "cfi", TLI = "tli", RMSEA = "rmsea")
+  )
+  if (nzchar(note)) nomo_present_text(note, indent = 2L)
+  nomo_method_variance_present_comparisons(x$comparisons, single_factor = !nrow(x$correlations))
 
   nomo_present_section(sprintf("Loadings in %s (completely standardized)", x$retained))
+  loading <- fit("loading")
   nomo_present_table(
     x$method_loadings,
     c("Factor" = "factor", "Item" = "item", "Substantive" = "substantive_loading",
       "Method" = "method_loading", "Method p" = "p_value",
       "Method variance" = "method_variance"),
-    formats = list(p_value = nomo_present_p, method_variance = nomo_present_percent),
+    formats = list(substantive_loading = loading, method_loading = loading,
+                   p_value = nomo_present_p, method_variance = nomo_present_percent),
     more = "nomo_table(x, \"loadings\")"
   )
   nomo_method_variance_present_reliability(x$reliability)
   nomo_method_variance_present_correlations(x$correlations, x$retained)
-  nomo_present_flagged(x$decision_log, recommendation = TRUE)
-  nomo_method_variance_present_note()
+  nomo_method_variance_present_flagged(x$decision_log, recommendation = TRUE)
+  nomo_method_variance_present_models(x$method_r)
+  nomo_present_key(nomo_invariance_key_entries(c(
+    "CFI", "TLI", "RMSEA", "SRMR", "df", x$estimator_shown
+  )))
+  nomo_method_variance_present_closing()
+  nomo_present_pointer(
+    c("nomo_table(x, \"decision_log\")", "x$fits"),
+    c("every recorded decision", "each model's lavaan fit")
+  )
   invisible(x)
 }
 
 
 # The comparisons in the order they are made, each with the question it
 # answers, so the table can be read without the documentation. A question
-# without a short form is shown as stored.
-nomo_method_variance_present_comparisons <- function(comparisons) {
+# without a short form is shown as stored. With one substantive factor there
+# is no correlation to bias, so the Method-R comparison, which was not run, is
+# left out and said to be (#145).
+nomo_method_variance_present_comparisons <- function(comparisons, single_factor = FALSE) {
   shown <- comparisons
   questions <- nomo_method_variance_questions
   short <- questions$short[match(shown$question, questions$question)]
   shown$question_shown <- ifelse(is.na(short), shown$question, short)
+  if (isTRUE(single_factor)) {
+    shown <- shown[shown$question != questions[["bias", "question"]], , drop = FALSE]
+  }
   nomo_present_section("Model comparisons")
   nomo_present_table(
     shown,
     c("Comparison" = "comparison", "Question" = "question_shown",
-      "Chi-sq diff" = "chisq_diff", "df" = "df_diff", "p" = "p_value"),
-    formats = list(chisq_diff = function(v) nomo_present_number(v, 2L),
-                   df_diff = function(v) format(v, trim = TRUE),
+      "Delta chi-square" = "chisq_diff", "df" = "df_diff", "p" = "p_value"),
+    formats = list(chisq_diff = function(v) nomo_present_stat(v, "stat"),
+                   df_diff = function(v) nomo_present_stat(v, "df"),
                    p_value = nomo_present_p),
     more = "nomo_table(x, \"comparisons\")"
   )
+  if (isTRUE(single_factor)) {
+    nomo_present_text(
+      "With one substantive factor there are no correlations to bias, so ",
+      "Method-R is not fitted.", indent = 2L
+    )
+  }
 }
 
 
 nomo_method_variance_present_reliability <- function(reliability) {
   nomo_present_section("Reliability decomposition")
+  part <- function(v) nomo_present_stat(v, "reliability")
   nomo_present_table(
     reliability,
     c("Factor" = "factor", "Total" = "reliability_total",
       "Substantive" = "reliability_substantive", "Method" = "reliability_method",
       "Method share" = "method_share"),
-    formats = list(method_share = nomo_present_percent),
+    formats = list(reliability_total = part, reliability_substantive = part,
+                   reliability_method = part, method_share = nomo_present_percent),
     more = "nomo_table(x, \"reliability\")"
   )
 }
 
 
 # The models are named as in the models table, the retained one by its name.
+# The correlations take three decimals, one precision for all of them here,
+# since the sensitivity models move them in the third (guide point 9).
 nomo_method_variance_present_correlations <- function(correlations, retained) {
   if (!nrow(correlations)) return(invisible(NULL))
   shown <- correlations
   shown$pair <- paste(shown$factor1, "with", shown$factor2)
+  r <- function(v) nomo_present_stat(v, "r", digits = 3L)
   nomo_present_section("Substantive correlations")
   nomo_present_table(
     shown,
@@ -798,24 +1145,7 @@ nomo_method_variance_present_correlations <- function(correlations, retained) {
       c("pair", "cfa", "baseline", "retained", "method_s_05", "method_s_01"),
       c("Factors", "CFA", "Baseline", retained, "Method-S(.05)", "Method-S(.01)")
     ),
+    formats = list(cfa = r, baseline = r, retained = r, method_s_05 = r, method_s_01 = r),
     more = "nomo_table(x, \"correlations\")"
-  )
-}
-
-
-# The models are defined here, as nomo_retest()'s note defines its
-# abbreviations, since the tables name them only.
-nomo_method_variance_present_note <- function() {
-  cat("\n")
-  nomo_present_text(
-    "Comprehensive CFA marker technique (Williams, Hartman, & Cavazotte, 2010). ",
-    "Baseline: the marker uncorrelated with the substantive factors. Method-C: ",
-    "Baseline plus equal marker loadings on every substantive item; Method-U: ",
-    "those loadings free to differ. Method-R: the retained model with the ",
-    "substantive correlations fixed at their Baseline values. Method-S(.05), ",
-    "Method-S(.01): the method loadings fixed at the upper ends of their 95% ",
-    "and 99% intervals. The results describe the method variance this marker ",
-    "captures; they are not corrected estimates, and other sources of method ",
-    "variance may remain."
   )
 }

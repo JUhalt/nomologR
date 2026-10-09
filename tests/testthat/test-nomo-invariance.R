@@ -1227,7 +1227,7 @@ test_that("invariance label helpers cover metric and parameter types", {
     nomologR:::nomo_invariance_metric_label(
       c("delta_cfi", "delta_rmsea", "delta_srmr", "other")
     ),
-    c("Delta CFI", "Delta RMSEA", "Delta SRMR", "other")
+    c("CFI change", "RMSEA change", "SRMR change", "other")
   )
 
   pt <- data.frame(
@@ -1283,7 +1283,7 @@ test_that("invariance print and summary cover ordered and partial presentation",
 
   txt <- paste(capture.output(print(shown)), collapse = "\n")
   expect_match(txt, "Ordered identification", fixed = TRUE)
-  expect_match(txt, "Researcher-specified partial releases", fixed = TRUE)
+  expect_match(txt, "Partial releases: 1 (researcher specified)", fixed = TRUE)
 
   s <- summary(shown)
   s$ordered_categories <- tibble::tibble(
@@ -1888,7 +1888,7 @@ test_that("latent means compare the groups once intercepts are invariant (#129)"
 
   local_reproducible_output(width = 80)
   printed <- capture.output(print(summary(partial)))
-  expect_match(printed, "Latent means relative to online (its latent SD)",
+  expect_match(printed, "Latent means relative to online, in its latent standard deviations",
                fixed = TRUE, all = FALSE)
 })
 
@@ -1994,7 +1994,7 @@ test_that("an error that detected ordered factors cause says why (#145)", {
                paste0("may contain only: configural, thresholds, metric, scalar, strict. ", note),
                fixed = TRUE)
   expect_error(run(ID.fac = "UL"),
-               paste0("should use `ID.fac = \"std.lv\"`. ", note), fixed = TRUE)
+               paste0("such as \"UV\" or \"fixed.factor\". ", note), fixed = TRUE)
   expect_error(run(estimator = "MLR"),
                paste0("categorical-data estimator supported by lavaan. ", note), fixed = TRUE)
   expect_error(run(missing = "fiml"),
@@ -2013,7 +2013,8 @@ test_that("an error that detected ordered factors cause says why (#145)", {
   # Declared in `ordered`, nothing was detected and the message is unchanged.
   expect_error(
     nomo_invariance(model, dat, group = "grp", ordered = paste0("u", 1:5), ID.fac = "UL"),
-    "should use `ID\\.fac = \"std\\.lv\"`\\.$"
+    "should use `ID.fac = \"std.lv\"` or a semTools alias for it, such as \"UV\" or \"fixed.factor\".",
+    fixed = TRUE
   )
 })
 
@@ -2191,4 +2192,530 @@ test_that("completed_levels leaves out a level that did not converge (#145)", {
   expect_identical(out$fit_evidence$status, c("estimated", "not_converged"))
   expect_identical(out$completed_levels, "configural")
   expect_output(print(out), "Completed: configural\n", fixed = TRUE)
+
+  # The level is flagged, and nothing is said of tests or changes that were
+  # never computed (#144, #145).
+  local_reproducible_output(width = 80)
+  printed <- capture.output(print(out))
+  expect_match(printed, "  - strong (Concern): The strong model did not converge.", fixed = TRUE,
+               all = FALSE)
+  expect_false(any(grepl("LRT|difference tests", printed)))
+  summarized <- capture.output(print(summary(out)))
+  expect_false(any(grepl("Changes from the preceding level|difference tests", summarized)))
+  expect_match(summarized, "The chi-square is the scaled and shifted test statistic; CFI and",
+               fixed = TRUE, all = FALSE)
+})
+
+
+# Pre-RC fixes and the shared output style (#144, #145) -----------------------------
+
+make_three_group_fixture <- function(n = 300L, seed = 44L, shifted = "two") {
+  set.seed(seed)
+  one_group <- function(group) {
+    f <- rnorm(n)
+    data.frame(
+      y1 = .80 * f + rnorm(n, sd = .6), y2 = .78 * f + rnorm(n, sd = .6),
+      y3 = .74 * f + rnorm(n, sd = .6) + if (group == shifted) .6 else 0,
+      y4 = .76 * f + rnorm(n, sd = .6), g = group
+    )
+  }
+  rbind(one_group("one"), one_group("two"), one_group("three"))
+}
+
+
+test_that("with three groups, a score test is labeled by the group it frees (#145)", {
+  skip_on_cran()
+  # Only group two's y3 intercept is shifted. Each test frees one group from
+  # the value the others share, and had been labeled as a pair: "one vs.
+  # three" read as a difference between two identical groups.
+  out <- nomo_invariance("F =~ y1 + y2 + y3 + y4", make_three_group_fixture(), "g",
+                         levels = c("configural", "metric", "scalar"))
+  strain <- nomo_table(out, "local_strain")
+  scalar <- strain[strain$level == "scalar", , drop = FALSE]
+  top <- scalar$constraint_display[order(-scalar$score_x2)][[1L]]
+  expect_identical(top, "Intercept: y3 (two vs. others)")
+  expect_true("Intercept: y3 (three vs. others)" %in% strain$constraint_display)
+  expect_false(any(grepl("one vs.", strain$constraint_display, fixed = TRUE)))
+
+  local_reproducible_output(width = 80)
+  summarized <- capture.output(print(summary(out)))
+  flat <- gsub("[[:space:]]+", " ", paste(summarized, collapse = " "))
+  expect_match(flat, "Each diagnostic frees one group's parameter while the other groups stay equal",
+               fixed = TRUE)
+  expect_match(flat, "The first group (one) is the reference and is never freed on its own",
+               fixed = TRUE)
+  expect_false(any(nchar(summarized) > 80L))
+  p <- plot(out, "local_strain")
+  expect_match(p$labels$caption, "frees one group's parameter", fixed = TRUE)
+  expect_match(gsub("\n", " ", p$labels$caption, fixed = TRUE), "The first group (one) is the",
+               fixed = TRUE)
+  expect_true(all(nchar(strsplit(p$labels$caption, "\n", fixed = TRUE)[[1L]]) <= 85L))
+
+  # When the first group alone differs, no label names it: both others show
+  # the strain, as the note says.
+  reference <- nomo_invariance("F =~ y1 + y2 + y3 + y4",
+                               make_three_group_fixture(shifted = "one"), "g",
+                               levels = c("configural", "metric", "scalar"))
+  strain <- nomo_table(reference, "local_strain")
+  y3 <- strain[strain$level == "scalar" & grepl("^Intercept: y3", strain$constraint_display), ]
+  expect_setequal(y3$constraint_display,
+                  c("Intercept: y3 (two vs. others)", "Intercept: y3 (three vs. others)"))
+  expect_true(all(y3$p_value < .001))
+
+  # Across occasions the first occasion is the reference.
+  occasions <- list(groups = c("t1", "t2", "t3"), design = "occasions")
+  expect_match(nomologR:::nomo_invariance_others_note(occasions),
+               "The first occasion (t1) is the reference", fixed = TRUE)
+
+  # Two groups are still compared as a pair.
+  two <- nomo_invariance("Agency =~ ag1 + ag2 + ag3 + ag4", nomo_demo_network, "group",
+                         levels = c("configural", "metric"))
+  expect_true(all(grepl("(online vs. paper)", nomo_table(two, "local_strain")$constraint_display,
+                        fixed = TRUE)))
+  expect_identical(nomologR:::nomo_invariance_others_note(two), "")
+})
+
+
+test_that("the cases used are counted, by group, and listwise loss is flagged (#145)", {
+  skip_on_cran()
+  set.seed(7)
+  dat <- make_invariance_fixture(n = 200L)
+  dat$x1[sample(nrow(dat), 60)] <- NA
+  dat$x2[sample(nrow(dat), 60)] <- NA
+  out <- nomo_invariance("F =~ x1 + x2 + x3 + x4", dat, group = "group",
+                         levels = c("configural", "metric"), localize = FALSE)
+  nobs <- lavaan::lavInspect(out$fits$configural, "nobs")
+  expect_identical(out$n_used, as.integer(sum(nobs)))
+  expect_lt(out$n_used, 400L)
+  expect_identical(out$group_n$group, c("A", "B"))
+  expect_identical(out$group_n$n, as.integer(nobs))
+
+  row <- out$decision_log[out$decision_log$metric == "cases_used", ]
+  expect_identical(row$severity, "review")
+  expect_identical(row$object, "sample")
+  expect_match(row$observation, sprintf("%d of 400 input cases were used (A n = %d, B n = %d)",
+                                        out$n_used, nobs[[1L]], nobs[[2L]]), fixed = TRUE)
+  expect_match(row$recommendation, "`missing = \"fiml\"`", fixed = TRUE)
+
+  local_reproducible_output(width = 80)
+  printed <- capture.output(print(out))
+  expect_identical(printed[[2L]], sprintf("Cases: %d of 400 used (A n = %d, B n = %d) | Estimator: ML",
+                                          out$n_used, nobs[[1L]], nobs[[2L]]))
+  expect_match(printed, "Cases (Review):", fixed = TRUE, all = FALSE)
+
+  # With FIML every case is used, and there is nothing to review.
+  fiml <- nomo_invariance("F =~ x1 + x2 + x3 + x4", dat, group = "group",
+                          levels = "configural", localize = FALSE, missing = "fiml")
+  expect_identical(fiml$n_used, 400L)
+  expect_false("cases_used" %in% fiml$decision_log$metric)
+  expect_identical(capture.output(print(fiml))[[2L]],
+                   "Cases: 400 (A n = 200, B n = 200) | Estimator: ML")
+
+  # The log row names the strategy chosen, and ordered indicators have their own.
+  log_of <- function(missing, ordered = character()) {
+    nomologR:::nomo_invariance_cases_log(
+      nomologR:::nomo_log_new(), list(data_n = 10L, n_used = 8L, group_n = NULL),
+      missing, ordered
+    )
+  }
+  expect_match(log_of("listwise")$recommendation, "(`missing = \"listwise\"`)", fixed = TRUE)
+  expect_match(log_of(NULL, "u1")$recommendation, "`missing = \"pairwise\"`", fixed = TRUE)
+  expect_match(log_of(NULL)$observation, "8 of 10 input cases were used; 2 cases with", fixed = TRUE)
+  # Without a fitted level there is no count to log or print.
+  expect_identical(nrow(nomologR:::nomo_invariance_cases_log(
+    nomologR:::nomo_log_new(), list(data_n = 10L, n_used = NA_integer_, group_n = NULL),
+    NULL, character()
+  )), 0L)
+  none <- nomologR:::nomo_invariance_cases(list(), 10L)
+  expect_identical(none$n_used, NA_integer_)
+  expect_null(none$group_n)
+  expect_identical(nomologR:::nomo_invariance_cases_fact(list(data_n = 10L, n_used = NA_integer_)),
+                   "Cases: 10 in the data")
+})
+
+
+test_that("semTools' spellings of an identification method are treated alike (#145)", {
+  skip_on_cran()
+  dat <- make_ordinal_invariance_fixture()
+  out <- nomo_invariance("F =~ u1 + u2 + u3 + u4", dat, group = "group",
+                         ordered = paste0("u", 1:4), ID.fac = "UV",
+                         levels = c("configural", "thresholds"), localize = FALSE)
+  expect_identical(out$completed_levels, c("configural", "thresholds"))
+  expect_identical(out$ID.fac, "UV")
+  for (spelling in c("fixed.factor", "Unit.Variance", "fixed-factor", "std.lv")) {
+    expect_identical(nomologR:::nomo_invariance_id_fac_method(spelling), "std.lv")
+  }
+  expect_identical(nomologR:::nomo_invariance_id_fac_method("marker"), "ul")
+  expect_identical(nomologR:::nomo_invariance_id_fac_method("EC"), "effects.coding")
+  expect_error(
+    nomo_invariance("F =~ x1 + x2 + x3 + x4", make_invariance_fixture(), group = "group",
+                    ID.fac = "foo"),
+    "`ID.fac` must be one of \"std.lv\", \"UL\", or \"effects.coding\", or a semTools alias for one of them, not \"foo\".",
+    fixed = TRUE
+  )
+})
+
+
+test_that("one version of each fit statistic is shown at every level, and named (#145)", {
+  skip_on_cran()
+  out <- nomo_invariance("F =~ x1 + x2 + x3 + x4", make_invariance_fixture(), group = "group",
+                         levels = c("configural", "metric"), estimator = "MLR")
+  expect_identical(out$fit_variants[c("chisq", "df", "pvalue", "cfi", "rmsea", "srmr")],
+                   c(chisq = "chisq.scaled", df = "df.scaled", pvalue = "pvalue.scaled",
+                     cfi = "cfi.robust", rmsea = "rmsea.robust", srmr = "srmr"))
+  measures <- lavaan::fitMeasures(out$fits$metric, c("chisq.scaled", "cfi.robust", "rmsea.robust"))
+  expect_equal(out$fit_evidence$chisq[[2L]], unname(measures[["chisq.scaled"]]))
+  expect_equal(out$fit_evidence$cfi[[2L]], unname(measures[["cfi.robust"]]))
+  expect_equal(out$fit_evidence$delta_cfi[[2L]],
+               out$fit_evidence$cfi[[2L]] - out$fit_evidence$cfi[[1L]])
+
+  local_reproducible_output(width = 80)
+  printed <- gsub("\\s+", " ", paste(capture.output(print(out)), collapse = " "))
+  expect_match(printed, "The likelihood-ratio tests are scaled difference tests; CFI and RMSEA are robust values.",
+               fixed = TRUE)
+  expect_match(printed, "MLR = maximum likelihood with robust standard errors", fixed = TRUE)
+  summarized <- gsub("\\s+", " ", paste(capture.output(print(summary(out))), collapse = " "))
+  expect_match(summarized, paste(
+    "The chi-square is the Yuan-Bentler scaled test statistic, and the likelihood-ratio",
+    "tests are scaled difference tests; CFI and RMSEA are robust values."
+  ), fixed = TRUE)
+
+  # Under ML nothing is scaled, and no note is printed.
+  ml <- nomo_invariance("F =~ x1 + x2 + x3 + x4", make_invariance_fixture(), group = "group",
+                        levels = "configural", localize = FALSE)
+  expect_identical(ml$fit_variants[["chisq"]], "chisq")
+  expect_false(any(grepl("robust value|scaled", capture.output(print(summary(ml))))))
+
+  # A level that lacks the robust value moves every level to the next version,
+  # and each change is recomputed from the version shown.
+  measures <- list(
+    configural = c(chisq = 1, chisq.scaled = 2, df = 4, df.scaled = 4, pvalue = .5,
+                   pvalue.scaled = .4, cfi = .99, cfi.scaled = .98, cfi.robust = .97,
+                   rmsea = .02, rmsea.scaled = .03, rmsea.robust = .04, srmr = .01),
+    metric = c(chisq = 3, chisq.scaled = 5, df = 7, df.scaled = 7, pvalue = .4,
+               pvalue.scaled = .3, cfi = .98, cfi.scaled = .96, cfi.robust = NA,
+               rmsea = .03, rmsea.scaled = .05, rmsea.robust = .06, srmr = .02),
+    scalar = numeric()
+  )
+  variants <- nomologR:::nomo_invariance_fit_variants(measures)
+  expect_identical(unname(variants[c("chisq", "cfi", "rmsea")]),
+                   c("chisq.scaled", "cfi.scaled", "rmsea.robust"))
+  evidence <- tibble::tibble(level = c("configural", "metric", "scalar"),
+                             converged = c(TRUE, TRUE, FALSE), chisq = 0, df = 0, pvalue = 0,
+                             cfi = 0, rmsea = 0, srmr = 0, delta_cfi = NA_real_,
+                             delta_rmsea = NA_real_, delta_srmr = NA_real_)
+  shown <- nomologR:::nomo_invariance_apply_variants(evidence, measures, variants)
+  expect_equal(shown$cfi, c(.98, .96, NA))
+  expect_equal(shown$delta_cfi, c(NA, -.02, NA))
+  expect_equal(shown$delta_rmsea, c(NA, .02, NA))
+  expect_identical(nomologR:::nomo_invariance_apply_variants(evidence[0, ], measures, variants),
+                   evidence[0, ])
+  # Nothing fitted: the standard versions, and no note.
+  plain <- nomologR:::nomo_invariance_fit_variants(list(configural = numeric()))
+  expect_identical(unname(plain[c("chisq", "cfi", "rmsea")]), c("chisq", "cfi", "rmsea"))
+  expect_identical(nomologR:::nomo_invariance_versions_note(plain), "")
+  expect_identical(nomologR:::nomo_invariance_versions_note(NULL), "")
+  expect_identical(
+    nomologR:::nomo_invariance_versions_note(c(chisq = "chisq", cfi = "cfi.robust",
+                                               rmsea = "rmsea.scaled")),
+    "CFI is a robust value; RMSEA is a scaled value."
+  )
+})
+
+
+test_that("the plot of score diagnostics fails cleanly without them (#145)", {
+  skip_on_cran()
+  out <- nomo_invariance("F =~ x1 + x2 + x3 + x4", make_invariance_fixture(), group = "group",
+                         levels = c("configural", "metric"), localize = FALSE)
+  expect_error(
+    withCallingHandlers(
+      plot(out, "local_strain"),
+      warning = function(w) stop("a warning escaped: ", conditionMessage(w))
+    ),
+    "No equality-constraint score diagnostics are available to plot.", fixed = TRUE
+  )
+})
+
+
+test_that("a single-level summary has no section of changes (#145)", {
+  skip_on_cran()
+  out <- nomo_invariance("F =~ x1 + x2 + x3 + x4", make_invariance_fixture(), group = "group",
+                         levels = "configural")
+  local_reproducible_output(width = 80)
+  summarized <- capture.output(print(summary(out)))
+  expect_false(any(grepl("Changes from the preceding level", summarized, fixed = TRUE)))
+  expect_match(summarized, "Fit by level", fixed = TRUE, all = FALSE)
+})
+
+
+test_that("the reference group is the one that appears first in the data, as the help says (#145)", {
+  skip_on_cran()
+  dat <- make_invariance_fixture()
+  dat <- dat[order(dat$group, decreasing = TRUE), ]
+  dat$group <- factor(dat$group, levels = c("A", "B"))
+  out <- nomo_invariance("F =~ x1 + x2 + x3 + x4", dat, group = "group",
+                         levels = c("configural", "metric", "scalar"), localize = FALSE)
+  expect_identical(out$groups, c("B", "A"))
+  expect_identical(unique(out$latent_means$reference_group), "B")
+  rd <- testthat::test_path("..", "..", "man", "nomo_invariance.Rd")
+  skip_if_not(file.exists(rd))
+  help <- paste(readLines(rd, warn = FALSE), collapse = " ")
+  expect_match(help, "the group that appears first in \\code{data}", fixed = TRUE)
+  expect_false(grepl("the reference group, the first group", help, fixed = TRUE))
+})
+
+
+test_that("the help lists Byrne et al. (1989), and the code comments are ASCII (#145)", {
+  rd <- testthat::test_path("..", "..", "man", "nomo_invariance.Rd")
+  source_file <- testthat::test_path("..", "..", "R", "nomo_invariance.R")
+  skip_if_not(file.exists(rd) && file.exists(source_file))
+  help <- paste(readLines(rd, warn = FALSE, encoding = "UTF-8"), collapse = " ")
+  expect_match(help, "10.1037/0033-2909.105.3.456", fixed = TRUE)
+  expect_match(help, "Latent means and partial invariance:", fixed = TRUE)
+  # Plain comments, unlike roxygen, have no encoding of their own.
+  code <- readLines(source_file, warn = FALSE)
+  plain <- grep("^\\s*#[^']", code, value = TRUE)
+  expect_false(any(grepl("[^\x01-\x7F]", plain)))
+})
+
+
+test_that("a guidance list asking to delete or respecify is refused (#145)", {
+  guidance <- nomo_defaults()
+  guidance$auto_respecify <- TRUE
+  expect_error(
+    nomo_invariance("F =~ x1 + x2 + x3 + x4", make_invariance_fixture(), group = "group",
+                    guidance = guidance),
+    "`guidance$auto_respecify` cannot be `TRUE`", fixed = TRUE
+  )
+})
+
+
+test_that("lavaan's warnings and a failed level become flags (#145)", {
+  fit_evidence <- tibble::tibble(
+    level = c("configural", "metric", "scalar"),
+    constraints = c("none", "loadings", "loadings, intercepts"),
+    status = c("estimated", "not_converged", "fit_error"),
+    error = c("", "", "lavaan->lav_model():\n   model is not identified")
+  )
+  log <- nomologR:::nomo_invariance_decision_log(
+    group = "group", groups = c("A", "B"), requested_levels = fit_evidence$level,
+    fit_evidence = fit_evidence, estimator = NULL, missing = NULL, ID.fac = "std.lv",
+    ID.cat = NA_character_, parameterization = NA_character_, ordered = character(),
+    category_table = NULL, sequence_note = "Note.", localize = FALSE,
+    engine_warnings = list(configural = "lavaan->lav_data_full():\n   some observed variances are large",
+                           metric = character()),
+    comparison_warnings = list(metric = "lavaan WARNING: some restricted models fit better")
+  )
+  # lavaan's message ends with a period, so summary()'s recommendation after
+  # it is a sentence of its own.
+  levels <- log[log$metric == "invariance_level", ]
+  expect_identical(levels$observation[2:3], c(
+    "The metric model did not converge.",
+    "The scalar model could not be fitted: model is not identified."
+  ))
+  warned <- log[log$metric %in% c("engine_warning", "comparison_warning"), ]
+  expect_identical(warned$severity, c("review", "review"))
+  expect_identical(warned$observation, c(
+    "lavaan warned when fitting the configural model: some observed variances are large.",
+    "lavaan warned when comparing the metric model with the one before it: some restricted models fit better."
+  ))
+  no_error <- fit_evidence
+  no_error$error[[3L]] <- ""
+  log <- nomologR:::nomo_invariance_decision_log(
+    group = "group", groups = c("A", "B"), requested_levels = no_error$level,
+    fit_evidence = no_error, estimator = NULL, missing = NULL, ID.fac = "std.lv",
+    ID.cat = NA_character_, parameterization = NA_character_, ordered = character(),
+    category_table = NULL, sequence_note = "Note.", localize = FALSE
+  )
+  expect_identical(log$observation[log$metric == "invariance_level"][[3L]],
+                   "The scalar model could not be fitted.")
+
+  # print() names each flag under its level, concern before review.
+  local_reproducible_output(width = 80)
+  flagged <- capture.output(nomologR:::nomo_invariance_present_flagged(tibble::tibble(
+    object = c("metric", "equality_constraints", "sample"),
+    metric = c("invariance_level", "score_diagnostics", "cases_used"),
+    severity = c("concern", "review", "info"),
+    observation = c("The metric model did not converge.", "3 diagnostics were retained.",
+                    "All cases were used."),
+    recommendation = "Look."
+  )))
+  expect_identical(flagged, c("", "Flagged", "  - metric (Concern): The metric model did not converge.",
+                              "  - Score diagnostics (Review): 3 diagnostics were retained."))
+  expect_null(nomologR:::nomo_invariance_present_flagged(tibble::tibble()))
+})
+
+
+test_that("lavaan's messages read as plain sentences (#145)", {
+  text <- function(x, ...) nomologR:::nomo_invariance_warning_text(x, ...)
+  # Its jargon is spelled out and its capitals calmed (guide points 18, 23).
+  expect_identical(
+    text("lavaan->lav_object_post_check():\n   some estimated ov variances are negative"),
+    "some estimated observed-variable variances are negative."
+  )
+  expect_identical(text("lavaan WARNING: some estimated lv variances are negative"),
+                   "some estimated latent-variable variances are negative.")
+  expect_identical(text("the optimizer warns that a solution has NOT been found!"),
+                   "the optimizer warns that a solution has not been found.")
+  expect_identical(
+    text("Could not compute standard errors! The information matrix could not be inverted."),
+    "Could not compute standard errors. The information matrix could not be inverted."
+  )
+  # R names and code stay as written.
+  expect_identical(text("use lavInspect(fit, \"cov.lv\") and ov.names; type != free"),
+                   "use lavInspect(fit, \"cov.lv\") and ov.names; type != free.")
+  expect_identical(text("lavaan ERROR: a failure;"), "a failure.")
+  expect_identical(text("is the model identified?"), "is the model identified?")
+  expect_identical(text(c("one.", "two"), period = FALSE), c("one", "two"))
+  expect_identical(text("lavaan WARNING:"), "")
+})
+
+
+test_that("a configural model that is not fitted leaves no fit to report (#145)", {
+  skip_on_cran()
+  skip_if_not(
+    exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
+  )
+  # One iteration: the configural model does not converge, and lavaan says so.
+  real_cfa <- lavaan::cfa
+  testthat::local_mocked_bindings(
+    cfa = function(...) real_cfa(..., control = list(iter.max = 1L)),
+    .package = "lavaan"
+  )
+  out <- nomo_invariance("Agency =~ ag1 + ag2 + ag3 + ag4", nomo_demo_network, "group")
+  expect_identical(out$fit_evidence$status, "not_converged")
+  expect_false(nomologR:::nomo_invariance_has_fit(out$fit_evidence))
+
+  for (width in c(80, 40)) {
+    local_reproducible_output(width = width)
+    printed <- capture.output(print(out))
+    summarized <- capture.output(print(summary(out)))
+    both <- c(printed, summarized)
+    expect_false(any(nchar(both) > width))
+    # No stub-only table, no key to columns that are not shown, and no
+    # pointer to tests that were not computed.
+    expect_false(any(grepl("Fit by level|CFI|RMSEA|SRMR|chi-square|df --|NOT|!", both)))
+    expect_match(gsub("[[:space:]]+", " ", paste(printed, collapse = " ")),
+                 "The configural model did not converge.", fixed = TRUE)
+    flat <- gsub("[[:space:]]+", " ", paste(summarized, collapse = " "))
+    expect_match(flat, "has not been found. Inspect the warning", fixed = TRUE)
+    expect_match(flat, "Abbreviations ML -- Maximum likelihood.", fixed = TRUE)
+    expect_false(grepl("What these columns mean", flat, fixed = TRUE))
+    for (shown in list(printed, summarized)) {
+      flat <- gsub("[[:space:]]+", " ", paste(shown, collapse = " "))
+      expect_match(flat, "No level has fit to report", fixed = TRUE)
+      expect_match(flat, "See nomo_table(x, \"decision_log\") for every recorded decision.",
+                   fixed = TRUE)
+    }
+  }
+  local_reproducible_output(width = 80)
+  printed <- capture.output(print(out))
+  expect_identical(printed[grep("^ML = ", printed)], "ML = maximum likelihood.")
+
+  # A configural model that cannot be fitted at all reads the same way.
+  testthat::local_mocked_bindings(
+    cfa = function(...) {
+      if (isFALSE(list(...)$do.fit)) return(real_cfa(...))
+      stop("lavaan ERROR: synthetic failure")
+    },
+    .package = "lavaan"
+  )
+  failed <- nomo_invariance("Agency =~ ag1 + ag2 + ag3 + ag4", nomo_demo_network, "group")
+  expect_identical(failed$fit_evidence$status, "fit_error")
+  printed <- capture.output(print(failed))
+  expect_match(printed, "  - configural (Concern): The configural model could not be fitted:",
+               fixed = TRUE, all = FALSE)
+  expect_false(any(grepl("Fit by level|CFI|ERROR", printed)))
+  expect_match(summary(failed)$note, "No level has fit to report", fixed = TRUE)
+})
+
+
+test_that("invariance output follows the shared style (#144)", {
+  skip_on_cran()
+  out <- nomo_invariance("Agency =~ ag1 + ag2 + ag3 + ag4", nomo_demo_network, "group",
+                         levels = c("configural", "metric", "scalar"))
+  local_reproducible_output(width = 80)
+  printed <- capture.output(print(out))
+  expect_identical(printed[1:2], c("<nomo_invariance> Measurement invariance across groups",
+                                   "Cases: 800 (online n = 400, paper n = 400) | Estimator: ML"))
+  expect_match(printed, "^Fit by level$", all = FALSE)
+  # CFI and its change lose the leading zero; RMSEA keeps it.
+  expect_match(printed, "^  scalar +\\.9[0-9]{2} +0\\.[0-9]{3} +0\\.[0-9]{3} +-\\.[0-9]{3} +\\+0\\.[0-9]{3} +< \\.001$",
+               all = FALSE)
+  text <- gsub("\\s+", " ", paste(printed, collapse = " "))
+  expect_match(text, "CFI = comparative fit index; RMSEA = root mean square error of approximation;",
+               fixed = TRUE)
+  expect_match(text, "LRT = likelihood-ratio test", fixed = TRUE)
+  expect_match(printed[[length(printed)]], "for all 12 score diagnostics.", fixed = TRUE)
+  expect_false(any(grepl("Localized equality-constraint diagnostics retained", printed)))
+  expect_false(any(nchar(printed) > 80L))
+  returned <- NULL
+  capture.output(returned <- print(out))
+  expect_identical(returned, out)
+
+  summarized <- capture.output(print(summary(out)))
+  expect_match(summarized, "^  Level +Constraint +Score chi-square +df +p$", all = FALSE)
+  expect_match(summarized, "^  Level +CFI change +RMSEA change +SRMR change +Delta chi-square +df +p$",
+               all = FALSE)
+  expect_match(summarized, "Latent means relative to online, in its latent standard deviations",
+               fixed = TRUE, all = FALSE)
+  expect_match(summarized, "^  scalar +paper +Agency +0\\.[0-9]{2} +\\[0\\.[0-9]{2}, 0\\.[0-9]{2}\\] +< \\.001$",
+               all = FALSE)
+  expect_match(summarized, "  CI -- Confidence interval.", fixed = TRUE, all = FALSE)
+  summary_text <- gsub("\\s+", " ", paste(summarized, collapse = " "))
+  expect_match(summary_text, "No single CFI change, RMSEA change, SRMR change", fixed = TRUE)
+  expect_false(any(grepl("delta-CFI|p-value", summarized)))
+  expect_false(any(nchar(summarized) > 80L))
+
+  # Plots name the changes as the tables do.
+  change <- plot(out, "change")
+  expect_identical(levels(change$data$metric), c("CFI change", "RMSEA change", "SRMR change"))
+  expect_identical(change$labels$x, "Invariance level")
+  strain <- plot(out, "local_strain")
+  expect_identical(strain$labels$x, "Score chi-square")
+  expect_match(plot(out, "fit")$labels$caption, "CFI = comparative fit index", fixed = TRUE)
+
+  # A narrow console keeps the status of each test and names what it drops.
+  local_reproducible_output(width = 40)
+  narrow <- capture.output(print(summary(out)))
+  expect_false(any(nchar(narrow) > 40L))
+  expect_match(narrow, "Not shown for width:", fixed = TRUE, all = FALSE)
+})
+
+
+test_that("the invariance display helpers cover their edge cases (#144)", {
+  # No fitted level: no estimator, the standard test, and no cases to count.
+  expect_identical(nomologR:::nomo_invariance_estimator(list(estimator = NA_character_,
+                                                              fits = list())), NA_character_)
+  expect_identical(nomologR:::nomo_invariance_estimator(list(estimator = NA_character_,
+                                                              fits = list(configural = "x"))),
+                   NA_character_)
+  expect_identical(nomologR:::nomo_invariance_test_label(list(fits = list())), "scaled")
+  expect_identical(nomologR:::nomo_invariance_test_label(list(fits = list(configural = "x"))),
+                   "scaled")
+  expect_identical(nomologR:::nomo_invariance_test_words(c("standard", "scaled.shifted")),
+                   "scaled and shifted")
+  expect_identical(nomologR:::nomo_invariance_test_words("browne.residual.adf"),
+                   "browne residual adf")
+  broken <- nomologR:::nomo_invariance_cases(list(configural = "not a fit"), 10L)
+  expect_identical(broken$n_used, NA_integer_)
+  expect_null(broken$group_n)
+  expect_identical(
+    nomologR:::nomo_invariance_versions_note(c(chisq = "chisq.scaled"), "scaled"),
+    "The chi-square is the scaled test statistic, and the likelihood-ratio tests are scaled difference tests."
+  )
+  expect_identical(capture.output(nomologR:::nomo_invariance_key_note(c("none", "other"))),
+                   character())
+
+  local_reproducible_output(width = 80)
+  facts <- capture.output(nomologR:::nomo_invariance_present_facts(list(
+    estimator_shown = NA_character_, design = "groups", group = "g", groups = c("a", "b"),
+    indicator_type = "ordered_polytomous", ordered = "u1", ID.cat = "Wu.Estabrook.2016",
+    parameterization = "theta", partial = NULL, data_n = 10L, n_used = NA_integer_
+  )))
+  expect_identical(facts, c(
+    "Cases: 10 in the data",
+    "Grouping variable: g (a, b) | Indicators: ordered polytomous",
+    "Ordered identification: Wu.Estabrook.2016 | Parameterization: theta"
+  ))
 })

@@ -29,12 +29,14 @@ names that \code{model} does not use.}
 With a robust estimator, the comparisons use lavaan's scaled difference
 tests.}
 
-\item{marker_name}{Name given to the marker factor. Default \code{"Marker"}.}
+\item{marker_name}{Name given to the marker factor. Default \code{"Marker"}. It
+names a factor in lavaan syntax, so it must be a syntactic name, such as
+\code{"SocialDesirability"}, without spaces.}
 }
 \value{
 A \code{nomo_method_variance} object. The fields to read are:
 \itemize{
-\item \code{models}: each model's chi-square, degrees of freedom, p-value
+\item \code{models}: each model's chi-square, degrees of freedom, p value
 (\code{pvalue}), CFI, TLI, RMSEA, and SRMR. With a robust estimator, the
 chi-square is scaled and the indices are robust, as in \code{\link[=nomo_cfa]{nomo_cfa()}}.
 \item \code{comparisons}: the three model comparisons, with their chi-square
@@ -48,24 +50,31 @@ marker accounts for, and the method loading's \code{p_value}.
 substantive and method parts, and \code{method_share}.
 \item \code{correlations}: each pair of substantive factors (\code{factor1}, \code{factor2})
 and their correlation in the CFA, Baseline, retained, Method-S(.05), and
-Method-S(.01) models, with p-values in the retained and sensitivity
+Method-S(.01) models, with p values in the retained and sensitivity
 models (\code{retained_p_value}, \code{method_s_05_p_value},
 \code{method_s_01_p_value}).
 \item \code{marker_correlations}: the marker's correlation with each substantive
 factor in the CFA model; \code{factor1} is the substantive factor and
 \code{factor2} the marker.
+\item \code{engine_warnings}: the warnings lavaan raised, by model and for the
+comparisons.
 \item \code{fits} and \code{decision_log}.
 }
 
-A table with one p-value for a test or an estimate names it \code{p_value}, as
+A table with one p value for a test or an estimate names it \code{p_value}, as
 the rest of the package does. \code{correlations} has one for each model, so
-each is named \verb{<model>_p_value}. In \code{models}, \code{pvalue} is the p-value of
+each is named \verb{<model>_p_value}. In \code{models}, \code{pvalue} is the p value of
 each model's chi-square test, named as in the fit tables of \code{\link[=nomo_esem]{nomo_esem()}}
 and \code{\link[=nomo_invariance]{nomo_invariance()}}.
 
 Other fields record the call, the settings used, and the syntax fitted.
 They may change between releases and are not part of the stable interface
 (see \code{?nomologR}).
+
+\code{print()} shows the model comparisons, the reliability decomposition, the
+substantive correlations across the models, and any flag. \code{summary()} adds
+each model's fit, the loadings in the retained model, and each flag's
+recommendation.
 }
 \description{
 \code{nomo_method_variance()} tests whether a marker variable carries method
@@ -120,9 +129,21 @@ method part (Williams et al., 2010, equations 1-3). \code{method_share} is the
 method part as a proportion of the Baseline reliability.
 
 \strong{Phase III: sensitivity.} Because the method loadings are estimates, the
-retained model is refitted with them fixed at the upper ends of their 95\%
-and 99\% confidence intervals (Method-S(.05) and Method-S(.01)), and the
-substantive correlations are compared across the models.
+retained model is refitted with them fixed at the ends of their 95\% and 99\%
+confidence intervals farther from zero (Method-S(.05) and Method-S(.01)), so
+a negative loading, as from a marker keyed opposite to the substantive
+items, becomes more negative. The substantive correlations are then compared
+across the models.
+
+\strong{Checks.} lavaan's warnings are kept for each model and comparison, in
+\code{engine_warnings} and as review rows of the decision log, and a model with
+an improper solution, such as a negative variance, is a concern. The marker's
+loadings and error variances from the CFA anchor every later model, so a CFA
+that does not converge, or gives the marker a negative error variance or no
+standard errors, stops the analysis, as does any model that does not
+converge. With two marker indicators, the marker's loadings are identified
+only through its correlations with the substantive factors, which the
+technique assumes are zero, so the decision log asks for review.
 
 \strong{What the technique cannot do.} It requires the marker to be orthogonal to
 the substantive factors. In simulations, with an ideal marker it did not
@@ -135,25 +156,15 @@ MacKenzie, & Podsakoff, 2012).
 }
 \examples{
 \donttest{
-# Two substantive factors and a marker, all sharing a method factor
-# (simulated).
-population <- "
-  A =~ 0.7*a1 + 0.7*a2 + 0.6*a3 + 0.6*a4
-  B =~ 0.7*b1 + 0.6*b2 + 0.6*b3 + 0.5*b4
-  M =~ 0.7*m1 + 0.7*m2 + 0.6*m3
-  CMV =~ 0.3*a1 + 0.3*a2 + 0.3*a3 + 0.3*a4 + 0.3*b1 + 0.3*b2 + 0.3*b3 +
-         0.3*b4 + 0.3*m1 + 0.3*m2 + 0.3*m3
-  A ~~ 0.4*B
-  A ~~ 0*M
-  B ~~ 0*M
-  CMV ~~ 0*A + 0*B + 0*M
-"
-set.seed(2010)
-dat <- lavaan::simulateData(population, sample.nobs = 600, standardized = TRUE)
-mv <- nomo_method_variance(
-  "A =~ a1 + a2 + a3 + a4\nB =~ b1 + b2 + b3 + b4",
-  data = dat, marker = c("m1", "m2", "m3")
-)
+# Social desirability as the marker for the Agency and Persistence items of
+# the simulated validation study. In its population the marker shares
+# nothing with those items, so no method variance should be detected.
+model <- nomo_model(list(
+  Agency = paste0("ag", 1:4),
+  Persistence = paste0("pe", 1:4)
+))
+mv <- nomo_method_variance(model, data = nomo_demo_network,
+                           marker = c("sd1", "sd2", "sd3"))
 mv
 nomo_table(mv, "reliability")
 }

@@ -12,18 +12,22 @@ mv_population <- function(method = rep(.3, 11), r = .4) {
     sep = "\n"
   )
 }
-mv_data <- function(population, n = 600, seed = 2010) {
-  set.seed(seed)
-  lavaan::simulateData(population, sample.nobs = n, standardized = TRUE)
+mv_data <- function(population, n = 600, seed = 2010, exact = FALSE) {
+  nomo_test_simulate(population, n = n, seed = seed, exact = exact)
 }
 mv_model <- "A =~ a1 + a2 + a3 + a4\nB =~ b1 + b2 + b3 + b4"
 mv_marker <- c("m1", "m2", "m3")
 
+# A test that asserts what a population implies (which model is retained,
+# whether method variance is detected) uses data that reproduce the population
+# covariance matrix exactly (`exact = TRUE`), so the outcome follows from the
+# population and not from a draw.
 mv_equal <- local({
   cache <- NULL
   function() {
     if (is.null(cache)) {
-      cache <<- nomo_method_variance(mv_model, mv_data(mv_population()), marker = mv_marker)
+      cache <<- nomo_method_variance(mv_model, mv_data(mv_population(), exact = TRUE),
+                                     marker = mv_marker)
     }
     cache
   }
@@ -105,7 +109,7 @@ test_that("unequal method effects retain Method-U, and strong ones bias the corr
   skip_on_cran()
   unequal <- c(.1, .2, .5, .6, .1, .2, .5, .6, .3, .3, .3)
   mv <- nomo_method_variance(
-    mv_model, mv_data(mv_population(method = unequal, r = .2), n = 1500),
+    mv_model, mv_data(mv_population(method = unequal, r = .2), n = 1500, exact = TRUE),
     marker = mv_marker
   )
   expect_identical(mv$retained, "Method-U")
@@ -123,7 +127,8 @@ test_that("unequal method effects retain Method-U, and strong ones bias the corr
 test_that("without method variance, none is reported", {
   skip_on_cran()
   mv <- nomo_method_variance(
-    mv_model, mv_data(mv_population(method = rep(0, 11)), seed = 3), marker = mv_marker
+    mv_model, mv_data(mv_population(method = rep(0, 11)), seed = 3, exact = TRUE),
+    marker = mv_marker
   )
   log <- mv$decision_log
   presence <- log[log$metric == "method_variance_presence", ]
@@ -135,7 +140,9 @@ test_that("without method variance, none is reported", {
 
 test_that("a one-factor model has no correlations to bias", {
   skip_on_cran()
-  dat <- mv_data(mv_population())
+  # A two-indicator marker's loadings rest on its correlation with the factor.
+  # In these data they are the population's, equal and proper.
+  dat <- mv_data(mv_population(), exact = TRUE)
   mv <- nomo_method_variance("A =~ a1 + a2 + a3 + a4", dat, marker = c("m1", "m2"))
   expect_true(is.na(mv$comparisons$p_value[[3L]]))
   expect_identical(nrow(mv$correlations), 0L)
@@ -147,6 +154,19 @@ test_that("a one-factor model has no correlations to bias", {
   local_reproducible_output(width = 80)
   printed <- capture.output(print(mv))
   expect_false(any(grepl("Substantive correlations", printed, fixed = TRUE)))
+  # The comparison that was not run is left out and said to be, rather than
+  # shown as a row of "--" and "NA" (#145).
+  expect_false(any(grepl("NA", printed, fixed = TRUE)))
+  expect_false(any(grepl("Correlations biased?", printed, fixed = TRUE)))
+  expect_match(gsub("[[:space:]]+", " ", paste(printed, collapse = " ")), "so Method-R is not fitted.",
+               fixed = TRUE)
+  expect_false(any(grepl("Method-R --", printed, fixed = TRUE)))
+  # A two-indicator marker is flagged for review, with the reason (#145).
+  marker <- mv$decision_log[mv$decision_log$metric == "marker_assumption", ]
+  expect_identical(marker$severity, "review")
+  expect_match(marker$observation, "identified only through its correlations", fixed = TRUE)
+  expect_match(printed, "Marker (Review): The marker is measured by m1, m2", fixed = TRUE,
+               all = FALSE)
 })
 
 
@@ -176,6 +196,15 @@ test_that("a robust estimator and FIML are passed to lavaan, and fit is reported
   expect_equal(row$cfi, unname(measures[["cfi.robust"]]))
   expect_equal(row$tli, unname(measures[["tli.robust"]]))
   expect_equal(row$rmsea, unname(measures[["rmsea.robust"]]))
+
+  # The summary says which versions it shows (#145).
+  local_reproducible_output(width = 80)
+  summarized <- gsub("[[:space:]]+", " ", paste(capture.output(print(summary(mv))), collapse = " "))
+  expect_match(summarized, paste(
+    "The chi-square is the Yuan-Bentler scaled test statistic, and the model comparisons",
+    "are scaled difference tests; CFI, TLI, and RMSEA are robust values."
+  ), fixed = TRUE)
+  expect_match(summarized, "MLR -- Maximum likelihood with robust standard errors", fixed = TRUE)
 })
 
 
@@ -194,11 +223,21 @@ test_that("the results print and summarize within 80 columns", {
                all = FALSE)
   expect_match(printed, "(Review): Marker-based method variance is present", fixed = TRUE,
                all = FALSE)
-  # The closing note defines the models the tables name.
-  note <- paste(printed, collapse = " ")
-  expect_match(note, "Method-C: Baseline plus equal marker loadings", fixed = TRUE)
-  expect_match(note, "Method-S(.01): the method loadings fixed at the upper ends",
+  # A key defines the models the tables name (#144).
+  note <- gsub("\\s+", " ", paste(printed, collapse = " "))
+  expect_match(note, "Method-C -- Baseline plus equal marker loadings", fixed = TRUE)
+  expect_match(note, "Method-S(.05), Method-S(.01) -- The retained method loadings fixed at the ends",
                fixed = TRUE)
+  # The header cites the technique, the cases are counted, the numbers follow
+  # their kinds, and the print ends with a pointer (#144).
+  expect_identical(printed[1:2], c("<nomo_method_variance> Marker-based method variance",
+                                   "Williams, Hartman, and Cavazotte (2010)."))
+  expect_match(printed, "Cases: 600 | Estimator: ML", fixed = TRUE, all = FALSE)
+  expect_match(printed, "^  A +\\.[0-9]{2} +\\.[0-9]{2} +\\.[0-9]{2} +[0-9.]+%$", all = FALSE)
+  expect_match(printed, "^  A with B +\\.[0-9]{3} +\\.[0-9]{3}", all = FALSE)
+  expect_match(note, "df = degrees of freedom; ML = maximum likelihood.", fixed = TRUE)
+  expect_match(printed[[length(printed)]], "for every recorded decision.", fixed = TRUE)
+  expect_false(any(grepl("p-value|NA", printed)))
   expect_false(any(nchar(printed) > 80L))
   summarized <- capture.output(print(summary(mv)))
   expect_match(summarized, "Loadings in Method-C (completely standardized)",
@@ -206,8 +245,10 @@ test_that("the results print and summarize within 80 columns", {
   expect_match(summarized, "Method-S(.01)", fixed = TRUE, all = FALSE)
   # Percentages are right-aligned with the numbers beside them.
   expect_match(summarized, "Method p  Method variance$", all = FALSE)
-  expect_match(summarized, "^  A +0\\.[0-9]{3} +0\\.[0-9]{3} +0\\.[0-9]{3} +[0-9.]+%$",
+  expect_match(summarized, "^  A +\\.[0-9]{2} +\\.[0-9]{2} +\\.[0-9]{2} +[0-9.]+%$",
                all = FALSE)
+  expect_match(summarized, "^  A +a1 +0\\.[0-9]{2} +0\\.[0-9]{2} +< \\.001", all = FALSE)
+  expect_match(summarized, "TLI -- Tucker-Lewis index.", fixed = TRUE, all = FALSE)
   expect_false(any(nchar(summarized) > 80L))
 })
 
@@ -292,4 +333,199 @@ test_that("a biased correlation, and one whose significance the sensitivity chan
   expect_match(sensitivity$observation, "the significance of A with C changes", fixed = TRUE)
   expect_match(log$observation[log$metric == "method_variance_reliability"], "A 12.5%",
                fixed = TRUE)
+})
+
+
+test_that("a missing degrees of freedom prints as missing, never NA (#145)", {
+  comparisons <- tibble::tibble(
+    comparison = "Method-C vs. Method-R", question = "Asked?",
+    chisq_diff = NA_real_, df_diff = NA_integer_, p_value = NA_real_
+  )
+  local_reproducible_output(width = 80)
+  shown <- capture.output(nomologR:::nomo_method_variance_present_comparisons(comparisons))
+  expect_false(any(grepl("NA", shown, fixed = TRUE)))
+})
+
+
+test_that("opposite-signed method effects are not reported as absent (#145)", {
+  skip_on_cran()
+  # The marker loads +.35 on the A items and -.35 on the B items: under
+  # Method-C's equality constraint they cancel, and Method-U is retained.
+  mixed <- c(rep(.35, 4), rep(-.35, 4), .35, .35, .35)
+  mv <- nomo_method_variance(
+    mv_model, mv_data(mv_population(method = mixed), n = 800, seed = 11, exact = TRUE),
+    marker = mv_marker
+  )
+  expect_identical(mv$retained, "Method-U")
+  expect_gt(mv$comparisons$p_value[[1L]], .05)
+  presence <- mv$decision_log[mv$decision_log$metric == "method_variance_presence", ]
+  expect_identical(presence$severity, "review")
+  expect_match(presence$observation, "not detected under equal effects", fixed = TRUE)
+  expect_match(presence$observation, "Method-U is retained", fixed = TRUE)
+  expect_match(presence$observation, "Delta chi-square(8) = ", fixed = TRUE)
+  expect_match(presence$recommendation, "opposite signs cancel", fixed = TRUE)
+  # The published sequence of comparisons is unchanged.
+  expect_identical(nrow(mv$comparisons), 3L)
+})
+
+
+test_that("the sensitivity models move negative method loadings away from zero (#145)", {
+  skip_on_cran()
+  negative <- c(rep(-.3, 8), .3, .3, .3)
+  mv <- nomo_method_variance(
+    mv_model, mv_data(mv_population(method = negative), n = 800, seed = 12, exact = TRUE),
+    marker = mv_marker
+  )
+  items <- c(paste0("a", 1:4), paste0("b", 1:4))
+  marker_loadings <- function(fit) {
+    pe <- lavaan::parameterEstimates(fit)
+    pe$est[pe$op == "=~" & pe$lhs == "Marker" & pe$rhs %in% items]
+  }
+  retained <- marker_loadings(mv$fits[[mv$retained]])
+  expect_true(all(retained < 0))
+  s05 <- marker_loadings(mv$fits$`Method-S(.05)`)
+  s01 <- marker_loadings(mv$fits$`Method-S(.01)`)
+  expect_true(all(s05 < retained))
+  expect_true(all(s01 < s05))
+  sensitivity <- mv$decision_log[mv$decision_log$metric == "method_variance_sensitivity", ]
+  expect_match(sensitivity$reference, "farther from zero", fixed = TRUE)
+})
+
+
+test_that("an improper or unconverged CFA stops the technique with its reason (#145)", {
+  skip_on_cran()
+  # A two-indicator marker's loadings l1 and l2 are identified only through its
+  # correlations with the substantive factors: cov(m1, m2) is l1 * l2 and
+  # cov(m1, a) / cov(m2, a) is l1 / l2, so the CFA's l1^2 is that ratio times
+  # cov(m1, m2). In this population it is 1.1^2 = 1.21, above m1's variance of
+  # 1, and the data reproduce the population matrix exactly. The CFA therefore
+  # fits perfectly with an error variance of about -.21 for m1, on every
+  # platform. Such a variance had been fixed into every later model.
+  heywood <- paste(
+    "A =~ 0.7*a1 + 0.7*a2 + 0.6*a3 + 0.6*a4", "B =~ 0.7*b1 + 0.6*b2 + 0.6*b3 + 0.5*b4",
+    "M =~ 1.1*m1 + 0.5*m2", "A ~~ 0.4*B", "A ~~ 0.5*M", "B ~~ 0.5*M", sep = "\n"
+  )
+  sigma <- nomo_test_population_cov(heywood)
+  expect_gt(sigma["m1", "a1"] / sigma["m2", "a1"] * sigma["m1", "m2"], sigma["m1", "m1"])
+  two <- mv_data(heywood, n = 300, seed = 68, exact = TRUE)
+  expect_error(
+    nomo_method_variance(mv_model, two, marker = c("m1", "m2")),
+    "The CFA model gives the marker a negative error variance for m1", fixed = TRUE
+  )
+  # The negative-variance message itself, on fixed estimates.
+  negative <- data.frame(lhs = c("Marker", "Marker", "m1", "m2"), op = c("=~", "=~", "~~", "~~"),
+                         rhs = c("m1", "m2", "m1", "m2"), est = c(.9, .4, -.05, .5), se = .1)
+  expect_error(nomologR:::nomo_method_variance_check_cfa(negative, c("m1", "m2"), "Marker"),
+               "The CFA model gives the marker a negative error variance for m1", fixed = TRUE)
+  expect_error(nomologR:::nomo_method_variance_check_cfa(negative, c("m1", "m2"), "Marker"),
+               "identified only through its correlations", fixed = TRUE)
+  # A model that does not converge is said to be the reason. No data set can
+  # guarantee that an optimizer fails, so lavaan's cfa() is stopped after its
+  # first iteration, as in the invariance tests: it returns a fit that lavaan
+  # itself reports as not converged.
+  real_cfa <- lavaan::cfa
+  testthat::with_mocked_bindings(
+    expect_error(
+      nomo_method_variance(mv_model, mv_data(mv_population()), marker = mv_marker),
+      "The CFA model did not converge", fixed = TRUE
+    ),
+    cfa = function(...) real_cfa(..., control = list(iter.max = 1L)),
+    .package = "lavaan"
+  )
+  # Standard errors that cannot be computed are reported too.
+  pe <- data.frame(lhs = c("Marker", "Marker", "m1", "m2", "m3"), op = c("=~", "=~", "~~", "~~", "~~"),
+                   rhs = c("m1", "m2", "m1", "m2", "m3"), est = c(.7, .6, .5, .5, .5),
+                   se = c(NA, .1, .1, .1, .1))
+  expect_error(nomologR:::nomo_method_variance_check_cfa(pe, c("m1", "m2", "m3"), "Marker"),
+               "The CFA model gives the marker no standard errors for its parameters", fixed = TRUE)
+  pe$se <- .1
+  expect_invisible(nomologR:::nomo_method_variance_check_cfa(pe, c("m1", "m2", "m3"), "Marker"))
+})
+
+
+test_that("lavaan warnings reach the log, and an improper model is a concern (#145)", {
+  skip_on_cran()
+  dat <- mv_data(mv_population())
+  # A variance 2500 times the others makes lavaan warn at every model, and
+  # ten incomplete cases are left out.
+  dat$a1 <- dat$a1 * 50
+  dat$b1[1:10] <- NA
+  mv <- nomo_method_variance(mv_model, dat, marker = mv_marker)
+  expect_true(length(mv$engine_warnings$CFA) > 0L)
+  warned <- mv$decision_log[mv$decision_log$metric == "engine_warning", ]
+  expect_true(nrow(warned) > 0L)
+  expect_true(all(warned$severity == "review"))
+  expect_match(warned$observation[[1L]], "lavaan warned when fitting the CFA model:", fixed = TRUE)
+  local_reproducible_output(width = 80)
+  printed <- capture.output(print(mv))
+  expect_match(printed, "CFA (Review): lavaan warned", fixed = TRUE, all = FALSE)
+  expect_match(printed, "Cases: 590 of 600 used", fixed = TRUE, all = FALSE)
+  cases <- mv$decision_log[mv$decision_log$metric == "cases_used", ]
+  expect_identical(cases$severity, "review")
+  expect_identical(cases$stage, "method_variance")
+  expect_match(printed, "Cases (Review): 590 of 600 input cases were used", fixed = TRUE,
+               all = FALSE)
+
+  # A model whose solution fails lavaan's check is a concern, with the check's
+  # own words; other warnings stay review rows.
+  log <- nomologR:::nomo_method_variance_engine_log(
+    list(
+      Baseline = c("lavaan->lav_object_post_check():\n   some estimated ov variances are negative",
+                   "another warning"),
+      `Method-U` = character(),
+      `Baseline vs. Method-C` = "a comparison warning"
+    ),
+    c(Baseline = FALSE, `Method-U` = FALSE)
+  )
+  expect_identical(log$severity, c("concern", "review", "concern", "review"))
+  # In plain words, each a sentence of its own (#145).
+  expect_identical(
+    log$observation[[1L]],
+    "The Baseline solution is improper: some estimated observed-variable variances are negative."
+  )
+  expect_identical(log$observation[[2L]],
+                   "lavaan warned when fitting the Baseline model: another warning.")
+  expect_match(log$observation[[3L]], "admissibility check failed", fixed = TRUE)
+  expect_match(log$observation[[4L]], "fitting the comparison Baseline vs. Method-C", fixed = TRUE)
+  # Two failed checks make one sentence.
+  both <- nomologR:::nomo_method_variance_engine_log(
+    list(CFA = c("lavaan->lav_object_post_check():\n   some estimated ov variances are negative",
+                 "lavaan->lav_object_post_check():\n   some estimated lv variances are negative")),
+    c(CFA = FALSE)
+  )
+  expect_identical(both$observation, paste(
+    "The CFA solution is improper: some estimated observed-variable variances are negative;",
+    "some estimated latent-variable variances are negative."
+  ))
+})
+
+
+test_that("the marker name must be a syntactic name (#145)", {
+  dat <- data.frame(a1 = 1:5, a2 = 1:5, m1 = 1:5, m2 = 1:5)
+  expect_error(
+    nomo_method_variance("A =~ a1 + a2", dat, c("m1", "m2"), marker_name = "Social desirability"),
+    "`marker_name` must be a syntactic name, such as \"Socialdesirability\"", fixed = TRUE
+  )
+})
+
+
+test_that("the method-variance display helpers cover their edge cases (#144)", {
+  local_reproducible_output(width = 80)
+  facts <- capture.output(nomologR:::nomo_method_variance_present_facts(list(
+    marker = c("m1", "m2", "m3"), n = 600, data_n = 600, estimator_shown = NA_character_,
+    retained = "Method-C", alpha = .01
+  )))
+  expect_identical(facts, c(
+    "<nomo_method_variance> Marker-based method variance",
+    "Williams, Hartman, and Cavazotte (2010).",
+    "Marker: m1, m2, m3 | Cases: 600",
+    "Retained: Method-C | Comparisons at alpha = .01"
+  ))
+  expect_null(nomologR:::nomo_method_variance_present_flagged(tibble::tibble()))
+  captured <- nomologR:::nomo_method_variance_capture({
+    warning("first")
+    warning("first")
+    "value"
+  })
+  expect_identical(captured, list(value = "value", warnings = "first"))
 })

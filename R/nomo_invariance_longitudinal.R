@@ -67,8 +67,10 @@
 #'
 #' @return A `nomo_invariance_longitudinal` object, which is also a
 #'   `nomo_invariance` object, so [nomo_table()], [nomo_apa_table()], and
-#'   `plot()` work as they do for groups. The fields to read are those of
-#'   [nomo_invariance()], with `occasions` in place of `groups`, and:
+#'   `plot()` work as they do for groups, and `print()` and `summary()` show
+#'   what they show for groups. The fields to read are those of
+#'   [nomo_invariance()], with `occasions` in place of `groups` and without
+#'   `group_n`, since every occasion has the same people, and:
 #'
 #'   * `latent_means`: at each level that holds intercepts equal, each later
 #'     occasion's latent mean relative to the first, in the first occasion's
@@ -293,6 +295,7 @@ nomo_invariance_longitudinal <- function(model,
   )
   fit_evidence <- run$fit_evidence
   ordered_used <- length(ordered_columns) > 0L
+  cases <- nomo_invariance_cases(run$fits, nrow(data))
 
   decision_log <- nomo_invariance_decision_log(
     group = "occasions",
@@ -312,7 +315,10 @@ nomo_invariance_longitudinal <- function(model,
     score_diagnostics = run$score_diagnostics,
     design = "occasions",
     ordered_detected = ordered_detected,
-    partial_declared = prepared$partial_declared
+    partial_declared = prepared$partial_declared,
+    cases = cases,
+    engine_warnings = run$engine_warnings,
+    comparison_warnings = run$comparison_warnings
   )
   means <- nomo_invariance_longitudinal_means(
     fits = run$fits,
@@ -336,6 +342,7 @@ nomo_invariance_longitudinal <- function(model,
     model = model,
     longitudinal_model = longitudinal_model,
     data_n = nrow(data),
+    n_used = cases$n_used,
     group = NA_character_,
     groups = occasions,
     occasions = occasions,
@@ -375,6 +382,7 @@ nomo_invariance_longitudinal <- function(model,
     fits = run$fits,
     fit_measures = run$fit_measures,
     fit_evidence = fit_evidence,
+    fit_variants = run$fit_variants,
     latent_means = latent_means,
     engine_warnings = run$engine_warnings,
     comparison_warnings = run$comparison_warnings,
@@ -397,7 +405,10 @@ nomo_invariance_longitudinal_structure <- function(model) {
       call. = FALSE
     )
   }
-  if (grepl("*", model, fixed = TRUE)) {
+  # A modifier such as 0.7* or a label is found in the parsed model, so a "*"
+  # in a comment is not mistaken for one (#145).
+  modifiers <- lavaan::lavParseModelString(model, as.data.frame. = TRUE)$mod.idx
+  if (any(modifiers > 0L)) {
     stop(
       "`model` cannot fix or label loadings; the invariance levels constrain them.",
       call. = FALSE

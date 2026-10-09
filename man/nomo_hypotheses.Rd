@@ -14,6 +14,11 @@ or \code{\link[=negligible]{negligible()}}. Names must specify relations using \
 A \code{nomo_hypotheses} object whose \code{hypotheses} field is one row per
 hypothesis: its relation, prediction, theoretical region, scale, and
 origin. \code{n} is the number of hypotheses.
+
+\code{print()} shows the relations with each predicted region in words, their
+scale, and their origin. \code{summary()} adds the counts by origin, how many
+predictions can be confirmed as specified, and what each prediction
+claims.
 }
 \description{
 \code{nomo_hypotheses()} converts named theoretical predictions into a
