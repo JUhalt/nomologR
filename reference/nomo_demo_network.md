@@ -18,18 +18,18 @@ A data frame with 800 rows and 13 columns:
 
 - ag1, ag2, ag3, ag4:
 
-  Agency indicators. Population standardized loadings .80, .75, .70,
-  .78.
+  Agency indicators. Population standardized loadings 0.80, 0.75, 0.70,
+  0.78.
 
 - pe1, pe2, pe3, pe4:
 
-  Persistence indicators. Population standardized loadings .78, .72,
-  .76, .70.
+  Persistence indicators. Population standardized loadings 0.78, 0.72,
+  0.76, 0.70.
 
 - sd1, sd2, sd3:
 
-  Social desirability indicators. Population standardized loadings .70,
-  .75, .65.
+  Social desirability indicators. Population standardized loadings 0.70,
+  0.75, 0.65.
 
 - Performance:
 
@@ -50,9 +50,9 @@ source repository.
 Within each group, the population structural model is:
 
 - Persistence is regressed on Agency with a standardized coefficient of
-  .45;
+  0.45;
 
-- Performance is regressed on Agency (.40) and **not** on Persistence
+- Performance is regressed on Agency (0.40) and **not** on Persistence
   (0);
 
 - Agency and Social desirability are uncorrelated (0).
@@ -64,9 +64,9 @@ zero. This makes the dataset useful for teaching the difference between
 a marginal association and a theory-specified structural path.
 
 Measurement-invariance teaching features: all loadings are equal across
-groups, the latent Agency mean is .25 SD higher in the `paper` group,
-and the intercept of `ag3` is .50 higher in the `paper` group. The `ag3`
-intercept is therefore a known source of scalar non-invariance.
+groups, the latent Agency mean is 0.25 SD higher in the `paper` group,
+and the intercept of `ag3` is 0.50 higher in the `paper` group. The
+`ag3` intercept is therefore a known source of scalar non-invariance.
 Indicators are reported on a continuous rating metric (population mean
 4, SD 1 in the `online` group) and rounded to two decimals.
 

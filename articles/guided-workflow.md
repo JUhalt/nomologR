@@ -511,12 +511,11 @@ nomo_table(revised$revision_comparison, "comparisons")[, c(
 #> 1 revised less_constrained     0.0105       1   0.918 -0.000333
 ```
 
-Here the revision changes almost nothing (chi-square difference = 0.01,
-df = 1, p = 0.918; CFI changes by -0.0003). Once the common factor is
-accounted for, the residual association these two items were expected to
-share is close to zero, so the data give no reason to prefer the revised
-model over its parent. A revision is not automatically an improvement,
-and
+Here the revision changes almost nothing (Delta chi-square(1) = 0.01,
+*p* = .918; CFI change .000). Once the common factor is accounted for,
+the residual association these two items were expected to share is close
+to zero, so the data give no reason to prefer the revised model over its
+parent. A revision is not automatically an improvement, and
 [`nomo_revise()`](https://juhalt.github.io/nomologR/reference/nomo_revise.md)
 does not choose: it records the attempt, its rationale, and the
 comparison, so keeping the parent model is as visible as adopting the
@@ -754,9 +753,9 @@ workflow](https://juhalt.github.io/nomologR/articles/reproducible-report.md).
 Staged scale development with explicit decisions follows guidance such
 as Clark and Watson (1995, 2019), Hinkin (1998), and Boateng et
 al. (2018). Recording decisions and rationales responds to evidence that
-undisclosed analytic flexibility undermines measurement claims (Simmons,
-Nelson, & Simonsohn, 2011; Flake, Pek, & Hehman, 2017; Flake & Fried,
-2020). Full references are in
+undisclosed analytic flexibility undermines measurement claims (Simmons
+et al., 2011; Flake et al., 2017; Flake & Fried, 2020). Full references
+are in
 [`?nomo_run`](https://juhalt.github.io/nomologR/reference/nomo_run.md)
 and the [research
 basis](https://juhalt.github.io/nomologR/articles/research-basis.md)

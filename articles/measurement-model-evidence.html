@@ -547,8 +547,7 @@ index points toward the cross-loading that the data-generating model
 contains, but <code>nomologR</code> does not add it. Allowing a
 cross-loading, revising the item, or evaluating a model without it is a
 theoretical decision; freeing parameters because an index is large is
-capitalization on chance (MacCallum, Roznowski, &amp; Necowitz,
-1992).</li>
+capitalization on chance (MacCallum et al., 1992).</li>
 <li>
 <strong>The same sample is not independent confirmation.</strong>
 This CFA uses the data that suggested the structure.
@@ -610,8 +609,8 @@ post hoc:</p>
 <span><span class="co">## </span></span>
 <span><span class="co">## See summary(x) for the interpretations and measurement evidence and</span></span>
 <span><span class="co">## nomo_table(x, "comparisons") for every test.</span></span></code></pre>
-<p>Estimating the cross-loading reduces misfit (chi-square difference =
-48.7, df = 1, p &lt; .001; CFI changes by +0.027). That is exactly the
+<p>Estimating the cross-loading reduces misfit (Delta chi-square(1) =
+48.72, <em>p</em> &lt; .001; CFI change +.027). That is exactly the
 feature built into these simulated data, but with real data the evidence
 alone does not settle the question. Does the wording of <code>a5</code>
 plausibly reflect both constructs? Because the comparison is post hoc,
@@ -718,8 +717,8 @@ and fix its loading to zero:</p>
 <span><span class="co">## </span></span>
 <span><span class="co">## See nomo_table(x, "decision_log") for the decision log and x$fits for each</span></span>
 <span><span class="co">## model's own analysis.</span></span></code></pre>
-<p>Fixing the loading to zero worsens fit (chi-square difference = 46.9,
-df = 1, p &lt; .001), so <code>b5</code> is statistically related to B.
+<p>Fixing the loading to zero worsens fit (Delta chi-square(1) = 46.91,
+<em>p</em> &lt; .001), so <code>b5</code> is statistically related to B.
 Its standardized loading, however, is only 0.34. With 473 cases, even a
 weak relation is detectable; statistical detectability is not the same
 as an adequate indicator. The decision still depends on whether
@@ -772,11 +771,11 @@ it. None of them alone decides whether the item stays.</p>
 <p>The comparison above freed one cross-loading because the results
 pointed to it. Exploratory structural equation modeling (ESEM) estimates
 all of them, in a model that still gives fit and standard errors
-(Asparouhov &amp; Muthén, 2009). With an a priori structure, Marsh,
-Morin, Parker, and Kaur (2014) recommend target rotation: each item
-loads freely on its own factor, and its cross-loadings are rotated
-towards zero without being fixed there. <code><a href="../reference/nomo_esem.html">nomo_esem()</a></code> fits
-the ESEM beside the CFA of the same model:</p>
+(Asparouhov &amp; Muthén, 2009). With an a priori structure, Marsh et
+al. (2014) recommend target rotation: each item loads freely on its own
+factor, and its cross-loadings are rotated towards zero without being
+fixed there. <code><a href="../reference/nomo_esem.html">nomo_esem()</a></code> fits the ESEM beside the CFA of
+the same model:</p>
 <div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">esem</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_esem.html">nomo_esem</a></span><span class="op">(</span><span class="va">demo_model</span>, data <span class="op">=</span> <span class="va">nomo_demo_continuous</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">esem</span><span class="op">)</span></span></code></pre></div>
@@ -840,10 +839,10 @@ the ESEM beside the CFA of the same model:</p>
 <span><span class="co">## See nomo_table(x, "loadings") for each loading's standard error and p value</span></span>
 <span><span class="co">## and nomo_table(x, "decision_log") for the decision log.</span></span></code></pre>
 <p>The ESEM fits better even on TLI and RMSEA, which penalize its extra
-parameters (TLI 1.006 vs. 0.965, RMSEA 0.000 vs. 0.051). Without being
+parameters (TLI 1.006 vs. 0.965, RMSEA 0.000 vs. 0.051). Without being
 told where to look, its loadings show both features built into these
 data: <code>a5</code> cross-loads on B, and <code>b5</code> is weak. The
-factor correlation barely moves (0.48 vs. 0.50), so here the zero
+factor correlation barely moves (.48 vs. .50), so here the zero
 cross-loadings cost the CFA fit without distorting the relation between
 the factors. When items of related constructs share many small
 cross-loadings, the CFA pushes them into the factor correlations
@@ -857,7 +856,7 @@ question about its content.</p>
 <h2 id="does-a-result-depend-on-how-missing-data-were-handled">Does a result depend on how missing data were handled?<a class="anchor" aria-label="anchor" href="#does-a-result-depend-on-how-missing-data-were-handled"></a>
 </h2>
 <p><code>demo_cfa</code> used lavaan’s default, listwise deletion, which
-analyses only the cases observed on every item.
+analyzes only the cases observed on every item.
 <code><a href="../reference/nomo_missing.html">nomo_missing()</a></code> refits the same model under alternative
 strategies and reports what changes. For continuous indicators it
 compares listwise deletion with full-information maximum likelihood
@@ -966,9 +965,9 @@ whether B is missing depends on the observed A items:</p>
 <span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
 <span><span class="co">## <span style="color: #BCBCBC;">1</span> listwise    0.411 0.026<span style="text-decoration: underline;">4</span>            -<span style="color: #BB0000;">2.01</span></span></span>
 <span><span class="co">## <span style="color: #BCBCBC;">2</span> ml          0.467 0.028<span style="text-decoration: underline;">0</span>            <span style="color: #BB0000;">NA</span></span></span></code></pre>
-<p>FIML’s estimate, 0.467, is 1.2 of its standard errors from the
-population value, within sampling error. Listwise deletion’s, 0.411, is
-3.4 standard errors below it. The complete cases under-represent high
+<p>FIML’s estimate, .47, is 1.18 of its standard errors from the
+population value, within sampling error. Listwise deletion’s, .41, is
+3.38 standard errors below it. The complete cases under-represent high
 scorers on A, and that restricted range attenuates the correlation. The
 decision log flags the difference and says what it can and cannot
 mean:</p>
@@ -1075,7 +1074,7 @@ it.</p>
 <span><span class="co">## meaningful one.</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## See nomo_table(x, "reliable_change") for each person's change.</span></span></code></pre>
-<p>These scores were simulated to rise by .30 between occasions, and in
+<p>These scores were simulated to rise by 0.30 between occasions, and in
 this sample they rose by 0.24. That rise is why ICC(A,1) is below
 ICC(C,1), and the summary flags it.</p>
 <p>Koo and Li read the reliability range from the interval rather than
@@ -1090,13 +1089,12 @@ changed by more than that changed reliably, in Jacobson and Truax’s
 <h2 id="method-variance-from-a-marker-variable">Method variance from a marker variable<a class="anchor" aria-label="anchor" href="#method-variance-from-a-marker-variable"></a>
 </h2>
 <p>When every measure comes from the same self-report, some of what the
-items share may be the method rather than the constructs (Podsakoff,
-MacKenzie, Lee, &amp; Podsakoff, 2003). A marker variable is a measure
-theoretically unrelated to the constructs that taps the biases the
-measurement context invites, such as social desirability or common scale
-anchors. What it shares with them is taken to be method variance
-(Lindell &amp; Whitney, 2001; Williams, Hartman, &amp; Cavazotte,
-2010).</p>
+items share may be the method rather than the constructs (Podsakoff et
+al., 2003). A marker variable is a measure theoretically unrelated to
+the constructs that taps the biases the measurement context invites,
+such as social desirability or common scale anchors. What it shares with
+them is taken to be method variance (Lindell &amp; Whitney, 2001;
+Williams et al., 2010).</p>
 <p><code><a href="../reference/nomo_method_variance.html">nomo_method_variance()</a></code> follows Williams et al.’s (2010)
 comprehensive CFA marker technique:</p>
 <ul>
@@ -1112,7 +1110,7 @@ factor’s reliability the method accounts for.</li>
 ends of their intervals farther from zero.</li>
 </ul>
 <p>Here, two constructs and a three-item marker are simulated sharing a
-method factor that loads .30 on every item:</p>
+method factor that loads 0.30 on every item:</p>
 <div class="sourceCode" id="cb51"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2010</span><span class="op">)</span></span>
 <span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">600</span></span>
@@ -1190,19 +1188,19 @@ it.</p>
 <p>The technique has a limit worth teaching. In simulations it did not
 find method variance that was absent when the marker was ideal. With a
 nonideal marker it sometimes did, and with either kind it did not
-recover the substantive correlations accurately (Richardson, Simmering,
-&amp; Sturman, 2009). The results describe the method variance this
-marker captures. They are not corrected estimates, and a marker chosen
-only because it is unrelated, such as a demographic, may capture no
-method variance at all.</p>
+recover the substantive correlations accurately (Richardson et al.,
+2009). The results describe the method variance this marker captures.
+They are not corrected estimates, and a marker chosen only because it is
+unrelated, such as a demographic, may capture no method variance at
+all.</p>
 </div>
 <div class="section level2">
 <h2 id="planning-the-sample-size">Planning the sample size<a class="anchor" aria-label="anchor" href="#planning-the-sample-size"></a>
 </h2>
 <p>Two questions about sample size have different answers. The first is
-whether the overall fit test can tell good fit from mediocre. MacCallum,
-Browne, and Sugawara (1996) answered it with power for tests of RMSEA,
-which depends mostly on the model’s degrees of freedom:</p>
+whether the overall fit test can tell good fit from mediocre. MacCallum
+et al. (1996) answered it with power for tests of RMSEA, which depends
+mostly on the model’s degrees of freedom:</p>
 <div class="sourceCode" id="cb53"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/nomo_power_rmsea.html">nomo_power_rmsea</a></span><span class="op">(</span><span class="fu"><a href="../reference/nomo_model.html">nomo_model</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>A <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">)</span>, B <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"b"</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## &lt;nomo_power&gt; Power of the test of close fit</span></span>
@@ -1236,9 +1234,9 @@ reaches .80.</p>
 <span><span class="st">"</span></span>
 <span><span class="fu"><a href="../reference/nomo_power_simulate.html">nomo_power_simulate</a></span><span class="op">(</span><span class="va">population</span>, n <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">100</span>, <span class="fl">150</span>, <span class="fl">200</span>, <span class="fl">300</span><span class="op">)</span>, reps <span class="op">=</span> <span class="fl">500</span>,</span>
 <span>                    focus <span class="op">=</span> <span class="st">"A~~B"</span>, seed <span class="op">=</span> <span class="fl">2026</span><span class="op">)</span></span></code></pre></div>
-<p>Wolf, Harrington, Clark, and Miller (2013) found that the N a model
-needs ranges widely with its structure, so no rule of thumb, such as 200
-cases or ten per parameter, replaces the simulation.</p>
+<p>Wolf et al. (2013) found that the N a model needs ranges widely with
+its structure, so no rule of thumb, such as 200 cases or ten per
+parameter, replaces the simulation.</p>
 </div>
 <div class="section level2">
 <h2 id="reading-the-evidence-as-an-argument">Reading the evidence as an argument<a class="anchor" aria-label="anchor" href="#reading-the-evidence-as-an-argument"></a>
@@ -1270,25 +1268,25 @@ the scale or model.</p>
 </h2>
 <p>The reliability workflow follows the literature recommending
 model-based omega for congeneric measurement and cautioning against
-mechanical use of coefficient alpha, including Dunn, Baguley, and
-Brunsden (2014), Flora (2020), and Bell, Chalmers, and Flora (2024).
-Ordered-score reliability follows the distinction emphasized by Green
-and Yang (2009) and implemented in <code>semTools</code>.</p>
+mechanical use of coefficient alpha, including Dunn et al. (2014), Flora
+(2020), and Bell et al. (2024). Ordered-score reliability follows the
+distinction emphasized by Green and Yang (2009) and implemented in
+<code>semTools</code>.</p>
 <p>The validity workflow treats AVE as convergent evidence rather than
 reliability, following Fornell and Larcker (1981). For construct
 separation, HTMT-family evidence is prioritized because simulation
-research shows that older criteria can miss overlap (Henseler, Ringle,
-&amp; Sarstedt, 2015). HTMT2 is emphasized for congeneric measurement
-because it relaxes the original HTMT tau-equivalence assumption (Roemer,
-Schuberth, &amp; Henseler, 2021). Fornell-Larcker output remains
-available only as optional historical/ supporting information.</p>
+research shows that older criteria can miss overlap (Henseler et al.,
+2015). HTMT2 is emphasized for congeneric measurement because it relaxes
+the original HTMT tau-equivalence assumption (Roemer et al., 2021).
+Fornell-Larcker output remains available only as optional historical/
+supporting information.</p>
 <p>ESEM follows Asparouhov and Muthén (2009), with the target rotation
 Marsh et al. (2014) recommend for an a priori structure (Browne,
 2001).</p>
-<p>Method variance follows Williams, Hartman, and Cavazotte’s (2010)
-comprehensive CFA marker technique, building on Lindell and Whitney
-(2001), with the limits Richardson, Simmering, and Sturman (2009) and
-Podsakoff, MacKenzie, and Podsakoff (2012) describe.</p>
+<p>Method variance follows Williams et al.’s (2010) comprehensive CFA
+marker technique, building on Lindell and Whitney (2001), with the
+limits Richardson et al. (2009) and Podsakoff et al. (2012)
+describe.</p>
 <p>Test-retest reliability follows Koo and Li (2016) and the intraclass
 correlations defined by Shrout and Fleiss (1979) and McGraw and Wong
 (1996). Measurement error and reliable change follow Weir (2005) and

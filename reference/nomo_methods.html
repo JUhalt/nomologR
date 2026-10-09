@@ -110,6 +110,9 @@ expanded to one row per method per reference, with full <code>citation</code> an
 method, and <code>references</code> holds short in-text citations. With
 <code>references = TRUE</code> there is one row per method-reference pair, with
 <code>citation_key</code>, <code>citation</code>, and <code>doi</code>.</p>
+<p>The result is an ordinary tibble with no <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> or <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> method
+of its own, so the console shortens its long text columns; select columns,
+or call <code><a href="https://rdrr.io/r/base/list.html" class="external-link">as.list()</a></code> on one row, to read an entry in full.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -140,78 +143,111 @@ that are planned but not implemented are discussed in the research-basis
 article and tracked in issues; they are deliberately absent here, so that
 <code>nomo_methods(run)</code> can never credit a run with a method it did not use.</p>
 <p>Passing a <code>nomologR</code> result object returns only the methods that object
-actually used, which is what <code><a href="nomo_report.html">nomo_report()</a></code> cites.</p>
+actually used, which is what <code><a href="nomo_report.html">nomo_report()</a></code> cites. They are read from what
+the object records: the estimator that ran, the extraction and rotation of
+an exploratory solution, and an equivalence test only where one could be
+computed.</p>
     </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># The whole registry</span></span></span>
-<span class="r-in"><span><span class="fu">nomo_methods</span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 99 × 12</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    id      stage method lineage role  estimand assumptions implemented_by engine</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> missin… scre… Item … contem… supp… Proport… Descriptiv… nomo_screen()  nomol…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> respon… scre… Respo… contem… supp… Categor… Requires i… nomo_screen()  nomol…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> item_r… scre… Corre… contem… supp… Correla… Depends on… nomo_screen()  nomol…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> item_t… scre… Fixed… histor… cont… A conve… No simulat… nomo_screen()  nomol…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> near_z… scre… Near-… contem… supp… Frequen… Heuristic … nomo_screen()  nomol…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> long_s… scre… Long-… contem… supp… Longest… Reads raw … nomo_screen()  nomol…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> inter_… scre… Inter… contem… supp… Within-… Detects ra… nomo_screen()  nomol…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> mahala… scre… Mahal… contem… supp… Multiva… Unaffected… nomo_screen()  nomol…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> even_o… scre… Even-… contem… supp… Within-… Needs at l… nomo_screen()  nomol…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> psycho… scre… Psych… contem… supp… Within-… Needs at l… nomo_screen()  nomol…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 89 more rows</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 3 more variables: introduced &lt;int&gt;, contemporary_practice &lt;chr&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   references &lt;chr&gt;</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># The whole registry, one row per method</span></span></span>
+<span class="r-in"><span><span class="va">methods</span> <span class="op">&lt;-</span> <span class="fu">nomo_methods</span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">methods</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"method"</span>, <span class="st">"lineage"</span>, <span class="st">"role"</span><span class="op">)</span><span class="op">]</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 102 × 3</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    method                                             lineage      role      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                                              <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> Item and case missingness audit                    contemporary supporting</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> Response distribution and category-use audit       contemporary supporting</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> Corrected item-rest correlation                    contemporary supporting</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> Fixed item-total correlation reference (about .30) historical   context   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> Near-zero-variance screening                       contemporary supporting</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> Long-string analysis                               contemporary supporting</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> Inter-item standard deviation                      contemporary supporting</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> Mahalanobis distance screen                        contemporary supporting</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> Even-odd consistency                               contemporary supporting</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> Psychometric antonyms                              contemporary supporting</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 92 more rows</span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Everything the registry records about one method</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">as.list</a></span><span class="op">(</span><span class="va">methods</span><span class="op">[</span><span class="va">methods</span><span class="op">$</span><span class="va">id</span> <span class="op">==</span> <span class="st">"omega"</span>, <span class="op">]</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $id</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "omega"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $stage</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "reliability"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $method</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Model-based coefficient omega"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $lineage</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "contemporary"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $role</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "primary"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $estimand</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Proportion of composite-score variance attributable to the common factor."</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $assumptions</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Requires a fitted measurement model; misspecification of that model biases the estimate."</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $implemented_by</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "nomo_reliability()"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $engine</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "semTools"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $introduced</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $contemporary_practice</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $references</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Dunn et al. (2014); McNeish (2018); Flora (2020); Bell et al. (2024)"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># What is shown only as historical context, and why</span></span></span>
 <span class="r-in"><span><span class="fu">nomo_methods</span><span class="op">(</span>lineage <span class="op">=</span> <span class="st">"historical"</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"method"</span>, <span class="st">"role"</span>, <span class="st">"assumptions"</span><span class="op">)</span><span class="op">]</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 20 × 3</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    method                                               role       assumptions  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                                                <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> Fixed item-total correlation reference (about .30)   context    No simulatio…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> Eigenvalue-greater-than-one rule                     context    Over-extract…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> Scree test                                           context    Requires sub…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> Kaiser-Meyer-Olkin sampling adequacy                 supporting Supporting a…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> Bartlett's test of sphericity                        supporting Strongly sam…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> Orthogonal (varimax) rotation                        context    Forces facto…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> Fixed loading cutoff                                 context    No universal…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> Chi-square exact-fit test                            supporting Power increa…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> Fixed fit-index cutoffs                              context    Derived unde…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> Modification indices                                 context    Data-driven …</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">11</span> Coefficient alpha                                    supporting Assumes equa…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">12</span> Schmid-Leiman decomposition                          supporting Originally a…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">13</span> Standardized loadings and average variance extracted supporting Convergent e…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">14</span> Fornell-Larcker comparison                           context    Simulation w…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">15</span> Unit-weighted sum or mean score                      primary    Not a model-…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">16</span> Regression (Thurstone) factor scores                 primary    Indeterminat…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">17</span> Bartlett factor scores                               primary    Indeterminat…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">18</span> Nomological network of construct relations           primary    Evidence for…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">19</span> Listwise deletion                                    context    Requires dat…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">20</span> Pairwise deletion                                    context    Requires dat…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 21 × 3</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    method                                                      role  assumptions</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                                                       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> Fixed item-total correlation reference (about .30)          cont… No simulat…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> Eigenvalue-greater-than-one rule                            cont… Over-extra…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> Scree test                                                  cont… Requires s…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> Kaiser-Meyer-Olkin sampling adequacy                        supp… Supporting…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> Bartlett's test of sphericity                               supp… Strongly s…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> Orthogonal (varimax) rotation                               cont… Forces fac…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> Other orthogonal rotation (quartimax, equamax, varimin, ge… cont… Forces fac…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> Fixed loading cutoff                                        cont… No univers…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> Chi-square exact-fit test                                   supp… Power incr…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> Fixed fit-index cutoffs                                     cont… Derived un…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 11 more rows</span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># How practice changed: historical methods and what now does their work</span></span></span>
 <span class="r-in"><span><span class="va">old</span> <span class="op">&lt;-</span> <span class="fu">nomo_methods</span><span class="op">(</span>lineage <span class="op">=</span> <span class="st">"historical"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">old</span><span class="op">[</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">old</span><span class="op">$</span><span class="va">contemporary_practice</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>    <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"introduced"</span>, <span class="st">"method"</span>, <span class="st">"contemporary_practice"</span><span class="op">)</span><span class="op">]</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 15 × 3</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 16 × 3</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    introduced method                                       contemporary_practice</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                                        <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span>         <span style="color: #BB0000;">NA</span> Fixed item-total correlation reference (abo… item_rest_correlation</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span>       <span style="text-decoration: underline;">1</span>954 Eigenvalue-greater-than-one rule             parallel_analysis; m…</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span>       <span style="text-decoration: underline;">1</span>966 Scree test                                   parallel_analysis    </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span>       <span style="text-decoration: underline;">1</span>958 Orthogonal (varimax) rotation                oblique_rotation     </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span>         <span style="color: #BB0000;">NA</span> Fixed loading cutoff                         loading_diagnostics  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span>       <span style="text-decoration: underline;">1</span>969 Chi-square exact-fit test                    incremental_fit; rms…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span>       <span style="text-decoration: underline;">1</span>999 Fixed fit-index cutoffs                      local_strain         </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span>         <span style="color: #BB0000;">NA</span> Modification indices                         local_strain; revisi…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span>       <span style="text-decoration: underline;">1</span>951 Coefficient alpha                            omega                </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span>       <span style="text-decoration: underline;">1</span>957 Schmid-Leiman decomposition                  bifactor_model       </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">11</span>       <span style="text-decoration: underline;">1</span>981 Fornell-Larcker comparison                   htmt2; latent_correl…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">12</span>         <span style="color: #BB0000;">NA</span> Unit-weighted sum or mean score              parallel_model_test  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">13</span>       <span style="text-decoration: underline;">1</span>955 Nomological network of construct relations   two_step_sem; predic…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">14</span>         <span style="color: #BB0000;">NA</span> Listwise deletion                            fiml; missing_sensit…</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">15</span>         <span style="color: #BB0000;">NA</span> Pairwise deletion                            fiml; missing_sensit…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span>         <span style="color: #BB0000;">NA</span> Other orthogonal rotation (quartimax, equam… oblique_rotation     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span>         <span style="color: #BB0000;">NA</span> Fixed loading cutoff                         loading_diagnostics  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span>       <span style="text-decoration: underline;">1</span>969 Chi-square exact-fit test                    incremental_fit; rms…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span>       <span style="text-decoration: underline;">1</span>999 Fixed fit-index cutoffs                      local_strain         </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span>         <span style="color: #BB0000;">NA</span> Modification indices                         local_strain; revisi…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span>       <span style="text-decoration: underline;">1</span>951 Coefficient alpha                            omega                </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">11</span>       <span style="text-decoration: underline;">1</span>957 Schmid-Leiman decomposition                  bifactor_model       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">12</span>       <span style="text-decoration: underline;">1</span>981 Fornell-Larcker comparison                   htmt2; latent_correl…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">13</span>         <span style="color: #BB0000;">NA</span> Unit-weighted sum or mean score              parallel_model_test  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">14</span>       <span style="text-decoration: underline;">1</span>955 Nomological network of construct relations   two_step_sem; predic…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">15</span>         <span style="color: #BB0000;">NA</span> Listwise deletion                            fiml; missing_sensit…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">16</span>         <span style="color: #BB0000;">NA</span> Pairwise deletion                            fiml; missing_sensit…</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># A reference list for one stage</span></span></span>
 <span class="r-in"><span><span class="fu">nomo_methods</span><span class="op">(</span>stage <span class="op">=</span> <span class="st">"reliability"</span>, references <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"method"</span>, <span class="st">"citation"</span><span class="op">)</span><span class="op">]</span></span></span>

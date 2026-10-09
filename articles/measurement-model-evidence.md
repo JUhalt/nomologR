@@ -534,7 +534,7 @@ Three lessons carry over from the exploratory stage:
   `nomologR` does not add it. Allowing a cross-loading, revising the
   item, or evaluating a model without it is a theoretical decision;
   freeing parameters because an index is large is capitalization on
-  chance (MacCallum, Roznowski, & Necowitz, 1992).
+  chance (MacCallum et al., 1992).
 - **The same sample is not independent confirmation.** This CFA uses the
   data that suggested the structure.
   [`nomo_split()`](https://juhalt.github.io/nomologR/reference/nomo_split.md)
@@ -599,13 +599,13 @@ cross_comparison
     ## See summary(x) for the interpretations and measurement evidence and
     ## nomo_table(x, "comparisons") for every test.
 
-Estimating the cross-loading reduces misfit (chi-square difference =
-48.7, df = 1, p \< .001; CFI changes by +0.027). That is exactly the
-feature built into these simulated data, but with real data the evidence
-alone does not settle the question. Does the wording of `a5` plausibly
-reflect both constructs? Because the comparison is post hoc, the
-decision log records it as such and recommends confirming the retained
-model in independent data.
+Estimating the cross-loading reduces misfit (Delta chi-square(1) =
+48.72, *p* \< .001; CFI change +.027). That is exactly the feature built
+into these simulated data, but with real data the evidence alone does
+not settle the question. Does the wording of `a5` plausibly reflect both
+constructs? Because the comparison is post hoc, the decision log records
+it as such and recommends confirming the retained model in independent
+data.
 
 ### Is a weak item needed?
 
@@ -710,8 +710,8 @@ summary(b5_comparison)
     ## See nomo_table(x, "decision_log") for the decision log and x$fits for each
     ## model's own analysis.
 
-Fixing the loading to zero worsens fit (chi-square difference = 46.9, df
-= 1, p \< .001), so `b5` is statistically related to B. Its standardized
+Fixing the loading to zero worsens fit (Delta chi-square(1) = 46.91, *p*
+\< .001), so `b5` is statistically related to B. Its standardized
 loading, however, is only 0.34. With 473 cases, even a weak relation is
 detectable; statistical detectability is not the same as an adequate
 indicator. The decision still depends on whether `b5` covers content the
@@ -778,10 +778,9 @@ None of them alone decides whether the item stays.
 The comparison above freed one cross-loading because the results pointed
 to it. Exploratory structural equation modeling (ESEM) estimates all of
 them, in a model that still gives fit and standard errors (Asparouhov &
-Muthén, 2009). With an a priori structure, Marsh, Morin, Parker, and
-Kaur (2014) recommend target rotation: each item loads freely on its own
-factor, and its cross-loadings are rotated towards zero without being
-fixed there.
+Muthén, 2009). With an a priori structure, Marsh et al. (2014) recommend
+target rotation: each item loads freely on its own factor, and its
+cross-loadings are rotated towards zero without being fixed there.
 [`nomo_esem()`](https://juhalt.github.io/nomologR/reference/nomo_esem.md)
 fits the ESEM beside the CFA of the same model:
 
@@ -852,20 +851,20 @@ summary(esem)
     ## and nomo_table(x, "decision_log") for the decision log.
 
 The ESEM fits better even on TLI and RMSEA, which penalize its extra
-parameters (TLI 1.006 vs. 0.965, RMSEA 0.000 vs. 0.051). Without being
+parameters (TLI 1.006 vs. 0.965, RMSEA 0.000 vs. 0.051). Without being
 told where to look, its loadings show both features built into these
 data: `a5` cross-loads on B, and `b5` is weak. The factor correlation
-barely moves (0.48 vs. 0.50), so here the zero cross-loadings cost the
-CFA fit without distorting the relation between the factors. When items
-of related constructs share many small cross-loadings, the CFA pushes
-them into the factor correlations instead, and a lower ESEM correlation
-is the evidence Marsh et al. (2014) weigh in preferring it. The solution
+barely moves (.48 vs. .50), so here the zero cross-loadings cost the CFA
+fit without distorting the relation between the factors. When items of
+related constructs share many small cross-loadings, the CFA pushes them
+into the factor correlations instead, and a lower ESEM correlation is
+the evidence Marsh et al. (2014) weigh in preferring it. The solution
 depends on the rotation, and whether `a5` belongs to both constructs is
 still a question about its content.
 
 ## Does a result depend on how missing data were handled?
 
-`demo_cfa` used lavaan’s default, listwise deletion, which analyses only
+`demo_cfa` used lavaan’s default, listwise deletion, which analyzes only
 the cases observed on every item.
 [`nomo_missing()`](https://juhalt.github.io/nomologR/reference/nomo_missing.md)
 refits the same model under alternative strategies and reports what
@@ -990,11 +989,11 @@ mar_estimates[mar_estimates$type == "factor_correlation",
     ## 1 listwise    0.411 0.0264            -2.01
     ## 2 ml          0.467 0.0280            NA
 
-FIML’s estimate, 0.467, is 1.2 of its standard errors from the
-population value, within sampling error. Listwise deletion’s, 0.411, is
-3.4 standard errors below it. The complete cases under-represent high
-scorers on A, and that restricted range attenuates the correlation. The
-decision log flags the difference and says what it can and cannot mean:
+FIML’s estimate, .47, is 1.18 of its standard errors from the population
+value, within sampling error. Listwise deletion’s, .41, is 3.38 standard
+errors below it. The complete cases under-represent high scorers on A,
+and that restricted range attenuates the correlation. The decision log
+flags the difference and says what it can and cannot mean:
 
 ``` r
 
@@ -1107,7 +1106,7 @@ summary(rt)
     ## 
     ## See nomo_table(x, "reliable_change") for each person's change.
 
-These scores were simulated to rise by .30 between occasions, and in
+These scores were simulated to rise by 0.30 between occasions, and in
 this sample they rose by 0.24. That rise is why ICC(A,1) is below
 ICC(C,1), and the summary flags it.
 
@@ -1122,12 +1121,12 @@ changed by more than that changed reliably, in Jacobson and Truax’s
 ## Method variance from a marker variable
 
 When every measure comes from the same self-report, some of what the
-items share may be the method rather than the constructs (Podsakoff,
-MacKenzie, Lee, & Podsakoff, 2003). A marker variable is a measure
-theoretically unrelated to the constructs that taps the biases the
-measurement context invites, such as social desirability or common scale
-anchors. What it shares with them is taken to be method variance
-(Lindell & Whitney, 2001; Williams, Hartman, & Cavazotte, 2010).
+items share may be the method rather than the constructs (Podsakoff et
+al., 2003). A marker variable is a measure theoretically unrelated to
+the constructs that taps the biases the measurement context invites,
+such as social desirability or common scale anchors. What it shares with
+them is taken to be method variance (Lindell & Whitney, 2001; Williams
+et al., 2010).
 
 [`nomo_method_variance()`](https://juhalt.github.io/nomologR/reference/nomo_method_variance.md)
 follows Williams et al.’s (2010) comprehensive CFA marker technique:
@@ -1141,7 +1140,7 @@ follows Williams et al.’s (2010) comprehensive CFA marker technique:
   intervals farther from zero.
 
 Here, two constructs and a three-item marker are simulated sharing a
-method factor that loads .30 on every item:
+method factor that loads 0.30 on every item:
 
 ``` r
 
@@ -1224,18 +1223,17 @@ B barely moves, and the sensitivity models do not change it.
 The technique has a limit worth teaching. In simulations it did not find
 method variance that was absent when the marker was ideal. With a
 nonideal marker it sometimes did, and with either kind it did not
-recover the substantive correlations accurately (Richardson, Simmering,
-& Sturman, 2009). The results describe the method variance this marker
-captures. They are not corrected estimates, and a marker chosen only
-because it is unrelated, such as a demographic, may capture no method
-variance at all.
+recover the substantive correlations accurately (Richardson et al.,
+2009). The results describe the method variance this marker captures.
+They are not corrected estimates, and a marker chosen only because it is
+unrelated, such as a demographic, may capture no method variance at all.
 
 ## Planning the sample size
 
 Two questions about sample size have different answers. The first is
-whether the overall fit test can tell good fit from mediocre. MacCallum,
-Browne, and Sugawara (1996) answered it with power for tests of RMSEA,
-which depends mostly on the model’s degrees of freedom:
+whether the overall fit test can tell good fit from mediocre. MacCallum
+et al. (1996) answered it with power for tests of RMSEA, which depends
+mostly on the model’s degrees of freedom:
 
 ``` r
 
@@ -1278,9 +1276,9 @@ nomo_power_simulate(population, n = c(100, 150, 200, 300), reps = 500,
                     focus = "A~~B", seed = 2026)
 ```
 
-Wolf, Harrington, Clark, and Miller (2013) found that the N a model
-needs ranges widely with its structure, so no rule of thumb, such as 200
-cases or ten per parameter, replaces the simulation.
+Wolf et al. (2013) found that the N a model needs ranges widely with its
+structure, so no rule of thumb, such as 200 cases or ten per parameter,
+replaces the simulation.
 
 ## Reading the evidence as an argument
 
@@ -1306,27 +1304,25 @@ the scale or model.
 
 The reliability workflow follows the literature recommending model-based
 omega for congeneric measurement and cautioning against mechanical use
-of coefficient alpha, including Dunn, Baguley, and Brunsden (2014),
-Flora (2020), and Bell, Chalmers, and Flora (2024). Ordered-score
-reliability follows the distinction emphasized by Green and Yang (2009)
-and implemented in `semTools`.
+of coefficient alpha, including Dunn et al. (2014), Flora (2020), and
+Bell et al. (2024). Ordered-score reliability follows the distinction
+emphasized by Green and Yang (2009) and implemented in `semTools`.
 
 The validity workflow treats AVE as convergent evidence rather than
 reliability, following Fornell and Larcker (1981). For construct
 separation, HTMT-family evidence is prioritized because simulation
-research shows that older criteria can miss overlap (Henseler, Ringle, &
-Sarstedt, 2015). HTMT2 is emphasized for congeneric measurement because
-it relaxes the original HTMT tau-equivalence assumption (Roemer,
-Schuberth, & Henseler, 2021). Fornell-Larcker output remains available
-only as optional historical/ supporting information.
+research shows that older criteria can miss overlap (Henseler et al.,
+2015). HTMT2 is emphasized for congeneric measurement because it relaxes
+the original HTMT tau-equivalence assumption (Roemer et al., 2021).
+Fornell-Larcker output remains available only as optional historical/
+supporting information.
 
 ESEM follows Asparouhov and Muthén (2009), with the target rotation
 Marsh et al. (2014) recommend for an a priori structure (Browne, 2001).
 
-Method variance follows Williams, Hartman, and Cavazotte’s (2010)
-comprehensive CFA marker technique, building on Lindell and Whitney
-(2001), with the limits Richardson, Simmering, and Sturman (2009) and
-Podsakoff, MacKenzie, and Podsakoff (2012) describe.
+Method variance follows Williams et al.’s (2010) comprehensive CFA
+marker technique, building on Lindell and Whitney (2001), with the
+limits Richardson et al. (2009) and Podsakoff et al. (2012) describe.
 
 Test-retest reliability follows Koo and Li (2016) and the intraclass
 correlations defined by Shrout and Fleiss (1979) and McGraw and Wong

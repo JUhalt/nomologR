@@ -95,7 +95,7 @@ results;</li>
 <li>compare estimates and uncertainty with the prespecified theoretical
 region;</li>
 <li>distinguish theory strain, imprecision, measurement problems, and
-post-hoc exploration.</li>
+post hoc exploration.</li>
 </ol>
 </div>
 <div class="section level2">
@@ -109,8 +109,8 @@ desirability</strong> — along with an observed
 <p>The population model is known (see
 <code><a href="../reference/nomo_demo_network.html">?nomo_demo_network</a></code>):</p>
 <ul>
-<li>Agency predicts Persistence (standardized coefficient .45);</li>
-<li>Agency predicts Performance (.40);</li>
+<li>Agency predicts Persistence (standardized coefficient 0.45);</li>
+<li>Agency predicts Performance (0.40);</li>
 <li>Persistence has <strong>no</strong> direct effect on Performance
 once Agency is accounted for (0);</li>
 <li>Agency and Social desirability are unrelated (0).</li>
@@ -222,30 +222,39 @@ available in the returned object.</p>
 </h2>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">evidence</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">net</span>, <span class="st">"hypotheses"</span><span class="op">)</span></span>
+<span><span class="va">evidence</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"id"</span>, <span class="st">"relation"</span>, <span class="st">"theoretical_region"</span>, <span class="st">"concordance"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4 × 4</span></span></span>
+<span><span class="co">#&gt;   id    relation                      theoretical_region concordance </span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                         <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> H1    Agency -&gt; Persistence         [0.2, +Inf)        concordant  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> H2    Agency &lt;-&gt; SocialDesirability [-0.15, 0.15]      concordant  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> H3    Agency -&gt; Performance         (0, +Inf)          concordant  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> H4    Persistence -&gt; Performance    [0.2, +Inf)        inconsistent</span></span>
 <span><span class="va">evidence</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
-<span>  <span class="st">"id"</span>, <span class="st">"relation"</span>, <span class="st">"theoretical_region"</span>, <span class="st">"estimate"</span>,</span>
-<span>  <span class="st">"ci_lower"</span>, <span class="st">"ci_upper"</span>, <span class="st">"equivalence_supported"</span>, <span class="st">"concordance"</span></span>
+<span>  <span class="st">"id"</span>, <span class="st">"estimate"</span>, <span class="st">"ci_lower"</span>, <span class="st">"ci_upper"</span>,</span>
+<span>  <span class="st">"equivalence_ci_lower"</span>, <span class="st">"equivalence_ci_upper"</span></span>
 <span><span class="op">)</span><span class="op">]</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4 × 8</span></span></span>
-<span><span class="co">#&gt;   id    relation                   theoretical_region estimate ci_lower ci_upper</span></span>
-<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                 <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> H1    Agency -&gt; Persistence      [0.2, +Inf)         0.458     0.389    0.526 </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> H2    Agency &lt;-&gt; SocialDesirabi… [-0.15, 0.15]       0.007<span style="text-decoration: underline;">73</span>  -<span style="color: #BB0000;">0.079</span><span style="color: #BB0000; text-decoration: underline;">4</span>   0.094<span style="text-decoration: underline;">8</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> H3    Agency -&gt; Performance      (0, +Inf)           0.418     0.341    0.495 </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> H4    Persistence -&gt; Performance [0.2, +Inf)        -<span style="color: #BB0000;">0.062</span><span style="color: #BB0000; text-decoration: underline;">4</span>   -<span style="color: #BB0000;">0.146</span>    0.021<span style="text-decoration: underline;">5</span></span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 2 more variables: equivalence_supported &lt;lgl&gt;, concordance &lt;chr&gt;</span></span></span></code></pre></div>
-<p>Reading each row:</p>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4 × 6</span></span></span>
+<span><span class="co">#&gt;   id    estimate ci_lower ci_upper equivalence_ci_lower equivalence_ci_upper</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>                <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>                <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> H1     0.458     0.389    0.526               <span style="color: #BB0000;">NA</span>                   <span style="color: #BB0000;">NA</span>     </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> H2     0.007<span style="text-decoration: underline;">73</span>  -<span style="color: #BB0000;">0.079</span><span style="color: #BB0000; text-decoration: underline;">4</span>   0.094<span style="text-decoration: underline;">8</span>              -<span style="color: #BB0000;">0.065</span><span style="color: #BB0000; text-decoration: underline;">4</span>               0.080<span style="text-decoration: underline;">8</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> H3     0.418     0.341    0.495               <span style="color: #BB0000;">NA</span>                   <span style="color: #BB0000;">NA</span>     </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> H4    -<span style="color: #BB0000;">0.062</span><span style="color: #BB0000; text-decoration: underline;">4</span>   -<span style="color: #BB0000;">0.146</span>    0.021<span style="text-decoration: underline;">5</span>              <span style="color: #BB0000;">NA</span>                   <span style="color: #BB0000;">NA</span></span></span></code></pre></div>
+<p>The first table gives each prediction and how the evidence was
+classified, and the second the estimates behind it. Reading each
+relation:</p>
 <ul>
 <li>
 <strong>H1</strong> (<code>Agency -&gt; Persistence</code>):
 estimate 0.46, interval [0.39, 0.53], classified
-<strong>concordant</strong> with the prediction of at least .20.</li>
+<strong>concordant</strong> with the prediction of at least 0.20.</li>
 <li>
 <strong>H2</strong>
-(<code>Agency &lt;-&gt; SocialDesirability</code>): estimate 0.01. The
-90% equivalence interval [-0.07, 0.08] lies inside the ±.15 region, so
-the negligible prediction is supported by equivalence evidence — not
-merely by a non-significant p-value.</li>
+(<code>Agency &lt;-&gt; SocialDesirability</code>), a correlation:
+estimate .01. The 90% equivalence interval [-.07, .08] lies inside the
+±.15 region, so the negligible prediction is supported by equivalence
+evidence — not merely by a non-significant <em>p</em> value.</li>
 <li>
 <strong>H3</strong> (<code>Agency -&gt; Performance</code>):
 estimate 0.42, classified <strong>concordant</strong>.</li>
@@ -254,9 +263,10 @@ estimate 0.42, classified <strong>concordant</strong>.</li>
 estimate -0.06, interval [-0.15, 0.02], classified
 <strong>inconsistent</strong> with the predicted region.</li>
 </ul>
-<p>Every relation also retains its standard error, p-value, evidence
-scope, a-priori versus post-hoc provenance, and a measurement-context
-flag. The goal is not to produce a single “validity score.”</p>
+<p>Every relation also retains its standard error, <em>p</em> value,
+evidence scope, a priori versus post hoc provenance, and a
+measurement-context flag. The goal is not to produce a single “validity
+score.”</p>
 </div>
 <div class="section level2">
 <h2 id="a-marginal-association-is-not-a-structural-prediction">A marginal association is not a structural prediction<a class="anchor" aria-label="anchor" href="#a-marginal-association-is-not-a-structural-prediction"></a>
@@ -343,10 +353,16 @@ corrects this. The composite becomes the one indicator of a latent
 variable, and its error variance is fixed at (1 − reliability) × its
 variance. The idea goes back to Spearman’s (1904) correction for
 attenuation. The SEM textbooks describe it (Hayduk, 1987; Bollen, 1989),
-and marketing research calls it the “total aggregation” model (Bagozzi
-&amp; Heatherton, 1994). Savalei (2019) found that it gave the most
-accurate estimates in samples of 30 to 200, provided the reliability is
-close to its true value.</p>
+applied work in organizational research and marketing took it up
+(Williams &amp; Hazer, 1986), and Bagozzi and Heatherton (1994) called
+it the “total aggregation” model. In samples of 30 to 200, Savalei
+(2019) found that path analysis and single indicators whose reliability
+was fixed in advance, at a value slightly above the true one, gave the
+most accurate estimates and the most power; single indicators whose
+reliability was estimated from the same data performed in between, and
+she recommended a fixed-reliability single indicator in small samples.
+An omega from the same sample, as below, corresponds to the
+data-estimated variant.</p>
 <p>Here the Persistence mean replaces the Persistence factor. Its
 reliability is omega from its own measurement model:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
@@ -360,13 +376,14 @@ reliability is omega from its own measurement model:</p>
 <span>  <span class="st">"Agency =~ ag1 + ag2 + ag3 + ag4"</span>, <span class="va">dat</span>, <span class="va">h_si</span>,</span>
 <span>  single_indicators <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>persistence <span class="op">=</span> <span class="fu"><a href="../reference/nomo_single_indicator.html">nomo_single_indicator</a></span><span class="op">(</span><span class="va">rel</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">corrected</span>, <span class="st">"single_indicators"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 9</span></span></span>
-<span><span class="co">#&gt;   variable    indicator      reliability    se coefficient source     n variance</span></span>
-<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> persistence persistence_si       0.816    <span style="color: #BB0000;">NA</span> omega       this …   800    0.645</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 1 more variable: error_variance &lt;dbl&gt;</span></span></span></code></pre></div>
-<p>The population path is .45. The observed composite gives 0.41,
+<span><span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">corrected</span>, <span class="st">"single_indicators"</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>  <span class="st">"variable"</span>, <span class="st">"coefficient"</span>, <span class="st">"reliability"</span>, <span class="st">"variance"</span>, <span class="st">"error_variance"</span></span>
+<span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 5</span></span></span>
+<span><span class="co">#&gt;   variable    coefficient reliability variance error_variance</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> persistence omega             0.816    0.645          0.119</span></span></code></pre></div>
+<p>The population path is 0.45. The observed composite gives 0.41,
 attenuated by its unreliability. The single indicator gives 0.46, close
 to the latent model’s 0.46.</p>
 <p>A correction is only as good as the reliability behind it. So the
@@ -434,33 +451,29 @@ the theory evidence so the two are not confused.</p>
 <span></span>
 <span><span class="va">replication</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_table.html">nomo_table</a></span><span class="op">(</span><span class="va">net_rep</span>, <span class="st">"replication"</span><span class="op">)</span></span>
 <span><span class="va">replication</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
-<span>  <span class="st">"id"</span>, <span class="st">"relation"</span>, <span class="st">"primary_estimate"</span>, <span class="st">"validation_estimate"</span>,</span>
-<span>  <span class="st">"validation_concordance"</span>, <span class="st">"replication_status"</span></span>
+<span>  <span class="st">"id"</span>, <span class="st">"primary_estimate"</span>, <span class="st">"validation_estimate"</span>, <span class="st">"replication_status"</span></span>
 <span><span class="op">)</span><span class="op">]</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4 × 6</span></span></span>
-<span><span class="co">#&gt;   id    relation     primary_estimate validation_estimate validation_concordance</span></span>
-<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>               <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                 </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> H1    Agency -&gt; P…           0.472              0.441   concordant            </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> H2    Agency &lt;-&gt; …          -<span style="color: #BB0000;">0.028</span><span style="color: #BB0000; text-decoration: underline;">5</span>             0.053<span style="text-decoration: underline;">1</span>  directionally_concord…</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> H3    Agency -&gt; P…           0.448              0.369   concordant            </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> H4    Persistence…          -<span style="color: #BB0000;">0.101</span>              0.003<span style="text-decoration: underline;">64</span> inconsistent          </span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 1 more variable: replication_status &lt;chr&gt;</span></span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4 × 4</span></span></span>
+<span><span class="co">#&gt;   id    primary_estimate validation_estimate replication_status            </span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>               <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                         </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> H1              0.472              0.441   replicated_concordance        </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> H2             -<span style="color: #BB0000;">0.028</span><span style="color: #BB0000; text-decoration: underline;">5</span>             0.053<span style="text-decoration: underline;">1</span>  mixed_or_inconclusive         </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> H3              0.448              0.369   replicated_concordance        </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> H4             -<span style="color: #BB0000;">0.101</span>              0.003<span style="text-decoration: underline;">64</span> sign_change_within_uncertainty</span></span></code></pre></div>
 <p>The calibration and validation subsets receive the <strong>same
 prespecified fitted model</strong>; <code>nomologR</code> does not
 respecify the validation model to rescue a primary result. Reading the
 statuses:</p>
 <ul>
-<li>H1 and H3 are <strong>replicated_concordance</strong> and
-<strong>replicated_concordance</strong>.</li>
-<li>H2 is <strong>mixed_or_inconclusive</strong>: with only 320
-validation cases, the equivalence interval is too wide to confirm
-negligibility. Splitting a sample buys independence at the cost of
-precision.</li>
-<li>H4 is <strong>sign_change_within_uncertainty</strong>. The
-population path is zero, and the two point estimates happen to differ in
-sign. Here neither sample’s confidence interval excludes zero, so the
-sign change is attributed to sampling uncertainty rather than to a
-substantive discrepancy.</li>
+<li>H1 and H3 are both <code>replicated_concordance</code>.</li>
+<li>H2 is <code>mixed_or_inconclusive</code>: with only 320 validation
+cases, the equivalence interval is too wide to confirm negligibility.
+Splitting a sample buys independence at the cost of precision.</li>
+<li>H4 is <code>sign_change_within_uncertainty</code>. The population
+path is zero, and the two point estimates happen to differ in sign. Here
+neither sample’s confidence interval excludes zero, so the sign change
+is attributed to sampling uncertainty rather than to a substantive
+discrepancy.</li>
 </ul>
 <p>A change in sign between samples needs care. Estimates scattered
 around a null relation differ in sign about half the time, so
@@ -500,8 +513,7 @@ opposite</td>
 <p>None of these turns a non-significant path into evidence of
 <em>no</em> relation. That claim needs a
 <code>negligible(within = ...)</code> prediction with an equivalence
-region, the kind of prediction H2 makes (Lakens, Scheel, &amp; Isager,
-2018).</p>
+region, the kind of prediction H2 makes (Lakens et al., 2018).</p>
 <p>External validation data can instead be supplied with
 <code>validation_data =</code>, which is generally stronger evidence
 than an internal split.</p>
@@ -536,11 +548,12 @@ patterns from Campbell and Fiske (1959). Contemporary practice separates
 the measurement model from structural relations (Anderson &amp; Gerbing,
 1988), treats validity as an argument about score interpretation
 (Messick, 1995), evaluates negligible predictions with equivalence
-procedures (Schuirmann, 1987; Lakens, Scheel, &amp; Isager, 2018), and
-distinguishes prespecified from post-hoc predictions (Nosek et al.,
-2018). Single-indicator corrections follow Bollen (1989) and Savalei
-(2019). Their standard errors follow Oberski and Satorra (2013). Full
-references are in <code><a href="../reference/nomo_network.html">?nomo_network</a></code> and the <a href="research-basis.html">research basis</a> article.</p>
+procedures (Schuirmann, 1987; Lakens et al., 2018), and distinguishes
+prespecified from post hoc predictions (Nosek et al., 2018).
+Single-indicator corrections follow Bollen (1989) and Savalei (2019).
+Their standard errors follow Oberski and Satorra (2013). Full references
+are in <code><a href="../reference/nomo_network.html">?nomo_network</a></code>, <code><a href="../reference/nomo_single_indicator.html">?nomo_single_indicator</a></code>,
+and the <a href="research-basis.html">research basis</a> article.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

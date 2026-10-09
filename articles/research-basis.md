@@ -33,11 +33,11 @@ They need not covary, and removing one changes the construct
 (Diamantopoulos & Winklhofer, 2001), so internal consistency,
 loadings-based item review, and the validity indices here do not apply
 to them. Treating one model as the other biases structural estimates,
-and Jarvis, MacKenzie, and Podsakoff (2003) and MacKenzie, Podsakoff,
-and Jarvis (2005) give criteria for choosing between them. The formative
-model itself remains contested (Howell, Breivik, & Wilcox, 2007;
-Edwards, 2011; Bollen & Diamantopoulos, 2017). `nomologR` does not fit
-formative latent variables; a formative index can enter
+and Jarvis et al. (2003) and MacKenzie et al. (2005) give criteria for
+choosing between them. The formative model itself remains contested
+(Howell et al., 2007; Edwards, 2011; Bollen & Diamantopoulos, 2017).
+`nomologR` does not fit formative latent variables; a formative index
+can enter
 [`nomo_network()`](https://juhalt.github.io/nomologR/reference/nomo_network.md)
 as an observed variable.
 
@@ -53,13 +53,13 @@ computational engine, and references.
 
 methods <- nomo_methods()
 nrow(methods)
-#> [1] 99
+#> [1] 102
 table(methods$stage, methods$lineage)
 #>              
 #>               contemporary emerging historical
-#>   cfa                   14        0          3
+#>   cfa                   15        0          3
 #>   compare                6        0          0
-#>   efa                    3        0          2
+#>   efa                    4        0          3
 #>   factors                7        1          4
 #>   invariance             8        0          0
 #>   network                5        0          1
@@ -77,29 +77,20 @@ takes no part in any synthesis or decision:
 ``` r
 
 nomo_methods(lineage = "historical")[, c("stage", "method", "role")]
-#> # A tibble: 20 × 3
-#>    stage       method                                               role      
-#>    <chr>       <chr>                                                <chr>     
-#>  1 screen      Fixed item-total correlation reference (about .30)   context   
-#>  2 factors     Eigenvalue-greater-than-one rule                     context   
-#>  3 factors     Scree test                                           context   
-#>  4 factors     Kaiser-Meyer-Olkin sampling adequacy                 supporting
-#>  5 factors     Bartlett's test of sphericity                        supporting
-#>  6 efa         Orthogonal (varimax) rotation                        context   
-#>  7 efa         Fixed loading cutoff                                 context   
-#>  8 cfa         Chi-square exact-fit test                            supporting
-#>  9 cfa         Fixed fit-index cutoffs                              context   
-#> 10 cfa         Modification indices                                 context   
-#> 11 reliability Coefficient alpha                                    supporting
-#> 12 reliability Schmid-Leiman decomposition                          supporting
-#> 13 validity    Standardized loadings and average variance extracted supporting
-#> 14 validity    Fornell-Larcker comparison                           context   
-#> 15 scores      Unit-weighted sum or mean score                      primary   
-#> 16 scores      Regression (Thurstone) factor scores                 primary   
-#> 17 scores      Bartlett factor scores                               primary   
-#> 18 network     Nomological network of construct relations           primary   
-#> 19 workflow    Listwise deletion                                    context   
-#> 20 workflow    Pairwise deletion                                    context
+#> # A tibble: 21 × 3
+#>    stage   method                                                          role 
+#>    <chr>   <chr>                                                           <chr>
+#>  1 screen  Fixed item-total correlation reference (about .30)              cont…
+#>  2 factors Eigenvalue-greater-than-one rule                                cont…
+#>  3 factors Scree test                                                      cont…
+#>  4 factors Kaiser-Meyer-Olkin sampling adequacy                            supp…
+#>  5 factors Bartlett's test of sphericity                                   supp…
+#>  6 efa     Orthogonal (varimax) rotation                                   cont…
+#>  7 efa     Other orthogonal rotation (quartimax, equamax, varimin, geomin… cont…
+#>  8 efa     Fixed loading cutoff                                            cont…
+#>  9 cfa     Chi-square exact-fit test                                       supp…
+#> 10 cfa     Fixed fit-index cutoffs                                         cont…
+#> # ℹ 11 more rows
 ```
 
 The registry lists only what the package actually computes. Methods that
@@ -147,7 +138,7 @@ question it answered. The tables below are drawn from
 so they cannot drift from what the package computes.
 
 A method is dated only from the publication that introduced it, and only
-when the registry cites that publication. 50 of the 99 methods are not
+when the registry cites that publication. 54 of the 102 methods are not
 yet dated, because the registry cites a later review or critique instead
 of the original. Adding those originating references is ongoing work.
 
@@ -190,11 +181,11 @@ knitr::kable(
 | 1996 | Power of the RMSEA tests of close, not-close, and exact fit | cfa | contemporary |
 | 1999 | Fixed fit-index cutoffs | cfa | historical |
 | 2000 | Scaled-and-shifted difference test | compare | contemporary |
-| 2000 | Velicer revised MAP (fourth powers) | factors | contemporary |
+| 2000 | Velicer revised MAP (fourth matrix power) | factors | contemporary |
 | 2001 | Satorra-Bentler scaled difference test | compare | contemporary |
 | 2001 | Construct replicability (H) | reliability | contemporary |
 | 2002 | Change-in-fit indices | compare | contemporary |
-| 2007 | Change-in-fit evidence across levels | invariance | contemporary |
+| 2002 | Change-in-fit evidence across levels | invariance | contemporary |
 | 2009 | Exploratory structural equation modeling beside its CFA | cfa | contemporary |
 | 2009 | Reliability on the ordered-score scale | reliability | contemporary |
 | 2010 | Comprehensive CFA marker technique for method variance | cfa | contemporary |
@@ -206,10 +197,9 @@ knitr::kable(
 | 2015 | Inter-item standard deviation | screen | contemporary |
 | 2015 | Heterotrait-monotrait ratio | validity | contemporary |
 | 2016 | Identification-aware sequence for ordered indicators | invariance | contemporary |
-| 2016 | Bootstrap confidence intervals for reliability | reliability | contemporary |
 | 2017 | Empirical Kaiser criterion | factors | contemporary |
 | 2017 | Next Eigenvalue Sufficiency Test (NEST) | factors | emerging |
-| 2018 | A-priori versus post-hoc prediction provenance | network | contemporary |
+| 2018 | A priori versus post hoc prediction provenance | network | contemporary |
 | 2020 | Test of the constraints unit weighting assumes | scores | contemporary |
 | 2021 | HTMT2 | validity | contemporary |
 | 2022 | Latent correlations with confidence intervals | validity | contemporary |
@@ -264,9 +254,10 @@ knitr::kable(
 | Year | Historical | Now |
 |:---|:---|:---|
 |  | Fixed item-total correlation reference (about .30) | Corrected item-rest correlation |
-| 1954 | Eigenvalue-greater-than-one rule | Common-factor parallel analysis; Velicer revised MAP (fourth powers); Empirical Kaiser criterion |
+| 1954 | Eigenvalue-greater-than-one rule | Common-factor parallel analysis; Velicer revised MAP (fourth matrix power); Empirical Kaiser criterion |
 | 1966 | Scree test | Common-factor parallel analysis |
-| 1958 | Orthogonal (varimax) rotation | Oblique (oblimin) rotation |
+| 1958 | Orthogonal (varimax) rotation | Oblique rotation |
+|  | Other orthogonal rotation (quartimax, equamax, varimin, geomin, Bentler) | Oblique rotation |
 |  | Fixed loading cutoff | Cross-loading, communality, and residual diagnostics |
 | 1969 | Chi-square exact-fit test | Incremental fit indices (CFI, TLI); RMSEA with confidence interval; Standardized root mean square residual; Localized residual correlations |
 | 1999 | Fixed fit-index cutoffs | Localized residual correlations |
@@ -275,7 +266,7 @@ knitr::kable(
 | 1957 | Schmid-Leiman decomposition | Bifactor measurement model |
 | 1981 | Fornell-Larcker comparison | HTMT2; Latent correlations with confidence intervals |
 |  | Unit-weighted sum or mean score | Test of the constraints unit weighting assumes |
-| 1955 | Nomological network of construct relations | Measurement-then-structure modeling; A-priori versus post-hoc prediction provenance |
+| 1955 | Nomological network of construct relations | Measurement-then-structure modeling; A priori versus post hoc prediction provenance |
 |  | Listwise deletion | Full-information maximum likelihood for missing data; Missing-data sensitivity comparison |
 |  | Pairwise deletion | Full-information maximum likelihood for missing data; Missing-data sensitivity comparison |
 
@@ -358,9 +349,10 @@ content (Costello & Osborne, 2005; Watkins, 2018).
 
 **What nomologR does.** MINRES common-factor extraction with oblimin
 rotation by default; pattern and structure matrices; communalities;
-cross-loading and residual diagnostics; `KEEP`, `REVIEW`, or
-`STRONG REVIEW` item guidance with explanations. Orthogonal rotation is
-allowed but recorded as a choice that needs justification.
+cross-loading and residual diagnostics; and item guidance with
+explanations, flagging an item for review or concern and never for
+deletion. Orthogonal rotation is allowed but recorded as a choice that
+needs justification.
 
 ## 4. Confirmatory measurement model — `nomo_cfa()`
 
@@ -387,7 +379,7 @@ alternative to fixed thresholds (McNeish & Wolf, 2023).
 2012) and reports chi-square, CFI (Bentler, 1990), TLI, RMSEA with its
 interval, and SRMR against teaching references; localized residual
 correlations; Heywood and convergence diagnostics; and modification
-indices quarantined as post-hoc diagnostics that never change the model.
+indices quarantined as post hoc diagnostics that never change the model.
 Declared ordered indicators request WLSMV.
 [`nomo_split()`](https://juhalt.github.io/nomologR/reference/nomo_split.md)
 supports calibration and validation samples because evaluating an
@@ -406,7 +398,7 @@ and compares non-nested models of the same data with information
 criteria (Akaike, 1974; Schwarz, 1978; Raftery, 1995; Burnham &
 Anderson, 2004).
 [`nomo_compare()`](https://juhalt.github.io/nomologR/reference/nomo_compare.md)
-implements this: it requires a recorded rationale, labels post-hoc
+implements this: it requires a recorded rationale, labels post hoc
 comparisons, refuses comparisons across different estimators, cases, or
 data, and never selects a model automatically.
 
@@ -417,7 +409,7 @@ had been the plan.
 instead creates a child workflow from the parent run, records what
 changed, the researcher’s rationale, and whether the change was
 prespecified or post hoc, compares the parent and revised models, and
-recommends confirming a post-hoc revision in independent data.
+recommends confirming a post hoc revision in independent data.
 
 **Cross-loadings.** Historically, a confirmatory model fixed every
 cross-loading at zero, and items with small cross-loadings were deleted
@@ -427,23 +419,22 @@ loadings carry into the factor correlations, which are then inflated
 estimates the cross-loadings within a model that still gives fit and
 standard errors, and with an a priori structure, target rotation keeps
 the hypothesized pattern without fixing the cross-loadings (Browne,
-2001; Marsh, Morin, Parker, & Kaur, 2014).
+2001; Marsh et al., 2014).
 [`nomo_esem()`](https://juhalt.github.io/nomologR/reference/nomo_esem.md)
 fits ESEM beside the CFA and compares them on fit indices that penalize
 ESEM’s extra parameters and on the factor correlations.
 
 **Method variance.** Historically, common method variance was dismissed
 with Harman’s single-factor test, which cannot detect what it is used to
-rule out (Podsakoff, MacKenzie, Lee, & Podsakoff, 2003), or removed from
-observed correlations with a marker variable’s partial correlation
-(Lindell & Whitney, 2001). Williams, Hartman, and Cavazotte’s (2010)
-comprehensive CFA marker technique models the marker’s method factor,
-tests whether it biases the substantive correlations, and decomposes
-each factor’s reliability. With a marker that does not tap the relevant
-biases it can find method variance that is absent, and it does not
-recover the substantive correlations accurately (Richardson, Simmering,
-& Sturman, 2009); other sources of method variance may remain
-(Podsakoff, MacKenzie, & Podsakoff, 2012).
+rule out (Podsakoff et al., 2003), or removed from observed correlations
+with a marker variable’s partial correlation (Lindell & Whitney, 2001).
+Williams et al.’s (2010) comprehensive CFA marker technique models the
+marker’s method factor, tests whether it biases the substantive
+correlations, and decomposes each factor’s reliability. With a marker
+that does not tap the relevant biases it can find method variance that
+is absent, and it does not recover the substantive correlations
+accurately (Richardson et al., 2009); other sources of method variance
+may remain (Podsakoff et al., 2012).
 [`nomo_method_variance()`](https://juhalt.github.io/nomologR/reference/nomo_method_variance.md)
 implements the technique and reports its results as evidence about the
 marker’s method variance, not as corrected estimates.
@@ -451,13 +442,12 @@ marker’s method variance, not as corrected estimates.
 **Sample size.** Historically, sample size was set by rules of thumb,
 such as a minimum N or a number of cases per indicator or parameter. The
 sample a model needs varies widely with its loadings, factors, and
-indicators, from 30 to 460 cases in Wolf, Harrington, Clark, and
-Miller’s (2013) simulations, so no single rule fits. Contemporary
-practice computes power for a planned analysis: for the RMSEA tests of
-close, not-close, and exact fit from the model’s degrees of freedom
-(MacCallum, Browne, & Sugawara, 1996), and for the parameters themselves
-by Monte Carlo simulation from a population model, checking bias,
-coverage, and power together (Muthén & Muthén, 2002).
+indicators, from 30 to 460 cases in Wolf et al.’s (2013) simulations, so
+no single rule fits. Contemporary practice computes power for a planned
+analysis: for the RMSEA tests of close, not-close, and exact fit from
+the model’s degrees of freedom (MacCallum et al., 1996), and for the
+parameters themselves by Monte Carlo simulation from a population model,
+checking bias, coverage, and power together (Muthén & Muthén, 2002).
 [`nomo_power_rmsea()`](https://juhalt.github.io/nomologR/reference/nomo_power_rmsea.md)
 and
 [`nomo_power_simulate()`](https://juhalt.github.io/nomologR/reference/nomo_power_simulate.md)
@@ -492,12 +482,11 @@ practice fits confirmatory bifactor and higher-order models and
 evaluates them with model-based indices: omega hierarchical for the
 total score, omega hierarchical subscale for what each subscale adds
 beyond the general factor, explained common variance, and the percentage
-of uncontaminated correlations (Reise, 2012; Reise, Bonifay, & Haviland,
-2013; Rodriguez, Reise, & Haviland, 2016). A bifactor model will usually
-fit at least as well as the alternatives even when it did not generate
-the data (Reise, 2012), and a higher-order model is a constrained
-bifactor model (Yung, Thissen, & McLeod, 1999), so fit alone cannot
-choose between them.
+of uncontaminated correlations (Reise, 2012; Reise et al., 2013;
+Rodriguez et al., 2016). A bifactor model will usually fit at least as
+well as the alternatives even when it did not generate the data (Reise,
+2012), and a higher-order model is a constrained bifactor model (Yung et
+al., 1999), so fit alone cannot choose between them.
 [`nomo_model()`](https://juhalt.github.io/nomologR/reference/nomo_model.md)
 writes all three structures,
 [`nomo_hierarchical()`](https://juhalt.github.io/nomologR/reference/nomo_hierarchical.md)
@@ -511,12 +500,13 @@ scores](https://juhalt.github.io/nomologR/articles/hierarchical-models.md).
 Pearson correlation between occasions, which ignores systematic change
 (Weir, 2005), or an intraclass correlation whose form went unreported.
 The forms answer different questions (Shrout & Fleiss, 1979; McGraw &
-Wong, 1996), and for test-retest data Koo and Li (2016) recommend the
-two-way, absolute-agreement, single-measurement form, interpreted from
-its confidence interval. The standard error of measurement and the
-smallest detectable change put the reliability on the score’s scale
-(Weir, 2005), and the reliable change index asks whether one person’s
-change exceeds measurement error (Jacobson & Truax, 1991).
+Wong, 1996). For test-retest data Koo and Li (2016) recommend a two-way
+mixed-effects model with absolute agreement, which for a single
+measurement is ICC(A,1), interpreted from its confidence interval. The
+standard error of measurement and the smallest detectable change put the
+reliability on the score’s scale (Weir, 2005), and the reliable change
+index asks whether one person’s change exceeds measurement error
+(Jacobson & Truax, 1991).
 [`nomo_retest()`](https://juhalt.github.io/nomologR/reference/nomo_retest.md)
 reports all of these.
 
@@ -559,9 +549,8 @@ between groups expressed in the reference group’s latent standard
 deviations, as known-groups evidence (Hancock, 2001). Across occasions,
 the same items are modeled at each occasion with each item’s unique
 factors correlated over time, so that change in a score can be read as
-change in the construct (Widaman, Ferrer, & Conger, 2010), with
-identification conditions for ordered items over time (Liu et al.,
-2017).
+change in the construct (Widaman et al., 2010), with identification
+conditions for ordered items over time (Liu et al., 2017).
 
 **What nomologR does.** Category-aware sequences for continuous, binary,
 three-category, and four-or-more-category indicators; fit and change
@@ -585,14 +574,14 @@ interpreting structural relations (Anderson & Gerbing, 1988); treat
 validity as an integrated argument about the meaning of scores (Messick,
 1995); test negligible predictions with equivalence procedures and a
 smallest effect size of interest rather than `p > .05` (Schuirmann,
-1987; Lakens et al., 2018); and distinguish prespecified from post-hoc
+1987; Lakens et al., 2018); and distinguish prespecified from post hoc
 predictions (Nosek et al., 2018).
 
 **What nomologR does.** Machine-readable directional, magnitude, and
 negligible predictions; researcher-specified equivalence regions (the
 package never invents one); latent SEM with observed outcomes;
-measurement context kept alongside theory concordance; a-priori versus
-post-hoc provenance; and replication of the exact same model in
+measurement context kept alongside theory concordance; a priori versus
+post hoc provenance; and replication of the exact same model in
 validation data. A change in sign between samples is called a reversal
 only when both confidence intervals exclude zero on opposite sides;
 otherwise it is reported as a direction that did not replicate, or as a
@@ -616,9 +605,12 @@ relations it enters (Spearman, 1904). Single-indicator modeling corrects
 this by making the composite the one indicator of a latent variable with
 its error variance fixed at (1 − reliability) × its variance (Williams &
 Hazer, 1986; Hayduk, 1987; Bollen, 1989). The correction is only as good
-as the reliability and the error it captures (DeShon, 1998); with an
-accurate reliability, Savalei (2019) found it the most accurate option
-in small samples.
+as the reliability and the error it captures (DeShon, 1998). In samples
+of 30 to 200, Savalei (2019) found path analysis and single indicators
+with a reliability fixed in advance, slightly above its true value, the
+most accurate and the most powerful, with a reliability estimated from
+the same data in between; an omega from the same sample is that
+data-estimated variant.
 [`nomo_network()`](https://juhalt.github.io/nomologR/reference/nomo_network.md)
 applies it only when the researcher names the composite and its
 reliability, refits with the reliability .05 and .10 lower and higher,
@@ -878,8 +870,9 @@ ordinal data. *Psychological Methods, 9*(4), 466–491.
 <https://doi.org/10.1037/1082-989X.9.4.466>
 
 Fokkema, M., & Greiff, S. (2017). How performing PCA and CFA on the same
-data equals trouble. *European Journal of Psychological Assessment,
-33*(6), 399–402. <https://doi.org/10.1027/1015-5759/a000460>
+data equals trouble: Overfitting in the assessment of internal structure
+and some editorial thoughts on it. *European Journal of Psychological
+Assessment, 33*(6), 399–402. <https://doi.org/10.1027/1015-5759/a000460>
 
 Fornell, C., & Larcker, D. F. (1981). Evaluating structural equation
 models with unobservable variables and measurement error. *Journal of
@@ -933,7 +926,7 @@ Howell, R. D., Breivik, E., & Wilcox, J. B. (2007). Reconsidering
 formative measurement. *Psychological Methods, 12*(2), 205–218.
 <https://doi.org/10.1037/1082-989X.12.2.205>
 
-Hu, L., & Bentler, P. M. (1999). Cutoff criteria for fit indexes in
+Hu, L.-T., & Bentler, P. M. (1999). Cutoff criteria for fit indexes in
 covariance structure analysis: Conventional criteria versus new
 alternatives. *Structural Equation Modeling, 6*(1), 1–55.
 <https://doi.org/10.1080/10705519909540118>
@@ -1146,7 +1139,7 @@ modeling. *Industrial Management & Data Systems, 121*(12), 2637–2650.
 <https://doi.org/10.1108/IMDS-02-2021-0082>
 
 Rönkkö, M., & Cho, E. (2022). An updated guideline for assessing
-discriminant validity. *Organizational Research Methods, 25*(1).
+discriminant validity. *Organizational Research Methods, 25*(1), 6–47.
 <https://doi.org/10.1177/1094428120968614>
 
 Rosseel, Y. (2012). lavaan: An R package for structural equation
@@ -1163,9 +1156,9 @@ factorial structure. *Psychological Assessment, 24*(2), 282–292.
 <https://doi.org/10.1037/a0025697>
 
 Satorra, A. (2000). Scaled and adjusted restricted tests in multi-sample
-analysis of moment structures. In *Innovations in multivariate
-statistical analysis* (pp. 233–247). Springer.
-<https://doi.org/10.1007/978-1-4615-4603-0_17>
+analysis of moment structures. In R. D. H. Heijmans, D. S. G. Pollock, &
+A. Satorra (Eds.), *Innovations in multivariate statistical analysis*
+(pp. 233–247). Springer. <https://doi.org/10.1007/978-1-4615-4603-0_17>
 
 Satorra, A., & Bentler, P. M. (2001). A scaled difference chi-square
 test statistic for moment structure analysis. *Psychometrika, 66*(4),

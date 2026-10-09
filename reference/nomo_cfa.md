@@ -176,7 +176,7 @@ Browne, M. W., & Cudeck, R. (1992). Alternative ways of assessing model
 fit. *Sociological Methods & Research, 21*(2), 230-258.
 [doi:10.1177/0049124192021002005](https://doi.org/10.1177/0049124192021002005)
 
-Hu, L., & Bentler, P. M. (1999). Cutoff criteria for fit indexes in
+Hu, L.-T., & Bentler, P. M. (1999). Cutoff criteria for fit indexes in
 covariance structure analysis: Conventional criteria versus new
 alternatives. *Structural Equation Modeling, 6*(1), 1-55.
 [doi:10.1080/10705519909540118](https://doi.org/10.1080/10705519909540118)

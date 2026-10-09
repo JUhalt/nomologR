@@ -92,13 +92,13 @@ Population model, per respondent:
   normal error, scaled to unit variance, and cut into five categories at
   the normal quantiles .10, .30, .60, and .85.
 
-- Standardized loadings on EF: `EF1` .72, `EF2` .68, `EF3` .60, `EF4`
-  .15, `EF5` .55, `EF6` .60, and `TF4` .45.
+- Standardized loadings on EF: `EF1` 0.72, `EF2` 0.68, `EF3` 0.60, `EF4`
+  0.15, `EF5` 0.55, `EF6` 0.60, and `TF4` 0.45.
 
-- Loadings on TF: `TF1` .70, `TF2` .66, `TF3` .62, `TF4` .40, `TF5` .58,
-  `TF6` .64.
+- Loadings on TF: `TF1` 0.70, `TF2` 0.66, `TF3` 0.62, `TF4` 0.40, `TF5`
+  0.58, `TF6` 0.64.
 
-- `EF3`'s latent response is shifted up by 1.75, and `TF6`'s by .35 in
+- `EF3`'s latent response is shifted up by 1.75, and `TF6`'s by 0.35 in
   cohort B. `EF2` and `TF2` are answered in the opposite direction (6
   minus the category).
 

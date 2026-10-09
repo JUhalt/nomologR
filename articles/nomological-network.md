@@ -15,7 +15,7 @@ The intended sequence is:
 4.  compare estimates and uncertainty with the prespecified theoretical
     region;
 5.  distinguish theory strain, imprecision, measurement problems, and
-    post-hoc exploration.
+    post hoc exploration.
 
 ## The teaching study
 
@@ -27,8 +27,8 @@ outcome.
 The population model is known (see
 [`?nomo_demo_network`](https://juhalt.github.io/nomologR/reference/nomo_demo_network.md)):
 
-- Agency predicts Persistence (standardized coefficient .45);
-- Agency predicts Performance (.40);
+- Agency predicts Persistence (standardized coefficient 0.45);
+- Agency predicts Performance (0.40);
 - Persistence has **no** direct effect on Performance once Agency is
   accounted for (0);
 - Agency and Social desirability are unrelated (0).
@@ -144,37 +144,47 @@ in the returned object.
 ``` r
 
 evidence <- nomo_table(net, "hypotheses")
+evidence[, c("id", "relation", "theoretical_region", "concordance")]
+#> # A tibble: 4 × 4
+#>   id    relation                      theoretical_region concordance 
+#>   <chr> <chr>                         <chr>              <chr>       
+#> 1 H1    Agency -> Persistence         [0.2, +Inf)        concordant  
+#> 2 H2    Agency <-> SocialDesirability [-0.15, 0.15]      concordant  
+#> 3 H3    Agency -> Performance         (0, +Inf)          concordant  
+#> 4 H4    Persistence -> Performance    [0.2, +Inf)        inconsistent
 evidence[, c(
-  "id", "relation", "theoretical_region", "estimate",
-  "ci_lower", "ci_upper", "equivalence_supported", "concordance"
+  "id", "estimate", "ci_lower", "ci_upper",
+  "equivalence_ci_lower", "equivalence_ci_upper"
 )]
-#> # A tibble: 4 × 8
-#>   id    relation                   theoretical_region estimate ci_lower ci_upper
-#>   <chr> <chr>                      <chr>                 <dbl>    <dbl>    <dbl>
-#> 1 H1    Agency -> Persistence      [0.2, +Inf)         0.458     0.389    0.526 
-#> 2 H2    Agency <-> SocialDesirabi… [-0.15, 0.15]       0.00773  -0.0794   0.0948
-#> 3 H3    Agency -> Performance      (0, +Inf)           0.418     0.341    0.495 
-#> 4 H4    Persistence -> Performance [0.2, +Inf)        -0.0624   -0.146    0.0215
-#> # ℹ 2 more variables: equivalence_supported <lgl>, concordance <chr>
+#> # A tibble: 4 × 6
+#>   id    estimate ci_lower ci_upper equivalence_ci_lower equivalence_ci_upper
+#>   <chr>    <dbl>    <dbl>    <dbl>                <dbl>                <dbl>
+#> 1 H1     0.458     0.389    0.526               NA                   NA     
+#> 2 H2     0.00773  -0.0794   0.0948              -0.0654               0.0808
+#> 3 H3     0.418     0.341    0.495               NA                   NA     
+#> 4 H4    -0.0624   -0.146    0.0215              NA                   NA
 ```
 
-Reading each row:
+The first table gives each prediction and how the evidence was
+classified, and the second the estimates behind it. Reading each
+relation:
 
 - **H1** (`Agency -> Persistence`): estimate 0.46, interval \[0.39,
-  0.53\], classified **concordant** with the prediction of at least .20.
-- **H2** (`Agency <-> SocialDesirability`): estimate 0.01. The 90%
-  equivalence interval \[-0.07, 0.08\] lies inside the ±.15 region, so
-  the negligible prediction is supported by equivalence evidence — not
-  merely by a non-significant p-value.
+  0.53\], classified **concordant** with the prediction of at least
+  0.20.
+- **H2** (`Agency <-> SocialDesirability`), a correlation: estimate .01.
+  The 90% equivalence interval \[-.07, .08\] lies inside the ±.15
+  region, so the negligible prediction is supported by equivalence
+  evidence — not merely by a non-significant *p* value.
 - **H3** (`Agency -> Performance`): estimate 0.42, classified
   **concordant**.
 - **H4** (`Persistence -> Performance`): estimate -0.06, interval
   \[-0.15, 0.02\], classified **inconsistent** with the predicted
   region.
 
-Every relation also retains its standard error, p-value, evidence scope,
-a-priori versus post-hoc provenance, and a measurement-context flag. The
-goal is not to produce a single “validity score.”
+Every relation also retains its standard error, *p* value, evidence
+scope, a priori versus post hoc provenance, and a measurement-context
+flag. The goal is not to produce a single “validity score.”
 
 ## A marginal association is not a structural prediction
 
@@ -268,11 +278,16 @@ enters are attenuated by it. A single-indicator latent variable corrects
 this. The composite becomes the one indicator of a latent variable, and
 its error variance is fixed at (1 − reliability) × its variance. The
 idea goes back to Spearman’s (1904) correction for attenuation. The SEM
-textbooks describe it (Hayduk, 1987; Bollen, 1989), and marketing
-research calls it the “total aggregation” model (Bagozzi & Heatherton,
-1994). Savalei (2019) found that it gave the most accurate estimates in
-samples of 30 to 200, provided the reliability is close to its true
-value.
+textbooks describe it (Hayduk, 1987; Bollen, 1989), applied work in
+organizational research and marketing took it up (Williams & Hazer,
+1986), and Bagozzi and Heatherton (1994) called it the “total
+aggregation” model. In samples of 30 to 200, Savalei (2019) found that
+path analysis and single indicators whose reliability was fixed in
+advance, at a value slightly above the true one, gave the most accurate
+estimates and the most power; single indicators whose reliability was
+estimated from the same data performed in between, and she recommended a
+fixed-reliability single indicator in small samples. An omega from the
+same sample, as below, corresponds to the data-estimated variant.
 
 Here the Persistence mean replaces the Persistence factor. Its
 reliability is omega from its own measurement model:
@@ -289,15 +304,16 @@ corrected <- nomo_network(
   "Agency =~ ag1 + ag2 + ag3 + ag4", dat, h_si,
   single_indicators = list(persistence = nomo_single_indicator(rel))
 )
-nomo_table(corrected, "single_indicators")
-#> # A tibble: 1 × 9
-#>   variable    indicator      reliability    se coefficient source     n variance
-#>   <chr>       <chr>                <dbl> <dbl> <chr>       <chr>  <int>    <dbl>
-#> 1 persistence persistence_si       0.816    NA omega       this …   800    0.645
-#> # ℹ 1 more variable: error_variance <dbl>
+nomo_table(corrected, "single_indicators")[, c(
+  "variable", "coefficient", "reliability", "variance", "error_variance"
+)]
+#> # A tibble: 1 × 5
+#>   variable    coefficient reliability variance error_variance
+#>   <chr>       <chr>             <dbl>    <dbl>          <dbl>
+#> 1 persistence omega             0.816    0.645          0.119
 ```
 
-The population path is .45. The observed composite gives 0.41,
+The population path is 0.45. The observed composite gives 0.41,
 attenuated by its unreliability. The single indicator gives 0.46, close
 to the latent model’s 0.46.
 
@@ -369,29 +385,26 @@ net_rep <- nomo_network(
 
 replication <- nomo_table(net_rep, "replication")
 replication[, c(
-  "id", "relation", "primary_estimate", "validation_estimate",
-  "validation_concordance", "replication_status"
+  "id", "primary_estimate", "validation_estimate", "replication_status"
 )]
-#> # A tibble: 4 × 6
-#>   id    relation     primary_estimate validation_estimate validation_concordance
-#>   <chr> <chr>                   <dbl>               <dbl> <chr>                 
-#> 1 H1    Agency -> P…           0.472              0.441   concordant            
-#> 2 H2    Agency <-> …          -0.0285             0.0531  directionally_concord…
-#> 3 H3    Agency -> P…           0.448              0.369   concordant            
-#> 4 H4    Persistence…          -0.101              0.00364 inconsistent          
-#> # ℹ 1 more variable: replication_status <chr>
+#> # A tibble: 4 × 4
+#>   id    primary_estimate validation_estimate replication_status            
+#>   <chr>            <dbl>               <dbl> <chr>                         
+#> 1 H1              0.472              0.441   replicated_concordance        
+#> 2 H2             -0.0285             0.0531  mixed_or_inconclusive         
+#> 3 H3              0.448              0.369   replicated_concordance        
+#> 4 H4             -0.101              0.00364 sign_change_within_uncertainty
 ```
 
 The calibration and validation subsets receive the **same prespecified
 fitted model**; `nomologR` does not respecify the validation model to
 rescue a primary result. Reading the statuses:
 
-- H1 and H3 are **replicated_concordance** and
-  **replicated_concordance**.
-- H2 is **mixed_or_inconclusive**: with only 320 validation cases, the
+- H1 and H3 are both `replicated_concordance`.
+- H2 is `mixed_or_inconclusive`: with only 320 validation cases, the
   equivalence interval is too wide to confirm negligibility. Splitting a
   sample buys independence at the cost of precision.
-- H4 is **sign_change_within_uncertainty**. The population path is zero,
+- H4 is `sign_change_within_uncertainty`. The population path is zero,
   and the two point estimates happen to differ in sign. Here neither
   sample’s confidence interval excludes zero, so the sign change is
   attributed to sampling uncertainty rather than to a substantive
@@ -410,8 +423,8 @@ the 95 percent confidence intervals:
 
 None of these turns a non-significant path into evidence of *no*
 relation. That claim needs a `negligible(within = ...)` prediction with
-an equivalence region, the kind of prediction H2 makes (Lakens, Scheel,
-& Isager, 2018).
+an equivalence region, the kind of prediction H2 makes (Lakens et al.,
+2018).
 
 External validation data can instead be supplied with
 `validation_data =`, which is generally stronger evidence than an
@@ -451,12 +464,13 @@ patterns from Campbell and Fiske (1959). Contemporary practice separates
 the measurement model from structural relations (Anderson & Gerbing,
 1988), treats validity as an argument about score interpretation
 (Messick, 1995), evaluates negligible predictions with equivalence
-procedures (Schuirmann, 1987; Lakens, Scheel, & Isager, 2018), and
-distinguishes prespecified from post-hoc predictions (Nosek et al.,
-2018). Single-indicator corrections follow Bollen (1989) and Savalei
-(2019). Their standard errors follow Oberski and Satorra (2013). Full
-references are in
-[`?nomo_network`](https://juhalt.github.io/nomologR/reference/nomo_network.md)
+procedures (Schuirmann, 1987; Lakens et al., 2018), and distinguishes
+prespecified from post hoc predictions (Nosek et al., 2018).
+Single-indicator corrections follow Bollen (1989) and Savalei (2019).
+Their standard errors follow Oberski and Satorra (2013). Full references
+are in
+[`?nomo_network`](https://juhalt.github.io/nomologR/reference/nomo_network.md),
+[`?nomo_single_indicator`](https://juhalt.github.io/nomologR/reference/nomo_single_indicator.md),
 and the [research
 basis](https://juhalt.github.io/nomologR/articles/research-basis.md)
 article.

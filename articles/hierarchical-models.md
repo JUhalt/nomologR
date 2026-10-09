@@ -25,8 +25,8 @@ The bifactor model dates to Holzinger and Swineford (1937), and Schmid
 and Leiman (1957) showed how to re-express a higher-order solution in
 bifactor form. Bifactor models were later rediscovered as a way to
 evaluate multidimensional measures (Reise, 2012), with indices for
-judging total and subscale scores (Reise, Bonifay, & Haviland, 2013;
-Rodriguez, Reise, & Haviland, 2016). The [research
+judging total and subscale scores (Reise et al., 2013; Rodriguez et al.,
+2016). The [research
 basis](https://juhalt.github.io/nomologR/articles/research-basis.md)
 article places these methods in context.
 
@@ -189,15 +189,15 @@ h
 
 Reading the total score:
 
-- **Omega total** (0.92) is the proportion of total-score variance
+- **Omega total** (.92) is the proportion of total-score variance
   explained by all common factors.
-- **Omega hierarchical** (0.79) is the part explained by the general
+- **Omega hierarchical** (.79) is the part explained by the general
   factor alone. It is the index that speaks to interpreting the total
   score as a measure of one construct.
-- Their ratio (0.86) says how much of the total score’s reliable
-  variance is general.
-- **ECV** (0.68) is the share of common item variance the general factor
-  explains, and **PUC** (0.73) is the share of item correlations
+- Their ratio (.86) says how much of the total score’s reliable variance
+  is general.
+- **ECV** (.68) is the share of common item variance the general factor
+  explains, and **PUC** (.73) is the share of item correlations
   influenced only by the general factor.
 
 The subscales tell a different story:
@@ -215,14 +215,14 @@ nomo_table(h, "subscales")[, c(
 #> 3 Poise             0.807                       0.295
 ```
 
-Focus has an omega of 0.84, which looks like a reliable subscale. But
-its **omega hierarchical subscale** is 0.29: once the general factor is
-removed, that is the reliable variance specific to Focus. Only 0.34 of a
+Focus has an omega of .84, which looks like a reliable subscale. But its
+**omega hierarchical subscale** is .29: once the general factor is
+removed, that is the reliable variance specific to Focus. Only .34 of a
 Focus score’s reliable variance is specific to Focus; the rest is the
-general factor, which the total score already measures. Reise, Bonifay,
-and Haviland (2013) frame exactly this question: whether subscale scores
-are justified, and how much reliable variance they add after controlling
-for the general factor.
+general factor, which the total score already measures. Reise et
+al. (2013) frame exactly this question: whether subscale scores are
+justified, and how much reliable variance they add after controlling for
+the general factor.
 
 The same division is shown for every composite:
 
@@ -249,38 +249,50 @@ ways:
 
 ``` r
 
-nomo_table(h, "factors")
-#> # A tibble: 4 × 7
-#>   factor role    n_items factor_determinacy determinacy_r2 min_competing_r
-#>   <chr>  <chr>     <int>              <dbl>          <dbl>           <dbl>
-#> 1 G      general      12              0.898          0.806         0.612  
-#> 2 Focus  group         4              0.709          0.503         0.00660
-#> 3 Drive  group         4              0.639          0.408        -0.185  
-#> 4 Poise  group         4              0.699          0.489        -0.0222 
-#> # ℹ 1 more variable: construct_replicability <dbl>
+factors <- nomo_table(h, "factors")
+factors[, c("factor", "role", "factor_determinacy", "min_competing_r")]
+#> # A tibble: 4 × 4
+#>   factor role    factor_determinacy min_competing_r
+#>   <chr>  <chr>                <dbl>           <dbl>
+#> 1 G      general              0.898         0.612  
+#> 2 Focus  group                0.709         0.00660
+#> 3 Drive  group                0.639        -0.185  
+#> 4 Poise  group                0.699        -0.0222
 ```
 
 `factor_determinacy` is the correlation between a factor and its
-estimated factor score (Beauducel, 2011; Rodriguez, Reise, & Haviland,
-2016). Gorsuch (1983) recommended using factor score estimates only
-above .90. `min_competing_r` is the lowest correlation two equally valid
-sets of scores could have. When it is negative, two researchers scoring
-the same data with equally defensible methods could rank people in
-opposite orders, and both would be consistent with the model.
+estimated factor score (Beauducel, 2011; Rodriguez et al., 2016).
+Gorsuch (1983) recommended using factor score estimates only above .90.
+`min_competing_r` is the lowest correlation two equally valid sets of
+scores could have. When it is negative, two researchers scoring the same
+data with equally defensible methods could rank people in opposite
+orders, and both would be consistent with the model.
+
+``` r
+
+factors[, c("factor", "construct_replicability", "determinacy_r2")]
+#> # A tibble: 4 × 3
+#>   factor construct_replicability determinacy_r2
+#>   <chr>                    <dbl>          <dbl>
+#> 1 G                        0.878          0.806
+#> 2 Focus                    0.500          0.503
+#> 3 Drive                    0.403          0.408
+#> 4 Poise                    0.485          0.489
+```
 
 `construct_replicability`, Hancock and Mueller’s (2001) H, is the
 proportion of variance in a factor its own indicators could explain if
 optimally weighted. They proposed .70 as a standard.
 
 The two indices answer different questions, and the difference is easy
-to miss. They are the same quantity when a construct is unidimensional.
-Under a bifactor model they are not: determinacy is computed from the
-whole reproduced correlation matrix, so a group factor’s score can
-borrow the other items to partial out the general factor, while H sees
-only that factor’s own loadings and treats the rest of each item as
-uncorrelated residual. Rodriguez et al. (2016) state that the two can
-differ here and decline to prefer either, so `nomologR` reports both and
-names what each one measures.
+to miss. When a construct is unidimensional, H equals the squared
+determinacy, `determinacy_r2`. Under a bifactor model the two need not
+agree: determinacy is computed from the whole reproduced correlation
+matrix, so a group factor’s score can borrow the other items to partial
+out the general factor, while H sees only that factor’s own loadings and
+treats the rest of each item as uncorrelated residual. Rodriguez et al.
+(2016) state that the two can differ here and decline to prefer either,
+so `nomologR` reports both and names what each one measures.
 
 Neither threshold is applied as a rule. They are reported as their
 authors’ recommendations where a value falls below them, in the same way
@@ -315,13 +327,13 @@ comparisons
 Two features of this table are structural rather than empirical:
 
 - The higher-order model is **equivalent** to the correlated-factors
-  model: both have chi-square = 72.45 on 51 degrees of freedom. With
-  three first-order factors, the second-order part is just identified,
-  so it imposes no testable constraint. Fit cannot distinguish the two,
-  which is what the note on the syntax warned.
+  model: both have chi-square(51) = 72.45. With three first-order
+  factors, the second-order part is just identified, so it imposes no
+  testable constraint. Fit cannot distinguish the two, which is what the
+  note on the syntax warned.
 - The bifactor model is **less constrained**. A higher-order model is a
-  constrained version of the bifactor model (Yung, Thissen, & McLeod,
-  1999), so the bifactor model can only fit as well or better.
+  constrained version of the bifactor model (Yung et al., 1999), so the
+  bifactor model can only fit as well or better.
 
 ## Why fit cannot choose the structure
 
@@ -333,10 +345,10 @@ That last point has a consequence. The next data set is simulated from a
 first_order <- c(.70, .65, .60, .75, .70, .60, .65, .70, .55, .70, .65, .60)
 second_order <- c(.80, .70, .60)
 
-F <- sapply(1:3, function(k) ifelse(subscale == k, first_order, 0))
+lambda <- sapply(1:3, function(k) ifelse(subscale == k, first_order, 0))
 phi <- second_order %*% t(second_order)
 diag(phi) <- 1
-sigma_higher <- F %*% phi %*% t(F)
+sigma_higher <- lambda %*% phi %*% t(lambda)
 diag(sigma_higher) <- 1
 dimnames(sigma_higher) <- list(items, items)
 
@@ -347,11 +359,11 @@ bifactor_model <- nomo_cfa(nomo_model(subscales, "bifactor"), data = dat_higher)
 ```
 
 The higher-order model generated these data, yet the bifactor model fits
-better: chi-square = 38.14 on 42 degrees of freedom, against 42.48 on 51
-for the true model. That is not a sign that the bifactor model is
-correct. Its extra parameters absorb sampling noise, and it will usually
-fit at least as well as correlated-factors or higher-order models of the
-same items (Reise, 2012).
+better: chi-square(42) = 38.14, against chi-square(51) = 42.48 for the
+true model. That is not a sign that the bifactor model is correct. Its
+extra parameters absorb sampling noise, and it will usually fit at least
+as well as correlated-factors or higher-order models of the same items
+(Reise, 2012).
 
 So the choice between structures has to rest on theory: is there a
 construct that every item measures directly, with subscale content as a
@@ -440,6 +452,18 @@ nomo_methods(h)[, c("method", "lineage", "role")]
 ```
 
 ## References
+
+Beauducel, A. (2011). Indeterminacy of factor score estimates in
+slightly misspecified confirmatory factor models. *Journal of Modern
+Applied Statistical Methods, 10*(2), 583–598.
+<https://doi.org/10.22237/jmasm/1320120900>
+
+Gorsuch, R. L. (1983). *Factor analysis* (2nd ed.). Lawrence Erlbaum.
+
+Hancock, G. R., & Mueller, R. O. (2001). Rethinking construct
+reliability within latent variable systems. In R. Cudeck, S. du Toit, &
+D. Sörbom (Eds.), *Structural equation modeling: Present and future*
+(pp. 195–216). Scientific Software International.
 
 Holzinger, K. J., & Swineford, F. (1937). The bi-factor method.
 *Psychometrika, 2*(1), 41–54. <https://doi.org/10.1007/BF02287965>

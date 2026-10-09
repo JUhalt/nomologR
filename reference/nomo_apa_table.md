@@ -122,7 +122,7 @@ modeling. *Industrial Management & Data Systems, 121*(12), 2637-2650.
 [doi:10.1108/IMDS-02-2021-0082](https://doi.org/10.1108/IMDS-02-2021-0082)
 
 Rönkkö, M., & Cho, E. (2022). An updated guideline for assessing
-discriminant validity. *Organizational Research Methods, 25*(1).
+discriminant validity. *Organizational Research Methods, 25*(1), 6-47.
 [doi:10.1177/1094428120968614](https://doi.org/10.1177/1094428120968614)
 
 ## Examples

@@ -6,7 +6,7 @@ Measurement invariance asks whether a construct is measured comparably
 across groups or occasions. If it is not, a difference in observed
 scores can reflect how an item functions in each group rather than a
 difference in the construct itself. `nomologR` treats invariance as
-**graded evidence** rather than a sequence of automatic PASS/FAIL
+**graded evidence** rather than a sequence of automatic pass/fail
 decisions.
 
 Every fitted level retains:
@@ -26,9 +26,9 @@ Every fitted level retains:
 administration groups, `online` and `paper`. Its population model builds
 in two features:
 
-1.  the latent **Agency mean is .25 SD higher** in the `paper` group (a
+1.  the latent **Agency mean is 0.25 SD higher** in the `paper` group (a
     real construct difference); and
-2.  the **intercept of item `ag3` is .50 higher** in the `paper` group
+2.  the **intercept of item `ag3` is 0.50 higher** in the `paper` group
     (item bias: `ag3` is endorsed more on paper at the same level of
     Agency).
 
@@ -113,10 +113,10 @@ fit[, c("level", "constraints", "cfi", "rmsea", "srmr", "delta_cfi", "delta_rmse
 
 The configural and metric models fit closely, consistent with equal
 loadings. Adding intercept equality at the scalar level changes CFI by
--0.046 and RMSEA by 0.121, and the likelihood-ratio test is very small
-(p = 1.2e-13). No single delta-CFI, delta-RMSEA, delta-SRMR, or
-chi-square rule is treated as universally decisive; the evidence is read
-together, in context.
+-.046 and RMSEA by +0.121, and the likelihood-ratio test rejects equal
+intercepts (*p* \< .001). No single CFI change, RMSEA change, SRMR
+change, or chi-square rule is treated as universally decisive; the
+evidence is read together, in context.
 
 ``` r
 
@@ -158,7 +158,7 @@ plot(inv, type = "local_strain")
 ![](measurement-invariance_files/figure-html/local-plot-1.png)
 
 The largest scalar-level diagnostic is **Intercept: ag3 (online
-vs. paper)** (score chi-square 61.1), which matches the item bias built
+vs. paper)** (score chi-square 61.12), which matches the item bias built
 into the data.
 
 Two cautions matter for real research:
@@ -167,7 +167,7 @@ Two cautions matter for real research:
   With many constraints, some diagnostics will look notable by chance;
   look at the smaller metric-level values above for an example.
 - In real data you do not know the population model. A release chosen
-  only because its diagnostic was largest is a post-hoc decision and
+  only because its diagnostic was largest is a post hoc decision and
   should be reported as one.
 
 ## Researcher-controlled partial invariance
@@ -219,10 +219,9 @@ model meets a preferred cutoff.
 ## Comparing the groups: known-groups evidence
 
 Once the intercepts are invariant, fully or partially, the groups can be
-compared on the construct itself (Byrne, Shavelson, & Muthén, 1989). A
-difference that theory predicts between groups that differ on the
-construct is known-groups evidence. At each level that holds intercepts
-equal,
+compared on the construct itself (Byrne et al., 1989). A difference that
+theory predicts between groups that differ on the construct is
+known-groups evidence. At each level that holds intercepts equal,
 [`nomo_invariance()`](https://juhalt.github.io/nomologR/reference/nomo_invariance.md)
 reports each group’s latent means relative to the reference group. The
 reference group’s mean is fixed at 0 and its variance at 1, so each mean
@@ -245,7 +244,7 @@ partial_means[partial_means$level == "scalar", c("group", "factor", "estimate", 
 #> 1 paper Agency    0.329    0.171    0.487
 ```
 
-The population difference is .25 SD. Holding the biased `ag3` intercept
+The population difference is 0.25 SD. Holding the biased `ag3` intercept
 equal inflates it to 0.44, because the model reads the item’s extra
 endorsement on paper as more Agency. With that intercept released, the
 difference is 0.33, 95% CI \[0.17, 0.49\]. So known-groups evidence is
@@ -319,14 +318,14 @@ The same question arises when the same people answer the same items more
 than once. A change in scores is a change in the construct only if the
 items relate to it in the same way on each occasion. An item whose
 meaning drifts, through practice or an intervention, otherwise shows up
-as change (Widaman, Ferrer, & Conger, 2010).
+as change (Widaman et al., 2010).
 [`nomo_invariance_longitudinal()`](https://juhalt.github.io/nomologR/reference/nomo_invariance_longitudinal.md)
 applies the same sequence across occasions instead of groups.
 
 `nomo_demo_longitudinal` has four Wellbeing items answered on three
-occasions. The latent mean rises by .30 and then .50 of the first
+occasions. The latent mean rises by 0.30 and then 0.50 of the first
 occasion’s standard deviation, and the intercept of `w3` also rises by
-.40 after the first occasion: a drift the analysis should find. The
+0.40 after the first occasion: a drift the analysis should find. The
 model is written for one occasion, in the items’ own names, and
 `columns` says how an item and an occasion name a column; the default
 `"{item}_{occasion}"` matches `w1_t1` to `w4_t3`. Each item’s residuals
@@ -408,7 +407,7 @@ summary(long)
 ```
 
 Fit holds up with the loadings equal and drops once the intercepts are
-too (CFI change -0.036), and the largest score diagnostics point to the
+too (CFI change -.036), and the largest score diagnostics point to the
 `w3` intercept. Held equal, that intercept inflates the latent change at
 `t3` to 0.66 standard deviations. Releasing it is a documented decision,
 as across groups:
@@ -436,9 +435,9 @@ nomo_table(long_partial, "latent_means")[, c("occasion", "estimate", "ci_lower",
 
 The release names the item as in the one-occasion model and frees its
 intercept on every occasion. The change is then carried by the other
-three items, and its intervals cover the population’s .30 and .50. With
-real data the release still needs a reason beyond the diagnostics: here,
-something about `w3` that could have changed its meaning between
+three items, and its intervals cover the population’s 0.30 and 0.50.
+With real data the release still needs a reason beyond the diagnostics:
+here, something about `w3` that could have changed its meaning between
 occasions.
 
 ## Tables and figures
@@ -468,10 +467,10 @@ sensitivity of change-in-fit indices depends on sample size and model
 context (Chen, 2007; Putnick & Bornstein, 2016), which is why `nomologR`
 reports several indices without a universal cutoff. Ordered-indicator
 sequences follow Wu and Estabrook (2016) as implemented in `semTools`
-(see also Svetina et al., 2020). Partial invariance follows Byrne,
-Shavelson, and Muthén (1989), and latent mean comparisons follow Hancock
-(2001). Invariance across occasions follows Widaman, Ferrer, and Conger
-(2010), with Liu et al. (2017) for ordered items. Full references are in
+(see also Svetina et al., 2020). Partial invariance follows Byrne et
+al. (1989), and latent mean comparisons follow Hancock (2001).
+Invariance across occasions follows Widaman et al. (2010), with Liu et
+al. (2017) for ordered items. Full references are in
 [`?nomo_invariance`](https://juhalt.github.io/nomologR/reference/nomo_invariance.md),
 [`?nomo_invariance_longitudinal`](https://juhalt.github.io/nomologR/reference/nomo_invariance_longitudinal.md),
 and the [research

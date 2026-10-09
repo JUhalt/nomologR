@@ -51,9 +51,9 @@ summary(efa)
 
 What the data were built to show
 
-`b5` is a weak indicator, with a population loading of .30, so it has a
-low loading and little common variance. `a5` cross-loads, at .45 on A
-and .35 on B, so its secondary loading is flagged. Neither flag is an
+`b5` is a weak indicator, with a population loading of 0.30, so it has a
+low loading and little common variance. `a5` cross-loads, at 0.45 on A
+and 0.35 on B, so its secondary loading is flagged. Neither flag is an
 instruction to delete the item. Ask what each item’s content covers, and
 whether the scale needs it.
 
@@ -147,8 +147,8 @@ summary(net)
 
 What the data were built to show
 
-Performance depends on Agency (.40) and not on Persistence (0).
-Persistence depends on Agency (.45), so Persistence and Performance are
+Performance depends on Agency (0.40) and not on Persistence (0).
+Persistence depends on Agency (0.45), so Persistence and Performance are
 still correlated, about .18 in the population, through their shared
 cause. The structural path answers a different question from the
 correlation.
@@ -178,11 +178,11 @@ summary(inv)
 What the data were built to show
 
 Loadings are equal across groups, so metric invariance holds. The
-intercept of `ag3` is .50 higher on paper, so equal intercepts cost fit,
-and the largest score diagnostic is `ag3`’s intercept. The latent Agency
-mean is also .25 higher on paper. That is a real difference, which an
-unequal intercept would distort. Whether to release the intercept is the
-researcher’s decision, with a rationale
+intercept of `ag3` is 0.50 higher on paper, so equal intercepts cost
+fit, and the largest score diagnostic is `ag3`’s intercept. The latent
+Agency mean is also 0.25 higher on paper. That is a real difference,
+which an unequal intercept would distort. Whether to release the
+intercept is the researcher’s decision, with a rationale
 ([`nomo_partial()`](https://juhalt.github.io/nomologR/reference/nomo_partial.md)).
 
 ## 7. When content review and the data disagree

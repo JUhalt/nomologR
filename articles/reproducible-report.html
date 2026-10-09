@@ -176,7 +176,7 @@ writes its reports to a temporary directory.</p>
 <p>For a thesis committee or a collaborator who works in Word, give the
 file a <code>.docx</code> extension instead:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/nomo_report.html">nomo_report</a></span><span class="op">(</span><span class="va">run</span>, file <span class="op">=</span> <span class="st">"construct-validation-report.docx"</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/nomo_report.html">nomo_report</a></span><span class="op">(</span><span class="va">run</span>, file <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">report_dir</span>, <span class="st">"construct-validation-report.docx"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>The Word document carries the same tables, figures, and
 interpretation contract as the HTML report. Sections that collapse in
 HTML, such as the full evidence trace, are shown expanded, and it uses
@@ -530,7 +530,7 @@ one-construct model, is left out.</p>
 <li>invariance, if requested;</li>
 <li>nomological-network evidence, if requested;</li>
 <li>workflow decisions and outstanding decisions;</li>
-<li>deviations and post-hoc decisions;</li>
+<li>deviations and post hoc decisions;</li>
 <li>methods and citations: the methods this workflow actually used, each
 with its lineage and role, a reference list for those methods, and
 software citations;</li>
@@ -590,7 +590,7 @@ paused report above:</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/nomo_report.html">nomo_report</a></span><span class="op">(</span></span>
 <span>  <span class="va">run</span>,</span>
-<span>  file <span class="op">=</span> <span class="st">"compact-report.html"</span>,</span>
+<span>  file <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">report_dir</span>, <span class="st">"compact-report.html"</span><span class="op">)</span>,</span>
 <span>  include_plots <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  include_session <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>

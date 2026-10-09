@@ -549,14 +549,14 @@ another, <code><a href="../reference/nomo_revise.html">nomo_revise()</a></code> 
 <span><span class="co">#&gt;   model   relation         chisq_diff df_diff p_value delta_cfi</span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                 <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> revised less_constrained     0.010<span style="text-decoration: underline;">5</span>       1   0.918 -<span style="color: #BB0000;">0.000</span><span style="color: #BB0000; text-decoration: underline;">333</span></span></span></code></pre></div>
-<p>Here the revision changes almost nothing (chi-square difference =
-0.01, df = 1, p = 0.918; CFI changes by -0.0003). Once the common factor
-is accounted for, the residual association these two items were expected
-to share is close to zero, so the data give no reason to prefer the
-revised model over its parent. A revision is not automatically an
-improvement, and <code><a href="../reference/nomo_revise.html">nomo_revise()</a></code> does not choose: it records
-the attempt, its rationale, and the comparison, so keeping the parent
-model is as visible as adopting the revision.</p>
+<p>Here the revision changes almost nothing (Delta chi-square(1) = 0.01,
+<em>p</em> = .918; CFI change .000). Once the common factor is accounted
+for, the residual association these two items were expected to share is
+close to zero, so the data give no reason to prefer the revised model
+over its parent. A revision is not automatically an improvement, and
+<code><a href="../reference/nomo_revise.html">nomo_revise()</a></code> does not choose: it records the attempt, its
+rationale, and the comparison, so keeping the parent model is as visible
+as adopting the revision.</p>
 <p>The origin still matters. The change was prompted by inspecting these
 data, so the decision log records it as post hoc and says what follows
 from that:</p>
@@ -762,10 +762,9 @@ named.</p>
 <p>Staged scale development with explicit decisions follows guidance
 such as Clark and Watson (1995, 2019), Hinkin (1998), and Boateng et
 al. (2018). Recording decisions and rationales responds to evidence that
-undisclosed analytic flexibility undermines measurement claims (Simmons,
-Nelson, &amp; Simonsohn, 2011; Flake, Pek, &amp; Hehman, 2017; Flake
-&amp; Fried, 2020). Full references are in <code><a href="../reference/nomo_run.html">?nomo_run</a></code> and
-the <a href="research-basis.html">research basis</a> article.</p>
+undisclosed analytic flexibility undermines measurement claims (Simmons
+et al., 2011; Flake et al., 2017; Flake &amp; Fried, 2020). Full
+references are in <code><a href="../reference/nomo_run.html">?nomo_run</a></code> and the <a href="research-basis.html">research basis</a> article.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

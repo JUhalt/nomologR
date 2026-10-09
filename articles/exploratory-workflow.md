@@ -27,9 +27,9 @@ so the package’s evidence can be checked against the truth:
 
 - two factors, A and B, correlated .40;
 - items `a1`–`a4` and `b1`–`b4` are ordinary indicators (population
-  loadings .70 to .80);
-- `a5` **cross-loads** on both factors (.45 on A and .35 on B);
-- `b5` is a **weak** indicator (.30 on B);
+  loadings 0.70 to 0.80);
+- `a5` **cross-loads** on both factors (0.45 on A and 0.35 on B);
+- `b5` is a **weak** indicator (0.30 on B);
 - `a2` and `b3` contain a small amount of missing data.
 
 ``` r
@@ -371,35 +371,35 @@ treating the handoff as proof.
 ``` r
 
 item_view <- efa$item_summary[, c(
-  "item", "primary_factor", "primary_loading", "secondary_loading",
-  "communality", "attention"
+  "item", "primary_loading", "secondary_loading", "communality", "attention"
 )]
 item_view
-#> # A tibble: 10 × 6
-#>    item  primary_factor primary_loading secondary_loading communality attention 
-#>    <chr> <chr>                    <dbl>             <dbl>       <dbl> <chr>     
-#>  1 a1    F1                       0.808          -0.0444        0.624 KEEP      
-#>  2 a2    F1                       0.709           0.0643        0.547 KEEP      
-#>  3 a3    F1                       0.667           0.0153        0.454 KEEP      
-#>  4 a4    F1                       0.770          -0.0377        0.569 KEEP      
-#>  5 a5    F1                       0.414           0.335         0.406 REVIEW    
-#>  6 b1    F2                       0.783           0.0141        0.623 KEEP      
-#>  7 b2    F2                       0.693          -0.0200        0.469 KEEP      
-#>  8 b3    F2                       0.783          -0.00673       0.608 KEEP      
-#>  9 b4    F2                       0.637          -0.0119        0.400 REVIEW    
-#> 10 b5    F2                       0.332           0.0286        0.120 STRONG RE…
+#> # A tibble: 10 × 5
+#>    item  primary_loading secondary_loading communality attention    
+#>    <chr>           <dbl>             <dbl>       <dbl> <chr>        
+#>  1 a1              0.808          -0.0444        0.624 KEEP         
+#>  2 a2              0.709           0.0643        0.547 KEEP         
+#>  3 a3              0.667           0.0153        0.454 KEEP         
+#>  4 a4              0.770          -0.0377        0.569 KEEP         
+#>  5 a5              0.414           0.335         0.406 REVIEW       
+#>  6 b1              0.783           0.0141        0.623 KEEP         
+#>  7 b2              0.693          -0.0200        0.469 KEEP         
+#>  8 b3              0.783          -0.00673       0.608 KEEP         
+#>  9 b4              0.637          -0.0119        0.400 REVIEW       
+#> 10 b5              0.332           0.0286        0.120 STRONG REVIEW
 ```
 
 Compare the table with the known population model:
 
-- `a5` receives **REVIEW**. Its secondary loading of 0.34 reaches the
-  cross-loading reference, exactly the feature built into the data.
-- `b5` receives **STRONG REVIEW**. Its primary loading of 0.33 and
-  communality of 0.12 reflect the weak population loading.
-- `b4` receives **REVIEW** even though its population loading is .70.
-  Its sample communality of 0.400 sits essentially at the .40 reference.
-  This is sampling variability around a teaching reference — a reminder
-  that references are prompts, not cliffs.
+- `a5` is flagged for review (`attention` is `REVIEW`). Its secondary
+  loading of 0.34 reaches the cross-loading reference, exactly the
+  feature built into the data.
+- `b5` is flagged for concern (`STRONG REVIEW`). Its primary loading of
+  0.33 and communality of .12 reflect the weak population loading.
+- `b4` is flagged for review (`REVIEW`) even though its population
+  loading is 0.70. Its sample communality of .3997 sits essentially at
+  the .40 reference. This is sampling variability around a teaching
+  reference — a reminder that references are prompts, not cliffs.
 
 `KEEP` means that no configured numerical teaching reference fired. It
 does **not** mean that theory, wording, content coverage, redundancy, or

@@ -135,14 +135,13 @@ dropping one changes what is measured (Diamantopoulos &amp; Winklhofer,
 2001). The tools here do not apply to such a measure, and applying them
 misleads: low internal consistency is expected, and deleting a “weak”
 indicator removes part of the construct. Decide which model a measure
-follows before choosing tools; Jarvis, MacKenzie, and Podsakoff (2003)
-and MacKenzie, Podsakoff, and Jarvis (2005) give criteria. Whether
-formative latent variables are meaningful at all is still debated
-(Howell, Breivik, &amp; Wilcox, 2007; Edwards, 2011; Bollen &amp;
-Diamantopoulos, 2017), and <code>nomologR</code> does not fit them. A
-formative index can still enter a nomological network as an observed
-variable in <code><a href="../reference/nomo_network.html">nomo_network()</a></code>, and its content can still be
-reviewed with <code>contentvalidR</code>.</p>
+follows before choosing tools; Jarvis et al. (2003) and MacKenzie et
+al. (2005) give criteria. Whether formative latent variables are
+meaningful at all is still debated (Howell et al., 2007; Edwards, 2011;
+Bollen &amp; Diamantopoulos, 2017), and <code>nomologR</code> does not
+fit them. A formative index can still enter a nomological network as an
+observed variable in <code><a href="../reference/nomo_network.html">nomo_network()</a></code>, and its content can
+still be reviewed with <code>contentvalidR</code>.</p>
 </div>
 <div class="section level2">
 <h2 id="the-workflow-at-a-glance">The workflow at a glance<a class="anchor" aria-label="anchor" href="#the-workflow-at-a-glance"></a>
@@ -374,19 +373,22 @@ Recommendations state what was found, why it may matter, what defensible
 choices exist, and what each choice changes downstream.</li>
 <li>
 <strong>Reference values are prompts, not verdicts.</strong>
-Familiar numbers such as a loading of .40 or a CFI of .95 flag evidence
-for review. Items receive <code>KEEP</code>, <code>REVIEW</code>, or
-<code>STRONG REVIEW</code>, never <code>DELETE</code>. The references
-live in <code><a href="../reference/nomo_defaults.html">nomo_defaults()</a></code>, and changing them is a visible
-researcher choice.</li>
+Familiar numbers such as a loading of 0.40 or a CFI of .95 flag evidence
+for review. An item can be flagged for review or concern, never for
+deletion. The references live in <code><a href="../reference/nomo_defaults.html">nomo_defaults()</a></code>, and
+changing them is a visible researcher choice.</li>
 <li>
 <strong>One flag wording on screen.</strong> Printed output, plots,
-and reports use one flag wording: “review”, then “concern”, and no flag
-when no reference fired (a plot legend calls that “none”). The returned
-tables keep each analysis’s own values (<code>KEEP</code>,
-<code>REVIEW</code>, and <code>STRONG REVIEW</code> for loadings;
-<code>info</code>, <code>review</code>, and <code>concern</code> for
-evidence), so code that filters on them is unaffected.</li>
+and reports use one flag wording: “review”, then “concern”, “not
+computed” for a value that could not be computed, and no flag when no
+reference fired (a plot legend calls that “No flag”). Plots show each by
+shape as well as color. The returned tables keep each analysis’s own
+values (<code>KEEP</code>, <code>REVIEW</code>, and
+<code>STRONG REVIEW</code> for loadings; <code>info</code>,
+<code>review</code>, and <code>concern</code> for evidence), so code
+that filters on them is unaffected. <code><a href="../reference/nomologR-package.html">?nomologR</a></code> sets out how
+these words correspond to the statuses <code>contentvalidR</code>
+reports.</li>
 <li>
 <strong>Historical methods are labeled.</strong> Techniques you will
 meet in published work — eigenvalues greater than one, coefficient

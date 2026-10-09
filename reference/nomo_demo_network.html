@@ -77,15 +77,15 @@ groups.</p>
     <h2 id="format">Format<a class="anchor" aria-label="anchor" href="#format"></a></h2>
     <p>A data frame with 800 rows and 13 columns:</p><dl><dt>ag1, ag2, ag3, ag4</dt>
 <dd><p>Agency indicators. Population standardized
-loadings .80, .75, .70, .78.</p></dd>
+loadings 0.80, 0.75, 0.70, 0.78.</p></dd>
 
 <dt>pe1, pe2, pe3, pe4</dt>
 <dd><p>Persistence indicators. Population standardized
-loadings .78, .72, .76, .70.</p></dd>
+loadings 0.78, 0.72, 0.76, 0.70.</p></dd>
 
 <dt>sd1, sd2, sd3</dt>
 <dd><p>Social desirability indicators. Population
-standardized loadings .70, .75, .65.</p></dd>
+standardized loadings 0.70, 0.75, 0.65.</p></dd>
 
 <dt>Performance</dt>
 <dd><p>Observed outcome score (population mean 70, SD 10).</p></dd>
@@ -103,8 +103,8 @@ source repository.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>Within each group, the population structural model is:</p><ul><li><p>Persistence is regressed on Agency with a standardized coefficient of .45;</p></li>
-<li><p>Performance is regressed on Agency (.40) and <strong>not</strong> on Persistence (0);</p></li>
+    <p>Within each group, the population structural model is:</p><ul><li><p>Persistence is regressed on Agency with a standardized coefficient of 0.45;</p></li>
+<li><p>Performance is regressed on Agency (0.40) and <strong>not</strong> on Persistence (0);</p></li>
 <li><p>Agency and Social desirability are uncorrelated (0).</p></li>
 </ul><p>Because Persistence is correlated with Agency, Persistence and Performance
 are still correlated marginally (about .18 in the population) even though the
@@ -112,8 +112,8 @@ direct Persistence-to-Performance path is zero. This makes the dataset useful
 for teaching the difference between a marginal association and a
 theory-specified structural path.</p>
 <p>Measurement-invariance teaching features: all loadings are equal across
-groups, the latent Agency mean is .25 SD higher in the <code>paper</code> group, and the
-intercept of <code>ag3</code> is .50 higher in the <code>paper</code> group. The <code>ag3</code> intercept is
+groups, the latent Agency mean is 0.25 SD higher in the <code>paper</code> group, and the
+intercept of <code>ag3</code> is 0.50 higher in the <code>paper</code> group. The <code>ag3</code> intercept is
 therefore a known source of scalar non-invariance. Indicators are reported
 on a continuous rating metric (population mean 4, SD 1 in the <code>online</code>
 group) and rounded to two decimals.</p>

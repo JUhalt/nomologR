@@ -106,7 +106,7 @@ file a `.docx` extension instead:
 
 ``` r
 
-nomo_report(run, file = "construct-validation-report.docx")
+nomo_report(run, file = file.path(report_dir, "construct-validation-report.docx"))
 ```
 
 The Word document carries the same tables, figures, and interpretation
@@ -321,7 +321,7 @@ The report mirrors the full guided workflow:
 8.  invariance, if requested;
 9.  nomological-network evidence, if requested;
 10. workflow decisions and outstanding decisions;
-11. deviations and post-hoc decisions;
+11. deviations and post hoc decisions;
 12. methods and citations: the methods this workflow actually used, each
     with its lineage and role, a reference list for those methods, and
     software citations;
@@ -390,7 +390,7 @@ can be turned off, as in the paused report above:
 
 nomo_report(
   run,
-  file = "compact-report.html",
+  file = file.path(report_dir, "compact-report.html"),
   include_plots = FALSE,
   include_session = FALSE
 )

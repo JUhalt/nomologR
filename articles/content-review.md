@@ -242,14 +242,14 @@ summary(ef)
 #> evidence map.
 ```
 
-Recoded, `EF2` correlates 0.50 with the rest of its facet, and one EF
-item remains flagged: `EF4`, at 0.23. Eighteen of twenty judges placed
+Recoded, `EF2` correlates .50 with the rest of its facet, and one EF
+item remains flagged: `EF4`, at .23. Eighteen of twenty judges placed
 `EF4` in Effort Regulation, and they were right about its wording.
 Keeping to a self-set study schedule reads as effort. In the responses,
 though, it shares almost nothing with the other items. This is what
 content review cannot see.
 
-`EF3` is not flagged here (0.34), but its distribution stands out: the
+`EF3` is not flagged here (.34), but its distribution stands out: the
 “Top share” column shows most answers in a single category. Almost
 everyone finishes the assignments that count toward their grade. The
 next stage shows what that costs.
@@ -477,5 +477,5 @@ its own explanation. Neither is presented as a verdict on the other:
 
 ``` r
 
-nomo_report(run, file = "walkthrough-report.html")
+nomo_report(run, file = file.path(tempdir(), "walkthrough-report.html"))
 ```

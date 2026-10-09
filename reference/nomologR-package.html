@@ -69,6 +69,9 @@ decision logging, and teaching-oriented interpretation.</p>
 and measurement model before interpreting a theory-specified structural
 network. Numerical reference values are prompts for investigation rather than
 universal deletion or validity rules.</p>
+<p><code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> shows a result's main evidence and any flags and ends with a
+pointer to where to look next; <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> shows the full evidence, with the
+reason for every flag.</p>
     </div>
     <div class="section level2">
     <h2 id="stability-and-deprecation">Stability and deprecation<a class="anchor" aria-label="anchor" href="#stability-and-deprecation"></a></h2>
@@ -146,8 +149,10 @@ also mark a value that could not be computed as <code>"unavailable"</code>, as t
 them in one wording: no flag for <code>"KEEP"</code>, <code>"none"</code>, and <code>"info"</code>; "review"
 for <code>"REVIEW"</code> and <code>"review"</code>; "concern" for <code>"STRONG REVIEW"</code> and
 <code>"concern"</code>; and "not computed" for <code>"unavailable"</code>. The stored values do
-not change, so code that filters a table uses that table's own values.</p>
-<p><strong>P-values and fit indices.</strong> A p-value is named <code>p_value</code>, or
+not change, so code that filters a table uses that table's own values.
+<strong>Status words shared with contentvalidR</strong> below relates these words to
+that package's.</p>
+<p><strong>p values and fit indices.</strong> A <em>p</em> value is named <code>p_value</code>, or
 <code>&lt;model&gt;_p_value</code> where a table holds one for each model. Three kinds of
 table differ:</p><ul><li><p><code>lavaan</code>'s parameter tables, <code>parameter_estimates</code> and
 <code>standardized_solution</code>, keep <code>lavaan</code>'s name, <code>pvalue</code>.</p></li>
@@ -163,6 +168,17 @@ and <code>lrt_p</code>.</p></li>
 <code>chi_square</code>, <code>df</code>, <code>p_value</code>, <code>CFI</code>, <code>TLI</code>, <code>RMSEA</code>, and <code>SRMR</code>.</p></li>
 </ul><p>The <strong>Fit tables</strong> section of <code><a href="nomo_table.html">nomo_table()</a></code> names the index columns of
 each fit table.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="status-words-shared-with-contentvalidr">Status words shared with contentvalidR<a class="anchor" aria-label="anchor" href="#status-words-shared-with-contentvalidr"></a></h2>
+
+
+<p><code>nomologR</code> and <code>contentvalidR</code>, which reviews item content before the
+analyses here, show status in words that correspond, so an item can be
+followed from one package to the other:</p><table class="table table"><tr><td><code>contentvalidR</code></td><td><code>nomologR</code></td></tr><tr><td>Supported</td><td>no flag</td></tr><tr><td>Review</td><td>review</td></tr><tr><td>(no counterpart)</td><td>concern</td></tr><tr><td>Insufficient data</td><td>not computed</td></tr><tr><td>Descriptive only</td><td>note</td></tr></table><p>In both, "review" means look at the item again, never delete it.</p>
+<p>The field <code>recommendation</code> means different things in the two packages. In
+a <code>nomologR</code> decision log it is prose advice about what to examine next; in
+<code>contentvalidR</code>'s results and handoff it is a decision word.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
