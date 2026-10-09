@@ -320,7 +320,11 @@ nomo_power_model_df <- function(model) {
 #'   nonzero population value.
 #' @param alpha Significance level for detection. Default `.05`.
 #' @param seed Optional integer seed, for a reproducible simulation. The
-#'   session's random-number state is restored afterwards.
+#'   session's random-number state is restored afterwards. A seed reproduces
+#'   the same samples only under the same version of lavaan:
+#'   `lavaan::simulateData()` changed its default generator in lavaan 0.7-3,
+#'   so the same seed draws different samples, and gives slightly different
+#'   estimates of power, bias, and coverage, before and after that version.
 #' @param standardized Passed to `lavaan::simulateData()`. Default `TRUE`,
 #'   which gives the observed variables unit variance where the population
 #'   values allow it (see Details).

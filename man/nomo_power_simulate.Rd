@@ -33,7 +33,11 @@ nonzero population value.}
 \item{alpha}{Significance level for detection. Default \code{.05}.}
 
 \item{seed}{Optional integer seed, for a reproducible simulation. The
-session's random-number state is restored afterwards.}
+session's random-number state is restored afterwards. A seed reproduces
+the same samples only under the same version of lavaan:
+\code{lavaan::simulateData()} changed its default generator in lavaan 0.7-3,
+so the same seed draws different samples, and gives slightly different
+estimates of power, bias, and coverage, before and after that version.}
 
 \item{standardized}{Passed to \code{lavaan::simulateData()}. Default \code{TRUE},
 which gives the observed variables unit variance where the population
