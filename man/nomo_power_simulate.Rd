@@ -33,10 +33,15 @@ nonzero population value.}
 \item{alpha}{Significance level for detection. Default \code{.05}.}
 
 \item{seed}{Optional integer seed, for a reproducible simulation. The
-session's random-number state is restored afterwards.}
+session's random-number state is restored afterwards. A seed reproduces
+the same samples only under the same version of lavaan:
+\code{lavaan::simulateData()} changed its default generator in lavaan 0.7-3,
+so the same seed draws different samples, and gives slightly different
+estimates of power, bias, and coverage, before and after that version.}
 
 \item{standardized}{Passed to \code{lavaan::simulateData()}. Default \code{TRUE},
-which gives the observed variables unit variance.}
+which gives the observed variables unit variance where the population
+values allow it (see Details).}
 }
 \value{
 A \code{nomo_power} object. The fields to read are \code{parameters} (for
@@ -48,8 +53,10 @@ proportions that converged and that were improper, the smallest power in
 \code{meets_references}), \code{n_required} (the smallest simulated sample size that
 meets the references, or \code{NA}), \code{focus}, \code{reps}, \code{alpha}, and \code{seed} (the
 seed given, or \code{NA} without one). \code{\link[=nomo_table]{nomo_table()}} returns the \code{"summary"}
-table, its default \code{type}, or the \code{"parameters"} table; \code{print()} shows
-the first and \code{summary()} both.
+table, its default \code{type}, or the \code{"parameters"} table. \code{print()} shows
+the table by sample size with a key to its columns and the references;
+\code{summary()} adds the table by sample size and parameter. \code{plot()} draws
+the power of each focus parameter by sample size.
 
 Other fields record the call, the population and analysis models, and the
 kind of power analysis. They may change between releases and are not part
@@ -73,8 +80,13 @@ Data are generated from \code{population}, a lavaan model whose parameters carry
 their population values (for example \code{A =~ 0.7*a1}), with
 \code{lavaan::simulateData()}. With \code{standardized = TRUE}, the default, the
 residual variances of the observed variables are set so that each has unit
-variance. The \code{analysis} model, which by default is \code{population} without its
+variance. Values that explain more than a variable's whole variance leave no
+residual variance to set, and lavaan then generates the data in another
+metric; a warning names the variances \code{population} implies when any is not
+\enumerate{
+\item The \code{analysis} model, which by default is \code{population} without its
 values, is fitted to each data set with \code{lavaan::sem(std.lv = TRUE)}.
+}
 
 \strong{The metric.} Each estimate is the analysis model's unstandardized
 estimate, and it is compared with the population value as written. Both are
@@ -91,26 +103,37 @@ coverage, and power are for the values as written.
 Muthén and Muthén (2002) suggest choosing the sample size at which three
 conditions hold, and power for the parameter of interest is close to .80:
 \itemize{
-\item parameter and standard error biases are within 10\% for every parameter;
+\item parameter and standard error biases are within 10\% for every parameter
+given a population value;
 \item the standard error bias of the parameter whose power is assessed is within
 5\%;
 \item coverage of the 95\% interval lies between .91 and .98.
 }
 
 \code{meets_references} records whether they hold at each sample size, for the
-parameters in \code{focus}. Wolf, Harrington, Clark, and Miller (2013) showed
+parameters in \code{focus}. Only parameters given a population value in
+\code{population} (loadings, regressions, and covariances) are checked, so
+residual and factor variances are outside the check.
+
+Wolf, Harrington, Clark, and Miller (2013) showed
 that the sample size a model needs varies widely with its structure, so
 rules of thumb such as a fixed N or a ratio of cases to parameters are no
 substitute. They also counted improper solutions, which are reported here.
 Summaries use the replications that converged.
 }
 \examples{
-\donttest{
 population <- "
   A =~ 0.7*a1 + 0.7*a2 + 0.6*a3 + 0.5*a4
   B =~ 0.7*b1 + 0.6*b2 + 0.6*b3 + 0.5*b4
   A ~~ 0.3*B
 "
+# Five replications run quickly and show the result; they are far too few to
+# estimate power.
+quick <- nomo_power_simulate(population, n = 100, reps = 5,
+                             focus = "A~~B", seed = 2026)
+nomo_table(quick, "summary")
+
+\donttest{
 pw <- nomo_power_simulate(population, n = c(100, 200), reps = 100,
                           focus = "A~~B", seed = 2026)
 pw

@@ -412,6 +412,7 @@ test_that("difference-test helpers report unusable values rather than guessing",
 
 
 test_that("nomo_compare refuses when lavaan cannot report the cases or data used", {
+  skip_on_cran()
   pair <- compare_fitted_pair()
   real_lav_inspect <- lavaan::lavInspect
 
@@ -450,6 +451,7 @@ test_that("nomo_compare refuses when lavaan cannot report the cases or data used
 
 
 test_that("model data is recovered when lavaan returns it per group", {
+  skip_on_cran()
   fit <- compare_fitted_pair()$full$fit
   real_lav_inspect <- lavaan::lavInspect
 
@@ -483,6 +485,7 @@ test_that("model data is recovered when lavaan returns it per group", {
 
 
 test_that("fixed-zero loadings are empty rather than an error when parTable fails", {
+  skip_on_cran()
   fit <- compare_fitted_pair()$full$fit
 
   out <- testthat::with_mocked_bindings(
@@ -507,6 +510,7 @@ test_that("fixed-zero loadings are empty rather than an error when parTable fail
 
 
 test_that("the nesting check explains itself when semTools cannot answer", {
+  skip_on_cran()
   pair <- compare_fitted_pair()
   reference <- pair$full$fit
   other <- pair$zero$fit
@@ -589,6 +593,7 @@ test_that("the nesting check explains itself when semTools cannot answer", {
 
 
 test_that("warnings raised by the nesting check are carried, not swallowed", {
+  skip_on_cran()
   pair <- compare_fitted_pair()
   reference <- pair$full$fit
   other <- pair$zero$fit
@@ -616,6 +621,7 @@ test_that("warnings raised by the nesting check are carried, not swallowed", {
 
 
 test_that("a difference test that lavaan cannot compute is reported, not assumed", {
+  skip_on_cran()
   pair <- compare_fitted_pair()
 
   failed <- testthat::with_mocked_bindings(
@@ -635,6 +641,7 @@ test_that("a difference test that lavaan cannot compute is reported, not assumed
 
 
 test_that("a negative scaled difference statistic is named as the reason", {
+  skip_on_cran()
   pair <- compare_fitted_pair()
   real_lrt <- lavaan::lavTestLRT
 
@@ -678,6 +685,7 @@ test_that("a negative scaled difference statistic is named as the reason", {
 
 
 test_that("warnings from lavaan are carried into the difference-test note", {
+  skip_on_cran()
   pair <- compare_fitted_pair()
   real_lrt <- lavaan::lavTestLRT
 
@@ -786,6 +794,7 @@ test_that("the interpretation omits sections that have nothing to report", {
 
 
 test_that("equal degrees of freedom read as equivalent even when the check could not run", {
+  skip_on_cran()
   pair <- compare_fitted_pair()
 
   # Declared nested, the automatic check unavailable, and the two models have
@@ -830,6 +839,7 @@ test_that("warnings are collected once while evidence is computed quietly", {
 # Audit fixes (#145) ------------------------------------------------------------
 
 test_that("a nesting check that cannot run leaves the relation undetermined, for review (#145)", {
+  skip_on_cran()
   pair <- compare_fitted_pair()
   out <- testthat::with_mocked_bindings(
     nomo_compare(full = pair$full, zero_b5 = pair$zero, rationale = "Item b5.", evidence = FALSE),
@@ -1069,6 +1079,7 @@ test_that("measurement evidence with no notes, the usual case, prints no empty b
 
 
 test_that("a flag's note ends with a full stop before its recommendation (#145)", {
+  skip_on_cran()
   pair <- compare_fitted_pair()
   out <- testthat::with_mocked_bindings(
     nomo_compare(full = pair$full, zero = pair$zero, rationale = "x", evidence = FALSE),

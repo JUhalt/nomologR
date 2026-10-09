@@ -78,8 +78,10 @@ test_that("a table that does not apply is left out rather than failing the repor
 
 
 test_that("apa_tables must be TRUE or FALSE", {
+  # The argument is checked before the run's results are read, so the small
+  # run the other report tests share is enough.
   expect_error(
-    nomo_report(report_apa_run(), file = tempfile(fileext = ".html"),
+    nomo_report(make_m9_minimal_run(), file = tempfile(fileext = ".html"),
                 apa_tables = NA),
     "apa_tables"
   )
@@ -103,6 +105,10 @@ test_that("the appendix appears only when asked for", {
   expect_match(with_tables, 'id="manuscript-tables"', fixed = TRUE)
   expect_match(with_tables, "<strong>Table 1</strong>", fixed = TRUE)
   expect_match(with_tables, "Standardized Factor Loadings", fixed = TRUE)
+  # The tables carry APA rules, not the page's rule under every row (#145).
+  expect_match(with_tables, '<div class="nomo-apa"> <p><strong>Table 1</strong>', fixed = TRUE)
+  expect_match(with_tables, ".nomo-apa table > tbody > tr > td { border-top: none !important; }",
+               fixed = TRUE)
 
   expect_false(grepl('id="manuscript-tables"', render(FALSE), fixed = TRUE))
 })

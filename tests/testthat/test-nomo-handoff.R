@@ -659,6 +659,7 @@ test_that("the handoff and the keying the screen reports are the same, whatever 
 
 
 test_that("declared keying explains a negative item-rest correlation, without recoding (#60)", {
+  skip_on_cran()
   h <- handoff_fixture("walkthrough-sort", "0.7.0")
   # EF2 and TF2 are declared reverse-keyed; answered as written, they run
   # against their scales.

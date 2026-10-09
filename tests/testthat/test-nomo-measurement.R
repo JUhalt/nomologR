@@ -446,6 +446,7 @@ test_that("closeout: measurement helper fallback schemas cover data-frame, list,
 
 
 test_that("closeout: latent-correlation helper covers missing-CI and cor.lv list fallbacks", {
+  skip_on_cran()
   skip_if_not(
     exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
   )
@@ -493,6 +494,7 @@ test_that("closeout: latent-correlation helper covers missing-CI and cor.lv list
 
 
 test_that("closeout B: measurement-fit fallbacks normalize absent parameter metadata and group-level counts", {
+  skip_on_cran()
   skip_if_not(
     exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
   )
@@ -522,6 +524,7 @@ test_that("closeout B: measurement-fit fallbacks normalize absent parameter meta
 
 
 test_that("closeout B: measurement fit-context and latent-correlation helpers preserve empty and unnamed fallbacks", {
+  skip_on_cran()
   skip_if_not(
     exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
   )
@@ -570,6 +573,7 @@ test_that("closeout B: measurement fit-context and latent-correlation helpers pr
 
 
 test_that("closeout B: HTMT input recovery handles one-element data lists and unavailable raw data", {
+  skip_on_cran()
   skip_if_not(
     exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
   )

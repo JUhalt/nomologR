@@ -602,6 +602,7 @@ test_that("reliability summary table fills missing CI-success columns", {
 # internal helpers directly.
 
 test_that("closeout: reliability bootstrap helper covers alignment and finite-draw qualifications", {
+  skip_on_cran()
   skip_if_not(
     exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
   )
@@ -676,6 +677,7 @@ test_that("closeout: reliability bootstrap helper covers alignment and finite-dr
 
 
 test_that("closeout: reliability bootstrap statistic returns all-NA when engines fail", {
+  skip_on_cran()
   skip_if_not(
     exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
   )
@@ -702,6 +704,7 @@ test_that("closeout: reliability bootstrap statistic returns all-NA when engines
 
 
 test_that("closeout: reliability engine errors and inadmissible coefficient interpretation are explicit", {
+  skip_on_cran()
   skip_if_not(
     exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
   )
@@ -781,6 +784,7 @@ test_that("closeout: mixed ordered/continuous constructs compute alpha only for 
 
 
 test_that("closeout B: reliability alpha engine errors remain specific to the requested estimand", {
+  skip_on_cran()
   skip_if_not(
     exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
   )
@@ -808,6 +812,7 @@ test_that("closeout B: reliability alpha engine errors remain specific to the re
 
 
 test_that("closeout B: continuous-alpha failure is explicit in a model containing separate ordered and continuous composites", {
+  skip_on_cran()
   skip_if_not(
     exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
   )
@@ -943,6 +948,55 @@ test_that("an unseeded bootstrap is flagged as not reproducible", {
 
   expect_identical(entry$severity, "review")
   expect_match(entry$recommendation, "cannot be reproduced exactly", fixed = TRUE)
+})
+
+
+test_that("a seeded bootstrap leaves the caller's random-number state as it was", {
+  skip_on_cran()
+  fit <- reliability_boot_fit()
+  # With a seed, the session's random-number state is afterwards as it was;
+  # without one, the draws use the session's stream, so it moves on.
+  # test-nomo-global-state.R covers a session that has no state.
+  withr::with_seed(8105, {
+    before <- nomo_test_rng_state()
+    seeded <- nomo_reliability(fit, ci = "bootstrap", ci_boot = 20, ci_seed = 2026)
+    expect_identical(nomo_test_rng_state(), before)
+    unseeded <- nomo_reliability(fit, ci = "bootstrap", ci_boot = 20)
+    expect_false(identical(nomo_test_rng_state(), before))
+  })
+  expect_true(seeded$ci_status$available)
+  expect_identical(seeded$ci_status$seed, 2026L)
+  expect_true(unseeded$ci_status$available)
+  expect_identical(unseeded$ci_status$seed, NA_integer_)
+})
+
+
+test_that("a seeded bootstrap that fails leaves the random-number state as it was", {
+  skip_on_cran()
+  skip_if_not(
+    exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
+  )
+  fit <- reliability_boot_fit()
+
+  # lavaan seeds the draws itself and, in the version read for this test
+  # (0.7.2), puts the state back only when it reaches the end of the
+  # bootstrap. The stand-in seeds, draws and stops, as a bootstrap that fails
+  # part-way does.
+  testthat::local_mocked_bindings(
+    bootstrapLavaan = function(..., iseed) {
+      set.seed(iseed)
+      stats::runif(1)
+      stop("boom")
+    },
+    .package = "lavaan"
+  )
+  withr::with_seed(8106, {
+    before <- nomo_test_rng_state()
+    rel <- nomo_reliability(fit, ci = "bootstrap", ci_boot = 20, ci_seed = 2026)
+    expect_identical(nomo_test_rng_state(), before)
+  })
+  expect_false(rel$ci_status$available)
+  expect_match(rel$ci_status$reason, "Bootstrap failed: boom", fixed = TRUE)
 })
 
 

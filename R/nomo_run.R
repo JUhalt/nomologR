@@ -21,9 +21,10 @@ nomo_run_fresh <- function(data,
       call. = FALSE
     )
   }
+  nomo_defaults_check_safeguards(guidance)
 
   scales <- nomo_run_validate_scales(scales, roles)
-  settings <- nomo_run_validate_settings(settings, scales)
+  settings <- nomo_run_validate_settings(settings, scales, roles)
   nomo_run_check_reverse(settings, scales)
   decisions <- nomo_run_validate_decisions(decisions)
   # Declared keying lets the item audit say whether a negative item-rest
@@ -275,7 +276,16 @@ nomo_run_resume <- function(resume,
 #'
 #' The guided workflow is resumable. Completed component objects are retained
 #' rather than recomputed. Future-stage settings may be added or revised until
-#' that stage has completed; settings for completed/blocked stages are locked.
+#' that stage runs. Settings given when resuming are merged argument by
+#' argument: a named argument is added or replaces the earlier value, the
+#' others keep theirs, and the decision log records the change. Settings are
+#' locked for a stage that has completed or blocked, for an invariance or
+#' network branch a completed run marked not requested, and for `scores` and
+#' `missing` once the CFA has been fitted, since they would never run; a new
+#' `nomo_run()` is then the way to request them. At the pause after a
+#' `"revise"` decision, settings for invariance, the network, `scores`, or
+#' `missing` may still be given when this run has not computed that evidence:
+#' [nomo_revise()] carries the settings into the revision, which runs it.
 #'
 #' Consequential decisions are currently:
 #'
@@ -296,7 +306,8 @@ nomo_run_resume <- function(resume,
 #'   object so the same prespecified network can be evaluated across calibration
 #'   and validation samples.
 #' @param scales A non-empty named list. Each element is a character vector of
-#'   candidate item-column names for one scale/construct. May also be a handoff
+#'   candidate item-column names for one scale/construct, at least three per
+#'   scale, since factor-retention evidence needs three. May also be a handoff
 #'   from `contentvalidR`'s `content_handoff()`, whose carried items and
 #'   construct mapping then define the scales, as described for
 #'   [nomo_screen()]. A handoff from a review with no construct mapping is
@@ -304,7 +315,9 @@ nomo_run_resume <- function(resume,
 #'   them.
 #' @param mode Presentation mode: `"teaching"` or `"research"`. Mode changes
 #'   presentation, not statistical behavior.
-#' @param guidance Guidance settings from [nomo_defaults()].
+#' @param guidance Guidance settings from [nomo_defaults()]. `auto_delete` and
+#'   `auto_respecify` cannot be `TRUE`, since nomologR never deletes an item or
+#'   respecifies a model.
 #' @param decisions Named list of explicit researcher decisions. Decisions may
 #'   be supplied one pause at a time or all at once for a fully prespecified
 #'   one-call run. A structured decision can be written as
@@ -314,8 +327,9 @@ nomo_run_resume <- function(resume,
 #'   `list(invariance = list(group = "group"))`, or
 #'   `list(network = list(hypotheses = h))`. Pipeline-controlled arguments such
 #'   as component data/model inputs cannot be overridden through `settings`.
-#'   When resuming, settings for future stages may be supplied without
-#'   recomputing completed stages.
+#'   `settings$invariance$group` must name a column of the data the
+#'   confirmatory stages use. When resuming, settings for future stages may be
+#'   supplied without recomputing completed stages.
 #'
 #'   `list(screen = list(effort = TRUE))` adds careless-responding indices (see
 #'   [nomo_screen()]). They describe a respondent across the whole instrument,
@@ -342,8 +356,9 @@ nomo_run_resume <- function(resume,
 #'   * `list(scores = list(method = "sum"))` scores it with [nomo_scores()],
 #'     using a method the researcher names; nomologR does not choose one.
 #'   * `list(missing = list())` compares missing-data strategies with
-#'     [nomo_missing()]. `strategies` and `reliability` may be given. The
-#'     comparison covers the network too when one is requested.
+#'     [nomo_missing()]. `strategies`, lavaan `missing` options such as
+#'     `"listwise"` or `"ml"`, and `reliability` may be given. The comparison
+#'     covers the network too when one is requested.
 #'
 #'   Both run after convergent and discriminant evidence, so they are in view
 #'   when the researcher decides whether to carry the model forward. Neither is
@@ -373,8 +388,14 @@ nomo_run_resume <- function(resume,
 #'   * `scales`, `mode`, `sample_design`, `sample_n`, `decisions`, and
 #'     `settings`.
 #'
+#'   `print()` shows where the run is, one line of key evidence per component,
+#'   and the decision the run waits for or why it is blocked. `summary()` adds
+#'   every stage, the scales, the recorded decisions, the component recipe,
+#'   the methods used, and each flag the components raised.
+#'
 #'   [nomo_table()] returns the run's tables, including the component recipe,
-#'   the component decision logs, and the revision lineage. Other fields hold
+#'   the settings with their values, the component decision logs, and the
+#'   revision lineage. Other fields hold
 #'   the source data and state needed to resume or revise the run. They may
 #'   change between releases and are not part of the stable interface (see
 #'   `?nomologR`).
@@ -409,7 +430,6 @@ nomo_run_resume <- function(resume,
 #' 1359-1366. \doi{10.1177/0956797611417632}
 #'
 #' @examples
-#' \donttest{
 #' scales <- list(
 #'   Agency = c("ag1", "ag2", "ag3", "ag4"),
 #'   Persistence = c("pe1", "pe2", "pe3", "pe4")
@@ -424,6 +444,9 @@ nomo_run_resume <- function(resume,
 #' run
 #' nomo_table(run, "requests")
 #'
+#' \donttest{
+#' # Each decision resumes the run, which computes the next evidence and pauses
+#' # again.
 #' run <- nomo_run(
 #'   resume = run,
 #'   decisions = list(

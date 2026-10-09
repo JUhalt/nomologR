@@ -357,7 +357,7 @@ test_that("guided runs say what they found, and group repeated requests (#89)", 
   # default path, so the hint names `file`.
   expect_match(
     paste(utils::capture.output(print(complete)), collapse = " "),
-    "nomo_report(x, file = \"report.html\") archives the evidence.",
+    "nomo_report(x, file = \"report.html\") for an archived report.",
     fixed = TRUE
   )
 
