@@ -218,3 +218,105 @@ make_m9_full_report_run <- local({
 # Plot titles, subtitles, and captions are wrapped with line breaks (#89), so
 # tests compare their text with the breaks collapsed to single spaces.
 plot_text <- function(x) gsub("\\s+", " ", x)
+
+
+# ---- simulated fixtures ----
+# No fixture is drawn with lavaan::simulateData(): the same seed gives
+# different data from one lavaan version to the next (0.7-3 changed its
+# default generator), and lavaan lists the function as deprecated. The
+# functions below use lavaan only to read the population syntax, and base R
+# for everything else, so a fixture is the same data under every lavaan
+# version.
+
+# The covariance matrix of the observed variables that a population model
+# implies. `population` is lavaan syntax in which every loading and every
+# factor variance or covariance carries its value, as in "A =~ 0.7*a1" and
+# "A ~~ 0.4*B"; a factor variance that is left out is 1, and a factor
+# covariance that is left out is 0. Each observed variable has variance 1, as
+# with simulateData(standardized = TRUE): its error variance is 1 minus the
+# variance its factors explain, which is negative for a loading above 1. A
+# covariance matrix is returned as it is.
+nomo_test_population_cov <- function(population) {
+  if (is.matrix(population)) return(population)
+  table <- lavaan::lavaanify(population)
+  table <- table[table$user == 1L, , drop = FALSE]
+  loadings <- table[table$op == "=~", , drop = FALSE]
+  covariances <- table[table$op == "~~", , drop = FALSE]
+  factors <- unique(loadings$lhs)
+  items <- unique(loadings$rhs)
+  # Loadings and factor (co)variances with values are all the fixtures need;
+  # anything else is refused rather than read as something it is not.
+  stopifnot(
+    nrow(loadings) + nrow(covariances) == nrow(table),
+    !anyNA(table$ustart),
+    all(c(covariances$lhs, covariances$rhs) %in% factors),
+    !any(items %in% factors)
+  )
+  lambda <- matrix(0, length(items), length(factors), dimnames = list(items, factors))
+  lambda[cbind(loadings$rhs, loadings$lhs)] <- loadings$ustart
+  psi <- diag(length(factors))
+  dimnames(psi) <- list(factors, factors)
+  psi[cbind(covariances$lhs, covariances$rhs)] <- covariances$ustart
+  psi[cbind(covariances$rhs, covariances$lhs)] <- covariances$ustart
+  sigma <- lambda %*% psi %*% t(lambda)
+  diag(sigma) <- 1
+  sigma
+}
+
+
+# `n` multivariate normal cases with the covariance matrix of `population`
+# (lavaan population syntax or a covariance matrix; see above), drawn with
+# set.seed(seed) and rnorm().
+#
+# With `exact = TRUE` the draws are first centered and whitened with the
+# Cholesky factor of their own covariance matrix, so the data have mean 0 and
+# the population matrix as their sample covariance matrix, cov(data), exactly.
+# Normal-theory maximum likelihood reads complete data only through that
+# matrix: a model that holds in the population fits these data perfectly, and
+# one that does not misfits by an amount the population fixes, whatever the
+# seed. Use it when a test needs an outcome the population guarantees rather
+# than one a draw happens to give.
+nomo_test_simulate <- function(population, n, seed, exact = FALSE) {
+  sigma <- nomo_test_population_cov(population)
+  set.seed(seed)
+  nomo_test_draw(sigma, n, exact)
+}
+
+
+# The draw itself, from the session's random stream as it stands.
+nomo_test_draw <- function(sigma, n, exact = FALSE) {
+  z <- matrix(stats::rnorm(n * ncol(sigma)), nrow = n)
+  if (exact) {
+    z <- scale(z, center = TRUE, scale = FALSE)
+    z <- z %*% solve(chol(stats::cov(z)))
+  }
+  # chol() stops unless the matrix is positive definite.
+  data <- as.data.frame(z %*% chol(sigma))
+  names(data) <- colnames(sigma)
+  data
+}
+
+
+# For a test of code that draws its own samples, as nomo_power_simulate() does
+# with lavaan::simulateData(): until the calling test ends, that function is
+# replaced by the base-R draw above. The samples come from the session's random
+# stream, so a seed set by the code under test gives the same samples under
+# every lavaan version, and what the test asserts about them cannot change with
+# lavaan's generator.
+#
+# The stand-in serves a standardized population of the kind
+# nomo_test_population_cov() reads. As in lavaan, `empirical = TRUE` gives data
+# whose maximum-likelihood covariance matrix (divisor n) is the population
+# matrix. Any other argument stops, rather than being ignored.
+local_base_r_simulate_data <- function(env = parent.frame()) {
+  testthat::local_mocked_bindings(
+    simulateData = function(model, sample.nobs, standardized = FALSE,
+                            empirical = FALSE, ...) {
+      stopifnot(...length() == 0L, isTRUE(standardized))
+      data <- nomo_test_draw(nomo_test_population_cov(model), sample.nobs, exact = empirical)
+      if (empirical) data <- data * sqrt(sample.nobs / (sample.nobs - 1))
+      data
+    },
+    .package = "lavaan", .env = env
+  )
+}

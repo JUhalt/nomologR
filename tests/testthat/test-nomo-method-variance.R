@@ -12,18 +12,22 @@ mv_population <- function(method = rep(.3, 11), r = .4) {
     sep = "\n"
   )
 }
-mv_data <- function(population, n = 600, seed = 2010) {
-  set.seed(seed)
-  lavaan::simulateData(population, sample.nobs = n, standardized = TRUE)
+mv_data <- function(population, n = 600, seed = 2010, exact = FALSE) {
+  nomo_test_simulate(population, n = n, seed = seed, exact = exact)
 }
 mv_model <- "A =~ a1 + a2 + a3 + a4\nB =~ b1 + b2 + b3 + b4"
 mv_marker <- c("m1", "m2", "m3")
 
+# A test that asserts what a population implies (which model is retained,
+# whether method variance is detected) uses data that reproduce the population
+# covariance matrix exactly (`exact = TRUE`), so the outcome follows from the
+# population and not from a draw.
 mv_equal <- local({
   cache <- NULL
   function() {
     if (is.null(cache)) {
-      cache <<- nomo_method_variance(mv_model, mv_data(mv_population()), marker = mv_marker)
+      cache <<- nomo_method_variance(mv_model, mv_data(mv_population(), exact = TRUE),
+                                     marker = mv_marker)
     }
     cache
   }
@@ -105,7 +109,7 @@ test_that("unequal method effects retain Method-U, and strong ones bias the corr
   skip_on_cran()
   unequal <- c(.1, .2, .5, .6, .1, .2, .5, .6, .3, .3, .3)
   mv <- nomo_method_variance(
-    mv_model, mv_data(mv_population(method = unequal, r = .2), n = 1500),
+    mv_model, mv_data(mv_population(method = unequal, r = .2), n = 1500, exact = TRUE),
     marker = mv_marker
   )
   expect_identical(mv$retained, "Method-U")
@@ -123,7 +127,8 @@ test_that("unequal method effects retain Method-U, and strong ones bias the corr
 test_that("without method variance, none is reported", {
   skip_on_cran()
   mv <- nomo_method_variance(
-    mv_model, mv_data(mv_population(method = rep(0, 11)), seed = 3), marker = mv_marker
+    mv_model, mv_data(mv_population(method = rep(0, 11)), seed = 3, exact = TRUE),
+    marker = mv_marker
   )
   log <- mv$decision_log
   presence <- log[log$metric == "method_variance_presence", ]
@@ -135,7 +140,9 @@ test_that("without method variance, none is reported", {
 
 test_that("a one-factor model has no correlations to bias", {
   skip_on_cran()
-  dat <- mv_data(mv_population())
+  # A two-indicator marker's loadings rest on its correlation with the factor.
+  # In these data they are the population's, equal and proper.
+  dat <- mv_data(mv_population(), exact = TRUE)
   mv <- nomo_method_variance("A =~ a1 + a2 + a3 + a4", dat, marker = c("m1", "m2"))
   expect_true(is.na(mv$comparisons$p_value[[3L]]))
   expect_identical(nrow(mv$correlations), 0L)
@@ -345,8 +352,10 @@ test_that("opposite-signed method effects are not reported as absent (#145)", {
   # The marker loads +.35 on the A items and -.35 on the B items: under
   # Method-C's equality constraint they cancel, and Method-U is retained.
   mixed <- c(rep(.35, 4), rep(-.35, 4), .35, .35, .35)
-  mv <- nomo_method_variance(mv_model, mv_data(mv_population(method = mixed), n = 800, seed = 11),
-                             marker = mv_marker)
+  mv <- nomo_method_variance(
+    mv_model, mv_data(mv_population(method = mixed), n = 800, seed = 11, exact = TRUE),
+    marker = mv_marker
+  )
   expect_identical(mv$retained, "Method-U")
   expect_gt(mv$comparisons$p_value[[1L]], .05)
   presence <- mv$decision_log[mv$decision_log$metric == "method_variance_presence", ]
@@ -363,8 +372,10 @@ test_that("opposite-signed method effects are not reported as absent (#145)", {
 test_that("the sensitivity models move negative method loadings away from zero (#145)", {
   skip_on_cran()
   negative <- c(rep(-.3, 8), .3, .3, .3)
-  mv <- nomo_method_variance(mv_model, mv_data(mv_population(method = negative), n = 800, seed = 12),
-                             marker = mv_marker)
+  mv <- nomo_method_variance(
+    mv_model, mv_data(mv_population(method = negative), n = 800, seed = 12, exact = TRUE),
+    marker = mv_marker
+  )
   items <- c(paste0("a", 1:4), paste0("b", 1:4))
   marker_loadings <- function(fit) {
     pe <- lavaan::parameterEstimates(fit)
@@ -383,19 +394,23 @@ test_that("the sensitivity models move negative method loadings away from zero (
 
 test_that("an improper or unconverged CFA stops the technique with its reason (#145)", {
   skip_on_cran()
-  # A two-indicator marker unrelated to the substantive items: the CFA gives m1
-  # a negative error variance, which had been fixed into every later model.
-  two <- mv_data(paste(
+  # A two-indicator marker's loadings l1 and l2 are identified only through its
+  # correlations with the substantive factors: cov(m1, m2) is l1 * l2 and
+  # cov(m1, a) / cov(m2, a) is l1 / l2, so the CFA's l1^2 is that ratio times
+  # cov(m1, m2). In this population it is 1.1^2 = 1.21, above m1's variance of
+  # 1, and the data reproduce the population matrix exactly. The CFA therefore
+  # fits perfectly with an error variance of about -.21 for m1, on every
+  # platform. Such a variance had been fixed into every later model.
+  heywood <- paste(
     "A =~ 0.7*a1 + 0.7*a2 + 0.6*a3 + 0.6*a4", "B =~ 0.7*b1 + 0.6*b2 + 0.6*b3 + 0.5*b4",
-    "M =~ 0.7*m1 + 0.7*m2", "A ~~ 0.4*B", "A ~~ 0*M", "B ~~ 0*M", sep = "
-"
-  ), n = 300, seed = 68)
-  # Some platforms' optimizers (macOS) stop short of convergence on these data
-  # instead of reaching the negative variance; either way the technique stops
-  # with its reason.
+    "M =~ 1.1*m1 + 0.5*m2", "A ~~ 0.4*B", "A ~~ 0.5*M", "B ~~ 0.5*M", sep = "\n"
+  )
+  sigma <- nomo_test_population_cov(heywood)
+  expect_gt(sigma["m1", "a1"] / sigma["m2", "a1"] * sigma["m1", "m2"], sigma["m1", "m1"])
+  two <- mv_data(heywood, n = 300, seed = 68, exact = TRUE)
   expect_error(
     nomo_method_variance(mv_model, two, marker = c("m1", "m2")),
-    "The CFA model (gives the marker a negative error variance for m1|did not converge)"
+    "The CFA model gives the marker a negative error variance for m1", fixed = TRUE
   )
   # The negative-variance message itself, on fixed estimates.
   negative <- data.frame(lhs = c("Marker", "Marker", "m1", "m2"), op = c("=~", "=~", "~~", "~~"),
@@ -404,11 +419,18 @@ test_that("an improper or unconverged CFA stops the technique with its reason (#
                "The CFA model gives the marker a negative error variance for m1", fixed = TRUE)
   expect_error(nomologR:::nomo_method_variance_check_cfa(negative, c("m1", "m2"), "Marker"),
                "identified only through its correlations", fixed = TRUE)
-  # Forty cases: the CFA does not converge, and that is said.
-  small <- mv_data(mv_population(), n = 40, seed = 7)
-  expect_error(
-    nomo_method_variance(mv_model, small, marker = mv_marker),
-    "The CFA model did not converge", fixed = TRUE
+  # A model that does not converge is said to be the reason. No data set can
+  # guarantee that an optimizer fails, so lavaan's cfa() is stopped after its
+  # first iteration, as in the invariance tests: it returns a fit that lavaan
+  # itself reports as not converged.
+  real_cfa <- lavaan::cfa
+  testthat::with_mocked_bindings(
+    expect_error(
+      nomo_method_variance(mv_model, mv_data(mv_population()), marker = mv_marker),
+      "The CFA model did not converge", fixed = TRUE
+    ),
+    cfa = function(...) real_cfa(..., control = list(iter.max = 1L)),
+    .package = "lavaan"
   )
   # Standard errors that cannot be computed are reported too.
   pe <- data.frame(lhs = c("Marker", "Marker", "m1", "m2", "m3"), op = c("=~", "=~", "~~", "~~", "~~"),
