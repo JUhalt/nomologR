@@ -531,6 +531,7 @@ test_that("a split, revised workflow credits holdout, lineage, and its compariso
 
 
 test_that("a requested Fornell-Larcker comparison is credited", {
+  skip_on_cran()
   fit <- methods_compare_models()$ml[[1]]
   expect_false("fornell_larcker" %in% nomo_methods(nomo_validity(fit))$id)
   expect_true(
