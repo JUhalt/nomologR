@@ -412,6 +412,7 @@ test_that("single-factor AVE retains the CFA construct name", {
 # internal helpers directly.
 
 test_that("closeout: validity AVE and HTMT engine failure paths are retained as evidence", {
+  skip_on_cran()
   skip_if_not(
     exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
   )
@@ -441,6 +442,7 @@ test_that("closeout: validity AVE and HTMT engine failure paths are retained as 
 
 
 test_that("closeout: validity HTMT failures and inadmissible values are explicit", {
+  skip_on_cran()
   skip_if_not(
     exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
   )

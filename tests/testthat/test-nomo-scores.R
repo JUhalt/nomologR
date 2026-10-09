@@ -417,6 +417,7 @@ test_that("loadings that differ twofold are flagged for a unit-weighted score", 
 
 
 test_that("a parallel model lavaan cannot fit is reported with lavaan's reason, not hidden", {
+  skip_on_cran()
   fit <- scores_fit()
 
   testthat::local_mocked_bindings(
@@ -435,6 +436,7 @@ test_that("a parallel model lavaan cannot fit is reported with lavaan's reason, 
 
 
 test_that("a parallel model that does not converge is reported, not hidden", {
+  skip_on_cran()
   fit <- scores_fit()
   unconverged <- suppressWarnings(lavaan::cfa(
     scores_model, data = scores_sample(scores_population()$sigma),
@@ -453,6 +455,7 @@ test_that("a parallel model that does not converge is reported, not hidden", {
 
 
 test_that("a comparison lavaan cannot compute is reported with lavaan's reason, not hidden", {
+  skip_on_cran()
   fit <- scores_fit()
 
   testthat::local_mocked_bindings(
@@ -592,6 +595,7 @@ test_that("a fit that is already parallel, or cannot be, has no test and says wh
 
 
 test_that("a fit without a test statistic is scored, with the comparison not computed", {
+  skip_on_cran()
   dat <- scores_sample(scores_population()$sigma)
 
   # lavaan gives no fit measures for test = "none", the refit keeps the
@@ -628,6 +632,7 @@ test_that("a fit without a test statistic is scored, with the comparison not com
 
 
 test_that("a negative difference is reported as no test, not as support for a sum score", {
+  skip_on_cran()
   fit <- scores_fit()
   difference <- function(value, p) {
     data.frame(

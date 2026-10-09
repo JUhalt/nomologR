@@ -1955,6 +1955,7 @@ test_that("closeout B: parallel analysis records smoothed null matrices", {
 
 
 test_that("closeout B: parallel analysis skips null matrices that cannot be smoothed", {
+  skip_on_cran()
   skip_if_not(
     exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
   )
@@ -2056,6 +2057,7 @@ test_that("closeout B: parallel analysis retains a qualified partial set of usab
 
 
 test_that("closeout B: MAP truncation and unavailable adequacy engines are explicit", {
+  skip_on_cran()
   map <- nomologR:::nomo_factors_map(
     corr = matrix(1, 3, 3),
     max_factors = 2L
@@ -2149,6 +2151,7 @@ test_that("closeout B: KMO decision-log severity distinguishes concern and revie
 
 
 test_that("closeout B: EKC and comparison-data helpers preserve no-suggestion outcomes", {
+  skip_on_cran()
   skip_if_not(
     exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
   )
@@ -2279,6 +2282,7 @@ test_that("one list of extraction methods serves both functions (#145, factors-1
 
 
 test_that("ordinal and binary codes are ranked, and too many categories are named (#145, factors-4)", {
+  skip_on_cran()
   ord <- make_cov_final_ordinal(n = 200L, seed = 9411L)
   codes <- as.data.frame(lapply(ord, as.integer))
   types <- stats::setNames(rep("ordinal", ncol(codes)), names(codes))

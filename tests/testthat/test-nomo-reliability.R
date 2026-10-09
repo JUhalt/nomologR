@@ -602,6 +602,7 @@ test_that("reliability summary table fills missing CI-success columns", {
 # internal helpers directly.
 
 test_that("closeout: reliability bootstrap helper covers alignment and finite-draw qualifications", {
+  skip_on_cran()
   skip_if_not(
     exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
   )
@@ -676,6 +677,7 @@ test_that("closeout: reliability bootstrap helper covers alignment and finite-dr
 
 
 test_that("closeout: reliability bootstrap statistic returns all-NA when engines fail", {
+  skip_on_cran()
   skip_if_not(
     exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
   )
@@ -702,6 +704,7 @@ test_that("closeout: reliability bootstrap statistic returns all-NA when engines
 
 
 test_that("closeout: reliability engine errors and inadmissible coefficient interpretation are explicit", {
+  skip_on_cran()
   skip_if_not(
     exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
   )
@@ -781,6 +784,7 @@ test_that("closeout: mixed ordered/continuous constructs compute alpha only for 
 
 
 test_that("closeout B: reliability alpha engine errors remain specific to the requested estimand", {
+  skip_on_cran()
   skip_if_not(
     exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
   )
@@ -808,6 +812,7 @@ test_that("closeout B: reliability alpha engine errors remain specific to the re
 
 
 test_that("closeout B: continuous-alpha failure is explicit in a model containing separate ordered and continuous composites", {
+  skip_on_cran()
   skip_if_not(
     exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
   )
