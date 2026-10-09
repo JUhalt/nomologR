@@ -190,7 +190,7 @@ Science, 5}(1), 184-186. \doi{10.1177/2167702616657069}
 Gorsuch, R. L. (1983). \emph{Factor analysis} (2nd ed.). Lawrence Erlbaum.
 
 Hancock, G. R., & Mueller, R. O. (2001). Rethinking construct reliability
-within latent variable systems. In R. Cudeck, S. du Toit, & D. Sorbom (Eds.),
+within latent variable systems. In R. Cudeck, S. du Toit, & D. Sörbom (Eds.),
 \emph{Structural equation modeling: Present and future} (pp. 195-216). Scientific
 Software International.
 

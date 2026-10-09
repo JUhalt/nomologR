@@ -171,9 +171,26 @@ test_that("nomo_methods() filters by stage and lineage", {
 
 
 test_that("nomo_methods() refuses unknown filters by name", {
-  expect_error(nomo_methods(stage = "nonsense"), "Unknown `stage`")
-  expect_error(nomo_methods(stage = "nonsense"), "nonsense")
-  expect_error(nomo_methods(lineage = "modern"), "Unknown `lineage`")
+  # The shared form for a wrong choice: the argument, the choices, and what was
+  # given (#144, guide point 26).
+  expect_error(
+    nomo_methods(stage = "nonsense"),
+    paste0(
+      "`stage` must be one or more of \"screen\", \"factors\", \"efa\", \"cfa\", ",
+      "\"compare\", \"reliability\", \"validity\", \"invariance\", \"scores\", ",
+      "\"network\", or \"workflow\", not \"nonsense\"."
+    ),
+    fixed = TRUE
+  )
+  expect_error(
+    nomo_methods(stage = c("cfa", "nonsense", "more")),
+    "not \"nonsense\", \"more\".", fixed = TRUE
+  )
+  expect_error(
+    nomo_methods(lineage = "modern"),
+    "`lineage` must be one or more of \"historical\", \"contemporary\", or \"emerging\", not \"modern\".",
+    fixed = TRUE
+  )
   expect_error(nomo_methods(references = "yes"), "must be TRUE or FALSE")
 })
 
@@ -671,4 +688,259 @@ test_that("contemporary practice is named only for historical methods, from the 
   expect_true(all(c("introduced", "contemporary_practice") %in% names(nomo_methods())))
   expect_true(all(c("introduced", "contemporary_practice") %in%
                     names(nomo_methods(references = TRUE))))
+})
+
+
+# Crediting what ran: estimator, extraction, rotation, equivalence (#145) -------
+
+test_that("a CFA is credited with the estimator that ran, not with the indicators' default (#145)", {
+  # ML and its robust forms are maximum likelihood; WLSMV is credited only for
+  # ordered indicators; anything else is credited as another estimator.
+  ids <- nomologR:::nomo_methods_estimator_ids
+  expect_identical(ids("ML", character()), "ml_cfa")
+  expect_identical(ids("mlr", character()), "ml_cfa")
+  expect_identical(ids("ULS", character()), "cfa_other_estimator")
+  expect_identical(ids("GLS", character()), "cfa_other_estimator")
+  expect_identical(ids("WLSMV", character()), "cfa_other_estimator")
+  expect_identical(ids("WLSMV", "x1"), c("wlsmv_cfa", "categorical_correlations"))
+  expect_identical(ids("ULSMV", "x1"), c("cfa_other_estimator", "categorical_correlations"))
+  # A missing estimator is lavaan's default for the indicators.
+  expect_identical(ids(NA_character_, character()), "ml_cfa")
+  expect_identical(ids(NA_character_, "x1"), c("wlsmv_cfa", "categorical_correlations"))
+  expect_identical(ids(NULL, character()), "ml_cfa")
+  # So is "default", lavaan's own name for it: nomo_cfa() records the request
+  # as "DEFAULT", nomo_esem() and nomo_method_variance() as it was typed.
+  for (default in c("default", "DEFAULT", "Default")) {
+    expect_identical(ids(default, character()), "ml_cfa", info = default)
+    expect_identical(ids(default, "x1"), c("wlsmv_cfa", "categorical_correlations"),
+                     info = default)
+  }
+
+  esem <- structure(list(estimator = "ULS", ordered = character(), missing = NA_character_),
+                    class = c("nomo_esem", "list"))
+  expect_identical(nomo_methods_used(esem), c("esem", "cfa_other_estimator"))
+  esem$estimator <- "default"
+  expect_identical(nomo_methods_used(esem), c("esem", "ml_cfa"))
+  esem$ordered <- "x1"
+  expect_identical(nomo_methods_used(esem),
+                   c("esem", "wlsmv_cfa", "categorical_correlations"))
+  mv <- structure(list(estimator = "GLS", missing = NA_character_),
+                  class = c("nomo_method_variance", "list"))
+  expect_identical(nomo_methods_used(mv), c("cfa_marker_technique", "cfa_other_estimator"))
+  mv$estimator <- "default"
+  expect_identical(nomo_methods_used(mv), c("cfa_marker_technique", "ml_cfa"))
+  registry <- nomo_methods_registry()
+  expect_match(registry$method[registry$id == "cfa_other_estimator"], "another estimator",
+               fixed = TRUE)
+
+  skip_on_cran()
+  model <- "A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4 + b5"
+  for (estimator in c("ULS", "GLS")) {
+    used <- nomo_methods(nomo_cfa(model, data = nomo_demo_continuous, estimator = estimator))
+    expect_true("cfa_other_estimator" %in% used$id, info = estimator)
+    expect_false("ml_cfa" %in% used$id, info = estimator)
+  }
+  items <- c(paste0("a", 1:5), paste0("b", 1:5))
+  ulsmv <- nomo_methods(nomo_cfa(model, data = nomo_demo_ordinal, ordered = items,
+                                 estimator = "ULSMV"))$id
+  expect_true(all(c("cfa_other_estimator", "categorical_correlations") %in% ulsmv))
+  expect_false("wlsmv_cfa" %in% ulsmv)
+
+  # estimator = "default" runs lavaan's default, so it is credited as the same
+  # call without `estimator` is: the recorded label differs, the engine does not.
+  asked <- nomo_cfa(model, data = nomo_demo_continuous, estimator = "default")
+  left <- nomo_cfa(model, data = nomo_demo_continuous)
+  expect_identical(asked$estimator, "DEFAULT")
+  expect_identical(asked$estimator_engine, left$estimator_engine)
+  expect_identical(nomo_methods_used(asked), nomo_methods_used(left))
+  expect_true("ml_cfa" %in% nomo_methods_used(asked))
+  expect_false("cfa_other_estimator" %in% nomo_methods(asked)$id)
+
+  asked <- nomo_cfa(model, data = nomo_demo_ordinal, ordered = items, estimator = "default")
+  left <- nomo_cfa(model, data = nomo_demo_ordinal, ordered = items)
+  expect_identical(asked$estimator_engine, left$estimator_engine)
+  expect_identical(nomo_methods_used(asked), nomo_methods_used(left))
+  expect_true(all(c("wlsmv_cfa", "categorical_correlations") %in% nomo_methods_used(asked)))
+  expect_false("cfa_other_estimator" %in% nomo_methods(asked)$id)
+})
+
+
+test_that("an EFA is credited with its extraction and the rotation it records (#145)", {
+  efa <- function(fm = "minres", rotation = "oblimin", n_factors = 2) {
+    structure(
+      list(fm = fm, rotation = rotation, n_factors = n_factors,
+           oblique = rotation %in% nomologR:::nomo_efa_rotations$oblique),
+      class = c("nomo_efa", "list")
+    )
+  }
+  # MINRES under each name psych gives the same criterion; anything else is
+  # another common-factor extraction.
+  for (fm in c("minres", "uls", "ols", "old.min")) {
+    expect_true("minres_extraction" %in% nomo_methods_used(efa(fm)), info = fm)
+  }
+  for (fm in c("ml", "pa", "wls", "gls", "minchi", "alpha")) {
+    used <- nomo_methods_used(efa(fm))
+    expect_true("common_factor_extraction" %in% used, info = fm)
+    expect_false("minres_extraction" %in% used, info = fm)
+  }
+  expect_false(any(c("minres_extraction", "common_factor_extraction") %in%
+                     nomo_methods_used(efa(NA_character_))))
+
+  rotations <- function(rotation, n_factors = 2) {
+    intersect(nomo_methods_used(efa(rotation = rotation, n_factors = n_factors)),
+              c("oblique_rotation", "orthogonal_rotation", "orthogonal_rotation_other"))
+  }
+  expect_identical(rotations("oblimin"), "oblique_rotation")
+  expect_identical(rotations("promax"), "oblique_rotation")
+  expect_identical(rotations("geominQ"), "oblique_rotation")
+  expect_identical(rotations("varimax"), "orthogonal_rotation")
+  expect_identical(rotations("Varimax"), "orthogonal_rotation")
+  expect_identical(rotations("quartimax"), "orthogonal_rotation_other")
+  # An unrotated solution, and a one-factor solution, credit no rotation.
+  expect_identical(rotations("none"), character())
+  expect_identical(rotations("oblimin", n_factors = 1), character())
+  # Neither does a solution that records no rotation.
+  unrecorded <- structure(list(fm = "minres", n_factors = 2, oblique = FALSE),
+                          class = c("nomo_efa", "list"))
+  expect_identical(nomo_methods_used(unrecorded), "minres_extraction")
+  expect_identical(rotations(NA_character_), character())
+
+  registry <- nomo_methods_registry()
+  expect_identical(registry$method[registry$id == "oblique_rotation"], "Oblique rotation")
+  expect_identical(registry$lineage[registry$id == "orthogonal_rotation_other"], "historical")
+
+  skip_on_cran()
+  ml <- nomo_methods(nomo_efa(nomo_demo_continuous, factors = 2, fm = "ml"))$id
+  expect_true("common_factor_extraction" %in% ml)
+  unrotated <- nomo_methods(nomo_efa(nomo_demo_continuous, factors = 2, rotation = "none"))$id
+  expect_false(any(c("oblique_rotation", "orthogonal_rotation", "orthogonal_rotation_other") %in%
+                     unrotated))
+  promax <- nomo_methods(nomo_efa(nomo_demo_continuous, factors = 2, rotation = "promax"))$id
+  expect_true("oblique_rotation" %in% promax)
+})
+
+
+test_that("equivalence testing is credited only when an equivalence region was tested (#145)", {
+  bare <- nomo_hypotheses(
+    "Agency -> Persistence" = positive(),
+    "Agency <-> SocialDesirability" = negligible()
+  )
+  expect_false("equivalence_testing" %in% nomo_methods(bare)$id)
+  bounded <- nomo_hypotheses(
+    "Agency <-> SocialDesirability" = negligible(within = c(-.15, .15))
+  )
+  expect_true("equivalence_testing" %in% nomo_methods(bounded)$id)
+
+  # A network is credited from its evidence: a finite equivalence interval.
+  network <- function(lower, upper) {
+    structure(
+      list(hypotheses = bare,
+           hypothesis_evidence = tibble::tibble(equivalence_ci_lower = lower,
+                                                equivalence_ci_upper = upper)),
+      class = c("nomo_network", "list")
+    )
+  }
+  expect_false("equivalence_testing" %in% nomo_methods_used(network(NA_real_, NA_real_)))
+  expect_true("equivalence_testing" %in% nomo_methods_used(network(-.05, .08)))
+  expect_false("equivalence_testing" %in% nomo_methods_used(
+    structure(list(hypotheses = bare), class = c("nomo_network", "list"))
+  ))
+
+  skip_on_cran()
+  model <- nomo_model(list(
+    Agency = paste0("ag", 1:4),
+    Persistence = paste0("pe", 1:4),
+    SocialDesirability = paste0("sd", 1:3)
+  ))
+  untested <- nomo_network(model, data = nomo_demo_network, hypotheses = bare)
+  expect_true(all(is.na(untested$hypothesis_evidence$equivalence_ci_lower)))
+  expect_false("equivalence_testing" %in% nomo_methods(untested)$id)
+})
+
+
+# Registry text and dates (#145) ------------------------------------------------
+
+test_that("registry estimands say what each method computes (#145)", {
+  reg <- nomo_methods_registry()
+  row <- function(id) reg[reg$id == id, , drop = FALSE]
+
+  # factors-6: revised MAP is a fourth matrix power, not a mean of fourth powers.
+  expect_match(row("map_revised")$estimand, "trace of the fourth power", fixed = TRUE)
+  expect_match(row("map_revised")$estimand, "not the mean of fourth-power", fixed = TRUE)
+  expect_false(grepl("under-extraction", row("map_revised")$assumptions, fixed = TRUE))
+  # ?nomo_factors defines the TR2 and TR4 labels its output uses.
+  description <- nomo_test_rd_text("nomo_factors", "\\details")
+  expect_match(description, "TR2, the original", fixed = TRUE)
+  expect_match(description, "TR4, the revised form", fixed = TRUE)
+  expect_match(description, "not the average of fourth-power", fixed = TRUE)
+  # lit-6: alpha equals reliability under essential tau-equivalence.
+  expect_false(startsWith(row("alpha")$estimand, "Lower bound"))
+  expect_match(row("alpha")$estimand, "essentially", fixed = TRUE)
+  expect_match(row("alpha")$estimand, "a lower bound when loadings", fixed = TRUE)
+  # lit-7: KMO is r^2 / (r^2 + q^2).
+  expect_match(row("kmo")$estimand, "squared correlations plus squared partial", fixed = TRUE)
+  # lit-5: the shift is not about positivity.
+  expect_false(grepl("positive", row("lrt_scaled_shifted")$estimand, fixed = TRUE))
+  expect_match(row("lrt_scaled_shifted")$estimand, "left unadjusted", fixed = TRUE)
+  # lit-8: EKC is not limited to uncorrelated factors.
+  expect_false(grepl("approximately uncorrelated", row("ekc")$assumptions, fixed = TRUE))
+  expect_match(row("ekc")$assumptions, "more accurate with correlated factors", fixed = TRUE)
+  # lit-4: the TLI and the CFI are dated separately in the text.
+  expect_match(row("incremental_fit")$estimand, "CFI (Bentler, 1990)", fixed = TRUE)
+  # "a priori" and "post hoc" take no hyphen.
+  expect_false(any(grepl("post-hoc|a-priori", c(reg$method, reg$estimand, reg$assumptions),
+                         ignore.case = TRUE)))
+})
+
+
+test_that("methods are dated from the work that introduced them (#145, lit-3, lit-4)", {
+  reg <- nomo_methods_registry()
+  history <- nomo_methods_history()
+  delta <- reg[reg$id == "invariance_delta_fit", ]
+  expect_identical(delta$introduced, 2002L)
+  expect_true("cheung_rensvold_2002" %in% delta$citations[[1]])
+  expect_identical(history$origin[history$id == "invariance_delta_fit"], "cheung_rensvold_2002")
+  expect_true(is.na(reg$introduced[reg$id == "reliability_bootstrap_ci"]))
+})
+
+
+test_that("short citations follow one APA 7 rule (#145, lit-10)", {
+  bib <- nomo_bibliography()
+  authors <- sub(" \\(\\d{4}\\)\\..*$", "", bib$citation)
+  n_authors <- lengths(regmatches(authors, gregexpr("\\., (& )?\\S", authors))) + 1L
+
+  expect_true(all(grepl("^[^,&]+ \\(\\d{4}\\)$", bib$short[n_authors == 1L])))
+  expect_true(all(grepl("^[^,&]+ & [^,&]+ \\(\\d{4}\\)$", bib$short[n_authors == 2L])))
+  expect_true(all(grepl("^[^,&]+ et al\\. \\(\\d{4}\\)$", bib$short[n_authors >= 3L])))
+  expect_gt(sum(n_authors >= 3L), 20L)
+  # "et al." never makes two works read alike.
+  expect_false(anyDuplicated(bib$short) > 0L)
+})
+
+
+test_that("registry references are complete (#145, lit-9, lit-11)", {
+  bib <- nomo_bibliography()
+  cite <- function(key) bib$citation[bib$key == key]
+
+  expect_match(cite("ronkko_cho_2022"), "25(1), 6-47.", fixed = TRUE)
+  expect_match(cite("satorra_2000"),
+               "In R. D. H. Heijmans, D. S. G. Pollock, & A. Satorra (Eds.)", fixed = TRUE)
+  expect_match(cite("hu_bentler_1999"), "^Hu, L\\.-T\\., & Bentler")
+  expect_false(grepl("Sorbom", cite("hancock_mueller_2001"), fixed = TRUE))
+  expect_match(cite("hancock_mueller_2001"), "rbom (Eds.)", fixed = TRUE)
+  expect_match(cite("fokkema_greiff_2017"), "equals trouble: Overfitting", fixed = TRUE)
+
+  # The help pages that repeat these references give them as the registry does.
+  refs <- function(topic) nomo_test_rd_text(topic, "\\references")
+  for (topic in c("nomo_apa_table", "nomo_validity")) {
+    expect_match(refs(topic), "Organizational Research Methods, 25}(1), 6-47.", fixed = TRUE,
+                 info = topic)
+  }
+  for (topic in c("nomo_compare", "nomo_esem")) {
+    expect_match(refs(topic), "In R. D. H. Heijmans, D. S. G. Pollock, & A. Satorra (Eds.)",
+                 fixed = TRUE, info = topic)
+  }
+  expect_match(refs("nomo_cfa"), "Hu, L.-T., & Bentler", fixed = TRUE)
+  expect_false(grepl("Sorbom", refs("nomo_hierarchical"), fixed = TRUE))
+  expect_match(refs("nomo_split"), "equals trouble: Overfitting in the assessment", fixed = TRUE)
 })

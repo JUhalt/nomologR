@@ -31,6 +31,10 @@ A tibble with columns \code{id}, \code{stage}, \code{method}, \code{lineage}, \c
 method, and \code{references} holds short in-text citations. With
 \code{references = TRUE} there is one row per method-reference pair, with
 \code{citation_key}, \code{citation}, and \code{doi}.
+
+The result is an ordinary tibble with no \code{print()} or \code{summary()} method
+of its own, so the console shortens its long text columns; select columns,
+or call \code{as.list()} on one row, to read an entry in full.
 }
 \description{
 \code{nomo_methods()} returns a machine-readable registry of the statistical
@@ -79,11 +83,18 @@ article and tracked in issues; they are deliberately absent here, so that
 \code{nomo_methods(run)} can never credit a run with a method it did not use.
 
 Passing a \code{nomologR} result object returns only the methods that object
-actually used, which is what \code{\link[=nomo_report]{nomo_report()}} cites.
+actually used, which is what \code{\link[=nomo_report]{nomo_report()}} cites. They are read from what
+the object records: the estimator that ran, the extraction and rotation of
+an exploratory solution, and an equivalence test only where one could be
+computed.
 }
 \examples{
-# The whole registry
-nomo_methods()
+# The whole registry, one row per method
+methods <- nomo_methods()
+methods[, c("method", "lineage", "role")]
+
+# Everything the registry records about one method
+as.list(methods[methods$id == "omega", ])
 
 # What is shown only as historical context, and why
 nomo_methods(lineage = "historical")[, c("method", "role", "assumptions")]

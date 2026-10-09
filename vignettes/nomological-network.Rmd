@@ -31,7 +31,7 @@ The intended sequence is:
 2. specify the expected relations before inspecting the structural results;
 3. fit the full model;
 4. compare estimates and uncertainty with the prespecified theoretical region;
-5. distinguish theory strain, imprecision, measurement problems, and post-hoc
+5. distinguish theory strain, imprecision, measurement problems, and post hoc
    exploration.
 
 # The teaching study
@@ -42,8 +42,8 @@ desirability** — along with an observed **Performance** outcome.
 
 The population model is known (see `?nomo_demo_network`):
 
-- Agency predicts Persistence (standardized coefficient .45);
-- Agency predicts Performance (.40);
+- Agency predicts Persistence (standardized coefficient 0.45);
+- Agency predicts Performance (0.40);
 - Persistence has **no** direct effect on Performance once Agency is accounted
   for (0);
 - Agency and Social desirability are unrelated (0).
@@ -104,38 +104,50 @@ syntax and unchanged `lavaan` fit remain available in the returned object.
 
 ```{r evidence}
 evidence <- nomo_table(net, "hypotheses")
+evidence[, c("id", "relation", "theoretical_region", "concordance")]
 evidence[, c(
-  "id", "relation", "theoretical_region", "estimate",
-  "ci_lower", "ci_upper", "equivalence_supported", "concordance"
+  "id", "estimate", "ci_lower", "ci_upper",
+  "equivalence_ci_lower", "equivalence_ci_upper"
 )]
 ```
 
 ```{r evidence-values, include=FALSE}
 ev <- function(id, col) evidence[[col]][evidence$id == id]
-fmt <- function(x) sprintf("%.2f", x)
+# Standardized estimates in the prose: two decimals, rounded half away from
+# zero as the package's printed output is, and never a negative zero. A path
+# coefficient keeps its leading zero, as a standardized loading does; a
+# correlation, which cannot exceed 1, drops it.
+fmt <- function(x, correlation = FALSE) {
+  r <- sign(x) * floor(abs(x) * 100 + 0.5 + 1e-9) / 100
+  out <- formatC(abs(r), format = "f", digits = 2)
+  if (correlation) out <- sub("^0[.]", ".", out)
+  paste0(if (r < 0) "-" else "", out)
+}
 ```
 
-Reading each row:
+The first table gives each prediction and how the evidence was classified, and
+the second the estimates behind it. Reading each relation:
 
 - **H1** (`Agency -> Persistence`): estimate `r fmt(ev("H1", "estimate"))`,
   interval [`r fmt(ev("H1", "ci_lower"))`, `r fmt(ev("H1", "ci_upper"))`],
   classified **`r ev("H1", "concordance")`** with the prediction of at least
-  .20.
-- **H2** (`Agency <-> SocialDesirability`): estimate
-  `r fmt(ev("H2", "estimate"))`. The 90% equivalence interval
-  [`r fmt(ev("H2", "equivalence_ci_lower"))`,
-  `r fmt(ev("H2", "equivalence_ci_upper"))`] lies inside the ±.15 region, so
+  0.20.
+- **H2** (`Agency <-> SocialDesirability`), a correlation: estimate
+  `r fmt(ev("H2", "estimate"), correlation = TRUE)`. The 90% equivalence
+  interval [`r fmt(ev("H2", "equivalence_ci_lower"), correlation = TRUE)`,
+  `r fmt(ev("H2", "equivalence_ci_upper"), correlation = TRUE)`] lies inside
+  the ±.15 region, so
   the negligible prediction is supported by equivalence evidence — not merely
-  by a non-significant p-value.
+  by a non-significant *p* value.
 - **H3** (`Agency -> Performance`): estimate `r fmt(ev("H3", "estimate"))`,
   classified **`r ev("H3", "concordance")`**.
 - **H4** (`Persistence -> Performance`): estimate `r fmt(ev("H4", "estimate"))`,
   interval [`r fmt(ev("H4", "ci_lower"))`, `r fmt(ev("H4", "ci_upper"))`],
   classified **`r ev("H4", "concordance")`** with the predicted region.
 
-Every relation also retains its standard error, p-value, evidence scope, a-priori
-versus post-hoc provenance, and a measurement-context flag. The goal is not to
-produce a single "validity score."
+Every relation also retains its standard error, *p* value, evidence scope, a
+priori versus post hoc provenance, and a measurement-context flag. The goal is
+not to produce a single "validity score."
 
 # A marginal association is not a structural prediction
 
@@ -187,10 +199,15 @@ are attenuated by it. A single-indicator latent variable corrects this. The
 composite becomes the one indicator of a latent variable, and its error variance
 is fixed at (1 − reliability) × its variance. The idea goes back to Spearman's
 (1904) correction for attenuation. The SEM textbooks describe it (Hayduk, 1987;
-Bollen, 1989), and marketing research calls it the "total aggregation" model
-(Bagozzi & Heatherton, 1994). Savalei (2019) found that it gave the most
-accurate estimates in samples of 30 to 200, provided the reliability is close to
-its true value.
+Bollen, 1989), applied work in organizational research and marketing took it
+up (Williams & Hazer, 1986), and Bagozzi and Heatherton (1994) called it the
+"total aggregation" model. In samples of 30 to 200, Savalei (2019) found that
+path analysis and single indicators whose reliability was fixed in advance, at
+a value slightly above the true one, gave the most accurate estimates and the
+most power; single indicators whose reliability was estimated from the same
+data performed in between, and she recommended a fixed-reliability single
+indicator in small samples. An omega from the same sample, as below,
+corresponds to the data-estimated variant.
 
 Here the Persistence mean replaces the Persistence factor. Its reliability is
 omega from its own measurement model:
@@ -206,10 +223,12 @@ corrected <- nomo_network(
   "Agency =~ ag1 + ag2 + ag3 + ag4", dat, h_si,
   single_indicators = list(persistence = nomo_single_indicator(rel))
 )
-nomo_table(corrected, "single_indicators")
+nomo_table(corrected, "single_indicators")[, c(
+  "variable", "coefficient", "reliability", "variance", "error_variance"
+)]
 ```
 
-The population path is .45. The observed composite gives
+The population path is 0.45. The observed composite gives
 `r fmt(as_observed$hypothesis_evidence$estimate)`, attenuated by its
 unreliability. The single indicator gives
 `r fmt(corrected$hypothesis_evidence$estimate)`, close to the latent model's
@@ -262,13 +281,19 @@ net_rep <- nomo_network(
 
 replication <- nomo_table(net_rep, "replication")
 replication[, c(
-  "id", "relation", "primary_estimate", "validation_estimate",
-  "validation_concordance", "replication_status"
+  "id", "primary_estimate", "validation_estimate", "replication_status"
 )]
 ```
 
 ```{r replication-values, include=FALSE}
 rs <- function(id) replication$replication_status[replication$id == id]
+# A stored status in code font, as the table shows it.
+rs_code <- function(id) paste0("`", rs(id), "`")
+h1_h3 <- if (identical(rs("H1"), rs("H3"))) {
+  paste("both", rs_code("H1"))
+} else {
+  paste(rs_code("H1"), "and", rs_code("H3"))
+}
 
 h4_reading <- switch(
   rs("H4"),
@@ -292,11 +317,11 @@ The calibration and validation subsets receive the **same prespecified fitted
 model**; `nomologR` does not respecify the validation model to rescue a primary
 result. Reading the statuses:
 
-- H1 and H3 are **`r rs("H1")`** and **`r rs("H3")`**.
-- H2 is **`r rs("H2")`**: with only `r nrow(s$validation)` validation cases, the
+- H1 and H3 are `r h1_h3`.
+- H2 is `r rs_code("H2")`: with only `r nrow(s$validation)` validation cases, the
   equivalence interval is too wide to confirm negligibility. Splitting a sample
   buys independence at the cost of precision.
-- H4 is **`r rs("H4")`**. The population path is zero, and the two point
+- H4 is `r rs_code("H4")`. The population path is zero, and the two point
   estimates happen to differ in sign. Here `r h4_reading`.
 
 A change in sign between samples needs care. Estimates scattered around a null
@@ -312,7 +337,7 @@ confidence intervals:
 
 None of these turns a non-significant path into evidence of *no* relation. That
 claim needs a `negligible(within = ...)` prediction with an equivalence region,
-the kind of prediction H2 makes (Lakens, Scheel, & Isager, 2018).
+the kind of prediction H2 makes (Lakens et al., 2018).
 
 External validation data can instead be supplied with `validation_data =`, which
 is generally stronger evidence than an internal split.
@@ -344,8 +369,9 @@ and Meehl (1955), and convergent and discriminant correlation patterns from
 Campbell and Fiske (1959). Contemporary practice separates the measurement model
 from structural relations (Anderson & Gerbing, 1988), treats validity as an
 argument about score interpretation (Messick, 1995), evaluates negligible
-predictions with equivalence procedures (Schuirmann, 1987; Lakens, Scheel, &
-Isager, 2018), and distinguishes prespecified from post-hoc predictions (Nosek
-et al., 2018). Single-indicator corrections follow Bollen (1989) and Savalei
-(2019). Their standard errors follow Oberski and Satorra (2013). Full references are in `?nomo_network` and the
+predictions with equivalence procedures (Schuirmann, 1987; Lakens et al.,
+2018), and distinguishes prespecified from post hoc predictions (Nosek et al.,
+2018). Single-indicator corrections follow Bollen (1989) and Savalei (2019).
+Their standard errors follow Oberski and Satorra (2013). Full references are in
+`?nomo_network`, `?nomo_single_indicator`, and the
 [research basis](research-basis.html) article.

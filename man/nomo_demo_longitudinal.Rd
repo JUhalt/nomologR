@@ -7,7 +7,7 @@
 \format{
 A data frame with 500 rows and 12 columns, \code{w1_t1} to \code{w4_t3}: items
 \code{w1} to \code{w4} at occasions \code{t1}, \code{t2}, and \code{t3}. Population standardized
-loadings at \code{t1} are .80, .75, .70, and .65, and the loadings are equal
+loadings at \code{t1} are 0.80, 0.75, 0.70, and 0.65, and the loadings are equal
 across occasions.
 }
 \source{
@@ -23,12 +23,12 @@ Wellbeing items answered by the same people on three occasions.
 }
 \details{
 Wellbeing has a latent variance of 1 at every occasion. Its mean rises from
-0 at \code{t1} to .30 at \code{t2} and .50 at \code{t3}, in \code{t1} standard deviations, and
+0 at \code{t1} to 0.30 at \code{t2} and 0.50 at \code{t3}, in \code{t1} standard deviations, and
 it correlates .60 between adjacent occasions and .45 between \code{t1} and \code{t3}.
 
 Longitudinal teaching features: each item's unique factor correlates .20
 with the same item's unique factor on the other occasions, and the intercept
-of \code{w3} is .40 higher at \code{t2} and \code{t3} than at \code{t1}. The \code{w3} intercept is
+of \code{w3} is 0.40 higher at \code{t2} and \code{t3} than at \code{t1}. The \code{w3} intercept is
 therefore a known source of scalar non-invariance over time, and holding it
 equal inflates the apparent change in Wellbeing. Indicators are on a
 continuous rating metric (population mean 4 at \code{t1}) and rounded to two

@@ -15,6 +15,10 @@ The package follows a measurement-first philosophy: understand the item set
 and measurement model before interpreting a theory-specified structural
 network. Numerical reference values are prompts for investigation rather than
 universal deletion or validity rules.
+
+\code{print()} shows a result's main evidence and any flags and ends with a
+pointer to where to look next; \code{summary()} shows the full evidence, with the
+reason for every flag.
 }
 \section{Stability and deprecation}{
 
@@ -109,8 +113,10 @@ them in one wording: no flag for \code{"KEEP"}, \code{"none"}, and \code{"info"}
 for \code{"REVIEW"} and \code{"review"}; "concern" for \code{"STRONG REVIEW"} and
 \code{"concern"}; and "not computed" for \code{"unavailable"}. The stored values do
 not change, so code that filters a table uses that table's own values.
+\strong{Status words shared with contentvalidR} below relates these words to
+that package's.
 
-\strong{P-values and fit indices.} A p-value is named \code{p_value}, or
+\strong{p values and fit indices.} A \emph{p} value is named \code{p_value}, or
 \verb{<model>_p_value} where a table holds one for each model. Three kinds of
 table differ:
 \itemize{
@@ -130,6 +136,27 @@ and \code{lrt_p}.
 
 The \strong{Fit tables} section of \code{\link[=nomo_table]{nomo_table()}} names the index columns of
 each fit table.
+}
+
+\section{Status words shared with contentvalidR}{
+
+\code{nomologR} and \code{contentvalidR}, which reviews item content before the
+analyses here, show status in words that correspond, so an item can be
+followed from one package to the other:\tabular{ll}{
+   \code{contentvalidR} \tab \code{nomologR} \cr
+   Supported \tab no flag \cr
+   Review \tab review \cr
+   (no counterpart) \tab concern \cr
+   Insufficient data \tab not computed \cr
+   Descriptive only \tab note \cr
+}
+
+
+In both, "review" means look at the item again, never delete it.
+
+The field \code{recommendation} means different things in the two packages. In
+a \code{nomologR} decision log it is prose advice about what to examine next; in
+\code{contentvalidR}'s results and handoff it is a decision word.
 }
 
 \seealso{

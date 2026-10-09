@@ -17,10 +17,15 @@ knitr::opts_chunk$set(
   warning = FALSE
 )
 
-# A corrected item-rest correlation from a screen, for the prose.
+# A corrected item-rest correlation from a screen, for the prose, as the
+# package prints a correlation: two decimals, rounded half away from zero, and
+# no leading zero.
 item_rest <- function(screen, item) {
   r <- screen$relationship_summary$corrected_item_rest_r
-  sprintf("%.2f", r[screen$relationship_summary$item == item])
+  r <- r[screen$relationship_summary$item == item]
+  rounded <- sign(r) * floor(abs(r) * 100 + 0.5 + 1e-9) / 100
+  paste0(if (rounded < 0) "-" else "",
+         sub("^0[.]", ".", formatC(abs(rounded), format = "f", digits = 2)))
 }
 ```
 
@@ -221,5 +226,5 @@ handoff opens with the content review, quoting the panel's decisions in
 Neither is presented as a verdict on the other:
 
 ```{r report, eval=FALSE}
-nomo_report(run, file = "walkthrough-report.html")
+nomo_report(run, file = file.path(tempdir(), "walkthrough-report.html"))
 ```

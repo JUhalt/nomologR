@@ -3,7 +3,9 @@
 # Bibliography ----------------------------------------------------------------
 #
 # One entry per work cited by the registry. `short` is the in-text form used in
-# compact output; `citation` is the full reference. Author names that contain
+# compact output, following APA 7: both names for two authors, and the first
+# author with "et al." for three or more, which no two entries share (#145,
+# lit-10); `citation` is the full reference. Author names that contain
 # non-ASCII characters use \u escapes so the source file stays ASCII while the
 # parsed string carries the correct spelling.
 #
@@ -79,7 +81,7 @@ nomo_bibliography <- function() {
       "10.22237/jmasm/1320120900"
     ),
     nomo_bib_entry(
-      "bell_2024", "Bell, Chalmers, & Flora (2024)",
+      "bell_2024", "Bell et al. (2024)",
       paste(
         "Bell, S. M., Chalmers, R. P., & Flora, D. B. (2024). The impact of",
         "measurement model misspecification on coefficient omega estimates of",
@@ -132,7 +134,7 @@ nomo_bibliography <- function() {
       "10.1002/9781118619179"
     ),
     nomo_bib_entry(
-      "bonifay_2017", "Bonifay, Lane, & Reise (2017)",
+      "bonifay_2017", "Bonifay et al. (2017)",
       paste(
         "Bonifay, W., Lane, S. P., & Reise, S. P. (2017). Three concerns with",
         "applying a bifactor model as a structure of psychopathology. Clinical",
@@ -174,7 +176,7 @@ nomo_bibliography <- function() {
       "10.1177/0049124104268644"
     ),
     nomo_bib_entry(
-      "byrne_1989", "Byrne, Shavelson, & Muth\u00e9n (1989)",
+      "byrne_1989", "Byrne et al. (1989)",
       paste(
         "Byrne, B. M., Shavelson, R. J., & Muth\u00e9n, B. (1989). Testing for the",
         "equivalence of factor covariance and mean structures: The issue of",
@@ -290,7 +292,7 @@ nomo_bibliography <- function() {
       "10.1037/1082-989X.3.4.412"
     ),
     nomo_bib_entry(
-      "dunn_2014", "Dunn, Baguley, & Brunsden (2014)",
+      "dunn_2014", "Dunn et al. (2014)",
       paste(
         "Dunn, T. J., Baguley, T., & Brunsden, V. (2014). From alpha to omega: A",
         "practical solution to the pervasive problem of internal consistency",
@@ -327,7 +329,7 @@ nomo_bibliography <- function() {
       "10.1177/2515245920952393"
     ),
     nomo_bib_entry(
-      "flake_2017", "Flake, Pek, & Hehman (2017)",
+      "flake_2017", "Flake et al. (2017)",
       paste(
         "Flake, J. K., Pek, J., & Hehman, E. (2017). Construct validation in",
         "social and personality research: Current practice and recommendations.",
@@ -358,8 +360,9 @@ nomo_bibliography <- function() {
       "fokkema_greiff_2017", "Fokkema & Greiff (2017)",
       paste(
         "Fokkema, M., & Greiff, S. (2017). How performing PCA and CFA on the",
-        "same data equals trouble. European Journal of Psychological Assessment,",
-        "33(6), 399-402."
+        "same data equals trouble: Overfitting in the assessment of internal",
+        "structure and some editorial thoughts on it. European Journal of",
+        "Psychological Assessment, 33(6), 399-402."
       ),
       "10.1027/1015-5759/a000460"
     ),
@@ -419,7 +422,7 @@ nomo_bibliography <- function() {
       paste(
         "Hancock, G. R., & Mueller, R. O. (2001). Rethinking construct",
         "reliability within latent variable systems. In R. Cudeck, S. du Toit, &",
-        "D. Sorbom (Eds.), Structural equation modeling: Present and future",
+        "D. S\u00f6rbom (Eds.), Structural equation modeling: Present and future",
         "(pp. 195-216). Scientific Software International."
       ),
       NA_character_
@@ -433,7 +436,7 @@ nomo_bibliography <- function() {
       NA_character_
     ),
     nomo_bib_entry(
-      "henseler_2015", "Henseler, Ringle, & Sarstedt (2015)",
+      "henseler_2015", "Henseler et al. (2015)",
       paste(
         "Henseler, J., Ringle, C. M., & Sarstedt, M. (2015). A new criterion for",
         "assessing discriminant validity in variance-based structural equation",
@@ -469,14 +472,14 @@ nomo_bibliography <- function() {
     nomo_bib_entry(
       "hu_bentler_1999", "Hu & Bentler (1999)",
       paste(
-        "Hu, L., & Bentler, P. M. (1999). Cutoff criteria for fit indexes in",
+        "Hu, L.-T., & Bentler, P. M. (1999). Cutoff criteria for fit indexes in",
         "covariance structure analysis: Conventional criteria versus new",
         "alternatives. Structural Equation Modeling, 6(1), 1-55."
       ),
       "10.1080/10705519909540118"
     ),
     nomo_bib_entry(
-      "huang_2012", "Huang, Curran, Keeney, Poposki, & DeShon (2012)",
+      "huang_2012", "Huang et al. (2012)",
       paste(
         "Huang, J. L., Curran, P. G., Keeney, J., Poposki, E. M., & DeShon, R. P.",
         "(2012). Detecting and deterring insufficient effort responding to surveys.",
@@ -575,7 +578,7 @@ nomo_bibliography <- function() {
       "10.1007/978-1-4614-6849-3"
     ),
     nomo_bib_entry(
-      "lakens_2018", "Lakens, Scheel, & Isager (2018)",
+      "lakens_2018", "Lakens et al. (2018)",
       paste(
         "Lakens, D., Scheel, A. M., & Isager, P. M. (2018). Equivalence testing",
         "for psychological research: A tutorial. Advances in Methods and",
@@ -603,7 +606,7 @@ nomo_bibliography <- function() {
       "10.1037/met0000075"
     ),
     nomo_bib_entry(
-      "lorenzoseva_2011", "Lorenzo-Seva, Timmerman, & Kiers (2011)",
+      "lorenzoseva_2011", "Lorenzo-Seva et al. (2011)",
       paste(
         "Lorenzo-Seva, U., Timmerman, M. E., & Kiers, H. A. L. (2011). The Hull",
         "method for selecting the number of common factors. Multivariate",
@@ -612,7 +615,7 @@ nomo_bibliography <- function() {
       "10.1080/00273171.2011.564527"
     ),
     nomo_bib_entry(
-      "maccallum_1992", "MacCallum, Roznowski, & Necowitz (1992)",
+      "maccallum_1992", "MacCallum et al. (1992)",
       paste(
         "MacCallum, R. C., Roznowski, M., & Necowitz, L. B. (1992). Model",
         "modifications in covariance structure analysis: The problem of",
@@ -621,7 +624,7 @@ nomo_bibliography <- function() {
       "10.1037/0033-2909.111.3.490"
     ),
     nomo_bib_entry(
-      "maccallum_1996", "MacCallum, Browne, & Sugawara (1996)",
+      "maccallum_1996", "MacCallum et al. (1996)",
       paste(
         "MacCallum, R. C., Browne, M. W., & Sugawara, H. M. (1996). Power",
         "analysis and determination of sample size for covariance structure",
@@ -630,7 +633,7 @@ nomo_bibliography <- function() {
       "10.1037/1082-989X.1.2.130"
     ),
     nomo_bib_entry(
-      "marjanovic_2015", "Marjanovic, Holden, Struthers, Cribbie, & Greenglass (2015)",
+      "marjanovic_2015", "Marjanovic et al. (2015)",
       paste(
         "Marjanovic, Z., Holden, R., Struthers, W., Cribbie, R., & Greenglass, E.",
         "(2015). The inter-item standard deviation (ISD): An index that discriminates",
@@ -640,7 +643,7 @@ nomo_bibliography <- function() {
       "10.1016/j.paid.2014.08.021"
     ),
     nomo_bib_entry(
-      "marsh_2004", "Marsh, Hau, & Wen (2004)",
+      "marsh_2004", "Marsh et al. (2004)",
       paste(
         "Marsh, H. W., Hau, K.-T., & Wen, Z. (2004). In search of golden rules:",
         "Comment on hypothesis-testing approaches to setting cutoff values for",
@@ -650,7 +653,7 @@ nomo_bibliography <- function() {
       "10.1207/s15328007sem1103_2"
     ),
     nomo_bib_entry(
-      "marsh_2014", "Marsh, Morin, Parker, & Kaur (2014)",
+      "marsh_2014", "Marsh et al. (2014)",
       paste(
         "Marsh, H. W., Morin, A. J. S., Parker, P. D., & Kaur, G. (2014).",
         "Exploratory structural equation modeling: An integration of the best",
@@ -750,7 +753,7 @@ nomo_bibliography <- function() {
       "10.1080/10705511.2013.797820"
     ),
     nomo_bib_entry(
-      "podsakoff_2003", "Podsakoff, MacKenzie, Lee, & Podsakoff (2003)",
+      "podsakoff_2003", "Podsakoff et al. (2003)",
       paste(
         "Podsakoff, P. M., MacKenzie, S. B., Lee, J.-Y., & Podsakoff, N. P.",
         "(2003). Common method biases in behavioral research: A critical review",
@@ -760,7 +763,7 @@ nomo_bibliography <- function() {
       "10.1037/0021-9010.88.5.879"
     ),
     nomo_bib_entry(
-      "podsakoff_2012", "Podsakoff, MacKenzie, & Podsakoff (2012)",
+      "podsakoff_2012", "Podsakoff et al. (2012)",
       paste(
         "Podsakoff, P. M., MacKenzie, S. B., & Podsakoff, N. P. (2012). Sources",
         "of method bias in social science research and recommendations on how",
@@ -794,7 +797,7 @@ nomo_bibliography <- function() {
       "10.1080/00273171.2012.715555"
     ),
     nomo_bib_entry(
-      "reise_bonifay_2013", "Reise, Bonifay, & Haviland (2013)",
+      "reise_bonifay_2013", "Reise et al. (2013)",
       paste(
         "Reise, S. P., Bonifay, W. E., & Haviland, M. G. (2013). Scoring and",
         "modeling psychological measures in the presence of",
@@ -804,7 +807,7 @@ nomo_bibliography <- function() {
       "10.1080/00223891.2012.725437"
     ),
     nomo_bib_entry(
-      "rhemtulla_2012", "Rhemtulla, Brosseau-Liard, & Savalei (2012)",
+      "rhemtulla_2012", "Rhemtulla et al. (2012)",
       paste(
         "Rhemtulla, M., Brosseau-Liard, P. \u00c9., & Savalei, V. (2012). When can",
         "categorical variables be treated as continuous? A comparison of robust",
@@ -814,7 +817,7 @@ nomo_bibliography <- function() {
       "10.1037/a0029315"
     ),
     nomo_bib_entry(
-      "richardson_2009", "Richardson, Simmering, & Sturman (2009)",
+      "richardson_2009", "Richardson et al. (2009)",
       paste(
         "Richardson, H. A., Simmering, M. J., & Sturman, M. C. (2009). A tale",
         "of three perspectives: Examining post hoc statistical techniques for",
@@ -824,7 +827,7 @@ nomo_bibliography <- function() {
       "10.1177/1094428109332834"
     ),
     nomo_bib_entry(
-      "rodriguez_2016", "Rodriguez, Reise, & Haviland (2016)",
+      "rodriguez_2016", "Rodriguez et al. (2016)",
       paste(
         "Rodriguez, A., Reise, S. P., & Haviland, M. G. (2016). Evaluating",
         "bifactor models: Calculating and interpreting statistical indices.",
@@ -833,7 +836,7 @@ nomo_bibliography <- function() {
       "10.1037/met0000045"
     ),
     nomo_bib_entry(
-      "roemer_2021", "Roemer, Schuberth, & Henseler (2021)",
+      "roemer_2021", "Roemer et al. (2021)",
       paste(
         "Roemer, E., Schuberth, F., & Henseler, J. (2021). HTMT2 - An improved",
         "criterion for assessing discriminant validity in structural equation",
@@ -845,7 +848,7 @@ nomo_bibliography <- function() {
       "ronkko_cho_2022", "R\u00f6nkk\u00f6 & Cho (2022)",
       paste(
         "R\u00f6nkk\u00f6, M., & Cho, E. (2022). An updated guideline for assessing",
-        "discriminant validity. Organizational Research Methods, 25(1)."
+        "discriminant validity. Organizational Research Methods, 25(1), 6-47."
       ),
       "10.1177/1094428120968614"
     ),
@@ -870,8 +873,9 @@ nomo_bibliography <- function() {
       "satorra_2000", "Satorra (2000)",
       paste(
         "Satorra, A. (2000). Scaled and adjusted restricted tests in multi-sample",
-        "analysis of moment structures. In Innovations in multivariate",
-        "statistical analysis (pp. 233-247). Springer."
+        "analysis of moment structures. In R. D. H. Heijmans, D. S. G. Pollock,",
+        "& A. Satorra (Eds.), Innovations in multivariate statistical analysis",
+        "(pp. 233-247). Springer."
       ),
       "10.1007/978-1-4615-4603-0_17"
     ),
@@ -953,7 +957,7 @@ nomo_bibliography <- function() {
       "10.1007/s11336-008-9101-0"
     ),
     nomo_bib_entry(
-      "simmons_2011", "Simmons, Nelson, & Simonsohn (2011)",
+      "simmons_2011", "Simmons et al. (2011)",
       paste(
         "Simmons, J. P., Nelson, L. D., & Simonsohn, U. (2011). False-positive",
         "psychology: Undisclosed flexibility in data collection and analysis",
@@ -971,7 +975,7 @@ nomo_bibliography <- function() {
       "10.2307/1412159"
     ),
     nomo_bib_entry(
-      "svetina_2020", "Svetina, Rutkowski, & Rutkowski (2020)",
+      "svetina_2020", "Svetina et al. (2020)",
       paste(
         "Svetina, D., Rutkowski, L., & Rutkowski, D. (2020). Multiple-group",
         "invariance with categorical outcomes using updated guidelines: An",
@@ -999,7 +1003,7 @@ nomo_bibliography <- function() {
       "10.1007/BF02293557"
     ),
     nomo_bib_entry(
-      "velicer_2000", "Velicer, Eaton, & Fava (2000)",
+      "velicer_2000", "Velicer et al. (2000)",
       paste(
         "Velicer, W. F., Eaton, C. A., & Fava, J. L. (2000). Construct",
         "explication through factor or component analysis: A review and",
@@ -1047,7 +1051,7 @@ nomo_bibliography <- function() {
       "10.3389/fpsyg.2016.01832"
     ),
     nomo_bib_entry(
-      "widaman_2010", "Widaman, Ferrer, & Conger (2010)",
+      "widaman_2010", "Widaman et al. (2010)",
       paste(
         "Widaman, K. F., Ferrer, E., & Conger, R. D. (2010). Factorial",
         "invariance within longitudinal structural equation models: Measuring",
@@ -1057,7 +1061,7 @@ nomo_bibliography <- function() {
       "10.1111/j.1750-8606.2009.00110.x"
     ),
     nomo_bib_entry(
-      "williams_2010", "Williams, Hartman, & Cavazotte (2010)",
+      "williams_2010", "Williams et al. (2010)",
       paste(
         "Williams, L. J., Hartman, N., & Cavazotte, F. (2010). Method variance",
         "and marker variables: A review and comprehensive CFA marker technique.",
@@ -1076,7 +1080,7 @@ nomo_bibliography <- function() {
       "10.1037/0021-9010.71.2.219"
     ),
     nomo_bib_entry(
-      "wolf_2013", "Wolf, Harrington, Clark, & Miller (2013)",
+      "wolf_2013", "Wolf et al. (2013)",
       paste(
         "Wolf, E. J., Harrington, K. M., Clark, S. L., & Miller, M. W. (2013).",
         "Sample size requirements for structural equation models: An evaluation",
@@ -1086,7 +1090,7 @@ nomo_bibliography <- function() {
       "10.1177/0013164413495237"
     ),
     nomo_bib_entry(
-      "yung_1999", "Yung, Thissen, & McLeod (1999)",
+      "yung_1999", "Yung et al. (1999)",
       paste(
         "Yung, Y.-F., Thissen, D., & McLeod, L. D. (1999). On the relationship",
         "between the higher-order factor model and the hierarchical factor",
@@ -1300,10 +1304,18 @@ nomo_methods_registry <- function() {
     ),
     nomo_method_entry(
       "map_revised", "factors",
-      "Velicer revised MAP (fourth powers)",
+      "Velicer revised MAP (fourth matrix power)",
       "contemporary", "supporting",
-      "Factor count minimizing the average fourth-power partial correlation.",
-      "As for original MAP; less prone to under-extraction with weak factors.",
+      paste(
+        "Factor count minimizing the trace of the fourth power of the",
+        "partial-correlation matrix, less the number of items p, divided by",
+        "p(p - 1). It is a matrix power, not the mean of fourth-power partial",
+        "correlations, and can exceed 1."
+      ),
+      paste(
+        "As for original MAP. Velicer et al. (2000) proposed it as a revision of",
+        "the original squared-partial criterion."
+      ),
       "nomo_factors()", "nomologR",
       c("velicer_2000")
     ),
@@ -1312,7 +1324,15 @@ nomo_methods_registry <- function() {
       "Empirical Kaiser criterion",
       "contemporary", "supporting",
       "Factor count from eigenvalues compared with a sample-size-aware reference.",
-      "Derived for continuous indicators and approximately uncorrelated factors.",
+      paste(
+        "Reference eigenvalues come from the eigenvalue distribution of",
+        "uncorrelated variables, adjusted for sample size and for the variance",
+        "the earlier eigenvalues account for. That distribution assumes",
+        "product-moment correlations, so with polychoric ones it is an",
+        "approximation. Braeken and van Assen (2017) found it about as accurate",
+        "as parallel analysis with orthogonal factors and more accurate with",
+        "correlated factors measured by few variables."
+      ),
       "nomo_factors()", "EFAtools",
       c("braeken_vanassen_2017")
     ),
@@ -1369,7 +1389,10 @@ nomo_methods_registry <- function() {
       "kmo", "factors",
       "Kaiser-Meyer-Olkin sampling adequacy",
       "historical", "supporting",
-      "Ratio of squared correlations to squared partial correlations, overall and per item.",
+      paste(
+        "Sum of squared correlations divided by the sum of squared correlations",
+        "plus squared partial correlations, overall and per item."
+      ),
       "Supporting adequacy evidence, not an item-retention rule.",
       "nomo_factors()", "psych",
       c("kaiser_1970", "kaiser_1974")
@@ -1404,16 +1427,41 @@ nomo_methods_registry <- function() {
       "minres_extraction", "efa",
       "MINRES common-factor extraction",
       "contemporary", "primary",
-      "Common-factor loadings minimizing residual correlations.",
+      paste(
+        "Common-factor loadings minimizing residual correlations (unweighted",
+        "least squares), which psych fits as minres, uls, ols, or old.min."
+      ),
       "Models common variance only; distinct from principal components.",
       "nomo_efa()", "psych",
       c("fabrigar_1999")
     ),
     nomo_method_entry(
-      "oblique_rotation", "efa",
-      "Oblique (oblimin) rotation",
+      "common_factor_extraction", "efa",
+      "Other common-factor extraction (ML, principal axis, WLS, GLS)",
       "contemporary", "primary",
-      "Rotated pattern and structure matrices permitting correlated factors.",
+      paste(
+        "Common-factor loadings from the extraction recorded in fm: maximum",
+        "likelihood, principal axis factoring, weighted or generalized least",
+        "squares, minimum chi-square, or alpha factoring."
+      ),
+      paste(
+        "Models common variance only, as MINRES does. Maximum likelihood adds",
+        "an assumption of multivariate normality and a test of fit; principal",
+        "axis factoring makes no distributional assumption."
+      ),
+      "nomo_efa()", "psych",
+      c("fabrigar_1999", "costello_osborne_2005")
+    ),
+    nomo_method_entry(
+      "oblique_rotation", "efa",
+      "Oblique rotation",
+      "contemporary", "primary",
+      paste(
+        "Rotated pattern and structure matrices permitting correlated factors,",
+        "by the oblique criterion recorded with the solution: oblimin by",
+        "default, or promax, geomin, quartimin, simplimax, Bentler's criterion,",
+        "or cluster rotation."
+      ),
       "Appropriate whenever factors may plausibly correlate, which is the usual case in psychology.",
       "nomo_efa()", "psych",
       c("browne_2001", "fabrigar_1999")
@@ -1430,6 +1478,22 @@ nomo_methods_registry <- function() {
       ),
       "nomo_efa()", "psych",
       c("kaiser_1958", "conway_huffcutt_2003")
+    ),
+    nomo_method_entry(
+      "orthogonal_rotation_other", "efa",
+      "Other orthogonal rotation (quartimax, equamax, varimin, geomin, Bentler)",
+      "historical", "context",
+      paste(
+        "Rotated loadings under an imposed zero factor correlation, by an",
+        "orthogonal criterion other than varimax."
+      ),
+      paste(
+        "Forces factors to be uncorrelated, as varimax does, which is rarely",
+        "defensible for psychological constructs. Available, but recorded as a",
+        "choice that needs justification."
+      ),
+      "nomo_efa()", "psych",
+      c("browne_2001", "conway_huffcutt_2003")
     ),
     nomo_method_entry(
       "loading_diagnostics", "efa",
@@ -1479,6 +1543,23 @@ nomo_methods_registry <- function() {
       c("flora_curran_2004", "rhemtulla_2012")
     ),
     nomo_method_entry(
+      "cfa_other_estimator", "cfa",
+      "Confirmatory factor analysis with another estimator (such as ULS, GLS, WLS, or DWLS)",
+      "contemporary", "primary",
+      paste(
+        "Loadings, residual variances, and factor covariances for a specified",
+        "measurement model, estimated with the estimator the fit records,",
+        "other than maximum likelihood or WLSMV for ordered indicators."
+      ),
+      paste(
+        "Each estimator minimizes its own discrepancy function under its own",
+        "assumptions, so a methods section names the estimator that ran, which",
+        "the fit and its decision log record."
+      ),
+      "nomo_cfa()", "lavaan",
+      c("bollen_1989", "rosseel_2012")
+    ),
+    nomo_method_entry(
       "chisq_exact_fit", "cfa",
       "Chi-square exact-fit test",
       "historical", "supporting",
@@ -1494,7 +1575,12 @@ nomo_methods_registry <- function() {
       "incremental_fit", "cfa",
       "Incremental fit indices (CFI, TLI)",
       "contemporary", "supporting",
-      "Improvement in fit relative to a null model of uncorrelated observed variables.",
+      paste(
+        "Improvement in fit relative to a null model of uncorrelated observed",
+        "variables: the TLI, which Bentler and Bonett (1980) carried into",
+        "covariance structure analysis as their non-normed index, and the CFI",
+        "(Bentler, 1990)."
+      ),
       "Depends on the null model; comparable only across models of the same data.",
       "nomo_cfa()", "lavaan",
       c("bentler_1990", "bentler_bonett_1980")
@@ -1546,7 +1632,7 @@ nomo_methods_registry <- function() {
       "Expected chi-square improvement from freeing each fixed parameter.",
       paste(
         "Data-driven respecification capitalizes on chance and does not",
-        "replicate. Quarantined as post-hoc diagnostics; nomologR never applies",
+        "replicate. Quarantined as post hoc diagnostics; nomologR never applies",
         "them to a model."
       ),
       "nomo_cfa()", "lavaan",
@@ -1572,9 +1658,8 @@ nomo_methods_registry <- function() {
       paste(
         "General and group factors must be orthogonal. It usually fits at least",
         "as well as correlated-factors models of the same items even when it",
-        "did not generate the data, so fit alone does not choose it; Bonifay,",
-        "Lane, and Reise (2017) treat that superior fit as possible",
-        "overfitting."
+        "did not generate the data, so fit alone does not choose it; Bonifay et",
+        "al. (2017) treat that superior fit as possible overfitting."
       ),
       "nomo_model()", "lavaan",
       c("holzinger_swineford_1937", "reise_2012", "bonifay_2017")
@@ -1630,7 +1715,11 @@ nomo_methods_registry <- function() {
       "lrt_scaled_shifted", "compare",
       "Scaled-and-shifted difference test",
       "contemporary", "primary",
-      "Difference test for categorical estimators, shifted to keep the statistic positive.",
+      paste(
+        "Difference test for mean- and variance-adjusted estimators, scaled and",
+        "shifted so that its mean and variance match a chi-square distribution",
+        "on the difference in degrees of freedom, which is left unadjusted."
+      ),
       "Applies to mean- and variance-adjusted estimators such as WLSMV.",
       "nomo_compare()", "lavaan",
       c("satorra_2000")
@@ -1765,7 +1854,11 @@ nomo_methods_registry <- function() {
       "alpha", "reliability",
       "Coefficient alpha",
       "historical", "supporting",
-      "Lower bound on reliability under tau-equivalence.",
+      paste(
+        "Reliability of a unit-weighted composite when items are essentially",
+        "tau-equivalent with uncorrelated errors; a lower bound when loadings",
+        "differ and errors are uncorrelated."
+      ),
       paste(
         "Assumes equal true-score loadings and uncorrelated residuals; both are",
         "usually violated. Reported as a qualified secondary statistic."
@@ -2015,7 +2108,7 @@ nomo_methods_registry <- function() {
       "Differences in fit between adjacent invariance levels.",
       "Interpreted with sample size and model context; no universal pass/fail value.",
       "nomo_invariance()", "nomologR",
-      c("chen_2007", "putnick_bornstein_2016")
+      c("cheung_rensvold_2002", "chen_2007", "putnick_bornstein_2016")
     ),
     nomo_method_entry(
       "score_diagnostics", "invariance",
@@ -2214,7 +2307,7 @@ nomo_methods_registry <- function() {
     ),
     nomo_method_entry(
       "prediction_provenance", "network",
-      "A-priori versus post-hoc prediction provenance",
+      "A priori versus post hoc prediction provenance",
       "contemporary", "supporting",
       "Whether each prediction was specified before or after seeing the results.",
       "Depends on honest recording; the package cannot verify when a prediction was formed.",
@@ -2399,6 +2492,7 @@ nomo_methods_history <- function() {
     c("bartlett", "bartlett_1950", NA),
     c("inter_item_sd", "marjanovic_2015", NA),
     c("orthogonal_rotation", "kaiser_1958", "oblique_rotation"),
+    c("orthogonal_rotation_other", NA, "oblique_rotation"),
     c("loading_reference", NA, "loading_diagnostics"),
     c("item_total_reference", NA, "item_rest_correlation"),
     c("icc_retest", NA, NA),
@@ -2422,7 +2516,9 @@ nomo_methods_history <- function() {
     c("information_criteria", "akaike_1974", NA),
     c("alpha", "cronbach_1951", "omega"),
     c("omega_ordinal_scale", "green_yang_2009", NA),
-    c("reliability_bootstrap_ci", "kelley_pornprasertmanit_2016", NA),
+    # Kelley and Pornprasertmanit (2016) evaluated existing interval methods and
+    # recommended bootstrap intervals; they did not introduce them (#145, lit-4).
+    c("reliability_bootstrap_ci", NA, NA),
     c("omega_hierarchical_subscale", "reise_bonifay_2013", NA),
     c("construct_replicability", "hancock_mueller_2001", NA),
     c("puc", "reise_2012", NA),
@@ -2435,7 +2531,7 @@ nomo_methods_history <- function() {
     c("multigroup_cfa", "joreskog_1971", NA),
     c("invariance_hierarchy", "meredith_1993", NA),
     c("categorical_invariance", "wu_estabrook_2016", NA),
-    c("invariance_delta_fit", "chen_2007", NA),
+    c("invariance_delta_fit", "cheung_rensvold_2002", NA),
     c("partial_invariance", "byrne_1989", NA),
     c("unit_weighted_score", NA, "parallel_model_test"),
     c("parallel_model_test", "mcneish_wolf_2020", NA),
@@ -2478,6 +2574,19 @@ nomo_methods_lineages <- function() {
 
 nomo_methods_roles <- function() {
   c("primary", "supporting", "context")
+}
+
+
+# The error for a `stage` or `lineage` value the registry does not have, in the
+# package's form for a wrong choice: the argument, the choices, and what was
+# given (#144, guide point 26). Both arguments take one or more values.
+nomo_methods_choice_error <- function(arg, valid, bad) {
+  sprintf(
+    "`%s` must be one or more of %s, not %s.",
+    arg,
+    nomo_present_or(sprintf('"%s"', valid)),
+    paste(sprintf('"%s"', bad), collapse = ", ")
+  )
 }
 
 
@@ -2538,7 +2647,10 @@ nomo_methods_short_citations <- function(keys, bib) {
 #' `nomo_methods(run)` can never credit a run with a method it did not use.
 #'
 #' Passing a `nomologR` result object returns only the methods that object
-#' actually used, which is what [nomo_report()] cites.
+#' actually used, which is what [nomo_report()] cites. They are read from what
+#' the object records: the estimator that ran, the extraction and rotation of
+#' an exploratory solution, and an equivalence test only where one could be
+#' computed.
 #'
 #' @param x Optional `nomologR` result object. If supplied, only the methods
 #'   actually used in producing that object are returned, in registry order. If
@@ -2560,11 +2672,19 @@ nomo_methods_short_citations <- function(keys, bib) {
 #'   method, and `references` holds short in-text citations. With
 #'   `references = TRUE` there is one row per method-reference pair, with
 #'   `citation_key`, `citation`, and `doi`.
+#'
+#'   The result is an ordinary tibble with no `print()` or `summary()` method
+#'   of its own, so the console shortens its long text columns; select columns,
+#'   or call `as.list()` on one row, to read an entry in full.
 #' @export
 #'
 #' @examples
-#' # The whole registry
-#' nomo_methods()
+#' # The whole registry, one row per method
+#' methods <- nomo_methods()
+#' methods[, c("method", "lineage", "role")]
+#'
+#' # Everything the registry records about one method
+#' as.list(methods[methods$id == "omega", ])
 #'
 #' # What is shown only as historical context, and why
 #' nomo_methods(lineage = "historical")[, c("method", "role", "assumptions")]
@@ -2603,26 +2723,14 @@ nomo_methods <- function(x = NULL,
   if (!is.null(stage)) {
     valid <- nomo_methods_stages()
     bad <- setdiff(stage, valid)
-    if (length(bad)) {
-      stop(
-        "Unknown `stage` value(s): ", paste(bad, collapse = ", "),
-        ". Valid stages are: ", paste(valid, collapse = ", "), ".",
-        call. = FALSE
-      )
-    }
+    if (length(bad)) stop(nomo_methods_choice_error("stage", valid, bad), call. = FALSE)
     registry <- registry[registry$stage %in% stage, , drop = FALSE]
   }
 
   if (!is.null(lineage)) {
     valid <- nomo_methods_lineages()
     bad <- setdiff(lineage, valid)
-    if (length(bad)) {
-      stop(
-        "Unknown `lineage` value(s): ", paste(bad, collapse = ", "),
-        ". Valid values are: ", paste(valid, collapse = ", "), ".",
-        call. = FALSE
-      )
-    }
+    if (length(bad)) stop(nomo_methods_choice_error("lineage", valid, bad), call. = FALSE)
     registry <- registry[registry$lineage %in% lineage, , drop = FALSE]
   }
 

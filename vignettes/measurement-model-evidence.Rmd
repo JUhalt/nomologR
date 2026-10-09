@@ -261,7 +261,7 @@ Three lessons carry over from the exploratory stage:
   cross-loading that the data-generating model contains, but `nomologR` does not
   add it. Allowing a cross-loading, revising the item, or evaluating a model
   without it is a theoretical decision; freeing parameters because an index is
-  large is capitalization on chance (MacCallum, Roznowski, & Necowitz, 1992).
+  large is capitalization on chance (MacCallum et al., 1992).
 - **The same sample is not independent confirmation.** This CFA uses the data
   that suggested the structure. `nomo_split()` or a new sample provides a
   stronger test.
@@ -300,16 +300,36 @@ cross_comparison
 ```
 
 ```{r compare-values, include=FALSE}
-fmt_p <- function(p) {
-  if (!is.finite(p)) return("unavailable")
-  if (p < .001) "< .001" else paste("=", formatC(p, format = "f", digits = 3))
+# Numbers in the prose follow the package's printed style: rounded half away
+# from zero, no leading zero for a statistic that cannot exceed 1 (CFI and its
+# change, correlations, p), and a change shown with its sign unless it rounds
+# to zero.
+half_up <- function(x, digits) {
+  s <- 10^digits
+  sign(x) * floor(abs(x) * s + 0.5 + 1e-9) / s
+}
+num <- function(x, digits = 2, bounded = FALSE, signed = FALSE) {
+  r <- half_up(x, digits)
+  out <- formatC(abs(r), format = "f", digits = digits)
+  if (bounded) out <- sub("^0[.]", ".", out)
+  sign_text <- if (r < 0) "-" else if (signed && r > 0) "+" else ""
+  paste0(sign_text, out)
+}
+p_clause <- function(p) {
+  if (!is.finite(p)) return("*p* unavailable")
+  if (p < .001) return("*p* < .001")
+  if (p > .999) return("*p* > .999")
+  paste("*p* =", num(p, 3, bounded = TRUE))
+}
+delta_chisq <- function(row) {
+  sprintf("Delta chi-square(%s) = %s, %s", row$df_diff, num(row$chisq_diff),
+          p_clause(row$p_value))
 }
 cc <- cross_comparison$comparisons
 ```
 
-Estimating the cross-loading reduces misfit (chi-square difference =
-`r sprintf("%.1f", cc$chisq_diff)`, df = `r cc$df_diff`, p `r fmt_p(cc$p_value)`;
-CFI changes by `r sprintf("%+.3f", cc$delta_cfi)`). That is exactly the feature
+Estimating the cross-loading reduces misfit (`r delta_chisq(cc)`; CFI change
+`r num(cc$delta_cfi, 3, bounded = TRUE, signed = TRUE)`). That is exactly the feature
 built into these simulated data, but with real data the evidence alone does not
 settle the question. Does the wording of `a5` plausibly reflect both
 constructs? Because the comparison is post hoc, the decision log records it as
@@ -343,10 +363,9 @@ bc <- b5_comparison$comparisons
 b5_loading <- b5_comparison$loadings$full[b5_comparison$loadings$item == "b5"]
 ```
 
-Fixing the loading to zero worsens fit (chi-square difference =
-`r sprintf("%.1f", bc$chisq_diff)`, df = `r bc$df_diff`, p `r fmt_p(bc$p_value)`),
-so `b5` is statistically related to B. Its standardized loading, however, is
-only `r sprintf("%.2f", b5_loading)`. With `r b5_comparison$models$n_used[[1]]`
+Fixing the loading to zero worsens fit (`r delta_chisq(bc)`), so `b5` is
+statistically related to B. Its standardized loading, however, is only
+`r num(b5_loading)`. With `r b5_comparison$models$n_used[[1]]`
 cases, even a weak relation is detectable; statistical detectability is not the
 same as an adequate indicator. The decision still depends on whether `b5` covers
 content the construct needs.
@@ -390,7 +409,7 @@ alone decides whether the item stays.
 The comparison above freed one cross-loading because the results pointed to it.
 Exploratory structural equation modeling (ESEM) estimates all of them, in a
 model that still gives fit and standard errors (Asparouhov & Muthén, 2009).
-With an a priori structure, Marsh, Morin, Parker, and Kaur (2014) recommend
+With an a priori structure, Marsh et al. (2014) recommend
 target rotation: each item loads freely on its own factor, and its
 cross-loadings are rotated towards zero without being fixed there.
 `nomo_esem()` fits the ESEM beside the CFA of the same model:
@@ -406,12 +425,11 @@ ec <- esem$factor_correlations
 ```
 
 The ESEM fits better even on TLI and RMSEA, which penalize its extra
-parameters (TLI `r sprintf("%.3f", ef$tli[[1]])` vs.
-`r sprintf("%.3f", ef$tli[[2]])`, RMSEA `r sprintf("%.3f", ef$rmsea[[1]])` vs.
-`r sprintf("%.3f", ef$rmsea[[2]])`). Without being told where to look, its
+parameters (TLI `r num(ef$tli[[1]], 3)` vs. `r num(ef$tli[[2]], 3)`, RMSEA
+`r num(ef$rmsea[[1]], 3)` vs. `r num(ef$rmsea[[2]], 3)`). Without being told where to look, its
 loadings show both features built into these data: `a5` cross-loads on B, and
 `b5` is weak. The factor correlation barely moves
-(`r sprintf("%.2f", ec$esem)` vs. `r sprintf("%.2f", ec$cfa)`), so here the
+(`r num(ec$esem, bounded = TRUE)` vs. `r num(ec$cfa, bounded = TRUE)`), so here the
 zero cross-loadings cost the CFA fit without distorting the relation between
 the factors. When items of related constructs share many small cross-loadings,
 the CFA pushes them into the factor correlations instead, and a lower ESEM
@@ -421,7 +439,7 @@ is still a question about its content.
 
 # Does a result depend on how missing data were handled?
 
-`demo_cfa` used lavaan's default, listwise deletion, which analyses only the
+`demo_cfa` used lavaan's default, listwise deletion, which analyzes only the
 cases observed on every item. `nomo_missing()` refits the same model under
 alternative strategies and reports what changes. For continuous indicators it
 compares listwise deletion with full-information maximum likelihood (FIML),
@@ -491,14 +509,14 @@ mar_estimates[mar_estimates$type == "factor_correlation",
 mar_r <- mar_estimates[mar_estimates$type == "factor_correlation", ]
 mar_listwise <- mar_r[mar_r$strategy == "listwise", ]
 mar_fiml <- mar_r[mar_r$strategy == "ml", ]
-se_from_truth <- function(row) sprintf("%.1f", abs(row$estimate - .50) / row$se)
+se_from_truth <- function(row) num(abs(row$estimate - .50) / row$se)
 ```
 
-FIML's estimate, `r sprintf("%.3f", mar_fiml$estimate)`, is
+FIML's estimate, `r num(mar_fiml$estimate, bounded = TRUE)`, is
 `r se_from_truth(mar_fiml)` of its standard errors from the population value,
 within sampling error. Listwise deletion's,
-`r sprintf("%.3f", mar_listwise$estimate)`, is `r se_from_truth(mar_listwise)`
-standard errors below it. The complete cases under-represent high scorers on A,
+`r num(mar_listwise$estimate, bounded = TRUE)`, is
+`r se_from_truth(mar_listwise)` standard errors below it. The complete cases under-represent high scorers on A,
 and that restricted range attenuates the correlation. The decision log flags
 the difference and says what it can and cannot mean:
 
@@ -558,8 +576,8 @@ rt <- nomo_retest(panel, scores = list(Agency = c("agency_t1", "agency_t2")),
 summary(rt)
 ```
 
-These scores were simulated to rise by .30 between occasions, and in this
-sample they rose by `r sprintf("%.2f", rt$icc$mean_change)`. That rise is why
+These scores were simulated to rise by 0.30 between occasions, and in this
+sample they rose by `r num(rt$icc$mean_change)`. That rise is why
 ICC(A,1) is below ICC(C,1), and the summary flags it.
 
 Koo and Li read the reliability range from the interval rather than the
@@ -573,11 +591,11 @@ is not the same as meaningfully.
 # Method variance from a marker variable
 
 When every measure comes from the same self-report, some of what the items share
-may be the method rather than the constructs (Podsakoff, MacKenzie, Lee, &
-Podsakoff, 2003). A marker variable is a measure theoretically unrelated to the
+may be the method rather than the constructs (Podsakoff et al., 2003). A
+marker variable is a measure theoretically unrelated to the
 constructs that taps the biases the measurement context invites, such as social
 desirability or common scale anchors. What it shares with them is taken to be
-method variance (Lindell & Whitney, 2001; Williams, Hartman, & Cavazotte, 2010).
+method variance (Lindell & Whitney, 2001; Williams et al., 2010).
 
 `nomo_method_variance()` follows Williams et al.'s (2010) comprehensive CFA
 marker technique:
@@ -591,7 +609,7 @@ marker technique:
   intervals farther from zero.
 
 Here, two constructs and a three-item marker are simulated sharing a method
-factor that loads .30 on every item:
+factor that loads 0.30 on every item:
 
 ```{r method-variance}
 set.seed(2010)
@@ -628,7 +646,7 @@ moves, and the sensitivity models do not change it.
 The technique has a limit worth teaching. In simulations it did not find method
 variance that was absent when the marker was ideal. With a nonideal marker it
 sometimes did, and with either kind it did not recover the substantive
-correlations accurately (Richardson, Simmering, & Sturman, 2009). The results
+correlations accurately (Richardson et al., 2009). The results
 describe the method variance this marker captures. They are not corrected
 estimates, and a marker chosen only because it is unrelated, such as a
 demographic, may capture no method variance at all.
@@ -636,8 +654,8 @@ demographic, may capture no method variance at all.
 # Planning the sample size
 
 Two questions about sample size have different answers. The first is whether
-the overall fit test can tell good fit from mediocre. MacCallum, Browne, and
-Sugawara (1996) answered it with power for tests of RMSEA, which depends mostly
+the overall fit test can tell good fit from mediocre. MacCallum et al. (1996)
+answered it with power for tests of RMSEA, which depends mostly
 on the model's degrees of freedom:
 
 ```{r power-rmsea}
@@ -661,7 +679,7 @@ nomo_power_simulate(population, n = c(100, 150, 200, 300), reps = 500,
                     focus = "A~~B", seed = 2026)
 ```
 
-Wolf, Harrington, Clark, and Miller (2013) found that the N a model needs
+Wolf et al. (2013) found that the N a model needs
 ranges widely with its structure, so no rule of thumb, such as 200 cases or ten
 per parameter, replaces the simulation.
 
@@ -683,25 +701,22 @@ researcher decisions without automatically changing the scale or model.
 
 The reliability workflow follows the literature recommending model-based omega for
 congeneric measurement and cautioning against mechanical use of coefficient alpha,
-including Dunn, Baguley, and Brunsden (2014), Flora (2020), and Bell, Chalmers, and
-Flora (2024). Ordered-score reliability follows the distinction emphasized by Green
+including Dunn et al. (2014), Flora (2020), and Bell et al. (2024). Ordered-score reliability follows the distinction emphasized by Green
 and Yang (2009) and implemented in `semTools`.
 
 The validity workflow treats AVE as convergent evidence rather than reliability,
 following Fornell and Larcker (1981). For construct separation, HTMT-family evidence
 is prioritized because simulation research shows that older criteria can miss overlap
-(Henseler, Ringle, & Sarstedt, 2015). HTMT2 is emphasized for congeneric measurement
-because it relaxes the original HTMT tau-equivalence assumption (Roemer, Schuberth, &
-Henseler, 2021). Fornell-Larcker output remains available only as optional historical/
+(Henseler et al., 2015). HTMT2 is emphasized for congeneric measurement because it
+relaxes the original HTMT tau-equivalence assumption (Roemer et al., 2021). Fornell-Larcker output remains available only as optional historical/
 supporting information.
 
 ESEM follows Asparouhov and Muthén (2009), with the target rotation Marsh et
 al. (2014) recommend for an a priori structure (Browne, 2001).
 
-Method variance follows Williams, Hartman, and Cavazotte's (2010) comprehensive
-CFA marker technique, building on Lindell and Whitney (2001), with the limits
-Richardson, Simmering, and Sturman (2009) and Podsakoff, MacKenzie, and
-Podsakoff (2012) describe.
+Method variance follows Williams et al.'s (2010) comprehensive CFA marker
+technique, building on Lindell and Whitney (2001), with the limits Richardson
+et al. (2009) and Podsakoff et al. (2012) describe.
 
 Test-retest reliability follows Koo and Li (2016) and the intraclass
 correlations defined by Shrout and Fleiss (1979) and McGraw and Wong (1996).
