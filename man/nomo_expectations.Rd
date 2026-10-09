@@ -36,11 +36,19 @@ than zero. For \code{negative()} it must be less than zero.}
 
 \item{scale}{Scale on which the expectation is defined. Standardized
 coefficients are the default because magnitude expectations such as \code{.20}
-are otherwise not portable across arbitrary raw units.}
+are otherwise not portable across arbitrary raw units. For an observed
+variable, \code{"unstandardized"} is its raw units. A latent variable has no
+raw units: its metric is set by the identification \code{\link[=nomo_network]{nomo_network()}} fits
+with. With the default \code{std.lv = TRUE}, an exogenous factor has variance
+1 and an endogenous factor has residual variance 1, so the same
+unstandardized bound can be met under \code{std.lv = TRUE} and missed under
+\code{std.lv = FALSE}, which scales each factor by its first indicator.}
 
 \item{origin}{Whether the expectation was specified \code{a_priori} or added
-\code{post_hoc}. Post-hoc expectations remain machine-readable but are never
-presented as confirmatory evidence.}
+\code{post_hoc}. Post hoc expectations remain machine-readable but are never
+presented as confirmatory evidence: \code{\link[=nomo_network]{nomo_network()}} marks them
+"(post hoc)" wherever their concordance is printed or plotted, and its
+interpretation calls them exploratory.}
 
 \item{within}{Optional length-two finite numeric vector defining the
 negligible-effect region. The interval must contain zero.}
@@ -60,7 +68,7 @@ distinguishes an unquantified null-like expectation from a quantitative
 smallest effect size of interest (SESOI) region.
 
 A bare \code{negligible()} expectation is \strong{not confirmable as negligible} from a
-non-significant p-value. Supply \code{within = c(lower, upper)} when theory or the
+non-significant p value. Supply \code{within = c(lower, upper)} when theory or the
 study design provides a defensible negligible-effect region.
 }
 \examples{

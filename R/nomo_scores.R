@@ -32,6 +32,30 @@ nomo_scores_input <- function(x) {
   lv <- as.character(lavaan::lavNames(fit, type = "lv"))
   ov <- as.character(lavaan::lavNames(fit, type = "ov"))
 
+  loadings <- pe[pe$op == "=~" & pe$rhs %in% ov, c("lhs", "rhs"), drop = FALSE]
+  factors <- lapply(lv, function(f) as.character(loadings$rhs[loadings$lhs == f]))
+  names(factors) <- lv
+
+  # A factor measured only by other factors, as a second-order factor is, has
+  # no items to weight, and the weights below would describe a model lavaan did
+  # not fit (#145).
+  unmeasured <- lv[!lengths(factors)]
+  if (length(unmeasured)) {
+    stop(
+      sprintf(
+        paste(
+          "`fit` has %s without observed indicators (%s), such as a",
+          "higher-order factor. `nomo_scores()` scores factors from their",
+          "items; score the first-order measurement model, without the",
+          "higher-order factor."
+        ),
+        nomo_present_noun(length(unmeasured), "a factor", "factors"),
+        paste(unmeasured, collapse = ", ")
+      ),
+      call. = FALSE
+    )
+  }
+
   if (any(pe$op == "~" & pe$lhs %in% lv & pe$rhs %in% lv)) {
     stop(
       paste(
@@ -43,9 +67,36 @@ nomo_scores_input <- function(x) {
     )
   }
 
-  loadings <- pe[pe$op == "=~" & pe$rhs %in% ov, c("lhs", "rhs"), drop = FALSE]
-  factors <- lapply(lv, function(f) as.character(loadings$rhs[loadings$lhs == f]))
-  names(factors) <- lv
+  # Any other regression, such as a factor on an observed covariate, or a
+  # factor loading on another factor, puts a structural part (lavaan's beta
+  # matrix) into the model, and the scores' weights are written for a
+  # measurement model alone (#145). So does a covariance between a factor and
+  # an observed variable: lavaan then carries the variable as a latent variable
+  # of its own (a phantom), a column of the loading matrix that is not one of
+  # the model's factors, and the weights would score it as a factor with no
+  # items. Any phantom column not already named by a parameter is named too.
+  linked <- pe$op == "~~" & xor(pe$lhs %in% lv, pe$rhs %in% lv)
+  structural <- pe[pe$op == "~" | (pe$op == "=~" & pe$rhs %in% lv) | linked, , drop = FALSE]
+  phantom <- setdiff(colnames(lavaan::lavInspect(fit, "est")$lambda), lv)
+  named <- c(
+    unique(paste(structural$lhs, structural$op, structural$rhs)),
+    setdiff(phantom, c(structural$lhs, structural$rhs))
+  )
+  if (length(named)) {
+    stop(
+      sprintf(
+        paste(
+          "`fit` contains structural paths or covariates (%s). `nomo_scores()`",
+          "scores a measurement model, in which each factor is measured by its",
+          "items and related only to the other factors; score the measurement",
+          "model and fit the paths and covariates on the latent variables",
+          "instead."
+        ),
+        paste(named, collapse = ", ")
+      ),
+      call. = FALSE
+    )
+  }
 
   cross <- names(which(table(loadings$rhs) > 1L))
 
@@ -208,8 +259,27 @@ nomo_scores_properties <- function(parts) {
     univocality = stats::setNames(univocality, factors),
     accuracy = stats::setNames(accuracy, factors),
     cor_scores = cor_ss,
-    cor_factors = cor_ff
+    cor_factors = cor_ff,
+    # Rows are factors and columns scores, so [j, k] is the correlation of
+    # factor j with the score for factor k.
+    cor_factor_scores = cor_fs
   )
+}
+
+
+# Univocality judged against the factor correlations (#145). A score reaches
+# the other factors through its own: if it carried nothing of factor j beyond
+# what factor k brings, its correlation with j would be the factor correlation
+# times its validity, as it is for Bartlett scores, and for sum scores of a
+# simple structure, whatever the factors' correlation. The departure from that
+# is what a score takes from another factor directly, which is what Grice
+# (2001) asks univocality to reveal. [j, k] is for the score of factor k.
+nomo_scores_univocality_departure <- function(properties) {
+  through <- properties$cor_factors *
+    rep(unname(properties$validity), each = nrow(properties$cor_factors))
+  departure <- properties$cor_factor_scores - through
+  diag(departure) <- NA_real_
+  list(departure = departure, through = through)
 }
 
 
@@ -245,6 +315,22 @@ nomo_scores_unit_weighting <- function(input, parts) {
   })
 
   tibble::as_tibble(do.call(rbind, spread))
+}
+
+
+# Items whose standardized loading has the opposite sign to their factor's
+# strongest loading. A sum adds them as they are, so each counts against the
+# factor it measures; the model, by contrast, weights them negatively (#145).
+# A named list: one character vector per factor, empty for most.
+nomo_scores_opposite_signs <- function(input) {
+  std <- lavaan::standardizedSolution(input$fit)
+  std <- std[std$op == "=~" & is.finite(std$est.std), , drop = FALSE]
+  out <- lapply(names(input$factors), function(f) {
+    rows <- std[std$lhs == f & std$rhs %in% input$factors[[f]], , drop = FALSE]
+    strongest <- sign(rows$est.std[which.max(abs(rows$est.std))])
+    as.character(rows$rhs[sign(rows$est.std) == -strongest])
+  })
+  stats::setNames(out, names(input$factors))
 }
 
 
@@ -376,7 +462,7 @@ nomo_scores_parallel_test <- function(input) {
   # The parallel model is nested in the fitted one, so its chi-square cannot be
   # the smaller of the two. A negative difference comes from a scaled statistic
   # or from an optimization that stopped short, and it is not a test: its
-  # p-value of 1 would read as support for unit weighting.
+  # p value of 1 would read as support for unit weighting.
   usable <- is.finite(chisq_diff) && chisq_diff >= 0 && is.finite(df_diff) &&
     df_diff > 0 && is.finite(p_value)
   if (!usable) {
@@ -387,7 +473,8 @@ nomo_scores_parallel_test <- function(input) {
           "not give a usable chi-square difference (lavaan returned %s on %s",
           "df), so unit weighting was not tested."
         ),
-        format(round(chisq_diff, 2L), nsmall = 2L), format(df_diff, trim = TRUE)
+        if (is.finite(chisq_diff)) nomo_present_stat(chisq_diff, "stat") else "none",
+        nomo_present_df(df_diff)
       ),
       sprintf("lavaan reported: %s.", warnings)
     ), collapse = " ")

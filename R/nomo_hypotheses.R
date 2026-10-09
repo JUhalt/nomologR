@@ -46,7 +46,7 @@ nomo_expectation_new <- function(prediction,
 #' smallest effect size of interest (SESOI) region.
 #'
 #' A bare `negligible()` expectation is **not confirmable as negligible** from a
-#' non-significant p-value. Supply `within = c(lower, upper)` when theory or the
+#' non-significant p value. Supply `within = c(lower, upper)` when theory or the
 #' study design provides a defensible negligible-effect region.
 #'
 #' @param min Optional finite lower bound. For `positive()` it must be greater
@@ -57,10 +57,18 @@ nomo_expectation_new <- function(prediction,
 #'   negligible-effect region. The interval must contain zero.
 #' @param scale Scale on which the expectation is defined. Standardized
 #'   coefficients are the default because magnitude expectations such as `.20`
-#'   are otherwise not portable across arbitrary raw units.
+#'   are otherwise not portable across arbitrary raw units. For an observed
+#'   variable, `"unstandardized"` is its raw units. A latent variable has no
+#'   raw units: its metric is set by the identification [nomo_network()] fits
+#'   with. With the default `std.lv = TRUE`, an exogenous factor has variance
+#'   1 and an endogenous factor has residual variance 1, so the same
+#'   unstandardized bound can be met under `std.lv = TRUE` and missed under
+#'   `std.lv = FALSE`, which scales each factor by its first indicator.
 #' @param origin Whether the expectation was specified `a_priori` or added
-#'   `post_hoc`. Post-hoc expectations remain machine-readable but are never
-#'   presented as confirmatory evidence.
+#'   `post_hoc`. Post hoc expectations remain machine-readable but are never
+#'   presented as confirmatory evidence: [nomo_network()] marks them
+#'   "(post hoc)" wherever their concordance is printed or plotted, and its
+#'   interpretation calls them exploratory.
 #'
 #' @return An object of class `nomo_expectation`.
 #' @name nomo_expectations
@@ -317,6 +325,11 @@ nomo_expectation_region_label <- function(expectation) {
 #'   hypothesis: its relation, prediction, theoretical region, scale, and
 #'   origin. `n` is the number of hypotheses.
 #'
+#'   `print()` shows the relations with each predicted region in words, their
+#'   scale, and their origin. `summary()` adds the counts by origin, how many
+#'   predictions can be confirmed as specified, and what each prediction
+#'   claims.
+#'
 #' @references
 #' Cronbach, L. J., & Meehl, P. E. (1955). Construct validity in psychological
 #' tests. *Psychological Bulletin, 52*(4), 281-302. \doi{10.1037/h0040957}
@@ -446,42 +459,69 @@ nomo_hypotheses <- function(...) {
 }
 
 
-# The hypothesis table as print() and summary() show it. When every relation is
-# on one scale, the scale is stated once rather than repeated in each row.
+# The scale of the relations in one sentence: "Every relation is on the
+# standardized scale.", or which relations are on which scale.
+nomo_hypotheses_scale_note <- function(h) {
+  scales <- unique(h$scale)
+  if (length(scales) == 1L) return(sprintf("Every relation is on the %s scale.", scales))
+  paste0(paste(vapply(scales, function(s) {
+    ids <- h$id[h$scale == s]
+    sprintf("%s %s %s", nomo_present_or(ids, "and"),
+            nomo_present_noun(length(ids), "is", "are"), s)
+  }, character(1)), collapse = "; "), ".")
+}
+
+
+# The hypothesis table as print() and summary() show it, with each region in
+# words and its bounds as given (">= 0.20", "[-.15, .15]"). When every relation
+# is on one scale, the scale is stated once rather than repeated in each row.
 nomo_hypotheses_present_table <- function(hypotheses) {
-  show <- hypotheses
-  show$origin_shown <- gsub("_", " ", show$origin)
-  scales <- unique(show$scale)
-  if (length(scales) == 1L) {
-    nomo_present_text(sprintf("Every relation is on the %s scale.", scales))
-  }
+  show <- as.data.frame(hypotheses, stringsAsFactors = FALSE)
+  show$origin_shown <- nomo_present_origin(show$origin, cell = TRUE)
+  show$region_shown <- nomo_network_region_text(
+    show, nomo_network_kind(show$scale, show$relation_type)
+  )
+  # The scale is stated beneath the table, where no console width hides it.
   nomo_present_table(
     show,
-    nomo_present_drop_constant(
-      c("ID" = "id", "Relation" = "relation", "Prediction" = "prediction",
-        "Region" = "region", "Scale" = "scale", "Origin" = "origin_shown"),
-      "Scale", show$scale
-    ),
+    c("ID" = "id", "Relation" = "relation", "Prediction" = "prediction",
+      "Region" = "region_shown", "Origin" = "origin_shown"),
     more = "nomo_table(x)"
   )
+  notes <- c(
+    nomo_hypotheses_scale_note(show),
+    if (any(!show$confirmable)) {
+      paste(
+        "A region that is \"not specified\" belongs to a negligible() prediction",
+        "without a smallest effect size of interest (SESOI), which cannot be",
+        "confirmed merely because p > .05."
+      )
+    }
+  )
+  nomo_present_text(paste(notes, collapse = " "), indent = 2L)
 }
 
 
 #' @export
 print.nomo_hypotheses <- function(x, ...) {
   nomo_present_header("nomo_hypotheses", "Theory-specified relations")
-  nomo_present_facts(nomo_present_count(x$n, "theory-specified relation"))
+  nomo_present_facts(c(
+    sprintf("Relations: %d", x$n),
+    sprintf("A priori: %d", sum(x$hypotheses$origin == "a_priori")),
+    sprintf("Post hoc: %d", sum(x$hypotheses$origin == "post_hoc"))
+  ))
   cat("\n")
   nomo_hypotheses_present_table(x$hypotheses)
 
-  if (any(!x$hypotheses$confirmable)) {
-    cat("\n")
-    nomo_present_text(
-      "Note: at least one negligible prediction has no quantitative smallest ",
-      "effect size of interest (SESOI) region and cannot be confirmed merely ",
-      "because p > .05."
-    )
-  }
+  cat("\n")
+  nomo_present_text(
+    "The relations record theory; only nomo_network() evaluates them against ",
+    "data."
+  )
+  nomo_present_pointer(
+    c("nomo_table(x)", "nomo_network(model, data, x)"),
+    c("every column", "the evidence")
+  )
 
   invisible(x)
 }
@@ -510,10 +550,25 @@ print.summary_nomo_hypotheses <- function(x, ...) {
     sprintf("Post hoc: %d", x$post_hoc)
   ))
   nomo_present_facts(sprintf(
-    "Quantitatively confirmable with the supplied specification: %d/%d",
-    x$quantitatively_confirmable, x$n
+    "Confirmable as specified: %d of %d", x$quantitatively_confirmable, x$n
   ))
   cat("\n")
   nomo_hypotheses_present_table(x$hypotheses)
+
+  h <- x$hypotheses
+  nomo_present_section("What each prediction claims")
+  nomo_present_bullets(sprintf(
+    "%s %s: %s%s", h$id, h$relation,
+    c(positive = "a positive relation", negative = "a negative relation",
+      negligible = "a negligible relation")[h$prediction],
+    ifelse(h$magnitude_specified,
+           paste0(" (region: ", nomo_network_region_text(
+             h, nomo_network_kind(h$scale, h$relation_type)
+           ), ")."),
+           ifelse(h$prediction == "negligible",
+                  " with no region, so it cannot be confirmed.",
+                  " of any size."))
+  ))
+  nomo_present_pointer("nomo_table(x)", "every column")
   invisible(x)
 }

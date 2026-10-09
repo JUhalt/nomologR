@@ -2153,8 +2153,11 @@ nomo_methods_registry <- function() {
       "contemporary", "supporting",
       "Correlation between a factor score estimate and the factors it does not represent.",
       paste(
-        "Requires more than one factor. A score that is not univocal cannot be",
-        "treated as though it measured its own factor alone."
+        "Requires more than one factor. With correlated factors a score reaches",
+        "the others through its own, by the factor correlation times its",
+        "validity, so it is judged against that value: only a departure from it",
+        "marks a score that is not univocal, which cannot be treated as though",
+        "it measured its own factor alone."
       ),
       "nomo_scores()", "nomologR",
       c("grice_2001")
