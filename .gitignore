@@ -12,3 +12,25 @@ pkgdown
 .httr-oauth
 .quarto
 .claude/
+
+# Stray output of a working session (#145). Each has a matching line in
+# .Rbuildignore, so none of them can be committed or built into the tarball.
+# A plot drawn with no graphics device open:
+Rplots.pdf
+Rplots.ps
+# The file nomo_report() wrote by default up to 0.9.0:
+nomologR-report.html
+nomologR-report.docx
+# What a failed test run leaves behind:
+testthat-problems.rds
+tests/testthat/_snaps/**/*.new.md
+# Knitted by hand or by devtools::build_vignettes():
+/README.html
+/doc/
+/Meta/
+vignettes/*.html
+vignettes/*_files/
+vignettes/*_cache/
+# R CMD build and R CMD check run in the package directory:
+*.Rcheck/
+/nomologR_*.tar.gz

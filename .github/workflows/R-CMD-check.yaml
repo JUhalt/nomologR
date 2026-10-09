@@ -28,6 +28,12 @@ jobs:
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       R_KEEP_PKG_SOURCE: yes
+      # A NOTE fails these jobs (see `error-on` below), so the one check that
+      # gives a NOTE for a reason outside the package is switched off:
+      # "checking for future file timestamps" asks a web service for the time
+      # and reports "Unable to verify current time" when it does not answer.
+      # File timestamps are still compared with the runner's own clock.
+      _R_CHECK_SYSTEM_CLOCK_: false
 
     steps:
       - uses: actions/checkout@v5
@@ -55,15 +61,75 @@ jobs:
           http-user-agent: ${{ matrix.config.http-user-agent }}
           use-public-rspm: always
 
+      # commonmark and xml2 are here for R CMD check itself: it reads NEWS.md
+      # ("checking package subdirectories") only when both are installed, and
+      # nothing the package depends on brings them in. Without them the check
+      # passed over a NEWS.md that win-builder and CRAN, which have both,
+      # reported as "Problems with news in 'NEWS.md'" (#145).
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::rcmdcheck
+          extra-packages: any::rcmdcheck, any::commonmark, any::xml2
           needs: check
 
+      # The same reading of NEWS.md, as a step of its own, so that a file R
+      # cannot read fails the job with the reason at the top of the log, and
+      # so that the check cannot be lost again without anyone noticing: the
+      # step stops if commonmark or xml2 is missing. It also asks that a
+      # release version in DESCRIPTION has its section in NEWS.md, which is
+      # what goes wrong when DESCRIPTION is bumped and line 1 of NEWS.md is
+      # left as "# nomologR (development version)".
+      - name: Check that R can read NEWS.md
+        shell: Rscript {0}
+        run: |
+          for (pkg in c("commonmark", "xml2")) {
+            if (!requireNamespace(pkg, quietly = TRUE)) {
+              stop(pkg, " is not installed, so R CMD check would skip NEWS.md.")
+            }
+          }
+          # R's own reader, the one R CMD check calls. It is not exported, so a
+          # version of R without it leaves the reading to R CMD check below.
+          reader <- get0(".build_news_db_from_package_NEWS_md", envir = asNamespace("tools"))
+          if (is.null(reader)) {
+            cat("This version of R has another NEWS reader; R CMD check reads NEWS.md.\n")
+            quit(save = "no", status = 0)
+          }
+          problems <- character()
+          news <- withCallingHandlers(
+            reader("NEWS.md"),
+            warning = function(w) {
+              problems <<- c(problems, conditionMessage(w))
+              invokeRestart("muffleWarning")
+            }
+          )
+          if (length(problems)) {
+            stop("R CMD check would report these problems with NEWS.md:\n", paste(problems, collapse = "\n"))
+          }
+          if (!inherits(news, "news_db") || !nrow(news)) {
+            stop("R finds no news entries in NEWS.md.")
+          }
+          versions <- unique(news$Version)
+          cat("Versions R reads from NEWS.md:", paste(versions, collapse = ", "), "\n")
+          version <- read.dcf("DESCRIPTION", fields = "Version")[[1]]
+          # A development version, such as 1.0.0.9000, has no section of its own.
+          release <- length(unlist(package_version(version))) <= 3L
+          if (release && !version %in% versions) {
+            stop(
+              "DESCRIPTION has version ", version, ", which has no section in NEWS.md. ",
+              "Line 1 of NEWS.md must read: # nomologR ", version
+            )
+          }
+
+      # error-on '"note"': a NOTE fails the job, as a WARNING does. With the
+      # default ('"warning"') a "no visible binding for global variable" NOTE
+      # stayed on master, green, from #164 until #167. Every job was free of
+      # NOTEs when this was set (run 37931098522 on master). A NOTE that a
+      # platform cannot avoid is better silenced where it arises, with the
+      # reason, than by going back to '"warning"'.
       - uses: r-lib/actions/check-r-package@v2
         with:
           upload-snapshots: true
           build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'
+          error-on: '"note"'
 
   # Checks the package against the minimum versions declared in DESCRIPTION
   # Imports (for example `lavaan (>= 0.6-21)`), so a declared minimum is never
@@ -77,6 +143,8 @@ jobs:
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       R_KEEP_PKG_SOURCE: yes
+      # As in the job above: no NOTE for a time service that does not answer.
+      _R_CHECK_SYSTEM_CLOCK_: false
 
     steps:
       - uses: actions/checkout@v5
@@ -117,11 +185,12 @@ jobs:
       # Suggests of the pinned packages (semTools suggests blavaan, which
       # requires a newer lavaan) and cannot honor the declared minimums.
       # nomologR's own Suggests are added explicitly so R CMD check can run
-      # tests and vignettes.
+      # tests and vignettes. commonmark and xml2 are added so that R CMD check
+      # reads NEWS.md in this job too (see the job above).
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           dependencies: '"hard"'
-          extra-packages: any::rcmdcheck, ${{ steps.minimums.outputs.suggests }}, ${{ steps.minimums.outputs.refs }}
+          extra-packages: any::rcmdcheck, any::commonmark, any::xml2, ${{ steps.minimums.outputs.suggests }}, ${{ steps.minimums.outputs.refs }}
           needs: check
 
       - name: Confirm minimum versions are installed
@@ -137,7 +206,9 @@ jobs:
             if (installed != declared) stop(sprintf("%s %s is installed, not the declared minimum %s.", m[[2]], installed, declared))
           }
 
+      # A NOTE fails this job as well; the reason is given in the job above.
       - uses: r-lib/actions/check-r-package@v2
         with:
           upload-snapshots: true
           build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'
+          error-on: '"note"'
