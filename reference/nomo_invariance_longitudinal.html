@@ -248,7 +248,42 @@ researcher-specified releases.</p></div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># The first two occasions, which fit quickly.</span></span></span>
+<span class="r-in"><span><span class="va">two</span> <span class="op">&lt;-</span> <span class="fu">nomo_invariance_longitudinal</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="st">"Wellbeing =~ w1 + w2 + w3 + w4"</span>,</span></span>
+<span class="r-in"><span>  data <span class="op">=</span> <span class="va">nomo_demo_longitudinal</span>,</span></span>
+<span class="r-in"><span>  occasions <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"t1"</span>, <span class="st">"t2"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">two</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;nomo_invariance_longitudinal&gt; Measurement invariance across occasions</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Cases: 500 | Estimator: ML</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Occasions: t1, t2 | Indicators: continuous</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Requested: configural -&gt; metric -&gt; scalar -&gt; strict</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Completed: configural -&gt; metric -&gt; scalar -&gt; strict</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Fit by level</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Level         CFI  RMSEA   SRMR  CFI change  RMSEA change   LRT p</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   configural  1.000  0.000  0.014          --            --      --</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   metric      1.000  0.000  0.028        .000         0.000    .057</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   scalar       .965  0.067  0.046       -.035        +0.067  &lt; .001</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   strict       .966  0.061  0.048       +.001        -0.007    .655</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Flagged</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   - Score diagnostics (Review): 24 univariate equality-constraint score</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     diagnostics were retained.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CFI = comparative fit index; RMSEA = root mean square error of approximation;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SRMR = standardized root mean square residual; LRT = likelihood-ratio test of</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> a level against the level before it; ML = maximum likelihood.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Fit changes and score diagnostics are evidence, not pass/fail rules, and</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> nomologR never frees a parameter because of them.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> See summary(x) for each level's chi-square test and</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> nomo_table(x, "local_strain") for all 24 score diagnostics.</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># \donttest{</span></span></span>
+<span class="r-in"><span><span class="co"># All three occasions.</span></span></span>
 <span class="r-in"><span><span class="va">long</span> <span class="op">&lt;-</span> <span class="fu">nomo_invariance_longitudinal</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  <span class="st">"Wellbeing =~ w1 + w2 + w3 + w4"</span>,</span></span>
 <span class="r-in"><span>  data <span class="op">=</span> <span class="va">nomo_demo_longitudinal</span>,</span></span>

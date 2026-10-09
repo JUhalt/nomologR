@@ -218,7 +218,42 @@ for researcher-specified releases.
 ## Examples
 
 ``` r
+# The first two occasions, which fit quickly.
+two <- nomo_invariance_longitudinal(
+  "Wellbeing =~ w1 + w2 + w3 + w4",
+  data = nomo_demo_longitudinal,
+  occasions = c("t1", "t2")
+)
+two
+#> <nomo_invariance_longitudinal> Measurement invariance across occasions
+#> Cases: 500 | Estimator: ML
+#> Occasions: t1, t2 | Indicators: continuous
+#> Requested: configural -> metric -> scalar -> strict
+#> Completed: configural -> metric -> scalar -> strict
+#> 
+#> Fit by level
+#>   Level         CFI  RMSEA   SRMR  CFI change  RMSEA change   LRT p
+#>   configural  1.000  0.000  0.014          --            --      --
+#>   metric      1.000  0.000  0.028        .000         0.000    .057
+#>   scalar       .965  0.067  0.046       -.035        +0.067  < .001
+#>   strict       .966  0.061  0.048       +.001        -0.007    .655
+#> 
+#> Flagged
+#>   - Score diagnostics (Review): 24 univariate equality-constraint score
+#>     diagnostics were retained.
+#> 
+#> CFI = comparative fit index; RMSEA = root mean square error of approximation;
+#> SRMR = standardized root mean square residual; LRT = likelihood-ratio test of
+#> a level against the level before it; ML = maximum likelihood.
+#> 
+#> Fit changes and score diagnostics are evidence, not pass/fail rules, and
+#> nomologR never frees a parameter because of them.
+#> 
+#> See summary(x) for each level's chi-square test and
+#> nomo_table(x, "local_strain") for all 24 score diagnostics.
+
 # \donttest{
+# All three occasions.
 long <- nomo_invariance_longitudinal(
   "Wellbeing =~ w1 + w2 + w3 + w4",
   data = nomo_demo_longitudinal,

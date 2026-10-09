@@ -159,7 +159,6 @@ test statistic for moment structure analysis. *Psychometrika, 66*(4),
 ## Examples
 
 ``` r
-# \donttest{
 model <- nomo_model(list(
   Agency = paste0("ag", 1:4),
   Persistence = paste0("pe", 1:4)
@@ -195,5 +194,4 @@ nomo_table(es, "factor_correlations")
 #>   factor1 factor2      esem   cfa difference
 #>   <chr>   <chr>       <dbl> <dbl>      <dbl>
 #> 1 Agency  Persistence 0.455 0.457   -0.00281
-# }
 ```

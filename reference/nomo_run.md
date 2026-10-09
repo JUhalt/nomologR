@@ -230,7 +230,6 @@ allows presenting anything as significant. *Psychological Science,
 ## Examples
 
 ``` r
-# \donttest{
 scales <- list(
   Agency = c("ag1", "ag2", "ag3", "ag4"),
   Persistence = c("pe1", "pe2", "pe3", "pe4")
@@ -282,6 +281,9 @@ nomo_table(run, "requests")
 #> 1 factor_count:Agency efa   Agen… Parallel a… The E… Inspec… No EFA is … decisi…
 #> 2 factor_count:Persi… efa   Pers… Parallel a… The E… Inspec… No EFA is … decisi…
 
+# \donttest{
+# Each decision resumes the run, which computes the next evidence and pauses
+# again.
 run <- nomo_run(
   resume = run,
   decisions = list(

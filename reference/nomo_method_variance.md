@@ -221,7 +221,6 @@ and marker variables: A review and comprehensive CFA marker technique.
 ## Examples
 
 ``` r
-# \donttest{
 # Social desirability as the marker for the Agency and Persistence items of
 # the simulated validation study. In its population the marker shares
 # nothing with those items, so no method variance should be detected.
@@ -279,5 +278,4 @@ nomo_table(mv, "reliability")
 #> 1 Agency                  0.849                   0.849         0.00000374
 #> 2 Persistence             0.816                   0.816         0.00000413
 #> # ℹ 1 more variable: method_share <dbl>
-# }
 ```

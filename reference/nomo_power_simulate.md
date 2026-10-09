@@ -174,12 +174,23 @@ for the power of the overall fit tests.
 ## Examples
 
 ``` r
-# \donttest{
 population <- "
   A =~ 0.7*a1 + 0.7*a2 + 0.6*a3 + 0.5*a4
   B =~ 0.7*b1 + 0.6*b2 + 0.6*b3 + 0.5*b4
   A ~~ 0.3*B
 "
+# Five replications run quickly and show the result; they are far too few to
+# estimate power.
+quick <- nomo_power_simulate(population, n = 100, reps = 5,
+                             focus = "A~~B", seed = 2026)
+nomo_table(quick, "summary")
+#> # A tibble: 1 × 9
+#>       n converged improper min_power max_abs_bias max_abs_se_bias min_coverage
+#>   <int>     <dbl>    <dbl>     <dbl>        <dbl>           <dbl>        <dbl>
+#> 1   100         1        0       0.8        0.214            1.32          0.6
+#> # ℹ 2 more variables: max_coverage <dbl>, meets_references <lgl>
+
+# \donttest{
 pw <- nomo_power_simulate(population, n = c(100, 200), reps = 100,
                           focus = "A~~B", seed = 2026)
 pw
