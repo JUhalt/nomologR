@@ -64,11 +64,6 @@
 #'   `"methods"` returns the registry entries for the methods the run actually
 #'   used, and is equivalent to `nomo_methods(x)`; see [nomo_methods()].
 #'
-#' A table the object has no rows for, such as `"partial"` for an invariance
-#' analysis without releases or `"replication"` for a network without
-#' validation data, is a tibble with no rows and the table's usual columns.
-#' An object of another class is refused with the list of supported classes.
-#'
 #' @section Fit tables:
 #' Fit tables name their indices in one of two ways, a known difference that
 #' is kept as it is (see **Conventions in returned tables** in `?nomologR`).
@@ -96,10 +91,14 @@
 #' * `nomo_network`, `"fit"`: one row, with `chisq`, `df`, `pvalue`, `cfi`,
 #'   `tli`, `rmsea`, and `srmr`.
 #'
-#' @param x A supported `nomologR` result object.
+#' @param x A supported `nomologR` result object. An object of any other class
+#'   is refused with the list of supported classes.
 #' @param ... Additional arguments passed to methods, usually `type`.
 #'
-#' @return A tibble.
+#' @return A tibble. A table the object has no rows for, such as `"partial"`
+#'   for an invariance analysis without releases or `"replication"` for a
+#'   network without validation data, has no rows and the table's usual
+#'   columns.
 #' @export
 #'
 #' @examples

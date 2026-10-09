@@ -7,12 +7,16 @@
 nomo_table(x, ...)
 }
 \arguments{
-\item{x}{A supported \code{nomologR} result object.}
+\item{x}{A supported \code{nomologR} result object. An object of any other class
+is refused with the list of supported classes.}
 
 \item{...}{Additional arguments passed to methods, usually \code{type}.}
 }
 \value{
-A tibble.
+A tibble. A table the object has no rows for, such as \code{"partial"}
+for an invariance analysis without releases or \code{"replication"} for a
+network without validation data, has no rows and the table's usual
+columns.
 }
 \description{
 \code{nomo_table()} returns compact tibbles intended for manuscripts, audit
@@ -105,11 +109,6 @@ against it (\code{lrt_chisq}, \code{lrt_df}, \code{lrt_p}).
 \item \code{nomo_network}, \code{"fit"}: one row, with \code{chisq}, \code{df}, \code{pvalue}, \code{cfi},
 \code{tli}, \code{rmsea}, and \code{srmr}.
 }
-
-A table the object has no rows for, such as \code{"partial"} for an invariance
-analysis without releases or \code{"replication"} for a network without
-validation data, is a tibble with no rows and the table's usual columns.
-An object of another class is refused with the list of supported classes.
 }
 
 \examples{

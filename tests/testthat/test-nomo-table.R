@@ -159,6 +159,14 @@ test_that("?nomo_table lists every type each method accepts, and no other (#145)
 })
 
 
+test_that("?nomo_table says what an empty table and an unsupported object give (#145)", {
+  expect_true(grepl("has no rows and the table's usual columns",
+                    nomo_test_rd_text("nomo_table", "\\value"), fixed = TRUE))
+  expect_true(grepl("is refused with the list of supported classes",
+                    nomo_test_rd_text("nomo_table", "\\arguments"), fixed = TRUE))
+})
+
+
 test_that("the fit-table columns ?nomo_table names are the ones returned (#145)", {
   skip_on_cran()
   items <- nomo_test_rd_items(nomo_test_rd_text("nomo_table", "Fit tables"))
