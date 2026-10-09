@@ -152,18 +152,70 @@ test_that("hypothesis print and summary methods are stable", {
     "A -> C" = negligible()
   )
 
-  expect_output(print(h), "theory-specified")
-  expect_output(print(h), "cannot be confirmed")
+  expect_output(print(h), "Theory-specified relations")
+  expect_output(print(h), "Relations: 2 | A priori: 2 | Post hoc: 0", fixed = TRUE)
 
   # The abbreviation is spelled out where a reader first meets it (#145).
   printed <- gsub("\\s+", " ", paste(capture.output(print(h)), collapse = " "))
-  expect_match(printed, "smallest effect size of interest (SESOI) region", fixed = TRUE)
+  expect_match(printed, "smallest effect size of interest (SESOI), which cannot be confirmed", fixed = TRUE)
 
   s <- summary(h)
   expect_s3_class(s, "summary_nomo_hypotheses")
   expect_equal(s$n, 2L)
   expect_equal(s$quantitatively_confirmable, 1L)
   expect_output(print(s), "A priori")
+})
+
+
+test_that("hypotheses print their regions in words, origin, scale, and a pointer (#144, #145)", {
+  local_reproducible_output(width = 80)
+  h <- nomo_hypotheses(
+    "Agency -> Persistence" = positive(min = .2, origin = "post_hoc"),
+    "Agency -> Performance" = positive(min = 2, scale = "unstandardized"),
+    "Agency <-> SocialDesirability" = negligible(within = c(-.15, .15))
+  )
+  printed <- utils::capture.output(print(h))
+  expect_identical(printed[[1L]], "<nomo_hypotheses> Theory-specified relations")
+  expect_identical(printed[[2L]], "Relations: 3 | A priori: 2 | Post hoc: 1")
+  expect_true(any(grepl("^  H1  Agency -> Persistence +positive +>= 0.20 +Post hoc$", printed)))
+  expect_true(any(grepl("^  H3  Agency <-> SocialDesirability +negligible +\\[-.15, .15\\] +A priori$",
+                        printed)))
+  flat <- gsub("\\s+", " ", paste(printed, collapse = " "))
+  expect_match(flat, "H1 and H3 are standardized; H2 is unstandardized.", fixed = TRUE)
+  expect_no_match(flat, "SESOI", fixed = TRUE)
+  expect_match(flat, "See nomo_table(x) for every column and nomo_network(model, data, x) for the evidence.",
+               fixed = TRUE)
+  expect_true(all(nchar(printed) <= 79L))
+
+  s <- utils::capture.output(print(summary(h)))
+  expect_identical(s[[1L]], "<nomo_hypotheses summary> Theory-specified relations")
+  expect_true("Confirmable as specified: 3 of 3" %in% s)
+  flat <- gsub("\\s+", " ", paste(s, collapse = " "))
+  expect_match(flat, "- H1 Agency -> Persistence: a positive relation (region: >= 0.20).",
+               fixed = TRUE)
+  expect_match(flat, "- H3 Agency <-> SocialDesirability: a negligible relation (region: [-.15, .15]).",
+               fixed = TRUE)
+
+  bare <- utils::capture.output(print(summary(nomo_hypotheses(
+    "A -> B" = negative(), "A <-> C" = negligible()
+  ))))
+  flat <- gsub("\\s+", " ", paste(bare, collapse = " "))
+  expect_match(flat, "- H1 A -> B: a negative relation of any size.", fixed = TRUE)
+  expect_match(flat, "- H2 A <-> C: a negligible relation with no region, so it cannot be confirmed.",
+               fixed = TRUE)
+  expect_match(flat, "Every relation is on the standardized scale.", fixed = TRUE)
+  expect_match(flat, "H2 A <-> C negligible not specified A priori", fixed = TRUE)
+  expect_identical(
+    nomo_hypotheses_scale_note(data.frame(id = c("H1", "H2"), scale = "unstandardized")),
+    "Every relation is on the unstandardized scale."
+  )
+
+  # The help says what print() and summary() show.
+  expect_match(nomo_test_rd_text("nomo_hypotheses", "\\value"), "adds the counts by origin",
+               fixed = TRUE)
+  expect_match(nomo_test_rd_text("nomo_expectations", "\\arguments"),
+               "marks them \"(post hoc)\" wherever their concordance is printed or plotted",
+               fixed = TRUE)
 })
 
 

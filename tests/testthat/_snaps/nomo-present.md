@@ -402,66 +402,94 @@
     Code
       print(sc)
     Output
-      <nomo_scores> Scores
-      Unit weighting (method: sum) | 2 factors | 473 scored cases
+      <nomo_scores> Scores from a measurement model
+      Method: sum (unit weighted) | Factors: 2 | Cases: 473
       
       Score properties (Grice, 2001)
         Factor  Items  Validity  Univocality  Correlational accuracy
-        A           5     0.911       +0.455                  -0.097
-        B           5     0.885       +0.442                  -0.097
+        A           5       .91          .46                    -.10
+        B           5       .89          .44                    -.10
       
-      Parallel model (what unit weighting assumes)
-        chi-square difference 171.84 on 16 df, p < .001
+      What these columns mean
+        Validity -- Correlation of the score with its own factor; higher is better.
+        Univocality -- Largest correlation of the score with another factor. Through
+            its own factor, a score reaches another by the factor correlation times
+            its validity; a departure of .05 or more from that is noted.
+        Correlational accuracy -- Score correlation minus factor correlation, for
+            the pair of factors where they differ most; 0 is best.
       
-      Notes
-        - Review: The parallel model that unit weighting assumes fits worse than the
-          model you fitted (chi-square difference 171.84 on 16 df, p < .001). The
-          items are not interchangeable in the way adding them assumes. This does
-          not forbid a sum score; it means the choice needs a reason beyond
-          convenience, and that `validity` and `correlational_accuracy` describe
-          what it costs.
-        - Review: Validity is below .90 for B. Gorsuch (1983, p. 260) recommended at
-          least .80, and above .90 if the scores are to serve as adequate
-          substitutes for the factors themselves. Reported as his recommendation,
-          not applied as a rule.
-        - Concern: Correlations among these scores do not reproduce the correlations
-          among the factors: the largest discrepancy is -0.097, between A and B. A
-          relationship estimated from these scores carries that much bias, and its
-          direction is a property of the method and the model rather than a constant
-          that can be corrected for. Where the question can be asked of the latent
-          variables, ask it there. For a linear regression among factors, Skrondal
-          and Laake (2001) showed a scoring design that gives consistent
-          coefficients, and scores from one model containing every factor, like
-          these, are not it: the predictors need regression-method scores and the
-          outcome Bartlett scores, each from a measurement model of its own.
-        - Review: These scores also carry the other factors: the score for A
-          correlates +0.455 with a factor it does not represent (Grice, 2001). A
-          score that is not univocal cannot be treated as though it measured its own
-          factor alone.
-        - Review: The strongest standardized loading is at least twice the weakest
-          for B. Adding those items gives the weakest indicator the same say as the
-          strongest, so two people with the same total can differ on the construct
-          by having endorsed different items.
+      Flagged
+        - Correlational accuracy (Concern): Correlations among these scores do not
+          reproduce the correlations among the factors: the largest discrepancy is
+          -.10, between A and B.
+        - Unit weighting (Review): The parallel model that unit weighting assumes
+          fits worse than the model you fitted (Delta chi-square(16) = 171.84,
+          p < .001). The strongest standardized loading is at least twice the
+          weakest for B.
+        - Validity (Review): Validity is below .90 for B.
       
-      No value here is a pass/fail threshold; see nomo_table(x, "diagnostics").
+      No value here is a pass/fail threshold, and no scoring method is chosen for
+      you.
+      
+      See summary(x) for every note in full and the loading spread and
+      nomo_table(x, "diagnostics") for the score properties as a table.
 
 ---
 
     Code
       print(summary(sc))
     Output
-      <nomo_scores summary> Scores
-      Unit weighting (method: sum) | 473 scored cases
+      <nomo_scores summary> Scores from a measurement model
+      Method: sum (unit weighted) | Factors: 2 | Cases: 473
       
       Score properties (Grice, 2001)
         Factor  Items  Validity  Univocality  Correlational accuracy
-        A           5     0.911       +0.455                  -0.097
-        B           5     0.885       +0.442                  -0.097
+        A           5       .91          .46                    -.10
+        B           5       .89          .44                    -.10
       
       Standardized loading spread
         Factor  Lowest  Highest  Ratio
         A         0.60     0.77   1.29
         B         0.34     0.79   2.35
+      
+      What these columns mean
+        Validity -- Correlation of the score with its own factor; higher is better.
+        Univocality -- Largest correlation of the score with another factor. Through
+            its own factor, a score reaches another by the factor correlation times
+            its validity; a departure of .05 or more from that is noted.
+        Correlational accuracy -- Score correlation minus factor correlation, for
+            the pair of factors where they differ most; 0 is best.
+        Lowest, Highest -- The weakest and strongest standardized loading on the
+            factor.
+        Ratio -- The strongest standardized loading divided by the weakest, in
+            absolute value; -- where the loadings differ in sign.
+      
+      Flagged
+        - Correlational accuracy (Concern): Correlations among these scores do not
+          reproduce the correlations among the factors: the largest discrepancy is
+          -.10, between A and B. A relationship estimated from these scores carries
+          that much bias, and its direction is a property of the method and the
+          model rather than a constant that can be corrected for. Where the question
+          can be asked of the latent variables, ask it there. For a linear
+          regression among factors, Skrondal and Laake (2001) showed a scoring
+          design that gives consistent coefficients, and scores from one model
+          containing every factor, like these, are not it: the predictors need
+          regression-method scores and the outcome Bartlett scores, each from a
+          measurement model of its own.
+        - Unit weighting (Review): The parallel model that unit weighting assumes
+          fits worse than the model you fitted (Delta chi-square(16) = 171.84,
+          p < .001). The items are not interchangeable in the way adding them
+          assumes. This does not forbid a sum score; it means the choice needs a
+          reason beyond convenience, and that `validity` and
+          `correlational_accuracy` describe what it costs. The strongest
+          standardized loading is at least twice the weakest for B. Adding those
+          items gives the weakest indicator the same say as the strongest, so two
+          people with the same total can differ on the construct by having endorsed
+          different items.
+        - Validity (Review): Validity is below .90 for B. Gorsuch (1983, p. 260)
+          recommended at least .80, and above .90 if the scores are to serve as
+          adequate substitutes for the factors themselves. Reported as his
+          recommendation, not applied as a rule.
       
       Notes
         - A score is not the latent variable. Every method here produces an estimate
@@ -473,38 +501,18 @@
           show that adding items assumes a parallel model: equal unstandardized
           loadings and equal residual variances. That assumption needs the same
           justification as any other measurement model.
-        - Review: The parallel model that unit weighting assumes fits worse than the
-          model you fitted (chi-square difference 171.84 on 16 df, p < .001). The
-          items are not interchangeable in the way adding them assumes. This does
-          not forbid a sum score; it means the choice needs a reason beyond
-          convenience, and that `validity` and `correlational_accuracy` describe
-          what it costs.
-        - Coefficient alpha is the reliability coefficient for a unit-weighted
-          scale; coefficient H belongs to optimally weighted scores (McNeish & Wolf,
-          2020). Reporting H for a sum score, or alpha for a weighted one, describes
-          a scale that was not used.
-        - Review: Validity is below .90 for B. Gorsuch (1983, p. 260) recommended at
-          least .80, and above .90 if the scores are to serve as adequate
-          substitutes for the factors themselves. Reported as his recommendation,
-          not applied as a rule.
-        - Concern: Correlations among these scores do not reproduce the correlations
-          among the factors: the largest discrepancy is -0.097, between A and B. A
-          relationship estimated from these scores carries that much bias, and its
-          direction is a property of the method and the model rather than a constant
-          that can be corrected for. Where the question can be asked of the latent
-          variables, ask it there. For a linear regression among factors, Skrondal
-          and Laake (2001) showed a scoring design that gives consistent
-          coefficients, and scores from one model containing every factor, like
-          these, are not it: the predictors need regression-method scores and the
-          outcome Bartlett scores, each from a measurement model of its own.
-        - Review: These scores also carry the other factors: the score for A
-          correlates +0.455 with a factor it does not represent (Grice, 2001). A
-          score that is not univocal cannot be treated as though it measured its own
-          factor alone.
-        - Review: The strongest standardized loading is at least twice the weakest
-          for B. Adding those items gives the weakest indicator the same say as the
-          strongest, so two people with the same total can differ on the construct
-          by having endorsed different items.
+        - The reliability of a unit-weighted score is omega computed from the fitted
+          model, which nomo_reliability() reports; coefficient alpha equals it only
+          when the items' loadings are equal (essential tau-equivalence).
+          Coefficient H describes optimally weighted scores rather than a sum
+          (McNeish & Wolf, 2020). Reporting H for a sum score, or a sum's omega or
+          alpha for a weighted one, describes a scale that was not used.
+      
+      No value here is a pass/fail threshold, and no scoring method is chosen for
+      you.
+      
+      See nomo_table(x, "notes") for the notes with their topics and
+      nomo_table(x, "unit_weighting") for every loading statistic.
 
 ---
 
@@ -512,25 +520,41 @@
       print(nomo_missing(cfa, data = nomo_demo_continuous))
     Output
       <nomo_missing> Missing-data sensitivity
-      Model: nomo_cfa | Reference: FIML | Fitted with: Listwise deletion
+      Model: CFA | Reference: FIML | Fitted with: Listwise deletion
       Cases: 27 of 500 incomplete (5.4%) | Patterns: 3
-      Lowest covariance coverage: 0.946 (a2, b3)
+      Lowest covariance coverage: .95 (a2, b3)
       
       Strategies
         Strategy           lavaan    Needs  Role          N  Converged  Admissible
         Listwise deletion  listwise  MCAR   comparison  473  yes        yes
         FIML               ml        MAR    reference   500  yes        yes
       
-      Largest differences from the reference, in reference standard errors
+      Largest differences from the reference (standardized estimates)
         Parameter  Strategy           Estimate  Reference  Difference (SE)
-        A ~~ B     Listwise deletion     0.499      0.480            +0.45
+        A ~~ B     Listwise deletion      .499       .480            +0.45
         B =~ b5    Listwise deletion     0.337      0.353            -0.37
         A =~ a5    Listwise deletion     0.598      0.590            +0.23
         A =~ a3    Listwise deletion     0.669      0.675            -0.21
         B =~ b3    Listwise deletion     0.757      0.762            -0.17
       
-      Whether data are missing at random cannot be tested from these data; see
-      nomo_table(x, "decision_log").
+      What these terms mean
+        CFA -- Confirmatory factor analysis.
+        FIML -- Full-information maximum likelihood.
+        Needs -- What the strategy requires of the missing data: MCAR, missing
+            completely at random, or MAR, missing at random; -- where no requirement
+            is stated for the method lavaan used.
+        N -- Cases the strategy analyzed.
+        Covariance coverage -- Proportion of cases with both variables of a pair
+            observed; the lowest pair is shown.
+        Difference (SE) -- The estimate minus the reference strategy's estimate, in
+            the reference standard error (SE); beyond half of one is flagged for
+            review.
+      
+      Whether data are missing at random cannot be tested from these data, and
+      agreement between strategies does not show that either is unbiased.
+      
+      See summary(x) for every difference and each recommendation and
+      nomo_table(x, "decision_log") for every recorded decision.
 
 # hierarchical output reads as designed (#89)
 
@@ -803,27 +827,40 @@
     Code
       print(inv)
     Output
-      <nomo_invariance> Measurement invariance
-      Grouping variable: group (2 groups: online, paper) | Indicators: continuous
+      <nomo_invariance> Measurement invariance across groups
+      Cases: 800 (online n = 400, paper n = 400) | Estimator: ML
+      Grouping variable: group | Indicators: continuous
       Requested: configural -> metric -> scalar
       Completed: configural -> metric -> scalar
       
+      Fit by level
         Level         CFI  RMSEA   SRMR  CFI change  RMSEA change   LRT p
         configural  1.000  0.000  0.002          --            --      --
-        metric      1.000  0.000  0.028       0.000         0.000    .146
-        scalar      0.954  0.121  0.065      -0.046        +0.121  < .001
-      Localized equality-constraint diagnostics retained: 12
+        metric      1.000  0.000  0.028        .000         0.000    .146
+        scalar       .954  0.121  0.065       -.046        +0.121  < .001
       
-      Fit changes and score diagnostics are evidence. They are not pass/fail rules,
-      and nomologR never frees a parameter because of them.
+      Flagged
+        - Score diagnostics (Review): 12 univariate equality-constraint score
+          diagnostics were retained.
+      
+      CFI = comparative fit index; RMSEA = root mean square error of approximation;
+      SRMR = standardized root mean square residual; LRT = likelihood-ratio test of
+      a level against the level before it; ML = maximum likelihood.
+      
+      Fit changes and score diagnostics are evidence, not pass/fail rules, and
+      nomologR never frees a parameter because of them.
+      
+      See summary(x) for each level's chi-square test and
+      nomo_table(x, "local_strain") for all 12 score diagnostics.
 
 ---
 
     Code
       print(summary(inv))
     Output
-      <nomo_invariance summary> Measurement invariance
-      Indicators: continuous | Groups: online, paper
+      <nomo_invariance summary> Measurement invariance across groups
+      Cases: 800 (online n = 400, paper n = 400) | Estimator: ML
+      Grouping variable: group | Indicators: continuous
       Levels completed: configural -> metric -> scalar
       
       Identification and sequence
@@ -834,34 +871,51 @@
         Level       Chi-square  df       p    CFI  RMSEA   SRMR
         configural        0.33   4    .988  1.000  0.000  0.002
         metric            5.71   7    .575  1.000  0.000  0.028
-        scalar           68.93  10  < .001  0.954  0.121  0.065
+        scalar           68.93  10  < .001   .954  0.121  0.065
         Held equal: loadings from metric; intercepts from scalar.
       
       Changes from the preceding level
-        Level   CFI change  RMSEA change  SRMR change  LRT chi-square  df       p
-        metric       0.000         0.000       +0.026            5.38   3    .146
-        scalar      -0.046        +0.121       +0.037           63.23   3  < .001
+        Level   CFI change  RMSEA change  SRMR change  Delta chi-square  df       p
+        metric        .000         0.000       +0.026              5.38   3    .146
+        scalar       -.046        +0.121       +0.037             63.23   3  < .001
       
-      Latent means relative to online (its latent SD)
+      Latent means relative to online, in its latent standard deviations
         Level   Group  Factor  Difference  95% CI             p
         scalar  paper  Agency        0.44  [0.29, 0.60]  < .001
         Comparable only with invariant intercepts, full or partial.
       
-      Largest equality-constraint score diagnostics (diagnostic only)
-        Level   Constraint                                 Score  df       p
-        scalar  Intercept: ag3 (online vs. paper)          61.12   1  < .001
-        scalar  Intercept: ag1 (online vs. paper)          11.32   1  < .001
-        scalar  Intercept: ag4 (online vs. paper)           5.56   1    .018
-        metric  Loading: Agency -> ag3 (online vs. paper)   4.92   1    .027
-        metric  Loading: Agency -> ag2 (online vs. paper)   1.03   1    .310
-        scalar  Intercept: ag2 (online vs. paper)           0.98   1    .323
-        metric  Loading: Agency -> ag4 (online vs. paper)   0.69   1    .406
-        scalar  Loading: Agency -> ag2 (online vs. paper)   0.55   1    .460
-        scalar  Loading: Agency -> ag1 (online vs. paper)   0.32   1    .574
-        scalar  Loading: Agency -> ag3 (online vs. paper)   0.19   1    .664
+      Largest score diagnostics for equality constraints
+        Level  Constraint                                Score chi-square df      p
+        scalar Intercept: ag3 (online vs. paper)                    61.12  1 < .001
+        scalar Intercept: ag1 (online vs. paper)                    11.32  1 < .001
+        scalar Intercept: ag4 (online vs. paper)                     5.56  1   .018
+        metric Loading: Agency -> ag3 (online vs. paper)             4.92  1   .027
+        metric Loading: Agency -> ag2 (online vs. paper)             1.03  1   .310
+        scalar Intercept: ag2 (online vs. paper)                     0.98  1   .323
+        metric Loading: Agency -> ag4 (online vs. paper)             0.69  1   .406
+        scalar Loading: Agency -> ag2 (online vs. paper)             0.55  1   .460
+        scalar Loading: Agency -> ag1 (online vs. paper)             0.32  1   .574
+        scalar Loading: Agency -> ag3 (online vs. paper)             0.19  1   .664
       
-      No single delta-CFI, delta-RMSEA, delta-SRMR, chi-square difference, or score
-      diagnostic is treated as a universal invariance rule.
+      Flagged
+        - Score diagnostics (Review): 12 univariate equality-constraint score
+          diagnostics were retained. Use these diagnostics to localize strain, not
+          to authorize automatic constraint release. Partial invariance requires an
+          explicit researcher specification and rationale.
+      
+      What these columns mean
+        CFI -- Comparative fit index.
+        RMSEA -- Root mean square error of approximation.
+        SRMR -- Standardized root mean square residual.
+        df -- Degrees of freedom.
+        CI -- Confidence interval.
+        ML -- Maximum likelihood.
+      
+      No single CFI change, RMSEA change, SRMR change, chi-square difference, or
+      score diagnostic is treated as a universal invariance rule.
+      
+      See nomo_table(x, "local_strain") for all 12 score diagnostics and
+      nomo_table(x, "decision_log") for every recorded decision.
 
 ---
 
@@ -869,11 +923,16 @@
       print(nomo_partial(level = "scalar", syntax = "ag3 ~ 1", rationale = "Anticipated mode difference."))
     Output
       <nomo_partial> Partial invariance releases
-      1 researcher-specified release
+      Releases: 1 (researcher specified)
       
+      Releases
         - P1 (scalar): ag3 ~ 1. Anticipated mode difference.
       
-      No release was selected automatically by nomologR.
+      No release was selected automatically by nomologR. Each applies from the level
+      that first holds its parameter equal.
+      
+      See nomo_invariance(..., partial = x) for the models fitted with these
+      releases.
 
 ---
 
@@ -881,13 +940,18 @@
       print(h)
     Output
       <nomo_hypotheses> Theory-specified relations
-      3 theory-specified relations
+      Relations: 3 | A priori: 3 | Post hoc: 0
       
-      Every relation is on the standardized scale.
-        ID  Relation                       Prediction  Region         Origin
-        H1  Agency -> Persistence          positive    [0.2, +Inf)    a priori
-        H2  Agency <-> SocialDesirability  negligible  [-0.15, 0.15]  a priori
-        H3  Agency -> Performance          positive    (0, +Inf)      a priori
+        ID  Relation                       Prediction  Region       Origin
+        H1  Agency -> Persistence          positive    >= 0.20      A priori
+        H2  Agency <-> SocialDesirability  negligible  [-.15, .15]  A priori
+        H3  Agency -> Performance          positive    > 0          A priori
+        Every relation is on the standardized scale.
+      
+      The relations record theory; only nomo_network() evaluates them against data.
+      
+      See nomo_table(x) for every column and nomo_network(model, data, x) for the
+      evidence.
 
 ---
 
@@ -896,13 +960,21 @@
     Output
       <nomo_hypotheses summary> Theory-specified relations
       Relations: 3 | A priori: 3 | Post hoc: 0
-      Quantitatively confirmable with the supplied specification: 3/3
+      Confirmable as specified: 3 of 3
       
-      Every relation is on the standardized scale.
-        ID  Relation                       Prediction  Region         Origin
-        H1  Agency -> Persistence          positive    [0.2, +Inf)    a priori
-        H2  Agency <-> SocialDesirability  negligible  [-0.15, 0.15]  a priori
-        H3  Agency -> Performance          positive    (0, +Inf)      a priori
+        ID  Relation                       Prediction  Region       Origin
+        H1  Agency -> Persistence          positive    >= 0.20      A priori
+        H2  Agency <-> SocialDesirability  negligible  [-.15, .15]  A priori
+        H3  Agency -> Performance          positive    > 0          A priori
+        Every relation is on the standardized scale.
+      
+      What each prediction claims
+        - H1 Agency -> Persistence: a positive relation (region: >= 0.20).
+        - H2 Agency <-> SocialDesirability: a negligible relation (region:
+          [-.15, .15]).
+        - H3 Agency -> Performance: a positive relation of any size.
+      
+      See nomo_table(x) for every column.
 
 ---
 
@@ -910,20 +982,34 @@
       print(net)
     Output
       <nomo_network> Nomological network
-      Primary sample: N = 800 | Converged: yes
+      Cases: 800 | Converged: yes
       Theory relations: 3 | Added to the model from hypotheses: 2
-      Measurement context: no configured measurement-context review signal was
-      triggered
+      Measurement context: no flags | Model fit: no flags
       
       Hypothesis evidence
-        ID  Relation                       Estimate  95% CI           Concordance
-        H1  Agency -> Persistence             0.458  [0.389, 0.526]   Concordant
-        H2  Agency <-> SocialDesirability     0.008  [-0.079, 0.095]  Concordant
-        H3  Agency -> Performance             0.389  [0.325, 0.454]   Concordant
+        ID  Relation                       Concordance  Estimate  CI
+        H1  Agency -> Persistence          Concordant       0.46  [0.39, 0.53]
+        H2  Agency <-> SocialDesirability  Concordant        .01  [-.07, .08]
+        H3  Agency -> Performance          Concordant       0.39  [0.32, 0.45]
+        Estimates are standardized. CI = confidence interval (95%); for H2, a
+        negligible() prediction, it is the 90% equivalence interval the concordance
+        is judged on.
+      
+      Flagged
+        - Review: `Persistence <-> SocialDesirability`, estimated in the model as
+          given, is fixed to zero in the fitted model: with the hypothesized paths,
+          `Persistence` is an outcome, and lavaan does not covary an outcome's
+          residual with a variable that does not predict it.
+        - Review: `Performance <-> SocialDesirability` is fixed to zero in the
+          fitted model: the hypotheses bring `Performance` into the model, and
+          neither they nor lavaan's defaults relate the two.
       
       Theory concordance, uncertainty, measurement quality, and replication are
       distinct evidence streams. Statistical significance alone is not a validity
       verdict.
+      
+      See summary(x) for the fit and the flagged evidence in full and
+      nomo_table(x, "hypotheses") for every column.
 
 ---
 
@@ -931,31 +1017,74 @@
       print(summary(net))
     Output
       <nomo_network summary> Nomological network
-      Primary sample: N = 800 | Converged: yes
+      Cases: 800 | Converged: yes
+      Estimator: ML
       
       Measurement context
-        Flag: none | Constructs: 3 | Loading flags: 0 | Negative variances: 0 |
-        Global-fit flags: 0 | Engine warnings: 0
-        no configured measurement-context review signal was triggered
+        Status: no flags | Constructs: 3 | Loading flags: 0 | Negative variances: 0
+        Fit flags: 0 | Engine warnings: 0
+        No measurement-context flag was raised.
       
       Model fit
-        chi-square(51) = 61.62, p = .147
-        CFI 0.997 | TLI 0.996 | RMSEA 0.016 | SRMR 0.020
+        Network model: chi-square(51) = 61.62, p = .147
+          CFI .997 | TLI 0.996 | RMSEA 0.016 | SRMR 0.020
+        Measurement model alone: chi-square(49) = 61.60, p = .107
+          CFI .996 | TLI 0.994 | RMSEA 0.018 | SRMR 0.020
+        Structural restrictions: Delta chi-square(2) = 0.02, p = .991
+      
+      Relations the hypothesized paths changed
+        - Persistence <-> SocialDesirability: fixed to zero, although the model as
+          given estimates it.
+        - Performance <-> SocialDesirability: fixed to zero; the model as given does
+          not contain Performance.
+        - Persistence <-> Performance: estimated as a residual covariance of two
+          outcomes that neither the model nor the hypotheses name.
       
       Hypothesis evidence
-        ID  Relation                       Estimate  95% CI           Concordance
-        H1  Agency -> Persistence             0.458  [0.389, 0.526]   Concordant
-        H2  Agency <-> SocialDesirability     0.008  [-0.079, 0.095]  Concordant
-        H3  Agency -> Performance             0.389  [0.325, 0.454]   Concordant
+        ID  Relation                       Concordance  Estimate  CI
+        H1  Agency -> Persistence          Concordant       0.46  [0.39, 0.53]
+        H2  Agency <-> SocialDesirability  Concordant        .01  [-.07, .08]
+        H3  Agency -> Performance          Concordant       0.39  [0.32, 0.45]
+        Estimates are standardized. CI = confidence interval (95%); for H2, a
+        negligible() prediction, it is the 90% equivalence interval the concordance
+        is judged on.
       
       Predictions and context
-        ID  Prediction  Region         Evidence scope              Status
-        H1  positive    [0.2, +Inf)    latent structural           A priori
-        H2  negligible  [-0.15, 0.15]  latent association          A priori
-        H3  positive    (0, +Inf)      latent to observed outcome  A priori
+        ID  Prediction  Region       Evidence scope              Origin
+        H1  positive    >= 0.20      latent structural           A priori
+        H2  negligible  [-.15, .15]  latent association          A priori
+        H3  positive    > 0          latent to observed outcome  A priori
       
       Concordance
-        Concordant 3
+        Concordant: 3
+      
+      Flagged
+        - Review: `Persistence <-> SocialDesirability`, estimated in the model as
+          given, is fixed to zero in the fitted model: with the hypothesized paths,
+          `Persistence` is an outcome, and lavaan does not covary an outcome's
+          residual with a variable that does not predict it. Fixing a relation to
+          zero is a restriction of the network, and its misfit counts against the
+          theory's structure. If the theory allows the relation, add it as a
+          hypothesis or write it in `model`.
+        - Review: `Performance <-> SocialDesirability` is fixed to zero in the
+          fitted model: the hypotheses bring `Performance` into the model, and
+          neither they nor lavaan's defaults relate the two. Fixing a relation to
+          zero is a restriction of the network, and its misfit counts against the
+          theory's structure. If the theory allows the relation, add it as a
+          hypothesis or write it in `model`.
+      
+      Abbreviations
+        CFI -- comparative fit index.
+        TLI -- Tucker-Lewis index.
+        RMSEA -- root mean square error of approximation.
+        SRMR -- standardized root mean square residual.
+        ML -- maximum likelihood.
+      
+      Theory concordance, uncertainty, measurement quality, model fit, and
+      replication are distinct evidence streams; none is a validity verdict.
+      
+      See nomo_table(x, "decision_log") for every decision-log row and plot(x) for
+      the evidence.
 
 ---
 
@@ -1142,6 +1271,6 @@
           rationales
         Full entries and references: nomo_methods(x).
       
-      Component decision and evidence-log rows retained: 93; see nomo_table(x,
+      Component decision and evidence-log rows retained: 95; see nomo_table(x,
       "component_log").
 
