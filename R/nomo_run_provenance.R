@@ -144,9 +144,9 @@ nomo_run_initial_log <- function(scales, roles, handoff = NULL) {
       scope = nm,
       observation = if (is.null(handoff)) {
         sprintf(
-          "Scale `%s` contains %d explicitly supplied candidate item(s).",
+          "Scale `%s` contains %s.",
           nm,
-          length(scales[[nm]])
+          nomo_present_count(length(scales[[nm]]), "explicitly supplied candidate item")
         )
       } else {
         sprintf(
@@ -178,7 +178,8 @@ nomo_run_initial_log <- function(scales, roles, handoff = NULL) {
       stage = "design",
       scope = "scales",
       observation = sprintf(
-        "The following item(s) occur in more than one supplied scale: %s.",
+        "%s in more than one supplied scale: %s.",
+        nomo_present_noun(length(overlap), "This item occurs", "These items occur"),
         paste(overlap, collapse = ", ")
       ),
       reason = paste(
@@ -202,15 +203,23 @@ nomo_run_initial_log <- function(scales, roles, handoff = NULL) {
 }
 
 
+# The status of requested evidence attached to a stage (#73), in the stage
+# table's words: completed when computed, not computed when the request failed
+# (the design log says why), and otherwise not started.
+nomo_run_attached_status <- function(x, result, id) {
+  if (!is.null(result)) return("completed")
+  failed <- x$decision_log$decision[x$decision_log$id == id]
+  if (any(failed == "not computed")) "not_computed" else "not_started"
+}
+
+
 nomo_run_recipe_table <- function(x) {
   rows <- list()
   cursor <- 0L
 
-  add_row <- function(stage, scope, fun, data_role, researcher_control) {
+  add_row <- function(stage, scope, fun, data_role, researcher_control,
+                      status = nomo_run_stage_state(x, stage)) {
     cursor <<- cursor + 1L
-    status <- x$stage_status$status[
-      x$stage_status$stage == stage
-    ][[1L]]
 
     rows[[cursor]] <<- tibble::tibble(
       stage = stage,
@@ -246,6 +255,19 @@ nomo_run_recipe_table <- function(x) {
     )
   }
 
+  # Requested evidence that is not a stage of its own (#73, #145) has its own
+  # rows, so the recipe names every component the run called.
+  if (isTRUE(x$settings$screen$effort)) {
+    add_row(
+      "screen",
+      "careless_responding",
+      "nomo_screen(effort = TRUE)",
+      "exploratory",
+      "requested through `settings$screen$effort`; computed once over every item",
+      status = if (is.null(x$results$effort)) nomo_run_stage_state(x, "screen") else "completed"
+    )
+  }
+
   add_row(
     "cfa",
     "measurement_model",
@@ -267,6 +289,26 @@ nomo_run_recipe_table <- function(x) {
     "confirmatory",
     "evidence computed from retained CFA; no valid/invalid verdict"
   )
+  if (nomo_run_attached_requested(x, "scores")) {
+    add_row(
+      "scores",
+      "measurement_model",
+      "nomo_scores()",
+      "confirmatory",
+      "requested through `settings$scores`; scoring method named by the researcher",
+      status = nomo_run_attached_status(x, x$results$scores, "scores")
+    )
+  }
+  if (nomo_run_attached_requested(x, "missing")) {
+    add_row(
+      "missing",
+      "measurement_model",
+      "nomo_missing()",
+      "confirmatory",
+      "requested through `settings$missing`; the fitted model is unchanged",
+      status = nomo_run_attached_status(x, x$results$missing$cfa, "missing_data_cfa")
+    )
+  }
   add_row(
     "invariance",
     "configured_branch",
@@ -274,33 +316,50 @@ nomo_run_recipe_table <- function(x) {
     "confirmatory",
     "requested through `settings$invariance`; partial releases remain explicit"
   )
+  network_role <- if (identical(x$sample_design, "calibration_validation")) {
+    "calibration + validation"
+  } else {
+    "same sample unless validation_data supplied"
+  }
   add_row(
     "network",
     "configured_branch",
     "nomo_network()",
-    if (identical(x$sample_design, "calibration_validation")) {
-      "calibration + validation"
-    } else {
-      "same sample unless validation_data supplied"
-    },
+    network_role,
     "requested through `settings$network$hypotheses`"
   )
+  if (nomo_run_attached_requested(x, "missing") &&
+      nomo_run_branch_requested(x, "network")) {
+    add_row(
+      "missing",
+      "theory_network",
+      "nomo_missing()",
+      network_role,
+      "requested through `settings$missing`; the fitted network is unchanged",
+      status = nomo_run_attached_status(x, x$results$missing$network, "missing_data_network")
+    )
+  }
 
   dplyr::bind_rows(rows)
 }
 
 
+# One row per stage, then one for each kind of attached evidence (#145), with
+# the arguments set and their values.
 nomo_run_settings_table <- function(x) {
-  stages <- nomo_run_stage_order()
+  stages <- c(nomo_run_stage_order(), nomo_run_attached_settings())
 
   tibble::tibble(
     stage = stages,
     configured = vapply(
       stages,
       function(stage) {
+        # An empty `missing` request asks for the comparison with its defaults.
+        if (stage %in% nomo_run_attached_settings()) return(nomo_run_attached_requested(x, stage))
         stage %in% names(x$settings) && length(x$settings[[stage]]) > 0L
       },
-      logical(1)
+      logical(1),
+      USE.NAMES = FALSE
     ),
     setting_names = vapply(
       stages,
@@ -309,7 +368,18 @@ nomo_run_settings_table <- function(x) {
         if (is.null(setting) || !length(setting)) return("")
         paste(names(setting), collapse = ", ")
       },
-      character(1)
+      character(1),
+      USE.NAMES = FALSE
+    ),
+    values = vapply(
+      stages,
+      function(stage) {
+        setting <- x$settings[[stage]]
+        if (is.null(setting)) return("")
+        nomo_run_settings_text(setting)
+      },
+      character(1),
+      USE.NAMES = FALSE
     )
   )
 }
@@ -354,14 +424,24 @@ nomo_run_handoff_log <- function(log, handoff) {
 
   held <- ev[!ev$carried, , drop = FALSE]
   for (i in seq_len(nrow(held))) {
+    # A review whose results had no status or recommendation records NA; it is
+    # left out rather than quoted as the word "NA", as the handoff reader does
+    # (#145).
+    quoted <- c(
+      if (!is.na(held$status[[i]])) sprintf("status \"%s\"", held$status[[i]]),
+      if (!is.na(held$recommendation[[i]])) {
+        sprintf("recommendation \"%s\"", held$recommendation[[i]])
+      }
+    )
     log <- nomo_run_workflow_log_add(
       log,
       id = paste0("held_back:", held$item[[i]]),
       stage = "design",
       scope = if (is.na(held$scale[[i]])) "scales" else as.character(held$scale[[i]]),
       observation = sprintf(
-        "%s was held back by content review: status \"%s\", recommendation \"%s\".",
-        held$item[[i]], held$status[[i]], held$recommendation[[i]]
+        "%s was held back by content review%s.",
+        held$item[[i]],
+        if (length(quoted)) paste0(": ", paste(quoted, collapse = ", ")) else ""
       ),
       reason = "Only items carried by content review are analyzed.",
       options = "Reinstating it is a researcher decision to record with its rationale.",

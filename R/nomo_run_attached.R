@@ -70,6 +70,33 @@ nomo_run_run_scores <- function(x) {
 }
 
 
+# What the comparison did, from the strategies that were fitted (#145): a
+# strategy that could not be fitted, such as FIML on complete data, is named
+# with the reason rather than reported as a refit.
+nomo_run_missing_observation <- function(strategies, what) {
+  fitted <- nomo_missing_label_inline(strategies$strategy[strategies$available])
+  text <- if (length(fitted) > 1L) {
+    sprintf(
+      "The %s was fitted under %s to show how much its results depend on missing-data handling.",
+      what, nomo_present_or(fitted, "and")
+    )
+  } else {
+    sprintf(
+      "The %s could be fitted under %s only, so no missing-data strategies were compared.",
+      what, if (length(fitted)) fitted else "no strategy"
+    )
+  }
+  unfitted <- strategies[!strategies$available, , drop = FALSE]
+  if (nrow(unfitted)) {
+    why <- sub("\\.$", "", sub("^Not fitted: ", "", unfitted$note))
+    text <- paste0(text, " Not fitted: ", paste0(
+      nomo_missing_label_inline(unfitted$strategy), " (", why, ")", collapse = "; "
+    ), ".")
+  }
+  list(text = text, compared = length(fitted) > 1L)
+}
+
+
 nomo_run_run_missing <- function(x, target = c("cfa", "network")) {
   target <- nomo_match_arg(target)
   if (!nomo_run_attached_requested(x, "missing")) return(x)
@@ -101,22 +128,26 @@ nomo_run_run_missing <- function(x, target = c("cfa", "network")) {
   }
 
   x$results$missing[[target]] <- result$value
+  observed <- nomo_run_missing_observation(
+    result$value$strategies,
+    if (identical(target, "cfa")) "measurement model" else "network"
+  )
   x$decision_log <- nomo_run_workflow_log_add(
     x$decision_log,
     id = paste0("missing_data_", target),
     stage = target,
     scope = if (identical(target, "cfa")) "measurement_model" else "theory_network",
-    observation = sprintf(
-      "The %s was refitted under %s to show how much its results depend on missing-data handling.",
-      if (identical(target, "cfa")) "measurement model" else "network",
-      paste(result$value$strategies$label, collapse = " and ")
-    ),
+    observation = observed$text,
     reason = paste(
       "Whether data are missing at random cannot be tested from the data at",
       "hand, so the dependence on the strategy is reported."
     ),
     options = "Report the strategy chosen in advance, together with this sensitivity.",
-    consequence = "The fitted model and its results are unchanged; the refits are kept alongside.",
+    consequence = if (observed$compared) {
+      "The fitted model and its results are unchanged; the refits are kept alongside."
+    } else {
+      "The fitted model and its results are unchanged, and there is no refit to compare."
+    },
     decision = paste("strategies:", paste(result$value$strategies$strategy, collapse = ", ")),
     source = "researcher_input"
   )
