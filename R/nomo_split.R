@@ -86,25 +86,21 @@ nomo_split <- function(data,
   n_validation <- max(1L, min(n - 1L, n_validation))
   n_calibration <- n - n_validation
 
-  rng_exists <- exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
-  if (rng_exists) {
-    rng_before <- get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
-  }
-  on.exit({
-    if (rng_exists) {
-      assign(".Random.seed", rng_before, envir = .GlobalEnv)
-    } else if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
-      rm(".Random.seed", envir = .GlobalEnv)
-    }
-  }, add = TRUE)
-
-  set.seed(as.integer(seed))
-  # The seed reproduces the split only under the same generator, so the
-  # generator is recorded with it (#145). The first three kinds are the
-  # documented ones; R-devel's RNGkind() adds a fourth that sample.int() does
-  # not use.
-  rng_kind <- RNGkind()[1:3]
-  validation_rows <- sort(sample.int(n, size = n_validation, replace = FALSE))
+  # withr sets the seed for the draw and afterwards puts the caller's
+  # random-number state back as it was, so the split does not alter later
+  # stochastic analyses.
+  drawn <- withr::with_seed(as.integer(seed), {
+    # The seed reproduces the split only under the same generator, so the
+    # generator is recorded with it (#145). The first three kinds are the
+    # documented ones; R-devel's RNGkind() adds a fourth that sample.int() does
+    # not use.
+    list(
+      rng_kind = RNGkind()[1:3],
+      validation_rows = sort(sample.int(n, size = n_validation, replace = FALSE))
+    )
+  })
+  rng_kind <- drawn$rng_kind
+  validation_rows <- drawn$validation_rows
   calibration_rows <- setdiff(seq_len(n), validation_rows)
 
   assignment <- tibble::tibble(

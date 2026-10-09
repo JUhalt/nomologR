@@ -1715,25 +1715,20 @@ test_that("closeout: factor helpers cover singular adequacy and RNG cleanup", {
   kmo <- nomologR:::nomo_factors_kmo(singular, c("a", "b", "c"))
   expect_false(kmo$available)
 
-  had_seed <- exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
-  if (had_seed) {
-    old_seed <- get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
-  }
-  on.exit({
-    if (had_seed) {
-      assign(".Random.seed", old_seed, envir = .GlobalEnv)
-    } else if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
-      rm(".Random.seed", envir = .GlobalEnv)
-    }
-  }, add = TRUE)
-  if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
-    rm(".Random.seed", envir = .GlobalEnv)
-  }
-  expect_identical(
-    nomologR:::nomo_factors_with_seed(2026L, 42L),
-    42L
-  )
-  expect_false(exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE))
+  # The seeding helper returns the value of its code, draws under its own
+  # seed, and leaves the caller's random-number state as it found it, after an
+  # error too. test-nomo-global-state.R covers a session that has no state.
+  withr::with_seed(8101, {
+    before <- nomo_test_rng_state()
+    expect_identical(
+      nomologR:::nomo_factors_with_seed(2026L, 42L),
+      42L
+    )
+    drawn <- nomologR:::nomo_factors_with_seed(2026L, stats::runif(2))
+    expect_error(nomologR:::nomo_factors_with_seed(2026L, stop("boom")), "boom")
+    expect_identical(nomo_test_rng_state(), before)
+  })
+  expect_identical(drawn, withr::with_seed(2026L, stats::runif(2)))
 })
 
 
@@ -2187,7 +2182,7 @@ test_that("closeout B: EKC and comparison-data helpers preserve no-suggestion ou
 })
 
 
-test_that("closeout C: parallel analysis restores an initially absent RNG state", {
+test_that("closeout C: parallel analysis leaves the caller's random-number state as it was", {
   skip_if_not(
     exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
   )
@@ -2200,27 +2195,11 @@ test_that("closeout C: parallel analysis restores an initially absent RNG state"
     .package = "nomologR"
   )
 
-  probe <- function() {
-    old_exists <- exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
-    if (old_exists) {
-      old_seed <- get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
-    }
-
-    on.exit(
-      {
-        if (old_exists) {
-          assign(".Random.seed", old_seed, envir = .GlobalEnv)
-        } else if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
-          rm(".Random.seed", envir = .GlobalEnv)
-        }
-      },
-      add = TRUE
-    )
-
-    if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
-      rm(".Random.seed", envir = .GlobalEnv)
-    }
-
+  # The permutations still draw random numbers, so the state would move if it
+  # were not put back. test-nomo-global-state.R covers a session that has no
+  # state.
+  withr::with_seed(8102, {
+    before <- nomo_test_rng_state()
     out <- nomologR:::nomo_factors_parallel(
       x = x,
       model_types = rep("continuous", 3L),
@@ -2233,20 +2212,12 @@ test_that("closeout C: parallel analysis restores an initially absent RNG state"
       seed = 2026L,
       fm = "minres"
     )
+    after <- nomo_test_rng_state()
+  })
 
-    list(
-      out = out,
-      seed_exists_after = exists(
-        ".Random.seed",
-        envir = .GlobalEnv,
-        inherits = FALSE
-      )
-    )
-  }
-
-  result <- probe()
-  expect_false(result$seed_exists_after)
-  expect_equal(result$out$n_valid, 10L)
+  expect_identical(after, before)
+  expect_equal(out$n_valid, 10L)
+  expect_identical(out$seed, 2026L)
 })
 
 

@@ -208,14 +208,16 @@ test_that("the simulation handles zero values, missing parameters, and failed fi
   # Without a converged replication there is no coverage to show (#145).
   expect_false(any(grepl("---", failed, fixed = TRUE)))
 
-  # Without a seed, the session's random stream is used as it stands; without
-  # any random state, one is created and removed again.
-  old <- if (exists(".Random.seed", envir = .GlobalEnv)) get(".Random.seed", envir = .GlobalEnv)
-  if (!is.null(old)) rm(".Random.seed", envir = .GlobalEnv)
-  on.exit(if (!is.null(old)) assign(".Random.seed", old, envir = .GlobalEnv), add = TRUE)
-  nomo_power_simulate(pw_population, n = 30, reps = 2, seed = 1)
-  expect_false(exists(".Random.seed", envir = .GlobalEnv))
-  unseeded <- nomo_power_simulate(pw_population, n = 30, reps = 2)
+  # With a seed, the session's random-number state is afterwards as it was;
+  # without one, the session's stream is used as it stands, so it moves on.
+  # test-nomo-global-state.R covers a session that has no state.
+  withr::with_seed(8103, {
+    before <- nomo_test_rng_state()
+    nomo_power_simulate(pw_population, n = 30, reps = 2, seed = 1)
+    expect_identical(nomo_test_rng_state(), before)
+    unseeded <- nomo_power_simulate(pw_population, n = 30, reps = 2)
+    expect_false(identical(nomo_test_rng_state(), before))
+  })
   expect_identical(unseeded$reps, 2L)
   expect_identical(unseeded$seed, NA_integer_)
 })

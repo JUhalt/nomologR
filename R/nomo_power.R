@@ -332,23 +332,23 @@ nomo_power_simulate <- function(population,
           seed != round(seed)) {
       stop("`seed` must be NULL or one whole number.", call. = FALSE)
     }
-    rng_exists <- exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
-    if (rng_exists) rng_before <- get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
-    on.exit({
-      if (rng_exists) {
-        assign(".Random.seed", rng_before, envir = .GlobalEnv)
-      } else if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
-        rm(".Random.seed", envir = .GlobalEnv)
-      }
-    }, add = TRUE)
-    set.seed(as.integer(seed))
   }
 
   sizes <- as.integer(sort(unique(n)))
-  runs <- lapply(sizes, function(size) {
-    nomo_power_replicate(population, analysis, truth, size, as.integer(reps),
-                         standardized)
-  })
+  simulate <- function() {
+    lapply(sizes, function(size) {
+      nomo_power_replicate(population, analysis, truth, size, as.integer(reps),
+                           standardized)
+    })
+  }
+  # Only the replications draw random numbers. With a seed, withr sets it for
+  # them and afterwards puts the session's random-number state back as it was;
+  # without one, they use the session's stream as it stands.
+  if (is.null(seed)) {
+    runs <- simulate()
+  } else {
+    runs <- withr::with_seed(as.integer(seed), simulate())
+  }
 
   parameters <- dplyr::bind_rows(lapply(seq_along(sizes), function(i) {
     nomo_power_parameters(runs[[i]], truth, sizes[[i]], alpha)
