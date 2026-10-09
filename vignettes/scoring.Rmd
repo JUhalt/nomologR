@@ -88,9 +88,14 @@ quantity is the factor determinacy coefficient that
 [`nomo_hierarchical()`](hierarchical-models.html) reports, because that method
 maximizes it.
 
-`univocality` is a score's correlation with the factors it does *not*
-represent. A score that is not univocal cannot be treated as though it measured
-its own factor alone.
+`univocality` is a score's largest correlation with a factor it does *not*
+represent. When the factors correlate, a score reaches the others through its
+own factor, by the factor correlation times its validity, so a sizable value is
+expected: Bartlett scores, and sums of items that each load on one factor,
+correlate with the other factors by exactly that much. Only a departure from it
+is something the score takes from another factor directly, and
+`nomo_scores()` notes a departure of .05 or more. A score that is not univocal
+in that sense cannot be treated as though it measured its own factor alone.
 
 `correlational_accuracy` is the one to read before using scores in a later
 analysis. It is the difference between the correlations among the scores and
@@ -204,8 +209,10 @@ With one factor, regression and Bartlett scores differ only by a scaling
 constant and rank people identically, so the choice between them matters only
 when there is more than one factor.
 
-Reliability coefficients follow the weighting. Coefficient alpha is the
-reliability of a unit-weighted scale; coefficient H, reported by
+Reliability coefficients follow the weighting. The reliability of a
+unit-weighted scale is omega computed from the fitted model, which
+`nomo_reliability()` reports; coefficient alpha equals it only when the items'
+loadings are equal (essential tau-equivalence). Coefficient H, reported by
 [`nomo_hierarchical()`](hierarchical-models.html), belongs to optimally
 weighted scores. Reporting one for the other describes a scale that was not
 used.

@@ -18,7 +18,8 @@ nomo_power_rmsea(
 \arguments{
 \item{model}{The planned model: a lavaan model string, a \code{\link[=nomo_model]{nomo_model()}}
 object, a fitted \code{\link[=nomo_cfa]{nomo_cfa()}} result, or a \code{lavaan} fit. Its degrees of
-freedom are used. Give \code{model} or \code{df}, not both.}
+freedom are used. Give \code{model} or \code{df}, not both. A multi-group fit is
+refused (see Details).}
 
 \item{n}{Optional sample sizes at which to compute power.}
 
@@ -29,7 +30,8 @@ freedom are used. Give \code{model} or \code{df}, not both.}
 \item{test}{\code{"close"} (default), \code{"not_close"}, or \code{"exact"}.}
 
 \item{rmsea_null, rmsea_alt}{Optional null and alternative RMSEA values,
-replacing the test's defaults.}
+replacing the test's defaults. The null is 0 for \code{"exact"} and above 0
+for the other tests.}
 
 \item{alpha}{Significance level. Default \code{.05}.}
 }
@@ -38,8 +40,10 @@ A \code{nomo_power} object. The fields to read are \code{test}, \code{df},
 \code{rmsea_null}, \code{rmsea_alt}, \code{alpha}, \code{target_power}, \code{power} (a table of
 sample sizes and their power), and \code{n_required} (the smallest sample size
 reaching \code{target_power}, or \code{NA} if none up to one million does).
-\code{\link[=nomo_table]{nomo_table()}} returns the \code{"power"} table, its one \code{type}; \code{summary()}
-shows what \code{print()} shows.
+\code{\link[=nomo_table]{nomo_table()}} returns the \code{"power"} table, its one \code{type}. \code{print()}
+shows the test, its RMSEA values, and the power at each sample size;
+\code{summary()} shows the same. \code{plot()} draws the power curve with the
+target power and the smallest sample size that reaches it.
 
 Other fields record the kind of power analysis. They may change between
 releases and are not part of the stable interface (see \code{?nomologR}).
@@ -64,9 +68,18 @@ close, which is what supports a claim of good fit.
 \item \code{"exact"}: the test of exact fit, with null 0 and alternative .05.
 }
 
+Each test is named by its null hypothesis, so a \code{rmsea_null} that
+contradicts it is refused: the test of exact fit has a null of 0, and the
+tests of close and not-close fit a null above 0.
+
 Power depends on the degrees of freedom: a model with few of them needs a
 large sample to test its fit. This is power for the model's overall fit test,
 not for any one parameter; \code{\link[=nomo_power_simulate]{nomo_power_simulate()}} gives that.
+
+The calculation is for a single-group model. A multi-group \code{lavaan} fit is
+refused, because lavaan's RMSEA for several groups carries a factor of the
+square root of their number, and the noncentrality above would overstate
+the power for the RMSEA lavaan reports.
 }
 \examples{
 model <- nomo_model(list(A = paste0("a", 1:4), B = paste0("b", 1:4)))

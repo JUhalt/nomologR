@@ -1,15 +1,28 @@
 # Notes ------------------------------------------------------------------------
+#
+# Each note's first sentence states what was found, so that print() can show
+# that sentence and summary() the whole note. The references the notes apply
+# are fixed values from the literature, not settings read from `guidance`:
+# Gorsuch's (1983) .90 for validity, and .05 for a discrepancy between
+# correlations, for correlational accuracy and for univocality alike.
+
+# The size of a discrepancy between correlations that a note raises, for
+# correlational accuracy and for univocality.
+nomo_scores_discrepancy_reference <- 0.05
+
 
 nomo_scores_notes <- function(input, method, diagnostics, unit_weighting,
-                              parallel) {
+                              parallel, properties, scores, opposite) {
   notes <- tibble::tibble(
     topic = character(), severity = character(), note = character()
   )
   add <- function(notes, topic, severity, note) {
     tibble::add_row(notes, topic = topic, severity = severity, note = note)
   }
+  r <- function(v, signed = FALSE) nomo_present_stat(v, "r", signed = signed)
 
   unit <- method %in% c("sum", "mean")
+  several <- nrow(diagnostics) > 1L
 
   notes <- add(notes, "estimand", "info", paste(
     "A score is not the latent variable. Every method here produces an",
@@ -28,40 +41,48 @@ nomo_scores_notes <- function(input, method, diagnostics, unit_weighting,
     ))
 
     if (isTRUE(parallel$available) && is.finite(parallel$p_value)) {
+      test <- nomo_present_chisq(parallel$chisq_diff, parallel$df_diff,
+                                 parallel$p_value, delta = TRUE)
       if (parallel$p_value < .05) {
         notes <- add(notes, "unit_weighting", "review", sprintf(
           paste(
             "The parallel model that unit weighting assumes fits worse than",
-            "the model you fitted (chi-square difference %.2f on %s df, %s).",
-            "The items are not interchangeable in the way adding them",
-            "assumes. This does not forbid a sum score; it means the choice",
-            "needs a reason beyond convenience, and that `validity` and",
-            "`correlational_accuracy` describe what it costs."
+            "the model you fitted (%s). The items are not interchangeable in",
+            "the way adding them assumes. This does not forbid a sum score; it",
+            "means the choice needs a reason beyond convenience, and that %s",
+            "what it costs."
           ),
-          parallel$chisq_diff, format(parallel$df_diff, trim = TRUE),
-          nomo_compare_format_p(parallel$p_value)
+          test,
+          if (several) {
+            "`validity` and `correlational_accuracy` describe"
+          } else {
+            "`validity` describes"
+          }
         ))
       } else {
         notes <- add(notes, "unit_weighting", "info", sprintf(
           paste(
             "The parallel model that unit weighting assumes does not fit",
-            "worse than the model you fitted (chi-square difference %.2f on",
-            "%s df, %s), so the constraints adding the items assumes are",
-            "consistent with these data."
+            "worse than the model you fitted (%s), so the constraints adding",
+            "the items assumes are consistent with these data."
           ),
-          parallel$chisq_diff, format(parallel$df_diff, trim = TRUE),
-          nomo_compare_format_p(parallel$p_value)
+          test
         ))
       }
     } else if (nzchar(parallel$note)) {
       notes <- add(notes, "unit_weighting", "review", parallel$note)
     }
 
+    # The reliability of a unit-weighted composite is omega from the fitted
+    # model; alpha equals it only when the loadings are equal (#145).
     notes <- add(notes, "reliability", "info", paste(
-      "Coefficient alpha is the reliability coefficient for a unit-weighted",
-      "scale; coefficient H belongs to optimally weighted scores (McNeish &",
-      "Wolf, 2020). Reporting H for a sum score, or alpha for a weighted one,",
-      "describes a scale that was not used."
+      "The reliability of a unit-weighted score is omega computed from the",
+      "fitted model, which nomo_reliability() reports; coefficient alpha",
+      "equals it only when the items' loadings are equal (essential",
+      "tau-equivalence). Coefficient H describes optimally weighted scores",
+      "rather than a sum (McNeish & Wolf, 2020). Reporting H for a sum score,",
+      "or a sum's omega or alpha for a weighted one, describes a scale that",
+      "was not used."
     ))
   } else {
     notes <- add(notes, "indeterminacy", "info", paste(
@@ -78,15 +99,16 @@ nomo_scores_notes <- function(input, method, diagnostics, unit_weighting,
   ]
   if (length(low_validity)) {
     notes <- add(notes, "validity", "review", paste0(
-      "Validity is below .90 for ", paste(low_validity, collapse = ", "),
+      "Validity is below .90 for ", nomo_present_or(low_validity, "and"),
       ". Gorsuch (1983, p. 260) recommended at least .80, and above .90 if ",
       "the scores are to serve as adequate substitutes for the factors ",
       "themselves. Reported as his recommendation, not applied as a rule."
     ))
   }
 
+  reference <- nomo_scores_discrepancy_reference
   accurate <- is.finite(diagnostics$correlational_accuracy)
-  if (any(accurate & abs(diagnostics$correlational_accuracy) >= 0.05)) {
+  if (any(accurate & abs(diagnostics$correlational_accuracy) >= reference)) {
     size <- abs(diagnostics$correlational_accuracy)
     worst <- which.max(size)
     # A discrepancy belongs to a pair of factors and both report it, so the note
@@ -95,7 +117,7 @@ nomo_scores_notes <- function(input, method, diagnostics, unit_weighting,
     notes <- add(notes, "correlational_accuracy", "concern", sprintf(
       paste(
         "Correlations among these scores do not reproduce the correlations",
-        "among the factors: the largest discrepancy is %+.3f, between %s. A",
+        "among the factors: the largest discrepancy is %s, between %s. A",
         "relationship estimated from these scores carries that much bias, and",
         "its direction is a property of the method and the model rather than a",
         "constant that can be corrected for. Where the question can be asked of",
@@ -106,43 +128,76 @@ nomo_scores_notes <- function(input, method, diagnostics, unit_weighting,
         "scores and the outcome Bartlett scores, each from a measurement model",
         "of its own."
       ),
-      diagnostics$correlational_accuracy[[worst]], paste(pair, collapse = " and ")
+      nomo_present_stat(diagnostics$correlational_accuracy[[worst]], "r", signed = TRUE,
+                        reference = sign(diagnostics$correlational_accuracy[[worst]]) *
+                          reference),
+      paste(pair, collapse = " and ")
     ))
   }
 
-  univocal <- is.finite(diagnostics$univocality)
-  if (any(univocal & abs(diagnostics$univocality) >= 0.30)) {
-    worst <- diagnostics[which.max(abs(diagnostics$univocality)), ]
-    notes <- add(notes, "univocality", "review", sprintf(
-      paste(
-        "These scores also carry the other factors: the score for %s",
-        "correlates %+.3f with a factor it does not represent (Grice, 2001). A",
-        "score that is not univocal cannot be treated as though it measured its",
-        "own factor alone."
-      ),
-      worst$factor[[1L]], worst$univocality[[1L]]
-    ))
+  # Univocality is judged against the factor correlations (#145): a score
+  # reaches another factor through its own, by the factor correlation times
+  # its validity, and only a departure from that is variance it takes from the
+  # other factor directly.
+  if (several) {
+    judged <- nomo_scores_univocality_departure(properties)
+    departure <- judged$departure
+    if (any(abs(departure) >= reference, na.rm = TRUE)) {
+      at <- which(abs(departure) == max(abs(departure), na.rm = TRUE), arr.ind = TRUE)[1L, ]
+      other <- diagnostics$factor[[at[[1L]]]]
+      own <- diagnostics$factor[[at[[2L]]]]
+      notes <- add(notes, "univocality", "review", sprintf(
+        paste(
+          "The score for %s correlates %s with %s, a factor it does not",
+          "represent, where through %s alone it would correlate %s, the factor",
+          "correlation (%s) times the score's validity (%s). The difference,",
+          "%s, is what the score takes from %s directly, so it is not",
+          "univocal (Grice, 2001) and cannot be treated as though it measured",
+          "%s alone."
+        ),
+        own, r(properties$cor_factor_scores[at[[1L]], at[[2L]]]), other,
+        own, r(judged$through[at[[1L]], at[[2L]]]),
+        r(properties$cor_factors[at[[1L]], at[[2L]]]),
+        r(properties$validity[[at[[2L]]]]),
+        r(departure[at[[1L]], at[[2L]]], signed = TRUE), other, own
+      ))
+    }
   }
 
   if (length(input$ordered)) {
-    notes <- add(notes, "estimand", "review", sprintf(
-      paste(
-        "%s %s ordered. These scores treat the latent-response",
-        "variables as continuous; they are not the expected-a-posteriori scores",
-        "an item-response model would produce, and the difference grows with",
-        "fewer categories and more extreme thresholds."
-      ),
-      nomo_present_count(length(input$ordered), "indicator"),
-      nomo_present_noun(length(input$ordered), "is", "are")
+    notes <- add(notes, "estimand", "review", nomo_scores_ordered_note(
+      method, length(input$ordered)
     ))
   }
 
   if (length(input$cross_loaded)) {
+    k <- length(input$cross_loaded)
     notes <- add(notes, "cross_loadings", "review", paste0(
-      "Item(s) ", paste(input$cross_loaded, collapse = ", "),
-      " load on more than one factor. A unit-weighted score assigns each such ",
-      "item wholly to every factor it loads on, which counts it more than once; ",
-      "a weighted score divides it according to the model."
+      nomo_present_noun(k, "Item ", "Items "), nomo_present_or(input$cross_loaded, "and"),
+      nomo_present_noun(k, " loads", " load"), " on more than one factor. A ",
+      "unit-weighted score assigns each such item wholly to every factor it ",
+      "loads on, which counts it more than once; a weighted score divides it ",
+      "according to the model."
+    ))
+  }
+
+  # A sum adds an item that loads against its factor as though it loaded with
+  # it, which unit weighting's loading ratio, taken in absolute value, cannot
+  # show (#145).
+  reversed <- opposite[lengths(opposite) > 0L]
+  if (unit && length(reversed)) {
+    named <- unlist(lapply(names(reversed), function(f) {
+      sprintf("%s on %s", reversed[[f]], f)
+    }))
+    several_items <- length(named) > 1L
+    notes <- add(notes, "loading_signs", "concern", paste0(
+      "Standardized loadings differ in sign within a factor: ",
+      nomo_present_or(named, "and"), if (several_items) " load" else " loads",
+      " against the strongest item of ", if (several_items) "their factors" else "its factor",
+      ". A unit-weighted score gives every item the same positive weight, so ",
+      "such an item counts against the factor it measures, while the model ",
+      "weights it negatively. Reverse-score each such item before adding, or ",
+      "use a model-weighted score."
     ))
   }
 
@@ -152,14 +207,79 @@ nomo_scores_notes <- function(input, method, diagnostics, unit_weighting,
   if (unit && length(heterogeneous)) {
     notes <- add(notes, "unit_weighting", "review", paste0(
       "The strongest standardized loading is at least twice the weakest for ",
-      paste(heterogeneous, collapse = ", "),
+      nomo_present_or(heterogeneous, "and"),
       ". Adding those items gives the weakest indicator the same say as the ",
       "strongest, so two people with the same total can differ on the construct ",
       "by having endorsed different items."
     ))
   }
 
+  # A case the model used can still lack a score: a unit-weighted score needs
+  # every item of its factor, which FIML does not, and lavaan returns no score
+  # for a case it cannot estimate (#145).
+  unscored <- vapply(scores, function(v) sum(!is.finite(v)), integer(1))
+  unscored <- unscored[unscored > 0L]
+  if (length(unscored)) {
+    n <- nrow(scores)
+    counts <- sprintf("%d of %d on %s", n - unscored, n, names(unscored))
+    notes <- add(notes, "unscored_cases", "review", paste(
+      "Not every case the model used has a score: the cases scored are",
+      paste0(nomo_present_or(counts, "and"), ","),
+      "and the others are `NA` in `scores`.",
+      if (unit) {
+        paste(
+          "A unit-weighted score needs every item of its factor, so a case",
+          "missing one has none, while regression and Bartlett scores use the",
+          "items a case has."
+        )
+      } else {
+        "lavaan returned no score for those cases."
+      }
+    ))
+  }
+
   notes
+}
+
+
+# What lavaan computes for ordered indicators, and what the diagnostics then
+# describe (#145). The diagnostics come from linear weights on the continuous
+# latent responses underlying the items, so for every method they approximate
+# the scores returned rather than describe them exactly.
+nomo_scores_ordered_note <- function(method, k) {
+  ordered <- sprintf("%s %s ordered", nomo_present_count(k, "indicator"),
+                     nomo_present_noun(k, "is", "are"))
+  approximate <- paste(
+    "The validity, univocality, and correlational accuracy reported here are",
+    "those of %s, so they approximate the properties of these scores rather",
+    "than describe them, and the approximation worsens with fewer categories",
+    "and more extreme thresholds."
+  )
+  switch(
+    method,
+    regression = paste(
+      paste0(ordered, ", so lavaan computed these regression scores as empirical"),
+      "Bayes modal (EBM) scores from the categorical model, not as weighted",
+      "sums of the items.",
+      sprintf(approximate, "linear regression scores of the continuous latent responses")
+    ),
+    bartlett = paste(
+      paste0(ordered, ", so lavaan computed these Bartlett scores as"),
+      "maximum-likelihood (ML) scores from the categorical model, not as",
+      "weighted sums of the items. A case that answers every item of a factor",
+      "in its highest or its lowest category has no finite ML score.",
+      sprintf(approximate, "linear Bartlett scores of the continuous latent responses"),
+      "ML scores can differ from them markedly."
+    ),
+    paste(
+      paste0(ordered, ", and these scores add the observed category numbers,"),
+      "while the validity, univocality, and correlational accuracy reported",
+      "here are those of the same", method, "of the continuous latent responses",
+      "underlying the items. They approximate the properties of these scores",
+      "rather than describe them, and the approximation worsens with fewer",
+      "categories and more extreme thresholds."
+    )
+  )
 }
 
 
@@ -190,9 +310,12 @@ nomo_scores_notes <- function(input, method, diagnostics, unit_weighting,
 #' * `validity`, the correlation between a score and the factor it estimates.
 #'   For `method = "regression"` this equals the factor determinacy coefficient
 #'   reported by [nomo_hierarchical()], because that method maximizes it.
-#' * `univocality`, its correlation with the factors it does not represent.
+#' * `univocality`, its largest correlation with a factor it does not
+#'   represent.
 #' * `correlational_accuracy`, how far correlations among scores sit from the
-#'   correlations among the factors they stand in for.
+#'   correlations among the factors they stand in for: for each factor, the
+#'   score correlation minus the factor correlation for the pair where the two
+#'   differ most, so 0 is best.
 #'
 #' The third deserves attention before scores are used in later analyses. A
 #' relationship estimated from scores carries that discrepancy as bias, and its
@@ -200,6 +323,23 @@ nomo_scores_notes <- function(input, method, diagnostics, unit_weighting,
 #' constant that can be corrected for. Where a question can be asked of the
 #' latent variables instead, asking it of scores replaces an unbiased answer
 #' with a biased one.
+#'
+#' **Univocality is judged against the factor correlations.** When factors
+#' correlate, a score correlates with the other factors through its own: by
+#' the factor correlation times its validity. Bartlett scores, and sum scores
+#' of items that each load on one factor, correlate with the other factors by
+#' exactly that much. Only a departure from it is something a score takes from
+#' another factor directly, so a note is raised when a score's correlation
+#' with another factor departs from the factor correlation times its validity
+#' by .05 or more, and not merely because factors correlate (Grice, 2001).
+#'
+#' **Ordered indicators.** With ordered indicators lavaan computes
+#' `"regression"` scores as empirical Bayes modal scores, and `"bartlett"`
+#' scores as maximum-likelihood scores, from the categorical model; `"sum"` and
+#' `"mean"` add the observed category numbers. The
+#' diagnostics are computed from linear weights on the continuous latent
+#' responses underlying the items, so for ordered indicators they approximate
+#' the properties of the scores returned, and a note says so.
 #'
 #' **One design recovers a regression.** For a linear regression among
 #' factors, Skrondal and Laake (2001) proved that regression-method scores for
@@ -214,17 +354,32 @@ nomo_scores_notes <- function(input, method, diagnostics, unit_weighting,
 #' **Thresholds are context.** Gorsuch's (1983) recommendation that validity
 #' reach .80, and above .90 for scores serving as substitutes for the factors
 #' themselves, is reported where a value falls below it and is never applied as
-#' a rule.
+#' a rule. These references, and the .05 for a discrepancy between
+#' correlations, are fixed values from the literature; they are not read from
+#' `guidance`.
 #'
 #' The supplied data is never modified, and scores are computed only for the
 #' cases the model used. `rows` records which rows of the data those are, so
-#' the scores can be matched to the data when some cases were dropped.
+#' the scores can be matched to the data when some cases were dropped. A
+#' unit-weighted score needs every item of its factor: under FIML a case the
+#' model used can lack an item, and its sum or mean is then `NA`, which a note
+#' counts. Regression and Bartlett scores use the items a case has.
+#'
+#' `print()` shows the score properties with a key to their columns, each
+#' flagged note's first sentence, and the parallel-model test when it is not
+#' flagged; `summary()` adds the loading spread and every note in full.
+#' `plot()` draws each score's validity against Gorsuch's references.
 #'
 #' @param fit A `nomo_cfa` object or fitted `lavaan` measurement model.
-#'   Single-group, single-level, with no regressions among latent variables.
+#'   Single-group and single-level, with every factor measured by observed
+#'   items and no structural paths or covariates: no regressions, no
+#'   covariance between a factor and an observed variable, and no
+#'   higher-order factors.
 #' @param method Scoring method. `"sum"` and `"mean"` are unit weighted;
 #'   `"regression"` and `"bartlett"` are model weighted.
-#' @param guidance A `nomo_guidance` object from [nomo_defaults()].
+#' @param guidance A `nomo_guidance` object from [nomo_defaults()]. It is
+#'   checked and recorded with the result; the references the notes apply are
+#'   fixed values from the literature (see Details), not settings read from it.
 #'
 #' @return An object of class `nomo_scores`. The fields to read are:
 #'
@@ -291,6 +446,12 @@ nomo_scores <- function(fit,
                         method = c("sum", "mean", "regression", "bartlett"),
                         guidance = nomo_defaults()) {
   method <- nomo_match_arg(method)
+  # Checked as nomo_cfa() checks it, so a value that is not guidance at all is
+  # refused rather than recorded (#145).
+  if (!is.list(guidance)) {
+    stop("`guidance` must be a list returned by `nomo_defaults()`.", call. = FALSE)
+  }
+  nomo_defaults_check_safeguards(guidance)
   input <- nomo_scores_input(fit)
 
   scores <- if (method %in% c("sum", "mean")) {
@@ -340,7 +501,8 @@ nomo_scores <- function(fit,
     score_correlations = properties$cor_scores,
     factor_correlations = properties$cor_factors,
     notes = nomo_scores_notes(
-      input, method, diagnostics, unit_weighting, parallel
+      input, method, diagnostics, unit_weighting, parallel, properties,
+      scores, nomo_scores_opposite_signs(input)
     ),
     fit = input$fit,
     guidance = guidance
