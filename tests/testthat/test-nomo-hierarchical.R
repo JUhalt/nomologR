@@ -21,10 +21,10 @@ hier_bifactor_population <- function() {
 hier_higher_population <- function() {
   lam1 <- c(.70, .65, .60, .75, .70, .60, .65, .70, .55, .70, .65, .60)
   gam <- c(.80, .70, .60)
-  F <- sapply(1:3, function(k) ifelse(hier_grp == k, lam1, 0))
+  first_order <- sapply(1:3, function(k) ifelse(hier_grp == k, lam1, 0))
   phi <- gam %*% t(gam)
   diag(phi) <- 1
-  sigma <- F %*% phi %*% t(F)
+  sigma <- first_order %*% phi %*% t(first_order)
   diag(sigma) <- 1
   dimnames(sigma) <- list(hier_items, hier_items)
   list(sigma = sigma, lam1 = lam1, gam = gam)
