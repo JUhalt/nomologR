@@ -880,25 +880,41 @@ demo_missing
 ```
 
     ## <nomo_missing> Missing-data sensitivity
-    ## Model: nomo_cfa | Reference: FIML | Fitted with: Listwise deletion
+    ## Model: CFA | Reference: FIML | Fitted with: Listwise deletion
     ## Cases: 27 of 500 incomplete (5.4%) | Patterns: 3
-    ## Lowest covariance coverage: 0.946 (a2, b3)
+    ## Lowest covariance coverage: .95 (a2, b3)
     ## 
     ## Strategies
     ##   Strategy           lavaan    Needs  Role          N  Converged  Admissible
     ##   Listwise deletion  listwise  MCAR   comparison  473  yes        yes
     ##   FIML               ml        MAR    reference   500  yes        yes
     ## 
-    ## Largest differences from the reference, in reference standard errors
+    ## Largest differences from the reference (standardized estimates)
     ##   Parameter  Strategy           Estimate  Reference  Difference (SE)
-    ##   A ~~ B     Listwise deletion     0.499      0.480            +0.45
+    ##   A ~~ B     Listwise deletion      .499       .480            +0.45
     ##   B =~ b5    Listwise deletion     0.337      0.353            -0.37
     ##   A =~ a5    Listwise deletion     0.598      0.590            +0.23
     ##   A =~ a3    Listwise deletion     0.669      0.675            -0.21
     ##   B =~ b3    Listwise deletion     0.757      0.762            -0.17
     ## 
-    ## Whether data are missing at random cannot be tested from these data; see
-    ## nomo_table(x, "decision_log").
+    ## What these terms mean
+    ##   CFA -- Confirmatory factor analysis.
+    ##   FIML -- Full-information maximum likelihood.
+    ##   Needs -- What the strategy requires of the missing data: MCAR, missing
+    ##       completely at random, or MAR, missing at random; -- where no requirement
+    ##       is stated for the method lavaan used.
+    ##   N -- Cases the strategy analyzed.
+    ##   Covariance coverage -- Proportion of cases with both variables of a pair
+    ##       observed; the lowest pair is shown.
+    ##   Difference (SE) -- The estimate minus the reference strategy's estimate, in
+    ##       the reference standard error (SE); beyond half of one is flagged for
+    ##       review.
+    ## 
+    ## Whether data are missing at random cannot be tested from these data, and
+    ## agreement between strategies does not show that either is unbiased.
+    ## 
+    ## See summary(x) for every difference and each recommendation and
+    ## nomo_table(x, "decision_log") for every recorded decision.
 
 The two strategies make different assumptions. Listwise deletion
 requires data missing completely at random (MCAR). FIML requires the
@@ -986,7 +1002,7 @@ mar_log <- nomo_table(mar_missing, "decision_log")
 mar_log$recommendation[mar_log$metric == "estimate_difference"]
 ```
 
-    ## [1] "If the data are MAR and the model is correct, FIML is consistent and this difference estimates the bias listwise deletion introduces; Schafer and Graham (2002) treat a bias of this size as practically important. Listwise deletion analyses 1789 fewer cases than the fullest strategy (44.7%), and the more cases a strategy discards, the larger the differences that sampling variability alone produces. Report which strategy the results rest on and why."
+    ## [1] "If the data are MAR and the model is correct, FIML is consistent and this difference estimates the bias listwise deletion introduces, together with sampling variability. Half a standard error is the size of bias Schafer and Graham (2002) treat as practically important; applied to a difference within one sample it is a reference for review, which sampling variability alone can exceed when data are MCAR. Listwise deletion analyzes 1789 fewer cases than the fullest strategy (44.7%), and the more cases a strategy discards, the larger the differences that sampling variability alone produces. Report which strategy the results rest on and why."
 
 The flag carries two qualifications:
 
@@ -1227,15 +1243,21 @@ nomo_power_rmsea(nomo_model(list(A = paste0("a", 1:4), B = paste0("b", 1:4))))
 ```
 
     ## <nomo_power> Power of the test of close fit
-    ## df: 19 | RMSEA: null 0.05, alternative 0.08 | alpha: 0.05
-    ## Smallest N for power 0.80: 453
+    ## MacCallum, Browne, and Sugawara (1996).
+    ## df: 19 | RMSEA: null 0.050, alternative 0.080 | alpha = .05
+    ## Smallest N for power .80: 453
     ## 
     ## Power by sample size
     ##     N  Power
-    ##   453   0.80
+    ##   453   .801
     ## 
-    ## MacCallum, Browne, & Sugawara (1996). This is power for the overall fit test,
-    ## not for any one parameter; nomo_power_simulate() gives that.
+    ## RMSEA = root mean square error of approximation; df = degrees of freedom;
+    ## N = sample size.
+    ## 
+    ## This is power for the overall fit test, not for any one parameter;
+    ## nomo_power_simulate() gives that.
+    ## 
+    ## See nomo_table(x, "power") for the power at each sample size.
 
 The second is whether the parameters you care about will be estimated
 well enough, and detected. Muthén and Muthén (2002) answered it by

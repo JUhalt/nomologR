@@ -77,7 +77,10 @@ documents the decision rather than making it.</p>
 
 <dl><dt id="arg-fit">fit<a class="anchor" aria-label="anchor" href="#arg-fit"></a></dt>
 <dd><p>A <code>nomo_cfa</code> object or fitted <code>lavaan</code> measurement model.
-Single-group, single-level, with no regressions among latent variables.</p></dd>
+Single-group and single-level, with every factor measured by observed
+items and no structural paths or covariates: no regressions, no
+covariance between a factor and an observed variable, and no
+higher-order factors.</p></dd>
 
 
 <dt id="arg-method">method<a class="anchor" aria-label="anchor" href="#arg-method"></a></dt>
@@ -86,7 +89,9 @@ Single-group, single-level, with no regressions among latent variables.</p></dd>
 
 
 <dt id="arg-guidance">guidance<a class="anchor" aria-label="anchor" href="#arg-guidance"></a></dt>
-<dd><p>A <code>nomo_guidance</code> object from <code><a href="nomo_defaults.html">nomo_defaults()</a></code>.</p></dd>
+<dd><p>A <code>nomo_guidance</code> object from <code><a href="nomo_defaults.html">nomo_defaults()</a></code>. It is
+checked and recorded with the result; the references the notes apply are
+fixed values from the literature (see Details), not settings read from it.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -125,15 +130,33 @@ covariances kept as specified. When the comparison cannot be made,
 on three criteria, all reported here and all computed from the fitted model:</p><ul><li><p><code>validity</code>, the correlation between a score and the factor it estimates.
 For <code>method = "regression"</code> this equals the factor determinacy coefficient
 reported by <code><a href="nomo_hierarchical.html">nomo_hierarchical()</a></code>, because that method maximizes it.</p></li>
-<li><p><code>univocality</code>, its correlation with the factors it does not represent.</p></li>
+<li><p><code>univocality</code>, its largest correlation with a factor it does not
+represent.</p></li>
 <li><p><code>correlational_accuracy</code>, how far correlations among scores sit from the
-correlations among the factors they stand in for.</p></li>
+correlations among the factors they stand in for: for each factor, the
+score correlation minus the factor correlation for the pair where the two
+differ most, so 0 is best.</p></li>
 </ul><p>The third deserves attention before scores are used in later analyses. A
 relationship estimated from scores carries that discrepancy as bias, and its
 direction depends on the scoring method and the model rather than being a
 constant that can be corrected for. Where a question can be asked of the
 latent variables instead, asking it of scores replaces an unbiased answer
 with a biased one.</p>
+<p><strong>Univocality is judged against the factor correlations.</strong> When factors
+correlate, a score correlates with the other factors through its own: by
+the factor correlation times its validity. Bartlett scores, and sum scores
+of items that each load on one factor, correlate with the other factors by
+exactly that much. Only a departure from it is something a score takes from
+another factor directly, so a note is raised when a score's correlation
+with another factor departs from the factor correlation times its validity
+by .05 or more, and not merely because factors correlate (Grice, 2001).</p>
+<p><strong>Ordered indicators.</strong> With ordered indicators lavaan computes
+<code>"regression"</code> scores as empirical Bayes modal scores, and <code>"bartlett"</code>
+scores as maximum-likelihood scores, from the categorical model; <code>"sum"</code> and
+<code>"mean"</code> add the observed category numbers. The
+diagnostics are computed from linear weights on the continuous latent
+responses underlying the items, so for ordered indicators they approximate
+the properties of the scores returned, and a note says so.</p>
 <p><strong>One design recovers a regression.</strong> For a linear regression among
 factors, Skrondal and Laake (2001) proved that regression-method scores for
 the predictors and Bartlett scores for the outcome, each block scored from a
@@ -146,10 +169,19 @@ works through the design.</p>
 <p><strong>Thresholds are context.</strong> Gorsuch's (1983) recommendation that validity
 reach .80, and above .90 for scores serving as substitutes for the factors
 themselves, is reported where a value falls below it and is never applied as
-a rule.</p>
+a rule. These references, and the .05 for a discrepancy between
+correlations, are fixed values from the literature; they are not read from
+<code>guidance</code>.</p>
 <p>The supplied data is never modified, and scores are computed only for the
 cases the model used. <code>rows</code> records which rows of the data those are, so
-the scores can be matched to the data when some cases were dropped.</p>
+the scores can be matched to the data when some cases were dropped. A
+unit-weighted score needs every item of its factor: under FIML a case the
+model used can lack an item, and its sum or mean is then <code>NA</code>, which a note
+counts. Regression and Bartlett scores use the items a case has.</p>
+<p><code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> shows the score properties with a key to their columns, each
+flagged note's first sentence, and the parallel-model test when it is not
+flagged; <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> adds the loading spread and every note in full.
+<code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> draws each score's validity against Gorsuch's references.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
@@ -181,45 +213,37 @@ replicability.</p></div>
 <span class="r-in"><span><span class="co"># A sum score, with the parallel model it assumes fitted and compared</span></span></span>
 <span class="r-in"><span><span class="va">summed</span> <span class="op">&lt;-</span> <span class="fu">nomo_scores</span><span class="op">(</span><span class="va">cfa</span>, method <span class="op">=</span> <span class="st">"sum"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">summed</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;nomo_scores&gt; Scores</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Unit weighting (method: sum) | 3 factors | 301 scored cases</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;nomo_scores&gt; Scores from a measurement model</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Method: sum (unit weighted) | Factors: 3 | Cases: 301</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Score properties (Grice, 2001)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Factor   Items  Validity  Univocality  Correlational accuracy</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   visual       3     0.791       +0.372                  -0.162</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   textual      3     0.941       +0.431                  -0.117</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   speed        3     0.829       +0.390                  -0.162</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   visual       3       .79          .37                    -.16</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   textual      3       .94          .43                    -.12</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   speed        3       .83          .39                    -.16</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Parallel model (what unit weighting assumes)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   chi-square difference 43.27 on 12 df, p &lt; .001</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> What these columns mean</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Validity -- Correlation of the score with its own factor; higher is better.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Univocality -- Largest correlation of the score with another factor. Through</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       its own factor, a score reaches another by the factor correlation times</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       its validity; a departure of .05 or more from that is noted.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Correlational accuracy -- Score correlation minus factor correlation, for</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       the pair of factors where they differ most; 0 is best.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Notes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   - Review: The parallel model that unit weighting assumes fits worse than the</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     model you fitted (chi-square difference 43.27 on 12 df, p &lt; .001). The</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     items are not interchangeable in the way adding them assumes. This does</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     not forbid a sum score; it means the choice needs a reason beyond</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     convenience, and that `validity` and `correlational_accuracy` describe</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     what it costs.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   - Review: Validity is below .90 for visual, speed. Gorsuch (1983, p. 260)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     recommended at least .80, and above .90 if the scores are to serve as</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     adequate substitutes for the factors themselves. Reported as his</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     recommendation, not applied as a rule.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   - Concern: Correlations among these scores do not reproduce the correlations</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     among the factors: the largest discrepancy is -0.162, between visual and</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     speed. A relationship estimated from these scores carries that much bias,</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     and its direction is a property of the method and the model rather than a</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     constant that can be corrected for. Where the question can be asked of the</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     latent variables, ask it there. For a linear regression among factors,</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     Skrondal and Laake (2001) showed a scoring design that gives consistent</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     coefficients, and scores from one model containing every factor, like</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     these, are not it: the predictors need regression-method scores and the</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     outcome Bartlett scores, each from a measurement model of its own.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   - Review: These scores also carry the other factors: the score for textual</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     correlates +0.431 with a factor it does not represent (Grice, 2001). A</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     score that is not univocal cannot be treated as though it measured its own</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     factor alone.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Flagged</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   - Correlational accuracy (Concern): Correlations among these scores do not</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     reproduce the correlations among the factors: the largest discrepancy is</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     -.16, between visual and speed.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   - Unit weighting (Review): The parallel model that unit weighting assumes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     fits worse than the model you fitted (Delta chi-square(12) = 43.27,</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     p &lt; .001).</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   - Validity (Review): Validity is below .90 for visual and speed.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> No value here is a pass/fail threshold; see nomo_table(x, "diagnostics").</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> No value here is a pass/fail threshold, and no scoring method is chosen for</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> you.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> See summary(x) for every note in full and the loading spread and</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> nomo_table(x, "diagnostics") for the score properties as a table.</span>
 <span class="r-in"><span><span class="va">summed</span><span class="op">$</span><span class="va">unit_weighting</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 3 × 6</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   factor  n_items min_loading max_loading loading_ratio loading_sd</span>

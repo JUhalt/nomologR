@@ -18,9 +18,10 @@ nomo_scores(
 
 - fit:
 
-  A `nomo_cfa` object or fitted `lavaan` measurement model.
-  Single-group, single-level, with no regressions among latent
-  variables.
+  A `nomo_cfa` object or fitted `lavaan` measurement model. Single-group
+  and single-level, with every factor measured by observed items and no
+  structural paths or covariates: no regressions, no covariance between
+  a factor and an observed variable, and no higher-order factors.
 
 - method:
 
@@ -31,6 +32,9 @@ nomo_scores(
 
   A `nomo_guidance` object from
   [`nomo_defaults()`](https://juhalt.github.io/nomologR/reference/nomo_defaults.md).
+  It is checked and recorded with the result; the references the notes
+  apply are fixed values from the literature (see Details), not settings
+  read from it.
 
 ## Value
 
@@ -86,10 +90,13 @@ fitted model:
   [`nomo_hierarchical()`](https://juhalt.github.io/nomologR/reference/nomo_hierarchical.md),
   because that method maximizes it.
 
-- `univocality`, its correlation with the factors it does not represent.
+- `univocality`, its largest correlation with a factor it does not
+  represent.
 
 - `correlational_accuracy`, how far correlations among scores sit from
-  the correlations among the factors they stand in for.
+  the correlations among the factors they stand in for: for each factor,
+  the score correlation minus the factor correlation for the pair where
+  the two differ most, so 0 is best.
 
 The third deserves attention before scores are used in later analyses. A
 relationship estimated from scores carries that discrepancy as bias, and
@@ -97,6 +104,24 @@ its direction depends on the scoring method and the model rather than
 being a constant that can be corrected for. Where a question can be
 asked of the latent variables instead, asking it of scores replaces an
 unbiased answer with a biased one.
+
+**Univocality is judged against the factor correlations.** When factors
+correlate, a score correlates with the other factors through its own: by
+the factor correlation times its validity. Bartlett scores, and sum
+scores of items that each load on one factor, correlate with the other
+factors by exactly that much. Only a departure from it is something a
+score takes from another factor directly, so a note is raised when a
+score's correlation with another factor departs from the factor
+correlation times its validity by .05 or more, and not merely because
+factors correlate (Grice, 2001).
+
+**Ordered indicators.** With ordered indicators lavaan computes
+`"regression"` scores as empirical Bayes modal scores, and `"bartlett"`
+scores as maximum-likelihood scores, from the categorical model; `"sum"`
+and `"mean"` add the observed category numbers. The diagnostics are
+computed from linear weights on the continuous latent responses
+underlying the items, so for ordered indicators they approximate the
+properties of the scores returned, and a note says so.
 
 **One design recovers a regression.** For a linear regression among
 factors, Skrondal and Laake (2001) proved that regression-method scores
@@ -112,12 +137,25 @@ works through the design.
 **Thresholds are context.** Gorsuch's (1983) recommendation that
 validity reach .80, and above .90 for scores serving as substitutes for
 the factors themselves, is reported where a value falls below it and is
-never applied as a rule.
+never applied as a rule. These references, and the .05 for a discrepancy
+between correlations, are fixed values from the literature; they are not
+read from `guidance`.
 
 The supplied data is never modified, and scores are computed only for
 the cases the model used. `rows` records which rows of the data those
 are, so the scores can be matched to the data when some cases were
-dropped.
+dropped. A unit-weighted score needs every item of its factor: under
+FIML a case the model used can lack an item, and its sum or mean is then
+`NA`, which a note counts. Regression and Bartlett scores use the items
+a case has.
+
+[`print()`](https://rdrr.io/r/base/print.html) shows the score
+properties with a key to their columns, each flagged note's first
+sentence, and the parallel-model test when it is not flagged;
+[`summary()`](https://rdrr.io/r/base/summary.html) adds the loading
+spread and every note in full.
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws each
+score's validity against Gorsuch's references.
 
 ## References
 
@@ -153,45 +191,37 @@ cfa <- nomo_cfa(model, data = lavaan::HolzingerSwineford1939)
 # A sum score, with the parallel model it assumes fitted and compared
 summed <- nomo_scores(cfa, method = "sum")
 summed
-#> <nomo_scores> Scores
-#> Unit weighting (method: sum) | 3 factors | 301 scored cases
+#> <nomo_scores> Scores from a measurement model
+#> Method: sum (unit weighted) | Factors: 3 | Cases: 301
 #> 
 #> Score properties (Grice, 2001)
 #>   Factor   Items  Validity  Univocality  Correlational accuracy
-#>   visual       3     0.791       +0.372                  -0.162
-#>   textual      3     0.941       +0.431                  -0.117
-#>   speed        3     0.829       +0.390                  -0.162
+#>   visual       3       .79          .37                    -.16
+#>   textual      3       .94          .43                    -.12
+#>   speed        3       .83          .39                    -.16
 #> 
-#> Parallel model (what unit weighting assumes)
-#>   chi-square difference 43.27 on 12 df, p < .001
+#> What these columns mean
+#>   Validity -- Correlation of the score with its own factor; higher is better.
+#>   Univocality -- Largest correlation of the score with another factor. Through
+#>       its own factor, a score reaches another by the factor correlation times
+#>       its validity; a departure of .05 or more from that is noted.
+#>   Correlational accuracy -- Score correlation minus factor correlation, for
+#>       the pair of factors where they differ most; 0 is best.
 #> 
-#> Notes
-#>   - Review: The parallel model that unit weighting assumes fits worse than the
-#>     model you fitted (chi-square difference 43.27 on 12 df, p < .001). The
-#>     items are not interchangeable in the way adding them assumes. This does
-#>     not forbid a sum score; it means the choice needs a reason beyond
-#>     convenience, and that `validity` and `correlational_accuracy` describe
-#>     what it costs.
-#>   - Review: Validity is below .90 for visual, speed. Gorsuch (1983, p. 260)
-#>     recommended at least .80, and above .90 if the scores are to serve as
-#>     adequate substitutes for the factors themselves. Reported as his
-#>     recommendation, not applied as a rule.
-#>   - Concern: Correlations among these scores do not reproduce the correlations
-#>     among the factors: the largest discrepancy is -0.162, between visual and
-#>     speed. A relationship estimated from these scores carries that much bias,
-#>     and its direction is a property of the method and the model rather than a
-#>     constant that can be corrected for. Where the question can be asked of the
-#>     latent variables, ask it there. For a linear regression among factors,
-#>     Skrondal and Laake (2001) showed a scoring design that gives consistent
-#>     coefficients, and scores from one model containing every factor, like
-#>     these, are not it: the predictors need regression-method scores and the
-#>     outcome Bartlett scores, each from a measurement model of its own.
-#>   - Review: These scores also carry the other factors: the score for textual
-#>     correlates +0.431 with a factor it does not represent (Grice, 2001). A
-#>     score that is not univocal cannot be treated as though it measured its own
-#>     factor alone.
+#> Flagged
+#>   - Correlational accuracy (Concern): Correlations among these scores do not
+#>     reproduce the correlations among the factors: the largest discrepancy is
+#>     -.16, between visual and speed.
+#>   - Unit weighting (Review): The parallel model that unit weighting assumes
+#>     fits worse than the model you fitted (Delta chi-square(12) = 43.27,
+#>     p < .001).
+#>   - Validity (Review): Validity is below .90 for visual and speed.
 #> 
-#> No value here is a pass/fail threshold; see nomo_table(x, "diagnostics").
+#> No value here is a pass/fail threshold, and no scoring method is chosen for
+#> you.
+#> 
+#> See summary(x) for every note in full and the loading spread and
+#> nomo_table(x, "diagnostics") for the score properties as a table.
 summed$unit_weighting
 #> # A tibble: 3 × 6
 #>   factor  n_items min_loading max_loading loading_ratio loading_sd

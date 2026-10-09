@@ -562,12 +562,13 @@ nomo_missing(cfa, data = dat2)
 Listwise and pairwise deletion require data missing completely at
 random, and FIML requires data missing at random (Enders & Bandalos,
 2001). A difference larger than half the reference standard error is
-flagged, following Schafer and Graham’s (2002) rule for when bias
-becomes practically important. The flag comes with the caveat that the
-difference estimates bias only if the data are missing at random. That
-assumption cannot in general be tested from the data at hand, so
-agreement is reported as insensitivity to the choice, never as proof
-that either strategy is unbiased. See **“From CFA to a defensible
+flagged for review, a reference adapted from the size of bias Schafer
+and Graham (2002) treat as practically important; within one sample,
+sampling variability alone can exceed it. The flag comes with the caveat
+that the difference estimates bias only if the data are missing at
+random. That assumption cannot in general be tested from the data at
+hand, so agreement is reported as insensitivity to the choice, never as
+proof that either strategy is unbiased. See **“From CFA to a defensible
 measurement model”**.
 
 #### Calibration and validation samples

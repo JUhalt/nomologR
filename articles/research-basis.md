@@ -670,12 +670,14 @@ differ. Listwise and pairwise deletion require data missing completely
 at random; FIML requires data missing at random, and was unbiased under
 both in Enders and Bandalos’s (2001) simulations while the deletion
 methods were biased under MAR. A difference beyond half the reference
-standard error is flagged, following Schafer and Graham’s (2002) rule
-for when bias becomes practically important, with the caveat that it
-estimates bias only if the data are MAR. Because MAR cannot in general
-be tested from the data at hand (Schafer & Graham, 2002), agreement
-between strategies is reported as insensitivity, not as evidence that
-either is unbiased. Mean substitution is explained and not offered.
+standard error is flagged for review, a reference adapted from the size
+of bias Schafer and Graham (2002) treat as practically important, with
+two caveats: it estimates bias only if the data are MAR, and within one
+sample, sampling variability alone can exceed it. Because MAR cannot in
+general be tested from the data at hand (Schafer & Graham, 2002),
+agreement between strategies is reported as insensitivity, not as
+evidence that either is unbiased. Mean substitution is explained and not
+offered.
 
 **Planned.** Multiple-imputation integration is a candidate for a 1.x
 release after 1.0.0. The reasons for deferring it are recorded in

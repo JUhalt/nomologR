@@ -51,45 +51,36 @@ fits that constrained model and compares it with the model you supplied:
 
 summed <- nomo_scores(fit, method = "sum")
 summed
-#> <nomo_scores> Scores
-#> Unit weighting (method: sum) | 2 factors | 600 scored cases
+#> <nomo_scores> Scores from a measurement model
+#> Method: sum (unit weighted) | Factors: 2 | Cases: 600
 #> 
 #> Score properties (Grice, 2001)
 #>   Factor       Items  Validity  Univocality  Correlational accuracy
-#>   Agency           4     0.909       +0.525                  -0.186
-#>   Persistence      4     0.746       +0.431                  -0.186
+#>   Agency           4       .91          .52                    -.19
+#>   Persistence      4       .75          .43                    -.19
 #> 
-#> Parallel model (what unit weighting assumes)
-#>   chi-square difference 30.70 on 12 df, p = .002
+#> What these columns mean
+#>   Validity -- Correlation of the score with its own factor; higher is better.
+#>   Univocality -- Largest correlation of the score with another factor. Through
+#>       its own factor, a score reaches another by the factor correlation times
+#>       its validity; a departure of .05 or more from that is noted.
+#>   Correlational accuracy -- Score correlation minus factor correlation, for
+#>       the pair of factors where they differ most; 0 is best.
 #> 
-#> Notes
-#>   - Review: The parallel model that unit weighting assumes fits worse than the
-#>     model you fitted (chi-square difference 30.70 on 12 df, p = .002). The
-#>     items are not interchangeable in the way adding them assumes. This does
-#>     not forbid a sum score; it means the choice needs a reason beyond
-#>     convenience, and that `validity` and `correlational_accuracy` describe
-#>     what it costs.
-#>   - Review: Validity is below .90 for Persistence. Gorsuch (1983, p. 260)
-#>     recommended at least .80, and above .90 if the scores are to serve as
-#>     adequate substitutes for the factors themselves. Reported as his
-#>     recommendation, not applied as a rule.
-#>   - Concern: Correlations among these scores do not reproduce the correlations
-#>     among the factors: the largest discrepancy is -0.186, between Agency and
-#>     Persistence. A relationship estimated from these scores carries that much
-#>     bias, and its direction is a property of the method and the model rather
-#>     than a constant that can be corrected for. Where the question can be asked
-#>     of the latent variables, ask it there. For a linear regression among
-#>     factors, Skrondal and Laake (2001) showed a scoring design that gives
-#>     consistent coefficients, and scores from one model containing every
-#>     factor, like these, are not it: the predictors need regression-method
-#>     scores and the outcome Bartlett scores, each from a measurement model of
-#>     its own.
-#>   - Review: These scores also carry the other factors: the score for Agency
-#>     correlates +0.525 with a factor it does not represent (Grice, 2001). A
-#>     score that is not univocal cannot be treated as though it measured its own
-#>     factor alone.
+#> Flagged
+#>   - Correlational accuracy (Concern): Correlations among these scores do not
+#>     reproduce the correlations among the factors: the largest discrepancy is
+#>     -.19, between Agency and Persistence.
+#>   - Unit weighting (Review): The parallel model that unit weighting assumes
+#>     fits worse than the model you fitted (Delta chi-square(12) = 30.70,
+#>     p = .002).
+#>   - Validity (Review): Validity is below .90 for Persistence.
 #> 
-#> No value here is a pass/fail threshold; see nomo_table(x, "diagnostics").
+#> No value here is a pass/fail threshold, and no scoring method is chosen for
+#> you.
+#> 
+#> See summary(x) for every note in full and the loading spread and
+#> nomo_table(x, "diagnostics") for the score properties as a table.
 ```
 
 The loadings here were generated to differ, so the constraints are
@@ -122,9 +113,16 @@ coefficient that
 [`nomo_hierarchical()`](https://juhalt.github.io/nomologR/articles/hierarchical-models.md)
 reports, because that method maximizes it.
 
-`univocality` is a score’s correlation with the factors it does *not*
-represent. A score that is not univocal cannot be treated as though it
-measured its own factor alone.
+`univocality` is a score’s largest correlation with a factor it does
+*not* represent. When the factors correlate, a score reaches the others
+through its own factor, by the factor correlation times its validity, so
+a sizable value is expected: Bartlett scores, and sums of items that
+each load on one factor, correlate with the other factors by exactly
+that much. Only a departure from it is something the score takes from
+another factor directly, and
+[`nomo_scores()`](https://juhalt.github.io/nomologR/reference/nomo_scores.md)
+notes a departure of .05 or more. A score that is not univocal in that
+sense cannot be treated as though it measured its own factor alone.
 
 `correlational_accuracy` is the one to read before using scores in a
 later analysis. It is the difference between the correlations among the
@@ -258,8 +256,11 @@ With one factor, regression and Bartlett scores differ only by a scaling
 constant and rank people identically, so the choice between them matters
 only when there is more than one factor.
 
-Reliability coefficients follow the weighting. Coefficient alpha is the
-reliability of a unit-weighted scale; coefficient H, reported by
+Reliability coefficients follow the weighting. The reliability of a
+unit-weighted scale is omega computed from the fitted model, which
+[`nomo_reliability()`](https://juhalt.github.io/nomologR/reference/nomo_reliability.md)
+reports; coefficient alpha equals it only when the items’ loadings are
+equal (essential tau-equivalence). Coefficient H, reported by
 [`nomo_hierarchical()`](https://juhalt.github.io/nomologR/articles/hierarchical-models.md),
 belongs to optimally weighted scores. Reporting one for the other
 describes a scale that was not used.

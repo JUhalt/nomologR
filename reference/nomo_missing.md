@@ -124,7 +124,7 @@ reference strategy's estimate and expressed in units of the reference
 standard error. Schafer and Graham (2002) treat a bias larger than about
 half a standard error as practically important. Beyond that size it
 noticeably degrades the coverage of confidence intervals. A difference
-of that size is flagged for review, with two qualifications:
+of that size is flagged for review, with three qualifications:
 
 - The difference estimates listwise deletion's bias only if the data are
   MAR and the model is correct, since only then is FIML consistent. With
@@ -134,13 +134,36 @@ of that size is flagged for review, with two qualifications:
 - The strategies analyze different cases, so part of any difference is
   sampling variability.
 
+- Schafer and Graham's half a standard error judges a bias, measured
+  over simulated samples. Here it is applied to a difference within one
+  sample, so under MCAR, where listwise deletion is unbiased, sampling
+  variability alone can exceed it, and does so more often the more cases
+  are incomplete. A flag marks a difference to review, not a bias found.
+
 A hypothesis whose concordance with its prediction differs between
 strategies is also flagged for review.
 
-**The flagging rule** follows Schafer and Graham (2002, p. 157): a bias
-beyond about half a standard error is practically important, because it
-degrades interval coverage. Separating sampling variability from bias
-would be new output, added alongside this rule rather than replacing it.
+**The flagging rule** is adapted from Schafer and Graham (2002, p. 157):
+a bias beyond about half a standard error is practically important,
+because it degrades interval coverage. Separating sampling variability
+from bias would be new output, added alongside this rule rather than
+replacing it.
+
+**What lavaan estimated.** A strategy is labeled by the method lavaan
+used. When lavaan substitutes one method for another, as it runs
+two-stage ML when FIML is requested with ULS, the label names both, such
+as "Two-stage ML (requested FIML)", and a difference from it is
+attributed to no strategy.
+
+[`print()`](https://rdrr.io/r/base/print.html) shows the missingness,
+the strategies compared, the largest differences from the reference, and
+each flag's observation;
+[`summary()`](https://rdrr.io/r/base/summary.html) adds missing values
+by variable, fit and reliability by strategy, every difference, and each
+recorded decision with its recommendation. With more than one comparison
+strategy, each strategy's differences and coefficients are a table of
+their own. [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
+draws each difference from the reference in reference standard errors.
 
 **Not implemented.** Mean substitution is not offered. It understates
 variances and distorts covariances. Schafer and Graham (2002) show that
@@ -177,25 +200,41 @@ fit <- nomo_cfa(model, data = nomo_demo_continuous)
 sensitivity <- nomo_missing(fit, data = nomo_demo_continuous, reliability = FALSE)
 sensitivity
 #> <nomo_missing> Missing-data sensitivity
-#> Model: nomo_cfa | Reference: FIML | Fitted with: Listwise deletion
+#> Model: CFA | Reference: FIML | Fitted with: Listwise deletion
 #> Cases: 27 of 500 incomplete (5.4%) | Patterns: 3
-#> Lowest covariance coverage: 0.946 (a2, b3)
+#> Lowest covariance coverage: .95 (a2, b3)
 #> 
 #> Strategies
 #>   Strategy           lavaan    Needs  Role          N  Converged  Admissible
 #>   Listwise deletion  listwise  MCAR   comparison  473  yes        yes
 #>   FIML               ml        MAR    reference   500  yes        yes
 #> 
-#> Largest differences from the reference, in reference standard errors
+#> Largest differences from the reference (standardized estimates)
 #>   Parameter  Strategy           Estimate  Reference  Difference (SE)
-#>   A ~~ B     Listwise deletion     0.499      0.480            +0.45
+#>   A ~~ B     Listwise deletion      .499       .480            +0.45
 #>   B =~ b5    Listwise deletion     0.337      0.353            -0.37
 #>   A =~ a5    Listwise deletion     0.598      0.590            +0.23
 #>   A =~ a3    Listwise deletion     0.669      0.675            -0.21
 #>   B =~ b3    Listwise deletion     0.757      0.762            -0.17
 #> 
-#> Whether data are missing at random cannot be tested from these data; see
-#> nomo_table(x, "decision_log").
+#> What these terms mean
+#>   CFA -- Confirmatory factor analysis.
+#>   FIML -- Full-information maximum likelihood.
+#>   Needs -- What the strategy requires of the missing data: MCAR, missing
+#>       completely at random, or MAR, missing at random; -- where no requirement
+#>       is stated for the method lavaan used.
+#>   N -- Cases the strategy analyzed.
+#>   Covariance coverage -- Proportion of cases with both variables of a pair
+#>       observed; the lowest pair is shown.
+#>   Difference (SE) -- The estimate minus the reference strategy's estimate, in
+#>       the reference standard error (SE); beyond half of one is flagged for
+#>       review.
+#> 
+#> Whether data are missing at random cannot be tested from these data, and
+#> agreement between strategies does not show that either is unbiased.
+#> 
+#> See summary(x) for every difference and each recommendation and
+#> nomo_table(x, "decision_log") for every recorded decision.
 nomo_table(sensitivity, "strategies")
 #> # A tibble: 2 × 12
 #>   strategy label     lavaan_missing requires role  as_fitted available converged
