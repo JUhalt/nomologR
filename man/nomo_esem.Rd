@@ -104,7 +104,6 @@ it. Cases \code{lavaan} did not use, such as incomplete cases without
 \code{missing = "fiml"}, are reported.
 }
 \examples{
-\donttest{
 model <- nomo_model(list(
   Agency = paste0("ag", 1:4),
   Persistence = paste0("pe", 1:4)
@@ -112,7 +111,6 @@ model <- nomo_model(list(
 es <- nomo_esem(model, nomo_demo_network)
 es
 nomo_table(es, "factor_correlations")
-}
 }
 \references{
 Asparouhov, T., & Muthén, B. (2009). Exploratory structural equation

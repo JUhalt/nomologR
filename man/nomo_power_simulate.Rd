@@ -105,12 +105,18 @@ substitute. They also counted improper solutions, which are reported here.
 Summaries use the replications that converged.
 }
 \examples{
-\donttest{
 population <- "
   A =~ 0.7*a1 + 0.7*a2 + 0.6*a3 + 0.5*a4
   B =~ 0.7*b1 + 0.6*b2 + 0.6*b3 + 0.5*b4
   A ~~ 0.3*B
 "
+# Ten replications run quickly and show the result; they are far too few to
+# estimate power.
+quick <- nomo_power_simulate(population, n = 100, reps = 10,
+                             focus = "A~~B", seed = 2026)
+nomo_table(quick, "summary")
+
+\donttest{
 pw <- nomo_power_simulate(population, n = c(100, 200), reps = 100,
                           focus = "A~~B", seed = 2026)
 pw

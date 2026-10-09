@@ -140,7 +140,6 @@ every intercept of a factor's items released, its later means are fixed at
 0 rather than estimated; the decision log says so, and they are left out.
 }
 \examples{
-\donttest{
 long <- nomo_invariance_longitudinal(
   "Wellbeing =~ w1 + w2 + w3 + w4",
   data = nomo_demo_longitudinal,
@@ -149,6 +148,7 @@ long <- nomo_invariance_longitudinal(
 long
 head(nomo_table(long, "local_strain"))
 
+\donttest{
 # The w3 intercept drifts upward over time. Releasing it, as a documented
 # decision, leaves the latent change to the other items.
 release <- nomo_partial(

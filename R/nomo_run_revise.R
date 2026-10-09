@@ -422,7 +422,6 @@ nomo_revise_content_review_log <- function(log, handoff, scales, lineage) {
 #' @seealso [nomo_run()], [nomo_compare()]
 #'
 #' @examples
-#' \donttest{
 #' scales <- list(Agency = c("ag1", "ag2", "ag3", "ag4"))
 #'
 #' run <- nomo_run(
@@ -434,18 +433,30 @@ nomo_revise_content_review_log <- function(log, handoff, scales, lineage) {
 #'     cfa_model = "Agency =~ ag1 + ag2 + ag3 + ag4"
 #'   )
 #' )
-#'
-#' revised <- nomo_revise(
-#'   run,
-#'   cfa_model = "Agency =~ ag1 + ag2 + ag3 + ag4\nag1 ~~ ag2",
-#'   rationale = paste(
-#'     "Residual diagnostics and item wording suggest ag1 and ag2 share",
-#'     "method variance beyond the common factor."
-#'   ),
-#'   origin = "post_hoc"
+#' revised_model <- "Agency =~ ag1 + ag2 + ag3 + ag4\nag1 ~~ ag2"
+#' rationale <- paste(
+#'   "Residual diagnostics and item wording suggest ag1 and ag2 share",
+#'   "method variance beyond the common factor."
 #' )
 #'
+#' # The revision alone, without the comparison of parent and revised models.
+#' revised <- nomo_revise(
+#'   run,
+#'   cfa_model = revised_model,
+#'   rationale = rationale,
+#'   origin = "post_hoc",
+#'   compare = FALSE
+#' )
 #' nomo_table(revised, "lineage")
+#'
+#' \donttest{
+#' # By default the two models are also compared.
+#' revised <- nomo_revise(
+#'   run,
+#'   cfa_model = revised_model,
+#'   rationale = rationale,
+#'   origin = "post_hoc"
+#' )
 #' nomo_table(revised$revision_comparison, "comparisons")
 #' }
 #' @export

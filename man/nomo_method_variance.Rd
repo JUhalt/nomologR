@@ -155,7 +155,6 @@ estimates, and other sources of method variance may remain (Podsakoff,
 MacKenzie, & Podsakoff, 2012).
 }
 \examples{
-\donttest{
 # Two substantive factors and a marker, all sharing a method factor
 # (simulated).
 population <- "
@@ -177,7 +176,6 @@ mv <- nomo_method_variance(
 )
 mv
 nomo_table(mv, "reliability")
-}
 }
 \references{
 Lindell, M. K., & Whitney, D. J. (2001). Accounting for common method

@@ -409,7 +409,6 @@ nomo_run_resume <- function(resume,
 #' 1359-1366. \doi{10.1177/0956797611417632}
 #'
 #' @examples
-#' \donttest{
 #' scales <- list(
 #'   Agency = c("ag1", "ag2", "ag3", "ag4"),
 #'   Persistence = c("pe1", "pe2", "pe3", "pe4")
@@ -454,7 +453,6 @@ nomo_run_resume <- function(resume,
 #'   )
 #' )
 #' nomo_table(run, "stages")
-#' }
 #'
 #' @export
 nomo_run <- function(data = NULL,

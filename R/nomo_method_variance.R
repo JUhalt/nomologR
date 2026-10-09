@@ -158,7 +158,6 @@
 #' \doi{10.1177/1094428110366036}
 #'
 #' @examples
-#' \donttest{
 #' # Two substantive factors and a marker, all sharing a method factor
 #' # (simulated).
 #' population <- "
@@ -180,7 +179,6 @@
 #' )
 #' mv
 #' nomo_table(mv, "reliability")
-#' }
 #' @export
 nomo_method_variance <- function(model,
                                  data,
