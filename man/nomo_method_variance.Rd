@@ -156,25 +156,15 @@ MacKenzie, & Podsakoff, 2012).
 }
 \examples{
 \donttest{
-# Two substantive factors and a marker, all sharing a method factor
-# (simulated).
-population <- "
-  A =~ 0.7*a1 + 0.7*a2 + 0.6*a3 + 0.6*a4
-  B =~ 0.7*b1 + 0.6*b2 + 0.6*b3 + 0.5*b4
-  M =~ 0.7*m1 + 0.7*m2 + 0.6*m3
-  CMV =~ 0.3*a1 + 0.3*a2 + 0.3*a3 + 0.3*a4 + 0.3*b1 + 0.3*b2 + 0.3*b3 +
-         0.3*b4 + 0.3*m1 + 0.3*m2 + 0.3*m3
-  A ~~ 0.4*B
-  A ~~ 0*M
-  B ~~ 0*M
-  CMV ~~ 0*A + 0*B + 0*M
-"
-set.seed(2010)
-dat <- lavaan::simulateData(population, sample.nobs = 600, standardized = TRUE)
-mv <- nomo_method_variance(
-  "A =~ a1 + a2 + a3 + a4\nB =~ b1 + b2 + b3 + b4",
-  data = dat, marker = c("m1", "m2", "m3")
-)
+# Social desirability as the marker for the Agency and Persistence items of
+# the simulated validation study. In its population the marker shares
+# nothing with those items, so no method variance should be detected.
+model <- nomo_model(list(
+  Agency = paste0("ag", 1:4),
+  Persistence = paste0("pe", 1:4)
+))
+mv <- nomo_method_variance(model, data = nomo_demo_network,
+                           marker = c("sd1", "sd2", "sd3"))
 mv
 nomo_table(mv, "reliability")
 }
