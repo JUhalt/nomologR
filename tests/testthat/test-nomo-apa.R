@@ -477,6 +477,14 @@ test_that("omega for ordered indicators is named for its scale, and alpha's abse
   )
   expect_match(tab$notes$specific, "^Categorical omega")
   expect_match(tab$notes$general, "\u03c9 = coefficient omega.", fixed = TRUE)
+  # An omega that was not computed is a dash without a marker, and explained.
+  gone <- mixed
+  gone$omega$estimate[[1L]] <- NA_real_
+  tab <- nomo_apa_table(gone)
+  expect_identical(tab$body[[2L]][[1L]], nomologR:::nomo_apa_dash)
+  expect_identical(tab$notes$specific, character())
+  expect_match(tab$notes$general, paste(nomologR:::nomo_apa_dash, "= not computed."),
+               fixed = TRUE)
   # Alpha requested for continuous indicators but not available is said so.
   mixed$alpha_status$indicator_type <- "continuous"
   expect_match(nomo_apa_table(mixed)$notes$general,
@@ -623,7 +631,10 @@ test_that("correlations a model fixes are not tabled as estimates (#145)", {
   expect_identical(tab$body$Factors, c("visual with speed", "textual with speed"))
   expect_match(tab$notes$general,
                "Correlations the model fixes are not shown: visual with textual.", fixed = TRUE)
-  expect_match(tab$notes$general, "CI = confidence interval.", fixed = TRUE)
+  # Every abbreviation in the headings is defined, r among them.
+  expect_match(tab$notes$general,
+               "*r* = latent correlation from the confirmatory factor analysis; CI = confidence interval.",
+               fixed = TRUE)
 })
 
 
@@ -669,6 +680,19 @@ test_that("the hypotheses table shows the interval each concordance was judged o
   expect_match(tab$notes$general, "Estimates are standardized except where marked.", fixed = TRUE)
   expect_match(tab$notes$general, "CI = confidence interval.", fixed = TRUE)
 
+  # A cell is marked for what it shows: an estimate without its equivalence
+  # interval, or no estimate at all, carries no marker, and the dash is
+  # explained.
+  bare <- net
+  bare$hypothesis_evidence$equivalence_ci_lower[[2L]] <- NA_real_
+  bare$hypothesis_evidence$estimate[[3L]] <- NA_real_
+  tab <- nomo_apa_table(bare)
+  expect_identical(tab$body[[3L]][[2L]], nomologR:::nomo_apa_number(h2$estimate, 2, TRUE))
+  expect_identical(tab$body[[3L]][[3L]], nomologR:::nomo_apa_dash)
+  expect_identical(tab$notes$specific, character())
+  expect_match(tab$notes$general, paste(nomologR:::nomo_apa_dash, "= not estimated."),
+               fixed = TRUE)
+
   # Every prediction negligible: the heading itself names the interval.
   only <- net
   only$hypothesis_evidence <- he[he$id == "H2", ]
@@ -686,12 +710,30 @@ test_that("evidence labels are the console's, and a bare negligible prediction i
                                       "not_confirmable_without_sesoi", "something_new", NA)),
     c("Concordant", "In region, imprecise", "Not confirmable", "Something new", "\u2014")
   )
+  # Every stored value has its words, so no label is left undefined.
+  expect_true(all(c(
+    "concordant", "directionally_concordant_imprecise", "direction_concordant_below_magnitude",
+    "direction_concordant_above_magnitude", "inconclusive", "inconsistent", "not_evaluable",
+    "not_confirmable_without_sesoi"
+  ) %in% names(nomologR:::nomo_apa_evidence_words)))
   skip_on_cran()
   net <- apa_net()
-  net$hypothesis_evidence$concordance[[2L]] <- "not_confirmable_without_sesoi"
-  expect_match(nomo_apa_table(net)$notes$general,
-               "Not confirmable = a negligible prediction without a smallest effect size of interest",
+  # The note defines the labels the table shows, in the order shown, and no other.
+  note <- nomo_apa_table(net)$notes$general
+  expect_match(note, "not a verdict on the measure. Concordant = the interval lies inside the predicted region.",
                fixed = TRUE)
+  expect_false(grepl("Not confirmable =", note, fixed = TRUE))
+  net$hypothesis_evidence$concordance[2:3] <- c("not_confirmable_without_sesoi", "something_new")
+  note <- nomo_apa_table(net)$notes$general
+  expect_match(note, paste(
+    "Concordant = the interval lies inside the predicted region; Not confirmable = a",
+    "negligible prediction without a smallest effect size of interest, which a",
+    "nonsignificant estimate cannot confirm."
+  ), fixed = TRUE)
+  expect_false(grepl("Something new =", note, fixed = TRUE))
+  # A table whose labels are all unknown has no definitions to give.
+  net$hypothesis_evidence$concordance <- "something_new"
+  expect_false(grepl(" = the ", nomo_apa_table(net)$notes$general, fixed = TRUE))
 })
 
 
@@ -730,13 +772,108 @@ test_that("the console fits an APA table to its width and names what it leaves o
   expect_true(any(grepl("^Composite +n +\\[95% CI\\] +\\[95% CI\\] +\\[95% CI\\] +SEM +SDC$",
                         retest)))
 
-  # At 40 columns the fit table keeps its stub and p value and names the rest.
+  # A number keeps its column whether or not a note marker follows it: the
+  # closing bracket of every interval sits in one column.
+  rows <- out[grepl("^H[0-9]:", out)]
+  expect_identical(length(rows), 3L)
+  expect_identical(length(unique(vapply(gregexpr("]", rows, fixed = TRUE), max, numeric(1)))), 1L)
+  expect_true(any(grepl("] (b)", rows, fixed = TRUE)))
+  expect_true(any(grepl("] (c)", rows, fixed = TRUE)))
+  # Each specific note starts its own line, so no marker is left at a line's end.
+  expect_true(any(startsWith(out, "(b) The interval is the 90% equivalence interval")))
+  expect_true(any(startsWith(out, "(c) Unstandardized estimate.")))
+
+  # At 40 columns the fit table keeps its stub and the columns that fit, and
+  # names the rest.
   local_reproducible_output(width = 40)
   fit <- capture.output(print(tables[[3L]]))
   expect_true(any(grepl("Not shown for width:", fit, fixed = TRUE)))
   expect_true(any(grepl("See x$body.", fit, fixed = TRUE)))
   expect_true(any(grepl("^Model ", fit) & grepl(" p ", fit, fixed = TRUE)))
   expect_false(any(grepl("SRMR", fit[grepl("^Model ", fit)], fixed = TRUE)))
+  # The hypotheses table keeps its Evidence, the status, whatever it drops.
+  narrow <- capture.output(print(tables[[1L]]))
+  expect_true(any(grepl("^Hypothesis +Evidence$", narrow)))
+  expect_true(any(grepl("Not shown for width: Prediction,", narrow, fixed = TRUE)))
+})
+
+
+test_that("a console too narrow drops columns from the right, a p value among them (#145)", {
+  # A p value belongs to the estimate or test beside it, so it is not kept
+  # when that column goes: the correlation stays, and its p value is named.
+  tab <- nomologR:::nomo_apa_new(
+    body = data.frame(
+      Factors = c("Agency with Persistence", "Persistence with SocialDesirability"),
+      r = c(".46 [.39, .53]", ".00 [-.09, .09]^a^"), p = c("< .001", ".963"),
+      stringsAsFactors = FALSE
+    ),
+    title = "Factor Correlations", stub = "Factors",
+    specific = c("First.", "Second.")
+  )
+  names(tab$body) <- c("Factors", "*r* [95% CI]", "*p*")
+  local_reproducible_output(width = 40)
+  out <- capture.output(print(tab))
+  expect_true(all(nchar(out, type = "width") <= 40L))
+  expect_true(any(grepl("^Factors +r \\[95% CI\\]$", out)))
+  expect_true(any(grepl("Not shown for width: p. See x$body.", out, fixed = TRUE)))
+  expect_true(any(grepl(".00 [-.09, .09] (a)", out, fixed = TRUE)))
+  # In the console each specific note has its line; knitted, they run on in
+  # one paragraph, as APA sets them.
+  expect_true(all(c("(a) First.", "(b) Second.") %in% out))
+  md <- nomologR:::nomo_apa_markdown(tab, latex = FALSE)
+  expect_identical(md[[length(md)]], "^a^ First. ^b^ Second.")
+})
+
+
+test_that("a multi-group reliability table has a row for each construct and group (#145)", {
+  skip_on_cran()
+  # Two groups, set on the object, so the test needs no multi-group fit.
+  rel <- nomo_reliability(apa_cfa())
+  by_group <- function(tbl) {
+    paper <- tbl
+    paper$estimate <- tbl$estimate - .02
+    tbl$block <- "online"
+    paper$block <- "paper"
+    rbind(tbl, paper)
+  }
+  rel$omega <- by_group(rel$omega)
+  rel$alpha <- by_group(rel$alpha)
+  tab <- nomo_apa_table(rel)
+  expect_identical(tab$body$Construct, c("Agency (online)", "Persistence (online)",
+                                         "Agency (paper)", "Persistence (paper)"))
+  # No group's coefficient is dropped: each row has its own.
+  expect_identical(
+    tab$body[[2L]],
+    nomologR:::nomo_apa_number(rel$omega$estimate, 2L, bounded = TRUE)
+  )
+})
+
+
+test_that("the hypotheses note names composites modeled as single indicators", {
+  skip_on_cran()
+  net <- apa_net()
+  net$single_indicators <- data.frame(
+    variable = c("persistence", "sd_score"), reliability = c(.8, .62),
+    coefficient = c("omega", "unspecified"), stringsAsFactors = FALSE
+  )
+  note <- nomo_apa_table(net)$notes$general
+  expect_match(note, "persistence and sd_score were modeled as single-indicator latent variables",
+               fixed = TRUE)
+  expect_match(note, "(reliability: persistence = .80, omega; sd_score = .62).", fixed = TRUE)
+  net$single_indicators <- net$single_indicators[1L, ]
+  expect_match(nomo_apa_table(net)$notes$general,
+               "persistence was modeled as a single-indicator latent variable, with its error variance",
+               fixed = TRUE)
+})
+
+
+test_that("fractional degrees of freedom are not rounded to a whole number (#145)", {
+  expect_identical(nomologR:::nomo_apa_df(c(34, 33.468, NA)),
+                   c("34", "33.47", nomologR:::nomo_apa_dash))
+  # An adjusted test, such as the mean- and variance-adjusted one, has them.
+  cfa <- apa_cfa()
+  cfa$fit_evidence$value[cfa$fit_evidence$metric == "df"] <- 18.42
+  expect_identical(nomo_apa_table(cfa, "fit")$body[["*df*"]], "18.42")
 })
 
 

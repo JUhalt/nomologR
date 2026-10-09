@@ -57,6 +57,17 @@ nomo_apa_p <- function(p) {
 }
 
 
+# Degrees of freedom as the console prints them: whole, or with two decimals
+# for an adjusted test whose degrees of freedom are fractional, which a whole
+# number would misreport.
+nomo_apa_df <- function(x) {
+  x <- suppressWarnings(as.numeric(x))
+  out <- nomo_present_stat(x, "df")
+  out[!is.finite(x)] <- nomo_apa_dash
+  out
+}
+
+
 nomo_apa_interval <- function(estimate, lower, upper, digits = 2L,
                               bounded = FALSE) {
   est <- nomo_apa_number(estimate, digits, bounded)
@@ -244,16 +255,19 @@ nomo_apa_mark <- function(body, marks) {
 #' **Notes say what the table shows.** The general note defines each
 #' abbreviation, gives the estimator and the number of cases analyzed, and
 #' says when the chi-square is a scaled test statistic and the fit indices are
-#' robust or scaled values. An interval's heading carries its level, such as
-#' "90% CI" for a reliability interval bootstrapped at that level. A cell left
-#' empty is an em dash, explained in the note; a cell that does not apply, such
-#' as the change in fit of the first invariance model, is blank. Specific notes,
-#' marked with superscript letters, name the parameters a partial invariance
-#' model frees, the hypotheses specified post hoc, the estimates whose interval
-#' is the equivalence interval a `negligible()` prediction is judged on, and
-#' the estimates on another scale than the rest. A correlation the model fixes,
-#' such as the zero correlations of a bifactor model, is not tabled as an
-#' estimate.
+#' robust or scaled values. For a network's hypotheses it also defines each
+#' evidence label the table shows, such as "Concordant", and each prediction
+#' is given with the region it names. An interval's heading carries its level,
+#' such as "90% CI" for a reliability interval bootstrapped at that level. A
+#' cell left empty is an em dash, explained in the note; a cell that does not
+#' apply, such as the change in fit of the first invariance model, is blank.
+#' Specific notes, marked with superscript letters, name the parameters a
+#' partial invariance model frees, the hypotheses specified post hoc, the
+#' estimates whose interval is the equivalence interval a `negligible()`
+#' prediction is judged on, and the estimates on another scale than the rest.
+#' A correlation the model fixes, such as the zero correlations of a bifactor
+#' model, is not tabled as an estimate. Degrees of freedom that are not whole,
+#' as for a mean- and variance-adjusted test, are given to two decimals.
 #'
 #' **Discriminant evidence without the Fornell-Larcker matrix.** For a
 #' `nomo_validity` result, the `"discriminant"` table gives each pair of
@@ -339,7 +353,7 @@ nomo_apa_mark <- function(body, marks) {
 #' \doi{10.1108/IMDS-02-2021-0082}
 #'
 #' Rönkkö, M., & Cho, E. (2022). An updated guideline for assessing
-#' discriminant validity. *Organizational Research Methods, 25*(1).
+#' discriminant validity. *Organizational Research Methods, 25*(1), 6-47.
 #' \doi{10.1177/1094428120968614}
 #'
 #' @examples
@@ -434,8 +448,8 @@ nomo_apa_table.nomo_cfa <- function(x, type = c("loadings", "fit", "factor_corre
       title = nomo_apa_or(title, "Factor Correlations"),
       stub = "Factors",
       general = nomo_apa_join(
-        "CI = confidence interval.",
-        "Latent correlations from the confirmatory factor analysis.",
+        "*r* = latent correlation from the confirmatory factor analysis; CI =",
+        "confidence interval.",
         sample_note,
         if (any(fixed)) {
           sprintf("Correlations the model fixes are not shown: %s.",
@@ -475,7 +489,7 @@ nomo_apa_fit_table <- function(fe, estimator, n, title, number, source,
   body <- data.frame(
     Model = model_label,
     chisq = nomo_apa_number(value("chi_square"), 2L),
-    df = nomo_apa_number(value("df"), 0L),
+    df = nomo_apa_df(value("df")),
     p = nomo_apa_p(value("p_value")),
     CFI = nomo_apa_number(value("CFI"), 3L, bounded = TRUE),
     TLI = nomo_apa_number(value("TLI"), 3L, bounded = FALSE),
@@ -557,7 +571,7 @@ nomo_apa_table.nomo_reliability <- function(x, type = NULL, number = NULL,
   one_scale <- length(unique(scale)) == 1L
   marks <- if (one_scale) list() else {
     lapply(setdiff(unique(scale), "continuous"), function(s) list(
-      rows = scale == s, column = omega_heading,
+      rows = scale == s & omega != nomo_apa_dash, column = omega_heading,
       note = paste0(nomo_apa_capitalize(nomo_apa_omega_words[[s]]), ".")
     ))
   }
@@ -600,7 +614,7 @@ nomo_apa_table.nomo_reliability <- function(x, type = NULL, number = NULL,
           "Coefficient alpha could not be computed for these constructs."
         }
       },
-      nomo_apa_dash_note(marked$body, "not computed")
+      nomo_apa_dash_note(body, "not computed")
     ),
     specific = marked$specific,
     number = number, source = "nomo_reliability"
@@ -648,7 +662,7 @@ nomo_apa_table.nomo_invariance <- function(x, type = NULL, number = NULL,
   }
   lrt <- ifelse(
     is.finite(fe$lrt_chisq),
-    sprintf("%s (%s)", nomo_apa_number(fe$lrt_chisq, 2L), nomo_apa_number(fe$lrt_df, 0L)),
+    sprintf("%s (%s)", nomo_apa_number(fe$lrt_chisq, 2L), nomo_apa_df(fe$lrt_df)),
     nomo_apa_dash
   )
   # A level fitted with researcher-specified releases is a partial model, and
@@ -664,7 +678,7 @@ nomo_apa_table.nomo_invariance <- function(x, type = NULL, number = NULL,
   body <- data.frame(
     Model = model,
     chisq = nomo_apa_number(fe$chisq, 2L),
-    df = nomo_apa_number(fe$df, 0L),
+    df = nomo_apa_df(fe$df),
     CFI = nomo_apa_number(fe$cfi, 3L, bounded = TRUE),
     RMSEA = nomo_apa_number(fe$rmsea, 3L, bounded = FALSE),
     SRMR = nomo_apa_number(fe$srmr, 3L, bounded = FALSE),
@@ -733,7 +747,7 @@ nomo_apa_table.nomo_invariance <- function(x, type = NULL, number = NULL,
       ),
       "Each model adds constraints to the one above it. Changes in fit are",
       "reported as evidence and are not compared with fixed cutoffs.",
-      nomo_apa_dash_note(marked$body, "not computed")
+      nomo_apa_dash_note(body, "not computed")
     ),
     specific = marked$specific,
     number = number, source = "nomo_invariance"
@@ -818,9 +832,11 @@ nomo_apa_table.nomo_network <- function(x, type = c("hypotheses", "fit"),
   lower <- ifelse(equivalence, he$equivalence_ci_lower, he$ci_lower)
   upper <- ifelse(equivalence, he$equivalence_ci_upper, he$ci_upper)
   shown <- function(v) nomo_network_number(v, kind, nomo_network_nearest_bound(v, h$lower, h$upper))
+  estimated <- is.finite(he$estimate)
+  interval <- estimated & is.finite(lower) & is.finite(upper)
   estimate <- ifelse(
-    !is.finite(he$estimate), nomo_apa_dash,
-    ifelse(is.finite(lower) & is.finite(upper),
+    !estimated, nomo_apa_dash,
+    ifelse(interval,
            sprintf("%s [%s, %s]", shown(he$estimate), shown(lower), shown(upper)),
            shown(he$estimate))
   )
@@ -849,7 +865,8 @@ nomo_apa_table.nomo_network <- function(x, type = c("hypotheses", "fit"),
 
   # Specific notes: post hoc hypotheses, which are exploratory however the
   # estimate turns out; the equivalence intervals among 95% intervals; and the
-  # estimates on another scale than the rest (#145).
+  # estimates on another scale than the rest (#145). A cell is marked for what
+  # it shows, so an empty one carries no marker.
   tost <- sprintf("two one-sided tests at \u03b1 = %s", nomo_present_level(equivalence_alpha))
   scale <- as.character(he$scale)
   scales <- unique(scale)
@@ -859,14 +876,14 @@ nomo_apa_table.nomo_network <- function(x, type = c("hypotheses", "fit"),
       note = "Specified after the data were seen, so this relation is exploratory."
     )),
     if (!all_equivalence) list(list(
-      rows = equivalence, column = estimate_heading,
+      rows = equivalence & interval, column = estimate_heading,
       note = sprintf(paste(
         "The interval is the %s equivalence interval (%s), on which concordance",
         "with a negligible prediction is judged."
       ), equivalence_level, tost)
     )),
     if (length(scales) > 1L) lapply(setdiff(scales, "standardized"), function(s) list(
-      rows = scale == s, column = estimate_heading,
+      rows = scale == s & estimated, column = estimate_heading,
       note = sprintf("%s estimate.", nomo_apa_capitalize(s))
     ))
   )
@@ -895,7 +912,13 @@ nomo_apa_table.nomo_network <- function(x, type = c("hypotheses", "fit"),
   } else {
     ""
   }
-  bare <- he$concordance %in% "not_confirmable_without_sesoi"
+  # Each evidence label the table shows, defined once, in the order shown.
+  shown_evidence <- unique(as.character(he$concordance))
+  shown_evidence <- shown_evidence[shown_evidence %in% names(nomo_apa_evidence_words)]
+  evidence_note <- if (length(shown_evidence)) {
+    paste0(paste(sprintf("%s = %s", nomo_apa_concordance(shown_evidence),
+                         nomo_apa_evidence_words[shown_evidence]), collapse = "; "), ".")
+  }
   nomo_apa_new(
     body = marked$body,
     title = nomo_apa_or(title, "Theory-Specified Relations"),
@@ -919,14 +942,9 @@ nomo_apa_table.nomo_network <- function(x, type = c("hypotheses", "fit"),
       "Evidence describes how each estimate relates to the prediction",
       "registered for it; it is evidence about the prediction, not a verdict on",
       "the measure.",
-      if (any(bare)) {
-        paste(
-          "Not confirmable = a negligible prediction without a smallest effect",
-          "size of interest, which a nonsignificant estimate cannot confirm."
-        )
-      },
+      evidence_note,
       single_note,
-      nomo_apa_dash_note(marked$body, "not estimated")
+      nomo_apa_dash_note(body, "not estimated")
     ),
     specific = marked$specific,
     number = number, source = "nomo_network"
@@ -1094,10 +1112,43 @@ nomo_apa_concordance <- function(x) {
 }
 
 
+# What each evidence label means, for the note of a table that shows it, in
+# the words of the Concordance section of ?nomo_network. "The interval" is the
+# one the table shows for the estimate.
+nomo_apa_evidence_words <- c(
+  concordant = "the interval lies inside the predicted region",
+  directionally_concordant_imprecise = paste(
+    "the estimate lies inside the predicted region and its interval extends",
+    "outside it"
+  ),
+  direction_concordant_below_magnitude = paste(
+    "the estimate has the predicted sign and is smaller than the predicted",
+    "magnitude, which its interval reaches"
+  ),
+  direction_concordant_above_magnitude = paste(
+    "the estimate has the predicted sign and is larger than the predicted",
+    "magnitude, which its interval reaches"
+  ),
+  inconclusive = "the estimate lies outside the predicted region, which its interval reaches",
+  inconsistent = "the estimate and its interval lie outside the predicted region",
+  not_evaluable = paste(
+    "no estimate with a standard error is available, so the relation is not",
+    "compared with its prediction"
+  ),
+  not_confirmable_without_sesoi = paste(
+    "a negligible prediction without a smallest effect size of interest,",
+    "which a nonsignificant estimate cannot confirm"
+  )
+)
+
+
 # Printing ---------------------------------------------------------------------
 
-# The general, specific, and probability notes, one paragraph each.
-nomo_apa_notes_text <- function(notes) {
+# The general, specific, and probability notes, one paragraph each. In a
+# manuscript the specific notes run on in one paragraph (APA 7, Section 7.14);
+# the console gives each its own line (`run_in = FALSE`), so no marker is left
+# at the end of a line, away from its note.
+nomo_apa_notes_text <- function(notes, run_in = TRUE) {
   parts <- character()
   general <- notes$general[nzchar(notes$general)]
   if (length(general)) {
@@ -1105,7 +1156,8 @@ nomo_apa_notes_text <- function(notes) {
   }
   specific <- notes$specific[nzchar(notes$specific)]
   if (length(specific)) {
-    parts <- c(parts, paste0("^", letters[seq_along(specific)], "^ ", specific, collapse = " "))
+    specific <- paste0("^", letters[seq_along(specific)], "^ ", specific)
+    parts <- c(parts, if (isTRUE(run_in)) paste(specific, collapse = " ") else specific)
   }
   probability <- notes$probability[nzchar(notes$probability)]
   if (length(probability)) {
@@ -1122,6 +1174,9 @@ nomo_apa_console_text <- function(s) {
   trimws(gsub("*", "", s, fixed = TRUE))
 }
 
+# A note marker as the console writes it: "(a)", or "(a,b)" for two notes.
+nomo_apa_marker <- "\\([a-z](,[a-z])*\\)"
+
 
 # A cell's statistical clauses bound with no-break spaces, as the console binds
 # them; a bound kept with its relation, "\u2265 0.20" or "> 0", though not the
@@ -1131,7 +1186,7 @@ nomo_apa_console_text <- function(s) {
 nomo_apa_bind <- function(text) {
   nb <- nomo_present_nbsp
   text <- gsub("(^|[[:space:]])([\u2264\u2265<>]=?) ", paste0("\\1\\2", nb), text)
-  text <- gsub(" (\\([a-z,]+\\))$", paste0(nb, "\\1"), text)
+  text <- gsub(paste0(" (", nomo_apa_marker, ")$"), paste0(nb, "\\1"), text)
   nomo_present_bind(gsub(" = ", paste0(nb, "=", nb), text, fixed = TRUE))
 }
 
@@ -1157,19 +1212,29 @@ nomo_apa_cell_floor <- function(text, exdent = 2L) {
 # wraps its long headings over two or more lines, then wraps its text cells
 # (the stub, and words such as an evidence label), widest first, then
 # tightens its column gaps to one space. Only then are columns dropped, from
-# the right, never the stub, the Evidence status, or a p value (guide point
-# 5), and named beneath the table (#145).
+# the right, never the stub or the Evidence status (guide point 5), and named
+# beneath the table (#145). A p value is dropped like any other column: in a
+# manuscript table it belongs to the test beside it, and would be misread
+# without it.
 nomo_apa_console_layout <- function(headings, cells, room) {
-  stripped <- lapply(cells, function(v) sub("[[:space:]]*\\([a-z,]+\\)$", "", v))
+  marker <- paste0(" ", nomo_apa_marker, "$")
+  stripped <- lapply(cells, function(v) sub(marker, "", v))
   text <- vapply(stripped, function(v) any(grepl("[A-Za-z]", v)), logical(1))
   text[[1L]] <- TRUE
-  keep <- tolower(c(nomo_present_keep, "Evidence"))
+  # A note marker hangs to the right of a column of numbers, so the numbers
+  # stay aligned; in a text cell it follows the word it marks.
+  marks <- lapply(seq_along(cells), function(j) {
+    if (text[[j]]) rep("", length(cells[[j]])) else substring(cells[[j]], nchar(stripped[[j]]) + 1L)
+  })
+  cells[!text] <- stripped[!text]
+  hang <- vapply(marks, function(m) max(nchar(m, type = "width"), 0L), integer(1))
+  keep <- "evidence"
 
   layout <- function(cols) {
     heads <- lapply(headings[cols], identity)
     body <- lapply(cells[cols], as.list)
     width <- function(j) {
-      max(nchar(c(heads[[j]], unlist(body[[j]])), type = "width"), 1L)
+      max(nchar(c(heads[[j]], unlist(body[[j]])), type = "width"), 1L) + hang[[cols[[j]]]]
     }
     widths <- function() vapply(seq_along(cols), width, integer(1))
     total <- function(gap) sum(widths()) + gap * (length(cols) - 1L)
@@ -1215,23 +1280,29 @@ nomo_apa_console_layout <- function(headings, cells, room) {
     space <- strrep(" ", pmax(0L, w - nchar(s, type = "width")))
     if (left) paste0(s, space) else paste0(space, s)
   }
-  emit <- function(parts) sub("[[:space:]]+$", "", paste(parts, collapse = strrep(" ", laid$gap)))
   left <- text[laid$cols]
+  hang <- hang[laid$cols]
+  marks <- marks[laid$cols]
   k <- length(laid$cols)
+  # One column's piece of a line: the text in its column, then its note marker
+  # in the room the column keeps for one.
+  piece <- function(j, s, mark = "") {
+    paste0(align(s, laid$widths[[j]] - hang[[j]], left[[j]]), align(mark, hang[[j]], TRUE))
+  }
+  emit <- function(parts) sub("[[:space:]]+$", "", paste(parts, collapse = strrep(" ", laid$gap)))
   # Headings sit on the bottom line of the heading rows, as in print.
   depth <- max(lengths(laid$heads))
   heads <- lapply(laid$heads, function(h) c(rep("", depth - length(h)), h))
   lines <- vapply(seq_len(depth), function(l) {
-    emit(vapply(seq_len(k), function(j) align(heads[[j]][[l]], laid$widths[[j]], left[[j]]),
-                character(1)))
+    emit(vapply(seq_len(k), function(j) piece(j, heads[[j]][[l]]), character(1)))
   }, character(1))
   rows <- unlist(lapply(seq_along(cells[[1L]]), function(r) {
     row <- lapply(laid$body, `[[`, r)
     height <- max(lengths(row))
     vapply(seq_len(height), function(l) {
       emit(vapply(seq_len(k), function(j) {
-        piece <- if (l <= length(row[[j]])) row[[j]][[l]] else ""
-        align(piece, laid$widths[[j]], left[[j]])
+        s <- if (l <= length(row[[j]])) row[[j]][[l]] else ""
+        piece(j, s, if (l == 1L) marks[[j]][[r]] else "")
       }, character(1)))
     }, character(1))
   }))
@@ -1255,11 +1326,12 @@ print.nomo_apa_table <- function(x, ...) {
     nb <- nomo_present_nbsp
     nomo_present_text("Not shown for width: ",
                       paste(gsub(" ", nb, laid$hidden, fixed = TRUE), collapse = ", "),
-                      ".", nb, "See", nb, "x$body.")
+                      ". See", nb, "x$body.")
   }
 
-  # Notes wrap to the console, as every other printed text does (#89).
-  for (note in nomo_apa_console_text(nomo_apa_notes_text(x$notes))) {
+  # Notes wrap to the console, as every other printed text does (#89), each
+  # specific note on its own line.
+  for (note in nomo_apa_console_text(nomo_apa_notes_text(x$notes, run_in = FALSE))) {
     nomo_present_text(nomo_apa_bind(note))
   }
   nomo_present_pointer(c("x$body", "knitr::knit_print(x)"),

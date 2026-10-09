@@ -70,16 +70,19 @@ No cell reads PASS or FAIL, and fit indices are not labeled good or poor.
 \strong{Notes say what the table shows.} The general note defines each
 abbreviation, gives the estimator and the number of cases analyzed, and
 says when the chi-square is a scaled test statistic and the fit indices are
-robust or scaled values. An interval's heading carries its level, such as
-"90\% CI" for a reliability interval bootstrapped at that level. A cell left
-empty is an em dash, explained in the note; a cell that does not apply, such
-as the change in fit of the first invariance model, is blank. Specific notes,
-marked with superscript letters, name the parameters a partial invariance
-model frees, the hypotheses specified post hoc, the estimates whose interval
-is the equivalence interval a \code{negligible()} prediction is judged on, and
-the estimates on another scale than the rest. A correlation the model fixes,
-such as the zero correlations of a bifactor model, is not tabled as an
-estimate.
+robust or scaled values. For a network's hypotheses it also defines each
+evidence label the table shows, such as "Concordant", and each prediction
+is given with the region it names. An interval's heading carries its level,
+such as "90\% CI" for a reliability interval bootstrapped at that level. A
+cell left empty is an em dash, explained in the note; a cell that does not
+apply, such as the change in fit of the first invariance model, is blank.
+Specific notes, marked with superscript letters, name the parameters a
+partial invariance model frees, the hypotheses specified post hoc, the
+estimates whose interval is the equivalence interval a \code{negligible()}
+prediction is judged on, and the estimates on another scale than the rest.
+A correlation the model fixes, such as the zero correlations of a bifactor
+model, is not tabled as an estimate. Degrees of freedom that are not whole,
+as for a mean- and variance-adjusted test, are given to two decimals.
 
 \strong{Discriminant evidence without the Fornell-Larcker matrix.} For a
 \code{nomo_validity} result, the \code{"discriminant"} table gives each pair of
@@ -143,6 +146,6 @@ modeling. \emph{Industrial Management & Data Systems, 121}(12), 2637-2650.
 \doi{10.1108/IMDS-02-2021-0082}
 
 Rönkkö, M., & Cho, E. (2022). An updated guideline for assessing
-discriminant validity. \emph{Organizational Research Methods, 25}(1).
+discriminant validity. \emph{Organizational Research Methods, 25}(1), 6-47.
 \doi{10.1177/1094428120968614}
 }
