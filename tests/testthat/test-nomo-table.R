@@ -136,35 +136,16 @@ test_that("the fit-table columns ?nomo_table names are the ones returned (#145)"
   persistence <- c("pe1", "pe2", "pe3", "pe4")
   model <- nomo_model(list(Agency = agency, Persistence = persistence))
 
-  # The ?nomo_method_variance example's population, with a method factor.
-  set.seed(2010)
-  marker_data <- lavaan::simulateData(
-    paste(
-      "A =~ 0.7*a1 + 0.7*a2 + 0.6*a3 + 0.6*a4",
-      "B =~ 0.7*b1 + 0.6*b2 + 0.6*b3 + 0.5*b4",
-      "M =~ 0.7*m1 + 0.7*m2 + 0.6*m3",
-      "CMV =~ 0.3*a1 + 0.3*a2 + 0.3*a3 + 0.3*a4 + 0.3*b1 + 0.3*b2 + 0.3*b3 +",
-      "  0.3*b4 + 0.3*m1 + 0.3*m2 + 0.3*m3",
-      "A ~~ 0.4*B",
-      "A ~~ 0*M",
-      "B ~~ 0*M",
-      "CMV ~~ 0*A + 0*B + 0*M",
-      sep = "\n"
-    ),
-    sample.nobs = 600, standardized = TRUE
-  )
-
   tables <- list(
     nomo_cfa = nomo_table(cfa, "fit"),
     nomo_missing = nomo_table(
       nomo_missing(cfa, data = nomo_demo_continuous, reliability = FALSE), "fit"
     ),
     nomo_esem = nomo_table(nomo_esem(model, nomo_demo_network), "models"),
+    # The ?nomo_method_variance example: the packaged study's social
+    # desirability items as the marker.
     nomo_method_variance = nomo_table(
-      nomo_method_variance(
-        "A =~ a1 + a2 + a3 + a4\nB =~ b1 + b2 + b3 + b4",
-        data = marker_data, marker = c("m1", "m2", "m3")
-      ),
+      nomo_method_variance(model, data = nomo_demo_network, marker = c("sd1", "sd2", "sd3")),
       "models"
     ),
     nomo_compare = nomo_table(
