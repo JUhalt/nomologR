@@ -56,18 +56,26 @@ nomo_report_flatten_table <- function(x) {
 }
 
 
-# Report tables for reading (#89) ----------------------------------------------
+# Report tables for reading (#89, #144) -----------------------------------------
 #
 # The report shows the tables the package returns, whose column names are the
 # code's. For reading, a name becomes words ("omega_ci_lower" is "Omega CI
-# lower"), a flag uses the console's wording, a missing or empty cell is an em
-# dash, and TRUE/FALSE is yes/no. Numbers are left for the table writer to
-# round. The console's "--" is not used: pandoc reads markdown inside the HTML
-# table, where "--" becomes an en dash and a lone "-" a list item that breaks it.
+# lower"), a flag uses the shared status words in sentence case ("Review",
+# "Concern", "Not computed", blank for no flag), a missing or empty cell is an
+# em dash, as in the APA tables, and TRUE/FALSE is yes/no. Numbers are rounded
+# for display by the console's rules (R/nomo_present.R), chosen from the
+# column's name: p values to three decimals ("< .001"), a proportion stored
+# under `pct` shown as a percentage, counts and degrees of freedom as whole
+# numbers, and each statistic with its kind's precision and leading zero. A
+# table of `metric` and `value` rows takes each row's kind from its metric.
 # Names that are not the package's own are left as they are: any name with a
 # capital letter, such as a factor called F1, a single word with a digit, such
 # as an item called ag1, and whatever the caller protects, such as the run's
 # item and scale names.
+#
+# Pandoc reads markdown inside the cells, even those of an HTML table, so a cell
+# is escaped before it is written (nomo_report_escape()): lavaan's `~~` would
+# otherwise become a subscript and `a*x1 + a*x2` lose its asterisks.
 
 nomo_report_label_words <- c(
   abs = "absolute", ave = "AVE", cfa = "CFA", cfi = "CFI", chisq = "chi-square",
@@ -83,7 +91,12 @@ nomo_report_label_overrides <- c(
   measurement_attention = "Measurement flag",
   df = "df", p = "p", p_value = "p", pvalue = "p", lrt_p = "LRT p", r = "r", z = "z",
   chi_square = "Chi-square", score_x2 = "Score chi-square",
-  n_items = "Items", item1 = "Item 1", item2 = "Item 2",
+  n_cases = "Cases", n_columns = "Columns",
+  n_unique = "Unique values", mode_n = "Responses at the mode",
+  n_interitem_estimable = "Inter-item correlations estimated",
+  negative_interitem_n = "Negative pairs",
+  n_loading_review = "Loadings flagged",
+  item1 = "Item 1", item2 = "Item 2",
   cross_loading = "Cross-loading", near_zero_variance = "Near-zero variance",
   lavaan_missing = "lavaan missing",
   corrected_item_rest_r = "Corrected item-rest r", item_rest_n = "Item-rest N",
@@ -99,6 +112,25 @@ nomo_report_label_overrides <- c(
 
 nomo_report_flag_columns <- c("attention", "severity", "signal", "measurement_attention")
 
+# Stored origins, shown as words without a hyphen or underscore ("A priori",
+# "Post hoc"; guide point 25).
+nomo_report_origin_columns <- c("origin", "confirmatory_status")
+
+# Stored statuses, shown as words in sentence case (guide point 18):
+# "awaiting_decision" is "Awaiting decision". The network's concordance and
+# replication statuses take the labels its print() gives them.
+nomo_report_network_status_columns <- c(
+  "concordance", "primary_concordance", "validation_concordance",
+  "replication_status"
+)
+
+# N in a heading is a number of cases (guide point 2): `n`, `n_observed`,
+# `item_rest_n`. A count of anything else is named in words: `n_items` is
+# "Number of items".
+nomo_report_case_words <- c(
+  "cases", "observed", "missing", "used", "complete", "incomplete", "valid", "total"
+)
+
 nomo_report_blank <- "\u2014"
 
 
@@ -110,6 +142,10 @@ nomo_report_column_labels <- function(names, protected = character()) {
     }
     words <- strsplit(name, "[._]")[[1L]]
     if (length(words) == 1L && grepl("[0-9]", name)) return(name)
+    if (length(words) > 1L && words[[1L]] == "n" &&
+        !words[[2L]] %in% nomo_report_case_words) {
+      words[[1L]] <- "number of"
+    }
     known <- words %in% names(nomo_report_label_words)
     words[known] <- nomo_report_label_words[words[known]]
     label <- paste(words, collapse = " ")
@@ -118,22 +154,440 @@ nomo_report_column_labels <- function(names, protected = character()) {
 }
 
 
+# The kind of number a column holds, from its name or, in a table of `metric`
+# and `value` rows, from the row's metric: one of the kinds of
+# nomo_present_stat(), or "pct" (a proportion shown as a percentage),
+# "percent" (a percentage already), and "residual" (a residual correlation,
+# with the three decimals the EFA print gives it, since two would show most
+# as zero). A name says nothing more for "estimate", the default: two decimals
+# with the leading zero.
+#
+# A log metric whose name does not say what its value is has its kind listed
+# (nomo_report_metric_kinds): `htmt_missing_data` names a statistic and holds
+# the number of cases used, and `missingness` holds a proportion that the
+# row's own sentence gives as a percentage. Such a proportion is "pct_sign",
+# shown with its percent sign ("3.0%"), since a "Value" heading cannot carry
+# the unit as "% missing" does.
+nomo_report_metric_kinds <- c(
+  htmt_missing_data = "count", htmt_single_indicator = "count",
+  missingness = "pct_sign", all_missing = "pct_sign",
+  missing_mechanism = "pct_sign", response_concentration = "pct_sign",
+  floor_concentration = "pct_sign", ceiling_concentration = "pct_sign"
+)
+
+nomo_report_metric_kind <- function(metric) {
+  listed <- unname(nomo_report_metric_kinds[as.character(metric)])
+  ifelse(is.na(listed), nomo_report_number_kind(metric), listed)
+}
+
+
+nomo_report_number_kind <- function(name) {
+  words <- strsplit(tolower(as.character(name)), "[._ ]+")
+  vapply(words, function(w) {
+    w <- w[!is.na(w) & nzchar(w)]
+    if (!length(w)) return("estimate")
+    has <- function(...) any(w %in% c(...))
+    if (has("pvalue", "bartlett") || w[[length(w)]] == "p" ||
+        grepl("(^|_)p_value$", paste(w, collapse = "_"))) {
+      return("p")
+    }
+    if (has("pct")) return("pct")
+    if (has("percent")) return("percent")
+    if (has("df")) return("df")
+    if (has("n", "count", "cases", "cells", "items", "judges", "npar", "step")) return("count")
+    if (has("cfi")) return("fit_bounded")
+    if (has("tli", "rmsea", "srmr", "rmsr")) return("fit")
+    if (has("aic", "bic")) return("ic")
+    if (has("htmt", "htmt2")) return("htmt")
+    if (has("omega", "alpha", "ave", "reliability", "icc", "determinacy")) return("reliability")
+    if (has("loading", "lambda")) return("loading")
+    if (has("power", "coverage")) return("power")
+    if (has("prop", "proportion", "communality", "uniqueness", "kmo", "msa")) return("proportion")
+    if (has("r", "correlation", "validity", "univocality", "accuracy")) return("r")
+    # The decision log's corrected item-rest correlation, `corrected_item_rest`.
+    if (identical(utils::tail(w, 2L), c("item", "rest"))) return("r")
+    if (has("chisq", "chi", "x2", "z", "t", "f", "mi", "statistic")) return("stat")
+    # `residual` and `abs_residual`, not a residual variance.
+    if (w[[length(w)]] == "residual") return("residual")
+    "estimate"
+  }, character(1), USE.NAMES = FALSE)
+}
+
+
+# Values of one kind as text. `digits` replaces the kind's precision.
+# `reference` is for one value: the numbers it is read against. The value is
+# shown with the decimals it needs to differ from each of them (guide point 9),
+# so a flagged omega of .698 is not printed ".70" beside a reference of .70.
+nomo_report_format_kind <- function(value, kind, digits = NULL, signed = FALSE,
+                                    reference = NULL) {
+  stat <- function(v, k, d = digits) {
+    if (!length(reference)) return(nomo_present_stat(v, k, digits = d, signed = signed))
+    shown <- vapply(reference, function(r) {
+      nomo_present_stat(v, k, digits = d, reference = r, signed = signed)
+    }, character(1))
+    shown[[which.max(nchar(shown))]]
+  }
+  switch(
+    kind,
+    pct = stat(100 * value, "estimate", 1L),
+    pct_sign = paste0(stat(100 * value, "estimate", 1L), "%"),
+    percent = stat(value, "estimate", 1L),
+    residual = stat(value, "r", 3L),
+    stat(value, kind)
+  )
+}
+
+
+# A numeric column as text: each value by its kind, a missing value as the
+# report's dash. Integer storage is a count. In a table of metric and value
+# rows, a whole value in a row whose metric names no kind is a count too: the
+# evidence trace mixes counts with statistics. `reference` holds, for each
+# row, the numbers its value is read against (nomo_report_value_reference());
+# a value that is not a count is shown with the decimals that tell it from
+# them. `digits` replaces the kind's precision for the whole column. A change
+# from the preceding model, stored under `delta`, and a difference from a
+# reference estimate, stored under `difference`, carry their sign, and none
+# when they round to zero (guide point 15), as the invariance and missing-data
+# prints show them.
+nomo_report_format_numbers <- function(value, name, metric = NULL, reference = NULL,
+                                       digits = NULL) {
+  kind <- if (is.integer(value)) "count" else nomo_report_number_kind(name)
+  signed <- grepl("^(delta|difference)([._]|$)", tolower(name))
+  value <- as.numeric(value)
+  finite <- is.finite(value)
+  if (identical(kind, "estimate") && !is.null(metric)) {
+    kinds <- nomo_report_metric_kind(metric)
+    whole <- finite & abs(value - round(value)) < 1e-8
+    kinds[kinds == "estimate" & whole] <- "count"
+  } else {
+    kinds <- rep(kind, length(value))
+  }
+
+  out <- rep(nomo_report_blank, length(value))
+  for (k in unique(kinds[finite])) {
+    i <- finite & kinds == k
+    out[i] <- nomo_report_format_kind(value[i], k, digits, signed)
+  }
+  for (i in which(finite & kinds != "count" & lengths(reference) > 0L)) {
+    out[[i]] <- nomo_report_format_kind(value[[i]], kinds[[i]], digits, signed,
+                                        reference[[i]])
+  }
+  out
+}
+
+
+# The numbers a text names: ".70" in "configured review reference = .70", both
+# limits of "[-0.15, 0.15]", "90.0" in "90.0% of responses". A digit that is
+# part of a name ("TR2", "HTMT2") or an exponent is not one, and a hyphen
+# between two numbers (".50-.75") is not a sign.
+nomo_report_reference_numbers <- function(text) {
+  number <- paste0(
+    "(?<![A-Za-z0-9.^])-?(?:[0-9]+(?:\\.[0-9]+)?|\\.[0-9]+)",
+    "(?![A-Za-z0-9]|\\.[0-9])"
+  )
+  text <- as.character(text)
+  text[is.na(text)] <- ""
+  lapply(regmatches(text, gregexpr(number, text, perl = TRUE)), as.numeric)
+}
+
+
+# For each row of a table, the numbers its `value` is read against, or NULL
+# when the table has no `reference` column. A reference stored as a number,
+# such as the teaching reference of a fit index, is that number. A reference
+# stored as text, as in every decision log ("configured review reference =
+# .70", "Teaching reference .30; not a retention rule"), gives the numbers it
+# names, and only for a row flagged for review or concern: the flag says the
+# value fell on one side of its reference, so the two must not print alike.
+nomo_report_value_reference <- function(x) {
+  reference <- x[["reference"]]
+  if (is.numeric(reference)) return(lapply(reference, function(r) r[is.finite(r)]))
+  if (!is.character(reference)) return(NULL)
+  flagged <- rep(FALSE, nrow(x))
+  for (name in intersect(names(x), nomo_report_flag_columns)) {
+    flagged <- flagged | nomo_present_status(x[[name]]) %in% c("Review", "Concern")
+  }
+  numbers <- nomo_report_reference_numbers(reference)
+  numbers[!flagged] <- list(numeric())
+  numbers
+}
+
+
+# In a table that sets an estimate beside the reference estimate it is
+# compared with, these columns take three decimals, as print.nomo_missing()
+# gives them: the table exists to show small differences, and both estimates
+# must have one precision to be compared (guide point 9).
+nomo_report_compared_columns <- c(
+  "estimate", "reference", "reference_estimate", "difference"
+)
+
+
+# A stored word as a cell shows it: underscores as spaces, in sentence case.
+nomo_report_sentence <- function(x) {
+  x <- gsub("_", " ", as.character(x), fixed = TRUE)
+  out <- paste0(toupper(substr(x, 1L, 1L)), substring(x, 2L))
+  out[is.na(x)] <- NA_character_
+  out
+}
+
+
 nomo_report_display_table <- function(x, protected = character()) {
   x <- nomo_report_flatten_table(x)
-  for (name in names(x)) {
-    value <- x[[name]]
+  metric <- if (is.character(x[["metric"]])) x[["metric"]]
+  value_reference <- nomo_report_value_reference(x)
+  compared <- is.numeric(x[["estimate"]]) &&
+    (is.numeric(x[["reference"]]) || is.numeric(x[["reference_estimate"]]))
+  role <- rep("text", ncol(x))
+  for (j in seq_along(x)) {
+    name <- names(x)[[j]]
+    value <- x[[j]]
     if (name %in% nomo_report_flag_columns) {
-      value <- nomo_present_flag(value)
+      # No flag is a blank cell, as in the console; the status column is never
+      # left out for being blank.
+      value <- nomo_present_status(value)
+      role[[j]] <- "status"
     } else if (is.logical(value)) {
       value <- ifelse(value, "yes", "no")
+    } else if (is.numeric(value)) {
+      value <- nomo_report_format_numbers(
+        value, name, metric,
+        reference = if (identical(name, "value")) value_reference,
+        digits = if (compared && name %in% nomo_report_compared_columns) 3L
+      )
+      role[[j]] <- "numeric"
+    } else if (name %in% nomo_report_origin_columns && is.character(value)) {
+      value <- nomo_present_origin(value, cell = TRUE)
+    } else if (name %in% nomo_report_network_status_columns && is.character(value)) {
+      value <- nomo_report_sentence(nomo_network_pretty_status(value))
+      role[[j]] <- "status"
+    } else if (identical(name, "status") && is.character(value)) {
+      value <- nomo_report_sentence(value)
+      role[[j]] <- "status"
     }
-    if (is.character(value)) {
-      value[is.na(value) | !nzchar(trimws(value))] <- nomo_report_blank
+    if (is.character(value) && !identical(role[[j]], "status")) {
+      value[is.na(value) | !nzchar(trimws(value)) | value == nomo_present_missing] <-
+        nomo_report_blank
     }
-    x[[name]] <- value
+    value[is.na(value)] <- ""
+    x[[j]] <- value
   }
   names(x) <- nomo_report_column_labels(names(x), protected)
+  attr(x, "role") <- role
   x
+}
+
+
+# Text for a cell, a heading, or a note, escaped so that pandoc shows it as
+# written (#145). Each character markdown reads as markup becomes a numeric
+# character reference, which pandoc reads as that character and nothing else,
+# in the HTML report and in the markdown of the Word one alike. (A backslash
+# escape would not do: with R Markdown's `tex_math_single_backslash`, "\[" opens
+# display math.) Runs of hyphens and dots, which pandoc would set as dashes and
+# an ellipsis, are escaped the same way, and so is whatever would start a block
+# where the text begins: a list marker, alone or before a space, in every form
+# pandoc reads ("- x", "+ x", "1. x", "1) x", "(1) x", "a) x", "(iv) x",
+# "#. x"), and a run of colons, which opens a fenced div. In an HTML table a
+# rationale that began "1) ..." became a numbered list that swallowed the rows
+# after it, and a cell holding only "+" a bullet. A line break is <br> in HTML
+# and "; " in a Word table cell, which also keeps lavaan syntax valid. R names
+# in backticks stay code spans, as the console writes them. `cell = TRUE` is
+# for a table cell: in a Word table, a code span holding a bar, such as a
+# lavaan threshold `x1 | t1`, is escaped like other text, since a bar there
+# would end the cell and its character reference would be shown as typed
+# inside code.
+nomo_report_escape <- function(x, to = c("html", "markdown"), cell = FALSE) {
+  to <- match.arg(to)
+  html <- identical(to, "html")
+  bar_ends_cell <- !html && isTRUE(cell)
+  markup <- c("\\", "`", "*", "_", "~", "^", "[", "]", "$", "@", "#", "|",
+              "\"", "'", "!", "{", "}", "&", "<", ">")
+  # What numbers a list item: digits, one letter, a roman numeral, or "#",
+  # which is a character reference by the time the marker is looked for.
+  number <- "(?:[0-9]+|[A-Za-z]|[ivxlcdm]+|[IVXLCDM]+|&#35;)"
+  escape_text <- function(s) {
+    chars <- strsplit(s, "", fixed = TRUE)[[1L]]
+    special <- chars %in% markup
+    chars[special] <- sprintf("&#%d;", vapply(chars[special], utf8ToInt, integer(1)))
+    s <- paste(chars, collapse = "")
+    s <- gsub("-(?=-)|(?<=-)-", "&#45;", s, perl = TRUE)
+    s <- gsub("\\.(?=\\.)|(?<=\\.)\\.", "&#46;", s, perl = TRUE)
+    # Text that starts like a list item.
+    s <- sub("^(\\s*)-(?=\\s|$)", "\\1&#45;", s, perl = TRUE)
+    s <- sub("^(\\s*)\\+(?=\\s|$)", "\\1&#43;", s, perl = TRUE)
+    s <- sub(paste0("^(\\s*)\\((?=", number, "\\)(?:\\s|$))"), "\\1&#40;", s, perl = TRUE)
+    s <- sub(paste0("^(\\s*(?:&#40;)?", number, ")\\.(?=\\s|$)"), "\\1&#46;", s, perl = TRUE)
+    s <- sub(paste0("^(\\s*(?:&#40;)?", number, ")\\)(?=\\s|$)"), "\\1&#41;", s, perl = TRUE)
+    # Text that starts with colons; the length is -1 when it does not.
+    colons <- attr(regexpr("^\\s*:+", s), "match.length")
+    s <- paste0(gsub(":", "&#58;", substring(s, 1L, colons), fixed = TRUE),
+                substring(s, colons + 1L))
+    gsub("\r?\n", if (html) "<br>" else "; ", s)
+  }
+
+  # Code spans are left as they are: pandoc shows their contents verbatim.
+  # They are found before anything is escaped, so that two spans in one cell
+  # stay two spans; those with a bar are then escaped for a Word table cell.
+  vapply(as.character(x), function(s) {
+    if (is.na(s) || !nzchar(s)) return(s)
+    spans <- gregexpr("`[^`\r\n]+`", s)
+    code <- regmatches(s, spans)[[1L]]
+    text <- regmatches(s, spans, invert = TRUE)[[1L]]
+    text <- vapply(text, function(t) if (nzchar(t)) escape_text(t) else t,
+                   character(1), USE.NAMES = FALSE)
+    barred <- bar_ends_cell & grepl("|", code, fixed = TRUE)
+    code[barred] <- vapply(code[barred], escape_text, character(1), USE.NAMES = FALSE)
+    paste0(text, c(code, ""), collapse = "")
+  }, character(1), USE.NAMES = FALSE)
+}
+
+
+# One report table, ready to write: HTML for an HTML report, a pipe table for a
+# Word one, with the notes that go beneath it. NULL when there are no rows.
+# Columns with no value in any row are left out, except the first and a status
+# column, and the note names them. `markdown = TRUE` is for cells that are
+# markdown already, such as R's citations with their italics; they are only
+# made safe for the table.
+nomo_report_table <- function(x, protected = character(), word = FALSE,
+                              max_rows = Inf, markdown = FALSE) {
+  x <- nomo_report_display_table(x, protected)
+  if (!nrow(x) || !ncol(x)) return(NULL)
+  role <- attr(x, "role")
+
+  empty <- vapply(x, function(v) all(v %in% c("", nomo_report_blank)), logical(1))
+  drop <- empty & role != "status" & seq_along(role) > 1L
+  dropped <- names(x)[drop]
+  x <- x[, !drop, drop = FALSE]
+  role <- role[!drop]
+
+  n_total <- nrow(x)
+  if (n_total > max_rows) x <- utils::head(x, max_rows)
+
+  # In trusted markdown, a bar in a pipe table cell is kable's to escape.
+  to <- if (word) "markdown" else "html"
+  escape <- function(v) {
+    if (!isTRUE(markdown)) return(nomo_report_escape(v, to, cell = TRUE))
+    if (word) return(gsub("[\r\n]+", " ", v))
+    v <- gsub("&", "&amp;", v, fixed = TRUE)
+    gsub(">", "&gt;", gsub("<", "&lt;", v, fixed = TRUE), fixed = TRUE)
+  }
+  cells <- as.data.frame(lapply(x, escape), stringsAsFactors = FALSE,
+                         check.names = FALSE)
+  labels <- nomo_report_escape(names(x), to, cell = TRUE)
+  align <- ifelse(role == "numeric", "r", "l")
+  markup <- if (word) {
+    knitr::kable(cells, format = "pipe", col.names = labels, align = align,
+                 row.names = FALSE)
+  } else {
+    knitr::kable(cells, format = "html", col.names = labels, align = align,
+                 escape = FALSE, row.names = FALSE,
+                 table.attr = 'class="table table-striped table-condensed nomo-table"')
+  }
+
+  notes <- c(
+    if (length(dropped)) {
+      sprintf("Columns with no value in any row are left out: %s.",
+              paste(dropped, collapse = ", "))
+    },
+    if (n_total > nrow(x)) {
+      sprintf("Showing %d of %d rows. The underlying nomo_run object retains all rows.",
+              nrow(x), n_total)
+    }
+  )
+  list(markup = paste(markup, collapse = "\n"), notes = notes,
+       labels = names(x), cells = unlist(lapply(x, as.character), use.names = FALSE))
+}
+
+
+# Abbreviations (guide point 23) -----------------------------------------------
+#
+# Every abbreviation the report shows is defined once, in a table at its end.
+# The report collects the headings and cells it writes; an abbreviation that
+# appears in them is listed. A symbol such as p, r, or N is listed when it heads
+# a column, since the same letter in a cell is usually part of a word or a
+# formatted clause.
+
+nomo_report_glossary <- c(
+  AIC = "Akaike information criterion",
+  APA = "American Psychological Association",
+  AVE = "average variance extracted",
+  BIC = "Bayesian information criterion",
+  CFA = "confirmatory factor analysis",
+  CFI = "comparative fit index",
+  CI = "confidence interval",
+  Csv = "coefficient of substantive validity",
+  CVI = "content validity index; I-CVI is the index of one item",
+  DOI = "digital object identifier",
+  EFA = "exploratory factor analysis",
+  EKC = "empirical Kaiser criterion",
+  EPC = "expected parameter change",
+  FIML = "full-information maximum likelihood",
+  HTMT = "heterotrait-monotrait ratio of correlations",
+  HTMT2 = "heterotrait-monotrait ratio computed from geometric means of correlations",
+  ID = "identifier",
+  IOC = "index of item-objective congruence",
+  KMO = "Kaiser-Meyer-Olkin measure of sampling adequacy",
+  LRT = "likelihood-ratio test",
+  MAP = "minimum average partial",
+  MAR = "missing at random",
+  MCAR = "missing completely at random",
+  MI = "modification index",
+  MINRES = "minimum residual factor extraction",
+  ML = "maximum likelihood",
+  MLR = "maximum likelihood with robust standard errors and a scaled test statistic",
+  MSA = "measure of sampling adequacy",
+  NEST = "next eigenvalue sufficiency test",
+  Psa = "proportion of substantive agreement",
+  RMSEA = "root mean square error of approximation",
+  RMSR = "root mean square residual",
+  SD = "standard deviation",
+  SE = "standard error",
+  SEM = "structural equation model",
+  SESOI = "smallest effect size of interest",
+  SRMR = "standardized root mean square residual",
+  TLI = "Tucker-Lewis index",
+  TR2 = "MAP criterion averaging squared partial correlations",
+  TR4 = "MAP criterion averaging partial correlations raised to the fourth power",
+  WLSMV = "weighted least squares, mean- and variance-adjusted",
+  df = "degrees of freedom",
+  lhs = "left-hand side of a lavaan model term",
+  N = "number of cases",
+  op = "lavaan operator: =~ loads on, ~~ covaries with, ~ is regressed on",
+  p = "p value",
+  r = "correlation",
+  rhs = "right-hand side of a lavaan model term",
+  z = "estimate divided by its standard error"
+)
+
+nomo_report_glossary_symbols <- c("df", "lhs", "N", "op", "p", "r", "rhs", "z")
+
+
+nomo_report_abbreviations <- function(labels = character(), text = character()) {
+  words <- function(s) unique(unlist(strsplit(as.character(s), "[^A-Za-z0-9]+")))
+  in_labels <- words(labels)
+  in_text <- words(text)
+  keys <- names(nomo_report_glossary)
+  used <- keys %in% in_labels |
+    (keys %in% in_text & !keys %in% nomo_report_glossary_symbols)
+  tibble::tibble(
+    abbreviation = keys[used],
+    meaning = unname(nomo_report_glossary[used])
+  )
+}
+
+
+# How to read the report's tables, stated once near its start.
+nomo_report_reading_note <- function() {
+  paste(
+    "Values are rounded for display only; the `nomo_run` object and `nomo_table()`",
+    "keep every value as computed. p values have three decimals, and smaller",
+    sprintf("ones read \"< .001\". A %s marks a value that is not available.", nomo_report_blank),
+    "The Flag column uses one wording for every analysis: blank for no flag,",
+    "Review to look at a result again (never an instruction to delete),",
+    "Concern for a stronger signal, and Not computed when the evidence could",
+    "not be produced. A name written with underscores, such as",
+    "`researcher_input`, is a value shown as the object stores it, so it can be",
+    "matched in `nomo_table()`. Abbreviations are defined at the end of the",
+    "report."
+  )
 }
 
 
@@ -255,6 +709,11 @@ nomo_report_component_list <- function(x, stage) {
 
 nomo_report_component_summary_text <- function(obj) {
   if (is.null(obj)) return("No component result is available.")
+
+  # Printed at the 80 columns the console style is written for, so the archive
+  # does not depend on the width of the console that rendered it (#144).
+  old <- options(width = 80L)
+  on.exit(options(old), add = TRUE)
 
   tryCatch(
     paste(
@@ -430,10 +889,13 @@ nomo_report_effort <- function(screen) {
     )
   )
 
+  # The rows the indices write, including those saying why an index has no
+  # value for some or all cases (#145).
   log <- screen$decision_log
-  log <- log[log$metric %in% c("long_string", "psychometric_antonym",
-                               "psychometric_synonym", "even_odd",
-                               "index_disagreement"), , drop = FALSE]
+  log <- log[log$metric %in% c("long_string", "mahalanobis", "even_odd",
+                               "per_scale_indices", "psychometric_antonym",
+                               "psychometric_synonym", "index_disagreement"), ,
+             drop = FALSE]
 
   list(
     summary = sprintf(
@@ -462,10 +924,10 @@ nomo_report_scores <- function(scores) {
     sprintf(
       paste(
         "The parallel model that unit weighting assumes was compared with the",
-        "fitted model: chi-square difference %.2f on %s df, %s."
+        "fitted model: %s."
       ),
-      parallel$chisq_diff, format(parallel$df_diff, trim = TRUE),
-      nomo_compare_format_p(parallel$p_value)
+      nomo_present_chisq(parallel$chisq_diff, parallel$df_diff, parallel$p_value,
+                         delta = TRUE)
     )
   } else if (nzchar(parallel$note)) {
     parallel$note
@@ -506,22 +968,56 @@ nomo_report_missing <- function(m) {
     difference_in_se = compared$difference_in_se
   )
 
-  list(
-    summary = sprintf(
+  # The reference is fitted only when some case is missing a modeled variable;
+  # the summary and the empty-table message say which applies (#145).
+  reference_fitted <- any(m$strategies$role == "reference" & m$strategies$available)
+  reference <- nomo_missing_label_inline(m$reference)
+  summary <- if (p$n_incomplete == 0L) {
+    sprintf(
       paste(
-        "%d of %d cases (%.1f%%) are missing at least one modeled variable.",
-        "The reference is %s. Differences are in units of the reference standard",
-        "error; Schafer and Graham (2002) treat a bias beyond about half a",
-        "standard error as practically important. Whether data are missing at",
-        "random cannot be tested from the data at hand."
+        "None of the %d cases is missing a modeled variable, so every strategy",
+        "uses the same cases: the reference strategy (%s) was not fitted, and",
+        "there are no differences to compare."
       ),
-      p$n_incomplete, p$n_cases, 100 * p$pct_incomplete,
-      nomo_missing_label_inline(m$reference)
-    ),
+      p$n_cases, reference
+    )
+  } else {
+    paste(
+      sprintf(
+        "%d of %d cases (%s) are missing at least one modeled variable.",
+        p$n_incomplete, p$n_cases,
+        nomo_present_percent(p$pct_incomplete, base = p$n_cases)
+      ),
+      if (reference_fitted) {
+        sprintf("The reference is %s.", reference)
+      } else {
+        sprintf("The reference strategy (%s) could not be fitted.", reference)
+      },
+      "Differences are in units of the reference standard error; Schafer and",
+      "Graham (2002) treat a bias beyond about half a standard error as",
+      "practically important. Whether data are missing at random cannot be",
+      "tested from the data at hand."
+    )
+  }
+
+  # A strategy by the name the Strategies table gives it, not its lavaan code
+  # ("FIML", not "ml"), as in the differences above.
+  named <- function(tab) {
+    if ("strategy" %in% names(tab)) tab$strategy <- nomo_missing_label(tab$strategy)
+    tab
+  }
+
+  list(
+    summary = summary,
     strategies = strategies,
     differences = differences,
-    fit = m$fit,
-    reliability = m$reliability,
+    differences_empty = if (reference_fitted) {
+      "No comparison strategy was fitted."
+    } else {
+      "The reference strategy was not fitted, so there are no differences to show."
+    },
+    fit = named(m$fit),
+    reliability = named(m$reliability),
     log = m$decision_log
   )
 }
@@ -560,22 +1056,28 @@ nomo_report_apa_tables <- function(x) {
 }
 
 
-nomo_report_call_history <- function(x) {
+nomo_report_calls <- function(x) {
   calls <- x$call_history
   if (is.null(calls) || !length(calls)) {
     calls <- if (!is.null(x$call)) list(x$call) else list()
   }
+  calls
+}
 
-  if (!length(calls)) return(nomo_report_empty_table())
 
-  tibble::tibble(
-    step = seq_along(calls),
-    call = vapply(
-      calls,
-      function(z) paste(deparse(z, width.cutoff = 120L), collapse = " "),
-      character(1)
-    )
-  )
+# The calls as R code for a code block, which pandoc leaves as written: in a
+# table cell its straight quotes became typographic ones, so a copied call did
+# not parse (#145). Several calls are numbered by comments.
+nomo_report_call_code <- function(x) {
+  calls <- nomo_report_calls(x)
+  if (!length(calls)) return("")
+  # deparse() breaks a line only after the cutoff, so 60 keeps most lines
+  # within 80 columns.
+  code <- vapply(calls, function(z) {
+    paste(deparse(z, width.cutoff = 60L), collapse = "\n")
+  }, character(1))
+  if (length(code) > 1L) code <- paste0("# Step ", seq_along(code), "\n", code)
+  paste(code, collapse = "\n\n")
 }
 
 
@@ -703,11 +1205,17 @@ nomo_report_flagged_trace <- function(x) {
     return(nomo_report_empty_table())
   }
 
-  trace[
-    tolower(trace$severity) %in% c("review", "concern"),
-    ,
-    drop = FALSE
-  ]
+  nomo_report_flagged_rows(trace)
+}
+
+
+# The review and concern rows of a log, concern first (guide point 22), each
+# group in the log's order.
+nomo_report_flagged_rows <- function(log) {
+  if (!nrow(log) || !"severity" %in% names(log)) return(log)
+  severity <- tolower(log$severity)
+  log <- log[severity %in% c("review", "concern"), , drop = FALSE]
+  log[order(tolower(log$severity) != "concern"), , drop = FALSE]
 }
 
 
@@ -743,10 +1251,11 @@ nomo_report_deviations <- function(x) {
           } else {
             ""
           },
+          # "level: scalar; syntax: ag3 ~ 1", with the syntax as written.
           detail = paste(
             vapply(
               detail_cols,
-              function(nm) paste0(nm, "=", as.character(partial[[nm]][[i]])),
+              function(nm) paste0(nm, ": ", as.character(partial[[nm]][[i]])),
               character(1)
             ),
             collapse = "; "
@@ -775,23 +1284,21 @@ nomo_report_deviations <- function(x) {
       for (i in which(idx)) {
         cursor <- cursor + 1L
         rows[[cursor]] <- tibble::tibble(
-          type = "post-hoc nomological relation",
+          type = "post hoc nomological relation",
           stage = "network",
           scope = if ("relation" %in% names(h)) {
             as.character(h$relation[[i]])
           } else {
             ""
           },
-          detail = if ("concordance" %in% names(h)) {
-            paste0(
-              "confirmatory_status=",
-              h$confirmatory_status[[i]],
-              "; concordance=",
-              h$concordance[[i]]
-            )
-          } else {
-            paste0("confirmatory_status=", h$confirmatory_status[[i]])
-          },
+          # In the words the report's tables use: "post hoc exploratory;
+          # concordance: Concordant".
+          detail = paste(c(
+            nomo_present_origin(h$confirmatory_status[[i]]),
+            if ("concordance" %in% names(h)) {
+              paste("concordance:", nomo_network_pretty_status(h$concordance[[i]]))
+            }
+          ), collapse = "; "),
           rationale = ""
         )
       }
@@ -805,27 +1312,29 @@ nomo_report_deviations <- function(x) {
     } else {
       rep(FALSE, nrow(dl))
     }
+    # A decision id is the package's own prefix, then a colon and the
+    # researcher's scale or item name ("scale_definition:PostpartumDepression"),
+    # so only the prefix is read (#145).
+    id_prefix <- sub(":.*$", "", as.character(dl$id))
     revise <- which(
       decision_revise |
-        grepl("post|partial|deviation|revision", dl$id, ignore.case = TRUE)
+        grepl("post|partial|deviation|revision", id_prefix, ignore.case = TRUE)
     )
 
+    field <- function(name, i) {
+      if (name %in% names(dl)) as.character(dl[[name]][[i]]) else ""
+    }
     for (i in revise) {
       cursor <- cursor + 1L
+      decision <- field("decision", i)
       rows[[cursor]] <- tibble::tibble(
         type = "workflow deviation/revision decision",
-        stage = if ("stage" %in% names(dl)) as.character(dl$stage[[i]]) else "",
-        scope = if ("scope" %in% names(dl)) as.character(dl$scope[[i]]) else "",
-        detail = if ("decision" %in% names(dl)) {
-          as.character(dl$decision[[i]])
-        } else {
-          ""
-        },
-        rationale = if ("rationale" %in% names(dl)) {
-          as.character(dl$rationale[[i]])
-        } else {
-          ""
-        }
+        stage = field("stage", i),
+        scope = field("scope", i),
+        # A row that records no decision, such as the comparison of a revision
+        # with its parent model, shows what it observed.
+        detail = if (nzchar(decision)) decision else field("observation", i),
+        rationale = field("rationale", i)
       )
     }
   }
@@ -970,6 +1479,15 @@ nomo_report_sanitize_citation_text <- function(x) {
   # \texttt{semTools}, keeps only its text.
   x <- gsub("\\\\[A-Za-z]+\\{([^{}]*)\\}", "\\1", x, perl = TRUE)
   x <- gsub("[[:space:]]+", " ", x, perl = TRUE)
+  # R writes a DOI twice, "doi:10.x/y https://doi.org/10.x/y", and pandoc links
+  # the first form to an address no browser opens; some packages add the URL
+  # once more. Each DOI is given once, as its https://doi.org/ address (#145).
+  x <- gsub("(^|[[:space:]])doi:(10\\.[^[:space:]]+?)[.,;]?[[:space:]]+(https?://doi\\.org/\\2)",
+            "\\1\\3", x, perl = TRUE)
+  x <- gsub("(^|[[:space:]])doi:(10\\.[^[:space:]]+?)([.,;]?)(?=[[:space:]]|$)",
+            "\\1https://doi.org/\\2\\3", x, perl = TRUE)
+  x <- gsub("(https?://[^[:space:]]+?)([.,;]?)([[:space:]]+\\1[.,;]?)+(?=[[:space:]]|$)",
+            "\\1\\2", x, perl = TRUE)
   trimws(x)
 }
 
@@ -1041,7 +1559,10 @@ nomo_report_safe_plot <- function(obj, type = NULL) {
 
 
 nomo_report_prepare_template <- function(template, input, title) {
-  copied <- file.copy(template, input, overwrite = TRUE)
+  # `copy.mode = FALSE`: a read-only installed template (as on a system
+  # library) must not make the temporary copy read-only, since its title is
+  # written into it next.
+  copied <- file.copy(template, input, overwrite = TRUE, copy.mode = FALSE)
   if (!isTRUE(copied)) {
     stop("Could not prepare the temporary report template.", call. = FALSE)
   }
@@ -1057,13 +1578,24 @@ nomo_report_prepare_template <- function(template, input, title) {
     )
   }
 
-  lines[[hits]] <- paste0(
-    "title: ",
-    encodeString(title, quote = '"')
-  )
+  lines[[hits]] <- paste0("title: ", nomo_report_title_yaml(title))
 
   writeLines(lines, input, useBytes = TRUE)
   invisible(input)
+}
+
+
+# The title as a YAML string that the render shows exactly as given (#145).
+# Three readers see it: knitr runs inline code (`r ...`), YAML reads escapes,
+# and pandoc reads markdown, so "C:\Users" lost its backslashes and <b> became
+# markup. Every ASCII punctuation mark becomes a numeric character reference,
+# which pandoc reads as that character: knitr finds no backtick, YAML no quote
+# or backslash, and pandoc no markup. The result is quoted for YAML.
+nomo_report_title_yaml <- function(title) {
+  chars <- strsplit(title, "", fixed = TRUE)[[1L]]
+  punct <- grepl("^[[:punct:]]$", chars) & chars %in% rawToChar(as.raw(32:126), multiple = TRUE)
+  chars[punct] <- sprintf("&#%d;", vapply(chars[punct], utf8ToInt, integer(1)))
+  encodeString(paste(chars, collapse = ""), quote = '"')
 }
 
 
@@ -1073,15 +1605,33 @@ nomo_report_prepare_template <- function(template, input, title) {
 #' object. The report archives researcher inputs, sample roles, item and factor
 #' evidence, EFA/CFA results, reliability, convergent/discriminant evidence,
 #' optional invariance and nomological-network results, researcher decisions,
-#' deviations/post-hoc decisions, method citations, an evidence trace, and
+#' deviations and post hoc decisions, method citations, an evidence trace, and
 #' session information.
 #'
 #' The report is a presentation and provenance layer. It does not refit models,
 #' alter data, free parameters, remove items, or manufacture additional
 #' statistical conclusions.
 #'
+#' Its tables are the ones [nomo_table()] returns, with values rounded for
+#' display by the rules printed output follows (p values to three decimals and
+#' "< .001" below that, proportions stored as `pct_*` shown as percentages,
+#' counts as whole numbers), flags in the shared wording ("Review", "Concern",
+#' "Not computed", blank for no flag), and each cell shown exactly as written,
+#' so lavaan syntax such as `~~` and `a*x1` survives. The workflow's calls are
+#' printed as R code, and a table at the end defines every abbreviation the
+#' report shows.
+#'
 #' Reports can be rendered from complete, paused, or blocked `nomo_run` objects.
 #' Incomplete stages are labeled as such rather than silently omitted.
+#'
+#' `nomo_report()` writes one file, the report named by `file`, and creates
+#' that file's directory when it does not exist. The working files of the
+#' render (the copy of the template, the intermediate files, and the figures)
+#' are written to a temporary directory under [tempdir()] and removed when the
+#' call returns, whether or not it succeeds. The working directory, the
+#' options, and the graphics device are left as they were. The report is
+#' rendered in an environment of its own, so objects in the global environment
+#' are neither read nor changed.
 #'
 #' `nomo_report()` behaves the same from the console, a script, or a chunk
 #' inside another R Markdown or Quarto document, such as a thesis chapter.
@@ -1119,8 +1669,10 @@ nomo_report_prepare_template <- function(template, input, title) {
 #'
 #' @examples
 #' \donttest{
-#' # Rendering requires pandoc, which RStudio and Quarto installations include.
-#' if (rmarkdown::pandoc_available()) {
+#' # Rendering requires the rmarkdown package and pandoc, which RStudio and
+#' # Quarto installations include.
+#' if (requireNamespace("rmarkdown", quietly = TRUE) &&
+#'     rmarkdown::pandoc_available()) {
 #'   run <- nomo_run(
 #'     data = nomo_demo_network,
 #'     scales = list(Agency = c("ag1", "ag2", "ag3", "ag4")),
@@ -1137,6 +1689,7 @@ nomo_report_prepare_template <- function(template, input, title) {
 #'     file = tempfile(fileext = ".html")
 #'   )
 #'   file.exists(report_file)
+#'   \dontshow{unlink(report_file)}
 #' }
 #' }
 #'
@@ -1209,12 +1762,6 @@ nomo_report <- function(x,
   }
 
   template <- nomo_report_template_path()
-  input <- tempfile(pattern = "nomologR-report-", fileext = ".Rmd")
-  nomo_report_prepare_template(
-    template = template,
-    input = input,
-    title = title
-  )
 
   output_dir <- dirname(file)
   if (!dir.exists(output_dir)) {
@@ -1226,15 +1773,45 @@ nomo_report <- function(x,
       )
     }
   }
+  # The full path, taken while the working directory is still the caller's.
+  target <- file.path(
+    normalizePath(output_dir, winslash = "/", mustWork = TRUE),
+    basename(file)
+  )
+
+  # The report is the only file written outside tempdir() (CRAN policy on the
+  # user's file space). The copy of the template, the intermediate files of
+  # knitr and pandoc, and the figures all go to a scratch directory there,
+  # which is removed on exit, and the finished report is then copied to `file`.
+  # Nothing else is left beside the report, in the working directory, or in the
+  # package directory, even when a render stops part-way: rendering straight
+  # into the report's directory left the figures there when it did.
+  scratch <- tempfile(pattern = "nomologR-report-")
+  dir.create(scratch)
+  on.exit(unlink(scratch, recursive = TRUE, force = TRUE), add = TRUE)
+
+  input <- file.path(scratch, "report.Rmd")
+  nomo_report_prepare_template(
+    template = template,
+    input = input,
+    title = title
+  )
 
   restore_knitr <- nomo_report_isolate_knitr()
   on.exit(restore_knitr(), add = TRUE)
 
+  # The template is rendered where it was copied, so its intermediate files
+  # and figures are written beside it. `knit_root_dir` keeps the chunks there
+  # too when a calling document has set a root directory of its own.
+  # rmarkdown::render() and knitr restore the working directory, the options,
+  # and the graphics device on exit, so the caller's are left as found.
+  output_format <- nomo_report_output_format(file)
   rendered <- rmarkdown::render(
     input = input,
-    output_format = nomo_report_output_format(file),
-    output_file = basename(file),
-    output_dir = output_dir,
+    output_format = output_format,
+    output_file = if (is.null(output_format)) "report.html" else "report.docx",
+    output_dir = scratch,
+    knit_root_dir = scratch,
     params = list(
       run = x,
       report_title = title,
@@ -1247,12 +1824,35 @@ nomo_report <- function(x,
         "%Y-%m-%d %H:%M:%S %Z"
       )
     ),
-    envir = new.env(parent = globalenv()),
+    envir = nomo_report_render_env(),
     clean = TRUE,
     quiet = quiet
   )
 
-  invisible(normalizePath(rendered, winslash = "/", mustWork = TRUE))
+  invisible(nomo_report_deliver(rendered, target))
+}
+
+
+# The finished report, copied from the scratch directory to the path the
+# caller asked for. Returns that path, normalized.
+nomo_report_deliver <- function(rendered, target) {
+  if (!isTRUE(file.copy(rendered, target, overwrite = TRUE, copy.mode = FALSE))) {
+    stop(sprintf("Could not write the report file: %s", target), call. = FALSE)
+  }
+  normalizePath(target, winslash = "/", mustWork = TRUE)
+}
+
+
+# The environment the template's code runs in. Its parent is the base
+# environment rather than the global one: the template calls base R and names
+# the package of everything else (`knitr::`, `utils::`, `nomologR:::`), so it
+# needs nothing from the caller's workspace. It therefore cannot pick up an
+# object there that masks a base function, and whatever it assigns stays in
+# this environment, which is discarded; the global environment is neither read
+# nor changed (CRAN policy). A test reads the template to check that every
+# name it uses is defined there, in base R, or by a package it names.
+nomo_report_render_env <- function() {
+  new.env(parent = baseenv())
 }
 
 

@@ -43,7 +43,6 @@ Imports:
     tibble,
     withr (>= 3.0.2)
 Suggests:
-    covr,
     knitr,
     parallel,
     rmarkdown,
