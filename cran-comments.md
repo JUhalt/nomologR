@@ -63,17 +63,15 @@ while 0.3.0 was under review; `NEWS.md` lists the changes.
 
 TODO (maintainer, before submission): replace this paragraph with the result
 line of `R CMD check --as-cran` on the tarball that is submitted. No such
-result exists yet. The development version (0.9.0) was checked on 2026-10-09
-on a Windows 11 laptop that was running other jobs (`R CMD check --as-cran
---no-manual`, R 4.6.1): 0 errors | 0 warnings | 3 notes. The notes were the
-new-submission note; "Problems with news in 'NEWS.md'", which goes when the
-first heading of `NEWS.md` carries the version number; and "Examples with CPU
-(user + system) or elapsed time > 5s". That machine reported elapsed times
-over 5 s even for `nomo_defaults()` (11 s elapsed, 0.4 s of CPU). The two
-examples that passed 5 s of CPU, `nomo_revise()` and
-`nomo_invariance_longitudinal()`, were made lighter after that check, and the
-check was not repeated. Neither of the last two notes may appear for the
-submitted tarball: read the example timings that win-builder reports.
+result exists yet. The development version (0.9.0) was last checked on
+2026-10-09 on a Windows 11 laptop that was running other jobs (`R CMD check
+--as-cran --no-manual`, R 4.6.1): 0 errors | 0 warnings | 3 notes. The notes
+were the new-submission note; "Problems with news in 'NEWS.md'", which goes
+when the first heading of `NEWS.md` carries the version number; and "Examples
+with CPU (user + system) or elapsed time > 5s", for `nomo_run()` alone and by
+elapsed time only (8.0 s elapsed, 2.0 s of CPU). No example took 5 s of CPU.
+Neither of the last two notes may appear for the submitted tarball: read the
+example timings that win-builder reports.
 
 * This is a new submission.
 * win-builder lists possibly misspelled words in DESCRIPTION. Cronbach, Meehl,
@@ -99,13 +97,16 @@ run on this version yet.
   coverage is 100%. Tests that check the package against lavaan's own
   estimates run on CRAN.
   TODO (maintainer, before submission): confirm that the coverage job still
-  reports 100% for every file in `R/` on the submitted commit, and add the
-  whole check time that win-builder or the macOS builder reports. The 2.5
-  minutes reported with 0.3.0 no longer holds. In the local check described
-  above the tests took 13
-  minutes (10 minutes of CPU), the vignettes 11 minutes, and the whole check
-  45 minutes. That laptop takes about four times as long as GitHub's Windows
-  runner to rebuild the vignettes, so these are not the figures to report.
+  reports 100% for every file in `R/` on the submitted commit (a local covr
+  run of the whole suite on 2026-10-09 gave 100% for each of the 61 files
+  that hold executable lines),
+  and add the whole check time that win-builder or the macOS builder reports.
+  The 2.5 minutes reported with 0.3.0 no longer holds. In the local check
+  described above the tests took 12 minutes, the vignettes 37 minutes, and the
+  whole check 61 minutes, beside two other long R jobs; an earlier check with
+  less running beside it took 13, 11, and 45 minutes. That laptop takes about
+  four times as long as GitHub's Windows runner to rebuild the vignettes, so
+  these are not the figures to report.
 * Examples. Every exported function has examples that run in the ordinary
   check, except `nomo_report()` and `nomo_revise()`, whose examples are
   wrapped whole in `\donttest{}`. The first renders a report, which needs
