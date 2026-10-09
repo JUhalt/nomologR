@@ -27,5 +27,10 @@ utils::globalVariables(c(
   "item",
   "source",
   "share",
-  "composite"
+  "composite",
+  "interval_lower",
+  "interval_upper",
+  "reference_label",
+  "id",
+  "hjust"
 ))
