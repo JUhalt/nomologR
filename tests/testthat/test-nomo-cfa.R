@@ -1617,15 +1617,24 @@ test_that("the versions note covers each combination of variants (#145)", {
   # A scaled test without a label here is named as lavaan names it.
   fit <- nomo_cfa(hs_three, lavaan::HolzingerSwineford1939, modification_indices = FALSE)$fit
   real <- lavaan::lavInspect
-  label <- testthat::with_mocked_bindings(
-    nomologR:::nomo_cfa_test_label(fit),
-    lavInspect = function(object, what, ...) {
-      if (identical(what, "options")) return(list(test = c("standard", "browne.residual.adf")))
-      real(object, what, ...)
-    },
-    .package = "lavaan"
+  label_for <- function(tests) {
+    testthat::with_mocked_bindings(
+      nomologR:::nomo_cfa_test_label(fit),
+      lavInspect = function(object, what, ...) {
+        if (identical(what, "options")) return(list(test = tests))
+        real(object, what, ...)
+      },
+      .package = "lavaan"
+    )
+  }
+  expect_identical(label_for(c("standard", "some.new.test")), "some new test")
+  # A residual-based test is not a scaling of the chi-square shown; lavaan
+  # 0.7-3 computes Browne's for every ML fit.
+  expect_identical(label_for(c("standard", "browne.residual.nt.model")), "")
+  expect_identical(
+    label_for(c("standard", "browne.residual.nt.model", "yuan.bentler.mplus")),
+    "Yuan-Bentler scaled"
   )
-  expect_identical(label, "browne residual adf")
   expect_identical(nomologR:::nomo_cfa_test_label(NULL), "")
 })
 
