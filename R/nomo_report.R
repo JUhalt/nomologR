@@ -1513,6 +1513,15 @@ nomo_report_title_yaml <- function(title) {
 #' if (requireNamespace("rmarkdown", quietly = TRUE) &&
 #'     rmarkdown::pandoc_available()) {
 #'   run <- nomo_run(
+#' `nomo_report()` writes one file, the report named by `file`, and creates
+#' that file's directory when it does not exist. The working files of the
+#' render (the copy of the template, the intermediate files, and the figures)
+#' are written to a temporary directory under [tempdir()] and removed when the
+#' call returns, whether or not it succeeds. The working directory, the
+#' options, and the graphics device are left as they were. The report is
+#' rendered in an environment of its own, so objects in the global environment
+#' are neither read nor changed.
+#'
 #'     data = nomo_demo_network,
 #'     scales = list(Agency = c("ag1", "ag2", "ag3", "ag4")),
 #'     settings = list(factors = list(n_iter = 20, seed = 2026)),
@@ -1600,12 +1609,6 @@ nomo_report <- function(x,
   }
 
   template <- nomo_report_template_path()
-  input <- tempfile(pattern = "nomologR-report-", fileext = ".Rmd")
-  nomo_report_prepare_template(
-    template = template,
-    input = input,
-    title = title
-  )
 
   output_dir <- dirname(file)
   if (!dir.exists(output_dir)) {
@@ -1623,9 +1626,10 @@ nomo_report <- function(x,
 
   rendered <- rmarkdown::render(
     input = input,
-    output_format = nomo_report_output_format(file),
-    output_file = basename(file),
-    output_dir = output_dir,
+    output_format = output_format,
+    output_file = if (is.null(output_format)) "report.html" else "report.docx",
+    output_dir = scratch,
+    knit_root_dir = scratch,
     params = list(
       run = x,
       report_title = title,
@@ -1638,12 +1642,35 @@ nomo_report <- function(x,
         "%Y-%m-%d %H:%M:%S %Z"
       )
     ),
-    envir = new.env(parent = globalenv()),
+    envir = nomo_report_render_env(),
     clean = TRUE,
     quiet = quiet
   )
 
-  invisible(normalizePath(rendered, winslash = "/", mustWork = TRUE))
+  invisible(nomo_report_deliver(rendered, target))
+}
+
+
+# The finished report, copied from the scratch directory to the path the
+# caller asked for. Returns that path, normalized.
+nomo_report_deliver <- function(rendered, target) {
+  if (!isTRUE(file.copy(rendered, target, overwrite = TRUE))) {
+    stop(sprintf("Could not write the report file: %s", target), call. = FALSE)
+  }
+  normalizePath(target, winslash = "/", mustWork = TRUE)
+}
+
+
+# The environment the template's code runs in. Its parent is the base
+# environment rather than the global one: the template calls base R and names
+# the package of everything else (`knitr::`, `utils::`, `nomologR:::`), so it
+# needs nothing from the caller's workspace. It therefore cannot pick up an
+# object there that masks a base function, and whatever it assigns stays in
+# this environment, which is discarded; the global environment is neither read
+# nor changed (CRAN policy). A test reads the template to check that every
+# name it uses is defined there, in base R, or by a package it names.
+nomo_report_render_env <- function() {
+  new.env(parent = baseenv())
 }
 
 
@@ -1658,5 +1685,34 @@ nomo_report_output_format <- function(file) {
   if ("number_sections" %in% names(formals(rmarkdown::word_document))) {
     args$number_sections <- TRUE
   }
+  # The full path, taken while the working directory is still the caller's.
+  target <- file.path(
+    normalizePath(output_dir, winslash = "/", mustWork = TRUE),
+    basename(file)
+  )
+
+  # The report is the only file written outside tempdir() (CRAN policy on the
+  # user's file space). The copy of the template, the intermediate files of
+  # knitr and pandoc, and the figures all go to a scratch directory there,
+  # which is removed on exit, and the finished report is then copied to `file`.
+  # Nothing else is left beside the report, in the working directory, or in the
+  # package directory, even when a render stops part-way: rendering straight
+  # into the report's directory left the figures there when it did.
+  scratch <- tempfile(pattern = "nomologR-report-")
+  dir.create(scratch)
+  on.exit(unlink(scratch, recursive = TRUE, force = TRUE), add = TRUE)
+
+  input <- file.path(scratch, "report.Rmd")
+  nomo_report_prepare_template(
+    template = template,
+    input = input,
+    title = title
+  )
   do.call(rmarkdown::word_document, args)
 }
+  # The template is rendered where it was copied, so its intermediate files
+  # and figures are written beside it. `knit_root_dir` keeps the chunks there
+  # too when a calling document has set a root directory of its own.
+  # rmarkdown::render() and knitr restore the working directory, the options,
+  # and the graphics device on exit, so the caller's are left as found.
+  output_format <- nomo_report_output_format(file)

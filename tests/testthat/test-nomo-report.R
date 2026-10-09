@@ -40,6 +40,19 @@ test_that("nomo_report() has no default path and writes only where asked", {
   # No default: the formal is empty, where it used to be a file name in the
   # working directory.
   expect_identical(deparse(formals(nomo_report)$file), "")
+  # `file` is the only argument that names a path, so no other argument can
+  # write anywhere by default, and an existing file is not replaced by default.
+  defaults <- formals(nomo_report)
+  expect_identical(
+    names(defaults),
+    c("x", "file", "title", "include_plots", "include_session",
+      "max_table_rows", "overwrite", "quiet", "apa_tables")
+  )
+  expect_identical(
+    names(defaults)[vapply(defaults, is.character, logical(1))],
+    "title"
+  )
+  expect_false(defaults$overwrite)
 
   scratch <- tempfile("nomo-report-wd-")
   dir.create(scratch)
@@ -1282,7 +1295,9 @@ caller_state <- list(
     outer
   )
 
-  envir <- new.env(parent = globalenv())
+  # The calling document's code uses base R and what it is given here, so its
+  # environment need not reach the global one.
+  envir <- new.env(parent = baseenv())
   envir$run <- run
   envir$report_dir <- dir
   envir$nomo_report <- nomo_report
@@ -1847,4 +1862,263 @@ test_that("a rendered report keeps model syntax, quotes, and the title as writte
   expect_true(grepl("scales = list(S = c(&quot;i1&quot;, &quot;i2&quot;))", text, fixed = TRUE))
   expect_true(grepl("Scale &quot;A&quot; -- C:\\Users\\data &amp; &lt;b&gt;x&lt;/b&gt;", text,
                     fixed = TRUE))
+})
+
+
+# CRAN policy: files written, session state, and the render environment --------
+
+report_listing <- function(dir) {
+  sort(list.files(dir, all.files = TRUE, recursive = TRUE, include.dirs = TRUE))
+}
+
+report_scratch_dirs <- function() {
+  list.files(tempdir(), pattern = "^nomologR-report-")
+}
+
+report_can_render <- function() {
+  skip_on_cran()
+  skip_if_not_installed("rmarkdown")
+  skip_if_not_installed("knitr")
+  skip_if_not(rmarkdown::pandoc_available())
+}
+
+# Two renders with figures, an HTML report to an absolute path and a Word
+# report to a relative one, with what was on disk and in the session before
+# and after. The tests below read the record, so the renders happen once.
+report_footprint <- local({
+  cache <- NULL
+
+  function() {
+    if (!is.null(cache)) return(cache)
+
+    run <- make_m9_report_run()
+    root <- tempfile("nomo-report-footprint-")
+    out <- file.path(root, "out")
+    work <- file.path(root, "work")
+    dir.create(out, recursive = TRUE)
+    dir.create(work)
+    on.exit(unlink(root, recursive = TRUE), add = TRUE)
+    template_dir <- dirname(nomologR:::nomo_report_template_path())
+
+    # A graphics device of the caller's, with par() settings of its own.
+    grDevices::pdf(NULL)
+    device <- grDevices::dev.cur()
+    on.exit(grDevices::dev.off(device), add = TRUE)
+    graphics::par(mar = c(1, 2, 3, 4))
+
+    state <- function() {
+      list(
+        wd = getwd(),
+        options = options(),
+        device = grDevices::dev.cur(),
+        par = graphics::par(no.readonly = TRUE),
+        global = ls(globalenv(), all.names = TRUE),
+        wd_files = report_listing(getwd()),
+        template_files = report_listing(template_dir),
+        scratch = report_scratch_dirs()
+      )
+    }
+    before <- state()
+
+    html <- nomo_report(run, file = file.path(out, "report.html"),
+                        include_session = FALSE, quiet = TRUE)
+    out_files <- report_listing(out)
+    html_text <- paste(readLines(html, warn = FALSE), collapse = "\n")
+
+    render_in_work <- function() {
+      old <- setwd(work)
+      on.exit(setwd(old), add = TRUE)
+      nomo_report(run, file = "relative.docx", include_session = FALSE, quiet = TRUE)
+    }
+    docx <- render_in_work()
+
+    cache <<- list(
+      before = before, after = state(),
+      html = html, docx = docx,
+      out = normalizePath(out, winslash = "/"),
+      work = normalizePath(work, winslash = "/"),
+      out_files = out_files, work_files = report_listing(work),
+      figures = lengths(regmatches(
+        html_text, gregexpr("data:image/png;base64", html_text, fixed = TRUE)
+      ))
+    )
+    cache
+  }
+})
+
+
+test_that("a render writes the report and nothing else outside tempdir() (CRAN)", {
+  report_can_render()
+  seen <- report_footprint()
+
+  # The render drew figures, which knitr writes to disk before pandoc embeds
+  # them; none is left beside the report, and neither is an intermediate file.
+  expect_gt(seen$figures, 0L)
+  expect_identical(seen$out_files, "report.html")
+  expect_identical(seen$html, file.path(seen$out, "report.html"))
+  # A relative path is written in the working directory, and only it.
+  expect_identical(seen$work_files, "relative.docx")
+  expect_identical(seen$docx, file.path(seen$work, "relative.docx"))
+
+  # Nothing was written to the session's working directory or to the package
+  # directory that holds the template, and the scratch directory under
+  # tempdir() was removed.
+  expect_identical(seen$after$wd_files, seen$before$wd_files)
+  expect_identical(seen$after$template_files, seen$before$template_files)
+  expect_identical(seen$after$scratch, seen$before$scratch)
+})
+
+
+test_that("a render leaves the working directory, options, and graphics state as found (CRAN)", {
+  report_can_render()
+  seen <- report_footprint()
+
+  expect_identical(seen$after$wd, seen$before$wd)
+  # Every option set before the render has the value it had.
+  expect_identical(seen$after$options[names(seen$before$options)], seen$before$options)
+  # The caller's device is still the active one, with its par() settings.
+  expect_identical(seen$after$device, seen$before$device)
+  expect_identical(seen$after$par, seen$before$par)
+  expect_identical(seen$after$par$mar, c(1, 2, 3, 4))
+})
+
+
+test_that("a render assigns nothing in the global environment (CRAN)", {
+  report_can_render()
+  seen <- report_footprint()
+  expect_identical(seen$after$global, seen$before$global)
+})
+
+
+test_that("the template is rendered in an environment that does not expose the workspace (CRAN)", {
+  env <- nomologR:::nomo_report_render_env()
+  expect_identical(parent.env(env), baseenv())
+  expect_length(ls(env, all.names = TRUE), 0L)
+  # Each render has an environment of its own.
+  expect_false(identical(env, nomologR:::nomo_report_render_env()))
+})
+
+
+test_that("the report template uses only base R and functions whose package it names (CRAN)", {
+  # The template runs in a child of the base environment, so a name that is
+  # neither defined in the template nor in base R would fail only in the
+  # section of the report that uses it. This reads every chunk and every
+  # inline expression.
+  lines <- readLines(nomologR:::nomo_report_template_path(), warn = FALSE,
+                     encoding = "UTF-8")
+  fences <- grep("^```", lines)
+  starts <- fences[grepl("^```\\{r[ ,}]", lines[fences])]
+  ends <- vapply(starts, function(s) min(fences[fences > s]), numeric(1))
+  expect_gt(length(starts), 20L)
+  chunk_lines <- unlist(Map(seq, starts, ends))
+  code <- lines[setdiff(chunk_lines, c(starts, ends))]
+  prose <- lines[-chunk_lines]
+  inline <- unlist(regmatches(prose, gregexpr("`r [^`]+`", prose)))
+  expect_gt(length(inline), 3L)
+  exprs <- c(
+    as.list(parse(text = code, keep.source = FALSE)),
+    lapply(substring(inline, 4L, nchar(inline) - 1L),
+           function(z) parse(text = z, keep.source = FALSE)[[1L]])
+  )
+
+  # The parts of a call, without the empty arguments of x[i, , drop = FALSE]
+  # and of function(x, y).
+  children <- function(e) {
+    parts <- as.list(e)
+    keep <- vapply(seq_along(parts),
+                   function(i) !identical(parts[[i]], quote(expr = )), logical(1))
+    parts[keep]
+  }
+  used <- function(e) {
+    if (is.name(e)) return(as.character(e))
+    if (!is.call(e) && !is.pairlist(e)) return(character())
+    if (is.call(e) && is.name(e[[1L]])) {
+      head <- as.character(e[[1L]])
+      # pkg::name is looked up in the package; x$name reads a field.
+      if (head %in% c("::", ":::")) return(character())
+      if (head %in% c("$", "@")) return(used(e[[2L]]))
+    }
+    unlist(lapply(children(e), used))
+  }
+  defined <- function(e) {
+    if (!is.call(e) && !is.pairlist(e)) return(character())
+    own <- character()
+    if (is.call(e) && is.name(e[[1L]])) {
+      head <- as.character(e[[1L]])
+      if (head %in% c("<-", "=", "for") && is.name(e[[2L]])) own <- as.character(e[[2L]])
+      if (head == "function") own <- names(e[[2L]])
+    }
+    c(own, unlist(lapply(children(e), defined)))
+  }
+
+  names_used <- unique(unlist(lapply(exprs, used)))
+  # rmarkdown gives the template its `params`.
+  names_defined <- c(unique(unlist(lapply(exprs, defined))), "params")
+  free <- setdiff(names_used, names_defined)
+  in_base <- vapply(free, exists, logical(1), envir = baseenv(), inherits = FALSE)
+  expect_identical(sort(free[!in_base]), character())
+  # The walker does see what the template uses and defines.
+  expect_true(all(c("emit_table", "run", "cat", "paste") %in% names_used))
+  expect_true(all(c("emit_table", "run", "word_output") %in% names_defined))
+})
+
+
+test_that("the finished report is copied to the path asked for, or the failure is reported", {
+  rendered <- tempfile(fileext = ".html")
+  target <- tempfile(fileext = ".html")
+  on.exit(unlink(c(rendered, target)), add = TRUE)
+  writeLines("report", rendered)
+
+  out <- nomologR:::nomo_report_deliver(rendered, target)
+  expect_identical(out, normalizePath(target, winslash = "/"))
+  expect_identical(readLines(target), "report")
+
+  # An existing file is replaced: nomo_report() has checked `overwrite` by then.
+  writeLines("newer report", rendered)
+  nomologR:::nomo_report_deliver(rendered, target)
+  expect_identical(readLines(target), "newer report")
+
+  expect_error(
+    nomologR:::nomo_report_deliver(tempfile(fileext = ".html"), target),
+    "Could not write the report file"
+  )
+})
+
+
+test_that("a render that stops part-way leaves nothing behind (CRAN)", {
+  report_can_render()
+  skip_if_not(
+    exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
+  )
+
+  run <- make_m9_report_run()
+  out <- tempfile("nomo-report-stopped-")
+  dir.create(out)
+  on.exit(unlink(out, recursive = TRUE), add = TRUE)
+  scratch_before <- report_scratch_dirs()
+  wd_before <- getwd()
+  wd_files_before <- report_listing(wd_before)
+  options_before <- options()
+
+  # The template's last chunk stops, after every figure has been drawn and
+  # written to disk.
+  testthat::local_mocked_bindings(
+    nomo_report_abbreviations = function(...) stop("synthetic render failure"),
+    .package = "nomologR"
+  )
+  expect_error(
+    suppressMessages(
+      nomo_report(run, file = file.path(out, "report.html"),
+                  include_session = FALSE, quiet = TRUE)
+    ),
+    "synthetic render failure"
+  )
+
+  # No report, no figure directory beside where it would have been, and no
+  # scratch directory; the session is as it was.
+  expect_length(report_listing(out), 0L)
+  expect_identical(report_scratch_dirs(), scratch_before)
+  expect_identical(getwd(), wd_before)
+  expect_identical(report_listing(wd_before), wd_files_before)
+  expect_identical(options()[names(options_before)], options_before)
 })
