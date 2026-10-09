@@ -12,8 +12,8 @@ These changes lead to 1.0.0, the stable release planned jointly with
 - **One output style.** Printed output, plots, APA tables, and the report follow
   one style, shared with `contentvalidR` (#144).
 - **The CRAN review.** CRAN returned 0.3.0 with two requests. Both are met: no
-  function writes a file unless it is given the path, and the package writes
-  nothing to the global environment.
+  function writes a file unless it is given the path, and no code in the
+  package writes to the global environment.
 - **The 1.0 contract.** The contract is now settled: the stability policy covers
   every exported function and documented field except `nomo_method_variance()`
   and `nomo_power_simulate()`, which stay experimental into 1.x.
@@ -325,6 +325,7 @@ that does. A call that worked is not affected.
   - **The handoff is kept.** A revision of a run whose scales came from content review keeps the `contentvalidR` handoff. The revised run was built from the plain scale list, so it lost the handoff's declared reverse keying, the content-review and held-back rows of the decision log, and the report's content-review section, and relabeled item membership as researcher input. The revised run now carries all of these, and declared keying follows its items.
   - **Departures from content review.** A scale whose items differ from those content review carried is recorded as the researcher's definition. Each held-back item a revision reinstates, or carried item it removes, gets its own row (`reinstated:<item>`, `removed:<item>`) with the rationale of the revision that made the change.
   - **Decisions.** A `factor_count` given in `decisions` is used; the revision had been refused when the inherited count no longer fitted the revised items. `cfa_model` inside `decisions` is refused, since the fitted model is the one the `cfa_model` argument gives and the lineage records. `decisions` is validated before it is merged, and each scale keeps its own inherited rationale.
+  - **A priori revisions.** The `revision` row of the log no longer says that an a priori revision was evaluated on the sample that motivated it. It says that the parent and the revision are evaluated on the same sample, or on the same validation rows, so the model that is retained still needs confirming in independent data.
 - `nomo_table()` for a guided run (#145). `nomo_table(run, "settings")` gains rows for `scores` and `missing` and a `values` column. `nomo_table(run, "recipe")` names `nomo_scores()`, `nomo_missing()`, and the careless-responding screen when they were requested.
 - The run's own decision log (#145). The missing-data row names only the strategies that were fitted, a held-back item's missing status or recommendation is no longer quoted as "NA", and a parallel-analysis count of 0 gets its own request with a usable example. `?nomo_run` lists the log's columns and the values of `source`.
 
@@ -430,7 +431,7 @@ deprecation period.
   - `nomo_invariance()`: `n_used`, `group_n`, `ordered_detected`, `fit_variants`, and `latent_means`.
   - `nomo_network()`: `model_changes`, `n_used`, `validation_n_used`, `single_indicators`, and `single_indicator_sensitivity`; `chisq_version` and `index_version` in `fit_evidence`; `fit` and `structural_test` in `measurement_context`.
 - **New values.** `"undetermined"` in `nomo_compare()`'s `relation`; `"direction_concordant_above_magnitude"` in `nomo_network()`'s `concordance`; `"residual_association"` in its `evidence_scope`; `"network_validation"` in the `stage` of its decision log.
-- **New `nomo_table()` types and columns.** `"latent_means"` for `nomo_invariance()`; `"single_indicators"` and `"sensitivity"` for `nomo_network()`, whose `"fit"` table gains `chisq_version` and `index_version`; `missing` and `n` in `"htmt_status"` for `nomo_validity()`; `brief` in `"notes"` for `nomo_hierarchical()`; `values` in `"settings"` for `nomo_run()`. `nomo_table()` has a method for every other object, which stops with the supported classes.
+- **New `nomo_table()` types and columns.** `"latent_means"` for `nomo_invariance()`; `"single_indicators"` and `"sensitivity"` for `nomo_network()`, whose `"fit"` table gains `chisq_version` and `index_version`; `missing` and `n` in `"htmt_status"` for `nomo_validity()`; `brief` in `"notes"` for `nomo_hierarchical()`. `nomo_table()` has a method for every other object, which stops with the supported classes.
 - **New `nomo_apa_table()` method.** For `nomo_retest()` results.
 - **New `plot()` and `summary()` methods.** `plot()` for `nomo_scores`, `nomo_missing`, and `nomo_power` objects, and `summary()` for `nomo_missing` objects. `summary()` of a `nomo_scores` object has class `summary_nomo_scores`.
 - **New decision-log rows**, named by their `metric`, or by their `id` in a guided run's own log.
@@ -450,7 +451,7 @@ CRAN returned 0.3.0 with two requests: not to write to the user's file space by
 default, and not to modify the global environment.
 
 - **No default write path.** `nomo_report()` requires `file`, and writes the report and nothing else (see "Report").
-- **Random-number state.** `nomo_factors()`, `nomo_split()`, `nomo_power_simulate()`, and `nomo_reliability()` set their seed with `withr::with_seed()`. Results for a given seed are unchanged, and the caller's random-number state is left as it was. The package no longer assigns or removes `.Random.seed` in the global environment, and writes nothing else to it. `withr` (>= 3.0.2) joins `Imports`; ggplot2 already imports it, so it is not a new package among the dependencies.
+- **Random-number state.** `nomo_factors()`, `nomo_split()`, `nomo_power_simulate()`, and `nomo_reliability()` set their seed with `withr::with_seed()`. The check `nomo_power_simulate()` makes of the population's variances under `standardized = TRUE` draws its data inside `withr::with_preserve_seed()`. Results for a given seed are unchanged, and the caller's random-number state is left as it was. No code in the package assigns or removes `.Random.seed` in the global environment any more, or writes anything else there; `withr` saves and restores the state. `withr` (>= 3.0.2) joins `Imports`; ggplot2 already imports it, so it is not a new package among the dependencies.
 - **`nomo_reliability(ci_seed = )`.** lavaan still seeds the bootstrap draws, so intervals for a given seed and worker count are the same. Two cases are fixed. A seeded bootstrap on more than one worker (`ci_ncpus`), in a session that had not yet drawn a random number, left the session on the `"L'Ecuyer-CMRG"` generator. A bootstrap that failed part-way could leave the session on the bootstrap's seed.
 - **Examples.** Every exported function has examples that run in the ordinary check, except `nomo_report()` and `nomo_revise()`, whose examples stay in `\donttest{}`.
 - **Suggested packages.** The examples and tests that need `rmarkdown` are skipped without it, and `covr`, which no package code uses, is no longer in `Suggests`.
