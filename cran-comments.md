@@ -28,8 +28,9 @@ while 0.3.0 was under review; `NEWS.md` lists the changes.
   and no test gives `nomo_report()` a relative path. The vignette that renders
   reports writes them to a directory it creates under `tempdir()` and removes
   at its end.
-* The test suite keeps a null graphics device open (`grDevices::pdf(NULL)`),
-  so a plot drawn by a test cannot create `Rplots.pdf`.
+* The test suite sets its default graphics device to one with no file
+  (`grDevices::pdf(NULL)`), so a plot drawn by a test cannot create
+  `Rplots.pdf`.
 
 > Please do not modify the .GlobalEnv.
 
