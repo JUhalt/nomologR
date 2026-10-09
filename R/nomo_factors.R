@@ -988,24 +988,38 @@ nomo_factors_parallel <- function(x,
                                   parallel_rule,
                                   seed,
                                   fm) {
-  old_exists <- exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
-  if (old_exists) {
-    old_seed <- get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
-  }
-
-  on.exit(
-    {
-      if (old_exists) {
-        assign(".Random.seed", old_seed, envir = .GlobalEnv)
-      } else if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
-        rm(".Random.seed", envir = .GlobalEnv)
-      }
-    },
-    add = TRUE
+  # withr sets the seed for the null data and afterwards puts the caller's
+  # random-number state back as it was, on a normal return and on an error.
+  withr::with_seed(
+    seed,
+    nomo_factors_parallel_null(
+      x = x,
+      model_types = model_types,
+      method = method,
+      use = use,
+      observed = observed,
+      n_iter = n_iter,
+      quantile = quantile,
+      parallel_rule = parallel_rule,
+      seed = seed,
+      fm = fm
+    )
   )
+}
 
-  set.seed(seed)
 
+# The null eigenvalues and the retention counts they give. It draws from the
+# random-number stream as it stands, so nomo_factors_parallel() seeds it.
+nomo_factors_parallel_null <- function(x,
+                                       model_types,
+                                       method,
+                                       use,
+                                       observed,
+                                       n_iter,
+                                       quantile,
+                                       parallel_rule,
+                                       seed,
+                                       fm) {
   p <- ncol(x)
   random_values <- matrix(NA_real_, nrow = n_iter, ncol = p)
   smoothed_null <- 0L

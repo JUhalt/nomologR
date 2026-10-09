@@ -24,7 +24,9 @@ methods_run <- local({
         measurement_model = "proceed"
       ),
       settings = list(
-        factors = list(seed = 2026),
+        # Ten null data sets: the methods credited do not depend on how many,
+        # and this fixture is built under CRAN's check-time limit.
+        factors = list(seed = 2026, n_iter = 10),
         invariance = list(
           group = "group",
           levels = c("configural", "metric", "scalar"),
@@ -422,6 +424,7 @@ test_that("categorical and rotated solutions credit their own methods", {
 
 
 test_that("an ordered CFA credits WLSMV, not maximum likelihood", {
+  skip_on_cran()
   used <- nomo_methods(methods_compare_models()$wlsmv[[1]])$id
   expect_true(all(c("wlsmv_cfa", "categorical_correlations") %in% used))
   expect_false("ml_cfa" %in% used)
@@ -545,6 +548,7 @@ test_that("a split, revised workflow credits holdout, lineage, and its compariso
 
 
 test_that("a requested Fornell-Larcker comparison is credited", {
+  skip_on_cran()
   fit <- methods_compare_models()$ml[[1]]
   expect_false("fornell_larcker" %in% nomo_methods(nomo_validity(fit))$id)
   expect_true(

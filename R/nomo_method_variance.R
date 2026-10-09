@@ -158,7 +158,6 @@
 #' \doi{10.1177/1094428110366036}
 #'
 #' @examples
-#' \donttest{
 #' # Social desirability as the marker for the Agency and Persistence items of
 #' # the simulated validation study. In its population the marker shares
 #' # nothing with those items, so no method variance should be detected.
@@ -170,7 +169,6 @@
 #'                            marker = c("sd1", "sd2", "sd3"))
 #' mv
 #' nomo_table(mv, "reliability")
-#' }
 #' @export
 nomo_method_variance <- function(model,
                                  data,

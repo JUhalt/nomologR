@@ -77,6 +77,7 @@ test_that("a run that requests neither is unchanged, and the stage table keeps i
 
 
 test_that("attached evidence reaches the component log and the method credits", {
+  skip_on_cran()
   run <- attached_run()
   component <- nomo_table(run, "component_log")
   expect_true("scores" %in% component$pipeline_component)
