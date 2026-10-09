@@ -28,7 +28,8 @@ nomo_apa_table(x, type = NULL, number = NULL, title = NULL, ...)
 
 - number:
 
-  Optional table number, printed in bold as "Table 1".
+  Optional table number, printed in bold as "Table 1". Without one, the
+  number line is left out, for the document to supply.
 
 - title:
 
@@ -62,8 +63,12 @@ read are:
   `"nomo_cfa"`.
 
 Headings, cells, and notes are written in Markdown, as pandoc reads it:
-italics as `*p*` and a superscript as `^a^`. Printing in the console
-drops these marks from the headings and notes; knitting renders them.
+italics as `*p*` and a superscript as `^a^`.
+[`print()`](https://rdrr.io/r/base/print.html) shows the table as
+aligned text under its number and title, with its notes, the italics
+dropped, and a note marker written `(a)`; a table wider than the console
+wraps its long headings and text cells, and names any column it still
+cannot fit.
 
 ## Details
 
@@ -74,11 +79,32 @@ TLI, RMSEA, SRMR, and standardized loadings keep it, `0.95`, because
 each can exceed 1 in principle: TLI is not bounded above, and a
 standardized loading does in an improper (Heywood) solution. Many
 published tables print standardized loadings without the zero; this
-follows the rule as written.
+follows the rule as written, as the output style shared with
+`contentvalidR` does.
 
 **No verdicts.** Table notes keep the package's reference-value
 language. No cell reads PASS or FAIL, and fit indices are not labeled
 good or poor.
+
+**Notes say what the table shows.** The general note defines each
+abbreviation, gives the estimator and the number of cases analyzed, and
+says when the chi-square is a scaled test statistic and the fit indices
+are robust or scaled values. For a network's hypotheses it also defines
+each evidence label the table shows, such as "Concordant", and each
+prediction is given with the region it names. An interval's heading
+carries its level, such as "90% CI" for a reliability interval
+bootstrapped at that level. A cell left empty is an em dash, explained
+in the note; a cell that does not apply, such as the change in fit of
+the first invariance model, is blank. Specific notes, marked with
+superscript letters, name the parameters a partial invariance model
+frees, the hypotheses specified post hoc, the estimates whose interval
+is the equivalence interval a
+[`negligible()`](https://juhalt.github.io/nomologR/reference/nomo_expectations.md)
+prediction is judged on, and the estimates on another scale than the
+rest. A correlation the model fixes, such as the zero correlations of a
+bifactor model, is not tabled as an estimate. Degrees of freedom that
+are not whole, as for a mean- and variance-adjusted test, are given to
+two decimals.
 
 **Discriminant evidence without the Fornell-Larcker matrix.** For a
 `nomo_validity` result, the `"discriminant"` table gives each pair of
@@ -89,6 +115,12 @@ were computed. It does not print the correlation matrix with the square
 root of AVE on its diagonal, because that comparison often misses
 discriminant-validity problems (Henseler et al., 2015). AVE is
 convergent evidence and has its own `"convergent"` table.
+
+**Knitting.** In an R Markdown or Quarto document the table renders as a
+table with its number, title, and notes. Each column's share of the page
+follows its widest entry. Knitted to PDF, the Greek letters and math
+symbols are written as TeX math, so the default `pdflatex` engine
+compiles them.
 
 The rules come from the *Publication Manual of the American
 Psychological Association* (7th ed.), checked against Purdue OWL's APA 7
@@ -110,6 +142,11 @@ Fornell, C., & Larcker, D. F. (1981). Evaluating structural equation
 models with unobservable variables and measurement error. *Journal of
 Marketing Research, 18*(1), 39-50.
 [doi:10.2307/3151312](https://doi.org/10.2307/3151312)
+
+Green, S. B., & Yang, Y. (2009). Reliability of summed item scores using
+structural equation modeling: An alternative to coefficient alpha.
+*Psychometrika, 74*(1), 155-167.
+[doi:10.1007/s11336-008-9099-3](https://doi.org/10.1007/s11336-008-9099-3)
 
 Henseler, J., Ringle, C. M., & Sarstedt, M. (2015). A new criterion for
 assessing discriminant validity in variance-based structural equation
@@ -136,24 +173,32 @@ model <- '
 cfa <- nomo_cfa(model, data = lavaan::HolzingerSwineford1939)
 
 nomo_apa_table(cfa, "loadings", number = 1)
+#> <nomo_apa_table> Manuscript table in APA style
+#> 
 #> Table 1
 #> Standardized Factor Loadings
 #> ----------------------------
 #> Item  visual  textual  speed
 #> ----------------------------
-#> x1      0.77                
-#> x2      0.42                
-#> x3      0.58                
-#> x4               0.85       
-#> x5               0.86       
-#> x6               0.84       
+#> x1      0.77
+#> x2      0.42
+#> x3      0.58
+#> x4               0.85
+#> x5               0.86
+#> x6               0.84
 #> x7                      0.57
 #> x8                      0.72
 #> x9                      0.67
 #> ----------------------------
 #> Note. Standardized loadings from a confirmatory factor analysis. Estimated
-#> with ML; N = 301. Blank cells are loadings fixed to zero by the model.
+#> with maximum likelihood (ML); N = 301. Blank cells are loadings fixed to zero
+#> by the model.
+#> 
+#> See x$body for the cells and knitr::knit_print(x) for the Markdown a knitted
+#> document renders.
 nomo_apa_table(cfa, "fit", number = 2)
+#> <nomo_apa_table> Manuscript table in APA style
+#> 
 #> Table 2
 #> Model Fit
 #> ------------------------------------------------------------------------------
@@ -161,11 +206,16 @@ nomo_apa_table(cfa, "fit", number = 2)
 #> ------------------------------------------------------------------------------
 #> Measurement model  85.31  24  < .001  .931  0.896  0.092 [0.071, 0.114]  0.065
 #> ------------------------------------------------------------------------------
-#> Note. Estimated with ML; N = 301. CFI = comparative fit index;
-#> TLI = Tucker-Lewis index; RMSEA = root mean square error of approximation;
-#> SRMR = standardized root mean square residual. Fit indices are reported as
-#> evidence, not against fixed cutoffs.
+#> Note. CFI = comparative fit index; TLI = Tucker-Lewis index; RMSEA = root mean
+#> square error of approximation; CI = confidence interval; SRMR = standardized
+#> root mean square residual. Estimated with maximum likelihood (ML); N = 301.
+#> Fit indices are reported as evidence, not against fixed cutoffs.
+#> 
+#> See x$body for the cells and knitr::knit_print(x) for the Markdown a knitted
+#> document renders.
 nomo_apa_table(nomo_reliability(cfa), number = 3)
+#> <nomo_apa_table> Manuscript table in APA style
+#> 
 #> Table 3
 #> Reliability Estimates
 #> -------------------
@@ -178,4 +228,7 @@ nomo_apa_table(nomo_reliability(cfa), number = 3)
 #> Note. ω = coefficient omega; α = coefficient alpha. Coefficient alpha assumes
 #> equal loadings and is reported alongside omega for comparison with published
 #> work.
+#> 
+#> See x$body for the cells and knitr::knit_print(x) for the Markdown a knitted
+#> document renders.
 ```

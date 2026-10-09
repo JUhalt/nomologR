@@ -88,7 +88,8 @@ value is an error.</p></dd>
 
 
 <dt id="arg-number">number<a class="anchor" aria-label="anchor" href="#arg-number"></a></dt>
-<dd><p>Optional table number, printed in bold as "Table 1".</p></dd>
+<dd><p>Optional table number, printed in bold as "Table 1". Without
+one, the number line is left out, for the document to supply.</p></dd>
 
 
 <dt id="arg-title">title<a class="anchor" aria-label="anchor" href="#arg-title"></a></dt>
@@ -115,8 +116,11 @@ printed. Any of them may be empty.</p></li>
 <li><p><code>source</code>: the class of the result the table was built from, such as
 <code>"nomo_cfa"</code>.</p></li>
 </ul><p>Headings, cells, and notes are written in Markdown, as pandoc reads it:
-italics as <code>*p*</code> and a superscript as <code>^a^</code>. Printing in the console drops
-these marks from the headings and notes; knitting renders them.</p>
+italics as <code>*p*</code> and a superscript as <code>^a^</code>. <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> shows the table as
+aligned text under its number and title, with its notes, the italics
+dropped, and a note marker written <code>(a)</code>; a table wider than the console
+wraps its long headings and text cells, and names any column it still
+cannot fit.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -126,9 +130,26 @@ correlations, reliability coefficients, and CFI are written <code>.95</code>, wh
 RMSEA, SRMR, and standardized loadings keep it, <code>0.95</code>, because each can
 exceed 1 in principle: TLI is not bounded above, and a standardized loading
 does in an improper (Heywood) solution. Many published tables print
-standardized loadings without the zero; this follows the rule as written.</p>
+standardized loadings without the zero; this follows the rule as written,
+as the output style shared with <code>contentvalidR</code> does.</p>
 <p><strong>No verdicts.</strong> Table notes keep the package's reference-value language.
 No cell reads PASS or FAIL, and fit indices are not labeled good or poor.</p>
+<p><strong>Notes say what the table shows.</strong> The general note defines each
+abbreviation, gives the estimator and the number of cases analyzed, and
+says when the chi-square is a scaled test statistic and the fit indices are
+robust or scaled values. For a network's hypotheses it also defines each
+evidence label the table shows, such as "Concordant", and each prediction
+is given with the region it names. An interval's heading carries its level,
+such as "90% CI" for a reliability interval bootstrapped at that level. A
+cell left empty is an em dash, explained in the note; a cell that does not
+apply, such as the change in fit of the first invariance model, is blank.
+Specific notes, marked with superscript letters, name the parameters a
+partial invariance model frees, the hypotheses specified post hoc, the
+estimates whose interval is the equivalence interval a <code><a href="nomo_expectations.html">negligible()</a></code>
+prediction is judged on, and the estimates on another scale than the rest.
+A correlation the model fixes, such as the zero correlations of a bifactor
+model, is not tabled as an estimate. Degrees of freedom that are not whole,
+as for a mean- and variance-adjusted test, are given to two decimals.</p>
 <p><strong>Discriminant evidence without the Fornell-Larcker matrix.</strong> For a
 <code>nomo_validity</code> result, the <code>"discriminant"</code> table gives each pair of
 constructs one row: the latent correlation with its 95% confidence interval
@@ -138,6 +159,11 @@ not print the correlation matrix with the square root of AVE on its
 diagonal, because that comparison often misses discriminant-validity
 problems (Henseler et al., 2015). AVE is convergent evidence and has its own
 <code>"convergent"</code> table.</p>
+<p><strong>Knitting.</strong> In an R Markdown or Quarto document the table renders as a
+table with its number, title, and notes. Each column's share of the page
+follows its widest entry. Knitted to PDF, the Greek letters and math
+symbols are written as TeX math, so the default <code>pdflatex</code> engine compiles
+them.</p>
 <p>The rules come from the <em>Publication Manual of the American Psychological
 Association</em> (7th ed.), checked against Purdue OWL's APA 7 guides.
 Journal-specific templates are out of scope.</p>
@@ -154,6 +180,9 @@ American Psychological Association</em> (7th ed.).
 <p>Fornell, C., &amp; Larcker, D. F. (1981). Evaluating structural equation models
 with unobservable variables and measurement error. <em>Journal of Marketing
 Research, 18</em>(1), 39-50. <a href="https://doi.org/10.2307/3151312" class="external-link">doi:10.2307/3151312</a></p>
+<p>Green, S. B., &amp; Yang, Y. (2009). Reliability of summed item scores using
+structural equation modeling: An alternative to coefficient alpha.
+<em>Psychometrika, 74</em>(1), 155-167. <a href="https://doi.org/10.1007/s11336-008-9099-3" class="external-link">doi:10.1007/s11336-008-9099-3</a></p>
 <p>Henseler, J., Ringle, C. M., &amp; Sarstedt, M. (2015). A new criterion for
 assessing discriminant validity in variance-based structural equation
 modeling. <em>Journal of the Academy of Marketing Science, 43</em>(1), 115-135.
@@ -177,24 +206,32 @@ discriminant validity. <em>Organizational Research Methods, 25</em>(1), 6-47.
 <span class="r-in"><span><span class="va">cfa</span> <span class="op">&lt;-</span> <span class="fu"><a href="nomo_cfa.html">nomo_cfa</a></span><span class="op">(</span><span class="va">model</span>, data <span class="op">=</span> <span class="fu">lavaan</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/lavaan/man/HolzingerSwineford1939.html" class="external-link">HolzingerSwineford1939</a></span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">nomo_apa_table</span><span class="op">(</span><span class="va">cfa</span>, <span class="st">"loadings"</span>, number <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;nomo_apa_table&gt; Manuscript table in APA style</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Table 1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Standardized Factor Loadings</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ----------------------------</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Item  visual  textual  speed</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ----------------------------</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> x1      0.77                </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> x2      0.42                </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> x3      0.58                </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> x4               0.85       </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> x5               0.86       </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> x6               0.84       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> x1      0.77</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> x2      0.42</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> x3      0.58</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> x4               0.85</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> x5               0.86</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> x6               0.84</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> x7                      0.57</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> x8                      0.72</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> x9                      0.67</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ----------------------------</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Note. Standardized loadings from a confirmatory factor analysis. Estimated</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> with ML; N = 301. Blank cells are loadings fixed to zero by the model.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> with maximum likelihood (ML); N = 301. Blank cells are loadings fixed to zero</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> by the model.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> See x$body for the cells and knitr::knit_print(x) for the Markdown a knitted</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> document renders.</span>
 <span class="r-in"><span><span class="fu">nomo_apa_table</span><span class="op">(</span><span class="va">cfa</span>, <span class="st">"fit"</span>, number <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;nomo_apa_table&gt; Manuscript table in APA style</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Table 2</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Model Fit</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ------------------------------------------------------------------------------</span>
@@ -202,11 +239,16 @@ discriminant validity. <em>Organizational Research Methods, 25</em>(1), 6-47.
 <span class="r-out co"><span class="r-pr">#&gt;</span> ------------------------------------------------------------------------------</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Measurement model  85.31  24  &lt; .001  .931  0.896  0.092 [0.071, 0.114]  0.065</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ------------------------------------------------------------------------------</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Note. Estimated with ML; N = 301. CFI = comparative fit index;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> TLI = Tucker-Lewis index; RMSEA = root mean square error of approximation;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SRMR = standardized root mean square residual. Fit indices are reported as</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> evidence, not against fixed cutoffs.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Note. CFI = comparative fit index; TLI = Tucker-Lewis index; RMSEA = root mean</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> square error of approximation; CI = confidence interval; SRMR = standardized</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> root mean square residual. Estimated with maximum likelihood (ML); N = 301.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Fit indices are reported as evidence, not against fixed cutoffs.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> See x$body for the cells and knitr::knit_print(x) for the Markdown a knitted</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> document renders.</span>
 <span class="r-in"><span><span class="fu">nomo_apa_table</span><span class="op">(</span><span class="fu"><a href="nomo_reliability.html">nomo_reliability</a></span><span class="op">(</span><span class="va">cfa</span><span class="op">)</span>, number <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;nomo_apa_table&gt; Manuscript table in APA style</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Table 3</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Reliability Estimates</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> -------------------</span>
@@ -219,6 +261,9 @@ discriminant validity. <em>Organizational Research Methods, 25</em>(1), 6-47.
 <span class="r-out co"><span class="r-pr">#&gt;</span> Note. ω = coefficient omega; α = coefficient alpha. Coefficient alpha assumes</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> equal loadings and is reported alongside omega for comparison with published</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> work.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> See x$body for the cells and knitr::knit_print(x) for the Markdown a knitted</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> document renders.</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

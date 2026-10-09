@@ -254,22 +254,22 @@ Quarto document:</p>
 </tbody>
 </table>
 <p><em>Note.</em> Standardized loadings from a confirmatory factor
-analysis. Estimated with ML; <em>N</em> = 800. Blank cells are loadings
-fixed to zero by the model.</p>
+analysis. Estimated with maximum likelihood (ML); <em>N</em> = 800.
+Blank cells are loadings fixed to zero by the model.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/nomo_apa_table.html">nomo_apa_table</a></span><span class="op">(</span><span class="va">run</span><span class="op">$</span><span class="va">results</span><span class="op">$</span><span class="va">cfa</span>, <span class="st">"fit"</span>, number <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
 <p><strong>Table 2</strong></p>
 <p><em>Model Fit</em></p>
 <table style="width:100%;" class="table">
 <colgroup>
-<col width="10%">
-<col width="12%">
-<col width="12%">
-<col width="12%">
-<col width="12%">
-<col width="12%">
-<col width="12%">
-<col width="12%">
+<col width="21%">
+<col width="9%">
+<col width="7%">
+<col width="8%">
+<col width="9%">
+<col width="9%">
+<col width="25%">
+<col width="9%">
 </colgroup>
 <thead><tr class="header">
 <th align="left">Model</th>
@@ -292,10 +292,11 @@ fixed to zero by the model.</p>
 <td align="center">0.015</td>
 </tr></tbody>
 </table>
-<p><em>Note.</em> Estimated with ML; <em>N</em> = 800. CFI = comparative
-fit index; TLI = Tucker-Lewis index; RMSEA = root mean square error of
-approximation; SRMR = standardized root mean square residual. Fit
-indices are reported as evidence, not against fixed cutoffs.</p>
+<p><em>Note.</em> CFI = comparative fit index; TLI = Tucker-Lewis index;
+RMSEA = root mean square error of approximation; CI = confidence
+interval; SRMR = standardized root mean square residual. Estimated with
+maximum likelihood (ML); <em>N</em> = 800. Fit indices are reported as
+evidence, not against fixed cutoffs.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/nomo_apa_table.html">nomo_apa_table</a></span><span class="op">(</span><span class="va">run</span><span class="op">$</span><span class="va">results</span><span class="op">$</span><span class="va">reliability</span>, number <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></code></pre></div>
 <p><strong>Table 3</strong></p>
@@ -371,8 +372,8 @@ coefficient.</p>
 </tr></tbody>
 </table>
 <p><em>Note.</em> <em>r</em> = latent correlation from the confirmatory
-factor analysis, with its 95% confidence interval; the upper limit shows
-how high the correlation plausibly is (Rönkkö &amp; Cho, 2022). HTMT2 =
+factor analysis; CI = confidence interval, whose upper limit shows how
+high the correlation plausibly is (Rönkkö &amp; Cho, 2022). HTMT2 =
 heterotrait-monotrait ratio based on geometric means, suited to
 indicators with unequal loadings (Roemer et al., 2021). HTMT =
 heterotrait-monotrait ratio (Henseler et al., 2015). The review
@@ -385,15 +386,15 @@ discriminant validity.</p>
 <p><em>Measurement Invariance Across Groups</em></p>
 <table class="table">
 <colgroup>
-<col width="8%">
+<col width="13%">
 <col width="10%">
+<col width="7%">
+<col width="9%">
+<col width="9%">
+<col width="9%">
+<col width="9%">
 <col width="10%">
-<col width="10%">
-<col width="10%">
-<col width="10%">
-<col width="10%">
-<col width="10%">
-<col width="10%">
+<col width="13%">
 <col width="10%">
 </colgroup>
 <thead><tr class="header">
@@ -416,10 +417,10 @@ discriminant validity.</p>
 <td align="center">1.000</td>
 <td align="center">0.000</td>
 <td align="center">0.017</td>
-<td align="center">—</td>
-<td align="center">—</td>
-<td align="center">—</td>
-<td align="center">—</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
 </tr>
 <tr class="even">
 <td align="left">Metric</td>
@@ -447,20 +448,23 @@ discriminant validity.</p>
 </tr>
 </tbody>
 </table>
-<p><em>Note.</em> Grouping variable: group. Each model adds constraints
-to the one above it; changes are relative to the preceding model.
-Changes in fit are reported as evidence and are not compared with fixed
-cutoffs.</p>
+<p><em>Note.</em> CFI = comparative fit index; RMSEA = root mean square
+error of approximation; SRMR = standardized root mean square residual; Δ
+= change from the model above. Grouping variable: group, with <em>n</em>
+= 400 (online) and <em>n</em> = 400 (paper). Estimated with maximum
+likelihood (ML); <em>N</em> = 800. Each model adds constraints to the
+one above it. Changes in fit are reported as evidence and are not
+compared with fixed cutoffs.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/nomo_apa_table.html">nomo_apa_table</a></span><span class="op">(</span><span class="va">run</span><span class="op">$</span><span class="va">results</span><span class="op">$</span><span class="va">network</span>, number <span class="op">=</span> <span class="fl">7</span><span class="op">)</span></span></code></pre></div>
 <p><strong>Table 7</strong></p>
 <p><em>Theory-Specified Relations</em></p>
-<table class="table">
+<table style="width:100%;" class="table">
 <colgroup>
-<col width="21%">
-<col width="26%">
-<col width="26%">
-<col width="26%">
+<col width="33%">
+<col width="24%">
+<col width="25%">
+<col width="16%">
 </colgroup>
 <thead><tr class="header">
 <th align="left">Hypothesis</th>
@@ -471,21 +475,23 @@ cutoffs.</p>
 <tbody>
 <tr class="odd">
 <td align="left">H1: Agency -&gt; Persistence</td>
-<td align="center">positive</td>
+<td align="center">Positive, ≥ 0.20</td>
 <td align="center">0.46 [0.39, 0.53]</td>
 <td align="center">Concordant</td>
 </tr>
 <tr class="even">
 <td align="left">H2: Agency -&gt; Performance</td>
-<td align="center">positive</td>
+<td align="center">Positive</td>
 <td align="center">0.39 [0.32, 0.45]</td>
 <td align="center">Concordant</td>
 </tr>
 </tbody>
 </table>
-<p><em>Note.</em> Estimates are on the standardized scale. Evidence
+<p><em>Note.</em> CI = confidence interval. Estimates are standardized.
+Estimated with maximum likelihood (ML); <em>N</em> = 800. Evidence
 describes how each estimate relates to the prediction registered for it;
-it is evidence about the prediction, not a verdict on the measure.</p>
+it is evidence about the prediction, not a verdict on the measure.
+Concordant = the interval lies inside the predicted region.</p>
 <p>Notice the leading zeros. APA 7 drops the zero before a decimal point
 only for a statistic that <em>cannot</em> exceed 1, so the rule follows
 the statistic rather than the value it happens to take. Reliability

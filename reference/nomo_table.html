@@ -75,7 +75,8 @@ the underlying object: full engine results remain stored in the original
 
 
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
-<dd><p>A supported <code>nomologR</code> result object.</p></dd>
+<dd><p>A supported <code>nomologR</code> result object. An object of any other class
+is refused with the list of supported classes.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -84,7 +85,10 @@ the underlying object: full engine results remain stored in the original
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A tibble.</p>
+    <p>A tibble. A table the object has no rows for, such as <code>"partial"</code>
+for an invariance analysis without releases or <code>"replication"</code> for a
+network without validation data, has no rows and the table's usual
+columns.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -109,7 +113,8 @@ the latent correlation and the HTMT-family values together; see
 <code>"notes"</code>; see <code><a href="nomo_scores.html">nomo_scores()</a></code>.</p></li>
 <li><p><code>nomo_power</code>: <code>"power"</code> from <code><a href="nomo_power_rmsea.html">nomo_power_rmsea()</a></code>; <code>"summary"</code> (default)
 and <code>"parameters"</code> from <code><a href="nomo_power_simulate.html">nomo_power_simulate()</a></code>.</p></li>
-<li><p><code>nomo_hypotheses</code>: the machine-readable hypothesis table (no <code>type</code>).</p></li>
+<li><p><code>nomo_hypotheses</code>: the machine-readable hypothesis table (no <code>type</code>;
+any <code>type</code> given is an error).</p></li>
 <li><p><code>nomo_network</code>: <code>"hypotheses"</code> (default), <code>"fit"</code>, <code>"measurement"</code>,
 <code>"relations"</code>, <code>"replication"</code>, <code>"single_indicators"</code>, <code>"sensitivity"</code>,
 <code>"decision_log"</code>. <code>"single_indicators"</code> and <code>"sensitivity"</code> describe the
@@ -160,7 +165,7 @@ The <code>nomo_cfa</code> and <code>nomo_missing</code> tables spell them <code>
 <code>df</code>, <code>pvalue</code>, <code>cfi</code>, <code>tli</code>, <code>rmsea</code>, and <code>srmr</code>.</p></li>
 <li><p><code>nomo_compare</code>, <code>"models"</code>: one row per <code>model</code>, with <code>npar</code>, <code>df</code>,
 <code>chisq</code>, <code>cfi</code>, <code>tli</code>, <code>rmsea</code>, <code>srmr</code>, <code>aic</code>, and <code>bic</code>. The difference
-tests and their p-values are in <code>"comparisons"</code>.</p></li>
+tests and their p values are in <code>"comparisons"</code>.</p></li>
 <li><p><code>nomo_invariance</code>, <code>"fit"</code>: one row per <code>level</code>, with <code>chisq</code>, <code>df</code>,
 <code>pvalue</code>, <code>cfi</code>, <code>rmsea</code>, and <code>srmr</code>, the changes from the level before
 (<code>delta_cfi</code>, <code>delta_rmsea</code>, <code>delta_srmr</code>), and the likelihood-ratio test

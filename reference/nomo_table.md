@@ -16,7 +16,8 @@ nomo_table(x, ...)
 
 - x:
 
-  A supported `nomologR` result object.
+  A supported `nomologR` result object. An object of any other class is
+  refused with the list of supported classes.
 
 - ...:
 
@@ -24,7 +25,9 @@ nomo_table(x, ...)
 
 ## Value
 
-A tibble.
+A tibble. A table the object has no rows for, such as `"partial"` for an
+invariance analysis without releases or `"replication"` for a network
+without validation data, has no rows and the table's usual columns.
 
 ## Details
 
@@ -68,7 +71,8 @@ default.
   `"summary"` (default) and `"parameters"` from
   [`nomo_power_simulate()`](https://juhalt.github.io/nomologR/reference/nomo_power_simulate.md).
 
-- `nomo_hypotheses`: the machine-readable hypothesis table (no `type`).
+- `nomo_hypotheses`: the machine-readable hypothesis table (no `type`;
+  any `type` given is an error).
 
 - `nomo_network`: `"hypotheses"` (default), `"fit"`, `"measurement"`,
   `"relations"`, `"replication"`, `"single_indicators"`,
@@ -146,7 +150,7 @@ The `nomo_cfa` and `nomo_missing` tables spell them `chi_square`,
 
 - `nomo_compare`, `"models"`: one row per `model`, with `npar`, `df`,
   `chisq`, `cfi`, `tli`, `rmsea`, `srmr`, `aic`, and `bic`. The
-  difference tests and their p-values are in `"comparisons"`.
+  difference tests and their p values are in `"comparisons"`.
 
 - `nomo_invariance`, `"fit"`: one row per `level`, with `chisq`, `df`,
   `pvalue`, `cfi`, `rmsea`, and `srmr`, the changes from the level

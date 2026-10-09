@@ -157,8 +157,8 @@ nomo_apa_table(run$results$cfa, "loadings", number = 1)
 | pe4  |        |    0.69     |
 
 *Note.* Standardized loadings from a confirmatory factor analysis.
-Estimated with ML; *N* = 800. Blank cells are loadings fixed to zero by
-the model.
+Estimated with maximum likelihood (ML); *N* = 800. Blank cells are
+loadings fixed to zero by the model.
 
 ``` r
 
@@ -173,10 +173,11 @@ nomo_apa_table(run$results$cfa, "fit", number = 2)
 |:------------------|:-----:|:----:|:----:|:-----:|:-----:|:----------------------:|:-----:|
 | Measurement model | 18.52 |  19  | .488 | 1.000 | 1.000 | 0.000 \[0.000, 0.030\] | 0.015 |
 
-*Note.* Estimated with ML; *N* = 800. CFI = comparative fit index; TLI =
-Tucker-Lewis index; RMSEA = root mean square error of approximation;
-SRMR = standardized root mean square residual. Fit indices are reported
-as evidence, not against fixed cutoffs.
+*Note.* CFI = comparative fit index; TLI = Tucker-Lewis index; RMSEA =
+root mean square error of approximation; CI = confidence interval; SRMR
+= standardized root mean square residual. Estimated with maximum
+likelihood (ML); *N* = 800. Fit indices are reported as evidence, not
+against fixed cutoffs.
 
 ``` r
 
@@ -229,8 +230,8 @@ nomo_apa_table(run$results$validity, "discriminant", number = 5)
 |:------------------------|:----------------:|:-----:|:----:|
 | Agency with Persistence | .46 \[.39, .53\] | 0.45  | 0.46 |
 
-*Note.* *r* = latent correlation from the confirmatory factor analysis,
-with its 95% confidence interval; the upper limit shows how high the
+*Note.* *r* = latent correlation from the confirmatory factor analysis;
+CI = confidence interval, whose upper limit shows how high the
 correlation plausibly is (Rönkkö & Cho, 2022). HTMT2 =
 heterotrait-monotrait ratio based on geometric means, suited to
 indicators with unequal loadings (Roemer et al., 2021). HTMT =
@@ -250,13 +251,16 @@ nomo_apa_table(run$results$invariance, number = 6)
 
 | Model      |   χ²   | *df* |  CFI  | RMSEA | SRMR  | ΔCFI  | ΔRMSEA | Δχ² (Δ*df*) |   *p*   |
 |:-----------|:------:|:----:|:-----:|:-----:|:-----:|:-----:|:------:|:-----------:|:-------:|
-| Configural | 32.75  |  38  | 1.000 | 0.000 | 0.017 |   —   |   —    |      —      |    —    |
+| Configural | 32.75  |  38  | 1.000 | 0.000 | 0.017 |       |        |             |         |
 | Metric     | 41.15  |  44  | 1.000 | 0.000 | 0.027 | .000  | 0.000  |  8.40 (6)   |  .210   |
 | Scalar     | 106.08 |  50  | .977  | 0.053 | 0.044 | -.023 | 0.053  |  64.92 (6)  | \< .001 |
 
-*Note.* Grouping variable: group. Each model adds constraints to the one
-above it; changes are relative to the preceding model. Changes in fit
-are reported as evidence and are not compared with fixed cutoffs.
+*Note.* CFI = comparative fit index; RMSEA = root mean square error of
+approximation; SRMR = standardized root mean square residual; Δ = change
+from the model above. Grouping variable: group, with *n* = 400 (online)
+and *n* = 400 (paper). Estimated with maximum likelihood (ML); *N* =
+800. Each model adds constraints to the one above it. Changes in fit are
+reported as evidence and are not compared with fixed cutoffs.
 
 ``` r
 
@@ -267,14 +271,16 @@ nomo_apa_table(run$results$network, number = 7)
 
 *Theory-Specified Relations*
 
-| Hypothesis                 | Prediction | Estimate \[95% CI\] |  Evidence  |
-|:---------------------------|:----------:|:-------------------:|:----------:|
-| H1: Agency -\> Persistence |  positive  | 0.46 \[0.39, 0.53\] | Concordant |
-| H2: Agency -\> Performance |  positive  | 0.39 \[0.32, 0.45\] | Concordant |
+| Hypothesis                 |    Prediction    | Estimate \[95% CI\] |  Evidence  |
+|:---------------------------|:----------------:|:-------------------:|:----------:|
+| H1: Agency -\> Persistence | Positive, ≥ 0.20 | 0.46 \[0.39, 0.53\] | Concordant |
+| H2: Agency -\> Performance |     Positive     | 0.39 \[0.32, 0.45\] | Concordant |
 
-*Note.* Estimates are on the standardized scale. Evidence describes how
-each estimate relates to the prediction registered for it; it is
-evidence about the prediction, not a verdict on the measure.
+*Note.* CI = confidence interval. Estimates are standardized. Estimated
+with maximum likelihood (ML); *N* = 800. Evidence describes how each
+estimate relates to the prediction registered for it; it is evidence
+about the prediction, not a verdict on the measure. Concordant = the
+interval lies inside the predicted region.
 
 Notice the leading zeros. APA 7 drops the zero before a decimal point
 only for a statistic that *cannot* exceed 1, so the rule follows the
