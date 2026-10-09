@@ -190,6 +190,12 @@ test_that("a single-factor model has no univocality or accuracy to report", {
   expect_identical(nrow(out$diagnostics), 1L)
   expect_true(is.na(out$diagnostics$univocality))
   expect_true(is.na(out$diagnostics$correlational_accuracy))
+
+  # Nothing here is flagged, so the print has no Flagged section (#145).
+  local_reproducible_output(width = 80)
+  printed <- capture.output(print(out))
+  expect_false("Flagged" %in% printed)
+  expect_match(printed, "^  F +8 +[.]9[0-9]$", all = FALSE)
 })
 
 
@@ -276,7 +282,8 @@ test_that("nomo_scores prints, summarizes, and tabulates its evidence", {
   out <- nomo_scores(scores_fit(), method = "sum")
 
   expect_output(print(out), "Score properties")
-  expect_output(print(out), "Parallel model")
+  # The rejected parallel model is a flag, so it is printed with the others.
+  expect_output(print(out), "Unit weighting (Review): The parallel model", fixed = TRUE)
   expect_output(print(summary(out)), "Standardized loading spread")
 
   # The summary's class is named as every other summary class is; the name it
@@ -379,7 +386,8 @@ test_that("cross-loaded items are named, and no parallel model is written for th
 
   expect_identical(out$parallel_test$available, FALSE)
   notes <- out$notes
-  expect_match(notes$note[notes$topic == "cross_loadings"], "Item(s) a5", fixed = TRUE)
+  expect_match(notes$note[notes$topic == "cross_loadings"],
+               "Item a5 loads on more than one factor.", fixed = TRUE)
   expect_true(any(notes$topic == "unit_weighting" & notes$severity == "review" &
                     grepl("could not be written", notes$note, fixed = TRUE)))
 })
@@ -667,7 +675,7 @@ test_that("a negative difference is reported as no test, not as support for a su
   )
   out <- nomo_scores(fit, method = "sum")
   expect_false(out$parallel_test$available)
-  expect_match(out$parallel_test$note, "lavaan returned NA on 12 df", fixed = TRUE)
+  expect_match(out$parallel_test$note, "lavaan returned none on 12 df", fixed = TRUE)
   expect_false(grepl("lavaan reported", out$parallel_test$note, fixed = TRUE))
 
   # Constraints that hold exactly differ from zero only by rounding error.
@@ -714,4 +722,370 @@ test_that("`rows` says which row of the data each score belongs to", {
   # With every case used, the rows are simply all of them.
   complete <- nomo_scores(scores_fit(), method = "sum")
   expect_identical(complete$rows, seq_len(nrow(complete$scores)))
+})
+
+
+# Pre-RC fixes (#145) ----------------------------------------------------------
+
+# Text as printed, with line breaks and runs of spaces read as one space.
+flat_text <- function(x) gsub("[[:space:]]+", " ", paste(x, collapse = " "))
+
+
+scores_hs_model <- "visual =~ x1 + x2 + x3\ntextual =~ x4 + x5 + x6\nspeed =~ x7 + x8 + x9"
+
+scores_hs_fit <- local({
+  cache <- NULL
+  function() {
+    if (!is.null(cache)) return(cache)
+    cache <<- nomo_cfa(scores_hs_model, data = lavaan::HolzingerSwineford1939)
+    cache
+  }
+})
+
+
+test_that("ordered indicators: the notes say what lavaan computed for each method (#145)", {
+  skip_on_cran()
+  items <- c(paste0("a", 1:5), paste0("b", 1:5))
+  fit <- nomo_cfa("A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4 + b5",
+                  data = nomo_demo_ordinal, ordered = items)
+  note_for <- function(method) {
+    notes <- nomo_scores(fit, method = method)$notes
+    notes$note[notes$topic == "estimand" & notes$severity == "review"]
+  }
+
+  # With ordered indicators lavaan's regression scores are its empirical Bayes
+  # modal scores, and its Bartlett scores its maximum-likelihood scores.
+  expect_equal(lavaan::lavPredict(fit$fit, method = "regression"),
+               lavaan::lavPredict(fit$fit, method = "EBM"))
+  expect_match(note_for("regression"),
+               "lavaan computed these regression scores as empirical Bayes modal (EBM)",
+               fixed = TRUE)
+  bartlett <- note_for("bartlett")
+  expect_match(bartlett, "as maximum-likelihood (ML) scores", fixed = TRUE)
+  expect_match(bartlett, "no finite ML score", fixed = TRUE)
+  # A sum adds categories; the diagnostics describe latent responses.
+  expect_match(note_for("sum"), "add the observed category numbers", fixed = TRUE)
+  for (method in c("regression", "bartlett", "sum")) {
+    expect_match(note_for(method), "approximate the properties of these scores", fixed = TRUE)
+    expect_false(grepl("treat the latent-response variables as continuous", note_for(method),
+                       fixed = TRUE))
+  }
+
+  # The case with no ML score is counted, not left for the reader to find.
+  bartlett_scores <- nomo_scores(fit, method = "bartlett")
+  unscored <- bartlett_scores$notes$note[bartlett_scores$notes$topic == "unscored_cases"]
+  expect_match(unscored, "499 of 500 on A and 499 of 500 on B", fixed = TRUE)
+  expect_match(unscored, "lavaan returned no score for those cases.", fixed = TRUE)
+
+  local_reproducible_output(width = 80)
+  printed <- paste(capture.output(print(bartlett_scores)), collapse = " ")
+  printed <- gsub("[[:space:]]+", " ", printed)
+  expect_match(printed, "these values approximate the properties of the scores", fixed = TRUE)
+  expect_match(printed, "Scored -- Cases with a score on the factor, of the 500", fixed = TRUE)
+})
+
+
+test_that("univocality is judged against the factor correlations, not a flat .30 (#145)", {
+  skip_on_cran()
+  fit <- scores_hs_fit()
+  univocality_note <- function(method) {
+    notes <- nomo_scores(fit, method = method)$notes
+    notes$note[notes$topic == "univocality"]
+  }
+
+  # Bartlett scores, and sums of items that each load on one factor, reach the
+  # other factors only through their own: the factor correlation times the
+  # validity. Their univocality is above .30 here because the factors
+  # correlate, and that is not a flaw.
+  bartlett <- nomo_scores(fit, method = "bartlett")
+  phi <- bartlett$factor_correlations
+  expect_equal(bartlett$diagnostics$univocality[[2L]],
+               phi["visual", "textual"] * bartlett$diagnostics$validity[[2L]],
+               tolerance = 1e-6)
+  expect_gt(max(abs(bartlett$diagnostics$univocality)), .30)
+  expect_length(univocality_note("bartlett"), 0L)
+  expect_length(univocality_note("sum"), 0L)
+
+  # Regression scores take from the other factors directly, and the note says
+  # by how much more than the factor correlation carries.
+  note <- univocality_note("regression")
+  expect_length(note, 1L)
+  expect_match(note, "The score for visual correlates .52 with textual", fixed = TRUE)
+  expect_match(note, "through visual alone it would correlate .39", fixed = TRUE)
+  expect_match(note, "the factor correlation (.46) times the score's validity (.85)",
+               fixed = TRUE)
+  expect_match(note, "The difference, +.13, is what the score takes from textual directly",
+               fixed = TRUE)
+
+  # A cross-loaded item puts one factor's variance into another's sum.
+  cross <- nomo_cfa("A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4 + b5 + a5",
+                    data = nomo_demo_continuous)
+  expect_true("univocality" %in% nomo_scores(cross, method = "sum")$notes$topic)
+})
+
+
+test_that("higher-order factors and structural paths are refused, each with its reason (#145)", {
+  skip_on_cran()
+  hs <- lavaan::HolzingerSwineford1939
+
+  second_order <- nomo_cfa(paste(scores_hs_model, "g =~ visual + textual + speed",
+                                 sep = "\n"), data = hs)
+  for (method in c("sum", "regression", "bartlett")) {
+    expect_error(nomo_scores(second_order, method = method),
+                 "`fit` has a factor without observed indicators (g)", fixed = TRUE)
+  }
+
+  covariate <- lavaan::sem(paste(scores_hs_model, "visual ~ ageyr", sep = "\n"), data = hs)
+  for (method in c("sum", "regression")) {
+    expect_error(nomo_scores(covariate, method = method),
+                 "`fit` contains structural paths or covariates (visual ~ ageyr)", fixed = TRUE)
+  }
+  observed <- lavaan::sem(paste(scores_hs_model, "x1 ~ ageyr", sep = "\n"), data = hs)
+  expect_error(nomo_scores(observed), "structural paths or covariates (x1 ~ ageyr)", fixed = TRUE)
+  nested <- lavaan::cfa("visual =~ x1 + x2 + x3 + textual\ntextual =~ x4 + x5 + x6",
+                        data = hs)
+  expect_error(nomo_scores(nested), "structural paths or covariates (visual =~ textual)",
+               fixed = TRUE)
+
+  # A covariance between a factor and an observed variable makes lavaan carry
+  # the variable as a latent variable of its own, which had stopped with an
+  # internal vapply() error (sum), a singular matrix (Bartlett), or a "factor"
+  # row for it (regression).
+  linked <- lavaan::cfa(paste(scores_hs_model, "visual ~~ ageyr", sep = "\n"), data = hs)
+  expect_true("ageyr" %in% colnames(lavaan::lavInspect(linked, "est")$lambda))
+  for (method in c("sum", "regression", "bartlett")) {
+    expect_error(nomo_scores(linked, method = method),
+                 "`fit` contains structural paths or covariates (visual ~~ ageyr)",
+                 fixed = TRUE)
+  }
+  expect_error(nomo_scores(linked), "fit the paths and covariates on the latent variables",
+               fixed = TRUE)
+  two <- lavaan::cfa(paste(scores_hs_model, "ageyr ~~ visual + textual", sep = "\n"),
+                     data = hs)
+  expect_error(nomo_scores(two), "(visual ~~ ageyr, textual ~~ ageyr)", fixed = TRUE)
+  # An item of another factor is linked the same way.
+  item <- lavaan::cfa(paste(scores_hs_model, "visual ~~ x4", sep = "\n"), data = hs)
+  expect_error(nomo_scores(item), "(visual ~~ x4)", fixed = TRUE)
+
+  # A residual covariance between an item and an observed variable outside the
+  # factors adds no latent variable, and the scores are lavaan's own.
+  residual <- lavaan::cfa(paste(scores_hs_model, "x1 ~~ ageyr", sep = "\n"), data = hs)
+  kept <- nomo_scores(residual, method = "regression")
+  expect_equal(unname(as.matrix(kept$scores)),
+               unname(as.matrix(lavaan::lavPredict(residual))[, kept$diagnostics$factor]),
+               tolerance = 1e-10)
+  expect_identical(kept$diagnostics$factor, c("visual", "textual", "speed"))
+})
+
+
+test_that("cases with no unit-weighted score under FIML are counted and shown (#145)", {
+  skip_on_cran()
+  holes <- lavaan::HolzingerSwineford1939
+  set.seed(1)
+  holes$x1[sample(nrow(holes), 40)] <- NA
+  holes$x5[sample(nrow(holes), 30)] <- NA
+  fit <- nomo_cfa(scores_hs_model, data = holes, missing = "ml")
+
+  summed <- nomo_scores(fit, method = "sum")
+  expect_identical(nrow(summed$scores), 301L)
+  expect_identical(unname(colSums(is.na(summed$scores))), c(40, 30, 0))
+  note <- summed$notes[summed$notes$topic == "unscored_cases", ]
+  expect_identical(note$severity, "review")
+  expect_match(note$note, "the cases scored are 261 of 301 on visual and 271 of 301 on textual",
+               fixed = TRUE)
+  expect_match(note$note, "A unit-weighted score needs every item of its factor", fixed = TRUE)
+
+  # Regression scores use the items each case has, so all are scored.
+  regression <- nomo_scores(fit, method = "regression")
+  expect_identical(sum(is.na(regression$scores)), 0L)
+  expect_false("unscored_cases" %in% regression$notes$topic)
+
+  local_reproducible_output(width = 80)
+  printed <- capture.output(print(summed))
+  expect_match(printed, "^  Factor +Items +Scored +Validity", all = FALSE)
+  expect_match(printed, "^  visual +3 +261 ", all = FALSE)
+  expect_true(any(grepl("Unscored cases (Review):", printed, fixed = TRUE)))
+  # With every case scored, the column is not shown.
+  expect_false(any(grepl("Scored", capture.output(print(regression)), fixed = TRUE)))
+  detail <- capture.output(print(summary(summed)))
+  expect_match(detail, "^  visual +3 +261 ", all = FALSE)
+})
+
+
+test_that("`guidance` is checked, and its safeguards hold (#145)", {
+  fit <- scores_fit()
+  expect_error(nomo_scores(fit, guidance = "banana"),
+               "`guidance` must be a list returned by `nomo_defaults()`.", fixed = TRUE)
+  unsafe <- nomo_defaults()
+  unsafe$auto_delete <- TRUE
+  expect_error(nomo_scores(fit, guidance = unsafe),
+               "`guidance$auto_delete` cannot be `TRUE`", fixed = TRUE)
+  expect_identical(nomo_scores(fit, method = "regression")$guidance, nomo_defaults())
+})
+
+
+test_that("an item loading against its factor is named for a unit-weighted score (#145)", {
+  skip_on_cran()
+  hs <- lavaan::HolzingerSwineford1939
+  hs$x3 <- -hs$x3
+  summed <- nomo_scores(nomo_cfa(scores_hs_model, data = hs), method = "sum")
+  note <- summed$notes[summed$notes$topic == "loading_signs", ]
+  expect_identical(note$severity, "concern")
+  expect_match(note$note, "x3 on visual loads against the strongest item of its factor",
+               fixed = TRUE)
+  expect_match(note$note, "Reverse-score each such item", fixed = TRUE)
+  # The stored ratio is unchanged; the summary does not show it as though the
+  # loadings agreed.
+  expect_equal(summed$unit_weighting$loading_ratio[[1L]], 1.82, tolerance = 0.01)
+  local_reproducible_output(width = 80)
+  detail <- capture.output(print(summary(summed)))
+  expect_match(detail, "^  visual +-0[.]58 +0[.]77 +--$", all = FALSE)
+
+  # A model-weighted score weights the item negatively, so there is no note.
+  expect_false("loading_signs" %in%
+                 nomo_scores(nomo_cfa(scores_hs_model, data = hs), "regression")$notes$topic)
+
+  # Two such items, on two factors.
+  hs$x6 <- -hs$x6
+  two <- nomo_scores(nomo_cfa(scores_hs_model, data = hs), method = "sum")
+  expect_match(two$notes$note[two$notes$topic == "loading_signs"],
+               "x3 on visual and x6 on textual load against the strongest item of their factors",
+               fixed = TRUE)
+})
+
+
+test_that("the reliability note points a sum score to omega, not alpha (#145)", {
+  note <- nomo_scores(scores_fit(), method = "sum")$notes
+  note <- note$note[note$topic == "reliability"]
+  expect_match(note, "The reliability of a unit-weighted score is omega", fixed = TRUE)
+  expect_match(note, "essential tau-equivalence", fixed = TRUE)
+  expect_false(grepl("alpha is the reliability coefficient", note, fixed = TRUE))
+})
+
+
+test_that("the print explains its columns and states the parallel test once (#145)", {
+  skip_on_cran()
+  summed <- nomo_scores(scores_fit(), method = "sum")
+  local_reproducible_output(width = 80)
+  printed <- capture.output(print(summed))
+  detail <- capture.output(print(summary(summed)))
+
+  for (out in list(printed, detail)) {
+    expect_identical(sum(grepl("What these columns mean", out, fixed = TRUE)), 1L)
+    expect_true(any(grepl("Validity -- Correlation of the score with its own factor", out,
+                          fixed = TRUE)))
+    expect_true(any(grepl("Univocality -- Largest correlation of the score with another",
+                          out, fixed = TRUE)))
+    expect_true(any(grepl("Correlational accuracy -- Score correlation minus factor", out,
+                          fixed = TRUE)))
+    # The parallel-model test is printed once.
+    expect_identical(sum(grepl("Delta chi-square(", out, fixed = TRUE)), 1L)
+    expect_false(any(nchar(out) > 80L))
+  }
+  # One Flagged section, concern before review, under the unit flagged.
+  flagged <- printed[seq(which(printed == "Flagged") + 1L, length(printed))]
+  bullets <- grep("^  - ", flagged, value = TRUE)
+  expect_match(bullets[[1L]], "^  - Correlational accuracy \\(Concern\\): ")
+  expect_true(all(grepl("\\(Review\\)", bullets[-1L])))
+  # print() gives each note's first sentence, summary() all of it.
+  expect_false(any(grepl("Skrondal and Laake", printed, fixed = TRUE)))
+  expect_true(any(grepl("Skrondal and Laake", detail, fixed = TRUE)))
+  expect_match(printed[[length(printed)]], "for the score properties as a table.", fixed = TRUE)
+
+  # A parallel model that fits is shown on its own, as the evidence it is.
+  pop <- scores_population()
+  L <- cbind(F1 = c(rep(.65, 4), 0, 0, 0, 0), F2 = c(0, 0, 0, 0, rep(.65, 4)))
+  sigma <- L %*% pop$phi %*% t(L)
+  diag(sigma) <- 1
+  dimnames(sigma) <- list(scores_items, scores_items)
+  parallel <- lavaan::cfa(scores_model, data = scores_sample(sigma, seed = 77), std.lv = TRUE)
+  fits <- capture.output(print(nomo_scores(parallel, method = "sum")))
+  expect_true(any(grepl("Parallel model (what unit weighting assumes)", fits, fixed = TRUE)))
+  expect_identical(sum(grepl("Delta chi-square(", fits, fixed = TRUE)), 1L)
+})
+
+
+test_that("a unit flagged by two notes has one bullet in the Flagged section (#145)", {
+  # The teaching data rejects the parallel model, and B's loadings differ
+  # twofold: two review notes on unit weighting.
+  summed <- nomo_scores(
+    nomo_cfa("A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4 + b5",
+             data = nomo_demo_continuous),
+    method = "sum"
+  )
+  notes <- summed$notes
+  expect_identical(sum(notes$topic == "unit_weighting" & notes$severity == "review"), 2L)
+
+  local_reproducible_output(width = 80)
+  printed <- capture.output(print(summed))
+  detail <- capture.output(print(summary(summed)))
+  for (out in list(printed, detail)) {
+    expect_identical(sum(grepl("^  - Unit weighting \\(", out)), 1L)
+  }
+  # Joined in the order raised: the parallel-model test, then the loading ratio.
+  bullet <- function(out) {
+    from <- grep("^  - Unit weighting \\(Review\\): ", out)
+    ends <- c(grep("^  - ", out), which(out == ""))
+    flat_text(out[from:(min(ends[ends > from]) - 1L)])
+  }
+  expect_true(endsWith(bullet(printed), paste(
+    "fits worse than the model you fitted (Delta chi-square(16) = 171.84, p < .001).",
+    "The strongest standardized loading is at least twice the weakest for B."
+  )))
+  expect_match(bullet(detail), "describe what it costs. The strongest standardized loading",
+               fixed = TRUE)
+  expect_true(endsWith(bullet(detail), "by having endorsed different items."))
+
+  # Two statuses on one unit print once, under the more severe.
+  mixed <- tibble::tibble(
+    topic = c("unit_weighting", "validity", "unit_weighting"),
+    severity = c("review", "review", "concern"),
+    note = c("First finding. More.", "Low validity.", "Second finding. More.")
+  )
+  shown <- capture.output(nomologR:::nomo_scores_present_flagged(mixed))
+  expect_identical(shown[3:4], c("  - Unit weighting (Concern): First finding. Second finding.",
+                                 "  - Validity (Review): Low validity."))
+})
+
+
+test_that("a one-factor score cites only the properties it has (#145)", {
+  dat <- scores_sample(scores_population()$sigma)
+  fit <- lavaan::cfa(paste("F =~", paste(scores_items, collapse = " + ")), data = dat,
+                     std.lv = TRUE)
+  out <- nomo_scores(fit, method = "sum")
+  rejection <- out$notes$note[grepl("fits worse", out$notes$note, fixed = TRUE)]
+  expect_match(rejection, "that `validity` describes what it costs", fixed = TRUE)
+  expect_false(grepl("correlational_accuracy", rejection, fixed = TRUE))
+  local_reproducible_output(width = 80)
+  printed <- capture.output(print(out))
+  expect_false(any(grepl("Univocality", printed, fixed = TRUE)))
+  expect_false(any(grepl("Correlational accuracy", printed, fixed = TRUE)))
+})
+
+
+test_that("a sentence's end is found without breaking a citation's page (#145)", {
+  first <- nomologR:::nomo_scores_first_sentence
+  expect_identical(first("Validity is below .90 for B. Gorsuch (1983, p. 260) recommended."),
+                   "Validity is below .90 for B.")
+  expect_identical(first("One sentence only."), "One sentence only.")
+  bound <- nomologR:::nomo_scores_bind("Delta chi-square(2) = 3.00 and (1983, p. 260)")
+  expect_false(grepl("Delta chi-square", bound, fixed = TRUE))
+  expect_false(grepl("p. 2", bound, fixed = TRUE))
+})
+
+
+test_that("plot() draws each score's validity against Gorsuch's references (#145)", {
+  out <- nomo_scores(scores_fit(), method = "sum")
+  p <- plot(out)
+  expect_s3_class(p, "ggplot")
+  # Both validities are below .90 here, so both are marked for review.
+  expect_identical(as.character(p$data$status), c("review", "review"))
+  built <- ggplot2::ggplot_build(p)
+  expect_equal(sort(built$data[[1L]]$xintercept), c(.80, .90))
+  expect_match(flat_text(p$labels$caption), "Gorsuch's (1983) .80, and .90", fixed = TRUE)
+  expect_identical(p$labels$title, "Validity of the scores (Grice, 2001)")
+  expect_error(plot(out, type = "scores"), "`type` must be one of", fixed = TRUE)
+  skip_on_cran()
+  bartlett <- plot(nomo_scores(scores_hs_fit(), method = "bartlett"))
+  expect_identical(as.character(bartlett$data$status), c("review", "none", "review"))
 })

@@ -48,7 +48,21 @@ test_that("requested scores and missing-data sensitivity follow the CFA", {
   expect_match(log$observation[log$id == "scores"], "sum method the researcher specified",
                fixed = TRUE)
   expect_match(log$observation[log$id == "missing_data_cfa"],
-               "Listwise deletion and FIML", fixed = TRUE)
+               "fitted under listwise deletion and FIML", fixed = TRUE)
+
+  # The settings table and the recipe name both requests (#145).
+  settings <- nomo_table(run, "settings")
+  expect_identical(settings$configured[settings$stage %in% c("scores", "missing")], c(TRUE, TRUE))
+  expect_identical(settings$values[settings$stage == "scores"], "method = \"sum\"")
+  recipe <- nomo_table(run, "recipe")
+  expect_identical(recipe$function_name[recipe$stage %in% c("scores", "missing")],
+                   c("nomo_scores()", "nomo_missing()"))
+  expect_true(all(recipe$status[recipe$stage %in% c("scores", "missing")] == "completed"))
+
+  evidence <- nomologR:::nomo_run_key_evidence(run)
+  expect_true("Scores: sum method" %in% evidence)
+  expect_true("Missing-data sensitivity: strategies compared for the measurement model" %in%
+                evidence)
 })
 
 
@@ -103,6 +117,9 @@ test_that("a network's missing-data sensitivity follows the network", {
   component <- nomo_table(run, "component_log")
   expect_true("theory_network" %in%
                 component$pipeline_scope[component$pipeline_component == "missing"])
+  recipe <- nomo_table(run, "recipe")
+  expect_identical(recipe$scope[recipe$stage == "missing"], c("measurement_model", "theory_network"))
+  expect_identical(recipe$status[recipe$stage == "missing"], c("completed", "completed"))
 })
 
 
@@ -163,6 +180,8 @@ test_that("requested evidence that cannot be computed is recorded, and the run g
   entry <- run$decision_log[run$decision_log$id == "scores", ]
   expect_identical(entry$decision, "not computed")
   expect_match(entry$observation, "simulated scoring failure", fixed = TRUE)
+  recipe <- nomo_table(run, "recipe")
+  expect_identical(recipe$status[recipe$stage == "scores"], "not_computed")
 })
 
 
