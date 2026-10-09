@@ -36,7 +36,9 @@ nomo_run_factor_requests <- function(x) {
       as.integer(unlist(fac$plausible_factors, use.names = FALSE))
     )
     plausible <- sort(unique(plausible[is.finite(plausible) & plausible >= 1L]))
-    if (!length(plausible) && is.finite(primary)) plausible <- primary
+    # A suggestion of 0 is not a count to retain (#145).
+    zero <- is.finite(primary) && primary < 1L
+    if (!length(plausible) && is.finite(primary) && !zero) plausible <- primary
 
     plausible_text <- if (length(plausible)) {
       paste(plausible, collapse = ", ")
@@ -46,6 +48,27 @@ nomo_run_factor_requests <- function(x) {
 
     factor_word <- if (is.finite(primary) && primary == 1L) "factor" else "factors"
     primary_text <- if (is.finite(primary)) as.character(primary) else "no usable number of"
+    observation <- if (zero) {
+      # The wording of nomo_efa(), which fits a count given in `factor_count`
+      # when parallel analysis suggested 0 (#145, efa-2).
+      paste0(
+        "Parallel analysis suggests 0 factors: it found no factor above the null ",
+        "reference, so there is no count to adopt",
+        if (length(plausible)) sprintf("; the retained plausible set is %s", plausible_text) else "",
+        ". To fit an EFA anyway, give the count in `factor_count`, with the ",
+        "substantive reason as its rationale. The pipeline has not adopted a factor count."
+      )
+    } else {
+      sprintf(
+        paste0(
+          "Parallel analysis currently suggests %s %s; ",
+          "the retained plausible set is %s. The pipeline has not adopted a factor count."
+        ),
+        primary_text,
+        factor_word,
+        plausible_text
+      )
+    }
 
     example <- if (multiple) {
       paste0(
@@ -66,15 +89,7 @@ nomo_run_factor_requests <- function(x) {
       id = paste0("factor_count:", scope),
       stage = "efa",
       scope = scope,
-      observation = sprintf(
-        paste0(
-          "Parallel analysis currently suggests %s %s; ",
-          "the retained plausible set is %s. The pipeline has not adopted a factor count."
-        ),
-        primary_text,
-        factor_word,
-        plausible_text
-      ),
+      observation = observation,
       reason = paste(
         "The EFA factor count changes the fitted model. Retention evidence can",
         "inform that choice, but it does not authorize the pipeline to choose",
@@ -93,6 +108,147 @@ nomo_run_factor_requests <- function(x) {
   })
 
   dplyr::bind_rows(rows)
+}
+
+
+# The items the exploratory stages treated as categorical (#145): those
+# modeled as binary or ordinal where nomo_factors() or nomo_efa() used
+# tetrachoric, polychoric, or mixed correlations, with those methods. `only`
+# keeps the items a measurement model contains, and the methods used for them.
+nomo_run_categorical_items <- function(x, only = NULL) {
+  items <- character()
+  methods <- character()
+  for (r in c(unname(x$results$factors), unname(x$results$efa))) {
+    if (is.null(r$correlation) || identical(r$correlation, "pearson")) next
+    types <- r$modeling_types
+    found <- types$item[types$model_type %in% c("binary", "ordinal")]
+    if (!is.null(only)) found <- intersect(found, only)
+    if (!length(found)) next
+    items <- c(items, found)
+    methods <- c(methods, r$correlation)
+  }
+  list(items = unique(items), methods = unique(methods))
+}
+
+
+# A sentence for the CFA request when the exploratory stages treated items as
+# categorical and the CFA, as configured, would treat them as continuous; ""
+# otherwise. nomologR does not choose for the researcher. Before a model is
+# given, every such item is named; `indicators`, the model's once it is, keeps
+# those the CFA contains (#145).
+nomo_run_item_type_note <- function(x, indicators = NULL) {
+  categorical <- nomo_run_categorical_items(x, only = indicators)
+  if (!length(categorical$items) || !is.null(x$settings$cfa$ordered)) return("")
+  sprintf(
+    paste(
+      "The exploratory stages treated %s as categorical (%s correlations), while",
+      "the CFA treats every indicator as continuous unless `settings$cfa$ordered`",
+      "names it."
+    ),
+    paste(categorical$items, collapse = ", "),
+    nomo_present_or(categorical$methods, "and")
+  )
+}
+
+
+# The indicators and factors a measurement model names, or NULL when it cannot
+# be parsed; the CFA then reports lavaan's own error.
+nomo_run_model_names <- function(model) {
+  pt <- tryCatch(suppressWarnings(lavaan::lavaanify(model)), error = function(e) NULL)
+  if (is.null(pt)) return(NULL)
+  list(indicators = lavaan::lavNames(pt, "ov.ind"), factors = lavaan::lavNames(pt, "lv"))
+}
+
+
+# The items of the measurement model compared with the screened scales (#145):
+# screened items it leaves out, and indicators no scale supplied, which no
+# item audit, retention, or EFA evidence covers. NULL when the model cannot be
+# parsed.
+nomo_run_model_item_set <- function(model, scales) {
+  parsed <- nomo_run_model_names(model)
+  if (is.null(parsed)) return(NULL)
+  indicators <- parsed$indicators
+  screened <- unique(unlist(scales, use.names = FALSE))
+  list(omitted = setdiff(screened, indicators), added = setdiff(indicators, screened),
+       indicators = indicators)
+}
+
+
+# Design-log rows recorded once the CFA has been fitted, so never for a model
+# lavaan refused: a measurement model whose items differ from the screened
+# scales, and items of the model that the exploratory stages treated as
+# categorical while the CFA treats them as continuous (#145). Neither blocks
+# the run.
+nomo_run_cfa_model_log <- function(x, model, rationale) {
+  set <- nomo_run_model_item_set(model, x$scales)
+  if (!is.null(set) && (length(set$omitted) || length(set$added))) {
+    parts <- c(
+      if (length(set$omitted)) {
+        sprintf("leaves out %s, which the earlier stages screened and explored",
+                paste(set$omitted, collapse = ", "))
+      },
+      if (length(set$added)) {
+        sprintf(
+          "includes %s, which no supplied scale contains, so no item audit, retention, or EFA evidence covers %s",
+          paste(set$added, collapse = ", "), nomo_present_noun(length(set$added), "it", "them")
+        )
+      }
+    )
+    x$decision_log <- nomo_run_workflow_log_add(
+      x$decision_log,
+      id = "cfa_item_set",
+      stage = "cfa",
+      scope = "measurement_model",
+      observation = paste0("The measurement model ", paste(parts, collapse = ", and "), "."),
+      reason = paste(
+        "Screening, retention, and EFA evidence describe the supplied scales, while",
+        "CFA, reliability, and validity evidence describe the measurement model, so",
+        "a difference between the two item sets must stay visible."
+      ),
+      options = paste(
+        "Report the difference and the reason for it, or start a new run whose",
+        "scales match the measurement model."
+      ),
+      consequence = paste(
+        "The difference does not block the run: leaving out or adding items at the",
+        "CFA is the researcher's decision, and nomologR changes neither the model",
+        "nor the scales."
+      ),
+      decision = paste(c(
+        if (length(set$omitted)) paste("left out:", paste(set$omitted, collapse = ", ")),
+        if (length(set$added)) paste("added:", paste(set$added, collapse = ", "))
+      ), collapse = "; "),
+      rationale = rationale,
+      source = "researcher_decision"
+    )
+  }
+
+  note <- nomo_run_item_type_note(x, indicators = set$indicators)
+  if (nzchar(note)) {
+    x$decision_log <- nomo_run_workflow_log_add(
+      x$decision_log,
+      id = "item_types",
+      stage = "cfa",
+      scope = "measurement_model",
+      observation = note,
+      reason = paste(
+        "Normal-theory estimation of binary or few-category items attenuates",
+        "loadings and distorts fit, so the exploratory and confirmatory evidence",
+        "would rest on different assumptions about the same items."
+      ),
+      options = paste(
+        "Start a new run that names them in `ordered` within `settings$cfa` to",
+        "treat them as the exploratory stages did, or record why continuous",
+        "treatment is defensible for these items."
+      ),
+      consequence = paste(
+        "The CFA, reliability, and validity evidence treat as continuous items",
+        "that the exploratory evidence treated as categorical."
+      ),
+      source = "pipeline"
+    )
+  }
+  x
 }
 
 
@@ -308,22 +464,33 @@ nomo_run_apply_factor_decision <- function(x, decision) {
     )
   }
 
+  item_types <- nomo_run_item_type_note(x)
   x$decision_requests <- tibble::tibble(
     id = "cfa_model",
     stage = "cfa",
     scope = "measurement_model",
-    observation = paste(
+    observation = trimws(paste(
       "EFA has completed for every supplied scale.",
-      "No confirmatory measurement model has been constructed or fitted."
-    ),
+      "No confirmatory measurement model has been constructed or fitted.",
+      item_types
+    )),
     reason = paste(
       "CFA syntax encodes consequential choices about item retention, factor",
       "membership, cross-loadings, and correlated residuals; these cannot be",
       "chosen silently."
     ),
-    options = paste(
-      "Inspect the EFA evidence and theory, then supply a prespecified lavaan",
-      "measurement model (or `nomo_model()` object)."
+    options = paste0(
+      "Inspect the EFA evidence and theory, then supply a prespecified lavaan ",
+      "measurement model (or `nomo_model()` object).",
+      if (nzchar(item_types)) {
+        paste(
+          " To keep the CFA consistent with the exploratory evidence, name the",
+          "categorical items in `ordered` within `settings$cfa` when supplying the",
+          "model."
+        )
+      } else {
+        ""
+      }
     ),
     consequence = consequence,
     example = paste(
@@ -386,15 +553,29 @@ nomo_run_measurement_request <- function(x) {
 
   heywood <- isTRUE(x$results$cfa$heywood_detected)
 
-  observation <- sprintf(
-    paste(
-      "CFA converged and reliability/validity evidence was computed.",
-      "Across these components, %d concern and %d review log entries are retained%s."
+  # The design-log rows the CFA added are named here too, since they bear on
+  # whether to carry the model forward (#145).
+  ids <- x$decision_log$id
+  observation <- paste(c(
+    sprintf(
+      paste(
+        "CFA converged and reliability and validity evidence was computed.",
+        "Their logs hold %s and %s%s."
+      ),
+      nomo_present_count(concern_n, "concern entry", "concern entries"),
+      nomo_present_count(review_n, "review entry", "review entries"),
+      if (heywood) "; a CFA improper-solution (Heywood) flag is also present" else ""
     ),
-    concern_n,
-    review_n,
-    if (heywood) "; a CFA improper-solution/Heywood flag is also present" else ""
-  )
+    if ("cfa_item_set" %in% ids) {
+      "The measurement model's items differ from the screened scales (decision-log row cfa_item_set)."
+    },
+    if ("item_types" %in% ids) {
+      paste(
+        "The CFA treats as continuous items the exploratory stages treated as",
+        "categorical (decision-log row item_types)."
+      )
+    }
+  ), collapse = " ")
 
   tibble::tibble(
     id = "measurement_model",
@@ -479,6 +660,8 @@ nomo_run_apply_cfa_model <- function(x, decision) {
     return(nomo_run_block(x, "cfa", "measurement_model", cfa_result))
   }
 
+  # Recorded for the model lavaan fitted, not for one it refused (#145).
+  x <- nomo_run_cfa_model_log(x, model, rationale)
   x$results$cfa <- cfa_result$value
 
   if (!isTRUE(x$results$cfa$converged)) {
@@ -710,9 +893,10 @@ nomo_run_process_decisions <- function(x, decisions) {
     stop(
       sprintf(
         paste(
-          "Decision(s) could not be consumed at the current workflow state",
+          "%s could not be consumed at the current workflow state",
           "`%s`: %s."
         ),
+        nomo_present_noun(length(remaining), "A decision", "Decisions"),
         if (is.null(x$next_stage)) "complete" else x$next_stage,
         paste(names(remaining), collapse = ", ")
       ),

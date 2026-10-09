@@ -58,7 +58,8 @@ test_that("a model revision records lineage, rationale, and a parent comparison"
   expect_identical(cmp$model, "revised")
   expect_identical(cmp$reference, "parent")
   expect_true(cmp$test_available)
-  expect_match(lineage$comparison, "chi-square difference")
+  # The package's one wording for a difference test (#144).
+  expect_match(lineage$comparison, "^Delta chi-square\\(1\\) = [0-9.]+, p ")
 
   expect_identical(revised$parent_summary$cfa_model, parent$decisions$cfa_model$value)
   expect_null(parent$lineage)
@@ -95,6 +96,10 @@ test_that("revision decisions and holdout advice are recorded in the decision lo
   )
   planned_row <- planned$decision_log[planned$decision_log$id == "revision", , drop = FALSE]
   expect_match(planned_row$consequence, "prespecified")
+  # A prespecified revision was not motivated by the sample (#145).
+  expect_no_match(planned_row$consequence, "that motivated it", fixed = TRUE)
+  expect_match(planned_row$consequence, "evaluated on the same sample as the parent model",
+               fixed = TRUE)
   expect_null(planned$revision_comparison)
   expect_match(nomo_table(planned, "lineage")$comparison, "not requested")
 })
@@ -433,7 +438,9 @@ test_that("research-mode printing shows the revision count", {
   parent <- revise_parent_run()
   parent$mode <- "research"
   revised <- nomo_revise(parent, cfa_model = revised_residual_model, rationale = "Shared wording.")
-  expect_output(print(revised), "Revisions: 1 (post-hoc)", fixed = TRUE)
+  # "post hoc" takes no hyphen (#144).
+  expect_output(print(revised), "Revisions: 1 (post hoc)", fixed = TRUE)
+  expect_output(print(revised), "nomo_table(x, \"lineage\") for the revisions.", fixed = TRUE)
 })
 
 
@@ -451,7 +458,92 @@ test_that("revision guards handle unparseable models and missing rationales", {
     list(A = c("a1", "a2", "a3"))
   )
   expect_equal(inherited$value, c(A = 1))
-  expect_match(inherited$rationale, "Inherited from the parent workflow")
+  expect_identical(inherited$rationale, c(A = "Inherited from the parent workflow."))
+})
+
+
+test_that("each scale inherits its own factor-count rationale (#145)", {
+  inherit <- function(rationale) {
+    nomologR:::nomo_revise_inherited_factor_counts(
+      list(decisions = list(factor_count = list(value = c(A = 1, B = 1), rationale = rationale))),
+      list(A = c("a1", "a2", "a3"), B = c("b1", "b2", "b3"))
+    )$rationale
+  }
+  expect_identical(
+    inherit(c(B = "B was written as one facet.", A = "A is one construct.")),
+    c(A = "Inherited from the parent workflow. A is one construct.",
+      B = "Inherited from the parent workflow. B was written as one facet.")
+  )
+  # A rationale shared by every scale is not repeated.
+  expect_identical(inherit("theory"),
+                   c(A = "Inherited from the parent workflow. theory",
+                     B = "Inherited from the parent workflow. theory"))
+})
+
+
+test_that("a revision's model has one source and its decisions are checked (#145)", {
+  skip_on_cran()
+  parent <- revise_parent_run()
+  expect_error(
+    nomo_revise(parent, cfa_model = revised_residual_model, rationale = "r",
+                decisions = list(cfa_model = paste(revised_residual_model, "b1 ~~ b2", sep = "\n"))),
+    "Give the revised measurement model in `cfa_model`, not in `decisions`", fixed = TRUE
+  )
+  # An unnamed decision is refused rather than dropped.
+  expect_error(
+    nomo_revise(parent, cfa_model = revised_residual_model, rationale = "r",
+                decisions = list(c(A = 2, B = 1))),
+    "`decisions` must use unique non-empty names.", fixed = TRUE
+  )
+  expect_error(
+    nomo_revise(parent, cfa_model = revised_residual_model, rationale = "r",
+                decisions = list(factor_counts = c(A = 2, B = 1))),
+    "Unsupported workflow decision name: factor_counts.", fixed = TRUE
+  )
+})
+
+
+test_that("a supplied factor count replaces an inherited one the revised items cannot hold (#145)", {
+  skip_on_cran()
+  pool <- nomo_run(
+    data = nomo_demo_continuous,
+    scales = list(Pool = c(paste0("a", 1:5), paste0("b", 1:5))),
+    settings = list(factors = list(criterion_set = "minimal", n_iter = 10L, seed = 2026L)),
+    decisions = list(
+      factor_count = c(Pool = 3),
+      cfa_model = "A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4 + b5"
+    )
+  )
+  short <- list(Pool = c("a1", "a2", "a3"))
+  expect_error(
+    nomo_revise(pool, items = short, cfa_model = "A =~ a1 + a2 + a3", rationale = "Short form."),
+    "not smaller than the revised item count for Pool", fixed = TRUE
+  )
+  revised <- nomo_revise(
+    pool, items = short, cfa_model = "A =~ a1 + a2 + a3", rationale = "Short form.",
+    decisions = list(factor_count = list(value = c(Pool = 1), rationale = "One construct.")),
+    compare = FALSE
+  )
+  expect_identical(revised$next_stage, "measurement_review")
+  expect_identical(revised$decisions$factor_count$value, c(Pool = 1L))
+  log <- revised$decision_log
+  expect_identical(log$rationale[log$id == "factor_count:Pool"], "One construct.")
+  expect_identical(
+    log$observation[log$id == "revision"],
+    paste("Revision 1 of the guided workflow: the measurement model was revised; items",
+          "removed: a4, a5, b1, b2, b3, b4, b5.")
+  )
+})
+
+
+test_that("the holdout advice follows the revision's origin and sample design (#145)", {
+  note <- nomologR:::nomo_revise_holdout_note
+  expect_match(note("same_sample", "post_hoc"), "the same sample that motivated it", fixed = TRUE)
+  expect_match(note("same_sample", "a_priori"), "the same sample as the parent model", fixed = TRUE)
+  expect_match(note("calibration_validation", "post_hoc"), "no longer independent", fixed = TRUE)
+  expect_match(note("calibration_validation", "a_priori"),
+               "evaluated on the same validation rows", fixed = TRUE)
+  expect_identical(note("same_sample"), note("same_sample", "post_hoc"))
 })
 
 
