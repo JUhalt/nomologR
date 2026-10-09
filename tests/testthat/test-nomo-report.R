@@ -7,7 +7,7 @@ test_that("nomo_report validates workflow and output arguments", {
   )
 
   expect_error(
-    nomo_report(run, file = "report.pdf"),
+    nomo_report(run, file = file.path(tempdir(), "report.pdf")),
     "HTML"
   )
 
@@ -58,7 +58,7 @@ test_that("nomo_report() has no default path and writes only where asked", {
   unlink(scratch, recursive = TRUE)
 
   # A path given by position is still a path given.
-  expect_error(nomo_report(run, "report.pdf"), "HTML or Word")
+  expect_error(nomo_report(run, file.path(tempdir(), "report.pdf")), "HTML or Word")
   # An object that is not a workflow is reported before the missing path.
   expect_error(nomo_report(list()), "nomo_run")
 })
@@ -260,7 +260,7 @@ test_that("deviation helper identifies explicit partial and post-hoc evidence", 
 
 test_that("existing report is protected unless overwrite is explicit", {
   run <- make_m9_minimal_run()
-  file <- tempfile(fileext = ".html")
+  file <- withr::local_tempfile(fileext = ".html")
   writeLines("existing", file)
 
   expect_error(
@@ -271,8 +271,8 @@ test_that("existing report is protected unless overwrite is explicit", {
 
 
 test_that("report template preparation injects a safe dynamic title", {
-  template <- tempfile(fileext = ".Rmd")
-  input <- tempfile(fileext = ".Rmd")
+  template <- withr::local_tempfile(fileext = ".Rmd")
+  input <- withr::local_tempfile(fileext = ".Rmd")
 
   writeLines(
     c(
@@ -362,7 +362,7 @@ test_that("report validation catches malformed run objects and paths", {
     "non-empty"
   )
 
-  file <- tempfile(fileext = ".html")
+  file <- withr::local_tempfile(fileext = ".html")
   writeLines("existing", file)
   expect_silent(
     nomologR:::nomo_report_validate_file(file, TRUE)
@@ -719,9 +719,9 @@ test_that("the citations table gives each reference without R's header or BibTeX
 
 
 test_that("template preparation rejects missing or duplicate title markers", {
-  missing <- tempfile(fileext = ".Rmd")
-  duplicate <- tempfile(fileext = ".Rmd")
-  out <- tempfile(fileext = ".Rmd")
+  missing <- withr::local_tempfile(fileext = ".Rmd")
+  duplicate <- withr::local_tempfile(fileext = ".Rmd")
+  out <- withr::local_tempfile(fileext = ".Rmd")
 
   writeLines(c("---", 'title: "ordinary"', "---"), missing)
   expect_error(
@@ -980,7 +980,7 @@ test_that("closeout: report package-version and citation helpers expose package 
 
 test_that("closeout: report development-template fallback and missing-template guard are explicit", {
 
-  dev_root <- tempfile("nomo-report-dev-")
+  dev_root <- withr::local_tempdir(pattern = "nomo-report-dev-")
 
   dev_template <- file.path(
     dev_root,
@@ -1026,7 +1026,7 @@ test_that("closeout: report development-template fallback and missing-template g
 
 
 test_that("closeout: report template preparation fails closed when copy is impossible", {
-  src <- tempfile(fileext = ".Rmd")
+  src <- withr::local_tempfile(fileext = ".Rmd")
   writeLines('title: "__NOMO_REPORT_TITLE__"', src)
   impossible <- file.path(tempfile(), "child", "report.Rmd")
   expect_error(
@@ -1039,9 +1039,22 @@ test_that("closeout: report template preparation fails closed when copy is impos
 
 
 test_that("closeout: report rendering dependency and output-directory guards are explicit", {
+  skip_if_not(
+    exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
+  )
+
   run <- make_m9_report_run()
 
-  bad_parent <- tempfile()
+  # The directory is checked after rmarkdown, knitr and pandoc are, so they
+  # are reported as present: the check is reached where one of them is missing
+  # and stops before anything is rendered.
+  testthat::local_mocked_bindings(
+    nomo_report_namespace_available = function(pkg) TRUE,
+    nomo_report_pandoc_available = function() TRUE,
+    .package = "nomologR"
+  )
+
+  bad_parent <- withr::local_tempfile()
   writeLines("not a directory", bad_parent)
   out <- file.path(bad_parent, "report.html")
   expect_error(
@@ -1320,8 +1333,9 @@ test_that("the output format follows the file extension", {
 
 test_that("an unsupported extension names both supported formats", {
   run <- make_m9_minimal_run()
-  expect_error(nomo_report(run, file = "report.pdf"), "HTML or Word")
-  expect_error(nomo_report(run, file = "report.pdf"), ".docx", fixed = TRUE)
+  file <- file.path(tempdir(), "report.pdf")
+  expect_error(nomo_report(run, file = file), "HTML or Word")
+  expect_error(nomo_report(run, file = file), ".docx", fixed = TRUE)
 })
 
 
