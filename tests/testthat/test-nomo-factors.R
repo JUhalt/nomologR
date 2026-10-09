@@ -142,10 +142,12 @@ test_that("seed makes null reference reproducible without changing caller RNG", 
     replicate(5, 0.8 * f + rnorm(250, sd = 0.6))
   )
 
-  set.seed(777)
-  before <- .Random.seed
-  a <- nomo_factors(dat, n_iter = 10, seed = 44)
-  after <- .Random.seed
+  # test-nomo-global-state.R covers a session that has no state.
+  withr::with_seed(777, {
+    before <- nomo_test_rng_state()
+    a <- nomo_factors(dat, n_iter = 10, seed = 44)
+    after <- nomo_test_rng_state()
+  })
 
   b <- nomo_factors(dat, n_iter = 10, seed = 44)
 
@@ -1900,23 +1902,25 @@ test_that("closeout B: parallel analysis preserves an existing RNG state and han
     .package = "nomologR"
   )
 
-  set.seed(711)
-  before <- .Random.seed
+  # test-nomo-global-state.R covers a session that has no state.
+  withr::with_seed(711, {
+    before <- nomo_test_rng_state()
+    out <- nomologR:::nomo_factors_parallel(
+      x = x,
+      model_types = rep("continuous", 3L),
+      method = "pearson",
+      use = "pairwise.complete.obs",
+      observed = c(10, 10, 10),
+      n_iter = 10L,
+      quantile = .95,
+      parallel_rule = "percentile",
+      seed = 2026L,
+      fm = "minres"
+    )
+    after <- nomo_test_rng_state()
+  })
 
-  out <- nomologR:::nomo_factors_parallel(
-    x = x,
-    model_types = rep("continuous", 3L),
-    method = "pearson",
-    use = "pairwise.complete.obs",
-    observed = c(10, 10, 10),
-    n_iter = 10L,
-    quantile = .95,
-    parallel_rule = "percentile",
-    seed = 2026L,
-    fm = "minres"
-  )
-
-  expect_identical(.Random.seed, before)
+  expect_identical(after, before)
   expect_identical(out$n_factors, 3L)
 })
 

@@ -125,14 +125,18 @@ test_that("a Monte Carlo study reports recovery and power at each sample size", 
   expect_true(is.call(pw$call))
   expect_identical(pw$call$seed, 11)
 
-  # The same seed gives the same study, and the session's random state is kept.
-  set.seed(99)
-  before <- stats::runif(1)
-  set.seed(99)
-  again <- nomo_power_simulate(pw_population, n = c(300, 60), reps = 12,
-                               focus = "A~~B", seed = 11)
+  # The same seed gives the same study, and the session's random-number state
+  # is afterwards as it was, so the caller's next draw is the one it would
+  # have had.
+  expected <- withr::with_seed(99, stats::runif(1))
+  withr::with_seed(99, {
+    before <- nomo_test_rng_state()
+    again <- nomo_power_simulate(pw_population, n = c(300, 60), reps = 12,
+                                 focus = "A~~B", seed = 11)
+    expect_identical(nomo_test_rng_state(), before)
+    expect_identical(stats::runif(1), expected)
+  })
   expect_identical(again$parameters, pw$parameters)
-  expect_identical(stats::runif(1), before)
 
   local_reproducible_output(width = 80)
   printed <- capture.output(print(pw))
