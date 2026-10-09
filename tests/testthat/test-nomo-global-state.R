@@ -132,13 +132,26 @@ test_that("a seeded call leaves a session that has no random-number state withou
     "power <- nomo_power_simulate(population, n = 40, reps = 2, seed = 3)",
     "state('nomo_power_simulate')",
     "ran <- factors$criterion_status$criterion[factors$criterion_status$status == 'available']",
-    "writeLines(paste('criteria', paste(ran, collapse = ' ')))"
+    "writeLines(paste('criteria', paste(ran, collapse = ' ')))",
+    "fit <- nomo_cfa('A =~ a1 + a2 + a3 + a4\\nB =~ b1 + b2 + b3 + b4', nomo_demo_continuous)",
+    "generator <- RNGkind()",
+    "serial <- nomo_reliability(fit, ci = 'bootstrap', ci_boot = 20, ci_seed = 3)",
+    "state('nomo_reliability')",
+    "writeLines(paste('bootstrap', serial$ci_status$available))",
+    "workers <- nomo_reliability(fit, ci = 'bootstrap', ci_boot = 20, ci_seed = 3, ci_ncpus = 2)",
+    "state('nomo_reliability on workers')",
+    "writeLines(paste('bootstrap on workers', workers$ci_status$available))",
+    "writeLines(paste('generator', if (identical(RNGkind(), generator)) 'kept' else 'changed'))"
   ), script)
 
   # R CMD check points R_TESTS at a startup file that a process started from
-  # another directory cannot find.
+  # another directory cannot find. R_LIBS names the libraries for the workers
+  # of the parallel bootstrap, which are further R processes and must load the
+  # same installed package.
+  libraries <- paste(unique(c(dirname(package_dir), .libPaths())),
+                     collapse = .Platform$path.sep)
   output <- withr::with_envvar(
-    c(R_TESTS = ""),
+    c(R_TESTS = "", R_LIBS = libraries),
     suppressWarnings(system2(
       file.path(R.home("bin"), "Rscript"),
       c("--vanilla", shQuote(script)),
@@ -160,4 +173,16 @@ test_that("a seeded call leaves a session that has no random-number state withou
   expect_match(criteria, "nest", fixed = TRUE)
   expect_match(criteria, "hull", fixed = TRUE)
   expect_match(criteria, "comparison_data", fixed = TRUE)
+  # The seeded bootstrap drew its resamples and left no state either.
+  expect_true("bootstrap TRUE" %in% output)
+  expect_true("nomo_reliability absent" %in% output)
+
+  # For a bootstrap on workers, lavaan calls parallel::clusterSetRNGStream(),
+  # which switches a session that has no state to the L'Ecuyer generator and
+  # does not switch it back. The seed that withr sets gives the session a
+  # state for the length of the call, so the generator is put back with it.
+  skip_if_not("bootstrap on workers TRUE" %in% output,
+              "worker processes could not run the bootstrap")
+  expect_true("nomo_reliability on workers absent" %in% output)
+  expect_true("generator kept" %in% output)
 })
