@@ -177,22 +177,47 @@ nomo_revise_inherited_factor_counts <- function(run, scales) {
     )
   }
 
+  # The parent records one rationale per scale, so each scale keeps its own
+  # rather than every scale carrying all of them (#145).
   parent_rationale <- decision$rationale
   if (!is.character(parent_rationale) || !length(parent_rationale)) {
     parent_rationale <- ""
   }
+  if (!is.null(names(parent_rationale)) && all(names(scales) %in% names(parent_rationale))) {
+    parent_rationale <- parent_rationale[names(scales)]
+  } else {
+    parent_rationale <- rep(paste(unique(parent_rationale), collapse = " "), length(scales))
+  }
   list(
     value = counts,
-    rationale = trimws(paste(
-      "Inherited from the parent workflow.",
-      paste(parent_rationale, collapse = " ")
-    ))
+    rationale = stats::setNames(
+      trimws(paste("Inherited from the parent workflow.", parent_rationale)),
+      names(scales)
+    )
   )
 }
 
 
-nomo_revise_holdout_note <- function(sample_design) {
-  if (identical(sample_design, "calibration_validation")) {
+# Why the revised model still needs independent confirmation. A post hoc
+# revision was prompted by the sample it is evaluated on; a prespecified one
+# was not, but it is still judged on the same sample as its parent (#145).
+nomo_revise_holdout_note <- function(sample_design, origin = "post_hoc") {
+  split <- identical(sample_design, "calibration_validation")
+  if (identical(origin, "a_priori")) {
+    if (split) {
+      return(paste(
+        "The parent and revised models are evaluated on the same validation",
+        "rows, so a choice between them made on these rows still needs",
+        "confirmation in a new sample."
+      ))
+    }
+    return(paste(
+      "The revision is evaluated on the same sample as the parent model, so the",
+      "evidence for both comes from one sample. Confirm the model you retain in",
+      "independent data, for example with `nomo_split()` or a new sample."
+    ))
+  }
+  if (split) {
     paste(
       "The confirmatory stages already used the validation rows, so this",
       "revision is no longer independent of them. Confirm the revised model in",
@@ -208,17 +233,18 @@ nomo_revise_holdout_note <- function(sample_design) {
 }
 
 
+# The comparison in the package's one wording for a difference test (#144):
+# "Delta chi-square(1) = 0.01, p = .916", with a scaled method named.
 nomo_revise_comparison_summary <- function(comparison, note) {
   if (is.null(comparison)) return(note)
   cmp <- comparison$comparisons
   if (!nrow(cmp)) return(note)
 
   if (isTRUE(cmp$test_available[[1L]])) {
-    sprintf(
-      "%s: chi-square difference = %.2f, df = %s, %s",
-      cmp$test[[1L]], cmp$chisq_diff[[1L]],
-      format(cmp$df_diff[[1L]], trim = TRUE),
-      nomo_compare_format_p(cmp$p_value[[1L]])
+    paste0(
+      nomo_present_chisq(cmp$chisq_diff[[1L]], cmp$df_diff[[1L]], cmp$p_value[[1L]],
+                         delta = TRUE),
+      nomo_compare_method_note(cmp$method[[1L]])
     )
   } else {
     cmp$test_note[[1L]]
@@ -355,7 +381,10 @@ nomo_revise_content_review_log <- function(log, handoff, scales, lineage) {
 #' The factor-count decision is inherited from the parent unless `decisions`
 #' supplies a new one, so the revision changes only what the researcher
 #' changed. The parent's settings carry over too, except that reverse keying
-#' set for an item the revision removes is dropped with the item.
+#' set for an item the revision removes is dropped with the item. Settings for
+#' evidence the parent has not computed, such as invariance or scores, can be
+#' added by resuming the parent at the pause after its `"revise"` decision, as
+#' described in [nomo_run()].
 #'
 #' When the parent's scales came from a `contentvalidR` handoff, the child
 #' keeps it: its declared keying, the content-review rows of the decision
@@ -367,7 +396,9 @@ nomo_revise_content_review_log <- function(log, handoff, scales, lineage) {
 #' Because a revision prompted by results is evaluated on the data that
 #' prompted it, the decision log records whether the change was `"post_hoc"`
 #' and recommends confirming the revised model in independent data (Simmons,
-#' Nelson, & Simonsohn, 2011; Wicherts et al., 2016; Flake & Fried, 2020).
+#' Nelson, & Simonsohn, 2011; Wicherts et al., 2016; Flake & Fried, 2020). A
+#' prespecified (`"a_priori"`) revision is still judged on the same sample as
+#' its parent, and the log says so.
 #'
 #' Removing an item changes the observed variables, so parent and revised
 #' models are not nested and `nomo_compare()` reports descriptive evidence
@@ -389,13 +420,18 @@ nomo_revise_content_review_log <- function(log, handoff, scales, lineage) {
 #'   results, or `"a_priori"` when it was planned in advance.
 #' @param decisions Optional named list of decisions for the child workflow,
 #'   for example `list(factor_count = c(WellBeing = 1))`. Supplied decisions
-#'   override inherited ones.
+#'   override inherited ones; a supplied `factor_count` is used in place of the
+#'   parent's, which is then not checked against the revised items. The
+#'   revised model is given in `cfa_model`, not here, so that the model fitted
+#'   is the one the lineage records.
 #' @param compare Logical. If `TRUE` (default), compare the parent and revised
 #'   measurement models with [nomo_compare()].
 #'
 #' @return A new `nomo_run` object for the revised workflow, carrying
 #'   `$lineage` (one row per revision), `$revision_comparison` (the
-#'   `nomo_compare()` result, when available), and `$parent_summary`.
+#'   `nomo_compare()` result, when available), and `$parent_summary`. It
+#'   prints as any guided run does (see [nomo_run()]), with the number of
+#'   revisions among its facts.
 #'
 #' @references
 #' Flake, J. K., & Fried, E. I. (2020). Measurement schmeasurement:
@@ -480,6 +516,21 @@ nomo_revise <- function(run,
   if (!is.list(decisions)) {
     stop("`decisions` must be a named list of workflow decisions.", call. = FALSE)
   }
+  # Checked before anything is merged, so an unnamed or misnamed decision is
+  # refused rather than dropped (#145).
+  decisions <- nomo_run_validate_decisions(decisions)
+  # The revised model has one source, `cfa_model`, which the lineage records;
+  # a second one in `decisions` would be fitted while the lineage named the
+  # other (#145).
+  if ("cfa_model" %in% names(decisions)) {
+    stop(
+      paste(
+        "Give the revised measurement model in `cfa_model`, not in `decisions`:",
+        "the lineage records the model from `cfa_model`, so it is the one fitted."
+      ),
+      call. = FALSE
+    )
+  }
   if (!is.logical(compare) || length(compare) != 1L || is.na(compare)) {
     stop("`compare` must be TRUE or FALSE.", call. = FALSE)
   }
@@ -514,7 +565,14 @@ nomo_revise <- function(run,
   }
 
   child_decisions <- list()
-  inherited_counts <- nomo_revise_inherited_factor_counts(run, scales)
+  # A factor count supplied for the revision replaces the parent's, so the
+  # parent's is checked against the revised items only when it is inherited
+  # (#145).
+  inherited_counts <- if ("factor_count" %in% names(decisions)) {
+    NULL
+  } else {
+    nomo_revise_inherited_factor_counts(run, scales)
+  }
   if (!is.null(inherited_counts)) child_decisions$factor_count <- inherited_counts
   child_decisions$cfa_model <- list(value = revised_model, rationale = rationale)
   for (nm in names(decisions)) child_decisions[[nm]] <- decisions[[nm]]
@@ -598,7 +656,7 @@ nomo_revise <- function(run,
     decisions = run$decisions
   )
 
-  holdout <- nomo_revise_holdout_note(run$sample_design)
+  holdout <- nomo_revise_holdout_note(run$sample_design, origin)
   origin_text <- if (identical(origin, "post_hoc")) {
     paste(
       "This revision was prompted by results, so it is recorded as post hoc.",
@@ -611,12 +669,14 @@ nomo_revise <- function(run,
   change_text <- c(
     if (model_changed) "the measurement model was revised" else NULL,
     if (length(changes$removed)) {
-      paste0("item(s) removed: ", paste(changes$removed, collapse = ", "))
+      paste0(nomo_present_noun(length(changes$removed), "item"), " removed: ",
+             paste(changes$removed, collapse = ", "))
     } else {
       NULL
     },
     if (length(changes$added)) {
-      paste0("item(s) added: ", paste(changes$added, collapse = ", "))
+      paste0(nomo_present_noun(length(changes$added), "item"), " added: ",
+             paste(changes$added, collapse = ", "))
     } else {
       NULL
     }

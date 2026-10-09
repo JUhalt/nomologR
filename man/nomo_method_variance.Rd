@@ -155,7 +155,6 @@ estimates, and other sources of method variance may remain (Podsakoff,
 MacKenzie, & Podsakoff, 2012).
 }
 \examples{
-\donttest{
 # Social desirability as the marker for the Agency and Persistence items of
 # the simulated validation study. In its population the marker shares
 # nothing with those items, so no method variance should be detected.
@@ -167,7 +166,6 @@ mv <- nomo_method_variance(model, data = nomo_demo_network,
                            marker = c("sd1", "sd2", "sd3"))
 mv
 nomo_table(mv, "reliability")
-}
 }
 \references{
 Lindell, M. K., & Whitney, D. J. (2001). Accounting for common method

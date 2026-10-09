@@ -17,20 +17,16 @@ test_that("nomo_split is reproducible, exhaustive, and non-overlapping", {
 
 
 test_that("nomo_split restores caller RNG state", {
-  set.seed(9123)
-  before <- .Random.seed
-  invisible(nomo_split(data.frame(x = 1:120), seed = 99))
-  expect_identical(.Random.seed, before)
-})
-
-
-test_that("nomo_split leaves no seed behind when the caller had none", {
-  had <- exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
-  old <- if (had) get(".Random.seed", envir = .GlobalEnv) else NULL
-  on.exit(if (had) assign(".Random.seed", old, envir = .GlobalEnv), add = TRUE)
-  if (had) rm(".Random.seed", envir = .GlobalEnv)
-  invisible(nomo_split(data.frame(x = 1:20), seed = 1))
-  expect_false(exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE))
+  # The state is the same object afterwards, and the caller's next draws are
+  # the ones it would have had without the split. test-nomo-global-state.R
+  # covers a session that has no state.
+  expected <- withr::with_seed(9123, stats::runif(3))
+  withr::with_seed(9123, {
+    before <- nomo_test_rng_state()
+    invisible(nomo_split(data.frame(x = 1:120), seed = 99))
+    expect_identical(nomo_test_rng_state(), before)
+    expect_identical(stats::runif(3), expected)
+  })
 })
 
 

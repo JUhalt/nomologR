@@ -360,12 +360,18 @@ nomo_power_model_df <- function(model) {
 #' @seealso [nomo_power_rmsea()] for the power of the overall fit tests.
 #'
 #' @examples
-#' \donttest{
 #' population <- "
 #'   A =~ 0.7*a1 + 0.7*a2 + 0.6*a3 + 0.5*a4
 #'   B =~ 0.7*b1 + 0.6*b2 + 0.6*b3 + 0.5*b4
 #'   A ~~ 0.3*B
 #' "
+#' # Five replications run quickly and show the result; they are far too few to
+#' # estimate power.
+#' quick <- nomo_power_simulate(population, n = 100, reps = 5,
+#'                              focus = "A~~B", seed = 2026)
+#' nomo_table(quick, "summary")
+#'
+#' \donttest{
 #' pw <- nomo_power_simulate(population, n = c(100, 200), reps = 100,
 #'                           focus = "A~~B", seed = 2026)
 #' pw
@@ -411,23 +417,23 @@ nomo_power_simulate <- function(population,
     if (!nomo_is_whole_number(seed)) {
       stop("`seed` must be NULL or one whole number within R's integer range.", call. = FALSE)
     }
-    rng_exists <- exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
-    if (rng_exists) rng_before <- get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
-    on.exit({
-      if (rng_exists) {
-        assign(".Random.seed", rng_before, envir = .GlobalEnv)
-      } else if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
-        rm(".Random.seed", envir = .GlobalEnv)
-      }
-    }, add = TRUE)
-    set.seed(as.integer(seed))
   }
 
   sizes <- as.integer(sort(unique(n)))
-  runs <- lapply(sizes, function(size) {
-    nomo_power_replicate(population, analysis, truth, size, as.integer(reps),
-                         standardized)
-  })
+  simulate <- function() {
+    lapply(sizes, function(size) {
+      nomo_power_replicate(population, analysis, truth, size, as.integer(reps),
+                           standardized)
+    })
+  }
+  # Only the replications draw random numbers. With a seed, withr sets it for
+  # them and afterwards puts the session's random-number state back as it was;
+  # without one, they use the session's stream as it stands.
+  if (is.null(seed)) {
+    runs <- simulate()
+  } else {
+    runs <- withr::with_seed(as.integer(seed), simulate())
+  }
 
   parameters <- dplyr::bind_rows(lapply(seq_along(sizes), function(i) {
     nomo_power_parameters(runs[[i]], truth, sizes[[i]], alpha)
@@ -465,14 +471,10 @@ nomo_power_simulate <- function(population,
 # names any that is not 1 (#145). The session's random-number state is left as
 # it was, so a seeded simulation draws the same data as without the check.
 nomo_power_check_unit_variance <- function(population) {
-  had_state <- exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
-  state <- if (had_state) get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
-  on.exit({
-    rm(list = intersect(".Random.seed", ls(.GlobalEnv, all.names = TRUE)), envir = .GlobalEnv)
-    if (had_state) assign(".Random.seed", state, envir = .GlobalEnv)
-  }, add = TRUE)
-  data <- as.matrix(lavaan::simulateData(population, sample.nobs = 1000L,
-                                         standardized = TRUE, empirical = TRUE))
+  data <- withr::with_preserve_seed(
+    as.matrix(lavaan::simulateData(population, sample.nobs = 1000L,
+                                   standardized = TRUE, empirical = TRUE))
+  )
   centered <- sweep(data, 2L, colMeans(data))
   variances <- colSums(centered^2) / nrow(centered)
   off <- abs(variances - 1) > 1e-6

@@ -15,7 +15,9 @@ si_reliability <- local({
     if (is.null(cache)) {
       cache <<- nomo_reliability(
         nomo_cfa("Persistence =~ pe1 + pe2 + pe3 + pe4", si_data),
-        ci = "bootstrap", ci_boot = 100L, ci_seed = 1L
+        # Twenty draws: the tests read the interval's width, whatever it is,
+        # and this fixture is built under CRAN's check-time limit.
+        ci = "bootstrap", ci_boot = 20L, ci_seed = 1L
       )
     }
     cache

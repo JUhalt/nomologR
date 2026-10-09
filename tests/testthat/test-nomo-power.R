@@ -133,14 +133,18 @@ test_that("a Monte Carlo study reports recovery and power at each sample size", 
   expect_true(is.call(pw$call))
   expect_identical(pw$call$seed, 11)
 
-  # The same seed gives the same study, and the session's random state is kept.
-  set.seed(99)
-  before <- stats::runif(1)
-  set.seed(99)
-  again <- nomo_power_simulate(pw_population, n = c(300, 60), reps = 12,
-                               focus = "A~~B", seed = 11)
+  # The same seed gives the same study, and the session's random-number state
+  # is afterwards as it was, so the caller's next draw is the one it would
+  # have had.
+  expected <- withr::with_seed(99, stats::runif(1))
+  withr::with_seed(99, {
+    before <- nomo_test_rng_state()
+    again <- nomo_power_simulate(pw_population, n = c(300, 60), reps = 12,
+                                 focus = "A~~B", seed = 11)
+    expect_identical(nomo_test_rng_state(), before)
+    expect_identical(stats::runif(1), expected)
+  })
   expect_identical(again$parameters, pw$parameters)
-  expect_identical(stats::runif(1), before)
 
   local_reproducible_output(width = 80)
   printed <- capture.output(print(pw))
@@ -218,14 +222,16 @@ test_that("the simulation handles zero values, missing parameters, and failed fi
   # Without a converged replication there is no coverage to show (#145).
   expect_false(any(grepl("---", failed, fixed = TRUE)))
 
-  # Without a seed, the session's random stream is used as it stands; without
-  # any random state, one is created and removed again.
-  old <- if (exists(".Random.seed", envir = .GlobalEnv)) get(".Random.seed", envir = .GlobalEnv)
-  if (!is.null(old)) rm(".Random.seed", envir = .GlobalEnv)
-  on.exit(if (!is.null(old)) assign(".Random.seed", old, envir = .GlobalEnv), add = TRUE)
-  nomo_power_simulate(pw_population, n = 30, reps = 2, seed = 1)
-  expect_false(exists(".Random.seed", envir = .GlobalEnv))
-  unseeded <- nomo_power_simulate(pw_population, n = 30, reps = 2)
+  # With a seed, the session's random-number state is afterwards as it was;
+  # without one, the session's stream is used as it stands, so it moves on.
+  # test-nomo-global-state.R covers a session that has no state.
+  withr::with_seed(8103, {
+    before <- nomo_test_rng_state()
+    nomo_power_simulate(pw_population, n = 30, reps = 2, seed = 1)
+    expect_identical(nomo_test_rng_state(), before)
+    unseeded <- nomo_power_simulate(pw_population, n = 30, reps = 2)
+    expect_false(identical(nomo_test_rng_state(), before))
+  })
   expect_identical(unseeded$reps, 2L)
   expect_identical(unseeded$seed, NA_integer_)
 })
