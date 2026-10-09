@@ -3,12 +3,12 @@
 object. The report archives researcher inputs, sample roles, item and factor
 evidence, EFA/CFA results, reliability, convergent/discriminant evidence,
 optional invariance and nomological-network results, researcher decisions,
-deviations/post-hoc decisions, method citations, an evidence trace, and
+deviations and post hoc decisions, method citations, an evidence trace, and
 session information."><meta property="og:description" content="nomo_report() renders a self-contained HTML document from a nomo_run
 object. The report archives researcher inputs, sample roles, item and factor
 evidence, EFA/CFA results, reliability, convergent/discriminant evidence,
 optional invariance and nomological-network results, researcher decisions,
-deviations/post-hoc decisions, method citations, an evidence trace, and
+deviations and post hoc decisions, method citations, an evidence trace, and
 session information."></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
@@ -67,7 +67,7 @@ session information."></head><body>
 object. The report archives researcher inputs, sample roles, item and factor
 evidence, EFA/CFA results, reliability, convergent/discriminant evidence,
 optional invariance and nomological-network results, researcher decisions,
-deviations/post-hoc decisions, method citations, an evidence trace, and
+deviations and post hoc decisions, method citations, an evidence trace, and
 session information.</p>
     </div>
 
@@ -149,8 +149,24 @@ numbered in that order. Default <code>FALSE</code>, which leaves the report unch
     <p>The report is a presentation and provenance layer. It does not refit models,
 alter data, free parameters, remove items, or manufacture additional
 statistical conclusions.</p>
+<p>Its tables are the ones <code><a href="nomo_table.html">nomo_table()</a></code> returns, with values rounded for
+display by the rules printed output follows (p values to three decimals and
+"&lt; .001" below that, proportions stored as <code>pct_*</code> shown as percentages,
+counts as whole numbers), flags in the shared wording ("Review", "Concern",
+"Not computed", blank for no flag), and each cell shown exactly as written,
+so lavaan syntax such as <code>~~</code> and <code>a*x1</code> survives. The workflow's calls are
+printed as R code, and a table at the end defines every abbreviation the
+report shows.</p>
 <p>Reports can be rendered from complete, paused, or blocked <code>nomo_run</code> objects.
 Incomplete stages are labeled as such rather than silently omitted.</p>
+<p><code>nomo_report()</code> writes one file, the report named by <code>file</code>, and creates
+that file's directory when it does not exist. The working files of the
+render (the copy of the template, the intermediate files, and the figures)
+are written to a temporary directory under <code><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir()</a></code> and removed when the
+call returns, whether or not it succeeds. The working directory, the
+options, and the graphics device are left as they were. The report is
+rendered in an environment of its own, so objects in the global environment
+are neither read nor changed.</p>
 <p><code>nomo_report()</code> behaves the same from the console, a script, or a chunk
 inside another R Markdown or Quarto document, such as a thesis chapter.
 Rendering from inside a document nests two renders that share knitr's global
@@ -163,8 +179,10 @@ report, and rendering the report does not change the calling document.</p>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
-<span class="r-in"><span><span class="co"># Rendering requires pandoc, which RStudio and Quarto installations include.</span></span></span>
-<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu">rmarkdown</span><span class="fu">::</span><span class="fu"><a href="https://pkgs.rstudio.com/rmarkdown/reference/pandoc_available.html" class="external-link">pandoc_available</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span><span class="co"># Rendering requires the rmarkdown package and pandoc, which RStudio and</span></span></span>
+<span class="r-in"><span><span class="co"># Quarto installations include.</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"rmarkdown"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">&amp;&amp;</span></span></span>
+<span class="r-in"><span>    <span class="fu">rmarkdown</span><span class="fu">::</span><span class="fu"><a href="https://pkgs.rstudio.com/rmarkdown/reference/pandoc_available.html" class="external-link">pandoc_available</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span>  <span class="va">run</span> <span class="op">&lt;-</span> <span class="fu"><a href="nomo_run.html">nomo_run</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>    data <span class="op">=</span> <span class="va">nomo_demo_network</span>,</span></span>
 <span class="r-in"><span>    scales <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>Agency <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ag1"</span>, <span class="st">"ag2"</span>, <span class="st">"ag3"</span>, <span class="st">"ag4"</span><span class="op">)</span><span class="op">)</span>,</span></span>
@@ -181,8 +199,8 @@ report, and rendering the report does not change the calling document.</p>
 <span class="r-in"><span>    file <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".html"</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/files.html" class="external-link">file.exists</a></span><span class="op">(</span><span class="va">report_file</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="fu">DONTSHOW</span><span class="op">(</span><span class="op">{</span><span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="va">report_file</span><span class="op">)</span><span class="op">}</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
