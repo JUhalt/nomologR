@@ -101,7 +101,7 @@ reference strategy's estimate and expressed in units of the reference
 standard error. Schafer and Graham (2002) treat a bias larger than about half
 a standard error as practically important. Beyond that size it noticeably
 degrades the coverage of confidence intervals. A difference of that size is
-flagged for review, with two qualifications:
+flagged for review, with three qualifications:
 \itemize{
 \item The difference estimates listwise deletion's bias only if the data are MAR
 and the model is correct, since only then is FIML consistent. With ordered
@@ -109,15 +109,33 @@ indicators, both strategies require MCAR, so a difference cannot be
 attributed to either one.
 \item The strategies analyze different cases, so part of any difference is
 sampling variability.
+\item Schafer and Graham's half a standard error judges a bias, measured over
+simulated samples. Here it is applied to a difference within one sample,
+so under MCAR, where listwise deletion is unbiased, sampling variability
+alone can exceed it, and does so more often the more cases are
+incomplete. A flag marks a difference to review, not a bias found.
 }
 
 A hypothesis whose concordance with its prediction differs between
 strategies is also flagged for review.
 
-\strong{The flagging rule} follows Schafer and Graham (2002, p. 157): a bias
-beyond about half a standard error is practically important, because it
+\strong{The flagging rule} is adapted from Schafer and Graham (2002, p. 157): a
+bias beyond about half a standard error is practically important, because it
 degrades interval coverage. Separating sampling variability from bias would
 be new output, added alongside this rule rather than replacing it.
+
+\strong{What lavaan estimated.} A strategy is labeled by the method lavaan used.
+When lavaan substitutes one method for another, as it runs two-stage ML when
+FIML is requested with ULS, the label names both, such as "Two-stage ML
+(requested FIML)", and a difference from it is attributed to no strategy.
+
+\code{print()} shows the missingness, the strategies compared, the largest
+differences from the reference, and each flag's observation; \code{summary()}
+adds missing values by variable, fit and reliability by strategy, every
+difference, and each recorded decision with its recommendation. With more
+than one comparison strategy, each strategy's differences and coefficients
+are a table of their own. \code{plot()} draws each difference from the reference
+in reference standard errors.
 
 \strong{Not implemented.} Mean substitution is not offered. It understates
 variances and distorts covariances. Schafer and Graham (2002) show that even

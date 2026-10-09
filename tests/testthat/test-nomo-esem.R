@@ -1,6 +1,6 @@
 # Exploratory structural equation modeling (#129) -----------------------------------
 
-esem_data <- function(cross = TRUE, n = 800, seed = 2009) {
+esem_data <- function(cross = TRUE, n = 800, seed = 2009, exact = FALSE) {
   population <- if (cross) {
     paste(
       "A =~ 0.7*a1 + 0.7*a2 + 0.6*a3 + 0.6*a4 + 0.25*b1",
@@ -16,15 +16,17 @@ esem_data <- function(cross = TRUE, n = 800, seed = 2009) {
       sep = "\n"
     )
   }
-  set.seed(seed)
-  lavaan::simulateData(population, sample.nobs = n, standardized = TRUE)
+  nomo_test_simulate(population, n = n, seed = seed, exact = exact)
 }
 esem_model <- "A =~ a1 + a2 + a3 + a4\nB =~ b1 + b2 + b3 + b4"
 
+# The tests of this fit assert what the population with cross-loadings
+# implies (which loadings are flagged, which model is preferred), so its data
+# reproduce the population covariance matrix exactly.
 esem_cross <- local({
   cache <- NULL
   function() {
-    if (is.null(cache)) cache <<- nomo_esem(esem_model, esem_data())
+    if (is.null(cache)) cache <<- nomo_esem(esem_model, esem_data(exact = TRUE))
     cache
   }
 })
@@ -94,8 +96,14 @@ test_that("ESEM recovers cross-loadings the CFA inflates the correlation with", 
 
 test_that("without cross-loadings the CFA is the more parsimonious account", {
   skip_on_cran()
-  es <- nomo_esem(esem_model, esem_data(cross = FALSE), rotation = "geomin")
+  # The data reproduce the covariance matrix of the population without
+  # cross-loadings, so both models fit perfectly. The ESEM is preferred only
+  # when its TLI is higher and its RMSEA lower, and an RMSEA cannot be below
+  # the CFA's 0: the CFA is retained by the rule, not by the luck of a draw.
+  es <- nomo_esem(esem_model, esem_data(cross = FALSE, exact = TRUE), rotation = "geomin")
   expect_identical(es$rotation, "geomin")
+  expect_lt(max(es$models$chisq), 1e-6)
+  expect_identical(es$models$rmsea, c(0, 0))
   log <- es$decision_log
   expect_identical(log$metric, c("esem_rotation", "cases_used", "esem_comparison"))
   expect_match(log$observation[[1L]], "Geomin")
@@ -201,9 +209,20 @@ test_that("guidance is checked before any model is fitted (#145)", {
 
 test_that("an improper ESEM keeps lavaan's warnings and is flagged as a concern (#145)", {
   skip_on_cran()
-  set.seed(5)
-  small <- nomo_demo_network[sample(800, 14), ]
-  expect_no_warning(es <- nomo_esem(esem_two, small))
+  # A loading of 1.05 gives ag1 a negative error variance in the population,
+  # 1 - 1.05^2, and the data reproduce the population covariance matrix
+  # exactly: the solution is improper by construction, not because an
+  # optimizer happened to end there in a small sample.
+  improper <- nomo_test_simulate(
+    paste(
+      "Agency =~ 1.05*ag1 + 0.7*ag2 + 0.6*ag3 + 0.6*ag4",
+      "Persistence =~ 0.7*pe1 + 0.6*pe2 + 0.6*pe3 + 0.5*pe4",
+      "Agency ~~ 0.4*Persistence",
+      sep = "\n"
+    ),
+    n = 200, seed = 5, exact = TRUE
+  )
+  expect_no_warning(es <- nomo_esem(esem_two, improper))
   expect_true(any(grepl("variances are negative", es$engine_warnings$ESEM, fixed = TRUE)))
   log <- es$decision_log
   expect_true(all(c("engine_warning", "negative_observed_residual_variance",
@@ -211,7 +230,7 @@ test_that("an improper ESEM keeps lavaan's warnings and is flagged as a concern 
   concern <- log[log$severity == "concern", , drop = FALSE]
   expect_true("ESEM ag1" %in% concern$object)
   expect_match(concern$observation[concern$metric == "negative_observed_residual_variance"][[1L]],
-               "The value in the ESEM is -0.03.", fixed = TRUE)
+               "The value in the ESEM is -0.10.", fixed = TRUE)
   local_reproducible_output(width = 80)
   printed <- capture.output(print(es))
   flagged <- printed[(which(printed == "Flagged") + 1L):length(printed)]
@@ -230,14 +249,27 @@ test_that("an improper ESEM keeps lavaan's warnings and is flagged as a concern 
 
 test_that("an ESEM or CFA that does not converge is named, with what lavaan said (#145)", {
   skip_on_cran()
-  set.seed(204)
-  tiny <- nomo_demo_network[sample(800, 10), ]
-  expect_error(nomo_esem(esem_two, tiny),
-               "The ESEM did not converge, so the ESEM and the CFA cannot be compared.",
-               fixed = TRUE)
-  expect_error(nomo_esem(esem_two, tiny), "lavaan reported: ", fixed = TRUE)
+  # No data set can guarantee that an optimizer fails, so the CFA is stopped
+  # after its first iteration: lavaan itself reports that it did not converge
+  # and warns, and both are passed on. The ESEM is left alone, because lavaan
+  # reports it as converged after one iteration.
+  real_sem <- lavaan::sem
+  testthat::with_mocked_bindings(
+    {
+      expect_error(nomo_esem(esem_two, nomo_demo_network),
+                   "The CFA did not converge, so the ESEM and the CFA cannot be compared.",
+                   fixed = TRUE)
+      expect_error(nomo_esem(esem_two, nomo_demo_network), "lavaan reported: ", fixed = TRUE)
+    },
+    sem = function(model, ...) {
+      if (grepl("efa(", model, fixed = TRUE)) return(real_sem(model = model, ...))
+      real_sem(model = model, ..., control = list(iter.max = 1L))
+    },
+    .package = "lavaan"
+  )
 
-  # Without a warning from lavaan, the message says only what failed.
+  # The ESEM is fitted first, so it is the one named when neither converges;
+  # without a warning from lavaan, the message says only what failed.
   real <- lavaan::lavInspect
   err <- tryCatch(
     testthat::with_mocked_bindings(
@@ -250,6 +282,8 @@ test_that("an ESEM or CFA that does not converge is named, with what lavaan said
     ),
     error = function(e) conditionMessage(e)
   )
+  expect_match(err, "The ESEM did not converge, so the ESEM and the CFA cannot be compared.",
+               fixed = TRUE)
   expect_match(err, "well defined.$")
 })
 

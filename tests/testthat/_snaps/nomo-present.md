@@ -402,66 +402,94 @@
     Code
       print(sc)
     Output
-      <nomo_scores> Scores
-      Unit weighting (method: sum) | 2 factors | 473 scored cases
+      <nomo_scores> Scores from a measurement model
+      Method: sum (unit weighted) | Factors: 2 | Cases: 473
       
       Score properties (Grice, 2001)
         Factor  Items  Validity  Univocality  Correlational accuracy
-        A           5     0.911       +0.455                  -0.097
-        B           5     0.885       +0.442                  -0.097
+        A           5       .91          .46                    -.10
+        B           5       .89          .44                    -.10
       
-      Parallel model (what unit weighting assumes)
-        chi-square difference 171.84 on 16 df, p < .001
+      What these columns mean
+        Validity -- Correlation of the score with its own factor; higher is better.
+        Univocality -- Largest correlation of the score with another factor. Through
+            its own factor, a score reaches another by the factor correlation times
+            its validity; a departure of .05 or more from that is noted.
+        Correlational accuracy -- Score correlation minus factor correlation, for
+            the pair of factors where they differ most; 0 is best.
       
-      Notes
-        - Review: The parallel model that unit weighting assumes fits worse than the
-          model you fitted (chi-square difference 171.84 on 16 df, p < .001). The
-          items are not interchangeable in the way adding them assumes. This does
-          not forbid a sum score; it means the choice needs a reason beyond
-          convenience, and that `validity` and `correlational_accuracy` describe
-          what it costs.
-        - Review: Validity is below .90 for B. Gorsuch (1983, p. 260) recommended at
-          least .80, and above .90 if the scores are to serve as adequate
-          substitutes for the factors themselves. Reported as his recommendation,
-          not applied as a rule.
-        - Concern: Correlations among these scores do not reproduce the correlations
-          among the factors: the largest discrepancy is -0.097, between A and B. A
-          relationship estimated from these scores carries that much bias, and its
-          direction is a property of the method and the model rather than a constant
-          that can be corrected for. Where the question can be asked of the latent
-          variables, ask it there. For a linear regression among factors, Skrondal
-          and Laake (2001) showed a scoring design that gives consistent
-          coefficients, and scores from one model containing every factor, like
-          these, are not it: the predictors need regression-method scores and the
-          outcome Bartlett scores, each from a measurement model of its own.
-        - Review: These scores also carry the other factors: the score for A
-          correlates +0.455 with a factor it does not represent (Grice, 2001). A
-          score that is not univocal cannot be treated as though it measured its own
-          factor alone.
-        - Review: The strongest standardized loading is at least twice the weakest
-          for B. Adding those items gives the weakest indicator the same say as the
-          strongest, so two people with the same total can differ on the construct
-          by having endorsed different items.
+      Flagged
+        - Correlational accuracy (Concern): Correlations among these scores do not
+          reproduce the correlations among the factors: the largest discrepancy is
+          -.10, between A and B.
+        - Unit weighting (Review): The parallel model that unit weighting assumes
+          fits worse than the model you fitted (Delta chi-square(16) = 171.84,
+          p < .001). The strongest standardized loading is at least twice the
+          weakest for B.
+        - Validity (Review): Validity is below .90 for B.
       
-      No value here is a pass/fail threshold; see nomo_table(x, "diagnostics").
+      No value here is a pass/fail threshold, and no scoring method is chosen for
+      you.
+      
+      See summary(x) for every note in full and the loading spread and
+      nomo_table(x, "diagnostics") for the score properties as a table.
 
 ---
 
     Code
       print(summary(sc))
     Output
-      <nomo_scores summary> Scores
-      Unit weighting (method: sum) | 473 scored cases
+      <nomo_scores summary> Scores from a measurement model
+      Method: sum (unit weighted) | Factors: 2 | Cases: 473
       
       Score properties (Grice, 2001)
         Factor  Items  Validity  Univocality  Correlational accuracy
-        A           5     0.911       +0.455                  -0.097
-        B           5     0.885       +0.442                  -0.097
+        A           5       .91          .46                    -.10
+        B           5       .89          .44                    -.10
       
       Standardized loading spread
         Factor  Lowest  Highest  Ratio
         A         0.60     0.77   1.29
         B         0.34     0.79   2.35
+      
+      What these columns mean
+        Validity -- Correlation of the score with its own factor; higher is better.
+        Univocality -- Largest correlation of the score with another factor. Through
+            its own factor, a score reaches another by the factor correlation times
+            its validity; a departure of .05 or more from that is noted.
+        Correlational accuracy -- Score correlation minus factor correlation, for
+            the pair of factors where they differ most; 0 is best.
+        Lowest, Highest -- The weakest and strongest standardized loading on the
+            factor.
+        Ratio -- The strongest standardized loading divided by the weakest, in
+            absolute value; -- where the loadings differ in sign.
+      
+      Flagged
+        - Correlational accuracy (Concern): Correlations among these scores do not
+          reproduce the correlations among the factors: the largest discrepancy is
+          -.10, between A and B. A relationship estimated from these scores carries
+          that much bias, and its direction is a property of the method and the
+          model rather than a constant that can be corrected for. Where the question
+          can be asked of the latent variables, ask it there. For a linear
+          regression among factors, Skrondal and Laake (2001) showed a scoring
+          design that gives consistent coefficients, and scores from one model
+          containing every factor, like these, are not it: the predictors need
+          regression-method scores and the outcome Bartlett scores, each from a
+          measurement model of its own.
+        - Unit weighting (Review): The parallel model that unit weighting assumes
+          fits worse than the model you fitted (Delta chi-square(16) = 171.84,
+          p < .001). The items are not interchangeable in the way adding them
+          assumes. This does not forbid a sum score; it means the choice needs a
+          reason beyond convenience, and that `validity` and
+          `correlational_accuracy` describe what it costs. The strongest
+          standardized loading is at least twice the weakest for B. Adding those
+          items gives the weakest indicator the same say as the strongest, so two
+          people with the same total can differ on the construct by having endorsed
+          different items.
+        - Validity (Review): Validity is below .90 for B. Gorsuch (1983, p. 260)
+          recommended at least .80, and above .90 if the scores are to serve as
+          adequate substitutes for the factors themselves. Reported as his
+          recommendation, not applied as a rule.
       
       Notes
         - A score is not the latent variable. Every method here produces an estimate
@@ -473,38 +501,18 @@
           show that adding items assumes a parallel model: equal unstandardized
           loadings and equal residual variances. That assumption needs the same
           justification as any other measurement model.
-        - Review: The parallel model that unit weighting assumes fits worse than the
-          model you fitted (chi-square difference 171.84 on 16 df, p < .001). The
-          items are not interchangeable in the way adding them assumes. This does
-          not forbid a sum score; it means the choice needs a reason beyond
-          convenience, and that `validity` and `correlational_accuracy` describe
-          what it costs.
-        - Coefficient alpha is the reliability coefficient for a unit-weighted
-          scale; coefficient H belongs to optimally weighted scores (McNeish & Wolf,
-          2020). Reporting H for a sum score, or alpha for a weighted one, describes
-          a scale that was not used.
-        - Review: Validity is below .90 for B. Gorsuch (1983, p. 260) recommended at
-          least .80, and above .90 if the scores are to serve as adequate
-          substitutes for the factors themselves. Reported as his recommendation,
-          not applied as a rule.
-        - Concern: Correlations among these scores do not reproduce the correlations
-          among the factors: the largest discrepancy is -0.097, between A and B. A
-          relationship estimated from these scores carries that much bias, and its
-          direction is a property of the method and the model rather than a constant
-          that can be corrected for. Where the question can be asked of the latent
-          variables, ask it there. For a linear regression among factors, Skrondal
-          and Laake (2001) showed a scoring design that gives consistent
-          coefficients, and scores from one model containing every factor, like
-          these, are not it: the predictors need regression-method scores and the
-          outcome Bartlett scores, each from a measurement model of its own.
-        - Review: These scores also carry the other factors: the score for A
-          correlates +0.455 with a factor it does not represent (Grice, 2001). A
-          score that is not univocal cannot be treated as though it measured its own
-          factor alone.
-        - Review: The strongest standardized loading is at least twice the weakest
-          for B. Adding those items gives the weakest indicator the same say as the
-          strongest, so two people with the same total can differ on the construct
-          by having endorsed different items.
+        - The reliability of a unit-weighted score is omega computed from the fitted
+          model, which nomo_reliability() reports; coefficient alpha equals it only
+          when the items' loadings are equal (essential tau-equivalence).
+          Coefficient H describes optimally weighted scores rather than a sum
+          (McNeish & Wolf, 2020). Reporting H for a sum score, or a sum's omega or
+          alpha for a weighted one, describes a scale that was not used.
+      
+      No value here is a pass/fail threshold, and no scoring method is chosen for
+      you.
+      
+      See nomo_table(x, "notes") for the notes with their topics and
+      nomo_table(x, "unit_weighting") for every loading statistic.
 
 ---
 
@@ -512,25 +520,41 @@
       print(nomo_missing(cfa, data = nomo_demo_continuous))
     Output
       <nomo_missing> Missing-data sensitivity
-      Model: nomo_cfa | Reference: FIML | Fitted with: Listwise deletion
+      Model: CFA | Reference: FIML | Fitted with: Listwise deletion
       Cases: 27 of 500 incomplete (5.4%) | Patterns: 3
-      Lowest covariance coverage: 0.946 (a2, b3)
+      Lowest covariance coverage: .95 (a2, b3)
       
       Strategies
         Strategy           lavaan    Needs  Role          N  Converged  Admissible
         Listwise deletion  listwise  MCAR   comparison  473  yes        yes
         FIML               ml        MAR    reference   500  yes        yes
       
-      Largest differences from the reference, in reference standard errors
+      Largest differences from the reference (standardized estimates)
         Parameter  Strategy           Estimate  Reference  Difference (SE)
-        A ~~ B     Listwise deletion     0.499      0.480            +0.45
+        A ~~ B     Listwise deletion      .499       .480            +0.45
         B =~ b5    Listwise deletion     0.337      0.353            -0.37
         A =~ a5    Listwise deletion     0.598      0.590            +0.23
         A =~ a3    Listwise deletion     0.669      0.675            -0.21
         B =~ b3    Listwise deletion     0.757      0.762            -0.17
       
-      Whether data are missing at random cannot be tested from these data; see
-      nomo_table(x, "decision_log").
+      What these terms mean
+        CFA -- Confirmatory factor analysis.
+        FIML -- Full-information maximum likelihood.
+        Needs -- What the strategy requires of the missing data: MCAR, missing
+            completely at random, or MAR, missing at random; -- where no requirement
+            is stated for the method lavaan used.
+        N -- Cases the strategy analyzed.
+        Covariance coverage -- Proportion of cases with both variables of a pair
+            observed; the lowest pair is shown.
+        Difference (SE) -- The estimate minus the reference strategy's estimate, in
+            the reference standard error (SE); beyond half of one is flagged for
+            review.
+      
+      Whether data are missing at random cannot be tested from these data, and
+      agreement between strategies does not show that either is unbiased.
+      
+      See summary(x) for every difference and each recommendation and
+      nomo_table(x, "decision_log") for every recorded decision.
 
 # hierarchical output reads as designed (#89)
 
@@ -1247,6 +1271,6 @@
           rationales
         Full entries and references: nomo_methods(x).
       
-      Component decision and evidence-log rows retained: 96; see nomo_table(x,
+      Component decision and evidence-log rows retained: 95; see nomo_table(x,
       "component_log").
 
