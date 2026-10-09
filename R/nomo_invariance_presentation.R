@@ -90,6 +90,9 @@ nomo_invariance_test_label <- function(x) {
 
 nomo_invariance_test_words <- function(test) {
   test <- setdiff(test, c("standard", "none", "default"))
+  # A residual-based test (Browne) is a separate test, not a scaling of the
+  # chi-square reported here. lavaan 0.7-3 computes one for every ML fit.
+  test <- test[!grepl("^browne\\.residual", test)]
   if (!length(test)) return("scaled")
   words <- c(
     satorra.bentler = "Satorra-Bentler scaled",

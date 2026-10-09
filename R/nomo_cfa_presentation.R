@@ -191,6 +191,9 @@ nomo_cfa_test_label <- function(fit) {
   test <- tryCatch(as.character(lavaan::lavInspect(fit, "options")$test),
                    error = function(e) character())
   test <- setdiff(test, c("standard", "none", "default"))
+  # A residual-based test (Browne) is a separate test, not a scaling of the
+  # chi-square reported here. lavaan 0.7-3 computes one for every ML fit.
+  test <- test[!grepl("^browne\\.residual", test)]
   if (!length(test)) return("")
   words <- c(
     satorra.bentler = "Satorra-Bentler scaled",

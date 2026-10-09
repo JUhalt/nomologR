@@ -3,22 +3,28 @@
     Code
       print(nomo_apa_table(apa_cfa(), "loadings", number = 1))
     Output
+      <nomo_apa_table> Manuscript table in APA style
+      
       Table 1
       Standardized Factor Loadings
       -------------------------
       Item  Agency  Persistence
       -------------------------
-      ag1     0.82             
-      ag2     0.75             
-      ag3     0.71             
-      ag4     0.78             
+      ag1     0.82
+      ag2     0.75
+      ag3     0.71
+      ag4     0.78
       pe1                  0.77
       pe2                  0.70
       pe3                  0.74
       pe4                  0.69
       -------------------------
       Note. Standardized loadings from a confirmatory factor analysis. Estimated
-      with ML; N = 800. Blank cells are loadings fixed to zero by the model.
+      with maximum likelihood (ML); N = 800. Blank cells are loadings fixed to zero
+      by the model.
+      
+      See x$body for the cells and knitr::knit_print(x) for the Markdown a knitted
+      document renders.
 
 # the validity tables are stable
 
@@ -35,6 +41,8 @@
     Code
       print(nomo_apa_table(apa_validity(), "convergent", number = 5))
     Output
+      <nomo_apa_table> Manuscript table in APA style
+      
       Table 5
       Average Variance Extracted
       --------------------------
@@ -49,4 +57,7 @@
       explains. The review reference is .50; a value below it prompts a look at the
       loadings and content coverage. AVE is convergent evidence and is not a
       reliability coefficient.
+      
+      See x$body for the cells and knitr::knit_print(x) for the Markdown a knitted
+      document renders.
 
