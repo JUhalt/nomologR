@@ -76,6 +76,8 @@ emit_heading <- function(text, level = 2L) {
 }
 
 emit_note <- function(text) {
+  # Leading spaces would make the note an indented block, or a bullet in Word.
+  text <- trimws(text)
   remember(text = text)
   if (word_output) {
     cat("\n*", text_escape(text), "*\n\n", sep = "")

@@ -1511,6 +1511,24 @@ test_that("report cells are escaped so pandoc shows them as written (#145)", {
   expect_identical(escape("x -- y ... z", "html"), "x &#45;&#45; y &#46;&#46;&#46; z")
   expect_identical(escape(c("- a", "+ b", "1. c", "-0.5"), "html"),
                    c("&#45; a", "&#43; b", "1&#46; c", "-0.5"))
+  # So does every other marker pandoc numbers a list by: a parenthesis, a
+  # letter, a roman numeral, or "#". In an HTML table a rationale that began
+  # "1) ..." became a numbered list that swallowed the rows after it.
+  expect_identical(
+    escape(c("1) x", "(a) x", "(1) x", "i. x", "#. x", "IV) x", "  2) x"), "html"),
+    c("1&#41; x", "&#40;a&#41; x", "&#40;1&#41; x", "i&#46; x", "&#35;&#46; x",
+      "IV&#41; x", "  2&#41; x")
+  )
+  # A marker alone in its cell starts a list too, since the table's own markup
+  # follows it on the line.
+  expect_identical(escape(c("+", "-", "1.", "a)", "(b)"), "html"),
+                   c("&#43;", "&#45;", "1&#46;", "a&#41;", "&#40;b&#41;"))
+  # Text that only looks like a marker is left alone.
+  expect_identical(escape(c("(Intercept)", "e.g. x", "(n = 5) x", "1.5 x", "a.b"), "html"),
+                   c("(Intercept)", "e.g. x", "(n = 5) x", "1.5 x", "a.b"))
+  # Leading colons would open a fenced div; colons elsewhere are text.
+  expect_identical(escape(c(":::", " ::: x", "a: b"), "html"),
+                   c("&#58;&#58;&#58;", " &#58;&#58;&#58; x", "a: b"))
   # R names in backticks stay code, as the console writes them.
   expect_identical(escape("Scale `Agency` has x_y", "html"), "Scale `Agency` has x&#95;y")
   expect_identical(escape("`a_b` then c|d", "markdown"), "`a_b` then c&#124;d")
@@ -1520,6 +1538,16 @@ test_that("report cells are escaped so pandoc shows them as written (#145)", {
                    "free &#96;x1 &#124; t1&#96;")
   expect_identical(escape("free `x1 | t1`", "markdown"), "free `x1 | t1`")
   expect_identical(escape("free `x1 | t1`", "html", cell = TRUE), "free `x1 | t1`")
+  # Two such spans in one cell stay two spans: the text between them is not
+  # taken for code, and a span without a bar stays code.
+  expect_identical(
+    escape("Released `ag3 | t1` and `ag3 | t2` here", "markdown", cell = TRUE),
+    "Released &#96;ag3 &#124; t1&#96; and &#96;ag3 &#124; t2&#96; here"
+  )
+  expect_identical(
+    escape("Released `ag3 | t1` and `ag3_r` here", "markdown", cell = TRUE),
+    "Released &#96;ag3 &#124; t1&#96; and `ag3_r` here"
+  )
   expect_identical(escape(c(NA, ""), "html"), c(NA, ""))
 })
 
@@ -1555,6 +1583,16 @@ test_that("report tables write escaped cells, keep trusted markdown, and note wh
   )
   expect_match(threshold$markup, "|&#96;ag3 &#124; t1&#96;", fixed = TRUE)
   expect_false(grepl("ag3 | t1", threshold$markup, fixed = TRUE))
+  # Two thresholds in one cell: each keeps its backticks and its spaces.
+  two <- nomologR:::nomo_report_table(
+    tibble::tibble(id = "partial", rationale = "Released `ag3 | t1` and `ag3 | t2` as planned."),
+    word = TRUE
+  )
+  expect_match(
+    two$markup,
+    "|Released &#96;ag3 &#124; t1&#96; and &#96;ag3 &#124; t2&#96; as planned.",
+    fixed = TRUE
+  )
 
   # Numbers are right-aligned.
   numbers <- nomologR:::nomo_report_table(tibble::tibble(item = "a", p_value = 0))
@@ -1936,6 +1974,19 @@ test_that("a rendered report keeps model syntax, quotes, and the title as writte
     rationale = "Equal loadings, and a residual covariance from item wording.",
     source = "researcher_decision"
   ))
+  # Rationales that pandoc would read as blocks or split: a numbered and a
+  # lettered list, a lone "+", and two thresholds in backticks.
+  numbered <- "1) Wording overlap. 2) Seen in MI."
+  lettered <- "(a) Wording overlap with i2; (b) prior theory."
+  thresholds <- "Released `i1 | t1` and `i1 | t2` as planned."
+  run$decision_log <- dplyr::bind_rows(run$decision_log, tibble::tibble(
+    id = c("revision", "revision_reason", "expected_sign", "partial_release"),
+    stage = "workflow", scope = "measurement_model",
+    observation = "Recorded.", reason = "", options = "", consequence = "",
+    decision = c("revise", "keep", "+", "release"),
+    rationale = c(numbered, lettered, ":::", thresholds),
+    source = "researcher_decision"
+  ))
   title <- 'Scale "A" -- C:\\Users\\data & <b>x</b>'
   dir <- tempfile("nomo-escape-")
   dir.create(dir)
@@ -1950,6 +2001,22 @@ test_that("a rendered report keeps model syntax, quotes, and the title as writte
   expect_true(grepl("F =~ a*i1 + a*i2<br>i1 ~~ i2", html, fixed = TRUE))
   expect_false(grepl("<sub></sub>", html, fixed = TRUE))
   expect_false(grepl("a<em>i1", html, fixed = TRUE))
+  # No cell became a list: the report has no numbered list at all, and its
+  # only bullets are the table of contents, which is not inside a table. Each
+  # rationale is in the Workflow decisions table and, for the revision rows,
+  # the Deviations table, as typed.
+  expect_false(grepl("<ol", html, fixed = TRUE))
+  cells <- regmatches(html, gregexpr("(?s)<td[^>]*>.*?</td>", html, perl = TRUE))[[1L]]
+  expect_false(any(grepl("<(ul|ol|li|div|p|blockquote)[ >]", cells)))
+  shown <- trimws(gsub("<td[^>]*>|</td>", "", cells))
+  expect_identical(sum(shown == numbered), 2L)
+  expect_identical(sum(shown == lettered), 2L)
+  expect_identical(sum(shown == "+"), 1L)
+  expect_identical(sum(shown == ":::"), 1L)
+  expect_identical(
+    sum(shown == "Released <code>i1 | t1</code> and <code>i1 | t2</code> as planned."),
+    2L
+  )
   # The call is code with straight quotes, not a table cell with curly ones.
   expect_true(grepl(
     "<pre><code>nomo_run(data = dat, scales = list(S = c(&quot;i1&quot;, &quot;i2&quot;)))",
@@ -1976,6 +2043,10 @@ test_that("a rendered report keeps model syntax, quotes, and the title as writte
                          encoding = "UTF-8"), collapse = "")
   text <- gsub("<[^>]+>", "", xml)
   expect_true(grepl("F =~ a*i1 + a*i2; i1 ~~ i2", text, fixed = TRUE))
+  # Two thresholds in one Word cell keep their backticks and their spaces.
+  expect_true(grepl(thresholds, text, fixed = TRUE))
+  expect_true(grepl(numbered, text, fixed = TRUE))
+  expect_true(grepl(lettered, text, fixed = TRUE))
   expect_true(grepl("scales = list(S = c(&quot;i1&quot;, &quot;i2&quot;))", text, fixed = TRUE))
   expect_true(grepl("Scale &quot;A&quot; -- C:\\Users\\data &amp; &lt;b&gt;x&lt;/b&gt;", text,
                     fixed = TRUE))

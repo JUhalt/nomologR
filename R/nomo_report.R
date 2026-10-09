@@ -292,19 +292,27 @@ nomo_report_display_table <- function(x, protected = character()) {
 # in the HTML report and in the markdown of the Word one alike. (A backslash
 # escape would not do: with R Markdown's `tex_math_single_backslash`, "\[" opens
 # display math.) Runs of hyphens and dots, which pandoc would set as dashes and
-# an ellipsis, and a leading list marker are escaped the same way. A line break
-# is <br> in HTML and "; " in a Word table cell, which also keeps lavaan syntax
-# valid. R names in backticks stay code spans, as the console writes them.
-# `cell = TRUE` is for a table cell: in a Word table, a code span holding a
-# bar, such as a lavaan threshold `x1 | t1`, is escaped like other text, since
-# a bar there would end the cell and its character reference would be shown as
-# typed inside code.
+# an ellipsis, are escaped the same way, and so is whatever would start a block
+# where the text begins: a list marker, alone or before a space, in every form
+# pandoc reads ("- x", "+ x", "1. x", "1) x", "(1) x", "a) x", "(iv) x",
+# "#. x"), and a run of colons, which opens a fenced div. In an HTML table a
+# rationale that began "1) ..." became a numbered list that swallowed the rows
+# after it, and a cell holding only "+" a bullet. A line break is <br> in HTML
+# and "; " in a Word table cell, which also keeps lavaan syntax valid. R names
+# in backticks stay code spans, as the console writes them. `cell = TRUE` is
+# for a table cell: in a Word table, a code span holding a bar, such as a
+# lavaan threshold `x1 | t1`, is escaped like other text, since a bar there
+# would end the cell and its character reference would be shown as typed
+# inside code.
 nomo_report_escape <- function(x, to = c("html", "markdown"), cell = FALSE) {
   to <- match.arg(to)
   html <- identical(to, "html")
-  code_span <- if (!html && isTRUE(cell)) "`[^`\r\n|]+`" else "`[^`\r\n]+`"
+  bar_ends_cell <- !html && isTRUE(cell)
   markup <- c("\\", "`", "*", "_", "~", "^", "[", "]", "$", "@", "#", "|",
               "\"", "'", "!", "{", "}", "&", "<", ">")
+  # What numbers a list item: digits, one letter, a roman numeral, or "#",
+  # which is a character reference by the time the marker is looked for.
+  number <- "(?:[0-9]+|[A-Za-z]|[ivxlcdm]+|[IVXLCDM]+|&#35;)"
   escape_text <- function(s) {
     chars <- strsplit(s, "", fixed = TRUE)[[1L]]
     special <- chars %in% markup
@@ -312,21 +320,31 @@ nomo_report_escape <- function(x, to = c("html", "markdown"), cell = FALSE) {
     s <- paste(chars, collapse = "")
     s <- gsub("-(?=-)|(?<=-)-", "&#45;", s, perl = TRUE)
     s <- gsub("\\.(?=\\.)|(?<=\\.)\\.", "&#46;", s, perl = TRUE)
-    # A cell that starts like a list item ("- x", "+ x", "1. x").
-    s <- sub("^(\\s*)-(\\s)", "\\1&#45;\\2", s, perl = TRUE)
-    s <- sub("^(\\s*)\\+(\\s)", "\\1&#43;\\2", s, perl = TRUE)
-    s <- sub("^(\\s*[0-9]+)\\.(\\s)", "\\1&#46;\\2", s, perl = TRUE)
+    # Text that starts like a list item.
+    s <- sub("^(\\s*)-(?=\\s|$)", "\\1&#45;", s, perl = TRUE)
+    s <- sub("^(\\s*)\\+(?=\\s|$)", "\\1&#43;", s, perl = TRUE)
+    s <- sub(paste0("^(\\s*)\\((?=", number, "\\)(?:\\s|$))"), "\\1&#40;", s, perl = TRUE)
+    s <- sub(paste0("^(\\s*(?:&#40;)?", number, ")\\.(?=\\s|$)"), "\\1&#46;", s, perl = TRUE)
+    s <- sub(paste0("^(\\s*(?:&#40;)?", number, ")\\)(?=\\s|$)"), "\\1&#41;", s, perl = TRUE)
+    # Text that starts with colons; the length is -1 when it does not.
+    colons <- attr(regexpr("^\\s*:+", s), "match.length")
+    s <- paste0(gsub(":", "&#58;", substring(s, 1L, colons), fixed = TRUE),
+                substring(s, colons + 1L))
     gsub("\r?\n", if (html) "<br>" else "; ", s)
   }
 
   # Code spans are left as they are: pandoc shows their contents verbatim.
+  # They are found before anything is escaped, so that two spans in one cell
+  # stay two spans; those with a bar are then escaped for a Word table cell.
   vapply(as.character(x), function(s) {
     if (is.na(s) || !nzchar(s)) return(s)
-    spans <- gregexpr(code_span, s)
+    spans <- gregexpr("`[^`\r\n]+`", s)
     code <- regmatches(s, spans)[[1L]]
     text <- regmatches(s, spans, invert = TRUE)[[1L]]
     text <- vapply(text, function(t) if (nzchar(t)) escape_text(t) else t,
                    character(1), USE.NAMES = FALSE)
+    barred <- bar_ends_cell & grepl("|", code, fixed = TRUE)
+    code[barred] <- vapply(code[barred], escape_text, character(1), USE.NAMES = FALSE)
     paste0(text, c(code, ""), collapse = "")
   }, character(1), USE.NAMES = FALSE)
 }
