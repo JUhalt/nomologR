@@ -471,14 +471,10 @@ nomo_power_simulate <- function(population,
 # names any that is not 1 (#145). The session's random-number state is left as
 # it was, so a seeded simulation draws the same data as without the check.
 nomo_power_check_unit_variance <- function(population) {
-  had_state <- exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
-  state <- if (had_state) get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
-  on.exit({
-    rm(list = intersect(".Random.seed", ls(.GlobalEnv, all.names = TRUE)), envir = .GlobalEnv)
-    if (had_state) assign(".Random.seed", state, envir = .GlobalEnv)
-  }, add = TRUE)
-  data <- as.matrix(lavaan::simulateData(population, sample.nobs = 1000L,
-                                         standardized = TRUE, empirical = TRUE))
+  data <- withr::with_preserve_seed(
+    as.matrix(lavaan::simulateData(population, sample.nobs = 1000L,
+                                   standardized = TRUE, empirical = TRUE))
+  )
   centered <- sweep(data, 2L, colMeans(data))
   variances <- colSums(centered^2) / nrow(centered)
   off <- abs(variances - 1) > 1e-6
