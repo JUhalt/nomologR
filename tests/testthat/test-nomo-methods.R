@@ -703,13 +703,28 @@ test_that("a CFA is credited with the estimator that ran, not with the indicator
   # A missing estimator is lavaan's default for the indicators.
   expect_identical(ids(NA_character_, character()), "ml_cfa")
   expect_identical(ids(NA_character_, "x1"), c("wlsmv_cfa", "categorical_correlations"))
+  expect_identical(ids(NULL, character()), "ml_cfa")
+  # So is "default", lavaan's own name for it: nomo_cfa() records the request
+  # as "DEFAULT", nomo_esem() and nomo_method_variance() as it was typed.
+  for (default in c("default", "DEFAULT", "Default")) {
+    expect_identical(ids(default, character()), "ml_cfa", info = default)
+    expect_identical(ids(default, "x1"), c("wlsmv_cfa", "categorical_correlations"),
+                     info = default)
+  }
 
   esem <- structure(list(estimator = "ULS", ordered = character(), missing = NA_character_),
                     class = c("nomo_esem", "list"))
   expect_identical(nomo_methods_used(esem), c("esem", "cfa_other_estimator"))
+  esem$estimator <- "default"
+  expect_identical(nomo_methods_used(esem), c("esem", "ml_cfa"))
+  esem$ordered <- "x1"
+  expect_identical(nomo_methods_used(esem),
+                   c("esem", "wlsmv_cfa", "categorical_correlations"))
   mv <- structure(list(estimator = "GLS", missing = NA_character_),
                   class = c("nomo_method_variance", "list"))
   expect_identical(nomo_methods_used(mv), c("cfa_marker_technique", "cfa_other_estimator"))
+  mv$estimator <- "default"
+  expect_identical(nomo_methods_used(mv), c("cfa_marker_technique", "ml_cfa"))
   registry <- nomo_methods_registry()
   expect_match(registry$method[registry$id == "cfa_other_estimator"], "another estimator",
                fixed = TRUE)
@@ -726,6 +741,23 @@ test_that("a CFA is credited with the estimator that ran, not with the indicator
                                  estimator = "ULSMV"))$id
   expect_true(all(c("cfa_other_estimator", "categorical_correlations") %in% ulsmv))
   expect_false("wlsmv_cfa" %in% ulsmv)
+
+  # estimator = "default" runs lavaan's default, so it is credited as the same
+  # call without `estimator` is: the recorded label differs, the engine does not.
+  asked <- nomo_cfa(model, data = nomo_demo_continuous, estimator = "default")
+  left <- nomo_cfa(model, data = nomo_demo_continuous)
+  expect_identical(asked$estimator, "DEFAULT")
+  expect_identical(asked$estimator_engine, left$estimator_engine)
+  expect_identical(nomo_methods_used(asked), nomo_methods_used(left))
+  expect_true("ml_cfa" %in% nomo_methods_used(asked))
+  expect_false("cfa_other_estimator" %in% nomo_methods(asked)$id)
+
+  asked <- nomo_cfa(model, data = nomo_demo_ordinal, ordered = items, estimator = "default")
+  left <- nomo_cfa(model, data = nomo_demo_ordinal, ordered = items)
+  expect_identical(asked$estimator_engine, left$estimator_engine)
+  expect_identical(nomo_methods_used(asked), nomo_methods_used(left))
+  expect_true(all(c("wlsmv_cfa", "categorical_correlations") %in% nomo_methods_used(asked)))
+  expect_false("cfa_other_estimator" %in% nomo_methods(asked)$id)
 })
 
 

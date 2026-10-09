@@ -195,16 +195,20 @@ nomo_methods_used.nomo_cfa <- function(x, ...) {
 # nomo_cfa() itself treats as ML; WLSMV is credited only for ordered
 # indicators, the case its entry describes. Any other estimator, such as ULS,
 # GLS, WLS, DWLS, or ULSMV, is credited by the entry for those. A missing
-# estimator is lavaan's default, which is WLSMV with ordered indicators and ML
-# otherwise. Ordered indicators also credit their polychoric correlations.
+# estimator, or lavaan's own name for it, "default", in any case, is lavaan's
+# default: WLSMV with ordered indicators and ML otherwise. nomo_cfa() records
+# that request as "DEFAULT", and nomo_esem() and nomo_method_variance() as
+# typed, so the name is resolved here and never read as another estimator.
+# Ordered indicators also credit their polychoric correlations.
 nomo_methods_estimator_ids <- function(estimator, ordered) {
   ordered <- length(ordered) > 0L
   estimator <- if (length(estimator) == 1L && !is.na(estimator)) {
     toupper(estimator)
-  } else if (ordered) {
-    "WLSMV"
   } else {
-    "ML"
+    "DEFAULT"
+  }
+  if (identical(estimator, "DEFAULT")) {
+    estimator <- if (ordered) "WLSMV" else "ML"
   }
   c(
     if (grepl("^ML", estimator)) {
