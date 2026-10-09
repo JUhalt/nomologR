@@ -1682,16 +1682,6 @@ test_that("report numbers follow the console's kinds: p, percentages, counts, an
   expect_identical(fit$Value, c("53.91", "41", ".085", ".996", "0.9496", ".82", "< .001", "13"))
   expect_identical(fit$Reference, c(dash, dash, dash, ".950", "0.950", dash, dash, dash))
 
-  # An estimate just off the reference estimate it is compared with does too:
-  # 0.738 against 0.743 is not shown as 0.74 against 0.74.
-  compared <- nomologR:::nomo_report_display_table(tibble::tibble(
-    parameter = c("F =~ a", "F =~ b"),
-    estimate = c(0.738, 0.70),
-    reference = c(0.743, 0.70)
-  ))
-  expect_identical(compared$Estimate, c("0.738", "0.70"))
-  expect_identical(compared$Reference, c("0.74", "0.70"))
-
   expect_identical(
     nomologR:::nomo_report_number_kind(c("aic", "power", "lambda", "estimate", "", "omega_ci_n_success")),
     c("ic", "power", "loading", "estimate", "estimate", "count")
@@ -1702,6 +1692,110 @@ test_that("report numbers follow the console's kinds: p, percentages, counts, an
     nomologR:::nomo_report_number_kind(c("corrected_item_rest", "item_rest_not_computed", "item_rest_n")),
     c("r", "estimate", "count")
   )
+})
+
+
+test_that("an estimate and the reference estimate beside it have one precision (#144)", {
+  # The table exists to show small differences, so both estimates have three
+  # decimals, as print.nomo_missing() gives them: not 0.710 beside 0.71.
+  compared <- nomologR:::nomo_report_display_table(tibble::tibble(
+    parameter = c("F =~ a", "F =~ b", "F ~~ G"),
+    estimate = c(0.738, 0.70, 0.7104),
+    reference = c(0.743, 0.70, 0.7096),
+    difference_in_se = c(-0.284, 0.001, 0.316)
+  ))
+  expect_identical(compared$Estimate, c("0.738", "0.700", "0.710"))
+  expect_identical(compared$Reference, c("0.743", "0.700", "0.710"))
+  # The difference carries its sign, as the missing-data print and the log's
+  # own sentence ("+0.32 SE") give it, and none when it rounds to zero.
+  expect_identical(compared[["Difference in SE"]], c("-0.28", "0.00", "+0.32"))
+
+  # The reliability comparison, whose reference is `reference_estimate`, with
+  # the leading-zero rule of the coefficient its metric names.
+  reliability <- nomologR:::nomo_report_display_table(tibble::tibble(
+    construct = "A", metric = "omega",
+    strategy = c("Listwise deletion", "Pairwise deletion", "FIML"),
+    estimate = c(0.8481, 0.8512, 0.8490), reference_estimate = 0.8490,
+    difference = c(-0.0009, 0.0022, NA)
+  ))
+  expect_identical(reliability$Estimate, c(".848", ".851", ".849"))
+  expect_identical(reliability[["Reference estimate"]], c(".849", ".849", ".849"))
+  expect_identical(reliability$Difference, c("-.001", "+.002", nomologR:::nomo_report_blank))
+
+  # An estimate with no reference estimate beside it keeps its kind's precision.
+  alone <- nomologR:::nomo_report_display_table(
+    tibble::tibble(parameter = "F =~ a", estimate = 0.738, reference_group = "A")
+  )
+  expect_identical(alone$Estimate, "0.74")
+})
+
+
+test_that("a log metric whose name misleads has its kind listed (#145)", {
+  kind <- nomologR:::nomo_report_metric_kind
+  # The number of cases the HTMT ratios used is a count, not a ratio.
+  expect_identical(kind(c("htmt_missing_data", "htmt_single_indicator", "HTMT", "HTMT2")),
+                   c("count", "count", "htmt", "htmt"))
+  # Proportions of responses or cases, which the row's sentence gives in percent.
+  expect_true(all(kind(c("missingness", "all_missing", "missing_mechanism",
+                         "response_concentration", "floor_concentration",
+                         "ceiling_concentration")) == "pct_sign"))
+  # Any other metric is read from its words, as a column name is.
+  expect_identical(kind(c("omega", "pairwise_n", "kmo", NA)),
+                   c("reliability", "count", "proportion", "estimate"))
+
+  trace <- nomologR:::nomo_report_display_table(tibble::tibble(
+    object = c("validity", "ag2", "pe1", "model", "ag4", "model"),
+    metric = c("htmt_missing_data", "missingness", "missingness", "missing_mechanism",
+               "ceiling_concentration", "cases_used"),
+    value = c(800, 0.03, 0.01125, 0.04125, 0.925, 767),
+    severity = c("info", "info", "info", "info", "review", "review")
+  ))
+  # 9 of 800 is 1.1%, as the item summary shows it under "% missing".
+  expect_identical(trace$Value, c("800", "3.0%", "1.1%", "4.1%", "92.5%", "767"))
+})
+
+
+test_that("a flagged value is told apart from the reference its row names (#144)", {
+  # In a decision log the reference is text. A value flagged for falling on
+  # one side of it must not print as the reference does.
+  log <- nomologR:::nomo_report_display_table(tibble::tibble(
+    metric = c("omega", "AVE", "omega", "corrected_item_rest", "fit_cfi", "kmo",
+               "theory_concordance", "ceiling_concentration", "identification",
+               "omega", "omega"),
+    value = c(0.698, 0.4996, 0.7004, 0.298, 0.9496, 0.598, 0.1521, 0.9004, 0, 0.698, 0.62),
+    reference = c(
+      "configured review reference = .70", "configured review reference = .50",
+      "configured review reference = .70", "Teaching reference .30; not a retention rule",
+      "Configured teaching reference: .950",
+      ".60 and .50 are teaching review and concern prompts, not universal laws",
+      "[-0.15, 0.15]",
+      "Teaching reference 90.0% of responses in one category; not a deletion rule",
+      "A k-factor model of p items has ((p - k)^2 - (p + k)) / 2 degrees of freedom",
+      NA, "configured review reference = .70"
+    ),
+    severity = c("review", "review", "info", "review", "review", "review", "concern",
+                 "review", "review", "review", "concern")
+  ))
+  expect_identical(
+    log$Value,
+    c(".698", ".4996", ".70", ".298", ".9496", ".598", "0.152", "90.04%", "0",
+      ".70", ".62")
+  )
+  # The reference text is shown as the log wrote it.
+  expect_identical(log$Reference[[1L]], "configured review reference = .70")
+
+  # Without a flag column no row is flagged, so nothing is read from the text.
+  unflagged <- nomologR:::nomo_report_display_table(tibble::tibble(
+    metric = "omega", value = 0.698, reference = "configured review reference = .70"
+  ))
+  expect_identical(unflagged$Value, ".70")
+
+  numbers <- nomologR:::nomo_report_reference_numbers
+  expect_identical(numbers("configured review reference = .70"), list(0.70))
+  expect_identical(numbers(c("[-0.15, 0.15]", NA, "Curran (2016); no stated cut score")),
+                   list(c(-0.15, 0.15), numeric(), 2016))
+  # A hyphen between two numbers is a range, and a digit in a name is no number.
+  expect_identical(numbers("moderate .50-.75; MAP (TR2), HTMT2, x^2"), list(c(0.50, 0.75)))
 })
 
 

@@ -161,10 +161,30 @@ nomo_report_column_labels <- function(names, protected = character()) {
 # with the three decimals the EFA print gives it, since two would show most
 # as zero). A name says nothing more for "estimate", the default: two decimals
 # with the leading zero.
+#
+# A log metric whose name does not say what its value is has its kind listed
+# (nomo_report_metric_kinds): `htmt_missing_data` names a statistic and holds
+# the number of cases used, and `missingness` holds a proportion that the
+# row's own sentence gives as a percentage. Such a proportion is "pct_sign",
+# shown with its percent sign ("3.0%"), since a "Value" heading cannot carry
+# the unit as "% missing" does.
+nomo_report_metric_kinds <- c(
+  htmt_missing_data = "count", htmt_single_indicator = "count",
+  missingness = "pct_sign", all_missing = "pct_sign",
+  missing_mechanism = "pct_sign", response_concentration = "pct_sign",
+  floor_concentration = "pct_sign", ceiling_concentration = "pct_sign"
+)
+
+nomo_report_metric_kind <- function(metric) {
+  listed <- unname(nomo_report_metric_kinds[as.character(metric)])
+  ifelse(is.na(listed), nomo_report_number_kind(metric), listed)
+}
+
+
 nomo_report_number_kind <- function(name) {
   words <- strsplit(tolower(as.character(name)), "[._ ]+")
   vapply(words, function(w) {
-    w <- w[nzchar(w)]
+    w <- w[!is.na(w) & nzchar(w)]
     if (!length(w)) return("estimate")
     has <- function(...) any(w %in% c(...))
     if (has("pvalue", "bartlett") || w[[length(w)]] == "p" ||
@@ -194,23 +214,49 @@ nomo_report_number_kind <- function(name) {
 }
 
 
+# Values of one kind as text. `digits` replaces the kind's precision.
+# `reference` is for one value: the numbers it is read against. The value is
+# shown with the decimals it needs to differ from each of them (guide point 9),
+# so a flagged omega of .698 is not printed ".70" beside a reference of .70.
+nomo_report_format_kind <- function(value, kind, digits = NULL, signed = FALSE,
+                                    reference = NULL) {
+  stat <- function(v, k, d = digits) {
+    if (!length(reference)) return(nomo_present_stat(v, k, digits = d, signed = signed))
+    shown <- vapply(reference, function(r) {
+      nomo_present_stat(v, k, digits = d, reference = r, signed = signed)
+    }, character(1))
+    shown[[which.max(nchar(shown))]]
+  }
+  switch(
+    kind,
+    pct = stat(100 * value, "estimate", 1L),
+    pct_sign = paste0(stat(100 * value, "estimate", 1L), "%"),
+    percent = stat(value, "estimate", 1L),
+    residual = stat(value, "r", 3L),
+    stat(value, kind)
+  )
+}
+
+
 # A numeric column as text: each value by its kind, a missing value as the
 # report's dash. Integer storage is a count. In a table of metric and value
 # rows, a whole value in a row whose metric names no kind is a count too: the
-# evidence trace mixes counts with statistics. `reference`, given for a `value`
-# or `estimate` column beside a `reference` column, gives a value the extra
-# decimals it needs to differ from its reference (guide point 9): an estimate
-# of 0.738 beside a reference estimate of 0.743 is not shown as 0.74 beside
-# 0.74. A change from the preceding
-# model, stored under `delta`, carries its sign, and none when it rounds to
-# zero (guide point 15), as the invariance print shows it.
-nomo_report_format_numbers <- function(value, name, metric = NULL, reference = NULL) {
+# evidence trace mixes counts with statistics. `reference` holds, for each
+# row, the numbers its value is read against (nomo_report_value_reference());
+# a value that is not a count is shown with the decimals that tell it from
+# them. `digits` replaces the kind's precision for the whole column. A change
+# from the preceding model, stored under `delta`, and a difference from a
+# reference estimate, stored under `difference`, carry their sign, and none
+# when they round to zero (guide point 15), as the invariance and missing-data
+# prints show them.
+nomo_report_format_numbers <- function(value, name, metric = NULL, reference = NULL,
+                                       digits = NULL) {
   kind <- if (is.integer(value)) "count" else nomo_report_number_kind(name)
-  signed <- grepl("^delta[._]", tolower(name))
+  signed <- grepl("^(delta|difference)([._]|$)", tolower(name))
   value <- as.numeric(value)
   finite <- is.finite(value)
   if (identical(kind, "estimate") && !is.null(metric)) {
-    kinds <- nomo_report_number_kind(metric)
+    kinds <- nomo_report_metric_kind(metric)
     whole <- finite & abs(value - round(value)) < 1e-8
     kinds[kinds == "estimate" & whole] <- "count"
   } else {
@@ -220,18 +266,59 @@ nomo_report_format_numbers <- function(value, name, metric = NULL, reference = N
   out <- rep(nomo_report_blank, length(value))
   for (k in unique(kinds[finite])) {
     i <- finite & kinds == k
-    out[i] <- switch(
-      k,
-      pct = nomo_present_number(100 * value[i], digits = 1L),
-      percent = nomo_present_number(value[i], digits = 1L),
-      residual = nomo_present_stat(value[i], "r", digits = 3L),
-      nomo_present_stat(value[i], k,
-                        reference = if (!is.null(reference)) reference[i],
-                        signed = signed)
-    )
+    out[i] <- nomo_report_format_kind(value[i], k, digits, signed)
+  }
+  for (i in which(finite & kinds != "count" & lengths(reference) > 0L)) {
+    out[[i]] <- nomo_report_format_kind(value[[i]], kinds[[i]], digits, signed,
+                                        reference[[i]])
   }
   out
 }
+
+
+# The numbers a text names: ".70" in "configured review reference = .70", both
+# limits of "[-0.15, 0.15]", "90.0" in "90.0% of responses". A digit that is
+# part of a name ("TR2", "HTMT2") or an exponent is not one, and a hyphen
+# between two numbers (".50-.75") is not a sign.
+nomo_report_reference_numbers <- function(text) {
+  number <- paste0(
+    "(?<![A-Za-z0-9.^])-?(?:[0-9]+(?:\\.[0-9]+)?|\\.[0-9]+)",
+    "(?![A-Za-z0-9]|\\.[0-9])"
+  )
+  text <- as.character(text)
+  text[is.na(text)] <- ""
+  lapply(regmatches(text, gregexpr(number, text, perl = TRUE)), as.numeric)
+}
+
+
+# For each row of a table, the numbers its `value` is read against, or NULL
+# when the table has no `reference` column. A reference stored as a number,
+# such as the teaching reference of a fit index, is that number. A reference
+# stored as text, as in every decision log ("configured review reference =
+# .70", "Teaching reference .30; not a retention rule"), gives the numbers it
+# names, and only for a row flagged for review or concern: the flag says the
+# value fell on one side of its reference, so the two must not print alike.
+nomo_report_value_reference <- function(x) {
+  reference <- x[["reference"]]
+  if (is.numeric(reference)) return(lapply(reference, function(r) r[is.finite(r)]))
+  if (!is.character(reference)) return(NULL)
+  flagged <- rep(FALSE, nrow(x))
+  for (name in intersect(names(x), nomo_report_flag_columns)) {
+    flagged <- flagged | nomo_present_status(x[[name]]) %in% c("Review", "Concern")
+  }
+  numbers <- nomo_report_reference_numbers(reference)
+  numbers[!flagged] <- list(numeric())
+  numbers
+}
+
+
+# In a table that sets an estimate beside the reference estimate it is
+# compared with, these columns take three decimals, as print.nomo_missing()
+# gives them: the table exists to show small differences, and both estimates
+# must have one precision to be compared (guide point 9).
+nomo_report_compared_columns <- c(
+  "estimate", "reference", "reference_estimate", "difference"
+)
 
 
 # A stored word as a cell shows it: underscores as spaces, in sentence case.
@@ -246,7 +333,9 @@ nomo_report_sentence <- function(x) {
 nomo_report_display_table <- function(x, protected = character()) {
   x <- nomo_report_flatten_table(x)
   metric <- if (is.character(x[["metric"]])) x[["metric"]]
-  reference <- if (is.numeric(x[["reference"]])) x[["reference"]]
+  value_reference <- nomo_report_value_reference(x)
+  compared <- is.numeric(x[["estimate"]]) &&
+    (is.numeric(x[["reference"]]) || is.numeric(x[["reference_estimate"]]))
   role <- rep("text", ncol(x))
   for (j in seq_along(x)) {
     name <- names(x)[[j]]
@@ -261,7 +350,8 @@ nomo_report_display_table <- function(x, protected = character()) {
     } else if (is.numeric(value)) {
       value <- nomo_report_format_numbers(
         value, name, metric,
-        reference = if (name %in% c("value", "estimate")) reference
+        reference = if (identical(name, "value")) value_reference,
+        digits = if (compared && name %in% nomo_report_compared_columns) 3L
       )
       role[[j]] <- "numeric"
     } else if (name %in% nomo_report_origin_columns && is.character(value)) {
