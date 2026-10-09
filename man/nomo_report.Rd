@@ -116,6 +116,7 @@ if (requireNamespace("rmarkdown", quietly = TRUE) &&
     file = tempfile(fileext = ".html")
   )
   file.exists(report_file)
+  \dontshow{unlink(report_file)}
 }
 }
 

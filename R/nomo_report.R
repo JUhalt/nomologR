@@ -1559,7 +1559,10 @@ nomo_report_safe_plot <- function(obj, type = NULL) {
 
 
 nomo_report_prepare_template <- function(template, input, title) {
-  copied <- file.copy(template, input, overwrite = TRUE)
+  # `copy.mode = FALSE`: a read-only installed template (as on a system
+  # library) must not make the temporary copy read-only, since its title is
+  # written into it next.
+  copied <- file.copy(template, input, overwrite = TRUE, copy.mode = FALSE)
   if (!isTRUE(copied)) {
     stop("Could not prepare the temporary report template.", call. = FALSE)
   }
@@ -1686,6 +1689,7 @@ nomo_report_title_yaml <- function(title) {
 #'     file = tempfile(fileext = ".html")
 #'   )
 #'   file.exists(report_file)
+#'   \dontshow{unlink(report_file)}
 #' }
 #' }
 #'
@@ -1832,7 +1836,7 @@ nomo_report <- function(x,
 # The finished report, copied from the scratch directory to the path the
 # caller asked for. Returns that path, normalized.
 nomo_report_deliver <- function(rendered, target) {
-  if (!isTRUE(file.copy(rendered, target, overwrite = TRUE))) {
+  if (!isTRUE(file.copy(rendered, target, overwrite = TRUE, copy.mode = FALSE))) {
     stop(sprintf("Could not write the report file: %s", target), call. = FALSE)
   }
   normalizePath(target, winslash = "/", mustWork = TRUE)
