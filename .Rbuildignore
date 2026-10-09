@@ -23,3 +23,15 @@
 ^cran-comments\.md$
 ^CRAN-SUBMISSION$
 ^\.claude$
+(^|/)Rplots\.(pdf|ps)$
+(^|/)\.Rhistory$
+(^|/)\.RData$
+(^|/)nomologR-report\.(html|docx)$
+(^|/)testthat-problems\.rds$
+^tests/testthat/_snaps/.*\.new\.md$
+^vignettes/.*_(files|cache)$
+^README\.html$
+^doc$
+^Meta$
+\.Rcheck$
+^nomologR_.*\.tar\.gz$
