@@ -42,7 +42,6 @@ Imports:
     semTools (>= 0.5-9),
     tibble
 Suggests:
-    covr,
     knitr,
     parallel,
     rmarkdown,
