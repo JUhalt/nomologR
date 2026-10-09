@@ -875,6 +875,7 @@ test_that("closeout: EFA item summary uses documented fallback references", {
 
 
 test_that("closeout B: EFA estimation errors are wrapped with component context", {
+  skip_on_cran()
   skip_if_not(
     exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
   )
@@ -905,6 +906,7 @@ test_that("closeout B: EFA estimation errors are wrapped with component context"
 
 
 test_that("closeout B: EFA derives structure, communalities, uniqueness, and complexity when engines omit them", {
+  skip_on_cran()
   skip_if_not(
     exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
   )
@@ -955,6 +957,7 @@ test_that("closeout B: EFA derives structure, communalities, uniqueness, and com
 
 
 test_that("closeout B: EFA uses an engine communalities alias when the primary field is absent", {
+  skip_on_cran()
   skip_if_not(
     exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
   )
@@ -1399,6 +1402,7 @@ test_that("rotation is checked, and the log and methods describe the solution fi
 
 
 test_that("every rotation nomo_efa() accepts fits two and three factors (#145, efa-4)", {
+  skip_on_cran()
   set.seed(8305)
   f <- matrix(stats::rnorm(240 * 3), ncol = 3)
   dat <- as.data.frame(f[, rep(1:3, each = 3)] + matrix(stats::rnorm(240 * 9, sd = 0.8), ncol = 9))

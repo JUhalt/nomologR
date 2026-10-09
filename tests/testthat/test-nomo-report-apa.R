@@ -78,8 +78,10 @@ test_that("a table that does not apply is left out rather than failing the repor
 
 
 test_that("apa_tables must be TRUE or FALSE", {
+  # The argument is checked before the run's results are read, so the small
+  # run the other report tests share is enough.
   expect_error(
-    nomo_report(report_apa_run(), file = tempfile(fileext = ".html"),
+    nomo_report(make_m9_minimal_run(), file = tempfile(fileext = ".html"),
                 apa_tables = NA),
     "apa_tables"
   )

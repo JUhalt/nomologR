@@ -142,10 +142,12 @@ test_that("seed makes null reference reproducible without changing caller RNG", 
     replicate(5, 0.8 * f + rnorm(250, sd = 0.6))
   )
 
-  set.seed(777)
-  before <- .Random.seed
-  a <- nomo_factors(dat, n_iter = 10, seed = 44)
-  after <- .Random.seed
+  # test-nomo-global-state.R covers a session that has no state.
+  withr::with_seed(777, {
+    before <- nomo_test_rng_state()
+    a <- nomo_factors(dat, n_iter = 10, seed = 44)
+    after <- nomo_test_rng_state()
+  })
 
   b <- nomo_factors(dat, n_iter = 10, seed = 44)
 
@@ -1715,25 +1717,20 @@ test_that("closeout: factor helpers cover singular adequacy and RNG cleanup", {
   kmo <- nomologR:::nomo_factors_kmo(singular, c("a", "b", "c"))
   expect_false(kmo$available)
 
-  had_seed <- exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
-  if (had_seed) {
-    old_seed <- get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
-  }
-  on.exit({
-    if (had_seed) {
-      assign(".Random.seed", old_seed, envir = .GlobalEnv)
-    } else if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
-      rm(".Random.seed", envir = .GlobalEnv)
-    }
-  }, add = TRUE)
-  if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
-    rm(".Random.seed", envir = .GlobalEnv)
-  }
-  expect_identical(
-    nomologR:::nomo_factors_with_seed(2026L, 42L),
-    42L
-  )
-  expect_false(exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE))
+  # The seeding helper returns the value of its code, draws under its own
+  # seed, and leaves the caller's random-number state as it found it, after an
+  # error too. test-nomo-global-state.R covers a session that has no state.
+  withr::with_seed(8101, {
+    before <- nomo_test_rng_state()
+    expect_identical(
+      nomologR:::nomo_factors_with_seed(2026L, 42L),
+      42L
+    )
+    drawn <- nomologR:::nomo_factors_with_seed(2026L, stats::runif(2))
+    expect_error(nomologR:::nomo_factors_with_seed(2026L, stop("boom")), "boom")
+    expect_identical(nomo_test_rng_state(), before)
+  })
+  expect_identical(drawn, withr::with_seed(2026L, stats::runif(2)))
 })
 
 
@@ -1905,23 +1902,25 @@ test_that("closeout B: parallel analysis preserves an existing RNG state and han
     .package = "nomologR"
   )
 
-  set.seed(711)
-  before <- .Random.seed
+  # test-nomo-global-state.R covers a session that has no state.
+  withr::with_seed(711, {
+    before <- nomo_test_rng_state()
+    out <- nomologR:::nomo_factors_parallel(
+      x = x,
+      model_types = rep("continuous", 3L),
+      method = "pearson",
+      use = "pairwise.complete.obs",
+      observed = c(10, 10, 10),
+      n_iter = 10L,
+      quantile = .95,
+      parallel_rule = "percentile",
+      seed = 2026L,
+      fm = "minres"
+    )
+    after <- nomo_test_rng_state()
+  })
 
-  out <- nomologR:::nomo_factors_parallel(
-    x = x,
-    model_types = rep("continuous", 3L),
-    method = "pearson",
-    use = "pairwise.complete.obs",
-    observed = c(10, 10, 10),
-    n_iter = 10L,
-    quantile = .95,
-    parallel_rule = "percentile",
-    seed = 2026L,
-    fm = "minres"
-  )
-
-  expect_identical(.Random.seed, before)
+  expect_identical(after, before)
   expect_identical(out$n_factors, 3L)
 })
 
@@ -1960,6 +1959,7 @@ test_that("closeout B: parallel analysis records smoothed null matrices", {
 
 
 test_that("closeout B: parallel analysis skips null matrices that cannot be smoothed", {
+  skip_on_cran()
   skip_if_not(
     exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
   )
@@ -2061,6 +2061,7 @@ test_that("closeout B: parallel analysis retains a qualified partial set of usab
 
 
 test_that("closeout B: MAP truncation and unavailable adequacy engines are explicit", {
+  skip_on_cran()
   map <- nomologR:::nomo_factors_map(
     corr = matrix(1, 3, 3),
     max_factors = 2L
@@ -2154,6 +2155,7 @@ test_that("closeout B: KMO decision-log severity distinguishes concern and revie
 
 
 test_that("closeout B: EKC and comparison-data helpers preserve no-suggestion outcomes", {
+  skip_on_cran()
   skip_if_not(
     exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
   )
@@ -2187,7 +2189,7 @@ test_that("closeout B: EKC and comparison-data helpers preserve no-suggestion ou
 })
 
 
-test_that("closeout C: parallel analysis restores an initially absent RNG state", {
+test_that("closeout C: parallel analysis leaves the caller's random-number state as it was", {
   skip_if_not(
     exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
   )
@@ -2200,27 +2202,11 @@ test_that("closeout C: parallel analysis restores an initially absent RNG state"
     .package = "nomologR"
   )
 
-  probe <- function() {
-    old_exists <- exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
-    if (old_exists) {
-      old_seed <- get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
-    }
-
-    on.exit(
-      {
-        if (old_exists) {
-          assign(".Random.seed", old_seed, envir = .GlobalEnv)
-        } else if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
-          rm(".Random.seed", envir = .GlobalEnv)
-        }
-      },
-      add = TRUE
-    )
-
-    if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
-      rm(".Random.seed", envir = .GlobalEnv)
-    }
-
+  # The permutations still draw random numbers, so the state would move if it
+  # were not put back. test-nomo-global-state.R covers a session that has no
+  # state.
+  withr::with_seed(8102, {
+    before <- nomo_test_rng_state()
     out <- nomologR:::nomo_factors_parallel(
       x = x,
       model_types = rep("continuous", 3L),
@@ -2233,20 +2219,12 @@ test_that("closeout C: parallel analysis restores an initially absent RNG state"
       seed = 2026L,
       fm = "minres"
     )
+    after <- nomo_test_rng_state()
+  })
 
-    list(
-      out = out,
-      seed_exists_after = exists(
-        ".Random.seed",
-        envir = .GlobalEnv,
-        inherits = FALSE
-      )
-    )
-  }
-
-  result <- probe()
-  expect_false(result$seed_exists_after)
-  expect_equal(result$out$n_valid, 10L)
+  expect_identical(after, before)
+  expect_equal(out$n_valid, 10L)
+  expect_identical(out$seed, 2026L)
 })
 
 
@@ -2308,6 +2286,7 @@ test_that("one list of extraction methods serves both functions (#145, factors-1
 
 
 test_that("ordinal and binary codes are ranked, and too many categories are named (#145, factors-4)", {
+  skip_on_cran()
   ord <- make_cov_final_ordinal(n = 200L, seed = 9411L)
   codes <- as.data.frame(lapply(ord, as.integer))
   types <- stats::setNames(rep("ordinal", ncol(codes)), names(codes))

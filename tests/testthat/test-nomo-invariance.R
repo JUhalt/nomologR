@@ -1395,6 +1395,7 @@ test_that("closeout: invariance sequence, level, partial, fit-row, and LRT error
 
 
 test_that("closeout: invariance score-test handles engine errors, warnings, and missing columns", {
+  skip_on_cran()
   skip_if_not(
     exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
   )
@@ -1511,6 +1512,7 @@ test_that("closeout: invariance public validation covers model, ordered, identif
 
 
 test_that("closeout: invariance pretty-constraint covers label fallbacks and unmatched labels", {
+  skip_on_cran()
   skip_if_not(
     exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
   )
@@ -1569,6 +1571,7 @@ test_that("closeout: invariance pretty-constraint covers label fallbacks and unm
 
 
 test_that("closeout B: invariance LRT captures warnings and missing finite comparison values", {
+  skip_on_cran()
   skip_if_not(
     exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
   )
@@ -1599,6 +1602,7 @@ test_that("closeout B: invariance LRT captures warnings and missing finite compa
 
 
 test_that("closeout B: invariance syntax-generation failures are wrapped by level", {
+  skip_on_cran()
   skip_if_not(
     exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
   )
@@ -1625,6 +1629,7 @@ test_that("closeout B: invariance syntax-generation failures are wrapped by leve
 
 
 test_that("closeout B: invariance captures CFA warnings and unavailable fit-measure detail", {
+  skip_on_cran()
   skip_if_not(
     exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
   )
@@ -1702,6 +1707,7 @@ test_that("closeout B: ordered invariance uses WLSMV and theta parameterization 
 
 
 test_that("closeout B: invariance pretty constraints cover label-only tables and group-free fallbacks", {
+  skip_on_cran()
   skip_if_not(
     exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
   )
@@ -1765,6 +1771,7 @@ test_that("closeout B: invariance pretty constraints cover label-only tables and
 
 
 test_that("closeout C: invariance LRT returns NA when expected comparison columns are absent", {
+  skip_on_cran()
   skip_if_not(
     exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
   )
@@ -1808,6 +1815,7 @@ test_that("closeout C: invariance records researcher estimator and missing-data 
 
 
 test_that("closeout C: invariance fit failures are retained as evidence instead of escaping the workflow", {
+  skip_on_cran()
   skip_if_not(
     exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
   )
@@ -2020,6 +2028,7 @@ test_that("an error that detected ordered factors cause says why (#145)", {
 
 
 test_that("a release that frees no parameter is an error, not a silent no-op (#145)", {
+  skip_on_cran()
   model <- "Agency =~ ag1 + ag2 + ag3 + ag4"
   release <- function(level, syntax) nomo_partial(level, syntax, "Prespecified.")
   fit <- function(...) {

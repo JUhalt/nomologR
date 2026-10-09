@@ -528,25 +528,10 @@ nomo_factors_extract_n <- function(x, preferred = NULL) {
 }
 
 
+# Runs `code` under `seed`. withr sets the seed and afterwards puts the
+# caller's random-number state back as it was.
 nomo_factors_with_seed <- function(seed, code) {
-  old_exists <- exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
-  if (old_exists) {
-    old_seed <- get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
-  }
-
-  on.exit(
-    {
-      if (old_exists) {
-        assign(".Random.seed", old_seed, envir = .GlobalEnv)
-      } else if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
-        rm(".Random.seed", envir = .GlobalEnv)
-      }
-    },
-    add = TRUE
-  )
-
-  set.seed(seed)
-  force(code)
+  withr::with_seed(seed, code)
 }
 
 

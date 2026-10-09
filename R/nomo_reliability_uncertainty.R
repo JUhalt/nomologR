@@ -152,7 +152,7 @@ nomo_reliability_bootstrap_ci <- function(fit_info,
     ))
   }
 
-  draws <- tryCatch(
+  bootstrap <- function() {
     lavaan::bootstrapLavaan(
       fit_info$fit,
       R = R,
@@ -169,7 +169,23 @@ nomo_reliability_bootstrap_ci <- function(fit_info,
       obs.var = obs.var,
       ordinal_scale = ordinal_scale,
       include_alpha = include_alpha
-    ),
+    )
+  }
+  # With a seed, the bootstrap runs inside withr::with_seed(), which puts the
+  # session's random-number state back as it was afterwards, whatever lavaan's
+  # version does and also when the bootstrap fails or is interrupted. lavaan
+  # still seeds the draws itself from `iseed`, so the intervals are the ones
+  # it gives without withr. What withr's seed adds is a state for the length
+  # of the call in a session that had none: without one,
+  # parallel::clusterSetRNGStream(), which lavaan calls for snow workers,
+  # leaves the session on the L'Ecuyer-CMRG generator. Without a seed, the
+  # draws use the session's stream as it stands.
+  draws <- tryCatch(
+    if (is.null(seed)) {
+      bootstrap()
+    } else {
+      withr::with_seed(seed, bootstrap())
+    },
     error = function(e) e
   )
 

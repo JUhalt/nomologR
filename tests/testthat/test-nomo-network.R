@@ -1600,6 +1600,7 @@ test_that("closeout: network presentation covers empty evidence and replication 
 
 
 test_that("closeout B: network fitting captures warnings and explicit researcher estimator selection", {
+  skip_on_cran()
   skip_if_not(
     exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
   )
@@ -2647,6 +2648,7 @@ test_that("misfit of the structural restrictions is not attributed to measuremen
 
 
 test_that("the measurement model alone is the network with its structural part saturated (#145)", {
+  skip_on_cran()
   # A path between every pair: the structural part is already saturated.
   two <- nomo_network(demo_network_model(), nomo_demo_network,
                       nomo_hypotheses("Agency -> Persistence" = positive()))

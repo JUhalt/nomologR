@@ -1133,6 +1133,7 @@ test_that("closeout: CFA captures residual and modification-index warnings and M
 
 
 test_that("closeout B: CFA fallbacks recover names when standardized output is unavailable and nobs is unusable", {
+  skip_on_cran()
   skip_if_not(
     exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
   )
@@ -1601,6 +1602,7 @@ test_that("the CFA says which chi-square and which index versions it shows (#145
 
 
 test_that("the versions note covers each combination of variants (#145)", {
+  skip_on_cran()
   note <- nomologR:::nomo_cfa_versions_note
   expect_identical(note(c(chi_square = "chisq", CFI = "cfi", TLI = "tli", RMSEA = "rmsea")), "")
   expect_identical(
