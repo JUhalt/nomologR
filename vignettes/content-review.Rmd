@@ -226,5 +226,5 @@ handoff opens with the content review, quoting the panel's decisions in
 Neither is presented as a verdict on the other:
 
 ```{r report, eval=FALSE}
-nomo_report(run, file = "walkthrough-report.html")
+nomo_report(run, file = file.path(tempdir(), "walkthrough-report.html"))
 ```

@@ -101,7 +101,7 @@ For a thesis committee or a collaborator who works in Word, give the file a
 `.docx` extension instead:
 
 ```r
-nomo_report(run, file = "construct-validation-report.docx")
+nomo_report(run, file = file.path(report_dir, "construct-validation-report.docx"))
 ```
 
 The Word document carries the same tables, figures, and interpretation contract
@@ -247,7 +247,7 @@ The default includes a compact, nonredundant set of plots and full
 ```r
 nomo_report(
   run,
-  file = "compact-report.html",
+  file = file.path(report_dir, "compact-report.html"),
   include_plots = FALSE,
   include_session = FALSE
 )
