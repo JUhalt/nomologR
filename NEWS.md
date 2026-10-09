@@ -56,9 +56,11 @@ that had ignored the argument.
   - A partial-invariance release that matches no parameter, that the model
     already fixes, or that would break nesting is an error.
   - `ID.cat` accepts only Wu and Estabrook's identification.
-- `nomo_efa()` no longer offers `fm = "minrank"`, which ran only where the
-  `Rcsdp` package was installed, and refuses `rotation = "targetQ"`, for which
-  psych had silently used `"Promax"`.
+- `nomo_efa()` and `nomo_factors()` no longer accept `fm = "minrank"`. psych
+  needs the `Rcsdp` package for it, which nomologR does not declare, so the
+  call ran only where that package was installed.
+- `nomo_efa()` refuses `rotation = "targetQ"`, for which psych had silently
+  used `"Promax"`.
 - `nomo_factors()` refuses an `fm` it does not know. An unknown value had been
   accepted and recorded, and psych ran `minres` in its place.
 - `nomo_hypotheses()` and `nomo_network()` refuse a directed path and an
@@ -140,11 +142,11 @@ that does. A call that worked is not affected.
 
 - `nomo_screen()`: data with two columns of one name, and a handoff that
   carries no items or is not a list.
-- `nomo_factors()` and `nomo_efa()`: an `fm` psych could not run (`"alpha"` or
-  `"minrank"` in `nomo_factors()`, `"alpha"` with one factor in `nomo_efa()`),
-  a misspelled `rotation`, `"bifactor"` and `"biquartimin"`, an ordinal item
-  with more than 8 categories under polychoric or mixed correlations, and a
-  `types` vector with a missing name.
+- `nomo_factors()` and `nomo_efa()`: `fm = "alpha"` where psych cannot fit it
+  (in `nomo_factors()`, and with one factor in `nomo_efa()`), `fm = "minrank"`
+  without the `Rcsdp` package, a misspelled `rotation`, `"bifactor"` and
+  `"biquartimin"`, an ordinal item with more than 8 categories under
+  polychoric or mixed correlations, and a `types` vector with a missing name.
 - `nomo_cfa()`, `nomo_split()`, and `nomo_compare()`: an `mi_top`, `seed`, or
   `reference` beyond R's integer range.
 - `nomo_invariance()`: an unknown `ID.fac`.
