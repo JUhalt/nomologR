@@ -85,9 +85,9 @@ test_that("report helpers expose data, calls, and stage tables", {
   expect_equal(chars$n_cases, 5L)
   expect_equal(chars$candidate_items, 2L)
 
-  calls <- nomologR:::nomo_report_call_history(run)
-  expect_equal(nrow(calls), 1L)
-  expect_match(calls$call, "nomo_run")
+  calls <- nomologR:::nomo_report_calls(run)
+  expect_length(calls, 1L)
+  expect_match(nomologR:::nomo_report_call_code(run), "nomo_run")
 
   stages <- nomologR:::nomo_report_run_table(run, "stages")
   expect_equal(nrow(stages), 8L)
@@ -506,15 +506,12 @@ test_that("data characteristics cover split roles, missingness, and empty item o
 test_that("call history and run-table helpers fail closed", {
   run <- make_m9_minimal_run()
 
+  # Without a history, the run's own call is the history.
   run$call_history <- NULL
-  calls <- nomologR:::nomo_report_call_history(run)
-  expect_equal(nrow(calls), 1L)
+  expect_length(nomologR:::nomo_report_calls(run), 1L)
 
   run$call <- NULL
-  expect_equal(
-    nrow(nomologR:::nomo_report_call_history(run)),
-    0L
-  )
+  expect_length(nomologR:::nomo_report_calls(run), 0L)
 
   expect_equal(
     nrow(nomologR:::nomo_report_run_table(run, "not_a_real_table")),
@@ -1094,6 +1091,7 @@ test_that("closeout B: report deviation extraction handles sparse partial and wo
   partial <- nomologR:::nomo_report_deviations(x)
   expect_identical(partial$scope[[1L]], "")
   expect_identical(partial$rationale[[1L]], "")
+  expect_identical(partial$detail[[1L]], "syntax: x1 ~ 1")
 
   x2 <- make_m9_minimal_run()
   x2$results$invariance <- NULL
@@ -1516,6 +1514,12 @@ test_that("report cells are escaped so pandoc shows them as written (#145)", {
   # R names in backticks stay code, as the console writes them.
   expect_identical(escape("Scale `Agency` has x_y", "html"), "Scale `Agency` has x&#95;y")
   expect_identical(escape("`a_b` then c|d", "markdown"), "`a_b` then c&#124;d")
+  # In a Word table cell a code span holding a bar, such as a lavaan threshold,
+  # is escaped like other text: the bar would end the cell.
+  expect_identical(escape("free `x1 | t1`", "markdown", cell = TRUE),
+                   "free &#96;x1 &#124; t1&#96;")
+  expect_identical(escape("free `x1 | t1`", "markdown"), "free `x1 | t1`")
+  expect_identical(escape("free `x1 | t1`", "html", cell = TRUE), "free `x1 | t1`")
   expect_identical(escape(c(NA, ""), "html"), c(NA, ""))
 })
 
@@ -1545,6 +1549,12 @@ test_that("report tables write escaped cells, keep trusted markdown, and note wh
     word$notes[[2L]],
     "Showing 2 of 3 rows. The underlying nomo_run object retains all rows."
   )
+  # A threshold in backticks keeps its bar without ending the Word table cell.
+  threshold <- nomologR:::nomo_report_table(
+    tibble::tibble(level = "scalar", syntax = "`ag3 | t1`"), word = TRUE
+  )
+  expect_match(threshold$markup, "|&#96;ag3 &#124; t1&#96;", fixed = TRUE)
+  expect_false(grepl("ag3 | t1", threshold$markup, fixed = TRUE))
 
   # Numbers are right-aligned.
   numbers <- nomologR:::nomo_report_table(tibble::tibble(item = "a", p_value = 0))
@@ -1582,7 +1592,12 @@ test_that("report numbers follow the console's kinds: p, percentages, counts, an
     loading = c(0.822, 1.04),
     HTMT2 = c(0.4527, 1.01),
     chi_square = c(53.909, 3),
-    complexity = c(1, 1)
+    complexity = c(1, 1),
+    residual = c(0.0021, -0.0162),
+    abs_residual = c(0.0021, 0.0162),
+    residual_variance = c(0.3149, -0.0162),
+    delta_cfi = c(0.0004, -0.0123),
+    delta_rmsea = c(0.0101, 0)
   ))
   dash <- nomologR:::nomo_report_blank
   # A proportion stored under `pct` is shown as the percentage its heading says.
@@ -1609,6 +1624,15 @@ test_that("report numbers follow the console's kinds: p, percentages, counts, an
   expect_identical(shown$Loading, c("0.82", "1.04"))
   expect_identical(shown$HTMT2, c("0.45", "1.01"))
   expect_identical(shown[["Chi-square"]], c("53.91", "3.00"))
+  # A residual correlation has the three decimals the EFA print gives it; two
+  # would show nearly every one as zero. A residual variance is an estimate.
+  expect_identical(shown$Residual, c(".002", "-.016"))
+  expect_identical(shown[["Absolute residual"]], c(".002", ".016"))
+  expect_identical(shown[["Residual variance"]], c("0.31", "-0.02"))
+  # A change from the preceding model carries its sign, and none when it
+  # rounds to zero.
+  expect_identical(shown[["Change in CFI"]], c(".000", "-.012"))
+  expect_identical(shown[["Change in RMSEA"]], c("+0.010", "0.000"))
 
   # A table of metric and value rows takes each row's kind from its metric, and
   # a value just off its reference shows the decimals that tell them apart.
@@ -1620,9 +1644,25 @@ test_that("report numbers follow the console's kinds: p, percentages, counts, an
   expect_identical(fit$Value, c("53.91", "41", ".085", ".996", "0.9496", ".82", "< .001", "13"))
   expect_identical(fit$Reference, c(dash, dash, dash, ".950", "0.950", dash, dash, dash))
 
+  # An estimate just off the reference estimate it is compared with does too:
+  # 0.738 against 0.743 is not shown as 0.74 against 0.74.
+  compared <- nomologR:::nomo_report_display_table(tibble::tibble(
+    parameter = c("F =~ a", "F =~ b"),
+    estimate = c(0.738, 0.70),
+    reference = c(0.743, 0.70)
+  ))
+  expect_identical(compared$Estimate, c("0.738", "0.70"))
+  expect_identical(compared$Reference, c("0.74", "0.70"))
+
   expect_identical(
     nomologR:::nomo_report_number_kind(c("aic", "power", "lambda", "estimate", "", "omega_ci_n_success")),
     c("ic", "power", "loading", "estimate", "estimate", "count")
+  )
+  # Decision-log metrics: the item-rest correlation is a correlation, and the
+  # row saying it was not computed, or its N, is not.
+  expect_identical(
+    nomologR:::nomo_report_number_kind(c("corrected_item_rest", "item_rest_not_computed", "item_rest_n")),
+    c("r", "estimate", "count")
   )
 })
 
@@ -1638,6 +1678,15 @@ test_that("report status and origin cells use the shared words (#144)", {
   expect_identical(shown$Status, c("Awaiting decision", ""))
   expect_identical(shown$Origin, c("A priori", "Post hoc"))
   expect_identical(shown[["Measurement flag"]], c("Not computed", ""))
+  # The network's stored statuses take the labels its print() gives them.
+  network <- nomologR:::nomo_report_display_table(tibble::tibble(
+    id = c("H1", "H2"),
+    concordance = c("concordant", "not_evaluable"),
+    replication_status = c("not_replicated", NA)
+  ))
+  expect_identical(network$Concordance, c("Concordant", "Not evaluable"))
+  expect_identical(network[["Replication status"]], c("Not replicated", ""))
+  expect_identical(attr(network, "role"), c("text", "status", "status"))
   # A status column is kept when it is blank in every row.
   kept <- nomologR:::nomo_report_table(tibble::tibble(stage = "efa", severity = "info"))
   expect_identical(kept$labels, c("Stage", "Flag"))
@@ -1649,6 +1698,58 @@ test_that("the scale definitions table has one heading per column (#145)", {
     nomologR:::nomo_report_column_labels(c("scale", "n_items", "items")),
     c("Scale", "Number of items", "Items")
   )
+})
+
+
+test_that("N in a heading is a number of cases, and other counts are named in words (#144)", {
+  labels <- nomologR:::nomo_report_column_labels
+  expect_identical(
+    labels(c("n", "n_observed", "n_missing", "n_used", "item_rest_n")),
+    c("N", "N observed", "N missing", "N used", "Item-rest N")
+  )
+  expect_identical(
+    labels(c("n_cases", "n_columns", "n_unique", "mode_n", "n_factors",
+             "n_interitem_estimable", "negative_interitem_n", "n_loading_review")),
+    c("Cases", "Columns", "Unique values", "Responses at the mode", "Number of factors",
+      "Inter-item correlations estimated", "Negative pairs", "Loadings flagged")
+  )
+  # Any other count is a "Number of".
+  expect_identical(labels(c("n_groups", "n_pairs")), c("Number of groups", "Number of pairs"))
+  # The key at the end of the report can then say what N is.
+  abbr <- nomologR:::nomo_report_abbreviations(labels = "N observed")
+  expect_identical(abbr$meaning, "number of cases")
+  # A count named in words is still a whole number.
+  shown <- nomologR:::nomo_report_display_table(
+    tibble::tibble(item = "a", n_unique = 5, mode_n = 84, n_factors = 1)
+  )
+  expect_identical(shown[["Unique values"]], "5")
+  expect_identical(shown[["Responses at the mode"]], "84")
+  expect_identical(shown[["Number of factors"]], "1")
+})
+
+
+test_that("deviation rows read as words, and a row without a decision shows what it observed (#144)", {
+  run <- make_m9_minimal_run()
+  run$results$network <- list(hypothesis_evidence = tibble::tibble(
+    relation = "A -> B",
+    confirmatory_status = "post_hoc_exploratory",
+    concordance = "not_evaluable"
+  ))
+  run$decision_log <- tibble::tibble(
+    id = c("revision", "revision_comparison"),
+    stage = "workflow",
+    scope = "measurement_model",
+    observation = c("Revision 1.", "Chi-square difference = 0.01, df = 1, p = .916"),
+    decision = c("revised measurement model: F =~ a", ""),
+    rationale = "Shared wording."
+  )
+  devs <- nomologR:::nomo_report_deviations(run)
+  expect_identical(devs$detail, c(
+    "post hoc exploratory; concordance: Not evaluable",
+    "revised measurement model: F =~ a",
+    "Chi-square difference = 0.01, df = 1, p = .916"
+  ))
+  expect_identical(devs$rationale, c("", "Shared wording.", "Shared wording."))
 })
 
 
@@ -1704,6 +1805,16 @@ test_that("the missing-data section says when the reference was not fitted (#145
   fitted <- nomologR:::nomo_report_missing(m)
   expect_match(fitted$summary, "The reference is FIML.", fixed = TRUE)
   expect_identical(fitted$differences_empty, "No comparison strategy was fitted.")
+
+  # A strategy is named as the Strategies table names it, not by its lavaan
+  # code, in the fit and reliability tables too.
+  expect_null(fitted$reliability)
+  m$fit <- tibble::tibble(strategy = c("listwise", "ml"), CFI = c(.99, 1))
+  m$reliability <- tibble::tibble(construct = "A", metric = "omega",
+                                  strategy = "ml", estimate = .85)
+  named <- nomologR:::nomo_report_missing(m)
+  expect_identical(named$fit$strategy, c("Listwise deletion", "FIML"))
+  expect_identical(named$reliability$strategy, "FIML")
 })
 
 
@@ -1797,6 +1908,12 @@ test_that("every abbreviation the report shows is defined once at its end (#144)
   expect_identical(abbr$abbreviation, c("CFI", "CI", "FIML", "MCAR", "SE", "p"))
   expect_identical(abbr$meaning[abbr$abbreviation == "p"], "p value")
   expect_identical(nrow(nomologR:::nomo_report_abbreviations()), 0L)
+  # The abbreviations a content review or a network status brings with it.
+  carried <- nomologR:::nomo_report_abbreviations(text = c(
+    "Anderson-Gerbing Psa/Csv with Howard-Melloy exact inference",
+    "I-CVI >= .88; Lynn, 1986", "target IOC", "Not confirmable without SESOI"
+  ))
+  expect_identical(carried$abbreviation, c("Csv", "CVI", "IOC", "Psa", "SESOI"))
 
   note <- nomologR:::nomo_report_reading_note()
   expect_match(note, nomologR:::nomo_report_blank, fixed = TRUE)
