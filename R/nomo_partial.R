@@ -35,7 +35,8 @@
 #'
 #' @return A `nomo_partial` object whose `releases` field is one row per
 #'   release: its identifier, level, syntax, and rationale. `n` is the number
-#'   of releases. `print()` lists each release with its level and rationale.
+#'   of releases. `print()` lists each release with its level and rationale,
+#'   and `as.data.frame()` returns `releases` as a data frame.
 #'
 #' @references
 #' Byrne, B. M., Shavelson, R. J., & Muthén, B. (1989). Testing for the
@@ -141,6 +142,15 @@ print.nomo_partial <- function(x, ...) {
     "the models fitted with these releases"
   )
   invisible(x)
+}
+
+
+# The releases are the object's one table. Base R's method for a list would
+# evaluate the stored call again, and again for the object that returns,
+# until "node stack overflow" (#145); R/nomo_as_data_frame.R has the rest.
+#' @export
+as.data.frame.nomo_partial <- function(x, row.names = NULL, optional = FALSE, ...) {
+  as.data.frame(x$releases, row.names = row.names, optional = optional, ...)
 }
 
 

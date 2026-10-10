@@ -164,6 +164,9 @@ that does. A call that worked is not affected.
   observed covariate to a factor, and a covariance between a factor and an
   observed variable.
 - `nomo_table()`: an object that has no tables.
+- `as.data.frame()` on a result object: it stops and points to `nomo_table()`.
+  It had ended in "node stack overflow", or had run the analysis again and
+  again.
 - `nomo_apa_table()`: factor correlations for a higher-order model. The error
   had said that the model has one factor.
 
@@ -379,6 +382,10 @@ that does. A call that worked is not affected.
   - **Other objects.** An object without tables is refused with the list of supported classes; the error had been base R's "no applicable method".
   - **Hypotheses.** A `nomo_hypotheses` object has one table, so a `type` is an error; it used to be ignored.
   - **Empty tables.** `"partial"` for an invariance analysis without releases and `"replication"` for a network without validation data return a tibble with no rows and the table's usual columns. They had returned a tibble with no columns.
+- `as.data.frame()` on a result object no longer runs the analysis again (#145). A result is a list that keeps the call that made it, and base R's method for a list evaluated that call again, for the object it returned too, without end. `as.data.frame(x$partial)` on an invariance result stopped with "node stack overflow", and a fitted object whose arguments were in scope was fitted again and again.
+  - **Results.** For every result that keeps its call, the conversion stops with a message that points to `nomo_table()`. For a `nomo_split()` result the message names `calibration` and `validation`.
+  - **`nomo_partial()`.** `as.data.frame()` returns its `releases`.
+  - **Unchanged.** A result that keeps no call, such as that of `nomo_power_rmsea()` or `nomo_single_indicator()`, converts as before, and every result is still a list.
 
 ### Methods registry
 
@@ -450,6 +457,7 @@ deprecation period.
 - **New values.** `"undetermined"` in `nomo_compare()`'s `relation`; `"direction_concordant_above_magnitude"` in `nomo_network()`'s `concordance`; `"residual_association"` in its `evidence_scope`; `"network_validation"` in the `stage` of its decision log.
 - **New `nomo_table()` types and columns.** `"latent_means"` for `nomo_invariance()`; `"single_indicators"` and `"sensitivity"` for `nomo_network()`, whose `"fit"` table gains `chisq_version` and `index_version`; `missing` and `n` in `"htmt_status"` for `nomo_validity()`; `brief` in `"notes"` for `nomo_hierarchical()`. `nomo_table()` has a method for every other object, which stops with the supported classes.
 - **New `nomo_apa_table()` method.** For `nomo_retest()` results.
+- **New `as.data.frame()` method.** For `nomo_partial()` objects; it returns `releases`.
 - **New `plot()` and `summary()` methods.** `plot()` for `nomo_scores`, `nomo_missing`, and `nomo_power` objects, and `summary()` for `nomo_missing` objects. `summary()` of a `nomo_scores` object has class `summary_nomo_scores`.
 - **New decision-log rows**, named by their `metric`, or by their `id` in a guided run's own log.
   - `nomo_screen()`: `keying_not_used`, `out_of_range`, `item_rest_not_computed`, `mahalanobis`, `per_scale_indices`, `keying_completed`, and `scales_override`.
