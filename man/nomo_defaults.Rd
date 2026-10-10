@@ -40,8 +40,12 @@ short; raise them for a final analysis.
 
 \code{auto_delete} and \code{auto_respecify} are always \code{FALSE}. They record a design
 rule rather than switch a feature: nomologR never deletes an item or
-respecifies a model on its own. \code{\link[=nomo_factors]{nomo_factors()}} and \code{\link[=nomo_efa]{nomo_efa()}} stop with
-an explanation when either is set to \code{TRUE}.
+respecifies a model on its own. Every function that takes \code{guidance} stops
+with an explanation when either is set to \code{TRUE}: \code{\link[=nomo_screen]{nomo_screen()}},
+\code{\link[=nomo_factors]{nomo_factors()}}, \code{\link[=nomo_efa]{nomo_efa()}}, \code{\link[=nomo_cfa]{nomo_cfa()}}, \code{\link[=nomo_esem]{nomo_esem()}},
+\code{\link[=nomo_compare]{nomo_compare()}}, \code{\link[=nomo_split]{nomo_split()}}, \code{\link[=nomo_reliability]{nomo_reliability()}}, \code{\link[=nomo_validity]{nomo_validity()}},
+\code{\link[=nomo_hierarchical]{nomo_hierarchical()}}, \code{\link[=nomo_scores]{nomo_scores()}}, \code{\link[=nomo_invariance]{nomo_invariance()}},
+\code{\link[=nomo_invariance_longitudinal]{nomo_invariance_longitudinal()}}, \code{\link[=nomo_network]{nomo_network()}}, and \code{\link[=nomo_run]{nomo_run()}}.
 }
 \examples{
 guidance <- nomo_defaults()
