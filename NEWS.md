@@ -528,6 +528,7 @@ affected.
   - **Help pages.** The pages of `nomo_screen()`, `nomo_cfa()`, `nomo_efa()`, `nomo_validity()`, `nomo_reliability()`, `nomo_network()`, and `nomo_missing()` name the units and flag values of their own tables. The stability policy lists the columns of each analysis's decision log, and `?nomo_run` those of the run's own log.
   - **`nomo_cfa()`.** `?nomo_cfa` says that `estimator` is stored in upper case, so a requested `"default"` is stored as `"DEFAULT"`.
   - **`nomo_table()`.** Its help page lists the `"factors"` type of `nomo_hierarchical`, and a new "Fit tables" section names the index columns of each fit table.
+  - **Tables that were not computed.** `?nomo_table` says that two types are errors, each with a message that names the argument to set: `"effort"` for a `nomo_screen()` result run without `effort = TRUE`, and `"reliability"` for a `nomo_missing()` result without a reliability comparison. A table that only lacks rows is returned empty.
   - **`nomo_apa_table()`.** Its help page lists the fields of the returned table (`number`, `title`, `body`, `stub`, `notes`, `source`) and says that headings, cells, and notes are written in Markdown.
   - **`nomo_network()`.** `?nomo_network` defines every `concordance`, `evidence_scope`, and `replication_status` value, with its rule and the interval it uses, and spells out SESOI (smallest effect size of interest).
   - **`nomo_defaults()`.** It documents `auto_delete` and `auto_respecify` as fixed safeguards, and the comparison-data settings and how they differ from the `EFAtools` defaults.

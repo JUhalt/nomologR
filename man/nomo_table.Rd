@@ -16,7 +16,11 @@ is refused with the list of supported classes.}
 A tibble. A table the object has no rows for, such as \code{"partial"}
 for an invariance analysis without releases or \code{"replication"} for a
 network without validation data, has no rows and the table's usual
-columns.
+columns. A table that was not computed is an error, with a message that
+names the argument to set: \code{"effort"} for a \code{nomo_screen} object run
+without \code{effort = TRUE}, and \code{"reliability"} for a \code{nomo_missing} object
+whose reliability comparison was not made, because \code{reliability = FALSE}
+was given or the fit is not a \code{nomo_cfa} object.
 }
 \description{
 \code{nomo_table()} returns compact tibbles intended for manuscripts, audit
