@@ -120,7 +120,8 @@ that had ignored the argument.
   appears, and the class of its `summary()`.
 - **Invariance.** In `nomo_invariance()`: the sequence for ordered-factor
   columns, the level a release applies from, `completed_levels`, and the
-  version of the fit statistics under a robust estimator.
+  version of the fit statistics under a robust estimator. The decision-log row
+  that counts the score diagnostics is information, no longer a review flag.
 - **Nomological network.** `nomo_network()`'s concordance values, what its
   measurement context is judged on, the `estimator` it records and, for some
   networks, the fitted model.
@@ -260,6 +261,7 @@ that does. A call that worked is not affected.
 - Engine problems are flagged (#145). lavaan's warnings at each level, and a level that fails or does not converge, become decision-log rows and appear under "Flagged". lavaan's messages are quoted as sentences in plain words, such as "observed-variable variances" where lavaan abbreviates.
 - With three or more groups, each score diagnostic frees one group's parameter from the value the others share (#145). It is labeled by the group it frees, as in "Intercept: y3 (three vs. others)", no longer "(one vs. three)", which read as a comparison of two groups. The first group, the reference, is never freed on its own: when it alone differs, every other group shows similar strain. A note and the help say so.
 - `plot(x, type = "local_strain")` without diagnostics no longer warns, and `summary()` has no empty section of changes (#145).
+- The `score_diagnostics` row of the decision log, which counts the score diagnostics that were kept, has severity `"info"` (#145). It was `"review"` whenever a diagnostic existed, which is every run with the default `localize = TRUE`. So "Score diagnostics (Review): 12 univariate equality-constraint score diagnostics were retained." was the one flag of every invariance print, of the summary, and of a guided run's invariance stage, whatever the fit. The row stays in `nomo_table(x, "decision_log")`, and the print still points to `nomo_table(x, "local_strain")`. This holds for `nomo_invariance_longitudinal()` too.
 
 ### Nomological network
 
