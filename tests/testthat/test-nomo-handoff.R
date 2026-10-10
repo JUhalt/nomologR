@@ -411,6 +411,11 @@ test_that("a handoff that carries no items is refused with what content review d
                "naming the statuses to carry in `keep` (here \"Supported\" or \"Review\"), and record why.",
                fixed = TRUE)
   expect_error(nomo_run(data, scales = h), message, fixed = TRUE)
+  # A rule that names several statuses is written as it is typed.
+  several <- h
+  several$provenance$keep <- c("Supported", "Descriptive only")
+  expect_error(nomo_screen(data, items = several),
+               "under the carry rule keep = c(\"Supported\", \"Descriptive only\").", fixed = TRUE)
 
   # Without a recorded carry rule, or with no reviewed items, it still says so.
   h$provenance$keep <- NULL

@@ -107,8 +107,10 @@ nomo_handoff_read <- function(x) {
         nomo_present_count(nrow(evidence), "reviewed item"),
         nomo_handoff_status_counts(evidence$status),
         if (length(keep)) {
+          # Written as it is typed: one status bare, several inside c().
+          quoted <- paste0("\"", keep, "\"", collapse = ", ")
           sprintf(" under the carry rule keep = %s",
-                  paste0("\"", keep, "\"", collapse = ", "))
+                  if (length(keep) > 1L) sprintf("c(%s)", quoted) else quoted)
         } else {
           ""
         },
