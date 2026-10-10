@@ -53,7 +53,13 @@
 #'     `reference` and `attention`. A correlation is flagged for review when it
 #'     could exceed the HTMT-family reference: the upper limit of its interval
 #'     (Rönkkö & Cho, 2022), or the estimate when there is no interval, is
-#'     above it. A correlation beyond 1 in absolute value is a concern.
+#'     above it. A correlation beyond 1 in absolute value is a concern. A
+#'     correlation the model fixes, such as the zero correlations of a
+#'     bifactor model or `A ~~ 0*B`, is listed at its fixed value. It is a
+#'     constraint, not an estimate, and so no evidence that two constructs are
+#'     separate: `print()`, `summary()`, `plot()`, [nomo_table()], and
+#'     [nomo_apa_table()] leave it out, and the summary names the pair as
+#'     fixed.
 #'   * `htmt2` and `htmt`: heterotrait-monotrait ratios per pair.
 #'   * `discriminant`: each pair's separation evidence with its reference and
 #'     interpretation.
@@ -603,12 +609,24 @@ nomo_validity <- function(fit,
     logged <- is.finite(latent_correlations$correlation) & (
       latent_correlations$attention != "info" | !with_htmt
     )
+    # A correlation the model fixes is logged as the constraint it is, never
+    # as evidence about the pair or as a flag (#145).
+    fixed_by_model <- nomo_validity_latent_fixed(latent_correlations, fit_info$fit)
     for (i in which(logged)) {
       row <- latent_correlations[i, , drop = FALSE]
       sets_flag <- !with_htmt[[i]] || row$attention == "concern"
       severity <- if (sets_flag) row$attention else "info"
       observation <- row$interpretation
-      if (!sets_flag) {
+      if (fixed_by_model[[i]]) {
+        sets_flag <- FALSE
+        severity <- "info"
+        observation <- paste0(
+          "The model fixes this latent correlation",
+          if (isTRUE(row$correlation == 0)) " at 0" else "",
+          ", so it is not an estimate and is no evidence that the two ",
+          "constructs are separate."
+        )
+      } else if (!sets_flag) {
         observation <- paste0(
           observation, " ", htmt_method[[i]], " (",
           nomo_present_stat(htmt_value[[i]], "htmt", reference = htmt_reference), ") is ",
@@ -628,7 +646,13 @@ nomo_validity <- function(fit,
         ),
         severity = severity,
         observation = observation,
-        recommendation = if (!sets_flag) {
+        recommendation = if (fixed_by_model[[i]]) {
+          paste(
+            "Report it as a constraint of the model. Evidence that the two",
+            "constructs are separate needs a model that estimates their",
+            "correlation, or an HTMT-family value."
+          )
+        } else if (!sets_flag) {
           paste(
             "Report the latent correlation's interval beside the HTMT-family",
             "value; the pair's flag follows the HTMT-family value."

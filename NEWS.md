@@ -92,6 +92,10 @@ that had ignored the argument.
   stops for a model that fixes every factor correlation, such as a bifactor
   model; it had tabled the fixed zeros as estimates. `nomo_table()` refuses a
   `type` for a `nomo_hypotheses` object.
+- For a `nomo_validity` result whose model fixes every factor correlation and
+  has no HTMT, such as a bifactor model, `nomo_apa_table(x)` and
+  `plot(x, type = "discriminant")` stop, because no pair is left to table or
+  draw. They had shown the fixed zeros as estimates.
 
 ### Results that change
 
@@ -114,6 +118,8 @@ that had ignored the argument.
     factor.
   - `nomo_validity()`'s HTMT cases under FIML, its `ave` when indicators
     cross-load, and the flag of a construct pair that has no HTMT.
+  - `nomo_table(x, "discriminant")` for a `nomo_validity` result: a latent
+    correlation the model fixes is left out.
 - **Hierarchical models.** `nomo_hierarchical()` under the theta
   parameterization, and with a negative variance.
 - **Scores.** `nomo_scores()`'s parallel-model test, when its univocality note
@@ -239,6 +245,11 @@ that does. A call that worked is not affected.
   - **Pairs without HTMT.** Where neither was computed (several groups, a cross-loading, a covariance-matrix fit, or `htmt = "none"`), `signal` comes from the latent correlation; it used to be "unavailable". A latent correlation near 1 is therefore flagged in those cases too, and `plot(x, type = "discriminant")` draws the latent correlation with its interval; it had stopped.
   - **Beyond 1.** A latent correlation beyond 1 is a concern either way.
   - **An HTMT that cannot exist.** With one construct, or for a construct with one indicator, it is logged as information, not as a review or concern flag.
+- `nomo_validity()` no longer presents a correlation the model fixes as evidence that two constructs are separate (#145). A bifactor model fixes its six factor correlations at 0. `summary()` and `nomo_apa_table()` tabled each as ".00 [.00, .00]", `print()` counted them as "Separation flags: none (6 pairs)" and said that the latent correlations carry the construct-separation evidence.
+  - **What is shown.** `nomo_table(x, "discriminant")`, `summary()`, the pair count of `print()`, `plot(x, type = "discriminant")`, and `nomo_apa_table()` leave out a latent correlation the model fixes. A pair that has an HTMT-family value keeps its row and its ratios, because HTMT is computed from the data; a pair that has none is not listed. `summary()` names the fixed pairs as the CFA summary does, such as "Fixed at 0 by the model, so not estimated: visual with textual.", and the APA note lists them.
+  - **When no pair is left.** `print()` reads "Separation flags: not evaluated (the model fixes every factor correlation)", `nomo_apa_table()` and the plot stop with the reason, and `nomo_table(x, "discriminant")` has no rows and its usual columns. For a model with one construct it had no columns either.
+  - **What is stored.** `latent_correlations` still lists a fixed correlation at its fixed value, as `factor_correlations` of `nomo_cfa()` does. Its decision-log row says that the model fixes it, at severity `"info"`; the row had read it against the review reference.
+  - **Other models.** A model that fixes no factor correlation gives the output it gave before.
 - `nomo_validity()`'s `htmt_missing = "default"` follows the fitted model's missing-data handling: FIML when the CFA used it, pairwise deletion when it used that, and listwise deletion otherwise (#145). Despite its help page, it had always used listwise deletion, so on a FIML CFA, HTMT rested on fewer cases than the CFA. `htmt_status` gains `missing` and `n`, and a decision-log entry records the cases HTMT used. The entry is for review only when a different handling leaves HTMT with fewer cases than the CFA.
 - `nomo_reliability()` checks `ci_level`, `ci_boot`, and `ci_seed` before using them (#145). It had cut a vector to its first element and truncated a fraction. A bootstrap request for a model fitted from a covariance matrix says that raw data are needed, and requested intervals that are not available get a review row.
 - `nomo_hierarchical()` (#145):

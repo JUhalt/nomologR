@@ -218,7 +218,7 @@ nomo_run_key_evidence <- function(x) {
     out <- c(out, sprintf(
       "Validity: convergent flags %s; separation flags %s",
       nomo_present_flag_counts(nomo_validity_convergent_table(r$validity)[["signal"]]),
-      # A single construct has no pairs, so the table has no columns.
+      # A single construct has no pairs, so the table has no rows.
       nomo_present_flag_counts(nomo_validity_discriminant_table(r$validity)[["signal"]])
     ))
   }

@@ -132,11 +132,53 @@ nomo_validity_separation_flag <- function(htmt2, htmt, latent_attention, referen
 }
 
 
+# Which rows of a latent-correlation table the model fixes, such as the zeros
+# of a bifactor model or `A ~~ 0*B`. Nothing is taken to be fixed for a saved
+# object that has no fit.
+nomo_validity_latent_fixed <- function(latent, fit) {
+  if (!nrow(latent)) return(logical())
+  nomo_cfa_fixed_correlations(
+    data.frame(factor1 = latent$construct_1, factor2 = latent$construct_2),
+    fit
+  )
+}
+
+
+# The pairs whose latent correlation the model fixes, one row per pair in
+# model order, with the value it is fixed at. print() and summary() name
+# them, and the APA table's note does.
+nomo_validity_fixed_pairs <- function(x) {
+  latent <- nomo_validity_orient_pairs(
+    x$latent_correlations, nomo_validity_construct_order(x)
+  )
+  fixed <- latent[nomo_validity_latent_fixed(latent, x$fit), , drop = FALSE]
+  # Once per pair, however many groups or levels the model has. With one
+  # construct the table has no columns, and `[[` then gives NULL.
+  pair <- paste(fixed[["construct_1"]], fixed[["construct_2"]], sep = "\r")
+  fixed <- fixed[!duplicated(pair), , drop = FALSE]
+  tibble::tibble(
+    factor1 = as.character(fixed[["construct_1"]]),
+    factor2 = as.character(fixed[["construct_2"]]),
+    correlation = as.numeric(fixed[["correlation"]])
+  )
+}
+
+
 # `attention = TRUE` keeps the latent correlation's own flag, which the summary
 # reads to say when it and the HTMT-family value disagree.
+#
+# A latent correlation the model fixes is left out (#145). It is a constraint
+# the researcher imposed, not an estimate, so it is no evidence that two
+# constructs are separate: a bifactor model's six zeros had been tabled as
+# ".00 [.00, .00]" and counted as six pairs without a separation flag. Such a
+# pair keeps its row only when it has an HTMT-family value, which is computed
+# from the data. Everything that shows pairs reads this table, so the filter
+# is here once: nomo_table(), summary(), print()'s count, the plot, and the
+# APA table.
 nomo_validity_discriminant_table <- function(x, attention = FALSE) {
   order <- nomo_validity_construct_order(x)
   latent <- nomo_validity_orient_pairs(x$latent_correlations, order)
+  latent <- latent[!nomo_validity_latent_fixed(latent, x$fit), , drop = FALSE]
   if (nrow(latent)) {
     # A saved object from before latent correlations were flagged (#145).
     if (!"attention" %in% names(latent)) {
@@ -169,7 +211,17 @@ nomo_validity_discriminant_table <- function(x, attention = FALSE) {
   keys <- c("construct_1", "construct_2", "block")
   available <- list(latent, h2, h1)
   available <- available[vapply(available, nrow, integer(1)) > 0L]
-  if (!length(available)) return(tibble::tibble())
+  # Without a pair to show, the table has no rows and its usual columns, as
+  # ?nomo_table says of an empty table: with one construct, and when the model
+  # fixes every correlation and no HTMT-family value was computed.
+  if (!length(available)) {
+    return(tibble::tibble(
+      construct_1 = character(), construct_2 = character(), block = character(),
+      latent_r = numeric(), latent_r_ci_lower = numeric(), latent_r_ci_upper = numeric(),
+      HTMT2 = numeric(), HTMT = numeric(), signal = character(),
+      latent_r_attention = if (isTRUE(attention)) character()
+    ))
+  }
 
   out <- available[[1L]]
   if (length(available) > 1L) {
@@ -217,7 +269,8 @@ nomo_validity_latent_beside <- function(x) {
 # groups or levels they appear in, and a flag count names what it counts, so
 # "none" never reads as "no separation" (#145).
 nomo_validity_present_facts <- function(constructs, ngroups, nlevels, ave_reference,
-                                        htmt_reference, convergent, discriminant) {
+                                        htmt_reference, convergent, discriminant,
+                                        fixed = 0L) {
   constructs <- unique(c(constructs, convergent[["construct"]]))
   blocks <- if (isTRUE(ngroups > 1L)) {
     c("Groups", nomo_present_count(ngroups, "group"))
@@ -242,7 +295,12 @@ nomo_validity_present_facts <- function(constructs, ngroups, nlevels, ave_refere
   } else {
     "not evaluated"
   }
-  separation_text <- if (!pairs) {
+  # `fixed` counts the pairs whose correlation the model fixes. When no pair
+  # is left to evaluate because of them, the line says so; it had read "none"
+  # over the pairs, as if their separation had been checked (#145).
+  separation_text <- if (!pairs && fixed > 0L) {
+    "not evaluated (the model fixes every factor correlation)"
+  } else if (!pairs) {
     "not applicable (one construct)"
   } else if (all(discriminant[["signal"]] == "unavailable")) {
     sprintf("not evaluated (%s)", nomo_present_count(pairs, "pair"))
@@ -258,12 +316,19 @@ nomo_validity_present_facts <- function(constructs, ngroups, nlevels, ave_refere
 }
 
 
-# What the HTMT-family evidence rests on, when it was not computed.
-nomo_validity_htmt_note <- function(x) {
+# What the HTMT-family evidence rests on, when it was not computed. Latent
+# correlations carry the evidence only where the model estimates one: when it
+# fixes every one, as a bifactor model does, there is none to show (#145).
+nomo_validity_htmt_note <- function(x, discriminant, fixed) {
   status <- x$htmt_status
   if (!nrow(status) || any(status$available)) return("")
+  carried <- if (nrow(fixed) && !any(is.finite(discriminant[["latent_r"]]))) {
+    ", and the model fixes every factor correlation, so there is no construct-separation evidence to show."
+  } else {
+    ", so the latent correlations carry the construct-separation evidence."
+  }
   if (!any(status$requested)) {
-    return("HTMT-family values were not requested, so the latent correlations carry the construct-separation evidence.")
+    return(paste0("HTMT-family values were not requested", carried))
   }
   if (identical(x$htmt_applicable, FALSE)) {
     return(paste0(
@@ -271,7 +336,7 @@ nomo_validity_htmt_note <- function(x) {
       sub("^HTMT/HTMT2 ", "HTMT ", status$reason[[1L]])
     ))
   }
-  "HTMT-family values could not be computed (see x$htmt_status), so the latent correlations carry the construct-separation evidence."
+  paste0("HTMT-family values could not be computed (see x$htmt_status)", carried)
 }
 
 
@@ -367,12 +432,13 @@ nomo_validity_capitalize <- function(x) {
 print.nomo_validity <- function(x, ...) {
   convergent <- nomo_validity_convergent_table(x)
   discriminant <- nomo_validity_discriminant_table(x)
+  fixed <- nomo_validity_fixed_pairs(x)
   nomo_present_header("nomo_validity", "Convergent and discriminant evidence")
   nomo_validity_present_facts(
     nomo_validity_construct_order(x), x$ngroups, x$nlevels, x$ave_reference,
-    x$htmt_reference, convergent, discriminant
+    x$htmt_reference, convergent, discriminant, fixed = nrow(fixed)
   )
-  note <- nomo_validity_htmt_note(x)
+  note <- nomo_validity_htmt_note(x, discriminant, fixed)
   if (nzchar(note)) nomo_present_text(note)
   if (x$ngroups > 1L || x$nlevels > 1L) {
     nomo_present_text(
@@ -417,6 +483,7 @@ summary.nomo_validity <- function(object, ...) {
   out <- list(
     convergent = nomo_validity_convergent_table(object),
     discriminant = nomo_validity_discriminant_table(object),
+    fixed_pairs = nomo_validity_fixed_pairs(object),
     latent_beside = nomo_validity_latent_beside(object),
     htmt_status = object$htmt_status,
     htmt_applicable = object$htmt_applicable,
@@ -442,9 +509,11 @@ summary.nomo_validity <- function(object, ...) {
 print.summary_nomo_validity <- function(x, ...) {
   nomo_present_header("nomo_validity", "Convergent and discriminant evidence",
                       summary = TRUE)
+  # A summary saved before fixed correlations were set apart has none listed.
+  fixed <- x$fixed_pairs
   nomo_validity_present_facts(
     x$construct_order, x$ngroups, x$nlevels, x$ave_reference, x$htmt_reference,
-    x$convergent, x$discriminant
+    x$convergent, x$discriminant, fixed = NROW(fixed)
   )
 
   nomo_present_section("Convergent evidence by construct")
@@ -515,8 +584,13 @@ print.summary_nomo_validity <- function(x, ...) {
         indent = 2L
       )
     }
-  } else {
+  } else if (!NROW(fixed)) {
     nomo_present_text("No pairwise construct-separation summary is available.", indent = 2L)
+  }
+  # A correlation the model fixes is named as fixed, in the words the CFA
+  # summary uses, and is not tabled as an estimate (#145).
+  if (NROW(fixed)) {
+    nomo_cfa_present_fixed(fixed, estimated = any(is.finite(x$discriminant[["latent_r"]])))
   }
 
   unavailable <- x$htmt_status[
