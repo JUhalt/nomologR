@@ -1413,22 +1413,20 @@ nomo_report_namespace_available <- function(pkg) {
 # that half of the restore is a guarantee rather than the only protection; the
 # duplicate-label option is not one it touches.
 #
-# Returns a function that puts the caller's knitr state back; the caller runs
-# it on exit. Outside a knit it changes nothing and the restore is a no-op.
-nomo_report_isolate_knitr <- function() {
-  if (!isTRUE(getOption("knitr.in.progress"))) {
-    return(invisible(function() invisible(NULL)))
-  }
+# The state is changed for the length of the calling function, and the change
+# and its undo are made in this one place: withr registers the restore of the
+# option and of the chunk options in the caller's frame, `frame`, so both run
+# when that function exits, on an error or an interrupt too. Each restore is
+# registered before its change is made. Outside a knit nothing is changed.
+# Returns, invisibly, whether the state was isolated.
+nomo_report_isolate_knitr <- function(frame = parent.frame()) {
+  if (!isTRUE(getOption("knitr.in.progress"))) return(invisible(FALSE))
 
-  previous_options <- options(knitr.duplicate.label = "allow")
+  withr::local_options(list(knitr.duplicate.label = "allow"), .local_envir = frame)
   saved_chunk_options <- knitr::opts_chunk$get()
+  withr::defer(knitr::opts_chunk$restore(saved_chunk_options), envir = frame)
   knitr::opts_chunk$restore()
-
-  invisible(function() {
-    options(previous_options)
-    knitr::opts_chunk$restore(saved_chunk_options)
-    invisible(NULL)
-  })
+  invisible(TRUE)
 }
 
 
@@ -1797,8 +1795,9 @@ nomo_report <- function(x,
     title = title
   )
 
-  restore_knitr <- nomo_report_isolate_knitr()
-  on.exit(restore_knitr(), add = TRUE)
+  # Inside another knitted document, knitr's state is set for this render and
+  # put back when nomo_report() exits.
+  nomo_report_isolate_knitr()
 
   # The template is rendered where it was copied, so its intermediate files
   # and figures are written beside it. `knit_root_dir` keeps the chunks there
