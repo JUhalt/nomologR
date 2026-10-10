@@ -25,4 +25,4 @@ handoff-expert-krippendorff-v0.10.1.rds,0.10.1,v0.10.1,4c13be087f2b2fd0dc7179525
 handoff-delphi-v0.10.1.rds,0.10.1,v0.10.1,4c13be087f2b2fd0dc7179525265b25c9160f0e5,ac96af3feab07c73c4ca77e1ca9aba99,4.6.1,2026-09-28
 handoff-expert-nine-v0.10.1.rds,0.10.1,v0.10.1,4c13be087f2b2fd0dc7179525265b25c9160f0e5,3cbba131994127cb3be49323219586ad,4.6.1,2026-09-28
 handoff-walkthrough-sort-none-reversed-v0.10.1.rds,0.10.1,v0.10.1,4c13be087f2b2fd0dc7179525265b25c9160f0e5,f893a6c247f13101e3b2890adfee7166,4.6.1,2026-09-28
-make-handoff-fixtures.R,,,,11e565e1c8c85266106a5f1a90b69780,4.6.1,2026-09-27
+make-handoff-fixtures.R,,,,8b9dae904131fea773e0ed2f5a5c9a8b,4.6.1,2026-10-09
