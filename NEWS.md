@@ -142,6 +142,10 @@ that had ignored the argument.
   an empty `nomo_table()`.
 - **Printed numbers.** Display rounds half away from zero. Returned values are
   unchanged.
+- **`digits` in `print()`.** `print()` for `nomo_scores`, `nomo_hierarchical`,
+  and `nomo_missing` objects, and for the summary of a `nomo_scores` object,
+  has `digits = NULL` as its default; it was 3. `NULL` gives each statistic
+  the decimals of the shared style, and a number given sets them as before.
 
 ### New refusals
 

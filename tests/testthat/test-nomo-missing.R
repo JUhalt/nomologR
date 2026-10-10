@@ -666,6 +666,39 @@ test_that("the print defines its terms and puts flags in one Flagged section (#1
 })
 
 
+test_that("print() takes `digits` for the estimates, as it did in 0.9.0", {
+  skip_on_cran()
+  out <- missing_results()$mar
+  local_reproducible_output(width = 80)
+  # The argument is part of the method, with the default of the other print
+  # methods that take it.
+  expect_identical(names(formals(nomologR:::print.nomo_missing)), c("x", "digits", "..."))
+  expect_null(formals(nomologR:::print.nomo_missing)$digits)
+  for (method in c("print.nomo_scores", "print.nomo_hierarchical")) {
+    expect_null(formals(get(method, asNamespace("nomologR")))$digits, label = method)
+  }
+
+  standard <- capture.output(print(out))
+  expect_identical(capture.output(print(out, digits = NULL)), standard)
+  expect_identical(capture.output(print(out, digits = 3)), standard)
+
+  # One decimal for the estimate and its reference; the difference in
+  # standard errors keeps its own format.
+  short <- capture.output(print(out, digits = 1))
+  expect_false(identical(short, standard))
+  row <- "^  A ~~ B +Listwise deletion +"
+  expect_match(standard, paste0(row, "[.][0-9]{3} +[.][0-9]{3} +[-+][0-9]+[.][0-9]{2}$"),
+               all = FALSE)
+  expect_match(short, paste0(row, "[.][0-9]{1,4} +[.][0-9] +[-+][0-9]+[.][0-9]{2}$"),
+               all = FALSE)
+  expect_match(short, "^  [AB] =~ [ab][0-9] +Listwise deletion +0[.][0-9]{1,4} +0[.][0-9] ",
+               all = FALSE)
+  # Nothing else in the output depends on it.
+  differences <- function(lines) grepl(" Listwise deletion +[-.0-9]", lines)
+  expect_identical(short[!differences(short)], standard[!differences(standard)])
+})
+
+
 test_that("summary() shows every comparison and each recommendation (#145)", {
   skip_on_cran()
   out <- missing_results()$mar
