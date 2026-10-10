@@ -2577,15 +2577,31 @@ nomo_methods_roles <- function() {
 }
 
 
+# The registry values that a `stage` or `lineage` argument names. A value may
+# be shortened as far as it stays unique, as every other choice argument of the
+# package may, since those go through match.arg(): "rel" is "reliability".
+# The error below is in the form those arguments use, and exact matching here
+# had refused what they accept. A value that names no choice, or more than
+# one, is an error.
+nomo_methods_choice <- function(given, valid, arg) {
+  matched <- pmatch(given, valid, duplicates.ok = TRUE)
+  if (anyNA(matched)) {
+    stop(nomo_methods_choice_error(arg, valid, given[is.na(matched)]), call. = FALSE)
+  }
+  valid[matched]
+}
+
+
 # The error for a `stage` or `lineage` value the registry does not have, in the
 # package's form for a wrong choice: the argument, the choices, and what was
-# given (#144, guide point 26). Both arguments take one or more values.
+# given (#144, guide point 26). Both arguments take one or more values. A
+# missing value is shown as NA, not quoted as the string "NA".
 nomo_methods_choice_error <- function(arg, valid, bad) {
   sprintf(
     "`%s` must be one or more of %s, not %s.",
     arg,
     nomo_present_or(sprintf('"%s"', valid)),
-    paste(sprintf('"%s"', bad), collapse = ", ")
+    paste(ifelse(is.na(bad), "NA", sprintf('"%s"', bad)), collapse = ", ")
   )
 }
 
@@ -2721,16 +2737,12 @@ nomo_methods <- function(x = NULL,
   }
 
   if (!is.null(stage)) {
-    valid <- nomo_methods_stages()
-    bad <- setdiff(stage, valid)
-    if (length(bad)) stop(nomo_methods_choice_error("stage", valid, bad), call. = FALSE)
+    stage <- nomo_methods_choice(stage, nomo_methods_stages(), "stage")
     registry <- registry[registry$stage %in% stage, , drop = FALSE]
   }
 
   if (!is.null(lineage)) {
-    valid <- nomo_methods_lineages()
-    bad <- setdiff(lineage, valid)
-    if (length(bad)) stop(nomo_methods_choice_error("lineage", valid, bad), call. = FALSE)
+    lineage <- nomo_methods_choice(lineage, nomo_methods_lineages(), "lineage")
     registry <- registry[registry$lineage %in% lineage, , drop = FALSE]
   }
 

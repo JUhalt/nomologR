@@ -195,6 +195,37 @@ test_that("nomo_methods() refuses unknown filters by name", {
 })
 
 
+test_that("nomo_methods() takes a shortened stage or lineage that names one choice", {
+  # Every other choice argument of the package goes through match.arg(), which
+  # accepts an unambiguous abbreviation; these two refused it under the same
+  # form of error.
+  expect_identical(nomo_methods(stage = "rel"), nomo_methods(stage = "reliability"))
+  expect_identical(nomo_methods(lineage = "hist"), nomo_methods(lineage = "historical"))
+  expect_identical(
+    nomo_methods(stage = c("inv", "net"), lineage = c("cont", "em")),
+    nomo_methods(stage = c("invariance", "network"), lineage = c("contemporary", "emerging"))
+  )
+  # An exact name is itself, and a value given twice is no error.
+  expect_identical(nomo_methods(stage = c("cfa", "cfa")), nomo_methods(stage = "cfa"))
+  expect_identical(nrow(nomo_methods(stage = character())), 0L)
+
+  # A value that could be two choices names neither.
+  expect_error(nomo_methods(stage = "c"), "not \"c\".", fixed = TRUE)
+  expect_error(nomo_methods(stage = c("rel", "s", "")), "not \"s\", \"\".", fixed = TRUE)
+  # A missing value is shown as NA, not as the string "NA".
+  expect_error(
+    nomo_methods(stage = NA),
+    "\"network\", or \"workflow\", not NA.",
+    fixed = TRUE
+  )
+  expect_error(
+    nomo_methods(lineage = c("historical", NA, "new")),
+    "\"contemporary\", or \"emerging\", not NA, \"new\".",
+    fixed = TRUE
+  )
+})
+
+
 test_that("references = TRUE expands to one row per method-reference pair", {
   long <- nomo_methods(stage = "reliability", references = TRUE)
 

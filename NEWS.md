@@ -402,6 +402,7 @@ that does. A call that worked is not affected.
   - **Dates.** Change-in-fit evidence for invariance cites Cheung and Rensvold (2002) and is dated 2002, not 2007. Bootstrap intervals for reliability are no longer dated 2016 from a later evaluation; `introduced` is `NA`.
   - **References.** Short citations follow APA 7, with "et al." for three or more authors. Rönkkö and Cho (2022) has its pages, Satorra (2000) its editors, and Fokkema and Greiff (2017) its subtitle.
 - A wrong `stage` or `lineage` in `nomo_methods()` is reported in the package's form for a wrong choice, "`stage` must be one or more of ..." (#144).
+- `nomo_methods(stage = , lineage = )` takes a value shortened as far as it still names one choice, such as `stage = "rel"` for `"reliability"`, as the package's other choice arguments do (#145). It had refused one under the error those arguments share. That error now shows a missing value as `NA`, not as the string "NA".
 
 ## Output style shared with contentvalidR (#144)
 
