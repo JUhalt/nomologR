@@ -535,14 +535,6 @@ test_that("objects content_handoff() could not have produced are refused as malf
   h <- base; h$item_evidence$keying <- 0L
   malformed(h)
 
-  # One row per item: a second row could hold back an item that is screened.
-  h <- base
-  extra <- h$item_evidence[h$item_evidence$item == "EF1", ]
-  extra$carried <- FALSE
-  h$item_evidence <- rbind(h$item_evidence, extra)
-  expect_error(nomologR:::nomo_handoff_read(h), "`item_evidence` lists EF1 more than once",
-               fixed = TRUE)
-
   # Something that is not a list is refused with the same explanation, not a
   # raw R error.
   expect_error(nomologR:::nomo_handoff_read(structure("x", class = "cv_handoff")),
@@ -550,6 +542,105 @@ test_that("objects content_handoff() could not have produced are refused as malf
   expect_error(nomo_screen(handoff_responses(walkthrough_items),
                            items = structure("x", class = "cv_handoff")),
                "This handoff is malformed", fixed = TRUE)
+})
+
+
+# The handoff contentvalidR 0.10.1 wrote for a congruence fit without a target
+# mapping, rebuilt from its output for that package's
+# expert_congruence_example.csv (three items, three objectives, six experts):
+# one row per item and objective, where every other handoff, and the same fit
+# from contentvalidR 1.0 on, has one row per item. `keep` is the carry rule
+# the handoff was made with.
+handoff_congruence_per_objective <- function(keep) {
+  items <- rep(c("I1", "I2", "I3"), each = 3L)
+  carried <- "Descriptive only" %in% keep
+  no_interval <- data.frame(
+    statistic = character(0), value = numeric(0), criterion = numeric(0),
+    round = integer(0), lower = numeric(0), upper = numeric(0),
+    interval_method = character(0), interval_level = numeric(0), note = character(0),
+    stringsAsFactors = FALSE
+  )
+  structure(
+    list(
+      items = if (carried) unique(items) else character(0),
+      scales = NULL,
+      item_evidence = data.frame(
+        item = items, scale = NA_character_, carried = carried,
+        status = "Descriptive only", recommendation = "Descriptive only",
+        n_judges = 6L,
+        rule = "no target-objective mapping was supplied; IOC is reported descriptively",
+        round = 1L, keying = NA_integer_, response_min = NA_integer_,
+        response_max = NA_integer_, stringsAsFactors = FALSE
+      ),
+      item_statistics = data.frame(
+        item = items, statistic = "IOC",
+        value = c(1, -4 / 6, -1, -4 / 6, 1, -5 / 6, -4 / 6, 3 / 6, 5 / 6),
+        criterion = NA_real_, round = 1L, lower = NA_real_, upper = NA_real_,
+        interval_method = NA_character_, interval_level = NA_real_, note = "",
+        stringsAsFactors = FALSE
+      ),
+      provenance = list(
+        schema_version = 1L, package = "contentvalidR", package_version = "0.10.1",
+        workflow = "expert-panel", mode = "congruence", keep = keep,
+        method = "Rovinelli-Hambleton item-objective congruence",
+        citation = c("Rovinelli & Hambleton (1977)", "Turner & Carlson (2003)"),
+        settings = list(), design = list(), created = as.Date("2026-10-09")
+      ),
+      panel_statistics = no_interval
+    ),
+    class = c("contentvalid_handoff", "cv_handoff", "list")
+  )
+}
+
+
+test_that("an item listed more than once is refused, with both ways it can arise", {
+  # One row per item: a second row could hold back an item that is screened.
+  h <- handoff_fixture("walkthrough-sort", "0.7.0")
+  extra <- h$item_evidence[h$item_evidence$item == "EF1", ]
+  extra$carried <- FALSE
+  h$item_evidence <- rbind(h$item_evidence, extra)
+  expect_error(
+    nomologR:::nomo_handoff_read(h),
+    "This handoff does not have one row per reviewed item: `item_evidence` lists EF1 more than once.",
+    fixed = TRUE
+  )
+  expect_error(nomologR:::nomo_handoff_read(h),
+               "Otherwise the object may have been built by hand or edited afterwards",
+               fixed = TRUE)
+
+  # contentvalidR 0.10.1 wrote one row per objective for a congruence fit
+  # without a target mapping, so content_handoff() can have produced such an
+  # object: the refusal names the items and says to make the handoff again.
+  per_objective <- handoff_congruence_per_objective(keep = c("Supported", "Descriptive only"))
+  expect_identical(per_objective$items, c("I1", "I2", "I3"))
+  expect_identical(nrow(per_objective$item_evidence), 9L)
+  refusal <- paste(
+    "This handoff does not have one row per reviewed item: `item_evidence` lists",
+    "I1, I2, I3 more than once. A congruence handoff written by contentvalidR",
+    "before 1.0 without a target mapping had one row per objective; such a",
+    "handoff has to be made again from a new fit with contentvalidR 1.0 or",
+    "later. Otherwise the object may have been built by hand or edited",
+    "afterwards: produce it again with content_handoff()."
+  )
+  expect_identical(
+    tryCatch(nomologR:::nomo_handoff_read(per_objective), error = conditionMessage),
+    refusal
+  )
+  expect_no_match(refusal, "cannot", fixed = TRUE)
+  data <- handoff_responses(c("I1", "I2", "I3"))
+  expect_error(nomo_screen(data, items = per_objective), refusal, fixed = TRUE)
+  expect_error(nomo_run(data, scales = per_objective), refusal, fixed = TRUE)
+
+  # Made with the default keep, the same object carries nothing. It is still
+  # the rows that are reported: naming a status in `keep`, as the refusal of an
+  # empty handoff advises, would only lead here.
+  none_carried <- handoff_congruence_per_objective(keep = "Supported")
+  expect_identical(none_carried$items, character(0))
+  expect_error(nomologR:::nomo_handoff_read(none_carried), refusal, fixed = TRUE)
+
+  # The rows decide, never the producer's version.
+  per_objective$provenance$package_version <- "1.0.0"
+  expect_error(nomologR:::nomo_handoff_read(per_objective), refusal, fixed = TRUE)
 })
 
 
