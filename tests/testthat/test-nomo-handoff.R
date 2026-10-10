@@ -356,7 +356,9 @@ test_that("a handoff that carries no items is refused with what content review d
     "keep = \"Supported\"."
   )
   expect_error(nomo_screen(data, items = h), message, fixed = TRUE)
-  expect_error(nomo_screen(data, items = h), "naming the statuses to carry in `keep`",
+  # The statuses `keep` would have to name are the ones this handoff holds.
+  expect_error(nomo_screen(data, items = h),
+               "naming the statuses to carry in `keep` (here \"Supported\" or \"Review\"), and record why.",
                fixed = TRUE)
   expect_error(nomo_run(data, scales = h), message, fixed = TRUE)
 
@@ -367,6 +369,8 @@ test_that("a handoff that carries no items is refused with what content review d
   h$item_evidence <- h$item_evidence[0, , drop = FALSE]
   expect_error(nomologR:::nomo_handoff_read(h),
                "held back all 0 reviewed items (status counts: none recorded)", fixed = TRUE)
+  expect_error(nomologR:::nomo_handoff_read(h),
+               "naming the statuses to carry in `keep`, and record why.", fixed = TRUE)
 })
 
 

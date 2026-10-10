@@ -86,10 +86,14 @@ nomo_handoff_read <- function(x) {
   }
 
   # content_handoff() does not stop when no item meets its carry rule, so an
-  # empty handoff is a real producer object. It is refused here, before either
-  # reader asks for `items` or `scales`, with what content review decided.
+  # empty handoff is a real producer object: its default rule carries only
+  # "Supported", and a review that applied no decision rule supports nothing.
+  # It is refused here, before either reader asks for `items` or `scales`, with
+  # what content review decided and the statuses `keep` would have to name.
   if (!length(carried)) {
     keep <- as.character(unlist(prov$keep))
+    statuses <- unique(as.character(evidence$status))
+    statuses <- statuses[!is.na(statuses)]
     stop(
       sprintf(
         paste0(
@@ -97,7 +101,7 @@ nomo_handoff_read <- function(x) {
           "(status counts: %s)%s. nomologR analyzes only carried items, so ",
           "there is nothing to screen. To analyze items the review did not ",
           "carry, produce the handoff again with contentvalidR's ",
-          "content_handoff(), naming the statuses to carry in `keep`, and ",
+          "content_handoff(), naming the statuses to carry in `keep`%s, and ",
           "record why."
         ),
         nomo_present_count(nrow(evidence), "reviewed item"),
@@ -105,6 +109,11 @@ nomo_handoff_read <- function(x) {
         if (length(keep)) {
           sprintf(" under the carry rule keep = %s",
                   paste0("\"", keep, "\"", collapse = ", "))
+        } else {
+          ""
+        },
+        if (length(statuses)) {
+          sprintf(" (here %s)", nomo_present_or(paste0("\"", statuses, "\"")))
         } else {
           ""
         }
