@@ -13,6 +13,28 @@ handoff_versions_after <- function(version) {
   handoff_versions[seq_along(handoff_versions) > match(version, handoff_versions)]
 }
 
+# The first producer version each fit is stored for. The nine-expert panel
+# joined the fixtures at 0.7.0 and the none-reversed sort at 0.9.0. The three
+# congruence fits start at 0.99.0, the first producer that hands off the index
+# of item-objective congruence with one row per item. Until a version from
+# 0.99.0 on is added to handoff_versions, they have no stored version and
+# their tests are not defined.
+handoff_fit_from <- c(
+  "walkthrough-sort" = "0.6.0",
+  "expert-krippendorff" = "0.6.0",
+  "delphi" = "0.6.0",
+  "expert-nine" = "0.7.0",
+  "walkthrough-sort-none-reversed" = "0.9.0",
+  "congruence-targeted" = "0.99.0",
+  "congruence-untargeted" = "0.99.0",
+  "congruence-untargeted-default-keep" = "0.99.0"
+)
+
+# The stored versions of one fit: every version from its first on.
+handoff_fit_versions <- function(fit) {
+  handoff_versions[numeric_version(handoff_versions) >= handoff_fit_from[[fit]]]
+}
+
 handoff_fixture <- function(fit, version) {
   readRDS(test_path(
     "fixtures", "contentvalidR", sprintf("handoff-%s-v%s.rds", fit, version)
@@ -37,11 +59,39 @@ walkthrough_items <- c(paste0("EF", 1:6), paste0("TF", 1:6))
 
 # Reading every fixture ---------------------------------------------------------
 
+test_that("the stored fixtures are the ones the version list and the manifest name", {
+  # A file stored without its version in handoff_versions would be left out of
+  # every test below without a failure, so the two are compared here.
+  directory <- test_path("fixtures", "contentvalidR")
+  stored <- sort(list.files(directory, pattern = "^handoff-.*[.]rds$"))
+  named <- unlist(lapply(names(handoff_fit_from), function(fit) {
+    sprintf("handoff-%s-v%s.rds", fit, handoff_fit_versions(fit))
+  }))
+  expect_identical(stored, sort(named))
+
+  # MANIFEST.csv records each stored file once, with the version its name
+  # carries and the checksum of the bytes stored.
+  manifest <- utils::read.csv(file.path(directory, "MANIFEST.csv"), colClasses = "character")
+  rows <- manifest[grepl("[.]rds$", manifest$file), ]
+  expect_identical(sort(rows$file), stored)
+  expect_identical(sub("^handoff-.*-v([0-9.]+)[.]rds$", "\\1", rows$file),
+                   rows$contentvalidR_version)
+  expect_identical(unname(tools::md5sum(file.path(directory, rows$file))), rows$md5)
+  # The generator is left out of the built package, so its checksum is
+  # compared only where the source tree is at hand.
+  generator <- file.path(directory, "make-handoff-fixtures.R")
+  if (file.exists(generator)) {
+    expect_identical(unname(tools::md5sum(generator)),
+                     manifest$md5[manifest$file == "make-handoff-fixtures.R"])
+  }
+})
+
+
 test_that("every stored handoff is read without contentvalidR", {
-  for (fit in c("walkthrough-sort", "expert-krippendorff", "delphi", "expert-nine")) {
-    # The nine-expert panel was added to the fixtures at 0.7.0.
-    versions <- if (fit == "expert-nine") handoff_versions[-1L] else handoff_versions
-    for (version in versions) {
+  # The default-keep congruence fit carries no item, so it is refused, not
+  # read; its own test is below.
+  for (fit in setdiff(names(handoff_fit_from), "congruence-untargeted-default-keep")) {
+    for (version in handoff_fit_versions(fit)) {
       raw <- handoff_fixture(fit, version)
       h <- nomologR:::nomo_handoff_read(raw)
 
@@ -372,6 +422,122 @@ test_that("a handoff that carries no items is refused with what content review d
   expect_error(nomologR:::nomo_handoff_read(h),
                "naming the statuses to carry in `keep`, and record why.", fixed = TRUE)
 })
+
+
+# Congruence --------------------------------------------------------------------
+#
+# The three congruence fits start at contentvalidR 0.99.0 (handoff_fit_from),
+# so each test below is defined once for every stored version from 0.99.0 on,
+# and not at all while none is stored. Five experts rated items C1, C2 and C3
+# against objectives A, B and C; make-handoff-fixtures.R holds the ratings.
+
+for (version in handoff_fit_versions("congruence-targeted")) {
+  test_that(sprintf("a congruence handoff with a target mapping is read as decided (%s)", version), {
+    raw <- handoff_fixture("congruence-targeted", version)
+    h <- nomologR:::nomo_handoff_read(raw)
+
+    # One row per item. C2 fell below the congruence criterion: held back.
+    expect_identical(h$evidence$item, c("C1", "C2", "C3"))
+    expect_identical(h$evidence$carried, c(TRUE, FALSE, TRUE))
+    expect_identical(h$items, c("C1", "C3"))
+    # The objective each item was written for is its construct.
+    expect_identical(h$scales, list(A = "C1", C = "C3"))
+    expect_identical(h$provenance$mode, "congruence")
+
+    # The producer's words pass through as written.
+    expect_identical(h$evidence$status, c("Supported", "Review", "Supported"))
+    expect_identical(h$evidence$status, raw$item_evidence$status)
+    expect_identical(h$evidence$recommendation, raw$item_evidence$recommendation)
+    expect_false(anyNA(h$evidence$recommendation))
+
+    # So do the statistics: the index, held to its criterion, and the two mean
+    # ratings beside it, once for each item, with the note naming C2's tied
+    # competitors.
+    expect_identical(as.list(h$statistics), as.list(raw$item_statistics))
+    labels <- c("target IOC", "target mean rating", "competitor mean rating")
+    expect_setequal(h$statistics$statistic, labels)
+    for (label in labels) {
+      expect_identical(h$statistics$item[h$statistics$statistic == label], c("C1", "C2", "C3"))
+    }
+    tied <- h$statistics[h$statistics$item == "C2" &
+                           h$statistics$statistic == "competitor mean rating", ]
+    expect_true(nzchar(tied$note))
+
+    # The screen analyzes the carried items and quotes the held-back one.
+    out <- nomo_screen(handoff_responses(c("C1", "C2", "C3")), items = raw)
+    expect_identical(out$items, c("C1", "C3"))
+    log <- out$decision_log
+    expect_match(log$observation[log$metric == "content_review_provenance"],
+                 "^Items and their construct membership came from content review")
+    expect_match(log$observation[log$metric == "carry_decisions"],
+                 "2 of 3 reviewed items were carried and 1 held back. Status counts: Review 1, Supported 2.",
+                 fixed = TRUE)
+    held <- log[log$metric == "held_back_item", ]
+    expect_identical(held$object, "C2")
+    expect_identical(held$observation, sprintf(
+      "C2 was held back by content review: status \"Review\", recommendation \"%s\".",
+      raw$item_evidence$recommendation[[2L]]
+    ))
+  })
+}
+
+
+for (version in handoff_fit_versions("congruence-untargeted")) {
+  test_that(sprintf("a congruence handoff without a target mapping carries described items (%s)", version), {
+    raw <- handoff_fixture("congruence-untargeted", version)
+    h <- nomologR:::nomo_handoff_read(raw)
+
+    # One row per item, each carried because `keep` names its status.
+    expect_identical(h$evidence$item, c("C1", "C2", "C3"))
+    expect_identical(h$items, c("C1", "C2", "C3"))
+    expect_identical(h$evidence$status[h$evidence$carried], rep("Descriptive only", 3L))
+    expect_identical(h$provenance$keep, "Supported, Descriptive only")
+    expect_null(h$scales)
+
+    # Every carried item has the one statistic this fit hands off.
+    expect_identical(as.list(h$statistics), as.list(raw$item_statistics))
+    expect_identical(h$statistics$item[h$statistics$statistic == "highest IOC"], h$items)
+
+    # Nothing was held back, and the log says under which rule.
+    out <- nomo_screen(handoff_responses(h$items), items = raw)
+    expect_identical(out$items, h$items)
+    log <- out$decision_log
+    expect_false("held_back_item" %in% log$metric)
+    expect_match(log$observation[log$metric == "content_review_provenance"],
+                 "carry rule: Supported, Descriptive only", fixed = TRUE)
+    expect_match(log$observation[log$metric == "carry_decisions"],
+                 "3 of 3 reviewed items were carried and 0 held back. Status counts: Descriptive only 3.",
+                 fixed = TRUE)
+    # No target mapping means no construct membership for a guided run.
+    expect_error(nomo_run(handoff_responses(h$items), scales = raw),
+                 "does not invent construct membership", fixed = TRUE)
+  })
+}
+
+
+for (version in handoff_fit_versions("congruence-untargeted-default-keep")) {
+  test_that(sprintf("a congruence handoff that carries nothing under the default keep is refused (%s)", version), {
+    # The same fit as above, handed off with content_handoff()'s default
+    # keep = "Supported": no decision rule was applied, so no item is carried.
+    raw <- handoff_fixture("congruence-untargeted-default-keep", version)
+    expect_identical(raw$items, character(0))
+    expect_identical(raw$item_evidence$item, c("C1", "C2", "C3"))
+
+    message <- paste(
+      "This handoff carries no items: content review held back all 3 reviewed",
+      "items (status counts: Descriptive only 3) under the carry rule",
+      "keep = \"Supported\". nomologR analyzes only carried items, so there is",
+      "nothing to screen. To analyze items the review did not carry, produce",
+      "the handoff again with contentvalidR's content_handoff(), naming the",
+      "statuses to carry in `keep` (here \"Descriptive only\"), and record why."
+    )
+    data <- handoff_responses(c("C1", "C2", "C3"))
+    expect_identical(tryCatch(nomologR:::nomo_handoff_read(raw), error = conditionMessage),
+                     message)
+    expect_error(nomo_screen(data, items = raw), message, fixed = TRUE)
+    expect_error(nomo_run(data, scales = raw), message, fixed = TRUE)
+  })
+}
 
 
 test_that("a carried item missing from the data is refused, not dropped", {
