@@ -466,8 +466,13 @@ deprecation period.
 - **New `plot()` and `summary()` methods.** `plot()` for `nomo_scores`, `nomo_missing`, and `nomo_power` objects, and `summary()` for `nomo_missing` objects. `summary()` of a `nomo_scores` object has class `summary_nomo_scores`.
 - **New decision-log rows**, named by their `metric`, or by their `id` in a guided run's own log.
   - `nomo_screen()`: `keying_not_used`, `out_of_range`, `item_rest_not_computed`, `mahalanobis`, `per_scale_indices`, `keying_completed`, and `scales_override`.
+  - `nomo_factors()`: `parallel_null_iterations`.
+  - `nomo_efa()`: `heywood`, `convergence`, `identification`, and `engine_warnings`.
+  - `nomo_cfa()`: `scaled_test_unavailable`.
   - `nomo_compare()`: `improper_solution`.
-  - `nomo_validity()`: `latent_correlation` and `htmt_missing_data`.
+  - `nomo_reliability()`: `single_indicator_factor`, `parameterization`, and `bootstrap_ci`.
+  - `nomo_validity()`: `latent_correlation`, `htmt_missing_data`, `htmt_single_indicator`, and `parameterization`.
+  - `nomo_invariance()`: `latent_means`, `latent_means_fixed`, `cases_used`, `engine_warning`, and `comparison_warning`.
   - `nomo_cfa()`, `nomo_invariance()`, and `nomo_network()`: `ordered_detected`; `nomo_network()` also `cases_used`, `model_fit`, `relation_constrained`, `relation_auto_freed`, `residual_association`, and `unstandardized_metric`.
   - `nomo_run()`: `keying`, `estimation_settings:<stage>`, `settings:<stage>`, `cfa_item_set`, and `item_types`; `nomo_revise()`: `reinstated:<item>` and `removed:<item>`.
 - **Conventions in returned tables.** A new section of `?nomologR` records three differences between tables that are kept as they are (#145).
