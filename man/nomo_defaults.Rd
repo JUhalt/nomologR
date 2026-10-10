@@ -25,6 +25,12 @@ the corresponding analysis function (for example, \code{\link[=nomo_efa]{nomo_ef
 reference changes which evidence is flagged for review; it never deletes
 items, respecifies models, or declares validity.
 
+Pass a complete list as \code{guidance}: start from \code{nomo_defaults()} and change
+the settings you need, as the example does. A list that holds only some of
+the settings is completed from the defaults by \code{\link[=nomo_efa]{nomo_efa()}} only. Another
+function may stop because a setting it needs is missing, or may run without
+the reference and so not raise the flags that depend on it.
+
 \code{long_string_min_items} is a count of items, not a reference value for a
 statistic: \code{\link[=nomo_screen]{nomo_screen()}} flags a case on long-string only when at least
 that many items are screened, because half the length of a shorter item set

@@ -102,3 +102,37 @@ test_that("?nomo_defaults names every function that refuses the safeguards set t
                  label = name)
   }
 })
+
+
+test_that("?nomo_defaults says to pass a complete guidance list", {
+  # The rule is written once, on this page; ?nomo_efa says what nomo_efa() adds.
+  details <- nomo_test_rd_text("nomo_defaults", "\\details")
+  expect_true(grepl("Pass a complete list as \\code{guidance}", details, fixed = TRUE))
+  expect_true(grepl(
+    "is completed from the defaults by \\code{\\link[=nomo_efa]{nomo_efa()}} only",
+    details, fixed = TRUE
+  ))
+  expect_true(grepl("is completed from", nomo_test_rd_text("nomo_efa", "\\arguments"),
+                    fixed = TRUE))
+
+  # What the paragraph describes. A list with one setting is completed by
+  # nomo_efa(), and gives what the complete list with that change gives.
+  skip_on_cran()
+  dat <- nomo_demo_continuous[, c(paste0("a", 1:5), paste0("b", 1:5))]
+  one <- list(efa_loading_reference = 0.60)
+  whole <- nomo_defaults()
+  whole$efa_loading_reference <- 0.60
+  completed <- nomo_efa(dat, factors = 2, guidance = one)
+  expect_identical(completed$guidance, whole)
+  expect_identical(completed$item_summary$attention,
+                   nomo_efa(dat, factors = 2, guidance = whole)$item_summary$attention)
+
+  # Elsewhere a missing setting can stop the call, which names it.
+  expect_error(nomo_split(dat, guidance = one),
+               "`guidance` must include `factor_small_n_reference`", fixed = TRUE)
+  expect_error(nomo_cfa("A =~ a1 + a2 + a3 + a4 + a5", dat, guidance = one),
+               "`guidance` is missing required setting(s): cfa_loading_reference, fit_reference.",
+               fixed = TRUE)
+  # The complete list is accepted.
+  expect_s3_class(nomo_split(dat, guidance = whole), "nomo_split")
+})
