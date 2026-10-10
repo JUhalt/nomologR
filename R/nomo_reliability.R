@@ -49,6 +49,7 @@
 #' @param ci_boot Number of ordinary bootstrap resamples when
 #'   `ci = "bootstrap"`. Default is `1000`.
 #' @param ci_seed Optional integer seed for reproducible bootstrap intervals.
+#'   The session's random-number state is restored afterwards.
 #' @param ci_ncpus Number of worker processes for the bootstrap. The default,
 #'   `1`, runs serially. Values above one use lavaan's `snow` backend, which
 #'   works on Windows, macOS, and Linux. The draws depend on the worker count as

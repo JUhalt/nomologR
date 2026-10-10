@@ -18,7 +18,8 @@ nomo_split(
 Must be strictly between 0 and 1.}
 
 \item{seed}{Integer seed used, with the random-number generator recorded in
-\code{rng_kind}, to make the split reproducible.}
+\code{rng_kind}, to make the split reproducible. The session's random-number
+state is restored afterwards.}
 
 \item{guidance}{Guidance settings from \code{\link[=nomo_defaults]{nomo_defaults()}}.}
 }
