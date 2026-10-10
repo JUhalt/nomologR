@@ -187,3 +187,13 @@ test_that("?nomologR sets out the status words shared with contentvalidR (#144)"
   expect_true(grepl("decision word", text, fixed = TRUE))
   expect_true(grepl("never delete", text, fixed = TRUE))
 })
+
+
+test_that("the stability policy takes effect at 1.0.0 (#113)", {
+  text <- nomo_test_rd_text("nomologR-package", "Stability and deprecation")
+
+  # The releases before 1.0.0 changed the interface without a deprecation
+  # period, so the promise cannot be dated from one of them.
+  expect_true(grepl("From version 1.0.0, the public interface changes only", text, fixed = TRUE))
+  expect_false(grepl("0.3.0", text, fixed = TRUE))
+})

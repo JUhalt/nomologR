@@ -25,7 +25,9 @@ across groups and occasions".
 ## Calls that now behave differently
 
 This section lists what a call written for 0.9.0 can run into. The sections
-after it give the details.
+after it give the details. These changes were made before the stability
+promise takes effect at 1.0.0, so none of them went through a deprecation
+period.
 
 ### Errors where calls used to be accepted
 
@@ -511,6 +513,7 @@ affected.
 ## The stability contract (#113)
 
 - `nomo_missing()` and `nomo_apa_table()` leave the experimental list and are covered by the stability policy (#113). `nomo_missing()`'s flagging rule is adapted from Schafer and Graham (2002, p. 157), who judged a bias beyond about half a standard error practically important, because it degrades interval coverage. Separating sampling variability from bias would be new output, added alongside the rule. `nomo_apa_table()`'s `type` values and returned structure are covered. A table's formatting (headings, number formats, notes) may still be corrected where it departs from APA style, with the correction described in NEWS.
+- The stability policy in `?nomologR` takes effect at 1.0.0 (#113). Its text had said 0.3.0, while the roadmap gave 1.0.0, and this release changes parts of the interface without a deprecation period; "Calls that now behave differently" lists them.
 
 ## The contentvalidR handoff (#53)
 
