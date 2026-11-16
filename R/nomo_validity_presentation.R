@@ -133,33 +133,74 @@ nomo_validity_separation_flag <- function(htmt2, htmt, latent_attention, referen
 
 
 # Which rows of a latent-correlation table the model fixes, such as the zeros
-# of a bifactor model or `A ~~ 0*B`. Nothing is taken to be fixed for a saved
+# of a bifactor model or `A ~~ 0*B`, read from lavaan's parameter table: one
+# row per row of `latent`, with `fixed` and `where`, the group or level of the
+# parameter it was matched with. Nothing is taken to be fixed for a saved
 # object that has no fit.
+#
+# A row is matched in its own group, labeled as
+# nomo_validity_latent_correlations() labels it: a correlation fixed in one
+# group, as with `A ~~ c(NA, 0)*B`, is an estimate in the others (#145). The
+# table takes its rows from the parameter table in that table's order, so the
+# k-th row of a pair in a group is the k-th parameter of that pair there; that
+# also tells apart the levels of a multilevel model, which the table does not
+# name, and `where` names them.
 nomo_validity_latent_fixed <- function(latent, fit) {
-  if (!nrow(latent)) return(logical())
-  nomo_cfa_fixed_correlations(
-    data.frame(factor1 = latent$construct_1, factor2 = latent$construct_2),
-    fit
+  out <- data.frame(fixed = logical(nrow(latent)), where = character(nrow(latent)))
+  model <- if (nrow(latent)) tryCatch(
+    list(pt = as.data.frame(lavaan::parTable(fit)),
+         groups = lavaan::lavInspect(fit, "group.label"),
+         levels = lavaan::lavInspect(fit, "level.label")),
+    error = function(e) NULL
   )
+  if (is.null(model)) return(out)
+  pt <- model$pt[model$pt$op == "~~" & model$pt$lhs != model$pt$rhs, , drop = FALSE]
+  block <- if (length(model$groups) > 1L) model$groups[pt$group] else rep("overall", nrow(pt))
+  key <- function(a, b, block) {
+    pair <- paste(pmin(a, b), pmax(a, b), block, sep = "\r")
+    paste(pair, stats::ave(seq_along(pair), pair, FUN = seq_along), sep = "\r")
+  }
+  pos <- match(key(latent$construct_1, latent$construct_2, latent$block),
+               key(pt$lhs, pt$rhs, block))
+  where <- if (length(model$levels) > 1L) {
+    sub("^overall, ", "", paste0(block, ", ", model$levels[pt$level]))
+  } else {
+    block
+  }
+  out$fixed <- pt$free[pos] %in% 0L
+  out$where <- where[pos]
+  out
 }
 
 
-# The pairs whose latent correlation the model fixes, one row per pair in
-# model order, with the value it is fixed at. print() and summary() name
-# them, and the APA table's note does.
+# The pairs whose latent correlation the model fixes, in model order, with the
+# value it is fixed at and `label`, the words print() and summary() name them
+# in, as the APA table's note does. A pair fixed wherever it appears is named
+# once, however many groups or levels the model has. A pair the model fixes in
+# some groups or levels and estimates in others is named with each group or
+# level that fixes it, so it is not read as fixed in all of them (#145).
 nomo_validity_fixed_pairs <- function(x) {
   latent <- nomo_validity_orient_pairs(
     x$latent_correlations, nomo_validity_construct_order(x)
   )
-  fixed <- latent[nomo_validity_latent_fixed(latent, x$fit), , drop = FALSE]
-  # Once per pair, however many groups or levels the model has. With one
-  # construct the table has no columns, and `[[` then gives NULL.
-  pair <- paste(fixed[["construct_1"]], fixed[["construct_2"]], sep = "\r")
-  fixed <- fixed[!duplicated(pair), , drop = FALSE]
+  found <- nomo_validity_latent_fixed(latent, x$fit)
+  is_fixed <- found$fixed
+  # No pair is fixed. With one construct the table has no columns either.
+  if (!any(is_fixed)) {
+    return(tibble::tibble(factor1 = character(), factor2 = character(),
+                          correlation = numeric(), label = character()))
+  }
+  pair <- paste(latent$construct_1, latent$construct_2, sep = "\r")
+  fixed <- latent[is_fixed, , drop = FALSE]
+  label <- paste(fixed$construct_1, "with", fixed$construct_2)
+  partly <- pair[is_fixed] %in% pair[!is_fixed]
+  label[partly] <- paste0(label[partly], " (", found$where[is_fixed][partly], ")")
+  keep <- !duplicated(label)
   tibble::tibble(
-    factor1 = as.character(fixed[["construct_1"]]),
-    factor2 = as.character(fixed[["construct_2"]]),
-    correlation = as.numeric(fixed[["correlation"]])
+    factor1 = as.character(fixed$construct_1[keep]),
+    factor2 = as.character(fixed$construct_2[keep]),
+    correlation = as.numeric(fixed$correlation[keep]),
+    label = label[keep]
   )
 }
 
@@ -178,7 +219,7 @@ nomo_validity_fixed_pairs <- function(x) {
 nomo_validity_discriminant_table <- function(x, attention = FALSE) {
   order <- nomo_validity_construct_order(x)
   latent <- nomo_validity_orient_pairs(x$latent_correlations, order)
-  latent <- latent[!nomo_validity_latent_fixed(latent, x$fit), , drop = FALSE]
+  latent <- latent[!nomo_validity_latent_fixed(latent, x$fit)$fixed, , drop = FALSE]
   if (nrow(latent)) {
     # A saved object from before latent correlations were flagged (#145).
     if (!"attention" %in% names(latent)) {
@@ -590,7 +631,8 @@ print.summary_nomo_validity <- function(x, ...) {
   # A correlation the model fixes is named as fixed, in the words the CFA
   # summary uses, and is not tabled as an estimate (#145).
   if (NROW(fixed)) {
-    nomo_cfa_present_fixed(fixed, estimated = any(is.finite(x$discriminant[["latent_r"]])))
+    nomo_cfa_present_fixed(fixed, estimated = any(is.finite(x$discriminant[["latent_r"]])),
+                           labels = fixed$label)
   }
 
   unavailable <- x$htmt_status[

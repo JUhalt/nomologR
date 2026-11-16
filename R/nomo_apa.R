@@ -1104,7 +1104,7 @@ nomo_apa_table.nomo_validity <- function(x, type = c("discriminant", "convergent
       },
       if (nrow(fixed)) {
         sprintf("Correlations the model fixes are not shown: %s.",
-                nomo_present_or(paste(fixed$factor1, "with", fixed$factor2), "and"))
+                nomo_present_or(fixed$label, "and"))
       },
       nomo_apa_dash_note(
         body, if (nrow(fixed)) "fixed by the model or not computed" else "not computed"

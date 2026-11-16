@@ -1168,3 +1168,82 @@ test_that("a correlation the model fixes is not shown as separation evidence (#1
   expect_false(grepl("the model fixes", squash(nomo_apa_table(ordinary)$notes$general),
                      fixed = TRUE))
 })
+
+
+test_that("a correlation fixed in some groups or levels is left out only there (#145)", {
+  skip_on_cran()
+  local_reproducible_output(width = 80)
+  squash <- function(x) gsub("\\s+", " ", paste(x, collapse = " "))
+  shown <- function(x) squash(capture.output(print(x)))
+  log_row <- function(x, object) {
+    x$decision_log[x$decision_log$metric == "latent_correlation" &
+                     x$decision_log$object == object, ]
+  }
+  three <- "visual =~ x1 + x2 + x3\ntextual =~ x4 + x5 + x6\nspeed =~ x7 + x8 + x9"
+  fit_groups <- function(constraint) {
+    lavaan::cfa(paste(three, constraint, sep = "\n"), lavaan::HolzingerSwineford1939,
+                group = "school", std.lv = TRUE)
+  }
+
+  # Fixed at 0 in Grant-White and estimated in Pasteur: the Pasteur value is
+  # an estimate, shown and read against the reference as before.
+  partial <- nomo_validity(fit_groups("visual ~~ c(NA, 0)*textual"), htmt = "none")
+  stored <- partial$latent_correlations
+  pasteur <- stored$construct_1 == "visual" & stored$construct_2 == "textual" &
+    stored$block == "Pasteur"
+  expect_true(stored$correlation[pasteur] > .3)
+  pairs <- nomo_table(partial, "discriminant")
+  expect_identical(nrow(pairs), 5L)
+  kept <- pairs[pairs$construct_1 == "visual" & pairs$construct_2 == "textual", ]
+  expect_identical(kept$block, "Pasteur")
+  expect_equal(kept$latent_r, stored$correlation[pasteur])
+  expect_equal(kept$latent_r_ci_lower, stored$ci_lower[pasteur])
+  expect_true("Separation flags: none (3 pairs in 2 groups)" %in%
+                capture.output(print(partial)))
+  expect_match(shown(summary(partial)),
+               "Fixed at 0 by the model, so not estimated: visual with textual (Grant-White).",
+               fixed = TRUE)
+  apa <- nomo_apa_table(partial)
+  expect_identical(apa$body$Group[apa$body$Constructs == "visual with textual"], "Pasteur")
+  expect_match(squash(apa$notes$general),
+               "Correlations the model fixes are not shown: visual with textual (Grant-White).",
+               fixed = TRUE)
+  estimated <- log_row(partial, "visual vs textual (Pasteur)")
+  expect_match(estimated$observation, "^The latent correlation \\(r = \\.48, 95% CI")
+  expect_false(startsWith(estimated$recommendation, "Report it as a constraint"))
+  constraint <- log_row(partial, "visual vs textual (Grant-White)")
+  expect_identical(constraint$severity, "info")
+  expect_match(constraint$observation, "The model fixes this latent correlation at 0",
+               fixed = TRUE)
+
+  # Fixed in every group, the pair is named once, without a group.
+  both <- nomo_validity(fit_groups("visual ~~ 0*textual"), htmt = "none")
+  expect_identical(nrow(nomo_table(both, "discriminant")), 4L)
+  expect_true("Separation flags: none (2 pairs in 2 groups)" %in%
+                capture.output(print(both)))
+  expect_match(shown(summary(both)),
+               "Fixed at 0 by the model, so not estimated: visual with textual.", fixed = TRUE)
+  expect_identical(nomologR:::nomo_validity_fixed_pairs(both)$label, "visual with textual")
+
+  # The levels of a multilevel model share the table's block, and the factors
+  # here share their names: the row the model fixes is told apart by its
+  # place, and named with its level.
+  levels <- nomo_validity(lavaan::cfa(
+    paste(
+      "level: 1", "f =~ y1 + y2 + y3", "g =~ y4 + y5 + y6", "f ~~ 0*g",
+      "level: 2", "f =~ y1 + y2 + y3", "g =~ y4 + y5 + y6",
+      sep = "\n"
+    ),
+    data = lavaan::Demo.twolevel, cluster = "cluster", std.lv = TRUE
+  ), htmt = "none")
+  stored <- levels$latent_correlations
+  expect_identical(stored$correlation[[1L]], 0)
+  pairs <- nomo_table(levels, "discriminant")
+  expect_identical(nrow(pairs), 1L)
+  expect_equal(pairs$latent_r, stored$correlation[[2L]])
+  expect_match(shown(summary(levels)),
+               "Fixed at 0 by the model, so not estimated: f with g (within).", fixed = TRUE)
+  logged <- levels$decision_log[levels$decision_log$metric == "latent_correlation", ]
+  expect_identical(startsWith(logged$observation, "The model fixes this latent correlation"),
+                   c(TRUE, FALSE))
+})

@@ -573,13 +573,15 @@ nomo_cfa_present_correlations <- function(correlations) {
 
 # The line that names the correlations a model fixes, from their `factor1`,
 # `factor2`, and `correlation`. summary() of a nomo_validity object prints it
-# too, so the two say the same thing of the same model.
-nomo_cfa_present_fixed <- function(fixed, estimated) {
+# too, so the two say the same thing of the same model; it passes `labels`,
+# which name the group or level of a pair fixed in some of them only.
+nomo_cfa_present_fixed <- function(fixed, estimated,
+                                   labels = paste(fixed$factor1, "with", fixed$factor2)) {
   nomo_present_text(
     if (estimated) "Fixed" else "Every factor correlation is fixed",
     if (isTRUE(all(fixed$correlation == 0))) " at 0" else "",
     " by the model, so not estimated: ",
-    nomo_present_or(paste(fixed$factor1, "with", fixed$factor2), "and"), ".",
+    nomo_present_or(labels, "and"), ".",
     indent = 2L
   )
 }

@@ -611,7 +611,7 @@ nomo_validity <- function(fit,
     )
     # A correlation the model fixes is logged as the constraint it is, never
     # as evidence about the pair or as a flag (#145).
-    fixed_by_model <- nomo_validity_latent_fixed(latent_correlations, fit_info$fit)
+    fixed_by_model <- nomo_validity_latent_fixed(latent_correlations, fit_info$fit)$fixed
     for (i in which(logged)) {
       row <- latent_correlations[i, , drop = FALSE]
       sets_flag <- !with_htmt[[i]] || row$attention == "concern"
