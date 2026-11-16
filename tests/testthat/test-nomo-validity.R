@@ -663,9 +663,18 @@ test_that("flag counts name what they count, and constructs are counted once (#1
   expect_match(grouped, "nomo_invariance() compares", fixed = TRUE, all = FALSE)
   expect_false(any(grepl("later invariance workflow", grouped, fixed = TRUE)))
 
-  one <- capture.output(print(nomo_validity(nomo_cfa("A =~ a1 + a2 + a3 + a4",
-                                                     data = nomo_demo_continuous))))
+  one_construct <- nomo_validity(nomo_cfa("A =~ a1 + a2 + a3 + a4",
+                                          data = nomo_demo_continuous))
+  one <- capture.output(print(one_construct))
   expect_true("Separation flags: not applicable (one construct)" %in% one)
+  # Without a pair, the table has no rows and its usual columns, as NEWS says;
+  # it had no columns (#145).
+  pairs <- nomo_table(one_construct, "discriminant")
+  expect_identical(nrow(pairs), 0L)
+  expect_identical(names(pairs), c(
+    "construct_1", "construct_2", "block", "latent_r", "latent_r_ci_lower",
+    "latent_r_ci_upper", "HTMT2", "HTMT", "signal"
+  ))
 })
 
 
