@@ -109,6 +109,18 @@ write an `expert-nine-v0.6.0` file, and a run at v0.7.0 or v0.8.0 a
 the edited script at v0.9.0 reproduced the four earlier 0.9.0 files exactly
 apart from `provenance$created`.
 
+On 2026-10-09 the script gained three item-objective congruence fits for the
+1.0 release candidate: `congruence-targeted` (three items, each written for
+one of three objectives; one falls below the congruence criterion and is held
+back), `congruence-untargeted` (the same ratings without the target mapping,
+handed off with `keep = c("Supported", "Descriptive only")`), and
+`congruence-untargeted-default-keep` (the same fit with the default `keep`,
+which carries no item). They need a producer that hands off the index of
+item-objective congruence with one row per item, so the script writes them
+from 0.99.0 on and skips them for older producers. No file from them is stored
+yet. Rerunning the edited script at v0.10.1 wrote the same five files as
+before, identical to the stored 0.10.1 files apart from `provenance$created`.
+
 Checked before handoff, in an R process where contentvalidR was not loaded:
 every 0.8.0 file reads back as a `cv_handoff` at schema version 1 with the
 producer version its filename says.

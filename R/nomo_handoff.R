@@ -16,7 +16,8 @@ nomo_handoff_is <- function(x) inherits(x, "cv_handoff")
 # Validates a handoff and returns what nomologR uses from it. Anything that
 # could only arise from an object not produced by contentvalidR's
 # content_handoff() (hand-built, or edited afterwards) stops with that
-# explanation rather than being guessed at.
+# explanation rather than being guessed at. Each decision is taken as its
+# producer recorded it: nothing here branches on the producer's version.
 nomo_handoff_read <- function(x) {
   if (!is.list(x)) nomo_handoff_malformed("it is not a list")
   prov <- if (is.list(x$provenance)) x$provenance else list()
@@ -54,12 +55,27 @@ nomo_handoff_read <- function(x) {
     nomo_handoff_malformed("`carried` must be TRUE or FALSE for every reviewed item")
   }
   # One row per reviewed item: a second row could carry an item and hold it
-  # back at once.
+  # back at once. contentvalidR before 1.0 wrote one row per objective for a
+  # congruence fit without a target mapping, so this refusal does not say the
+  # producer could not have written the object. It reads the rows alone, never
+  # the producer's version.
   repeated <- unique(as.character(evidence$item[duplicated(evidence$item)]))
   if (length(repeated)) {
-    nomo_handoff_malformed(sprintf(
-      "`item_evidence` lists %s more than once", paste(repeated, collapse = ", ")
-    ))
+    stop(
+      sprintf(
+        paste(
+          "This handoff does not have one row per reviewed item:",
+          "`item_evidence` lists %s more than once. A congruence handoff",
+          "written by contentvalidR before 1.0 without a target mapping had",
+          "one row per objective; such a handoff has to be made again from a",
+          "new fit with contentvalidR 1.0 or later. Otherwise the object may",
+          "have been built by hand or edited afterwards: produce it again",
+          "with content_handoff()."
+        ),
+        paste(repeated, collapse = ", ")
+      ),
+      call. = FALSE
+    )
   }
 
   # `carried` is the only field that decides what is analyzed, and `items` must
@@ -70,10 +86,14 @@ nomo_handoff_read <- function(x) {
   }
 
   # content_handoff() does not stop when no item meets its carry rule, so an
-  # empty handoff is a real producer object. It is refused here, before either
-  # reader asks for `items` or `scales`, with what content review decided.
+  # empty handoff is a real producer object: its default rule carries only
+  # "Supported", and a review that applied no decision rule supports nothing.
+  # It is refused here, before either reader asks for `items` or `scales`, with
+  # what content review decided and the statuses `keep` would have to name.
   if (!length(carried)) {
     keep <- as.character(unlist(prov$keep))
+    statuses <- unique(as.character(evidence$status))
+    statuses <- statuses[!is.na(statuses)]
     stop(
       sprintf(
         paste0(
@@ -81,14 +101,21 @@ nomo_handoff_read <- function(x) {
           "(status counts: %s)%s. nomologR analyzes only carried items, so ",
           "there is nothing to screen. To analyze items the review did not ",
           "carry, produce the handoff again with contentvalidR's ",
-          "content_handoff(), naming the statuses to carry in `keep`, and ",
+          "content_handoff(), naming the statuses to carry in `keep`%s, and ",
           "record why."
         ),
         nomo_present_count(nrow(evidence), "reviewed item"),
         nomo_handoff_status_counts(evidence$status),
         if (length(keep)) {
+          # Written as it is typed: one status bare, several inside c().
+          quoted <- paste0("\"", keep, "\"", collapse = ", ")
           sprintf(" under the carry rule keep = %s",
-                  paste0("\"", keep, "\"", collapse = ", "))
+                  if (length(keep) > 1L) sprintf("c(%s)", quoted) else quoted)
+        } else {
+          ""
+        },
+        if (length(statuses)) {
+          sprintf(" (here %s)", nomo_present_or(paste0("\"", statuses, "\"")))
         } else {
           ""
         }
