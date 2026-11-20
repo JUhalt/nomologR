@@ -75,8 +75,8 @@
       Flagged
         - Cases (Review): 473 of 500 input cases were used. Confirm that the loss
           follows the intended missing-data strategy.
-        - b5 on B (Review): Absolute standardized loading is below the configured
-          teaching reference of 0.50; inspect item content, precision, and model
+        - b5 on B (Review): Standardized loading 0.34 is below the review reference
+          0.50 in absolute value; inspect item content, precision, and model
           specification.
       
       What these columns mean
@@ -374,12 +374,12 @@
         - b5 (Review): Standardized loading 0.34 is below the review reference 0.50
           in absolute value; inspect item content, precision, and model
           specification.
-        - A (Review): AVE (.497) is below the configured convergent-evidence
-          reference (.50). Inspect standardized loadings, indicator-specific error,
-          and content coverage; do not automatically delete items.
-        - B (Review): AVE (.43) is below the configured convergent-evidence
-          reference (.50). Inspect standardized loadings, indicator-specific error,
-          and content coverage; do not automatically delete items.
+        - A (Review): AVE .497 is below the review reference .50. Inspect
+          standardized loadings, indicator-specific error, and content coverage; do
+          not automatically delete items.
+        - B (Review): AVE .43 is below the review reference .50. Inspect
+          standardized loadings, indicator-specific error, and content coverage; do
+          not automatically delete items.
       
       What these columns mean
         AVE -- Average variance extracted, the mean share of its indicators'
@@ -1304,10 +1304,9 @@
         - The SocialDesirability EFA (Review): 1 factor on 3 items leaves 0 degrees
           of freedom: the model reproduces the correlations exactly, so an RMSR near
           0 is not evidence of fit.
-        - SocialDesirability in validity (Review): AVE (.47) is below the configured
-          convergent-evidence reference (.50). Inspect standardized loadings,
-          indicator-specific error, and content coverage; do not automatically
-          delete items.
+        - SocialDesirability in validity (Review): AVE .47 is below the review
+          reference .50. Inspect standardized loadings, indicator-specific error,
+          and content coverage; do not automatically delete items.
         - Scores (Review): The parallel model that unit weighting assumes fits worse
           than the model you fitted (Delta chi-square(16) = 41.93, p < .001). The
           items are not interchangeable in the way adding them assumes. This does

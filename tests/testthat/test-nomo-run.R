@@ -2251,9 +2251,12 @@ test_that("the summary lists each component flag where it was raised (#144)", {
                   decisions = list(factor_count = c(Agency = 1L),
                                    cfa_model = "AG =~ ag1 + ag2 + ag3 + ag4 + sd1"))
   s <- utils::capture.output(print(summary(run)))
-  expect_true(any(startsWith(s, "  - sd1 in the CFA (Review): Absolute standardized loading is")))
-  expect_true(any(startsWith(s, "  - sd1 in validity (Review): Standardized loading 0.00 is below")))
-  expect_true(any(startsWith(s, "  - AG in validity (Review): AVE (.47) is below")))
+  # The CFA and validity word a weak loading alike, so its two flags share a
+  # bullet, and the AVE reads as print() of the validity object gives it
+  # (#145, out-7 and the R-0b sweep).
+  expect_true(any(startsWith(s, "  - sd1 in the CFA, sd1 in validity (Review): Standardized loading")))
+  expect_false(any(grepl("Absolute standardized loading is below", s, fixed = TRUE)))
+  expect_true(any(startsWith(s, "  - AG in validity (Review): AVE .47 is below the review")))
 })
 
 

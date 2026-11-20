@@ -1562,7 +1562,8 @@ test_that("references are written as the values they are compared with (#144)", 
   out <- nomo_cfa(hs_three, lavaan::HolzingerSwineford1939, estimator = "MLR",
                   modification_indices = FALSE)
   weak <- out$standardized_loadings$explanation[out$standardized_loadings$attention == "REVIEW"]
-  expect_match(weak, "teaching reference of 0.50;", fixed = TRUE)
+  # The sentence nomo_validity() uses, so a guided run groups the two (#145).
+  expect_match(weak, "^Standardized loading 0\\.[0-9]{2} is below the review reference 0\\.50 in absolute value; ")
   log <- out$decision_log
   expect_identical(log$reference[log$metric == "fit_cfi"], "Configured teaching reference: .950")
   expect_identical(log$reference[log$metric == "fit_rmsea"], "Configured teaching reference: 0.060")
