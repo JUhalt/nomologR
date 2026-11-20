@@ -3,8 +3,8 @@
 These changes lead to 1.0.0, the stable release planned jointly with
 `contentvalidR` (#53). Its first release candidate, `v1.0.0-rc.1` (version
 0.99.0), is planned for 2026-11-24, or earlier if both packages are ready, and
-its tag is the interface freeze. The 1.0.0 release follows on the maintainer's
-sign-off and goes to GitHub and R-universe first; the CRAN submission follows
+its tag is the interface freeze. The 1.0.0 release follows when the maintainer
+signs off, and goes to GitHub and R-universe first; the CRAN submission follows
 it.
 
 - **New methods.** The gap review (#129) added the methods social-science scale

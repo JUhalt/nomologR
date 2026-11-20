@@ -1267,9 +1267,9 @@ sample-size planning by RMSEA power and Monte Carlo simulation
 after 1.0.0; the rest fall under the stability promise. The release
 candidate, `v1.0.0-rc.1`, is planned for 2026-11-24 together with
 `contentvalidR`’s, or earlier if both packages are ready, and its tag is
-the interface freeze. `v1.0.0` follows on the maintainer’s sign-off and
-is released on GitHub and R-universe first; the CRAN submission follows
-it.
+the interface freeze. `v1.0.0` follows when the maintainer signs off,
+and is released on GitHub and R-universe first; the CRAN submission
+follows it.
 
 Larger extensions, such as IRT/DIF, Bayesian SEM, multiple imputation, and
 formative models, are candidates for `1.x`. They are additive, so they do
