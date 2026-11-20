@@ -68,8 +68,9 @@ as the output style shared with \code{contentvalidR} does.
 No cell reads PASS or FAIL, and fit indices are not labeled good or poor.
 
 \strong{Notes say what the table shows.} The general note defines each
-abbreviation, gives the estimator and the number of cases analyzed, and
-says when the chi-square is a scaled test statistic and the fit indices are
+abbreviation, gives the estimator and the number of cases analyzed, says
+when full-information maximum likelihood handled missing values, and says
+when the chi-square is a scaled test statistic and the fit indices are
 robust or scaled values. For a network's hypotheses it also defines each
 evidence label the table shows, such as "Concordant", and each prediction
 is given with the region it names. An interval's heading carries its level,

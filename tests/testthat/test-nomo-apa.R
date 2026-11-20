@@ -658,6 +658,35 @@ test_that("fit tables name the estimator, the cases analyzed, and scaled or robu
 })
 
 
+test_that("reliability and validity notes give the estimator, N, and FIML (#145)", {
+  skip_on_cran()
+  notes <- function(tab) paste(tab$notes$general, collapse = " ")
+  ml <- "Estimated with maximum likelihood (ML); *N* = 800."
+  expect_match(notes(nomo_apa_table(nomo_reliability(apa_cfa()))), ml, fixed = TRUE)
+  expect_match(notes(nomo_apa_table(apa_validity())), ml, fixed = TRUE)
+  expect_match(notes(nomo_apa_table(apa_validity(), "convergent")), ml, fixed = TRUE)
+
+  # The cases analyzed, not the rows supplied: listwise deletion keeps 473.
+  two <- "A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4 + b5"
+  listwise <- nomo_reliability(nomo_cfa(two, nomo_demo_continuous))
+  expect_match(notes(nomo_apa_table(listwise)), "(ML); *N* = 473.", fixed = TRUE)
+
+  # Under FIML every case is analyzed, and the note says how.
+  fiml <- nomo_cfa(two, nomo_demo_continuous, missing = "fiml")
+  sentence <- "Missing values were handled by full-information maximum likelihood (FIML)."
+  for (tab in list(nomo_apa_table(fiml, "fit"), nomo_apa_table(fiml, "loadings"),
+                   nomo_apa_table(nomo_reliability(fiml)))) {
+    expect_match(notes(tab), paste("(ML); *N* = 500.", sentence), fixed = TRUE)
+  }
+  expect_false(grepl("FIML", notes(nomo_apa_table(listwise)), fixed = TRUE))
+
+  # The estimator requested, WLSMV, not the DWLS lavaan files it under.
+  ordinal <- nomo_reliability(nomo_cfa(two, nomo_demo_ordinal))
+  expect_match(notes(nomo_apa_table(ordinal)), "(WLSMV); *N* = 500.", fixed = TRUE)
+  expect_identical(nomologR:::nomo_apa_fit_sample_note(NULL), "")
+})
+
+
 test_that("correlations a model fixes are not tabled as estimates (#145)", {
   skip_on_cran()
   hs <- lavaan::HolzingerSwineford1939
