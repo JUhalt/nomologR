@@ -1259,16 +1259,25 @@ test_that("a correlation fixed in some groups or levels is left out only there (
 
   # With both groups and levels, lavaan stores each group's label rather than
   # its number; the block was NA and the fixed pair read "(NA, within)" (#145).
+  # The grouping column has a name of its own, since lavaan warns when a
+  # factor's name is also a column's. Half the clusters per group leave some
+  # cluster-level variances negative; that warning alone is muffled, since the
+  # labels are what is tested here.
   twolevel <- lavaan::Demo.twolevel
-  twolevel$g <- ifelse(twolevel$cluster %% 2 == 0, "even", "odd")
+  twolevel$half <- ifelse(twolevel$cluster %% 2 == 0, "even", "odd")
   block <- function(label, fixed) {
     c(paste("group:", label), "level: 1", "f =~ y1 + y2 + y3", "g =~ y4 + y5 + y6",
       if (fixed) "f ~~ 0*g", "level: 2", "f =~ y1 + y2 + y3", "g =~ y4 + y5 + y6")
   }
-  grouped <- nomo_validity(lavaan::cfa(
+  negative_variances <- function(w) {
+    if (grepl("variances are negative", conditionMessage(w), fixed = TRUE)) {
+      invokeRestart("muffleWarning")
+    }
+  }
+  grouped <- withCallingHandlers(nomo_validity(lavaan::cfa(
     paste(c(block("even", TRUE), block("odd", FALSE)), collapse = "\n"),
-    data = twolevel, cluster = "cluster", group = "g", std.lv = TRUE
-  ), htmt = "none")
+    data = twolevel, cluster = "cluster", group = "half", std.lv = TRUE
+  ), htmt = "none"), warning = negative_variances)
   stored <- grouped$latent_correlations
   expect_false(anyNA(stored$block))
   expect_setequal(stored$block, c("even", "odd"))
