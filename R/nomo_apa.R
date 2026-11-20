@@ -1274,10 +1274,12 @@ nomo_apa_marker <- "\\([a-z](,[a-z])*\\)"
 # A cell's statistical clauses bound with no-break spaces, as the console binds
 # them; a bound kept with its relation, "\u2265 0.20" or "> 0", though not the
 # arrow of a relation such as "Agency -> Persistence"; a note marker with the
-# word it follows, "scalar (a)"; and every "x = y" of a note, Greek symbols
-# included ("\u03b1 = .05").
+# word it follows, "scalar (a)"; every "x = y" of a note, Greek symbols
+# included ("\u03b1 = .05"); and a product such as the retest note's
+# "1.96 \u00d7 \u221a2 \u00d7 SEM", which is read as one term (#145).
 nomo_apa_bind <- function(text) {
   nb <- nomo_present_nbsp
+  text <- gsub(" \u00d7 ", paste0(nb, "\u00d7", nb), text, fixed = TRUE)
   text <- gsub("(^|[[:space:]])([\u2264\u2265<>]=?) ", paste0("\\1\\2", nb), text)
   text <- gsub(paste0(" (", nomo_apa_marker, ")$"), paste0(nb, "\\1"), text)
   nomo_present_bind(gsub(" = ", paste0(nb, "=", nb), text, fixed = TRUE))

@@ -119,7 +119,7 @@ test_that("the invariance table reports changes without a signed zero", {
   expect_false(any(grepl("^-\\.0+$|^-0\\.0+$", unlist(tab$body))))
   expect_match(tab$notes$general, "Grouping variable: group, with", fixed = TRUE)
   expect_match(tab$notes$general,
-               "standardized root mean square residual; Δ = change from the model above.",
+               "standardized root mean square residual; \u0394 = change from the model above.",
                fixed = TRUE)
 })
 
@@ -130,12 +130,12 @@ test_that("an invariance table of one model has no change columns (#145)", {
                          group = "group", levels = "configural")
   tab <- nomo_apa_table(one)
   expect_identical(names(tab$body),
-                   c("Model", "χ²", "*df*", "CFI", "RMSEA", "SRMR"))
+                   c("Model", "\u03c7\u00b2", "*df*", "CFI", "RMSEA", "SRMR"))
   expect_identical(tab$body$Model, "Configural")
   note <- paste(tab$notes$general, collapse = " ")
   expect_match(note, "standardized root mean square residual. Grouping variable",
                fixed = TRUE)
-  expect_false(grepl("Δ", note, fixed = TRUE))
+  expect_false(grepl("\u0394", note, fixed = TRUE))
   expect_false(grepl("Each model adds constraints", note, fixed = TRUE))
   expect_match(note, "Fit indices are reported as evidence, not against fixed cutoffs.",
                fixed = TRUE)
@@ -435,9 +435,9 @@ test_that("tables of an improper solution say the admissibility check did not pa
   # lavaan estimated b4 and b5; their standardized loadings are not finite.
   loadings <- tables[[1L]]
   expect_identical(loadings$body$B[loadings$body$Item %in% c("b4", "b5")],
-                   rep("—", 2L))
+                   rep("\u2014", 2L))
   expect_match(notes(loadings),
-               "— = not available (the standardized value is not finite).",
+               "\u2014 = not available (the standardized value is not finite).",
                fixed = TRUE)
   expect_false(grepl("not estimated", notes(loadings), fixed = TRUE))
 
@@ -457,7 +457,7 @@ test_that("an AVE just below its reference is not printed as the reference (#145
   tab <- nomo_apa_table(v, "convergent")
   expect_identical(tab$body$AVE, c(".497", ".53", ".4999"))
   v$ave$estimate[[2L]] <- NA_real_
-  expect_identical(nomo_apa_table(v, "convergent")$body$AVE[[2L]], "—")
+  expect_identical(nomo_apa_table(v, "convergent")$body$AVE[[2L]], "\u2014")
 })
 
 
@@ -870,6 +870,15 @@ test_that("the console fits an APA table to its width and names what it leaves o
   retest <- capture.output(print(tables[[2L]]))
   expect_true(any(grepl("^Composite +n +\\[95% CI\\] +\\[95% CI\\] +\\[95% CI\\] +SEM +SDC$",
                         retest)))
+  # The formula of the smallest detectable change is never broken across
+  # lines, at any width.
+  for (width in 40:80) {
+    local_reproducible_output(width = width)
+    retest <- capture.output(print(tables[[2L]]))
+    expect_true(any(grepl("1.96 \u00d7 \u221a2 \u00d7 SEM", retest, fixed = TRUE)),
+                label = paste("the formula at width", width))
+  }
+  local_reproducible_output(width = 80)
 
   # A number keeps its column whether or not a note marker follows it: the
   # closing bracket of every interval sits in one column.
