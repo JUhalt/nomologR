@@ -6,7 +6,10 @@ test_that("nomo_factors validates core inputs", {
   )
 
   expect_error(nomo_factors(matrix(1:9, 3, 3)), "data frame")
-  expect_error(nomo_factors(dat, items = c("a", "nope", "c")), "Unknown")
+  expect_error(nomo_factors(dat, items = c("a", "nope", "c")), "Unknown item column: nope.",
+               fixed = TRUE)
+  expect_error(nomo_factors(dat, items = c("a", "nope", "gone")),
+               "Unknown item columns: nope, gone.", fixed = TRUE)
   expect_error(nomo_factors(dat, items = c("a", "b")), "at least three")
   expect_error(nomo_factors(dat, n_iter = 5), "at least 10")
   expect_error(nomo_factors(dat, quantile = 1), "strictly between")
@@ -40,6 +43,18 @@ test_that("numeric-discrete items remain conservative unless overridden", {
   expect_true(
     any(pearson$decision_log$metric == "numeric_discrete_assumption")
   )
+
+  # The row counts the items it names: all five, or the one left when the
+  # others are declared.
+  entry <- pearson$decision_log[pearson$decision_log$metric == "numeric_discrete_assumption", ]
+  expect_equal(entry$value, 5)
+  expect_match(entry$observation, "5 numeric-discrete items ", fixed = TRUE)
+  declared <- stats::setNames(rep("continuous", 4L), paste0("i", 1:4))
+  one <- nomo_factors(likert, types = declared, n_iter = 10, seed = 10)
+  entry <- one$decision_log[one$decision_log$metric == "numeric_discrete_assumption", ]
+  expect_identical(entry$object, "i5")
+  expect_equal(entry$value, 1)
+  expect_match(entry$observation, "^1 numeric-discrete item [^s].*: i5[.]$")
 
   ordinal_types <- stats::setNames(
     rep("ordinal", ncol(likert)),
@@ -428,7 +443,13 @@ test_that("remaining modeling-type defensive branches are protected", {
   )
   expect_error(
     nomo_factors(dat, types = c(i1 = "unsupported")),
-    "Unsupported modeling type"
+    "Unsupported modeling type: unsupported.",
+    fixed = TRUE
+  )
+  expect_error(
+    nomo_factors(dat, types = c(i1 = "likert", i2 = "nominal")),
+    "Unsupported modeling types: likert, nominal. Use continuous, ordinal, or binary.",
+    fixed = TRUE
   )
 
   character_dat <- data.frame(
@@ -2086,6 +2107,44 @@ test_that("closeout B: MAP truncation and unavailable adequacy engines are expli
   bart <- nomologR:::nomo_factors_bartlett(diag(3), n = 100L, available = TRUE)
   expect_false(bart$available)
   expect_match(bart$reason, "could not be computed", fixed = TRUE)
+})
+
+
+test_that("a truncated MAP is logged with the number of components it reached", {
+  map_log <- function(m_last) {
+    log <- nomologR:::nomo_factors_log(
+      item_types = tibble::tibble(item = "x", model_type = "continuous", source = "inferred"),
+      requested_correlation = "pearson",
+      correlation_method = "pearson",
+      missing = "complete",
+      min_pairwise_n = 100L,
+      smoothed = FALSE,
+      original_min_eigen = .50,
+      kmo = list(available = TRUE, overall = .80,
+                 item = tibble::tibble(item = "x", msa = .80)),
+      bartlett = list(available = FALSE, reason = "Synthetic unavailable."),
+      pa = list(
+        n_factors = 1L, rule = "percentile", quantile = .95,
+        sensitivity = tibble::tibble(rule = c("percentile", "mean", "crawford"),
+                                     n_factors = c(1L, 1L, 1L))
+      ),
+      map = list(n_factors_original = 1L, n_factors_revised = 1L, truncated = TRUE,
+                 m_last = m_last),
+      criteria = list(status = tibble::tibble(), evidence = tibble::tibble()),
+      synthesis = list(support_for_primary = 1L, agreement = "convergent",
+                       text = "Synthetic convergence."),
+      guidance = nomo_defaults()
+    )
+    log[log$metric == "map_truncated", ]
+  }
+
+  one <- map_log(1L)
+  expect_identical(one$severity, "review")
+  expect_equal(one$value, 1)
+  expect_identical(one$observation,
+                   "MAP could be evaluated only through 1 partialled component.")
+  expect_identical(map_log(2L)$observation,
+                   "MAP could be evaluated only through 2 partialled components.")
 })
 
 
