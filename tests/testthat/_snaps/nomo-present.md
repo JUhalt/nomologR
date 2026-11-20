@@ -987,13 +987,13 @@
         is judged on.
       
       Flagged
-        - Review: `Persistence <-> SocialDesirability`, estimated in the model as
-          given, is fixed to zero in the fitted model: with the hypothesized paths,
-          `Persistence` is an outcome, and lavaan does not covary an outcome's
-          residual with a variable that does not predict it.
-        - Review: `Performance <-> SocialDesirability` is fixed to zero in the
-          fitted model: the hypotheses bring `Performance` into the model, and
-          neither they nor lavaan's defaults relate the two.
+        - Persistence <-> SocialDesirability (Review): The relation, estimated in
+          the model as given, is fixed to zero in the fitted model: with the
+          hypothesized paths, `Persistence` is an outcome, and lavaan does not
+          covary an outcome's residual with a variable that does not predict it.
+        - Performance <-> SocialDesirability (Review): The relation is fixed to zero
+          in the fitted model: the hypotheses bring `Performance` into the model,
+          and neither they nor lavaan's defaults relate the two.
       
       Theory concordance, uncertainty, measurement quality, and replication are
       distinct evidence streams. Statistical significance alone is not a validity
@@ -1050,17 +1050,17 @@
         Concordant: 3
       
       Flagged
-        - Review: `Persistence <-> SocialDesirability`, estimated in the model as
-          given, is fixed to zero in the fitted model: with the hypothesized paths,
-          `Persistence` is an outcome, and lavaan does not covary an outcome's
-          residual with a variable that does not predict it. Fixing a relation to
-          zero is a restriction of the network, and its misfit counts against the
-          theory's structure. If the theory allows the relation, add it as a
-          hypothesis or write it in `model`.
-        - Review: `Performance <-> SocialDesirability` is fixed to zero in the
-          fitted model: the hypotheses bring `Performance` into the model, and
-          neither they nor lavaan's defaults relate the two. Fixing a relation to
-          zero is a restriction of the network, and its misfit counts against the
+        - Persistence <-> SocialDesirability (Review): The relation, estimated in
+          the model as given, is fixed to zero in the fitted model: with the
+          hypothesized paths, `Persistence` is an outcome, and lavaan does not
+          covary an outcome's residual with a variable that does not predict it.
+          Fixing a relation to zero is a restriction of the network, and its misfit
+          counts against the theory's structure. If the theory allows the relation,
+          add it as a hypothesis or write it in `model`.
+        - Performance <-> SocialDesirability (Review): The relation is fixed to zero
+          in the fitted model: the hypotheses bring `Performance` into the model,
+          and neither they nor lavaan's defaults relate the two. Fixing a relation
+          to zero is a restriction of the network, and its misfit counts against the
           theory's structure. If the theory allows the relation, add it as a
           hypothesis or write it in `model`.
       
