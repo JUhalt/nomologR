@@ -745,6 +745,10 @@ nomo_apa_table.nomo_invariance <- function(x, type = NULL, number = NULL,
     "Model", "\u03c7\u00b2", "*df*", "CFI", "RMSEA", "SRMR",
     "\u0394CFI", "\u0394RMSEA", "\u0394\u03c7\u00b2 (\u0394*df*)", "*p*"
   )
+  # A table of one model, such as the configural model alone, has no change
+  # in fit to report, so its change columns are left out rather than blank.
+  several <- nrow(fe) > 1L
+  if (!several) body <- body[, seq_len(6L), drop = FALSE]
 
   across_occasions <- identical(x$design, "occasions")
   across <- if (across_occasions) "occasions" else "groups"
@@ -789,9 +793,11 @@ nomo_apa_table.nomo_invariance <- function(x, type = NULL, number = NULL,
     ),
     stub = "Model",
     general = nomo_apa_join(
-      "CFI = comparative fit index; RMSEA = root mean square error of",
-      "approximation; SRMR = standardized root mean square residual; \u0394 =",
-      "change from the model above.",
+      paste0(
+        "CFI = comparative fit index; RMSEA = root mean square error of ",
+        "approximation; SRMR = standardized root mean square residual",
+        if (several) "; \u0394 = change from the model above", "."
+      ),
       design,
       nomo_apa_sample_note(nomo_invariance_estimator(x), nomo_apa_or(x[["n_used"]], NA_real_),
                            nomo_apa_or(x[["missing"]], NA)),
@@ -799,8 +805,14 @@ nomo_apa_table.nomo_invariance <- function(x, type = NULL, number = NULL,
         version("chisq"), c(CFI = version("cfi"), RMSEA = version("rmsea")),
         test = nomo_invariance_test_label(x), models = nrow(fe)
       ),
-      "Each model adds constraints to the one above it. Changes in fit are",
-      "reported as evidence and are not compared with fixed cutoffs.",
+      if (several) {
+        paste(
+          "Each model adds constraints to the one above it. Changes in fit are",
+          "reported as evidence and are not compared with fixed cutoffs."
+        )
+      } else {
+        "Fit indices are reported as evidence, not against fixed cutoffs."
+      },
       nomo_apa_dash_note(body, "not computed")
     ),
     specific = marked$specific,

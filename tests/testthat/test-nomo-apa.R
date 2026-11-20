@@ -118,6 +118,27 @@ test_that("the invariance table reports changes without a signed zero", {
   expect_identical(tab$body$Model[[1L]], "Configural")
   expect_false(any(grepl("^-\\.0+$|^-0\\.0+$", unlist(tab$body))))
   expect_match(tab$notes$general, "Grouping variable: group, with", fixed = TRUE)
+  expect_match(tab$notes$general,
+               "standardized root mean square residual; Δ = change from the model above.",
+               fixed = TRUE)
+})
+
+
+test_that("an invariance table of one model has no change columns (#145)", {
+  skip_on_cran()
+  one <- nomo_invariance("Agency =~ ag1 + ag2 + ag3 + ag4", data = nomo_demo_network,
+                         group = "group", levels = "configural")
+  tab <- nomo_apa_table(one)
+  expect_identical(names(tab$body),
+                   c("Model", "χ²", "*df*", "CFI", "RMSEA", "SRMR"))
+  expect_identical(tab$body$Model, "Configural")
+  note <- paste(tab$notes$general, collapse = " ")
+  expect_match(note, "standardized root mean square residual. Grouping variable",
+               fixed = TRUE)
+  expect_false(grepl("Δ", note, fixed = TRUE))
+  expect_false(grepl("Each model adds constraints", note, fixed = TRUE))
+  expect_match(note, "Fit indices are reported as evidence, not against fixed cutoffs.",
+               fixed = TRUE)
 })
 
 
