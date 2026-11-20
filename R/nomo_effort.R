@@ -443,7 +443,7 @@ nomo_effort_log <- function(result, n_items) {
       log, stage = "screen", object = "cases",
       metric = paste0("psychometric_", kind),
       value = n_flag,
-      # Fewer than three pairs left the loop above, so the count is plural.
+      # A kind with fewer than three pairs went on to the next above (`next`).
       reference = sprintf(
         "Curran (2016): %s, computed here over %d pairs",
         rule, n_pairs
