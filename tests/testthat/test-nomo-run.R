@@ -157,6 +157,16 @@ test_that("resume protects source data scales and guidance", {
     ),
     "nomo_run"
   )
+
+  # A mode given when resuming replaces the saved one; a mode, guidance, or
+  # settings left out keeps what the run holds.
+  research <- nomo_run(resume = run, mode = "research")
+  expect_identical(research$mode, "research")
+  kept <- nomo_run(resume = research)
+  expect_identical(kept$mode, "research")
+  expect_identical(kept$guidance, run$guidance)
+  expect_identical(kept$settings, run$settings)
+  expect_identical(kept$next_stage, "efa")
 })
 
 
