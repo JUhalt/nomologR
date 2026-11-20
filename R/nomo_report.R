@@ -983,19 +983,20 @@ nomo_report_scores <- function(scores) {
     parallel$note
   }
 
-  # Validity and correlational accuracy show the decimals that tell them from
-  # the reference beside them, Gorsuch's .90 and a discrepancy of .05, as
-  # print() does (#145).
-  diagnostics <- scores$diagnostics
+  # In the report's table, validity and correlational accuracy show the
+  # decimals that tell them from the reference beside them, Gorsuch's .90 and
+  # a discrepancy of .05, as print() does (#145). `diagnostics` stays the
+  # result's own table.
+  diagnostics_table <- scores$diagnostics
   references <- list()
-  if (is.numeric(diagnostics[["validity"]])) {
-    references$validity <- rep(0.90, nrow(diagnostics))
+  if (is.numeric(diagnostics_table[["validity"]])) {
+    references$validity <- rep(0.90, nrow(diagnostics_table))
   }
-  if (is.numeric(diagnostics[["correlational_accuracy"]])) {
-    references$correlational_accuracy <- sign(diagnostics$correlational_accuracy) *
+  if (is.numeric(diagnostics_table[["correlational_accuracy"]])) {
+    references$correlational_accuracy <- sign(diagnostics_table$correlational_accuracy) *
       nomo_scores_discrepancy_reference
   }
-  attr(diagnostics, "nomo_report_references") <- lapply(references, as.list)
+  attr(diagnostics_table, "nomo_report_references") <- lapply(references, as.list)
 
   list(
     summary = paste(c(
@@ -1008,7 +1009,8 @@ nomo_report_scores <- function(scores) {
       parallel_text,
       "No value here is a pass/fail threshold."
     ), collapse = " "),
-    diagnostics = diagnostics,
+    diagnostics = scores$diagnostics,
+    diagnostics_table = diagnostics_table,
     notes = scores$notes
   )
 }

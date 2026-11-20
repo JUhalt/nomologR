@@ -1895,9 +1895,14 @@ test_that("report cells follow print() where a column's name cannot say how (#14
     ),
     parallel_test = list(available = FALSE, note = ""), notes = tibble::tibble()
   ))
-  shown <- nomologR:::nomo_report_display_table(scores$diagnostics)
+  shown <- nomologR:::nomo_report_display_table(scores$diagnostics_table)
   expect_identical(shown$Validity, c(".903", ".95"))
   expect_identical(shown[["Correlational accuracy"]], c("-.0496", ".02"))
+  # The result's own table is passed on as it is; only the report's copy
+  # carries the references.
+  expect_null(attr(scores$diagnostics, "nomo_report_references"))
+  expect_identical(nomologR:::nomo_report_display_table(scores$diagnostics)$Validity,
+                   c(".90", ".95"))
 
   # A stage configured with no setting of its own runs with its defaults.
   run <- make_m9_report_run()

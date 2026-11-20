@@ -550,7 +550,7 @@ if (!is.null(run$results$scores)) {
   cat("\n# Scores\n\n")
   emit_note(scores_report$summary)
   cat("\n## Score properties (Grice, 2001)\n\n")
-  emit_table(scores_report$diagnostics, truncate = FALSE)
+  emit_table(scores_report$diagnostics_table, truncate = FALSE)
   cat("\n## Notes\n\n")
   emit_table(scores_report$notes, empty = "No notes were recorded.", truncate = FALSE)
 }
