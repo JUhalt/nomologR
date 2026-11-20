@@ -3212,6 +3212,15 @@ test_that("the summary counts and facts read as label: value (#145)", {
   expect_match(summary_text, "Status: no flags | Constructs: 3", fixed = TRUE)
   expect_no_match(summary_text, ": none", fixed = TRUE)
   expect_match(rg_text(summary(rg_split())), "Replication\n  Mixed: 1 | Replicated: 2\n", fixed = TRUE)
+  # print() counts every flag the object holds, also those it leaves to the
+  # hypothesis tables and to summary() (#145, out-9).
+  split <- rg_split()
+  severity <- split$decision_log$severity
+  shown <- utils::capture.output(print(split))
+  expect_true(sprintf("Total flags: %d concern, %d review",
+                      sum(severity == "concern"), sum(severity == "review")) %in% shown)
+  bullets <- sum(startsWith(shown[(which(shown == "Flagged") + 1L):length(shown)], "  - "))
+  expect_gt(sum(severity %in% c("review", "concern")), bullets)
   expect_match(summary_text, "\nSee nomo_table(x, \"decision_log\") for every decision-log row",
                fixed = TRUE)
   # The facts inside a section break between parts, never inside one.

@@ -976,6 +976,7 @@
       Cases: 800 | Converged: yes
       Theory relations: 3 | Added to the model from hypotheses: 2
       Measurement context: no flags | Model fit: no flags
+      Total flags: 0 concern, 2 review
       
       Hypothesis evidence
         ID  Relation                       Concordance  Estimate  CI

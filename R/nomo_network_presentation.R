@@ -531,7 +531,11 @@ print.nomo_network <- function(x, ...) {
     }),
     paste0("Model fit: ", nomo_network_stream_status(
       nomo_network_log_severity(x$decision_log, "model_fit")
-    ))
+    )),
+    # Every flag the object holds, so print() never shows fewer than there are:
+    # the hypothesis tables show the concordance and replication flags by
+    # status, and summary() explains each (#145, out-9).
+    paste0("Total flags: ", nomo_present_flag_counts(x$decision_log$severity))
   ))
   nomo_network_present_single(
     x[["single_indicators"]], x[["single_indicator_sensitivity"]]
