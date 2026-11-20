@@ -205,21 +205,38 @@ nomo_present_prose_width <- function() {
 # a name, its relation, and the next word ("p < .001", "N = 473", "alpha =
 # .05", "CI = confidence"); a closing parenthesis and its value ("F(2, 14) =
 # 3.21", "chi-square(34) = 75.83"); an interval ("[.12, .34]") and its label
-# ("95% CI [.12, .34]"); and the degrees of freedom of a test ("F(2, 14)",
-# "chi-square(1, N = 40)"). As contentvalidR does.
+# ("95% CI [.12, .34]"); the degrees of freedom of a test ("F(2, 14)",
+# "chi-square(1, N = 40)") and "Delta" to the test it names ("Delta
+# chi-square(6)"); a page citation ("p. 260", "pp. 6-47"); and a call written
+# in prose, such as nomo_table(x, "criteria"). A name may hold underscores and
+# dots ("ord.scale = TRUE"). As contentvalidR does.
 nomo_present_bind <- function(x) {
   nb <- nomo_present_nbsp
   rel <- "([<>]=?|!?=)"
   # A name that itself follows a relation is left free, so a chain such as
-  # "a > b > c" binds only its first clause and can still be wrapped.
-  x <- gsub(paste0("(?<![<>=] )\\b([A-Za-z][A-Za-z0-9-]*) ", rel, " "),
+  # "a > b > c" binds only its first clause and can still be wrapped. So is a
+  # value that opens a call, as in code: "decisions = list(cfa_model = ...".
+  x <- gsub(paste0("(?<![<>=] )(?<![A-Za-z0-9_.])([A-Za-z][A-Za-z0-9_.-]*) ", rel,
+                   " (?=[^\\s(]*(\\s|$))"),
             paste0("\\1", nb, "\\2", nb), x, perl = TRUE)
   x <- gsub(paste0("\\) ", rel, " "), paste0(")", nb, "\\1", nb), x, perl = TRUE)
   x <- gsub("\\[([^]\\[]*), ([^]\\[]*)\\]", paste0("[\\1,", nb, "\\2]"), x,
             perl = TRUE)
   x <- gsub("\\(([0-9.]+), ", paste0("(\\1,", nb), x, perl = TRUE)
   x <- gsub("([0-9.]+%) CI\\b", paste0("\\1", nb, "CI"), x, perl = TRUE)
-  gsub("\\bCI \\[", paste0("CI", nb, "["), x, perl = TRUE)
+  x <- gsub("\\bCI \\[", paste0("CI", nb, "["), x, perl = TRUE)
+  x <- gsub("\\bDelta chi-square", paste0("Delta", nb, "chi-square"), x, perl = TRUE)
+  x <- gsub("\\b(pp?\\.) (?=[0-9])", paste0("\\1", nb), x, perl = TRUE)
+  # A short call's arguments stay with it: nomo_table(x, "criteria"). A call
+  # with named arguments or one longer than 30 characters is left free, so a
+  # narrow console can still wrap it.
+  calls <- gregexpr("(?<![A-Za-z0-9_.])[A-Za-z.][A-Za-z0-9_.]*\\([^()=]*\\)", x, perl = TRUE)
+  regmatches(x, calls) <- lapply(regmatches(x, calls), function(call) {
+    short <- nchar(call, type = "width") <= 30L
+    call[short] <- gsub(" ", nb, call[short], fixed = TRUE)
+    call
+  })
+  x
 }
 
 # Wrapped lines with every clause kept whole; the no-break spaces are spaces
@@ -732,7 +749,9 @@ nomo_present_table <- function(x, columns, formats = list(), more = NULL,
     }, character(1)))
   }
   if (length(hidden)) {
-    note <- paste0("Not shown for width: ", paste(hidden, collapse = ", "), ".")
+    # A label of several words, such as "Max SE bias", is never broken.
+    labels <- gsub(" ", nomo_present_nbsp, hidden, fixed = TRUE)
+    note <- paste0("Not shown for width: ", paste(labels, collapse = ", "), ".")
     if (!is.null(more)) {
       note <- paste0(note, " See ", gsub(" ", nomo_present_nbsp, more, fixed = TRUE), ".")
     }

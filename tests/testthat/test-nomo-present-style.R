@@ -133,6 +133,26 @@ test_that("statistical clauses are never broken across lines (#145)", {
                    "chi-square(34)_=_75.83 and chi-square(1,_N_=_40)")
   # A chain binds only its first clause, so it can still be wrapped.
   expect_identical(bind("a > b > c"), "a_>_b > c")
+  # "Delta" stays with its test, a page with its number, a short call with its
+  # arguments, and a name with underscores or dots with its value (#145,
+  # R-0b follow-up). A call with a named argument, or a long one, stays free.
+  expect_identical(bind("Delta chi-square(2) = 3.00"), "Delta_chi-square(2)_=_3.00")
+  expect_identical(bind("Gorsuch (1983, p. 260) and pp. 6-47"),
+                   "Gorsuch (1983,_p._260) and pp._6-47")
+  expect_identical(bind('See nomo_table(x, "criteria") now.'), 'See nomo_table(x,_"criteria") now.')
+  expect_identical(bind('nomo_table(x, type = "fit")'), 'nomo_table(x, type_=_"fit")')
+  expect_identical(bind('nomo_table(x, "hypothesis_evidence")'), 'nomo_table(x, "hypothesis_evidence")')
+  expect_identical(bind("with ord.scale = TRUE and ci_lower = .12"),
+                   "with ord.scale_=_TRUE and ci_lower_=_.12")
+  expect_identical(bind("x.y = 1"), "x.y_=_1")
+  # Code is not bound into one long run: a value that opens a call stays free.
+  expect_identical(bind("decisions = list(cfa_model = list(value = model, source = x)"),
+                   "decisions = list(cfa_model = list(value_=_model, source_=_x)")
+  # Unbound, the first line would end on "nomo_table(x,".
+  call <- utils::capture.output(nomologR:::nomo_present_text(
+    strrep("z", 15), ' see nomo_table(x, "criteria") gives it.'
+  ))
+  expect_identical(call, c(paste(strrep("z", 15), "see"), 'nomo_table(x, "criteria") gives it.'))
 
   # Nothing is left bound in what is printed.
   wrapped <- utils::capture.output(nomologR:::nomo_present_text(

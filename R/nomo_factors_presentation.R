@@ -57,7 +57,7 @@ print.nomo_factors <- function(x, ...) {
   ))
 
   cat("\n")
-  nomo_present_text(nomo_factors_bind_calls(x$recommendation))
+  nomo_present_text(x$recommendation)
   nomo_present_pointer("summary(x)", "the evidence by method and the criteria that did not run")
   invisible(x)
 }
@@ -101,13 +101,6 @@ nomo_factors_method_counts <- function(x) {
     families = if (is.null(x$family_evidence)) recommended else nrow(x$family_evidence),
     skipped = sum(status$status == "skipped")
   )
-}
-
-
-# A call named in the synthesis, such as nomo_table(x, "criteria"), is kept on
-# one line when the text is wrapped.
-nomo_factors_bind_calls <- function(text) {
-  gsub("(\\w+\\(x,) ", paste0("\\1", nomo_present_nbsp), text)
 }
 
 
@@ -268,7 +261,7 @@ print.summary_nomo_factors <- function(x, ...) {
                        text = paste(flags$observation, flags$recommendation))
 
   nomo_present_section("Synthesis")
-  nomo_present_text(nomo_factors_bind_calls(x$recommendation), indent = 2L)
+  nomo_present_text(x$recommendation, indent = 2L)
 
   nomo_present_key(nomo_factors_key(status), title = "Abbreviations")
 
