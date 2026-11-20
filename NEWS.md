@@ -370,6 +370,7 @@ that does. A call that worked is not affected.
   - **Careless responding.** The evidence table keeps the rows that say why an index has no value.
 - `nomo_report()` labels and rounds what it shows as printed output does (#145).
   - **Bartlett's test.** The supporting-adequacy row reads "Bartlett's test, p", since its Value is the p value, beside KMO's statistic.
+  - **Paused runs.** A run that paused before the invariance or network stage says the stage "was not reached", not that it "was not completed", which read as though it had been requested.
 
 ### APA tables and `nomo_table()`
 

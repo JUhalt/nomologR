@@ -565,6 +565,10 @@ if (!length(inv_list)) {
   status <- stage_status$status[stage_status$stage == "invariance"]
   if (length(status) && identical(status[[1L]], "not_requested")) {
     emit_note("Measurement invariance was not requested in this workflow.")
+  } else if (length(status) && identical(status[[1L]], "not_started")) {
+    # A run that paused before this stage has not read whether it was
+    # requested, so the note does not say it was left incomplete (#145).
+    emit_note("Measurement invariance was not reached in this workflow.")
   } else {
     emit_note("Measurement invariance was not completed in this workflow.")
   }
@@ -602,6 +606,8 @@ if (!length(net_list)) {
   status <- stage_status$status[stage_status$stage == "network"]
   if (length(status) && identical(status[[1L]], "not_requested")) {
     emit_note("A theory-specified nomological network was not requested.")
+  } else if (length(status) && identical(status[[1L]], "not_started")) {
+    emit_note("The nomological-network stage was not reached in this workflow.")
   } else {
     emit_note("The nomological-network stage was not completed.")
   }

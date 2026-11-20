@@ -826,6 +826,14 @@ test_that("nomo_report renders a polished self-contained HTML archive when Pando
 
   # The report is intended to be archiveable without a MathJax network request.
   expect_false(grepl("MathJax.js", html, fixed = TRUE))
+
+  # The run paused before the optional stages, so the report does not say
+  # they were requested and left incomplete (#145).
+  expect_match(html, "Measurement invariance was not reached in this workflow.",
+               fixed = TRUE)
+  expect_match(html, "The nomological-network stage was not reached in this workflow.",
+               fixed = TRUE)
+  expect_false(grepl("invariance was not completed", html, fixed = TRUE))
 })
 
 
