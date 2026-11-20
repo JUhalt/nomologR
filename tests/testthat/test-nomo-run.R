@@ -1965,6 +1965,15 @@ test_that("a held-back item's missing status or recommendation is not quoted as 
                    "EF5 was held back by content review: status \"Review\".")
   expect_identical(log$observation[log$id == "held_back:TF5"],
                    "TF5 was held back by content review.")
+
+  # A held-back item is logged under its scale, and under the scales as a
+  # whole when content review assigned it to none.
+  ev$scale[ev$item == "TF5"] <- NA_character_
+  h$item_evidence <- ev
+  log <- nomologR:::nomo_run_handoff_log(nomologR:::nomo_run_workflow_log_new(),
+                                         nomologR:::nomo_handoff_read(h))
+  expect_identical(log$scope[match(c("held_back:EF5", "held_back:TF5"), log$id)],
+                   c("EF", "scales"))
 })
 
 
