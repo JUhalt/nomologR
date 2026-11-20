@@ -790,3 +790,34 @@ test_that("pair counts read in the right number (#145)", {
   long <- short$decision_log$observation[short$decision_log$metric == "long_string"]
   expect_match(long, "at least 1 consecutive item, half of the 1 item screened.", fixed = TRUE)
 })
+
+
+test_that("a rule that flags no case is information, not review", {
+  fx <- effort_data()
+  attentive <- fx$data[fx$group == "attentive", ]
+
+  # Without the straight-liners no case gives the same answer to half the 24
+  # items, so the long-string rule, applied at 24 items, flags no case.
+  out <- nomo_screen(attentive, effort = TRUE, scales = fx$scales, reverse = fx$reverse,
+                     scale_range = c(1, 5))
+  long <- out$decision_log[out$decision_log$metric == "long_string", ]
+  expect_true(out$effort_settings$long_string_rule_applied)
+  expect_equal(long$value, 0)
+  expect_identical(long$severity, "info")
+
+  # A pair rule with enough pairs and no flagged case is information too. The
+  # attentive respondents still cross zero by chance, so the flags are
+  # cleared here to isolate the rule's severity.
+  result <- nomologR:::nomo_effort_screen(attentive, long_string_min_items = 20L,
+                                          scales = fx$scales, reverse = fx$reverse,
+                                          scale_range = c(1, 5))
+  n_pairs <- nrow(result$antonym_pairs)
+  expect_gte(n_pairs, 3L)
+  result$effort$flag_antonym[] <- FALSE
+  log <- nomologR:::nomo_effort_log(result, n_items = 24L)
+  antonym <- log[log$metric == "psychometric_antonym", ]
+  expect_equal(antonym$value, 0)
+  expect_identical(antonym$severity, "info")
+  expect_match(antonym$reference, sprintf("computed here over %d pairs", n_pairs), fixed = TRUE)
+  expect_match(antonym$observation, "0 cases (0.0%) showed", fixed = TRUE)
+})
