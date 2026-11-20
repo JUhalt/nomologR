@@ -336,12 +336,15 @@ nomo_report_sentence <- function(x) {
 
 
 # A table can carry, as attributes, what its column names cannot say (#145):
-# `nomo_report_kinds`, a list naming each column's kind of number row by row,
-# and `nomo_report_references`, a list naming, for each row of a column, the
-# numbers its value is read against.
+# `nomo_report_kinds`, a list naming each column's kind of number row by row;
+# `nomo_report_references`, a list naming, for each row of a column, the
+# numbers its value is read against; and `nomo_report_ci_levels`, the
+# confidence level of each interval bound's column, which its heading then
+# carries ("Omega 90% CI lower").
 nomo_report_display_table <- function(x, protected = character()) {
   column_kinds <- attr(x, "nomo_report_kinds")
   column_references <- attr(x, "nomo_report_references")
+  column_levels <- attr(x, "nomo_report_ci_levels")
   x <- nomo_report_flatten_table(x)
   metric <- if (is.character(x[["metric"]])) x[["metric"]]
   value_reference <- nomo_report_value_reference(x)
@@ -388,7 +391,13 @@ nomo_report_display_table <- function(x, protected = character()) {
     value[is.na(value)] <- ""
     x[[j]] <- value
   }
-  names(x) <- nomo_report_column_labels(names(x), protected)
+  labels <- nomo_report_column_labels(names(x), protected)
+  for (name in intersect(names(column_levels), names(x))) {
+    j <- match(name, names(x))
+    labels[[j]] <- sub("CI", nomo_present_ci_label(column_levels[[name]]), labels[[j]],
+                       fixed = TRUE)
+  }
+  names(x) <- labels
   attr(x, "role") <- role
   x
 }
@@ -1197,7 +1206,29 @@ nomo_report_component_table <- function(obj,
   if (identical(stage, "network") && identical(type, "primary")) {
     result <- nomo_report_network_hypotheses(result, obj)
   }
+  levels <- nomo_report_ci_levels(obj, stage, type)
+  if (length(levels)) attr(result, "nomo_report_ci_levels") <- levels
   result
+}
+
+
+# The confidence level of the interval bounds a component table shows, for
+# its headings (#145): a reliability interval at the level it was bootstrapped
+# at, and lavaan's 95% intervals of loadings and latent correlations. The
+# network's are set with its other attributes.
+nomo_report_ci_levels <- function(obj, stage, type) {
+  bounds <- function(prefix, level) {
+    stats::setNames(rep(level, 2L), paste0(prefix, c("ci_lower", "ci_upper")))
+  }
+  switch(
+    paste(stage, type),
+    "cfa loadings" = bounds("", 0.95),
+    "reliability coefficients" = if (is.numeric(obj$ci_level)) {
+      c(bounds("omega_", obj$ci_level), bounds("alpha_", obj$ci_level))
+    },
+    "validity discriminant" = bounds("latent_r_", 0.95),
+    NULL
+  )
 }
 
 
@@ -1223,6 +1254,13 @@ nomo_report_network_hypotheses <- function(tab, net) {
     nearest <- nomo_network_nearest_bound(tab[[column]], h$lower, h$upper)
     lapply(nearest, function(r) r[is.finite(r)])
   }), bounded)
+  # The 95% interval of each estimate, and the equivalence interval of a
+  # negligible() prediction at 1 - 2 alpha.
+  equivalence <- 1 - 2 * nomo_apa_or(net$equivalence_alpha, 0.05)
+  attr(tab, "nomo_report_ci_levels") <- c(
+    ci_lower = 0.95, ci_upper = 0.95,
+    equivalence_ci_lower = equivalence, equivalence_ci_upper = equivalence
+  )
   tab
 }
 

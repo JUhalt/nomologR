@@ -1896,6 +1896,35 @@ test_that("report cells follow print() where a column's name cannot say how (#14
 })
 
 
+test_that("an interval's headings carry its confidence level (#145)", {
+  run <- make_m9_report_run()
+  labels <- function(obj, stage, type) {
+    names(nomologR:::nomo_report_display_table(
+      nomologR:::nomo_report_component_table(obj, stage, type)
+    ))
+  }
+  # A reliability interval at the level it was bootstrapped at, read from
+  # the object, so a 90% interval is not taken for a 95% one.
+  rel <- run$results$reliability
+  rel$ci_level <- 0.90
+  expect_true(all(c("Omega 90% CI lower", "Omega 90% CI upper", "Alpha 90% CI lower",
+                    "Alpha 90% CI upper") %in% labels(rel, "reliability", "primary")))
+  rel$ci_level <- NULL
+  expect_true("Omega CI lower" %in% labels(rel, "reliability", "primary"))
+  expect_true(all(c("95% CI lower", "95% CI upper") %in%
+                    labels(run$results$cfa, "cfa", "loadings")))
+  expect_null(nomologR:::nomo_report_ci_levels(run$results$cfa, "cfa", "fit"))
+
+  # The network's estimate intervals are 95%, its equivalence intervals
+  # 1 - 2 alpha.
+  net <- make_m9_full_report_run()$results$network
+  shown <- labels(net, "network", "primary")
+  expect_true(all(c("95% CI lower", "Equivalence 90% CI upper") %in% shown))
+  pairs <- nomologR:::nomo_report_ci_levels(NULL, "validity", "discriminant")
+  expect_identical(pairs, c(latent_r_ci_lower = 0.95, latent_r_ci_upper = 0.95))
+})
+
+
 test_that("a flagged value is told apart from the reference its row names (#144)", {
   # In a decision log the reference is text. A value flagged for falling on
   # one side of it must not print as the reference does.

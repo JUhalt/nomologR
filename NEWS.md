@@ -374,6 +374,7 @@ that does. A call that worked is not affected.
   - **Network hypotheses.** A standardized correlation has no leading zero, as in `print()` and the APA table, and an estimate just off a bound of its predicted region shows the decimals that tell them apart. The region reads as `print()` writes it, ">= 0.20", not "[0.2, +Inf)".
   - **Scores.** A validity just below Gorsuch's .90, or a correlational accuracy just short of .05, shows the decimal that tells them apart, ".903", as `print()` does.
   - **Settings and logs.** A stage configured with no setting of its own shows "defaults", not R's "list()", and a log value stored as the text TRUE or FALSE reads "yes" or "no".
+  - **Intervals.** An interval's headings carry its level, taken from the result, such as "Omega 90% CI lower" for a reliability interval bootstrapped at 90%, and "Equivalence 90% CI lower" beside the network's 95% intervals.
 
 ### APA tables and `nomo_table()`
 
