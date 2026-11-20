@@ -30,6 +30,14 @@
 # reversed, was added on 2026-09-27 at nomologR's request. It needs a producer
 # that records keying (0.7.0 on), so older producers skip it.
 #
+# Fits 5, 5b and 5c, the item-objective congruence fits, were added on
+# 2026-10-09 for the 1.0 release candidate. They need a producer that hands
+# off the index of item-objective congruence, one row per item (0.99.0 on).
+# Older producers wrote congruence handoffs too, but with the experts' mean
+# rating under the label "target IOC" and, without a target mapping, one row
+# per objective, which a reader of one row per item refuses. So they skip
+# these fits.
+#
 # The fixtures are genuine producer output, never edited afterwards. One
 # consequence: provenance$created records the day they were generated, so a
 # regenerated file differs in that field (and in its md5) while every
@@ -54,6 +62,10 @@ version <- as.character(utils::packageVersion("contentvalidR"))
 # producer can actually express.
 has_instrument <- all(c("reverse_keyed", "response_scale") %in%
                         names(formals(content_handoff)))
+
+# The index of item-objective congruence, held to a criterion (`ioc_cut`),
+# first appears in 0.99.0. Decided from the function itself, as above.
+has_congruence_index <- "ioc_cut" %in% names(formals(expert_validity))
 
 # ---------------------------------------------------------------------------
 # 1. The walkthrough item sort: twelve items, twenty judges, three constructs.
@@ -156,11 +168,67 @@ expert_nine <- content_handoff(
 )
 
 # ---------------------------------------------------------------------------
+# 5. Item-objective congruence with a target mapping: five experts rate each
+#    of three items against three objectives as 1 (it measures the objective),
+#    0 (unclear) or -1 (it does not). Each item was written for one objective,
+#    and the index of item-objective congruence is half the difference between
+#    the mean rating on that objective and the mean on the others:
+#    C1  written for A: every expert gives 1 on A and -1 elsewhere, so the
+#        index is 1, and B and C tie as its strongest competitor;
+#    C2  written for B: the mean is .6 on B and .2 on both A and C, so the
+#        index is .2, below the .70 criterion, and it is held back at Review
+#        with a competitor note naming both tied objectives;
+#    C3  written for C: the mean is 1 on C, -.6 on A and -1 on B, so the index
+#        is .9, and A alone is its strongest competitor.
+# ---------------------------------------------------------------------------
+congruence_ratings <- list(
+  C1 = cbind(A = c( 1,  1,  1,  1,  1), B = c(-1, -1, -1, -1, -1),
+             C = c(-1, -1, -1, -1, -1)),
+  C2 = cbind(A = c( 1,  0,  0,  0,  0), B = c( 1,  1,  1,  0,  0),
+             C = c( 0,  1,  0,  0,  0)),
+  C3 = cbind(A = c(-1, -1,  0, -1,  0), B = c(-1, -1, -1, -1, -1),
+             C = c( 1,  1,  1,  1,  1))
+)
+written_for <- c(C1 = "A", C2 = "B", C3 = "C")
+congruence <- do.call(rbind, lapply(names(congruence_ratings), function(id) {
+  ratings <- congruence_ratings[[id]]
+  data.frame(item = id, judge = rep(seq_len(nrow(ratings)), times = ncol(ratings)),
+             objective = rep(colnames(ratings), each = nrow(ratings)),
+             target_objective = written_for[[id]],
+             score = as.vector(ratings), stringsAsFactors = FALSE)
+}))
+congruence_targeted <- if (has_congruence_index) {
+  content_handoff(expert_validity(congruence, mode = "congruence"))
+}
+
+# 5b. The same ratings without the target mapping. No decision rule applies,
+#     so every item is "Descriptive only", with the highest index among its
+#     objectives as its one statistic. `keep` names that status, so all three
+#     items are carried.
+untargeted_fit <- if (has_congruence_index) {
+  expert_validity(congruence[names(congruence) != "target_objective"],
+                  mode = "congruence")
+}
+congruence_untargeted <- if (has_congruence_index) {
+  content_handoff(untargeted_fit, keep = c("Supported", "Descriptive only"))
+}
+
+# 5c. The same fit handed off with the default `keep = "Supported"`: no item
+#     is carried. It is a real producer object that a reader has to refuse.
+congruence_untargeted_default_keep <- if (has_congruence_index) {
+  content_handoff(untargeted_fit)
+}
+
+# ---------------------------------------------------------------------------
 fixtures <- list(`walkthrough-sort` = walkthrough,
                  `expert-krippendorff` = expert,
                  delphi = delphi,
                  `expert-nine` = expert_nine,
-                 `walkthrough-sort-none-reversed` = walkthrough_none_reversed)
+                 `walkthrough-sort-none-reversed` = walkthrough_none_reversed,
+                 `congruence-targeted` = congruence_targeted,
+                 `congruence-untargeted` = congruence_untargeted,
+                 `congruence-untargeted-default-keep` =
+                   congruence_untargeted_default_keep)
 fixtures <- Filter(Negate(is.null), fixtures)
 for (fit in names(fixtures)) {
   path <- file.path(out, sprintf("handoff-%s-v%s.rds", fit, version))
