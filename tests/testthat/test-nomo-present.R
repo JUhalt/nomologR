@@ -36,6 +36,16 @@ test_that("alternatives read as prose, and a bad choice names its argument (#89)
                fixed = TRUE)
   expect_error(nomologR:::nomo_match_arg("x", choices = "teaching"),
                'must be one of "teaching", not "x".', fixed = TRUE)
+
+  # The shared whole-number check sits with the other argument helpers
+  # (#145, R-0b follow-up): one finite whole number in R's integer range.
+  whole <- nomologR:::nomo_is_whole_number
+  expect_identical(vapply(list(3, -2L, 3.5, 1e10, NA_real_, Inf, c(1, 2), "3", numeric()),
+                          whole, logical(1)),
+                   c(TRUE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE))
+  helpers <- testthat::test_path("..", "..", "R", "utils-args.R")
+  skip_if_not(file.exists(helpers))
+  expect_true(any(grepl("^nomo_is_whole_number <- function", readLines(helpers))))
 })
 
 
