@@ -24,9 +24,10 @@ release (September 9, 2026) keeps its original MIT license.
 **Next release:** [v1.0.0](https://github.com/JUhalt/nomologR/milestone/5) —
 the joint release with `contentvalidR`
 ([#53](https://github.com/JUhalt/nomologR/issues/53)), scoped in
-[#113](https://github.com/JUhalt/nomologR/issues/113): interface freeze on
-2026-11-27, release candidate `v1.0.0-rc.1` on 2026-12-01, then 1.0.0 on
-GitHub and R-universe, with the CRAN submission after it. See
+[#113](https://github.com/JUhalt/nomologR/issues/113): release candidate
+`v1.0.0-rc.1` on 2026-11-24, or earlier if both packages are ready, whose tag
+is the interface freeze; then 1.0.0 on GitHub and R-universe, with the CRAN
+submission after it. See
 [v1.0.0](#v100--joint-stable-release-with-contentvalidr) below; candidates for
 1.x follow it.
 **Distribution:** [R-universe](https://juhalt.r-universe.dev), which builds each
@@ -227,11 +228,11 @@ to that date.
 
 # v1.0.0 — Joint Stable Release with contentvalidR
 
-**Status:** Release candidate planned for 2026-12-01, the same day as
-`contentvalidR`'s, after an interface freeze on 2026-11-27 (dates set by the
-maintainer on 2026-11-16). 1.0.0 follows the candidate on the maintainer's
-sign-off. It is released on GitHub and R-universe first, and submitted to CRAN
-after that. The scope is set in
+**Status:** Release candidate planned for 2026-11-24, together with
+`contentvalidR`'s, or earlier if both packages are ready (date set by the
+maintainer on 2026-11-20). The candidate's tag is the interface freeze. 1.0.0
+follows the candidate on the maintainer's sign-off. It is released on GitHub
+and R-universe first, and submitted to CRAN after that. The scope is set in
 [#113](https://github.com/JUhalt/nomologR/issues/113), where the maintainer
 delegated decisions to what the literature says. On 2026-09-28 the maintainer
 asked that the gaps social-science scale developers meet be closed before the
@@ -289,7 +290,9 @@ can wait for 1.x.
   tag `v1.0.0-rc.N`, as a tag only, with no GitHub release, so R-universe does
   not publish it. 1.0.0 itself is a GitHub release, which R-universe builds;
   the CRAN submission follows it, on the maintainer's go-ahead (decided
-  2026-11-16).
+  2026-11-16). Nothing merges unless CI is green, R CMD check gives no NOTE,
+  and every file in `R/` is at 100% line coverage as covr 4.0.0 counts it
+  (decided 2026-11-20).
 
 # 1.x — Modern Extensions
 

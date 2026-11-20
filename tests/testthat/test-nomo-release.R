@@ -141,7 +141,8 @@ flat <- function(text) {
 }
 
 test_that("the release plan gives the dates and the order the maintainer set (#53)", {
-  # Interface freeze 2026-11-27, release candidate 2026-12-01, and 1.0.0 on
+  # The release candidate on 2026-11-24, or earlier if both packages are
+  # ready, its tag the interface freeze (decided 2026-11-20); then 1.0.0 on
   # GitHub and R-universe before the CRAN submission (decided 2026-11-16).
   plans <- list(
     "NEWS.md introduction" = news_introduction(),
@@ -151,19 +152,22 @@ test_that("the release plan gives the dates and the order the maintainer set (#5
   )
   for (name in names(plans)) {
     text <- flat(plans[[name]])
-    expect_false(grepl("2026-10-1[37]", text), label = paste(name, "gives an old date"))
+    expect_false(grepl("2026-10-1[37]|2026-11-27|2026-12-01", text),
+                 label = paste(name, "gives an old date"))
     expect_false(grepl("feature freeze", text), label = paste(name, "says feature freeze"))
     expect_match(text, "interface freeze", label = name)
-    expect_match(text, "2026-11-27", fixed = TRUE, label = name)
-    expect_match(text, "2026-12-01", fixed = TRUE, label = name)
+    expect_false(grepl("freeze (is )?on 20", text), label = paste(name, "dates the freeze apart"))
+    expect_match(text, "2026-11-24", fixed = TRUE, label = name)
+    expect_match(text, "or earlier", fixed = TRUE, label = name)
     expect_match(text, "GitHub and R-universe first", fixed = TRUE, label = name)
   }
   # No CRAN interval comes before 1.0.0.
   roadmap <- flat(plans[["ROADMAP.md"]])
   expect_false(grepl("first acceptances|update interval", roadmap))
 
-  for (name in c("vignettes/nomologR.Rmd", "cran-comments.md")) {
-    expect_false(grepl("2026-10-1[37]", release_text(name)), label = paste(name, "gives an old date"))
+  for (name in c("vignettes/nomologR.Rmd", "cran-comments.md", "CONTRIBUTING.md")) {
+    expect_false(grepl("2026-10-1[37]|2026-11-27|2026-12-01", release_text(name)),
+                 label = paste(name, "gives an old date"))
   }
 })
 
