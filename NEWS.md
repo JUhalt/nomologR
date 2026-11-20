@@ -368,6 +368,8 @@ that does. A call that worked is not affected.
   - **Title.** The title is shown as given. Inline R code in it had been run, backslashes dropped, and HTML interpreted.
   - **Software citations.** Each DOI is given once, as its `https://doi.org/` address.
   - **Careless responding.** The evidence table keeps the rows that say why an index has no value.
+- `nomo_report()` labels and rounds what it shows as printed output does (#145).
+  - **Bartlett's test.** The supporting-adequacy row reads "Bartlett's test, p", since its Value is the p value, beside KMO's statistic.
 
 ### APA tables and `nomo_table()`
 

@@ -594,6 +594,17 @@ test_that("component-table helper covers alternate M1 through M5 report views", 
 })
 
 
+test_that("the adequacy table says its Bartlett value is a p value (#145)", {
+  factors <- make_m9_report_run()$results$factors$WellBeing
+  adequacy <- nomologR:::nomo_report_component_table(factors, "factors", "adequacy")
+  expect_identical(adequacy$metric, c("KMO", "Bartlett's test, p"))
+  shown <- nomologR:::nomo_report_display_table(adequacy)
+  expect_identical(shown$Value[[2L]], "< .001")
+  # The stored table keeps its own name for the row.
+  expect_identical(nomo_table(factors, "adequacy")$metric[[2L]], "Bartlett")
+})
+
+
 test_that("optional M7 and M6 branches are reportable through common helpers", {
   skip_on_cran()
   run <- make_m9_full_report_run()

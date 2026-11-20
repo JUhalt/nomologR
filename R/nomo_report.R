@@ -1150,7 +1150,13 @@ nomo_report_component_table <- function(obj,
     error = function(e) nomo_report_empty_table()
   )
 
-  nomo_report_flatten_table(result)
+  result <- nomo_report_flatten_table(result)
+  # The adequacy table's Value is the statistic for KMO and the p value for
+  # Bartlett's test, so the row says which it holds (#145).
+  if (identical(stage, "factors") && identical(type, "adequacy") && nrow(result)) {
+    result$metric[result$metric %in% "Bartlett"] <- "Bartlett's test, p"
+  }
+  result
 }
 
 
