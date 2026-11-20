@@ -40,10 +40,11 @@ pak::pak("JUhalt/nomologR")
 ```
 
 `nomologR` is distributed through R-universe, which builds each GitHub
-release, usually within a few hours. `v0.3.0` is the first release
-submitted to CRAN
-([\#39](https://github.com/JUhalt/nomologR/issues/39)); until CRAN
-accepts it, install from R-universe or GitHub.
+release, usually within a few hours. It is not on CRAN yet: CRAN
+returned `v0.3.0` with two requests, both since met
+([\#39](https://github.com/JUhalt/nomologR/issues/39)), and the CRAN
+submission follows the 1.0.0 release. Until CRAN accepts it, install from
+R-universe or GitHub.
 
 ## Who it is for
 
@@ -1186,9 +1187,10 @@ columns, wording, and arguments.
 
 ### Previous releases
 
-`v0.3.0` is the first release submitted to CRAN
+`v0.3.0` was the first release submitted to CRAN, which returned it with
+two requests, both since met
 ([\#39](https://github.com/JUhalt/nomologR/issues/39)). Its scope was
-kept deliberately lean for that reason
+kept deliberately lean for that submission
 ([\#38](https://github.com/JUhalt/nomologR/issues/38);
 [milestone](https://github.com/JUhalt/nomologR/milestone/3)):
 

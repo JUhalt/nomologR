@@ -128,6 +128,22 @@ test_that("Get started describes 1.0.0 in words that stay true after it is out (
 })
 
 
+test_that("no document says 0.3.0 is waiting for CRAN (#39)", {
+  # CRAN returned 0.3.0 on 2026-10-08 with two requests. README.md ships in
+  # the tarball, so a CRAN reader would read it.
+  for (name in c("README.Rmd", "README.md", "ROADMAP.md", "CONTRIBUTING.md")) {
+    text <- flat(release_text(name))
+    expect_false(grepl("CRAN's queue|until CRAN accepts the submission|is submitted to CRAN [(]",
+                       text), label = paste(name, "says 0.3.0 is in CRAN's queue"))
+    expect_false(grepl("`v0.3.0` is the first release submitted to CRAN|targeted for `v0.3.0`",
+                       text, fixed = FALSE), label = paste(name, "describes 0.3.0 as pending"))
+    expect_false(grepl("v0.3.0`? is submitted to CRAN", text),
+                 label = paste(name, "says 0.3.0 is submitted"))
+    expect_match(text, "returned `?v?0.3.0`? (on 2026-10-08 )?with two requests", label = name)
+  }
+})
+
+
 test_that("the README dates the stability promise as ?nomologR does (#113)", {
   help <- flat(release_text("man", "nomologR-package.Rd"))
   from <- regmatches(help, regexpr("From version [0-9.]+[0-9], the public interface", help))
