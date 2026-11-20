@@ -2760,3 +2760,17 @@ test_that("the summary lists the decision log's flags, each with its reference (
   # An object without a decision log has no flags.
   expect_identical(nrow(nomologR:::nomo_factors_flag_rows(NULL)), 0L)
 })
+
+
+test_that("a summary's abbreviations follow the criteria it requested", {
+  # Without a criterion table nothing beyond the two always shown is defined,
+  # and MAP is defined by its original criterion only.
+  key <- nomologR:::nomo_factors_key(NULL)
+  expect_identical(names(key), c("MAP", "KMO"))
+  expect_no_match(key[["MAP"]], "TR4", fixed = TRUE)
+
+  status <- tibble::tibble(criterion = c("parallel", "map_revised", "ekc", "nest", "hull"))
+  key <- nomologR:::nomo_factors_key(status)
+  expect_identical(names(key), c("MAP", "KMO", "EKC", "NEST", "CAF"))
+  expect_match(key[["MAP"]], "TR4", fixed = TRUE)
+})
