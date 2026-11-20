@@ -242,10 +242,11 @@ test_that("a narrow table keeps its status and p columns and tightens before dro
   }
 
   # Two-space gaps would need 72 columns and one-space gaps 66, so a column goes;
-  # the flag and p columns stay, and the last other column is dropped.
+  # the flag and p columns stay, and the last other column is dropped. The
+  # columns left fit with two-space gaps again (58 columns), so they get them.
   out <- table(more = "nomo_table(x, \"items\")")
-  expect_identical(out[[1L]], "  Item  Value Long one     Long two     Flag        p")
-  expect_identical(out[[3L]], "  a2   -0.250 qqqqqqqqqqqq wwwwwwwwwwww Review < .001")
+  expect_identical(out[[1L]], "  Item   Value  Long one      Long two      Flag         p")
+  expect_identical(out[[3L]], "  a2    -0.250  qqqqqqqqqqqq  wwwwwwwwwwww  Review  < .001")
   expect_identical(out[4:5], c("  Not shown for width: Long three. See",
                                "  nomo_table(x, \"items\")."))
 
@@ -260,6 +261,7 @@ test_that("a narrow table keeps its status and p columns and tightens before dro
   out <- table(keep = c("Value", "Long one", "Long two", "Long three", "Flag", "p"))
   expect_false(any(grepl("Not shown", out, fixed = TRUE)))
   out <- table(keep = character())
+  # Two-space gaps would need 42 columns here, so the gaps stay at one.
   expect_identical(out[[1L]], "  Item  Value Long one     Long two")
   expect_match(gsub("\\s+", " ", paste(out[-(1:3)], collapse = " ")),
                "Not shown for width: Long three, Flag, p.", fixed = TRUE)
@@ -277,6 +279,33 @@ test_that("a narrow table keeps its status and p columns and tightens before dro
     )),
     c("  A", "  x", "  y")
   )
+  # Unless the caller keeps it, as a decisive test column whose "--" a note
+  # explains (#145, R-0b follow-up).
+  expect_identical(
+    utils::capture.output(nomologR:::nomo_present_table(
+      data.frame(a = c("x", "y"), b = c("-", "-")), c("A" = "a", "B" = "b"), keep_empty = "b"
+    )),
+    c("  A  B", "  x  -", "  y  -")
+  )
+
+  # The table returns the labels it dropped, so a caller can leave out notes
+  # on columns not shown; a label of several words is never broken.
+  local_reproducible_output(width = 40)
+  hidden <- NULL
+  out <- utils::capture.output(hidden <- nomologR:::nomo_present_table(
+    data.frame(item = "a1", long = strrep("x", 35), other = strrep("y", 30)),
+    c("Item" = "item", "Ninechars" = "long", "Max SE bias" = "other"), more = "x$table"
+  ))
+  expect_identical(hidden, c("Ninechars", "Max SE bias"))
+  # Unbound, the first line of the note would end on "Max".
+  expect_identical(out, c("  Item", "  a1", "  Not shown for width: Ninechars,",
+                          "  Max SE bias. See x$table."))
+  shown <- NULL
+  invisible(utils::capture.output(shown <- nomologR:::nomo_present_table(d, c("Item" = "item"),
+                                                                        more = "x")))
+  expect_identical(shown, character())
+  expect_identical(nomologR:::nomo_present_table(d[0, ], c("Item" = "item"), more = "x"),
+                   character())
 })
 
 

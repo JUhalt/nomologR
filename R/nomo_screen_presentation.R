@@ -100,7 +100,7 @@ print.summary_nomo_screen <- function(x, ...) {
   review$item_rest <- nomo_screen_review_item_rest(review)
   reference <- nomo_screen_item_rest_reference(x$guidance)
   nomo_present_section("Item review")
-  nomo_present_table(
+  hidden <- nomo_present_table(
     review,
     c("Item" = "item", "Scale" = "scale", "Type" = "type",
       "Missing" = "pct_missing", "Top share" = "mode_prop",
@@ -112,7 +112,7 @@ print.summary_nomo_screen <- function(x, ...) {
     ),
     more = "summary(x)$item_review"
   )
-  nomo_present_text(nomo_screen_review_notes(review), indent = 2L)
+  nomo_present_text(nomo_screen_review_notes(review, hidden), indent = 2L)
 
   # Items first, then the log's other flagged entries, such as negative pairs
   # or careless-responding counts, each under a plain name.
@@ -155,8 +155,8 @@ nomo_screen_item_rest_reference <- function(guidance) {
 # The notes under the item review table: what Top share and Item-rest r are,
 # and what each "--" marks (guide point 13). An item in no declared scale is
 # read on the pooled value even when scales were declared, and the note says so
-# (#145).
-nomo_screen_review_notes <- function(review) {
+# (#145). A column the table dropped for width, named in `hidden`, gets no note.
+nomo_screen_review_notes <- function(review, hidden = character()) {
   scale <- review[["scale"]]
   if (is.null(scale)) scale <- rep(NA_character_, nrow(review))
   shown <- is.finite(review$item_rest)
@@ -198,12 +198,13 @@ nomo_screen_review_notes <- function(review) {
       "a value that was not computed; the decision log says why."
     )
   }
-  c(
-    "Top share is the share of observed responses in the most common category.",
-    rest_note,
-    scale_note,
-    value_note
+  notes <- c(
+    "Top share" = "Top share is the share of observed responses in the most common category.",
+    "Item-rest r" = rest_note,
+    "Scale" = scale_note,
+    "value" = value_note
   )
+  unname(notes[!names(notes) %in% hidden])
 }
 
 

@@ -1595,6 +1595,17 @@ test_that("the summary notes say what each item-rest value and each -- is (#145)
   review$item_rest[[1L]] <- NA
   expect_identical(nomologR:::nomo_screen_review_notes(review)[[3L]],
                    "-- marks a value that was not computed; the decision log says why.")
+  # A column a narrow console dropped gets no note (#145, R-0b follow-up).
+  expect_identical(
+    nomologR:::nomo_screen_review_notes(review, hidden = c("Top share", "Item-rest r")),
+    "-- marks a value that was not computed; the decision log says why."
+  )
+  local_reproducible_output(width = 40)
+  narrow <- gsub("\\s+", " ", paste(capture.output(print(summary(nomo_screen(dat[c("a1", "a2", "a3")])))),
+                                   collapse = " "))
+  expect_match(narrow, "Not shown for width: Item-rest r.", fixed = TRUE)
+  expect_false(grepl("Item-rest r is the correlation", narrow, fixed = TRUE))
+  expect_match(narrow, "Top share is the share", fixed = TRUE)
 })
 
 

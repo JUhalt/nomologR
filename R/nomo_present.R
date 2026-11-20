@@ -54,7 +54,7 @@
 #   nomo_present_then_recommend(observation, recommendation)
 #       an observation ended with a full stop, then its recommendation.
 #   nomo_present_table(x, columns, formats = list(), more = NULL, indent = 2L,
-#                      keep = nomo_present_keep)
+#                      keep = nomo_present_keep, keep_empty = character())
 #       an aligned table; `columns` maps display labels to columns of `x`,
 #       `formats` maps a column to a function returning text. Columns are
 #       indented 2 and separated by 2 spaces, tightened to 1 before any column
@@ -64,7 +64,10 @@
 #       <more>." names them, where `more` is the call that shows them, such as
 #       nomo_table(x, "fit"). Every call passes `more`, even for a table too
 #       narrow to lose a column; a test reads the sources to check it. Missing
-#       cells are "--".
+#       cells are "--"; a column that is "--" everywhere is dropped unless its
+#       label is in `keep_empty`. After a drop the gaps widen back to 2 spaces
+#       when they fit. Returns the labels dropped for width, invisibly, so a
+#       caller can leave out notes on columns not shown.
 #   nomo_present_key(entries, title = "What these columns mean")
 #       a key section; `entries` is a named vector, c(SE = "Standard error."),
 #       printed "  SE -- Standard error." with a 6-space hanging indent.
@@ -702,15 +705,19 @@ nomo_present_drop_constant <- function(columns, label, values) {
 
 # An aligned text table. `columns` maps each display label to a column of `x`;
 # `formats` maps a column name to a function returning character values. A
-# column that is empty or missing in every row is dropped. A table wider than
-# the console tightens its column gaps from 2 spaces to 1, then drops columns
-# from the right, never the first (the stub) or one whose label is in `keep`,
-# and names them alongside `more`, the call that shows them.
+# column that is empty or missing in every row is dropped, unless its label is
+# in `keep_empty`, as for a decisive test column whose "--" a note explains. A
+# table wider than the console tightens its column gaps from 2 spaces to 1,
+# then drops columns from the right, never the first (the stub) or one whose
+# label is in `keep`, names them alongside `more`, the call that shows them,
+# and widens its gaps again when they fit. It returns the labels it dropped for
+# width, invisibly, so a caller can leave out notes on columns not shown.
 nomo_present_table <- function(x, columns, formats = list(), more = NULL,
-                               indent = 2L, keep = nomo_present_keep) {
+                               indent = 2L, keep = nomo_present_keep,
+                               keep_empty = character()) {
   x <- as.data.frame(x, stringsAsFactors = FALSE)
   columns <- columns[unname(columns) %in% names(x)]
-  if (!nrow(x) || !length(columns)) return(invisible(NULL))
+  if (!nrow(x) || !length(columns)) return(invisible(character()))
   missing_mark <- nomo_present_missing
 
   cells <- lapply(unname(columns), function(col) {
@@ -734,10 +741,10 @@ nomo_present_table <- function(x, columns, formats = list(), more = NULL,
 
   # A lone "-" from an older formatter counts as missing too.
   shown <- vapply(cells, function(v) any(nzchar(v) & !(v %in% c(missing_mark, "-"))),
-                  logical(1))
+                  logical(1)) | tolower(names(cells)) %in% tolower(keep_empty)
   cells <- cells[shown]
   numeric_col <- numeric_col[shown]
-  if (!length(cells)) return(invisible(NULL))
+  if (!length(cells)) return(invisible(character()))
 
   # By position, so two columns may share a label.
   widths <- vapply(seq_along(cells), function(i) {
@@ -756,6 +763,8 @@ nomo_present_table <- function(x, columns, formats = list(), more = NULL,
     numeric_col <- numeric_col[-drop]
     kept <- kept[-drop]
   }
+  # The columns left may fit with the usual gaps again.
+  if (length(hidden) && total(2L) <= room) gap <- 2L
 
   align <- function(v, w, right) {
     space <- strrep(" ", pmax(0L, w - nchar(v, type = "width")))
@@ -781,5 +790,5 @@ nomo_present_table <- function(x, columns, formats = list(), more = NULL,
     }
     nomo_present_text(note, indent = indent)
   }
-  invisible(NULL)
+  invisible(hidden)
 }

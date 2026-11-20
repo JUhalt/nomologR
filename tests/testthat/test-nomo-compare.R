@@ -1021,7 +1021,8 @@ test_that("difference tests read one way, with df and p kept on a narrow console
                "The chi-square is the Yuan-Bentler scaled test statistic", fixed = TRUE)
   local_reproducible_output(width = 40)
   narrow <- paste(capture.output(print(summary(mlr))), collapse = " ")
-  expect_match(narrow, "Model Delta chi-square df      p", fixed = TRUE)
+  # The columns left after Relation is dropped fit with two-space gaps again.
+  expect_match(narrow, "Model  Delta chi-square  df       p", fixed = TRUE)
   expect_match(narrow, "Not shown for width: Relation.", fixed = TRUE)
 })
 
