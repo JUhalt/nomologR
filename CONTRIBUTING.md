@@ -103,4 +103,11 @@ certification since `v0.2.0`
 ([#37](https://github.com/JUhalt/nomologR/issues/37)).
 
 Contributions should keep `R CMD check --as-cran` clean, keep examples and
-vignettes fast, and use `skip_on_cran()` for long-running simulations.
+vignettes fast, and use `skip_on_cran()` for long-running simulations and for
+any test that replaces a function of another package. A pull request merges
+only when continuous integration is green: the R-CMD-check workflow fails on
+any NOTE, and the test-coverage workflow fails when a line in `R/` is not
+covered, as covr 4.0.0 or later counts it. The cran-conditions workflow runs
+`R CMD check --as-cran` as CRAN does, with `NOT_CRAN` unset, on Linux and
+Windows. It fails on an error or a warning, never on time, and reports how
+long the tests, the examples, the vignettes, and the whole check take.

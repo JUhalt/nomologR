@@ -100,6 +100,33 @@ test_that("the coverage job fails when a line in R/ is not covered (#53)", {
 })
 
 
+test_that("a CI job checks the package under CRAN conditions and reports the time (#39)", {
+  workflow <- workflow_text("cran-conditions.yaml")
+  expect_match(workflow, "os: [ubuntu-latest, windows-latest]", fixed = TRUE)
+  # NOT_CRAN is unset, as on CRAN, for the step and so for the build and the
+  # check it starts; the step stops if skip_on_cran() would not skip.
+  expect_match(workflow, "Sys.unsetenv(\"NOT_CRAN\")", fixed = TRUE)
+  expect_false(grepl("\n\\s*NOT_CRAN:", workflow))
+  expect_false(grepl("NOT_CRAN = ", workflow, fixed = TRUE))
+  expect_match(workflow, "if (!skipped) stop(", fixed = TRUE)
+  expect_match(workflow, "args = c(\"--as-cran\", \"--no-manual\")", fixed = TRUE)
+  expect_false(grepl("--no-tests|--ignore-vignettes|--no-vignettes|--no-examples", workflow))
+  # check-r-package would turn CRAN's incoming checks off.
+  expect_false(grepl("uses: r-lib/actions/check-r-package", workflow, fixed = TRUE))
+  # The times of the tests, the examples, the vignettes and the whole check.
+  for (step in c("checking tests", "checking examples [.][.][.]",
+                 "checking re-building of vignette outputs", "The whole check")) {
+    expect_match(workflow, step, fixed = TRUE)
+  }
+  # Time never fails the job; an error or a warning does, after the times
+  # are written down.
+  expect_match(workflow, "error_on = \"never\"", fixed = TRUE)
+  expect_match(workflow, "if (length(result$errors) || length(result$warnings)) {", fixed = TRUE)
+  expect_match(workflow, "GITHUB_STEP_SUMMARY", fixed = TRUE)
+  expect_false(grepl("timeout-minutes: [0-9]{1,2}\\s", workflow))
+})
+
+
 # The release plan --------------------------------------------------------------
 
 # The introduction of NEWS.md: what comes before its first second-level heading.

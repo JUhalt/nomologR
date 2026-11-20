@@ -321,7 +321,7 @@ interactions, and multitrait-multimethod models to this list.
 - Stable releases are published as GitHub releases. [R-universe](https://juhalt.r-universe.dev) builds each release, usually within a few hours.
 - `v0.2.0` certification ([#37](https://github.com/JUhalt/nomologR/issues/37)) includes a CRAN-readiness gate: `R CMD check --as-cran` clean on win-builder, the macOS builder, and R-hub; long-running tests skipped on CRAN; fast examples and vignettes.
 - [ ] First CRAN submission with `v0.3.0` ([#39](https://github.com/JUhalt/nomologR/issues/39)). Decision recorded September 15, 2026: submitting after the v0.2 functions have been used on R-universe avoids repeated CRAN resubmissions while the API is still growing. CRAN returned 0.3.0 on 2026-10-08 with two requests: no default write paths, and no changes to the global environment. Both are met.
-- [ ] CRAN resubmission with 1.0.0 or later. Decision recorded 2026-11-16: 1.0.0 is released on GitHub and R-universe first, and the CRAN submission follows it, on the maintainer's go-ahead.
+- [ ] CRAN resubmission with 1.0.0 or later. Decision recorded 2026-11-16: 1.0.0 is released on GitHub and R-universe first, and the CRAN submission follows it, on the maintainer's go-ahead. The cran-conditions workflow checks each pull request and each push to `master` as CRAN does, with `NOT_CRAN` unset, and reports how long the check takes; `cran-comments.md` takes its figures from it.
 
 ***
 # Long-Term Research Program
