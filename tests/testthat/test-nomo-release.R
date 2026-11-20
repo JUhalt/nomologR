@@ -72,6 +72,34 @@ test_that("every test that replaces another package's function is skipped on CRA
 })
 
 
+# Continuous integration --------------------------------------------------------
+
+# A workflow's text. The workflows are skipped only where the whole directory
+# is absent; a workflow missing from it is a failure.
+workflow_text <- function(name) {
+  dir <- testthat::test_path("..", "..", ".github", "workflows")
+  skip_if_not(dir.exists(dir), "the CI workflows are not available")
+  path <- file.path(dir, name)
+  expect_true(file.exists(path), label = paste(name, "exists"))
+  if (!file.exists(path)) return("")
+  paste(readLines(path, warn = FALSE, encoding = "UTF-8"), collapse = "\n")
+}
+
+test_that("the coverage job fails when a line in R/ is not covered (#53)", {
+  # The merge rule is 100% in every file of R/ under covr 4.0.0 or later. The
+  # job reads covr's lines, each at its smallest count, not a rounded
+  # percentage, and stops when one was never run.
+  workflow <- workflow_text("test-coverage.yaml")
+  expect_match(workflow, "extra-packages: covr@>=4.0.0", fixed = TRUE)
+  expect_match(workflow, "if (utils::packageVersion(\"covr\") < \"4.0.0\") {", fixed = TRUE)
+  expect_match(workflow, "covr::tally_coverage(cov, by = \"line\")", fixed = TRUE)
+  expect_match(workflow, "startsWith(lines$filename, \"R/\")", fixed = TRUE)
+  expect_match(workflow, "aggregate(value ~ filename + line, data = lines, FUN = min)", fixed = TRUE)
+  expect_match(workflow, "uncovered <- lines[lines$value == 0, c(\"filename\", \"line\")]", fixed = TRUE)
+  expect_match(workflow, "stop(nrow(uncovered), \" line(s) in R/ are not covered", fixed = TRUE)
+})
+
+
 # The release plan --------------------------------------------------------------
 
 # The introduction of NEWS.md: what comes before its first second-level heading.

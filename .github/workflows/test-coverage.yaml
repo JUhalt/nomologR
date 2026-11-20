@@ -26,14 +26,51 @@ jobs:
         with:
           use-public-rspm: true
 
+      # covr 4.0.0 counts more strictly than 3.6.5: a braceless branch of an
+      # if or a switch inside an expression gets its own counter, a braceless
+      # while body is counted apart from its condition, and a line counts
+      # only when every expression on it ran. The merge rule is read with
+      # that counting, so 4.0.0 is the floor here (pak's `@>=` gives it), and
+      # the step below stops if an older covr is installed all the same.
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::covr
+          extra-packages: covr@>=4.0.0
           needs: coverage
 
+      # The merge rule is 100% line coverage in every file of R/ (#53), and
+      # this step enforces it. covr prints each file's percentage rounded, and
+      # a rounded 100.00% once hid one uncovered line, so the rule is read
+      # from covr's lines rather than from any percentage.
+      # covr::tally_coverage() gives each executable line with its count (one
+      # row for each function the line is in). Each line keeps its smallest
+      # count, as covr's own percentages do, so a line with an expression that
+      # never ran is uncovered. The step lists each file's covered lines and
+      # stops, naming each line, when a line in R/ was never run.
       - name: Calculate test coverage
         run: |
+          if (utils::packageVersion("covr") < "4.0.0") {
+            stop("covr ", utils::packageVersion("covr"), " is installed; the coverage rule is measured with covr 4.0.0 or later.")
+          }
+          cat("covr", format(utils::packageVersion("covr")), "\n")
           cov <- covr::package_coverage(quiet = FALSE)
           print(cov)
           cat(sprintf("Overall coverage: %.1f%%\n", covr::percent_coverage(cov)))
+
+          lines <- covr::tally_coverage(cov, by = "line")
+          lines <- lines[startsWith(lines$filename, "R/"), c("filename", "line", "value")]
+          if (!nrow(lines)) stop("covr reported no lines in R/, so coverage could not be checked.")
+          lines <- stats::aggregate(value ~ filename + line, data = lines, FUN = min)
+          files <- sort(unique(lines$filename))
+          covered <- as.integer(tapply(lines$value > 0, lines$filename, sum)[files])
+          total <- as.integer(table(lines$filename)[files])
+          cat("\nLines covered in each file of R/:\n")
+          cat(sprintf("  %-45s %5d of %5d\n", files, covered, total), sep = "")
+          uncovered <- lines[lines$value == 0, c("filename", "line")]
+          uncovered <- uncovered[order(uncovered$filename, uncovered$line), ]
+          if (nrow(uncovered)) {
+            cat("\nLines that no test runs:\n")
+            cat(sprintf("  %s:%d\n", uncovered$filename, uncovered$line), sep = "")
+            stop(nrow(uncovered), " line(s) in R/ are not covered; every file in R/ must be at 100%.")
+          }
+          cat("\nEvery executable line in R/ is covered.\n")
         shell: Rscript {0}
