@@ -158,6 +158,23 @@ nomo_apa_fit_estimator <- function(fit) {
 }
 
 
+# One sentence for a solution that did not pass lavaan's admissibility check,
+# such as one with a negative variance (#145). The values in the table are true
+# to the fit, and the console flags the problem; the note states the fact, not
+# a verdict. Empty for an admissible solution, or when the check cannot be read.
+nomo_apa_improper_note <- function(fit) {
+  check <- tryCatch({
+    admissible <- suppressWarnings(lavaan::lavInspect(fit, "post.check"))
+    pe <- lavaan::parameterEstimates(fit)
+    variance <- pe$op == "~~" & pe$lhs == pe$rhs
+    list(admissible = admissible, negative = any(variance & pe$est < 0, na.rm = TRUE))
+  }, error = function(e) list(admissible = NA, negative = FALSE))
+  if (!isFALSE(check$admissible)) return("")
+  paste0("The solution did not pass lavaan's admissibility check",
+         if (isTRUE(check$negative)) " (a variance estimate is negative)", ".")
+}
+
+
 # Which chi-square and which versions of the fit indices a table shows (#145).
 # `chisq` is "scaled" for a scaled test statistic; `indices` names each index's
 # version: "robust", "scaled", or "" for the standard one. `models` above 1
@@ -267,7 +284,10 @@ nomo_apa_mark <- function(body, marks) {
 #' prediction is judged on, and the estimates on another scale than the rest.
 #' A correlation the model fixes, such as the zero correlations of a bifactor
 #' model, is not tabled as an estimate. Degrees of freedom that are not whole,
-#' as for a mean- and variance-adjusted test, are given to two decimals.
+#' as for a mean- and variance-adjusted test, are given to two decimals. When
+#' the solution did not pass lavaan's admissibility check, as with a negative
+#' variance estimate, the note of a CFA, reliability, or validity table says
+#' so; its values are shown as estimated.
 #'
 #' **Discriminant evidence without the Fornell-Larcker matrix.** For a
 #' `nomo_validity` result, the `"discriminant"` table gives each pair of
@@ -392,8 +412,17 @@ nomo_apa_table.nomo_cfa <- function(x, type = c("loadings", "fit", "factor_corre
                                     number = NULL, title = NULL, ...) {
   type <- nomo_match_arg(type)
   sample_note <- nomo_apa_sample_note(x$estimator, x$n_used)
+  improper <- nomo_apa_improper_note(x$fit)
 
   if (type == "loadings") {
+    # In an improper solution lavaan estimates every loading, and a
+    # standardized one is missing because it is not finite, as when its
+    # factor's variance is negative.
+    dash_reason <- if (nzchar(improper)) {
+      "not available (the standardized value is not finite)"
+    } else {
+      "not estimated"
+    }
     sl <- x$standardized_loadings
     factors <- unique(as.character(sl$factor))
     items <- unique(as.character(sl$item))
@@ -413,8 +442,9 @@ nomo_apa_table.nomo_cfa <- function(x, type = c("loadings", "fit", "factor_corre
       general = nomo_apa_join(
         "Standardized loadings from a confirmatory factor analysis.",
         sample_note,
+        improper,
         "Blank cells are loadings fixed to zero by the model.",
-        nomo_apa_dash_note(body, "not estimated")
+        nomo_apa_dash_note(body, dash_reason)
       ),
       number = number, source = "nomo_cfa"
     ))
@@ -451,6 +481,7 @@ nomo_apa_table.nomo_cfa <- function(x, type = c("loadings", "fit", "factor_corre
         "*r* = latent correlation from the confirmatory factor analysis; CI =",
         "confidence interval.",
         sample_note,
+        improper,
         if (any(fixed)) {
           sprintf("Correlations the model fixes are not shown: %s.",
                   nomo_present_or(pairs[fixed], "and"))
@@ -466,7 +497,7 @@ nomo_apa_table.nomo_cfa <- function(x, type = c("loadings", "fit", "factor_corre
   version <- stats::setNames(nomo_apa_version(variant), fe$metric)
   nomo_apa_fit_table(
     fe, estimator = x$estimator, n = x$n_used,
-    title = title, number = number, source = "nomo_cfa",
+    title = title, number = number, source = "nomo_cfa", sample = improper,
     versions = nomo_apa_versions_note(
       version[["chi_square"]], version[c("CFI", "TLI", "RMSEA")],
       test = nomo_cfa_test_label(x$fit)
@@ -599,6 +630,7 @@ nomo_apa_table.nomo_reliability <- function(x, type = NULL, number = NULL,
         sprintf("%s = percentile bootstrap confidence interval%s.", ci,
                 if (is.finite(draws)) sprintf(", from %d draws", as.integer(draws)) else "")
       },
+      nomo_apa_improper_note(x$fit),
       if (has_alpha) {
         paste(
           "Coefficient alpha assumes equal loadings and is reported alongside omega",
@@ -1046,6 +1078,7 @@ nomo_apa_table.nomo_validity <- function(x, type = c("discriminant", "convergent
                 nomo_apa_number(x$ave_reference, 2L, bounded = TRUE)),
         "a value below it prompts a look at the loadings and content coverage.",
         "AVE is convergent evidence and is not a reliability coefficient.",
+        nomo_apa_improper_note(x$fit),
         nomo_apa_dash_note(body, "not computed")
       ),
       number = number, source = "nomo_validity"
@@ -1098,6 +1131,7 @@ nomo_apa_table.nomo_validity <- function(x, type = c("discriminant", "convergent
       "confidence interval, whose upper limit shows how high the correlation",
       "plausibly is (R\u00f6nkk\u00f6 & Cho, 2022).",
       defined[ratios],
+      nomo_apa_improper_note(x$fit),
       if (any(ratios)) {
         sprintf(paste(
           "The review reference for the ratios is %s. A ratio below it adds",

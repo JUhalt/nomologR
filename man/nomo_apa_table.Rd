@@ -82,7 +82,10 @@ estimates whose interval is the equivalence interval a \code{negligible()}
 prediction is judged on, and the estimates on another scale than the rest.
 A correlation the model fixes, such as the zero correlations of a bifactor
 model, is not tabled as an estimate. Degrees of freedom that are not whole,
-as for a mean- and variance-adjusted test, are given to two decimals.
+as for a mean- and variance-adjusted test, are given to two decimals. When
+the solution did not pass lavaan's admissibility check, as with a negative
+variance estimate, the note of a CFA, reliability, or validity table says
+so; its values are shown as estimated.
 
 \strong{Discriminant evidence without the Fornell-Larcker matrix.} For a
 \code{nomo_validity} result, the \code{"discriminant"} table gives each pair of

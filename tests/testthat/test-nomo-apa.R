@@ -391,6 +391,42 @@ test_that("the convergent table counts indicators and writes AVE without a zero"
 })
 
 
+test_that("tables of an improper solution say the admissibility check did not pass (#145)", {
+  skip_on_cran()
+  # b5 is noise, so lavaan estimates a negative variance for B and warns.
+  bad <- nomo_demo_continuous
+  bad$b5 <- withr::with_seed(9, stats::rnorm(nrow(bad)))
+  cb <- suppressWarnings(nomo_cfa("A =~ a1 + a2\nB =~ b4 + b5", data = bad))
+  rel <- suppressWarnings(nomo_reliability(cb))
+  val <- suppressWarnings(nomo_validity(cb))
+  notes <- function(tab) paste(tab$notes$general, collapse = " ")
+  sentence <- paste(
+    "The solution did not pass lavaan's admissibility check (a variance",
+    "estimate is negative)."
+  )
+  tables <- list(
+    nomo_apa_table(cb, "loadings"), nomo_apa_table(cb, "fit"),
+    nomo_apa_table(cb, "factor_correlations"), nomo_apa_table(rel),
+    nomo_apa_table(val), nomo_apa_table(val, "convergent")
+  )
+  for (tab in tables) expect_match(notes(tab), sentence, fixed = TRUE)
+
+  # lavaan estimated b4 and b5; their standardized loadings are not finite.
+  loadings <- tables[[1L]]
+  expect_identical(loadings$body$B[loadings$body$Item %in% c("b4", "b5")],
+                   rep("—", 2L))
+  expect_match(notes(loadings),
+               "— = not available (the standardized value is not finite).",
+               fixed = TRUE)
+  expect_false(grepl("not estimated", notes(loadings), fixed = TRUE))
+
+  # An admissible solution, and a fit that cannot be checked, add nothing.
+  expect_false(grepl("admissibility", notes(nomo_apa_table(apa_cfa(), "loadings")),
+                     fixed = TRUE))
+  expect_identical(nomologR:::nomo_apa_improper_note(NULL), "")
+})
+
+
 test_that("an AVE just below its reference is not printed as the reference (#145)", {
   skip_on_cran()
   # The console flags an AVE of .497 as below the review reference .50; the
