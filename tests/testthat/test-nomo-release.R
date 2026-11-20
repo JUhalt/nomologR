@@ -231,6 +231,44 @@ test_that("no document says 0.3.0 is waiting for CRAN (#39)", {
 })
 
 
+# Each checklist item of ROADMAP.md on one line, its continuation lines joined.
+roadmap_items <- function() {
+  lines <- readLines(release_source_file("ROADMAP.md"), warn = FALSE, encoding = "UTF-8")
+  item_start <- "^\\s*- \\[[ x]\\] "
+  vapply(grep(item_start, lines), function(i) {
+    j <- i
+    while (j < length(lines) && grepl("^\\s{2,}\\S", lines[[j + 1L]]) &&
+           !grepl(item_start, lines[[j + 1L]])) {
+      j <- j + 1L
+    }
+    flat(trimws(paste(lines[i:j], collapse = " ")))
+  }, character(1))
+}
+
+test_that("the ROADMAP tracks the 1.0.0 CRAN submission under #175, not the closed #39", {
+  # #39 (the 0.3.0 submission) was closed on 2026-11-20 with both of CRAN's
+  # requests met, and #75 (0.3.0's certification) on 2026-09-26; #175 tracks
+  # the submission of 1.0.0.
+  items <- roadmap_items()
+  open <- items[startsWith(items, "- [ ] ")]
+  expect_false(any(grepl("^- \\[ \\] \\[#(39|75)\\]", open)),
+               label = "an open ROADMAP item is tracked by a closed issue")
+  # An open item may cite #39 for CRAN's review, as a closed issue.
+  for (item in open[grepl("issues/39)", open, fixed = TRUE)]) {
+    expect_match(item, "issues/39[)], (now )?closed", label = substr(item, 1L, 60L))
+  }
+  expect_false(any(grepl("issues/75)", open, fixed = TRUE)))
+  # The v1.0.0 checklist item and the Distribution bullet.
+  cran <- open[grepl("CRAN resubmission", open, fixed = TRUE)]
+  expect_length(cran, 2L)
+  for (item in cran) {
+    expect_match(item, "issues/175)", fixed = TRUE, label = substr(item, 1L, 60L))
+  }
+  closed <- items[startsWith(items, "- [x] ")]
+  expect_true(any(grepl("issues/39)", closed, fixed = TRUE)))
+})
+
+
 test_that("the README says it describes the GitHub version, not the release it installs", {
   # The site and README document functions the R-universe release does not
   # have until 1.0.0 is out; the install block says so, naming the release

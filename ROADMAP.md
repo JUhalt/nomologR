@@ -34,7 +34,8 @@ submission after it. See
 GitHub release. The package is not on CRAN yet: CRAN returned `v0.3.0` with
 two requests, both since met
 ([#39](https://github.com/JUhalt/nomologR/issues/39)), and the CRAN submission
-follows the 1.0.0 release.
+follows the 1.0.0 release
+([#175](https://github.com/JUhalt/nomologR/issues/175)).
 
 The complete v0.1 milestone specifications, exit gates, and certification
 records are preserved verbatim in
@@ -208,12 +209,12 @@ that submission complete, stable, and well tested. Certification is recorded in
 submission on 2026-10-08 with two requests, recorded in
 [#39](https://github.com/JUhalt/nomologR/issues/39).
 
-- [ ] [#39](https://github.com/JUhalt/nomologR/issues/39) First CRAN submission; see [Distribution](#distribution--r-universe-and-cran-from-v030) below. Spelling, URLs, build exclusions, and test time under CRAN conditions were done for 0.3.0. CRAN returned it; the resubmission is listed under v1.0.0.
+- [x] [#39](https://github.com/JUhalt/nomologR/issues/39) First CRAN submission; see [Distribution](#distribution--r-universe-and-cran-from-v030) below. Spelling, URLs, build exclusions, and test time under CRAN conditions were done for 0.3.0. CRAN returned it with two requests, both since met, and #39 was closed on 2026-11-20. The resubmission is [#175](https://github.com/JUhalt/nomologR/issues/175), listed under v1.0.0.
 - [x] [#46](https://github.com/JUhalt/nomologR/issues/46) A `contentvalidR` handoff reader. It is tested against stored producer fixtures from contentvalidR 0.6.0 and 0.7.0, and neither package depends on the other.
 - [x] [#72](https://github.com/JUhalt/nomologR/issues/72) Restore full test coverage after v0.2.1. Reviewing each uncovered line found four defects, now fixed.
 - [x] [#73](https://github.com/JUhalt/nomologR/issues/73) The guided workflow and report carry scores, careless-responding screens, missing-data sensitivity, and APA tables.
 - [x] [#74](https://github.com/JUhalt/nomologR/issues/74) A written API-stability and deprecation policy, which the joint 1.0 release requires ([#53](https://github.com/JUhalt/nomologR/issues/53)).
-- [ ] [#75](https://github.com/JUhalt/nomologR/issues/75) Release certification and CRAN submission.
+- [x] [#75](https://github.com/JUhalt/nomologR/issues/75) Release certification and CRAN submission.
 
 # v0.9.0 — Before 1.0: Presentation, the Historical Record, and Teaching
 
@@ -278,8 +279,9 @@ can wait for 1.x.
   - [x] Sample-size planning: RMSEA power and Monte Carlo power (#135).
   - [x] Longitudinal measurement invariance and latent change (#137).
   - [x] A scope note: every analysis assumes reflective measurement.
-- [ ] [#39](https://github.com/JUhalt/nomologR/issues/39) The CRAN
-  resubmission. CRAN returned 0.3.0 on 2026-10-08 with two requests: no
+- [ ] [#175](https://github.com/JUhalt/nomologR/issues/175) The CRAN
+  resubmission. CRAN returned 0.3.0 on 2026-10-08 with two requests
+  ([#39](https://github.com/JUhalt/nomologR/issues/39), now closed): no
   default write paths, and no changes to the global environment. Both are met.
   The resubmission is 1.0.0 or later, after its release on GitHub and
   R-universe, on the maintainer's go-ahead.
@@ -323,8 +325,8 @@ interactions, and multitrait-multimethod models to this list.
 
 - Stable releases are published as GitHub releases. [R-universe](https://juhalt.r-universe.dev) builds each release, usually within a few hours.
 - `v0.2.0` certification ([#37](https://github.com/JUhalt/nomologR/issues/37)) includes a CRAN-readiness gate: `R CMD check --as-cran` clean on win-builder, the macOS builder, and R-hub; long-running tests skipped on CRAN; fast examples and vignettes.
-- [ ] First CRAN submission with `v0.3.0` ([#39](https://github.com/JUhalt/nomologR/issues/39)). Decision recorded September 15, 2026: submitting after the v0.2 functions have been used on R-universe avoids repeated CRAN resubmissions while the API is still growing. CRAN returned 0.3.0 on 2026-10-08 with two requests: no default write paths, and no changes to the global environment. Both are met.
-- [ ] CRAN resubmission with 1.0.0 or later. Decision recorded 2026-11-16: 1.0.0 is released on GitHub and R-universe first, and the CRAN submission follows it, on the maintainer's go-ahead. The cran-conditions workflow checks each pull request and each push to `master` as CRAN does, with `NOT_CRAN` unset, and reports how long the check takes; `cran-comments.md` takes its figures from it.
+- [x] First CRAN submission with `v0.3.0` ([#39](https://github.com/JUhalt/nomologR/issues/39), closed 2026-11-20). Decision recorded September 15, 2026: submitting after the v0.2 functions have been used on R-universe avoids repeated CRAN resubmissions while the API is still growing. CRAN returned 0.3.0 on 2026-10-08 with two requests: no default write paths, and no changes to the global environment. Both are met.
+- [ ] CRAN resubmission with 1.0.0 or later ([#175](https://github.com/JUhalt/nomologR/issues/175)). Decision recorded 2026-11-16: 1.0.0 is released on GitHub and R-universe first, and the CRAN submission follows it, on the maintainer's go-ahead. The cran-conditions workflow checks each pull request and each push to `master` as CRAN does, with `NOT_CRAN` unset, and reports how long the check takes; `cran-comments.md` takes its figures from it.
 
 ***
 # Long-Term Research Program
