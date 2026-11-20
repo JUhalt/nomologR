@@ -2217,6 +2217,19 @@ test_that("every abbreviation the report shows is defined once at its end (#144)
     "I-CVI >= .88; Lynn, 1986", "target IOC", "Not confirmable without SESOI"
   ))
   expect_identical(carried$abbreviation, c("Csv", "CVI", "IOC", "Psa", "SESOI"))
+  # Every estimator the methods table or a CFA summary can name, worded as
+  # nomo_cfa() words it, and revised MAP as the registry defines it (#145).
+  estimators <- nomologR:::nomo_report_abbreviations(text = c(
+    "ULS, GLS, WLS, DWLS, and ULSMV", "MLM or MLMV or MLMVS or MLF", "WLSM; TR4"
+  ))
+  expect_identical(estimators$abbreviation, c(
+    "DWLS", "GLS", "MLF", "MLM", "MLMV", "MLMVS", "TR4", "ULS", "ULSMV", "WLS", "WLSM"
+  ))
+  expect_identical(nomologR:::nomo_report_glossary[["DWLS"]],
+                   "diagonally weighted least squares")
+  tr4 <- nomologR:::nomo_report_glossary[["TR4"]]
+  expect_match(tr4, "trace of the fourth power of the partial-correlation matrix", fixed = TRUE)
+  expect_false(grepl("averag", tr4, fixed = TRUE))
 
   note <- nomologR:::nomo_report_reading_note()
   expect_match(note, nomologR:::nomo_report_blank, fixed = TRUE)

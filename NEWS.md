@@ -375,6 +375,7 @@ that does. A call that worked is not affected.
   - **Scores.** A validity just below Gorsuch's .90, or a correlational accuracy just short of .05, shows the decimal that tells them apart, ".903", as `print()` does.
   - **Settings and logs.** A stage configured with no setting of its own shows "defaults", not R's "list()", and a log value stored as the text TRUE or FALSE reads "yes" or "no".
   - **Intervals.** An interval's headings carry its level, taken from the result, such as "Omega 90% CI lower" for a reliability interval bootstrapped at 90%, and "Equivalence 90% CI lower" beside the network's 95% intervals.
+  - **Abbreviations.** The closing table defines every estimator a CFA can name, DWLS among them, in the words `summary()` uses. Revised MAP (TR4) is defined from the trace of the fourth power of the partial-correlation matrix; the table had called it an average of fourth powers.
 
 ### APA tables and `nomo_table()`
 

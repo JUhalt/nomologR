@@ -526,7 +526,8 @@ nomo_report_table <- function(x, protected = character(), word = FALSE,
 
 # Abbreviations (guide point 23) -----------------------------------------------
 #
-# Every abbreviation the report shows is defined once, in a table at its end.
+# Every abbreviation the report shows is defined once, in a table at its end,
+# the estimators in the words nomo_cfa() uses for them.
 # The report collects the headings and cells it writes; an abbreviation that
 # appears in them is listed. A symbol such as p, r, or N is listed when it heads
 # a column, since the same letter in a cell is usually part of a word or a
@@ -543,10 +544,12 @@ nomo_report_glossary <- c(
   Csv = "coefficient of substantive validity",
   CVI = "content validity index; I-CVI is the index of one item",
   DOI = "digital object identifier",
+  DWLS = "diagonally weighted least squares",
   EFA = "exploratory factor analysis",
   EKC = "empirical Kaiser criterion",
   EPC = "expected parameter change",
   FIML = "full-information maximum likelihood",
+  GLS = "generalized least squares",
   HTMT = "heterotrait-monotrait ratio of correlations",
   HTMT2 = "heterotrait-monotrait ratio computed from geometric means of correlations",
   ID = "identifier",
@@ -559,6 +562,13 @@ nomo_report_glossary <- c(
   MI = "modification index",
   MINRES = "minimum residual factor extraction",
   ML = "maximum likelihood",
+  MLF = "maximum likelihood with first-order standard errors",
+  MLM = paste("maximum likelihood with robust standard errors and the",
+              "Satorra-Bentler scaled test statistic"),
+  MLMV = paste("maximum likelihood with robust standard errors and a mean- and",
+               "variance-adjusted test statistic"),
+  MLMVS = paste("maximum likelihood with robust standard errors and a mean- and",
+                "variance-adjusted (Satterthwaite) test statistic"),
   MLR = "maximum likelihood with robust standard errors and a scaled test statistic",
   MSA = "measure of sampling adequacy",
   NEST = "next eigenvalue sufficiency test",
@@ -571,9 +581,17 @@ nomo_report_glossary <- c(
   SESOI = "smallest effect size of interest",
   SRMR = "standardized root mean square residual",
   TLI = "Tucker-Lewis index",
-  TR2 = "MAP criterion averaging squared partial correlations",
-  TR4 = "MAP criterion averaging partial correlations raised to the fourth power",
-  WLSMV = "weighted least squares, mean- and variance-adjusted",
+  TR2 = "original MAP criterion, the average squared partial correlation",
+  TR4 = paste("revised MAP criterion, from the trace of the fourth power of the",
+              "partial-correlation matrix (a matrix power)"),
+  ULS = "unweighted least squares",
+  ULSMV = paste("unweighted least squares with robust standard errors and a",
+                "mean- and variance-adjusted test statistic"),
+  WLS = "weighted least squares",
+  WLSM = paste("diagonally weighted least squares with robust standard errors",
+               "and a mean-adjusted test statistic"),
+  WLSMV = paste("diagonally weighted least squares with robust standard errors",
+                "and a mean- and variance-adjusted test statistic"),
   df = "degrees of freedom",
   lhs = "left-hand side of a lavaan model term",
   N = "number of cases",
