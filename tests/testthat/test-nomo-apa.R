@@ -391,6 +391,19 @@ test_that("the convergent table counts indicators and writes AVE without a zero"
 })
 
 
+test_that("an AVE just below its reference is not printed as the reference (#145)", {
+  skip_on_cran()
+  # The console flags an AVE of .497 as below the review reference .50; the
+  # table shows the decimal that tells them apart, and only in that cell.
+  v <- apa_validity()
+  v$ave$estimate <- c(0.497, 0.534, 0.4999)
+  tab <- nomo_apa_table(v, "convergent")
+  expect_identical(tab$body$AVE, c(".497", ".53", ".4999"))
+  v$ave$estimate[[2L]] <- NA_real_
+  expect_identical(nomo_apa_table(v, "convergent")$body$AVE[[2L]], "—")
+})
+
+
 test_that("one construct has a convergent table and no pair table", {
   skip_on_cran()
   one <- nomo_validity(nomo_cfa("Agency =~ ag1 + ag2 + ag3 + ag4", nomo_demo_network))

@@ -1021,11 +1021,16 @@ nomo_apa_table.nomo_validity <- function(x, type = c("discriminant", "convergent
     k <- vapply(as.character(tab$construct), function(construct) {
       length(unique(loadings$item[loadings$factor == construct]))
     }, integer(1), USE.NAMES = FALSE)
+    # An AVE that differs from the review reference but would round to it
+    # shows the decimals that tell them apart, .497 beside .50, as the console
+    # does (guide point 9); every other cell keeps two.
+    ave <- nomo_present_stat(tab$AVE, "reliability", reference = x$ave_reference)
+    ave[!is.finite(tab$AVE)] <- nomo_apa_dash
     body <- data.frame(
       Construct = as.character(tab$construct),
       Group = as.character(tab$block),
       k = as.character(k),
-      AVE = nomo_apa_number(tab$AVE, 2L, bounded = TRUE),
+      AVE = ave,
       stringsAsFactors = FALSE
     )
     if (!groups(tab$block)) body$Group <- NULL
