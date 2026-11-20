@@ -369,13 +369,13 @@ that does. A call that worked is not affected.
   - **Software citations.** Each DOI is given once, as its `https://doi.org/` address.
   - **Careless responding.** The evidence table keeps the rows that say why an index has no value.
 - `nomo_report()` labels and rounds what it shows as printed output does (#145).
-  - **Bartlett's test.** The supporting-adequacy row reads "Bartlett's test, p", since its Value is the p value, beside KMO's statistic.
+  - **Bartlett's test.** The supporting-adequacy row reads "Bartlett's test, p", since its Value is the p value, beside the KMO statistic.
   - **Paused runs.** A run that paused before the invariance or network stage says the stage "was not reached", not that it "was not completed", which read as though it had been requested.
   - **Network hypotheses.** A standardized correlation has no leading zero, as in `print()` and the APA table, and an estimate just off a bound of its predicted region shows the decimals that tell them apart. The region reads as `print()` writes it, ">= 0.20", not "[0.2, +Inf)".
   - **Scores.** A validity just below Gorsuch's .90, or a correlational accuracy just short of .05, shows the decimal that tells them apart, ".903", as `print()` does.
   - **Settings and logs.** A stage configured with no setting of its own shows "defaults", not R's "list()", and a log value stored as the text TRUE or FALSE reads "yes" or "no".
   - **Intervals.** An interval's headings carry its level, taken from the result, such as "Omega 90% CI lower" for a reliability interval bootstrapped at 90%, and "Equivalence 90% CI lower" beside the network's 95% intervals.
-  - **Abbreviations.** The closing table defines every estimator a CFA can name, DWLS among them, in the words `summary()` uses. Revised MAP (TR4) is defined from the trace of the fourth power of the partial-correlation matrix; the table had called it an average of fourth powers.
+  - **Abbreviations.** The closing table defines every estimator a CFA can name, `DWLS` among them, in the words `summary()` uses. Revised MAP (TR4) is defined from the trace of the fourth power of the partial-correlation matrix; the table had called it an average of fourth powers.
   - **Session information.** It is printed at 80 columns, as the component summaries are, whatever the width of the console that rendered the report.
   - **References in words.** A missing-data difference flagged against "half a reference standard error" shows the decimals that tell it from .5, "0.503", not "0.50".
 
@@ -394,7 +394,7 @@ that does. A call that worked is not affected.
   - Knitted to PDF, Greek letters and math symbols are written as TeX math, so the default `pdflatex` engine compiles the tables. It used to stop at the first `χ`.
 - `nomo_apa_table()` reports what the result holds, as the console does (#145).
   - **AVE.** An AVE that would round to the review reference shows the decimal that tells them apart, ".497" beside a reference of ".50", as `print()` does. Other cells keep two decimals.
-  - **Sample.** The reliability and validity tables give the estimator and the number of cases analyzed, as the other tables do; their notes had given neither. Every table whose model used full-information maximum likelihood says so, since *N* then counts the incomplete cases. A table from a WLSMV fit names WLSMV, not the DWLS lavaan files it under.
+  - **Sample.** The reliability and validity tables give the estimator and the number of cases analyzed, as the other tables do; their notes had given neither. Every table whose model used full-information maximum likelihood says so, since *N* then counts the incomplete cases. A table from a WLSMV fit names WLSMV, not the `DWLS` lavaan files it under.
   - **Improper solutions.** When lavaan's admissibility check did not pass, as with a negative variance estimate, the note of a CFA, reliability, or validity table says so, as `summary()` does. A standardized loading that is not finite is explained as such; the note had called it "not estimated", though lavaan estimated it.
 - `nomo_apa_table()` leaves out what a table cannot show (#145).
   - **One invariance model.** A table of the configural model alone has no change columns, which had been four empty columns, and its note neither defines the change symbol nor says that each model adds constraints.
