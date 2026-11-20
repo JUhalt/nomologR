@@ -1129,6 +1129,12 @@ test_that("synthesis covers primary-only, neighboring, divergent, and skipped-me
   expect_identical(primary_only$agreement, "primary_only")
   expect_match(primary_only$text, "No additional recommended criterion families")
   expect_match(primary_only$text, "1 requested method was not evaluated")
+  expect_match(primary_only$text, "Parallel analysis suggests investigating 1 factor. ",
+               fixed = TRUE)
+  two_only <- nomo_factors_synthesis(tibble::tibble(), parallel_n = 2L)
+  expect_identical(two_only$plausible_factors, 2L)
+  expect_match(two_only$text, "Parallel analysis suggests investigating 2 factors. ",
+               fixed = TRUE)
 
   make_evidence <- function(counts) {
     tibble::tibble(
@@ -2245,6 +2251,26 @@ test_that("closeout B: EKC and comparison-data helpers preserve no-suggestion ou
   )
   expect_false(cd$available)
   expect_match(cd$reason, "no usable", fixed = TRUE)
+})
+
+
+test_that("NEST and Hull without a usable suggestion say so", {
+  skip_on_cran()
+  testthat::local_mocked_bindings(
+    efa_nest = function(...) list(n_factors = NA_real_),
+    efa_hull = function(...) list(n_factors = c(CAF = NA_real_)),
+    .package = "EFAtools"
+  )
+  nest <- nomologR:::nomo_factors_nest(diag(3), n_obs = 100L, n_iter = 10L, seed = 2026L)
+  expect_false(nest$available)
+  expect_identical(nest$n_factors, NA_integer_)
+  expect_identical(nest$reason, "NEST returned no usable factor-count suggestion.")
+
+  hull <- nomologR:::nomo_factors_hull(diag(3), n_obs = 100L, n_iter = 10L,
+                                       quantile = .95, seed = 2026L)
+  expect_false(hull$available)
+  expect_identical(hull$n_factors, NA_integer_)
+  expect_identical(hull$reason, "Hull returned no usable CAF suggestion.")
 })
 
 
