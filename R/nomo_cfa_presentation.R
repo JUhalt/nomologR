@@ -683,11 +683,16 @@ plot.nomo_cfa <- function(x,
     dat$item <- factor(dat$item, levels = rev(unique(dat$item)))
     dat$status <- nomo_plot_status(dat$attention)
     ref <- x$guidance$cfa_loading_reference
+    # A loading with no finite standardized value, as in an improper solution,
+    # cannot be drawn: the caption names it, and the legend lists only the
+    # statuses drawn (#145).
+    drawn <- is.finite(dat$loading)
+    not_drawn <- unique(as.character(dat$item[!drawn]))
     return(
       ggplot2::ggplot(dat, ggplot2::aes(x = loading, y = item, shape = status, colour = status)) +
         ggplot2::geom_vline(xintercept = c(-ref, ref), linetype = 2) +
         ggplot2::geom_point(size = 2.8, na.rm = TRUE) +
-        nomo_plot_status_scales(dat$status, name = "Flag") +
+        nomo_plot_status_scales(dat$status[drawn], name = "Flag") +
         ggplot2::facet_wrap(stats::as.formula("~ factor"), scales = "free_y") +
         nomo_plot_labs(
           title = "CFA standardized loadings",
@@ -696,10 +701,14 @@ plot.nomo_cfa <- function(x,
             nomo_present_stat(ref, "loading"), ". Factor direction depends on the model."
           ),
           x = "Standardized loading", y = NULL, shape = "Flag", colour = "Flag",
-          caption = paste(
+          caption = paste(c(
             "A reference prompts inspection; it does not delete indicators or",
-            "validate the model."
-          )
+            "validate the model.",
+            if (length(not_drawn)) {
+              sprintf("Not drawn, with no finite standardized loading: %s.",
+                      nomo_present_or(not_drawn, "and"))
+            }
+          ), collapse = " ")
         ) + ggplot2::theme_minimal()
     )
   }

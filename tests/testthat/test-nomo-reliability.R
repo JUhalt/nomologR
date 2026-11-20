@@ -500,6 +500,19 @@ test_that("reliability plot covers errors, one-coefficient guides, CIs, and face
   expect_s3_class(p2, "ggplot")
   expect_match(plot_text(p2$labels$subtitle), "95% CI (percentile bootstrap)", fixed = TRUE)
   expect_true(length(p2$facet$params$facets) >= 1L)
+
+  # A coefficient that was not computed, so has no point, is named in the
+  # caption as its row would be named on the axis (#145).
+  expect_false(grepl("Not computed", plot_text(plot(rel)$labels$caption), fixed = TRUE))
+  missing <- rel
+  construct <- missing$evidence$construct[[1L]]
+  missing$evidence$estimate[missing$evidence$metric == "omega" &
+                              missing$evidence$construct == construct] <- NA_real_
+  missing$alpha_status$requested <- TRUE
+  missing$alpha_status$available[missing$alpha_status$construct == construct] <- FALSE
+  expect_match(plot_text(plot(missing)$labels$caption),
+               sprintf("Not computed, so not drawn: %s: omega and %s: alpha.", construct, construct),
+               fixed = TRUE)
 })
 
 

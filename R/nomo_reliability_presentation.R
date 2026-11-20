@@ -435,6 +435,15 @@ plot.nomo_reliability <- function(x, type = "coefficients", ...) {
     drop = FALSE
   ]
   reference_shown <- nomo_present_stat(ref, "reliability")
+  # A coefficient that was not computed has no point, so the caption names it,
+  # as its row would be named on the axis (guide point 27; #145).
+  evidence <- x$evidence
+  alpha_status <- x$alpha_status
+  not_computed <- unique(c(
+    paste(evidence$construct, evidence$metric, sep = ": ")[!is.finite(evidence$estimate)],
+    paste(alpha_status$construct, "alpha", sep = ": ")[alpha_status$requested &
+                                                          !alpha_status$available]
+  ))
 
   p <- ggplot2::ggplot() +
     ggplot2::geom_vline(xintercept = ref, linetype = 2) +
@@ -481,7 +490,13 @@ plot.nomo_reliability <- function(x, type = "coefficients", ...) {
       },
       x = "Reliability coefficient",
       y = NULL,
-      caption = "Omega is primary and drawn larger; alpha is secondary. Reference values guide review; they are not pass/fail rules."
+      caption = paste(c(
+        "Omega is primary and drawn larger; alpha is secondary. Reference values guide",
+        "review; they are not pass/fail rules.",
+        if (length(not_computed)) {
+          sprintf("Not computed, so not drawn: %s.", nomo_present_or(not_computed, "and"))
+        }
+      ), collapse = " ")
     ) +
     ggplot2::theme_minimal() +
     ggplot2::theme(

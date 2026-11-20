@@ -1721,6 +1721,15 @@ test_that("CFA plots draw flags with the shared status shapes and name the refer
   expect_identical(guide$.label, c("No flag", "Review", "Concern"))
   expect_identical(unname(guide$shape), c(16, 1, 15))
   expect_match(p$labels$subtitle, "0.50", fixed = TRUE)
+  expect_false(grepl("Not drawn", p$labels$caption, fixed = TRUE))
+  # A loading with no finite standardized value is named in the caption, and
+  # its flag, which no point shows, is left out of the legend (#145).
+  improper <- out
+  improper$standardized_loadings$loading[2:3] <- NA_real_
+  p <- plot(improper, type = "loadings")
+  expect_null(ggplot2::get_guide_data(p, "shape"))
+  expect_match(gsub("\n", " ", p$labels$caption),
+               "Not drawn, with no finite standardized loading: x2 and x3.", fixed = TRUE)
 
   fit <- plot(out, type = "fit")
   # The reference is a dashed mark, never the cross that means "not computed".
