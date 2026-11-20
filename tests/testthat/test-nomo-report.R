@@ -2604,4 +2604,37 @@ test_that("a render that stops part-way leaves nothing behind (CRAN)", {
   expect_identical(getwd(), wd_before)
   expect_identical(report_listing(wd_before), wd_files_before)
   expect_identical(options()[names(options_before)], options_before)
+
+  # The directories made for the report are removed with it (#145); one that
+  # was there before is kept.
+  expect_error(
+    suppressMessages(
+      nomo_report(run, file = file.path(out, "new", "deeper", "report.html"),
+                  include_session = FALSE, quiet = TRUE)
+    ),
+    "synthetic render failure"
+  )
+  expect_true(dir.exists(out))
+  expect_length(report_listing(out), 0L)
+})
+
+
+test_that("a directory made for a report is removed only while empty (#145)", {
+  root <- tempfile("nomo-report-dirs-")
+  dir.create(root)
+  on.exit(unlink(root, recursive = TRUE), add = TRUE)
+  path <- file.path(root, "a", "b")
+  new <- nomologR:::nomo_report_new_dirs(path)
+  expect_identical(basename(new), c("b", "a"))
+  expect_identical(new[[1L]], path)
+  expect_identical(nomologR:::nomo_report_new_dirs(root), character())
+
+  dir.create(path, recursive = TRUE)
+  writeLines("kept", file.path(path, "report.html"))
+  nomologR:::nomo_report_remove_empty_dirs(new)
+  expect_true(file.exists(file.path(path, "report.html")))
+  unlink(file.path(path, "report.html"))
+  nomologR:::nomo_report_remove_empty_dirs(new)
+  expect_false(dir.exists(file.path(root, "a")))
+  expect_true(dir.exists(root))
 })

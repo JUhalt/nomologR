@@ -1756,10 +1756,11 @@ nomo_report_title_yaml <- function(title) {
 #' Incomplete stages are labeled as such rather than silently omitted.
 #'
 #' `nomo_report()` writes one file, the report named by `file`, and creates
-#' that file's directory when it does not exist. The working files of the
-#' render (the copy of the template, the intermediate files, and the figures)
-#' are written to a temporary directory under [tempdir()] and removed when the
-#' call returns, whether or not it succeeds. The working directory, the
+#' that file's directory when it does not exist; a directory it created is
+#' removed again if the render stops before the report is written. The
+#' working files of the render (the copy of the template, the intermediate
+#' files, and the figures) are written to a temporary directory under
+#' [tempdir()] and removed when the call returns, whether or not it succeeds. The working directory, the
 #' options, and the graphics device are left as they were. The report is
 #' rendered in an environment of its own, so objects in the global environment
 #' are neither read nor changed.
@@ -1895,6 +1896,12 @@ nomo_report <- function(x,
   template <- nomo_report_template_path()
 
   output_dir <- dirname(file)
+  # A directory made for the report is made before the render, so a path that
+  # cannot be written stops the call at once, and is removed again when the
+  # render stops part-way and leaves it empty (#145). Once the report is in
+  # it, it stays.
+  new_dirs <- nomo_report_new_dirs(output_dir)
+  on.exit(nomo_report_remove_empty_dirs(new_dirs), add = TRUE)
   if (!dir.exists(output_dir)) {
     ok <- dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
     if (!isTRUE(ok) && !dir.exists(output_dir)) {
@@ -1962,6 +1969,28 @@ nomo_report <- function(x,
   )
 
   invisible(nomo_report_deliver(rendered, target))
+}
+
+
+# The directories of `path` that do not exist yet, deepest first, up to one
+# that exists or the root.
+nomo_report_new_dirs <- function(path) {
+  new <- character()
+  while (!dir.exists(path) && !identical(dirname(path), path)) {
+    new <- c(new, path)
+    path <- dirname(path)
+  }
+  new
+}
+
+
+# Each of `dirs`, deepest first, removed when it holds nothing, as a directory
+# made for a report that was never written does.
+nomo_report_remove_empty_dirs <- function(dirs) {
+  for (dir in dirs) {
+    if (!length(list.files(dir, all.files = TRUE, no.. = TRUE))) unlink(dir, recursive = TRUE)
+  }
+  invisible(NULL)
 }
 
 
