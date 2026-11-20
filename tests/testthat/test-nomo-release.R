@@ -72,6 +72,34 @@ test_that("every test that replaces another package's function is skipped on CRA
 })
 
 
+test_that("cran-comments.md answers the review as the code and tests stand (#39)", {
+  comments <- gsub("\\s+", " ", release_text("cran-comments.md"))
+  # The report template's environment has the base environment as parent;
+  # nothing in R/ names the global environment (test-nomo-global-state.R).
+  report <- release_text("R", "nomo_report.R")
+  expect_match(report, "new.env(parent = baseenv())", fixed = TRUE)
+  expect_match(comments, "(`new.env(parent = baseenv())`)", fixed = TRUE)
+  expect_false(grepl("globalenv()` appears|parent = globalenv()", comments))
+  # One test of test-nomo-report.R renders to a relative path, in a working
+  # directory under tempdir(), so the file must not say that none does.
+  expect_false(grepl("relative path", comments, fixed = TRUE))
+  # The NEWS.md NOTE of the 0.9.0 check is gone.
+  expect_false(grepl("Problems with news", comments, fixed = TRUE))
+  # "The four functions that take a seed": the help pages document a seed
+  # argument for exactly these.
+  seeded <- character()
+  for (rd in list.files(release_source_file("man"), pattern = "[.]Rd$", full.names = TRUE)) {
+    text <- paste(readLines(rd, warn = FALSE, encoding = "UTF-8"), collapse = "\n")
+    if (grepl("\\item{seed}", text, fixed = TRUE) || grepl("\\item{ci_seed}", text, fixed = TRUE)) {
+      seeded <- c(seeded, sub("[.]Rd$", "", basename(rd)))
+    }
+  }
+  expect_setequal(seeded, c("nomo_factors", "nomo_split", "nomo_power_simulate", "nomo_reliability"))
+  expect_match(comments, "The four functions that take a seed now set it with `withr::with_seed()`",
+               fixed = TRUE)
+})
+
+
 # Continuous integration --------------------------------------------------------
 
 # A workflow's text. The workflows are skipped only where the whole directory
