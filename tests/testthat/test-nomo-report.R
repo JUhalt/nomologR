@@ -1858,8 +1858,9 @@ test_that("report cells follow print() where a column's name cannot say how (#14
   )
   expect_identical(shown[["Theoretical region"]], c(">= 0.20", "[-.15, .15]", "> 0"))
   expect_identical(shown$Estimate, c("0.1996", ".01", "0.39"))
-  expect_identical(shown[["CI lower"]], c("0.13", "-.08", "0.32"))
-  expect_identical(shown[["Equivalence CI upper"]], c(dash, ".08", dash))
+  # The headings carry the intervals' levels (95%, and 1 - 2 alpha).
+  expect_identical(shown[["95% CI lower"]], c("0.13", "-.08", "0.32"))
+  expect_identical(shown[["Equivalence 90% CI upper"]], c(dash, ".08", dash))
   expect_identical(shown$SE, c("0.04", "0.04", "0.03"))
   expect_identical(nrow(nomologR:::nomo_report_network_hypotheses(tab[0, ], list())), 0L)
   # The report's network section goes through it.
