@@ -427,6 +427,19 @@ test_that("multiple scales require named factor-count decisions", {
     "named"
   )
 
+  # Names that do not match the scales say which are missing and which are
+  # extra, and "none" when there are none of one kind.
+  expect_error(
+    nomo_run(resume = run, decisions = list(factor_count = c(A = 1L, C = 1L))),
+    "`factor_count` names must match `scales`. Missing: B. Extra: C.",
+    fixed = TRUE
+  )
+  expect_error(
+    nomo_run(resume = run, decisions = list(factor_count = c(A = 1L))),
+    "`factor_count` names must match `scales`. Missing: B. Extra: none.",
+    fixed = TRUE
+  )
+
   run <- nomo_run(
     resume = run,
     decisions = list(
@@ -1278,6 +1291,16 @@ test_that("closeout: measurement request handles components without decision log
   x$results$cfa$decision_log <- tibble::tibble(severity = c("concern", "review", "review"))
   req <- nomologR:::nomo_run_measurement_request(x)
   expect_match(req$observation, "1 concern entry and 2 review entries.", fixed = TRUE)
+
+  # An improper CFA solution is named beside the counts.
+  x$results$cfa$heywood_detected <- TRUE
+  req <- nomologR:::nomo_run_measurement_request(x)
+  expect_match(
+    req$observation,
+    paste("1 concern entry and 2 review entries; a CFA improper-solution (Heywood)",
+          "flag is also present."),
+    fixed = TRUE
+  )
 })
 
 
@@ -2256,4 +2279,100 @@ test_that("an output with no abbreviation prints no note (#144)", {
                    character())
   expect_identical(nomologR:::nomo_run_abbreviations(c("nomo_cfa() and HTMT2", "MLR")),
                    c("HTMT2", "MLR"))
+})
+
+
+# A run paused at the measurement review, from structured decisions that give
+# no rationale: `factor_count` leaves it out and `cfa_model` gives an empty one.
+run_without_rationale <- local({
+  cache <- NULL
+  function() {
+    if (is.null(cache)) {
+      cache <<- nomo_run(
+        data = make_m8_full_data(seed = 8516L),
+        scales = list(WellBeing = c("i1", "i2", "i3", "i4")),
+        settings = m8_full_settings(),
+        decisions = list(
+          factor_count = list(value = 1L),
+          cfa_model = list(value = m8_model(), rationale = character())
+        )
+      )
+    }
+    cache
+  }
+})
+
+
+test_that("a structured decision without a rationale records an empty one", {
+  skip_on_cran()
+  run <- run_without_rationale()
+  expect_identical(run$next_stage, "measurement_review")
+  expect_identical(run$decisions$factor_count$rationale, c(WellBeing = ""))
+  expect_identical(run$decisions$cfa_model$rationale, "")
+
+  done <- nomo_run(
+    resume = run,
+    decisions = list(measurement_model = list(value = "proceed", rationale = character()))
+  )
+  expect_identical(done$status, "complete")
+  expect_identical(done$decisions$measurement_model$rationale, "")
+  log <- done$decision_log
+  ids <- c("factor_count:WellBeing", "cfa_model", "measurement_model")
+  expect_identical(log$rationale[match(ids, log$id)], c("", "", ""))
+  expect_identical(log$decision[match(ids, log$id)], c("1", m8_model(), "proceed"))
+})
+
+
+test_that("a decision left over when the run completes names the complete state", {
+  skip_on_cran()
+  # The measurement decision completes the run, so the factor count given with
+  # it has no stage left to be consumed at.
+  expect_error(
+    nomo_run(
+      resume = run_without_rationale(),
+      decisions = list(measurement_model = "proceed", factor_count = 1L)
+    ),
+    "A decision could not be consumed at the current workflow state `complete`: factor_count.",
+    fixed = TRUE
+  )
+})
+
+
+test_that("a decision applied where the run holds no matching request is still recorded", {
+  skip_on_cran()
+  # A run always holds the request a decision answers; the handlers do not rely
+  # on it, and record the decision with the request's fields left empty.
+  empty <- nomologR:::nomo_run_empty_requests()
+  run <- nomo_run(
+    data = make_m8_full_data(seed = 8518L),
+    scales = list(WellBeing = c("i1", "i2", "i3", "i4")),
+    settings = m8_full_settings()
+  )
+  run$decision_requests <- empty
+  run <- nomologR:::nomo_run_apply_factor_decision(
+    run, list(value = 1L, rationale = "One construct.")
+  )
+  expect_identical(run$next_stage, "cfa")
+  run$decision_requests <- empty
+  run <- nomologR:::nomo_run_apply_cfa_model(
+    run, list(value = m8_model(), rationale = "Prespecified.")
+  )
+  expect_identical(run$next_stage, "measurement_review")
+  run$decision_requests <- empty
+  run <- nomologR:::nomo_run_apply_measurement_decision(
+    run, list(value = "revise", rationale = "Revise the model.")
+  )
+  expect_identical(run$next_stage, "restart")
+
+  log <- run$decision_log
+  rows <- log[match(c("factor_count:WellBeing", "cfa_model", "measurement_model"), log$id), ]
+  expect_identical(rows$decision, c("1", m8_model(), "revise"))
+  expect_identical(rows$rationale, c("One construct.", "Prespecified.", "Revise the model."))
+  expect_identical(rows$observation, c("", "", ""))
+  expect_identical(rows$reason, c("", "", ""))
+  expect_identical(rows$options, c("", "", ""))
+  # The factor count states its own consequence; the others take the request's.
+  expect_match(rows$consequence[[1L]], "A 1-factor EFA will be fitted for `WellBeing`",
+               fixed = TRUE)
+  expect_identical(rows$consequence[2:3], c("", ""))
 })
