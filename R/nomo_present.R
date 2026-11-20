@@ -262,8 +262,10 @@ nomo_present_wrap <- function(text, width = nomo_present_prose_width(), ...) {
   gsub(nomo_present_nbsp, " ", lines, fixed = TRUE)
 }
 
+# Nothing to print prints nothing: paste0() would turn no lines into one empty
+# line, as when every note under a table was for a column it dropped (#145).
 nomo_present_cat <- function(lines) {
-  cat(paste0(lines, "\n"), sep = "")
+  cat(paste0(lines, rep("\n", length(lines))), sep = "")
 }
 
 

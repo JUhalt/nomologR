@@ -226,6 +226,9 @@ test_that("headers, sections, and facts fit narrow consoles (#145)", {
     "    Stages: configural -> metric -> configural -> metric",
     "      -> configural -> metric"
   ))
+  # No text prints nothing, not an empty line (#145).
+  expect_identical(utils::capture.output(nomologR:::nomo_present_text(character(), indent = 2L)),
+                   character())
 })
 
 

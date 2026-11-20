@@ -1601,8 +1601,10 @@ test_that("the summary notes say what each item-rest value and each -- is (#145)
     "-- marks a value that was not computed; the decision log says why."
   )
   local_reproducible_output(width = 40)
-  narrow <- gsub("\\s+", " ", paste(capture.output(print(summary(nomo_screen(dat[c("a1", "a2", "a3")])))),
-                                   collapse = " "))
+  narrow_lines <- capture.output(print(summary(nomo_screen(dat[c("a1", "a2", "a3")]))))
+  # A note left out leaves no empty line behind.
+  expect_false(any(narrow_lines[-1L] == "" & narrow_lines[-length(narrow_lines)] == ""))
+  narrow <- gsub("\\s+", " ", paste(narrow_lines, collapse = " "))
   expect_match(narrow, "Not shown for width: Item-rest r.", fixed = TRUE)
   expect_false(grepl("Item-rest r is the correlation", narrow, fixed = TRUE))
   expect_match(narrow, "Top share is the share", fixed = TRUE)
