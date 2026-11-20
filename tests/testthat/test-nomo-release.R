@@ -144,6 +144,25 @@ test_that("no document says 0.3.0 is waiting for CRAN (#39)", {
 })
 
 
+test_that("the README says it describes the GitHub version, not the release it installs", {
+  # The site and README document functions the R-universe release does not
+  # have until 1.0.0 is out; the install block says so, naming the release
+  # that the top of the README names.
+  for (name in c("README.Rmd", "README.md")) {
+    text <- flat(release_text(name))
+    current <- sub("^.*Current stable release: `([^`]+)`.*$", "\\1", text)
+    expect_match(current, "^[0-9]+[.][0-9]+[.][0-9]+$", label = name)
+    expect_match(
+      text,
+      paste0("The R-universe build is the current stable release, `", current,
+             "`. This README and the [website](https://juhalt.github.io/nomologR/) ",
+             "describe the GitHub version"),
+      fixed = TRUE, label = name
+    )
+  }
+})
+
+
 test_that("the README dates the stability promise as ?nomologR does (#113)", {
   help <- flat(release_text("man", "nomologR-package.Rd"))
   from <- regmatches(help, regexpr("From version [0-9.]+[0-9], the public interface", help))

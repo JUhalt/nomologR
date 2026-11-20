@@ -46,6 +46,12 @@ returned `v0.3.0` with two requests, both since met
 submission follows the 1.0.0 release. Until CRAN accepts it, install from
 R-universe or GitHub.
 
+The R-universe build is the current stable release, `0.9.0`. This
+README and the [website](https://juhalt.github.io/nomologR/) describe the
+GitHub version, which adds what 1.0.0 will contain, such as
+`nomo_esem()`, `nomo_retest()`, and `nomo_power_rmsea()`; install the
+GitHub version to use them.
+
 ## Who it is for
 
 `nomologR` is written for **graduate students** (master’s and doctoral)
