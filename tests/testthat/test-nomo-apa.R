@@ -894,6 +894,11 @@ test_that("the console fits an APA table to its width and names what it leaves o
   narrow <- capture.output(print(tables[[1L]]))
   expect_true(any(grepl("^Hypothesis +Evidence$", narrow)))
   expect_true(any(grepl("Not shown for width: Prediction,", narrow, fixed = TRUE)))
+  # A specific note whose marker is only in a column not shown is left out
+  # with it; the note on the stub stays, under its own letter.
+  expect_true(any(startsWith(narrow, "(a) Specified after")))
+  expect_false(any(grepl("equivalence interval", narrow, fixed = TRUE)))
+  expect_false(any(startsWith(narrow, "(b)") | startsWith(narrow, "(c)")))
 })
 
 

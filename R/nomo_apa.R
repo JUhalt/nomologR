@@ -1423,8 +1423,19 @@ print.nomo_apa_table <- function(x, ...) {
   }
 
   # Notes wrap to the console, as every other printed text does (#89), each
-  # specific note on its own line.
-  for (note in nomo_apa_console_text(nomo_apa_notes_text(x$notes, run_in = FALSE))) {
+  # specific note on its own line. A specific note whose marker is only in
+  # columns not shown for width is left out with them; the others keep their
+  # letters, so each still matches its cells in x$body (#145).
+  notes <- nomo_apa_notes_text(x$notes, run_in = FALSE)
+  marked <- function(columns) {
+    cells <- unlist(x$body[columns], use.names = FALSE)
+    markers <- unlist(regmatches(cells, gregexpr("\\^[a-z](,[a-z])*\\^", cells)))
+    unlist(strsplit(gsub("^", "", markers, fixed = TRUE), ",", fixed = TRUE))
+  }
+  hidden <- headings %in% laid$hidden
+  letter <- ifelse(grepl("^\\^[a-z]\\^ ", notes), substr(notes, 2L, 2L), "")
+  notes <- notes[!(letter %in% setdiff(marked(hidden), marked(!hidden)))]
+  for (note in nomo_apa_console_text(notes)) {
     nomo_present_text(nomo_apa_bind(note))
   }
   nomo_present_pointer(c("x$body", "knitr::knit_print(x)"),

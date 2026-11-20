@@ -388,6 +388,7 @@ that does. A call that worked is not affected.
   - **Improper solutions.** When lavaan's admissibility check did not pass, as with a negative variance estimate, the note of a CFA, reliability, or validity table says so, as `summary()` does. A standardized loading that is not finite is explained as such; the note had called it "not estimated", though lavaan estimated it.
 - `nomo_apa_table()` leaves out what a table cannot show (#145).
   - **One invariance model.** A table of the configural model alone has no change columns, which had been four empty columns, and its note neither defines the change symbol nor says that each model adds constraints.
+  - **Narrow console.** `print()` leaves out a specific note whose marker is only in columns not shown for width. The notes it keeps keep their letters, so each still matches its cells in `x$body`.
 - `nomo_apa_table()` refuses invalid arguments it used to ignore (#145): a `type` for a result that has one table (`nomo_reliability()`, `nomo_invariance()`), and a `title` that is not a single string, which was pasted together.
 - `nomo_table()` (#145):
   - **Other objects.** An object without tables is refused with the list of supported classes; the error had been base R's "no applicable method".
