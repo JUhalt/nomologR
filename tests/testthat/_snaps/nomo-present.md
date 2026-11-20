@@ -327,7 +327,7 @@
       assumption-dependent. Reliability contributes score-precision evidence, not
       construct validity.
       
-      See x$decision_log for the reasoning behind each coefficient.
+      See nomo_table(x, "decision_log") for the reasoning behind each coefficient.
 
 ---
 
@@ -395,8 +395,8 @@
       and HTMT-family statistics address construct separation. These are
       complementary questions, not interchangeable pass/fail tests.
       
-      See nomo_table(x, "discriminant") for every value and x$decision_log for the
-      reasoning behind each flag.
+      See nomo_table(x, "discriminant") for every value and
+      nomo_table(x, "decision_log") for the reasoning behind each flag.
 
 ---
 

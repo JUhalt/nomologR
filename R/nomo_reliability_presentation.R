@@ -360,7 +360,8 @@ print.summary_nomo_reliability <- function(x, ...) {
     "assumption-dependent. Reliability contributes score-precision evidence, ",
     "not construct validity."
   )
-  nomo_present_pointer("x$decision_log", "the reasoning behind each coefficient")
+  nomo_present_pointer("nomo_table(x, \"decision_log\")",
+                       "the reasoning behind each coefficient")
   invisible(x)
 }
 

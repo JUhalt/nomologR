@@ -707,7 +707,7 @@ print.summary_nomo_validity <- function(x, ...) {
     "These are complementary questions, not interchangeable pass/fail tests."
   )
   nomo_present_pointer(
-    c("nomo_table(x, \"discriminant\")", "x$decision_log"),
+    c("nomo_table(x, \"discriminant\")", "nomo_table(x, \"decision_log\")"),
     c("every value", "the reasoning behind each flag")
   )
   invisible(x)

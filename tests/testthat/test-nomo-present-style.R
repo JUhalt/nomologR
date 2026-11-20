@@ -419,3 +419,15 @@ test_that("revised MAP is never described as an average of fourth powers (#145)"
   }
   expect_gt(seen, 3L)
 })
+
+
+test_that("every pointer to a decision log names nomo_table() (#145, out-16)", {
+  # Every class's log is a nomo_table() type, so no output points to the field.
+  source_dir <- testthat::test_path("..", "..", "R")
+  skip_if_not(file.exists(file.path(source_dir, "nomo_present.R")))
+  for (file in list.files(source_dir, pattern = "[.]R$", full.names = TRUE)) {
+    data <- utils::getParseData(parse(file, keep.source = TRUE))
+    strings <- data$text[data$token == "STR_CONST"]
+    expect_false(any(grepl("^.x[$]decision_log.$", strings)), label = basename(file))
+  }
+})
