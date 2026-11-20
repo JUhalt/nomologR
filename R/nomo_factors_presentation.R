@@ -307,7 +307,11 @@ nomo_factors_key <- function(status) {
     MAP = paste(
       "Minimum average partial criterion (Velicer). TR2, the original, averages",
       if ("map_revised" %in% requested) {
-        "squared partial correlations; TR4, the revised, averages fourth powers."
+        paste(
+          "squared partial correlations; TR4, the revised, is the trace of the",
+          "fourth power of the partial-correlation matrix, less the number of",
+          "items p, over p(p - 1), and can exceed 1."
+        )
       } else {
         "squared partial correlations."
       }
@@ -592,7 +596,8 @@ plot.nomo_factors <- function(x,
         },
         caption = if (revised) {
           paste(
-            "TR2 averages the squared partial correlations and TR4 their fourth powers.",
+            "TR2 averages the squared partial correlations; TR4 is based on the trace of",
+            "the fourth power of the partial-correlation matrix and can exceed 1.",
             "The highlighted minimum is the count each variant suggests; smaller values",
             "are preferred. The two have different scales, so the panels use separate",
             "y-axes."

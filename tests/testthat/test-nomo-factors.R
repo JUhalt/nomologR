@@ -2399,7 +2399,14 @@ test_that("a minimal criterion set neither shows nor logs revised MAP (#145, fac
   map <- plot(core, type = "map")
   expect_identical(levels(map$data$criterion), c("Original MAP (TR2)", "Revised MAP (TR4)"))
   expect_match(map$labels$subtitle, "| Revised TR4 minimum: ", fixed = TRUE)
-  expect_match(plot_text(map$labels$caption), "TR4 their fourth powers", fixed = TRUE)
+  # Revised MAP is a matrix power, as the code and the registry say (#145).
+  expect_match(plot_text(map$labels$caption),
+               "TR4 is based on the trace of the fourth power of the partial-correlation matrix",
+               fixed = TRUE)
+  key <- paste(capture.output(print(summary(core))), collapse = " ")
+  expect_match(gsub("[[:space:]]+", " ", key),
+               "TR4, the revised, is the trace of the fourth power of the partial-correlation matrix",
+               fixed = TRUE)
   # TR2 is bounded, so its axis drops the leading zero; TR4 can exceed 1.
   map_labels <- nomologR:::nomo_factors_map_labels
   expect_identical(map_labels(c(0, 0.25, 0.5, NA)), c("0", ".25", ".50", NA))

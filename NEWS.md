@@ -221,6 +221,7 @@ that does. A call that worked is not affected.
 - For polychoric and mixed correlations, `nomo_factors()` and `nomo_efa()` score ordinal items by the rank of their observed values (#145). Items coded 0/25/50/75/100 or 1/3/5, and factors with a level nobody chose, no longer fail in psych. Items coded 1, 2, 3, ... give the same results as before, and Pearson correlations still use the values as coded.
 - With tetrachoric or mixed correlations, `nomo_factors()` and `nomo_efa()` no longer print a blank line for every simulated data set (#145). psych's warning for each smoothed matrix is replaced by one decision-log row.
 - `nomo_factors(criterion_set = "minimal")` no longer prints, plots, defines, or logs revised MAP, which that set does not include (#145).
+- Revised MAP (TR4) is described as what it is, the trace of the fourth power of the partial-correlation matrix, in the `nomo_factors()` summary, its MAP plot, and the abbreviations of `nomo_run()` and `nomo_report()` (#145). They had called it an average of fourth powers, against `?nomo_factors` and the methods registry. The values are unchanged.
 
 ### CFA, model comparison, model syntax, and sample splitting
 

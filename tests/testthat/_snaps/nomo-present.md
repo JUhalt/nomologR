@@ -210,8 +210,9 @@
       
       Abbreviations
         MAP -- Minimum average partial criterion (Velicer). TR2, the original,
-            averages squared partial correlations; TR4, the revised, averages fourth
-            powers.
+            averages squared partial correlations; TR4, the revised, is the trace of
+            the fourth power of the partial-correlation matrix, less the number of
+            items p, over p(p - 1), and can exceed 1.
         KMO -- Kaiser-Meyer-Olkin measure of sampling adequacy.
         EKC -- Empirical Kaiser criterion.
       

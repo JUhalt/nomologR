@@ -400,3 +400,22 @@ test_that("every printed table names the call that shows a column it drops (#145
   expect_gt(length(notes), 0L)
   expect_true(all(grepl("See nomo_table\\(x, \"[a-z_]+\"\\)\\.$", notes)), label = paste(notes))
 })
+
+
+test_that("revised MAP is never described as an average of fourth powers (#145)", {
+  # TR4 is the trace of the fourth matrix power of the partial-correlation
+  # matrix (R/nomo_factors.R, the registry); every printed string that names a
+  # fourth power says so.
+  source_dir <- testthat::test_path("..", "..", "R")
+  skip_if_not(file.exists(file.path(source_dir, "nomo_present.R")))
+  seen <- 0L
+  for (file in list.files(source_dir, pattern = "[.]R$", full.names = TRUE)) {
+    data <- utils::getParseData(parse(file, keep.source = TRUE))
+    strings <- data$text[data$token == "STR_CONST" & grepl("fourth", data$text)]
+    seen <- seen + length(strings)
+    for (string in strings) {
+      expect_true(grepl("matrix|trace", string), label = sprintf("%s: %s", basename(file), string))
+    }
+  }
+  expect_gt(seen, 3L)
+})
