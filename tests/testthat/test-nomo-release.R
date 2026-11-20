@@ -126,3 +126,19 @@ test_that("Get started describes 1.0.0 in words that stay true after it is out (
   expect_false(grepl("next release|planned|will |milestone", section))
   expect_false(grepl("v?[0-9]+[.][0-9]+[.][0-9]+", sub("1.0.0", "", section, fixed = TRUE)))
 })
+
+
+test_that("the README dates the stability promise as ?nomologR does (#113)", {
+  help <- flat(release_text("man", "nomologR-package.Rd"))
+  from <- regmatches(help, regexpr("From version [0-9.]+[0-9], the public interface", help))
+  expect_length(from, 1L)
+  version <- sub("From version ([0-9.]+[0-9]),.*$", "\\1", from)
+  expect_identical(version, "1.0.0")
+  for (name in c("README.Rmd", "README.md")) {
+    readme <- flat(release_text(name))
+    stability <- sub("^.*## Stability (.*?) ## Design principles.*$", "\\1", readme, perl = TRUE)
+    expect_match(stability, paste0("^From `v", version, "`, nomologR's public interface"),
+                 label = name)
+    expect_false(grepl("v0[.]3[.]0", stability), label = paste(name, "names 0.3.0"))
+  }
+})

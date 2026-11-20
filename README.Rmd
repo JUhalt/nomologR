@@ -1284,9 +1284,8 @@ For more, see:
 
 ## Stability
 
-From `v0.3.0`, the first release submitted to CRAN, nomologR's public interface
-changes only after a deprecation period, so code written against one release
-keeps working in the next.
+From `v1.0.0`, nomologR's public interface changes only after a deprecation
+period, so code written against one release keeps working in the next.
 
 - **What it covers.** The exported functions, their documented arguments and
   defaults, the documented fields of returned objects, `nomo_table()` types,
