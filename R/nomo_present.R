@@ -226,10 +226,14 @@ nomo_present_bind <- function(x) {
   nb <- nomo_present_nbsp
   rel <- "([<>]=?|!?=)"
   # A name that itself follows a relation is left free, so a chain such as
-  # "a > b > c" binds only its first clause and can still be wrapped. So is a
-  # value that opens a call, as in code: "decisions = list(cfa_model = ...".
-  x <- gsub(paste0("(?<![<>=] )(?<![A-Za-z0-9_.])([A-Za-z][A-Za-z0-9_.-]*) ", rel,
-                   " (?=[^\\s(]*(\\s|$))"),
+  # "a > b > c" binds only its first clause and can still be wrapped. A name
+  # just inside a parenthesis, such as "(p = .043)" or a named argument, binds
+  # only a value that does not open another call, so a line of code such as
+  # "decisions = list(cfa_model = list(value = ...))" never becomes one run.
+  name <- "([A-Za-z][A-Za-z0-9_.-]*)"
+  x <- gsub(paste0("(?<![<>=] )(?<![A-Za-z0-9_.(])", name, " ", rel, " "),
+            paste0("\\1", nb, "\\2", nb), x, perl = TRUE)
+  x <- gsub(paste0("(?<=\\()", name, " ", rel, " (?=[^\\s(]*(\\s|$))"),
             paste0("\\1", nb, "\\2", nb), x, perl = TRUE)
   x <- gsub(paste0("\\) ", rel, " "), paste0(")", nb, "\\1", nb), x, perl = TRUE)
   x <- gsub("\\[([^]\\[]*), ([^]\\[]*)\\]", paste0("[\\1,", nb, "\\2]"), x,

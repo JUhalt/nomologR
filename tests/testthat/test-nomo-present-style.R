@@ -150,9 +150,11 @@ test_that("statistical clauses are never broken across lines (#145)", {
   expect_identical(bind("with ord.scale = TRUE and ci_lower = .12"),
                    "with ord.scale_=_TRUE and ci_lower_=_.12")
   expect_identical(bind("x.y = 1"), "x.y_=_1")
-  # Code is not bound into one long run: a value that opens a call stays free.
+  # Code is not bound into one long run: a named argument whose value opens
+  # another call stays free, and so does a chain.
   expect_identical(bind("decisions = list(cfa_model = list(value = model, source = x)"),
-                   "decisions = list(cfa_model = list(value_=_model, source_=_x)")
+                   "decisions_=_list(cfa_model = list(value_=_model, source_=_x)")
+  expect_identical(bind("(p = .043) and f(n = g(1))"), "(p_=_.043) and f(n = g(1))")
   # Unbound, the first line would end on "nomo_table(x,".
   call <- utils::capture.output(nomologR:::nomo_present_text(
     strrep("z", 15), ' see nomo_table(x, "criteria") gives it.'
