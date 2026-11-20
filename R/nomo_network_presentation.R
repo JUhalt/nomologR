@@ -455,7 +455,7 @@ nomo_network_present_flagged <- function(log, evidence, detail = FALSE) {
   unit <- ifelse(is.na(prefix), unit, trimws(paste0(prefix, ": ", unit)))
   unit <- sub(":$", "", unit)
   text <- rows$observation
-  if (isTRUE(detail)) text <- paste(text, rows$recommendation)
+  if (isTRUE(detail)) text <- nomo_present_then_recommend(text, rows$recommendation)
   nomo_present_flagged(unit = unit, status = rows$severity, text = text)
   invisible(text)
 }

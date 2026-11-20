@@ -257,8 +257,8 @@ print.summary_nomo_factors <- function(x, ...) {
 
   # Review and concern rows of the decision log, with what to do about each.
   flags <- nomo_factors_flag_rows(x$decision_log)
-  nomo_present_flagged(unit = NULL, status = flags$severity,
-                       text = paste(flags$observation, flags$recommendation))
+  nomo_present_flagged(unit = NULL, status = flags$severity, text = flags$observation,
+                       recommendation = flags$recommendation)
 
   nomo_present_section("Synthesis")
   nomo_present_text(x$recommendation, indent = 2L)

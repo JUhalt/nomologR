@@ -45,9 +45,14 @@
 #   nomo_present_flagged(log, recommendation = FALSE, unit, status, text)
 #       the "Flagged" section: one bullet per unit, "  - b5 (Review): Sentence.",
 #       concern before review, units sharing a status and an explanation
-#       grouped ("  - B2, C2 (Review): ..."). Reads a decision log (`object`,
-#       `severity`, `observation`, and `recommendation` when asked), or the
-#       `unit`, `status`, and `text` vectors given.
+#       grouped ("  - B2, C2 (Review): ..."), a later unit's leading "The"
+#       lowercased ("The Agency EFA, the Persistence EFA"). Reads a decision
+#       log (`object`, `severity`, `observation`, and `recommendation` when
+#       asked), or the `unit`, `status`, and `text` vectors given;
+#       `recommendation` may also be the recommendations to follow `text`.
+#       An observation is ended with a full stop before its recommendation.
+#   nomo_present_then_recommend(observation, recommendation)
+#       an observation ended with a full stop, then its recommendation.
 #   nomo_present_table(x, columns, formats = list(), more = NULL, indent = 2L,
 #                      keep = nomo_present_keep)
 #       an aligned table; `columns` maps display labels to columns of `x`,
@@ -329,14 +334,18 @@ nomo_present_notes <- function(notes) {
 # and an explanation grouped on one bullet ("- B2, C2 (Review): ..."). From a
 # decision log, the unit is its `object` and the explanation its observation,
 # followed by its recommendation when `recommendation = TRUE`, as a summary
-# gives it. Nothing is printed when nothing is flagged.
+# gives it; `recommendation` may instead be the recommendations themselves, to
+# follow `text`. An observation is ended with a full stop before its
+# recommendation. In a group, a later unit that starts with "The" starts
+# lowercase ("The Agency EFA, the Persistence EFA"); "A" is left alone, since
+# it is as likely a construct's name as an article. Nothing is printed when
+# nothing is flagged.
 nomo_present_flagged <- function(log = NULL, recommendation = FALSE,
                                  unit = log[["object"]], status = log[["severity"]],
                                  text = NULL) {
-  if (is.null(text) && !is.null(log)) {
-    text <- log[["observation"]]
-    if (isTRUE(recommendation)) text <- paste(text, log[["recommendation"]])
-  }
+  if (is.null(text) && !is.null(log)) text <- log[["observation"]]
+  if (isTRUE(recommendation) && !is.null(log)) recommendation <- log[["recommendation"]]
+  if (is.character(recommendation)) text <- nomo_present_then_recommend(text, recommendation)
   shown <- nomo_present_status(status)
   n <- length(shown)
   unit <- if (is.null(unit)) rep("", n) else as.character(unit)
@@ -355,6 +364,7 @@ nomo_present_flagged <- function(log = NULL, recommendation = FALSE,
   bullets <- vapply(keys, function(k) {
     same <- key == k
     units <- unique(unit[same & nzchar(unit)])
+    units[-1L] <- sub("^The ", "the ", units[-1L])
     label <- if (length(units)) {
       paste0(paste(units, collapse = ", "), nomo_present_nbsp, "(", shown[same][[1L]], ")")
     } else {
@@ -364,6 +374,20 @@ nomo_present_flagged <- function(log = NULL, recommendation = FALSE,
   }, character(1), USE.NAMES = FALSE)
   nomo_present_section("Flagged")
   nomo_present_bullets(bullets)
+}
+
+
+# An observation followed by its recommendation, as a summary's "Flagged"
+# section gives them. The observation is ended with a full stop first, since a
+# lavaan message kept as an observation has none; a missing or empty
+# recommendation adds nothing.
+nomo_present_then_recommend <- function(observation, recommendation) {
+  observation <- trimws(as.character(observation))
+  observation[is.na(observation)] <- ""
+  recommendation <- trimws(as.character(recommendation))
+  recommendation[is.na(recommendation)] <- ""
+  ended <- !nzchar(observation) | !nzchar(recommendation) | grepl("[.!?]$", observation)
+  trimws(paste(ifelse(ended, observation, paste0(observation, ".")), recommendation))
 }
 
 

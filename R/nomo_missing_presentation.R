@@ -306,7 +306,7 @@ print.summary_nomo_missing <- function(x, ...) {
   # The log always records the missingness itself, so there is always a note.
   info <- x$decision_log[!x$decision_log$severity %in% c("review", "concern"), , drop = FALSE]
   nomo_present_section("Notes")
-  nomo_present_bullets(trimws(paste(info$observation, info$recommendation)))
+  nomo_present_bullets(nomo_present_then_recommend(info$observation, info$recommendation))
 
   nomo_missing_caveat()
   nomo_present_pointer(

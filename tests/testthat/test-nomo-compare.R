@@ -1098,8 +1098,8 @@ test_that("a flag's note ends with a full stop before its recommendation (#145)"
   expect_match(printed, "mocked difference-test failure.", fixed = TRUE)
   expect_false(grepl("Weigh the statistical evidence", printed, fixed = TRUE))
   expect_identical(
-    nomologR:::nomo_compare_then_recommend(c("Ends.", "Asks?", " No stop ", ""), "Do this."),
-    c("Ends. Do this.", "Asks? Do this.", "No stop. Do this.", " Do this.")
+    nomologR:::nomo_present_then_recommend(c("Ends.", "Asks?", " No stop ", ""), "Do this."),
+    c("Ends. Do this.", "Asks? Do this.", "No stop. Do this.", "Do this.")
   )
 })
 

@@ -331,13 +331,37 @@ test_that("the Flagged section, key, and pointer read as the guide shows (#144)"
   )
   expect_identical(utils::capture.output(flagged(log, recommendation = TRUE))[3:4],
                    c("  - a1 (Concern): Heywood case. Check.",
-                     "  - b5 (Review): Low loading Look again."))
+                     "  - b5 (Review): Low loading. Look again."))
   expect_identical(
     utils::capture.output(flagged(unit = c("ag1", "ag2"), status = c("REVIEW", "STRONG REVIEW"),
                                   text = c("", NA))),
     c("", "Flagged", "  - ag2 (Concern)", "  - ag1 (Review)")
   )
   expect_identical(utils::capture.output(flagged(status = "KEEP")), character())
+
+  # The recommendations may be given with `text`; an observation without a
+  # full stop, such as a lavaan message, gets one before its recommendation,
+  # and a missing recommendation adds nothing (#145, R-0b follow-up).
+  expect_identical(
+    utils::capture.output(flagged(unit = c("a", "b", "c"), status = rep("review", 3L),
+                                  text = c("A lavaan message", "Plain.", "Alone"),
+                                  recommendation = c("Check it.", "", NA))),
+    c("", "Flagged", "  - a (Review): A lavaan message. Check it.", "  - b (Review): Plain.",
+      "  - c (Review): Alone.")
+  )
+  then <- nomologR:::nomo_present_then_recommend
+  expect_identical(then(c("No stop", "Ends?", NA, "Alone", ""), c("Do this.", "Do that.", "Only.", NA, "")),
+                   c("No stop. Do this.", "Ends? Do that.", "Only.", "Alone", ""))
+  # Grouped units: a later unit's leading "The" is lowercased; a construct
+  # named A is not an article.
+  expect_identical(
+    utils::capture.output(flagged(
+      unit = c("The Agency EFA", "The Persistence EFA", "B in validity", "A in validity"),
+      status = rep("review", 4L), text = rep(c("Weak factor.", "Low AVE."), each = 2L)
+    ))[3:4],
+    c("  - The Agency EFA, the Persistence EFA (Review): Weak factor.",
+      "  - B in validity, A in validity (Review): Low AVE.")
+  )
 
   key <- utils::capture.output(nomologR:::nomo_present_key(c(
     SE = "Standard error",

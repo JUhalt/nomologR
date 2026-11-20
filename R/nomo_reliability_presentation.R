@@ -142,7 +142,7 @@ nomo_reliability_other_flags <- function(log, brief = FALSE) {
     text = if (isTRUE(brief)) {
       unname(nomo_reliability_brief[rows$metric])
     } else {
-      paste(rows$observation, rows$recommendation)
+      nomo_present_then_recommend(rows$observation, rows$recommendation)
     }
   )
 }
