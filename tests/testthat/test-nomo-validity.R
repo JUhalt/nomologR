@@ -586,7 +586,7 @@ test_that("a latent correlation near 1 is flagged when HTMT is absent (#145)", {
 
   local_reproducible_output(width = 80)
   printed <- capture.output(print(out))
-  expect_true("Separation flags: 1 review, 0 concern (1 pair)" %in% printed)
+  expect_true("Separation flags: 0 concern, 1 review (1 pair)" %in% printed)
   expect_match(printed, "^  - P vs. Q \\(Review\\): Latent r \\.9[0-9], 95% CI", all = FALSE)
   expect_match(printed, "HTMT-family values were not requested", all = FALSE)
 
@@ -645,7 +645,7 @@ test_that("flag counts name what they count, and constructs are counted once (#1
   cfa <- nomo_cfa(nomo_model(list(A = paste0("a", 1:5), B = paste0("b", 1:5))),
                   data = nomo_demo_continuous)
   printed <- capture.output(print(nomo_validity(cfa)))
-  expect_true("Convergent flags: 2 review, 0 concern (2 constructs)" %in% printed)
+  expect_true("Convergent flags: 0 concern, 2 review (2 constructs)" %in% printed)
   expect_true("Separation flags: none (1 pair)" %in% printed)
   expect_false(any(grepl("Construct separation: none", printed, fixed = TRUE)))
   expect_match(printed, "^  - B \\(Review\\): AVE \\.43 is below the review reference \\.50; 1 of 5",

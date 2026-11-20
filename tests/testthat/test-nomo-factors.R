@@ -2662,7 +2662,7 @@ test_that("the summary lists the decision log's flags, each with its reference (
 
   local_reproducible_output(width = 80)
   printed <- gsub("\\s+", " ", paste(capture.output(print(out)), collapse = " "))
-  expect_match(printed, "Flags: [0-9]+ review, [1-9] concern")
+  expect_match(printed, "Flags: [1-9] concern, [0-9]+ review")
   summarized <- capture.output(print(summary(out)))
   expect_true("Flagged" %in% summarized)
   expect_match(summarized, "^  - Concern: Overall KMO = ", all = FALSE)

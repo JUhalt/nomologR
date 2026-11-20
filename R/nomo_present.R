@@ -109,7 +109,7 @@
 #                                     -> "Not computed". Stored values never
 #                                     change.
 #   nomo_present_flag(x)              the same in lowercase, for running prose.
-#   nomo_present_flag_counts(x)       "1 review, 2 concern" or "none".
+#   nomo_present_flag_counts(x)       "2 concern, 1 review" or "none".
 #   nomo_present_count(n, singular, plural), nomo_present_noun(...)   "2 factors".
 #   nomo_present_or(x, word = "or")   "a, b, or c".
 #   nomo_present_origin(x, cell = FALSE)   "a priori", "post hoc" (no hyphen);
@@ -625,12 +625,14 @@ nomo_present_status <- function(x) {
 }
 
 
+# "2 concern, 1 review", concern first as in a Flagged section (guide point
+# 22), or "none".
 nomo_present_flag_counts <- function(x) {
   flags <- nomo_present_flag(x)
   review <- sum(flags == "review")
   concern <- sum(flags == "concern")
   if (!review && !concern) return("none")
-  sprintf("%d review, %d concern", review, concern)
+  sprintf("%d concern, %d review", concern, review)
 }
 
 

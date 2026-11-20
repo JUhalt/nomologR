@@ -1854,7 +1854,7 @@ test_that("log rows and printed counts agree in number (#145)", {
   local_reproducible_output(width = 80)
   printed <- capture.output(print(out))
   expect_true("Items in correlation diagnostics: 1 of 3 | Item-rest correlations: 0" %in% printed)
-  expect_true("Decision log: 10 entries | Flagged: 1 review, 2 concern" %in% printed)
+  expect_true("Decision log: 10 entries | Flagged: 2 concern, 1 review" %in% printed)
 })
 
 
@@ -1907,7 +1907,7 @@ test_that("print and summary follow the shared output style (#144)", {
                fixed = TRUE)
   summary_printed <- capture.output(print(summary(scr)))
   expect_identical(summary_printed[[1L]], "<nomo_screen summary> Item and data audit")
-  expect_true("Cases: 500 | Items: 10 | Item flags: 1 review, 0 concern" %in% summary_printed)
+  expect_true("Cases: 500 | Items: 10 | Item flags: 0 concern, 1 review" %in% summary_printed)
   expect_true(any(grepl("^  b5\\s+continuous\\s+0\\.0%\\s+1\\.4%\\s+\\.28  Review$", summary_printed)))
   expect_true("Flagged" %in% summary_printed)
   expect_match(paste(summary_printed, collapse = " "),

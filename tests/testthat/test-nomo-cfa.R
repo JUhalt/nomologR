@@ -645,7 +645,7 @@ test_that("CFA print method handles engine labels, warnings, and unavailable val
   expect_false(any(grepl("Fit:", txt, fixed = TRUE)))
   # The flags count what did not converge and lavaan's warning, not loadings
   # computed from an unconverged fit.
-  expect_true(any(grepl("Flags: 1 review, 1 concern", txt, fixed = TRUE)))
+  expect_true(any(grepl("Flags: 1 concern, 1 review", txt, fixed = TRUE)))
 
   out$estimator <- NA_character_
   out$estimator_engine <- NA_character_

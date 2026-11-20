@@ -47,7 +47,7 @@ test_that("every flag vocabulary is shown in one wording", {
   expect_identical(flag(c("Something Else", NA)), c("something else", ""))
   expect_identical(nomologR:::nomo_present_flag_counts(c("KEEP", "KEEP")), "none")
   expect_identical(nomologR:::nomo_present_flag_counts(c("REVIEW", "STRONG REVIEW", "KEEP")),
-                   "1 review, 1 concern")
+                   "1 concern, 1 review")
 })
 
 

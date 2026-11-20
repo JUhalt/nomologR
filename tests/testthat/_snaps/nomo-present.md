@@ -6,7 +6,7 @@
       <nomo_cfa> Confirmatory factor analysis
       Cases: 473 of 500 used | Estimator: ML | Converged: yes
       Fit: CFI .973 | TLI 0.965 | RMSEA 0.051 | SRMR 0.052
-      Loadings: 10 | Flags: 2 review, 0 concern
+      Loadings: 10 | Flags: 0 concern, 2 review
       No parameter was freed and no model was refit automatically.
       
       ML = maximum likelihood; CFI = comparative fit index; TLI = Tucker-Lewis
@@ -108,7 +108,7 @@
       Items with missing responses: 2 | Constant: 0 | All missing: 0
       Items in correlation diagnostics: 10 | Item-rest correlations: 10
       Response concentration flags: 0 | Near-zero variance: 0
-      Decision log: 4 entries | Flagged: 1 review, 0 concern
+      Decision log: 4 entries | Flagged: 0 concern, 1 review
       No rows or items were removed or modified.
       
       See summary(x) for each item's review and nomo_table(x, "decision_log") for
@@ -120,7 +120,7 @@
       print(summary(scr))
     Output
       <nomo_screen summary> Item and data audit
-      Cases: 500 | Items: 10 | Item flags: 1 review, 0 concern
+      Cases: 500 | Items: 10 | Item flags: 0 concern, 1 review
       Items with missing responses: 2 | Constant: 0 | All missing: 0
       Items in correlation diagnostics: 10
       
@@ -231,7 +231,7 @@
       Cases: 500 (minimum pairwise N: 473) | Items: 10
       Factors: 2 (from nomo_factors())
       Correlation: Pearson | Extraction: minres | Rotation: oblimin (oblique)
-      RMSR: 0.018 | Item flags: 2 review, 1 concern
+      RMSR: 0.018 | Item flags: 1 concern, 2 review
       RMSR = root mean square of the off-diagonal residual correlations. No item was
       deleted and no model was refit automatically.
       
@@ -336,7 +336,7 @@
     Output
       <nomo_validity> Convergent and discriminant evidence
       Constructs: 2 | AVE reference: .50 | HTMT reference: 0.85
-      Convergent flags: 2 review, 0 concern (2 constructs)
+      Convergent flags: 0 concern, 2 review (2 constructs)
       Separation flags: none (1 pair)
       
       Flagged
@@ -358,7 +358,7 @@
     Output
       <nomo_validity summary> Convergent and discriminant evidence
       Constructs: 2 | AVE reference: .50 | HTMT reference: 0.85
-      Convergent flags: 2 review, 0 concern (2 constructs)
+      Convergent flags: 0 concern, 2 review (2 constructs)
       Separation flags: none (1 pair)
       
       Convergent evidence by construct
@@ -1149,7 +1149,7 @@
         - EFA item flags: none
         - CFA: CFI .996, RMSEA 0.020, SRMR 0.021; loading flags: none
         - Reliability: omega .73 to .85
-        - Validity: convergent flags 1 review, 0 concern; separation flags none
+        - Validity: convergent flags 0 concern, 1 review; separation flags none
         - Invariance: completed configural -> metric
         - Network: 1 hypothesis; 1 concordant
         - Careless responding: 0 cases flagged, none removed

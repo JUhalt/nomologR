@@ -1310,7 +1310,7 @@ test_that("reliability output follows the shared style (#144)", {
   # The reference prints as omega does, without a leading zero.
   expect_match(printed, "Review reference: .70", fixed = TRUE, all = FALSE)
   expect_false(any(grepl("0.7\\b", printed)))
-  expect_true("Omega: .61 to .89 | Omega flags: 2 review, 0 concern" %in% printed)
+  expect_true("Omega: .61 to .89 | Omega flags: 0 concern, 2 review" %in% printed)
   expect_true("  - visual (Review): Omega .61 is below the review reference .70." %in% printed)
   expect_identical(printed[[length(printed)]], "See summary(x) for each construct's omega and alpha.")
   expect_true(all(nchar(printed) <= 79L))
