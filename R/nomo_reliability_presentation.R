@@ -304,11 +304,15 @@ print.summary_nomo_reliability <- function(x, ...) {
   ]
   if (nrow(unavailable)) {
     nomo_present_section("Alpha not computed")
-    nomo_present_bullets(sprintf(
-      "%s (%s indicators, %s scale): %s", unavailable$construct,
-      unavailable$indicator_type, gsub("_", " ", unavailable$score_scale),
-      unavailable$reason
-    ))
+    # Constructs with the same explanation share one bullet, "A, B (...): ..."
+    # (guide point 22; #145, out-15).
+    detail <- sprintf(
+      "(%s indicators, %s scale): %s", unavailable$indicator_type,
+      gsub("_", " ", unavailable$score_scale), unavailable$reason
+    )
+    nomo_present_bullets(vapply(unique(detail), function(d) {
+      paste(paste(unavailable$construct[detail == d], collapse = ", "), d)
+    }, character(1), USE.NAMES = FALSE))
   }
 
   # Each flagged coefficient, with what to look at; omega's and alpha's. Then

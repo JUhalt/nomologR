@@ -437,9 +437,19 @@ test_that("reliability print methods cover point, bootstrap, strain, and empty b
   strain$recommendation <- "Investigate the CFA."
   empty$decision_log <- rbind(empty$decision_log, strain)
 
-  txt3 <- paste(capture.output(print(empty)), collapse = "\n")
+  lines3 <- capture.output(print(empty))
+  txt3 <- paste(lines3, collapse = "\n")
   expect_match(txt3, "No reliability coefficients", fixed = TRUE)
   expect_match(txt3, "Alpha not computed", fixed = TRUE)
+  # Constructs with the same reason share one bullet (#145, out-15).
+  twice <- empty
+  second <- twice$alpha_status
+  second$construct <- "Other"
+  twice$alpha_status <- rbind(twice$alpha_status, second)
+  lines_twice <- capture.output(print(twice))
+  expect_identical(sum(grepl("Synthetic unavailable", lines_twice, fixed = TRUE)), 1L)
+  expect_match(lines_twice, paste0("^  - ", empty$alpha_status$construct[[1L]], ", Other \\("),
+               all = FALSE)
   expect_match(txt3, "Sampling uncertainty was not bootstrapped", fixed = TRUE)
   expect_match(
     gsub("\\s+", " ", txt3),
