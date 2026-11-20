@@ -2,7 +2,9 @@
 
 These changes lead to 1.0.0, the stable release planned jointly with
 `contentvalidR` (#53). Its first release candidate, `v1.0.0-rc.1` (version
-0.99.0), is planned for 2026-10-17, after the feature freeze on 2026-10-13.
+0.99.0), is planned for 2026-12-01, after the interface freeze on 2026-11-27.
+The 1.0.0 release goes to GitHub and R-universe first; the CRAN submission
+follows it.
 
 - **New methods.** The gap review (#129) added the methods social-science scale
   developers were missing, each taken from its literature.
@@ -557,7 +559,7 @@ affected.
 
 ## Documentation (#129, #138, #144, #145)
 
-- Documentation for 1.0 (#129, #138). Get started and the research-basis article say that every analysis assumes reflective measurement, why the tools do not apply to formative measures, and where the criteria for choosing between the two are. The research-basis article places each method added in #129 between historical and contemporary practice, and gains the McGraw and Wong (1996) entry its test-retest paragraph cites. The README walks through the new functions stage by stage, lists `nomo_demo_longitudinal`, says what 1.0.0 contains, and notes that `nomo_method_variance()` and `nomo_power_simulate()` stay experimental after 1.0.0; its license note now says that releases from 0.2.0 on are GPL-3. Get started adds the new functions and dataset to its workflow and dataset tables and its learning path, and the package description names the new methods. ROADMAP lists the gap review in the 1.0.0 scope, names 0.9.0 as the current release, and records the feature freeze on 2026-10-13. The README and the exploratory-workflow article read the documented `correlation_method` and `item_types` of `nomo_factors()`, not their undocumented aliases.
+- Documentation for 1.0 (#129, #138). Get started and the research-basis article say that every analysis assumes reflective measurement, why the tools do not apply to formative measures, and where the criteria for choosing between the two are. The research-basis article places each method added in #129 between historical and contemporary practice, and gains the McGraw and Wong (1996) entry its test-retest paragraph cites. The README walks through the new functions stage by stage, lists `nomo_demo_longitudinal`, says what 1.0.0 contains, and notes that `nomo_method_variance()` and `nomo_power_simulate()` stay experimental after 1.0.0; its license note now says that releases from 0.2.0 on are GPL-3. Get started adds the new functions and dataset to its workflow and dataset tables and its learning path, and the package description names the new methods. ROADMAP lists the gap review in the 1.0.0 scope, names 0.9.0 as the current release, and records the interface freeze on 2026-11-27. The README and the exploratory-workflow article read the documented `correlation_method` and `item_types` of `nomo_factors()`, not their undocumented aliases.
 - The interface frozen at 1.0 is written down where it was missing (#145). No value, name, or behavior changes for it.
   - **Help pages.** The pages of `nomo_screen()`, `nomo_cfa()`, `nomo_efa()`, `nomo_validity()`, `nomo_reliability()`, `nomo_network()`, and `nomo_missing()` name the units and flag values of their own tables. The stability policy lists the columns of each analysis's decision log, and `?nomo_run` those of the run's own log.
   - **`nomo_cfa()`.** `?nomo_cfa` says that `estimator` is stored in upper case, so a requested `"default"` is stored as `"DEFAULT"`.

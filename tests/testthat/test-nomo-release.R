@@ -70,3 +70,59 @@ test_that("every test that replaces another package's function is skipped on CRA
   }
   expect_gt(checked, 40L)
 })
+
+
+# The release plan --------------------------------------------------------------
+
+# The introduction of NEWS.md: what comes before its first second-level heading.
+news_introduction <- function() {
+  lines <- readLines(release_source_file("NEWS.md"), warn = FALSE, encoding = "UTF-8")
+  paste(lines[seq_len(grep("^## ", lines)[[1L]] - 1L)], collapse = "\n")
+}
+
+# A document's text on one line, with typographic apostrophes as typed.
+flat <- function(text) {
+  gsub("\\s+", " ", gsub("\u2019", "'", text))
+}
+
+test_that("the release plan gives the dates and the order the maintainer set (#53)", {
+  # Interface freeze 2026-11-27, release candidate 2026-12-01, and 1.0.0 on
+  # GitHub and R-universe before the CRAN submission (decided 2026-11-16).
+  plans <- list(
+    "NEWS.md introduction" = news_introduction(),
+    "README.Rmd" = release_text("README.Rmd"),
+    "README.md" = release_text("README.md"),
+    "ROADMAP.md" = release_text("ROADMAP.md")
+  )
+  for (name in names(plans)) {
+    text <- flat(plans[[name]])
+    expect_false(grepl("2026-10-1[37]", text), label = paste(name, "gives an old date"))
+    expect_false(grepl("feature freeze", text), label = paste(name, "says feature freeze"))
+    expect_match(text, "interface freeze", label = name)
+    expect_match(text, "2026-11-27", fixed = TRUE, label = name)
+    expect_match(text, "2026-12-01", fixed = TRUE, label = name)
+    expect_match(text, "GitHub and R-universe first", fixed = TRUE, label = name)
+  }
+  # No CRAN interval comes before 1.0.0.
+  roadmap <- flat(plans[["ROADMAP.md"]])
+  expect_false(grepl("first acceptances|update interval", roadmap))
+
+  for (name in c("vignettes/nomologR.Rmd", "cran-comments.md")) {
+    expect_false(grepl("2026-10-1[37]", release_text(name)), label = paste(name, "gives an old date"))
+  }
+})
+
+
+test_that("Get started describes 1.0.0 in words that stay true after it is out (#53)", {
+  # The article is installed with the package, so it must not call 1.0.0 the
+  # next release, and nothing in it has to be remembered on release day.
+  lines <- readLines(release_source_file("vignettes", "nomologR.Rmd"), warn = FALSE,
+                     encoding = "UTF-8")
+  start <- grep("^# Where nomologR is heading", lines)
+  expect_length(start, 1L)
+  end <- start + grep("^# ", lines[-seq_len(start)])[[1L]]
+  section <- flat(paste(lines[start:(end - 1L)], collapse = " "))
+  expect_match(section, "From 1.0.0, the interfaces of both packages are stable", fixed = TRUE)
+  expect_false(grepl("next release|planned|will |milestone", section))
+  expect_false(grepl("v?[0-9]+[.][0-9]+[.][0-9]+", sub("1.0.0", "", section, fixed = TRUE)))
+})

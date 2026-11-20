@@ -1164,7 +1164,7 @@ The detailed release plan lives in
 ### Current release: `v0.9.0`
 
 `v0.9.0` is the last minor release before `v1.0.0`, whose release candidate is
-planned for 2026-10-17
+planned for 2026-12-01
 ([#113](https://github.com/JUhalt/nomologR/issues/113)). It is about how the
 package presents itself and what it teaches:
 
@@ -1256,8 +1256,10 @@ comprehensive CFA marker technique (`nomo_method_variance()`); and
 sample-size planning by RMSEA power and Monte Carlo simulation
 (`nomo_power_rmsea()`, `nomo_power_simulate()`). All are additive.
 `nomo_method_variance()` and `nomo_power_simulate()` stay experimental
-after 1.0.0; the rest fall under the stability promise. The feature
-freeze is on 2026-10-13, before the release candidate on 2026-10-17.
+after 1.0.0; the rest fall under the stability promise. The interface
+freeze is on 2026-11-27, and the release candidate, `v1.0.0-rc.1`,
+follows on 2026-12-01, the same day as `contentvalidR`’s. `v1.0.0` is
+released on GitHub and R-universe first; the CRAN submission follows it.
 
 Larger extensions, such as IRT/DIF, Bayesian SEM, multiple imputation, and
 formative models, are candidates for `1.x`. They are additive, so they do

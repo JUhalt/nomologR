@@ -24,7 +24,9 @@ release (September 9, 2026) keeps its original MIT license.
 **Next release:** [v1.0.0](https://github.com/JUhalt/nomologR/milestone/5) —
 the joint release with `contentvalidR`
 ([#53](https://github.com/JUhalt/nomologR/issues/53)), scoped in
-[#113](https://github.com/JUhalt/nomologR/issues/113). See
+[#113](https://github.com/JUhalt/nomologR/issues/113): interface freeze on
+2026-11-27, release candidate `v1.0.0-rc.1` on 2026-12-01, then 1.0.0 on
+GitHub and R-universe, with the CRAN submission after it. See
 [v1.0.0](#v100--joint-stable-release-with-contentvalidr) below; candidates for
 1.x follow it.
 **Distribution:** [R-universe](https://juhalt.r-universe.dev), which builds each
@@ -222,9 +224,11 @@ to that date.
 
 # v1.0.0 — Joint Stable Release with contentvalidR
 
-**Status:** Release candidate planned for 2026-10-17, the same day as
-`contentvalidR`'s (decided by the maintainer on 2026-09-28), after a feature
-freeze on 2026-10-13. The scope is set in
+**Status:** Release candidate planned for 2026-12-01, the same day as
+`contentvalidR`'s, after an interface freeze on 2026-11-27 (dates set by the
+maintainer on 2026-11-16). 1.0.0 follows the candidate on the maintainer's
+sign-off. It is released on GitHub and R-universe first, and submitted to CRAN
+after that. The scope is set in
 [#113](https://github.com/JUhalt/nomologR/issues/113), where the maintainer
 delegated decisions to what the literature says. On 2026-09-28 the maintainer
 asked that the gaps social-science scale developers meet be closed before the
@@ -270,17 +274,19 @@ can wait for 1.x.
   - [x] Sample-size planning: RMSEA power and Monte Carlo power (#135).
   - [x] Longitudinal measurement invariance and latent change (#137).
   - [x] A scope note: every analysis assumes reflective measurement.
-- [ ] [#39](https://github.com/JUhalt/nomologR/issues/39) The CRAN outcome for
-  0.3.0, which is in CRAN's queue for new submissions. `contentvalidR` 0.4.0
-  was accepted on 2026-09-28, which starts its update interval.
+- [ ] [#39](https://github.com/JUhalt/nomologR/issues/39) The CRAN
+  resubmission. CRAN returned 0.3.0 on 2026-10-08 with two requests: no
+  default write paths, and no changes to the global environment. Both are met.
+  The resubmission is 1.0.0 or later, after its release on GitHub and
+  R-universe, on the maintainer's go-ahead.
 - [ ] [#53](https://github.com/JUhalt/nomologR/issues/53) Release candidates,
   fixtures from contentvalidR's RC, the compatibility table, and a same-day
   release with release notes linking each other. Both packages number a
   candidate the same way (decided 2026-09-28): DESCRIPTION `0.99.0` and a git
   tag `v1.0.0-rc.N`, as a tag only, with no GitHub release, so R-universe does
-  not publish it. CRAN asks for updates no more
-  often than every one to two months, so the joint submission follows the
-  later of the two packages' first acceptances by that interval.
+  not publish it. 1.0.0 itself is a GitHub release, which R-universe builds;
+  the CRAN submission follows it, on the maintainer's go-ahead (decided
+  2026-11-16).
 
 # 1.x — Modern Extensions
 
