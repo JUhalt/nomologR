@@ -792,33 +792,35 @@ nomo_network_theory_plot_data <- function(x) {
   dat$interval_upper <- ifelse(equivalence, dat$equivalence_ci_upper, dat$ci_upper)
   dat$equivalence <- equivalence
 
-  finite_values <- c(
-    dat$interval_lower[is.finite(dat$interval_lower)],
-    dat$interval_upper[is.finite(dat$interval_upper)],
-    dat$estimate[is.finite(dat$estimate)],
-    dat$theory_lower[is.finite(dat$theory_lower)],
-    dat$theory_upper[is.finite(dat$theory_upper)],
-    0
-  )
+  # The range of the rows `i`, with the zero reference, padded by a tenth of
+  # its span. The zero keeps the values from being empty; a span of zero pads
+  # by a tenth of 1.
+  range_of <- function(i) {
+    values <- c(dat$interval_lower[i], dat$interval_upper[i], dat$estimate[i],
+                dat$theory_lower[i], dat$theory_upper[i], 0)
+    values <- values[is.finite(values)]
+    span <- max(values) - min(values)
+    c(min(values), max(values)) + c(-.10, .10) * (span + (span == 0))
+  }
 
-  # `finite_values` always contains the explicit zero reference above, so
-  # the empty-vector branch is unreachable by construction.
-  plot_min <- min(finite_values, na.rm = TRUE)
-  plot_max <- max(finite_values, na.rm = TRUE)
-  span <- plot_max - plot_min
-  if (!is.finite(span) || span <= 0) span <- 1
-  plot_min <- plot_min - .10 * span
-  plot_max <- plot_max + .10 * span
-
-  # An unbounded side of a region runs to the edge of the plot. A region that
-  # was never specified, a bare negligible(), has missing bounds and no band:
-  # drawing one across the plot would call every value compatible (#145).
-  dat$theory_lower_plot <- ifelse(is.infinite(dat$theory_lower), plot_min, dat$theory_lower)
-  dat$theory_upper_plot <- ifelse(is.infinite(dat$theory_upper), plot_max, dat$theory_upper)
+  # An unbounded side of a region runs to the edge of its panel: the plot, or
+  # the panel of its scale when standardized and unstandardized hypotheses are
+  # mixed (#145). A region that was never specified, a bare negligible(), has
+  # missing bounds and no band: drawing one across the plot would call every
+  # value compatible (#145).
+  scale_key <- as.character(dat$scale)
+  scale_key[is.na(scale_key)] <- ""
+  edges <- lapply(split(seq_len(nrow(dat)), scale_key), range_of)
+  edge_min <- vapply(scale_key, function(s) edges[[s]][[1L]], numeric(1), USE.NAMES = FALSE)
+  edge_max <- vapply(scale_key, function(s) edges[[s]][[2L]], numeric(1), USE.NAMES = FALSE)
+  dat$theory_lower_plot <- ifelse(is.infinite(dat$theory_lower), edge_min, dat$theory_lower)
+  dat$theory_upper_plot <- ifelse(is.infinite(dat$theory_upper), edge_max, dat$theory_upper)
+  dat$scale_panel <- paste0(toupper(substr(scale_key, 1L, 1L)), substring(scale_key, 2L),
+                            " estimates")
 
   list(
     data = dat,
-    limits = c(plot_min, plot_max)
+    limits = range_of(seq_len(nrow(dat)))
   )
 }
 
@@ -905,6 +907,17 @@ plot.nomo_network <- function(
       "Theory regions are researcher specified; measurement context and a priori or post hoc status remain separate evidence streams."
     )
 
+    # Standardized and unstandardized estimates do not share an axis: each
+    # scale gets a panel and an axis of its own, so a large unstandardized
+    # estimate no longer flattens the standardized ones onto zero (#145).
+    layout <- if (length(unique(dat$scale_panel)) > 1L) {
+      list(ggplot2::facet_wrap(stats::as.formula("~ scale_panel"), ncol = 1L, scales = "free"),
+           ggplot2::coord_cartesian(clip = "off"))
+    } else {
+      # Every relation keeps its place, whether or not it has a band.
+      list(ggplot2::scale_y_discrete(limits = levels(dat$label)),
+           ggplot2::coord_cartesian(xlim = limits, clip = "off"))
+    }
     return(
       ggplot2::ggplot(dat, ggplot2::aes(y = label)) +
         ggplot2::geom_segment(
@@ -934,9 +947,7 @@ plot.nomo_network <- function(
           na.rm = TRUE
         ) +
         nomo_plot_status_scales(dat$status, name = "Concordance flag") +
-        # Every relation keeps its place, whether or not it has a band.
-        ggplot2::scale_y_discrete(limits = levels(dat$label)) +
-        ggplot2::coord_cartesian(xlim = limits, clip = "off") +
+        layout +
         ggplot2::scale_x_continuous(
           labels = nomo_network_axis_labels(nomo_network_kind(dat$scale, dat$relation_type)),
           expand = ggplot2::expansion(mult = c(.02, .04))

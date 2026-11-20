@@ -3057,6 +3057,22 @@ test_that("the scale of the estimates is stated, row by row when it differs (#14
   expect_identical(plot(mixed, "effects")$labels$x,
                    "Estimate (standardized or unstandardized, as each hypothesis specifies)")
   expect_identical(plot(rg_default(), "effects")$labels$x, "Standardized estimate")
+  # Each scale gets a panel and an axis of its own, so the unstandardized
+  # estimate does not flatten the standardized one onto zero; a one-scale plot
+  # keeps one panel (#145).
+  built <- ggplot2::ggplot_build(plot(mixed, "effects"))
+  expect_identical(nrow(built$layout$layout), 2L)
+  expect_setequal(as.character(built$layout$layout$scale_panel),
+                  c("Standardized estimates", "Unstandardized estimates"))
+  ranges <- lapply(built$layout$panel_params, function(p) p$x.range)
+  expect_lt(diff(ranges[[1L]]), diff(ranges[[2L]]))
+  expect_identical(nrow(ggplot2::ggplot_build(plot(rg_default(), "effects"))$layout$layout), 1L)
+  # A standardized band with an open side runs to the edge of its own panel,
+  # not to the unstandardized estimate's (H2 is at least 2).
+  prepared <- nomologR:::nomo_network_theory_plot_data(mixed)$data
+  open <- prepared$scale == "standardized" & is.infinite(prepared$theory_upper)
+  expect_true(any(open))
+  expect_true(all(prepared$theory_upper_plot[open] < 2))
 
   # The metric of an unstandardized latent estimate is logged with the
   # identification that set it, and documented.
