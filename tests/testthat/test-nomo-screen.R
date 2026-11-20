@@ -650,7 +650,13 @@ test_that("plot item filters are validated", {
 
   expect_error(
     plot(out, items = "not_an_item"),
-    "Unknown item"
+    "Unknown item: not_an_item.",
+    fixed = TRUE
+  )
+  expect_error(
+    plot(out, items = c("not_an_item", "item3")),
+    "Unknown items: not_an_item, item3.",
+    fixed = TRUE
   )
 
   expect_error(
