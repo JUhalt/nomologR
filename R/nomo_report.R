@@ -1654,7 +1654,11 @@ nomo_report_citations <- function(
 }
 
 
+# Printed at 80 columns, as the component summaries are, so the archive does
+# not depend on the width of the console that rendered it (#145).
 nomo_report_session_text <- function() {
+  old <- options(width = 80L)
+  on.exit(options(old), add = TRUE)
   paste(utils::capture.output(utils::sessionInfo()), collapse = "\n")
 }
 

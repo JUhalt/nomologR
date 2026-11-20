@@ -1570,6 +1570,23 @@ test_that("component summaries are printed at 80 columns whatever the console (#
 })
 
 
+test_that("session information is printed at 80 columns whatever the console (#145)", {
+  # sessionInfo() wraps its package lists to the console's width, so the same
+  # session read differently from a narrow and a wide console.
+  at <- function(width) {
+    withr::with_options(list(width = width), {
+      txt <- nomologR:::nomo_report_session_text()
+      expect_equal(getOption("width"), width)
+      txt
+    })
+  }
+  expect_identical(at(30L), at(200L))
+  expect_identical(at(200L), withr::with_options(
+    list(width = 80L), paste(utils::capture.output(utils::sessionInfo()), collapse = "\n")
+  ))
+})
+
+
 test_that("report cells are escaped so pandoc shows them as written (#145)", {
   escape <- nomologR:::nomo_report_escape
   syntax <- "F =~ a*i1 + a*i2\ni1 ~~ i2"
