@@ -660,6 +660,18 @@ test_that("nomo_run respects nomo_split sample roles", {
     out$sample_n$n[out$sample_n$role == "confirmatory"],
     split$n_validation
   )
+  # The samples are named as nomo_split() names them (#145, out-5).
+  local_reproducible_output(width = 80)
+  printed <- capture.output(print(out))
+  expect_match(printed, "Sample design: calibration and validation samples", fixed = TRUE,
+               all = FALSE)
+  expect_true(sprintf("Calibration cases: %d | Validation cases: %d | Scales: 1",
+                      split$n_calibration, split$n_validation) %in% printed)
+  expect_false(any(grepl("calibration validation|Exploratory cases", printed)))
+  decisions <- gsub("[[:space:]]+", " ",
+                    paste(capture.output(print(summary(out))), collapse = " "))
+  expect_match(decisions, "sample_design (design, researcher input): calibration and validation samples.",
+               fixed = TRUE)
 })
 
 

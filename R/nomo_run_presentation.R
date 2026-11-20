@@ -118,20 +118,33 @@ nomo_run_abbreviations <- function(lines) {
 
 # Facts -------------------------------------------------------------------------
 
+# A stored sample design in words: "calibration and validation samples" for a
+# split, "same sample" otherwise; never the stored value with its underscore
+# removed, "calibration validation" (#145, out-5).
+nomo_run_design_words <- function(design) {
+  out <- gsub("_", " ", design)
+  out[design %in% "calibration_validation"] <- "calibration and validation samples"
+  out
+}
+
 # Shared by print() and summary(): status, sample, progress, and revisions.
 nomo_run_present_facts <- function(x) {
   cases <- function(role) nomo_present_stat(x$sample_n$n[x$sample_n$role == role], "count")
   completed <- x$stage_status$stage[x$stage_status$status == "completed"]
+  # A split names its samples as nomo_split() does; the same-sample design
+  # names the stages its one sample serves (#145, out-5).
+  split <- identical(x$sample_design, "calibration_validation")
+  roles <- if (split) c("Calibration", "Validation") else c("Exploratory", "Confirmatory")
   nomo_present_facts(c(
     sprintf("Status: %s", nomo_run_status_words(x$status)),
     sprintf("Mode: %s", x$mode),
-    sprintf("Sample design: %s", gsub("_", " ", x$sample_design))
+    sprintf("Sample design: %s", nomo_run_design_words(x$sample_design))
   ))
   # A summary holds the scales as a table.
   n_scales <- if (is.data.frame(x$scales)) nrow(x$scales) else length(x$scales)
   nomo_present_facts(c(
-    sprintf("Exploratory cases: %s", cases("exploratory")),
-    sprintf("Confirmatory cases: %s", cases("confirmatory")),
+    sprintf("%s cases: %s", roles[[1L]], cases("exploratory")),
+    sprintf("%s cases: %s", roles[[2L]], cases("confirmatory")),
     sprintf("Scales: %d", n_scales)
   ))
   nomo_present_facts(c(
@@ -557,7 +570,7 @@ nomo_run_summary_body <- function(x) {
     # A model's operator stays on one line with its two sides: "ag1 ~~ ag2".
     nb <- nomo_present_nbsp
     decision <- gsub(" (=~|~~|~) ", paste0(nb, "\\1", nb), decision)
-    decision[d$id == "sample_design"] <- gsub("_", " ", decision[d$id == "sample_design"])
+    decision[d$id == "sample_design"] <- nomo_run_design_words(decision[d$id == "sample_design"])
     rationale <- ifelse(nzchar(d$rationale), paste0(" Rationale: ", d$rationale), "")
     nomo_present_bullets(sprintf("%s (%s, %s): %s.%s", d$id, nomo_run_stage_words(d$stage),
                                  gsub("_", " ", d$source), decision, rationale))

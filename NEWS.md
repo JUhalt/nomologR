@@ -440,7 +440,7 @@ Where one class changes more than that:
 - **`nomo_invariance()`.** The tables are headed "Fit by level", "CFI change", and "Delta chi-square". The fit table has no cumulative "Constraints" column, which had pushed RMSEA and SRMR out at 80 columns; a line beneath it says what each level adds, such as `Held equal: loadings from metric; intercepts from scalar, except ag3 ~ 1.` The fit and change plots angle the level names, and the local-strain plot gives each level its own panel.
 - **`nomo_network()` and `nomo_hypotheses()`.** Shorter status words, such as "In region, imprecise" and "Replicated", keep the status columns on an 80-column console. A `negligible()` prediction shows the equivalence interval its concordance is judged on, post hoc predictions are marked "(post hoc)", and a bare `negligible()` draws no theory-compatible band.
 - **`nomo_scores()` and `nomo_missing()`.** The parallel-model test is printed once, as in "Delta chi-square(16) = 171.84, p < .001", and each note is one bullet per factor under "Flagged".
-- **`nomo_run()`.** Statuses are in sentence case and stages in words. A blocked run is shown as one block that says what failed and what to do. `summary()` lists each component flag under "Flagged", where it was raised, and names each fit index's version.
+- **`nomo_run()`.** Statuses are in sentence case and stages in words. A blocked run is shown as one block that says what failed and what to do. `summary()` lists each component flag under "Flagged", where it was raised, and names each fit index's version. The samples of a split are named as `nomo_split()` names them: "Sample design: calibration and validation samples", then "Calibration cases" and "Validation cases".
 
 ## Additions to the documented interface
 
