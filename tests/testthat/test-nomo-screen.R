@@ -7,7 +7,9 @@ test_that("nomo_screen validates inputs", {
 
   expect_error(nomo_screen(dat, items = character()), "non-empty")
   expect_error(nomo_screen(dat, items = c("x", "x")), "duplicate")
-  expect_error(nomo_screen(dat, items = "z"), "Unknown item column")
+  expect_error(nomo_screen(dat, items = "z"), "Unknown item column: z.", fixed = TRUE)
+  expect_error(nomo_screen(dat, items = c("z", "w")), "Unknown item columns: z, w.",
+               fixed = TRUE)
   expect_error(nomo_screen(dat, items = NA_character_), "missing or empty")
   expect_error(nomo_screen(dat, guidance = "teaching"), "guidance")
 })
