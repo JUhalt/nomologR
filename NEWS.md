@@ -371,6 +371,9 @@ that does. A call that worked is not affected.
 - `nomo_report()` labels and rounds what it shows as printed output does (#145).
   - **Bartlett's test.** The supporting-adequacy row reads "Bartlett's test, p", since its Value is the p value, beside KMO's statistic.
   - **Paused runs.** A run that paused before the invariance or network stage says the stage "was not reached", not that it "was not completed", which read as though it had been requested.
+  - **Network hypotheses.** A standardized correlation has no leading zero, as in `print()` and the APA table, and an estimate just off a bound of its predicted region shows the decimals that tell them apart. The region reads as `print()` writes it, ">= 0.20", not "[0.2, +Inf)".
+  - **Scores.** A validity just below Gorsuch's .90, or a correlational accuracy just short of .05, shows the decimal that tells them apart, ".903", as `print()` does.
+  - **Settings and logs.** A stage configured with no setting of its own shows "defaults", not R's "list()", and a log value stored as the text TRUE or FALSE reads "yes" or "no".
 
 ### APA tables and `nomo_table()`
 

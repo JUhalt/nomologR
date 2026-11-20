@@ -1835,6 +1835,67 @@ test_that("a log metric whose name misleads has its kind listed (#145)", {
 })
 
 
+test_that("report cells follow print() where a column's name cannot say how (#145)", {
+  dash <- nomologR:::nomo_report_blank
+  # Network hypotheses: a standardized correlation has no leading zero and a
+  # path keeps it; a value just off a bound of its region shows the decimals
+  # that tell them apart; and the region reads as the console writes it.
+  h <- nomo_hypotheses(
+    "A -> B" = positive(min = .20),
+    "A <-> C" = negligible(within = c(-.15, .15)),
+    "A -> D" = positive()
+  )
+  tab <- tibble::tibble(
+    id = c("H1", "H2", "H3"),
+    theoretical_region = c("[0.2, +Inf)", "[-0.15, 0.15]", "(0, +Inf)"),
+    scale = "standardized", estimate = c(0.1996, 0.00773, 0.38931),
+    se = c(0.035, 0.0444, 0.0329), ci_lower = c(0.13, -0.0794, 0.3248),
+    ci_upper = c(0.27, 0.0948, 0.4538), equivalence_ci_lower = c(NA, -0.0654, NA),
+    equivalence_ci_upper = c(NA, 0.0808, NA)
+  )
+  shown <- nomologR:::nomo_report_display_table(
+    nomologR:::nomo_report_network_hypotheses(tab, list(hypotheses = h))
+  )
+  expect_identical(shown[["Theoretical region"]], c(">= 0.20", "[-.15, .15]", "> 0"))
+  expect_identical(shown$Estimate, c("0.1996", ".01", "0.39"))
+  expect_identical(shown[["CI lower"]], c("0.13", "-.08", "0.32"))
+  expect_identical(shown[["Equivalence CI upper"]], c(dash, ".08", dash))
+  expect_identical(shown$SE, c("0.04", "0.04", "0.03"))
+  expect_identical(nrow(nomologR:::nomo_report_network_hypotheses(tab[0, ], list())), 0L)
+  # The report's network section goes through it.
+  net <- make_m9_full_report_run()$results$network
+  primary <- nomologR:::nomo_report_component_table(net, "network", "primary")
+  expect_identical(primary$theoretical_region, ">= 0.10")
+
+  # Scores: a validity just below Gorsuch's .90, or a discrepancy just short
+  # of .05, shows the decimals that tell it from the reference.
+  scores <- nomologR:::nomo_report_scores(list(
+    weighting = "unit", method = "sum", scores = data.frame(A = 1:3),
+    diagnostics = tibble::tibble(
+      factor = c("A", "B"), n_items = c(4L, 4L), validity = c(0.903, 0.95),
+      univocality = c(0.4, 0.4), correlational_accuracy = c(-0.0496, 0.02)
+    ),
+    parallel_test = list(available = FALSE, note = ""), notes = tibble::tibble()
+  ))
+  shown <- nomologR:::nomo_report_display_table(scores$diagnostics)
+  expect_identical(shown$Validity, c(".903", ".95"))
+  expect_identical(shown[["Correlational accuracy"]], c("-.0496", ".02"))
+
+  # A stage configured with no setting of its own runs with its defaults.
+  run <- make_m9_report_run()
+  run$settings$missing <- list()
+  settings <- nomologR:::nomo_report_run_table(run, "settings")
+  expect_identical(settings$values[settings$stage == "missing"], "defaults")
+
+  # A logical value a log stored as text reads as a logical column does.
+  trace <- nomologR:::nomo_report_display_table(tibble::tibble(
+    metric = c("convergence", "note"), value = c(1, 2),
+    reference = c("TRUE", "Not TRUE here")
+  ))
+  expect_identical(trace$Reference, c("yes", "Not TRUE here"))
+})
+
+
 test_that("a flagged value is told apart from the reference its row names (#144)", {
   # In a decision log the reference is text. A value flagged for falling on
   # one side of it must not print as the reference does.

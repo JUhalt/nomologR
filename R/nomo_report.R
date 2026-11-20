@@ -248,14 +248,19 @@ nomo_report_format_kind <- function(value, kind, digits = NULL, signed = FALSE,
 # from the preceding model, stored under `delta`, and a difference from a
 # reference estimate, stored under `difference`, carry their sign, and none
 # when they round to zero (guide point 15), as the invariance and missing-data
-# prints show them.
+# prints show them. `kind`, when given, is each row's kind, for a column whose
+# name cannot say it, such as a network estimate that is a correlation in one
+# row and a path in the next.
 nomo_report_format_numbers <- function(value, name, metric = NULL, reference = NULL,
-                                       digits = NULL) {
-  kind <- if (is.integer(value)) "count" else nomo_report_number_kind(name)
+                                       digits = NULL, kind = NULL) {
+  given <- !is.null(kind)
+  if (!given) kind <- if (is.integer(value)) "count" else nomo_report_number_kind(name)
   signed <- grepl("^(delta|difference)([._]|$)", tolower(name))
   value <- as.numeric(value)
   finite <- is.finite(value)
-  if (identical(kind, "estimate") && !is.null(metric)) {
+  if (given) {
+    kinds <- rep_len(as.character(kind), length(value))
+  } else if (identical(kind, "estimate") && !is.null(metric)) {
     kinds <- nomo_report_metric_kind(metric)
     whole <- finite & abs(value - round(value)) < 1e-8
     kinds[kinds == "estimate" & whole] <- "count"
@@ -330,7 +335,13 @@ nomo_report_sentence <- function(x) {
 }
 
 
+# A table can carry, as attributes, what its column names cannot say (#145):
+# `nomo_report_kinds`, a list naming each column's kind of number row by row,
+# and `nomo_report_references`, a list naming, for each row of a column, the
+# numbers its value is read against.
 nomo_report_display_table <- function(x, protected = character()) {
+  column_kinds <- attr(x, "nomo_report_kinds")
+  column_references <- attr(x, "nomo_report_references")
   x <- nomo_report_flatten_table(x)
   metric <- if (is.character(x[["metric"]])) x[["metric"]]
   value_reference <- nomo_report_value_reference(x)
@@ -348,10 +359,13 @@ nomo_report_display_table <- function(x, protected = character()) {
     } else if (is.logical(value)) {
       value <- ifelse(value, "yes", "no")
     } else if (is.numeric(value)) {
+      reference <- column_references[[name]]
+      if (is.null(reference) && identical(name, "value")) reference <- value_reference
       value <- nomo_report_format_numbers(
         value, name, metric,
-        reference = if (identical(name, "value")) value_reference,
-        digits = if (compared && name %in% nomo_report_compared_columns) 3L
+        reference = reference,
+        digits = if (compared && name %in% nomo_report_compared_columns) 3L,
+        kind = column_kinds[[name]]
       )
       role[[j]] <- "numeric"
     } else if (name %in% nomo_report_origin_columns && is.character(value)) {
@@ -366,6 +380,10 @@ nomo_report_display_table <- function(x, protected = character()) {
     if (is.character(value) && !identical(role[[j]], "status")) {
       value[is.na(value) | !nzchar(trimws(value)) | value == nomo_present_missing] <-
         nomo_report_blank
+      # A logical value a log stored as text, such as the reference TRUE of a
+      # convergence row, reads as a logical column does (#145).
+      value[value %in% "TRUE"] <- "yes"
+      value[value %in% "FALSE"] <- "no"
     }
     value[is.na(value)] <- ""
     x[[j]] <- value
@@ -933,6 +951,20 @@ nomo_report_scores <- function(scores) {
     parallel$note
   }
 
+  # Validity and correlational accuracy show the decimals that tell them from
+  # the reference beside them, Gorsuch's .90 and a discrepancy of .05, as
+  # print() does (#145).
+  diagnostics <- scores$diagnostics
+  references <- list()
+  if (is.numeric(diagnostics[["validity"]])) {
+    references$validity <- rep(0.90, nrow(diagnostics))
+  }
+  if (is.numeric(diagnostics[["correlational_accuracy"]])) {
+    references$correlational_accuracy <- sign(diagnostics$correlational_accuracy) *
+      nomo_scores_discrepancy_reference
+  }
+  attr(diagnostics, "nomo_report_references") <- lapply(references, as.list)
+
   list(
     summary = paste(c(
       sprintf(
@@ -944,7 +976,7 @@ nomo_report_scores <- function(scores) {
       parallel_text,
       "No value here is a pass/fail threshold."
     ), collapse = " "),
-    diagnostics = scores$diagnostics,
+    diagnostics = diagnostics,
     notes = scores$notes
   )
 }
@@ -1082,10 +1114,16 @@ nomo_report_call_code <- function(x) {
 
 
 nomo_report_run_table <- function(x, type) {
-  tryCatch(
+  out <- tryCatch(
     nomo_report_flatten_table(nomo_table(x, type)),
     error = function(e) nomo_report_empty_table()
   )
+  # A stage configured with no setting of its own runs with its defaults,
+  # which the settings table writes as R's empty "list()" (#145).
+  if (identical(type, "settings") && is.character(out[["values"]])) {
+    out$values[out$values %in% "list()"] <- "defaults"
+  }
+  out
 }
 
 
@@ -1156,7 +1194,36 @@ nomo_report_component_table <- function(obj,
   if (identical(stage, "factors") && identical(type, "adequacy") && nrow(result)) {
     result$metric[result$metric %in% "Bartlett"] <- "Bartlett's test, p"
   }
+  if (identical(stage, "network") && identical(type, "primary")) {
+    result <- nomo_report_network_hypotheses(result, obj)
+  }
   result
+}
+
+
+# The network's hypotheses as print() and the APA table show them (#145): each
+# estimate and bound in its kind, so a standardized correlation has no leading
+# zero, with the decimals that tell it from the nearest bound of its predicted
+# region, and the region as the console writes it (">= 0.20", not
+# "[0.2, +Inf)").
+nomo_report_network_hypotheses <- function(tab, net) {
+  if (!nrow(tab) || !all(c("id", "scale") %in% names(tab))) return(tab)
+  spec <- as.data.frame(net$hypotheses$hypotheses, stringsAsFactors = FALSE)
+  h <- spec[match(tab$id, spec$id), , drop = FALSE]
+  kind <- nomo_network_kind(tab$scale, h$relation_type)
+  if ("theoretical_region" %in% names(tab)) {
+    tab$theoretical_region <- nomo_network_region_text(h, kind)
+  }
+  bounded <- intersect(
+    c("estimate", "ci_lower", "ci_upper", "equivalence_ci_lower", "equivalence_ci_upper"),
+    names(tab)
+  )
+  attr(tab, "nomo_report_kinds") <- stats::setNames(rep(list(kind), length(bounded)), bounded)
+  attr(tab, "nomo_report_references") <- stats::setNames(lapply(bounded, function(column) {
+    nearest <- nomo_network_nearest_bound(tab[[column]], h$lower, h$upper)
+    lapply(nearest, function(r) r[is.finite(r)])
+  }), bounded)
+  tab
 }
 
 
