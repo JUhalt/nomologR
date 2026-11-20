@@ -1154,8 +1154,8 @@
         - Network: 1 hypothesis; 1 concordant
         - Careless responding: 0 cases flagged, none removed
         - Scores: sum method
-        - Missing-data sensitivity: only one strategy could be fitted for the
-          measurement model and the network
+        - Missing-data sensitivity: no modeled variable of the measurement model or
+          the network has missing values, so no strategies were compared
       
       All requested stages are complete or explicitly marked not requested. No
       hidden item deletion, model respecification, parameter freeing, or validity

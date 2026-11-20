@@ -245,11 +245,20 @@ nomo_run_key_evidence <- function(x) {
   }
   if (length(r$missing)) {
     what <- c(cfa = "the measurement model", network = "the network")[names(r$missing)]
-    compared <- vapply(r$missing, function(m) sum(m$strategies$available) > 1L, logical(1))
+    # Complete data leave nothing to compare, which is not a fitting failure
+    # (#145, out-1).
+    complete <- vapply(r$missing, nomo_missing_complete, logical(1))
+    compared <- vapply(r$missing, function(m) sum(m$strategies$available) > 1L, logical(1)) &
+      !complete
+    failed <- !compared & !complete
     out <- c(out, paste0("Missing-data sensitivity: ", paste(c(
       if (any(compared)) paste("strategies compared for", nomo_present_or(what[compared], "and")),
-      if (any(!compared)) {
-        paste("only one strategy could be fitted for", nomo_present_or(what[!compared], "and"))
+      if (any(failed)) {
+        paste("only one strategy could be fitted for", nomo_present_or(what[failed], "and"))
+      },
+      if (any(complete)) {
+        paste("no modeled variable of", nomo_present_or(what[complete], "or"),
+              "has missing values, so no strategies were compared")
       }
     ), collapse = "; ")))
   }

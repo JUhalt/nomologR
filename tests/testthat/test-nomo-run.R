@@ -1995,6 +1995,13 @@ test_that("the missing-data log names only the strategies that were fitted (#145
   expect_match(row$observation, "could be fitted under listwise deletion only", fixed = TRUE)
   expect_identical(row$consequence,
                    "The fitted model and its results are unchanged, and there is no refit to compare.")
+  # Complete data are not a fitting failure (#145, out-1).
+  expect_true(paste("Missing-data sensitivity: no modeled variable of the measurement model",
+                    "has missing values, so no strategies were compared") %in%
+                nomologR:::nomo_run_key_evidence(run))
+  expect_false(any(grepl("could be fitted", nomologR:::nomo_run_key_evidence(run))))
+  # Incomplete data that only one strategy could fit still say so.
+  run$results$missing$cfa$pattern$n_incomplete <- 5L
   expect_true(paste("Missing-data sensitivity: only one strategy could be fitted for the",
                     "measurement model") %in% nomologR:::nomo_run_key_evidence(run))
 })

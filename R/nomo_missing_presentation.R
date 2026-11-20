@@ -41,9 +41,12 @@ nomo_missing_units <- c(
 nomo_missing_present_facts <- function(x) {
   p <- x$pattern
   label_of <- function(s) nomo_missing_table_label(s, x$strategies)
+  # With no value missing, the reference strategy is not fitted, so there is no
+  # reference to name (#145, out-17).
+  reference <- if (nomo_missing_complete(x)) "none (complete data)" else label_of(x$reference)
   nomo_present_facts(c(
     sprintf("Model: %s", if (identical(x$object, "nomo_network")) "Network" else "CFA"),
-    sprintf("Reference: %s", label_of(x$reference)),
+    sprintf("Reference: %s", reference),
     sprintf("Fitted with: %s", label_of(x$fitted_as))
   ))
   nomo_present_facts(c(
@@ -60,6 +63,12 @@ nomo_missing_present_facts <- function(x) {
               ""
             })
   ))
+}
+
+
+# TRUE when no modeled variable has a missing value: nothing is compared.
+nomo_missing_complete <- function(x) {
+  identical(as.numeric(x$pattern$n_incomplete), 0)
 }
 
 
@@ -202,9 +211,12 @@ print.nomo_missing <- function(x, digits = NULL, ...) {
   nomo_missing_key(x)
   nomo_missing_present_flagged(x$decision_log)
   nomo_missing_caveat()
+  # Complete data have no differences to promise (#145, out-17).
   nomo_present_pointer(
     c("summary(x)", "nomo_table(x, \"decision_log\")"),
-    c("every difference and each recommendation", "every recorded decision")
+    c(if (nomo_missing_complete(x)) "the fit and the notes" else
+        "every difference and each recommendation",
+      "every recorded decision")
   )
   invisible(x)
 }
