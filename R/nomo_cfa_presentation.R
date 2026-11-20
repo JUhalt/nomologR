@@ -625,13 +625,15 @@ nomo_cfa_present_improper <- function(heywood) {
 }
 
 
+# A residual correlation is printed as a correlation, without the leading
+# zero, as the EFA's residuals are (guide point 8; #145).
 nomo_cfa_present_residuals <- function(residuals) {
   if (!nrow(residuals)) return(invisible(NULL))
   nomo_present_section("Largest residual correlations")
   nomo_present_table(
     residuals,
     c("Item 1" = "item1", "Item 2" = "item2", "Residual" = "residual"),
-    formats = list(residual = function(v) nomo_present_stat(v, "estimate")),
+    formats = list(residual = function(v) nomo_present_stat(v, "r")),
     more = "nomo_table(x, \"residuals\")"
   )
 }

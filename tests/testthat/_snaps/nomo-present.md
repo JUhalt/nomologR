@@ -56,11 +56,11 @@
       
       Largest residual correlations
         Item 1  Item 2  Residual
-        b3      a5          0.19
-        b1      a5          0.19
-        b2      a5          0.14
-        b4      a5          0.14
-        b3      a4         -0.07
+        b3      a5           .19
+        b1      a5           .19
+        b2      a5           .14
+        b4      a5           .14
+        b3      a4          -.07
       
       Modification indices (diagnostic only)
         Parameter     MI    EPC  Std. EPC

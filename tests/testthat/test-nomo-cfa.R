@@ -691,6 +691,9 @@ test_that("summary printer covers flagged and diagnostic sections", {
   # An improper-solution signal of an unknown kind is named in words.
   expect_true(any(grepl("^  x1 +Synthetic heywood +-0.10$", txt)))
   expect_true(any(grepl("Largest residual correlations", txt, fixed = TRUE)))
+  # Residual correlations drop the leading zero, as the EFA's do (#145).
+  residuals <- txt[(which(grepl("^  Item 1 +Item 2 +Residual$", txt)) + 1L):length(txt)][1:3]
+  expect_true(all(grepl(" -?[.][0-9]{2}$", residuals)))
   expect_true(any(grepl("Modification indices (diagnostic only)", txt, fixed = TRUE)))
   expect_true(any(grepl("no single cutoff establishes model validity", txt, fixed = TRUE)))
 })
