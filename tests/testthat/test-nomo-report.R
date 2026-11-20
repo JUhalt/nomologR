@@ -1984,6 +1984,18 @@ test_that("a flagged value is told apart from the reference its row names (#144)
                    list(c(-0.15, 0.15), numeric(), 2016))
   # A hyphen between two numbers is a range, and a digit in a name is no number.
   expect_identical(numbers("moderate .50-.75; MAP (TR2), HTMT2, x^2"), list(c(0.50, 0.75)))
+
+  # A limit given in words is the number it names (#145): the missing-data
+  # log's difference of 0.503 standard errors is not shown as its reference's
+  # half.
+  expect_identical(numbers(c("Half a reference standard error", "behalf of")),
+                   list(0.5, numeric()))
+  missing_log <- nomologR:::nomo_report_display_table(tibble::tibble(
+    metric = c("estimate_difference", "estimates_agree"), value = c(0.503, 0.497),
+    reference = nomologR:::nomo_missing_half_se_reference,
+    severity = c("review", "info")
+  ))
+  expect_identical(missing_log$Value, c("0.503", "0.50"))
 })
 
 

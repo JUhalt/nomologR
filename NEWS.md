@@ -377,6 +377,7 @@ that does. A call that worked is not affected.
   - **Intervals.** An interval's headings carry its level, taken from the result, such as "Omega 90% CI lower" for a reliability interval bootstrapped at 90%, and "Equivalence 90% CI lower" beside the network's 95% intervals.
   - **Abbreviations.** The closing table defines every estimator a CFA can name, DWLS among them, in the words `summary()` uses. Revised MAP (TR4) is defined from the trace of the fourth power of the partial-correlation matrix; the table had called it an average of fourth powers.
   - **Session information.** It is printed at 80 columns, as the component summaries are, whatever the width of the console that rendered the report.
+  - **References in words.** A missing-data difference flagged against "half a reference standard error" shows the decimals that tell it from .5, "0.503", not "0.50".
 
 ### APA tables and `nomo_table()`
 
