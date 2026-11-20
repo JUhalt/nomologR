@@ -47,6 +47,9 @@ test_that("fixtures do not depend on lavaan's version, and exact ones match the 
 
 
 test_that("the stand-in for lavaan::simulateData() draws with base R, for one test only", {
+  # It rebinds a function of lavaan, so it is skipped on CRAN, as every such
+  # test is (cran-comments.md).
+  skip_on_cran()
   sigma <- nomo_test_population_cov(fixture_population)
   lavaan_simulate_data <- lavaan::simulateData
   with_stand_in <- function() {
