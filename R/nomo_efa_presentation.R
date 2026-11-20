@@ -54,17 +54,21 @@ nomo_efa_rotation_text <- function(x) {
 
 
 # Problems with the solution itself, from the decision log: identification,
-# Heywood cases, convergence, and engine messages (#145, efa-1 and efa-3). A
-# summary shows a Heywood case with its item instead.
+# Heywood cases, convergence, and engine messages (#145, efa-1 and efa-3), each
+# with the unit a Flagged bullet names: the item of a Heywood case, otherwise
+# what was checked. A summary shows a Heywood case with its item instead.
 nomo_efa_solution_checks <- function(log,
                                      metrics = c("identification", "heywood", "convergence",
                                                  "engine_warnings")) {
   if (!nomo_efa_has_log(log)) {
-    return(data.frame(severity = character(), note = character()))
+    return(data.frame(unit = character(), severity = character(), note = character()))
   }
   rows <- log[log$metric %in% metrics, , drop = FALSE]
   rows <- rows[order(match(rows$severity, c("concern", "review", "info"))), , drop = FALSE]
-  data.frame(severity = rows$severity, note = rows$observation, stringsAsFactors = FALSE)
+  units <- c(identification = "Identification", convergence = "Convergence",
+             engine_warnings = "Engine messages")
+  data.frame(unit = ifelse(rows$metric == "heywood", rows$object, units[rows$metric]),
+             severity = rows$severity, note = rows$observation, stringsAsFactors = FALSE)
 }
 
 nomo_efa_has_log <- function(log) {
@@ -84,11 +88,13 @@ nomo_efa_item_status <- function(items, log) {
   ifelse(items$item %in% nomo_efa_heywood_items(log), "concern", items$attention)
 }
 
+# Every solution check is a review or a concern, so print() lists them under
+# "Flagged", each under its item or what it checks (guide point 22; #145,
+# out-11).
 nomo_efa_present_checks <- function(log) {
   checks <- nomo_efa_solution_checks(log)
   if (!nrow(checks)) return(invisible(NULL))
-  nomo_present_section("Solution checks")
-  nomo_present_notes(checks)
+  nomo_present_flagged(unit = checks$unit, status = checks$severity, text = checks$note)
   cat("\n")
 }
 
@@ -188,7 +194,12 @@ print.summary_nomo_efa <- function(x, ...) {
   if (!any(nzchar(items$flag))) {
     nomo_present_text("No item reached a teaching reference.", indent = 2L)
   }
-  nomo_present_flagged(unit = items$item, status = status, text = text)
+  # One Flagged section: the items, then the checks of the solution itself.
+  checks <- nomo_efa_solution_checks(
+    x$decision_log, metrics = c("identification", "convergence", "engine_warnings")
+  )
+  nomo_present_flagged(unit = c(items$item, checks$unit), status = c(status, checks$severity),
+                       text = c(text, checks$note))
 
   nomo_present_section("Factor correlations")
   fc <- x$factor_correlations
@@ -220,14 +231,6 @@ print.summary_nomo_efa <- function(x, ...) {
       formats = list(r = function(v) nomo_present_stat(v, "r")),
       more = "nomo_table(x, \"factor_correlations\")"
     )
-  }
-
-  checks <- nomo_efa_solution_checks(
-    x$decision_log, metrics = c("identification", "convergence", "engine_warnings")
-  )
-  if (nrow(checks)) {
-    nomo_present_section("Solution checks")
-    nomo_present_notes(checks)
   }
 
   nomo_present_section("Largest residual correlations")
