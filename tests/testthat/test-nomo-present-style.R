@@ -204,6 +204,21 @@ test_that("headers, sections, and facts fit narrow consoles (#145)", {
   expect_identical(facts, c("Theory relations: 3",
                             "Added to the model from hypotheses: 2 | Fitted: yes"))
   expect_true(all(nchar(facts) <= 59L))
+
+  # Facts inside a section are indented, counted in the width, and a part
+  # longer than the line hangs beneath its own indent (#145, R-0b follow-up).
+  facts <- utils::capture.output(nomologR:::nomo_present_facts(c(
+    "Relations: 3", "Added from hypotheses: 2", "Converged: yes",
+    paste("Stages:", paste(rep("configural -> metric", 3L), collapse = " -> "))
+  ), indent = 4L))
+  # "Relations: 3 | Added from hypotheses: 2 | Converged: yes" is 56 columns,
+  # 60 with the indent, past the 59 of the prose width.
+  expect_identical(facts, c(
+    "    Relations: 3 | Added from hypotheses: 2",
+    "    Converged: yes",
+    "    Stages: configural -> metric -> configural -> metric",
+    "      -> configural -> metric"
+  ))
 })
 
 

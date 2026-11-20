@@ -497,20 +497,6 @@ nomo_network_present_key <- function(text, shown = character()) {
 }
 
 
-# Facts inside a section: "Label: value" parts joined by " | ", indented and
-# broken only between parts, as nomo_present_facts() does at the margin.
-nomo_network_section_facts <- function(parts, indent = 2L) {
-  width <- nomo_present_prose_width() - indent
-  lines <- parts[[1L]]
-  for (part in parts[-1L]) {
-    last <- length(lines)
-    candidate <- paste(lines[[last]], part, sep = " | ")
-    if (nchar(candidate, type = "width") < width) lines[[last]] <- candidate else lines <- c(lines, part)
-  }
-  nomo_present_cat(paste0(strrep(" ", indent), lines))
-}
-
-
 #' @export
 print.nomo_network <- function(x, ...) {
   nomo_present_header("nomo_network", "Nomological network")
@@ -607,7 +593,7 @@ summary.nomo_network <- function(object, ...) {
 nomo_network_fit_lines <- function(label, fit) {
   nomo_present_text(paste0(label, ": ", nomo_present_chisq(fit$chisq, fit$df, fit$pvalue)),
                     indent = 2L, exdent = 4L)
-  nomo_network_section_facts(c(
+  nomo_present_facts(c(
     paste("CFI", nomo_present_stat(fit$cfi, "fit_bounded")),
     paste("TLI", nomo_present_stat(fit$tli, "fit")),
     paste("RMSEA", nomo_present_stat(fit$rmsea, "fit")),
@@ -668,14 +654,14 @@ print.summary_nomo_network <- function(x, ...) {
 
   nomo_present_section("Measurement context")
   mc <- x$measurement_context$summary[1L, , drop = FALSE]
-  nomo_network_section_facts(c(
+  nomo_present_facts(c(
     paste0("Status: ", nomo_network_stream_status(mc$attention[[1L]])),
     sprintf("Constructs: %s", format(mc$latent_constructs, trim = TRUE)),
     sprintf("Loading flags: %s", format(mc$loading_review_flags, trim = TRUE)),
     sprintf("Negative variances: %s", format(mc$negative_variance_flags, trim = TRUE)),
     sprintf("Fit flags: %s", format(mc$global_fit_review_flags, trim = TRUE)),
     sprintf("Engine warnings: %s", format(mc$engine_warning_count, trim = TRUE))
-  ))
+  ), indent = 2L)
   nomo_present_text(mc$observation, indent = 2L)
 
   nomo_present_section("Model fit")
@@ -725,15 +711,15 @@ print.summary_nomo_network <- function(x, ...) {
 
   nomo_present_section("Concordance")
   counts <- x$concordance_counts
-  nomo_network_section_facts(paste0(
+  nomo_present_facts(paste0(
     nomo_network_pretty_status(counts$concordance), ": ", counts$n
-  ))
+  ), indent = 2L)
   if (nrow(x$replication_counts)) {
     replication <- x$replication_counts
     nomo_present_section("Replication")
-    nomo_network_section_facts(paste0(
+    nomo_present_facts(paste0(
       nomo_network_pretty_status(replication$replication_status), ": ", replication$n
-    ))
+    ), indent = 2L)
   }
 
   flagged <- nomo_network_present_flagged(x$decision_log, x$hypothesis_evidence, detail = TRUE)

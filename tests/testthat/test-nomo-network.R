@@ -3184,8 +3184,8 @@ test_that("the summary counts and facts read as label: value (#145)", {
                fixed = TRUE)
   # The facts inside a section break between parts, never inside one.
   local_reproducible_output(width = 50)
-  facts <- utils::capture.output(nomologR:::nomo_network_section_facts(
-    c("Loading flags: 0", "Negative variances: 0", "Engine warnings: 0")
+  facts <- utils::capture.output(nomologR:::nomo_present_facts(
+    c("Loading flags: 0", "Negative variances: 0", "Engine warnings: 0"), indent = 2L
   ))
   expect_identical(facts, c("  Loading flags: 0 | Negative variances: 0",
                             "  Engine warnings: 0"))

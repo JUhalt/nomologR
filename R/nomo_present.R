@@ -37,8 +37,9 @@
 #   nomo_present_section(title)       a blank line, then the title (sentence
 #                                     case, no colon); content is indented 2.
 #   nomo_present_text(..., indent = 0L, exdent = indent)   wrapped prose.
-#   nomo_present_facts(parts)         "Label: value | Label: value", broken only
-#                                     between parts; a label keeps its value.
+#   nomo_present_facts(parts, indent = 0L)   "Label: value | Label: value",
+#                                     broken only between parts; a label keeps
+#                                     its value; `indent` for facts in a section.
 #   nomo_present_bullets(items, indent = 2L)   "  - item", hanging indent.
 #   nomo_present_notes(notes)         bullets from a data frame with `severity`
 #                                     and `note`: "  - Review: Note."
@@ -289,19 +290,22 @@ nomo_present_text <- function(..., indent = 0L, exdent = indent) {
 
 # A line of "label: value" parts joined by " | ", broken between parts when it
 # would run past the prose width. A label keeps its value on its line.
-nomo_present_facts <- function(parts) {
+# `indent` sets facts inside a section, such as the fit indices under a model.
+nomo_present_facts <- function(parts, indent = 0L) {
   parts <- parts[!is.na(parts) & nzchar(parts)]
   if (!length(parts)) return(invisible(NULL))
   width <- nomo_present_prose_width()
   parts <- sub(": ", paste0(":", nomo_present_nbsp), parts, fixed = TRUE)
   # A single part longer than the line, such as a long stage sequence, is
   # wrapped with a hanging indent.
-  emit <- function(line) nomo_present_cat(nomo_present_wrap(line, width, exdent = 2L))
+  emit <- function(line) {
+    nomo_present_cat(nomo_present_wrap(line, width, indent = indent, exdent = indent + 2L))
+  }
   line <- parts[[1L]]
   for (part in parts[-1L]) {
     candidate <- paste(line, part, sep = " | ")
     # strwrap() breaks a line that is not shorter than its width.
-    if (nchar(candidate, type = "width") >= width) {
+    if (indent + nchar(candidate, type = "width") >= width) {
       emit(line)
       line <- part
     } else {
