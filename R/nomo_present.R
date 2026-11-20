@@ -101,7 +101,9 @@
 #   nomo_present_ci(lower, upper, digits = 3L, bounded = FALSE, kind = NULL)
 #                                     "[LL, UL]"; "--" when either bound is
 #                                     missing, never half an interval.
-#   nomo_present_ci_label(level = 0.95)   "95% CI", the level from the object.
+#   nomo_present_ci_label(level = 0.95)   "95% CI", the level from the object;
+#                                     each of several levels keeps its own
+#                                     digits ("95% CI", "97.5% CI").
 #   nomo_present_chisq(stat, df, p, n = NULL, delta = FALSE)
 #       "chi-square(34) = 75.83, p < .001"; with `n` (a contingency table)
 #       "chi-square(1, N = 40) = 10.00, p = .002"; with `delta = TRUE`
@@ -123,7 +125,8 @@
 #   nomo_present_or(x, word = "or")   "a, b, or c".
 #   nomo_present_origin(x, cell = FALSE)   "a priori", "post hoc" (no hyphen);
 #                                     sentence case in a cell.
-#   nomo_present_ordinal(n)           "1st", "2nd", "93rd", "11th".
+#   nomo_present_ordinal(n)           "1st", "2nd", "93rd", "11th"; "--" when
+#                                     missing.
 #
 # Widths and markers
 #   nomo_present_width()              the console width (at least 40), for tables.
@@ -471,14 +474,17 @@ nomo_present_origin <- function(x, cell = FALSE) {
 }
 
 
-# An ordinal: "1st", "2nd", "3rd", "11th", "93rd".
+# An ordinal: "1st", "2nd", "3rd", "11th", "93rd"; the missing marker, not
+# "NANA", when there is no number.
 nomo_present_ordinal <- function(n) {
   n <- as.integer(round(n))
   last <- n %% 10L
   teen <- n %% 100L %in% 11:13
   suffix <- ifelse(teen, "th", ifelse(last == 1L, "st", ifelse(last == 2L, "nd",
                    ifelse(last == 3L, "rd", "th"))))
-  paste0(n, suffix)
+  out <- paste0(n, suffix)
+  out[is.na(n)] <- nomo_present_missing
+  out
 }
 
 
@@ -558,8 +564,10 @@ nomo_present_ci <- function(lower, upper, digits = 3L, bounded = FALSE, kind = N
 
 
 # The heading of an interval, with the level taken from the object: "95% CI".
+# Each level keeps its own digits, so c(.95, .975) gives "95% CI" and
+# "97.5% CI", not "95.0% CI".
 nomo_present_ci_label <- function(level = 0.95) {
-  paste0(format(100 * level, trim = TRUE), "% CI")
+  paste0(vapply(100 * level, format, character(1), trim = TRUE), "% CI")
 }
 
 

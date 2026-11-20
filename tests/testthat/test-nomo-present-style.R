@@ -73,6 +73,9 @@ test_that("an interval is whole or missing, with its level in the label (#144)",
   expect_identical(ci(0.123, 0.345, kind = "r"), "[.12, .35]")
   expect_identical(ci(0.12345, 0.345, digits = 3L, kind = "loading"), "[0.123, 0.345]")
   expect_identical(nomologR:::nomo_present_ci_label(c(0.95, 0.9)), c("95% CI", "90% CI"))
+  # Each level keeps its own digits (#145, R-0b follow-up).
+  expect_identical(nomologR:::nomo_present_ci_label(c(0.95, 0.975, 0.9)),
+                   c("95% CI", "97.5% CI", "90% CI"))
 })
 
 
@@ -106,6 +109,8 @@ test_that("status words display in sentence case without changing (#144)", {
   expect_identical(nomologR:::nomo_present_origin("post_hoc", cell = TRUE), "Post hoc")
   expect_identical(nomologR:::nomo_present_ordinal(c(1, 2, 3, 4, 11, 12, 13, 21, 93, 111)),
                    c("1st", "2nd", "3rd", "4th", "11th", "12th", "13th", "21st", "93rd", "111th"))
+  # A missing number is the missing marker, not "NANA" (#145, R-0b follow-up).
+  expect_identical(nomologR:::nomo_present_ordinal(c(93, NA)), c("93rd", "--"))
 })
 
 
