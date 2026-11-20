@@ -1979,11 +1979,13 @@ nomo_report <- function(x,
 }
 
 
-# The directories of `path` that do not exist yet, deepest first, up to one
-# that exists or the root.
+# The directories of `path` that do not exist yet, deepest first, up to a path
+# that exists or the root. The walk stops at any existing path, a file as well
+# as a directory: a file is never one of the directories made for a report, so
+# it is never removed (CRAN policy on the user's file space).
 nomo_report_new_dirs <- function(path) {
   new <- character()
-  while (!dir.exists(path) && !identical(dirname(path), path)) {
+  while (!file.exists(path) && !identical(dirname(path), path)) {
     new <- c(new, path)
     path <- dirname(path)
   }
@@ -1991,11 +1993,15 @@ nomo_report_new_dirs <- function(path) {
 }
 
 
-# Each of `dirs`, deepest first, removed when it holds nothing, as a directory
-# made for a report that was never written does.
+# Each of `dirs`, deepest first, removed when it is a directory that holds
+# nothing, as a directory made for a report that was never written does. A
+# path that is not a directory, because dir.create() never made it or it is a
+# file, is left as it is.
 nomo_report_remove_empty_dirs <- function(dirs) {
   for (dir in dirs) {
-    if (!length(list.files(dir, all.files = TRUE, no.. = TRUE))) unlink(dir, recursive = TRUE)
+    if (dir.exists(dir) && !length(list.files(dir, all.files = TRUE, no.. = TRUE))) {
+      unlink(dir, recursive = TRUE)
+    }
   }
   invisible(NULL)
 }

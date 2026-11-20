@@ -2655,3 +2655,38 @@ test_that("a directory made for a report is removed only while empty (#145)", {
   expect_false(dir.exists(file.path(root, "a")))
   expect_true(dir.exists(root))
 })
+
+
+test_that("a file where the report's directory would be is never removed (CRAN)", {
+  root <- tempfile("nomo-report-file-dir-")
+  dir.create(root)
+  on.exit(unlink(root, recursive = TRUE), add = TRUE)
+  notes <- file.path(root, "notes.txt")
+  writeLines("user data", notes)
+
+  # The walk stops at the file, so it is not one of the directories to make.
+  expect_identical(nomologR:::nomo_report_new_dirs(notes), character())
+  below <- file.path(notes, "sub")
+  expect_identical(nomologR:::nomo_report_new_dirs(below), below)
+
+  # Removal touches only empty directories: a file, or a directory that was
+  # never made, is left as it is.
+  nomologR:::nomo_report_remove_empty_dirs(c(below, notes))
+  expect_identical(readLines(notes), "user data")
+
+  # Through nomo_report(): the directory cannot be made, the call stops, and
+  # the user's file is still there with what it held.
+  report_can_render()
+  run <- make_m9_report_run()
+  for (file in c(file.path(notes, "report.html"),
+                 file.path(notes, "sub", "report.html"))) {
+    expect_error(
+      nomo_report(run, file = file, include_session = FALSE, quiet = TRUE),
+      "Could not create report output directory"
+    )
+    expect_true(file.exists(notes))
+    expect_false(dir.exists(notes))
+    expect_identical(readLines(notes), "user data")
+  }
+  expect_identical(report_listing(root), "notes.txt")
+})
