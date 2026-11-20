@@ -2394,6 +2394,20 @@ test_that("a minimal criterion set neither shows nor logs revised MAP (#145, fac
 
   core <- nomo_factors(make_cov_final_data(), n_iter = 10, seed = 9431)
   expect_true(any(core$decision_log$metric == "map_revised"))
+  # The revised-MAP row says whether the two forms agree, and a review names
+  # both counts, so the flag states what is flagged (#145, out-8).
+  sd_items <- nomo_factors(nomo_demo_network[c("sd1", "sd2", "sd3")], n_iter = 10, seed = 2026)
+  map_rows <- sd_items$decision_log[sd_items$decision_log$metric == "map_revised", ]
+  expect_identical(c(sd_items$map$n_factors_original, sd_items$map$n_factors_revised), c(0L, 1L))
+  expect_identical(map_rows$severity, "review")
+  expect_identical(
+    map_rows$observation,
+    "The two MAP forms disagree: revised MAP (TR4) reaches its minimum at 1 factor, original MAP (TR2) at 0."
+  )
+  ab <- nomo_factors(nomo_demo_continuous[c(paste0("a", 1:5), paste0("b", 1:5))],
+                     n_iter = 10, seed = 2026)
+  expect_identical(ab$decision_log$observation[ab$decision_log$metric == "map_revised"],
+                   "Revised MAP (TR4) reaches its minimum at 2 factors, as original MAP (TR2) does.")
   expect_match(capture.output(print(core)), "MAP: [0-9]+ \\(TR2\\), [0-9]+ \\(TR4\\)", all = FALSE)
   expect_match(capture.output(print(summary(core))), "TR4, the revised", all = FALSE)
   map <- plot(core, type = "map")
