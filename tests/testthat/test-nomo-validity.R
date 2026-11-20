@@ -1255,4 +1255,25 @@ test_that("a correlation fixed in some groups or levels is left out only there (
   logged <- levels$decision_log[levels$decision_log$metric == "latent_correlation", ]
   expect_identical(startsWith(logged$observation, "The model fixes this latent correlation"),
                    c(TRUE, FALSE))
+
+  # With both groups and levels, lavaan stores each group's label rather than
+  # its number; the block was NA and the fixed pair read "(NA, within)" (#145).
+  twolevel <- lavaan::Demo.twolevel
+  twolevel$g <- ifelse(twolevel$cluster %% 2 == 0, "even", "odd")
+  block <- function(label, fixed) {
+    c(paste("group:", label), "level: 1", "f =~ y1 + y2 + y3", "g =~ y4 + y5 + y6",
+      if (fixed) "f ~~ 0*g", "level: 2", "f =~ y1 + y2 + y3", "g =~ y4 + y5 + y6")
+  }
+  grouped <- nomo_validity(lavaan::cfa(
+    paste(c(block("even", TRUE), block("odd", FALSE)), collapse = "\n"),
+    data = twolevel, cluster = "cluster", group = "g", std.lv = TRUE
+  ), htmt = "none")
+  stored <- grouped$latent_correlations
+  expect_false(anyNA(stored$block))
+  expect_setequal(stored$block, c("even", "odd"))
+  expect_identical(nrow(nomo_table(grouped, "discriminant")), 3L)
+  expect_match(shown(summary(grouped)),
+               "Fixed at 0 by the model, so not estimated: f with g (even, within).", fixed = TRUE)
+  expect_false(grepl("NA,", shown(summary(grouped)), fixed = TRUE))
+  expect_identical(nomologR:::nomo_lavaan_group_label(c(2, 1), c("a", "b")), c("b", "a"))
 })

@@ -120,6 +120,8 @@ that had ignored the argument.
     cross-load, and the flag of a construct pair that has no HTMT.
   - `nomo_table(x, "discriminant")` for a `nomo_validity` result: a latent
     correlation the model fixes is left out.
+  - `nomo_validity()`'s `latent_correlations$block` for a model with both
+    groups and levels, which was `NA`.
 - **Hierarchical models.** `nomo_hierarchical()` under the theta
   parameterization, and with a negative variance.
 - **Scores.** `nomo_scores()`'s parallel-model test, when its univocality note
@@ -259,6 +261,7 @@ that does. A call that worked is not affected.
   - **When no pair is left.** `print()` reads "Separation flags: not evaluated (the model fixes every factor correlation)", `nomo_apa_table()` and the plot stop with the reason, and `nomo_table(x, "discriminant")` has no rows and its usual columns.
   - **What is stored.** `latent_correlations` still lists a fixed correlation at its fixed value, as `factor_correlations` of `nomo_cfa()` does. Its decision-log row, in each group or level that fixes it, says that the model fixes it, at severity `"info"`; the row had read it against the review reference.
   - **Other models.** A model that fixes no factor correlation gives the output it gave before, with one exception: for a model with one construct, `nomo_table(x, "discriminant")` has no rows and its usual columns. It had no columns.
+  - **Groups and levels together.** For a model with both groups and levels, written with `group:` blocks, `latent_correlations$block` names each group. lavaan stores the group's label there, not its number, and the block had been `NA`, so a fixed pair was named "(NA, within)".
 - `nomo_validity()`'s `htmt_missing = "default"` follows the fitted model's missing-data handling: FIML when the CFA used it, pairwise deletion when it used that, and listwise deletion otherwise (#145). Despite its help page, it had always used listwise deletion, so on a FIML CFA, HTMT rested on fewer cases than the CFA. `htmt_status` gains `missing` and `n`, and a decision-log entry records the cases HTMT used. The entry is for review only when a different handling leaves HTMT with fewer cases than the CFA.
 - `nomo_reliability()` checks `ci_level`, `ci_boot`, and `ci_seed` before using them (#145). It had cut a vector to its first element and truncated a fraction. A bootstrap request for a model fitted from a covariance matrix says that raw data are needed, and requested intervals that are not available get a review row.
 - `nomo_hierarchical()` (#145):

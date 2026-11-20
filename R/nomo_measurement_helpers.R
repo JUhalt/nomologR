@@ -436,6 +436,19 @@ nomo_matrix_pairs <- function(mat, value_name = "estimate", block = "overall") {
 }
 
 
+# A group as its label. lavaan numbers the groups in the parameter table and
+# standardizedSolution(), except for a model with both groups and levels,
+# written with explicit `group:` blocks, where it stores each group's label;
+# indexing the labels with a label gave NA (#145).
+nomo_lavaan_group_label <- function(group, labels) {
+  if (is.numeric(group)) {
+    as.character(labels[group])
+  } else {
+    as.character(group)
+  }
+}
+
+
 nomo_validity_latent_correlations <- function(fit) {
   lv <- tryCatch(
     as.character(lavaan::lavNames(fit, type = "lv")),
@@ -463,7 +476,7 @@ nomo_validity_latent_correlations <- function(fit) {
       # standardizedSolution() numbers the groups. They are named as the AVE
       # table and the data name them, so the two tables' blocks agree.
       if ("group" %in% meta_names) {
-        rows$group <- lavaan::lavInspect(fit, "group.label")[rows$group]
+        rows$group <- nomo_lavaan_group_label(rows$group, lavaan::lavInspect(fit, "group.label"))
       }
       block <- if (length(meta_names)) {
         apply(rows[meta_names], 1L, function(z) paste(z, collapse = ":"))

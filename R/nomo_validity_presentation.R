@@ -155,7 +155,11 @@ nomo_validity_latent_fixed <- function(latent, fit) {
   )
   if (is.null(model)) return(out)
   pt <- model$pt[model$pt$op == "~~" & model$pt$lhs != model$pt$rhs, , drop = FALSE]
-  block <- if (length(model$groups) > 1L) model$groups[pt$group] else rep("overall", nrow(pt))
+  block <- if (length(model$groups) > 1L) {
+    nomo_lavaan_group_label(pt$group, model$groups)
+  } else {
+    rep("overall", nrow(pt))
+  }
   key <- function(a, b, block) {
     pair <- paste(pmin(a, b), pmax(a, b), block, sep = "\r")
     paste(pair, stats::ave(seq_along(pair), pair, FUN = seq_along), sep = "\r")
