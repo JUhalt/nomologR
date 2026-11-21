@@ -2329,9 +2329,11 @@ test_that("a structured decision without a rationale records an empty one", {
   expect_identical(run$decisions$factor_count$rationale, c(WellBeing = ""))
   expect_identical(run$decisions$cfa_model$rationale, "")
 
+  # A measurement decision with no `rationale` element goes through: it is not
+  # refused as a rationale that is not one character value.
   done <- nomo_run(
     resume = run,
-    decisions = list(measurement_model = list(value = "proceed", rationale = character()))
+    decisions = list(measurement_model = list(value = "proceed"))
   )
   expect_identical(done$status, "complete")
   expect_identical(done$decisions$measurement_model$rationale, "")
@@ -2339,6 +2341,17 @@ test_that("a structured decision without a rationale records an empty one", {
   ids <- c("factor_count:WellBeing", "cfa_model", "measurement_model")
   expect_identical(log$rationale[match(ids, log$id)], c("", "", ""))
   expect_identical(log$decision[match(ids, log$id)], c("1", m8_model(), "proceed"))
+
+  # An empty rationale is recorded the same way.
+  revised <- nomo_run(
+    resume = run,
+    decisions = list(measurement_model = list(value = "revise", rationale = character()))
+  )
+  expect_identical(revised$next_stage, "restart")
+  expect_identical(revised$decisions$measurement_model$rationale, "")
+  log <- revised$decision_log
+  expect_identical(log$rationale[log$id == "measurement_model"], "")
+  expect_identical(log$decision[log$id == "measurement_model"], "revise")
 })
 
 
