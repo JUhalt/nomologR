@@ -35,7 +35,7 @@ those plots are available.}
 \item{include_session}{Logical; include full \code{sessionInfo()} output.}
 
 \item{max_table_rows}{Positive integer used for ordinary display tables.
-The final evidence-trace appendix is not truncated.}
+The full evidence trace, in the reproducibility section, is not truncated.}
 
 \item{overwrite}{Logical; replace an existing \code{file}.}
 
@@ -57,8 +57,8 @@ The normalized report file path, invisibly.
 object. The report archives researcher inputs, sample roles, item and factor
 evidence, EFA/CFA results, reliability, convergent/discriminant evidence,
 optional invariance and nomological-network results, researcher decisions,
-deviations and post hoc decisions, method citations, an evidence trace, and
-session information.
+the revision lineage, deviations and post hoc decisions, method citations,
+an evidence trace, and session information.
 }
 \details{
 The report is a presentation and provenance layer. It does not refit models,

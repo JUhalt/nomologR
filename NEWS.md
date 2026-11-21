@@ -602,6 +602,7 @@ affected.
   - **Wording.** Numbers in the prose are rounded and written as the printed output is. Tests read "Delta chi-square(df) = x, p = .xxx". Three or more authors are cited with "et al.".
   - **Hierarchical models** lists Beauducel (2011), Gorsuch (1983), and Hancock and Mueller (2001), which it cites, and shows H beside the squared determinacy.
   - **Nomological network** shows each prediction's classification, its equivalence interval, and its replication status, which had been hidden at 80 columns. It credits the "total aggregation" name to Bagozzi and Heatherton (1994).
+  - **Reproducible report** lists every section of the report, adding the three it left out: the revision lineage, the manuscript tables, and the abbreviations. `?nomo_report` names the revision lineage among the report's contents.
   - **Research basis** gives Koo and Li's (2016) recommendation as a two-way mixed-effects model with absolute agreement.
 
 # nomologR 0.9.0
