@@ -1490,15 +1490,20 @@ nomo_network_fit_once <- function(model_fitted,
   if (!is.null(missing)) fit_args$missing <- missing
   if (!is.null(control)) fit_args$control <- control
 
+  # Warnings lavaan raises while fitting the model, and while the fit measures
+  # of the model and of its measurement model are read, such as lavaan 0.7-3's
+  # "computation of robust CFI resulted in NA values" for a model with no
+  # degrees of freedom, are recorded with the result, as nomo_cfa() records
+  # them, rather than printed loose at the console.
   engine_warnings <- character()
+  record_warnings <- function(expr) {
+    withCallingHandlers(expr, warning = function(w) {
+      engine_warnings <<- unique(c(engine_warnings, conditionMessage(w)))
+      invokeRestart("muffleWarning")
+    })
+  }
   fit <- tryCatch(
-    withCallingHandlers(
-      do.call(lavaan::sem, fit_args),
-      warning = function(w) {
-        engine_warnings <<- unique(c(engine_warnings, conditionMessage(w)))
-        invokeRestart("muffleWarning")
-      }
-    ),
+    record_warnings(do.call(lavaan::sem, fit_args)),
     error = function(e) {
       stop(
         paste0(
@@ -1542,7 +1547,7 @@ nomo_network_fit_once <- function(model_fitted,
     error = function(e) tibble::tibble()
   )
 
-  fit_evidence <- nomo_network_fit_evidence(fit)
+  fit_evidence <- record_warnings(nomo_network_fit_evidence(fit))
 
   latent <- tryCatch(
     as.character(lavaan::lavNames(fit, type = "lv")),
@@ -1554,7 +1559,7 @@ nomo_network_fit_once <- function(model_fitted,
   # The measurement model alone is fitted for the samples reported, not for
   # the refits a sensitivity analysis makes.
   measurement <- if (isTRUE(measurement_fit) && converged) {
-    nomo_network_measurement_fit(fit, fit_args, fit_evidence)
+    record_warnings(nomo_network_measurement_fit(fit, fit_args, fit_evidence))
   } else {
     list(
       status = "not_computed", fit_evidence = fit_evidence[0, , drop = FALSE],

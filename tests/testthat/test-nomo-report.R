@@ -1379,12 +1379,22 @@ caller_state <- list(
   envir$report_dir <- dir
   envir$nomo_report <- nomo_report
 
-  outer_html <- rmarkdown::render(
-    outer,
-    output_dir = dir,
-    intermediates_dir = dir,
-    envir = envir,
-    quiet = TRUE
+  # On a macOS runner without XQuartz, R warns while this document is rendered
+  # that it cannot load R_X11.so. The render needs no X11, so that warning
+  # alone is muffled; any other warning still reaches the test.
+  outer_html <- withCallingHandlers(
+    rmarkdown::render(
+      outer,
+      output_dir = dir,
+      intermediates_dir = dir,
+      envir = envir,
+      quiet = TRUE
+    ),
+    warning = function(w) {
+      if (grepl("R_X11", conditionMessage(w), fixed = TRUE)) {
+        invokeRestart("muffleWarning")
+      }
+    }
   )
 
   # The nested render succeeds and keeps its own figures.

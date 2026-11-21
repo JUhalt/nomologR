@@ -134,8 +134,8 @@ that had ignored the argument.
   version of the fit statistics under a robust estimator. The decision-log row
   that counts the score diagnostics is information, no longer a review flag.
 - **Nomological network.** `nomo_network()`'s concordance values, what its
-  measurement context is judged on, the `estimator` it records and, for some
-  networks, the fitted model.
+  measurement context is judged on, the `estimator` and the engine warnings it
+  records and, for some networks, the fitted model.
 - **Missing data.** The label of a `nomo_missing()` strategy when lavaan ran
   another method than the one requested.
 - **Guided workflow.** The settings the downstream stages of `nomo_run()` are
@@ -315,6 +315,7 @@ that does. A call that worked is not affected.
   - **Fit statistics.** `fit_evidence` names the version of its statistics (`chisq_version`, `index_version`), and `summary()` prints it with the estimator.
   - **The validation sample.** Its decision-log rows have the stage `"network_validation"`.
   - **Unstandardized bounds.** An `unstandardized_metric` row names the identification behind an unstandardized bound on a latent variable, which `?nomo_expectations` and `?nomo_network` now explain.
+  - **Engine warnings.** A warning lavaan raises while the fit measures of the network or of its measurement model are read, such as lavaan 0.7-3's "computation of robust CFI resulted in NA values" for a model with no degrees of freedom, is recorded in `engine_warnings` and the decision log, as `nomo_cfa()` records it. It had been printed at the console.
 
 ### Scores and missing data
 
