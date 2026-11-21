@@ -27,7 +27,7 @@ handoff_fit_from <- c(
   "walkthrough-sort-none-reversed" = "0.9.0",
   "congruence-targeted" = "0.99.0",
   "congruence-untargeted" = "0.99.0",
-  "congruence-untargeted-default-keep" = "0.99.0"
+  "congruence-untargeted-default" = "0.99.0"
 )
 
 # The stored versions of one fit: every version from its first on.
@@ -69,6 +69,17 @@ test_that("the stored fixtures are the ones the version list and the manifest na
   }))
   expect_identical(stored, sort(named))
 
+  # A tarball stores a path portably only up to 100 bytes, and R CMD check
+  # notes a longer one, so every stored file's path in the source package must
+  # fit. The fits' 1.0.0 names are checked too, before their files arrive.
+  in_package <- function(file) {
+    file.path("nomologR", "tests", "testthat", "fixtures", "contentvalidR", file)
+  }
+  next_names <- sprintf("handoff-%s-v1.0.0.rds", names(handoff_fit_from))
+  for (file in c(stored, next_names)) {
+    expect_lte(nchar(in_package(file), type = "bytes"), 100L, label = file)
+  }
+
   # MANIFEST.csv records each stored file once, with the version its name
   # carries and the checksum of the bytes stored.
   manifest <- utils::read.csv(file.path(directory, "MANIFEST.csv"), colClasses = "character")
@@ -88,9 +99,9 @@ test_that("the stored fixtures are the ones the version list and the manifest na
 
 
 test_that("every stored handoff is read without contentvalidR", {
-  # The default-keep congruence fit carries no item, so it is refused, not
-  # read; its own test is below.
-  for (fit in setdiff(names(handoff_fit_from), "congruence-untargeted-default-keep")) {
+  # The congruence fit handed off with the default keep carries no item, so it
+  # is refused, not read; its own test is below.
+  for (fit in setdiff(names(handoff_fit_from), "congruence-untargeted-default")) {
     for (version in handoff_fit_versions(fit)) {
       raw <- handoff_fixture(fit, version)
       h <- nomologR:::nomo_handoff_read(raw)
@@ -520,11 +531,11 @@ for (version in handoff_fit_versions("congruence-untargeted")) {
 }
 
 
-for (version in handoff_fit_versions("congruence-untargeted-default-keep")) {
+for (version in handoff_fit_versions("congruence-untargeted-default")) {
   test_that(sprintf("a congruence handoff that carries nothing under the default keep is refused (%s)", version), {
     # The same fit as above, handed off with content_handoff()'s default
     # keep = "Supported": no decision rule was applied, so no item is carried.
-    raw <- handoff_fixture("congruence-untargeted-default-keep", version)
+    raw <- handoff_fixture("congruence-untargeted-default", version)
     expect_identical(raw$items, character(0))
     expect_identical(raw$item_evidence$item, c("C1", "C2", "C3"))
 

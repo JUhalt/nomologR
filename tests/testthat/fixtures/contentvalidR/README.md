@@ -22,7 +22,7 @@ same commit and found the same objects (see "Regenerating").
 | `walkthrough-sort-none-reversed` | — | — | — | yes | as 0.9.0 | as 0.10.0 | `n_constructs_given` added | the same sort with `reverse_keyed = character(0)` and `response_scale = c(1, 5)`: keying recorded as checked, no item reversed |
 | `congruence-targeted` | — | — | — | — | — | — | yes | item-objective congruence with a target mapping: five experts, items C1, C2 and C3 written for objectives A, B and C; C2 falls below the criterion and is held back (`items` is `C1 C3`) |
 | `congruence-untargeted` | — | — | — | — | — | — | yes | the same ratings without a target mapping, so every item is "Descriptive only", handed off with `keep = c("Supported", "Descriptive only")` (`items` is `C1 C2 C3`, no scales) |
-| `congruence-untargeted-default-keep` | — | — | — | — | — | — | yes | the same fit with the default `keep = "Supported"`, which carries no item; a reader refuses it |
+| `congruence-untargeted-default` | — | — | — | — | — | — | yes | the same fit with the default `keep = "Supported"`, which carries no item; a reader refuses it |
 
 **0.9.0 files are identical to their 0.8.0 counterparts** in every field
 except `provenance$package_version` and `provenance$created`: the same schema
@@ -146,19 +146,30 @@ On 2026-10-09 the script gained three item-objective congruence fits for the
 one of three objectives; one falls below the congruence criterion and is held
 back), `congruence-untargeted` (the same ratings without the target mapping,
 handed off with `keep = c("Supported", "Descriptive only")`), and
-`congruence-untargeted-default-keep` (the same fit with the default `keep`,
-which carries no item). They need a producer that hands off the index of
+`congruence-untargeted-default` (the same fit with the default `keep`, which
+carries no item). They need a producer that hands off the index of
 item-objective congruence with one row per item, so the script writes them
 from 0.99.0 on and skips them for older producers. Rerunning the edited script
 at v0.10.1 wrote the same five files as before, identical to the stored 0.10.1
-files apart from `provenance$created`. The script ran unchanged for the 0.99.0
-files, which are the first stored for these fits.
+files apart from `provenance$created`. The 0.99.0 files are the first stored
+for these fits.
 
 For the 0.99.0 files, nomologR exported contentvalidR's release-candidate
 commit with `git archive`, ran the script on it, and compared each of its eight
 objects with the delivered one after setting `provenance$created` to `NA` in
 both. All eight were identical. Both runs were on 2026-11-21, so the files
 were also the same byte for byte.
+
+The third congruence fit was first named `congruence-untargeted-default-keep`,
+and contentvalidR delivered its 0.99.0 file under that name. The path
+`nomologR/tests/testthat/fixtures/contentvalidR/handoff-congruence-untargeted-default-keep-v0.99.0.rds`
+is 101 bytes. A tarball stores a path portably only up to 100 bytes, and R CMD
+check noted it. On 2026-11-21 the fit was renamed `congruence-untargeted-default`
+in the script, whose only other change is a comment saying why, and the script
+was run again on the same export. It wrote all eight files byte for byte as delivered, the renamed one
+included, so the delivered bytes are stored under the new name. The manifest
+test now checks every stored path, and each fit's 1.0.0 path, against that
+limit.
 
 Checked before handoff, in an R process where contentvalidR was not loaded:
 every 0.8.0 file reads back as a `cv_handoff` at schema version 1 with the

@@ -220,6 +220,12 @@ congruence_untargeted_default_keep <- if (has_congruence_index) {
 }
 
 # ---------------------------------------------------------------------------
+# Each name becomes part of a path in nomologR's source package,
+# nomologR/tests/testthat/fixtures/contentvalidR/handoff-<fit>-v<version>.rds,
+# which a tarball stores portably only up to 100 bytes (R CMD check notes a
+# longer one). Fit 5c is therefore `congruence-untargeted-default`, for the
+# default `keep`; its first name, ending in `-default-keep`, made a 101-byte
+# path at 0.99.0.
 fixtures <- list(`walkthrough-sort` = walkthrough,
                  `expert-krippendorff` = expert,
                  delphi = delphi,
@@ -227,8 +233,7 @@ fixtures <- list(`walkthrough-sort` = walkthrough,
                  `walkthrough-sort-none-reversed` = walkthrough_none_reversed,
                  `congruence-targeted` = congruence_targeted,
                  `congruence-untargeted` = congruence_untargeted,
-                 `congruence-untargeted-default-keep` =
-                   congruence_untargeted_default_keep)
+                 `congruence-untargeted-default` = congruence_untargeted_default_keep)
 fixtures <- Filter(Negate(is.null), fixtures)
 for (fit in names(fixtures)) {
   path <- file.path(out, sprintf("handoff-%s-v%s.rds", fit, version))
