@@ -56,9 +56,10 @@ The normalized report file path, invisibly.
 \code{nomo_report()} renders a self-contained HTML document from a \code{nomo_run}
 object. The report archives researcher inputs, sample roles, item and factor
 evidence, EFA/CFA results, reliability, convergent/discriminant evidence,
-optional invariance and nomological-network results, researcher decisions,
-the revision lineage, deviations and post hoc decisions, method citations,
-an evidence trace, and session information.
+optional scores, invariance, nomological-network, and missing-data
+sensitivity results, researcher decisions, the revision lineage, deviations
+and post hoc decisions, method citations, an evidence trace, and session
+information.
 }
 \details{
 The report is a presentation and provenance layer. It does not refit models,

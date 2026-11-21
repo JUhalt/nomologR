@@ -1823,9 +1823,10 @@ nomo_report_title_yaml <- function(title) {
 #' `nomo_report()` renders a self-contained HTML document from a `nomo_run`
 #' object. The report archives researcher inputs, sample roles, item and factor
 #' evidence, EFA/CFA results, reliability, convergent/discriminant evidence,
-#' optional invariance and nomological-network results, researcher decisions,
-#' the revision lineage, deviations and post hoc decisions, method citations,
-#' an evidence trace, and session information.
+#' optional scores, invariance, nomological-network, and missing-data
+#' sensitivity results, researcher decisions, the revision lineage, deviations
+#' and post hoc decisions, method citations, an evidence trace, and session
+#' information.
 #'
 #' The report is a presentation and provenance layer. It does not refit models,
 #' alter data, free parameters, remove items, or manufacture additional

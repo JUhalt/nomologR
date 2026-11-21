@@ -193,21 +193,23 @@ The report follows the guided workflow. Its main sections are:
 5. CFA;
 6. reliability;
 7. convergent/discriminant evidence;
-8. invariance, if requested;
-9. nomological-network evidence, if requested;
-10. the decision log: workflow decisions, outstanding decisions, and the
+8. scores and their properties, if requested;
+9. invariance, if requested;
+10. nomological-network evidence, if requested;
+11. missing-data sensitivity, if requested;
+12. the decision log: workflow decisions, outstanding decisions, and the
     evidence flagged for review or concern;
-11. the revision lineage: each revision made with `nomo_revise()`, with what
+13. the revision lineage: each revision made with `nomo_revise()`, with what
     changed, whether it was prespecified or post hoc, its rationale, and the
     comparison of the two models, or a note that the run is not a revision;
-12. deviations and post hoc decisions;
-13. methods and citations: the methods this workflow actually used, each with
+14. deviations and post hoc decisions;
+15. methods and citations: the methods this workflow actually used, each with
     its lineage and role, a reference list for those methods, and software
     citations;
-14. the manuscript tables, with `apa_tables = TRUE`;
-15. reproducibility information: the workflow's calls, package versions, the
+16. the manuscript tables, with `apa_tables = TRUE`;
+17. reproducibility information: the workflow's calls, package versions, the
     full evidence trace, and session details;
-16. abbreviations: a table that defines every abbreviation the report shows.
+18. abbreviations: a table that defines every abbreviation the report shows.
 
 The methods table is built from `nomo_methods(run)`, which returns only the
 methods the run used; a method the package offers but the workflow did not use
