@@ -1098,24 +1098,14 @@ nomo_report_missing <- function(m) {
 }
 
 
-# Each compared estimate in its kind (#145), as the component's own tables
-# show it: a loading keeps its leading zero and a factor correlation drops it,
-# as print() of the missing-data result gives them, and a network hypothesis
-# drops it when it is a standardized association, as the network's hypotheses
-# table does. The hypotheses' scale and relation type are read from the
-# refitted network. A row whose type is not recorded is NA: its column's name
-# gives its kind.
+# Each compared estimate in its kind (#145), as print() of the missing-data
+# result gives it (nomo_missing_estimate_kind()): a loading keeps its leading
+# zero, and a factor correlation and a standardized association drop it. A
+# row whose type is not recorded is NA: its column's name gives its kind.
 nomo_report_missing_kinds <- function(m, compared) {
   type <- compared[["type"]]
   if (is.null(type)) return(rep(NA_character_, nrow(compared)))
-  kind <- nomo_missing_estimate_kind(type)
-  fit <- Find(function(f) is.data.frame(f[["hypothesis_evidence"]]), m[["fits"]])
-  he <- as.data.frame(fit[["hypothesis_evidence"]], stringsAsFactors = FALSE)
-  hypothesis <- type %in% "hypothesis" & compared$parameter %in% he$id &
-    all(c("scale", "relation_type") %in% names(he))
-  i <- match(compared$parameter[hypothesis], he$id)
-  kind[hypothesis] <- nomo_network_kind(he$scale[i], he$relation_type[i])
-  kind
+  nomo_missing_estimate_kind(type, compared$parameter, nomo_missing_hypotheses(m))
 }
 
 

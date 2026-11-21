@@ -138,7 +138,9 @@ that had ignored the argument.
   measurement context is judged on, the `estimator` and the engine warnings it
   records and, for some networks, the fitted model.
 - **Missing data.** The label of a `nomo_missing()` strategy when lavaan ran
-  another method than the one requested.
+  another method than the one requested. For a network, a standardized
+  association has no leading zero in the decision log, `print()`, and
+  `summary()` (".151"), as in the network's own output.
 - **Guided workflow.** The settings the downstream stages of `nomo_run()` are
   fitted with, the keying a run takes from a `contentvalidR` handoff, and what
   `nomo_revise()` keeps of that handoff.
