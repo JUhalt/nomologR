@@ -43,11 +43,11 @@ pak::pak("JUhalt/nomologR")
 release, usually within a few hours. It is not on CRAN yet: CRAN
 returned `v0.3.0` with two requests, both since met
 ([\#39](https://github.com/JUhalt/nomologR/issues/39)), and the CRAN
-submission follows the 1.0.0 release. Until CRAN accepts it, install from
-R-universe or GitHub.
+submission follows the 1.0.0 release. Until CRAN accepts it, install
+from R-universe or GitHub.
 
-The R-universe build is the current stable release, `0.9.0`. This
-README and the [website](https://juhalt.github.io/nomologR/) describe the
+The R-universe build is the current stable release, `0.9.0`. This README
+and the [website](https://juhalt.github.io/nomologR/) describe the
 GitHub version, which adds what 1.0.0 will contain, such as
 `nomo_esem()`, `nomo_retest()`, and `nomo_power_rmsea()`; install the
 GitHub version to use them.
@@ -1155,9 +1155,10 @@ nomo_apa_table(network, number = 4)
 Leading zeros follow the statistic rather than its value: reliability,
 correlations, CFI, and *p* lose theirs because they cannot exceed 1,
 while TLI, RMSEA, SRMR, and standardized loadings keep theirs because
-they can. No table labels a result as passing or failing. The discriminant table gives each pair
-of constructs its latent correlation with a confidence interval beside HTMT2
-and HTMT, rather than the Fornell-Larcker matrix.
+they can. No table labels a result as passing or failing. The
+discriminant table gives each pair of constructs its latent correlation
+with a confidence interval beside HTMT2 and HTMT, rather than the
+Fornell-Larcker matrix.
 
 `nomo_report(run, file = "report.html", apa_tables = TRUE)` appends the
 same tables for every result a guided run holds, numbered in order, as a
@@ -1170,26 +1171,28 @@ The detailed release plan lives in
 
 ### Current release: `v0.9.0`
 
-`v0.9.0` is the last minor release before `v1.0.0`, whose release candidate is
-planned for 2026-11-24 or earlier
-([#113](https://github.com/JUhalt/nomologR/issues/113)). It is about how the
-package presents itself and what it teaches:
+`v0.9.0` is the last minor release before `v1.0.0`, whose release
+candidate is planned for 2026-11-24 or earlier
+([\#113](https://github.com/JUhalt/nomologR/issues/113)). It is about
+how the package presents itself and what it teaches:
 
-- redesigned console output, plots, and report tables, with one flag wording
-  throughout ([#89](https://github.com/JUhalt/nomologR/issues/89));
-- the historical record in `nomo_methods()`: when each method was introduced,
-  and what took over from each historical one, drawn into a timeline in the
-  research-basis article;
-- two articles, "Teaching with nomologR" and "From content review to empirical
-  screening", with the walkthrough data shared with `contentvalidR`
-  ([#60](https://github.com/JUhalt/nomologR/issues/60));
-- APA tables for convergent and discriminant evidence, and an item audit that
-  reviews each item within its declared scale;
+- redesigned console output, plots, and report tables, with one flag
+  wording throughout
+  ([\#89](https://github.com/JUhalt/nomologR/issues/89));
+- the historical record in `nomo_methods()`: when each method was
+  introduced, and what took over from each historical one, drawn into a
+  timeline in the research-basis article;
+- two articles, “Teaching with nomologR” and “From content review to
+  empirical screening”, with the walkthrough data shared with
+  `contentvalidR`
+  ([\#60](https://github.com/JUhalt/nomologR/issues/60));
+- APA tables for convergent and discriminant evidence, and an item audit
+  that reviews each item within its declared scale;
 - every help page naming the fields of the object it returns
-  ([#114](https://github.com/JUhalt/nomologR/issues/114)).
+  ([\#114](https://github.com/JUhalt/nomologR/issues/114)).
 
-No computed estimate changed from `v0.3.0`; NEWS lists the changes to returned
-columns, wording, and arguments.
+No computed estimate changed from `v0.3.0`; NEWS lists the changes to
+returned columns, wording, and arguments.
 
 ### Previous releases
 
@@ -1271,9 +1274,9 @@ the interface freeze. `v1.0.0` follows when the maintainer signs off,
 and is released on GitHub and R-universe first; the CRAN submission
 follows it.
 
-Larger extensions, such as IRT/DIF, Bayesian SEM, multiple imputation, and
-formative models, are candidates for `1.x`. They are additive, so they do
-not need to precede the freeze. None was rejected, and none is a
+Larger extensions, such as IRT/DIF, Bayesian SEM, multiple imputation,
+and formative models, are candidates for `1.x`. They are additive, so
+they do not need to precede the freeze. None was rejected, and none is a
 commitment until selected.
 
 ### Completed: `v0.1.0`
@@ -1295,50 +1298,55 @@ The complete `v0.1.0` release track is:
 
 ## The handoff from contentvalidR
 
-[`contentvalidR`](https://github.com/JUhalt/contentvalidR) is the partner
-package for content validity. Its `content_handoff()` records which items passed
-content review and why the others were held back, and nomologR reads that record
-so the empirical stage starts from those decisions without retyping anything. A
-handoff brings:
+[`contentvalidR`](https://github.com/JUhalt/contentvalidR) is the
+partner package for content validity. Its `content_handoff()` records
+which items passed content review and why the others were held back, and
+nomologR reads that record so the empirical stage starts from those
+decisions without retyping anything. A handoff brings:
 
-- the items carried forward, and the items held back. Each held-back item's
-  status and recommendation are quoted in the decision log. nomologR never
-  reinstates it; doing so is a researcher decision to record.
-- the scales, which become the run's scales;
-- the declared keying and the response scale, which the keying notes and the
-  careless-responding indices use. The data are never recoded.
+- the items carried forward, and the items held back. Each held-back
+  item’s status and recommendation are quoted in the decision log.
+  nomologR never reinstates it; doing so is a researcher decision to
+  record.
+- the scales, which become the run’s scales;
+- the declared keying and the response scale, which the keying notes and
+  the careless-responding indices use. The data are never recoded.
 
-Pass the handoff itself, not `h$items`, so everything it records travels with
-the items:
+Pass the handoff itself, not `h$items`, so everything it records travels
+with the items:
 
-```r
+``` r
 nomo_screen(responses, items = h)  # screens the carried items
 nomo_run(responses, scales = h)    # runs the empirical stage on the handoff's scales
 ```
 
 **How nomologR reads a handoff.**
 
-- Each item's decision comes from `carried`, which says whether it travels, and
-  `status`, which says why.
-- `recommendation` states the same decision in the workflow's own words. Like
-  `rule`, it is prose, so nomologR quotes it and never matches on it.
-- A decision is never re-derived by comparing a statistic with its criterion,
-  or by branching on the version that produced the handoff.
-- A `keying` of `NA` means nobody said, never that an item is forward-worded.
+- Each item’s decision comes from `carried`, which says whether it
+  travels, and `status`, which says why.
+- `recommendation` states the same decision in the workflow’s own words.
+  Like `rule`, it is prose, so nomologR quotes it and never matches on
+  it.
+- A decision is never re-derived by comparing a statistic with its
+  criterion, or by branching on the version that produced the handoff.
+- A `keying` of `NA` means nobody said, never that an item is
+  forward-worded.
 
-**Versions.** The handoff is schema version 1. Within it, fields are only
-added, and nomologR ignores fields it does not know. A schema version nomologR
-does not read is refused, with both packages' versions named. The reader is
-tested against handoffs from `contentvalidR` 0.6.0 through 0.10.1. They are
-generated from each release tag and stored with their checksums, and neither
-package depends on the other.
+**Versions.** The handoff is schema version 1. Within it, fields are
+only added, and nomologR ignores fields it does not know. A schema
+version nomologR does not read is refused, with both packages’ versions
+named. The reader is tested against handoffs from `contentvalidR` 0.6.0
+through 0.10.1. They are generated from each release tag and stored with
+their checksums, and neither package depends on the other.
 
 For more, see:
-- `vignette("content-review")`, which carries one reviewed item set through
-  the screen;
-- `contentvalidR`'s
-  [handoff guide](https://juhalt.github.io/contentvalidR/articles/handoff-to-empirical-validation.html)
-  and its [joint walkthrough](https://juhalt.github.io/contentvalidR/articles/one-item-set-both-stages.html).
+
+- `vignette("content-review")`, which carries one reviewed item set
+  through the screen;
+- `contentvalidR`’s [handoff
+  guide](https://juhalt.github.io/contentvalidR/articles/handoff-to-empirical-validation.html)
+  and its [joint
+  walkthrough](https://juhalt.github.io/contentvalidR/articles/one-item-set-both-stages.html).
 
 ## Stability
 
@@ -1355,12 +1363,12 @@ the next.
   listed in NEWS.
 - **Additions.** New functions, arguments, fields, and log rows can
   arrive in any release, so address fields by name.
-- **APA formatting.** `nomo_apa_table()`'s types and returned structure are
-  covered; a table's formatting may still be corrected toward APA style.
-- **Experimental.** `nomo_method_variance()` and
-  `nomo_power_simulate()` remain experimental after 1.0.0 and may
-  change during 1.x without a deprecation period, with changes listed
-  in NEWS.
+- **APA formatting.** `nomo_apa_table()`’s types and returned structure
+  are covered; a table’s formatting may still be corrected toward APA
+  style.
+- **Experimental.** `nomo_method_variance()` and `nomo_power_simulate()`
+  remain experimental after 1.0.0 and may change during 1.x without a
+  deprecation period, with changes listed in NEWS.
 
 The full policy is on the package help page, `?nomologR`. The
 `contentvalidR` handoff is versioned by schema. Within a version, fields
