@@ -1421,12 +1421,9 @@ nomo_factors_log <- function(item_types,
       reference = "Numeric storage does not establish ordinal measurement",
       severity = "review",
       observation = sprintf(
-        paste(
-          "%d numeric-discrete item%s were conservatively modeled as continuous:",
-          "%s."
-        ),
-        length(ambiguous),
-        if (length(ambiguous) == 1L) "" else "s",
+        "%s %s conservatively modeled as continuous: %s.",
+        nomo_present_count(length(ambiguous), "numeric-discrete item"),
+        nomo_present_noun(length(ambiguous), "was", "were"),
         paste(ambiguous, collapse = ", ")
       ),
       recommendation = paste(

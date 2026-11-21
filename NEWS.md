@@ -109,7 +109,8 @@ that had ignored the argument.
   - Which items of a declared scale are reviewed on an item-rest correlation.
 - **Factor retention and EFA.** `fm = "minchi"` in `nomo_efa()` and
   `nomo_factors()`, and `nomo_efa()`'s cases per item when item values are
-  missing.
+  missing. The decision-log row for a single numeric-discrete item modeled as
+  continuous reads "1 numeric-discrete item was", not "were".
 - **CFA and model comparison.**
   - `nomo_cfa()`'s `fit_evidence` when lavaan cannot compute a scaled test, and
     its `ordered`.
@@ -134,10 +135,12 @@ that had ignored the argument.
   version of the fit statistics under a robust estimator. The decision-log row
   that counts the score diagnostics is information, no longer a review flag.
 - **Nomological network.** `nomo_network()`'s concordance values, what its
-  measurement context is judged on, the `estimator` it records and, for some
-  networks, the fitted model.
+  measurement context is judged on, the `estimator` and the engine warnings it
+  records and, for some networks, the fitted model.
 - **Missing data.** The label of a `nomo_missing()` strategy when lavaan ran
-  another method than the one requested.
+  another method than the one requested. For a network, a standardized
+  association has no leading zero in the decision log, `print()`, and
+  `summary()` (".151"), as in the network's own output.
 - **Guided workflow.** The settings the downstream stages of `nomo_run()` are
   fitted with, the keying a run takes from a `contentvalidR` handoff, and what
   `nomo_revise()` keeps of that handoff.
@@ -315,6 +318,7 @@ that does. A call that worked is not affected.
   - **Fit statistics.** `fit_evidence` names the version of its statistics (`chisq_version`, `index_version`), and `summary()` prints it with the estimator.
   - **The validation sample.** Its decision-log rows have the stage `"network_validation"`.
   - **Unstandardized bounds.** An `unstandardized_metric` row names the identification behind an unstandardized bound on a latent variable, which `?nomo_expectations` and `?nomo_network` now explain.
+  - **Engine warnings.** A warning lavaan raises while the fit measures of the network or of its measurement model are read, such as lavaan 0.7-3's "computation of robust CFI resulted in NA values" for a model with no degrees of freedom, is recorded in `engine_warnings` and as a review row of the decision log, as `nomo_cfa()` records it; "NaNs produced", which negative degrees of freedom explain, is left out, as there. It had been printed at the console, and again by `nomo_apa_table(x, "fit")` and `nomo_report()`, which read the RMSEA interval from the same fit. It concerns a fit index, not the measurement model, so unlike a warning raised while the model is fitted it does not make the measurement context a review item or qualify the hypothesis interpretations. In `summary()`, the measurement context's count of the warnings raised while the model is fitted reads "Estimation warnings".
 
 ### Scores and missing data
 
@@ -378,11 +382,11 @@ that does. A call that worked is not affected.
   - **Careless responding.** The evidence table keeps the rows that say why an index has no value.
 - `nomo_report()` labels and rounds what it shows as printed output does (#145).
   - **Bartlett's test.** The supporting-adequacy row reads "Bartlett's test, p", since its Value is the p value, beside the KMO statistic.
-  - **Paused runs.** A run that paused before the invariance or network stage says the stage "was not reached", not that it "was not completed", which read as though it had been requested.
+  - **Paused runs.** A run that paused says that each stage it never started, the CFA as well as the network, "was not reached", not that it "was not completed", which read as though it had been requested. The stage the run paused at "was not completed".
   - **Network hypotheses.** A standardized correlation has no leading zero, as in `print()` and the APA table, and an estimate just off a bound of its predicted region shows the decimals that tell them apart. The region reads as `print()` writes it, ">= 0.20", not "[0.2, +Inf)". Elsewhere in the report the estimate reads the same: the theory-concordance rows of the flagged evidence and the full evidence trace give the estimate and its region as the hypotheses table does, and the replication table and the missing-data differences show a standardized association without a leading zero (".151", not "0.151"). Among the missing-data differences a factor correlation drops it too, as in `print()`.
   - **Scores.** A validity just below Gorsuch's .90, or a correlational accuracy just short of .05, shows the decimal that tells them apart, ".903", as `print()` does.
-  - **Settings and logs.** A stage configured with no setting of its own shows "defaults", not R's "list()", and a log value stored as the text TRUE or FALSE reads "yes" or "no".
-  - **Intervals.** An interval's headings carry its level, taken from the result, such as "Omega 90% CI lower" for a reliability interval bootstrapped at 90%, and "Equivalence 90% CI lower" beside the network's 95% intervals.
+  - **Settings and logs.** A stage configured with no setting of its own shows "defaults", not R's "list()", and a log's reference stored as the text TRUE or FALSE reads "yes" or "no". Other text that reads TRUE or FALSE, such as an item label, is shown as written.
+  - **Intervals.** An interval's headings carry its level, taken from the result, such as "Omega 90% CI lower" for a reliability interval bootstrapped at 90%, and "Equivalence 90% CI lower" beside the network's 95% intervals. A reliability analysis run without an interval (`ci = "none"`) gives no level to the empty bound columns the report names as left out.
   - **Abbreviations.** The closing table defines every estimator a CFA can name, `DWLS` among them, in the words `summary()` uses. Revised MAP (TR4) is defined from the trace of the fourth power of the partial-correlation matrix; the table had called it an average of fourth powers.
   - **Session information.** It is printed at 80 columns, as the component summaries are, whatever the width of the console that rendered the report.
   - **References in words.** A missing-data difference flagged against "half a reference standard error" shows the decimals that tell it from .5, "0.503", not "0.50".
@@ -402,7 +406,7 @@ that does. A call that worked is not affected.
   - Knitted to PDF, Greek letters and math symbols are written as TeX math, so the default `pdflatex` engine compiles the tables. It used to stop at the first `χ`.
 - `nomo_apa_table()` reports what the result holds, as the console does (#145).
   - **AVE.** An AVE that would round to the review reference shows the decimal that tells them apart, ".497" beside a reference of ".50", as `print()` does. Other cells keep two decimals.
-  - **Sample.** The reliability and validity tables give the estimator and the number of cases analyzed, as the other tables do; their notes had given neither. Every table whose model used full-information maximum likelihood says so, since *N* then counts the incomplete cases. A table from a WLSMV fit names WLSMV, not the `DWLS` lavaan files it under.
+  - **Sample.** The reliability and validity tables give the estimator and the number of cases analyzed, as the other tables do; their notes had given neither. Every table whose model used full-information maximum likelihood on data with incomplete cases says so, since *N* then counts them. With no missing values, there is no such sentence. A table from a WLSMV fit names WLSMV, not the `DWLS` lavaan files it under.
   - **Improper solutions.** When lavaan's admissibility check did not pass, as with a negative variance estimate, the note of a CFA, reliability, or validity table says so, as `summary()` does. A standardized loading that is not finite is explained as such; the note had called it "not estimated", though lavaan estimated it.
 - `nomo_apa_table()` leaves out what a table cannot show (#145).
   - **One invariance model.** A table of the configural model alone has no change columns, which had been four empty columns, and its note neither defines the change symbol nor says that each model adds constraints.
@@ -458,11 +462,11 @@ Where one class changes more than that:
 
 - **`nomo_screen()`.** "Items in correlation diagnostics" replaces "Relationship eligible", and one line says why category items have no correlations. The item-rest plot is now a dot plot. The evidence map and the item-rest plot no longer have a "note" level or green bars.
 - **`nomo_factors()` and `nomo_efa()`.** Agreement between two criteria is no longer called "strong converging evidence", and zero factors has its own text. Bartlett's test is written as other tests are, and is marked approximate for non-Pearson correlations. Percentiles read as ordinals ("93rd"). When original and revised MAP disagree, the review flag says so and gives both counts ("The two MAP forms disagree: revised MAP (TR4) reaches its minimum at 1 factor, original MAP (TR2) at 0."). In the EFA, checks of the solution itself, such as identification or convergence, are listed under "Flagged", each under what it checks ("- Identification (Concern): ...") or the item of a Heywood case.
-- **`nomo_cfa()` and `nomo_compare()`.** The chi-square line says which test it is, such as the Yuan-Bentler scaled test statistic. The summary of a CFA that did not converge shows no loadings, correlations, or fit. Correlations a model fixes, such as a bifactor model's zeros, are named as fixed. Pairs read "A vs. B". A weak loading's flag is worded as `nomo_validity()` words it, "Standardized loading 0.34 is below the review reference 0.50 in absolute value", so a guided run lists the two flags on one bullet. The summary's residual correlations drop the leading zero, as in the EFA.
+- **`nomo_cfa()` and `nomo_compare()`.** The chi-square line says which test it is, such as the Yuan-Bentler scaled test statistic. The summary of a CFA that did not converge shows no loadings, correlations, or fit. Correlations a model fixes, such as a bifactor model's zeros, are named as fixed. Pairs read "A vs. B". A weak loading's flag is worded as `nomo_validity()` words it, "Standardized loading 0.34 is below the review reference 0.50 in absolute value", so a guided run lists the two flags on one bullet. The summary's residual correlations drop the leading zero, as in the EFA. In the comparison's measurement evidence, a reliability, AVE, or HTMT2 value that would round to its review reference shows the decimal that tells them apart, ".497" beside an AVE reference of ".50", as `nomo_validity()` prints it.
 - **`nomo_model()`.** `print()` starts with a `<nomo_model>` header and wraps its identification notes.
 - **`nomo_reliability()`, `nomo_validity()`, and `nomo_hierarchical()`.** Intervals are in a column of their own. The validity print counts flags by name ("Separation flags: none (1 pair)"), and the summary states an AVE flag in the print's words, "AVE .43 is below the review reference .50", before what to inspect. The hierarchical model-choice caution is information shown in the summary, not a review flag on every model, and `summary()` includes the factor-score table.
 - **`nomo_invariance()`.** The tables are headed "Fit by level", "CFI change", and "Delta chi-square". The fit table has no cumulative "Constraints" column, which had pushed RMSEA and SRMR out at 80 columns; a line beneath it says what each level adds, such as `Held equal: loadings from metric; intercepts from scalar, except ag3 ~ 1.` The fit and change plots angle the level names, and the local-strain plot gives each level its own panel.
-- **`nomo_network()` and `nomo_hypotheses()`.** Shorter status words, such as "In region, imprecise" and "Replicated", keep the status columns on an 80-column console. A `negligible()` prediction shows the equivalence interval its concordance is judged on, post hoc predictions are marked "(post hoc)", and a bare `negligible()` draws no theory-compatible band. A flag about a relation names it as its unit, as in "- Agency <-> Persistence (Review): The relation ...", without backticks, and relations with one explanation share a bullet. `print()` counts every flag the object holds ("Total flags: 0 concern, 4 review"), also those it leaves to the hypothesis tables and to `summary()`. When standardized and unstandardized hypotheses are mixed, the effects plot draws each scale in a panel with its own axis.
+- **`nomo_network()` and `nomo_hypotheses()`.** Shorter status words, such as "In region, imprecise" and "Replicated", keep the status columns on an 80-column console. A `negligible()` prediction shows the equivalence interval its concordance is judged on, post hoc predictions are marked "(post hoc)", and a bare `negligible()` draws no theory-compatible band. A flag about a relation names it as its unit, as in "- Agency <-> Persistence (Review): The relation ...", without backticks, and relations with one explanation share a bullet. `print()` counts every flag the object holds ("Total flags: 0 concern, 4 review"), also those it leaves to the hypothesis tables and to `summary()`; with none, it reads "Total flags: no flags", as the measurement context and model fit beside it do. When standardized and unstandardized hypotheses are mixed, the effects plot draws each scale in a panel with its own axis.
 - **`nomo_scores()` and `nomo_missing()`.** The parallel-model test is printed once, as in "Delta chi-square(16) = 171.84, p < .001", and each note is one bullet per factor under "Flagged".
 - **`nomo_run()`.** Statuses are in sentence case and stages in words. A blocked run is shown as one block that says what failed and what to do. `summary()` lists each component flag under "Flagged", where it was raised, and names each fit index's version. A network flag about a relation is written as the network's own output writes it, as in "- Agency <-> Persistence in the network (Review): The relation ...", without backticks. The samples of a split are named as `nomo_split()` names them: "Sample design: calibration and validation samples", then "Calibration cases" and "Validation cases".
 

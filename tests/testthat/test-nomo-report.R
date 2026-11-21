@@ -834,6 +834,24 @@ test_that("nomo_report renders a polished self-contained HTML archive when Pando
   expect_match(html, "The nomological-network stage was not reached in this workflow.",
                fixed = TRUE)
   expect_false(grepl("invariance was not completed", html, fixed = TRUE))
+  # The measurement stages after the pause are described alike; the EFA, at
+  # which the run paused for a decision, was reached and is not completed.
+  for (what in c("CFA", "Reliability evidence", "Convergent/discriminant evidence")) {
+    expect_match(html, paste(what, "was not reached in this workflow."), fixed = TRUE)
+    expect_false(grepl(paste(what, "was not completed"), html, fixed = TRUE))
+  }
+  expect_match(html, "EFA was not completed in this workflow.", fixed = TRUE)
+})
+
+
+test_that("a stage with no result was not reached, or was not completed (#145)", {
+  stages <- tibble::tibble(stage = c("efa", "cfa"), status = c("failed", "not_started"))
+  note <- nomologR:::nomo_report_stage_note
+  expect_identical(note(stages, "cfa", "CFA"), "CFA was not reached in this workflow.")
+  expect_identical(note(stages, "efa", "EFA"), "EFA was not completed in this workflow.")
+  # Without a stages table to read, nothing says the stage was never started.
+  expect_identical(note(nomologR:::nomo_report_empty_table(), "cfa", "CFA"),
+                   "CFA was not completed in this workflow.")
 })
 
 
@@ -1379,12 +1397,22 @@ caller_state <- list(
   envir$report_dir <- dir
   envir$nomo_report <- nomo_report
 
-  outer_html <- rmarkdown::render(
-    outer,
-    output_dir = dir,
-    intermediates_dir = dir,
-    envir = envir,
-    quiet = TRUE
+  # On a macOS runner without XQuartz, R warns while this document is rendered
+  # that it cannot load R_X11.so. The render needs no X11, so that warning
+  # alone is muffled; any other warning still reaches the test.
+  outer_html <- withCallingHandlers(
+    rmarkdown::render(
+      outer,
+      output_dir = dir,
+      intermediates_dir = dir,
+      envir = envir,
+      quiet = TRUE
+    ),
+    warning = function(w) {
+      if (grepl("R_X11", conditionMessage(w), fixed = TRUE)) {
+        invokeRestart("muffleWarning")
+      }
+    }
   )
 
   # The nested render succeeds and keeps its own figures.
@@ -1919,6 +1947,18 @@ test_that("report cells follow print() where a column's name cannot say how (#14
 })
 
 
+test_that("only a log's reference reads TRUE and FALSE as yes and no (#145)", {
+  # An item labeled TRUE, or a rationale that reads FALSE, is the researcher's
+  # text, not a logical value, and is shown as written.
+  shown <- nomologR:::nomo_report_display_table(tibble::tibble(
+    item = c("TRUE", "x"), rationale = c("FALSE", "y"), reference = c("FALSE", "TRUE")
+  ))
+  expect_identical(shown$Item, c("TRUE", "x"))
+  expect_identical(shown$Rationale, c("FALSE", "y"))
+  expect_identical(shown$Reference, c("no", "yes"))
+})
+
+
 test_that("a network estimate reads alike wherever the report shows it (#145)", {
   # The theory-concordance rows of the evidence trace, primary and validation
   # sample alike, show each estimate in its kind and the region as the
@@ -2016,11 +2056,21 @@ test_that("an interval's headings carry its confidence level (#145)", {
   # A reliability interval at the level it was bootstrapped at, read from
   # the object, so a 90% interval is not taken for a 95% one.
   rel <- run$results$reliability
+  rel$ci <- "bootstrap"
   rel$ci_level <- 0.90
   expect_true(all(c("Omega 90% CI lower", "Omega 90% CI upper", "Alpha 90% CI lower",
                     "Alpha 90% CI upper") %in% labels(rel, "reliability", "primary")))
   rel$ci_level <- NULL
   expect_true("Omega CI lower" %in% labels(rel, "reliability", "primary"))
+  # With no interval asked for, the empty bound columns the report names as
+  # left out carry no level (ci_level keeps its default of .95).
+  none <- run$results$reliability
+  expect_identical(none$ci, "none")
+  expect_equal(none$ci_level, 0.95)
+  expect_null(nomologR:::nomo_report_ci_levels(none, "reliability", "coefficients"))
+  shown <- labels(none, "reliability", "primary")
+  expect_true(all(c("Omega CI lower", "Alpha CI upper") %in% shown))
+  expect_false(any(grepl("95% CI", shown, fixed = TRUE)))
   expect_true(all(c("95% CI lower", "95% CI upper") %in%
                     labels(run$results$cfa, "cfa", "loadings")))
   expect_null(nomologR:::nomo_report_ci_levels(run$results$cfa, "cfa", "fit"))
@@ -2082,6 +2132,9 @@ test_that("a flagged value is told apart from the reference its row names (#144)
   # half.
   expect_identical(numbers(c("Half a reference standard error", "behalf of")),
                    list(0.5, numeric()))
+  # Another half is no limit: the careless-responding reference counts items.
+  expect_identical(numbers("a run of 6 or more, half the items (Curran, 2016)"),
+                   list(c(6, 2016)))
   missing_log <- nomologR:::nomo_report_display_table(tibble::tibble(
     metric = c("estimate_difference", "estimates_agree"), value = c(0.503, 0.497),
     reference = nomologR:::nomo_missing_half_se_reference,

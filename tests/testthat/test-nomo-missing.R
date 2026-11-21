@@ -444,6 +444,50 @@ test_that("a network's fit comparison carries each strategy's fit indices", {
 })
 
 
+test_that("a standardized association reads as the network prints it, without a leading zero (#145)", {
+  skip_on_cran()
+  d <- nomo_demo_network
+  set.seed(32)
+  d$ag2[sample.int(nrow(d), 60)] <- NA
+  net <- nomo_network(
+    "Agency =~ ag1 + ag2 + ag3 + ag4\nPersistence =~ pe1 + pe2 + pe3 + pe4",
+    data = d,
+    hypotheses = nomo_hypotheses("Agency <-> Persistence" = positive())
+  )
+  out <- nomo_missing(net, data = d)
+  row <- out$estimates[out$estimates$role == "comparison", ]
+  shown <- function(v) nomologR:::nomo_present_stat(v, "r", digits = 3L)
+  expect_true(abs(row$estimate) < 1)
+  largest <- sprintf("Largest: H1, %s against %s", shown(row$estimate),
+                     shown(row$reference_estimate))
+  log <- out$decision_log
+  observation <- log$observation[log$metric %in% c("estimate_difference", "estimates_agree")]
+  expect_match(observation, largest, fixed = TRUE)
+  expect_no_match(observation, "H1, 0.", fixed = TRUE)
+  # print() and summary() show the two estimates alike.
+  local_reproducible_output(width = 80)
+  pattern <- paste0("^  H1 +Listwise deletion +",
+                    gsub(".", "\\.", shown(row$estimate), fixed = TRUE), " +",
+                    gsub(".", "\\.", shown(row$reference_estimate), fixed = TRUE), " ")
+  expect_true(any(grepl(pattern, capture.output(print(out)))))
+  expect_true(any(grepl(pattern, capture.output(print(summary(out))))))
+  # A directed path, a regression coefficient, keeps it.
+  expect_identical(
+    nomologR:::nomo_missing_estimate_kind(
+      c("hypothesis", "hypothesis", "loading"), c("H1", "H2", "A =~ a1"),
+      tibble::tibble(id = c("H1", "H2"), scale = "standardized",
+                     relation_type = c("association", "directed"))
+    ),
+    c("r", "estimate", "loading")
+  )
+  # The summary keeps a refit's hypotheses, not the refits.
+  expect_null(summary(out)$fits)
+  expect_identical(summary(out)$hypothesis_evidence$relation_type, "association")
+  # A CFA has none.
+  expect_null(nomologR:::nomo_missing_hypotheses(list(fits = list(listwise = list()))))
+})
+
+
 test_that("data without a modeled variable, or that cannot be refitted, is refused", {
   fit <- nomo_cfa(missing_demo_model, data = nomo_demo_continuous)
 

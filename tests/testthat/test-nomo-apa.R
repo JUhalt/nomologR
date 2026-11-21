@@ -708,6 +708,42 @@ test_that("reliability and validity notes give the estimator, N, and FIML (#145)
 })
 
 
+test_that("the FIML sentence is given only when there were missing values to handle (#145)", {
+  skip_on_cran()
+  notes <- function(tab) paste(tab$notes$general, collapse = " ")
+  sentence <- "Missing values were handled by full-information maximum likelihood (FIML)."
+  agency <- "Agency =~ ag1 + ag2 + ag3 + ag4"
+  two <- paste(agency, "Persistence =~ pe1 + pe2 + pe3 + pe4", sep = "\n")
+  h <- nomo_hypotheses("Agency -> Persistence" = positive())
+  # nomo_demo_network has no missing values, so FIML had none to handle.
+  complete <- nomo_demo_network
+  incomplete <- nomo_demo_network
+  incomplete$ag1[1:30] <- NA
+
+  tables <- function(data) {
+    cfa <- nomo_cfa(agency, data, missing = "fiml")
+    inv <- nomo_invariance(agency, data = data, group = "group",
+                           levels = c("configural", "metric"), missing = "fiml")
+    net <- nomo_network(two, data, h, missing = "fiml")
+    list(nomo_apa_table(cfa, "fit"), nomo_apa_table(cfa, "loadings"),
+         nomo_apa_table(nomo_reliability(cfa)), nomo_apa_table(inv),
+         nomo_apa_table(net, "fit"), nomo_apa_table(net, "hypotheses"))
+  }
+  for (tab in tables(complete)) {
+    expect_match(notes(tab), "(ML); *N* = 800.", fixed = TRUE)
+    expect_false(grepl("FIML", notes(tab), fixed = TRUE))
+  }
+  for (tab in tables(incomplete)) {
+    expect_match(notes(tab), paste("(ML); *N* = 800.", sentence), fixed = TRUE)
+  }
+
+  # Without a fit to read, the sentence is kept for a FIML estimator.
+  expect_identical(nomologR:::nomo_apa_incomplete(NULL), NA)
+  expect_identical(nomologR:::nomo_apa_sample_note("ML", 10, "fiml"),
+                   paste("Estimated with maximum likelihood (ML); *N* = 10.", sentence))
+})
+
+
 test_that("the network fit table names each index version, and an interval it cannot read", {
   skip_on_cran()
   two <- "A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4 + b5"

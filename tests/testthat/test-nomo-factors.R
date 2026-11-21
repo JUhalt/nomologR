@@ -48,13 +48,13 @@ test_that("numeric-discrete items remain conservative unless overridden", {
   # others are declared.
   entry <- pearson$decision_log[pearson$decision_log$metric == "numeric_discrete_assumption", ]
   expect_equal(entry$value, 5)
-  expect_match(entry$observation, "5 numeric-discrete items ", fixed = TRUE)
+  expect_match(entry$observation, "5 numeric-discrete items were conservatively", fixed = TRUE)
   declared <- stats::setNames(rep("continuous", 4L), paste0("i", 1:4))
   one <- nomo_factors(likert, types = declared, n_iter = 10, seed = 10)
   entry <- one$decision_log[one$decision_log$metric == "numeric_discrete_assumption", ]
   expect_identical(entry$object, "i5")
   expect_equal(entry$value, 1)
-  expect_match(entry$observation, "^1 numeric-discrete item [^s].*: i5[.]$")
+  expect_match(entry$observation, "^1 numeric-discrete item was conservatively .*: i5[.]$")
 
   ordinal_types <- stats::setNames(
     rep("ordinal", ncol(likert)),

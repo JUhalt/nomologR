@@ -364,6 +364,8 @@ nomo_compare_nesting <- function(reference_fit,
     "equivalent"
   }
 
+  # `check` is one of the five values named here, so the switch needs no
+  # default, which no call could reach.
   note <- switch(
     check,
     nested = "The nesting check (Bentler & Satorra, 2010) confirms that the models are nested.",
@@ -393,8 +395,7 @@ nomo_compare_nesting <- function(reference_fit,
         "parameters, set `nested = \"yes\"` to request the difference test."
       )
     },
-    not_run = "The researcher declared the models non-nested; no difference test was requested.",
-    ""
+    not_run = "The researcher declared the models non-nested; no difference test was requested."
   )
 
   list(
