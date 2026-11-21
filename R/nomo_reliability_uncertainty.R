@@ -236,7 +236,9 @@ nomo_reliability_bootstrap_ci <- function(fit_info,
     n_success = as.integer(mat[, "n"])
   )
 
-  min_success <- if (nrow(intervals)) min(intervals$n_success) else 0L
+  # nomo_reliability() stops before this when it has no coefficient, so there
+  # is a row for each one.
+  min_success <- min(intervals$n_success)
   available <- nrow(intervals) > 0L &&
     all(is.finite(intervals$ci_lower)) &&
     all(is.finite(intervals$ci_upper))

@@ -640,6 +640,32 @@ test_that("a difference test that lavaan cannot compute is reported, not assumed
 })
 
 
+test_that("a difference-test table without a heading is labeled as lavaan's default test", {
+  skip_on_cran()
+  pair <- compare_fitted_pair()
+  real_lrt <- lavaan::lavTestLRT
+
+  plain <- testthat::with_mocked_bindings(
+    nomologR:::nomo_compare_difference_test(
+      pair$full$fit, pair$zero$fit,
+      method = "default", estimator = "ML"
+    ),
+    lavTestLRT = function(...) {
+      tab <- real_lrt(...)
+      attr(tab, "heading") <- NULL
+      tab
+    },
+    .package = "lavaan"
+  )
+
+  expect_true(plain$available)
+  expect_identical(plain$label, "Chi-Squared Difference Test")
+  expect_identical(plain$method, "standard")
+  expect_equal(plain$statistic, lrt_row(pair$full$fit, pair$zero$fit)[["Chisq diff"]],
+               tolerance = 1e-8)
+})
+
+
 test_that("a negative scaled difference statistic is named as the reason", {
   skip_on_cran()
   pair <- compare_fitted_pair()

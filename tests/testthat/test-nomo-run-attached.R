@@ -211,6 +211,46 @@ test_that("a missing-data comparison that cannot be computed is recorded, and th
 })
 
 
+test_that("a network's missing-data comparison that cannot be computed is recorded, and the run goes on", {
+  skip_on_cran()
+  real_missing <- nomologR::nomo_missing
+  local_mocked_bindings(nomo_missing = function(fit, ...) {
+    if (inherits(fit, "nomo_network")) stop("simulated network comparison failure")
+    real_missing(fit, ...)
+  })
+  d <- nomo_demo_network
+  set.seed(73)
+  d$ag2[sample.int(nrow(d), 60)] <- NA
+  scales <- list(Agency = paste0("ag", 1:4), Persistence = paste0("pe", 1:4))
+  run <- nomo_run(
+    d, scales = scales, mode = "research",
+    decisions = list(
+      factor_count = list(value = c(Agency = 1, Persistence = 1), rationale = "x"),
+      cfa_model = list(value = nomo_model(scales), rationale = "x"),
+      measurement_model = list(value = "proceed", rationale = "x")
+    ),
+    settings = list(
+      factors = list(seed = 73),
+      missing = list(reliability = FALSE),
+      network = list(hypotheses = nomo_hypotheses("Agency -> Persistence" = positive()))
+    )
+  )
+
+  # The measurement model's comparison stands; the network's is recorded as
+  # requested but not computed, in the network's own scope.
+  expect_identical(run$status, "complete")
+  expect_s3_class(run$results$missing$cfa, "nomo_missing")
+  expect_null(run$results$missing$network)
+  entry <- run$decision_log[run$decision_log$id == "missing_data_network", ]
+  expect_identical(entry$decision, "not computed")
+  expect_identical(entry$stage, "network")
+  expect_identical(entry$scope, "theory_network")
+  expect_match(entry$observation, "simulated network comparison failure", fixed = TRUE)
+  recipe <- nomo_table(run, "recipe")
+  expect_identical(recipe$status[recipe$stage == "missing"], c("completed", "not_computed"))
+})
+
+
 test_that("attached settings can be added before the CFA and are locked after", {
   skip_on_cran()
   paused <- nomo_run(nomo_demo_continuous, scales = attached_scales,

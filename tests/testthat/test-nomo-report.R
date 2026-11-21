@@ -2259,6 +2259,13 @@ test_that("the scores summary writes the parallel-model test in APA form (#144)"
   scores$method <- "regression"
   expect_match(nomologR:::nomo_report_scores(scores)$summary,
                "Model-weighted scores (method: regression)", fixed = TRUE)
+
+  # Scores the model weights are named as such, with no parallel-model test.
+  cfa <- nomo_cfa("A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4 + b5",
+                  nomo_demo_continuous)
+  model <- nomologR:::nomo_report_scores(nomo_scores(cfa, method = "regression"))$summary
+  expect_match(model, "Model-weighted scores (method: regression) for ", fixed = TRUE)
+  expect_no_match(model, "parallel model", fixed = TRUE)
 })
 
 

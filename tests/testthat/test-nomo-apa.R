@@ -708,6 +708,42 @@ test_that("reliability and validity notes give the estimator, N, and FIML (#145)
 })
 
 
+test_that("the network fit table names each index version, and an interval it cannot read", {
+  skip_on_cran()
+  two <- "A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4 + b5"
+  net <- nomo_network(two, nomo_demo_continuous, nomo_hypotheses("A -> B" = positive()))
+  for (version in c("robust", "scaled")) {
+    net$fit_evidence$index_version <- version
+    expect_match(nomo_apa_table(net, "fit")$notes$general,
+                 sprintf("CFI, TLI, and RMSEA are %s values.", version), fixed = TRUE)
+  }
+
+  # Without a fit to read the interval from, the RMSEA is shown alone.
+  net$fit <- NULL
+  tab <- nomo_apa_table(net, "fit")
+  expect_identical(tab$body[["RMSEA [90% CI]"]],
+                   nomologR:::nomo_apa_number(net$fit_evidence$rmsea, 3L, bounded = FALSE))
+  expect_false(grepl("[", tab$body[["RMSEA [90% CI]"]], fixed = TRUE))
+})
+
+
+test_that("a ratio the validity table could not compute is marked as not computed", {
+  skip_on_cran()
+  three <- "visual =~ x1 + x2 + x3\ntextual =~ x4 + x5 + x6\nspeed =~ x7 + x8 + x9"
+  val <- nomo_validity(nomo_cfa(three, lavaan::HolzingerSwineford1939,
+                                modification_indices = FALSE))
+  # The model fixes no correlation, so an empty cell is one not computed.
+  missing_pair <- val$htmt2$construct_1 == "textual" & val$htmt2$construct_2 == "speed"
+  expect_identical(sum(missing_pair), 1L)
+  val$htmt2$estimate[missing_pair] <- NA_real_
+  tab <- nomo_apa_table(val)
+  expect_identical(tab$body$HTMT2[tab$body$Constructs == "textual with speed"], "\u2014")
+  general <- paste(tab$notes$general, collapse = " ")
+  expect_match(general, "\u2014 = not computed.", fixed = TRUE)
+  expect_false(grepl("fixed by the model", general, fixed = TRUE))
+})
+
+
 test_that("correlations a model fixes are not tabled as estimates (#145)", {
   skip_on_cran()
   hs <- lavaan::HolzingerSwineford1939
