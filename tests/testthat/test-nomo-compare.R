@@ -1105,6 +1105,32 @@ test_that("measurement evidence with no notes, the usual case, prints no empty b
 })
 
 
+test_that("measurement evidence just off its review reference is not printed as the reference (#145)", {
+  # An AVE of .497 had read ".50" beside an AVE reference of .50, where
+  # print() of the validity result says it is below it (guide point 9).
+  ev <- tibble::tibble(
+    model = rep(c("full", "short"), each = 4L),
+    construct = rep(c("A", "B", "A", "A vs B"), 2L),
+    metric = rep(c("omega", "omega", "AVE", "HTMT2"), 2L),
+    estimate = c(.698, .78, .497, .852, .83, .62, .43, .53),
+    note = ""
+  )
+  local_reproducible_output(width = 80)
+  txt <- capture.output(shown <- nomo_compare_present_evidence(ev, nomo_defaults()))
+  expect_identical(shown, c("AVE", "HTMT2"))
+  expect_true(any(grepl("^  A +omega +\\.698 +\\.83$", txt)))
+  expect_true(any(grepl("^  B +omega +\\.78 +\\.62$", txt)))
+  expect_true(any(grepl("^  A +AVE +\\.497 +\\.43$", txt)))
+  expect_true(any(grepl("^  A vs\\. B +HTMT2 +0\\.852 +0\\.53$", txt)))
+
+  # The references come from the guidance the comparison was run with.
+  guidance <- nomo_defaults()
+  guidance$ave_reference <- .45
+  txt <- capture.output(nomo_compare_present_evidence(ev, guidance))
+  expect_true(any(grepl("^  A +AVE +\\.50 +\\.43$", txt)))
+})
+
+
 test_that("a flag's note ends with a full stop before its recommendation (#145)", {
   skip_on_cran()
   pair <- compare_fitted_pair()

@@ -136,7 +136,8 @@ summary.nomo_compare <- function(object, ...) {
     loadings = object$loadings,
     evidence = object$evidence,
     references = object$references,
-    decision_log = object$decision_log
+    decision_log = object$decision_log,
+    guidance = object$guidance
   )
   class(out) <- c("summary_nomo_compare", "list")
   out
@@ -190,7 +191,9 @@ print.summary_nomo_compare <- function(x, ...) {
     )
   }
 
-  if (nrow(x$evidence)) shown <- c(shown, nomo_compare_present_evidence(x$evidence))
+  if (nrow(x$evidence)) {
+    shown <- c(shown, nomo_compare_present_evidence(x$evidence, x$guidance))
+  }
 
   nomo_compare_flagged(x, recommendation = TRUE)
   nomo_present_key(nomo_cfa_key_entries(shown))
@@ -246,11 +249,19 @@ nomo_compare_present_tests <- function(cmp) {
 
 # The measurement evidence, one column per model. A model whose evidence is not
 # available has no column, and its note, prefixed with its label, says why
-# (#145). Returns the abbreviations shown.
-nomo_compare_present_evidence <- function(ev) {
+# (#145). A value that differs from its review reference but would round to it
+# shows the decimals that tell them apart, an AVE of .497 beside .50, as
+# nomo_validity() and nomo_reliability() print it (guide point 9). Returns the
+# abbreviations shown.
+nomo_compare_present_evidence <- function(ev, guidance) {
   nomo_present_section("Measurement evidence by model")
   available <- ev[!is.na(ev$construct), , drop = FALSE]
   wide <- unique(available[, c("construct", "metric"), drop = FALSE])
+  reference <- ifelse(
+    wide$metric == "AVE", nomo_guidance_value(guidance, "ave_reference"),
+    ifelse(wide$metric == "HTMT2", nomo_guidance_value(guidance, "htmt_reference"),
+           nomo_guidance_value(guidance, "reliability_reference"))
+  )
   key <- paste(wide$construct, wide$metric, sep = "\r")
   models <- unique(available$model)
   columns <- c("Construct" = "construct", "Metric" = "metric")
@@ -261,8 +272,8 @@ nomo_compare_present_evidence <- function(ev) {
     wide[[column]] <- rows$estimate[match(key, paste(rows$construct, rows$metric, sep = "\r"))]
     columns <- c(columns, stats::setNames(column, models[[i]]))
     formats[[column]] <- function(v) {
-      ifelse(wide$metric == "HTMT2", nomo_present_stat(v, "htmt"),
-             nomo_present_stat(v, "reliability"))
+      ifelse(wide$metric == "HTMT2", nomo_present_stat(v, "htmt", reference = reference),
+             nomo_present_stat(v, "reliability", reference = reference))
     }
   }
   # A pair is labeled with "vs.", as labels are (guide point 25).
