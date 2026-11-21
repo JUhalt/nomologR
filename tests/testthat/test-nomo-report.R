@@ -2254,6 +2254,11 @@ test_that("the scores summary writes the parallel-model test in APA form (#144)"
   expect_match(text, "fitted model: Delta chi-square(16) = 41.93, p < .001.", fixed = TRUE)
   scores$parallel_test <- list(available = FALSE, note = "Not tested: one item.")
   expect_match(nomologR:::nomo_report_scores(scores)$summary, "Not tested: one item.", fixed = TRUE)
+  # Factor-score methods weight the items by the model.
+  scores$weighting <- "model"
+  scores$method <- "regression"
+  expect_match(nomologR:::nomo_report_scores(scores)$summary,
+               "Model-weighted scores (method: regression)", fixed = TRUE)
 })
 
 
