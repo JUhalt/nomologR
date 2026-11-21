@@ -1014,7 +1014,7 @@
       
       Measurement context
         Status: no flags | Constructs: 3 | Loading flags: 0 | Negative variances: 0
-        Fit flags: 0 | Engine warnings: 0
+        Fit flags: 0 | Estimation warnings: 0
         No measurement-context flag was raised.
       
       Model fit

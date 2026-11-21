@@ -222,26 +222,42 @@ test_that("warnings raised while fit measures are read are recorded, not printed
   f <- stats::rnorm(n)
   dat <- data.frame(y = .5 * f + stats::rnorm(n, sd = .8), comp = f + stats::rnorm(n, sd = .5))
   dat$other <- .3 * dat$comp + stats::rnorm(n)
+  fit_network <- function() {
+    nomo_network("y ~ comp + other", dat, nomo_hypotheses("comp -> y" = positive()),
+                 single_indicators = c(comp = .8))
+  }
+  plain <- fit_network()
   original <- lavaan::fitMeasures
   calls <- 0L
   testthat::local_mocked_bindings(
     fitMeasures = function(...) {
       calls <<- calls + 1L
       warning("computation of robust CFI resulted in NA values (read ", calls, ")")
+      warning("NaNs produced")
       original(...)
     },
     .package = "lavaan"
   )
 
-  expect_no_warning(net <- nomo_network(
-    "y ~ comp + other", dat, nomo_hypotheses("comp -> y" = positive()),
-    single_indicators = c(comp = .8)
-  ))
+  expect_no_warning(net <- fit_network())
   expect_identical(net$measurement_context$fit_status, "fitted")
   read <- paste0("computation of robust CFI resulted in NA values (read ", 1:2, ")")
   expect_true(all(read %in% net$engine_warnings))
+  # "NaNs produced", which negative degrees of freedom explain, is left out,
+  # as nomo_cfa() leaves it out.
+  expect_false("NaNs produced" %in% net$engine_warnings)
   log <- net$decision_log
   expect_match(log$observation[log$metric == "engine_warnings"], read[[1L]], fixed = TRUE)
+  expect_identical(log$severity[log$metric == "engine_warnings"], "review")
+  # The warning concerns a fit index, not the measurement model: the
+  # measurement context and the hypothesis interpretations are those of the
+  # network fitted without it, and summary() counts no estimation warning.
+  expect_identical(net$measurement_context$summary, plain$measurement_context$summary)
+  expect_identical(net$measurement_context$summary$attention, "info")
+  expect_identical(net$hypothesis_evidence$interpretation, plain$hypothesis_evidence$interpretation)
+  shown <- utils::capture.output(print(summary(net)))
+  expect_true("  Fit flags: 0 | Estimation warnings: 0" %in% shown)
+  expect_true(any(startsWith(shown, "  - Engine warnings (Review): computation of robust CFI")))
   # The APA fit table, which the report builds, reads the RMSEA interval from
   # the same fit without raising the warning again.
   expect_no_warning(tab <- nomo_apa_table(net, "fit"))
