@@ -443,9 +443,10 @@ nomo_effort_log <- function(result, n_items) {
       log, stage = "screen", object = "cases",
       metric = paste0("psychometric_", kind),
       value = n_flag,
+      # A kind with fewer than three pairs went on to the next above (`next`).
       reference = sprintf(
-        "Curran (2016): %s, computed here over %d pair%s",
-        rule, n_pairs, if (n_pairs == 1L) "" else "s"
+        "Curran (2016): %s, computed here over %d pairs",
+        rule, n_pairs
       ),
       severity = if (n_flag > 0L) "review" else "info",
       observation = sprintf(

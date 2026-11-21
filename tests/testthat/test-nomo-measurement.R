@@ -426,6 +426,11 @@ test_that("closeout: measurement helper fallback schemas cover data-frame, list,
     metric = "omega"
   )
   expect_identical(tidy_list$block, c("block_1", "block_2"))
+  # One unnamed value in a list element is the single overall block.
+  one_value <- nomologR:::nomo_reliability_tidy(list(F1 = .8), metric = "omega")
+  expect_identical(one_value$construct, "F1")
+  expect_identical(one_value$block, "overall")
+  expect_identical(one_value$estimate, .8)
 
   fit <- make_m9_report_run()$results$cfa$fit
   fi <- nomologR:::nomo_measurement_fit(fit)

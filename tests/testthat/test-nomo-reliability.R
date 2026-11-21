@@ -673,6 +673,24 @@ test_that("closeout: reliability bootstrap helper covers alignment and finite-dr
   )
   expect_true(q$status$available[[1L]])
   expect_match(q$status$reason[[1L]], "only 15 of 20", fixed = TRUE)
+
+  # Draws whose names match no coefficient are not used for any of them.
+  renamed <- matrix(.80, nrow = 20L, ncol = 2L)
+  colnames(renamed) <- c("omega.F1.overall", "omega.F2.overall")
+  testthat::local_mocked_bindings(
+    bootstrapLavaan = function(...) renamed,
+    .package = "lavaan"
+  )
+  unmatched <- nomologR:::nomo_reliability_bootstrap_ci(
+    fit_info, evidence, type_context,
+    obs.var = TRUE, ordinal_scale = TRUE, include_alpha = FALSE,
+    level = .95, R = 20L, seed = 1L
+  )
+  expect_identical(unmatched$intervals$n_success, c(0L, 0L))
+  expect_true(all(is.na(unmatched$intervals$ci_lower)))
+  expect_false(unmatched$status$available[[1L]])
+  expect_identical(unmatched$status$min_successful_draws[[1L]], 0L)
+  expect_match(unmatched$status$reason[[1L]], "minimum successful draws = 0 of 20", fixed = TRUE)
 })
 
 

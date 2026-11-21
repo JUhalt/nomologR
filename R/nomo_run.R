@@ -525,14 +525,16 @@ nomo_run <- function(data = NULL,
   }
 
   if (!is.null(resume)) {
+    # nomo_run_resume() reads `mode`, `guidance`, and `settings` only when they
+    # were supplied, so a missing one is never evaluated there.
     return(
       nomo_run_resume(
         resume = resume,
         data = data,
         scales = scales,
-        mode = if (mode_missing) resume$mode else mode,
-        guidance = if (guidance_missing) resume$guidance else guidance,
-        settings = if (settings_missing) list() else settings,
+        mode = mode,
+        guidance = guidance,
+        settings = settings,
         decisions = decisions,
         call = call,
         mode_missing = mode_missing,
