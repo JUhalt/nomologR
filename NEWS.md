@@ -600,10 +600,12 @@ affected.
 - The dataset help pages and the articles write population values as the output prints them (#144): a loading, a path, or a difference in means keeps its leading zero (0.45), and a correlation drops it (.40).
 - Articles (#144, #145).
   - **Wording.** Numbers in the prose are rounded and written as the printed output is. Tests read "Delta chi-square(df) = x, p = .xxx". Three or more authors are cited with "et al.".
+  - **Content review** accounts for all seven items its EFA summary flags: besides the three it discusses, four are flagged for review only for a communality a little below .40.
   - **Hierarchical models** lists Beauducel (2011), Gorsuch (1983), and Hancock and Mueller (2001), which it cites, and shows H beside the squared determinacy.
   - **Nomological network** shows each prediction's classification, its equivalence interval, and its replication status, which had been hidden at 80 columns. It credits the "total aggregation" name to Bagozzi and Heatherton (1994).
   - **Reproducible report** lists every section of the report, adding the three it left out: the revision lineage, the manuscript tables, and the abbreviations. `?nomo_report` names the revision lineage among the report's contents.
   - **Research basis** gives Koo and Li's (2016) recommendation as a two-way mixed-effects model with absolute agreement.
+  - **Teaching** explains, in the answer to its first exercise, the third flag the reader sees: an item flagged only for a communality within rounding of .40, as `b4` is, shows sampling variability around a teaching reference.
 
 # nomologR 0.9.0
 
