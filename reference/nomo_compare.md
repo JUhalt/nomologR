@@ -340,7 +340,7 @@ summary(cmp_evidence)
 #>   B          omega    .78    .62
 #>   A          alpha    .83    .83
 #>   B          alpha    .77    .77
-#>   A          AVE      .50    .50
+#>   A          AVE     .497   .497
 #>   B          AVE      .43    .52
 #>   A vs. B    HTMT2   0.53   0.53
 #>   - no_b5: The loading fixed to zero for b5 keeps that item in this composite;

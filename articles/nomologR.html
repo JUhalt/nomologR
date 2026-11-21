@@ -394,9 +394,13 @@ meet in published work — eigenvalues greater than one, coefficient
 alpha, the Fornell–Larcker comparison — are shown as context where
 useful, qualified, and kept separate from contemporary evidence.</li>
 <li>
-<strong>Engine results are never hidden.</strong> Every result keeps
-the underlying <code>psych</code> or <code>lavaan</code> object (usually
-in <code>$fit</code>) for direct inspection.</li>
+<strong>Engine results are never hidden.</strong> The fitted
+<code>psych</code> or <code>lavaan</code> model stays in the result for
+direct inspection: in <code>$fit</code> for <code><a href="../reference/nomo_efa.html">nomo_efa()</a></code>,
+<code><a href="../reference/nomo_cfa.html">nomo_cfa()</a></code>, and <code><a href="../reference/nomo_network.html">nomo_network()</a></code>, and in
+<code>$fits</code> for <code><a href="../reference/nomo_esem.html">nomo_esem()</a></code>,
+<code><a href="../reference/nomo_invariance.html">nomo_invariance()</a></code>, and
+<code><a href="../reference/nomo_method_variance.html">nomo_method_variance()</a></code>.</li>
 <li>
 <strong>Decisions are recorded.</strong> Each result carries a
 decision log, and <code><a href="../reference/nomo_run.html">nomo_run()</a></code> records the researcher’s

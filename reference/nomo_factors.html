@@ -221,7 +221,10 @@ item pair, the effective sample size under pairwise deletion. It equals
 <li><p><code>item_types</code>: each item's screened and modeling type.</p></li>
 <li><p><code>correlation_method</code> and <code>correlation_matrix</code>: the correlations analyzed.</p></li>
 <li><p><code>kmo</code> and <code>bartlett</code>: sampling-adequacy evidence.</p></li>
-<li><p><code>parallel</code>, <code>map</code>, and <code>scree</code>: each criterion's result.</p></li>
+<li><p><code>parallel</code>, <code>map</code>, and <code>scree</code>: each criterion's result.
+<code>parallel$sensitivity</code> has one row per parallel-analysis rule: <code>rule</code>
+(<code>"percentile"</code>, <code>"mean"</code>, and <code>"crawford"</code>), <code>n_factors</code>, the count
+that rule suggests, and <code>selected</code>, which is <code>TRUE</code> for <code>parallel_rule</code>.</p></li>
 <li><p><code>criterion_status</code>: which criteria ran, and why any did not.</p></li>
 <li><p><code>evidence</code>, <code>family_evidence</code>, and <code>family_concordance</code>: the suggested
 factor counts by method and by family of related methods.</p></li>

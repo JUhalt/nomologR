@@ -174,7 +174,9 @@ or one that had ignored the argument.
   [`nomo_factors()`](https://juhalt.github.io/nomologR/reference/nomo_factors.md),
   and
   [`nomo_efa()`](https://juhalt.github.io/nomologR/reference/nomo_efa.md)’s
-  cases per item when item values are missing.
+  cases per item when item values are missing. The decision-log row for
+  a single numeric-discrete item modeled as continuous reads “1
+  numeric-discrete item was”, not “were”.
 - **CFA and model comparison.**
   - [`nomo_cfa()`](https://juhalt.github.io/nomologR/reference/nomo_cfa.md)’s
     `fit_evidence` when lavaan cannot compute a scaled test, and its
@@ -210,10 +212,15 @@ or one that had ignored the argument.
 - **Nomological network.**
   [`nomo_network()`](https://juhalt.github.io/nomologR/reference/nomo_network.md)’s
   concordance values, what its measurement context is judged on, the
-  `estimator` it records and, for some networks, the fitted model.
+  `estimator` and the engine warnings it records and, for some networks,
+  the fitted model.
 - **Missing data.** The label of a
   [`nomo_missing()`](https://juhalt.github.io/nomologR/reference/nomo_missing.md)
-  strategy when lavaan ran another method than the one requested.
+  strategy when lavaan ran another method than the one requested. For a
+  network, a standardized association has no leading zero in the
+  decision log, [`print()`](https://rdrr.io/r/base/print.html), and
+  [`summary()`](https://rdrr.io/r/base/summary.html) (“.151”), as in the
+  network’s own output.
 - **Guided workflow.** The settings the downstream stages of
   [`nomo_run()`](https://juhalt.github.io/nomologR/reference/nomo_run.md)
   are fitted with, the keying a run takes from a `contentvalidR`
@@ -939,6 +946,23 @@ message that does. A call that worked is not affected.
     and
     [`?nomo_network`](https://juhalt.github.io/nomologR/reference/nomo_network.md)
     now explain.
+  - **Engine warnings.** A warning lavaan raises while the fit measures
+    of the network or of its measurement model are read, such as lavaan
+    0.7-3’s “computation of robust CFI resulted in NA values” for a
+    model with no degrees of freedom, is recorded in `engine_warnings`
+    and as a review row of the decision log, as
+    [`nomo_cfa()`](https://juhalt.github.io/nomologR/reference/nomo_cfa.md)
+    records it; “NaNs produced”, which negative degrees of freedom
+    explain, is left out, as there. It had been printed at the console,
+    and again by `nomo_apa_table(x, "fit")` and
+    [`nomo_report()`](https://juhalt.github.io/nomologR/reference/nomo_report.md),
+    which read the RMSEA interval from the same fit. It concerns a fit
+    index, not the measurement model, so unlike a warning raised while
+    the model is fitted it does not make the measurement context a
+    review item or qualify the hypothesis interpretations. In
+    [`summary()`](https://rdrr.io/r/base/summary.html), the measurement
+    context’s count of the warnings raised while the model is fitted
+    reads “Estimation warnings”.
 
 #### Scores and missing data
 
@@ -1222,9 +1246,10 @@ message that does. A call that worked is not affected.
   ([\#145](https://github.com/JUhalt/nomologR/issues/145)).
   - **Bartlett’s test.** The supporting-adequacy row reads “Bartlett’s
     test, p”, since its Value is the p value, beside the KMO statistic.
-  - **Paused runs.** A run that paused before the invariance or network
-    stage says the stage “was not reached”, not that it “was not
-    completed”, which read as though it had been requested.
+  - **Paused runs.** A run that paused says that each stage it never
+    started, the CFA as well as the network, “was not reached”, not that
+    it “was not completed”, which read as though it had been requested.
+    The stage the run paused at “was not completed”.
   - **Network hypotheses.** A standardized correlation has no leading
     zero, as in [`print()`](https://rdrr.io/r/base/print.html) and the
     APA table, and an estimate just off a bound of its predicted region
@@ -1242,12 +1267,15 @@ message that does. A call that worked is not affected.
     accuracy just short of .05, shows the decimal that tells them apart,
     “.903”, as [`print()`](https://rdrr.io/r/base/print.html) does.
   - **Settings and logs.** A stage configured with no setting of its own
-    shows “defaults”, not R’s “list()”, and a log value stored as the
-    text TRUE or FALSE reads “yes” or “no”.
+    shows “defaults”, not R’s “list()”, and a log’s reference stored as
+    the text TRUE or FALSE reads “yes” or “no”. Other text that reads
+    TRUE or FALSE, such as an item label, is shown as written.
   - **Intervals.** An interval’s headings carry its level, taken from
     the result, such as “Omega 90% CI lower” for a reliability interval
     bootstrapped at 90%, and “Equivalence 90% CI lower” beside the
-    network’s 95% intervals.
+    network’s 95% intervals. A reliability analysis run without an
+    interval (`ci = "none"`) gives no level to the empty bound columns
+    the report names as left out.
   - **Abbreviations.** The closing table defines every estimator a CFA
     can name, `DWLS` among them, in the words
     [`summary()`](https://rdrr.io/r/base/summary.html) uses. Revised MAP
@@ -1322,8 +1350,9 @@ message that does. A call that worked is not affected.
   - **Sample.** The reliability and validity tables give the estimator
     and the number of cases analyzed, as the other tables do; their
     notes had given neither. Every table whose model used
-    full-information maximum likelihood says so, since *N* then counts
-    the incomplete cases. A table from a WLSMV fit names WLSMV, not the
+    full-information maximum likelihood on data with incomplete cases
+    says so, since *N* then counts them. With no missing values, there
+    is no such sentence. A table from a WLSMV fit names WLSMV, not the
     `DWLS` lavaan files it under.
   - **Improper solutions.** When lavaan’s admissibility check did not
     pass, as with a negative variance estimate, the note of a CFA,
@@ -1573,7 +1602,12 @@ Where one class changes more than that:
   words it, “Standardized loading 0.34 is below the review reference
   0.50 in absolute value”, so a guided run lists the two flags on one
   bullet. The summary’s residual correlations drop the leading zero, as
-  in the EFA.
+  in the EFA. In the comparison’s measurement evidence, a reliability,
+  AVE, or HTMT2 value that would round to its review reference shows the
+  decimal that tells them apart, “.497” beside an AVE reference of
+  “.50”, as
+  [`nomo_validity()`](https://juhalt.github.io/nomologR/reference/nomo_validity.md)
+  prints it.
 - **[`nomo_model()`](https://juhalt.github.io/nomologR/reference/nomo_model.md).**
   [`print()`](https://rdrr.io/r/base/print.html) starts with a
   `<nomo_model>` header and wraps its identification notes.
@@ -1611,9 +1645,10 @@ Where one class changes more than that:
   [`print()`](https://rdrr.io/r/base/print.html) counts every flag the
   object holds (“Total flags: 0 concern, 4 review”), also those it
   leaves to the hypothesis tables and to
-  [`summary()`](https://rdrr.io/r/base/summary.html). When standardized
-  and unstandardized hypotheses are mixed, the effects plot draws each
-  scale in a panel with its own axis.
+  [`summary()`](https://rdrr.io/r/base/summary.html); with none, it
+  reads “Total flags: no flags”, as the measurement context and model
+  fit beside it do. When standardized and unstandardized hypotheses are
+  mixed, the effects plot draws each scale in a panel with its own axis.
 - **[`nomo_scores()`](https://juhalt.github.io/nomologR/reference/nomo_scores.md)
   and
   [`nomo_missing()`](https://juhalt.github.io/nomologR/reference/nomo_missing.md).**
@@ -2289,6 +2324,17 @@ Estimation is not affected.
     and
     [`?nomo_power_simulate`](https://juhalt.github.io/nomologR/reference/nomo_power_simulate.md)
     did.
+  - **Fields the README and the articles read.**
+    [`?nomo_efa`](https://juhalt.github.io/nomologR/reference/nomo_efa.md)
+    lists `fit`, the
+    [`psych::fa()`](https://rdrr.io/pkg/psych/man/fa.html) result, whose
+    factors keep the labels `psych` gives them, and
+    `reproduced_correlations`.
+    [`?nomo_factors`](https://juhalt.github.io/nomologR/reference/nomo_factors.md)
+    describes `parallel$sensitivity`, the factor count under each
+    parallel-analysis rule. Get started had said that every result keeps
+    the underlying `psych` or `lavaan` object; it now names the six
+    functions whose help pages document the field that holds it.
   - **Other pages.**
     [`?nomo_factors`](https://juhalt.github.io/nomologR/reference/nomo_factors.md)
     defines the three parallel-analysis rules and TR2 and TR4, and
@@ -2318,6 +2364,9 @@ Estimation is not affected.
   - **Wording.** Numbers in the prose are rounded and written as the
     printed output is. Tests read “Delta chi-square(df) = x, p = .xxx”.
     Three or more authors are cited with “et al.”.
+  - **Content review** accounts for all seven items its EFA summary
+    flags: besides the three it discusses, four are flagged for review
+    only for a communality a little below .40.
   - **Hierarchical models** lists Beauducel (2011), Gorsuch (1983), and
     Hancock and Mueller (2001), which it cites, and shows H beside the
     squared determinacy.
@@ -2325,8 +2374,18 @@ Estimation is not affected.
     equivalence interval, and its replication status, which had been
     hidden at 80 columns. It credits the “total aggregation” name to
     Bagozzi and Heatherton (1994).
+  - **Reproducible report** lists every section of the report, adding
+    the five it left out: the scores, the missing-data sensitivity, the
+    revision lineage, the manuscript tables, and the abbreviations.
+    [`?nomo_report`](https://juhalt.github.io/nomologR/reference/nomo_report.md)
+    names the scores, the missing-data sensitivity, and the revision
+    lineage among the report’s contents.
   - **Research basis** gives Koo and Li’s (2016) recommendation as a
     two-way mixed-effects model with absolute agreement.
+  - **Teaching** explains, in the answer to its first exercise, the
+    third flag the reader sees: an item flagged only for a communality
+    within rounding of .40, as `b4` is, shows sampling variability
+    around a teaching reference.
 
 ## nomologR 0.9.0
 

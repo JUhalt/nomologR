@@ -120,7 +120,7 @@
 <li>Which items of a declared scale are reviewed on an item-rest correlation.</li>
 </ul></li>
 <li>
-<strong>Factor retention and EFA.</strong> <code>fm = "minchi"</code> in <code><a href="../reference/nomo_efa.html">nomo_efa()</a></code> and <code><a href="../reference/nomo_factors.html">nomo_factors()</a></code>, and <code><a href="../reference/nomo_efa.html">nomo_efa()</a></code>’s cases per item when item values are missing.</li>
+<strong>Factor retention and EFA.</strong> <code>fm = "minchi"</code> in <code><a href="../reference/nomo_efa.html">nomo_efa()</a></code> and <code><a href="../reference/nomo_factors.html">nomo_factors()</a></code>, and <code><a href="../reference/nomo_efa.html">nomo_efa()</a></code>’s cases per item when item values are missing. The decision-log row for a single numeric-discrete item modeled as continuous reads “1 numeric-discrete item was”, not “were”.</li>
 <li>
 <strong>CFA and model comparison.</strong>
 <ul><li>
@@ -146,9 +146,9 @@
 <li>
 <strong>Invariance.</strong> In <code><a href="../reference/nomo_invariance.html">nomo_invariance()</a></code>: the sequence for ordered-factor columns, the level a release applies from, <code>completed_levels</code>, and the version of the fit statistics under a robust estimator. The decision-log row that counts the score diagnostics is information, no longer a review flag.</li>
 <li>
-<strong>Nomological network.</strong> <code><a href="../reference/nomo_network.html">nomo_network()</a></code>’s concordance values, what its measurement context is judged on, the <code>estimator</code> it records and, for some networks, the fitted model.</li>
+<strong>Nomological network.</strong> <code><a href="../reference/nomo_network.html">nomo_network()</a></code>’s concordance values, what its measurement context is judged on, the <code>estimator</code> and the engine warnings it records and, for some networks, the fitted model.</li>
 <li>
-<strong>Missing data.</strong> The label of a <code><a href="../reference/nomo_missing.html">nomo_missing()</a></code> strategy when lavaan ran another method than the one requested.</li>
+<strong>Missing data.</strong> The label of a <code><a href="../reference/nomo_missing.html">nomo_missing()</a></code> strategy when lavaan ran another method than the one requested. For a network, a standardized association has no leading zero in the decision log, <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>, and <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> (“.151”), as in the network’s own output.</li>
 <li>
 <strong>Guided workflow.</strong> The settings the downstream stages of <code><a href="../reference/nomo_run.html">nomo_run()</a></code> are fitted with, the keying a run takes from a <code>contentvalidR</code> handoff, and what <code><a href="../reference/nomo_revise.html">nomo_revise()</a></code> keeps of that handoff.</li>
 <li>
@@ -419,6 +419,8 @@
 <strong>The validation sample.</strong> Its decision-log rows have the stage <code>"network_validation"</code>.</li>
 <li>
 <strong>Unstandardized bounds.</strong> An <code>unstandardized_metric</code> row names the identification behind an unstandardized bound on a latent variable, which <code><a href="../reference/nomo_expectations.html">?nomo_expectations</a></code> and <code><a href="../reference/nomo_network.html">?nomo_network</a></code> now explain.</li>
+<li>
+<strong>Engine warnings.</strong> A warning lavaan raises while the fit measures of the network or of its measurement model are read, such as lavaan 0.7-3’s “computation of robust CFI resulted in NA values” for a model with no degrees of freedom, is recorded in <code>engine_warnings</code> and as a review row of the decision log, as <code><a href="../reference/nomo_cfa.html">nomo_cfa()</a></code> records it; “NaNs produced”, which negative degrees of freedom explain, is left out, as there. It had been printed at the console, and again by <code>nomo_apa_table(x, "fit")</code> and <code><a href="../reference/nomo_report.html">nomo_report()</a></code>, which read the RMSEA interval from the same fit. It concerns a fit index, not the measurement model, so unlike a warning raised while the model is fitted it does not make the measurement context a review item or qualify the hypothesis interpretations. In <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>, the measurement context’s count of the warnings raised while the model is fitted reads “Estimation warnings”.</li>
 </ul></li>
 </ul></div>
 <div class="section level4">
@@ -543,15 +545,15 @@
 <ul><li>
 <strong>Bartlett’s test.</strong> The supporting-adequacy row reads “Bartlett’s test, p”, since its Value is the p value, beside the KMO statistic.</li>
 <li>
-<strong>Paused runs.</strong> A run that paused before the invariance or network stage says the stage “was not reached”, not that it “was not completed”, which read as though it had been requested.</li>
+<strong>Paused runs.</strong> A run that paused says that each stage it never started, the CFA as well as the network, “was not reached”, not that it “was not completed”, which read as though it had been requested. The stage the run paused at “was not completed”.</li>
 <li>
 <strong>Network hypotheses.</strong> A standardized correlation has no leading zero, as in <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and the APA table, and an estimate just off a bound of its predicted region shows the decimals that tell them apart. The region reads as <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> writes it, “&gt;= 0.20”, not “[0.2, +Inf)”. Elsewhere in the report the estimate reads the same: the theory-concordance rows of the flagged evidence and the full evidence trace give the estimate and its region as the hypotheses table does, and the replication table and the missing-data differences show a standardized association without a leading zero (“.151”, not “0.151”). Among the missing-data differences a factor correlation drops it too, as in <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>.</li>
 <li>
 <strong>Scores.</strong> A validity just below Gorsuch’s .90, or a correlational accuracy just short of .05, shows the decimal that tells them apart, “.903”, as <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> does.</li>
 <li>
-<strong>Settings and logs.</strong> A stage configured with no setting of its own shows “defaults”, not R’s “list()”, and a log value stored as the text TRUE or FALSE reads “yes” or “no”.</li>
+<strong>Settings and logs.</strong> A stage configured with no setting of its own shows “defaults”, not R’s “list()”, and a log’s reference stored as the text TRUE or FALSE reads “yes” or “no”. Other text that reads TRUE or FALSE, such as an item label, is shown as written.</li>
 <li>
-<strong>Intervals.</strong> An interval’s headings carry its level, taken from the result, such as “Omega 90% CI lower” for a reliability interval bootstrapped at 90%, and “Equivalence 90% CI lower” beside the network’s 95% intervals.</li>
+<strong>Intervals.</strong> An interval’s headings carry its level, taken from the result, such as “Omega 90% CI lower” for a reliability interval bootstrapped at 90%, and “Equivalence 90% CI lower” beside the network’s 95% intervals. A reliability analysis run without an interval (<code>ci = "none"</code>) gives no level to the empty bound columns the report names as left out.</li>
 <li>
 <strong>Abbreviations.</strong> The closing table defines every estimator a CFA can name, <code>DWLS</code> among them, in the words <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> uses. Revised MAP (TR4) is defined from the trace of the fourth power of the partial-correlation matrix; the table had called it an average of fourth powers.</li>
 <li>
@@ -588,7 +590,7 @@
 <ul><li>
 <strong>AVE.</strong> An AVE that would round to the review reference shows the decimal that tells them apart, “.497” beside a reference of “.50”, as <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> does. Other cells keep two decimals.</li>
 <li>
-<strong>Sample.</strong> The reliability and validity tables give the estimator and the number of cases analyzed, as the other tables do; their notes had given neither. Every table whose model used full-information maximum likelihood says so, since <em>N</em> then counts the incomplete cases. A table from a WLSMV fit names WLSMV, not the <code>DWLS</code> lavaan files it under.</li>
+<strong>Sample.</strong> The reliability and validity tables give the estimator and the number of cases analyzed, as the other tables do; their notes had given neither. Every table whose model used full-information maximum likelihood on data with incomplete cases says so, since <em>N</em> then counts them. With no missing values, there is no such sentence. A table from a WLSMV fit names WLSMV, not the <code>DWLS</code> lavaan files it under.</li>
 <li>
 <strong>Improper solutions.</strong> When lavaan’s admissibility check did not pass, as with a negative variance estimate, the note of a CFA, reliability, or validity table says so, as <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> does. A standardized loading that is not finite is explained as such; the note had called it “not estimated”, though lavaan estimated it.</li>
 </ul></li>
@@ -686,7 +688,7 @@
 <li>
 <strong><code><a href="../reference/nomo_factors.html">nomo_factors()</a></code> and <code><a href="../reference/nomo_efa.html">nomo_efa()</a></code>.</strong> Agreement between two criteria is no longer called “strong converging evidence”, and zero factors has its own text. Bartlett’s test is written as other tests are, and is marked approximate for non-Pearson correlations. Percentiles read as ordinals (“93rd”). When original and revised MAP disagree, the review flag says so and gives both counts (“The two MAP forms disagree: revised MAP (TR4) reaches its minimum at 1 factor, original MAP (TR2) at 0.”). In the EFA, checks of the solution itself, such as identification or convergence, are listed under “Flagged”, each under what it checks (“- Identification (Concern): …”) or the item of a Heywood case.</li>
 <li>
-<strong><code><a href="../reference/nomo_cfa.html">nomo_cfa()</a></code> and <code><a href="../reference/nomo_compare.html">nomo_compare()</a></code>.</strong> The chi-square line says which test it is, such as the Yuan-Bentler scaled test statistic. The summary of a CFA that did not converge shows no loadings, correlations, or fit. Correlations a model fixes, such as a bifactor model’s zeros, are named as fixed. Pairs read “A vs. B”. A weak loading’s flag is worded as <code><a href="../reference/nomo_validity.html">nomo_validity()</a></code> words it, “Standardized loading 0.34 is below the review reference 0.50 in absolute value”, so a guided run lists the two flags on one bullet. The summary’s residual correlations drop the leading zero, as in the EFA.</li>
+<strong><code><a href="../reference/nomo_cfa.html">nomo_cfa()</a></code> and <code><a href="../reference/nomo_compare.html">nomo_compare()</a></code>.</strong> The chi-square line says which test it is, such as the Yuan-Bentler scaled test statistic. The summary of a CFA that did not converge shows no loadings, correlations, or fit. Correlations a model fixes, such as a bifactor model’s zeros, are named as fixed. Pairs read “A vs. B”. A weak loading’s flag is worded as <code><a href="../reference/nomo_validity.html">nomo_validity()</a></code> words it, “Standardized loading 0.34 is below the review reference 0.50 in absolute value”, so a guided run lists the two flags on one bullet. The summary’s residual correlations drop the leading zero, as in the EFA. In the comparison’s measurement evidence, a reliability, AVE, or HTMT2 value that would round to its review reference shows the decimal that tells them apart, “.497” beside an AVE reference of “.50”, as <code><a href="../reference/nomo_validity.html">nomo_validity()</a></code> prints it.</li>
 <li>
 <strong><code><a href="../reference/nomo_model.html">nomo_model()</a></code>.</strong> <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> starts with a <code>&lt;nomo_model&gt;</code> header and wraps its identification notes.</li>
 <li>
@@ -694,7 +696,7 @@
 <li>
 <strong><code><a href="../reference/nomo_invariance.html">nomo_invariance()</a></code>.</strong> The tables are headed “Fit by level”, “CFI change”, and “Delta chi-square”. The fit table has no cumulative “Constraints” column, which had pushed RMSEA and SRMR out at 80 columns; a line beneath it says what each level adds, such as <code>Held equal: loadings from metric; intercepts from scalar, except ag3 ~ 1.</code> The fit and change plots angle the level names, and the local-strain plot gives each level its own panel.</li>
 <li>
-<strong><code><a href="../reference/nomo_network.html">nomo_network()</a></code> and <code><a href="../reference/nomo_hypotheses.html">nomo_hypotheses()</a></code>.</strong> Shorter status words, such as “In region, imprecise” and “Replicated”, keep the status columns on an 80-column console. A <code><a href="../reference/nomo_expectations.html">negligible()</a></code> prediction shows the equivalence interval its concordance is judged on, post hoc predictions are marked “(post hoc)”, and a bare <code><a href="../reference/nomo_expectations.html">negligible()</a></code> draws no theory-compatible band. A flag about a relation names it as its unit, as in “- Agency &lt;-&gt; Persistence (Review): The relation …”, without backticks, and relations with one explanation share a bullet. <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> counts every flag the object holds (“Total flags: 0 concern, 4 review”), also those it leaves to the hypothesis tables and to <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>. When standardized and unstandardized hypotheses are mixed, the effects plot draws each scale in a panel with its own axis.</li>
+<strong><code><a href="../reference/nomo_network.html">nomo_network()</a></code> and <code><a href="../reference/nomo_hypotheses.html">nomo_hypotheses()</a></code>.</strong> Shorter status words, such as “In region, imprecise” and “Replicated”, keep the status columns on an 80-column console. A <code><a href="../reference/nomo_expectations.html">negligible()</a></code> prediction shows the equivalence interval its concordance is judged on, post hoc predictions are marked “(post hoc)”, and a bare <code><a href="../reference/nomo_expectations.html">negligible()</a></code> draws no theory-compatible band. A flag about a relation names it as its unit, as in “- Agency &lt;-&gt; Persistence (Review): The relation …”, without backticks, and relations with one explanation share a bullet. <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> counts every flag the object holds (“Total flags: 0 concern, 4 review”), also those it leaves to the hypothesis tables and to <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>; with none, it reads “Total flags: no flags”, as the measurement context and model fit beside it do. When standardized and unstandardized hypotheses are mixed, the effects plot draws each scale in a panel with its own axis.</li>
 <li>
 <strong><code><a href="../reference/nomo_scores.html">nomo_scores()</a></code> and <code><a href="../reference/nomo_missing.html">nomo_missing()</a></code>.</strong> The parallel-model test is printed once, as in “Delta chi-square(16) = 171.84, p &lt; .001”, and each note is one bullet per factor under “Flagged”.</li>
 <li>
@@ -901,6 +903,8 @@ The log explains what the marker must be: theoretically unrelated to the constru
 <li>
 <strong>Seeds.</strong> <code><a href="../reference/nomo_reliability.html">?nomo_reliability</a></code> (<code>ci_seed</code>) and <code><a href="../reference/nomo_split.html">?nomo_split</a></code> (<code>seed</code>) say that the session’s random-number state is restored afterwards, as <code><a href="../reference/nomo_factors.html">?nomo_factors</a></code> and <code><a href="../reference/nomo_power_simulate.html">?nomo_power_simulate</a></code> did.</li>
 <li>
+<strong>Fields the README and the articles read.</strong> <code><a href="../reference/nomo_efa.html">?nomo_efa</a></code> lists <code>fit</code>, the <code><a href="https://rdrr.io/pkg/psych/man/fa.html" class="external-link">psych::fa()</a></code> result, whose factors keep the labels <code>psych</code> gives them, and <code>reproduced_correlations</code>. <code><a href="../reference/nomo_factors.html">?nomo_factors</a></code> describes <code>parallel$sensitivity</code>, the factor count under each parallel-analysis rule. Get started had said that every result keeps the underlying <code>psych</code> or <code>lavaan</code> object; it now names the six functions whose help pages document the field that holds it.</li>
+<li>
 <strong>Other pages.</strong> <code><a href="../reference/nomo_factors.html">?nomo_factors</a></code> defines the three parallel-analysis rules and TR2 and TR4, and <code><a href="../reference/nomo_efa.html">?nomo_efa</a></code> lists the rotations it accepts. <code><a href="../reference/nomo_invariance.html">?nomo_invariance</a></code> says that the reference group is the one that appears first in <code>data</code>. <code><a href="../reference/nomo_hierarchical.html">?nomo_hierarchical</a></code> says that H equals the squared determinacy for unidimensional data. <code><a href="../reference/nomo_methods.html">?nomo_methods</a></code> lists <code>"scores"</code> among its stages and says that the result is an ordinary tibble.</li>
 </ul></li>
 <li>
@@ -910,11 +914,17 @@ The log explains what the marker must be: theoretically unrelated to the constru
 <ul><li>
 <strong>Wording.</strong> Numbers in the prose are rounded and written as the printed output is. Tests read “Delta chi-square(df) = x, p = .xxx”. Three or more authors are cited with “et al.”.</li>
 <li>
+<strong>Content review</strong> accounts for all seven items its EFA summary flags: besides the three it discusses, four are flagged for review only for a communality a little below .40.</li>
+<li>
 <strong>Hierarchical models</strong> lists Beauducel (2011), Gorsuch (1983), and Hancock and Mueller (2001), which it cites, and shows H beside the squared determinacy.</li>
 <li>
 <strong>Nomological network</strong> shows each prediction’s classification, its equivalence interval, and its replication status, which had been hidden at 80 columns. It credits the “total aggregation” name to Bagozzi and Heatherton (1994).</li>
 <li>
+<strong>Reproducible report</strong> lists every section of the report, adding the five it left out: the scores, the missing-data sensitivity, the revision lineage, the manuscript tables, and the abbreviations. <code><a href="../reference/nomo_report.html">?nomo_report</a></code> names the scores, the missing-data sensitivity, and the revision lineage among the report’s contents.</li>
+<li>
 <strong>Research basis</strong> gives Koo and Li’s (2016) recommendation as a two-way mixed-effects model with absolute agreement.</li>
+<li>
+<strong>Teaching</strong> explains, in the answer to its first exercise, the third flag the reader sees: an item flagged only for a communality within rounding of .40, as <code>b4</code> is, shows sampling variability around a teaching reference.</li>
 </ul></li>
 </ul></div>
 </div>

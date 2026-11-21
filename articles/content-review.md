@@ -319,7 +319,13 @@ summary(efa)
 #> nomo_table(x, "decision_log") for every recorded decision.
 ```
 
-Three items stand apart:
+The summary flags seven items. Four of them, `EF6`, `TF2`, `TF3`, and
+`TF6`, are flagged for review only because each communality falls a
+little below the .40 reference. Their population loadings of 0.60 to
+0.66 (see
+[`?nomo_demo_walkthrough`](https://juhalt.github.io/nomologR/reference/nomo_demo_walkthrough.md))
+put their communalities near that reference, and a review flag asks for
+a look, not a verdict. Three items stand apart:
 
 - `EF4` has almost no common variance, as the screen suggested.
 - `EF3` loads weakly as well. Its answers are piled at the top of the

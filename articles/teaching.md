@@ -57,6 +57,12 @@ and 0.35 on B, so its secondary loading is flagged. Neither flag is an
 instruction to delete the item. Ask what each item’s content covers, and
 whether the scale needs it.
 
+An item flagged only for a communality within rounding of the .40
+reference shows sampling variability around a teaching reference, not a
+problem built into the data. With this sample, `b4` is one: its
+communality falls just below .40, although its population loading is
+0.70.
+
 ## 2. How many factors?
 
 Do the factor-retention criteria agree, and does agreement prove the

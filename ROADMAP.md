@@ -321,7 +321,7 @@ certification and R-universe publication.
 
 ------------------------------------------------------------------------
 
-# v0.3.0 — First CRAN Release
+# v0.3.0 — First CRAN Submission
 
 **Status:** Released September 26, 2026 ([v0.3.0
 milestone](https://github.com/JUhalt/nomologR/milestone/3)), with scope
@@ -336,7 +336,7 @@ submission on 2026-10-08 with two requests, recorded in
 
 [\#39](https://github.com/JUhalt/nomologR/issues/39) First CRAN
 submission; see
-[Distribution](#distribution--r-universe-and-cran-from-v030) below.
+[Distribution](#distribution--r-universe-and-cran-after-100) below.
 Spelling, URLs, build exclusions, and test time under CRAN conditions
 were done for 0.3.0. CRAN returned it with two requests, both since met,
 and \#39 was closed on 2026-11-20. The resubmission is
@@ -522,7 +522,7 @@ Multitrait-multimethod models.
 
 ------------------------------------------------------------------------
 
-# Distribution — R-universe, and CRAN from v0.3.0
+# Distribution — R-universe, and CRAN after 1.0.0
 
 Stable releases are published as GitHub releases.
 [R-universe](https://juhalt.r-universe.dev) builds each release, usually

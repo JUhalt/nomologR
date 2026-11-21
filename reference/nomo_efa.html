@@ -183,10 +183,18 @@ item pair, the effective sample size under pairwise deletion. It equals
 <code>n_cases</code> when no item value is missing or <code>missing = "complete"</code>.</p></li>
 <li><p><code>correlation_method</code> and <code>correlation_matrix</code>: the correlations analyzed.</p></li>
 <li><p><code>pattern_matrix</code>, <code>structure_matrix</code>, and <code>factor_correlations</code>.</p></li>
+<li><p><code>fit</code>: the unchanged <code><a href="https://rdrr.io/pkg/psych/man/fa.html" class="external-link">psych::fa()</a></code> result, for anything else <code>psych</code>
+reports. Its factors are the columns of <code>pattern_matrix</code>, in the same
+order, under the labels <code>psych</code> gives them, so <code>F1</code> may be <code>MR2</code>.</p></li>
 <li><p><code>communalities</code>, <code>uniquenesses</code>, and <code>complexity</code>.</p></li>
 <li><p><code>item_summary</code>: one row per item, with its primary and secondary
 loadings, communality, flags, and the explanation of any flag.</p></li>
-<li><p><code>residual_matrix</code>, <code>residual_pairs</code>, and <code>rmsr</code>: local misfit.</p></li>
+<li><p><code>reproduced_correlations</code>: the correlations the solution implies, the
+pattern matrix times the factor correlations times the transposed
+pattern matrix. Its diagonal holds the communalities.</p></li>
+<li><p><code>residual_matrix</code>, <code>residual_pairs</code>, and <code>rmsr</code>: local misfit.
+<code>residual_matrix</code> is <code>correlation_matrix</code> minus
+<code>reproduced_correlations</code>, with zeros on the diagonal.</p></li>
 <li><p><code>sample_adequacy</code>: <code>n_cases</code>, <code>min_pairwise_n</code>, <code>n_items</code>,
 <code>cases_per_item</code> (<code>min_pairwise_n</code> divided by <code>n_items</code>), <code>kmo</code>, and
 <code>bartlett</code>.</p></li>

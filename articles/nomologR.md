@@ -169,8 +169,17 @@ the scale “has” two factors.
   published work — eigenvalues greater than one, coefficient alpha, the
   Fornell–Larcker comparison — are shown as context where useful,
   qualified, and kept separate from contemporary evidence.
-- **Engine results are never hidden.** Every result keeps the underlying
-  `psych` or `lavaan` object (usually in `$fit`) for direct inspection.
+- **Engine results are never hidden.** The fitted `psych` or `lavaan`
+  model stays in the result for direct inspection: in `$fit` for
+  [`nomo_efa()`](https://juhalt.github.io/nomologR/reference/nomo_efa.md),
+  [`nomo_cfa()`](https://juhalt.github.io/nomologR/reference/nomo_cfa.md),
+  and
+  [`nomo_network()`](https://juhalt.github.io/nomologR/reference/nomo_network.md),
+  and in `$fits` for
+  [`nomo_esem()`](https://juhalt.github.io/nomologR/reference/nomo_esem.md),
+  [`nomo_invariance()`](https://juhalt.github.io/nomologR/reference/nomo_invariance.md),
+  and
+  [`nomo_method_variance()`](https://juhalt.github.io/nomologR/reference/nomo_method_variance.md).
 - **Decisions are recorded.** Each result carries a decision log, and
   [`nomo_run()`](https://juhalt.github.io/nomologR/reference/nomo_run.md)
   records the researcher’s decisions and rationales across stages.

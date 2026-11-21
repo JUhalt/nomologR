@@ -167,6 +167,10 @@ An object of class `nomo_factors`. The fields to read are:
 - `kmo` and `bartlett`: sampling-adequacy evidence.
 
 - `parallel`, `map`, and `scree`: each criterion's result.
+  `parallel$sensitivity` has one row per parallel-analysis rule: `rule`
+  (`"percentile"`, `"mean"`, and `"crawford"`), `n_factors`, the count
+  that rule suggests, and `selected`, which is `TRUE` for
+  `parallel_rule`.
 
 - `criterion_status`: which criteria ran, and why any did not.
 

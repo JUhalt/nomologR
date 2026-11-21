@@ -1450,13 +1450,14 @@ named. The reader is tested against handoffs from `contentvalidR` 0.6.0
 through 0.10.1. They are generated from each release tag and stored with
 their checksums, and neither package depends on the other.
 
-For more, see: -
-[`vignette("content-review")`](https://juhalt.github.io/nomologR/articles/content-review.md),
-which carries one reviewed item set through the screen; -
-`contentvalidR`’s [handoff
-guide](https://juhalt.github.io/contentvalidR/articles/handoff-to-empirical-validation.html)
-and its [joint
-walkthrough](https://juhalt.github.io/contentvalidR/articles/one-item-set-both-stages.html).
+For more, see:
+
+- [`vignette("content-review")`](https://juhalt.github.io/nomologR/articles/content-review.md),
+  which carries one reviewed item set through the screen;
+- `contentvalidR`’s [handoff
+  guide](https://juhalt.github.io/contentvalidR/articles/handoff-to-empirical-validation.html)
+  and its [joint
+  walkthrough](https://juhalt.github.io/contentvalidR/articles/one-item-set-both-stages.html).
 
 ## Stability
 
