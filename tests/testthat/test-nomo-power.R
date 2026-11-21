@@ -151,19 +151,20 @@ test_that("a Monte Carlo study reports recovery and power at each sample size", 
   expect_match(printed, "Replications: 12 per N", fixed = TRUE, all = FALSE)
   # Whether an N meets the references follows the stub, and convergence,
   # improper solutions, and biases are right-aligned percentages, as the
-  # references for bias are (#89, #144).
-  expect_match(printed, "^ +60 +(yes|no) +[0-9.]+% +[0-9.]+% +[0-9.]+ +[0-9.]+% +[0-9.]+% ",
+  # references for bias are (#89, #144). The cell is in sentence case (guide
+  # point 18; #145).
+  expect_match(printed, "^ +60 +(Yes|No) +[0-9.]+% +[0-9.]+% +[0-9.]+ +[0-9.]+% +[0-9.]+% ",
                all = FALSE)
   expect_match(printed, "Max bias, Max SE bias -- Largest absolute relative bias",
                fixed = TRUE, all = FALSE)
   expect_false(any(nchar(printed) > 80L))
   # Coverage is a range, and a missing bound leaves the whole cell missing,
   # never half a range such as "---0.95" (#145).
-  expect_match(printed, "^ +300 +(yes|no) .* [.][0-9]{2} to (1[.]00|[.][0-9]{2})$", all = FALSE)
+  expect_match(printed, "^ +300 +(Yes|No) .* [.][0-9]{2} to (1[.]00|[.][0-9]{2})$", all = FALSE)
   half <- pw
   half$summary$min_coverage[[1L]] <- NA_real_
   shown <- capture.output(print(half))
-  expect_match(shown, "^ +60 +(yes|no) .* --$", all = FALSE)
+  expect_match(shown, "^ +60 +(Yes|No) .* --$", all = FALSE)
   expect_false(any(grepl("---", shown, fixed = TRUE)))
 
   # The tables are reached through nomo_table(), by sample size by default

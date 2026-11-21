@@ -1068,7 +1068,7 @@ test_that("a sentence's end is found without breaking a citation's page (#145)",
   expect_identical(first("Validity is below .90 for B. Gorsuch (1983, p. 260) recommended."),
                    "Validity is below .90 for B.")
   expect_identical(first("One sentence only."), "One sentence only.")
-  bound <- nomologR:::nomo_scores_bind("Delta chi-square(2) = 3.00 and (1983, p. 260)")
+  bound <- nomologR:::nomo_present_bind("Delta chi-square(2) = 3.00 and (1983, p. 260)")
   expect_false(grepl("Delta chi-square", bound, fixed = TRUE))
   expect_false(grepl("p. 2", bound, fixed = TRUE))
 })

@@ -683,6 +683,18 @@ test_that("nomo_run respects nomo_split sample roles", {
     out$sample_n$n[out$sample_n$role == "confirmatory"],
     split$n_validation
   )
+  # The samples are named as nomo_split() names them (#145, out-5).
+  local_reproducible_output(width = 80)
+  printed <- capture.output(print(out))
+  expect_match(printed, "Sample design: calibration and validation samples", fixed = TRUE,
+               all = FALSE)
+  expect_true(sprintf("Calibration cases: %d | Validation cases: %d | Scales: 1",
+                      split$n_calibration, split$n_validation) %in% printed)
+  expect_false(any(grepl("calibration validation|Exploratory cases", printed)))
+  decisions <- gsub("[[:space:]]+", " ",
+                    paste(capture.output(print(summary(out))), collapse = " "))
+  expect_match(decisions, "sample_design (design, researcher input): calibration and validation samples.",
+               fixed = TRUE)
 })
 
 
@@ -2037,6 +2049,13 @@ test_that("the missing-data log names only the strategies that were fitted (#145
   expect_match(row$observation, "could be fitted under listwise deletion only", fixed = TRUE)
   expect_identical(row$consequence,
                    "The fitted model and its results are unchanged, and there is no refit to compare.")
+  # Complete data are not a fitting failure (#145, out-1).
+  expect_true(paste("Missing-data sensitivity: no modeled variable of the measurement model",
+                    "has missing values, so no strategies were compared") %in%
+                nomologR:::nomo_run_key_evidence(run))
+  expect_false(any(grepl("could be fitted", nomologR:::nomo_run_key_evidence(run))))
+  # Incomplete data that only one strategy could fit still say so.
+  run$results$missing$cfa$pattern$n_incomplete <- 5L
   expect_true(paste("Missing-data sensitivity: only one strategy could be fitted for the",
                     "measurement model") %in% nomologR:::nomo_run_key_evidence(run))
 })
@@ -2267,6 +2286,35 @@ test_that("the summary lists each component flag where it was raised (#144)", {
     c(TRUE, FALSE, FALSE, FALSE)
   )
 
+  # A network flag about a relation names the relation, and the sample it
+  # comes from, and reads as the network's own print() gives it: without
+  # backticks around the relation, and "Each relation" when two share it. A
+  # relation keeps its own case (#145, out-11).
+  log <- tibble::tibble(
+    pipeline_component = "network", pipeline_scope = "workflow",
+    stage = c("network", "network", "network", "network_validation", "network_replication",
+              "network"),
+    object = c("A <-> B", "C <-> D", "ag -> pe", "ag -> pe", "ag -> pe", "primary"),
+    severity = c("review", "review", "review", "review", "concern", "review"),
+    observation = c("`A <-> B` is fixed to zero; `B` is an outcome.",
+                    "`C <-> D` is fixed to zero; `B` is an outcome.",
+                    "The interval is wide.", "The interval is wide.", "The samples disagree.",
+                    "`lavaan` warned.")
+  )
+  out <- utils::capture.output(nomologR:::nomo_run_present_flagged(log, scales))
+  flat <- gsub("\\s+", " ", paste(out, collapse = " "))
+  expect_match(flat, paste(
+    "- ag -> pe in the network's replication (Concern): The samples disagree.",
+    "- A <-> B in the network, C <-> D in the network (Review): Each relation is fixed",
+    "to zero; `B` is an outcome.",
+    "- ag -> pe in the network, ag -> pe in the network's validation sample (Review):",
+    "The interval is wide. - The network (Review): `lavaan` warned."
+  ), fixed = TRUE)
+  expect_false(grepl("`A <-> B`|`C <-> D`|`ag -> pe`", flat))
+  # One relation's bullet says "The relation".
+  out <- utils::capture.output(nomologR:::nomo_run_present_flagged(log[1L, ], scales))
+  expect_identical(out[[3L]], "  - A <-> B in the network (Review): The relation is fixed to zero; `B` is an")
+
   skip_on_cran()
   # A factor named differently from its scale, with an indicator no scale supplied.
   run <- nomo_run(nomo_demo_network, list(Agency = paste0("ag", 1:4)),
@@ -2274,9 +2322,12 @@ test_that("the summary lists each component flag where it was raised (#144)", {
                   decisions = list(factor_count = c(Agency = 1L),
                                    cfa_model = "AG =~ ag1 + ag2 + ag3 + ag4 + sd1"))
   s <- utils::capture.output(print(summary(run)))
-  expect_true(any(startsWith(s, "  - sd1 in the CFA (Review): Absolute standardized loading is")))
-  expect_true(any(startsWith(s, "  - sd1 in validity (Review): Standardized loading 0.00 is below")))
-  expect_true(any(startsWith(s, "  - AG in validity (Review): AVE (.47) is below")))
+  # The CFA and validity word a weak loading alike, so its two flags share a
+  # bullet, and the AVE reads as print() of the validity object gives it
+  # (#145, out-7 and the R-0b sweep).
+  expect_true(any(startsWith(s, "  - sd1 in the CFA, sd1 in validity (Review): Standardized loading")))
+  expect_false(any(grepl("Absolute standardized loading is below", s, fixed = TRUE)))
+  expect_true(any(startsWith(s, "  - AG in validity (Review): AVE .47 is below the review")))
 })
 
 

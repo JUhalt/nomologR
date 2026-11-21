@@ -2479,12 +2479,33 @@ test_that("a minimal criterion set neither shows nor logs revised MAP (#145, fac
 
   core <- nomo_factors(make_cov_final_data(), n_iter = 10, seed = 9431)
   expect_true(any(core$decision_log$metric == "map_revised"))
+  # The revised-MAP row says whether the two forms agree, and a review names
+  # both counts, so the flag states what is flagged (#145, out-8).
+  sd_items <- nomo_factors(nomo_demo_network[c("sd1", "sd2", "sd3")], n_iter = 10, seed = 2026)
+  map_rows <- sd_items$decision_log[sd_items$decision_log$metric == "map_revised", ]
+  expect_identical(c(sd_items$map$n_factors_original, sd_items$map$n_factors_revised), c(0L, 1L))
+  expect_identical(map_rows$severity, "review")
+  expect_identical(
+    map_rows$observation,
+    "The two MAP forms disagree: revised MAP (TR4) reaches its minimum at 1 factor, original MAP (TR2) at 0."
+  )
+  ab <- nomo_factors(nomo_demo_continuous[c(paste0("a", 1:5), paste0("b", 1:5))],
+                     n_iter = 10, seed = 2026)
+  expect_identical(ab$decision_log$observation[ab$decision_log$metric == "map_revised"],
+                   "Revised MAP (TR4) reaches its minimum at 2 factors, as original MAP (TR2) does.")
   expect_match(capture.output(print(core)), "MAP: [0-9]+ \\(TR2\\), [0-9]+ \\(TR4\\)", all = FALSE)
   expect_match(capture.output(print(summary(core))), "TR4, the revised", all = FALSE)
   map <- plot(core, type = "map")
   expect_identical(levels(map$data$criterion), c("Original MAP (TR2)", "Revised MAP (TR4)"))
   expect_match(map$labels$subtitle, "| Revised TR4 minimum: ", fixed = TRUE)
-  expect_match(plot_text(map$labels$caption), "TR4 their fourth powers", fixed = TRUE)
+  # Revised MAP is a matrix power, as the code and the registry say (#145).
+  expect_match(plot_text(map$labels$caption),
+               "TR4 is based on the trace of the fourth power of the partial-correlation matrix",
+               fixed = TRUE)
+  key <- paste(capture.output(print(summary(core))), collapse = " ")
+  expect_match(gsub("[[:space:]]+", " ", key),
+               "TR4, the revised, is the trace of the fourth power of the partial-correlation matrix",
+               fixed = TRUE)
   # TR2 is bounded, so its axis drops the leading zero; TR4 can exceed 1.
   map_labels <- nomologR:::nomo_factors_map_labels
   expect_identical(map_labels(c(0, 0.25, 0.5, NA)), c("0", ".25", ".50", NA))
@@ -2740,7 +2761,7 @@ test_that("the summary lists the decision log's flags, each with its reference (
 
   local_reproducible_output(width = 80)
   printed <- gsub("\\s+", " ", paste(capture.output(print(out)), collapse = " "))
-  expect_match(printed, "Flags: [0-9]+ review, [1-9] concern")
+  expect_match(printed, "Flags: [1-9] concern, [0-9]+ review")
   summarized <- capture.output(print(summary(out)))
   expect_true("Flagged" %in% summarized)
   expect_match(summarized, "^  - Concern: Overall KMO = ", all = FALSE)

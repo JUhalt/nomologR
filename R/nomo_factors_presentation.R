@@ -57,7 +57,7 @@ print.nomo_factors <- function(x, ...) {
   ))
 
   cat("\n")
-  nomo_present_text(nomo_factors_bind_calls(x$recommendation))
+  nomo_present_text(x$recommendation)
   nomo_present_pointer("summary(x)", "the evidence by method and the criteria that did not run")
   invisible(x)
 }
@@ -101,13 +101,6 @@ nomo_factors_method_counts <- function(x) {
     families = if (is.null(x$family_evidence)) recommended else nrow(x$family_evidence),
     skipped = sum(status$status == "skipped")
   )
-}
-
-
-# A call named in the synthesis, such as nomo_table(x, "criteria"), is kept on
-# one line when the text is wrapped.
-nomo_factors_bind_calls <- function(text) {
-  gsub("(\\w+\\(x,) ", paste0("\\1", nomo_present_nbsp), text)
 }
 
 
@@ -264,11 +257,11 @@ print.summary_nomo_factors <- function(x, ...) {
 
   # Review and concern rows of the decision log, with what to do about each.
   flags <- nomo_factors_flag_rows(x$decision_log)
-  nomo_present_flagged(unit = NULL, status = flags$severity,
-                       text = paste(flags$observation, flags$recommendation))
+  nomo_present_flagged(unit = NULL, status = flags$severity, text = flags$observation,
+                       recommendation = flags$recommendation)
 
   nomo_present_section("Synthesis")
-  nomo_present_text(nomo_factors_bind_calls(x$recommendation), indent = 2L)
+  nomo_present_text(x$recommendation, indent = 2L)
 
   nomo_present_key(nomo_factors_key(status), title = "Abbreviations")
 
@@ -307,7 +300,11 @@ nomo_factors_key <- function(status) {
     MAP = paste(
       "Minimum average partial criterion (Velicer). TR2, the original, averages",
       if ("map_revised" %in% requested) {
-        "squared partial correlations; TR4, the revised, averages fourth powers."
+        paste(
+          "squared partial correlations; TR4, the revised, is the trace of the",
+          "fourth power of the partial-correlation matrix, less the number of",
+          "items p, over p(p - 1), and can exceed 1."
+        )
       } else {
         "squared partial correlations."
       }
@@ -592,7 +589,8 @@ plot.nomo_factors <- function(x,
         },
         caption = if (revised) {
           paste(
-            "TR2 averages the squared partial correlations and TR4 their fourth powers.",
+            "TR2 averages the squared partial correlations; TR4 is based on the trace of",
+            "the fourth power of the partial-correlation matrix and can exceed 1.",
             "The highlighted minimum is the count each variant suggests; smaller values",
             "are preferred. The two have different scales, so the panels use separate",
             "y-axes."

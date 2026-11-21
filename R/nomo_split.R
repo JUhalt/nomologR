@@ -184,15 +184,6 @@ nomo_split <- function(data,
 }
 
 
-# TRUE for one finite whole number that fits R's integer range. Testing the
-# range first keeps as.integer() from turning 1e10 into NA, which made the
-# argument checks fail with a base-R error rather than their own (#145).
-nomo_is_whole_number <- function(x) {
-  is.numeric(x) && length(x) == 1L && !is.na(x) && is.finite(x) &&
-    abs(x) <= .Machine$integer.max && x == round(x)
-}
-
-
 #' @export
 print.nomo_split <- function(x, ...) {
   nomo_present_header("nomo_split", "Calibration and validation split")

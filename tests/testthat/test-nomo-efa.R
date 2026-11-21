@@ -156,6 +156,8 @@ test_that("presentation methods return stable user-facing objects", {
 
   expect_output(print(out), "No item was\\s+deleted and no model was refit automatically")
   expect_output(print(summary(out)), "Item structure")
+  # The reference is a review reference, as in the item flags (#145, out-7).
+  expect_output(print(summary(out)), "No item reached a review reference.", fixed = TRUE)
 })
 
 # ---- recovered from hygiene consolidation: test-nomo-efa.R ----
@@ -1220,14 +1222,19 @@ test_that("a Heywood case and a non-converged extraction are recorded, not swall
   # psych's own warning is kept on the object but not repeated in the log.
   expect_false(any(out$decision_log$metric == "engine_warnings"))
 
+  # The checks of the solution are flagged as every other flag is, each under
+  # its item or what it checks, in one Flagged section (#145, out-11).
   printed <- capture.output(print(out))
-  expect_true("Solution checks" %in% printed)
-  expect_match(printed, "^  - Concern: The communality of a1 is 1.0001", all = FALSE)
+  expect_true("Flagged" %in% printed)
+  expect_false("Solution checks" %in% printed)
+  expect_match(printed, "^  - a1 \\(Concern\\): The communality of a1 is 1.0001", all = FALSE)
   # The summary shows it with its item, as a concern beside its communality.
   summarized <- capture.output(print(summary(out)))
   expect_match(summarized, "^  a1 .* 1\\.0001  Concern$", all = FALSE)
   expect_match(summarized, "^  - a1 \\(Concern\\): The communality is 1.0001, so its unique", all = FALSE)
-  expect_true("Solution checks" %in% summarized)
+  expect_false("Solution checks" %in% summarized)
+  expect_identical(sum(summarized == "Flagged"), 1L)
+  expect_match(summarized, "^  - Identification \\((Review|Concern)\\): ", all = FALSE)
   expect_false(any(grepl("communality of a1", summarized, fixed = TRUE)))
 
   # Principal axis factoring stops at its iteration limit here.
@@ -1331,8 +1338,9 @@ test_that("models the correlations cannot identify are flagged (#145, efa-3)", {
   expect_identical(row$severity, "concern")
   expect_match(row$observation, "^3 factors on 4 items leave -3 degrees of freedom: more parameters")
   expect_match(row$recommendation, "Fit fewer factors", fixed = TRUE)
-  expect_match(paste(capture.output(print(three)), collapse = " "),
-               "Concern: 3 factors on 4 items leave -3 degrees of freedom", fixed = TRUE)
+  expect_match(gsub("\\s+", " ", paste(capture.output(print(three)), collapse = " ")),
+               "Identification (Concern): 3 factors on 4 items leave -3 degrees of freedom",
+               fixed = TRUE)
 
   two <- nomo_efa(dat, factors = 2)
   expect_identical(two$decision_log$value[two$decision_log$metric == "identification"], -1)
@@ -1447,15 +1455,19 @@ test_that("flag explanations are sentences that tell a value from its reference 
   )
   expect_identical(
     s$explanation[s$item == "near"],
-    paste("The primary loading, 0.3996 in absolute value, is below the 0.40 teaching",
-          "reference. The communality, .3997, is below the .40 teaching reference.")
+    paste("The primary loading, 0.3996 in absolute value, is below the review reference",
+          "0.40. The communality, .3997, is below the review reference .40.")
   )
   expect_identical(
     s$explanation[s$item == "cross"],
-    paste("The secondary loading, 0.3004 in absolute value, is at or above the 0.30",
-          "cross-loading reference.")
+    paste("The secondary loading, 0.3004 in absolute value, is at or above the",
+          "cross-loading review reference 0.30.")
   )
-  expect_match(s$explanation[s$item == "good"], "^No loading or communality reaches")
+  # A reference is called a review reference, as the CFA and validity logs
+  # call it (#145, out-7).
+  expect_identical(s$explanation[s$item == "good"],
+                   "No loading or communality reaches a review reference; examine the content as usual.")
+  expect_false(any(grepl("teaching", s$explanation, fixed = TRUE)))
   expect_false(any(grepl("|", s$explanation, fixed = TRUE)))
   expect_false(any(grepl("meets/exceeds", s$explanation, fixed = TRUE)))
 })

@@ -645,7 +645,7 @@ test_that("CFA print method handles engine labels, warnings, and unavailable val
   expect_false(any(grepl("Fit:", txt, fixed = TRUE)))
   # The flags count what did not converge and lavaan's warning, not loadings
   # computed from an unconverged fit.
-  expect_true(any(grepl("Flags: 1 review, 1 concern", txt, fixed = TRUE)))
+  expect_true(any(grepl("Flags: 1 concern, 1 review", txt, fixed = TRUE)))
 
   out$estimator <- NA_character_
   out$estimator_engine <- NA_character_
@@ -691,6 +691,9 @@ test_that("summary printer covers flagged and diagnostic sections", {
   # An improper-solution signal of an unknown kind is named in words.
   expect_true(any(grepl("^  x1 +Synthetic heywood +-0.10$", txt)))
   expect_true(any(grepl("Largest residual correlations", txt, fixed = TRUE)))
+  # Residual correlations drop the leading zero, as the EFA's do (#145).
+  residuals <- txt[(which(grepl("^  Item 1 +Item 2 +Residual$", txt)) + 1L):length(txt)][1:3]
+  expect_true(all(grepl(" -?[.][0-9]{2}$", residuals)))
   expect_true(any(grepl("Modification indices (diagnostic only)", txt, fixed = TRUE)))
   expect_true(any(grepl("no single cutoff establishes model validity", txt, fixed = TRUE)))
 })
@@ -1562,7 +1565,8 @@ test_that("references are written as the values they are compared with (#144)", 
   out <- nomo_cfa(hs_three, lavaan::HolzingerSwineford1939, estimator = "MLR",
                   modification_indices = FALSE)
   weak <- out$standardized_loadings$explanation[out$standardized_loadings$attention == "REVIEW"]
-  expect_match(weak, "teaching reference of 0.50;", fixed = TRUE)
+  # The sentence nomo_validity() uses, so a guided run groups the two (#145).
+  expect_match(weak, "^Standardized loading 0\\.[0-9]{2} is below the review reference 0\\.50 in absolute value; ")
   log <- out$decision_log
   expect_identical(log$reference[log$metric == "fit_cfi"], "Configured teaching reference: .950")
   expect_identical(log$reference[log$metric == "fit_rmsea"], "Configured teaching reference: 0.060")
@@ -1717,6 +1721,15 @@ test_that("CFA plots draw flags with the shared status shapes and name the refer
   expect_identical(guide$.label, c("No flag", "Review", "Concern"))
   expect_identical(unname(guide$shape), c(16, 1, 15))
   expect_match(p$labels$subtitle, "0.50", fixed = TRUE)
+  expect_false(grepl("Not drawn", p$labels$caption, fixed = TRUE))
+  # A loading with no finite standardized value is named in the caption, and
+  # its flag, which no point shows, is left out of the legend (#145).
+  improper <- out
+  improper$standardized_loadings$loading[2:3] <- NA_real_
+  p <- plot(improper, type = "loadings")
+  expect_null(ggplot2::get_guide_data(p, "shape"))
+  expect_match(gsub("\n", " ", p$labels$caption),
+               "Not drawn, with no finite standardized loading: x2 and x3.", fixed = TRUE)
 
   fit <- plot(out, type = "fit")
   # The reference is a dashed mark, never the cross that means "not computed".

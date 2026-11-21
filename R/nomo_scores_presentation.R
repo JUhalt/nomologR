@@ -19,16 +19,6 @@ nomo_scores_units <- c(
 )
 
 
-# "Delta chi-square(12) = ..." and a cited page, "p. 260", kept whole when
-# wrapped: nomo_present_bind() binds a test's degrees of freedom and value, but
-# not "Delta" to the test's name, nor a page to its number.
-nomo_scores_bind <- function(text) {
-  text <- gsub("Delta chi-square", paste0("Delta", nomo_present_nbsp, "chi-square"), text,
-               fixed = TRUE)
-  gsub("\\bp\\. ([0-9])", paste0("p.", nomo_present_nbsp, "\\1"), text, perl = TRUE)
-}
-
-
 # A note's first sentence, which states what was found (see the notes in
 # R/nomo_scores_guidance.R). A full stop inside a number or a citation's page
 # ("p. 260") is not followed by a capital, so it does not end the sentence.
@@ -132,14 +122,14 @@ nomo_scores_present_parallel <- function(parallel) {
   }
   nomo_present_section("Parallel model (what unit weighting assumes)")
   nomo_present_text(
-    nomo_scores_bind(sprintf(
+    sprintf(
       paste(
         "It does not fit worse than the model you fitted (%s), so the",
         "constraints adding the items assumes are consistent with these data."
       ),
       nomo_present_chisq(parallel$chisq_diff, parallel$df_diff, parallel$p_value,
                          delta = TRUE)
-    )),
+    ),
     indent = 2L
   )
 }
@@ -161,9 +151,9 @@ nomo_scores_present_flagged <- function(notes, full = FALSE) {
     status = vapply(units, function(u) {
       c("review", "concern")[[1L + any(flagged$severity[unit == u] == "concern")]]
     }, character(1), USE.NAMES = FALSE),
-    text = nomo_scores_bind(vapply(units, function(u) {
+    text = vapply(units, function(u) {
       paste(text[unit == u], collapse = " ")
-    }, character(1), USE.NAMES = FALSE))
+    }, character(1), USE.NAMES = FALSE)
   )
 }
 
