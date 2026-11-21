@@ -427,12 +427,54 @@ nomo_network_stream_status <- function(severity) {
 
 # Flagged ---------------------------------------------------------------------------
 
+# Whether a log row is about a relation of the network, "A <-> B" or "A -> B",
+# rather than a sample or a variable.
+nomo_network_is_relation <- function(object) {
+  grepl(" (<->|->|<-|~~|~) ", object)
+}
+
+
+# Whether each explanation names its row's object in backticks.
+nomo_network_names_object <- function(object, observation) {
+  vapply(seq_along(object), function(i) {
+    grepl(paste0("`", object[[i]], "`"), observation[[i]], fixed = TRUE)
+  }, logical(1))
+}
+
+
+# The explanations of flags about a relation, written for a bullet whose unit
+# is the relation (#145, out-11). `relation` marks the rows whose explanation
+# names their relation in backticks, which are for R names (guide point 25):
+# the relation loses them, and an explanation that opens with it refers to it
+# as "The relation", or "Each relation" when relations that share the
+# explanation share its bullet. `unit` and `severity` are the bullets' units
+# and statuses, which decide that. Other rows are returned as they are. The
+# network's print() and summary() and a guided run's summary() all use it,
+# so one flag reads alike wherever it is shown.
+nomo_network_relation_text <- function(object, observation, relation, unit, severity) {
+  quoted <- paste0("`", object, "`")
+  text <- observation
+  opens <- relation & startsWith(text, quoted)
+  text[opens] <- paste0("The relation", substring(text[opens], nchar(quoted[opens]) + 1L))
+  text[relation] <- vapply(which(relation), function(i) {
+    gsub(quoted[[i]], object[[i]], text[[i]], fixed = TRUE)
+  }, character(1))
+  key <- paste(nomo_present_status(severity), text)
+  units_per_key <- tapply(unit, key, function(u) length(unique(u)))
+  shared <- opens & units_per_key[key] > 1L
+  text[shared] <- sub("^The relation", "Each relation", text[shared])
+  text
+}
+
+
 # The decision-log rows that need attention, each under a name a reader knows:
-# the stream for a sample's row, the hypothesis for its evidence, and no name
-# where the explanation itself names the relation or composite; a row of the
-# validation sample or of the replication says so. The hypothesis tables show
-# the concordance and replication statuses, so print() leaves those rows out;
-# summary() keeps them and adds each recommendation.
+# the stream for a sample's row, and the relation, with its hypothesis ID when
+# it has one, for a row about a relation (guide point 22); a row of the
+# validation sample or of the replication says so. An explanation that names
+# its relation is written about it (nomo_network_relation_text()). Any other
+# explanation that names its object keeps it and has no unit. The hypothesis
+# tables show the concordance and replication statuses, so print() leaves
+# those rows out; summary() keeps them and adds each recommendation.
 nomo_network_present_flagged <- function(log, evidence, detail = FALSE) {
   log <- as.data.frame(log, stringsAsFactors = FALSE)
   rows <- log[log$severity %in% c("review", "concern"), , drop = FALSE]
@@ -447,15 +489,14 @@ nomo_network_present_flagged <- function(log, evidence, detail = FALSE) {
   ids <- evidence$id[match(rows$object, evidence$relation)]
   unit <- ifelse(is.na(ids), rows$object, paste(ids, rows$object))
   unit[rows$metric %in% names(streams)] <- unname(streams[rows$metric[rows$metric %in% names(streams)]])
-  named <- vapply(seq_len(nrow(rows)), function(i) {
-    grepl(paste0("`", rows$object[[i]], "`"), rows$observation[[i]], fixed = TRUE)
-  }, logical(1))
-  unit[named | rows$object %in% "hypotheses"] <- ""
+  named <- nomo_network_names_object(rows$object, rows$observation)
+  relation <- named & nomo_network_is_relation(rows$object)
+  unit[(named & !relation) | rows$object %in% "hypotheses"] <- ""
   prefix <- c(network_validation = "Validation", network_replication = "Replication")[rows$stage]
   unit <- ifelse(is.na(prefix), unit, trimws(paste0(prefix, ": ", unit)))
   unit <- sub(":$", "", unit)
-  text <- rows$observation
-  if (isTRUE(detail)) text <- paste(text, rows$recommendation)
+  text <- nomo_network_relation_text(rows$object, rows$observation, relation, unit, rows$severity)
+  if (isTRUE(detail)) text <- nomo_present_then_recommend(text, rows$recommendation)
   nomo_present_flagged(unit = unit, status = rows$severity, text = text)
   invisible(text)
 }
@@ -497,20 +538,6 @@ nomo_network_present_key <- function(text, shown = character()) {
 }
 
 
-# Facts inside a section: "Label: value" parts joined by " | ", indented and
-# broken only between parts, as nomo_present_facts() does at the margin.
-nomo_network_section_facts <- function(parts, indent = 2L) {
-  width <- nomo_present_prose_width() - indent
-  lines <- parts[[1L]]
-  for (part in parts[-1L]) {
-    last <- length(lines)
-    candidate <- paste(lines[[last]], part, sep = " | ")
-    if (nchar(candidate, type = "width") < width) lines[[last]] <- candidate else lines <- c(lines, part)
-  }
-  nomo_present_cat(paste0(strrep(" ", indent), lines))
-}
-
-
 #' @export
 print.nomo_network <- function(x, ...) {
   nomo_present_header("nomo_network", "Nomological network")
@@ -529,7 +556,11 @@ print.nomo_network <- function(x, ...) {
     }),
     paste0("Model fit: ", nomo_network_stream_status(
       nomo_network_log_severity(x$decision_log, "model_fit")
-    ))
+    )),
+    # Every flag the object holds, so print() never shows fewer than there are:
+    # the hypothesis tables show the concordance and replication flags by
+    # status, and summary() explains each (#145, out-9).
+    paste0("Total flags: ", nomo_present_flag_counts(x$decision_log$severity))
   ))
   nomo_network_present_single(
     x[["single_indicators"]], x[["single_indicator_sensitivity"]]
@@ -607,7 +638,7 @@ summary.nomo_network <- function(object, ...) {
 nomo_network_fit_lines <- function(label, fit) {
   nomo_present_text(paste0(label, ": ", nomo_present_chisq(fit$chisq, fit$df, fit$pvalue)),
                     indent = 2L, exdent = 4L)
-  nomo_network_section_facts(c(
+  nomo_present_facts(c(
     paste("CFI", nomo_present_stat(fit$cfi, "fit_bounded")),
     paste("TLI", nomo_present_stat(fit$tli, "fit")),
     paste("RMSEA", nomo_present_stat(fit$rmsea, "fit")),
@@ -668,14 +699,14 @@ print.summary_nomo_network <- function(x, ...) {
 
   nomo_present_section("Measurement context")
   mc <- x$measurement_context$summary[1L, , drop = FALSE]
-  nomo_network_section_facts(c(
+  nomo_present_facts(c(
     paste0("Status: ", nomo_network_stream_status(mc$attention[[1L]])),
     sprintf("Constructs: %s", format(mc$latent_constructs, trim = TRUE)),
     sprintf("Loading flags: %s", format(mc$loading_review_flags, trim = TRUE)),
     sprintf("Negative variances: %s", format(mc$negative_variance_flags, trim = TRUE)),
     sprintf("Fit flags: %s", format(mc$global_fit_review_flags, trim = TRUE)),
     sprintf("Engine warnings: %s", format(mc$engine_warning_count, trim = TRUE))
-  ))
+  ), indent = 2L)
   nomo_present_text(mc$observation, indent = 2L)
 
   nomo_present_section("Model fit")
@@ -725,15 +756,15 @@ print.summary_nomo_network <- function(x, ...) {
 
   nomo_present_section("Concordance")
   counts <- x$concordance_counts
-  nomo_network_section_facts(paste0(
+  nomo_present_facts(paste0(
     nomo_network_pretty_status(counts$concordance), ": ", counts$n
-  ))
+  ), indent = 2L)
   if (nrow(x$replication_counts)) {
     replication <- x$replication_counts
     nomo_present_section("Replication")
-    nomo_network_section_facts(paste0(
+    nomo_present_facts(paste0(
       nomo_network_pretty_status(replication$replication_status), ": ", replication$n
-    ))
+    ), indent = 2L)
   }
 
   flagged <- nomo_network_present_flagged(x$decision_log, x$hypothesis_evidence, detail = TRUE)
@@ -786,33 +817,35 @@ nomo_network_theory_plot_data <- function(x) {
   dat$interval_upper <- ifelse(equivalence, dat$equivalence_ci_upper, dat$ci_upper)
   dat$equivalence <- equivalence
 
-  finite_values <- c(
-    dat$interval_lower[is.finite(dat$interval_lower)],
-    dat$interval_upper[is.finite(dat$interval_upper)],
-    dat$estimate[is.finite(dat$estimate)],
-    dat$theory_lower[is.finite(dat$theory_lower)],
-    dat$theory_upper[is.finite(dat$theory_upper)],
-    0
-  )
+  # The range of the rows `i`, with the zero reference, padded by a tenth of
+  # its span. The zero keeps the values from being empty; a span of zero pads
+  # by a tenth of 1.
+  range_of <- function(i) {
+    values <- c(dat$interval_lower[i], dat$interval_upper[i], dat$estimate[i],
+                dat$theory_lower[i], dat$theory_upper[i], 0)
+    values <- values[is.finite(values)]
+    span <- max(values) - min(values)
+    c(min(values), max(values)) + c(-.10, .10) * (span + (span == 0))
+  }
 
-  # `finite_values` always contains the explicit zero reference above, so
-  # the empty-vector branch is unreachable by construction.
-  plot_min <- min(finite_values, na.rm = TRUE)
-  plot_max <- max(finite_values, na.rm = TRUE)
-  span <- plot_max - plot_min
-  if (!is.finite(span) || span <= 0) span <- 1
-  plot_min <- plot_min - .10 * span
-  plot_max <- plot_max + .10 * span
-
-  # An unbounded side of a region runs to the edge of the plot. A region that
-  # was never specified, a bare negligible(), has missing bounds and no band:
-  # drawing one across the plot would call every value compatible (#145).
-  dat$theory_lower_plot <- ifelse(is.infinite(dat$theory_lower), plot_min, dat$theory_lower)
-  dat$theory_upper_plot <- ifelse(is.infinite(dat$theory_upper), plot_max, dat$theory_upper)
+  # An unbounded side of a region runs to the edge of its panel: the plot, or
+  # the panel of its scale when standardized and unstandardized hypotheses are
+  # mixed (#145). A region that was never specified, a bare negligible(), has
+  # missing bounds and no band: drawing one across the plot would call every
+  # value compatible (#145).
+  scale_key <- as.character(dat$scale)
+  scale_key[is.na(scale_key)] <- ""
+  edges <- lapply(split(seq_len(nrow(dat)), scale_key), range_of)
+  edge_min <- vapply(scale_key, function(s) edges[[s]][[1L]], numeric(1), USE.NAMES = FALSE)
+  edge_max <- vapply(scale_key, function(s) edges[[s]][[2L]], numeric(1), USE.NAMES = FALSE)
+  dat$theory_lower_plot <- ifelse(is.infinite(dat$theory_lower), edge_min, dat$theory_lower)
+  dat$theory_upper_plot <- ifelse(is.infinite(dat$theory_upper), edge_max, dat$theory_upper)
+  dat$scale_panel <- paste0(toupper(substr(scale_key, 1L, 1L)), substring(scale_key, 2L),
+                            " estimates")
 
   list(
     data = dat,
-    limits = c(plot_min, plot_max)
+    limits = range_of(seq_len(nrow(dat)))
   )
 }
 
@@ -899,6 +932,17 @@ plot.nomo_network <- function(
       "Theory regions are researcher specified; measurement context and a priori or post hoc status remain separate evidence streams."
     )
 
+    # Standardized and unstandardized estimates do not share an axis: each
+    # scale gets a panel and an axis of its own, so a large unstandardized
+    # estimate no longer flattens the standardized ones onto zero (#145).
+    layout <- if (length(unique(dat$scale_panel)) > 1L) {
+      list(ggplot2::facet_wrap(stats::as.formula("~ scale_panel"), ncol = 1L, scales = "free"),
+           ggplot2::coord_cartesian(clip = "off"))
+    } else {
+      # Every relation keeps its place, whether or not it has a band.
+      list(ggplot2::scale_y_discrete(limits = levels(dat$label)),
+           ggplot2::coord_cartesian(xlim = limits, clip = "off"))
+    }
     return(
       ggplot2::ggplot(dat, ggplot2::aes(y = label)) +
         ggplot2::geom_segment(
@@ -928,9 +972,7 @@ plot.nomo_network <- function(
           na.rm = TRUE
         ) +
         nomo_plot_status_scales(dat$status, name = "Concordance flag") +
-        # Every relation keeps its place, whether or not it has a band.
-        ggplot2::scale_y_discrete(limits = levels(dat$label)) +
-        ggplot2::coord_cartesian(xlim = limits, clip = "off") +
+        layout +
         ggplot2::scale_x_continuous(
           labels = nomo_network_axis_labels(nomo_network_kind(dat$scale, dat$relation_type)),
           expand = ggplot2::expansion(mult = c(.02, .04))

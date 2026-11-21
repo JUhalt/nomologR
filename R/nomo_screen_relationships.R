@@ -447,7 +447,7 @@ nomo_screen_relationships <- function(selected, item_summary, guidance,
           sprintf(
             paste(
               "`%s` has a corrected item-rest correlation%s of r = %s (n = %d),",
-              "below the teaching reference of %s."
+              "below the review reference %s."
             ),
             item,
             within_text,

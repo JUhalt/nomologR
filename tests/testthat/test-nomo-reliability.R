@@ -437,9 +437,19 @@ test_that("reliability print methods cover point, bootstrap, strain, and empty b
   strain$recommendation <- "Investigate the CFA."
   empty$decision_log <- rbind(empty$decision_log, strain)
 
-  txt3 <- paste(capture.output(print(empty)), collapse = "\n")
+  lines3 <- capture.output(print(empty))
+  txt3 <- paste(lines3, collapse = "\n")
   expect_match(txt3, "No reliability coefficients", fixed = TRUE)
   expect_match(txt3, "Alpha not computed", fixed = TRUE)
+  # Constructs with the same reason share one bullet (#145, out-15).
+  twice <- empty
+  second <- twice$alpha_status
+  second$construct <- "Other"
+  twice$alpha_status <- rbind(twice$alpha_status, second)
+  lines_twice <- capture.output(print(twice))
+  expect_identical(sum(grepl("Synthetic unavailable", lines_twice, fixed = TRUE)), 1L)
+  expect_match(lines_twice, paste0("^  - ", empty$alpha_status$construct[[1L]], ", Other \\("),
+               all = FALSE)
   expect_match(txt3, "Sampling uncertainty was not bootstrapped", fixed = TRUE)
   expect_match(
     gsub("\\s+", " ", txt3),
@@ -490,6 +500,19 @@ test_that("reliability plot covers errors, one-coefficient guides, CIs, and face
   expect_s3_class(p2, "ggplot")
   expect_match(plot_text(p2$labels$subtitle), "95% CI (percentile bootstrap)", fixed = TRUE)
   expect_true(length(p2$facet$params$facets) >= 1L)
+
+  # A coefficient that was not computed, so has no point, is named in the
+  # caption as its row would be named on the axis (#145).
+  expect_false(grepl("Not computed", plot_text(plot(rel)$labels$caption), fixed = TRUE))
+  missing <- rel
+  construct <- missing$evidence$construct[[1L]]
+  missing$evidence$estimate[missing$evidence$metric == "omega" &
+                              missing$evidence$construct == construct] <- NA_real_
+  missing$alpha_status$requested <- TRUE
+  missing$alpha_status$available[missing$alpha_status$construct == construct] <- FALSE
+  expect_match(plot_text(plot(missing)$labels$caption),
+               sprintf("Not computed, so not drawn: %s: omega and %s: alpha.", construct, construct),
+               fixed = TRUE)
 })
 
 
@@ -1318,7 +1341,7 @@ test_that("reliability output follows the shared style (#144)", {
   # The reference prints as omega does, without a leading zero.
   expect_match(printed, "Review reference: .70", fixed = TRUE, all = FALSE)
   expect_false(any(grepl("0.7\\b", printed)))
-  expect_true("Omega: .61 to .89 | Omega flags: 2 review, 0 concern" %in% printed)
+  expect_true("Omega: .61 to .89 | Omega flags: 0 concern, 2 review" %in% printed)
   expect_true("  - visual (Review): Omega .61 is below the review reference .70." %in% printed)
   expect_identical(printed[[length(printed)]], "See summary(x) for each construct's omega and alpha.")
   expect_true(all(nchar(printed) <= 79L))

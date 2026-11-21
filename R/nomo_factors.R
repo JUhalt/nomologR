@@ -1716,8 +1716,13 @@ nomo_factors_log <- function(item_types,
   )
 
   # Revised MAP is logged only when the criterion set asked for it (#145,
-  # factors-7): "minimal" is parallel analysis and original MAP alone.
+  # factors-7): "minimal" is parallel analysis and original MAP alone. When
+  # the two forms disagree, the row is a review, and its observation says so
+  # (#145, out-8).
   if ("map_revised" %in% criteria$plan) {
+    agree <- map$n_factors_revised == map$n_factors_original
+    revised <- sprintf("%d factor%s", map$n_factors_revised,
+                       if (map$n_factors_revised == 1L) "" else "s")
     log <- nomo_log_add(
       log,
       stage = "factors",
@@ -1725,12 +1730,16 @@ nomo_factors_log <- function(item_types,
       metric = "map_revised",
       value = map$n_factors_revised,
       reference = "Velicer revised MAP (TR4), including m = 0",
-      severity = if (map$n_factors_revised == map$n_factors_original) "info" else "review",
-      observation = sprintf(
-        "Revised MAP (TR4) reaches its minimum at %d factor%s.",
-        map$n_factors_revised,
-        if (map$n_factors_revised == 1L) "" else "s"
-      ),
+      severity = if (agree) "info" else "review",
+      observation = if (agree) {
+        sprintf("Revised MAP (TR4) reaches its minimum at %s, as original MAP (TR2) does.",
+                revised)
+      } else {
+        sprintf(
+          "The two MAP forms disagree: revised MAP (TR4) reaches its minimum at %s, original MAP (TR2) at %d.",
+          revised, map$n_factors_original
+        )
+      },
       recommendation = paste(
         "Compare TR2 and TR4. Disagreement is sensitivity evidence, not a reason",
         "to select whichever count is more convenient."

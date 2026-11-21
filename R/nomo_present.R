@@ -37,19 +37,25 @@
 #   nomo_present_section(title)       a blank line, then the title (sentence
 #                                     case, no colon); content is indented 2.
 #   nomo_present_text(..., indent = 0L, exdent = indent)   wrapped prose.
-#   nomo_present_facts(parts)         "Label: value | Label: value", broken only
-#                                     between parts; a label keeps its value.
+#   nomo_present_facts(parts, indent = 0L)   "Label: value | Label: value",
+#                                     broken only between parts; a label keeps
+#                                     its value; `indent` for facts in a section.
 #   nomo_present_bullets(items, indent = 2L)   "  - item", hanging indent.
 #   nomo_present_notes(notes)         bullets from a data frame with `severity`
 #                                     and `note`: "  - Review: Note."
 #   nomo_present_flagged(log, recommendation = FALSE, unit, status, text)
 #       the "Flagged" section: one bullet per unit, "  - b5 (Review): Sentence.",
 #       concern before review, units sharing a status and an explanation
-#       grouped ("  - B2, C2 (Review): ..."). Reads a decision log (`object`,
-#       `severity`, `observation`, and `recommendation` when asked), or the
-#       `unit`, `status`, and `text` vectors given.
+#       grouped ("  - B2, C2 (Review): ..."), a later unit's leading "The"
+#       lowercased ("The Agency EFA, the Persistence EFA"). Reads a decision
+#       log (`object`, `severity`, `observation`, and `recommendation` when
+#       asked), or the `unit`, `status`, and `text` vectors given;
+#       `recommendation` may also be the recommendations to follow `text`.
+#       An observation is ended with a full stop before its recommendation.
+#   nomo_present_then_recommend(observation, recommendation)
+#       an observation ended with a full stop, then its recommendation.
 #   nomo_present_table(x, columns, formats = list(), more = NULL, indent = 2L,
-#                      keep = nomo_present_keep)
+#                      keep = nomo_present_keep, keep_empty = character())
 #       an aligned table; `columns` maps display labels to columns of `x`,
 #       `formats` maps a column to a function returning text. Columns are
 #       indented 2 and separated by 2 spaces, tightened to 1 before any column
@@ -59,7 +65,10 @@
 #       <more>." names them, where `more` is the call that shows them, such as
 #       nomo_table(x, "fit"). Every call passes `more`, even for a table too
 #       narrow to lose a column; a test reads the sources to check it. Missing
-#       cells are "--".
+#       cells are "--"; a column that is "--" everywhere is dropped unless its
+#       label is in `keep_empty`. After a drop the gaps widen back to 2 spaces
+#       when they fit. Returns the labels dropped for width, invisibly, so a
+#       caller can leave out notes on columns not shown.
 #   nomo_present_key(entries, title = "What these columns mean")
 #       a key section; `entries` is a named vector, c(SE = "Standard error."),
 #       printed "  SE -- Standard error." with a 6-space hanging indent.
@@ -92,7 +101,9 @@
 #   nomo_present_ci(lower, upper, digits = 3L, bounded = FALSE, kind = NULL)
 #                                     "[LL, UL]"; "--" when either bound is
 #                                     missing, never half an interval.
-#   nomo_present_ci_label(level = 0.95)   "95% CI", the level from the object.
+#   nomo_present_ci_label(level = 0.95)   "95% CI", the level from the object;
+#                                     each of several levels keeps its own
+#                                     digits ("95% CI", "97.5% CI").
 #   nomo_present_chisq(stat, df, p, n = NULL, delta = FALSE)
 #       "chi-square(34) = 75.83, p < .001"; with `n` (a contingency table)
 #       "chi-square(1, N = 40) = 10.00, p = .002"; with `delta = TRUE`
@@ -109,12 +120,13 @@
 #                                     -> "Not computed". Stored values never
 #                                     change.
 #   nomo_present_flag(x)              the same in lowercase, for running prose.
-#   nomo_present_flag_counts(x)       "1 review, 2 concern" or "none".
+#   nomo_present_flag_counts(x)       "2 concern, 1 review" or "none".
 #   nomo_present_count(n, singular, plural), nomo_present_noun(...)   "2 factors".
 #   nomo_present_or(x, word = "or")   "a, b, or c".
 #   nomo_present_origin(x, cell = FALSE)   "a priori", "post hoc" (no hyphen);
 #                                     sentence case in a cell.
-#   nomo_present_ordinal(n)           "1st", "2nd", "93rd", "11th".
+#   nomo_present_ordinal(n)           "1st", "2nd", "93rd", "11th"; "--" when
+#                                     missing.
 #
 # Widths and markers
 #   nomo_present_width()              the console width (at least 40), for tables.
@@ -205,21 +217,42 @@ nomo_present_prose_width <- function() {
 # a name, its relation, and the next word ("p < .001", "N = 473", "alpha =
 # .05", "CI = confidence"); a closing parenthesis and its value ("F(2, 14) =
 # 3.21", "chi-square(34) = 75.83"); an interval ("[.12, .34]") and its label
-# ("95% CI [.12, .34]"); and the degrees of freedom of a test ("F(2, 14)",
-# "chi-square(1, N = 40)"). As contentvalidR does.
+# ("95% CI [.12, .34]"); the degrees of freedom of a test ("F(2, 14)",
+# "chi-square(1, N = 40)") and "Delta" to the test it names ("Delta
+# chi-square(6)"); a page citation ("p. 260", "pp. 6-47"); and a call written
+# in prose, such as nomo_table(x, "criteria"). A name may hold underscores and
+# dots ("ord.scale = TRUE"). As contentvalidR does.
 nomo_present_bind <- function(x) {
   nb <- nomo_present_nbsp
   rel <- "([<>]=?|!?=)"
   # A name that itself follows a relation is left free, so a chain such as
-  # "a > b > c" binds only its first clause and can still be wrapped.
-  x <- gsub(paste0("(?<![<>=] )\\b([A-Za-z][A-Za-z0-9-]*) ", rel, " "),
+  # "a > b > c" binds only its first clause and can still be wrapped. A name
+  # just inside a parenthesis, such as "(p = .043)" or a named argument, binds
+  # only a value that does not open another call, so a line of code such as
+  # "decisions = list(cfa_model = list(value = ...))" never becomes one run.
+  name <- "([A-Za-z][A-Za-z0-9_.-]*)"
+  x <- gsub(paste0("(?<![<>=] )(?<![A-Za-z0-9_.(])", name, " ", rel, " "),
+            paste0("\\1", nb, "\\2", nb), x, perl = TRUE)
+  x <- gsub(paste0("(?<=\\()", name, " ", rel, " (?=[^\\s(]*(\\s|$))"),
             paste0("\\1", nb, "\\2", nb), x, perl = TRUE)
   x <- gsub(paste0("\\) ", rel, " "), paste0(")", nb, "\\1", nb), x, perl = TRUE)
   x <- gsub("\\[([^]\\[]*), ([^]\\[]*)\\]", paste0("[\\1,", nb, "\\2]"), x,
             perl = TRUE)
   x <- gsub("\\(([0-9.]+), ", paste0("(\\1,", nb), x, perl = TRUE)
   x <- gsub("([0-9.]+%) CI\\b", paste0("\\1", nb, "CI"), x, perl = TRUE)
-  gsub("\\bCI \\[", paste0("CI", nb, "["), x, perl = TRUE)
+  x <- gsub("\\bCI \\[", paste0("CI", nb, "["), x, perl = TRUE)
+  x <- gsub("\\bDelta chi-square", paste0("Delta", nb, "chi-square"), x, perl = TRUE)
+  x <- gsub("\\b(pp?\\.) (?=[0-9])", paste0("\\1", nb), x, perl = TRUE)
+  # A short call's arguments stay with it: nomo_table(x, "criteria"). A call
+  # with named arguments or one longer than 30 characters is left free, so a
+  # narrow console can still wrap it.
+  calls <- gregexpr("(?<![A-Za-z0-9_.])[A-Za-z.][A-Za-z0-9_.]*\\([^()=]*\\)", x, perl = TRUE)
+  regmatches(x, calls) <- lapply(regmatches(x, calls), function(call) {
+    short <- nchar(call, type = "width") <= 30L
+    call[short] <- gsub(" ", nb, call[short], fixed = TRUE)
+    call
+  })
+  x
 }
 
 # Wrapped lines with every clause kept whole; the no-break spaces are spaces
@@ -229,8 +262,10 @@ nomo_present_wrap <- function(text, width = nomo_present_prose_width(), ...) {
   gsub(nomo_present_nbsp, " ", lines, fixed = TRUE)
 }
 
+# Nothing to print prints nothing: paste0() would turn no lines into one empty
+# line, as when every note under a table was for a column it dropped (#145).
 nomo_present_cat <- function(lines) {
-  cat(paste0(lines, "\n"), sep = "")
+  cat(paste0(lines, rep("\n", length(lines))), sep = "")
 }
 
 
@@ -264,19 +299,22 @@ nomo_present_text <- function(..., indent = 0L, exdent = indent) {
 
 # A line of "label: value" parts joined by " | ", broken between parts when it
 # would run past the prose width. A label keeps its value on its line.
-nomo_present_facts <- function(parts) {
+# `indent` sets facts inside a section, such as the fit indices under a model.
+nomo_present_facts <- function(parts, indent = 0L) {
   parts <- parts[!is.na(parts) & nzchar(parts)]
   if (!length(parts)) return(invisible(NULL))
   width <- nomo_present_prose_width()
   parts <- sub(": ", paste0(":", nomo_present_nbsp), parts, fixed = TRUE)
   # A single part longer than the line, such as a long stage sequence, is
   # wrapped with a hanging indent.
-  emit <- function(line) nomo_present_cat(nomo_present_wrap(line, width, exdent = 2L))
+  emit <- function(line) {
+    nomo_present_cat(nomo_present_wrap(line, width, indent = indent, exdent = indent + 2L))
+  }
   line <- parts[[1L]]
   for (part in parts[-1L]) {
     candidate <- paste(line, part, sep = " | ")
     # strwrap() breaks a line that is not shorter than its width.
-    if (nchar(candidate, type = "width") >= width) {
+    if (indent + nchar(candidate, type = "width") >= width) {
       emit(line)
       line <- part
     } else {
@@ -312,14 +350,18 @@ nomo_present_notes <- function(notes) {
 # and an explanation grouped on one bullet ("- B2, C2 (Review): ..."). From a
 # decision log, the unit is its `object` and the explanation its observation,
 # followed by its recommendation when `recommendation = TRUE`, as a summary
-# gives it. Nothing is printed when nothing is flagged.
+# gives it; `recommendation` may instead be the recommendations themselves, to
+# follow `text`. An observation is ended with a full stop before its
+# recommendation. In a group, a later unit that starts with "The" starts
+# lowercase ("The Agency EFA, the Persistence EFA"); "A" is left alone, since
+# it is as likely a construct's name as an article. Nothing is printed when
+# nothing is flagged.
 nomo_present_flagged <- function(log = NULL, recommendation = FALSE,
                                  unit = log[["object"]], status = log[["severity"]],
                                  text = NULL) {
-  if (is.null(text) && !is.null(log)) {
-    text <- log[["observation"]]
-    if (isTRUE(recommendation)) text <- paste(text, log[["recommendation"]])
-  }
+  if (is.null(text) && !is.null(log)) text <- log[["observation"]]
+  if (isTRUE(recommendation) && !is.null(log)) recommendation <- log[["recommendation"]]
+  if (is.character(recommendation)) text <- nomo_present_then_recommend(text, recommendation)
   shown <- nomo_present_status(status)
   n <- length(shown)
   unit <- if (is.null(unit)) rep("", n) else as.character(unit)
@@ -338,6 +380,7 @@ nomo_present_flagged <- function(log = NULL, recommendation = FALSE,
   bullets <- vapply(keys, function(k) {
     same <- key == k
     units <- unique(unit[same & nzchar(unit)])
+    units[-1L] <- sub("^The ", "the ", units[-1L])
     label <- if (length(units)) {
       paste0(paste(units, collapse = ", "), nomo_present_nbsp, "(", shown[same][[1L]], ")")
     } else {
@@ -347,6 +390,20 @@ nomo_present_flagged <- function(log = NULL, recommendation = FALSE,
   }, character(1), USE.NAMES = FALSE)
   nomo_present_section("Flagged")
   nomo_present_bullets(bullets)
+}
+
+
+# An observation followed by its recommendation, as a summary's "Flagged"
+# section gives them. The observation is ended with a full stop first, since a
+# lavaan message kept as an observation has none; a missing or empty
+# recommendation adds nothing.
+nomo_present_then_recommend <- function(observation, recommendation) {
+  observation <- trimws(as.character(observation))
+  observation[is.na(observation)] <- ""
+  recommendation <- trimws(as.character(recommendation))
+  recommendation[is.na(recommendation)] <- ""
+  ended <- !nzchar(observation) | !nzchar(recommendation) | grepl("[.!?]$", observation)
+  trimws(paste(ifelse(ended, observation, paste0(observation, ".")), recommendation))
 }
 
 
@@ -423,14 +480,17 @@ nomo_present_origin <- function(x, cell = FALSE) {
 }
 
 
-# An ordinal: "1st", "2nd", "3rd", "11th", "93rd".
+# An ordinal: "1st", "2nd", "3rd", "11th", "93rd"; the missing marker, not
+# "NANA", when there is no number.
 nomo_present_ordinal <- function(n) {
   n <- as.integer(round(n))
   last <- n %% 10L
   teen <- n %% 100L %in% 11:13
   suffix <- ifelse(teen, "th", ifelse(last == 1L, "st", ifelse(last == 2L, "nd",
                    ifelse(last == 3L, "rd", "th"))))
-  paste0(n, suffix)
+  out <- paste0(n, suffix)
+  out[is.na(n)] <- nomo_present_missing
+  out
 }
 
 
@@ -510,8 +570,10 @@ nomo_present_ci <- function(lower, upper, digits = 3L, bounded = FALSE, kind = N
 
 
 # The heading of an interval, with the level taken from the object: "95% CI".
+# Each level keeps its own digits, so c(.95, .975) gives "95% CI" and
+# "97.5% CI", not "95.0% CI".
 nomo_present_ci_label <- function(level = 0.95) {
-  paste0(format(100 * level, trim = TRUE), "% CI")
+  paste0(vapply(100 * level, format, character(1), trim = TRUE), "% CI")
 }
 
 
@@ -625,12 +687,14 @@ nomo_present_status <- function(x) {
 }
 
 
+# "2 concern, 1 review", concern first as in a Flagged section (guide point
+# 22), or "none".
 nomo_present_flag_counts <- function(x) {
   flags <- nomo_present_flag(x)
   review <- sum(flags == "review")
   concern <- sum(flags == "concern")
   if (!review && !concern) return("none")
-  sprintf("%d review, %d concern", review, concern)
+  sprintf("%d concern, %d review", concern, review)
 }
 
 
@@ -659,15 +723,19 @@ nomo_present_drop_constant <- function(columns, label, values) {
 
 # An aligned text table. `columns` maps each display label to a column of `x`;
 # `formats` maps a column name to a function returning character values. A
-# column that is empty or missing in every row is dropped. A table wider than
-# the console tightens its column gaps from 2 spaces to 1, then drops columns
-# from the right, never the first (the stub) or one whose label is in `keep`,
-# and names them alongside `more`, the call that shows them.
+# column that is empty or missing in every row is dropped, unless its label is
+# in `keep_empty`, as for a decisive test column whose "--" a note explains. A
+# table wider than the console tightens its column gaps from 2 spaces to 1,
+# then drops columns from the right, never the first (the stub) or one whose
+# label is in `keep`, names them alongside `more`, the call that shows them,
+# and widens its gaps again when they fit. It returns the labels it dropped for
+# width, invisibly, so a caller can leave out notes on columns not shown.
 nomo_present_table <- function(x, columns, formats = list(), more = NULL,
-                               indent = 2L, keep = nomo_present_keep) {
+                               indent = 2L, keep = nomo_present_keep,
+                               keep_empty = character()) {
   x <- as.data.frame(x, stringsAsFactors = FALSE)
   columns <- columns[unname(columns) %in% names(x)]
-  if (!nrow(x) || !length(columns)) return(invisible(NULL))
+  if (!nrow(x) || !length(columns)) return(invisible(character()))
   missing_mark <- nomo_present_missing
 
   cells <- lapply(unname(columns), function(col) {
@@ -691,10 +759,10 @@ nomo_present_table <- function(x, columns, formats = list(), more = NULL,
 
   # A lone "-" from an older formatter counts as missing too.
   shown <- vapply(cells, function(v) any(nzchar(v) & !(v %in% c(missing_mark, "-"))),
-                  logical(1))
+                  logical(1)) | tolower(names(cells)) %in% tolower(keep_empty)
   cells <- cells[shown]
   numeric_col <- numeric_col[shown]
-  if (!length(cells)) return(invisible(NULL))
+  if (!length(cells)) return(invisible(character()))
 
   # By position, so two columns may share a label.
   widths <- vapply(seq_along(cells), function(i) {
@@ -713,6 +781,8 @@ nomo_present_table <- function(x, columns, formats = list(), more = NULL,
     numeric_col <- numeric_col[-drop]
     kept <- kept[-drop]
   }
+  # The columns left may fit with the usual gaps again.
+  if (length(hidden) && total(2L) <= room) gap <- 2L
 
   align <- function(v, w, right) {
     space <- strrep(" ", pmax(0L, w - nchar(v, type = "width")))
@@ -730,11 +800,13 @@ nomo_present_table <- function(x, columns, formats = list(), more = NULL,
     }, character(1)))
   }
   if (length(hidden)) {
-    note <- paste0("Not shown for width: ", paste(hidden, collapse = ", "), ".")
+    # A label of several words, such as "Max SE bias", is never broken.
+    labels <- gsub(" ", nomo_present_nbsp, hidden, fixed = TRUE)
+    note <- paste0("Not shown for width: ", paste(labels, collapse = ", "), ".")
     if (!is.null(more)) {
       note <- paste0(note, " See ", gsub(" ", nomo_present_nbsp, more, fixed = TRUE), ".")
     }
     nomo_present_text(note, indent = indent)
   }
-  invisible(NULL)
+  invisible(hidden)
 }

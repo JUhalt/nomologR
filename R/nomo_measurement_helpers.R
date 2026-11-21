@@ -436,6 +436,58 @@ nomo_matrix_pairs <- function(mat, value_name = "estimate", block = "overall") {
 }
 
 
+# A group as its label. lavaan numbers the groups in the parameter table and
+# standardizedSolution(), except for a model with both groups and levels,
+# written with explicit `group:` blocks, where it stores each group's label;
+# indexing the labels with a label gave NA (#145).
+nomo_lavaan_group_label <- function(group, labels) {
+  if (is.numeric(group)) {
+    as.character(labels[group])
+  } else {
+    as.character(group)
+  }
+}
+
+
+# The block of each row of a lavaan parameter table, named as the AVE table
+# names its blocks: the group ("Pasteur"), the level ("within"), the group and
+# the level joined by `sep` ("even:within"), or "overall" for a model with one
+# group and one level. `groups` and `levels` are lavaan's labels.
+nomo_lavaan_block_label <- function(pt, groups, levels, sep = ":") {
+  label <- rep("overall", nrow(pt))
+  if (length(groups) > 1L) label <- nomo_lavaan_group_label(pt$group, groups)
+  if (length(levels) > 1L) {
+    level <- as.character(levels[pt$level])
+    label <- if (length(groups) > 1L) paste(label, level, sep = sep) else level
+  }
+  label
+}
+
+
+# The block of each latent correlation standardizedSolution() gives, named as
+# the AVE table names its blocks, so the two tables' blocks agree.
+# standardizedSolution() gives a row's group but not its level, so each row is
+# matched with its parameter in the parameter table, where the k-th row of a
+# pair in a group is the k-th parameter of that pair there. The block had
+# named only the group, so a two-level model's within and between
+# correlations had the same block (#145).
+nomo_validity_latent_blocks <- function(rows, fit) {
+  pt <- as.data.frame(lavaan::parTable(fit))
+  pt <- pt[pt$op == "~~" & pt$lhs != pt$rhs, , drop = FALSE]
+  block <- nomo_lavaan_block_label(
+    pt, lavaan::lavInspect(fit, "group.label"), lavaan::lavInspect(fit, "level.label")
+  )
+  key <- function(a, b, group) {
+    pair <- paste(pmin(a, b), pmax(a, b), group, sep = "\r")
+    paste(pair, stats::ave(seq_along(pair), pair, FUN = seq_along), sep = "\r")
+  }
+  grouped <- "group" %in% names(rows)
+  pos <- match(key(rows$lhs, rows$rhs, if (grouped) rows$group else ""),
+               key(pt$lhs, pt$rhs, if (grouped) pt$group else ""))
+  block[pos]
+}
+
+
 nomo_validity_latent_correlations <- function(fit) {
   lv <- tryCatch(
     as.character(lavaan::lavNames(fit, type = "lv")),
@@ -459,15 +511,7 @@ nomo_validity_latent_correlations <- function(fit) {
     ]
 
     if (nrow(rows)) {
-      meta_names <- intersect(c("group", "level"), names(rows))
-      # standardizedSolution() numbers the groups. They are named as the AVE
-      # table and the data name them, so the two tables' blocks agree.
-      if ("group" %in% meta_names) {
-        rows$group <- lavaan::lavInspect(fit, "group.label")[rows$group]
-      }
-      block <- if (length(meta_names)) {
-        apply(rows[meta_names], 1L, function(z) paste(z, collapse = ":"))
-      } else rep("overall", nrow(rows))
+      block <- nomo_validity_latent_blocks(rows, fit)
 
       get_num <- function(name) {
         if (name %in% names(rows)) suppressWarnings(as.numeric(rows[[name]]))

@@ -138,13 +138,12 @@ nomo_validity_separation_flag <- function(htmt2, htmt, latent_attention, referen
 # parameter it was matched with. Nothing is taken to be fixed for a saved
 # object that has no fit.
 #
-# A row is matched in its own group, labeled as
+# A row is matched in its own group and level, its block, labeled as
 # nomo_validity_latent_correlations() labels it: a correlation fixed in one
 # group, as with `A ~~ c(NA, 0)*B`, is an estimate in the others (#145). The
 # table takes its rows from the parameter table in that table's order, so the
-# k-th row of a pair in a group is the k-th parameter of that pair there; that
-# also tells apart the levels of a multilevel model, which the table does not
-# name, and `where` names them.
+# k-th row of a pair in a block is the k-th parameter of that pair there.
+# `where` names the block in words: "even, within".
 nomo_validity_latent_fixed <- function(latent, fit) {
   out <- data.frame(fixed = logical(nrow(latent)), where = character(nrow(latent)))
   model <- if (nrow(latent)) tryCatch(
@@ -155,20 +154,15 @@ nomo_validity_latent_fixed <- function(latent, fit) {
   )
   if (is.null(model)) return(out)
   pt <- model$pt[model$pt$op == "~~" & model$pt$lhs != model$pt$rhs, , drop = FALSE]
-  block <- if (length(model$groups) > 1L) model$groups[pt$group] else rep("overall", nrow(pt))
+  block <- nomo_lavaan_block_label(pt, model$groups, model$levels)
   key <- function(a, b, block) {
     pair <- paste(pmin(a, b), pmax(a, b), block, sep = "\r")
     paste(pair, stats::ave(seq_along(pair), pair, FUN = seq_along), sep = "\r")
   }
   pos <- match(key(latent$construct_1, latent$construct_2, latent$block),
                key(pt$lhs, pt$rhs, block))
-  where <- if (length(model$levels) > 1L) {
-    sub("^overall, ", "", paste0(block, ", ", model$levels[pt$level]))
-  } else {
-    block
-  }
   out$fixed <- pt$free[pos] %in% 0L
-  out$where <- where[pos]
+  out$where <- nomo_lavaan_block_label(pt, model$groups, model$levels, sep = ", ")[pos]
   out
 }
 
@@ -707,7 +701,7 @@ print.summary_nomo_validity <- function(x, ...) {
     "These are complementary questions, not interchangeable pass/fail tests."
   )
   nomo_present_pointer(
-    c("nomo_table(x, \"discriminant\")", "x$decision_log"),
+    c("nomo_table(x, \"discriminant\")", "nomo_table(x, \"decision_log\")"),
     c("every value", "the reasoning behind each flag")
   )
   invisible(x)

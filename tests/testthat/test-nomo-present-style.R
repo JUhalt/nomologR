@@ -73,6 +73,9 @@ test_that("an interval is whole or missing, with its level in the label (#144)",
   expect_identical(ci(0.123, 0.345, kind = "r"), "[.12, .35]")
   expect_identical(ci(0.12345, 0.345, digits = 3L, kind = "loading"), "[0.123, 0.345]")
   expect_identical(nomologR:::nomo_present_ci_label(c(0.95, 0.9)), c("95% CI", "90% CI"))
+  # Each level keeps its own digits (#145, R-0b follow-up).
+  expect_identical(nomologR:::nomo_present_ci_label(c(0.95, 0.975, 0.9)),
+                   c("95% CI", "97.5% CI", "90% CI"))
 })
 
 
@@ -106,6 +109,8 @@ test_that("status words display in sentence case without changing (#144)", {
   expect_identical(nomologR:::nomo_present_origin("post_hoc", cell = TRUE), "Post hoc")
   expect_identical(nomologR:::nomo_present_ordinal(c(1, 2, 3, 4, 11, 12, 13, 21, 93, 111)),
                    c("1st", "2nd", "3rd", "4th", "11th", "12th", "13th", "21st", "93rd", "111th"))
+  # A missing number is the missing marker, not "NANA" (#145, R-0b follow-up).
+  expect_identical(nomologR:::nomo_present_ordinal(c(93, NA)), c("93rd", "--"))
 })
 
 
@@ -133,6 +138,28 @@ test_that("statistical clauses are never broken across lines (#145)", {
                    "chi-square(34)_=_75.83 and chi-square(1,_N_=_40)")
   # A chain binds only its first clause, so it can still be wrapped.
   expect_identical(bind("a > b > c"), "a_>_b > c")
+  # "Delta" stays with its test, a page with its number, a short call with its
+  # arguments, and a name with underscores or dots with its value (#145,
+  # R-0b follow-up). A call with a named argument, or a long one, stays free.
+  expect_identical(bind("Delta chi-square(2) = 3.00"), "Delta_chi-square(2)_=_3.00")
+  expect_identical(bind("Gorsuch (1983, p. 260) and pp. 6-47"),
+                   "Gorsuch (1983,_p._260) and pp._6-47")
+  expect_identical(bind('See nomo_table(x, "criteria") now.'), 'See nomo_table(x,_"criteria") now.')
+  expect_identical(bind('nomo_table(x, type = "fit")'), 'nomo_table(x, type_=_"fit")')
+  expect_identical(bind('nomo_table(x, "hypothesis_evidence")'), 'nomo_table(x, "hypothesis_evidence")')
+  expect_identical(bind("with ord.scale = TRUE and ci_lower = .12"),
+                   "with ord.scale_=_TRUE and ci_lower_=_.12")
+  expect_identical(bind("x.y = 1"), "x.y_=_1")
+  # Code is not bound into one long run: a named argument whose value opens
+  # another call stays free, and so does a chain.
+  expect_identical(bind("decisions = list(cfa_model = list(value = model, source = x)"),
+                   "decisions_=_list(cfa_model = list(value_=_model, source_=_x)")
+  expect_identical(bind("(p = .043) and f(n = g(1))"), "(p_=_.043) and f(n = g(1))")
+  # Unbound, the first line would end on "nomo_table(x,".
+  call <- utils::capture.output(nomologR:::nomo_present_text(
+    strrep("z", 15), ' see nomo_table(x, "criteria") gives it.'
+  ))
+  expect_identical(call, c(paste(strrep("z", 15), "see"), 'nomo_table(x, "criteria") gives it.'))
 
   # Nothing is left bound in what is printed.
   wrapped <- utils::capture.output(nomologR:::nomo_present_text(
@@ -184,6 +211,24 @@ test_that("headers, sections, and facts fit narrow consoles (#145)", {
   expect_identical(facts, c("Theory relations: 3",
                             "Added to the model from hypotheses: 2 | Fitted: yes"))
   expect_true(all(nchar(facts) <= 59L))
+
+  # Facts inside a section are indented, counted in the width, and a part
+  # longer than the line hangs beneath its own indent (#145, R-0b follow-up).
+  facts <- utils::capture.output(nomologR:::nomo_present_facts(c(
+    "Relations: 3", "Added from hypotheses: 2", "Converged: yes",
+    paste("Stages:", paste(rep("configural -> metric", 3L), collapse = " -> "))
+  ), indent = 4L))
+  # "Relations: 3 | Added from hypotheses: 2 | Converged: yes" is 56 columns,
+  # 60 with the indent, past the 59 of the prose width.
+  expect_identical(facts, c(
+    "    Relations: 3 | Added from hypotheses: 2",
+    "    Converged: yes",
+    "    Stages: configural -> metric -> configural -> metric",
+    "      -> configural -> metric"
+  ))
+  # No text prints nothing, not an empty line (#145).
+  expect_identical(utils::capture.output(nomologR:::nomo_present_text(character(), indent = 2L)),
+                   character())
 })
 
 
@@ -222,10 +267,11 @@ test_that("a narrow table keeps its status and p columns and tightens before dro
   }
 
   # Two-space gaps would need 72 columns and one-space gaps 66, so a column goes;
-  # the flag and p columns stay, and the last other column is dropped.
+  # the flag and p columns stay, and the last other column is dropped. The
+  # columns left fit with two-space gaps again (58 columns), so they get them.
   out <- table(more = "nomo_table(x, \"items\")")
-  expect_identical(out[[1L]], "  Item  Value Long one     Long two     Flag        p")
-  expect_identical(out[[3L]], "  a2   -0.250 qqqqqqqqqqqq wwwwwwwwwwww Review < .001")
+  expect_identical(out[[1L]], "  Item   Value  Long one      Long two      Flag         p")
+  expect_identical(out[[3L]], "  a2    -0.250  qqqqqqqqqqqq  wwwwwwwwwwww  Review  < .001")
   expect_identical(out[4:5], c("  Not shown for width: Long three. See",
                                "  nomo_table(x, \"items\")."))
 
@@ -240,6 +286,7 @@ test_that("a narrow table keeps its status and p columns and tightens before dro
   out <- table(keep = c("Value", "Long one", "Long two", "Long three", "Flag", "p"))
   expect_false(any(grepl("Not shown", out, fixed = TRUE)))
   out <- table(keep = character())
+  # Two-space gaps would need 42 columns here, so the gaps stay at one.
   expect_identical(out[[1L]], "  Item  Value Long one     Long two")
   expect_match(gsub("\\s+", " ", paste(out[-(1:3)], collapse = " ")),
                "Not shown for width: Long three, Flag, p.", fixed = TRUE)
@@ -257,6 +304,33 @@ test_that("a narrow table keeps its status and p columns and tightens before dro
     )),
     c("  A", "  x", "  y")
   )
+  # Unless the caller keeps it, as a decisive test column whose "--" a note
+  # explains (#145, R-0b follow-up).
+  expect_identical(
+    utils::capture.output(nomologR:::nomo_present_table(
+      data.frame(a = c("x", "y"), b = c("-", "-")), c("A" = "a", "B" = "b"), keep_empty = "b"
+    )),
+    c("  A  B", "  x  -", "  y  -")
+  )
+
+  # The table returns the labels it dropped, so a caller can leave out notes
+  # on columns not shown; a label of several words is never broken.
+  local_reproducible_output(width = 40)
+  hidden <- NULL
+  out <- utils::capture.output(hidden <- nomologR:::nomo_present_table(
+    data.frame(item = "a1", long = strrep("x", 35), other = strrep("y", 30)),
+    c("Item" = "item", "Ninechars" = "long", "Max SE bias" = "other"), more = "x$table"
+  ))
+  expect_identical(hidden, c("Ninechars", "Max SE bias"))
+  # Unbound, the first line of the note would end on "Max".
+  expect_identical(out, c("  Item", "  a1", "  Not shown for width: Ninechars,",
+                          "  Max SE bias. See x$table."))
+  shown <- NULL
+  invisible(utils::capture.output(shown <- nomologR:::nomo_present_table(d, c("Item" = "item"),
+                                                                        more = "x")))
+  expect_identical(shown, character())
+  expect_identical(nomologR:::nomo_present_table(d[0, ], c("Item" = "item"), more = "x"),
+                   character())
 })
 
 
@@ -311,13 +385,37 @@ test_that("the Flagged section, key, and pointer read as the guide shows (#144)"
   )
   expect_identical(utils::capture.output(flagged(log, recommendation = TRUE))[3:4],
                    c("  - a1 (Concern): Heywood case. Check.",
-                     "  - b5 (Review): Low loading Look again."))
+                     "  - b5 (Review): Low loading. Look again."))
   expect_identical(
     utils::capture.output(flagged(unit = c("ag1", "ag2"), status = c("REVIEW", "STRONG REVIEW"),
                                   text = c("", NA))),
     c("", "Flagged", "  - ag2 (Concern)", "  - ag1 (Review)")
   )
   expect_identical(utils::capture.output(flagged(status = "KEEP")), character())
+
+  # The recommendations may be given with `text`; an observation without a
+  # full stop, such as a lavaan message, gets one before its recommendation,
+  # and a missing recommendation adds nothing (#145, R-0b follow-up).
+  expect_identical(
+    utils::capture.output(flagged(unit = c("a", "b", "c"), status = rep("review", 3L),
+                                  text = c("A lavaan message", "Plain.", "Alone"),
+                                  recommendation = c("Check it.", "", NA))),
+    c("", "Flagged", "  - a (Review): A lavaan message. Check it.", "  - b (Review): Plain.",
+      "  - c (Review): Alone.")
+  )
+  then <- nomologR:::nomo_present_then_recommend
+  expect_identical(then(c("No stop", "Ends?", NA, "Alone", ""), c("Do this.", "Do that.", "Only.", NA, "")),
+                   c("No stop. Do this.", "Ends? Do that.", "Only.", "Alone", ""))
+  # Grouped units: a later unit's leading "The" is lowercased; a construct
+  # named A is not an article.
+  expect_identical(
+    utils::capture.output(flagged(
+      unit = c("The Agency EFA", "The Persistence EFA", "B in validity", "A in validity"),
+      status = rep("review", 4L), text = rep(c("Weak factor.", "Low AVE."), each = 2L)
+    ))[3:4],
+    c("  - The Agency EFA, the Persistence EFA (Review): Weak factor.",
+      "  - B in validity, A in validity (Review): Low AVE.")
+  )
 
   key <- utils::capture.output(nomologR:::nomo_present_key(c(
     SE = "Standard error",
@@ -399,4 +497,35 @@ test_that("every printed table names the call that shows a column it drops (#145
   notes <- regmatches(text, gregexpr("Not shown for width: [^.]+\\.( See [^ ]+ [^ ]+)?", text))[[1L]]
   expect_gt(length(notes), 0L)
   expect_true(all(grepl("See nomo_table\\(x, \"[a-z_]+\"\\)\\.$", notes)), label = paste(notes))
+})
+
+
+test_that("revised MAP is never described as an average of fourth powers (#145)", {
+  # TR4 is the trace of the fourth matrix power of the partial-correlation
+  # matrix (R/nomo_factors.R, the registry); every printed string that names a
+  # fourth power says so.
+  source_dir <- testthat::test_path("..", "..", "R")
+  skip_if_not(file.exists(file.path(source_dir, "nomo_present.R")))
+  seen <- 0L
+  for (file in list.files(source_dir, pattern = "[.]R$", full.names = TRUE)) {
+    data <- utils::getParseData(parse(file, keep.source = TRUE))
+    strings <- data$text[data$token == "STR_CONST" & grepl("fourth", data$text)]
+    seen <- seen + length(strings)
+    for (string in strings) {
+      expect_true(grepl("matrix|trace", string), label = sprintf("%s: %s", basename(file), string))
+    }
+  }
+  expect_gt(seen, 3L)
+})
+
+
+test_that("every pointer to a decision log names nomo_table() (#145, out-16)", {
+  # Every class's log is a nomo_table() type, so no output points to the field.
+  source_dir <- testthat::test_path("..", "..", "R")
+  skip_if_not(file.exists(file.path(source_dir, "nomo_present.R")))
+  for (file in list.files(source_dir, pattern = "[.]R$", full.names = TRUE)) {
+    data <- utils::getParseData(parse(file, keep.source = TRUE))
+    strings <- data$text[data$token == "STR_CONST"]
+    expect_false(any(grepl("^.x[$]decision_log.$", strings)), label = basename(file))
+  }
 })

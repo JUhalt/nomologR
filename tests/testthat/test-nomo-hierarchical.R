@@ -971,7 +971,7 @@ test_that("a negative disturbance variance gives NA indices and a concern, not a
   expect_true(any(grepl("Gorsuch (1983, p. 260)", summarized, fixed = TRUE)))
   expect_false(any(grepl("\\bp\\.$", summarized)))
   expect_true(all(nchar(summarized) <= 80L))
-  expect_identical(nomologR:::nomo_hierarchical_bind_pages("pp. 6-47 and p. 3"),
+  expect_identical(nomologR:::nomo_present_bind("pp. 6-47 and p. 3"),
                    "pp.\u00a06-47 and p.\u00a03")
   # The variance plot leaves out a composite it cannot divide, and the
   # loadings plot a loading it cannot standardize; each caption says which.

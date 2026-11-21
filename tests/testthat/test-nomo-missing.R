@@ -188,6 +188,19 @@ test_that("data with nothing missing is not refitted and says why", {
   expect_true(any(grepl("FIML: Not fitted: no modeled variable has missing values.",
                         printed, fixed = TRUE)))
   expect_false(any(grepl("\\bNA\\b", printed)))
+  # No reference was fitted and there are no differences to promise (#145,
+  # out-17).
+  local_reproducible_output(width = 80)
+  printed <- capture.output(print(out))
+  expect_identical(printed[[2L]],
+                   "Model: CFA | Reference: none (complete data) | Fitted with: Listwise deletion")
+  expect_identical(utils::tail(printed, 2L), c(
+    "See summary(x) for the fit and the notes and nomo_table(x, \"decision_log\") for",
+    "every recorded decision."
+  ))
+  expect_false(any(grepl("every difference", printed, fixed = TRUE)))
+  expect_match(capture.output(print(summary(out)))[[2L]], "Reference: none (complete data)",
+               fixed = TRUE)
 })
 
 

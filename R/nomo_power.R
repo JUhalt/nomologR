@@ -742,7 +742,8 @@ nomo_power_present <- function(x, detail = FALSE) {
     paste(power(summary$min_coverage), power(summary$max_coverage), sep = " to "),
     nomo_present_missing
   )
-  summary$meets <- ifelse(summary$meets_references, "yes", "no")
+  # Sentence case, as cells are (guide point 18).
+  summary$meets <- ifelse(summary$meets_references, "Yes", "No")
   # Whether an N meets the references is the result for that N, so it follows
   # the stub (guide point 5). Convergence, improper solutions, and biases are
   # percentages, as the references for bias are; power and coverage are
