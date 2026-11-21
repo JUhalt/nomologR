@@ -118,7 +118,9 @@ test_that("the coverage job fails when a line in R/ is not covered (#53)", {
   # job reads covr's lines, each at its smallest count, not a rounded
   # percentage, and stops when one was never run.
   workflow <- workflow_text("test-coverage.yaml")
-  expect_match(workflow, "extra-packages: covr@>=4.0.0", fixed = TRUE)
+  # pak resolves no version ranges, so the floor is enforced in R below.
+  expect_match(workflow, "extra-packages: any::covr", fixed = TRUE)
+  expect_false(grepl("covr@>=", workflow, fixed = TRUE))
   expect_match(workflow, "if (utils::packageVersion(\"covr\") < \"4.0.0\") {", fixed = TRUE)
   expect_match(workflow, "covr::tally_coverage(cov, by = \"line\")", fixed = TRUE)
   expect_match(workflow, "startsWith(lines$filename, \"R/\")", fixed = TRUE)
