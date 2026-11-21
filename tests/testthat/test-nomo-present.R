@@ -36,6 +36,16 @@ test_that("alternatives read as prose, and a bad choice names its argument (#89)
                fixed = TRUE)
   expect_error(nomologR:::nomo_match_arg("x", choices = "teaching"),
                'must be one of "teaching", not "x".', fixed = TRUE)
+
+  # The shared whole-number check sits with the other argument helpers
+  # (#145, R-0b follow-up): one finite whole number in R's integer range.
+  whole <- nomologR:::nomo_is_whole_number
+  expect_identical(vapply(list(3, -2L, 3.5, 1e10, NA_real_, Inf, c(1, 2), "3", numeric()),
+                          whole, logical(1)),
+                   c(TRUE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE))
+  helpers <- testthat::test_path("..", "..", "R", "utils-args.R")
+  skip_if_not(file.exists(helpers))
+  expect_true(any(grepl("^nomo_is_whole_number <- function", readLines(helpers))))
 })
 
 
@@ -47,7 +57,7 @@ test_that("every flag vocabulary is shown in one wording", {
   expect_identical(flag(c("Something Else", NA)), c("something else", ""))
   expect_identical(nomologR:::nomo_present_flag_counts(c("KEEP", "KEEP")), "none")
   expect_identical(nomologR:::nomo_present_flag_counts(c("REVIEW", "STRONG REVIEW", "KEEP")),
-                   "1 review, 1 concern")
+                   "1 concern, 1 review")
 })
 
 
@@ -352,6 +362,13 @@ test_that("guided runs say what they found, and group repeated requests (#89)", 
   )
   expect_snapshot(print(complete))
   expect_snapshot(print(summary(complete)))
+  # A network flag about a relation reads as the network's own summary gives
+  # it: the relation is the unit, and no bullet puts it in backticks (#145,
+  # out-11).
+  summarized <- utils::capture.output(print(summary(complete)))
+  flagged <- summarized[seq(match("Flagged", summarized), length(summarized))]
+  expect_true(any(startsWith(flagged, "  - Persistence <-> SocialDesirability in the network (Review): The")))
+  expect_false(any(grepl("`[^`]* (<->|->) [^`]*`", flagged)))
 
   # The closing hint is a call that runs as written: nomo_report() has no
   # default path, so the hint names `file`.

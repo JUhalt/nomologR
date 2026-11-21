@@ -561,8 +561,9 @@ test_that("closeout B: validity handles an empty standardized-loading evidence t
 test_that("a single construct has no pairs, and its output raises no warnings", {
   v <- nomo_validity(nomo_cfa("A =~ a1 + a2 + a3 + a4", data = nomo_demo_continuous))
   expect_identical(nrow(nomologR:::nomo_validity_discriminant_table(v)), 0L)
-  expect_no_warning(print(v))
-  expect_no_warning(print(summary(v)))
+  # The output is captured, so the suite does not print it (R-0b sweep).
+  expect_no_warning(utils::capture.output(print(v)))
+  expect_no_warning(utils::capture.output(print(summary(v))))
   expect_no_warning(evidence <- nomologR:::nomo_run_key_evidence(list(results = list(validity = v))))
   expect_match(evidence, "separation flags none", fixed = TRUE)
 })
@@ -599,7 +600,7 @@ test_that("a latent correlation near 1 is flagged when HTMT is absent (#145)", {
 
   local_reproducible_output(width = 80)
   printed <- capture.output(print(out))
-  expect_true("Separation flags: 1 review, 0 concern (1 pair)" %in% printed)
+  expect_true("Separation flags: 0 concern, 1 review (1 pair)" %in% printed)
   expect_match(printed, "^  - P vs. Q \\(Review\\): Latent r \\.9[0-9], 95% CI", all = FALSE)
   expect_match(printed, "HTMT-family values were not requested", all = FALSE)
 
@@ -658,7 +659,7 @@ test_that("flag counts name what they count, and constructs are counted once (#1
   cfa <- nomo_cfa(nomo_model(list(A = paste0("a", 1:5), B = paste0("b", 1:5))),
                   data = nomo_demo_continuous)
   printed <- capture.output(print(nomo_validity(cfa)))
-  expect_true("Convergent flags: 2 review, 0 concern (2 constructs)" %in% printed)
+  expect_true("Convergent flags: 0 concern, 2 review (2 constructs)" %in% printed)
   expect_true("Separation flags: none (1 pair)" %in% printed)
   expect_false(any(grepl("Construct separation: none", printed, fixed = TRUE)))
   expect_match(printed, "^  - B \\(Review\\): AVE \\.43 is below the review reference \\.50; 1 of 5",
@@ -1247,9 +1248,10 @@ test_that("a correlation fixed in some groups or levels is left out only there (
                "Fixed at 0 by the model, so not estimated: visual with textual.", fixed = TRUE)
   expect_identical(nomologR:::nomo_validity_fixed_pairs(both)$label, "visual with textual")
 
-  # The levels of a multilevel model share the table's block, and the factors
-  # here share their names: the row the model fixes is told apart by its
-  # place, and named with its level.
+  # The factors of the two levels share their names. Each row's block names
+  # its level, as the AVE table's blocks do, so the within and between
+  # correlations are told apart (#145); the row the model fixes is named with
+  # its level.
   levels <- nomo_validity(lavaan::cfa(
     paste(
       "level: 1", "f =~ y1 + y2 + y3", "g =~ y4 + y5 + y6", "f ~~ 0*g",
@@ -1260,12 +1262,49 @@ test_that("a correlation fixed in some groups or levels is left out only there (
   ), htmt = "none")
   stored <- levels$latent_correlations
   expect_identical(stored$correlation[[1L]], 0)
+  expect_identical(stored$block, c("within", "cluster"))
+  expect_setequal(stored$block, levels$ave$block)
   pairs <- nomo_table(levels, "discriminant")
   expect_identical(nrow(pairs), 1L)
   expect_equal(pairs$latent_r, stored$correlation[[2L]])
+  expect_identical(pairs$block, "cluster")
   expect_match(shown(summary(levels)),
                "Fixed at 0 by the model, so not estimated: f with g (within).", fixed = TRUE)
   logged <- levels$decision_log[levels$decision_log$metric == "latent_correlation", ]
   expect_identical(startsWith(logged$observation, "The model fixes this latent correlation"),
                    c(TRUE, FALSE))
+  expect_identical(logged$object, c("f vs g (within)", "f vs g (cluster)"))
+
+  # With both groups and levels, lavaan stores each group's label rather than
+  # its number; the block was NA and the fixed pair read "(NA, within)" (#145).
+  # The block names the group and the level, as the AVE table's does.
+  # The grouping column has a name of its own, since lavaan warns when a
+  # factor's name is also a column's. Half the clusters per group leave some
+  # cluster-level variances negative; that warning alone is muffled, since the
+  # labels are what is tested here.
+  twolevel <- lavaan::Demo.twolevel
+  twolevel$half <- ifelse(twolevel$cluster %% 2 == 0, "even", "odd")
+  block <- function(label, fixed) {
+    c(paste("group:", label), "level: 1", "f =~ y1 + y2 + y3", "g =~ y4 + y5 + y6",
+      if (fixed) "f ~~ 0*g", "level: 2", "f =~ y1 + y2 + y3", "g =~ y4 + y5 + y6")
+  }
+  negative_variances <- function(w) {
+    if (grepl("variances are negative", conditionMessage(w), fixed = TRUE)) {
+      invokeRestart("muffleWarning")
+    }
+  }
+  grouped <- withCallingHandlers(nomo_validity(lavaan::cfa(
+    paste(c(block("even", TRUE), block("odd", FALSE)), collapse = "\n"),
+    data = twolevel, cluster = "cluster", group = "half", std.lv = TRUE
+  ), htmt = "none"), warning = negative_variances)
+  stored <- grouped$latent_correlations
+  expect_false(anyNA(stored$block))
+  expect_identical(stored$block, c("even:within", "even:cluster", "odd:within", "odd:cluster"))
+  expect_setequal(stored$block, grouped$ave$block)
+  pairs <- nomo_table(grouped, "discriminant")
+  expect_setequal(pairs$block, c("even:cluster", "odd:within", "odd:cluster"))
+  expect_match(shown(summary(grouped)),
+               "Fixed at 0 by the model, so not estimated: f with g (even, within).", fixed = TRUE)
+  expect_false(grepl("NA,", shown(summary(grouped)), fixed = TRUE))
+  expect_identical(nomologR:::nomo_lavaan_group_label(c(2, 1), c("a", "b")), c("b", "a"))
 })

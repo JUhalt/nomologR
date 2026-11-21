@@ -679,11 +679,16 @@ nomo_cfa_loadings <- function(standardized_solution, guidance) {
   # second-order loading, so its content is the factor's definition.
   content <- ifelse(rows$rhs %in% rows$lhs, "the first-order factor's definition", "item content")
   attention[weak] <- "REVIEW"
-  # The reference is written as the loadings are, "0.50" (#144).
+  # The loading and its reference are written as loadings, "0.34" and "0.50"
+  # (#144), in the sentence nomo_validity() uses, so a guided run groups the
+  # two flags (#145).
   explanation[weak] <- paste0(
-    "Absolute standardized loading is below the configured teaching reference of ",
+    "Standardized loading ",
+    nomo_present_stat(loading[weak], "loading",
+                      reference = sign(loading[weak]) * guidance$cfa_loading_reference),
+    " is below the review reference ",
     nomo_present_stat(guidance$cfa_loading_reference, "loading"),
-    "; inspect ", content[weak], ", precision, and model specification."
+    " in absolute value; inspect ", content[weak], ", precision, and model specification."
   )
   attention[extreme] <- "STRONG REVIEW"
   explanation[extreme] <- paste(

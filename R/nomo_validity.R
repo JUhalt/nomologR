@@ -240,18 +240,17 @@ nomo_validity <- function(fit,
           "Inspect model admissibility, cross-loadings, and indicator specification before interpretation."
         )
       } else if (estimate < ave_reference) {
+        # The sentence print() gives, then what to inspect (#145, out-7).
         paste0(
-          label, " (", nomo_present_stat(estimate, "reliability", reference = ave_reference),
-          ") is below the configured convergent-evidence reference (",
-          ave_reference_shown,
-          "). Inspect standardized loadings, indicator-specific error, and content coverage; do not automatically delete items."
+          label, " ", nomo_present_stat(estimate, "reliability", reference = ave_reference),
+          " is below the review reference ", ave_reference_shown,
+          ". Inspect standardized loadings, indicator-specific error, and content coverage; do not automatically delete items."
         )
       } else {
         paste0(
-          label, " (", nomo_present_stat(estimate, "reliability", reference = ave_reference),
-          ") is at or above the configured convergent-evidence reference (",
-          ave_reference_shown,
-          "). This contributes convergent evidence but does not establish construct validity by itself."
+          label, " ", nomo_present_stat(estimate, "reliability", reference = ave_reference),
+          " is at or above the review reference ", ave_reference_shown,
+          ". This contributes convergent evidence but does not establish construct validity by itself."
         )
       }
     }, character(1))

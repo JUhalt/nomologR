@@ -56,7 +56,7 @@
       Larcker, 1981), the average proportion of indicator variance the construct
       explains. The review reference is .50; a value below it prompts a look at the
       loadings and content coverage. AVE is convergent evidence and is not a
-      reliability coefficient.
+      reliability coefficient. Estimated with maximum likelihood (ML); N = 800.
       
       See x$body for the cells and knitr::knit_print(x) for the Markdown a knitted
       document renders.

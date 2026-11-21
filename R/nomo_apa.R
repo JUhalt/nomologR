@@ -130,12 +130,17 @@ nomo_apa_join <- function(...) {
 
 
 # How a model was estimated and on how many cases (#145): the estimator spelled
-# out with its abbreviation, as APA asks of every abbreviation, and N.
-nomo_apa_sample_note <- function(estimator, n = NA_real_) {
+# out with its abbreviation, as APA asks of every abbreviation, and N. When
+# lavaan used the incomplete cases (`missing` "fiml", lavaan's "ml"), a second
+# sentence says so, since N then counts them.
+nomo_apa_sample_note <- function(estimator, n = NA_real_, missing = NA_character_) {
   estimator <- as.character(estimator)
   estimator <- if (length(estimator)) estimator[[1L]] else NA_character_
   n <- suppressWarnings(as.numeric(n))
   n <- if (length(n)) n[[1L]] else NA_real_
+  missing <- tolower(as.character(missing))
+  fiml <- length(missing) > 0L &&
+    missing[[1L]] %in% c("fiml", "fiml.x", "ml", "ml.x", "direct")
   words <- if (is.na(estimator) || !nzchar(estimator)) {
     ""
   } else if (estimator %in% names(nomo_cfa_glossary)) {
@@ -146,15 +151,46 @@ nomo_apa_sample_note <- function(estimator, n = NA_real_) {
   size <- if (is.finite(n)) sprintf("*N* = %d", as.integer(round(n))) else ""
   text <- c(words, size)
   text <- paste(text[nzchar(text)], collapse = "; ")
-  if (nzchar(text)) paste0(text, ".") else ""
+  nomo_apa_join(
+    if (nzchar(text)) paste0(text, "."),
+    if (fiml) "Missing values were handled by full-information maximum likelihood (FIML)."
+  )
 }
 
 
-# The estimator lavaan used, for a result that does not record it.
+# The estimator lavaan used, for a result that does not record it: the one
+# requested, such as WLSMV, rather than the one lavaan files it under (DWLS).
 nomo_apa_fit_estimator <- function(fit) {
-  estimator <- tryCatch(lavaan::lavInspect(fit, "options")$estimator,
-                        error = function(e) NULL)
+  options <- tryCatch(lavaan::lavInspect(fit, "options"), error = function(e) list())
+  estimator <- nomo_apa_or(options$estimator.orig, options$estimator)
   if (is.character(estimator) && length(estimator) == 1L) estimator else NA_character_
+}
+
+
+# The sample note of a table built from a lavaan fit, for a result that keeps
+# the fit rather than a description of it, as reliability and validity do
+# (#145).
+nomo_apa_fit_sample_note <- function(fit) {
+  options <- tryCatch(lavaan::lavInspect(fit, "options"), error = function(e) list())
+  n <- tryCatch(lavaan::lavInspect(fit, "ntotal"), error = function(e) NA_real_)
+  nomo_apa_sample_note(nomo_apa_fit_estimator(fit), n, nomo_apa_or(options$missing, NA))
+}
+
+
+# One sentence for a solution that did not pass lavaan's admissibility check,
+# such as one with a negative variance (#145). The values in the table are true
+# to the fit, and the console flags the problem; the note states the fact, not
+# a verdict. Empty for an admissible solution, or when the check cannot be read.
+nomo_apa_improper_note <- function(fit) {
+  check <- tryCatch({
+    admissible <- suppressWarnings(lavaan::lavInspect(fit, "post.check"))
+    pe <- lavaan::parameterEstimates(fit)
+    variance <- pe$op == "~~" & pe$lhs == pe$rhs
+    list(admissible = admissible, negative = any(variance & pe$est < 0, na.rm = TRUE))
+  }, error = function(e) list(admissible = NA, negative = FALSE))
+  if (!isFALSE(check$admissible)) return("")
+  paste0("The solution did not pass lavaan's admissibility check",
+         if (isTRUE(check$negative)) " (a variance estimate is negative)", ".")
 }
 
 
@@ -253,8 +289,9 @@ nomo_apa_mark <- function(body, marks) {
 #' No cell reads PASS or FAIL, and fit indices are not labeled good or poor.
 #'
 #' **Notes say what the table shows.** The general note defines each
-#' abbreviation, gives the estimator and the number of cases analyzed, and
-#' says when the chi-square is a scaled test statistic and the fit indices are
+#' abbreviation, gives the estimator and the number of cases analyzed, says
+#' when full-information maximum likelihood handled missing values, and says
+#' when the chi-square is a scaled test statistic and the fit indices are
 #' robust or scaled values. For a network's hypotheses it also defines each
 #' evidence label the table shows, such as "Concordant", and each prediction
 #' is given with the region it names. An interval's heading carries its level,
@@ -267,7 +304,10 @@ nomo_apa_mark <- function(body, marks) {
 #' prediction is judged on, and the estimates on another scale than the rest.
 #' A correlation the model fixes, such as the zero correlations of a bifactor
 #' model, is not tabled as an estimate. Degrees of freedom that are not whole,
-#' as for a mean- and variance-adjusted test, are given to two decimals.
+#' as for a mean- and variance-adjusted test, are given to two decimals. When
+#' the solution did not pass lavaan's admissibility check, as with a negative
+#' variance estimate, the note of a CFA, reliability, or validity table says
+#' so; its values are shown as estimated.
 #'
 #' **Discriminant evidence without the Fornell-Larcker matrix.** For a
 #' `nomo_validity` result, the `"discriminant"` table gives each pair of
@@ -391,9 +431,18 @@ nomo_apa_table.default <- function(x, type = NULL, number = NULL, title = NULL, 
 nomo_apa_table.nomo_cfa <- function(x, type = c("loadings", "fit", "factor_correlations"),
                                     number = NULL, title = NULL, ...) {
   type <- nomo_match_arg(type)
-  sample_note <- nomo_apa_sample_note(x$estimator, x$n_used)
+  sample_note <- nomo_apa_sample_note(x$estimator, x$n_used, nomo_apa_or(x$missing, NA))
+  improper <- nomo_apa_improper_note(x$fit)
 
   if (type == "loadings") {
+    # In an improper solution lavaan estimates every loading, and a
+    # standardized one is missing because it is not finite, as when its
+    # factor's variance is negative.
+    dash_reason <- if (nzchar(improper)) {
+      "not available (the standardized value is not finite)"
+    } else {
+      "not estimated"
+    }
     sl <- x$standardized_loadings
     factors <- unique(as.character(sl$factor))
     items <- unique(as.character(sl$item))
@@ -413,8 +462,9 @@ nomo_apa_table.nomo_cfa <- function(x, type = c("loadings", "fit", "factor_corre
       general = nomo_apa_join(
         "Standardized loadings from a confirmatory factor analysis.",
         sample_note,
+        improper,
         "Blank cells are loadings fixed to zero by the model.",
-        nomo_apa_dash_note(body, "not estimated")
+        nomo_apa_dash_note(body, dash_reason)
       ),
       number = number, source = "nomo_cfa"
     ))
@@ -451,6 +501,7 @@ nomo_apa_table.nomo_cfa <- function(x, type = c("loadings", "fit", "factor_corre
         "*r* = latent correlation from the confirmatory factor analysis; CI =",
         "confidence interval.",
         sample_note,
+        improper,
         if (any(fixed)) {
           sprintf("Correlations the model fixes are not shown: %s.",
                   nomo_present_or(pairs[fixed], "and"))
@@ -465,8 +516,8 @@ nomo_apa_table.nomo_cfa <- function(x, type = c("loadings", "fit", "factor_corre
   variant <- if ("variant" %in% names(fe)) fe$variant else rep(NA_character_, nrow(fe))
   version <- stats::setNames(nomo_apa_version(variant), fe$metric)
   nomo_apa_fit_table(
-    fe, estimator = x$estimator, n = x$n_used,
-    title = title, number = number, source = "nomo_cfa",
+    fe, estimator = x$estimator, n = x$n_used, missing = nomo_apa_or(x$missing, NA),
+    title = title, number = number, source = "nomo_cfa", sample = improper,
     versions = nomo_apa_versions_note(
       version[["chi_square"]], version[c("CFI", "TLI", "RMSEA")],
       test = nomo_cfa_test_label(x$fit)
@@ -477,7 +528,7 @@ nomo_apa_table.nomo_cfa <- function(x, type = c("loadings", "fit", "factor_corre
 
 nomo_apa_fit_table <- function(fe, estimator, n, title, number, source,
                                model_label = "Measurement model", versions = "",
-                               sample = "") {
+                               sample = "", missing = NA_character_) {
   value <- function(metric) {
     v <- fe$value[fe$metric == metric]
     if (length(v)) v[[1L]] else NA_real_
@@ -509,7 +560,7 @@ nomo_apa_fit_table <- function(fe, estimator, n, title, number, source,
       "CFI = comparative fit index; TLI = Tucker-Lewis index; RMSEA = root mean",
       "square error of approximation; CI = confidence interval; SRMR =",
       "standardized root mean square residual.",
-      nomo_apa_sample_note(estimator, n),
+      nomo_apa_sample_note(estimator, n, missing),
       sample,
       versions,
       nomo_apa_dash_note(body, "not available"),
@@ -599,6 +650,8 @@ nomo_apa_table.nomo_reliability <- function(x, type = NULL, number = NULL,
         sprintf("%s = percentile bootstrap confidence interval%s.", ci,
                 if (is.finite(draws)) sprintf(", from %d draws", as.integer(draws)) else "")
       },
+      nomo_apa_fit_sample_note(x$fit),
+      nomo_apa_improper_note(x$fit),
       if (has_alpha) {
         paste(
           "Coefficient alpha assumes equal loadings and is reported alongside omega",
@@ -692,6 +745,10 @@ nomo_apa_table.nomo_invariance <- function(x, type = NULL, number = NULL,
     "Model", "\u03c7\u00b2", "*df*", "CFI", "RMSEA", "SRMR",
     "\u0394CFI", "\u0394RMSEA", "\u0394\u03c7\u00b2 (\u0394*df*)", "*p*"
   )
+  # A table of one model, such as the configural model alone, has no change
+  # in fit to report, so its change columns are left out rather than blank.
+  several <- nrow(fe) > 1L
+  if (!several) body <- body[, seq_len(6L), drop = FALSE]
 
   across_occasions <- identical(x$design, "occasions")
   across <- if (across_occasions) "occasions" else "groups"
@@ -736,17 +793,26 @@ nomo_apa_table.nomo_invariance <- function(x, type = NULL, number = NULL,
     ),
     stub = "Model",
     general = nomo_apa_join(
-      "CFI = comparative fit index; RMSEA = root mean square error of",
-      "approximation; SRMR = standardized root mean square residual; \u0394 =",
-      "change from the model above.",
+      paste0(
+        "CFI = comparative fit index; RMSEA = root mean square error of ",
+        "approximation; SRMR = standardized root mean square residual",
+        if (several) "; \u0394 = change from the model above", "."
+      ),
       design,
-      nomo_apa_sample_note(nomo_invariance_estimator(x), nomo_apa_or(x[["n_used"]], NA_real_)),
+      nomo_apa_sample_note(nomo_invariance_estimator(x), nomo_apa_or(x[["n_used"]], NA_real_),
+                           nomo_apa_or(x[["missing"]], NA)),
       nomo_apa_versions_note(
         version("chisq"), c(CFI = version("cfi"), RMSEA = version("rmsea")),
         test = nomo_invariance_test_label(x), models = nrow(fe)
       ),
-      "Each model adds constraints to the one above it. Changes in fit are",
-      "reported as evidence and are not compared with fixed cutoffs.",
+      if (several) {
+        paste(
+          "Each model adds constraints to the one above it. Changes in fit are",
+          "reported as evidence and are not compared with fixed cutoffs."
+        )
+      } else {
+        "Fit indices are reported as evidence, not against fixed cutoffs."
+      },
       nomo_apa_dash_note(body, "not computed")
     ),
     specific = marked$specific,
@@ -776,7 +842,8 @@ nomo_apa_table.nomo_network <- function(x, type = c("hypotheses", "fit"),
   if (!length(n) || !is.finite(n[[1L]])) n <- x$data_n
   estimator <- as.character(nomo_apa_or(x$estimator, NA_character_))
   if (!length(estimator) || is.na(estimator[[1L]])) estimator <- nomo_apa_fit_estimator(x$fit)
-  sample_note <- nomo_apa_sample_note(estimator, n)
+  missing <- nomo_apa_or(x[["missing"]], NA)
+  sample_note <- nomo_apa_sample_note(estimator, n, missing)
 
   if (type == "fit") {
     fe <- x$fit_evidence
@@ -804,7 +871,7 @@ nomo_apa_table.nomo_network <- function(x, type = c("hypotheses", "fit"),
     index <- switch(index, robust = "robust", scaled = "scaled",
                     mixed = "robust or scaled", "")
     return(nomo_apa_fit_table(
-      long, estimator = estimator, n = n,
+      long, estimator = estimator, n = n, missing = missing,
       title = nomo_apa_or(title, "Fit of the Nomological Network Model"),
       model_label = "Nomological network",
       number = number, source = "nomo_network",
@@ -1021,11 +1088,16 @@ nomo_apa_table.nomo_validity <- function(x, type = c("discriminant", "convergent
     k <- vapply(as.character(tab$construct), function(construct) {
       length(unique(loadings$item[loadings$factor == construct]))
     }, integer(1), USE.NAMES = FALSE)
+    # An AVE that differs from the review reference but would round to it
+    # shows the decimals that tell them apart, .497 beside .50, as the console
+    # does (guide point 9); every other cell keeps two.
+    ave <- nomo_present_stat(tab$AVE, "reliability", reference = x$ave_reference)
+    ave[!is.finite(tab$AVE)] <- nomo_apa_dash
     body <- data.frame(
       Construct = as.character(tab$construct),
       Group = as.character(tab$block),
       k = as.character(k),
-      AVE = nomo_apa_number(tab$AVE, 2L, bounded = TRUE),
+      AVE = ave,
       stringsAsFactors = FALSE
     )
     if (!groups(tab$block)) body$Group <- NULL
@@ -1041,6 +1113,8 @@ nomo_apa_table.nomo_validity <- function(x, type = c("discriminant", "convergent
                 nomo_apa_number(x$ave_reference, 2L, bounded = TRUE)),
         "a value below it prompts a look at the loadings and content coverage.",
         "AVE is convergent evidence and is not a reliability coefficient.",
+        nomo_apa_fit_sample_note(x$fit),
+        nomo_apa_improper_note(x$fit),
         nomo_apa_dash_note(body, "not computed")
       ),
       number = number, source = "nomo_validity"
@@ -1093,6 +1167,8 @@ nomo_apa_table.nomo_validity <- function(x, type = c("discriminant", "convergent
       "confidence interval, whose upper limit shows how high the correlation",
       "plausibly is (R\u00f6nkk\u00f6 & Cho, 2022).",
       defined[ratios],
+      nomo_apa_fit_sample_note(x$fit),
+      nomo_apa_improper_note(x$fit),
       if (any(ratios)) {
         sprintf(paste(
           "The review reference for the ratios is %s. A ratio below it adds",
@@ -1198,10 +1274,12 @@ nomo_apa_marker <- "\\([a-z](,[a-z])*\\)"
 # A cell's statistical clauses bound with no-break spaces, as the console binds
 # them; a bound kept with its relation, "\u2265 0.20" or "> 0", though not the
 # arrow of a relation such as "Agency -> Persistence"; a note marker with the
-# word it follows, "scalar (a)"; and every "x = y" of a note, Greek symbols
-# included ("\u03b1 = .05").
+# word it follows, "scalar (a)"; every "x = y" of a note, Greek symbols
+# included ("\u03b1 = .05"); and a product such as the retest note's
+# "1.96 \u00d7 \u221a2 \u00d7 SEM", which is read as one term (#145).
 nomo_apa_bind <- function(text) {
   nb <- nomo_present_nbsp
+  text <- gsub(" \u00d7 ", paste0(nb, "\u00d7", nb), text, fixed = TRUE)
   text <- gsub("(^|[[:space:]])([\u2264\u2265<>]=?) ", paste0("\\1\\2", nb), text)
   text <- gsub(paste0(" (", nomo_apa_marker, ")$"), paste0(nb, "\\1"), text)
   nomo_present_bind(gsub(" = ", paste0(nb, "=", nb), text, fixed = TRUE))
@@ -1347,8 +1425,19 @@ print.nomo_apa_table <- function(x, ...) {
   }
 
   # Notes wrap to the console, as every other printed text does (#89), each
-  # specific note on its own line.
-  for (note in nomo_apa_console_text(nomo_apa_notes_text(x$notes, run_in = FALSE))) {
+  # specific note on its own line. A specific note whose marker is only in
+  # columns not shown for width is left out with them; the others keep their
+  # letters, so each still matches its cells in x$body (#145).
+  notes <- nomo_apa_notes_text(x$notes, run_in = FALSE)
+  marked <- function(columns) {
+    cells <- unlist(x$body[columns], use.names = FALSE)
+    markers <- unlist(regmatches(cells, gregexpr("\\^[a-z](,[a-z])*\\^", cells)))
+    unlist(strsplit(gsub("^", "", markers, fixed = TRUE), ",", fixed = TRUE))
+  }
+  hidden <- headings %in% laid$hidden
+  letter <- ifelse(grepl("^\\^[a-z]\\^ ", notes), substr(notes, 2L, 2L), "")
+  notes <- notes[!(letter %in% setdiff(marked(hidden), marked(!hidden)))]
+  for (note in nomo_apa_console_text(notes)) {
     nomo_present_text(nomo_apa_bind(note))
   }
   nomo_present_pointer(c("x$body", "knitr::knit_print(x)"),

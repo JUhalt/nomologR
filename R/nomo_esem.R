@@ -532,10 +532,8 @@ nomo_esem_present_header <- function(x, summary = FALSE) {
 # In a summary each observation is followed by its recommendation; a lavaan
 # warning kept as an observation is ended with a full stop first (#145).
 nomo_esem_flagged <- function(log, recommendation = FALSE) {
-  text <- log$observation
-  if (isTRUE(recommendation)) text <- nomo_compare_then_recommend(text, log$recommendation)
-  nomo_present_flagged(log, unit = ifelse(log$metric == "cases_used", "Cases", log$object),
-                       text = text)
+  nomo_present_flagged(log, recommendation = recommendation,
+                       unit = ifelse(log$metric == "cases_used", "Cases", log$object))
 }
 
 

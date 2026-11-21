@@ -41,22 +41,11 @@ nomo_compare_flagged <- function(x, recommendation = FALSE) {
   rows <- log$metric == "model_comparison"
   note <- x$comparisons$test_note[match(log$object[rows], x$comparisons$model)]
   text[rows] <- ifelse(nzchar(note), note, text[rows])
-  if (isTRUE(recommendation)) text <- nomo_compare_then_recommend(text, log$recommendation)
   nomo_present_flagged(
     unit = ifelse(log$metric == "comparison_origin", "Origin", log$object),
-    status = log$severity, text = text
+    status = log$severity, text = text,
+    recommendation = if (isTRUE(recommendation)) log$recommendation else FALSE
   )
-}
-
-
-# An observation followed by its recommendation, as a summary's "Flagged"
-# section gives them. The observation is ended with a full stop first, since a
-# lavaan message kept as an observation or a note has none, and the shared
-# helper adds one only at the very end (#145).
-nomo_compare_then_recommend <- function(observation, recommendation) {
-  observation <- trimws(observation)
-  ended <- !nzchar(observation) | grepl("[.!?]$", observation)
-  paste(ifelse(ended, observation, paste0(observation, ".")), recommendation)
 }
 
 

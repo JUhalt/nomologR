@@ -751,7 +751,7 @@ nomo_efa_item_summary <- function(pattern,
       reasons <- c(
         reasons,
         sprintf(
-          "The primary loading, %s in absolute value, is below the %s teaching reference.",
+          "The primary loading, %s in absolute value, is below the review reference %s.",
           nomo_present_stat(abs(primary), "loading", reference = load_ref),
           nomo_present_stat(load_ref, "loading")
         )
@@ -761,7 +761,7 @@ nomo_efa_item_summary <- function(pattern,
       reasons <- c(
         reasons,
         sprintf(
-          "The secondary loading, %s in absolute value, is at or above the %s cross-loading reference.",
+          "The secondary loading, %s in absolute value, is at or above the cross-loading review reference %s.",
           nomo_present_stat(abs(secondary), "loading", reference = cross_ref),
           nomo_present_stat(cross_ref, "loading")
         )
@@ -771,14 +771,14 @@ nomo_efa_item_summary <- function(pattern,
       reasons <- c(
         reasons,
         sprintf(
-          "The communality, %s, is below the %s teaching reference.",
+          "The communality, %s, is below the review reference %s.",
           nomo_present_stat(communality[[i]], "proportion", reference = communality_ref),
           nomo_present_stat(communality_ref, "proportion")
         )
       )
     }
     if (!length(reasons)) {
-      reasons <- "No loading or communality reaches a teaching reference; review the content as usual."
+      reasons <- "No loading or communality reaches a review reference; examine the content as usual."
     }
 
     tibble::tibble(

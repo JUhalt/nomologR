@@ -2487,7 +2487,35 @@ test_that("relations the added paths fix to zero or lavaan adds are disclosed (#
   expect_identical(row$severity, "review")
   expect_match(row$observation, "fixed to zero in the fitted model", fixed = TRUE)
   expect_match(row$observation, "`Persistence` is an outcome", fixed = TRUE)
-  expect_match(rg_text(dropped), "Review: `Agency <-> Persistence`, estimated in the model", fixed = TRUE)
+  # The relation is the bullet's unit, and the text refers to it without the
+  # backticks that are for R names (#145, out-11).
+  expect_match(rg_text(dropped),
+               "Agency <-> Persistence (Review): The relation, estimated in the model", fixed = TRUE)
+  expect_false(grepl("`Agency <-> Persistence`", rg_text(dropped), fixed = TRUE))
+  # A hypothesis's relation carries its ID; an R name in backticks keeps them
+  # and names its own row; summary() adds each recommendation.
+  log <- data.frame(
+    stage = "network", object = c("A <-> B", "A -> C", "Agency", "D <-> E", "F <-> G"),
+    metric = c("relation_constrained", "residual_association", "single_indicator",
+               "relation_constrained", "relation_constrained"),
+    severity = "review",
+    observation = c("`A <-> B` is fixed to zero", "Its estimate is residual; `A -> C` is conditional.",
+                    "`Agency` is modeled as a single indicator.", "`D <-> E` is added.",
+                    "`F <-> G` is added."),
+    recommendation = c("Add it.", "Read it so.", "Check it.", "", ""), stringsAsFactors = FALSE
+  )
+  evidence <- data.frame(id = "H1", relation = "A -> C", stringsAsFactors = FALSE)
+  local_reproducible_output(width = 80)
+  expect_identical(utils::capture.output(nomologR:::nomo_network_present_flagged(log, evidence)), c(
+    "", "Flagged", "  - A <-> B (Review): The relation is fixed to zero.",
+    "  - H1 A -> C (Review): Its estimate is residual; A -> C is conditional.",
+    "  - Review: `Agency` is modeled as a single indicator.",
+    "  - D <-> E, F <-> G (Review): Each relation is added."
+  ))
+  expect_identical(
+    utils::capture.output(nomologR:::nomo_network_present_flagged(log, evidence, detail = TRUE))[[3L]],
+    "  - A <-> B (Review): The relation is fixed to zero. Add it."
+  )
 
   # Two outcomes gain a residual covariance nobody wrote, disclosed for
   # information, and summary() lists each kind. Performance, which only the
@@ -2543,7 +2571,11 @@ test_that("relations of a variable the hypotheses bring in are disclosed as rest
     "`Agency <-> Performance` is fixed to zero in the fitted model: the hypotheses bring",
     "`Performance` into the model, and neither they nor lavaan's defaults relate the two."
   ), fixed = TRUE)
-  expect_match(rg_flat(net), "Review: `Agency <-> Performance` is fixed to zero", fixed = TRUE)
+  # Two relations with one explanation share a bullet (guide point 22).
+  expect_match(rg_flat(net), paste(
+    "Agency <-> Performance, Performance <-> SocialDesirability (Review): Each relation is",
+    "fixed to zero in the fitted model: the hypotheses bring `Performance`"
+  ), fixed = TRUE)
   expect_match(rg_flat(summary(net)), paste(
     "Agency <-> Performance: fixed to zero; the model as given does not contain Performance."
   ), fixed = TRUE)
@@ -3038,6 +3070,22 @@ test_that("the scale of the estimates is stated, row by row when it differs (#14
   expect_identical(plot(mixed, "effects")$labels$x,
                    "Estimate (standardized or unstandardized, as each hypothesis specifies)")
   expect_identical(plot(rg_default(), "effects")$labels$x, "Standardized estimate")
+  # Each scale gets a panel and an axis of its own, so the unstandardized
+  # estimate does not flatten the standardized one onto zero; a one-scale plot
+  # keeps one panel (#145).
+  built <- ggplot2::ggplot_build(plot(mixed, "effects"))
+  expect_identical(nrow(built$layout$layout), 2L)
+  expect_setequal(as.character(built$layout$layout$scale_panel),
+                  c("Standardized estimates", "Unstandardized estimates"))
+  ranges <- lapply(built$layout$panel_params, function(p) p$x.range)
+  expect_lt(diff(ranges[[1L]]), diff(ranges[[2L]]))
+  expect_identical(nrow(ggplot2::ggplot_build(plot(rg_default(), "effects"))$layout$layout), 1L)
+  # A standardized band with an open side runs to the edge of its own panel,
+  # not to the unstandardized estimate's (H2 is at least 2).
+  prepared <- nomologR:::nomo_network_theory_plot_data(mixed)$data
+  open <- prepared$scale == "standardized" & is.infinite(prepared$theory_upper)
+  expect_true(any(open))
+  expect_true(all(prepared$theory_upper_plot[open] < 2))
 
   # The metric of an unstandardized latent estimate is logged with the
   # identification that set it, and documented.
@@ -3193,12 +3241,21 @@ test_that("the summary counts and facts read as label: value (#145)", {
   expect_match(summary_text, "Status: no flags | Constructs: 3", fixed = TRUE)
   expect_no_match(summary_text, ": none", fixed = TRUE)
   expect_match(rg_text(summary(rg_split())), "Replication\n  Mixed: 1 | Replicated: 2\n", fixed = TRUE)
+  # print() counts every flag the object holds, also those it leaves to the
+  # hypothesis tables and to summary() (#145, out-9).
+  split <- rg_split()
+  severity <- split$decision_log$severity
+  shown <- utils::capture.output(print(split))
+  expect_true(sprintf("Total flags: %d concern, %d review",
+                      sum(severity == "concern"), sum(severity == "review")) %in% shown)
+  bullets <- sum(startsWith(shown[(which(shown == "Flagged") + 1L):length(shown)], "  - "))
+  expect_gt(sum(severity %in% c("review", "concern")), bullets)
   expect_match(summary_text, "\nSee nomo_table(x, \"decision_log\") for every decision-log row",
                fixed = TRUE)
   # The facts inside a section break between parts, never inside one.
   local_reproducible_output(width = 50)
-  facts <- utils::capture.output(nomologR:::nomo_network_section_facts(
-    c("Loading flags: 0", "Negative variances: 0", "Engine warnings: 0")
+  facts <- utils::capture.output(nomologR:::nomo_present_facts(
+    c("Loading flags: 0", "Negative variances: 0", "Engine warnings: 0"), indent = 2L
   ))
   expect_identical(facts, c("  Loading flags: 0 | Negative variances: 0",
                             "  Engine warnings: 0"))

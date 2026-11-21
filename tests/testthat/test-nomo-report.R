@@ -594,6 +594,17 @@ test_that("component-table helper covers alternate M1 through M5 report views", 
 })
 
 
+test_that("the adequacy table says its Bartlett value is a p value (#145)", {
+  factors <- make_m9_report_run()$results$factors$WellBeing
+  adequacy <- nomologR:::nomo_report_component_table(factors, "factors", "adequacy")
+  expect_identical(adequacy$metric, c("KMO", "Bartlett's test, p"))
+  shown <- nomologR:::nomo_report_display_table(adequacy)
+  expect_identical(shown$Value[[2L]], "< .001")
+  # The stored table keeps its own name for the row.
+  expect_identical(nomo_table(factors, "adequacy")$metric[[2L]], "Bartlett")
+})
+
+
 test_that("optional M7 and M6 branches are reportable through common helpers", {
   skip_on_cran()
   run <- make_m9_full_report_run()
@@ -815,6 +826,14 @@ test_that("nomo_report renders a polished self-contained HTML archive when Pando
 
   # The report is intended to be archiveable without a MathJax network request.
   expect_false(grepl("MathJax.js", html, fixed = TRUE))
+
+  # The run paused before the optional stages, so the report does not say
+  # they were requested and left incomplete (#145).
+  expect_match(html, "Measurement invariance was not reached in this workflow.",
+               fixed = TRUE)
+  expect_match(html, "The nomological-network stage was not reached in this workflow.",
+               fixed = TRUE)
+  expect_false(grepl("invariance was not completed", html, fixed = TRUE))
 })
 
 
@@ -1551,6 +1570,23 @@ test_that("component summaries are printed at 80 columns whatever the console (#
 })
 
 
+test_that("session information is printed at 80 columns whatever the console (#145)", {
+  # sessionInfo() wraps its package lists to the console's width, so the same
+  # session read differently from a narrow and a wide console.
+  at <- function(width) {
+    withr::with_options(list(width = width), {
+      txt <- nomologR:::nomo_report_session_text()
+      expect_equal(getOption("width"), width)
+      txt
+    })
+  }
+  expect_identical(at(30L), at(200L))
+  expect_identical(at(200L), withr::with_options(
+    list(width = 80L), paste(utils::capture.output(utils::sessionInfo()), collapse = "\n")
+  ))
+})
+
+
 test_that("report cells are escaped so pandoc shows them as written (#145)", {
   escape <- nomologR:::nomo_report_escape
   syntax <- "F =~ a*i1 + a*i2\ni1 ~~ i2"
@@ -1816,6 +1852,189 @@ test_that("a log metric whose name misleads has its kind listed (#145)", {
 })
 
 
+test_that("report cells follow print() where a column's name cannot say how (#145)", {
+  dash <- nomologR:::nomo_report_blank
+  # Network hypotheses: a standardized correlation has no leading zero and a
+  # path keeps it; a value just off a bound of its region shows the decimals
+  # that tell them apart; and the region reads as the console writes it.
+  h <- nomo_hypotheses(
+    "A -> B" = positive(min = .20),
+    "A <-> C" = negligible(within = c(-.15, .15)),
+    "A -> D" = positive()
+  )
+  tab <- tibble::tibble(
+    id = c("H1", "H2", "H3"),
+    theoretical_region = c("[0.2, +Inf)", "[-0.15, 0.15]", "(0, +Inf)"),
+    scale = "standardized", estimate = c(0.1996, 0.00773, 0.38931),
+    se = c(0.035, 0.0444, 0.0329), ci_lower = c(0.13, -0.0794, 0.3248),
+    ci_upper = c(0.27, 0.0948, 0.4538), equivalence_ci_lower = c(NA, -0.0654, NA),
+    equivalence_ci_upper = c(NA, 0.0808, NA)
+  )
+  shown <- nomologR:::nomo_report_display_table(
+    nomologR:::nomo_report_network_hypotheses(tab, list(hypotheses = h))
+  )
+  expect_identical(shown[["Theoretical region"]], c(">= 0.20", "[-.15, .15]", "> 0"))
+  expect_identical(shown$Estimate, c("0.1996", ".01", "0.39"))
+  # The headings carry the intervals' levels (95%, and 1 - 2 alpha).
+  expect_identical(shown[["95% CI lower"]], c("0.13", "-.08", "0.32"))
+  expect_identical(shown[["Equivalence 90% CI upper"]], c(dash, ".08", dash))
+  expect_identical(shown$SE, c("0.04", "0.04", "0.03"))
+  expect_identical(nrow(nomologR:::nomo_report_network_hypotheses(tab[0, ], list())), 0L)
+  # The report's network section goes through it.
+  net <- make_m9_full_report_run()$results$network
+  primary <- nomologR:::nomo_report_component_table(net, "network", "primary")
+  expect_identical(primary$theoretical_region, ">= 0.10")
+
+  # Scores: a validity just below Gorsuch's .90, or a discrepancy just short
+  # of .05, shows the decimals that tell it from the reference.
+  scores <- nomologR:::nomo_report_scores(list(
+    weighting = "unit", method = "sum", scores = data.frame(A = 1:3),
+    diagnostics = tibble::tibble(
+      factor = c("A", "B"), n_items = c(4L, 4L), validity = c(0.903, 0.95),
+      univocality = c(0.4, 0.4), correlational_accuracy = c(-0.0496, 0.02)
+    ),
+    parallel_test = list(available = FALSE, note = ""), notes = tibble::tibble()
+  ))
+  shown <- nomologR:::nomo_report_display_table(scores$diagnostics_table)
+  expect_identical(shown$Validity, c(".903", ".95"))
+  expect_identical(shown[["Correlational accuracy"]], c("-.0496", ".02"))
+  # The result's own table is passed on as it is; only the report's copy
+  # carries the references.
+  expect_null(attr(scores$diagnostics, "nomo_report_references"))
+  expect_identical(nomologR:::nomo_report_display_table(scores$diagnostics)$Validity,
+                   c(".90", ".95"))
+
+  # A stage configured with no setting of its own runs with its defaults.
+  run <- make_m9_report_run()
+  run$settings$missing <- list()
+  settings <- nomologR:::nomo_report_run_table(run, "settings")
+  expect_identical(settings$values[settings$stage == "missing"], "defaults")
+
+  # A logical value a log stored as text reads as a logical column does.
+  trace <- nomologR:::nomo_report_display_table(tibble::tibble(
+    metric = c("convergence", "note"), value = c(1, 2),
+    reference = c("TRUE", "Not TRUE here")
+  ))
+  expect_identical(trace$Reference, c("yes", "Not TRUE here"))
+})
+
+
+test_that("a network estimate reads alike wherever the report shows it (#145)", {
+  # The theory-concordance rows of the evidence trace, primary and validation
+  # sample alike, show each estimate in its kind and the region as the
+  # network's hypotheses table writes it; other rows keep their metric's kind.
+  h <- nomo_hypotheses(
+    "A -> B" = positive(min = .20),
+    "A <-> C" = negligible(within = c(-.15, .15)),
+    "A -> D" = positive()
+  )
+  log <- tibble::tibble(
+    stage = c("network", "network", "network", "network_validation", "network"),
+    object = c("A -> B", "A <-> C", "A -> D", "A <-> C", "primary"),
+    metric = c(rep("theory_concordance", 4L), "cases_used"),
+    value = c(0.456, 0.151, 0.39, 0.12, 800),
+    reference = c("[0.2, +Inf)", "[-0.15, 0.15]", "(0, +Inf)", "[-0.15, 0.15]", ""),
+    severity = c("info", "concern", "info", "info", "info"),
+    observation = "", recommendation = ""
+  )
+  run <- list(results = list(network = structure(
+    list(decision_log = log, hypotheses = h), class = "nomo_network"
+  )))
+  trace <- nomologR:::nomo_report_evidence_trace(run)
+  shown <- nomologR:::nomo_report_display_table(trace)
+  expect_identical(shown$Value, c("0.46", ".151", "0.39", ".12", "800"))
+  expect_identical(shown$Reference,
+                   c(">= 0.20", "[-.15, .15]", "> 0", "[-.15, .15]", nomologR:::nomo_report_blank))
+  # The flagged rows keep their kinds.
+  flagged <- nomologR:::nomo_report_display_table(nomologR:::nomo_report_flagged_trace(run))
+  expect_identical(flagged$Value, ".151")
+  expect_identical(flagged$Reference, "[-.15, .15]")
+  # A run without hypotheses keeps the log as stored.
+  run$results$network$hypotheses <- NULL
+  stored <- nomologR:::nomo_report_evidence_trace(run)
+  expect_identical(stored$reference, log$reference)
+  expect_null(attr(stored, "nomo_report_kinds"))
+
+  # The replication table gives each sample's estimate in its hypothesis's
+  # kind, as print() does; the shift between them keeps its leading zero.
+  replication <- tibble::tibble(
+    id = c("H1", "H2"), relation = c("A -> B", "A <-> C"),
+    primary_estimate = c(0.456, 0.151), validation_estimate = c(0.41, 0.12),
+    estimate_shift = c(-0.046, -0.031)
+  )
+  shown <- nomologR:::nomo_report_display_table(
+    nomologR:::nomo_report_network_replication(replication, list(hypotheses = h))
+  )
+  expect_identical(shown[["Primary estimate"]], c("0.46", ".15"))
+  expect_identical(shown[["Validation estimate"]], c("0.41", ".12"))
+  expect_identical(shown[["Estimate shift"]], c("-0.05", "-0.03"))
+  expect_identical(nrow(nomologR:::nomo_report_network_replication(replication[0, ], list())), 0L)
+
+  # The missing-data differences: a loading and a path keep the leading zero,
+  # and a factor correlation and a standardized association drop it, as the
+  # missing-data print() and the network's table show them.
+  m <- list(
+    pattern = list(n_incomplete = 15L, n_cases = 500L, pct_incomplete = 0.03),
+    strategies = tibble::tibble(
+      strategy = c("listwise", "ml"), label = c("Listwise deletion", "FIML"),
+      lavaan_missing = c("listwise", "ml"), requires = c("MCAR", "MAR"),
+      role = c("comparison", "reference"), available = TRUE,
+      n_used = c(485, 500), converged = TRUE, admissible = TRUE
+    ),
+    estimates = tibble::tibble(
+      type = c("loading", "factor_correlation", "hypothesis", "hypothesis"),
+      parameter = c("A =~ a1", "A ~~ B", "H1", "H2"),
+      strategy = "listwise", role = "comparison",
+      estimate = c(0.712, 0.451, 0.456, 0.151),
+      reference_estimate = c(0.708, 0.449, 0.450, 0.149),
+      difference_in_se = c(0.4, 0.3, 0.2, 0.1)
+    ),
+    reference = "ml", fit = tibble::tibble(), reliability = NULL,
+    decision_log = tibble::tibble(),
+    fits = list(listwise = NULL, ml = list(hypothesis_evidence = tibble::tibble(
+      id = c("H1", "H2"), scale = "standardized",
+      relation_type = c("directed", "association")
+    )))
+  )
+  differences <- nomologR:::nomo_report_display_table(nomologR:::nomo_report_missing(m)$differences)
+  expect_identical(differences$Estimate, c("0.712", ".451", "0.456", ".151"))
+  expect_identical(differences$Reference, c("0.708", ".449", "0.450", ".149"))
+  # Without the refitted network a hypothesis keeps the leading zero.
+  m$fits <- NULL
+  differences <- nomologR:::nomo_report_display_table(nomologR:::nomo_report_missing(m)$differences)
+  expect_identical(differences$Estimate, c("0.712", ".451", "0.456", "0.151"))
+})
+
+
+test_that("an interval's headings carry its confidence level (#145)", {
+  run <- make_m9_report_run()
+  labels <- function(obj, stage, type) {
+    names(nomologR:::nomo_report_display_table(
+      nomologR:::nomo_report_component_table(obj, stage, type)
+    ))
+  }
+  # A reliability interval at the level it was bootstrapped at, read from
+  # the object, so a 90% interval is not taken for a 95% one.
+  rel <- run$results$reliability
+  rel$ci_level <- 0.90
+  expect_true(all(c("Omega 90% CI lower", "Omega 90% CI upper", "Alpha 90% CI lower",
+                    "Alpha 90% CI upper") %in% labels(rel, "reliability", "primary")))
+  rel$ci_level <- NULL
+  expect_true("Omega CI lower" %in% labels(rel, "reliability", "primary"))
+  expect_true(all(c("95% CI lower", "95% CI upper") %in%
+                    labels(run$results$cfa, "cfa", "loadings")))
+  expect_null(nomologR:::nomo_report_ci_levels(run$results$cfa, "cfa", "fit"))
+
+  # The network's estimate intervals are 95%, its equivalence intervals
+  # 1 - 2 alpha.
+  net <- make_m9_full_report_run()$results$network
+  shown <- labels(net, "network", "primary")
+  expect_true(all(c("95% CI lower", "Equivalence 90% CI upper") %in% shown))
+  pairs <- nomologR:::nomo_report_ci_levels(NULL, "validity", "discriminant")
+  expect_identical(pairs, c(latent_r_ci_lower = 0.95, latent_r_ci_upper = 0.95))
+})
+
+
 test_that("a flagged value is told apart from the reference its row names (#144)", {
   # In a decision log the reference is text. A value flagged for falling on
   # one side of it must not print as the reference does.
@@ -1857,6 +2076,18 @@ test_that("a flagged value is told apart from the reference its row names (#144)
                    list(c(-0.15, 0.15), numeric(), 2016))
   # A hyphen between two numbers is a range, and a digit in a name is no number.
   expect_identical(numbers("moderate .50-.75; MAP (TR2), HTMT2, x^2"), list(c(0.50, 0.75)))
+
+  # A limit given in words is the number it names (#145): the missing-data
+  # log's difference of 0.503 standard errors is not shown as its reference's
+  # half.
+  expect_identical(numbers(c("Half a reference standard error", "behalf of")),
+                   list(0.5, numeric()))
+  missing_log <- nomologR:::nomo_report_display_table(tibble::tibble(
+    metric = c("estimate_difference", "estimates_agree"), value = c(0.503, 0.497),
+    reference = nomologR:::nomo_missing_half_se_reference,
+    severity = c("review", "info")
+  ))
+  expect_identical(missing_log$Value, c("0.503", "0.50"))
 })
 
 
@@ -2023,6 +2254,11 @@ test_that("the scores summary writes the parallel-model test in APA form (#144)"
   expect_match(text, "fitted model: Delta chi-square(16) = 41.93, p < .001.", fixed = TRUE)
   scores$parallel_test <- list(available = FALSE, note = "Not tested: one item.")
   expect_match(nomologR:::nomo_report_scores(scores)$summary, "Not tested: one item.", fixed = TRUE)
+  # Factor-score methods weight the items by the model.
+  scores$weighting <- "model"
+  scores$method <- "regression"
+  expect_match(nomologR:::nomo_report_scores(scores)$summary,
+               "Model-weighted scores (method: regression)", fixed = TRUE)
 
   # Scores the model weights are named as such, with no parallel-model test.
   cfa <- nomo_cfa("A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4 + b5",
@@ -2114,6 +2350,19 @@ test_that("every abbreviation the report shows is defined once at its end (#144)
     "I-CVI >= .88; Lynn, 1986", "target IOC", "Not confirmable without SESOI"
   ))
   expect_identical(carried$abbreviation, c("Csv", "CVI", "IOC", "Psa", "SESOI"))
+  # Every estimator the methods table or a CFA summary can name, worded as
+  # nomo_cfa() words it, and revised MAP as the registry defines it (#145).
+  estimators <- nomologR:::nomo_report_abbreviations(text = c(
+    "ULS, GLS, WLS, DWLS, and ULSMV", "MLM or MLMV or MLMVS or MLF", "WLSM; TR4"
+  ))
+  expect_identical(estimators$abbreviation, c(
+    "DWLS", "GLS", "MLF", "MLM", "MLMV", "MLMVS", "TR4", "ULS", "ULSMV", "WLS", "WLSM"
+  ))
+  expect_identical(nomologR:::nomo_report_glossary[["DWLS"]],
+                   "diagonally weighted least squares")
+  tr4 <- nomologR:::nomo_report_glossary[["TR4"]]
+  expect_match(tr4, "trace of the fourth power of the partial-correlation matrix", fixed = TRUE)
+  expect_false(grepl("averag", tr4, fixed = TRUE))
 
   note <- nomologR:::nomo_report_reading_note()
   expect_match(note, nomologR:::nomo_report_blank, fixed = TRUE)
@@ -2471,4 +2720,72 @@ test_that("a render that stops part-way leaves nothing behind (CRAN)", {
   expect_identical(getwd(), wd_before)
   expect_identical(report_listing(wd_before), wd_files_before)
   expect_identical(options()[names(options_before)], options_before)
+
+  # The directories made for the report are removed with it (#145); one that
+  # was there before is kept.
+  expect_error(
+    suppressMessages(
+      nomo_report(run, file = file.path(out, "new", "deeper", "report.html"),
+                  include_session = FALSE, quiet = TRUE)
+    ),
+    "synthetic render failure"
+  )
+  expect_true(dir.exists(out))
+  expect_length(report_listing(out), 0L)
+})
+
+
+test_that("a directory made for a report is removed only while empty (#145)", {
+  root <- tempfile("nomo-report-dirs-")
+  dir.create(root)
+  on.exit(unlink(root, recursive = TRUE), add = TRUE)
+  path <- file.path(root, "a", "b")
+  new <- nomologR:::nomo_report_new_dirs(path)
+  expect_identical(basename(new), c("b", "a"))
+  expect_identical(new[[1L]], path)
+  expect_identical(nomologR:::nomo_report_new_dirs(root), character())
+
+  dir.create(path, recursive = TRUE)
+  writeLines("kept", file.path(path, "report.html"))
+  nomologR:::nomo_report_remove_empty_dirs(new)
+  expect_true(file.exists(file.path(path, "report.html")))
+  unlink(file.path(path, "report.html"))
+  nomologR:::nomo_report_remove_empty_dirs(new)
+  expect_false(dir.exists(file.path(root, "a")))
+  expect_true(dir.exists(root))
+})
+
+
+test_that("a file where the report's directory would be is never removed (CRAN)", {
+  root <- tempfile("nomo-report-file-dir-")
+  dir.create(root)
+  on.exit(unlink(root, recursive = TRUE), add = TRUE)
+  notes <- file.path(root, "notes.txt")
+  writeLines("user data", notes)
+
+  # The walk stops at the file, so it is not one of the directories to make.
+  expect_identical(nomologR:::nomo_report_new_dirs(notes), character())
+  below <- file.path(notes, "sub")
+  expect_identical(nomologR:::nomo_report_new_dirs(below), below)
+
+  # Removal touches only empty directories: a file, or a directory that was
+  # never made, is left as it is.
+  nomologR:::nomo_report_remove_empty_dirs(c(below, notes))
+  expect_identical(readLines(notes), "user data")
+
+  # Through nomo_report(): the directory cannot be made, the call stops, and
+  # the user's file is still there with what it held.
+  report_can_render()
+  run <- make_m9_report_run()
+  for (file in c(file.path(notes, "report.html"),
+                 file.path(notes, "sub", "report.html"))) {
+    expect_error(
+      nomo_report(run, file = file, include_session = FALSE, quiet = TRUE),
+      "Could not create report output directory"
+    )
+    expect_true(file.exists(notes))
+    expect_false(dir.exists(notes))
+    expect_identical(readLines(notes), "user data")
+  }
+  expect_identical(report_listing(root), "notes.txt")
 })

@@ -6,7 +6,7 @@
       <nomo_cfa> Confirmatory factor analysis
       Cases: 473 of 500 used | Estimator: ML | Converged: yes
       Fit: CFI .973 | TLI 0.965 | RMSEA 0.051 | SRMR 0.052
-      Loadings: 10 | Flags: 2 review, 0 concern
+      Loadings: 10 | Flags: 0 concern, 2 review
       No parameter was freed and no model was refit automatically.
       
       ML = maximum likelihood; CFI = comparative fit index; TLI = Tucker-Lewis
@@ -56,11 +56,11 @@
       
       Largest residual correlations
         Item 1  Item 2  Residual
-        b3      a5          0.19
-        b1      a5          0.19
-        b2      a5          0.14
-        b4      a5          0.14
-        b3      a4         -0.07
+        b3      a5           .19
+        b1      a5           .19
+        b2      a5           .14
+        b4      a5           .14
+        b3      a4          -.07
       
       Modification indices (diagnostic only)
         Parameter     MI    EPC  Std. EPC
@@ -75,8 +75,8 @@
       Flagged
         - Cases (Review): 473 of 500 input cases were used. Confirm that the loss
           follows the intended missing-data strategy.
-        - b5 on B (Review): Absolute standardized loading is below the configured
-          teaching reference of 0.50; inspect item content, precision, and model
+        - b5 on B (Review): Standardized loading 0.34 is below the review reference
+          0.50 in absolute value; inspect item content, precision, and model
           specification.
       
       What these columns mean
@@ -108,7 +108,7 @@
       Items with missing responses: 2 | Constant: 0 | All missing: 0
       Items in correlation diagnostics: 10 | Item-rest correlations: 10
       Response concentration flags: 0 | Near-zero variance: 0
-      Decision log: 4 entries | Flagged: 1 review, 0 concern
+      Decision log: 4 entries | Flagged: 0 concern, 1 review
       No rows or items were removed or modified.
       
       See summary(x) for each item's review and nomo_table(x, "decision_log") for
@@ -120,7 +120,7 @@
       print(summary(scr))
     Output
       <nomo_screen summary> Item and data audit
-      Cases: 500 | Items: 10 | Item flags: 1 review, 0 concern
+      Cases: 500 | Items: 10 | Item flags: 0 concern, 1 review
       Items with missing responses: 2 | Constant: 0 | All missing: 0
       Items in correlation diagnostics: 10
       
@@ -141,7 +141,7 @@
       
       Flagged
         - b5 (Review): `b5` has a corrected item-rest correlation of r = .28
-          (n = 473), below the teaching reference of .30.
+          (n = 473), below the review reference .30.
       
       Flags are review aids, not decisions to keep or delete an item.
       
@@ -210,8 +210,9 @@
       
       Abbreviations
         MAP -- Minimum average partial criterion (Velicer). TR2, the original,
-            averages squared partial correlations; TR4, the revised, averages fourth
-            powers.
+            averages squared partial correlations; TR4, the revised, is the trace of
+            the fourth power of the partial-correlation matrix, less the number of
+            items p, over p(p - 1), and can exceed 1.
         KMO -- Kaiser-Meyer-Olkin measure of sampling adequacy.
         EKC -- Empirical Kaiser criterion.
       
@@ -230,7 +231,7 @@
       Cases: 500 (minimum pairwise N: 473) | Items: 10
       Factors: 2 (from nomo_factors())
       Correlation: Pearson | Extraction: minres | Rotation: oblimin (oblique)
-      RMSR: 0.018 | Item flags: 2 review, 1 concern
+      RMSR: 0.018 | Item flags: 1 concern, 2 review
       RMSR = root mean square of the off-diagonal residual correlations. No item was
       deleted and no model was refit automatically.
       
@@ -262,11 +263,11 @@
       
       Flagged
         - b5 (Concern): The primary loading, 0.33 in absolute value, is below the
-          0.40 teaching reference. The communality, .12, is below the .40 teaching
-          reference.
+          review reference 0.40. The communality, .12, is below the review reference
+          .40.
         - a5 (Review): The secondary loading, 0.34 in absolute value, is at or above
-          the 0.30 cross-loading reference.
-        - b4 (Review): The communality, .3997, is below the .40 teaching reference.
+          the cross-loading review reference 0.30.
+        - b4 (Review): The communality, .3997, is below the review reference .40.
       
       Factor correlations
         Factor 1  Factor 2    r
@@ -326,7 +327,7 @@
       assumption-dependent. Reliability contributes score-precision evidence, not
       construct validity.
       
-      See x$decision_log for the reasoning behind each coefficient.
+      See nomo_table(x, "decision_log") for the reasoning behind each coefficient.
 
 ---
 
@@ -335,7 +336,7 @@
     Output
       <nomo_validity> Convergent and discriminant evidence
       Constructs: 2 | AVE reference: .50 | HTMT reference: 0.85
-      Convergent flags: 2 review, 0 concern (2 constructs)
+      Convergent flags: 0 concern, 2 review (2 constructs)
       Separation flags: none (1 pair)
       
       Flagged
@@ -357,7 +358,7 @@
     Output
       <nomo_validity summary> Convergent and discriminant evidence
       Constructs: 2 | AVE reference: .50 | HTMT reference: 0.85
-      Convergent flags: 2 review, 0 concern (2 constructs)
+      Convergent flags: 0 concern, 2 review (2 constructs)
       Separation flags: none (1 pair)
       
       Convergent evidence by construct
@@ -373,12 +374,12 @@
         - b5 (Review): Standardized loading 0.34 is below the review reference 0.50
           in absolute value; inspect item content, precision, and model
           specification.
-        - A (Review): AVE (.497) is below the configured convergent-evidence
-          reference (.50). Inspect standardized loadings, indicator-specific error,
-          and content coverage; do not automatically delete items.
-        - B (Review): AVE (.43) is below the configured convergent-evidence
-          reference (.50). Inspect standardized loadings, indicator-specific error,
-          and content coverage; do not automatically delete items.
+        - A (Review): AVE .497 is below the review reference .50. Inspect
+          standardized loadings, indicator-specific error, and content coverage; do
+          not automatically delete items.
+        - B (Review): AVE .43 is below the review reference .50. Inspect
+          standardized loadings, indicator-specific error, and content coverage; do
+          not automatically delete items.
       
       What these columns mean
         AVE -- Average variance extracted, the mean share of its indicators'
@@ -394,8 +395,8 @@
       and HTMT-family statistics address construct separation. These are
       complementary questions, not interchangeable pass/fail tests.
       
-      See nomo_table(x, "discriminant") for every value and x$decision_log for the
-      reasoning behind each flag.
+      See nomo_table(x, "discriminant") for every value and
+      nomo_table(x, "decision_log") for the reasoning behind each flag.
 
 ---
 
@@ -975,6 +976,7 @@
       Cases: 800 | Converged: yes
       Theory relations: 3 | Added to the model from hypotheses: 2
       Measurement context: no flags | Model fit: no flags
+      Total flags: 0 concern, 2 review
       
       Hypothesis evidence
         ID  Relation                       Concordance  Estimate  CI
@@ -986,13 +988,13 @@
         is judged on.
       
       Flagged
-        - Review: `Persistence <-> SocialDesirability`, estimated in the model as
-          given, is fixed to zero in the fitted model: with the hypothesized paths,
-          `Persistence` is an outcome, and lavaan does not covary an outcome's
-          residual with a variable that does not predict it.
-        - Review: `Performance <-> SocialDesirability` is fixed to zero in the
-          fitted model: the hypotheses bring `Performance` into the model, and
-          neither they nor lavaan's defaults relate the two.
+        - Persistence <-> SocialDesirability (Review): The relation, estimated in
+          the model as given, is fixed to zero in the fitted model: with the
+          hypothesized paths, `Persistence` is an outcome, and lavaan does not
+          covary an outcome's residual with a variable that does not predict it.
+        - Performance <-> SocialDesirability (Review): The relation is fixed to zero
+          in the fitted model: the hypotheses bring `Performance` into the model,
+          and neither they nor lavaan's defaults relate the two.
       
       Theory concordance, uncertainty, measurement quality, and replication are
       distinct evidence streams. Statistical significance alone is not a validity
@@ -1049,17 +1051,17 @@
         Concordant: 3
       
       Flagged
-        - Review: `Persistence <-> SocialDesirability`, estimated in the model as
-          given, is fixed to zero in the fitted model: with the hypothesized paths,
-          `Persistence` is an outcome, and lavaan does not covary an outcome's
-          residual with a variable that does not predict it. Fixing a relation to
-          zero is a restriction of the network, and its misfit counts against the
-          theory's structure. If the theory allows the relation, add it as a
-          hypothesis or write it in `model`.
-        - Review: `Performance <-> SocialDesirability` is fixed to zero in the
-          fitted model: the hypotheses bring `Performance` into the model, and
-          neither they nor lavaan's defaults relate the two. Fixing a relation to
-          zero is a restriction of the network, and its misfit counts against the
+        - Persistence <-> SocialDesirability (Review): The relation, estimated in
+          the model as given, is fixed to zero in the fitted model: with the
+          hypothesized paths, `Persistence` is an outcome, and lavaan does not
+          covary an outcome's residual with a variable that does not predict it.
+          Fixing a relation to zero is a restriction of the network, and its misfit
+          counts against the theory's structure. If the theory allows the relation,
+          add it as a hypothesis or write it in `model`.
+        - Performance <-> SocialDesirability (Review): The relation is fixed to zero
+          in the fitted model: the hypotheses bring `Performance` into the model,
+          and neither they nor lavaan's defaults relate the two. Fixing a relation
+          to zero is a restriction of the network, and its misfit counts against the
           theory's structure. If the theory allows the relation, add it as a
           hypothesis or write it in `model`.
       
@@ -1148,13 +1150,13 @@
         - EFA item flags: none
         - CFA: CFI .996, RMSEA 0.020, SRMR 0.021; loading flags: none
         - Reliability: omega .73 to .85
-        - Validity: convergent flags 1 review, 0 concern; separation flags none
+        - Validity: convergent flags 0 concern, 1 review; separation flags none
         - Invariance: completed configural -> metric
         - Network: 1 hypothesis; 1 concordant
         - Careless responding: 0 cases flagged, none removed
         - Scores: sum method
-        - Missing-data sensitivity: only one strategy could be fitted for the
-          measurement model and the network
+        - Missing-data sensitivity: no modeled variable of the measurement model or
+          the network has missing values, so no strategies were compared
       
       All requested stages are complete or explicitly marked not requested. No
       hidden item deletion, model respecification, parameter freeing, or validity
@@ -1303,10 +1305,9 @@
         - The SocialDesirability EFA (Review): 1 factor on 3 items leaves 0 degrees
           of freedom: the model reproduces the correlations exactly, so an RMSR near
           0 is not evidence of fit.
-        - SocialDesirability in validity (Review): AVE (.47) is below the configured
-          convergent-evidence reference (.50). Inspect standardized loadings,
-          indicator-specific error, and content coverage; do not automatically
-          delete items.
+        - SocialDesirability in validity (Review): AVE .47 is below the review
+          reference .50. Inspect standardized loadings, indicator-specific error,
+          and content coverage; do not automatically delete items.
         - Scores (Review): The parallel model that unit weighting assumes fits worse
           than the model you fitted (Delta chi-square(16) = 41.93, p < .001). The
           items are not interchangeable in the way adding them assumes. This does
@@ -1317,10 +1318,10 @@
           (1983, p. 260) recommended at least .80, and above .90 if the scores are
           to serve as adequate substitutes for the factors themselves. Reported as
           his recommendation, not applied as a rule.
-        - The network (Review): `Persistence <-> SocialDesirability`, estimated in
-          the model as given, is fixed to zero in the fitted model: with the
-          hypothesized paths, `Persistence` is an outcome, and lavaan does not
-          covary an outcome's residual with a variable that does not predict it.
+        - Persistence <-> SocialDesirability in the network (Review): The relation,
+          estimated in the model as given, is fixed to zero in the fitted model:
+          with the hypothesized paths, `Persistence` is an outcome, and lavaan does
+          not covary an outcome's residual with a variable that does not predict it.
       
       Abbreviations
         EFA -- Exploratory factor analysis.

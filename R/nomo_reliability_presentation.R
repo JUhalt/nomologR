@@ -142,7 +142,7 @@ nomo_reliability_other_flags <- function(log, brief = FALSE) {
     text = if (isTRUE(brief)) {
       unname(nomo_reliability_brief[rows$metric])
     } else {
-      paste(rows$observation, rows$recommendation)
+      nomo_present_then_recommend(rows$observation, rows$recommendation)
     }
   )
 }
@@ -304,11 +304,15 @@ print.summary_nomo_reliability <- function(x, ...) {
   ]
   if (nrow(unavailable)) {
     nomo_present_section("Alpha not computed")
-    nomo_present_bullets(sprintf(
-      "%s (%s indicators, %s scale): %s", unavailable$construct,
-      unavailable$indicator_type, gsub("_", " ", unavailable$score_scale),
-      unavailable$reason
-    ))
+    # Constructs with the same explanation share one bullet, "A, B (...): ..."
+    # (guide point 22; #145, out-15).
+    detail <- sprintf(
+      "(%s indicators, %s scale): %s", unavailable$indicator_type,
+      gsub("_", " ", unavailable$score_scale), unavailable$reason
+    )
+    nomo_present_bullets(vapply(unique(detail), function(d) {
+      paste(paste(unavailable$construct[detail == d], collapse = ", "), d)
+    }, character(1), USE.NAMES = FALSE))
   }
 
   # Each flagged coefficient, with what to look at; omega's and alpha's. Then
@@ -360,7 +364,8 @@ print.summary_nomo_reliability <- function(x, ...) {
     "assumption-dependent. Reliability contributes score-precision evidence, ",
     "not construct validity."
   )
-  nomo_present_pointer("x$decision_log", "the reasoning behind each coefficient")
+  nomo_present_pointer("nomo_table(x, \"decision_log\")",
+                       "the reasoning behind each coefficient")
   invisible(x)
 }
 
@@ -430,6 +435,15 @@ plot.nomo_reliability <- function(x, type = "coefficients", ...) {
     drop = FALSE
   ]
   reference_shown <- nomo_present_stat(ref, "reliability")
+  # A coefficient that was not computed has no point, so the caption names it,
+  # as its row would be named on the axis (guide point 27; #145).
+  evidence <- x$evidence
+  alpha_status <- x$alpha_status
+  not_computed <- unique(c(
+    paste(evidence$construct, evidence$metric, sep = ": ")[!is.finite(evidence$estimate)],
+    paste(alpha_status$construct, "alpha", sep = ": ")[alpha_status$requested &
+                                                          !alpha_status$available]
+  ))
 
   p <- ggplot2::ggplot() +
     ggplot2::geom_vline(xintercept = ref, linetype = 2) +
@@ -476,7 +490,13 @@ plot.nomo_reliability <- function(x, type = "coefficients", ...) {
       },
       x = "Reliability coefficient",
       y = NULL,
-      caption = "Omega is primary and drawn larger; alpha is secondary. Reference values guide review; they are not pass/fail rules."
+      caption = paste(c(
+        "Omega is primary and drawn larger; alpha is secondary. Reference values guide",
+        "review; they are not pass/fail rules.",
+        if (length(not_computed)) {
+          sprintf("Not computed, so not drawn: %s.", nomo_present_or(not_computed, "and"))
+        }
+      ), collapse = " ")
     ) +
     ggplot2::theme_minimal() +
     ggplot2::theme(
