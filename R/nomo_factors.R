@@ -121,6 +121,9 @@
 #'   * `correlation_method` and `correlation_matrix`: the correlations analyzed.
 #'   * `kmo` and `bartlett`: sampling-adequacy evidence.
 #'   * `parallel`, `map`, and `scree`: each criterion's result.
+#'     `parallel$sensitivity` has one row per parallel-analysis rule: `rule`
+#'     (`"percentile"`, `"mean"`, and `"crawford"`), `n_factors`, the count
+#'     that rule suggests, and `selected`, which is `TRUE` for `parallel_rule`.
 #'   * `criterion_status`: which criteria ran, and why any did not.
 #'   * `evidence`, `family_evidence`, and `family_concordance`: the suggested
 #'     factor counts by method and by family of related methods.

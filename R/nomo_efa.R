@@ -90,10 +90,18 @@
 #'     `n_cases` when no item value is missing or `missing = "complete"`.
 #'   * `correlation_method` and `correlation_matrix`: the correlations analyzed.
 #'   * `pattern_matrix`, `structure_matrix`, and `factor_correlations`.
+#'   * `fit`: the unchanged `psych::fa()` result, for anything else `psych`
+#'     reports. Its factors are the columns of `pattern_matrix`, in the same
+#'     order, under the labels `psych` gives them, so `F1` may be `MR2`.
 #'   * `communalities`, `uniquenesses`, and `complexity`.
 #'   * `item_summary`: one row per item, with its primary and secondary
 #'     loadings, communality, flags, and the explanation of any flag.
+#'   * `reproduced_correlations`: the correlations the solution implies, the
+#'     pattern matrix times the factor correlations times the transposed
+#'     pattern matrix. Its diagonal holds the communalities.
 #'   * `residual_matrix`, `residual_pairs`, and `rmsr`: local misfit.
+#'     `residual_matrix` is `correlation_matrix` minus
+#'     `reproduced_correlations`, with zeros on the diagonal.
 #'   * `sample_adequacy`: `n_cases`, `min_pairwise_n`, `n_items`,
 #'     `cases_per_item` (`min_pairwise_n` divided by `n_items`), `kmo`, and
 #'     `bartlett`.
