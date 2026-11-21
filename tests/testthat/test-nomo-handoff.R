@@ -1,10 +1,11 @@
 # Fixtures ---------------------------------------------------------------------
 #
-# Genuine contentvalidR output from the v0.6.0 to v0.10.1 tags, stored so the
-# reader is tested against the real interface without contentvalidR installed
-# (#46, #53). See fixtures/contentvalidR/README.md and MANIFEST.csv.
+# Genuine contentvalidR output from the v0.6.0 to v0.10.1 tags and from its
+# 0.99.0 release candidate, stored so the reader is tested against the real
+# interface without contentvalidR installed (#46, #53). See
+# fixtures/contentvalidR/README.md and MANIFEST.csv.
 
-handoff_versions <- c("0.6.0", "0.7.0", "0.8.0", "0.9.0", "0.10.0", "0.10.1")
+handoff_versions <- c("0.6.0", "0.7.0", "0.8.0", "0.9.0", "0.10.0", "0.10.1", "0.99.0")
 
 # Every stored version after `version`, so a version added to the end of
 # handoff_versions joins each comparison with an earlier baseline.
@@ -16,9 +17,8 @@ handoff_versions_after <- function(version) {
 # The first producer version each fit is stored for. The nine-expert panel
 # joined the fixtures at 0.7.0 and the none-reversed sort at 0.9.0. The three
 # congruence fits start at 0.99.0, the first producer that hands off the index
-# of item-objective congruence with one row per item. Until a version from
-# 0.99.0 on is added to handoff_versions, they have no stored version and
-# their tests are not defined.
+# of item-objective congruence with one row per item, so they are stored from
+# 0.99.0 on only.
 handoff_fit_from <- c(
   "walkthrough-sort" = "0.6.0",
   "expert-krippendorff" = "0.6.0",
@@ -432,9 +432,9 @@ test_that("a handoff that carries no items is refused with what content review d
 # Congruence --------------------------------------------------------------------
 #
 # The three congruence fits start at contentvalidR 0.99.0 (handoff_fit_from),
-# so each test below is defined once for every stored version from 0.99.0 on,
-# and not at all while none is stored. Five experts rated items C1, C2 and C3
-# against objectives A, B and C; make-handoff-fixtures.R holds the ratings.
+# so each test below is defined once for every stored version from 0.99.0 on.
+# Five experts rated items C1, C2 and C3 against objectives A, B and C;
+# make-handoff-fixtures.R holds the ratings.
 
 for (version in handoff_fit_versions("congruence-targeted")) {
   test_that(sprintf("a congruence handoff with a target mapping is read as decided (%s)", version), {
@@ -732,7 +732,7 @@ test_that("objects content_handoff() could not have produced are refused as malf
 # mapping, rebuilt from its output for that package's
 # expert_congruence_example.csv (three items, three objectives, six experts):
 # one row per item and objective, where every other handoff, and the same fit
-# from contentvalidR 1.0 on, has one row per item. `keep` is the carry rule
+# from contentvalidR 0.99.0 on, has one row per item. `keep` is the carry rule
 # the handoff was made with.
 handoff_congruence_per_objective <- function(keep) {
   items <- rep(c("I1", "I2", "I3"), each = 3L)
@@ -800,8 +800,8 @@ test_that("an item listed more than once is refused, with both ways it can arise
   refusal <- paste(
     "This handoff does not have one row per reviewed item: `item_evidence` lists",
     "I1, I2, I3 more than once. A congruence handoff written by contentvalidR",
-    "before 1.0 without a target mapping had one row per objective; such a",
-    "handoff has to be made again from a new fit with contentvalidR 1.0 or",
+    "0.10.1 or earlier without a target mapping had one row per objective; such",
+    "a handoff has to be made again from a new fit with contentvalidR 1.0 or",
     "later. Otherwise the object may have been built by hand or edited",
     "afterwards: produce it again with content_handoff()."
   )

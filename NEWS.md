@@ -1,11 +1,10 @@
-# nomologR (development version)
+# nomologR 0.99.0
 
-These changes lead to 1.0.0, the stable release planned jointly with
-`contentvalidR` (#53). Its first release candidate, `v1.0.0-rc.1` (version
-0.99.0), is planned for 2026-11-24, or earlier if both packages are ready, and
-its tag is the interface freeze. The 1.0.0 release follows when the maintainer
-signs off, and goes to GitHub and R-universe first; the CRAN submission follows
-it.
+This version is the first release candidate, `v1.0.0-rc.1`, for 1.0.0, the
+stable release planned jointly with `contentvalidR` (#53). The candidate was
+planned for 2026-11-24, or earlier if both packages were ready, and its tag is
+the interface freeze. The 1.0.0 release follows when the maintainer signs off,
+and goes to GitHub and R-universe first; the CRAN submission follows it.
 
 - **New methods.** The gap review (#129) added the methods social-science scale
   developers were missing, each taken from its literature.
@@ -584,6 +583,7 @@ affected.
 - A handoff that lists an item more than once is still refused, but the message no longer says that `content_handoff()` cannot produce such an object (#46, #53). `contentvalidR` 0.10.1 and earlier wrote one row per objective for a congruence fit without a target mapping. The message now says that a handoff has one row per reviewed item, names the items listed more than once, and says that such a congruence handoff has to be made again from a new fit with `contentvalidR` 1.0 or later. The reader takes each decision as its producer recorded it and does not branch on the producer's version, so a congruence handoff written before 1.0 with a target mapping is read as before.
 - The refusal of a handoff that carries no items names the statuses its items have, which are the ones `keep` would have to name, and writes the carry rule as it is typed (#53). A review that applies no decision rule, such as a congruence fit without a target mapping, gives every item the status "Descriptive only", and `content_handoff()`'s default `keep = "Supported"` then carries none.
 - The fixture generator writes three item-objective congruence handoffs from `contentvalidR` 0.99.0 on, and the reader's tests for them are in place for the release candidate's fixtures (#53). The stored fixtures are now checked against the version list and their manifest.
+- The content-review reader is tested against `contentvalidR` 0.99.0 output, the partner package's release candidate (#53). That covers the five fits stored before and the three congruence fits, which are new. The 0.99.0 handoffs keep every decision of 0.10.1's, and the reader needed no change. The handoff stored with the package for the walkthrough items (`inst/extdata/content-handoff-walkthrough.rds`) is now the one 0.99.0 wrote, where it was 0.7.0's. Its items, scales, keying, and decisions are the same.
 
 ## Documentation (#129, #138, #144, #145)
 
