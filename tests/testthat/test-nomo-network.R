@@ -3262,6 +3262,19 @@ test_that("the summary counts and facts read as label: value (#145)", {
 })
 
 
+test_that("a network without flags says so in one form on its facts line (#145)", {
+  # The two streams read "no flags", so the total does too, not "none".
+  quiet <- rg_default()
+  quiet$decision_log$severity <- "info"
+  local_reproducible_output(width = 80)
+  printed <- utils::capture.output(print(quiet))
+  expect_true(
+    "Measurement context: no flags | Model fit: no flags | Total flags: no flags" %in% printed
+  )
+  expect_false(any(grepl(": none", printed, fixed = TRUE)))
+})
+
+
 test_that("replication plots label points by ID and name the relations (#145)", {
   p <- plot(rg_split(), "replication")
   labels <- ggplot2::layer_data(p, 3L)$label
