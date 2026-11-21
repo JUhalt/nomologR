@@ -1235,9 +1235,10 @@ test_that("a correlation fixed in some groups or levels is left out only there (
                "Fixed at 0 by the model, so not estimated: visual with textual.", fixed = TRUE)
   expect_identical(nomologR:::nomo_validity_fixed_pairs(both)$label, "visual with textual")
 
-  # The levels of a multilevel model share the table's block, and the factors
-  # here share their names: the row the model fixes is told apart by its
-  # place, and named with its level.
+  # The factors of the two levels share their names. Each row's block names
+  # its level, as the AVE table's blocks do, so the within and between
+  # correlations are told apart (#145); the row the model fixes is named with
+  # its level.
   levels <- nomo_validity(lavaan::cfa(
     paste(
       "level: 1", "f =~ y1 + y2 + y3", "g =~ y4 + y5 + y6", "f ~~ 0*g",
@@ -1248,17 +1249,22 @@ test_that("a correlation fixed in some groups or levels is left out only there (
   ), htmt = "none")
   stored <- levels$latent_correlations
   expect_identical(stored$correlation[[1L]], 0)
+  expect_identical(stored$block, c("within", "cluster"))
+  expect_setequal(stored$block, levels$ave$block)
   pairs <- nomo_table(levels, "discriminant")
   expect_identical(nrow(pairs), 1L)
   expect_equal(pairs$latent_r, stored$correlation[[2L]])
+  expect_identical(pairs$block, "cluster")
   expect_match(shown(summary(levels)),
                "Fixed at 0 by the model, so not estimated: f with g (within).", fixed = TRUE)
   logged <- levels$decision_log[levels$decision_log$metric == "latent_correlation", ]
   expect_identical(startsWith(logged$observation, "The model fixes this latent correlation"),
                    c(TRUE, FALSE))
+  expect_identical(logged$object, c("f vs g (within)", "f vs g (cluster)"))
 
   # With both groups and levels, lavaan stores each group's label rather than
   # its number; the block was NA and the fixed pair read "(NA, within)" (#145).
+  # The block names the group and the level, as the AVE table's does.
   # The grouping column has a name of its own, since lavaan warns when a
   # factor's name is also a column's. Half the clusters per group leave some
   # cluster-level variances negative; that warning alone is muffled, since the
@@ -1280,8 +1286,10 @@ test_that("a correlation fixed in some groups or levels is left out only there (
   ), htmt = "none"), warning = negative_variances)
   stored <- grouped$latent_correlations
   expect_false(anyNA(stored$block))
-  expect_setequal(stored$block, c("even", "odd"))
-  expect_identical(nrow(nomo_table(grouped, "discriminant")), 3L)
+  expect_identical(stored$block, c("even:within", "even:cluster", "odd:within", "odd:cluster"))
+  expect_setequal(stored$block, grouped$ave$block)
+  pairs <- nomo_table(grouped, "discriminant")
+  expect_setequal(pairs$block, c("even:cluster", "odd:within", "odd:cluster"))
   expect_match(shown(summary(grouped)),
                "Fixed at 0 by the model, so not estimated: f with g (even, within).", fixed = TRUE)
   expect_false(grepl("NA,", shown(summary(grouped)), fixed = TRUE))
