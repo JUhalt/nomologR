@@ -141,7 +141,7 @@
       
       Flagged
         - b5 (Review): `b5` has a corrected item-rest correlation of r = .28
-          (n = 473), below the teaching reference of .30.
+          (n = 473), below the review reference .30.
       
       Flags are review aids, not decisions to keep or delete an item.
       
@@ -263,11 +263,11 @@
       
       Flagged
         - b5 (Concern): The primary loading, 0.33 in absolute value, is below the
-          0.40 teaching reference. The communality, .12, is below the .40 teaching
-          reference.
+          review reference 0.40. The communality, .12, is below the review reference
+          .40.
         - a5 (Review): The secondary loading, 0.34 in absolute value, is at or above
-          the 0.30 cross-loading reference.
-        - b4 (Review): The communality, .3997, is below the .40 teaching reference.
+          the cross-loading review reference 0.30.
+        - b4 (Review): The communality, .3997, is below the review reference .40.
       
       Factor correlations
         Factor 1  Factor 2    r

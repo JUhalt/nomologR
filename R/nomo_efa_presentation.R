@@ -192,7 +192,7 @@ print.summary_nomo_efa <- function(x, ...) {
     more = "nomo_table(x, \"items\")"
   )
   if (!any(nzchar(items$flag))) {
-    nomo_present_text("No item reached a teaching reference.", indent = 2L)
+    nomo_present_text("No item reached a review reference.", indent = 2L)
   }
   # One Flagged section: the items, then the checks of the solution itself.
   checks <- nomo_efa_solution_checks(

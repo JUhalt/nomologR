@@ -156,6 +156,8 @@ test_that("presentation methods return stable user-facing objects", {
 
   expect_output(print(out), "No item was\\s+deleted and no model was refit automatically")
   expect_output(print(summary(out)), "Item structure")
+  # The reference is a review reference, as in the item flags (#145, out-7).
+  expect_output(print(summary(out)), "No item reached a review reference.", fixed = TRUE)
 })
 
 # ---- recovered from hygiene consolidation: test-nomo-efa.R ----
@@ -1447,15 +1449,19 @@ test_that("flag explanations are sentences that tell a value from its reference 
   )
   expect_identical(
     s$explanation[s$item == "near"],
-    paste("The primary loading, 0.3996 in absolute value, is below the 0.40 teaching",
-          "reference. The communality, .3997, is below the .40 teaching reference.")
+    paste("The primary loading, 0.3996 in absolute value, is below the review reference",
+          "0.40. The communality, .3997, is below the review reference .40.")
   )
   expect_identical(
     s$explanation[s$item == "cross"],
-    paste("The secondary loading, 0.3004 in absolute value, is at or above the 0.30",
-          "cross-loading reference.")
+    paste("The secondary loading, 0.3004 in absolute value, is at or above the",
+          "cross-loading review reference 0.30.")
   )
-  expect_match(s$explanation[s$item == "good"], "^No loading or communality reaches")
+  # A reference is called a review reference, as the CFA and validity logs
+  # call it (#145, out-7).
+  expect_identical(s$explanation[s$item == "good"],
+                   "No loading or communality reaches a review reference; examine the content as usual.")
+  expect_false(any(grepl("teaching", s$explanation, fixed = TRUE)))
   expect_false(any(grepl("|", s$explanation, fixed = TRUE)))
   expect_false(any(grepl("meets/exceeds", s$explanation, fixed = TRUE)))
 })
