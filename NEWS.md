@@ -109,7 +109,8 @@ that had ignored the argument.
   - Which items of a declared scale are reviewed on an item-rest correlation.
 - **Factor retention and EFA.** `fm = "minchi"` in `nomo_efa()` and
   `nomo_factors()`, and `nomo_efa()`'s cases per item when item values are
-  missing.
+  missing. The decision-log row for a single numeric-discrete item modeled as
+  continuous reads "1 numeric-discrete item was", not "were".
 - **CFA and model comparison.**
   - `nomo_cfa()`'s `fit_evidence` when lavaan cannot compute a scaled test, and
     its `ordered`.
