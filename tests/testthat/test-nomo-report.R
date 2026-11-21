@@ -834,6 +834,24 @@ test_that("nomo_report renders a polished self-contained HTML archive when Pando
   expect_match(html, "The nomological-network stage was not reached in this workflow.",
                fixed = TRUE)
   expect_false(grepl("invariance was not completed", html, fixed = TRUE))
+  # The measurement stages after the pause are described alike; the EFA, at
+  # which the run paused for a decision, was reached and is not completed.
+  for (what in c("CFA", "Reliability evidence", "Convergent/discriminant evidence")) {
+    expect_match(html, paste(what, "was not reached in this workflow."), fixed = TRUE)
+    expect_false(grepl(paste(what, "was not completed"), html, fixed = TRUE))
+  }
+  expect_match(html, "EFA was not completed in this workflow.", fixed = TRUE)
+})
+
+
+test_that("a stage with no result was not reached, or was not completed (#145)", {
+  stages <- tibble::tibble(stage = c("efa", "cfa"), status = c("failed", "not_started"))
+  note <- nomologR:::nomo_report_stage_note
+  expect_identical(note(stages, "cfa", "CFA"), "CFA was not reached in this workflow.")
+  expect_identical(note(stages, "efa", "EFA"), "EFA was not completed in this workflow.")
+  # Without a stages table to read, nothing says the stage was never started.
+  expect_identical(note(nomologR:::nomo_report_empty_table(), "cfa", "CFA"),
+                   "CFA was not completed in this workflow.")
 })
 
 

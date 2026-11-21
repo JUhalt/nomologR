@@ -1191,6 +1191,16 @@ nomo_report_run_table <- function(x, type) {
 }
 
 
+# The note for a stage the run holds no result of, by its status in the
+# stages table (#145): a stage the run never started, as every stage after a
+# pause, "was not reached"; one that started and stopped "was not completed".
+nomo_report_stage_note <- function(stage_status, stage, what) {
+  status <- stage_status[["status"]][stage_status[["stage"]] %in% stage]
+  started <- !identical(status, "not_started")
+  paste(what, if (started) "was not completed" else "was not reached", "in this workflow.")
+}
+
+
 # The nomo_table() type each measurement stage's report section leads with.
 nomo_report_table_defaults <- function() {
   c(
