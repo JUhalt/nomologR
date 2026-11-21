@@ -212,7 +212,7 @@ that does. A call that worked is not affected.
   - **Heywood cases.** An item with a communality of .995 or more gets a concern row in the decision log, which states the item's unique variance, because psych's extractions often stop just short of 1. A communality above 1 is reported as an ultra-Heywood case.
   - **Convergence and identification.** An extraction that stops at its iteration limit gets a concern row, and so does a model with more factors than its items can identify (negative degrees of freedom). Zero degrees of freedom is a prompt for review.
   - **Other messages.** Any other psych warning or message is recorded in the decision log for review.
-  - **Display.** `print()` lists these under "Solution checks" and counts a Heywood item among the item flags. `summary()` and the items plot show it as a concern. Stored item flags are unchanged.
+  - **Display.** `print()` lists these under "Flagged" and counts a Heywood item among the item flags. `summary()` and the items plot show it as a concern. Stored item flags are unchanged.
 - `nomo_efa()` checks `rotation` (#145).
   - A misspelled name stops with the list of accepted rotations.
   - A target rotation stops with the reason: `nomo_efa()` passes no target matrix, and psych had silently used `"Promax"` for `"targetQ"`.
