@@ -1,10 +1,11 @@
 # Fixtures ---------------------------------------------------------------------
 #
-# Genuine contentvalidR output from the v0.6.0 to v0.10.1 tags, stored so the
-# reader is tested against the real interface without contentvalidR installed
-# (#46, #53). See fixtures/contentvalidR/README.md and MANIFEST.csv.
+# Genuine contentvalidR output from the v0.6.0 to v0.10.1 tags and from its
+# 0.99.0 release candidate, stored so the reader is tested against the real
+# interface without contentvalidR installed (#46, #53). See
+# fixtures/contentvalidR/README.md and MANIFEST.csv.
 
-handoff_versions <- c("0.6.0", "0.7.0", "0.8.0", "0.9.0", "0.10.0", "0.10.1")
+handoff_versions <- c("0.6.0", "0.7.0", "0.8.0", "0.9.0", "0.10.0", "0.10.1", "0.99.0")
 
 # Every stored version after `version`, so a version added to the end of
 # handoff_versions joins each comparison with an earlier baseline.
@@ -16,9 +17,8 @@ handoff_versions_after <- function(version) {
 # The first producer version each fit is stored for. The nine-expert panel
 # joined the fixtures at 0.7.0 and the none-reversed sort at 0.9.0. The three
 # congruence fits start at 0.99.0, the first producer that hands off the index
-# of item-objective congruence with one row per item. Until a version from
-# 0.99.0 on is added to handoff_versions, they have no stored version and
-# their tests are not defined.
+# of item-objective congruence with one row per item, so they are stored from
+# 0.99.0 on only.
 handoff_fit_from <- c(
   "walkthrough-sort" = "0.6.0",
   "expert-krippendorff" = "0.6.0",
@@ -27,7 +27,7 @@ handoff_fit_from <- c(
   "walkthrough-sort-none-reversed" = "0.9.0",
   "congruence-targeted" = "0.99.0",
   "congruence-untargeted" = "0.99.0",
-  "congruence-untargeted-default-keep" = "0.99.0"
+  "congruence-untargeted-default" = "0.99.0"
 )
 
 # The stored versions of one fit: every version from its first on.
@@ -69,6 +69,17 @@ test_that("the stored fixtures are the ones the version list and the manifest na
   }))
   expect_identical(stored, sort(named))
 
+  # A tarball stores a path portably only up to 100 bytes, and R CMD check
+  # notes a longer one, so every stored file's path in the source package must
+  # fit. The fits' 1.0.0 names are checked too, before their files arrive.
+  in_package <- function(file) {
+    file.path("nomologR", "tests", "testthat", "fixtures", "contentvalidR", file)
+  }
+  next_names <- sprintf("handoff-%s-v1.0.0.rds", names(handoff_fit_from))
+  for (file in c(stored, next_names)) {
+    expect_lte(nchar(in_package(file), type = "bytes"), 100L, label = file)
+  }
+
   # MANIFEST.csv records each stored file once, with the version its name
   # carries and the checksum of the bytes stored.
   manifest <- utils::read.csv(file.path(directory, "MANIFEST.csv"), colClasses = "character")
@@ -88,9 +99,9 @@ test_that("the stored fixtures are the ones the version list and the manifest na
 
 
 test_that("every stored handoff is read without contentvalidR", {
-  # The default-keep congruence fit carries no item, so it is refused, not
-  # read; its own test is below.
-  for (fit in setdiff(names(handoff_fit_from), "congruence-untargeted-default-keep")) {
+  # The congruence fit handed off with the default keep carries no item, so it
+  # is refused, not read; its own test is below.
+  for (fit in setdiff(names(handoff_fit_from), "congruence-untargeted-default")) {
     for (version in handoff_fit_versions(fit)) {
       raw <- handoff_fixture(fit, version)
       h <- nomologR:::nomo_handoff_read(raw)
@@ -432,9 +443,9 @@ test_that("a handoff that carries no items is refused with what content review d
 # Congruence --------------------------------------------------------------------
 #
 # The three congruence fits start at contentvalidR 0.99.0 (handoff_fit_from),
-# so each test below is defined once for every stored version from 0.99.0 on,
-# and not at all while none is stored. Five experts rated items C1, C2 and C3
-# against objectives A, B and C; make-handoff-fixtures.R holds the ratings.
+# so each test below is defined once for every stored version from 0.99.0 on.
+# Five experts rated items C1, C2 and C3 against objectives A, B and C;
+# make-handoff-fixtures.R holds the ratings.
 
 for (version in handoff_fit_versions("congruence-targeted")) {
   test_that(sprintf("a congruence handoff with a target mapping is read as decided (%s)", version), {
@@ -520,11 +531,11 @@ for (version in handoff_fit_versions("congruence-untargeted")) {
 }
 
 
-for (version in handoff_fit_versions("congruence-untargeted-default-keep")) {
+for (version in handoff_fit_versions("congruence-untargeted-default")) {
   test_that(sprintf("a congruence handoff that carries nothing under the default keep is refused (%s)", version), {
     # The same fit as above, handed off with content_handoff()'s default
     # keep = "Supported": no decision rule was applied, so no item is carried.
-    raw <- handoff_fixture("congruence-untargeted-default-keep", version)
+    raw <- handoff_fixture("congruence-untargeted-default", version)
     expect_identical(raw$items, character(0))
     expect_identical(raw$item_evidence$item, c("C1", "C2", "C3"))
 
@@ -732,7 +743,7 @@ test_that("objects content_handoff() could not have produced are refused as malf
 # mapping, rebuilt from its output for that package's
 # expert_congruence_example.csv (three items, three objectives, six experts):
 # one row per item and objective, where every other handoff, and the same fit
-# from contentvalidR 1.0 on, has one row per item. `keep` is the carry rule
+# from contentvalidR 0.99.0 on, has one row per item. `keep` is the carry rule
 # the handoff was made with.
 handoff_congruence_per_objective <- function(keep) {
   items <- rep(c("I1", "I2", "I3"), each = 3L)
@@ -800,8 +811,8 @@ test_that("an item listed more than once is refused, with both ways it can arise
   refusal <- paste(
     "This handoff does not have one row per reviewed item: `item_evidence` lists",
     "I1, I2, I3 more than once. A congruence handoff written by contentvalidR",
-    "before 1.0 without a target mapping had one row per objective; such a",
-    "handoff has to be made again from a new fit with contentvalidR 1.0 or",
+    "0.10.1 or earlier without a target mapping had one row per objective; such",
+    "a handoff has to be made again from a new fit with contentvalidR 1.0 or",
     "later. Otherwise the object may have been built by hand or edited",
     "afterwards: produce it again with content_handoff()."
   )

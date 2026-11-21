@@ -55,8 +55,9 @@ nomo_handoff_read <- function(x) {
     nomo_handoff_malformed("`carried` must be TRUE or FALSE for every reviewed item")
   }
   # One row per reviewed item: a second row could carry an item and hold it
-  # back at once. contentvalidR before 1.0 wrote one row per objective for a
-  # congruence fit without a target mapping, so this refusal does not say the
+  # back at once. contentvalidR 0.10.1 and earlier wrote one row per objective
+  # for a congruence fit without a target mapping (0.99.0, the 1.0 release
+  # candidate, writes one row per item), so this refusal does not say the
   # producer could not have written the object. It reads the rows alone, never
   # the producer's version.
   repeated <- unique(as.character(evidence$item[duplicated(evidence$item)]))
@@ -66,8 +67,8 @@ nomo_handoff_read <- function(x) {
         paste(
           "This handoff does not have one row per reviewed item:",
           "`item_evidence` lists %s more than once. A congruence handoff",
-          "written by contentvalidR before 1.0 without a target mapping had",
-          "one row per objective; such a handoff has to be made again from a",
+          "written by contentvalidR 0.10.1 or earlier without a target mapping",
+          "had one row per objective; such a handoff has to be made again from a",
           "new fit with contentvalidR 1.0 or later. Otherwise the object may",
           "have been built by hand or edited afterwards: produce it again",
           "with content_handoff()."
