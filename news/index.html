@@ -67,7 +67,7 @@
 </ul><p>Calls whose results or behavior change are listed first. A function that is new since 0.9.0 is described once, as it is now, under “New methods” or “Invariance across groups and occasions”.</p>
 <div class="section level3">
 <h3 id="calls-that-now-behave-differently-development-version">Calls that now behave differently<a class="anchor" aria-label="anchor" href="#calls-that-now-behave-differently-development-version"></a></h3>
-<p>This section lists what a call written for 0.9.0 can run into. The sections after it give the details.</p>
+<p>This section lists what a call written for 0.9.0 can run into. The sections after it give the details. These changes were made before the stability promise takes effect at 1.0.0, so none of them went through a deprecation period.</p>
 <div class="section level4">
 <h4 id="errors-where-calls-used-to-be-accepted-development-version">Errors where calls used to be accepted<a class="anchor" aria-label="anchor" href="#errors-where-calls-used-to-be-accepted-development-version"></a></h4>
 <p>These calls ran in 0.9.0. Most of them returned a result that was wrong, or one that had ignored the argument.</p>
@@ -108,6 +108,7 @@
 <code><a href="../reference/nomo_revise.html">nomo_revise()</a></code> refuses <code>cfa_model</code> inside <code>decisions</code>.</li>
 <li>
 <code><a href="../reference/nomo_apa_table.html">nomo_apa_table()</a></code> refuses a <code>type</code> for a result that has one table and a <code>title</code> that is not one string. <code>nomo_apa_table(x, "factor_correlations")</code> stops for a model that fixes every factor correlation, such as a bifactor model; it had tabled the fixed zeros as estimates. <code><a href="../reference/nomo_table.html">nomo_table()</a></code> refuses a <code>type</code> for a <code>nomo_hypotheses</code> object.</li>
+<li>For a <code>nomo_validity</code> result whose model fixes every factor correlation and has no HTMT, such as a bifactor model, <code>nomo_apa_table(x)</code> and <code>plot(x, type = "discriminant")</code> stop, because no pair is left to table or draw. They had shown the fixed zeros as estimates.</li>
 </ul></div>
 <div class="section level4">
 <h4 id="results-that-change-development-version">Results that change<a class="anchor" aria-label="anchor" href="#results-that-change-development-version"></a></h4>
@@ -133,13 +134,15 @@
 <code><a href="../reference/nomo_reliability.html">nomo_reliability()</a></code> for a multi-group fit and beside a single-indicator factor.</li>
 <li>
 <code><a href="../reference/nomo_validity.html">nomo_validity()</a></code>’s HTMT cases under FIML, its <code>ave</code> when indicators cross-load, and the flag of a construct pair that has no HTMT.</li>
+<li>
+<code>nomo_table(x, "discriminant")</code> for a <code>nomo_validity</code> result: a latent correlation the model fixes is left out.</li>
 </ul></li>
 <li>
 <strong>Hierarchical models.</strong> <code><a href="../reference/nomo_hierarchical.html">nomo_hierarchical()</a></code> under the theta parameterization, and with a negative variance.</li>
 <li>
 <strong>Scores.</strong> <code><a href="../reference/nomo_scores.html">nomo_scores()</a></code>’s parallel-model test, when its univocality note appears, and the class of its <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>.</li>
 <li>
-<strong>Invariance.</strong> In <code><a href="../reference/nomo_invariance.html">nomo_invariance()</a></code>: the sequence for ordered-factor columns, the level a release applies from, <code>completed_levels</code>, and the version of the fit statistics under a robust estimator.</li>
+<strong>Invariance.</strong> In <code><a href="../reference/nomo_invariance.html">nomo_invariance()</a></code>: the sequence for ordered-factor columns, the level a release applies from, <code>completed_levels</code>, and the version of the fit statistics under a robust estimator. The decision-log row that counts the score diagnostics is information, no longer a review flag.</li>
 <li>
 <strong>Nomological network.</strong> <code><a href="../reference/nomo_network.html">nomo_network()</a></code>’s concordance values, what its measurement context is judged on, the <code>estimator</code> it records and, for some networks, the fitted model.</li>
 <li>
@@ -152,6 +155,8 @@
 <strong>Tables.</strong> The headings and cells of <code><a href="../reference/nomo_apa_table.html">nomo_apa_table()</a></code>, and the columns of an empty <code><a href="../reference/nomo_table.html">nomo_table()</a></code>.</li>
 <li>
 <strong>Printed numbers.</strong> Display rounds half away from zero. Returned values are unchanged.</li>
+<li>
+<strong><code>digits</code> in <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>.</strong> <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> for <code>nomo_scores</code>, <code>nomo_hierarchical</code>, and <code>nomo_missing</code> objects, and for the summary of a <code>nomo_scores</code> object, has <code>digits = NULL</code> as its default; it was 3. <code>NULL</code> gives each statistic the decimals of the shared style, and a number given sets them as before.</li>
 </ul></div>
 <div class="section level4">
 <h4 id="new-refusals-development-version">New refusals<a class="anchor" aria-label="anchor" href="#new-refusals-development-version"></a></h4>
@@ -170,6 +175,8 @@
 <code><a href="../reference/nomo_scores.html">nomo_scores()</a></code>: a factor with no observed indicators, a path from an observed covariate to a factor, and a covariance between a factor and an observed variable.</li>
 <li>
 <code><a href="../reference/nomo_table.html">nomo_table()</a></code>: an object that has no tables.</li>
+<li>
+<code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code> on a result object: it stops and points to <code><a href="../reference/nomo_table.html">nomo_table()</a></code>. It had ended in “node stack overflow”, or had run the analysis again and again.</li>
 <li>
 <code><a href="../reference/nomo_apa_table.html">nomo_apa_table()</a></code>: factor correlations for a higher-order model. The error had said that the model has one factor.</li>
 </ul></div>
@@ -316,6 +323,19 @@
 <strong>An HTMT that cannot exist.</strong> With one construct, or for a construct with one indicator, it is logged as information, not as a review or concern flag.</li>
 </ul></li>
 <li>
+<code><a href="../reference/nomo_validity.html">nomo_validity()</a></code> no longer presents a correlation the model fixes as evidence that two constructs are separate (<a href="https://github.com/JUhalt/nomologR/issues/145" class="external-link">#145</a>). A bifactor model fixes its six factor correlations at 0. <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> and <code><a href="../reference/nomo_apa_table.html">nomo_apa_table()</a></code> tabled each as “.00 [.00, .00]”, <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> counted them as “Separation flags: none (6 pairs)” and said that the latent correlations carry the construct-separation evidence.
+<ul><li>
+<strong>What is shown.</strong> <code>nomo_table(x, "discriminant")</code>, <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>, the pair count of <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>, <code>plot(x, type = "discriminant")</code>, and <code><a href="../reference/nomo_apa_table.html">nomo_apa_table()</a></code> leave out a latent correlation the model fixes. A pair that has an HTMT-family value keeps its row and its ratios, because HTMT is computed from the data; a pair that has none is not listed. <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> names the fixed pairs as the CFA summary does, such as “Fixed at 0 by the model, so not estimated: visual with textual.”, and the APA note lists them.</li>
+<li>
+<strong>Several groups or levels.</strong> A correlation is left out only in the groups or levels where the model fixes it. With <code>visual ~~ c(NA, 0)*textual</code> in two groups, the first group’s estimate is shown and read against the reference as before, and <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> names the other group: “visual with textual (Grant-White)”. A pair fixed in every group is named once.</li>
+<li>
+<strong>When no pair is left.</strong> <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> reads “Separation flags: not evaluated (the model fixes every factor correlation)”, <code><a href="../reference/nomo_apa_table.html">nomo_apa_table()</a></code> and the plot stop with the reason, and <code>nomo_table(x, "discriminant")</code> has no rows and its usual columns.</li>
+<li>
+<strong>What is stored.</strong> <code>latent_correlations</code> still lists a fixed correlation at its fixed value, as <code>factor_correlations</code> of <code><a href="../reference/nomo_cfa.html">nomo_cfa()</a></code> does. Its decision-log row, in each group or level that fixes it, says that the model fixes it, at severity <code>"info"</code>; the row had read it against the review reference.</li>
+<li>
+<strong>Other models.</strong> A model that fixes no factor correlation gives the output it gave before, with one exception: for a model with one construct, <code>nomo_table(x, "discriminant")</code> has no rows and its usual columns. It had no columns.</li>
+</ul></li>
+<li>
 <code><a href="../reference/nomo_validity.html">nomo_validity()</a></code>’s <code>htmt_missing = "default"</code> follows the fitted model’s missing-data handling: FIML when the CFA used it, pairwise deletion when it used that, and listwise deletion otherwise (<a href="https://github.com/JUhalt/nomologR/issues/145" class="external-link">#145</a>). Despite its help page, it had always used listwise deletion, so on a FIML CFA, HTMT rested on fewer cases than the CFA. <code>htmt_status</code> gains <code>missing</code> and <code>n</code>, and a decision-log entry records the cases HTMT used. The entry is for review only when a different handling leaves HTMT with fewer cases than the CFA.</li>
 <li>
 <code><a href="../reference/nomo_reliability.html">nomo_reliability()</a></code> checks <code>ci_level</code>, <code>ci_boot</code>, and <code>ci_seed</code> before using them (<a href="https://github.com/JUhalt/nomologR/issues/145" class="external-link">#145</a>). It had cut a vector to its first element and truncated a fraction. A bootstrap request for a model fitted from a covariance matrix says that raw data are needed, and requested intervals that are not available get a review row.</li>
@@ -350,6 +370,7 @@
 <li>With three or more groups, each score diagnostic frees one group’s parameter from the value the others share (<a href="https://github.com/JUhalt/nomologR/issues/145" class="external-link">#145</a>). It is labeled by the group it frees, as in “Intercept: y3 (three vs. others)”, no longer “(one vs. three)”, which read as a comparison of two groups. The first group, the reference, is never freed on its own: when it alone differs, every other group shows similar strain. A note and the help say so.</li>
 <li>
 <code>plot(x, type = "local_strain")</code> without diagnostics no longer warns, and <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> has no empty section of changes (<a href="https://github.com/JUhalt/nomologR/issues/145" class="external-link">#145</a>).</li>
+<li>The <code>score_diagnostics</code> row of the decision log, which counts the score diagnostics that were kept, has severity <code>"info"</code> (<a href="https://github.com/JUhalt/nomologR/issues/145" class="external-link">#145</a>). It was <code>"review"</code> whenever a diagnostic existed, which is every run with the default <code>localize = TRUE</code>. So “Score diagnostics (Review): 12 univariate equality-constraint score diagnostics were retained.” was the one flag of every invariance print, of the summary, and of a guided run’s invariance stage, whatever the fit. The row stays in <code>nomo_table(x, "decision_log")</code>, and the print still points to <code>nomo_table(x, "local_strain")</code>. This holds for <code><a href="../reference/nomo_invariance_longitudinal.html">nomo_invariance_longitudinal()</a></code> too.</li>
 </ul></div>
 <div class="section level4">
 <h4 id="nomological-network-development-version">Nomological network<a class="anchor" aria-label="anchor" href="#nomological-network-development-version"></a></h4>
@@ -545,6 +566,15 @@
 <li>
 <strong>Empty tables.</strong> <code>"partial"</code> for an invariance analysis without releases and <code>"replication"</code> for a network without validation data return a tibble with no rows and the table’s usual columns. They had returned a tibble with no columns.</li>
 </ul></li>
+<li>
+<code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code> on a result object no longer runs the analysis again (<a href="https://github.com/JUhalt/nomologR/issues/145" class="external-link">#145</a>). A result is a list that keeps the call that made it, and base R’s method for a list evaluated that call again, for the object it returned too, without end. <code>as.data.frame(x$partial)</code> on an invariance result stopped with “node stack overflow”, and a fitted object whose arguments were in scope was fitted again and again.
+<ul><li>
+<strong>Results.</strong> For every result that keeps its call, the conversion stops with a message that points to <code><a href="../reference/nomo_table.html">nomo_table()</a></code>. For a <code><a href="../reference/nomo_split.html">nomo_split()</a></code> result the message names <code>calibration</code> and <code>validation</code>.</li>
+<li>
+<strong><code><a href="../reference/nomo_partial.html">nomo_partial()</a></code>.</strong> <code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code> returns its <code>releases</code>.</li>
+<li>
+<strong>Unchanged.</strong> A result that keeps no call, such as that of <code><a href="../reference/nomo_power_rmsea.html">nomo_power_rmsea()</a></code> or <code><a href="../reference/nomo_single_indicator.html">nomo_single_indicator()</a></code>, converts as before, and every result is still a list.</li>
+</ul></li>
 </ul></div>
 <div class="section level4">
 <h4 id="methods-registry-development-version">Methods registry<a class="anchor" aria-label="anchor" href="#methods-registry-development-version"></a></h4>
@@ -566,6 +596,8 @@
 <strong>References.</strong> Short citations follow APA 7, with “et al.” for three or more authors. Rönkkö and Cho (2022) has its pages, Satorra (2000) its editors, and Fokkema and Greiff (2017) its subtitle.</li>
 </ul></li>
 <li>A wrong <code>stage</code> or <code>lineage</code> in <code><a href="../reference/nomo_methods.html">nomo_methods()</a></code> is reported in the package’s form for a wrong choice, “<code>stage</code> must be one or more of …” (<a href="https://github.com/JUhalt/nomologR/issues/144" class="external-link">#144</a>).</li>
+<li>
+<code>nomo_methods(stage = , lineage = )</code> takes a value shortened as far as it still names one choice, such as <code>stage = "rel"</code> for <code>"reliability"</code>, as the package’s other choice arguments do (<a href="https://github.com/JUhalt/nomologR/issues/145" class="external-link">#145</a>). It had refused one under the error those arguments share. That error now shows a missing value as <code>NA</code>, not as the string “NA”.</li>
 </ul></div>
 </div>
 <div class="section level3">
@@ -657,15 +689,27 @@
 <li>
 <strong>New <code><a href="../reference/nomo_apa_table.html">nomo_apa_table()</a></code> method.</strong> For <code><a href="../reference/nomo_retest.html">nomo_retest()</a></code> results.</li>
 <li>
+<strong>New <code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code> method.</strong> For <code><a href="../reference/nomo_partial.html">nomo_partial()</a></code> objects; it returns <code>releases</code>.</li>
+<li>
 <strong>New <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> and <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> methods.</strong> <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> for <code>nomo_scores</code>, <code>nomo_missing</code>, and <code>nomo_power</code> objects, and <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> for <code>nomo_missing</code> objects. <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> of a <code>nomo_scores</code> object has class <code>summary_nomo_scores</code>.</li>
 <li>
 <strong>New decision-log rows</strong>, named by their <code>metric</code>, or by their <code>id</code> in a guided run’s own log.
 <ul><li>
 <code><a href="../reference/nomo_screen.html">nomo_screen()</a></code>: <code>keying_not_used</code>, <code>out_of_range</code>, <code>item_rest_not_computed</code>, <code>mahalanobis</code>, <code>per_scale_indices</code>, <code>keying_completed</code>, and <code>scales_override</code>.</li>
 <li>
+<code><a href="../reference/nomo_factors.html">nomo_factors()</a></code>: <code>parallel_null_iterations</code>.</li>
+<li>
+<code><a href="../reference/nomo_efa.html">nomo_efa()</a></code>: <code>heywood</code>, <code>convergence</code>, <code>identification</code>, and <code>engine_warnings</code>.</li>
+<li>
+<code><a href="../reference/nomo_cfa.html">nomo_cfa()</a></code>: <code>scaled_test_unavailable</code>.</li>
+<li>
 <code><a href="../reference/nomo_compare.html">nomo_compare()</a></code>: <code>improper_solution</code>.</li>
 <li>
-<code><a href="../reference/nomo_validity.html">nomo_validity()</a></code>: <code>latent_correlation</code> and <code>htmt_missing_data</code>.</li>
+<code><a href="../reference/nomo_reliability.html">nomo_reliability()</a></code>: <code>single_indicator_factor</code>, <code>parameterization</code>, and <code>bootstrap_ci</code>.</li>
+<li>
+<code><a href="../reference/nomo_validity.html">nomo_validity()</a></code>: <code>latent_correlation</code>, <code>htmt_missing_data</code>, <code>htmt_single_indicator</code>, and <code>parameterization</code>.</li>
+<li>
+<code><a href="../reference/nomo_invariance.html">nomo_invariance()</a></code>: <code>latent_means</code>, <code>latent_means_fixed</code>, <code>cases_used</code>, <code>engine_warning</code>, and <code>comparison_warning</code>.</li>
 <li>
 <code><a href="../reference/nomo_cfa.html">nomo_cfa()</a></code>, <code><a href="../reference/nomo_invariance.html">nomo_invariance()</a></code>, and <code><a href="../reference/nomo_network.html">nomo_network()</a></code>: <code>ordered_detected</code>; <code><a href="../reference/nomo_network.html">nomo_network()</a></code> also <code>cases_used</code>, <code>model_fit</code>, <code>relation_constrained</code>, <code>relation_auto_freed</code>, <code>residual_association</code>, and <code>unstandardized_metric</code>.</li>
 <li>
@@ -690,6 +734,8 @@
 <strong>Random-number state.</strong> <code><a href="../reference/nomo_factors.html">nomo_factors()</a></code>, <code><a href="../reference/nomo_split.html">nomo_split()</a></code>, <code><a href="../reference/nomo_power_simulate.html">nomo_power_simulate()</a></code>, and <code><a href="../reference/nomo_reliability.html">nomo_reliability()</a></code> set their seed with <code><a href="https://withr.r-lib.org/reference/with_seed.html" class="external-link">withr::with_seed()</a></code>. The check <code><a href="../reference/nomo_power_simulate.html">nomo_power_simulate()</a></code> makes of the population’s variances under <code>standardized = TRUE</code> draws its data inside <code><a href="https://withr.r-lib.org/reference/with_seed.html" class="external-link">withr::with_preserve_seed()</a></code>. Results for a given seed are unchanged, and the caller’s random-number state is left as it was. No code in the package assigns or removes <code>.Random.seed</code> in the global environment any more, or writes anything else there; <code>withr</code> saves and restores the state. <code>withr</code> (&gt;= 3.0.2) joins <code>Imports</code>; ggplot2 already imports it, so it is not a new package among the dependencies.</li>
 <li>
 <strong><code>nomo_reliability(ci_seed = )</code>.</strong> lavaan still seeds the bootstrap draws, so intervals for a given seed and worker count are the same. Two cases are fixed. A seeded bootstrap on more than one worker (<code>ci_ncpus</code>), in a session that had not yet drawn a random number, left the session on the <code>"L'Ecuyer-CMRG"</code> generator. A bootstrap that failed part-way could leave the session on the bootstrap’s seed.</li>
+<li>
+<strong>Options.</strong> <code><a href="../reference/nomo_report.html">nomo_report()</a></code>, called from inside another knitted document, sets knitr’s duplicate-label option and chunk options for its render through <code>withr</code>, which registers the restore where the change is made. One function had changed them and returned the restore for its caller to run. The caller’s options are left as they were, as before, also when the render stops with an error.</li>
 <li>
 <strong>Examples.</strong> Every exported function has examples that run in the ordinary check, except <code><a href="../reference/nomo_report.html">nomo_report()</a></code> and <code><a href="../reference/nomo_revise.html">nomo_revise()</a></code>, whose examples stay in <code>\donttest{}</code>.</li>
 <li>
@@ -775,6 +821,7 @@ The log explains what the marker must be: theoretically unrelated to the constru
 <h3 id="the-stability-contract-development-version">The stability contract (<a href="https://github.com/JUhalt/nomologR/issues/113" class="external-link">#113</a>)<a class="anchor" aria-label="anchor" href="#the-stability-contract-development-version"></a></h3>
 <ul><li>
 <code><a href="../reference/nomo_missing.html">nomo_missing()</a></code> and <code><a href="../reference/nomo_apa_table.html">nomo_apa_table()</a></code> leave the experimental list and are covered by the stability policy (<a href="https://github.com/JUhalt/nomologR/issues/113" class="external-link">#113</a>). <code><a href="../reference/nomo_missing.html">nomo_missing()</a></code>’s flagging rule is adapted from Schafer and Graham (2002, p. 157), who judged a bias beyond about half a standard error practically important, because it degrades interval coverage. Separating sampling variability from bias would be new output, added alongside the rule. <code><a href="../reference/nomo_apa_table.html">nomo_apa_table()</a></code>’s <code>type</code> values and returned structure are covered. A table’s formatting (headings, number formats, notes) may still be corrected where it departs from APA style, with the correction described in NEWS.</li>
+<li>The stability policy in <code><a href="../reference/nomologR-package.html">?nomologR</a></code> takes effect at 1.0.0 (<a href="https://github.com/JUhalt/nomologR/issues/113" class="external-link">#113</a>). Its text had said 0.3.0, while the roadmap gave 1.0.0, and this release changes parts of the interface without a deprecation period; “Calls that now behave differently” lists them.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="the-contentvalidr-handoff-development-version">The contentvalidR handoff (<a href="https://github.com/JUhalt/nomologR/issues/53" class="external-link">#53</a>)<a class="anchor" aria-label="anchor" href="#the-contentvalidr-handoff-development-version"></a></h3>
@@ -790,13 +837,23 @@ The log explains what the marker must be: theoretically unrelated to the constru
 <ul><li>
 <strong>Help pages.</strong> The pages of <code><a href="../reference/nomo_screen.html">nomo_screen()</a></code>, <code><a href="../reference/nomo_cfa.html">nomo_cfa()</a></code>, <code><a href="../reference/nomo_efa.html">nomo_efa()</a></code>, <code><a href="../reference/nomo_validity.html">nomo_validity()</a></code>, <code><a href="../reference/nomo_reliability.html">nomo_reliability()</a></code>, <code><a href="../reference/nomo_network.html">nomo_network()</a></code>, and <code><a href="../reference/nomo_missing.html">nomo_missing()</a></code> name the units and flag values of their own tables. The stability policy lists the columns of each analysis’s decision log, and <code><a href="../reference/nomo_run.html">?nomo_run</a></code> those of the run’s own log.</li>
 <li>
+<strong><code><a href="../reference/nomo_cfa.html">nomo_cfa()</a></code>.</strong> <code><a href="../reference/nomo_cfa.html">?nomo_cfa</a></code> says that <code>estimator</code> is stored in upper case, so a requested <code>"default"</code> is stored as <code>"DEFAULT"</code>.</li>
+<li>
 <strong><code><a href="../reference/nomo_table.html">nomo_table()</a></code>.</strong> Its help page lists the <code>"factors"</code> type of <code>nomo_hierarchical</code>, and a new “Fit tables” section names the index columns of each fit table.</li>
+<li>
+<strong>Tables that were not computed.</strong> <code><a href="../reference/nomo_table.html">?nomo_table</a></code> says that two types are errors, each with a message that names the argument to set: <code>"effort"</code> for a <code><a href="../reference/nomo_screen.html">nomo_screen()</a></code> result run without <code>effort = TRUE</code>, and <code>"reliability"</code> for a <code><a href="../reference/nomo_missing.html">nomo_missing()</a></code> result without a reliability comparison. A table that only lacks rows is returned empty.</li>
 <li>
 <strong><code><a href="../reference/nomo_apa_table.html">nomo_apa_table()</a></code>.</strong> Its help page lists the fields of the returned table (<code>number</code>, <code>title</code>, <code>body</code>, <code>stub</code>, <code>notes</code>, <code>source</code>) and says that headings, cells, and notes are written in Markdown.</li>
 <li>
 <strong><code><a href="../reference/nomo_network.html">nomo_network()</a></code>.</strong> <code><a href="../reference/nomo_network.html">?nomo_network</a></code> defines every <code>concordance</code>, <code>evidence_scope</code>, and <code>replication_status</code> value, with its rule and the interval it uses, and spells out SESOI (smallest effect size of interest).</li>
 <li>
 <strong><code><a href="../reference/nomo_defaults.html">nomo_defaults()</a></code>.</strong> It documents <code>auto_delete</code> and <code>auto_respecify</code> as fixed safeguards, and the comparison-data settings and how they differ from the <code>EFAtools</code> defaults.</li>
+<li>
+<strong>The safeguards.</strong> <code><a href="../reference/nomo_defaults.html">?nomo_defaults</a></code> names every function that stops when <code>auto_delete</code> or <code>auto_respecify</code> is <code>TRUE</code>, which is each of the 15 that take <code>guidance</code>. It had named <code><a href="../reference/nomo_factors.html">nomo_factors()</a></code> and <code><a href="../reference/nomo_efa.html">nomo_efa()</a></code>.</li>
+<li>
+<strong>A complete <code>guidance</code> list.</strong> <code><a href="../reference/nomo_defaults.html">?nomo_defaults</a></code> says to pass the whole list, taken from <code><a href="../reference/nomo_defaults.html">nomo_defaults()</a></code> with the settings changed. Only <code><a href="../reference/nomo_efa.html">nomo_efa()</a></code> completes a list that holds some of the settings. Another function may stop for a setting it misses, or run without the reference and not raise the flags that depend on it. Nothing changes for a complete list.</li>
+<li>
+<strong>Seeds.</strong> <code><a href="../reference/nomo_reliability.html">?nomo_reliability</a></code> (<code>ci_seed</code>) and <code><a href="../reference/nomo_split.html">?nomo_split</a></code> (<code>seed</code>) say that the session’s random-number state is restored afterwards, as <code><a href="../reference/nomo_factors.html">?nomo_factors</a></code> and <code><a href="../reference/nomo_power_simulate.html">?nomo_power_simulate</a></code> did.</li>
 <li>
 <strong>Other pages.</strong> <code><a href="../reference/nomo_factors.html">?nomo_factors</a></code> defines the three parallel-analysis rules and TR2 and TR4, and <code><a href="../reference/nomo_efa.html">?nomo_efa</a></code> lists the rotations it accepts. <code><a href="../reference/nomo_invariance.html">?nomo_invariance</a></code> says that the reference group is the one that appears first in <code>data</code>. <code><a href="../reference/nomo_hierarchical.html">?nomo_hierarchical</a></code> says that H equals the squared determinacy for unidimensional data. <code><a href="../reference/nomo_methods.html">?nomo_methods</a></code> lists <code>"scores"</code> among its stages and says that the result is an ordinary tibble.</li>
 </ul></li>
@@ -1145,7 +1202,7 @@ The log explains what the marker must be: theoretically unrelated to the constru
 <li>Added self-contained HTML reporting across item screening, factor retention, EFA, CFA, reliability, convergent/discriminant evidence, invariance, and theory-specified nomological networks.</li>
 <li>Added researcher inputs, data characteristics, decision provenance, deviations/post-hoc decisions, methods/citations, reproducibility information, and a full evidence trace linking recommendations back to their source evidence.</li>
 <li>Added report-render regression tests covering the core workflow and optional invariance/network branches.</li>
-<li>Completed pre-v0.1 engineering hardening with the full test suite passing, R CMD check at 0 errors / 0 warnings / 0 notes, executable-line coverage at 100%, and an empty <code>covr::zero_coverage()</code> result.</li>
+<li>Completed pre-v0.1 engineering hardening with the full test suite passing, R CMD check at 0 errors / 0 warnings / 0 notes, executable-line coverage at 100%, and an empty <code><a href="https://covr.r-lib.org/reference/zero_coverage.html" class="external-link">covr::zero_coverage()</a></code> result.</li>
 <li>Finalized <code>v0.1.0</code> as the first stable public release after release-readiness review and certification.</li>
 </ul></div>
 <div class="section level3">

@@ -328,10 +328,6 @@ inv
 #>   metric      1.000  0.000  0.028        .000         0.000    .146
 #>   scalar       .954  0.121  0.065       -.046        +0.121  < .001
 #> 
-#> Flagged
-#>   - Score diagnostics (Review): 12 univariate equality-constraint score
-#>     diagnostics were retained.
-#> 
 #> CFI = comparative fit index; RMSEA = root mean square error of approximation;
 #> SRMR = standardized root mean square residual; LRT = likelihood-ratio test of
 #> a level against the level before it; ML = maximum likelihood.

@@ -37,7 +37,9 @@ nomo_partial(level, syntax, rationale)
 A `nomo_partial` object whose `releases` field is one row per release:
 its identifier, level, syntax, and rationale. `n` is the number of
 releases. [`print()`](https://rdrr.io/r/base/print.html) lists each
-release with its level and rationale.
+release with its level and rationale, and
+[`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html) returns
+`releases` as a data frame.
 
 ## Details
 

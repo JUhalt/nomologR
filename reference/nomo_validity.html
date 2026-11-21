@@ -140,7 +140,13 @@ indicator; its row has an <code>NA</code> estimate and the attention
 <code>reference</code> and <code>attention</code>. A correlation is flagged for review when it
 could exceed the HTMT-family reference: the upper limit of its interval
 (Rönkkö &amp; Cho, 2022), or the estimate when there is no interval, is
-above it. A correlation beyond 1 in absolute value is a concern.</p></li>
+above it. A correlation beyond 1 in absolute value is a concern. A
+correlation the model fixes, such as the zero correlations of a
+bifactor model or <code>A ~~ 0*B</code>, is listed at its fixed value. It is a
+constraint, not an estimate, and so no evidence that two constructs are
+separate: <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>, <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>, <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>, <code><a href="nomo_table.html">nomo_table()</a></code>, and
+<code><a href="nomo_apa_table.html">nomo_apa_table()</a></code> leave it out, and the summary names the pair as
+fixed.</p></li>
 <li><p><code>htmt2</code> and <code>htmt</code>: heterotrait-monotrait ratios per pair.</p></li>
 <li><p><code>discriminant</code>: each pair's separation evidence with its reference and
 interpretation.</p></li>

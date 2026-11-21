@@ -94,6 +94,8 @@ A `nomo_cfa` object. The fields to read are:
 - `model`: the model syntax fitted.
 
 - `converged`, `estimator`, `data_n`, `n_used`, and `sample_summary`.
+  `estimator` is stored in upper case, so `"mlr"` is stored as `"MLR"`
+  and a requested `"default"` as `"DEFAULT"`.
 
 - `fit_evidence`: global fit indices with their teaching references;
   `variant` names the `lavaan` measure each value comes from. Robust

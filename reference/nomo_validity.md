@@ -86,7 +86,16 @@ A `nomo_validity` object. The fields to read are:
   when it could exceed the HTMT-family reference: the upper limit of its
   interval (Rönkkö & Cho, 2022), or the estimate when there is no
   interval, is above it. A correlation beyond 1 in absolute value is a
-  concern.
+  concern. A correlation the model fixes, such as the zero correlations
+  of a bifactor model or `A ~~ 0*B`, is listed at its fixed value. It is
+  a constraint, not an estimate, and so no evidence that two constructs
+  are separate: [`print()`](https://rdrr.io/r/base/print.html),
+  [`summary()`](https://rdrr.io/r/base/summary.html),
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html),
+  [`nomo_table()`](https://juhalt.github.io/nomologR/reference/nomo_table.md),
+  and
+  [`nomo_apa_table()`](https://juhalt.github.io/nomologR/reference/nomo_apa_table.md)
+  leave it out, and the summary names the pair as fixed.
 
 - `htmt2` and `htmt`: heterotrait-monotrait ratios per pair.
 

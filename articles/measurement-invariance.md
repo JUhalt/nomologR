@@ -77,10 +77,6 @@ inv
 #>   scalar       .954  0.121  0.065       -.046        +0.121  < .001
 #>   strict       .954  0.102  0.066        .000        -0.019    .483
 #> 
-#> Flagged
-#>   - Score diagnostics (Review): 24 univariate equality-constraint score
-#>     diagnostics were retained.
-#> 
 #> CFI = comparative fit index; RMSEA = root mean square error of approximation;
 #> SRMR = standardized root mean square residual; LRT = likelihood-ratio test of
 #> a level against the level before it; ML = maximum likelihood.
@@ -384,12 +380,6 @@ summary(long)
 #>   stay equal: "vs. others" names the occasion freed. The first occasion (t1)
 #>   is the reference and is never freed on its own, so when it alone differs,
 #>   every other occasion shows similar strain on that parameter.
-#> 
-#> Flagged
-#>   - Score diagnostics (Review): 24 univariate equality-constraint score
-#>     diagnostics were retained. Use these diagnostics to localize strain, not
-#>     to authorize automatic constraint release. Partial invariance requires an
-#>     explicit researcher specification and rationale.
 #> 
 #> What these columns mean
 #>   CFI -- Comparative fit index.

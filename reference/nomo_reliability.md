@@ -76,7 +76,8 @@ nomo_reliability(
 
 - ci_seed:
 
-  Optional integer seed for reproducible bootstrap intervals.
+  Optional integer seed for reproducible bootstrap intervals. The
+  session's random-number state is restored afterwards.
 
 - ci_ncpus:
 

@@ -32,7 +32,8 @@ nomo_split(
 - seed:
 
   Integer seed used, with the random-number generator recorded in
-  `rng_kind`, to make the split reproducible.
+  `rng_kind`, to make the split reproducible. The session's
+  random-number state is restored afterwards.
 
 - guidance:
 

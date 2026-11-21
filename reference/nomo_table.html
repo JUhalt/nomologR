@@ -88,7 +88,11 @@ is refused with the list of supported classes.</p></dd>
     <p>A tibble. A table the object has no rows for, such as <code>"partial"</code>
 for an invariance analysis without releases or <code>"replication"</code> for a
 network without validation data, has no rows and the table's usual
-columns.</p>
+columns. A table that was not computed is an error, with a message that
+names the argument to set: <code>"effort"</code> for a <code>nomo_screen</code> object run
+without <code>effort = TRUE</code>, and <code>"reliability"</code> for a <code>nomo_missing</code> object
+whose reliability comparison was not made, because <code>reliability = FALSE</code>
+was given or the fit is not a <code>nomo_cfa</code> object.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

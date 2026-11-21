@@ -87,6 +87,11 @@ the corresponding analysis function (for example, <code><a href="nomo_efa.html">
 <code><a href="nomo_cfa.html">nomo_cfa()</a></code>, <code><a href="nomo_reliability.html">nomo_reliability()</a></code>, and <code><a href="nomo_validity.html">nomo_validity()</a></code>). Changing a
 reference changes which evidence is flagged for review; it never deletes
 items, respecifies models, or declares validity.</p>
+<p>Pass a complete list as <code>guidance</code>: start from <code>nomo_defaults()</code> and change
+the settings you need, as the example does. A list that holds only some of
+the settings is completed from the defaults by <code><a href="nomo_efa.html">nomo_efa()</a></code> only. Another
+function may stop because a setting it needs is missing, or may run without
+the reference and so not raise the flags that depend on it.</p>
 <p><code>long_string_min_items</code> is a count of items, not a reference value for a
 statistic: <code><a href="nomo_screen.html">nomo_screen()</a></code> flags a case on long-string only when at least
 that many items are screened, because half the length of a shorter item set
@@ -100,8 +105,12 @@ those of <code><a href="https://mdsteiner.github.io/EFAtools/reference/efa_cd.ht
 short; raise them for a final analysis.</p>
 <p><code>auto_delete</code> and <code>auto_respecify</code> are always <code>FALSE</code>. They record a design
 rule rather than switch a feature: nomologR never deletes an item or
-respecifies a model on its own. <code><a href="nomo_factors.html">nomo_factors()</a></code> and <code><a href="nomo_efa.html">nomo_efa()</a></code> stop with
-an explanation when either is set to <code>TRUE</code>.</p>
+respecifies a model on its own. Every function that takes <code>guidance</code> stops
+with an explanation when either is set to <code>TRUE</code>: <code><a href="nomo_screen.html">nomo_screen()</a></code>,
+<code><a href="nomo_factors.html">nomo_factors()</a></code>, <code><a href="nomo_efa.html">nomo_efa()</a></code>, <code><a href="nomo_cfa.html">nomo_cfa()</a></code>, <code><a href="nomo_esem.html">nomo_esem()</a></code>,
+<code><a href="nomo_compare.html">nomo_compare()</a></code>, <code><a href="nomo_split.html">nomo_split()</a></code>, <code><a href="nomo_reliability.html">nomo_reliability()</a></code>, <code><a href="nomo_validity.html">nomo_validity()</a></code>,
+<code><a href="nomo_hierarchical.html">nomo_hierarchical()</a></code>, <code><a href="nomo_scores.html">nomo_scores()</a></code>, <code><a href="nomo_invariance.html">nomo_invariance()</a></code>,
+<code><a href="nomo_invariance_longitudinal.html">nomo_invariance_longitudinal()</a></code>, <code><a href="nomo_network.html">nomo_network()</a></code>, and <code><a href="nomo_run.html">nomo_run()</a></code>.</p>
     </div>
 
     <div class="section level2">

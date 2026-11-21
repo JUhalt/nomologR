@@ -33,6 +33,14 @@ and
 Changing a reference changes which evidence is flagged for review; it
 never deletes items, respecifies models, or declares validity.
 
+Pass a complete list as `guidance`: start from `nomo_defaults()` and
+change the settings you need, as the example does. A list that holds
+only some of the settings is completed from the defaults by
+[`nomo_efa()`](https://juhalt.github.io/nomologR/reference/nomo_efa.md)
+only. Another function may stop because a setting it needs is missing,
+or may run without the reference and so not raise the flags that depend
+on it.
+
 `long_string_min_items` is a count of items, not a reference value for a
 statistic:
 [`nomo_screen()`](https://juhalt.github.io/nomologR/reference/nomo_screen.md)
@@ -53,11 +61,24 @@ analysis.
 
 `auto_delete` and `auto_respecify` are always `FALSE`. They record a
 design rule rather than switch a feature: nomologR never deletes an item
-or respecifies a model on its own.
-[`nomo_factors()`](https://juhalt.github.io/nomologR/reference/nomo_factors.md)
+or respecifies a model on its own. Every function that takes `guidance`
+stops with an explanation when either is set to `TRUE`:
+[`nomo_screen()`](https://juhalt.github.io/nomologR/reference/nomo_screen.md),
+[`nomo_factors()`](https://juhalt.github.io/nomologR/reference/nomo_factors.md),
+[`nomo_efa()`](https://juhalt.github.io/nomologR/reference/nomo_efa.md),
+[`nomo_cfa()`](https://juhalt.github.io/nomologR/reference/nomo_cfa.md),
+[`nomo_esem()`](https://juhalt.github.io/nomologR/reference/nomo_esem.md),
+[`nomo_compare()`](https://juhalt.github.io/nomologR/reference/nomo_compare.md),
+[`nomo_split()`](https://juhalt.github.io/nomologR/reference/nomo_split.md),
+[`nomo_reliability()`](https://juhalt.github.io/nomologR/reference/nomo_reliability.md),
+[`nomo_validity()`](https://juhalt.github.io/nomologR/reference/nomo_validity.md),
+[`nomo_hierarchical()`](https://juhalt.github.io/nomologR/reference/nomo_hierarchical.md),
+[`nomo_scores()`](https://juhalt.github.io/nomologR/reference/nomo_scores.md),
+[`nomo_invariance()`](https://juhalt.github.io/nomologR/reference/nomo_invariance.md),
+[`nomo_invariance_longitudinal()`](https://juhalt.github.io/nomologR/reference/nomo_invariance_longitudinal.md),
+[`nomo_network()`](https://juhalt.github.io/nomologR/reference/nomo_network.md),
 and
-[`nomo_efa()`](https://juhalt.github.io/nomologR/reference/nomo_efa.md)
-stop with an explanation when either is set to `TRUE`.
+[`nomo_run()`](https://juhalt.github.io/nomologR/reference/nomo_run.md).
 
 ## Examples
 

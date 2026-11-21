@@ -27,7 +27,12 @@ nomo_table(x, ...)
 
 A tibble. A table the object has no rows for, such as `"partial"` for an
 invariance analysis without releases or `"replication"` for a network
-without validation data, has no rows and the table's usual columns.
+without validation data, has no rows and the table's usual columns. A
+table that was not computed is an error, with a message that names the
+argument to set: `"effort"` for a `nomo_screen` object run without
+`effort = TRUE`, and `"reliability"` for a `nomo_missing` object whose
+reliability comparison was not made, because `reliability = FALSE` was
+given or the fit is not a `nomo_cfa` object.
 
 ## Details
 

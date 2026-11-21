@@ -238,10 +238,6 @@ two
 #>   scalar       .965  0.067  0.046       -.035        +0.067  < .001
 #>   strict       .966  0.061  0.048       +.001        -0.007    .655
 #> 
-#> Flagged
-#>   - Score diagnostics (Review): 24 univariate equality-constraint score
-#>     diagnostics were retained.
-#> 
 #> CFI = comparative fit index; RMSEA = root mean square error of approximation;
 #> SRMR = standardized root mean square residual; LRT = likelihood-ratio test of
 #> a level against the level before it; ML = maximum likelihood.
@@ -272,10 +268,6 @@ long
 #>   metric       .999  0.012  0.030       -.001        +0.012    .018
 #>   scalar       .963  0.058  0.045       -.036        +0.046  < .001
 #>   strict       .964  0.053  0.047       +.001        -0.005    .669
-#> 
-#> Flagged
-#>   - Score diagnostics (Review): 48 univariate equality-constraint score
-#>     diagnostics were retained.
 #> 
 #> CFI = comparative fit index; RMSEA = root mean square error of approximation;
 #> SRMR = standardized root mean square residual; LRT = likelihood-ratio test of

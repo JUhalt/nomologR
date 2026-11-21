@@ -415,12 +415,6 @@ summary(inv)
 #>   scalar  Loading: TF -> TF1 (A vs. B)              1.69   1    .194
 #>   scalar  Intercept: EF2 (A vs. B)                  1.49   1    .222
 #> 
-#> Flagged
-#>   - Score diagnostics (Review): 30 univariate equality-constraint score
-#>     diagnostics were retained. Use these diagnostics to localize strain, not
-#>     to authorize automatic constraint release. Partial invariance requires an
-#>     explicit researcher specification and rationale.
-#> 
 #> What these columns mean
 #>   CFI -- Comparative fit index.
 #>   RMSEA -- Root mean square error of approximation.
