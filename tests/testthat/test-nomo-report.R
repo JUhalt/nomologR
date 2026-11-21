@@ -2038,11 +2038,21 @@ test_that("an interval's headings carry its confidence level (#145)", {
   # A reliability interval at the level it was bootstrapped at, read from
   # the object, so a 90% interval is not taken for a 95% one.
   rel <- run$results$reliability
+  rel$ci <- "bootstrap"
   rel$ci_level <- 0.90
   expect_true(all(c("Omega 90% CI lower", "Omega 90% CI upper", "Alpha 90% CI lower",
                     "Alpha 90% CI upper") %in% labels(rel, "reliability", "primary")))
   rel$ci_level <- NULL
   expect_true("Omega CI lower" %in% labels(rel, "reliability", "primary"))
+  # With no interval asked for, the empty bound columns the report names as
+  # left out carry no level (ci_level keeps its default of .95).
+  none <- run$results$reliability
+  expect_identical(none$ci, "none")
+  expect_equal(none$ci_level, 0.95)
+  expect_null(nomologR:::nomo_report_ci_levels(none, "reliability", "coefficients"))
+  shown <- labels(none, "reliability", "primary")
+  expect_true(all(c("Omega CI lower", "Alpha CI upper") %in% shown))
+  expect_false(any(grepl("95% CI", shown, fixed = TRUE)))
   expect_true(all(c("95% CI lower", "95% CI upper") %in%
                     labels(run$results$cfa, "cfa", "loadings")))
   expect_null(nomologR:::nomo_report_ci_levels(run$results$cfa, "cfa", "fit"))

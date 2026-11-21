@@ -1273,7 +1273,9 @@ nomo_report_component_table <- function(obj,
 # The confidence level of the interval bounds a component table shows, for
 # its headings (#145): a reliability interval at the level it was bootstrapped
 # at, and lavaan's 95% intervals of loadings and latent correlations. The
-# network's are set with its other attributes.
+# network's are set with its other attributes. A reliability analysis that
+# asked for no interval (`ci = "none"`) has no level, so the note naming its
+# empty bound columns gives none.
 nomo_report_ci_levels <- function(obj, stage, type) {
   bounds <- function(prefix, level) {
     stats::setNames(rep(level, 2L), paste0(prefix, c("ci_lower", "ci_upper")))
@@ -1281,7 +1283,8 @@ nomo_report_ci_levels <- function(obj, stage, type) {
   switch(
     paste(stage, type),
     "cfa loadings" = bounds("", 0.95),
-    "reliability coefficients" = if (is.numeric(obj$ci_level)) {
+    "reliability coefficients" = if (is.numeric(obj$ci_level) &&
+                                       identical(obj$ci, "bootstrap")) {
       c(bounds("omega_", obj$ci_level), bounds("alpha_", obj$ci_level))
     },
     "validity discriminant" = bounds("latent_r_", 0.95),
