@@ -11,7 +11,8 @@ before are unchanged, byte for byte. The five 0.10.0 files come from the
 files were generated from untagged commit 3766519 (DESCRIPTION 0.99.0),
 contentvalidR's release candidate on its master, by contentvalidR on
 2026-11-21 with this folder's script; nomologR generated them again from the
-same commit and found the same objects (see "Regenerating").
+same commit and found the same objects (see "Regenerating"). That commit was
+later tagged `v1.0.0-rc.1`, so the manifest gives that tag for the eight files.
 
 | fit | 0.6.0 | 0.7.0 | 0.8.0 | 0.9.0 | 0.10.0 | 0.10.1 | 0.99.0 | what it exercises |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
