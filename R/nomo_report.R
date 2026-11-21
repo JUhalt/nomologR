@@ -1848,10 +1848,10 @@ nomo_report_title_yaml <- function(title) {
 #' removed again if the render stops before the report is written. The
 #' working files of the render (the copy of the template, the intermediate
 #' files, and the figures) are written to a temporary directory under
-#' [tempdir()] and removed when the call returns, whether or not it succeeds. The working directory, the
-#' options, and the graphics device are left as they were. The report is
-#' rendered in an environment of its own, so objects in the global environment
-#' are neither read nor changed.
+#' [tempdir()] and removed when the call returns, whether or not it succeeds.
+#' The working directory, the options, and the graphics device are left as they
+#' were. The report is rendered in an environment of its own, so objects in the
+#' global environment are neither read nor changed.
 #'
 #' `nomo_report()` behaves the same from the console, a script, or a chunk
 #' inside another R Markdown or Quarto document, such as a thesis chapter.
