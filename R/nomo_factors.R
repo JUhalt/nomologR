@@ -392,8 +392,9 @@ nomo_factors <- function(data,
   }
 
   pairwise_n <- nomo_factors_pairwise_n(analysis_data)
+  # At least three items were required above, so there are off-diagonal pairs.
   off_diag <- pairwise_n[row(pairwise_n) != col(pairwise_n)]
-  min_pairwise_n <- if (length(off_diag) > 0L) min(off_diag) else nrow(analysis_data)
+  min_pairwise_n <- min(off_diag)
 
   if (min_pairwise_n < 3L) {
     stop(

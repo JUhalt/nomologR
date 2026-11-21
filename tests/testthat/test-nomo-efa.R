@@ -306,7 +306,13 @@ test_that("nomo_efa validates public arguments and item selection", {
   expect_error(nomo_efa(dat, factors = 1, items = c("a", "b")), "at least three")
   expect_error(
     nomo_efa(dat, factors = 1, items = c("a", "b", "missing")),
-    "Unknown item"
+    "Unknown item column: missing.",
+    fixed = TRUE
+  )
+  expect_error(
+    nomo_efa(dat, factors = 1, items = c("a", "gone", "missing")),
+    "Unknown item columns: gone, missing.",
+    fixed = TRUE
   )
   expect_error(nomo_efa(dat, factors = 1.5), "positive integer")
 })

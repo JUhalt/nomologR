@@ -2848,6 +2848,19 @@ test_that("the model-fit stream attributes misfit only when it can (#145)", {
 })
 
 
+test_that("a network that did not converge, or whose measurement model failed, says so", {
+  unconverged <- rg_default()
+  unconverged$converged <- FALSE
+  expect_match(rg_text(unconverged), " | Converged: no", fixed = TRUE)
+
+  failed <- rg_default()
+  failed$measurement_context$fit_status <- "failed"
+  expect_match(rg_flat(summary(failed)),
+               "Measurement model alone: not available; it could not be fitted.", fixed = TRUE)
+  expect_no_match(rg_flat(summary(failed)), "Structural restrictions", fixed = TRUE)
+})
+
+
 test_that("the cases analyzed are reported beside the rows supplied (#145)", {
   dat <- rg_missing_data()
   net <- nomo_network(rg_three(), dat, nomo_hypotheses("Agency -> Persistence" = positive()))

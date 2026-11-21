@@ -6,7 +6,10 @@ test_that("nomo_factors validates core inputs", {
   )
 
   expect_error(nomo_factors(matrix(1:9, 3, 3)), "data frame")
-  expect_error(nomo_factors(dat, items = c("a", "nope", "c")), "Unknown")
+  expect_error(nomo_factors(dat, items = c("a", "nope", "c")), "Unknown item column: nope.",
+               fixed = TRUE)
+  expect_error(nomo_factors(dat, items = c("a", "nope", "gone")),
+               "Unknown item columns: nope, gone.", fixed = TRUE)
   expect_error(nomo_factors(dat, items = c("a", "b")), "at least three")
   expect_error(nomo_factors(dat, n_iter = 5), "at least 10")
   expect_error(nomo_factors(dat, quantile = 1), "strictly between")
@@ -40,6 +43,18 @@ test_that("numeric-discrete items remain conservative unless overridden", {
   expect_true(
     any(pearson$decision_log$metric == "numeric_discrete_assumption")
   )
+
+  # The row counts the items it names: all five, or the one left when the
+  # others are declared.
+  entry <- pearson$decision_log[pearson$decision_log$metric == "numeric_discrete_assumption", ]
+  expect_equal(entry$value, 5)
+  expect_match(entry$observation, "5 numeric-discrete items ", fixed = TRUE)
+  declared <- stats::setNames(rep("continuous", 4L), paste0("i", 1:4))
+  one <- nomo_factors(likert, types = declared, n_iter = 10, seed = 10)
+  entry <- one$decision_log[one$decision_log$metric == "numeric_discrete_assumption", ]
+  expect_identical(entry$object, "i5")
+  expect_equal(entry$value, 1)
+  expect_match(entry$observation, "^1 numeric-discrete item [^s].*: i5[.]$")
 
   ordinal_types <- stats::setNames(
     rep("ordinal", ncol(likert)),
@@ -428,7 +443,13 @@ test_that("remaining modeling-type defensive branches are protected", {
   )
   expect_error(
     nomo_factors(dat, types = c(i1 = "unsupported")),
-    "Unsupported modeling type"
+    "Unsupported modeling type: unsupported.",
+    fixed = TRUE
+  )
+  expect_error(
+    nomo_factors(dat, types = c(i1 = "likert", i2 = "nominal")),
+    "Unsupported modeling types: likert, nominal. Use continuous, ordinal, or binary.",
+    fixed = TRUE
   )
 
   character_dat <- data.frame(
@@ -1108,6 +1129,12 @@ test_that("synthesis covers primary-only, neighboring, divergent, and skipped-me
   expect_identical(primary_only$agreement, "primary_only")
   expect_match(primary_only$text, "No additional recommended criterion families")
   expect_match(primary_only$text, "1 requested method was not evaluated")
+  expect_match(primary_only$text, "Parallel analysis suggests investigating 1 factor. ",
+               fixed = TRUE)
+  two_only <- nomo_factors_synthesis(tibble::tibble(), parallel_n = 2L)
+  expect_identical(two_only$plausible_factors, 2L)
+  expect_match(two_only$text, "Parallel analysis suggests investigating 2 factors. ",
+               fixed = TRUE)
 
   make_evidence <- function(counts) {
     tibble::tibble(
@@ -2089,6 +2116,44 @@ test_that("closeout B: MAP truncation and unavailable adequacy engines are expli
 })
 
 
+test_that("a truncated MAP is logged with the number of components it reached", {
+  map_log <- function(m_last) {
+    log <- nomologR:::nomo_factors_log(
+      item_types = tibble::tibble(item = "x", model_type = "continuous", source = "inferred"),
+      requested_correlation = "pearson",
+      correlation_method = "pearson",
+      missing = "complete",
+      min_pairwise_n = 100L,
+      smoothed = FALSE,
+      original_min_eigen = .50,
+      kmo = list(available = TRUE, overall = .80,
+                 item = tibble::tibble(item = "x", msa = .80)),
+      bartlett = list(available = FALSE, reason = "Synthetic unavailable."),
+      pa = list(
+        n_factors = 1L, rule = "percentile", quantile = .95,
+        sensitivity = tibble::tibble(rule = c("percentile", "mean", "crawford"),
+                                     n_factors = c(1L, 1L, 1L))
+      ),
+      map = list(n_factors_original = 1L, n_factors_revised = 1L, truncated = TRUE,
+                 m_last = m_last),
+      criteria = list(status = tibble::tibble(), evidence = tibble::tibble()),
+      synthesis = list(support_for_primary = 1L, agreement = "convergent",
+                       text = "Synthetic convergence."),
+      guidance = nomo_defaults()
+    )
+    log[log$metric == "map_truncated", ]
+  }
+
+  one <- map_log(1L)
+  expect_identical(one$severity, "review")
+  expect_equal(one$value, 1)
+  expect_identical(one$observation,
+                   "MAP could be evaluated only through 1 partialled component.")
+  expect_identical(map_log(2L)$observation,
+                   "MAP could be evaluated only through 2 partialled components.")
+})
+
+
 test_that("closeout B: KMO decision-log severity distinguishes concern and review", {
   make_log <- function(kmo_value) {
     nomologR:::nomo_factors_log(
@@ -2186,6 +2251,26 @@ test_that("closeout B: EKC and comparison-data helpers preserve no-suggestion ou
   )
   expect_false(cd$available)
   expect_match(cd$reason, "no usable", fixed = TRUE)
+})
+
+
+test_that("NEST and Hull without a usable suggestion say so", {
+  skip_on_cran()
+  testthat::local_mocked_bindings(
+    efa_nest = function(...) list(n_factors = NA_real_),
+    efa_hull = function(...) list(n_factors = c(CAF = NA_real_)),
+    .package = "EFAtools"
+  )
+  nest <- nomologR:::nomo_factors_nest(diag(3), n_obs = 100L, n_iter = 10L, seed = 2026L)
+  expect_false(nest$available)
+  expect_identical(nest$n_factors, NA_integer_)
+  expect_identical(nest$reason, "NEST returned no usable factor-count suggestion.")
+
+  hull <- nomologR:::nomo_factors_hull(diag(3), n_obs = 100L, n_iter = 10L,
+                                       quantile = .95, seed = 2026L)
+  expect_false(hull$available)
+  expect_identical(hull$n_factors, NA_integer_)
+  expect_identical(hull$reason, "Hull returned no usable CAF suggestion.")
 })
 
 
@@ -2695,4 +2780,18 @@ test_that("the summary lists the decision log's flags, each with its reference (
 
   # An object without a decision log has no flags.
   expect_identical(nrow(nomologR:::nomo_factors_flag_rows(NULL)), 0L)
+})
+
+
+test_that("a summary's abbreviations follow the criteria it requested", {
+  # Without a criterion table nothing beyond the two always shown is defined,
+  # and MAP is defined by its original criterion only.
+  key <- nomologR:::nomo_factors_key(NULL)
+  expect_identical(names(key), c("MAP", "KMO"))
+  expect_no_match(key[["MAP"]], "TR4", fixed = TRUE)
+
+  status <- tibble::tibble(criterion = c("parallel", "map_revised", "ekc", "nest", "hull"))
+  key <- nomologR:::nomo_factors_key(status)
+  expect_identical(names(key), c("MAP", "KMO", "EKC", "NEST", "CAF"))
+  expect_match(key[["MAP"]], "TR4", fixed = TRUE)
 })

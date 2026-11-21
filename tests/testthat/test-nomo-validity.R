@@ -354,6 +354,19 @@ test_that("ordinal validity evidence matches semTools engines", {
   expect_equal(out$ave_engine, direct_ave)
   expect_equal(out$htmt2_matrix, direct_htmt2, tolerance = 1e-8)
   expect_setequal(out$ordered, names(dat))
+
+  # The original HTMT is computed from the same polychoric correlations.
+  original <- nomo_validity(fit, htmt = "htmt")
+  direct_htmt <- semTools::htmt(
+    model = model,
+    data = dat,
+    missing = "default",
+    ordered = names(dat),
+    absolute = TRUE,
+    htmt2 = FALSE
+  )
+  expect_equal(original$htmt_matrix, direct_htmt, tolerance = 1e-8)
+  expect_null(original$htmt2_matrix)
 })
 
 

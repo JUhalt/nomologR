@@ -304,6 +304,15 @@ B =~ b1 + b2 + b3 + b4 + b5"
   expect_identical(out$strategies$strategy, c("ml", "listwise"))
   expect_identical(out$reference, "ml")
 
+  # Without FIML or pairwise deletion among them, the strategy the model was
+  # fitted with is the reference.
+  listwise <- nomo_missing(fit, data = nomo_demo_continuous, strategies = "listwise",
+                           reliability = FALSE)
+  expect_identical(listwise$strategies$strategy, "listwise")
+  expect_identical(listwise$fitted_as, "listwise")
+  expect_identical(listwise$reference, "listwise")
+  expect_identical(listwise$strategies$role, "reference")
+
   expect_error(nomo_missing(fit, data = nomo_demo_continuous, strategies = NA_character_), "character vector")
   expect_error(nomo_missing(fit, data = nomo_demo_continuous, strategies = 1), "character vector")
 })
@@ -337,6 +346,14 @@ test_that("a hypothesis whose concordance depends on the strategy is flagged", {
   expect_match(entry$observation, "H1 (A -> B)", fixed = TRUE)
   expect_null(out$reliability)
   expect_error(nomo_table(out, "reliability"), "nomo_cfa")
+
+  # A network that records no estimator is refitted with lavaan's default,
+  # which is the estimator it was fitted with here.
+  unrecorded <- net
+  unrecorded$estimator <- NA_character_
+  again <- nomo_missing(unrecorded, data = mar)
+  expect_true(all(again$strategies$available))
+  expect_equal(again$estimates$estimate, out$estimates$estimate, tolerance = 1e-8)
 })
 
 

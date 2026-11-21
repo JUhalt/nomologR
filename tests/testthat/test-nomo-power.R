@@ -249,6 +249,24 @@ test_that("a smallest N is reported when one meets the references", {
 })
 
 
+test_that("the smallest N reported is the smallest simulated one that meets the references", {
+  skip_on_cran()
+  # Whether an N meets the references is set here, so that the test does not
+  # rest on how few replications happen to fall.
+  real_summary <- nomologR:::nomo_power_summary
+  local_mocked_bindings(nomo_power_summary = function(run, parameters, focus, size) {
+    out <- real_summary(run, parameters, focus, size)
+    out$meets_references <- size >= 50L
+    out
+  })
+  pw <- nomo_power_simulate(pw_population, n = c(80, 40, 50), reps = 2, seed = 3,
+                            focus = "A=~a1")
+  expect_identical(pw$summary$n, c(40L, 50L, 80L))
+  expect_identical(pw$summary$meets_references, c(FALSE, TRUE, TRUE))
+  expect_identical(pw$n_required, 50L)
+})
+
+
 test_that("simulation arguments are checked", {
   expect_error(nomo_power_simulate("", n = 50), "one lavaan model string")
   expect_error(nomo_power_simulate(pw_population, n = 5), "at least 10")
