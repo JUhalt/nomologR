@@ -1256,6 +1256,9 @@ nomo_report_component_table <- function(obj,
   if (identical(stage, "network") && identical(type, "primary")) {
     result <- nomo_report_network_hypotheses(result, obj)
   }
+  if (identical(stage, "network") && identical(type, "replication")) {
+    result <- nomo_report_network_replication(result, obj)
+  }
   levels <- nomo_report_ci_levels(obj, stage, type)
   if (length(levels)) attr(result, "nomo_report_ci_levels") <- levels
   result
@@ -1311,6 +1314,24 @@ nomo_report_network_hypotheses <- function(tab, net) {
     ci_lower = 0.95, ci_upper = 0.95,
     equivalence_ci_lower = equivalence, equivalence_ci_upper = equivalence
   )
+  tab
+}
+
+
+# The network's replication evidence with each sample's estimate in the kind
+# of its hypothesis, as print() shows them (#145): a standardized association
+# has no leading zero. The shift between the samples, which can exceed 1 in
+# absolute value, keeps it.
+nomo_report_network_replication <- function(tab, net) {
+  spec <- as.data.frame(net$hypotheses$hypotheses, stringsAsFactors = FALSE)
+  if (!nrow(tab) || !"id" %in% names(tab) ||
+      !all(c("id", "scale", "relation_type") %in% names(spec))) {
+    return(tab)
+  }
+  h <- spec[match(tab$id, spec$id), , drop = FALSE]
+  kind <- nomo_network_kind(h$scale, h$relation_type)
+  estimates <- intersect(c("primary_estimate", "validation_estimate"), names(tab))
+  attr(tab, "nomo_report_kinds") <- stats::setNames(rep(list(kind), length(estimates)), estimates)
   tab
 }
 

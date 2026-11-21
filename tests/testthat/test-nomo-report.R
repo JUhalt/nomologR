@@ -1955,6 +1955,21 @@ test_that("a network estimate reads alike wherever the report shows it (#145)", 
   expect_identical(stored$reference, log$reference)
   expect_null(attr(stored, "nomo_report_kinds"))
 
+  # The replication table gives each sample's estimate in its hypothesis's
+  # kind, as print() does; the shift between them keeps its leading zero.
+  replication <- tibble::tibble(
+    id = c("H1", "H2"), relation = c("A -> B", "A <-> C"),
+    primary_estimate = c(0.456, 0.151), validation_estimate = c(0.41, 0.12),
+    estimate_shift = c(-0.046, -0.031)
+  )
+  shown <- nomologR:::nomo_report_display_table(
+    nomologR:::nomo_report_network_replication(replication, list(hypotheses = h))
+  )
+  expect_identical(shown[["Primary estimate"]], c("0.46", ".15"))
+  expect_identical(shown[["Validation estimate"]], c("0.41", ".12"))
+  expect_identical(shown[["Estimate shift"]], c("-0.05", "-0.03"))
+  expect_identical(nrow(nomologR:::nomo_report_network_replication(replication[0, ], list())), 0L)
+
   # The missing-data differences: a loading and a path keep the leading zero,
   # and a factor correlation and a standardized association drop it, as the
   # missing-data print() and the network's table show them.
