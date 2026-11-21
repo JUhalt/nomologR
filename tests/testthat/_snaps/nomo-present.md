@@ -1318,10 +1318,10 @@
           (1983, p. 260) recommended at least .80, and above .90 if the scores are
           to serve as adequate substitutes for the factors themselves. Reported as
           his recommendation, not applied as a rule.
-        - The network (Review): `Persistence <-> SocialDesirability`, estimated in
-          the model as given, is fixed to zero in the fitted model: with the
-          hypothesized paths, `Persistence` is an outcome, and lavaan does not
-          covary an outcome's residual with a variable that does not predict it.
+        - Persistence <-> SocialDesirability in the network (Review): The relation,
+          estimated in the model as given, is fixed to zero in the fitted model:
+          with the hypothesized paths, `Persistence` is an outcome, and lavaan does
+          not covary an outcome's residual with a variable that does not predict it.
       
       Abbreviations
         EFA -- Exploratory factor analysis.

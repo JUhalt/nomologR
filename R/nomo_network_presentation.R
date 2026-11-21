@@ -427,12 +427,51 @@ nomo_network_stream_status <- function(severity) {
 
 # Flagged ---------------------------------------------------------------------------
 
+# Whether a log row is about a relation of the network, "A <-> B" or "A -> B",
+# rather than a sample or a variable.
+nomo_network_is_relation <- function(object) {
+  grepl(" (<->|->|<-|~~|~) ", object)
+}
+
+
+# Whether each explanation names its row's object in backticks.
+nomo_network_names_object <- function(object, observation) {
+  vapply(seq_along(object), function(i) {
+    grepl(paste0("`", object[[i]], "`"), observation[[i]], fixed = TRUE)
+  }, logical(1))
+}
+
+
+# The explanations of flags about a relation, written for a bullet whose unit
+# is the relation (#145, out-11). `relation` marks the rows whose explanation
+# names their relation in backticks, which are for R names (guide point 25):
+# the relation loses them, and an explanation that opens with it refers to it
+# as "The relation", or "Each relation" when relations that share the
+# explanation share its bullet. `unit` and `severity` are the bullets' units
+# and statuses, which decide that. Other rows are returned as they are. The
+# network's print() and summary() and a guided run's summary() all use it,
+# so one flag reads alike wherever it is shown.
+nomo_network_relation_text <- function(object, observation, relation, unit, severity) {
+  quoted <- paste0("`", object, "`")
+  text <- observation
+  opens <- relation & startsWith(text, quoted)
+  text[opens] <- paste0("The relation", substring(text[opens], nchar(quoted[opens]) + 1L))
+  text[relation] <- vapply(which(relation), function(i) {
+    gsub(quoted[[i]], object[[i]], text[[i]], fixed = TRUE)
+  }, character(1))
+  key <- paste(nomo_present_status(severity), text)
+  units_per_key <- tapply(unit, key, function(u) length(unique(u)))
+  shared <- opens & units_per_key[key] > 1L
+  text[shared] <- sub("^The relation", "Each relation", text[shared])
+  text
+}
+
+
 # The decision-log rows that need attention, each under a name a reader knows:
 # the stream for a sample's row, and the relation, with its hypothesis ID when
 # it has one, for a row about a relation (guide point 22); a row of the
-# validation sample or of the replication says so. An explanation that opens
-# with its relation in backticks, which are for R names (guide point 25),
-# refers to it as "The relation" under that unit (#145, out-11). Any other
+# validation sample or of the replication says so. An explanation that names
+# its relation is written about it (nomo_network_relation_text()). Any other
 # explanation that names its object keeps it and has no unit. The hypothesis
 # tables show the concordance and replication statuses, so print() leaves
 # those rows out; summary() keeps them and adds each recommendation.
@@ -450,27 +489,13 @@ nomo_network_present_flagged <- function(log, evidence, detail = FALSE) {
   ids <- evidence$id[match(rows$object, evidence$relation)]
   unit <- ifelse(is.na(ids), rows$object, paste(ids, rows$object))
   unit[rows$metric %in% names(streams)] <- unname(streams[rows$metric[rows$metric %in% names(streams)]])
-  quoted <- paste0("`", rows$object, "`")
-  named <- vapply(seq_len(nrow(rows)), function(i) {
-    grepl(quoted[[i]], rows$observation[[i]], fixed = TRUE)
-  }, logical(1))
-  relation <- named & grepl(" (<->|->|<-|~~|~) ", rows$object)
+  named <- nomo_network_names_object(rows$object, rows$observation)
+  relation <- named & nomo_network_is_relation(rows$object)
   unit[(named & !relation) | rows$object %in% "hypotheses"] <- ""
   prefix <- c(network_validation = "Validation", network_replication = "Replication")[rows$stage]
   unit <- ifelse(is.na(prefix), unit, trimws(paste0(prefix, ": ", unit)))
   unit <- sub(":$", "", unit)
-  text <- rows$observation
-  opens <- relation & startsWith(text, quoted)
-  text[opens] <- paste0("The relation", substring(text[opens], nchar(quoted[opens]) + 1L))
-  text[relation] <- vapply(which(relation), function(i) {
-    gsub(quoted[[i]], rows$object[[i]], text[[i]], fixed = TRUE)
-  }, character(1))
-  # Relations that share an explanation share a bullet, so it opens "Each
-  # relation" when there are several.
-  key <- paste(nomo_present_status(rows$severity), text)
-  units_per_key <- tapply(unit, key, function(u) length(unique(u)))
-  shared <- opens & units_per_key[key] > 1L
-  text[shared] <- sub("^The relation", "Each relation", text[shared])
+  text <- nomo_network_relation_text(rows$object, rows$observation, relation, unit, rows$severity)
   if (isTRUE(detail)) text <- nomo_present_then_recommend(text, rows$recommendation)
   nomo_present_flagged(unit = unit, status = rows$severity, text = text)
   invisible(text)

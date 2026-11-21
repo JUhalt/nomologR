@@ -362,6 +362,13 @@ test_that("guided runs say what they found, and group repeated requests (#89)", 
   )
   expect_snapshot(print(complete))
   expect_snapshot(print(summary(complete)))
+  # A network flag about a relation reads as the network's own summary gives
+  # it: the relation is the unit, and no bullet puts it in backticks (#145,
+  # out-11).
+  summarized <- utils::capture.output(print(summary(complete)))
+  flagged <- summarized[seq(match("Flagged", summarized), length(summarized))]
+  expect_true(any(startsWith(flagged, "  - Persistence <-> SocialDesirability in the network (Review): The")))
+  expect_false(any(grepl("`[^`]* (<->|->) [^`]*`", flagged)))
 
   # The closing hint is a call that runs as written: nomo_report() has no
   # default path, so the hint names `file`.

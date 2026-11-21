@@ -2244,6 +2244,35 @@ test_that("the summary lists each component flag where it was raised (#144)", {
     c(TRUE, FALSE, FALSE, FALSE)
   )
 
+  # A network flag about a relation names the relation, and the sample it
+  # comes from, and reads as the network's own print() gives it: without
+  # backticks around the relation, and "Each relation" when two share it. A
+  # relation keeps its own case (#145, out-11).
+  log <- tibble::tibble(
+    pipeline_component = "network", pipeline_scope = "workflow",
+    stage = c("network", "network", "network", "network_validation", "network_replication",
+              "network"),
+    object = c("A <-> B", "C <-> D", "ag -> pe", "ag -> pe", "ag -> pe", "primary"),
+    severity = c("review", "review", "review", "review", "concern", "review"),
+    observation = c("`A <-> B` is fixed to zero; `B` is an outcome.",
+                    "`C <-> D` is fixed to zero; `B` is an outcome.",
+                    "The interval is wide.", "The interval is wide.", "The samples disagree.",
+                    "`lavaan` warned.")
+  )
+  out <- utils::capture.output(nomologR:::nomo_run_present_flagged(log, scales))
+  flat <- gsub("\\s+", " ", paste(out, collapse = " "))
+  expect_match(flat, paste(
+    "- ag -> pe in the network's replication (Concern): The samples disagree.",
+    "- A <-> B in the network, C <-> D in the network (Review): Each relation is fixed",
+    "to zero; `B` is an outcome.",
+    "- ag -> pe in the network, ag -> pe in the network's validation sample (Review):",
+    "The interval is wide. - The network (Review): `lavaan` warned."
+  ), fixed = TRUE)
+  expect_false(grepl("`A <-> B`|`C <-> D`|`ag -> pe`", flat))
+  # One relation's bullet says "The relation".
+  out <- utils::capture.output(nomologR:::nomo_run_present_flagged(log[1L, ], scales))
+  expect_identical(out[[3L]], "  - A <-> B in the network (Review): The relation is fixed to zero; `B` is an")
+
   skip_on_cran()
   # A factor named differently from its scale, with an indicator no scale supplied.
   run <- nomo_run(nomo_demo_network, list(Agency = paste0("ag", 1:4)),

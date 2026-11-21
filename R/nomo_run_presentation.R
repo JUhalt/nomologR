@@ -528,15 +528,28 @@ nomo_run_present_flagged <- function(log, scales, models = character()) {
   named <- nomo_run_flag_named(log$object, nomo_run_flag_names(scales, models))
   unit <- ifelse(named, paste(gsub(" vs ", " vs. ", log$object, fixed = TRUE), "in", place),
                  place)
+  # A network flag about a relation names the relation, "Persistence <->
+  # SocialDesirability in the network", and its explanation reads as the
+  # network's own print() gives it, without backticks around the relation
+  # (#145, out-11). A row of the network's validation sample or replication
+  # says so; a log without a `stage` column has none.
+  relation <- log$pipeline_component %in% "network" & nomo_network_is_relation(log$object)
+  place[relation & log[["stage"]] %in% "network_validation"] <- "the network's validation sample"
+  place[relation & log[["stage"]] %in% "network_replication"] <- "the network's replication"
+  unit[relation] <- paste(log$object[relation], "in", place[relation])
+  text <- nomo_network_relation_text(
+    log$object, log$observation, relation & nomo_network_names_object(log$object, log$observation),
+    unit, log$severity
+  )
   # Units with the same flag share a bullet, so only the first of them starts
   # the line with a capital: "The Agency EFA, the Persistence EFA (Review)".
-  text <- trimws(log$observation)
+  text <- trimws(text)
   text[is.na(text)] <- ""
   text <- ifelse(nzchar(text) & !grepl("[.!?]$", text), paste0(text, "."), text)
   key <- paste(nomo_present_status(log$severity), text, sep = "\r")
-  lead <- !named & unit == unit[match(key, key)]
+  lead <- !named & !relation & unit == unit[match(key, key)]
   unit[lead] <- paste0(toupper(substr(unit[lead], 1L, 1L)), substring(unit[lead], 2L))
-  nomo_present_flagged(unit = unit, status = log$severity, text = log$observation)
+  nomo_present_flagged(unit = unit, status = log$severity, text = text)
 }
 
 
