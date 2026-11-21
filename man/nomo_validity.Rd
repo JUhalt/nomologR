@@ -56,7 +56,13 @@ indicator; its row has an \code{NA} estimate and the attention
 \code{reference} and \code{attention}. A correlation is flagged for review when it
 could exceed the HTMT-family reference: the upper limit of its interval
 (Rönkkö & Cho, 2022), or the estimate when there is no interval, is
-above it. A correlation beyond 1 in absolute value is a concern.
+above it. A correlation beyond 1 in absolute value is a concern. A
+correlation the model fixes, such as the zero correlations of a
+bifactor model or \code{A ~~ 0*B}, is listed at its fixed value. It is a
+constraint, not an estimate, and so no evidence that two constructs are
+separate: \code{print()}, \code{summary()}, \code{plot()}, \code{\link[=nomo_table]{nomo_table()}}, and
+\code{\link[=nomo_apa_table]{nomo_apa_table()}} leave it out, and the summary names the pair as
+fixed.
 \item \code{htmt2} and \code{htmt}: heterotrait-monotrait ratios per pair.
 \item \code{discriminant}: each pair's separation evidence with its reference and
 interpretation.

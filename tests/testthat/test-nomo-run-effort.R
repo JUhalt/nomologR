@@ -103,6 +103,19 @@ test_that("the pair threshold set in settings reaches the screen", {
 })
 
 
+test_that("scales set in settings are the instrument's scales for careless responding only", {
+  skip_on_cran()
+  fx <- run_effort_data()
+  instrument <- list(AB = c(fx$scales$A, fx$scales$B), C = fx$scales$C)
+  run <- run_effort(list(effort = TRUE, scales = instrument))
+  expect_identical(run$results$effort$effort_settings$scales, instrument)
+  # The item audits keep the run's own scales.
+  expect_identical(names(run$results$screen), names(fx$scales))
+  entry <- run$decision_log[run$decision_log$id == "careless_responding", ]
+  expect_match(entry$observation, "once across all 12 items, using 2 scales", fixed = TRUE)
+})
+
+
 test_that("an unreadable effort setting is refused before any stage runs", {
   expect_error(run_effort(list(effort = "yes")),
                "`settings$screen$effort` must be TRUE or FALSE.", fixed = TRUE)

@@ -291,6 +291,15 @@ B =~ b1 + b2 + b3 + b4 + b5"
   expect_identical(out$strategies$strategy, c("ml", "listwise"))
   expect_identical(out$reference, "ml")
 
+  # Without FIML or pairwise deletion among them, the strategy the model was
+  # fitted with is the reference.
+  listwise <- nomo_missing(fit, data = nomo_demo_continuous, strategies = "listwise",
+                           reliability = FALSE)
+  expect_identical(listwise$strategies$strategy, "listwise")
+  expect_identical(listwise$fitted_as, "listwise")
+  expect_identical(listwise$reference, "listwise")
+  expect_identical(listwise$strategies$role, "reference")
+
   expect_error(nomo_missing(fit, data = nomo_demo_continuous, strategies = NA_character_), "character vector")
   expect_error(nomo_missing(fit, data = nomo_demo_continuous, strategies = 1), "character vector")
 })
@@ -324,6 +333,14 @@ test_that("a hypothesis whose concordance depends on the strategy is flagged", {
   expect_match(entry$observation, "H1 (A -> B)", fixed = TRUE)
   expect_null(out$reliability)
   expect_error(nomo_table(out, "reliability"), "nomo_cfa")
+
+  # A network that records no estimator is refitted with lavaan's default,
+  # which is the estimator it was fitted with here.
+  unrecorded <- net
+  unrecorded$estimator <- NA_character_
+  again <- nomo_missing(unrecorded, data = mar)
+  expect_true(all(again$strategies$available))
+  expect_equal(again$estimates$estimate, out$estimates$estimate, tolerance = 1e-8)
 })
 
 
@@ -663,6 +680,39 @@ test_that("the print defines its terms and puts flags in one Flagged section (#1
                all = FALSE)
   expect_false(any(nchar(printed) > 80L))
   expect_match(printed[[length(printed)]], "for every recorded decision.", fixed = TRUE)
+})
+
+
+test_that("print() takes `digits` for the estimates, as it did in 0.9.0", {
+  skip_on_cran()
+  out <- missing_results()$mar
+  local_reproducible_output(width = 80)
+  # The argument is part of the method, with the default of the other print
+  # methods that take it.
+  expect_identical(names(formals(nomologR:::print.nomo_missing)), c("x", "digits", "..."))
+  expect_null(formals(nomologR:::print.nomo_missing)$digits)
+  for (method in c("print.nomo_scores", "print.nomo_hierarchical")) {
+    expect_null(formals(get(method, asNamespace("nomologR")))$digits, label = method)
+  }
+
+  standard <- capture.output(print(out))
+  expect_identical(capture.output(print(out, digits = NULL)), standard)
+  expect_identical(capture.output(print(out, digits = 3)), standard)
+
+  # One decimal for the estimate and its reference; the difference in
+  # standard errors keeps its own format.
+  short <- capture.output(print(out, digits = 1))
+  expect_false(identical(short, standard))
+  row <- "^  A ~~ B +Listwise deletion +"
+  expect_match(standard, paste0(row, "[.][0-9]{3} +[.][0-9]{3} +[-+][0-9]+[.][0-9]{2}$"),
+               all = FALSE)
+  expect_match(short, paste0(row, "[.][0-9]{1,4} +[.][0-9] +[-+][0-9]+[.][0-9]{2}$"),
+               all = FALSE)
+  expect_match(short, "^  [AB] =~ [ab][0-9] +Listwise deletion +0[.][0-9]{1,4} +0[.][0-9] ",
+               all = FALSE)
+  # Nothing else in the output depends on it.
+  differences <- function(lines) grepl(" Listwise deletion +[-.0-9]", lines)
+  expect_identical(short[!differences(short)], standard[!differences(standard)])
 })
 
 

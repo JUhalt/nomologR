@@ -839,10 +839,6 @@
         metric      1.000  0.000  0.028        .000         0.000    .146
         scalar       .954  0.121  0.065       -.046        +0.121  < .001
       
-      Flagged
-        - Score diagnostics (Review): 12 univariate equality-constraint score
-          diagnostics were retained.
-      
       CFI = comparative fit index; RMSEA = root mean square error of approximation;
       SRMR = standardized root mean square residual; LRT = likelihood-ratio test of
       a level against the level before it; ML = maximum likelihood.
@@ -896,12 +892,6 @@
         scalar Loading: Agency -> ag2 (online vs. paper)             0.55  1   .460
         scalar Loading: Agency -> ag1 (online vs. paper)             0.32  1   .574
         scalar Loading: Agency -> ag3 (online vs. paper)             0.19  1   .664
-      
-      Flagged
-        - Score diagnostics (Review): 12 univariate equality-constraint score
-          diagnostics were retained. Use these diagnostics to localize strain, not
-          to authorize automatic constraint release. Partial invariance requires an
-          explicit researcher specification and rationale.
       
       What these columns mean
         CFI -- Comparative fit index.
@@ -1327,8 +1317,6 @@
           (1983, p. 260) recommended at least .80, and above .90 if the scores are
           to serve as adequate substitutes for the factors themselves. Reported as
           his recommendation, not applied as a rule.
-        - Invariance (Review): 11 univariate equality-constraint score diagnostics
-          were retained.
         - The network (Review): `Persistence <-> SocialDesirability`, estimated in
           the model as given, is fixed to zero in the fitted model: with the
           hypothesized paths, `Persistence` is an outcome, and lavaan does not

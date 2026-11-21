@@ -25,6 +25,12 @@ the corresponding analysis function (for example, \code{\link[=nomo_efa]{nomo_ef
 reference changes which evidence is flagged for review; it never deletes
 items, respecifies models, or declares validity.
 
+Pass a complete list as \code{guidance}: start from \code{nomo_defaults()} and change
+the settings you need, as the example does. A list that holds only some of
+the settings is completed from the defaults by \code{\link[=nomo_efa]{nomo_efa()}} only. Another
+function may stop because a setting it needs is missing, or may run without
+the reference and so not raise the flags that depend on it.
+
 \code{long_string_min_items} is a count of items, not a reference value for a
 statistic: \code{\link[=nomo_screen]{nomo_screen()}} flags a case on long-string only when at least
 that many items are screened, because half the length of a shorter item set
@@ -40,8 +46,12 @@ short; raise them for a final analysis.
 
 \code{auto_delete} and \code{auto_respecify} are always \code{FALSE}. They record a design
 rule rather than switch a feature: nomologR never deletes an item or
-respecifies a model on its own. \code{\link[=nomo_factors]{nomo_factors()}} and \code{\link[=nomo_efa]{nomo_efa()}} stop with
-an explanation when either is set to \code{TRUE}.
+respecifies a model on its own. Every function that takes \code{guidance} stops
+with an explanation when either is set to \code{TRUE}: \code{\link[=nomo_screen]{nomo_screen()}},
+\code{\link[=nomo_factors]{nomo_factors()}}, \code{\link[=nomo_efa]{nomo_efa()}}, \code{\link[=nomo_cfa]{nomo_cfa()}}, \code{\link[=nomo_esem]{nomo_esem()}},
+\code{\link[=nomo_compare]{nomo_compare()}}, \code{\link[=nomo_split]{nomo_split()}}, \code{\link[=nomo_reliability]{nomo_reliability()}}, \code{\link[=nomo_validity]{nomo_validity()}},
+\code{\link[=nomo_hierarchical]{nomo_hierarchical()}}, \code{\link[=nomo_scores]{nomo_scores()}}, \code{\link[=nomo_invariance]{nomo_invariance()}},
+\code{\link[=nomo_invariance_longitudinal]{nomo_invariance_longitudinal()}}, \code{\link[=nomo_network]{nomo_network()}}, and \code{\link[=nomo_run]{nomo_run()}}.
 }
 \examples{
 guidance <- nomo_defaults()

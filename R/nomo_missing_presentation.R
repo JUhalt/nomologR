@@ -87,7 +87,10 @@ nomo_missing_present_strategies <- function(x) {
 # each estimate in its kind (a loading keeps its leading zero, a correlation
 # does not). Estimates that differ by a fraction of a standard error often
 # agree to two decimals, so they have three, as the decision log gives them.
-nomo_missing_present_differences <- function(x, title, limit = Inf) {
+# `digits` gives the estimates another number of decimals, as it did in print()
+# before the shared style; NULL keeps the three.
+nomo_missing_present_differences <- function(x, title, limit = Inf, digits = NULL) {
+  if (is.null(digits)) digits <- nomo_missing_estimate_digits
   compared <- x$estimates[x$estimates$role == "comparison" &
                             is.finite(x$estimates$difference_in_se), , drop = FALSE]
   if (!nrow(compared)) return(invisible(NULL))
@@ -97,7 +100,7 @@ nomo_missing_present_differences <- function(x, title, limit = Inf) {
   kinds <- nomo_missing_estimate_kind(shown$type)
   by_kind <- function(v, reference = NULL) {
     vapply(seq_along(v), function(i) {
-      nomo_present_stat(v[[i]], kinds[[i]], digits = nomo_missing_estimate_digits,
+      nomo_present_stat(v[[i]], kinds[[i]], digits = digits,
                         reference = if (is.null(reference)) NULL else reference[[i]])
     }, character(1))
   }
@@ -183,13 +186,18 @@ nomo_missing_caveat <- function() {
 }
 
 
+# `digits` sets the decimals of the estimates and their reference, as in
+# print() for nomo_scores and nomo_hierarchical; NULL, the default, gives the
+# shared style's. The argument was dropped by mistake when the style came in,
+# and a value given was then ignored without a word.
 #' @export
-print.nomo_missing <- function(x, ...) {
+print.nomo_missing <- function(x, digits = NULL, ...) {
   nomo_present_header("nomo_missing", "Missing-data sensitivity")
   nomo_missing_present_facts(x)
   nomo_missing_present_strategies(x)
   nomo_missing_present_differences(
-    x, "Largest differences from the reference (standardized estimates)", limit = 5L
+    x, "Largest differences from the reference (standardized estimates)", limit = 5L,
+    digits = digits
   )
   nomo_missing_key(x)
   nomo_missing_present_flagged(x$decision_log)

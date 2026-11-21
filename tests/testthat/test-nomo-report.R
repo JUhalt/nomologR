@@ -1216,12 +1216,28 @@ test_that("nomo_report isolates knitr state only while knitting (#40)", {
     add = TRUE
   )
 
+  # The state is isolated for the length of the function that asks for it, as
+  # nomo_report() does, and comes back when that function exits: the helper
+  # registers the restore in its caller's frame and hands nothing back to run.
+  rendering <- function(fail = FALSE) {
+    isolated <- nomologR:::nomo_report_isolate_knitr()
+    if (fail) stop("the render stopped part-way")
+    list(
+      isolated = isolated,
+      duplicate_label = getOption("knitr.duplicate.label"),
+      dev = knitr::opts_chunk$get("dev"),
+      comment = knitr::opts_chunk$get("comment"),
+      fig_width = knitr::opts_chunk$get("fig.width")
+    )
+  }
+
   # Outside a knit there is no shared state to protect, so nothing is touched.
   knitr::opts_chunk$set(comment = "#>")
-  restore_outside <- nomologR:::nomo_report_isolate_knitr()
+  outside <- rendering()
+  expect_false(outside$isolated)
+  expect_null(outside$duplicate_label)
+  expect_identical(outside$comment, "#>")
   expect_null(getOption("knitr.duplicate.label"))
-  expect_identical(knitr::opts_chunk$get("comment"), "#>")
-  restore_outside()
   expect_identical(knitr::opts_chunk$get("comment"), "#>")
 
   # Inside a knit the report is rendered with knitr's defaults, which its own
@@ -1231,18 +1247,53 @@ test_that("nomo_report isolates knitr state only while knitting (#40)", {
   options(knitr.in.progress = TRUE)
   knitr::opts_chunk$set(dev = "svg", fig.width = 3.1, comment = "#>")
 
-  restore_inside <- nomologR:::nomo_report_isolate_knitr()
-  expect_identical(getOption("knitr.duplicate.label"), "allow")
-  expect_null(knitr::opts_chunk$get("dev"))
-  expect_identical(knitr::opts_chunk$get("comment"), "##")
-  expect_equal(knitr::opts_chunk$get("fig.width"), 7)
+  inside <- rendering()
+  expect_true(inside$isolated)
+  expect_identical(inside$duplicate_label, "allow")
+  expect_null(inside$dev)
+  expect_identical(inside$comment, "##")
+  expect_equal(inside$fig_width, 7)
 
-  # The caller's state comes back, including an unset duplicate-label option.
-  restore_inside()
-  expect_null(getOption("knitr.duplicate.label"))
-  expect_identical(knitr::opts_chunk$get("dev"), "svg")
-  expect_equal(knitr::opts_chunk$get("fig.width"), 3.1)
-  expect_identical(knitr::opts_chunk$get("comment"), "#>")
+  # The caller's state is back once the function has returned, including an
+  # unset duplicate-label option.
+  caller_state_is_back <- function() {
+    expect_null(getOption("knitr.duplicate.label"))
+    expect_identical(knitr::opts_chunk$get("dev"), "svg")
+    expect_equal(knitr::opts_chunk$get("fig.width"), 3.1)
+    expect_identical(knitr::opts_chunk$get("comment"), "#>")
+  }
+  caller_state_is_back()
+
+  # It comes back when the function stops with an error too.
+  expect_error(rendering(fail = TRUE), "the render stopped part-way", fixed = TRUE)
+  caller_state_is_back()
+
+  # An option the caller had set is put back as it was, not unset.
+  options(knitr.duplicate.label = "deny")
+  expect_identical(rendering()$duplicate_label, "allow")
+  expect_identical(getOption("knitr.duplicate.label"), "deny")
+})
+
+
+test_that("no function restores an option that another function changed", {
+  # options() is changed in two places of R/. Each restores it where it changes
+  # it: with on.exit() on the next line, or through withr, which registers the
+  # restore itself. An installed package keeps no R sources, so the check runs
+  # from the source tree only.
+  source_dir <- testthat::test_path("..", "..", "R")
+  skip_if_not(file.exists(file.path(source_dir, "nomo_report.R")))
+  for (file in list.files(source_dir, pattern = "[.]R$", full.names = TRUE)) {
+    code <- sub("#.*$", "", readLines(file, warn = FALSE, encoding = "UTF-8"))
+    bare <- grep("(^|[^_.[:alnum:]:])options[(]", code)
+    saved <- grep("<- options[(]", code)
+    # A bare call is either the save, followed at once by its on.exit(), or
+    # the restore inside that on.exit().
+    for (at in saved) {
+      expect_match(code[[at + 1L]], "on.exit(options(", fixed = TRUE,
+                   label = paste0(basename(file), ":", at + 1L))
+    }
+    expect_setequal(bare, c(saved, saved + 1L))
+  }
 })
 
 
@@ -1972,6 +2023,13 @@ test_that("the scores summary writes the parallel-model test in APA form (#144)"
   expect_match(text, "fitted model: Delta chi-square(16) = 41.93, p < .001.", fixed = TRUE)
   scores$parallel_test <- list(available = FALSE, note = "Not tested: one item.")
   expect_match(nomologR:::nomo_report_scores(scores)$summary, "Not tested: one item.", fixed = TRUE)
+
+  # Scores the model weights are named as such, with no parallel-model test.
+  cfa <- nomo_cfa("A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4 + b5",
+                  nomo_demo_continuous)
+  model <- nomologR:::nomo_report_scores(nomo_scores(cfa, method = "regression"))$summary
+  expect_match(model, "Model-weighted scores (method: regression) for ", fixed = TRUE)
+  expect_no_match(model, "parallel model", fixed = TRUE)
 })
 
 

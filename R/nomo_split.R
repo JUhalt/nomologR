@@ -20,7 +20,8 @@
 #' @param validation_prop Proportion of rows assigned to the validation sample.
 #'   Must be strictly between 0 and 1.
 #' @param seed Integer seed used, with the random-number generator recorded in
-#'   `rng_kind`, to make the split reproducible.
+#'   `rng_kind`, to make the split reproducible. The session's random-number
+#'   state is restored afterwards.
 #' @param guidance Guidance settings from [nomo_defaults()].
 #'
 #' @return A `nomo_split` object. The fields to read are:

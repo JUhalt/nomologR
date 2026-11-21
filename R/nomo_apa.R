@@ -1047,7 +1047,18 @@ nomo_apa_table.nomo_validity <- function(x, type = c("discriminant", "convergent
     ))
   }
 
+  # A correlation the model fixes is not in the table: it is not an estimate,
+  # and so no evidence that two constructs are separate (#145). The note names
+  # the pairs left out, as the CFA's factor-correlation table does.
   tab <- nomo_validity_discriminant_table(x)
+  fixed <- nomo_validity_fixed_pairs(x)
+  if (!nrow(tab) && nrow(fixed)) {
+    stop(paste(
+      "No factor correlation is estimated in this model: the model fixes each",
+      "one, and no heterotrait-monotrait ratio was computed, so there are no",
+      "construct pairs to table."
+    ), call. = FALSE)
+  }
   if (!nrow(tab)) {
     stop("The model has one construct, so there are no construct pairs.", call. = FALSE)
   }
@@ -1091,7 +1102,13 @@ nomo_apa_table.nomo_validity <- function(x, type = c("discriminant", "convergent
       } else {
         "Heterotrait-monotrait ratios were not computed for this model."
       },
-      nomo_apa_dash_note(body, "not computed")
+      if (nrow(fixed)) {
+        sprintf("Correlations the model fixes are not shown: %s.",
+                nomo_present_or(fixed$label, "and"))
+      },
+      nomo_apa_dash_note(
+        body, if (nrow(fixed)) "fixed by the model or not computed" else "not computed"
+      )
     ),
     number = number, source = "nomo_validity"
   )

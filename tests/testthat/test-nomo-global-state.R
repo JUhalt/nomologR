@@ -186,3 +186,20 @@ test_that("a seeded call leaves a session that has no random-number state withou
   expect_true("nomo_reliability on workers absent" %in% output)
   expect_true("generator kept" %in% output)
 })
+
+
+test_that("the help of each seed argument says the random-number state is restored", {
+  # One argument's entry on a help page, as Rd source.
+  argument <- function(topic, name) {
+    items <- strsplit(nomo_test_rd_text(topic, "\\arguments"), "\\item{", fixed = TRUE)[[1L]]
+    item <- items[startsWith(items, paste0(name, "}"))]
+    expect_identical(length(item), 1L, label = paste(topic, name))
+    item
+  }
+  restored <- "The session's random-number state is restored afterwards."
+  expect_true(grepl(restored, argument("nomo_reliability", "ci_seed"), fixed = TRUE))
+  expect_true(grepl(restored, argument("nomo_split", "seed"), fixed = TRUE))
+  expect_true(grepl(restored, argument("nomo_power_simulate", "seed"), fixed = TRUE))
+  expect_true(grepl("random number state is restored before return",
+                    argument("nomo_factors", "seed"), fixed = TRUE))
+})

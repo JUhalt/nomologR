@@ -22,9 +22,8 @@ reason for every flag.
 }
 \section{Stability and deprecation}{
 
-From version 0.3.0, the first release submitted to CRAN, the public interface
-changes only after a deprecation period. Code written against one release
-keeps working in the next.
+From version 1.0.0, the public interface changes only after a deprecation
+period. Code written against one release keeps working in the next.
 
 \strong{What is covered.} The interface is:
 \itemize{

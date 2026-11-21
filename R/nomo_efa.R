@@ -397,8 +397,9 @@ nomo_efa <- function(data,
   }
 
   pairwise_n <- nomo_factors_pairwise_n(analysis_data)
+  # At least three items were required above, so there are off-diagonal pairs.
   off_diag_n <- pairwise_n[row(pairwise_n) != col(pairwise_n)]
-  min_pairwise_n <- if (length(off_diag_n)) min(off_diag_n) else nrow(analysis_data)
+  min_pairwise_n <- min(off_diag_n)
   if (min_pairwise_n < 3L) {
     stop(
       "At least one item pair has fewer than three jointly observed cases.",

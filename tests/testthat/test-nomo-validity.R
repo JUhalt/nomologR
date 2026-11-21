@@ -354,6 +354,19 @@ test_that("ordinal validity evidence matches semTools engines", {
   expect_equal(out$ave_engine, direct_ave)
   expect_equal(out$htmt2_matrix, direct_htmt2, tolerance = 1e-8)
   expect_setequal(out$ordered, names(dat))
+
+  # The original HTMT is computed from the same polychoric correlations.
+  original <- nomo_validity(fit, htmt = "htmt")
+  direct_htmt <- semTools::htmt(
+    model = model,
+    data = dat,
+    missing = "default",
+    ordered = names(dat),
+    absolute = TRUE,
+    htmt2 = FALSE
+  )
+  expect_equal(original$htmt_matrix, direct_htmt, tolerance = 1e-8)
+  expect_null(original$htmt2_matrix)
 })
 
 
@@ -663,9 +676,18 @@ test_that("flag counts name what they count, and constructs are counted once (#1
   expect_match(grouped, "nomo_invariance() compares", fixed = TRUE, all = FALSE)
   expect_false(any(grepl("later invariance workflow", grouped, fixed = TRUE)))
 
-  one <- capture.output(print(nomo_validity(nomo_cfa("A =~ a1 + a2 + a3 + a4",
-                                                     data = nomo_demo_continuous))))
+  one_construct <- nomo_validity(nomo_cfa("A =~ a1 + a2 + a3 + a4",
+                                          data = nomo_demo_continuous))
+  one <- capture.output(print(one_construct))
   expect_true("Separation flags: not applicable (one construct)" %in% one)
+  # Without a pair, the table has no rows and its usual columns, as NEWS says;
+  # it had no columns (#145).
+  pairs <- nomo_table(one_construct, "discriminant")
+  expect_identical(nrow(pairs), 0L)
+  expect_identical(names(pairs), c(
+    "construct_1", "construct_2", "block", "latent_r", "latent_r_ci_lower",
+    "latent_r_ci_upper", "HTMT2", "HTMT", "signal"
+  ))
 })
 
 
@@ -1010,4 +1032,240 @@ test_that("a flagged loading's log row states it beside its reference (#144, #14
   # from the reference.
   expect_match(log$observation[log$object == "a3"],
                "Standardized loading -0.4996 is below the review reference 0.50", fixed = TRUE)
+})
+
+
+test_that("a correlation the model fixes is not shown as separation evidence (#145)", {
+  skip_on_cran()
+  local_reproducible_output(width = 80)
+  squash <- function(x) gsub("\\s+", " ", paste(x, collapse = " "))
+  shown <- function(x) squash(capture.output(print(x)))
+  pair_names <- function(tab) paste(tab$construct_1, tab$construct_2)
+
+  # A bifactor model fixes all six factor correlations at 0, and its
+  # cross-loaded indicators leave no HTMT: nothing is left to evaluate.
+  dat <- withr::with_seed(2026, {
+    n <- 500
+    g <- rnorm(n)
+    s <- matrix(rnorm(n * 3), n, 3)
+    as.data.frame(sapply(1:9, function(i) {
+      .6 * g + .45 * s[, ceiling(i / 3)] + rnorm(n, sd = .65)
+    }))
+  })
+  names(dat) <- paste0("x", 1:9)
+  factors <- list(A = c("x1", "x2", "x3"), B = c("x4", "x5", "x6"), C = c("x7", "x8", "x9"))
+  bifactor <- nomo_validity(nomo_cfa(nomo_model(factors, structure = "bifactor"), data = dat,
+                                     modification_indices = FALSE))
+  # The stored table lists each correlation at its fixed value, as the CFA's does.
+  expect_identical(nrow(bifactor$latent_correlations), 6L)
+  expect_true(all(bifactor$latent_correlations$correlation == 0))
+
+  pairs <- nomo_table(bifactor, "discriminant")
+  expect_identical(nrow(pairs), 0L)
+  expect_identical(names(pairs), c(
+    "construct_1", "construct_2", "block", "latent_r", "latent_r_ci_lower",
+    "latent_r_ci_upper", "HTMT2", "HTMT", "signal"
+  ))
+  expect_identical(summary(bifactor)$discriminant, pairs)
+
+  printed <- capture.output(print(bifactor))
+  expect_true(
+    "Separation flags: not evaluated (the model fixes every factor correlation)" %in% printed
+  )
+  expect_false(grepl("carry the construct-separation evidence", squash(printed), fixed = TRUE))
+  expect_match(
+    squash(printed),
+    paste("HTMT-family values could not be computed (see x$htmt_status), and the model",
+          "fixes every factor correlation, so there is no construct-separation evidence",
+          "to show."),
+    fixed = TRUE
+  )
+  summarized <- shown(summary(bifactor))
+  expect_match(
+    summarized,
+    paste("Every factor correlation is fixed at 0 by the model, so not estimated: G with A,",
+          "G with B, G with C, A with B, A with C, and B with C."),
+    fixed = TRUE
+  )
+  expect_false(grepl("[.00, .00]", summarized, fixed = TRUE))
+  expect_false(grepl("Construct 1", summarized, fixed = TRUE))
+  expect_false(grepl("No pairwise construct-separation summary", summarized, fixed = TRUE))
+  expect_error(
+    nomo_apa_table(bifactor),
+    paste("No factor correlation is estimated in this model: the model fixes each one, and",
+          "no heterotrait-monotrait ratio was computed, so there are no construct pairs",
+          "to table."),
+    fixed = TRUE
+  )
+  expect_error(plot(bifactor, type = "discriminant"),
+               "No construct pairs are available to plot", fixed = TRUE)
+
+  # The decision log records each as the constraint it is, never as evidence
+  # about the pair and never as a flag.
+  logged <- bifactor$decision_log[bifactor$decision_log$metric == "latent_correlation", ]
+  expect_identical(nrow(logged), 6L)
+  expect_true(all(logged$severity == "info"))
+  expect_true(all(logged$observation == paste(
+    "The model fixes this latent correlation at 0, so it is not an estimate and is no",
+    "evidence that the two constructs are separate."
+  )))
+  expect_true(all(startsWith(logged$recommendation, "Report it as a constraint of the model.")))
+
+  # A saved object without its fit has no parameter table to read, so nothing
+  # is taken to be fixed.
+  unfitted <- bifactor
+  unfitted$fit <- NULL
+  expect_identical(nrow(nomologR:::nomo_validity_fixed_pairs(unfitted)), 0L)
+  expect_identical(nrow(nomo_table(unfitted, "discriminant")), 6L)
+
+  # One pair fixed among estimated ones. HTMT comes from the data, so the pair
+  # keeps its row and its ratios, and only its latent correlation is left out.
+  hs <- lavaan::HolzingerSwineford1939
+  three <- "visual =~ x1 + x2 + x3\ntextual =~ x4 + x5 + x6\nspeed =~ x7 + x8 + x9"
+  one_cfa <- nomo_cfa(paste(three, "visual ~~ 0*textual", sep = "\n"), hs,
+                      modification_indices = FALSE)
+  one <- nomo_validity(one_cfa)
+  pairs <- nomo_table(one, "discriminant")
+  expect_identical(pair_names(pairs), c("visual textual", "visual speed", "textual speed"))
+  expect_identical(is.finite(pairs$latent_r), c(FALSE, TRUE, TRUE))
+  expect_identical(is.finite(pairs$latent_r_ci_lower), c(FALSE, TRUE, TRUE))
+  expect_identical(is.finite(pairs$latent_r_ci_upper), c(FALSE, TRUE, TRUE))
+  expect_true(all(is.finite(pairs$HTMT2)))
+  expect_identical(pairs$signal, c("info", "info", "info"))
+  expect_true("Separation flags: none (3 pairs)" %in% capture.output(print(one)))
+  expect_match(shown(summary(one)),
+               "Fixed at 0 by the model, so not estimated: visual with textual.", fixed = TRUE)
+  apa <- nomo_apa_table(one)
+  expect_identical(apa$body[["*r* [95% CI]"]][[1L]], "\u2014")
+  expect_match(
+    squash(apa$notes$general),
+    paste("Correlations the model fixes are not shown: visual with textual. \u2014 = fixed",
+          "by the model or not computed."),
+    fixed = TRUE
+  )
+
+  # Without HTMT the fixed pair has nothing to show, and the pair count, the
+  # plot, and the APA table follow.
+  no_htmt <- nomo_validity(one_cfa, htmt = "none")
+  pairs <- nomo_table(no_htmt, "discriminant")
+  expect_identical(pair_names(pairs), c("visual speed", "textual speed"))
+  printed <- capture.output(print(no_htmt))
+  expect_true("Separation flags: none (2 pairs)" %in% printed)
+  expect_match(squash(printed),
+               "so the latent correlations carry the construct-separation evidence.",
+               fixed = TRUE)
+  expect_identical(nrow(plot(no_htmt, type = "discriminant")$data), 2L)
+  apa <- nomo_apa_table(no_htmt)
+  expect_identical(apa$body$Constructs, c("visual with speed", "textual with speed"))
+  expect_match(squash(apa$notes$general),
+               "Correlations the model fixes are not shown: visual with textual.", fixed = TRUE)
+  expect_false(grepl("\u2014 =", squash(apa$notes$general), fixed = TRUE))
+  fixed_row <- no_htmt$decision_log[no_htmt$decision_log$object == "visual vs textual", ]
+  expect_identical(fixed_row$metric, "latent_correlation")
+  expect_identical(fixed_row$severity, "info")
+
+  # A value fixed away from 0 is a constraint too.
+  fixed_high <- nomo_validity(
+    nomo_cfa(paste(three, "visual ~~ 0.3*textual", sep = "\n"), hs,
+             modification_indices = FALSE),
+    htmt = "none"
+  )
+  expect_identical(pair_names(nomo_table(fixed_high, "discriminant")),
+                   c("visual speed", "textual speed"))
+  expect_match(shown(summary(fixed_high)),
+               "Fixed by the model, so not estimated: visual with textual.", fixed = TRUE)
+  fixed_row <- fixed_high$decision_log[fixed_high$decision_log$object == "visual vs textual", ]
+  expect_identical(fixed_row$severity, "info")
+  expect_match(fixed_row$observation, "The model fixes this latent correlation, so it is not",
+               fixed = TRUE)
+
+  # An ordinary correlated-factor model fixes nothing and reads as before.
+  ordinary <- nomo_validity(nomo_cfa(three, hs, modification_indices = FALSE))
+  expect_identical(nrow(nomologR:::nomo_validity_fixed_pairs(ordinary)), 0L)
+  pairs <- nomo_table(ordinary, "discriminant")
+  expect_equal(pairs$latent_r, ordinary$latent_correlations$correlation)
+  expect_true(all(is.finite(pairs$latent_r_ci_lower)))
+  expect_true("Separation flags: none (3 pairs)" %in% capture.output(print(ordinary)))
+  expect_false(grepl("by the model", shown(summary(ordinary)), fixed = TRUE))
+  expect_false(grepl("the model fixes", squash(nomo_apa_table(ordinary)$notes$general),
+                     fixed = TRUE))
+})
+
+
+test_that("a correlation fixed in some groups or levels is left out only there (#145)", {
+  skip_on_cran()
+  local_reproducible_output(width = 80)
+  squash <- function(x) gsub("\\s+", " ", paste(x, collapse = " "))
+  shown <- function(x) squash(capture.output(print(x)))
+  log_row <- function(x, object) {
+    x$decision_log[x$decision_log$metric == "latent_correlation" &
+                     x$decision_log$object == object, ]
+  }
+  three <- "visual =~ x1 + x2 + x3\ntextual =~ x4 + x5 + x6\nspeed =~ x7 + x8 + x9"
+  fit_groups <- function(constraint) {
+    lavaan::cfa(paste(three, constraint, sep = "\n"), lavaan::HolzingerSwineford1939,
+                group = "school", std.lv = TRUE)
+  }
+
+  # Fixed at 0 in Grant-White and estimated in Pasteur: the Pasteur value is
+  # an estimate, shown and read against the reference as before.
+  partial <- nomo_validity(fit_groups("visual ~~ c(NA, 0)*textual"), htmt = "none")
+  stored <- partial$latent_correlations
+  pasteur <- stored$construct_1 == "visual" & stored$construct_2 == "textual" &
+    stored$block == "Pasteur"
+  expect_true(stored$correlation[pasteur] > .3)
+  pairs <- nomo_table(partial, "discriminant")
+  expect_identical(nrow(pairs), 5L)
+  kept <- pairs[pairs$construct_1 == "visual" & pairs$construct_2 == "textual", ]
+  expect_identical(kept$block, "Pasteur")
+  expect_equal(kept$latent_r, stored$correlation[pasteur])
+  expect_equal(kept$latent_r_ci_lower, stored$ci_lower[pasteur])
+  expect_true("Separation flags: none (3 pairs in 2 groups)" %in%
+                capture.output(print(partial)))
+  expect_match(shown(summary(partial)),
+               "Fixed at 0 by the model, so not estimated: visual with textual (Grant-White).",
+               fixed = TRUE)
+  apa <- nomo_apa_table(partial)
+  expect_identical(apa$body$Group[apa$body$Constructs == "visual with textual"], "Pasteur")
+  expect_match(squash(apa$notes$general),
+               "Correlations the model fixes are not shown: visual with textual (Grant-White).",
+               fixed = TRUE)
+  estimated <- log_row(partial, "visual vs textual (Pasteur)")
+  expect_match(estimated$observation, "^The latent correlation \\(r = \\.48, 95% CI")
+  expect_false(startsWith(estimated$recommendation, "Report it as a constraint"))
+  constraint <- log_row(partial, "visual vs textual (Grant-White)")
+  expect_identical(constraint$severity, "info")
+  expect_match(constraint$observation, "The model fixes this latent correlation at 0",
+               fixed = TRUE)
+
+  # Fixed in every group, the pair is named once, without a group.
+  both <- nomo_validity(fit_groups("visual ~~ 0*textual"), htmt = "none")
+  expect_identical(nrow(nomo_table(both, "discriminant")), 4L)
+  expect_true("Separation flags: none (2 pairs in 2 groups)" %in%
+                capture.output(print(both)))
+  expect_match(shown(summary(both)),
+               "Fixed at 0 by the model, so not estimated: visual with textual.", fixed = TRUE)
+  expect_identical(nomologR:::nomo_validity_fixed_pairs(both)$label, "visual with textual")
+
+  # The levels of a multilevel model share the table's block, and the factors
+  # here share their names: the row the model fixes is told apart by its
+  # place, and named with its level.
+  levels <- nomo_validity(lavaan::cfa(
+    paste(
+      "level: 1", "f =~ y1 + y2 + y3", "g =~ y4 + y5 + y6", "f ~~ 0*g",
+      "level: 2", "f =~ y1 + y2 + y3", "g =~ y4 + y5 + y6",
+      sep = "\n"
+    ),
+    data = lavaan::Demo.twolevel, cluster = "cluster", std.lv = TRUE
+  ), htmt = "none")
+  stored <- levels$latent_correlations
+  expect_identical(stored$correlation[[1L]], 0)
+  pairs <- nomo_table(levels, "discriminant")
+  expect_identical(nrow(pairs), 1L)
+  expect_equal(pairs$latent_r, stored$correlation[[2L]])
+  expect_match(shown(summary(levels)),
+               "Fixed at 0 by the model, so not estimated: f with g (within).", fixed = TRUE)
+  logged <- levels$decision_log[levels$decision_log$metric == "latent_correlation", ]
+  expect_identical(startsWith(logged$observation, "The model fixes this latent correlation"),
+                   c(TRUE, FALSE))
 })

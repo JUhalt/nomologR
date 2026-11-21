@@ -1786,3 +1786,20 @@ test_that("CFA, comparison, ESEM, and split refuse auto_delete and auto_respecif
   expect_error(nomo_split(hs, guidance = guidance),
                "`guidance$auto_respecify` cannot be `TRUE`", fixed = TRUE)
 })
+
+
+test_that("?nomo_cfa says how `estimator` is stored, and the fit stores it so", {
+  # The spelling of a documented field is part of the frozen interface.
+  value <- nomo_test_rd_text("nomo_cfa", "\\value")
+  expect_true(grepl("\\code{estimator} is stored in upper case", value, fixed = TRUE))
+  expect_true(grepl('\\code{"default"} as \\code{"DEFAULT"}', value, fixed = TRUE))
+
+  hs <- lavaan::HolzingerSwineford1939
+  model <- "visual =~ x1 + x2 + x3\ntextual =~ x4 + x5 + x6"
+  stored <- function(estimator) {
+    nomo_cfa(model, hs, estimator = estimator, modification_indices = FALSE)$estimator
+  }
+  expect_identical(stored("mlr"), "MLR")
+  expect_identical(stored("default"), "DEFAULT")
+  expect_identical(stored(NULL), "ML")
+})

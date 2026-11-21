@@ -167,6 +167,44 @@ test_that("?nomo_table says what an empty table and an unsupported object give (
 })
 
 
+test_that("a table that was not computed is an error that names the argument (#145)", {
+  # Two types stop instead of returning an empty table, which would hide that
+  # the analysis was switched off. ?nomo_table says which, and the errors are
+  # part of the frozen interface.
+  value <- nomo_test_rd_text("nomo_table", "\\value")
+  expect_true(grepl("A table that was not computed is an error", value, fixed = TRUE))
+  expect_true(grepl('\\code{"effort"} for a \\code{nomo_screen} object run without \\code{effort = TRUE}',
+                    value, fixed = TRUE))
+  expect_true(grepl('\\code{"reliability"} for a \\code{nomo_missing} object', value, fixed = TRUE))
+  expect_true(grepl("\\code{reliability = FALSE}", value, fixed = TRUE))
+
+  skip_on_cran()
+  screened <- nomo_screen(nomo_demo_continuous)
+  expect_null(screened$effort)
+  expect_error(
+    nomo_table(screened, "effort"),
+    "No careless-responding indices were computed. Rerun with `effort = TRUE`.",
+    fixed = TRUE
+  )
+
+  no_comparison <- paste(
+    "No reliability comparison: it is made for `nomo_cfa` objects, unless",
+    "`reliability = FALSE` was requested."
+  )
+  cfa <- nomo_cfa("A =~ a1 + a2 + a3 + a4 + a5", data = nomo_demo_continuous,
+                  modification_indices = FALSE)
+  switched_off <- nomo_missing(cfa, data = nomo_demo_continuous, reliability = FALSE)
+  expect_null(switched_off$reliability)
+  expect_error(nomo_table(switched_off, "reliability"), no_comparison, fixed = TRUE)
+  # The other tables of the same object are returned.
+  expect_s3_class(nomo_table(switched_off, "strategies"), "tbl_df")
+
+  # A fit that is not a nomo_cfa object has no comparison either.
+  not_cfa <- structure(list(reliability = NULL), class = c("nomo_missing", "list"))
+  expect_error(nomo_table(not_cfa, "reliability"), no_comparison, fixed = TRUE)
+})
+
+
 test_that("the fit-table columns ?nomo_table names are the ones returned (#145)", {
   skip_on_cran()
   items <- nomo_test_rd_items(nomo_test_rd_text("nomo_table", "Fit tables"))

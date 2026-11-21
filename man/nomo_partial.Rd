@@ -23,7 +23,8 @@ A single rationale may be recycled across multiple releases.}
 \value{
 A \code{nomo_partial} object whose \code{releases} field is one row per
 release: its identifier, level, syntax, and rationale. \code{n} is the number
-of releases. \code{print()} lists each release with its level and rationale.
+of releases. \code{print()} lists each release with its level and rationale,
+and \code{as.data.frame()} returns \code{releases} as a data frame.
 }
 \description{
 \code{nomo_partial()} records equality constraints that the researcher has decided

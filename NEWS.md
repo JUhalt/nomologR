@@ -25,7 +25,9 @@ across groups and occasions".
 ## Calls that now behave differently
 
 This section lists what a call written for 0.9.0 can run into. The sections
-after it give the details.
+after it give the details. These changes were made before the stability
+promise takes effect at 1.0.0, so none of them went through a deprecation
+period.
 
 ### Errors where calls used to be accepted
 
@@ -90,6 +92,10 @@ that had ignored the argument.
   stops for a model that fixes every factor correlation, such as a bifactor
   model; it had tabled the fixed zeros as estimates. `nomo_table()` refuses a
   `type` for a `nomo_hypotheses` object.
+- For a `nomo_validity` result whose model fixes every factor correlation and
+  has no HTMT, such as a bifactor model, `nomo_apa_table(x)` and
+  `plot(x, type = "discriminant")` stop, because no pair is left to table or
+  draw. They had shown the fixed zeros as estimates.
 
 ### Results that change
 
@@ -112,13 +118,16 @@ that had ignored the argument.
     factor.
   - `nomo_validity()`'s HTMT cases under FIML, its `ave` when indicators
     cross-load, and the flag of a construct pair that has no HTMT.
+  - `nomo_table(x, "discriminant")` for a `nomo_validity` result: a latent
+    correlation the model fixes is left out.
 - **Hierarchical models.** `nomo_hierarchical()` under the theta
   parameterization, and with a negative variance.
 - **Scores.** `nomo_scores()`'s parallel-model test, when its univocality note
   appears, and the class of its `summary()`.
 - **Invariance.** In `nomo_invariance()`: the sequence for ordered-factor
   columns, the level a release applies from, `completed_levels`, and the
-  version of the fit statistics under a robust estimator.
+  version of the fit statistics under a robust estimator. The decision-log row
+  that counts the score diagnostics is information, no longer a review flag.
 - **Nomological network.** `nomo_network()`'s concordance values, what its
   measurement context is judged on, the `estimator` it records and, for some
   networks, the fitted model.
@@ -133,6 +142,10 @@ that had ignored the argument.
   an empty `nomo_table()`.
 - **Printed numbers.** Display rounds half away from zero. Returned values are
   unchanged.
+- **`digits` in `print()`.** `print()` for `nomo_scores`, `nomo_hierarchical`,
+  and `nomo_missing` objects, and for the summary of a `nomo_scores` object,
+  has `digits = NULL` as its default; it was 3. `NULL` gives each statistic
+  the decimals of the shared style, and a number given sets them as before.
 
 ### New refusals
 
@@ -155,6 +168,9 @@ that does. A call that worked is not affected.
   observed covariate to a factor, and a covariance between a factor and an
   observed variable.
 - `nomo_table()`: an object that has no tables.
+- `as.data.frame()` on a result object: it stops and points to `nomo_table()`.
+  It had ended in "node stack overflow", or had run the analysis again and
+  again.
 - `nomo_apa_table()`: factor correlations for a higher-order model. The error
   had said that the model has one factor.
 
@@ -236,6 +252,12 @@ that does. A call that worked is not affected.
   - **Pairs without HTMT.** Where neither was computed (several groups, a cross-loading, a covariance-matrix fit, or `htmt = "none"`), `signal` comes from the latent correlation; it used to be "unavailable". A latent correlation near 1 is therefore flagged in those cases too, and `plot(x, type = "discriminant")` draws the latent correlation with its interval; it had stopped.
   - **Beyond 1.** A latent correlation beyond 1 is a concern either way.
   - **An HTMT that cannot exist.** With one construct, or for a construct with one indicator, it is logged as information, not as a review or concern flag.
+- `nomo_validity()` no longer presents a correlation the model fixes as evidence that two constructs are separate (#145). A bifactor model fixes its six factor correlations at 0. `summary()` and `nomo_apa_table()` tabled each as ".00 [.00, .00]", `print()` counted them as "Separation flags: none (6 pairs)" and said that the latent correlations carry the construct-separation evidence.
+  - **What is shown.** `nomo_table(x, "discriminant")`, `summary()`, the pair count of `print()`, `plot(x, type = "discriminant")`, and `nomo_apa_table()` leave out a latent correlation the model fixes. A pair that has an HTMT-family value keeps its row and its ratios, because HTMT is computed from the data; a pair that has none is not listed. `summary()` names the fixed pairs as the CFA summary does, such as "Fixed at 0 by the model, so not estimated: visual with textual.", and the APA note lists them.
+  - **Several groups or levels.** A correlation is left out only in the groups or levels where the model fixes it. With `visual ~~ c(NA, 0)*textual` in two groups, the first group's estimate is shown and read against the reference as before, and `summary()` names the other group: "visual with textual (Grant-White)". A pair fixed in every group is named once.
+  - **When no pair is left.** `print()` reads "Separation flags: not evaluated (the model fixes every factor correlation)", `nomo_apa_table()` and the plot stop with the reason, and `nomo_table(x, "discriminant")` has no rows and its usual columns.
+  - **What is stored.** `latent_correlations` still lists a fixed correlation at its fixed value, as `factor_correlations` of `nomo_cfa()` does. Its decision-log row, in each group or level that fixes it, says that the model fixes it, at severity `"info"`; the row had read it against the review reference.
+  - **Other models.** A model that fixes no factor correlation gives the output it gave before, with one exception: for a model with one construct, `nomo_table(x, "discriminant")` has no rows and its usual columns. It had no columns.
 - `nomo_validity()`'s `htmt_missing = "default"` follows the fitted model's missing-data handling: FIML when the CFA used it, pairwise deletion when it used that, and listwise deletion otherwise (#145). Despite its help page, it had always used listwise deletion, so on a FIML CFA, HTMT rested on fewer cases than the CFA. `htmt_status` gains `missing` and `n`, and a decision-log entry records the cases HTMT used. The entry is for review only when a different handling leaves HTMT with fewer cases than the CFA.
 - `nomo_reliability()` checks `ci_level`, `ci_boot`, and `ci_seed` before using them (#145). It had cut a vector to its first element and truncated a fraction. A bootstrap request for a model fitted from a covariance matrix says that raw data are needed, and requested intervals that are not available get a review row.
 - `nomo_hierarchical()` (#145):
@@ -258,6 +280,7 @@ that does. A call that worked is not affected.
 - Engine problems are flagged (#145). lavaan's warnings at each level, and a level that fails or does not converge, become decision-log rows and appear under "Flagged". lavaan's messages are quoted as sentences in plain words, such as "observed-variable variances" where lavaan abbreviates.
 - With three or more groups, each score diagnostic frees one group's parameter from the value the others share (#145). It is labeled by the group it frees, as in "Intercept: y3 (three vs. others)", no longer "(one vs. three)", which read as a comparison of two groups. The first group, the reference, is never freed on its own: when it alone differs, every other group shows similar strain. A note and the help say so.
 - `plot(x, type = "local_strain")` without diagnostics no longer warns, and `summary()` has no empty section of changes (#145).
+- The `score_diagnostics` row of the decision log, which counts the score diagnostics that were kept, has severity `"info"` (#145). It was `"review"` whenever a diagnostic existed, which is every run with the default `localize = TRUE`. So "Score diagnostics (Review): 12 univariate equality-constraint score diagnostics were retained." was the one flag of every invariance print, of the summary, and of a guided run's invariance stage, whatever the fit. The row stays in `nomo_table(x, "decision_log")`, and the print still points to `nomo_table(x, "local_strain")`. This holds for `nomo_invariance_longitudinal()` too.
 
 ### Nomological network
 
@@ -364,6 +387,10 @@ that does. A call that worked is not affected.
   - **Other objects.** An object without tables is refused with the list of supported classes; the error had been base R's "no applicable method".
   - **Hypotheses.** A `nomo_hypotheses` object has one table, so a `type` is an error; it used to be ignored.
   - **Empty tables.** `"partial"` for an invariance analysis without releases and `"replication"` for a network without validation data return a tibble with no rows and the table's usual columns. They had returned a tibble with no columns.
+- `as.data.frame()` on a result object no longer runs the analysis again (#145). A result is a list that keeps the call that made it, and base R's method for a list evaluated that call again, for the object it returned too, without end. `as.data.frame(x$partial)` on an invariance result stopped with "node stack overflow", and a fitted object whose arguments were in scope was fitted again and again.
+  - **Results.** For every result that keeps its call, the conversion stops with a message that points to `nomo_table()`. For a `nomo_split()` result the message names `calibration` and `validation`.
+  - **`nomo_partial()`.** `as.data.frame()` returns its `releases`.
+  - **Unchanged.** A result that keeps no call, such as that of `nomo_power_rmsea()` or `nomo_single_indicator()`, converts as before, and every result is still a list.
 
 ### Methods registry
 
@@ -376,6 +403,7 @@ that does. A call that worked is not affected.
   - **Dates.** Change-in-fit evidence for invariance cites Cheung and Rensvold (2002) and is dated 2002, not 2007. Bootstrap intervals for reliability are no longer dated 2016 from a later evaluation; `introduced` is `NA`.
   - **References.** Short citations follow APA 7, with "et al." for three or more authors. Rönkkö and Cho (2022) has its pages, Satorra (2000) its editors, and Fokkema and Greiff (2017) its subtitle.
 - A wrong `stage` or `lineage` in `nomo_methods()` is reported in the package's form for a wrong choice, "`stage` must be one or more of ..." (#144).
+- `nomo_methods(stage = , lineage = )` takes a value shortened as far as it still names one choice, such as `stage = "rel"` for `"reliability"`, as the package's other choice arguments do (#145). It had refused one under the error those arguments share. That error now shows a missing value as `NA`, not as the string "NA".
 
 ## Output style shared with contentvalidR (#144)
 
@@ -435,11 +463,17 @@ deprecation period.
 - **New values.** `"undetermined"` in `nomo_compare()`'s `relation`; `"direction_concordant_above_magnitude"` in `nomo_network()`'s `concordance`; `"residual_association"` in its `evidence_scope`; `"network_validation"` in the `stage` of its decision log.
 - **New `nomo_table()` types and columns.** `"latent_means"` for `nomo_invariance()`; `"single_indicators"` and `"sensitivity"` for `nomo_network()`, whose `"fit"` table gains `chisq_version` and `index_version`; `missing` and `n` in `"htmt_status"` for `nomo_validity()`; `brief` in `"notes"` for `nomo_hierarchical()`. `nomo_table()` has a method for every other object, which stops with the supported classes.
 - **New `nomo_apa_table()` method.** For `nomo_retest()` results.
+- **New `as.data.frame()` method.** For `nomo_partial()` objects; it returns `releases`.
 - **New `plot()` and `summary()` methods.** `plot()` for `nomo_scores`, `nomo_missing`, and `nomo_power` objects, and `summary()` for `nomo_missing` objects. `summary()` of a `nomo_scores` object has class `summary_nomo_scores`.
 - **New decision-log rows**, named by their `metric`, or by their `id` in a guided run's own log.
   - `nomo_screen()`: `keying_not_used`, `out_of_range`, `item_rest_not_computed`, `mahalanobis`, `per_scale_indices`, `keying_completed`, and `scales_override`.
+  - `nomo_factors()`: `parallel_null_iterations`.
+  - `nomo_efa()`: `heywood`, `convergence`, `identification`, and `engine_warnings`.
+  - `nomo_cfa()`: `scaled_test_unavailable`.
   - `nomo_compare()`: `improper_solution`.
-  - `nomo_validity()`: `latent_correlation` and `htmt_missing_data`.
+  - `nomo_reliability()`: `single_indicator_factor`, `parameterization`, and `bootstrap_ci`.
+  - `nomo_validity()`: `latent_correlation`, `htmt_missing_data`, `htmt_single_indicator`, and `parameterization`.
+  - `nomo_invariance()`: `latent_means`, `latent_means_fixed`, `cases_used`, `engine_warning`, and `comparison_warning`.
   - `nomo_cfa()`, `nomo_invariance()`, and `nomo_network()`: `ordered_detected`; `nomo_network()` also `cases_used`, `model_fit`, `relation_constrained`, `relation_auto_freed`, `residual_association`, and `unstandardized_metric`.
   - `nomo_run()`: `keying`, `estimation_settings:<stage>`, `settings:<stage>`, `cfa_item_set`, and `item_types`; `nomo_revise()`: `reinstated:<item>` and `removed:<item>`.
 - **Conventions in returned tables.** A new section of `?nomologR` records three differences between tables that are kept as they are (#145).
@@ -455,6 +489,7 @@ default, and not to modify the global environment.
 - **No default write path.** `nomo_report()` requires `file`, and writes the report and nothing else (see "Report").
 - **Random-number state.** `nomo_factors()`, `nomo_split()`, `nomo_power_simulate()`, and `nomo_reliability()` set their seed with `withr::with_seed()`. The check `nomo_power_simulate()` makes of the population's variances under `standardized = TRUE` draws its data inside `withr::with_preserve_seed()`. Results for a given seed are unchanged, and the caller's random-number state is left as it was. No code in the package assigns or removes `.Random.seed` in the global environment any more, or writes anything else there; `withr` saves and restores the state. `withr` (>= 3.0.2) joins `Imports`; ggplot2 already imports it, so it is not a new package among the dependencies.
 - **`nomo_reliability(ci_seed = )`.** lavaan still seeds the bootstrap draws, so intervals for a given seed and worker count are the same. Two cases are fixed. A seeded bootstrap on more than one worker (`ci_ncpus`), in a session that had not yet drawn a random number, left the session on the `"L'Ecuyer-CMRG"` generator. A bootstrap that failed part-way could leave the session on the bootstrap's seed.
+- **Options.** `nomo_report()`, called from inside another knitted document, sets knitr's duplicate-label option and chunk options for its render through `withr`, which registers the restore where the change is made. One function had changed them and returned the restore for its caller to run. The caller's options are left as they were, as before, also when the render stops with an error.
 - **Examples.** Every exported function has examples that run in the ordinary check, except `nomo_report()` and `nomo_revise()`, whose examples stay in `\donttest{}`.
 - **Suggested packages.** The examples and tests that need `rmarkdown` are skipped without it, and `covr`, which no package code uses, is no longer in `Suggests`.
 
@@ -511,6 +546,7 @@ affected.
 ## The stability contract (#113)
 
 - `nomo_missing()` and `nomo_apa_table()` leave the experimental list and are covered by the stability policy (#113). `nomo_missing()`'s flagging rule is adapted from Schafer and Graham (2002, p. 157), who judged a bias beyond about half a standard error practically important, because it degrades interval coverage. Separating sampling variability from bias would be new output, added alongside the rule. `nomo_apa_table()`'s `type` values and returned structure are covered. A table's formatting (headings, number formats, notes) may still be corrected where it departs from APA style, with the correction described in NEWS.
+- The stability policy in `?nomologR` takes effect at 1.0.0 (#113). Its text had said 0.3.0, while the roadmap gave 1.0.0, and this release changes parts of the interface without a deprecation period; "Calls that now behave differently" lists them.
 
 ## The contentvalidR handoff (#53)
 
@@ -524,10 +560,15 @@ affected.
 - Documentation for 1.0 (#129, #138). Get started and the research-basis article say that every analysis assumes reflective measurement, why the tools do not apply to formative measures, and where the criteria for choosing between the two are. The research-basis article places each method added in #129 between historical and contemporary practice, and gains the McGraw and Wong (1996) entry its test-retest paragraph cites. The README walks through the new functions stage by stage, lists `nomo_demo_longitudinal`, says what 1.0.0 contains, and notes that `nomo_method_variance()` and `nomo_power_simulate()` stay experimental after 1.0.0; its license note now says that releases from 0.2.0 on are GPL-3. Get started adds the new functions and dataset to its workflow and dataset tables and its learning path, and the package description names the new methods. ROADMAP lists the gap review in the 1.0.0 scope, names 0.9.0 as the current release, and records the feature freeze on 2026-10-13. The README and the exploratory-workflow article read the documented `correlation_method` and `item_types` of `nomo_factors()`, not their undocumented aliases.
 - The interface frozen at 1.0 is written down where it was missing (#145). No value, name, or behavior changes for it.
   - **Help pages.** The pages of `nomo_screen()`, `nomo_cfa()`, `nomo_efa()`, `nomo_validity()`, `nomo_reliability()`, `nomo_network()`, and `nomo_missing()` name the units and flag values of their own tables. The stability policy lists the columns of each analysis's decision log, and `?nomo_run` those of the run's own log.
+  - **`nomo_cfa()`.** `?nomo_cfa` says that `estimator` is stored in upper case, so a requested `"default"` is stored as `"DEFAULT"`.
   - **`nomo_table()`.** Its help page lists the `"factors"` type of `nomo_hierarchical`, and a new "Fit tables" section names the index columns of each fit table.
+  - **Tables that were not computed.** `?nomo_table` says that two types are errors, each with a message that names the argument to set: `"effort"` for a `nomo_screen()` result run without `effort = TRUE`, and `"reliability"` for a `nomo_missing()` result without a reliability comparison. A table that only lacks rows is returned empty.
   - **`nomo_apa_table()`.** Its help page lists the fields of the returned table (`number`, `title`, `body`, `stub`, `notes`, `source`) and says that headings, cells, and notes are written in Markdown.
   - **`nomo_network()`.** `?nomo_network` defines every `concordance`, `evidence_scope`, and `replication_status` value, with its rule and the interval it uses, and spells out SESOI (smallest effect size of interest).
   - **`nomo_defaults()`.** It documents `auto_delete` and `auto_respecify` as fixed safeguards, and the comparison-data settings and how they differ from the `EFAtools` defaults.
+  - **The safeguards.** `?nomo_defaults` names every function that stops when `auto_delete` or `auto_respecify` is `TRUE`, which is each of the 15 that take `guidance`. It had named `nomo_factors()` and `nomo_efa()`.
+  - **A complete `guidance` list.** `?nomo_defaults` says to pass the whole list, taken from `nomo_defaults()` with the settings changed. Only `nomo_efa()` completes a list that holds some of the settings. Another function may stop for a setting it misses, or run without the reference and not raise the flags that depend on it. Nothing changes for a complete list.
+  - **Seeds.** `?nomo_reliability` (`ci_seed`) and `?nomo_split` (`seed`) say that the session's random-number state is restored afterwards, as `?nomo_factors` and `?nomo_power_simulate` did.
   - **Other pages.** `?nomo_factors` defines the three parallel-analysis rules and TR2 and TR4, and `?nomo_efa` lists the rotations it accepts. `?nomo_invariance` says that the reference group is the one that appears first in `data`. `?nomo_hierarchical` says that H equals the squared determinacy for unidimensional data. `?nomo_methods` lists `"scores"` among its stages and says that the result is an ordinary tibble.
 - `?nomologR` gains "Status words shared with contentvalidR" (#144): how nomologR's flags correspond to `contentvalidR`'s statuses, that "review" never means delete, and that `recommendation` is prose advice in nomologR's decision logs and a decision word in `contentvalidR`.
 - The dataset help pages and the articles write population values as the output prints them (#144): a loading, a path, or a difference in means keeps its leading zero (0.45), and a correlation drops it (.40).

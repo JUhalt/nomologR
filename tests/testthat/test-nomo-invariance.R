@@ -937,6 +937,18 @@ test_that("localized score diagnostics are retained but never auto-applied", {
     out$fit_evidence$partial_requested,
     ignore.case = TRUE
   )))
+
+  # The row that counts them is information. Diagnostics are kept on every run
+  # with `localize = TRUE`, so their existence raises no flag.
+  counted <- out$decision_log[out$decision_log$metric == "score_diagnostics", ]
+  expect_identical(nrow(counted), 1L)
+  expect_identical(counted$value, as.numeric(nrow(out$local_strain)))
+  expect_gt(counted$value, 0)
+  expect_identical(counted$severity, "info")
+  local_reproducible_output(width = 80)
+  expect_false(any(grepl("Score diagnostics (", capture.output(print(out)), fixed = TRUE)))
+  expect_false(any(grepl("Score diagnostics (", capture.output(print(summary(out))),
+                         fixed = TRUE)))
 })
 
 
@@ -2539,18 +2551,20 @@ test_that("lavaan's warnings and a failed level become flags (#145)", {
   expect_identical(log$observation[log$metric == "invariance_level"][[3L]],
                    "The scalar model could not be fitted.")
 
-  # print() names each flag under its level, concern before review.
+  # print() names each flag under its level, concern before review. The count
+  # of score diagnostics is information, as the log stores it, and is not
+  # listed.
   local_reproducible_output(width = 80)
   flagged <- capture.output(nomologR:::nomo_invariance_present_flagged(tibble::tibble(
-    object = c("metric", "equality_constraints", "sample"),
-    metric = c("invariance_level", "score_diagnostics", "cases_used"),
-    severity = c("concern", "review", "info"),
-    observation = c("The metric model did not converge.", "3 diagnostics were retained.",
-                    "All cases were used."),
+    object = c("sample", "equality_constraints", "metric"),
+    metric = c("cases_used", "score_diagnostics", "invariance_level"),
+    severity = c("review", "info", "concern"),
+    observation = c("447 of 800 cases were used.", "3 diagnostics were retained.",
+                    "The metric model did not converge."),
     recommendation = "Look."
   )))
   expect_identical(flagged, c("", "Flagged", "  - metric (Concern): The metric model did not converge.",
-                              "  - Score diagnostics (Review): 3 diagnostics were retained."))
+                              "  - Cases (Review): 447 of 800 cases were used."))
   expect_null(nomologR:::nomo_invariance_present_flagged(tibble::tibble()))
 })
 

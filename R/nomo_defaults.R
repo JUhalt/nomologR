@@ -14,6 +14,12 @@
 #' reference changes which evidence is flagged for review; it never deletes
 #' items, respecifies models, or declares validity.
 #'
+#' Pass a complete list as `guidance`: start from `nomo_defaults()` and change
+#' the settings you need, as the example does. A list that holds only some of
+#' the settings is completed from the defaults by [nomo_efa()] only. Another
+#' function may stop because a setting it needs is missing, or may run without
+#' the reference and so not raise the flags that depend on it.
+#'
 #' `long_string_min_items` is a count of items, not a reference value for a
 #' statistic: [nomo_screen()] flags a case on long-string only when at least
 #' that many items are screened, because half the length of a shorter item set
@@ -29,8 +35,12 @@
 #'
 #' `auto_delete` and `auto_respecify` are always `FALSE`. They record a design
 #' rule rather than switch a feature: nomologR never deletes an item or
-#' respecifies a model on its own. [nomo_factors()] and [nomo_efa()] stop with
-#' an explanation when either is set to `TRUE`.
+#' respecifies a model on its own. Every function that takes `guidance` stops
+#' with an explanation when either is set to `TRUE`: [nomo_screen()],
+#' [nomo_factors()], [nomo_efa()], [nomo_cfa()], [nomo_esem()],
+#' [nomo_compare()], [nomo_split()], [nomo_reliability()], [nomo_validity()],
+#' [nomo_hierarchical()], [nomo_scores()], [nomo_invariance()],
+#' [nomo_invariance_longitudinal()], [nomo_network()], and [nomo_run()].
 #'
 #' @return A named list of guidance settings.
 #' @export

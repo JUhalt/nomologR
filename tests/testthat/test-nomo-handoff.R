@@ -627,6 +627,14 @@ test_that("an unknown schema version is refused, naming both package versions", 
     "schema version 2, written by contentvalidR 0.7.0", fixed = TRUE
   )
   expect_error(nomologR:::nomo_handoff_read(h), "reads schema version 1", fixed = TRUE)
+
+  # Provenance that is not a list records neither a version nor a producer,
+  # and a run or a screen refuses it the same way.
+  h$provenance <- "contentvalidR 1.0"
+  refusal <- "This handoff uses schema version (none), written by contentvalidR an unknown version."
+  expect_error(nomo_run(scales = h), refusal, fixed = TRUE)
+  expect_error(nomo_screen(handoff_responses(walkthrough_items), items = h), refusal,
+               fixed = TRUE)
 })
 
 

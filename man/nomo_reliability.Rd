@@ -46,7 +46,8 @@ repeatedly refitting the same CFA with \code{\link[lavaan:bootstrapLavaan]{lavaa
 \item{ci_boot}{Number of ordinary bootstrap resamples when
 \code{ci = "bootstrap"}. Default is \code{1000}.}
 
-\item{ci_seed}{Optional integer seed for reproducible bootstrap intervals.}
+\item{ci_seed}{Optional integer seed for reproducible bootstrap intervals.
+The session's random-number state is restored afterwards.}
 
 \item{ci_ncpus}{Number of worker processes for the bootstrap. The default,
 \code{1}, runs serially. Values above one use lavaan's \code{snow} backend, which

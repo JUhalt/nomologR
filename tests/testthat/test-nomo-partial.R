@@ -15,6 +15,34 @@ test_that("nomo_partial records explicit releases and rationales", {
 })
 
 
+test_that("as.data.frame() of a nomo_partial object returns its releases (#145)", {
+  p <- nomo_partial(
+    level = c("metric", "scalar"),
+    syntax = c("F =~ x2", "x3 ~ 1"),
+    rationale = "Prespecified."
+  )
+  # Base R's method for a list evaluated the stored call again, and again for
+  # the object that returned, until "node stack overflow". The call is swapped
+  # for one that stops, so this test fails at once without the method.
+  expect_true(is.call(p$call))
+  p$call <- quote(stop("the stored call was evaluated"))
+
+  out <- as.data.frame(p)
+  expect_identical(class(out), "data.frame")
+  expect_identical(out, as.data.frame(p$releases))
+  expect_identical(names(out), c("release_id", "level", "syntax", "rationale"))
+  expect_identical(out$syntax, c("F =~ x2", "x3 ~ 1"))
+  expect_output(print(out), "x3 ~ 1", fixed = TRUE)
+  expect_identical(data.frame(p)$level, c("metric", "scalar"))
+
+  # The object is still a list with its documented fields.
+  expect_true(is.list(p))
+  expect_identical(p$n, 2L)
+  expect_true(grepl("\\code{as.data.frame()} returns \\code{releases} as a data frame",
+                    nomo_test_rd_text("nomo_partial", "\\value"), fixed = TRUE))
+})
+
+
 test_that("nomo_partial validates researcher specifications", {
   expect_error(
     nomo_partial("configural", "F =~ x2", "reason"),

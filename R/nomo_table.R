@@ -98,7 +98,11 @@
 #' @return A tibble. A table the object has no rows for, such as `"partial"`
 #'   for an invariance analysis without releases or `"replication"` for a
 #'   network without validation data, has no rows and the table's usual
-#'   columns.
+#'   columns. A table that was not computed is an error, with a message that
+#'   names the argument to set: `"effort"` for a `nomo_screen` object run
+#'   without `effort = TRUE`, and `"reliability"` for a `nomo_missing` object
+#'   whose reliability comparison was not made, because `reliability = FALSE`
+#'   was given or the fit is not a `nomo_cfa` object.
 #' @export
 #'
 #' @examples
@@ -293,8 +297,12 @@ nomo_table.nomo_compare <- function(
 
 
 # The measurement-stage objects expose the tables their report sections show,
-# so nomo_table() and nomo_report() cannot drift apart (#89). A table an object
-# does not hold comes back as an empty tibble.
+# so nomo_table() and nomo_report() cannot drift apart (#89). A table one of
+# these objects has no rows for comes back as an empty tibble. Two tables of
+# other classes are errors when the analysis behind them was not run, because
+# an empty table would hide that it was switched off: "effort" of a
+# nomo_screen without `effort = TRUE`, and "reliability" of a nomo_missing
+# without a reliability comparison. ?nomo_table says so.
 
 #' @export
 nomo_table.nomo_factors <- function(

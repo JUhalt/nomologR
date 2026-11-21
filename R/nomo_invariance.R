@@ -1031,6 +1031,9 @@ nomo_invariance_decision_log <- function(group,
       integer(1)
     ))
 
+    # The row counts the diagnostics that were kept. That they exist is
+    # information, never a flag: with the default `localize = TRUE` every run
+    # has some, and "review" would then mean nothing.
     log <- nomo_log_add(
       log,
       stage = "invariance",
@@ -1038,7 +1041,7 @@ nomo_invariance_decision_log <- function(group,
       metric = "score_diagnostics",
       value = n_local,
       reference = "diagnostic only",
-      severity = if (n_local > 0L) "review" else "info",
+      severity = "info",
       observation = sprintf(
         "%s %s retained.",
         nomo_present_count(n_local, "univariate equality-constraint score diagnostic"),
