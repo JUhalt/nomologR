@@ -153,8 +153,8 @@ two factors.
   from contemporary evidence.
 - **Engine results are never hidden.** The fitted `psych` or `lavaan` model
   stays in the result for direct inspection: in `$fit` for `nomo_efa()`,
-  `nomo_cfa()`, and `nomo_network()`, and in `$fits` for `nomo_esem()` and
-  `nomo_invariance()`.
+  `nomo_cfa()`, and `nomo_network()`, and in `$fits` for `nomo_esem()`,
+  `nomo_invariance()`, and `nomo_method_variance()`.
 - **Decisions are recorded.** Each result carries a decision log, and
   `nomo_run()` records the researcher's decisions and rationales across stages.
 
