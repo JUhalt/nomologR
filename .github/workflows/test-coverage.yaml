@@ -30,11 +30,12 @@ jobs:
       # if or a switch inside an expression gets its own counter, a braceless
       # while body is counted apart from its condition, and a line counts
       # only when every expression on it ran. The merge rule is read with
-      # that counting, so 4.0.0 is the floor here (pak's `@>=` gives it), and
-      # the step below stops if an older covr is installed all the same.
+      # that counting, so 4.0.0 is the floor. pak resolves no version ranges
+      # (a ">= 4.0.0" requirement fails), so `any::covr` installs the newest
+      # covr the repository has, and the step below stops if it is older.
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: covr@>=4.0.0
+          extra-packages: any::covr
           needs: coverage
 
       # The merge rule is 100% line coverage in every file of R/ (#53), and

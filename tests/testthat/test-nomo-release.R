@@ -123,7 +123,9 @@ test_that("the coverage workflow keeps the settings of its line gate (#53)", {
   # percentage, and stops when one was never run. This test holds the
   # workflow's text to those settings; it does not run the gate.
   workflow <- workflow_text("test-coverage.yaml")
-  expect_match(workflow, "extra-packages: covr@>=4.0.0", fixed = TRUE)
+  # pak resolves no version ranges, so the floor is enforced in R below.
+  expect_match(workflow, "extra-packages: any::covr", fixed = TRUE)
+  expect_false(grepl("covr@>=", workflow, fixed = TRUE))
   expect_match(workflow, "if (utils::packageVersion(\"covr\") < \"4.0.0\") {", fixed = TRUE)
   expect_match(workflow, "covr::tally_coverage(cov, by = \"line\")", fixed = TRUE)
   expect_match(workflow, "startsWith(lines$filename, \"R/\")", fixed = TRUE)
