@@ -1929,6 +1929,18 @@ test_that("report cells follow print() where a column's name cannot say how (#14
 })
 
 
+test_that("only a log's reference reads TRUE and FALSE as yes and no (#145)", {
+  # An item labeled TRUE, or a rationale that reads FALSE, is the researcher's
+  # text, not a logical value, and is shown as written.
+  shown <- nomologR:::nomo_report_display_table(tibble::tibble(
+    item = c("TRUE", "x"), rationale = c("FALSE", "y"), reference = c("FALSE", "TRUE")
+  ))
+  expect_identical(shown$Item, c("TRUE", "x"))
+  expect_identical(shown$Rationale, c("FALSE", "y"))
+  expect_identical(shown$Reference, c("no", "yes"))
+})
+
+
 test_that("a network estimate reads alike wherever the report shows it (#145)", {
   # The theory-concordance rows of the evidence trace, primary and validation
   # sample alike, show each estimate in its kind and the region as the

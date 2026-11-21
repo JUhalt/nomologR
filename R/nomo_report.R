@@ -391,9 +391,13 @@ nomo_report_display_table <- function(x, protected = character()) {
       value[is.na(value) | !nzchar(trimws(value)) | value == nomo_present_missing] <-
         nomo_report_blank
       # A logical value a log stored as text, such as the reference TRUE of a
-      # convergence row, reads as a logical column does (#145).
-      value[value %in% "TRUE"] <- "yes"
-      value[value %in% "FALSE"] <- "no"
+      # convergence row, reads as a logical column does (#145). A log stores
+      # such a value only in its reference column; other text, such as an item
+      # label or a rationale, is shown as written.
+      if (identical(name, "reference")) {
+        value[value %in% "TRUE"] <- "yes"
+        value[value %in% "FALSE"] <- "no"
+      }
     }
     value[is.na(value)] <- ""
     x[[j]] <- value
