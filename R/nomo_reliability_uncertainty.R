@@ -215,8 +215,9 @@ nomo_reliability_bootstrap_ci <- function(fit_info,
   probs <- c(alpha, 1 - alpha)
 
   vals_by_key <- lapply(expected_keys, function(key) {
-    j <- match(key, colnames(draws))
-    vals <- if (is.na(j)) numeric() else draws[, j]
+    # A key with no column of draws matches NA, which selects a column of NA
+    # values; the finite filter drops them, so the key has no draws.
+    vals <- draws[, match(key, colnames(draws))]
     vals <- vals[is.finite(vals)]
     if (length(vals) >= 10L) {
       q <- stats::quantile(vals, probs = probs, names = FALSE, type = 7)
