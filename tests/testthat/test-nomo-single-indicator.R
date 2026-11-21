@@ -242,6 +242,10 @@ test_that("warnings raised while fit measures are read are recorded, not printed
   expect_true(all(read %in% net$engine_warnings))
   log <- net$decision_log
   expect_match(log$observation[log$metric == "engine_warnings"], read[[1L]], fixed = TRUE)
+  # The APA fit table, which the report builds, reads the RMSEA interval from
+  # the same fit without raising the warning again.
+  expect_no_warning(tab <- nomo_apa_table(net, "fit"))
+  expect_match(tab$body[["RMSEA [90% CI]"]], "[", fixed = TRUE)
 })
 
 

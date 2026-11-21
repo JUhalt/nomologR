@@ -865,8 +865,11 @@ nomo_apa_table.nomo_network <- function(x, type = c("hypotheses", "fit"),
     fe <- x$fit_evidence
     # The network's fit evidence keeps the RMSEA without its interval, so the
     # interval is read from the fit: the robust, scaled, or plain one, matching
-    # the RMSEA the evidence reports.
-    measures <- tryCatch(lavaan::fitMeasures(x$fit), error = function(e) numeric())
+    # the RMSEA the evidence reports. Any warning lavaan raises here was raised
+    # when nomo_network() read the same fit and is recorded in
+    # `engine_warnings` and the decision log, so it is not raised again.
+    measures <- tryCatch(suppressWarnings(lavaan::fitMeasures(x$fit)),
+                         error = function(e) numeric())
     variants <- c(".robust", ".scaled", "")
     reported <- vapply(variants, function(v) {
       is.finite(nomo_network_fit_measure(measures, paste0("rmsea", v)))
