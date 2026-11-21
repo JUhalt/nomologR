@@ -1,14 +1,14 @@
 # Changelog
 
-## nomologR (development version)
+## nomologR 0.99.0
 
-These changes lead to 1.0.0, the stable release planned jointly with
-`contentvalidR` ([\#53](https://github.com/JUhalt/nomologR/issues/53)).
-Its first release candidate, `v1.0.0-rc.1` (version 0.99.0), is planned
-for 2026-11-24, or earlier if both packages are ready, and its tag is
-the interface freeze. The 1.0.0 release follows when the maintainer
-signs off, and goes to GitHub and R-universe first; the CRAN submission
-follows it.
+This version is the first release candidate, `v1.0.0-rc.1`, for 1.0.0,
+the stable release planned jointly with `contentvalidR`
+([\#53](https://github.com/JUhalt/nomologR/issues/53)). The candidate
+was planned for 2026-11-24, or earlier if both packages were ready, and
+its tag is the interface freeze. The 1.0.0 release follows when the
+maintainer signs off, and goes to GitHub and R-universe first; the CRAN
+submission follows it.
 
 - **New methods.** The gap review
   ([\#129](https://github.com/JUhalt/nomologR/issues/129)) added the
@@ -2222,6 +2222,15 @@ Estimation is not affected.
   place for the release candidate’s fixtures
   ([\#53](https://github.com/JUhalt/nomologR/issues/53)). The stored
   fixtures are now checked against the version list and their manifest.
+- The content-review reader is tested against `contentvalidR` 0.99.0
+  output, the partner package’s release candidate
+  ([\#53](https://github.com/JUhalt/nomologR/issues/53)). That covers
+  the five fits stored before and the three congruence fits, which are
+  new. The 0.99.0 handoffs keep every decision of 0.10.1’s, and the
+  reader needed no change. The handoff stored with the package for the
+  walkthrough items (`inst/extdata/content-handoff-walkthrough.rds`) is
+  now the one 0.99.0 wrote, where it was 0.7.0’s. Its items, scales,
+  keying, and decisions are the same.
 
 ### Documentation ([\#129](https://github.com/JUhalt/nomologR/issues/129), [\#138](https://github.com/JUhalt/nomologR/issues/138), [\#144](https://github.com/JUhalt/nomologR/issues/144), [\#145](https://github.com/JUhalt/nomologR/issues/145))
 
