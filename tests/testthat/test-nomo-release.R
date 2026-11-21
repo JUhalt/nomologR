@@ -79,7 +79,11 @@ test_that("cran-comments.md answers the review as the code and tests stand (#39)
   report <- release_text("R", "nomo_report.R")
   expect_match(report, "new.env(parent = baseenv())", fixed = TRUE)
   expect_match(comments, "(`new.env(parent = baseenv())`)", fixed = TRUE)
-  expect_false(grepl("globalenv()` appears|parent = globalenv()", comments))
+  # The answer this replaced said "`globalenv()` appears once" and gave the
+  # template's environment as `new.env(parent = globalenv())`. Both are
+  # matched as typed: in a regular expression "()" is an empty group.
+  expect_false(grepl("globalenv()` appears", comments, fixed = TRUE))
+  expect_false(grepl("parent = globalenv()", comments, fixed = TRUE))
   # One test of test-nomo-report.R renders to a relative path, in a working
   # directory under tempdir(), so the file must not say that none does.
   expect_false(grepl("relative path", comments, fixed = TRUE))
