@@ -248,19 +248,26 @@ nomo_report_format_kind <- function(value, kind, digits = NULL, signed = FALSE,
 # from the preceding model, stored under `delta`, and a difference from a
 # reference estimate, stored under `difference`, carry their sign, and none
 # when they round to zero (guide point 15), as the invariance and missing-data
-# prints show them.
+# prints show them. `kind`, when given, is each row's kind, for a column whose
+# name cannot say it, such as a network estimate that is a correlation in one
+# row and a path in the next; a row whose given kind is NA keeps the kind the
+# column's name or the row's metric gives it.
 nomo_report_format_numbers <- function(value, name, metric = NULL, reference = NULL,
-                                       digits = NULL) {
-  kind <- if (is.integer(value)) "count" else nomo_report_number_kind(name)
+                                       digits = NULL, kind = NULL) {
+  default <- if (is.integer(value)) "count" else nomo_report_number_kind(name)
   signed <- grepl("^(delta|difference)([._]|$)", tolower(name))
   value <- as.numeric(value)
   finite <- is.finite(value)
-  if (identical(kind, "estimate") && !is.null(metric)) {
+  if (identical(default, "estimate") && !is.null(metric)) {
     kinds <- nomo_report_metric_kind(metric)
     whole <- finite & abs(value - round(value)) < 1e-8
     kinds[kinds == "estimate" & whole] <- "count"
   } else {
-    kinds <- rep(kind, length(value))
+    kinds <- rep(default, length(value))
+  }
+  if (!is.null(kind)) {
+    kind <- rep_len(as.character(kind), length(value))
+    kinds[!is.na(kind)] <- kind[!is.na(kind)]
   }
 
   out <- rep(nomo_report_blank, length(value))
@@ -279,7 +286,9 @@ nomo_report_format_numbers <- function(value, name, metric = NULL, reference = N
 # The numbers a text names: ".70" in "configured review reference = .70", both
 # limits of "[-0.15, 0.15]", "90.0" in "90.0% of responses". A digit that is
 # part of a name ("TR2", "HTMT2") or an exponent is not one, and a hyphen
-# between two numbers (".50-.75") is not a sign.
+# between two numbers (".50-.75") is not a sign. A limit given in words, the
+# missing-data log's "Half a reference standard error", is the number it
+# names, .5 (#145).
 nomo_report_reference_numbers <- function(text) {
   number <- paste0(
     "(?<![A-Za-z0-9.^])-?(?:[0-9]+(?:\\.[0-9]+)?|\\.[0-9]+)",
@@ -287,7 +296,10 @@ nomo_report_reference_numbers <- function(text) {
   )
   text <- as.character(text)
   text[is.na(text)] <- ""
-  lapply(regmatches(text, gregexpr(number, text, perl = TRUE)), as.numeric)
+  numbers <- lapply(regmatches(text, gregexpr(number, text, perl = TRUE)), as.numeric)
+  half <- grepl("\\bhalf\\b", text, ignore.case = TRUE, perl = TRUE)
+  numbers[half] <- lapply(numbers[half], function(n) c(0.5, n))
+  numbers
 }
 
 
@@ -330,7 +342,16 @@ nomo_report_sentence <- function(x) {
 }
 
 
+# A table can carry, as attributes, what its column names cannot say (#145):
+# `nomo_report_kinds`, a list naming each column's kind of number row by row;
+# `nomo_report_references`, a list naming, for each row of a column, the
+# numbers its value is read against; and `nomo_report_ci_levels`, the
+# confidence level of each interval bound's column, which its heading then
+# carries ("Omega 90% CI lower").
 nomo_report_display_table <- function(x, protected = character()) {
+  column_kinds <- attr(x, "nomo_report_kinds")
+  column_references <- attr(x, "nomo_report_references")
+  column_levels <- attr(x, "nomo_report_ci_levels")
   x <- nomo_report_flatten_table(x)
   metric <- if (is.character(x[["metric"]])) x[["metric"]]
   value_reference <- nomo_report_value_reference(x)
@@ -348,10 +369,13 @@ nomo_report_display_table <- function(x, protected = character()) {
     } else if (is.logical(value)) {
       value <- ifelse(value, "yes", "no")
     } else if (is.numeric(value)) {
+      reference <- column_references[[name]]
+      if (is.null(reference) && identical(name, "value")) reference <- value_reference
       value <- nomo_report_format_numbers(
         value, name, metric,
-        reference = if (identical(name, "value")) value_reference,
-        digits = if (compared && name %in% nomo_report_compared_columns) 3L
+        reference = reference,
+        digits = if (compared && name %in% nomo_report_compared_columns) 3L,
+        kind = column_kinds[[name]]
       )
       role[[j]] <- "numeric"
     } else if (name %in% nomo_report_origin_columns && is.character(value)) {
@@ -366,11 +390,21 @@ nomo_report_display_table <- function(x, protected = character()) {
     if (is.character(value) && !identical(role[[j]], "status")) {
       value[is.na(value) | !nzchar(trimws(value)) | value == nomo_present_missing] <-
         nomo_report_blank
+      # A logical value a log stored as text, such as the reference TRUE of a
+      # convergence row, reads as a logical column does (#145).
+      value[value %in% "TRUE"] <- "yes"
+      value[value %in% "FALSE"] <- "no"
     }
     value[is.na(value)] <- ""
     x[[j]] <- value
   }
-  names(x) <- nomo_report_column_labels(names(x), protected)
+  labels <- nomo_report_column_labels(names(x), protected)
+  for (name in intersect(names(column_levels), names(x))) {
+    j <- match(name, names(x))
+    labels[[j]] <- sub("CI", nomo_present_ci_label(column_levels[[name]]), labels[[j]],
+                       fixed = TRUE)
+  }
+  names(x) <- labels
   attr(x, "role") <- role
   x
 }
@@ -499,7 +533,8 @@ nomo_report_table <- function(x, protected = character(), word = FALSE,
 
 # Abbreviations (guide point 23) -----------------------------------------------
 #
-# Every abbreviation the report shows is defined once, in a table at its end.
+# Every abbreviation the report shows is defined once, in a table at its end,
+# the estimators in the words nomo_cfa() uses for them.
 # The report collects the headings and cells it writes; an abbreviation that
 # appears in them is listed. A symbol such as p, r, or N is listed when it heads
 # a column, since the same letter in a cell is usually part of a word or a
@@ -516,10 +551,12 @@ nomo_report_glossary <- c(
   Csv = "coefficient of substantive validity",
   CVI = "content validity index; I-CVI is the index of one item",
   DOI = "digital object identifier",
+  DWLS = "diagonally weighted least squares",
   EFA = "exploratory factor analysis",
   EKC = "empirical Kaiser criterion",
   EPC = "expected parameter change",
   FIML = "full-information maximum likelihood",
+  GLS = "generalized least squares",
   HTMT = "heterotrait-monotrait ratio of correlations",
   HTMT2 = "heterotrait-monotrait ratio computed from geometric means of correlations",
   ID = "identifier",
@@ -532,6 +569,13 @@ nomo_report_glossary <- c(
   MI = "modification index",
   MINRES = "minimum residual factor extraction",
   ML = "maximum likelihood",
+  MLF = "maximum likelihood with first-order standard errors",
+  MLM = paste("maximum likelihood with robust standard errors and the",
+              "Satorra-Bentler scaled test statistic"),
+  MLMV = paste("maximum likelihood with robust standard errors and a mean- and",
+               "variance-adjusted test statistic"),
+  MLMVS = paste("maximum likelihood with robust standard errors and a mean- and",
+                "variance-adjusted (Satterthwaite) test statistic"),
   MLR = "maximum likelihood with robust standard errors and a scaled test statistic",
   MSA = "measure of sampling adequacy",
   NEST = "next eigenvalue sufficiency test",
@@ -544,10 +588,17 @@ nomo_report_glossary <- c(
   SESOI = "smallest effect size of interest",
   SRMR = "standardized root mean square residual",
   TLI = "Tucker-Lewis index",
-  TR2 = "MAP criterion averaging squared partial correlations",
-  TR4 = paste("MAP criterion based on the trace of the fourth power of the",
-              "partial-correlation matrix"),
-  WLSMV = "weighted least squares, mean- and variance-adjusted",
+  TR2 = "original MAP criterion, the average squared partial correlation",
+  TR4 = paste("revised MAP criterion, from the trace of the fourth power of the",
+              "partial-correlation matrix (a matrix power)"),
+  ULS = "unweighted least squares",
+  ULSMV = paste("unweighted least squares with robust standard errors and a",
+                "mean- and variance-adjusted test statistic"),
+  WLS = "weighted least squares",
+  WLSM = paste("diagonally weighted least squares with robust standard errors",
+               "and a mean-adjusted test statistic"),
+  WLSMV = paste("diagonally weighted least squares with robust standard errors",
+                "and a mean- and variance-adjusted test statistic"),
   df = "degrees of freedom",
   lhs = "left-hand side of a lavaan model term",
   N = "number of cases",
@@ -934,6 +985,21 @@ nomo_report_scores <- function(scores) {
     parallel$note
   }
 
+  # In the report's table, validity and correlational accuracy show the
+  # decimals that tell them from the reference beside them, Gorsuch's .90 and
+  # a discrepancy of .05, as print() does (#145). `diagnostics` stays the
+  # result's own table.
+  diagnostics_table <- scores$diagnostics
+  references <- list()
+  if (is.numeric(diagnostics_table[["validity"]])) {
+    references$validity <- rep(0.90, nrow(diagnostics_table))
+  }
+  if (is.numeric(diagnostics_table[["correlational_accuracy"]])) {
+    references$correlational_accuracy <- sign(diagnostics_table$correlational_accuracy) *
+      nomo_scores_discrepancy_reference
+  }
+  attr(diagnostics_table, "nomo_report_references") <- lapply(references, as.list)
+
   list(
     summary = paste(c(
       sprintf(
@@ -946,6 +1012,7 @@ nomo_report_scores <- function(scores) {
       "No value here is a pass/fail threshold."
     ), collapse = " "),
     diagnostics = scores$diagnostics,
+    diagnostics_table = diagnostics_table,
     notes = scores$notes
   )
 }
@@ -968,6 +1035,8 @@ nomo_report_missing <- function(m) {
     reference = compared$reference_estimate,
     difference_in_se = compared$difference_in_se
   )
+  kind <- nomo_report_missing_kinds(m, compared)
+  attr(differences, "nomo_report_kinds") <- list(estimate = kind, reference = kind)
 
   # The reference is fitted only when some case is missing a modeled variable;
   # the summary and the empty-table message say which applies (#145).
@@ -1021,6 +1090,27 @@ nomo_report_missing <- function(m) {
     reliability = named(m$reliability),
     log = m$decision_log
   )
+}
+
+
+# Each compared estimate in its kind (#145), as the component's own tables
+# show it: a loading keeps its leading zero and a factor correlation drops it,
+# as print() of the missing-data result gives them, and a network hypothesis
+# drops it when it is a standardized association, as the network's hypotheses
+# table does. The hypotheses' scale and relation type are read from the
+# refitted network. A row whose type is not recorded is NA: its column's name
+# gives its kind.
+nomo_report_missing_kinds <- function(m, compared) {
+  type <- compared[["type"]]
+  if (is.null(type)) return(rep(NA_character_, nrow(compared)))
+  kind <- nomo_missing_estimate_kind(type)
+  fit <- Find(function(f) is.data.frame(f[["hypothesis_evidence"]]), m[["fits"]])
+  he <- as.data.frame(fit[["hypothesis_evidence"]], stringsAsFactors = FALSE)
+  hypothesis <- type %in% "hypothesis" & compared$parameter %in% he$id &
+    all(c("scale", "relation_type") %in% names(he))
+  i <- match(compared$parameter[hypothesis], he$id)
+  kind[hypothesis] <- nomo_network_kind(he$scale[i], he$relation_type[i])
+  kind
 }
 
 
@@ -1083,10 +1173,16 @@ nomo_report_call_code <- function(x) {
 
 
 nomo_report_run_table <- function(x, type) {
-  tryCatch(
+  out <- tryCatch(
     nomo_report_flatten_table(nomo_table(x, type)),
     error = function(e) nomo_report_empty_table()
   )
+  # A stage configured with no setting of its own runs with its defaults,
+  # which the settings table writes as R's empty "list()" (#145).
+  if (identical(type, "settings") && is.character(out[["values"]])) {
+    out$values[out$values %in% "list()"] <- "defaults"
+  }
+  out
 }
 
 
@@ -1151,7 +1247,92 @@ nomo_report_component_table <- function(obj,
     error = function(e) nomo_report_empty_table()
   )
 
-  nomo_report_flatten_table(result)
+  result <- nomo_report_flatten_table(result)
+  # The adequacy table's Value is the statistic for KMO and the p value for
+  # Bartlett's test, so the row says which it holds (#145).
+  if (identical(stage, "factors") && identical(type, "adequacy") && nrow(result)) {
+    result$metric[result$metric %in% "Bartlett"] <- "Bartlett's test, p"
+  }
+  if (identical(stage, "network") && identical(type, "primary")) {
+    result <- nomo_report_network_hypotheses(result, obj)
+  }
+  if (identical(stage, "network") && identical(type, "replication")) {
+    result <- nomo_report_network_replication(result, obj)
+  }
+  levels <- nomo_report_ci_levels(obj, stage, type)
+  if (length(levels)) attr(result, "nomo_report_ci_levels") <- levels
+  result
+}
+
+
+# The confidence level of the interval bounds a component table shows, for
+# its headings (#145): a reliability interval at the level it was bootstrapped
+# at, and lavaan's 95% intervals of loadings and latent correlations. The
+# network's are set with its other attributes.
+nomo_report_ci_levels <- function(obj, stage, type) {
+  bounds <- function(prefix, level) {
+    stats::setNames(rep(level, 2L), paste0(prefix, c("ci_lower", "ci_upper")))
+  }
+  switch(
+    paste(stage, type),
+    "cfa loadings" = bounds("", 0.95),
+    "reliability coefficients" = if (is.numeric(obj$ci_level)) {
+      c(bounds("omega_", obj$ci_level), bounds("alpha_", obj$ci_level))
+    },
+    "validity discriminant" = bounds("latent_r_", 0.95),
+    NULL
+  )
+}
+
+
+# The network's hypotheses as print() and the APA table show them (#145): each
+# estimate and bound in its kind, so a standardized correlation has no leading
+# zero, with the decimals that tell it from the nearest bound of its predicted
+# region, and the region as the console writes it (">= 0.20", not
+# "[0.2, +Inf)").
+nomo_report_network_hypotheses <- function(tab, net) {
+  if (!nrow(tab) || !all(c("id", "scale") %in% names(tab))) return(tab)
+  spec <- as.data.frame(net$hypotheses$hypotheses, stringsAsFactors = FALSE)
+  h <- spec[match(tab$id, spec$id), , drop = FALSE]
+  kind <- nomo_network_kind(tab$scale, h$relation_type)
+  if ("theoretical_region" %in% names(tab)) {
+    tab$theoretical_region <- nomo_network_region_text(h, kind)
+  }
+  bounded <- intersect(
+    c("estimate", "ci_lower", "ci_upper", "equivalence_ci_lower", "equivalence_ci_upper"),
+    names(tab)
+  )
+  attr(tab, "nomo_report_kinds") <- stats::setNames(rep(list(kind), length(bounded)), bounded)
+  attr(tab, "nomo_report_references") <- stats::setNames(lapply(bounded, function(column) {
+    nearest <- nomo_network_nearest_bound(tab[[column]], h$lower, h$upper)
+    lapply(nearest, function(r) r[is.finite(r)])
+  }), bounded)
+  # The 95% interval of each estimate, and the equivalence interval of a
+  # negligible() prediction at 1 - 2 alpha.
+  equivalence <- 1 - 2 * nomo_apa_or(net$equivalence_alpha, 0.05)
+  attr(tab, "nomo_report_ci_levels") <- c(
+    ci_lower = 0.95, ci_upper = 0.95,
+    equivalence_ci_lower = equivalence, equivalence_ci_upper = equivalence
+  )
+  tab
+}
+
+
+# The network's replication evidence with each sample's estimate in the kind
+# of its hypothesis, as print() shows them (#145): a standardized association
+# has no leading zero. The shift between the samples, which can exceed 1 in
+# absolute value, keeps it.
+nomo_report_network_replication <- function(tab, net) {
+  spec <- as.data.frame(net$hypotheses$hypotheses, stringsAsFactors = FALSE)
+  if (!nrow(tab) || !"id" %in% names(tab) ||
+      !all(c("id", "scale", "relation_type") %in% names(spec))) {
+    return(tab)
+  }
+  h <- spec[match(tab$id, spec$id), , drop = FALSE]
+  kind <- nomo_network_kind(h$scale, h$relation_type)
+  estimates <- intersect(c("primary_estimate", "validation_estimate"), names(tab))
+  attr(tab, "nomo_report_kinds") <- stats::setNames(rep(list(kind), length(estimates)), estimates)
+  tab
 }
 
 
@@ -1196,7 +1377,37 @@ nomo_report_evidence_trace <- function(x) {
 
   preferred <- intersect(preferred, names(log))
   rest <- setdiff(names(log), preferred)
-  log[, c(preferred, rest), drop = FALSE]
+  nomo_report_network_trace(log[, c(preferred, rest), drop = FALSE], x)
+}
+
+
+# The network's theory-concordance rows as its hypotheses table shows them
+# (#145): the estimate in its kind, so a standardized association is a
+# correlation with no leading zero, and the predicted region as print() writes
+# it (">= 0.20", "[-.15, .15]") where the log stores "[0.2, +Inf)". A row is
+# matched to its hypothesis by the relation it names. The stored log is left
+# as it is; every other row keeps the kind its metric gives it.
+nomo_report_network_trace <- function(log, x) {
+  spec <- tryCatch(
+    as.data.frame(x$results$network$hypotheses$hypotheses, stringsAsFactors = FALSE),
+    error = function(e) data.frame()
+  )
+  needed <- c("relation", "relation_type", "scale", "prediction", "lower", "upper",
+              "lower_inclusive", "upper_inclusive", "magnitude_specified")
+  if (!all(needed %in% names(spec)) ||
+      !all(c("pipeline_component", "object", "metric", "reference") %in% names(log))) {
+    return(log)
+  }
+  i <- match(log$object, spec$relation)
+  rows <- which(log$pipeline_component %in% "network" &
+                  log$metric %in% "theory_concordance" & !is.na(i))
+  h <- spec[i[rows], , drop = FALSE]
+  kind <- nomo_network_kind(h$scale, h$relation_type)
+  log$reference[rows] <- nomo_network_region_text(h, kind)
+  kinds <- rep(NA_character_, nrow(log))
+  kinds[rows] <- kind
+  attr(log, "nomo_report_kinds") <- list(value = kinds)
+  log
 }
 
 
@@ -1211,12 +1422,17 @@ nomo_report_flagged_trace <- function(x) {
 
 
 # The review and concern rows of a log, concern first (guide point 22), each
-# group in the log's order.
+# group in the log's order. The kinds a table names row by row
+# (nomo_report_display_table()) stay with their rows.
 nomo_report_flagged_rows <- function(log) {
   if (!nrow(log) || !"severity" %in% names(log)) return(log)
   severity <- tolower(log$severity)
-  log <- log[severity %in% c("review", "concern"), , drop = FALSE]
-  log[order(tolower(log$severity) != "concern"), , drop = FALSE]
+  keep <- which(severity %in% c("review", "concern"))
+  keep <- keep[order(severity[keep] != "concern")]
+  kinds <- attr(log, "nomo_report_kinds")
+  log <- log[keep, , drop = FALSE]
+  if (length(kinds)) attr(log, "nomo_report_kinds") <- lapply(kinds, function(k) k[keep])
+  log
 }
 
 
@@ -1526,7 +1742,11 @@ nomo_report_citations <- function(
 }
 
 
+# Printed at 80 columns, as the component summaries are, so the archive does
+# not depend on the width of the console that rendered it (#145).
 nomo_report_session_text <- function() {
+  old <- options(width = 80L)
+  on.exit(options(old), add = TRUE)
   paste(utils::capture.output(utils::sessionInfo()), collapse = "\n")
 }
 
@@ -1624,10 +1844,11 @@ nomo_report_title_yaml <- function(title) {
 #' Incomplete stages are labeled as such rather than silently omitted.
 #'
 #' `nomo_report()` writes one file, the report named by `file`, and creates
-#' that file's directory when it does not exist. The working files of the
-#' render (the copy of the template, the intermediate files, and the figures)
-#' are written to a temporary directory under [tempdir()] and removed when the
-#' call returns, whether or not it succeeds. The working directory, the
+#' that file's directory when it does not exist; a directory it created is
+#' removed again if the render stops before the report is written. The
+#' working files of the render (the copy of the template, the intermediate
+#' files, and the figures) are written to a temporary directory under
+#' [tempdir()] and removed when the call returns, whether or not it succeeds. The working directory, the
 #' options, and the graphics device are left as they were. The report is
 #' rendered in an environment of its own, so objects in the global environment
 #' are neither read nor changed.
@@ -1763,6 +1984,12 @@ nomo_report <- function(x,
   template <- nomo_report_template_path()
 
   output_dir <- dirname(file)
+  # A directory made for the report is made before the render, so a path that
+  # cannot be written stops the call at once, and is removed again when the
+  # render stops part-way and leaves it empty (#145). Once the report is in
+  # it, it stays.
+  new_dirs <- nomo_report_new_dirs(output_dir)
+  on.exit(nomo_report_remove_empty_dirs(new_dirs), add = TRUE)
   if (!dir.exists(output_dir)) {
     ok <- dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
     if (!isTRUE(ok) && !dir.exists(output_dir)) {
@@ -1830,6 +2057,34 @@ nomo_report <- function(x,
   )
 
   invisible(nomo_report_deliver(rendered, target))
+}
+
+
+# The directories of `path` that do not exist yet, deepest first, up to a path
+# that exists or the root. The walk stops at any existing path, a file as well
+# as a directory: a file is never one of the directories made for a report, so
+# it is never removed (CRAN policy on the user's file space).
+nomo_report_new_dirs <- function(path) {
+  new <- character()
+  while (!file.exists(path) && !identical(dirname(path), path)) {
+    new <- c(new, path)
+    path <- dirname(path)
+  }
+  new
+}
+
+
+# Each of `dirs`, deepest first, removed when it is a directory that holds
+# nothing, as a directory made for a report that was never written does. A
+# path that is not a directory, because dir.create() never made it or it is a
+# file, is left as it is.
+nomo_report_remove_empty_dirs <- function(dirs) {
+  for (dir in dirs) {
+    if (dir.exists(dir) && !length(list.files(dir, all.files = TRUE, no.. = TRUE))) {
+      unlink(dir, recursive = TRUE)
+    }
+  }
+  invisible(NULL)
 }
 
 

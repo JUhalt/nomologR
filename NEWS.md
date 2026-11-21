@@ -362,7 +362,7 @@ that does. A call that worked is not affected.
 ### Report
 
 - **Breaking:** `nomo_report()` requires `file` (#145). It used to default to `"nomologR-report.html"` in the working directory, and CRAN policy asks packages not to write to the user's file space by default. A call without `file` now stops with an error that names the argument and suggests a path, before anything is written. Calls that give `file` are unchanged; to keep the old behavior, pass `file = "nomologR-report.html"`.
-- `nomo_report()` writes the report and nothing else (#145). It renders in a scratch directory under `tempdir()`, which holds the copy of the template, the intermediate files, and the figures and is removed when the call returns; the finished report is then copied to `file`. A render that stopped part-way had left a directory of figures beside `file`, and every call left a copy of the template in `tempdir()`. The report's code runs in an environment whose parent is the base environment, so objects in the workspace are neither read nor changed. The working directory, options, and graphics device are left as they were.
+- `nomo_report()` writes the report and nothing else (#145). It renders in a scratch directory under `tempdir()`, which holds the copy of the template, the intermediate files, and the figures and is removed when the call returns; the finished report is then copied to `file`. A render that stopped part-way had left a directory of figures beside `file`, and every call left a copy of the template in `tempdir()`. A directory created for `file` is removed again when the render stops before the report is written. The report's code runs in an environment whose parent is the base environment, so objects in the workspace are neither read nor changed. The working directory, options, and graphics device are left as they were.
 - `nomo_report()` shows what the run holds, as written (#145).
   - **Model syntax and quotes.** Pandoc reads Markdown inside table cells, so lavaan's `~~` vanished from the modification-index, network, and decision tables, `a*x1 + a*x2` lost its asterisks, and straight quotes became typographic. Cells, headings, and notes built from data are now escaped, including the content-review table of a `contentvalidR` handoff.
   - **Text that starts like a list.** A rationale beginning "1) ..." or "(a) ..." became a numbered list in the HTML report, which lost the typed marker and ran on through the rows after it. Such cells are shown as typed.
@@ -373,6 +373,16 @@ that does. A call that worked is not affected.
   - **Title.** The title is shown as given. Inline R code in it had been run, backslashes dropped, and HTML interpreted.
   - **Software citations.** Each DOI is given once, as its `https://doi.org/` address.
   - **Careless responding.** The evidence table keeps the rows that say why an index has no value.
+- `nomo_report()` labels and rounds what it shows as printed output does (#145).
+  - **Bartlett's test.** The supporting-adequacy row reads "Bartlett's test, p", since its Value is the p value, beside the KMO statistic.
+  - **Paused runs.** A run that paused before the invariance or network stage says the stage "was not reached", not that it "was not completed", which read as though it had been requested.
+  - **Network hypotheses.** A standardized correlation has no leading zero, as in `print()` and the APA table, and an estimate just off a bound of its predicted region shows the decimals that tell them apart. The region reads as `print()` writes it, ">= 0.20", not "[0.2, +Inf)". Elsewhere in the report the estimate reads the same: the theory-concordance rows of the flagged evidence and the full evidence trace give the estimate and its region as the hypotheses table does, and the replication table and the missing-data differences show a standardized association without a leading zero (".151", not "0.151"). Among the missing-data differences a factor correlation drops it too, as in `print()`.
+  - **Scores.** A validity just below Gorsuch's .90, or a correlational accuracy just short of .05, shows the decimal that tells them apart, ".903", as `print()` does.
+  - **Settings and logs.** A stage configured with no setting of its own shows "defaults", not R's "list()", and a log value stored as the text TRUE or FALSE reads "yes" or "no".
+  - **Intervals.** An interval's headings carry its level, taken from the result, such as "Omega 90% CI lower" for a reliability interval bootstrapped at 90%, and "Equivalence 90% CI lower" beside the network's 95% intervals.
+  - **Abbreviations.** The closing table defines every estimator a CFA can name, `DWLS` among them, in the words `summary()` uses. Revised MAP (TR4) is defined from the trace of the fourth power of the partial-correlation matrix; the table had called it an average of fourth powers.
+  - **Session information.** It is printed at 80 columns, as the component summaries are, whatever the width of the console that rendered the report.
+  - **References in words.** A missing-data difference flagged against "half a reference standard error" shows the decimals that tell it from .5, "0.503", not "0.50".
 
 ### APA tables and `nomo_table()`
 
@@ -387,6 +397,14 @@ that does. A call that worked is not affected.
   - Without `number`, the number line is left out; it had been printed as a bare "Table".
   - Knitted, the general, specific, and probability notes are separate paragraphs, and each column's share of the width follows its widest entry.
   - Knitted to PDF, Greek letters and math symbols are written as TeX math, so the default `pdflatex` engine compiles the tables. It used to stop at the first `χ`.
+- `nomo_apa_table()` reports what the result holds, as the console does (#145).
+  - **AVE.** An AVE that would round to the review reference shows the decimal that tells them apart, ".497" beside a reference of ".50", as `print()` does. Other cells keep two decimals.
+  - **Sample.** The reliability and validity tables give the estimator and the number of cases analyzed, as the other tables do; their notes had given neither. Every table whose model used full-information maximum likelihood says so, since *N* then counts the incomplete cases. A table from a WLSMV fit names WLSMV, not the `DWLS` lavaan files it under.
+  - **Improper solutions.** When lavaan's admissibility check did not pass, as with a negative variance estimate, the note of a CFA, reliability, or validity table says so, as `summary()` does. A standardized loading that is not finite is explained as such; the note had called it "not estimated", though lavaan estimated it.
+- `nomo_apa_table()` leaves out what a table cannot show (#145).
+  - **One invariance model.** A table of the configural model alone has no change columns, which had been four empty columns, and its note neither defines the change symbol nor says that each model adds constraints.
+  - **Narrow console.** `print()` leaves out a specific note whose marker is only in columns not shown for width. The notes it keeps keep their letters, so each still matches its cells in `x$body`.
+  - **Formulas.** The retest note's formula for the smallest detectable change, 1.96 × √2 × *SEM*, is no longer broken across lines in the console.
 - `nomo_apa_table()` refuses invalid arguments it used to ignore (#145): a `type` for a result that has one table (`nomo_reliability()`, `nomo_invariance()`), and a `title` that is not a single string, which was pasted together.
 - `nomo_table()` (#145):
   - **Other objects.** An object without tables is refused with the list of supported classes; the error had been base R's "no applicable method".
