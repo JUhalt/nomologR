@@ -288,7 +288,8 @@ nomo_report_format_numbers <- function(value, name, metric = NULL, reference = N
 # part of a name ("TR2", "HTMT2") or an exponent is not one, and a hyphen
 # between two numbers (".50-.75") is not a sign. A limit given in words, the
 # missing-data log's "Half a reference standard error", is the number it
-# names, .5 (#145).
+# names, .5 (#145). No other half is a limit: in the careless-responding
+# reference, "half the items" counts items.
 nomo_report_reference_numbers <- function(text) {
   number <- paste0(
     "(?<![A-Za-z0-9.^])-?(?:[0-9]+(?:\\.[0-9]+)?|\\.[0-9]+)",
@@ -297,7 +298,7 @@ nomo_report_reference_numbers <- function(text) {
   text <- as.character(text)
   text[is.na(text)] <- ""
   numbers <- lapply(regmatches(text, gregexpr(number, text, perl = TRUE)), as.numeric)
-  half <- grepl("\\bhalf\\b", text, ignore.case = TRUE, perl = TRUE)
+  half <- grepl("\\bhalf a\\b", text, ignore.case = TRUE, perl = TRUE)
   numbers[half] <- lapply(numbers[half], function(n) c(0.5, n))
   numbers
 }

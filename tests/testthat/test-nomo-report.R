@@ -2104,6 +2104,9 @@ test_that("a flagged value is told apart from the reference its row names (#144)
   # half.
   expect_identical(numbers(c("Half a reference standard error", "behalf of")),
                    list(0.5, numeric()))
+  # Another half is no limit: the careless-responding reference counts items.
+  expect_identical(numbers("a run of 6 or more, half the items (Curran, 2016)"),
+                   list(c(6, 2016)))
   missing_log <- nomologR:::nomo_report_display_table(tibble::tibble(
     metric = c("estimate_difference", "estimates_agree"), value = c(0.503, 0.497),
     reference = nomologR:::nomo_missing_half_se_reference,
