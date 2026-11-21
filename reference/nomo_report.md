@@ -105,9 +105,10 @@ objects. Incomplete stages are labeled as such rather than silently
 omitted.
 
 `nomo_report()` writes one file, the report named by `file`, and creates
-that file's directory when it does not exist. The working files of the
-render (the copy of the template, the intermediate files, and the
-figures) are written to a temporary directory under
+that file's directory when it does not exist; a directory it created is
+removed again if the render stops before the report is written. The
+working files of the render (the copy of the template, the intermediate
+files, and the figures) are written to a temporary directory under
 [`tempdir()`](https://rdrr.io/r/base/tempfile.html) and removed when the
 call returns, whether or not it succeeds. The working directory, the
 options, and the graphics device are left as they were. The report is

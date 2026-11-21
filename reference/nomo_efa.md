@@ -229,7 +229,7 @@ efa
 #> Cases: 500 (minimum pairwise N: 473) | Items: 10
 #> Factors: 2 (researcher specified)
 #> Correlation: Pearson | Extraction: minres | Rotation: oblimin (oblique)
-#> RMSR: 0.018 | Item flags: 2 review, 1 concern
+#> RMSR: 0.018 | Item flags: 1 concern, 2 review
 #> RMSR = root mean square of the off-diagonal residual correlations. No item was
 #> deleted and no model was refit automatically.
 #> 
@@ -274,11 +274,11 @@ summary(efa_from_evidence)
 #> 
 #> Flagged
 #>   - b5 (Concern): The primary loading, 0.33 in absolute value, is below the
-#>     0.40 teaching reference. The communality, .12, is below the .40 teaching
-#>     reference.
+#>     review reference 0.40. The communality, .12, is below the review reference
+#>     .40.
 #>   - a5 (Review): The secondary loading, 0.34 in absolute value, is at or above
-#>     the 0.30 cross-loading reference.
-#>   - b4 (Review): The communality, .3997, is below the .40 teaching reference.
+#>     the cross-loading review reference 0.30.
+#>   - b4 (Review): The communality, .3997, is below the review reference .40.
 #> 
 #> Factor correlations
 #>   Factor 1  Factor 2    r

@@ -88,7 +88,7 @@ scr
 #> Items with missing responses: 2 | Constant: 0 | All missing: 0
 #> Items in correlation diagnostics: 10 | Item-rest correlations: 10
 #> Response concentration flags: 0 | Near-zero variance: 0
-#> Decision log: 4 entries | Flagged: 1 review, 0 concern
+#> Decision log: 4 entries | Flagged: 0 concern, 1 review
 #> No rows or items were removed or modified.
 #> 
 #> See summary(x) for each item's review and nomo_table(x, "decision_log") for

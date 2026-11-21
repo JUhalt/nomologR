@@ -171,7 +171,7 @@ run
 #>   - EFA item flags: none
 #>   - CFA: CFI .996, RMSEA 0.020, SRMR 0.021; loading flags: none
 #>   - Reliability: omega .73 to .85
-#>   - Validity: convergent flags 1 review, 0 concern; separation flags none
+#>   - Validity: convergent flags 0 concern, 1 review; separation flags none
 #> 
 #> Researcher decision required after the measurement review
 #>   Reason: Invariance and nomological-network interpretations inherit the
@@ -300,7 +300,7 @@ run
 #>   - EFA item flags: none
 #>   - CFA: CFI .996, RMSEA 0.020, SRMR 0.021; loading flags: none
 #>   - Reliability: omega .73 to .85
-#>   - Validity: convergent flags 1 review, 0 concern; separation flags none
+#>   - Validity: convergent flags 0 concern, 1 review; separation flags none
 #>   - Invariance: completed configural -> metric -> scalar
 #>   - Network: 3 hypotheses; 3 concordant
 #> 
@@ -394,7 +394,7 @@ run_prespecified
 #>   - EFA item flags: none
 #>   - CFA: CFI .996, RMSEA 0.020, SRMR 0.021; loading flags: none
 #>   - Reliability: omega .73 to .85
-#>   - Validity: convergent flags 1 review, 0 concern; separation flags none
+#>   - Validity: convergent flags 0 concern, 1 review; separation flags none
 #>   - Network: 3 hypotheses; 3 concordant
 #> 
 #> Requested workflow complete; no item was deleted and no model respecified.
@@ -449,7 +449,7 @@ revised
 #>   - EFA item flags: none
 #>   - CFA: CFI .995, RMSEA 0.021, SRMR 0.021; loading flags: none
 #>   - Reliability: omega .73 to .85
-#>   - Validity: convergent flags 1 review, 0 concern; separation flags none
+#>   - Validity: convergent flags 0 concern, 1 review; separation flags none
 #> 
 #> Researcher decision required after the measurement review
 #>   Reason: Invariance and nomological-network interpretations inherit the

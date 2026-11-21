@@ -135,8 +135,9 @@ as the output style shared with <code>contentvalidR</code> does.</p>
 <p><strong>No verdicts.</strong> Table notes keep the package's reference-value language.
 No cell reads PASS or FAIL, and fit indices are not labeled good or poor.</p>
 <p><strong>Notes say what the table shows.</strong> The general note defines each
-abbreviation, gives the estimator and the number of cases analyzed, and
-says when the chi-square is a scaled test statistic and the fit indices are
+abbreviation, gives the estimator and the number of cases analyzed, says
+when full-information maximum likelihood handled missing values, and says
+when the chi-square is a scaled test statistic and the fit indices are
 robust or scaled values. For a network's hypotheses it also defines each
 evidence label the table shows, such as "Concordant", and each prediction
 is given with the region it names. An interval's heading carries its level,
@@ -149,7 +150,10 @@ estimates whose interval is the equivalence interval a <code><a href="nomo_expec
 prediction is judged on, and the estimates on another scale than the rest.
 A correlation the model fixes, such as the zero correlations of a bifactor
 model, is not tabled as an estimate. Degrees of freedom that are not whole,
-as for a mean- and variance-adjusted test, are given to two decimals.</p>
+as for a mean- and variance-adjusted test, are given to two decimals. When
+the solution did not pass lavaan's admissibility check, as with a negative
+variance estimate, the note of a CFA, reliability, or validity table says
+so; its values are shown as estimated.</p>
 <p><strong>Discriminant evidence without the Fornell-Larcker matrix.</strong> For a
 <code>nomo_validity</code> result, the <code>"discriminant"</code> table gives each pair of
 constructs one row: the latent correlation with its 95% confidence interval
@@ -258,9 +262,9 @@ discriminant validity. <em>Organizational Research Methods, 25</em>(1), 6-47.
 <span class="r-out co"><span class="r-pr">#&gt;</span> textual    .89  .88</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> speed      .69  .69</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> -------------------</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Note. ω = coefficient omega; α = coefficient alpha. Coefficient alpha assumes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> equal loadings and is reported alongside omega for comparison with published</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> work.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Note. ω = coefficient omega; α = coefficient alpha. Estimated with maximum</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> likelihood (ML); N = 301. Coefficient alpha assumes equal loadings and is</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> reported alongside omega for comparison with published work.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> See x$body for the cells and knitr::knit_print(x) for the Markdown a knitted</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> document renders.</span>

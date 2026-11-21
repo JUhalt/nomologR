@@ -167,7 +167,7 @@ places.</p>
 <span><span class="co">## assumption-dependent. Reliability contributes score-precision evidence, not</span></span>
 <span><span class="co">## construct validity.</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## See x$decision_log for the reasoning behind each coefficient.</span></span></code></pre>
+<span><span class="co">## See nomo_table(x, "decision_log") for the reasoning behind each coefficient.</span></span></code></pre>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">val</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## &lt;nomo_validity summary&gt; Convergent and discriminant evidence</span></span>
@@ -197,8 +197,8 @@ places.</p>
 <span><span class="co">## and HTMT-family statistics address construct separation. These are</span></span>
 <span><span class="co">## complementary questions, not interchangeable pass/fail tests.</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## See nomo_table(x, "discriminant") for every value and x$decision_log for the</span></span>
-<span><span class="co">## reasoning behind each flag.</span></span></code></pre>
+<span><span class="co">## See nomo_table(x, "discriminant") for every value and</span></span>
+<span><span class="co">## nomo_table(x, "decision_log") for the reasoning behind each flag.</span></span></code></pre>
 <p>The figures also avoid duplication. Item-level loading evidence
 belongs to the CFA; reliability gets a coefficient plot; convergent
 validity gets an AVE plot; and construct separation gets an HTMT-family
@@ -286,12 +286,12 @@ score is precise.</p>
 <span><span class="co">## assumption-dependent. Reliability contributes score-precision evidence, not</span></span>
 <span><span class="co">## construct validity.</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## See x$decision_log for the reasoning behind each coefficient.</span></span></code></pre>
+<span><span class="co">## See nomo_table(x, "decision_log") for the reasoning behind each coefficient.</span></span></code></pre>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">weak_val</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## &lt;nomo_validity summary&gt; Convergent and discriminant evidence</span></span>
 <span><span class="co">## Constructs: 1 | AVE reference: .50 | HTMT reference: 0.85</span></span>
-<span><span class="co">## Convergent flags: 1 review, 0 concern (1 construct)</span></span>
+<span><span class="co">## Convergent flags: 0 concern, 1 review (1 construct)</span></span>
 <span><span class="co">## Separation flags: not applicable (one construct)</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Convergent evidence by construct</span></span>
@@ -317,9 +317,9 @@ score is precise.</p>
 <span><span class="co">##   - W5 (Review): Standardized loading 0.34 is below the review reference 0.50</span></span>
 <span><span class="co">##     in absolute value; inspect item content, precision, and model</span></span>
 <span><span class="co">##     specification.</span></span>
-<span><span class="co">##   - Weak (Review): AVE (.11) is below the configured convergent-evidence</span></span>
-<span><span class="co">##     reference (.50). Inspect standardized loadings, indicator-specific error,</span></span>
-<span><span class="co">##     and content coverage; do not automatically delete items.</span></span>
+<span><span class="co">##   - Weak (Review): AVE .11 is below the review reference .50. Inspect</span></span>
+<span><span class="co">##     standardized loadings, indicator-specific error, and content coverage; do</span></span>
+<span><span class="co">##     not automatically delete items.</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## What these columns mean</span></span>
 <span><span class="co">##   AVE -- Average variance extracted, the mean share of its indicators'</span></span>
@@ -333,8 +333,8 @@ score is precise.</p>
 <span><span class="co">## and HTMT-family statistics address construct separation. These are</span></span>
 <span><span class="co">## complementary questions, not interchangeable pass/fail tests.</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## See nomo_table(x, "discriminant") for every value and x$decision_log for the</span></span>
-<span><span class="co">## reasoning behind each flag.</span></span></code></pre>
+<span><span class="co">## See nomo_table(x, "discriminant") for every value and</span></span>
+<span><span class="co">## nomo_table(x, "decision_log") for the reasoning behind each flag.</span></span></code></pre>
 <p>This is why <code>nomologR</code> does not collapse measurement
 quality into a single global-fit verdict. Weak standardized loadings,
 low AVE, and weak model-based reliability remain important even when
@@ -385,13 +385,13 @@ empirically.</p>
 <span><span class="co">## assumption-dependent. Reliability contributes score-precision evidence, not</span></span>
 <span><span class="co">## construct validity.</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## See x$decision_log for the reasoning behind each coefficient.</span></span></code></pre>
+<span><span class="co">## See nomo_table(x, "decision_log") for the reasoning behind each coefficient.</span></span></code></pre>
 <div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">overlap_val</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## &lt;nomo_validity summary&gt; Convergent and discriminant evidence</span></span>
 <span><span class="co">## Constructs: 2 | AVE reference: .50 | HTMT reference: 0.85</span></span>
 <span><span class="co">## Convergent flags: none (2 constructs)</span></span>
-<span><span class="co">## Separation flags: 1 review, 0 concern (1 pair)</span></span>
+<span><span class="co">## Separation flags: 0 concern, 1 review (1 pair)</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Convergent evidence by construct</span></span>
 <span><span class="co">##   Construct  AVE  Min |loading|  Median |loading|  Loadings flagged</span></span>
@@ -426,8 +426,8 @@ empirically.</p>
 <span><span class="co">## and HTMT-family statistics address construct separation. These are</span></span>
 <span><span class="co">## complementary questions, not interchangeable pass/fail tests.</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## See nomo_table(x, "discriminant") for every value and x$decision_log for the</span></span>
-<span><span class="co">## reasoning behind each flag.</span></span></code></pre>
+<span><span class="co">## See nomo_table(x, "discriminant") for every value and</span></span>
+<span><span class="co">## nomo_table(x, "decision_log") for the reasoning behind each flag.</span></span></code></pre>
 <p>Here, strong omega and AVE do not erase a high latent correlation or
 HTMT2 value. The package therefore recommends investigating theoretical
 distinctiveness, item content, cross-construct overlap, and the intended
@@ -493,7 +493,7 @@ scale.</p>
 <span><span class="co">## assumption-dependent. Reliability contributes score-precision evidence, not</span></span>
 <span><span class="co">## construct validity.</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## See x$decision_log for the reasoning behind each coefficient.</span></span></code></pre>
+<span><span class="co">## See nomo_table(x, "decision_log") for the reasoning behind each coefficient.</span></span></code></pre>
 <p>Observed-scale omega is available for the practical ordinal
 composite. Observed-scale alpha is deliberately reported as unavailable
 in this ordered-CFA estimand rather than silently replacing it with a

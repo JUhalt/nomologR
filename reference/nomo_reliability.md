@@ -251,7 +251,7 @@ summary(rel)
 #> assumption-dependent. Reliability contributes score-precision evidence, not
 #> construct validity.
 #> 
-#> See x$decision_log for the reasoning behind each coefficient.
+#> See nomo_table(x, "decision_log") for the reasoning behind each coefficient.
 rel$decision_log
 #> # A tibble: 9 × 10
 #>   stage       object metric  value reference severity observation recommendation
@@ -306,6 +306,6 @@ summary(rel_ci)
 #> assumption-dependent. Reliability contributes score-precision evidence, not
 #> construct validity.
 #> 
-#> See x$decision_log for the reasoning behind each coefficient.
+#> See nomo_table(x, "decision_log") for the reasoning behind each coefficient.
 # }
 ```

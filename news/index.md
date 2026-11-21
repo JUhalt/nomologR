@@ -5,7 +5,10 @@
 These changes lead to 1.0.0, the stable release planned jointly with
 `contentvalidR` ([\#53](https://github.com/JUhalt/nomologR/issues/53)).
 Its first release candidate, `v1.0.0-rc.1` (version 0.99.0), is planned
-for 2026-10-17, after the feature freeze on 2026-10-13.
+for 2026-11-24, or earlier if both packages are ready, and its tag is
+the interface freeze. The 1.0.0 release follows when the maintainer
+signs off, and goes to GitHub and R-universe first; the CRAN submission
+follows it.
 
 - **New methods.** The gap review
   ([\#129](https://github.com/JUhalt/nomologR/issues/129)) added the
@@ -188,6 +191,9 @@ or one that had ignored the argument.
     flag of a construct pair that has no HTMT.
   - `nomo_table(x, "discriminant")` for a `nomo_validity` result: a
     latent correlation the model fixes is left out.
+  - [`nomo_validity()`](https://juhalt.github.io/nomologR/reference/nomo_validity.md)’s
+    `latent_correlations$block` for a model with more than one level,
+    which did not name the level.
 - **Hierarchical models.**
   [`nomo_hierarchical()`](https://juhalt.github.io/nomologR/reference/nomo_hierarchical.md)
   under the theta parameterization, and with a negative variance.
@@ -410,10 +416,9 @@ message that does. A call that worked is not affected.
   - **Other messages.** Any other psych warning or message is recorded
     in the decision log for review.
   - **Display.** [`print()`](https://rdrr.io/r/base/print.html) lists
-    these under “Solution checks” and counts a Heywood item among the
-    item flags. [`summary()`](https://rdrr.io/r/base/summary.html) and
-    the items plot show it as a concern. Stored item flags are
-    unchanged.
+    these under “Flagged” and counts a Heywood item among the item
+    flags. [`summary()`](https://rdrr.io/r/base/summary.html) and the
+    items plot show it as a concern. Stored item flags are unchanged.
 - [`nomo_efa()`](https://juhalt.github.io/nomologR/reference/nomo_efa.md)
   checks `rotation`
   ([\#145](https://github.com/JUhalt/nomologR/issues/145)).
@@ -458,6 +463,17 @@ message that does. A call that worked is not affected.
 - `nomo_factors(criterion_set = "minimal")` no longer prints, plots,
   defines, or logs revised MAP, which that set does not include
   ([\#145](https://github.com/JUhalt/nomologR/issues/145)).
+- Revised MAP (TR4) is described as what it is, the trace of the fourth
+  power of the partial-correlation matrix, in the
+  [`nomo_factors()`](https://juhalt.github.io/nomologR/reference/nomo_factors.md)
+  summary, its MAP plot, and the abbreviations of
+  [`nomo_run()`](https://juhalt.github.io/nomologR/reference/nomo_run.md)
+  and
+  [`nomo_report()`](https://juhalt.github.io/nomologR/reference/nomo_report.md)
+  ([\#145](https://github.com/JUhalt/nomologR/issues/145)). They had
+  called it an average of fourth powers, against
+  [`?nomo_factors`](https://juhalt.github.io/nomologR/reference/nomo_factors.md)
+  and the methods registry. The values are unchanged.
 
 #### CFA, model comparison, model syntax, and sample splitting
 
@@ -654,6 +670,15 @@ message that does. A call that worked is not affected.
     output it gave before, with one exception: for a model with one
     construct, `nomo_table(x, "discriminant")` has no rows and its usual
     columns. It had no columns.
+  - **Levels.** For a multilevel model, `latent_correlations$block`
+    names the level, and for a model with groups too, the group and the
+    level, as `ave$block` does: “within”, “even:within”. It had been
+    “overall” in each level of a one-group model, so the within and
+    between correlations of a pair could not be told apart in
+    `nomo_table(x, "discriminant")` or the decision log. With both
+    groups and levels, written with `group:` blocks, it had been `NA`,
+    since lavaan stores the group’s label there rather than its number,
+    and a fixed pair was named “(NA, within)”.
 - [`nomo_validity()`](https://juhalt.github.io/nomologR/reference/nomo_validity.md)’s
   `htmt_missing = "default"` follows the fitted model’s missing-data
   handling: FIML when the CFA used it, pairwise deletion when it used
@@ -1009,6 +1034,11 @@ message that does. A call that worked is not affected.
     print and summary give each strategy’s differences a table of its
     own. A narrow console had dropped the Strategy column and left rows
     that could not be told apart.
+  - **Complete data.** When no modeled variable has a missing value, the
+    print names no reference strategy (“Reference: none (complete
+    data)”) and no longer points to differences that do not exist, and
+    the guided run’s key evidence says so. It had said that only one
+    strategy could be fitted, which read as a fitting failure.
   - **Help.**
     [`?nomo_missing`](https://juhalt.github.io/nomologR/reference/nomo_missing.md)
     gives its result in the “fields to read” form the other result pages
@@ -1146,10 +1176,12 @@ message that does. A call that worked is not affected.
   removed when the call returns; the finished report is then copied to
   `file`. A render that stopped part-way had left a directory of figures
   beside `file`, and every call left a copy of the template in
-  [`tempdir()`](https://rdrr.io/r/base/tempfile.html). The report’s code
-  runs in an environment whose parent is the base environment, so
-  objects in the workspace are neither read nor changed. The working
-  directory, options, and graphics device are left as they were.
+  [`tempdir()`](https://rdrr.io/r/base/tempfile.html). A directory
+  created for `file` is removed again when the render stops before the
+  report is written. The report’s code runs in an environment whose
+  parent is the base environment, so objects in the workspace are
+  neither read nor changed. The working directory, options, and graphics
+  device are left as they were.
 - [`nomo_report()`](https://juhalt.github.io/nomologR/reference/nomo_report.md)
   shows what the run holds, as written
   ([\#145](https://github.com/JUhalt/nomologR/issues/145)).
@@ -1185,6 +1217,49 @@ message that does. A call that worked is not affected.
     `https://doi.org/` address.
   - **Careless responding.** The evidence table keeps the rows that say
     why an index has no value.
+- [`nomo_report()`](https://juhalt.github.io/nomologR/reference/nomo_report.md)
+  labels and rounds what it shows as printed output does
+  ([\#145](https://github.com/JUhalt/nomologR/issues/145)).
+  - **Bartlett’s test.** The supporting-adequacy row reads “Bartlett’s
+    test, p”, since its Value is the p value, beside the KMO statistic.
+  - **Paused runs.** A run that paused before the invariance or network
+    stage says the stage “was not reached”, not that it “was not
+    completed”, which read as though it had been requested.
+  - **Network hypotheses.** A standardized correlation has no leading
+    zero, as in [`print()`](https://rdrr.io/r/base/print.html) and the
+    APA table, and an estimate just off a bound of its predicted region
+    shows the decimals that tell them apart. The region reads as
+    [`print()`](https://rdrr.io/r/base/print.html) writes it, “\>=
+    0.20”, not “\[0.2, +Inf)”. Elsewhere in the report the estimate
+    reads the same: the theory-concordance rows of the flagged evidence
+    and the full evidence trace give the estimate and its region as the
+    hypotheses table does, and the replication table and the
+    missing-data differences show a standardized association without a
+    leading zero (“.151”, not “0.151”). Among the missing-data
+    differences a factor correlation drops it too, as in
+    [`print()`](https://rdrr.io/r/base/print.html).
+  - **Scores.** A validity just below Gorsuch’s .90, or a correlational
+    accuracy just short of .05, shows the decimal that tells them apart,
+    “.903”, as [`print()`](https://rdrr.io/r/base/print.html) does.
+  - **Settings and logs.** A stage configured with no setting of its own
+    shows “defaults”, not R’s “list()”, and a log value stored as the
+    text TRUE or FALSE reads “yes” or “no”.
+  - **Intervals.** An interval’s headings carry its level, taken from
+    the result, such as “Omega 90% CI lower” for a reliability interval
+    bootstrapped at 90%, and “Equivalence 90% CI lower” beside the
+    network’s 95% intervals.
+  - **Abbreviations.** The closing table defines every estimator a CFA
+    can name, `DWLS` among them, in the words
+    [`summary()`](https://rdrr.io/r/base/summary.html) uses. Revised MAP
+    (TR4) is defined from the trace of the fourth power of the
+    partial-correlation matrix; the table had called it an average of
+    fourth powers.
+  - **Session information.** It is printed at 80 columns, as the
+    component summaries are, whatever the width of the console that
+    rendered the report.
+  - **References in words.** A missing-data difference flagged against
+    “half a reference standard error” shows the decimals that tell it
+    from .5, “0.503”, not “0.50”.
 
 #### APA tables and `nomo_table()`
 
@@ -1237,6 +1312,39 @@ message that does. A call that worked is not affected.
   - Knitted to PDF, Greek letters and math symbols are written as TeX
     math, so the default `pdflatex` engine compiles the tables. It used
     to stop at the first `χ`.
+- [`nomo_apa_table()`](https://juhalt.github.io/nomologR/reference/nomo_apa_table.md)
+  reports what the result holds, as the console does
+  ([\#145](https://github.com/JUhalt/nomologR/issues/145)).
+  - **AVE.** An AVE that would round to the review reference shows the
+    decimal that tells them apart, “.497” beside a reference of “.50”,
+    as [`print()`](https://rdrr.io/r/base/print.html) does. Other cells
+    keep two decimals.
+  - **Sample.** The reliability and validity tables give the estimator
+    and the number of cases analyzed, as the other tables do; their
+    notes had given neither. Every table whose model used
+    full-information maximum likelihood says so, since *N* then counts
+    the incomplete cases. A table from a WLSMV fit names WLSMV, not the
+    `DWLS` lavaan files it under.
+  - **Improper solutions.** When lavaan’s admissibility check did not
+    pass, as with a negative variance estimate, the note of a CFA,
+    reliability, or validity table says so, as
+    [`summary()`](https://rdrr.io/r/base/summary.html) does. A
+    standardized loading that is not finite is explained as such; the
+    note had called it “not estimated”, though lavaan estimated it.
+- [`nomo_apa_table()`](https://juhalt.github.io/nomologR/reference/nomo_apa_table.md)
+  leaves out what a table cannot show
+  ([\#145](https://github.com/JUhalt/nomologR/issues/145)).
+  - **One invariance model.** A table of the configural model alone has
+    no change columns, which had been four empty columns, and its note
+    neither defines the change symbol nor says that each model adds
+    constraints.
+  - **Narrow console.** [`print()`](https://rdrr.io/r/base/print.html)
+    leaves out a specific note whose marker is only in columns not shown
+    for width. The notes it keeps keep their letters, so each still
+    matches its cells in `x$body`.
+  - **Formulas.** The retest note’s formula for the smallest detectable
+    change, 1.96 × √2 × *SEM*, is no longer broken across lines in the
+    console.
 - [`nomo_apa_table()`](https://juhalt.github.io/nomologR/reference/nomo_apa_table.md)
   refuses invalid arguments it used to ignore
   ([\#145](https://github.com/JUhalt/nomologR/issues/145)): a `type` for
@@ -1361,7 +1469,12 @@ decision logs follow the same number rules.
   - **References.** A reference is written like the value it is compared
     with (“.950” beside CFI). A flagged value shows the decimals that
     tell it from its reference: “The communality, .3997, is below the
-    .40 teaching reference.”
+    review reference .40.” A flag on an item, a loading, or an AVE calls
+    the value it is read against a review reference, in the item audit,
+    the EFA, the CFA, and
+    [`nomo_validity()`](https://juhalt.github.io/nomologR/reference/nomo_validity.md)
+    alike; the EFA and the item audit had called it a teaching
+    reference.
   - **Rounding.** Display rounds half away from zero, as `contentvalidR`
     does, so .625 prints .63. A value that rounds to zero never prints
     with a sign.
@@ -1376,18 +1489,28 @@ decision logs follow the same number rules.
     “–”, never half of it.
 - **Width.** Prose stops at 79 columns on a wide console, and wrapped
   text never breaks inside a statistical clause such as “p \< .001” or
-  “\[0.28, 0.51\]”. On a narrow console a table first narrows the space
-  between its columns, then drops columns from the right. It never drops
-  a status or *p* column, and a line beneath it names each dropped
-  column and the call that shows it.
+  “\[0.28, 0.51\]”, nor inside “Delta chi-square”, a page citation such
+  as “p. 260”, a short call such as `nomo_table(x, "criteria")`, or a
+  column named in a “Not shown for width” line. On a narrow console a
+  table first narrows the space between its columns, then drops columns
+  from the right. It never drops a status or *p* column, and a line
+  beneath it names each dropped column and the call that shows it. The
+  columns left take their usual spacing again when it fits, and a note
+  that explains a dropped column is left out with it.
 - **Flagged sections.** Each output has one “Flagged” section, with
   concern before review. A bullet names the unit and its status, as in
   “- b5 (Review): …”, and units with the same explanation are listed
-  together.
+  together. Counts of flags name concern first too, as in “Flags: 1
+  concern, 2 review”. In a summary, an observation ends with a full stop
+  before its recommendation, also when it is a lavaan message that has
+  none.
 - **Status words.** A flag reads “Review”, “Concern”, or “Not computed”
   in a table and at the start of a line, and a cell without a flag is
   blank. Other statuses are in sentence case (“Converged: yes”, “Origin:
-  a priori”), and “a priori” and “post hoc” take no hyphen.
+  a priori”), and “a priori” and “post hoc” take no hyphen. The “Meets”
+  column of
+  [`nomo_power_simulate()`](https://juhalt.github.io/nomologR/reference/nomo_power_simulate.md)
+  reads “Yes” or “No”.
 - **Abbreviation keys.** Every abbreviation an output shows is defined
   in it, under “What these columns mean” or “Abbreviations”.
 - **Pointer lines.** Each [`print()`](https://rdrr.io/r/base/print.html)
@@ -1398,7 +1521,10 @@ decision logs follow the same number rules.
   a triangle), a filled square for concern, and a cross for not
   computed. A legend appears whenever a point is flagged. Reference
   lines are dashed and named, an axis for a statistic that cannot exceed
-  1 drops the leading zero, and captions wrap to the plot.
+  1 drops the leading zero, and captions wrap to the plot. A value that
+  cannot be drawn, such as a CFA loading with no finite standardized
+  value or a reliability coefficient that was not computed, is named in
+  the caption, and the legend lists only the statuses drawn.
 - **APA tables.** [`print()`](https://rdrr.io/r/base/print.html) of an
   APA table opens with the `<nomo_apa_table>` header and fits the
   console: a table too wide wraps its long headings and text cells, then
@@ -1428,7 +1554,13 @@ Where one class changes more than that:
   Agreement between two criteria is no longer called “strong converging
   evidence”, and zero factors has its own text. Bartlett’s test is
   written as other tests are, and is marked approximate for non-Pearson
-  correlations. Percentiles read as ordinals (“93rd”).
+  correlations. Percentiles read as ordinals (“93rd”). When original and
+  revised MAP disagree, the review flag says so and gives both counts
+  (“The two MAP forms disagree: revised MAP (TR4) reaches its minimum at
+  1 factor, original MAP (TR2) at 0.”). In the EFA, checks of the
+  solution itself, such as identification or convergence, are listed
+  under “Flagged”, each under what it checks (“- Identification
+  (Concern): …”) or the item of a Heywood case.
 - **[`nomo_cfa()`](https://juhalt.github.io/nomologR/reference/nomo_cfa.md)
   and
   [`nomo_compare()`](https://juhalt.github.io/nomologR/reference/nomo_compare.md).**
@@ -1436,7 +1568,12 @@ Where one class changes more than that:
   scaled test statistic. The summary of a CFA that did not converge
   shows no loadings, correlations, or fit. Correlations a model fixes,
   such as a bifactor model’s zeros, are named as fixed. Pairs read “A
-  vs. B”.
+  vs. B”. A weak loading’s flag is worded as
+  [`nomo_validity()`](https://juhalt.github.io/nomologR/reference/nomo_validity.md)
+  words it, “Standardized loading 0.34 is below the review reference
+  0.50 in absolute value”, so a guided run lists the two flags on one
+  bullet. The summary’s residual correlations drop the leading zero, as
+  in the EFA.
 - **[`nomo_model()`](https://juhalt.github.io/nomologR/reference/nomo_model.md).**
   [`print()`](https://rdrr.io/r/base/print.html) starts with a
   `<nomo_model>` header and wraps its identification notes.
@@ -1445,11 +1582,12 @@ Where one class changes more than that:
   and
   [`nomo_hierarchical()`](https://juhalt.github.io/nomologR/reference/nomo_hierarchical.md).**
   Intervals are in a column of their own. The validity print counts
-  flags by name (“Separation flags: none (1 pair)”). The hierarchical
-  model-choice caution is information shown in the summary, not a review
-  flag on every model, and
-  [`summary()`](https://rdrr.io/r/base/summary.html) includes the
-  factor-score table.
+  flags by name (“Separation flags: none (1 pair)”), and the summary
+  states an AVE flag in the print’s words, “AVE .43 is below the review
+  reference .50”, before what to inspect. The hierarchical model-choice
+  caution is information shown in the summary, not a review flag on
+  every model, and [`summary()`](https://rdrr.io/r/base/summary.html)
+  includes the factor-score table.
 - **[`nomo_invariance()`](https://juhalt.github.io/nomologR/reference/nomo_invariance.md).**
   The tables are headed “Fit by level”, “CFI change”, and “Delta
   chi-square”. The fit table has no cumulative “Constraints” column,
@@ -1467,7 +1605,15 @@ Where one class changes more than that:
   prediction shows the equivalence interval its concordance is judged
   on, post hoc predictions are marked “(post hoc)”, and a bare
   [`negligible()`](https://juhalt.github.io/nomologR/reference/nomo_expectations.md)
-  draws no theory-compatible band.
+  draws no theory-compatible band. A flag about a relation names it as
+  its unit, as in “- Agency \<-\> Persistence (Review): The relation …”,
+  without backticks, and relations with one explanation share a bullet.
+  [`print()`](https://rdrr.io/r/base/print.html) counts every flag the
+  object holds (“Total flags: 0 concern, 4 review”), also those it
+  leaves to the hypothesis tables and to
+  [`summary()`](https://rdrr.io/r/base/summary.html). When standardized
+  and unstandardized hypotheses are mixed, the effects plot draws each
+  scale in a panel with its own axis.
 - **[`nomo_scores()`](https://juhalt.github.io/nomologR/reference/nomo_scores.md)
   and
   [`nomo_missing()`](https://juhalt.github.io/nomologR/reference/nomo_missing.md).**
@@ -1479,7 +1625,13 @@ Where one class changes more than that:
   shown as one block that says what failed and what to do.
   [`summary()`](https://rdrr.io/r/base/summary.html) lists each
   component flag under “Flagged”, where it was raised, and names each
-  fit index’s version.
+  fit index’s version. A network flag about a relation is written as the
+  network’s own output writes it, as in “- Agency \<-\> Persistence in
+  the network (Review): The relation …”, without backticks. The samples
+  of a split are named as
+  [`nomo_split()`](https://juhalt.github.io/nomologR/reference/nomo_split.md)
+  names them: “Sample design: calibration and validation samples”, then
+  “Calibration cases” and “Validation cases”.
 
 ### Additions to the documented interface
 
@@ -2058,9 +2210,9 @@ Estimation is not affected.
   dataset to its workflow and dataset tables and its learning path, and
   the package description names the new methods. ROADMAP lists the gap
   review in the 1.0.0 scope, names 0.9.0 as the current release, and
-  records the feature freeze on 2026-10-13. The README and the
-  exploratory-workflow article read the documented `correlation_method`
-  and `item_types` of
+  records the release candidate on 2026-11-24, whose tag is the
+  interface freeze. The README and the exploratory-workflow article read
+  the documented `correlation_method` and `item_types` of
   [`nomo_factors()`](https://juhalt.github.io/nomologR/reference/nomo_factors.md),
   not their undocumented aliases.
 - The interface frozen at 1.0 is written down where it was missing

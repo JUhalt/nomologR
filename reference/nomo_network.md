@@ -577,6 +577,7 @@ net
 #> Cases: 800 | Converged: yes
 #> Theory relations: 3 | Added to the model from hypotheses: 2
 #> Measurement context: no flags | Model fit: no flags
+#> Total flags: 0 concern, 2 review
 #> 
 #> Hypothesis evidence
 #>   ID  Relation                       Concordance  Estimate  CI
@@ -588,13 +589,13 @@ net
 #>   is judged on.
 #> 
 #> Flagged
-#>   - Review: `Persistence <-> SocialDesirability`, estimated in the model as
-#>     given, is fixed to zero in the fitted model: with the hypothesized paths,
-#>     `Persistence` is an outcome, and lavaan does not covary an outcome's
-#>     residual with a variable that does not predict it.
-#>   - Review: `Performance <-> SocialDesirability` is fixed to zero in the
-#>     fitted model: the hypotheses bring `Performance` into the model, and
-#>     neither they nor lavaan's defaults relate the two.
+#>   - Persistence <-> SocialDesirability (Review): The relation, estimated in
+#>     the model as given, is fixed to zero in the fitted model: with the
+#>     hypothesized paths, `Persistence` is an outcome, and lavaan does not
+#>     covary an outcome's residual with a variable that does not predict it.
+#>   - Performance <-> SocialDesirability (Review): The relation is fixed to zero
+#>     in the fitted model: the hypotheses bring `Performance` into the model,
+#>     and neither they nor lavaan's defaults relate the two.
 #> 
 #> Theory concordance, uncertainty, measurement quality, and replication are
 #> distinct evidence streams. Statistical significance alone is not a validity

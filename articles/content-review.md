@@ -94,7 +94,7 @@ run
 #> Completed: screen -> factors | Next: EFA
 #> 
 #> Key evidence
-#>   - Item audit: 10 items; flags: 10 review, 0 concern
+#>   - Item audit: 10 items; flags: 0 concern, 10 review
 #>   - Parallel analysis suggests: EF 1, TF 1
 #> 
 #> Researcher decision required on the factor counts
@@ -127,7 +127,7 @@ Every item is flagged. The Effort Regulation audit shows why:
 
 summary(run$results$screen$EF)
 #> <nomo_screen summary> Item and data audit
-#> Cases: 400 | Items: 5 | Item flags: 5 review, 0 concern
+#> Cases: 400 | Items: 5 | Item flags: 0 concern, 5 review
 #> Items with missing responses: 0 | Constant: 0 | All missing: 0
 #> Items in correlation diagnostics: 5
 #> 
@@ -143,30 +143,30 @@ summary(run$results$screen$EF)
 #> 
 #> Flagged
 #>   - EF1 (Review): `EF1` has a corrected item-rest correlation of r = .17
-#>     (n = 400), below the teaching reference of .30. Its rest score includes
-#>     EF2, declared reverse-keyed and not yet recoded in the data; with EF2
-#>     recoded as declared, its item-rest correlation is r = .56. Its correlation
-#>     with EF2 is negative.
+#>     (n = 400), below the review reference .30. Its rest score includes EF2,
+#>     declared reverse-keyed and not yet recoded in the data; with EF2 recoded
+#>     as declared, its item-rest correlation is r = .56. Its correlation with
+#>     EF2 is negative.
 #>   - EF2 (Review): `EF2` has a negative corrected item-rest correlation
 #>     (r = -.50, n = 400). It is declared reverse-keyed, and this is the sign
 #>     such an item shows before it is recoded: recoded on the declared 1 to 5
 #>     scale, its item-rest correlation is r = .50. The data were not recoded.
 #>     Its correlations with EF1, EF3, EF4, and EF6 are negative.
 #>   - EF3 (Review): `EF3` has a corrected item-rest correlation of r = .21
-#>     (n = 400), below the teaching reference of .30. Its rest score includes
-#>     EF2, declared reverse-keyed and not yet recoded in the data; with EF2
-#>     recoded as declared, its item-rest correlation is r = .34. Its correlation
-#>     with EF2 is negative.
+#>     (n = 400), below the review reference .30. Its rest score includes EF2,
+#>     declared reverse-keyed and not yet recoded in the data; with EF2 recoded
+#>     as declared, its item-rest correlation is r = .34. Its correlation with
+#>     EF2 is negative.
 #>   - EF4 (Review): `EF4` has a corrected item-rest correlation of r = .17
-#>     (n = 400), below the teaching reference of .30. Its rest score includes
-#>     EF2, declared reverse-keyed and not yet recoded in the data; with EF2
-#>     recoded as declared, its item-rest correlation is r = .23. Its correlation
-#>     with EF2 is negative.
+#>     (n = 400), below the review reference .30. Its rest score includes EF2,
+#>     declared reverse-keyed and not yet recoded in the data; with EF2 recoded
+#>     as declared, its item-rest correlation is r = .23. Its correlation with
+#>     EF2 is negative.
 #>   - EF6 (Review): `EF6` has a corrected item-rest correlation of r = .18
-#>     (n = 400), below the teaching reference of .30. Its rest score includes
-#>     EF2, declared reverse-keyed and not yet recoded in the data; with EF2
-#>     recoded as declared, its item-rest correlation is r = .47. Its correlation
-#>     with EF2 is negative.
+#>     (n = 400), below the review reference .30. Its rest score includes EF2,
+#>     declared reverse-keyed and not yet recoded in the data; with EF2 recoded
+#>     as declared, its item-rest correlation is r = .47. Its correlation with
+#>     EF2 is negative.
 #>   - Inter-item correlations (Review): 4 estimable inter-item correlations are
 #>     negative. All involve EF2, declared reverse-keyed and not yet recoded in
 #>     the data.
@@ -218,7 +218,7 @@ run$decision_log$observation[run$decision_log$id == "keying"]
 ef <- run$results$screen$EF
 summary(ef)
 #> <nomo_screen summary> Item and data audit
-#> Cases: 400 | Items: 5 | Item flags: 1 review, 0 concern
+#> Cases: 400 | Items: 5 | Item flags: 0 concern, 1 review
 #> Items with missing responses: 0 | Constant: 0 | All missing: 0
 #> Items in correlation diagnostics: 5
 #> 
@@ -234,7 +234,7 @@ summary(ef)
 #> 
 #> Flagged
 #>   - EF4 (Review): `EF4` has a corrected item-rest correlation of r = .23
-#>     (n = 400), below the teaching reference of .30.
+#>     (n = 400), below the review reference .30.
 #> 
 #> Flags are review aids, not decisions to keep or delete an item.
 #> 
@@ -283,17 +283,17 @@ summary(efa)
 #> 
 #> Flagged
 #>   - EF3 (Concern): The primary loading, 0.37 in absolute value, is below the
-#>     0.40 teaching reference. The communality, .17, is below the .40 teaching
-#>     reference.
+#>     review reference 0.40. The communality, .17, is below the review reference
+#>     .40.
 #>   - EF4 (Concern): The primary loading, 0.28 in absolute value, is below the
-#>     0.40 teaching reference. The communality, .08, is below the .40 teaching
-#>     reference.
-#>   - EF6, TF3 (Review): The communality, .35, is below the .40 teaching
-#>     reference.
-#>   - TF2, TF6 (Review): The communality, .37, is below the .40 teaching
-#>     reference.
+#>     review reference 0.40. The communality, .08, is below the review reference
+#>     .40.
+#>   - EF6, TF3 (Review): The communality, .35, is below the review reference
+#>     .40.
+#>   - TF2, TF6 (Review): The communality, .37, is below the review reference
+#>     .40.
 #>   - TF4 (Review): The secondary loading, 0.32 in absolute value, is at or
-#>     above the 0.30 cross-loading reference.
+#>     above the cross-loading review reference 0.30.
 #> 
 #> Factor correlations
 #>   Factor 1  Factor 2    r
@@ -338,7 +338,7 @@ cfa
 #> <nomo_cfa> Confirmatory factor analysis
 #> Cases: 400 | Estimator: ML | Converged: yes
 #> Fit: CFI .941 | TLI 0.922 | RMSEA 0.058 | SRMR 0.056
-#> Loadings: 10 | Flags: 4 review, 0 concern
+#> Loadings: 10 | Flags: 0 concern, 4 review
 #> No parameter was freed and no model was refit automatically.
 #> 
 #> ML = maximum likelihood; CFI = comparative fit index; TLI = Tucker-Lewis

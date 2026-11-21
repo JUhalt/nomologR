@@ -110,7 +110,7 @@ scr
 #> Items with missing responses: 2 | Constant: 0 | All missing: 0
 #> Items in correlation diagnostics: 10 | Item-rest correlations: 10
 #> Response concentration flags: 0 | Near-zero variance: 0
-#> Decision log: 4 entries | Flagged: 1 review, 0 concern
+#> Decision log: 4 entries | Flagged: 0 concern, 1 review
 #> No rows or items were removed or modified.
 #> 
 #> See summary(x) for each item's review and nomo_table(x, "decision_log") for
@@ -213,14 +213,14 @@ help page lists its references.
 
 ## Where nomologR is heading
 
-The next release, `v1.0.0`, is planned together with
+`nomologR` has a partner package,
 [`contentvalidR`](https://github.com/JUhalt/contentvalidR), which covers
-the content-review stage before this package’s. At 1.0.0 both packages’
-interfaces become stable, and the handoff between them becomes a
-supported contract. Larger extensions, such as IRT, multiple imputation,
-and formative models, are candidates for later 1.x releases. See the
-[roadmap](https://github.com/JUhalt/nomologR/blob/master/ROADMAP.md) and
-the [v1.0.0 milestone](https://github.com/JUhalt/nomologR/milestone/5).
+the content-review stage before this package’s. From 1.0.0, the
+interfaces of both packages are stable, and the handoff between them is
+a supported contract. Larger extensions, such as IRT, multiple
+imputation, and formative models, are candidates for 1.x releases. See
+the [roadmap](https://github.com/JUhalt/nomologR/blob/master/ROADMAP.md)
+and the [open issues](https://github.com/JUhalt/nomologR/issues).
 
 ## Citing nomologR
 

@@ -87,7 +87,8 @@ language. No cell reads PASS or FAIL, and fit indices are not labeled
 good or poor.
 
 **Notes say what the table shows.** The general note defines each
-abbreviation, gives the estimator and the number of cases analyzed, and
+abbreviation, gives the estimator and the number of cases analyzed, says
+when full-information maximum likelihood handled missing values, and
 says when the chi-square is a scaled test statistic and the fit indices
 are robust or scaled values. For a network's hypotheses it also defines
 each evidence label the table shows, such as "Concordant", and each
@@ -104,7 +105,10 @@ prediction is judged on, and the estimates on another scale than the
 rest. A correlation the model fixes, such as the zero correlations of a
 bifactor model, is not tabled as an estimate. Degrees of freedom that
 are not whole, as for a mean- and variance-adjusted test, are given to
-two decimals.
+two decimals. When the solution did not pass lavaan's admissibility
+check, as with a negative variance estimate, the note of a CFA,
+reliability, or validity table says so; its values are shown as
+estimated.
 
 **Discriminant evidence without the Fornell-Larcker matrix.** For a
 `nomo_validity` result, the `"discriminant"` table gives each pair of
@@ -225,9 +229,9 @@ nomo_apa_table(nomo_reliability(cfa), number = 3)
 #> textual    .89  .88
 #> speed      .69  .69
 #> -------------------
-#> Note. ω = coefficient omega; α = coefficient alpha. Coefficient alpha assumes
-#> equal loadings and is reported alongside omega for comparison with published
-#> work.
+#> Note. ω = coefficient omega; α = coefficient alpha. Estimated with maximum
+#> likelihood (ML); N = 301. Coefficient alpha assumes equal loadings and is
+#> reported alongside omega for comparison with published work.
 #> 
 #> See x$body for the cells and knitr::knit_print(x) for the Markdown a knitted
 #> document renders.

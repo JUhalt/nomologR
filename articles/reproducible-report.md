@@ -193,9 +193,10 @@ nomo_apa_table(run$results$reliability, number = 3)
 | Agency      | .85 | .85 |
 | Persistence | .82 | .82 |
 
-*Note.* ω = coefficient omega; α = coefficient alpha. Coefficient alpha
-assumes equal loadings and is reported alongside omega for comparison
-with published work.
+*Note.* ω = coefficient omega; α = coefficient alpha. Estimated with
+maximum likelihood (ML); *N* = 800. Coefficient alpha assumes equal
+loadings and is reported alongside omega for comparison with published
+work.
 
 ``` r
 
@@ -215,7 +216,8 @@ nomo_apa_table(run$results$validity, "convergent", number = 4)
 (Fornell & Larcker, 1981), the average proportion of indicator variance
 the construct explains. The review reference is .50; a value below it
 prompts a look at the loadings and content coverage. AVE is convergent
-evidence and is not a reliability coefficient.
+evidence and is not a reliability coefficient. Estimated with maximum
+likelihood (ML); *N* = 800.
 
 ``` r
 
@@ -235,10 +237,11 @@ CI = confidence interval, whose upper limit shows how high the
 correlation plausibly is (Rönkkö & Cho, 2022). HTMT2 =
 heterotrait-monotrait ratio based on geometric means, suited to
 indicators with unequal loadings (Roemer et al., 2021). HTMT =
-heterotrait-monotrait ratio (Henseler et al., 2015). The review
-reference for the ratios is 0.85. A ratio below it adds evidence that
-the constructs are empirically distinct; it does not by itself establish
-discriminant validity.
+heterotrait-monotrait ratio (Henseler et al., 2015). Estimated with
+maximum likelihood (ML); *N* = 800. The review reference for the ratios
+is 0.85. A ratio below it adds evidence that the constructs are
+empirically distinct; it does not by itself establish discriminant
+validity.
 
 ``` r
 

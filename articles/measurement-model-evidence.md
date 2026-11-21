@@ -91,7 +91,7 @@ summary(rel)
     ## assumption-dependent. Reliability contributes score-precision evidence, not
     ## construct validity.
     ## 
-    ## See x$decision_log for the reasoning behind each coefficient.
+    ## See nomo_table(x, "decision_log") for the reasoning behind each coefficient.
 
 ``` r
 
@@ -125,8 +125,8 @@ summary(val)
     ## and HTMT-family statistics address construct separation. These are
     ## complementary questions, not interchangeable pass/fail tests.
     ## 
-    ## See nomo_table(x, "discriminant") for every value and x$decision_log for the
-    ## reasoning behind each flag.
+    ## See nomo_table(x, "discriminant") for every value and
+    ## nomo_table(x, "decision_log") for the reasoning behind each flag.
 
 The figures also avoid duplication. Item-level loading evidence belongs
 to the CFA; reliability gets a coefficient plot; convergent validity
@@ -241,7 +241,7 @@ summary(weak_rel)
     ## assumption-dependent. Reliability contributes score-precision evidence, not
     ## construct validity.
     ## 
-    ## See x$decision_log for the reasoning behind each coefficient.
+    ## See nomo_table(x, "decision_log") for the reasoning behind each coefficient.
 
 ``` r
 
@@ -250,7 +250,7 @@ summary(weak_val)
 
     ## <nomo_validity summary> Convergent and discriminant evidence
     ## Constructs: 1 | AVE reference: .50 | HTMT reference: 0.85
-    ## Convergent flags: 1 review, 0 concern (1 construct)
+    ## Convergent flags: 0 concern, 1 review (1 construct)
     ## Separation flags: not applicable (one construct)
     ## 
     ## Convergent evidence by construct
@@ -276,9 +276,9 @@ summary(weak_val)
     ##   - W5 (Review): Standardized loading 0.34 is below the review reference 0.50
     ##     in absolute value; inspect item content, precision, and model
     ##     specification.
-    ##   - Weak (Review): AVE (.11) is below the configured convergent-evidence
-    ##     reference (.50). Inspect standardized loadings, indicator-specific error,
-    ##     and content coverage; do not automatically delete items.
+    ##   - Weak (Review): AVE .11 is below the review reference .50. Inspect
+    ##     standardized loadings, indicator-specific error, and content coverage; do
+    ##     not automatically delete items.
     ## 
     ## What these columns mean
     ##   AVE -- Average variance extracted, the mean share of its indicators'
@@ -292,8 +292,8 @@ summary(weak_val)
     ## and HTMT-family statistics address construct separation. These are
     ## complementary questions, not interchangeable pass/fail tests.
     ## 
-    ## See nomo_table(x, "discriminant") for every value and x$decision_log for the
-    ## reasoning behind each flag.
+    ## See nomo_table(x, "discriminant") for every value and
+    ## nomo_table(x, "decision_log") for the reasoning behind each flag.
 
 This is why `nomologR` does not collapse measurement quality into a
 single global-fit verdict. Weak standardized loadings, low AVE, and weak
@@ -351,7 +351,7 @@ summary(overlap_rel)
     ## assumption-dependent. Reliability contributes score-precision evidence, not
     ## construct validity.
     ## 
-    ## See x$decision_log for the reasoning behind each coefficient.
+    ## See nomo_table(x, "decision_log") for the reasoning behind each coefficient.
 
 ``` r
 
@@ -361,7 +361,7 @@ summary(overlap_val)
     ## <nomo_validity summary> Convergent and discriminant evidence
     ## Constructs: 2 | AVE reference: .50 | HTMT reference: 0.85
     ## Convergent flags: none (2 constructs)
-    ## Separation flags: 1 review, 0 concern (1 pair)
+    ## Separation flags: 0 concern, 1 review (1 pair)
     ## 
     ## Convergent evidence by construct
     ##   Construct  AVE  Min |loading|  Median |loading|  Loadings flagged
@@ -396,8 +396,8 @@ summary(overlap_val)
     ## and HTMT-family statistics address construct separation. These are
     ## complementary questions, not interchangeable pass/fail tests.
     ## 
-    ## See nomo_table(x, "discriminant") for every value and x$decision_log for the
-    ## reasoning behind each flag.
+    ## See nomo_table(x, "discriminant") for every value and
+    ## nomo_table(x, "decision_log") for the reasoning behind each flag.
 
 Here, strong omega and AVE do not erase a high latent correlation or
 HTMT2 value. The package therefore recommends investigating theoretical
@@ -473,7 +473,7 @@ summary(ordinal_rel)
     ## assumption-dependent. Reliability contributes score-precision evidence, not
     ## construct validity.
     ## 
-    ## See x$decision_log for the reasoning behind each coefficient.
+    ## See nomo_table(x, "decision_log") for the reasoning behind each coefficient.
 
 Observed-scale omega is available for the practical ordinal composite.
 Observed-scale alpha is deliberately reported as unavailable in this

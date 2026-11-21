@@ -315,7 +315,7 @@ out$decision_log
 scr <- nomo_screen(nomo_demo_continuous)
 summary(scr)
 #> <nomo_screen summary> Item and data audit
-#> Cases: 500 | Items: 10 | Item flags: 1 review, 0 concern
+#> Cases: 500 | Items: 10 | Item flags: 0 concern, 1 review
 #> Items with missing responses: 2 | Constant: 0 | All missing: 0
 #> Items in correlation diagnostics: 10
 #> 
@@ -336,7 +336,7 @@ summary(scr)
 #> 
 #> Flagged
 #>   - b5 (Review): `b5` has a corrected item-rest correlation of r = .28
-#>     (n = 473), below the teaching reference of .30.
+#>     (n = 473), below the review reference .30.
 #> 
 #> Flags are review aids, not decisions to keep or delete an item.
 #> 

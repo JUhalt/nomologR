@@ -62,7 +62,7 @@ when you *do* know what is true.
 scr <- nomo_screen(nomo_demo_continuous)
 summary(scr)
 #> <nomo_screen summary> Item and data audit
-#> Cases: 500 | Items: 10 | Item flags: 1 review, 0 concern
+#> Cases: 500 | Items: 10 | Item flags: 0 concern, 1 review
 #> Items with missing responses: 2 | Constant: 0 | All missing: 0
 #> Items in correlation diagnostics: 10
 #> 
@@ -83,7 +83,7 @@ summary(scr)
 #> 
 #> Flagged
 #>   - b5 (Review): `b5` has a corrected item-rest correlation of r = .28
-#>     (n = 473), below the teaching reference of .30.
+#>     (n = 473), below the review reference .30.
 #> 
 #> Flags are review aids, not decisions to keep or delete an item.
 #> 
@@ -162,7 +162,7 @@ careful
 #> Synonym: 36
 #>   Cases are flagged, never removed. Indices disagree by design; see the
 #>   decision log.
-#> Decision log: 43 entries | Flagged: 16 review, 0 concern
+#> Decision log: 43 entries | Flagged: 0 concern, 16 review
 #> No rows or items were removed or modified.
 #> 
 #> See summary(x) for each item's review, nomo_table(x, "decision_log") for every
@@ -252,8 +252,9 @@ summary(fac)
 #> 
 #> Abbreviations
 #>   MAP -- Minimum average partial criterion (Velicer). TR2, the original,
-#>       averages squared partial correlations; TR4, the revised, averages fourth
-#>       powers.
+#>       averages squared partial correlations; TR4, the revised, is the trace of
+#>       the fourth power of the partial-correlation matrix, less the number of
+#>       items p, over p(p - 1), and can exceed 1.
 #>   KMO -- Kaiser-Meyer-Olkin measure of sampling adequacy.
 #>   EKC -- Empirical Kaiser criterion.
 #> 
@@ -328,11 +329,11 @@ summary(efa)
 #> 
 #> Flagged
 #>   - b5 (Concern): The primary loading, 0.33 in absolute value, is below the
-#>     0.40 teaching reference. The communality, .12, is below the .40 teaching
-#>     reference.
+#>     review reference 0.40. The communality, .12, is below the review reference
+#>     .40.
 #>   - a5 (Review): The secondary loading, 0.34 in absolute value, is at or above
-#>     the 0.30 cross-loading reference.
-#>   - b4 (Review): The communality, .3997, is below the .40 teaching reference.
+#>     the cross-loading review reference 0.30.
+#>   - b4 (Review): The communality, .3997, is below the review reference .40.
 #> 
 #> Factor correlations
 #>   Factor 1  Factor 2    r

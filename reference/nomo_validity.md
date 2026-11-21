@@ -207,7 +207,7 @@ val <- nomo_validity(cfa)
 summary(val)
 #> <nomo_validity summary> Convergent and discriminant evidence
 #> Constructs: 3 | AVE reference: .50 | HTMT reference: 0.85
-#> Convergent flags: 2 review, 0 concern (3 constructs)
+#> Convergent flags: 0 concern, 2 review (3 constructs)
 #> Separation flags: none (3 pairs)
 #> 
 #> Convergent evidence by construct
@@ -226,12 +226,12 @@ summary(val)
 #>   - x2 (Review): Standardized loading 0.42 is below the review reference 0.50
 #>     in absolute value; inspect item content, precision, and model
 #>     specification.
-#>   - visual (Review): AVE (.37) is below the configured convergent-evidence
-#>     reference (.50). Inspect standardized loadings, indicator-specific error,
-#>     and content coverage; do not automatically delete items.
-#>   - speed (Review): AVE (.42) is below the configured convergent-evidence
-#>     reference (.50). Inspect standardized loadings, indicator-specific error,
-#>     and content coverage; do not automatically delete items.
+#>   - visual (Review): AVE .37 is below the review reference .50. Inspect
+#>     standardized loadings, indicator-specific error, and content coverage; do
+#>     not automatically delete items.
+#>   - speed (Review): AVE .42 is below the review reference .50. Inspect
+#>     standardized loadings, indicator-specific error, and content coverage; do
+#>     not automatically delete items.
 #> 
 #> What these columns mean
 #>   AVE -- Average variance extracted, the mean share of its indicators'
@@ -247,17 +247,17 @@ summary(val)
 #> and HTMT-family statistics address construct separation. These are
 #> complementary questions, not interchangeable pass/fail tests.
 #> 
-#> See nomo_table(x, "discriminant") for every value and x$decision_log for the
-#> reasoning behind each flag.
+#> See nomo_table(x, "discriminant") for every value and
+#> nomo_table(x, "decision_log") for the reasoning behind each flag.
 val$decision_log
 #> # A tibble: 12 × 10
 #>    stage    object  metric   value reference severity observation recommendation
 #>    <chr>    <chr>   <chr>    <dbl> <chr>     <chr>    <chr>       <chr>         
 #>  1 validity measur… evide…  NA     Fornell … info     "Convergen… Interpret num…
 #>  2 validity x2      stand…   0.424 configur… review   "Standardi… Inspect item …
-#>  3 validity visual  AVE      0.371 configur… review   "AVE (.37)… Inspect stand…
-#>  4 validity textual AVE      0.721 configur… info     "AVE (.72)… Carry AVE for…
-#>  5 validity speed   AVE      0.424 configur… review   "AVE (.42)… Inspect stand…
+#>  3 validity visual  AVE      0.371 configur… review   "AVE .37 i… Inspect stand…
+#>  4 validity textual AVE      0.721 configur… info     "AVE .72 i… Carry AVE for…
+#>  5 validity speed   AVE      0.424 configur… review   "AVE .42 i… Inspect stand…
 #>  6 validity textua… HTMT2    0.280 configur… info     "HTMT2 (0.… Interpret thi…
 #>  7 validity visual… HTMT2    0.387 configur… info     "HTMT2 (0.… Interpret thi…
 #>  8 validity visual… HTMT2    0.384 configur… info     "HTMT2 (0.… Interpret thi…

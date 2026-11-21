@@ -262,11 +262,11 @@ summary(out)
 #> 
 #> Largest residual correlations
 #>   Item 1  Item 2  Residual
-#>   x7      x2         -0.19
-#>   x5      x3         -0.15
-#>   x9      x1          0.15
-#>   x9      x3          0.15
-#>   x7      x1         -0.14
+#>   x7      x2          -.19
+#>   x5      x3          -.15
+#>   x9      x1           .15
+#>   x9      x3           .15
+#>   x7      x1          -.14
 #> 
 #> Modification indices (diagnostic only)
 #>   Parameter         MI    EPC  Std. EPC
@@ -285,9 +285,9 @@ summary(out)
 #>     inspect global and localized model strain.
 #>   - RMSEA (Review): The value, 0.092, is above the teaching reference of
 #>     0.060; inspect global and localized model strain.
-#>   - x2 on visual (Review): Absolute standardized loading is below the
-#>     configured teaching reference of 0.50; inspect item content, precision,
-#>     and model specification.
+#>   - x2 on visual (Review): Standardized loading 0.42 is below the review
+#>     reference 0.50 in absolute value; inspect item content, precision, and
+#>     model specification.
 #> 
 #> What these columns mean
 #>   ML -- Maximum likelihood.

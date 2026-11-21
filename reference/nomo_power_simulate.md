@@ -200,8 +200,8 @@ pw
 #> 
 #> By sample size
 #>     N  Meets  Converged  Improper  Min power  Max bias  Max SE bias  Coverage
-#>   100  no        100.0%      0.0%        .72      6.9%        10.7%  .92 to .97
-#>   200  no        100.0%      0.0%        .84      7.0%        12.2%  .90 to .97
+#>   100  No        100.0%      0.0%        .72      6.9%        10.7%  .92 to .97
+#>   200  No        100.0%      0.0%        .84      7.0%        12.2%  .90 to .97
 #>   No simulated N meets the references; try larger ones.
 #> 
 #> What these columns mean

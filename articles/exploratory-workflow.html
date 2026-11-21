@@ -154,7 +154,7 @@ when you <em>do</em> know what is true.</p>
 <code class="sourceCode R"><span><span class="va">scr</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nomo_screen.html">nomo_screen</a></span><span class="op">(</span><span class="va">nomo_demo_continuous</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">scr</span><span class="op">)</span></span>
 <span><span class="co">#&gt; &lt;nomo_screen summary&gt; Item and data audit</span></span>
-<span><span class="co">#&gt; Cases: 500 | Items: 10 | Item flags: 1 review, 0 concern</span></span>
+<span><span class="co">#&gt; Cases: 500 | Items: 10 | Item flags: 0 concern, 1 review</span></span>
 <span><span class="co">#&gt; Items with missing responses: 2 | Constant: 0 | All missing: 0</span></span>
 <span><span class="co">#&gt; Items in correlation diagnostics: 10</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -175,7 +175,7 @@ when you <em>do</em> know what is true.</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Flagged</span></span>
 <span><span class="co">#&gt;   - b5 (Review): `b5` has a corrected item-rest correlation of r = .28</span></span>
-<span><span class="co">#&gt;     (n = 473), below the teaching reference of .30.</span></span>
+<span><span class="co">#&gt;     (n = 473), below the review reference .30.</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Flags are review aids, not decisions to keep or delete an item.</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -242,7 +242,7 @@ is wrong whenever a category went unused:</p>
 <span><span class="co">#&gt; Synonym: 36</span></span>
 <span><span class="co">#&gt;   Cases are flagged, never removed. Indices disagree by design; see the</span></span>
 <span><span class="co">#&gt;   decision log.</span></span>
-<span><span class="co">#&gt; Decision log: 43 entries | Flagged: 16 review, 0 concern</span></span>
+<span><span class="co">#&gt; Decision log: 43 entries | Flagged: 0 concern, 16 review</span></span>
 <span><span class="co">#&gt; No rows or items were removed or modified.</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; See summary(x) for each item's review, nomo_table(x, "decision_log") for every</span></span>
@@ -327,8 +327,9 @@ view.</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Abbreviations</span></span>
 <span><span class="co">#&gt;   MAP -- Minimum average partial criterion (Velicer). TR2, the original,</span></span>
-<span><span class="co">#&gt;       averages squared partial correlations; TR4, the revised, averages fourth</span></span>
-<span><span class="co">#&gt;       powers.</span></span>
+<span><span class="co">#&gt;       averages squared partial correlations; TR4, the revised, is the trace of</span></span>
+<span><span class="co">#&gt;       the fourth power of the partial-correlation matrix, less the number of</span></span>
+<span><span class="co">#&gt;       items p, over p(p - 1), and can exceed 1.</span></span>
 <span><span class="co">#&gt;   KMO -- Kaiser-Meyer-Olkin measure of sampling adequacy.</span></span>
 <span><span class="co">#&gt;   EKC -- Empirical Kaiser criterion.</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -399,11 +400,11 @@ can recognize it in published work without relying on it.</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Flagged</span></span>
 <span><span class="co">#&gt;   - b5 (Concern): The primary loading, 0.33 in absolute value, is below the</span></span>
-<span><span class="co">#&gt;     0.40 teaching reference. The communality, .12, is below the .40 teaching</span></span>
-<span><span class="co">#&gt;     reference.</span></span>
+<span><span class="co">#&gt;     review reference 0.40. The communality, .12, is below the review reference</span></span>
+<span><span class="co">#&gt;     .40.</span></span>
 <span><span class="co">#&gt;   - a5 (Review): The secondary loading, 0.34 in absolute value, is at or above</span></span>
-<span><span class="co">#&gt;     the 0.30 cross-loading reference.</span></span>
-<span><span class="co">#&gt;   - b4 (Review): The communality, .3997, is below the .40 teaching reference.</span></span>
+<span><span class="co">#&gt;     the cross-loading review reference 0.30.</span></span>
+<span><span class="co">#&gt;   - b4 (Review): The communality, .3997, is below the review reference .40.</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Factor correlations</span></span>
 <span><span class="co">#&gt;   Factor 1  Factor 2    r</span></span>
