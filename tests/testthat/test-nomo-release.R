@@ -117,10 +117,11 @@ workflow_text <- function(name) {
   paste(readLines(path, warn = FALSE, encoding = "UTF-8"), collapse = "\n")
 }
 
-test_that("the coverage job fails when a line in R/ is not covered (#53)", {
+test_that("the coverage workflow keeps the settings of its line gate (#53)", {
   # The merge rule is 100% in every file of R/ under covr 4.0.0 or later. The
   # job reads covr's lines, each at its smallest count, not a rounded
-  # percentage, and stops when one was never run.
+  # percentage, and stops when one was never run. This test holds the
+  # workflow's text to those settings; it does not run the gate.
   workflow <- workflow_text("test-coverage.yaml")
   expect_match(workflow, "extra-packages: covr@>=4.0.0", fixed = TRUE)
   expect_match(workflow, "if (utils::packageVersion(\"covr\") < \"4.0.0\") {", fixed = TRUE)
