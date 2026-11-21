@@ -559,8 +559,10 @@ print.nomo_network <- function(x, ...) {
     )),
     # Every flag the object holds, so print() never shows fewer than there are:
     # the hypothesis tables show the concordance and replication flags by
-    # status, and summary() explains each (#145, out-9).
-    paste0("Total flags: ", nomo_present_flag_counts(x$decision_log$severity))
+    # status, and summary() explains each (#145, out-9). None reads "no
+    # flags", as the two streams before it do.
+    paste0("Total flags: ", sub("^none$", "no flags",
+                                nomo_present_flag_counts(x$decision_log$severity)))
   ))
   nomo_network_present_single(
     x[["single_indicators"]], x[["single_indicator_sensitivity"]]
@@ -699,13 +701,16 @@ print.summary_nomo_network <- function(x, ...) {
 
   nomo_present_section("Measurement context")
   mc <- x$measurement_context$summary[1L, , drop = FALSE]
+  # The context counts only the warnings raised while the model was fitted;
+  # the flagged engine warnings also list those raised while its fit measures
+  # were read (#145).
   nomo_present_facts(c(
     paste0("Status: ", nomo_network_stream_status(mc$attention[[1L]])),
     sprintf("Constructs: %s", format(mc$latent_constructs, trim = TRUE)),
     sprintf("Loading flags: %s", format(mc$loading_review_flags, trim = TRUE)),
     sprintf("Negative variances: %s", format(mc$negative_variance_flags, trim = TRUE)),
     sprintf("Fit flags: %s", format(mc$global_fit_review_flags, trim = TRUE)),
-    sprintf("Engine warnings: %s", format(mc$engine_warning_count, trim = TRUE))
+    sprintf("Estimation warnings: %s", format(mc$engine_warning_count, trim = TRUE))
   ), indent = 2L)
   nomo_present_text(mc$observation, indent = 2L)
 

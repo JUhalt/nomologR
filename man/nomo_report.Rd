@@ -35,7 +35,7 @@ those plots are available.}
 \item{include_session}{Logical; include full \code{sessionInfo()} output.}
 
 \item{max_table_rows}{Positive integer used for ordinary display tables.
-The final evidence-trace appendix is not truncated.}
+The full evidence trace, in the reproducibility section, is not truncated.}
 
 \item{overwrite}{Logical; replace an existing \code{file}.}
 
@@ -56,9 +56,10 @@ The normalized report file path, invisibly.
 \code{nomo_report()} renders a self-contained HTML document from a \code{nomo_run}
 object. The report archives researcher inputs, sample roles, item and factor
 evidence, EFA/CFA results, reliability, convergent/discriminant evidence,
-optional invariance and nomological-network results, researcher decisions,
-deviations and post hoc decisions, method citations, an evidence trace, and
-session information.
+optional scores, invariance, nomological-network, and missing-data
+sensitivity results, researcher decisions, the revision lineage, deviations
+and post hoc decisions, method citations, an evidence trace, and session
+information.
 }
 \details{
 The report is a presentation and provenance layer. It does not refit models,
@@ -82,10 +83,10 @@ that file's directory when it does not exist; a directory it created is
 removed again if the render stops before the report is written. The
 working files of the render (the copy of the template, the intermediate
 files, and the figures) are written to a temporary directory under
-\code{\link[=tempdir]{tempdir()}} and removed when the call returns, whether or not it succeeds. The working directory, the
-options, and the graphics device are left as they were. The report is
-rendered in an environment of its own, so objects in the global environment
-are neither read nor changed.
+\code{\link[=tempdir]{tempdir()}} and removed when the call returns, whether or not it succeeds.
+The working directory, the options, and the graphics device are left as they
+were. The report is rendered in an environment of its own, so objects in the
+global environment are neither read nor changed.
 
 \code{nomo_report()} behaves the same from the console, a script, or a chunk
 inside another R Markdown or Quarto document, such as a thesis chapter.

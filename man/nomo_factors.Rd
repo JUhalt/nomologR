@@ -113,6 +113,9 @@ item pair, the effective sample size under pairwise deletion. It equals
 \item \code{correlation_method} and \code{correlation_matrix}: the correlations analyzed.
 \item \code{kmo} and \code{bartlett}: sampling-adequacy evidence.
 \item \code{parallel}, \code{map}, and \code{scree}: each criterion's result.
+\code{parallel$sensitivity} has one row per parallel-analysis rule: \code{rule}
+(\code{"percentile"}, \code{"mean"}, and \code{"crawford"}), \code{n_factors}, the count
+that rule suggests, and \code{selected}, which is \code{TRUE} for \code{parallel_rule}.
 \item \code{criterion_status}: which criteria ran, and why any did not.
 \item \code{evidence}, \code{family_evidence}, and \code{family_concordance}: the suggested
 factor counts by method and by family of related methods.

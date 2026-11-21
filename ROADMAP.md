@@ -197,7 +197,7 @@ workstreams opened during the cycle. Certification is recorded in
 - [x] [#70](https://github.com/JUhalt/nomologR/issues/70) Release certification and R-universe publication.
 
 ***
-# v0.3.0 — First CRAN Release
+# v0.3.0 — First CRAN Submission
 
 **Status:** Released September 26, 2026
 ([v0.3.0 milestone](https://github.com/JUhalt/nomologR/milestone/3)), with scope
@@ -209,7 +209,7 @@ that submission complete, stable, and well tested. Certification is recorded in
 submission on 2026-10-08 with two requests, recorded in
 [#39](https://github.com/JUhalt/nomologR/issues/39).
 
-- [x] [#39](https://github.com/JUhalt/nomologR/issues/39) First CRAN submission; see [Distribution](#distribution--r-universe-and-cran-from-v030) below. Spelling, URLs, build exclusions, and test time under CRAN conditions were done for 0.3.0. CRAN returned it with two requests, both since met, and #39 was closed on 2026-11-20. The resubmission is [#175](https://github.com/JUhalt/nomologR/issues/175), listed under v1.0.0.
+- [x] [#39](https://github.com/JUhalt/nomologR/issues/39) First CRAN submission; see [Distribution](#distribution--r-universe-and-cran-after-100) below. Spelling, URLs, build exclusions, and test time under CRAN conditions were done for 0.3.0. CRAN returned it with two requests, both since met, and #39 was closed on 2026-11-20. The resubmission is [#175](https://github.com/JUhalt/nomologR/issues/175), listed under v1.0.0.
 - [x] [#46](https://github.com/JUhalt/nomologR/issues/46) A `contentvalidR` handoff reader. It is tested against stored producer fixtures from contentvalidR 0.6.0 and 0.7.0, and neither package depends on the other.
 - [x] [#72](https://github.com/JUhalt/nomologR/issues/72) Restore full test coverage after v0.2.1. Reviewing each uncovered line found four defects, now fixed.
 - [x] [#73](https://github.com/JUhalt/nomologR/issues/73) The guided workflow and report carry scores, careless-responding screens, missing-data sensitivity, and APA tables.
@@ -321,7 +321,7 @@ interactions, and multitrait-multimethod models to this list.
 - [ ] Multitrait-multimethod models.
 
 ***
-# Distribution — R-universe, and CRAN from v0.3.0
+# Distribution — R-universe, and CRAN after 1.0.0
 
 - Stable releases are published as GitHub releases. [R-universe](https://juhalt.r-universe.dev) builds each release, usually within a few hours.
 - `v0.2.0` certification ([#37](https://github.com/JUhalt/nomologR/issues/37)) includes a CRAN-readiness gate: `R CMD check --as-cran` clean on win-builder, the macOS builder, and R-hub; long-running tests skipped on CRAN; fast examples and vignettes.

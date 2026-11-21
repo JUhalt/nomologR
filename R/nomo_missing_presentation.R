@@ -106,7 +106,7 @@ nomo_missing_present_differences <- function(x, title, limit = Inf, digits = NUL
   compared <- compared[order(-abs(compared$difference_in_se)), , drop = FALSE]
   shown <- utils::head(compared, limit)
   shown$strategy_label <- nomo_missing_table_label(shown$strategy, x$strategies)
-  kinds <- nomo_missing_estimate_kind(shown$type)
+  kinds <- nomo_missing_estimate_kind(shown$type, shown$parameter, nomo_missing_hypotheses(x))
   by_kind <- function(v, reference = NULL) {
     vapply(seq_along(v), function(i) {
       nomo_present_stat(v[[i]], kinds[[i]], digits = digits,
@@ -226,6 +226,9 @@ print.nomo_missing <- function(x, digits = NULL, ...) {
 summary.nomo_missing <- function(object, ...) {
   out <- object[c("object", "reference", "fitted_as", "ordered", "pattern", "variables",
                   "strategies", "fit", "estimates", "reliability", "decision_log")]
+  # A network's hypotheses, which say which estimates are standardized
+  # associations, so that each is shown in its kind, as in print().
+  out$hypothesis_evidence <- nomo_missing_hypotheses(object)
   class(out) <- c("summary_nomo_missing", "list")
   out
 }

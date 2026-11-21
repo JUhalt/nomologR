@@ -1542,7 +1542,26 @@ nomo_network_fit_once <- function(model_fitted,
     error = function(e) tibble::tibble()
   )
 
-  fit_evidence <- nomo_network_fit_evidence(fit)
+  # Warnings lavaan raises while the fit measures of the model and of its
+  # measurement model are read, such as lavaan 0.7-3's "computation of robust
+  # CFI resulted in NA values" for a model with no degrees of freedom, are
+  # recorded with the result and in the decision log, as nomo_cfa() records
+  # them, rather than printed loose at the console. They concern an index the
+  # fit evidence then reports in another version or not at all, not the
+  # measurement model, so unlike a warning raised while the model is fitted
+  # they do not make the measurement context a review item (#145).
+  # fitMeasures() warns "NaNs produced" when the model has negative degrees of
+  # freedom, which the degrees-of-freedom entry reports.
+  fit_warnings <- character()
+  record_fit_warnings <- function(expr) {
+    withCallingHandlers(expr, warning = function(w) {
+      if (!identical(conditionMessage(w), "NaNs produced")) {
+        fit_warnings <<- unique(c(fit_warnings, conditionMessage(w)))
+      }
+      invokeRestart("muffleWarning")
+    })
+  }
+  fit_evidence <- record_fit_warnings(nomo_network_fit_evidence(fit))
 
   latent <- tryCatch(
     as.character(lavaan::lavNames(fit, type = "lv")),
@@ -1554,7 +1573,7 @@ nomo_network_fit_once <- function(model_fitted,
   # The measurement model alone is fitted for the samples reported, not for
   # the refits a sensitivity analysis makes.
   measurement <- if (isTRUE(measurement_fit) && converged) {
-    nomo_network_measurement_fit(fit, fit_args, fit_evidence)
+    record_fit_warnings(nomo_network_measurement_fit(fit, fit_args, fit_evidence))
   } else {
     list(
       status = "not_computed", fit_evidence = fit_evidence[0, , drop = FALSE],
@@ -1596,7 +1615,7 @@ nomo_network_fit_once <- function(model_fitted,
     data_n = nrow(data),
     n_used = n_used,
     converged = converged,
-    engine_warnings = engine_warnings,
+    engine_warnings = unique(c(engine_warnings, fit_warnings)),
     fit = fit,
     fit_evidence = fit_evidence,
     model_fit = model_fit,

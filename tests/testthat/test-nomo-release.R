@@ -79,7 +79,11 @@ test_that("cran-comments.md answers the review as the code and tests stand (#39)
   report <- release_text("R", "nomo_report.R")
   expect_match(report, "new.env(parent = baseenv())", fixed = TRUE)
   expect_match(comments, "(`new.env(parent = baseenv())`)", fixed = TRUE)
-  expect_false(grepl("globalenv()` appears|parent = globalenv()", comments))
+  # The answer this replaced said "`globalenv()` appears once" and gave the
+  # template's environment as `new.env(parent = globalenv())`. Both are
+  # matched as typed: in a regular expression "()" is an empty group.
+  expect_false(grepl("globalenv()` appears", comments, fixed = TRUE))
+  expect_false(grepl("parent = globalenv()", comments, fixed = TRUE))
   # One test of test-nomo-report.R renders to a relative path, in a working
   # directory under tempdir(), so the file must not say that none does.
   expect_false(grepl("relative path", comments, fixed = TRUE))
@@ -113,10 +117,11 @@ workflow_text <- function(name) {
   paste(readLines(path, warn = FALSE, encoding = "UTF-8"), collapse = "\n")
 }
 
-test_that("the coverage job fails when a line in R/ is not covered (#53)", {
+test_that("the coverage workflow keeps the settings of its line gate (#53)", {
   # The merge rule is 100% in every file of R/ under covr 4.0.0 or later. The
   # job reads covr's lines, each at its smallest count, not a rounded
-  # percentage, and stops when one was never run.
+  # percentage, and stops when one was never run. This test holds the
+  # workflow's text to those settings; it does not run the gate.
   workflow <- workflow_text("test-coverage.yaml")
   # pak resolves no version ranges, so the floor is enforced in R below.
   expect_match(workflow, "extra-packages: any::covr", fixed = TRUE)

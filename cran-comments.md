@@ -112,8 +112,9 @@ that was reviewed and are not repeated.
   `\donttest{}` follow a quick example that runs, and show slower uses: a
   Monte Carlo simulation, bootstrap intervals, ordered indicators with
   polychoric correlations, partial and longitudinal invariance, a model
-  comparison, a replication in split samples, and the later steps of a guided
-  workflow. Each is fully runnable, and all pass under `--run-donttest`.
+  comparison, a replication in split samples, a composite corrected for its
+  unreliability, and the later steps of a guided workflow. Each is fully
+  runnable, and all pass under `--run-donttest`.
 * Files. `nomo_report()` is the only function that writes a file outside
   `tempdir()`, and only when given a path: its `file` argument is required
   and has no default.

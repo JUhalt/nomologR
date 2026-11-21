@@ -1285,6 +1285,7 @@ generated from each release tag and stored with their checksums, and neither
 package depends on the other.
 
 For more, see:
+
 - `vignette("content-review")`, which carries one reviewed item set through
   the screen;
 - `contentvalidR`'s

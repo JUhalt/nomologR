@@ -325,7 +325,7 @@ emit_table(recipe, empty = "No component recipe is available.")
 screen <- nomologR:::nomo_report_component_list(run, "screen")
 
 if (!length(screen)) {
-  emit_note("The screening stage was not completed in this workflow.")
+  emit_note(nomologR:::nomo_report_stage_note(stage_status, "screen", "The screening stage"))
 } else {
   for (scope in names(screen)) {
     obj <- screen[[scope]]
@@ -369,7 +369,9 @@ if (!length(screen)) {
 factors <- nomologR:::nomo_report_component_list(run, "factors")
 
 if (!length(factors)) {
-  emit_note("Factor-retention evidence was not completed in this workflow.")
+  emit_note(nomologR:::nomo_report_stage_note(
+    stage_status, "factors", "Factor-retention evidence"
+  ))
 } else {
   for (scope in names(factors)) {
     obj <- factors[[scope]]
@@ -402,7 +404,7 @@ if (!length(factors)) {
 efa <- nomologR:::nomo_report_component_list(run, "efa")
 
 if (!length(efa)) {
-  emit_note("EFA was not completed in this workflow.")
+  emit_note(nomologR:::nomo_report_stage_note(stage_status, "efa", "EFA"))
 } else {
   for (scope in names(efa)) {
     obj <- efa[[scope]]
@@ -435,7 +437,7 @@ if (!length(efa)) {
 cfa_list <- nomologR:::nomo_report_component_list(run, "cfa")
 
 if (!length(cfa_list)) {
-  emit_note("CFA was not completed in this workflow.")
+  emit_note(nomologR:::nomo_report_stage_note(stage_status, "cfa", "CFA"))
 } else {
   cfa <- cfa_list[[1L]]
   emit_summary(cfa)
@@ -487,7 +489,9 @@ if (!length(cfa_list)) {
 rel_list <- nomologR:::nomo_report_component_list(run, "reliability")
 
 if (!length(rel_list)) {
-  emit_note("Reliability evidence was not completed in this workflow.")
+  emit_note(nomologR:::nomo_report_stage_note(
+    stage_status, "reliability", "Reliability evidence"
+  ))
 } else {
   rel <- rel_list[[1L]]
   emit_summary(rel)
@@ -513,7 +517,9 @@ if (!length(rel_list)) {
 val_list <- nomologR:::nomo_report_component_list(run, "validity")
 
 if (!length(val_list)) {
-  emit_note("Convergent/discriminant evidence was not completed in this workflow.")
+  emit_note(nomologR:::nomo_report_stage_note(
+    stage_status, "validity", "Convergent/discriminant evidence"
+  ))
 } else {
   val <- val_list[[1L]]
   emit_summary(val)

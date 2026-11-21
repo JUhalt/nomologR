@@ -288,7 +288,8 @@ nomo_report_format_numbers <- function(value, name, metric = NULL, reference = N
 # part of a name ("TR2", "HTMT2") or an exponent is not one, and a hyphen
 # between two numbers (".50-.75") is not a sign. A limit given in words, the
 # missing-data log's "Half a reference standard error", is the number it
-# names, .5 (#145).
+# names, .5 (#145). No other half is a limit: in the careless-responding
+# reference, "half the items" counts items.
 nomo_report_reference_numbers <- function(text) {
   number <- paste0(
     "(?<![A-Za-z0-9.^])-?(?:[0-9]+(?:\\.[0-9]+)?|\\.[0-9]+)",
@@ -297,7 +298,7 @@ nomo_report_reference_numbers <- function(text) {
   text <- as.character(text)
   text[is.na(text)] <- ""
   numbers <- lapply(regmatches(text, gregexpr(number, text, perl = TRUE)), as.numeric)
-  half <- grepl("\\bhalf\\b", text, ignore.case = TRUE, perl = TRUE)
+  half <- grepl("\\bhalf a\\b", text, ignore.case = TRUE, perl = TRUE)
   numbers[half] <- lapply(numbers[half], function(n) c(0.5, n))
   numbers
 }
@@ -391,9 +392,13 @@ nomo_report_display_table <- function(x, protected = character()) {
       value[is.na(value) | !nzchar(trimws(value)) | value == nomo_present_missing] <-
         nomo_report_blank
       # A logical value a log stored as text, such as the reference TRUE of a
-      # convergence row, reads as a logical column does (#145).
-      value[value %in% "TRUE"] <- "yes"
-      value[value %in% "FALSE"] <- "no"
+      # convergence row, reads as a logical column does (#145). A log stores
+      # such a value only in its reference column; other text, such as an item
+      # label or a rationale, is shown as written.
+      if (identical(name, "reference")) {
+        value[value %in% "TRUE"] <- "yes"
+        value[value %in% "FALSE"] <- "no"
+      }
     }
     value[is.na(value)] <- ""
     x[[j]] <- value
@@ -1093,24 +1098,14 @@ nomo_report_missing <- function(m) {
 }
 
 
-# Each compared estimate in its kind (#145), as the component's own tables
-# show it: a loading keeps its leading zero and a factor correlation drops it,
-# as print() of the missing-data result gives them, and a network hypothesis
-# drops it when it is a standardized association, as the network's hypotheses
-# table does. The hypotheses' scale and relation type are read from the
-# refitted network. A row whose type is not recorded is NA: its column's name
-# gives its kind.
+# Each compared estimate in its kind (#145), as print() of the missing-data
+# result gives it (nomo_missing_estimate_kind()): a loading keeps its leading
+# zero, and a factor correlation and a standardized association drop it. A
+# row whose type is not recorded is NA: its column's name gives its kind.
 nomo_report_missing_kinds <- function(m, compared) {
   type <- compared[["type"]]
   if (is.null(type)) return(rep(NA_character_, nrow(compared)))
-  kind <- nomo_missing_estimate_kind(type)
-  fit <- Find(function(f) is.data.frame(f[["hypothesis_evidence"]]), m[["fits"]])
-  he <- as.data.frame(fit[["hypothesis_evidence"]], stringsAsFactors = FALSE)
-  hypothesis <- type %in% "hypothesis" & compared$parameter %in% he$id &
-    all(c("scale", "relation_type") %in% names(he))
-  i <- match(compared$parameter[hypothesis], he$id)
-  kind[hypothesis] <- nomo_network_kind(he$scale[i], he$relation_type[i])
-  kind
+  nomo_missing_estimate_kind(type, compared$parameter, nomo_missing_hypotheses(m))
 }
 
 
@@ -1183,6 +1178,16 @@ nomo_report_run_table <- function(x, type) {
     out$values[out$values %in% "list()"] <- "defaults"
   }
   out
+}
+
+
+# The note for a stage the run holds no result of, by its status in the
+# stages table (#145): a stage the run never started, as every stage after a
+# pause, "was not reached"; one that started and stopped "was not completed".
+nomo_report_stage_note <- function(stage_status, stage, what) {
+  status <- stage_status[["status"]][stage_status[["stage"]] %in% stage]
+  started <- !identical(status, "not_started")
+  paste(what, if (started) "was not completed" else "was not reached", "in this workflow.")
 }
 
 
@@ -1268,7 +1273,9 @@ nomo_report_component_table <- function(obj,
 # The confidence level of the interval bounds a component table shows, for
 # its headings (#145): a reliability interval at the level it was bootstrapped
 # at, and lavaan's 95% intervals of loadings and latent correlations. The
-# network's are set with its other attributes.
+# network's are set with its other attributes. A reliability analysis that
+# asked for no interval (`ci = "none"`) has no level, so the note naming its
+# empty bound columns gives none.
 nomo_report_ci_levels <- function(obj, stage, type) {
   bounds <- function(prefix, level) {
     stats::setNames(rep(level, 2L), paste0(prefix, c("ci_lower", "ci_upper")))
@@ -1276,7 +1283,8 @@ nomo_report_ci_levels <- function(obj, stage, type) {
   switch(
     paste(stage, type),
     "cfa loadings" = bounds("", 0.95),
-    "reliability coefficients" = if (is.numeric(obj$ci_level)) {
+    "reliability coefficients" = if (is.numeric(obj$ci_level) &&
+                                       identical(obj$ci, "bootstrap")) {
       c(bounds("omega_", obj$ci_level), bounds("alpha_", obj$ci_level))
     },
     "validity discriminant" = bounds("latent_r_", 0.95),
@@ -1823,9 +1831,10 @@ nomo_report_title_yaml <- function(title) {
 #' `nomo_report()` renders a self-contained HTML document from a `nomo_run`
 #' object. The report archives researcher inputs, sample roles, item and factor
 #' evidence, EFA/CFA results, reliability, convergent/discriminant evidence,
-#' optional invariance and nomological-network results, researcher decisions,
-#' deviations and post hoc decisions, method citations, an evidence trace, and
-#' session information.
+#' optional scores, invariance, nomological-network, and missing-data
+#' sensitivity results, researcher decisions, the revision lineage, deviations
+#' and post hoc decisions, method citations, an evidence trace, and session
+#' information.
 #'
 #' The report is a presentation and provenance layer. It does not refit models,
 #' alter data, free parameters, remove items, or manufacture additional
@@ -1848,10 +1857,10 @@ nomo_report_title_yaml <- function(title) {
 #' removed again if the render stops before the report is written. The
 #' working files of the render (the copy of the template, the intermediate
 #' files, and the figures) are written to a temporary directory under
-#' [tempdir()] and removed when the call returns, whether or not it succeeds. The working directory, the
-#' options, and the graphics device are left as they were. The report is
-#' rendered in an environment of its own, so objects in the global environment
-#' are neither read nor changed.
+#' [tempdir()] and removed when the call returns, whether or not it succeeds.
+#' The working directory, the options, and the graphics device are left as they
+#' were. The report is rendered in an environment of its own, so objects in the
+#' global environment are neither read nor changed.
 #'
 #' `nomo_report()` behaves the same from the console, a script, or a chunk
 #' inside another R Markdown or Quarto document, such as a thesis chapter.
@@ -1874,7 +1883,7 @@ nomo_report_title_yaml <- function(title) {
 #'   those plots are available.
 #' @param include_session Logical; include full `sessionInfo()` output.
 #' @param max_table_rows Positive integer used for ordinary display tables.
-#'   The final evidence-trace appendix is not truncated.
+#'   The full evidence trace, in the reproducibility section, is not truncated.
 #' @param overwrite Logical; replace an existing `file`.
 #' @param quiet Logical passed to [rmarkdown::render()].
 #' @param apa_tables Logical; if `TRUE`, append a *Manuscript tables* appendix

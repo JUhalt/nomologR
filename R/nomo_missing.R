@@ -364,7 +364,8 @@ nomo_missing_run <- function(x, lavaan_fit, data, ordered, strategies, refit,
     estimates = estimates,
     reference = plan$reference,
     ordered = ordered,
-    kind = kind
+    kind = kind,
+    fits = fits
   )
   if (!identical(intended_reference, plan$reference)) {
     decision_log <- nomo_missing_reference_log(
@@ -792,7 +793,7 @@ nomo_missing_fit_table <- function(usable, fits, fit_evidence_of) {
 # Decision log -----------------------------------------------------------------
 
 nomo_missing_log <- function(pattern, strategies, estimates, reference, ordered,
-                             kind) {
+                             kind, fits = list()) {
   log <- nomo_log_new()
   s <- pattern$summary
   object <- if (identical(kind, "nomo_network")) "network" else "cfa"
@@ -905,7 +906,7 @@ nomo_missing_log <- function(pattern, strategies, estimates, reference, ordered,
   }
 
   log <- nomo_missing_difference_log(
-    log, estimates, strategies, reference, ref_label, object
+    log, estimates, strategies, reference, ref_label, object, fits
   )
 
   if (identical(kind, "nomo_network") && "concordance_changed" %in% names(estimates)) {
@@ -937,12 +938,30 @@ nomo_missing_log <- function(pattern, strategies, estimates, reference, ordered,
 nomo_missing_true <- function(x) !is.na(x) & x
 
 
-# The kind of nomo_present_stat() an estimate of each type takes: standardized
-# loadings keep their leading zero, factor correlations drop it, and a
-# hypothesis estimate, which can be a standardized regression coefficient
-# beyond 1, keeps it.
-nomo_missing_estimate_kind <- function(type) {
-  ifelse(type == "loading", "loading", ifelse(type == "factor_correlation", "r", "estimate"))
+# The kind of nomo_present_stat() an estimate of each type takes, as the
+# component's own tables show it (#145): standardized loadings keep their
+# leading zero, and factor correlations drop it. A network hypothesis drops it
+# when it is a standardized association, as the network's hypotheses table
+# does, and otherwise keeps it, since a standardized regression coefficient
+# can exceed 1. The hypotheses' scale and relation type are read from
+# `hypotheses`, the refitted network's hypothesis evidence; without it, a
+# hypothesis keeps the zero.
+nomo_missing_estimate_kind <- function(type, parameter, hypotheses = NULL) {
+  kind <- ifelse(type == "loading", "loading", ifelse(type == "factor_correlation", "r", "estimate"))
+  he <- as.data.frame(hypotheses, stringsAsFactors = FALSE)
+  hypothesis <- type %in% "hypothesis" & parameter %in% he$id &
+    all(c("scale", "relation_type") %in% names(he))
+  i <- match(parameter[hypothesis], he$id)
+  kind[hypothesis] <- nomo_network_kind(he$scale[i], he$relation_type[i])
+  kind
+}
+
+
+# The hypothesis evidence of a refitted network: kept by a summary itself, or
+# found among the refits (`fits`) of a result; NULL for a CFA.
+nomo_missing_hypotheses <- function(x) {
+  fit <- Find(function(f) is.data.frame(f[["hypothesis_evidence"]]), c(list(x), x[["fits"]]))
+  fit[["hypothesis_evidence"]]
 }
 
 # Estimates compared across strategies differ by fractions of a standard error
@@ -952,7 +971,7 @@ nomo_missing_estimate_digits <- 3L
 
 
 nomo_missing_difference_log <- function(log, estimates, strategies, reference,
-                                        ref_label, object) {
+                                        ref_label, object, fits = list()) {
   comparisons <- setdiff(unique(estimates$strategy), reference)
   n_cases <- max(strategies$n_used, na.rm = TRUE)
 
@@ -973,8 +992,9 @@ nomo_missing_difference_log <- function(log, estimates, strategies, reference,
     worst <- rows[which.max(abs(rows$difference_in_se)), ]
     flagged <- nomo_missing_true(rows$beyond_half_se)
     # Each estimate in its own kind: a loading keeps its leading zero, and a
-    # correlation does not.
-    kind <- nomo_missing_estimate_kind(worst$type)
+    # correlation, a standardized association among them, does not.
+    kind <- nomo_missing_estimate_kind(worst$type, worst$parameter,
+                                       nomo_missing_hypotheses(list(fits = fits)))
     largest <- sprintf(
       "%s, %s against %s (%s SE)", worst$parameter,
       nomo_present_stat(worst$estimate, kind, digits = nomo_missing_estimate_digits,

@@ -132,15 +132,19 @@ nomo_apa_join <- function(...) {
 # How a model was estimated and on how many cases (#145): the estimator spelled
 # out with its abbreviation, as APA asks of every abbreviation, and N. When
 # lavaan used the incomplete cases (`missing` "fiml", lavaan's "ml"), a second
-# sentence says so, since N then counts them.
-nomo_apa_sample_note <- function(estimator, n = NA_real_, missing = NA_character_) {
+# sentence says so, since N then counts them. A `fit` whose data had no
+# incomplete case gives no such sentence: there were no missing values to
+# handle.
+nomo_apa_sample_note <- function(estimator, n = NA_real_, missing = NA_character_,
+                                 fit = NULL) {
   estimator <- as.character(estimator)
   estimator <- if (length(estimator)) estimator[[1L]] else NA_character_
   n <- suppressWarnings(as.numeric(n))
   n <- if (length(n)) n[[1L]] else NA_real_
   missing <- tolower(as.character(missing))
   fiml <- length(missing) > 0L &&
-    missing[[1L]] %in% c("fiml", "fiml.x", "ml", "ml.x", "direct")
+    missing[[1L]] %in% c("fiml", "fiml.x", "ml", "ml.x", "direct") &&
+    !isFALSE(nomo_apa_incomplete(fit))
   words <- if (is.na(estimator) || !nzchar(estimator)) {
     ""
   } else if (estimator %in% names(nomo_cfa_glossary)) {
@@ -155,6 +159,16 @@ nomo_apa_sample_note <- function(estimator, n = NA_real_, missing = NA_character
     if (nzchar(text)) paste0(text, "."),
     if (fiml) "Missing values were handled by full-information maximum likelihood (FIML)."
   )
+}
+
+
+# Whether the cases a fit analyzed include incomplete ones (#145). lavaan's
+# coverage, one matrix per group, falls below 1 exactly then. NA when the fit
+# cannot say, as for no fit at all.
+nomo_apa_incomplete <- function(fit) {
+  coverage <- tryCatch(unlist(lavaan::lavInspect(fit, "coverage")),
+                       error = function(e) NULL)
+  if (is.null(coverage)) NA else any(coverage < 1)
 }
 
 
@@ -173,7 +187,8 @@ nomo_apa_fit_estimator <- function(fit) {
 nomo_apa_fit_sample_note <- function(fit) {
   options <- tryCatch(lavaan::lavInspect(fit, "options"), error = function(e) list())
   n <- tryCatch(lavaan::lavInspect(fit, "ntotal"), error = function(e) NA_real_)
-  nomo_apa_sample_note(nomo_apa_fit_estimator(fit), n, nomo_apa_or(options$missing, NA))
+  nomo_apa_sample_note(nomo_apa_fit_estimator(fit), n, nomo_apa_or(options$missing, NA),
+                       fit = fit)
 }
 
 
@@ -431,7 +446,8 @@ nomo_apa_table.default <- function(x, type = NULL, number = NULL, title = NULL, 
 nomo_apa_table.nomo_cfa <- function(x, type = c("loadings", "fit", "factor_correlations"),
                                     number = NULL, title = NULL, ...) {
   type <- nomo_match_arg(type)
-  sample_note <- nomo_apa_sample_note(x$estimator, x$n_used, nomo_apa_or(x$missing, NA))
+  sample_note <- nomo_apa_sample_note(x$estimator, x$n_used, nomo_apa_or(x$missing, NA),
+                                      fit = x$fit)
   improper <- nomo_apa_improper_note(x$fit)
 
   if (type == "loadings") {
@@ -517,7 +533,7 @@ nomo_apa_table.nomo_cfa <- function(x, type = c("loadings", "fit", "factor_corre
   version <- stats::setNames(nomo_apa_version(variant), fe$metric)
   nomo_apa_fit_table(
     fe, estimator = x$estimator, n = x$n_used, missing = nomo_apa_or(x$missing, NA),
-    title = title, number = number, source = "nomo_cfa", sample = improper,
+    fit = x$fit, title = title, number = number, source = "nomo_cfa", sample = improper,
     versions = nomo_apa_versions_note(
       version[["chi_square"]], version[c("CFI", "TLI", "RMSEA")],
       test = nomo_cfa_test_label(x$fit)
@@ -528,7 +544,7 @@ nomo_apa_table.nomo_cfa <- function(x, type = c("loadings", "fit", "factor_corre
 
 nomo_apa_fit_table <- function(fe, estimator, n, title, number, source,
                                model_label = "Measurement model", versions = "",
-                               sample = "", missing = NA_character_) {
+                               sample = "", missing = NA_character_, fit = NULL) {
   value <- function(metric) {
     v <- fe$value[fe$metric == metric]
     if (length(v)) v[[1L]] else NA_real_
@@ -560,7 +576,7 @@ nomo_apa_fit_table <- function(fe, estimator, n, title, number, source,
       "CFI = comparative fit index; TLI = Tucker-Lewis index; RMSEA = root mean",
       "square error of approximation; CI = confidence interval; SRMR =",
       "standardized root mean square residual.",
-      nomo_apa_sample_note(estimator, n, missing),
+      nomo_apa_sample_note(estimator, n, missing, fit = fit),
       sample,
       versions,
       nomo_apa_dash_note(body, "not available"),
@@ -800,7 +816,7 @@ nomo_apa_table.nomo_invariance <- function(x, type = NULL, number = NULL,
       ),
       design,
       nomo_apa_sample_note(nomo_invariance_estimator(x), nomo_apa_or(x[["n_used"]], NA_real_),
-                           nomo_apa_or(x[["missing"]], NA)),
+                           nomo_apa_or(x[["missing"]], NA), fit = fit),
       nomo_apa_versions_note(
         version("chisq"), c(CFI = version("cfi"), RMSEA = version("rmsea")),
         test = nomo_invariance_test_label(x), models = nrow(fe)
@@ -843,14 +859,17 @@ nomo_apa_table.nomo_network <- function(x, type = c("hypotheses", "fit"),
   estimator <- as.character(nomo_apa_or(x$estimator, NA_character_))
   if (!length(estimator) || is.na(estimator[[1L]])) estimator <- nomo_apa_fit_estimator(x$fit)
   missing <- nomo_apa_or(x[["missing"]], NA)
-  sample_note <- nomo_apa_sample_note(estimator, n, missing)
+  sample_note <- nomo_apa_sample_note(estimator, n, missing, fit = x$fit)
 
   if (type == "fit") {
     fe <- x$fit_evidence
     # The network's fit evidence keeps the RMSEA without its interval, so the
     # interval is read from the fit: the robust, scaled, or plain one, matching
-    # the RMSEA the evidence reports.
-    measures <- tryCatch(lavaan::fitMeasures(x$fit), error = function(e) numeric())
+    # the RMSEA the evidence reports. Any warning lavaan raises here was raised
+    # when nomo_network() read the same fit and is recorded in
+    # `engine_warnings` and the decision log, so it is not raised again.
+    measures <- tryCatch(suppressWarnings(lavaan::fitMeasures(x$fit)),
+                         error = function(e) numeric())
     variants <- c(".robust", ".scaled", "")
     reported <- vapply(variants, function(v) {
       is.finite(nomo_network_fit_measure(measures, paste0("rmsea", v)))
@@ -871,7 +890,7 @@ nomo_apa_table.nomo_network <- function(x, type = c("hypotheses", "fit"),
     index <- switch(index, robust = "robust", scaled = "scaled",
                     mixed = "robust or scaled", "")
     return(nomo_apa_fit_table(
-      long, estimator = estimator, n = n, missing = missing,
+      long, estimator = estimator, n = n, missing = missing, fit = x$fit,
       title = nomo_apa_or(title, "Fit of the Nomological Network Model"),
       model_label = "Nomological network",
       number = number, source = "nomo_network",

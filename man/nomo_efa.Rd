@@ -95,10 +95,18 @@ item pair, the effective sample size under pairwise deletion. It equals
 \code{n_cases} when no item value is missing or \code{missing = "complete"}.
 \item \code{correlation_method} and \code{correlation_matrix}: the correlations analyzed.
 \item \code{pattern_matrix}, \code{structure_matrix}, and \code{factor_correlations}.
+\item \code{fit}: the unchanged \code{psych::fa()} result, for anything else \code{psych}
+reports. Its factors are the columns of \code{pattern_matrix}, in the same
+order, under the labels \code{psych} gives them, so \code{F1} may be \code{MR2}.
 \item \code{communalities}, \code{uniquenesses}, and \code{complexity}.
 \item \code{item_summary}: one row per item, with its primary and secondary
 loadings, communality, flags, and the explanation of any flag.
+\item \code{reproduced_correlations}: the correlations the solution implies, the
+pattern matrix times the factor correlations times the transposed
+pattern matrix. Its diagonal holds the communalities.
 \item \code{residual_matrix}, \code{residual_pairs}, and \code{rmsr}: local misfit.
+\code{residual_matrix} is \code{correlation_matrix} minus
+\code{reproduced_correlations}, with zeros on the diagonal.
 \item \code{sample_adequacy}: \code{n_cases}, \code{min_pairwise_n}, \code{n_items},
 \code{cases_per_item} (\code{min_pairwise_n} divided by \code{n_items}), \code{kmo}, and
 \code{bartlett}.
