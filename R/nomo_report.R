@@ -250,22 +250,24 @@ nomo_report_format_kind <- function(value, kind, digits = NULL, signed = FALSE,
 # when they round to zero (guide point 15), as the invariance and missing-data
 # prints show them. `kind`, when given, is each row's kind, for a column whose
 # name cannot say it, such as a network estimate that is a correlation in one
-# row and a path in the next.
+# row and a path in the next; a row whose given kind is NA keeps the kind the
+# column's name or the row's metric gives it.
 nomo_report_format_numbers <- function(value, name, metric = NULL, reference = NULL,
                                        digits = NULL, kind = NULL) {
-  given <- !is.null(kind)
-  if (!given) kind <- if (is.integer(value)) "count" else nomo_report_number_kind(name)
+  default <- if (is.integer(value)) "count" else nomo_report_number_kind(name)
   signed <- grepl("^(delta|difference)([._]|$)", tolower(name))
   value <- as.numeric(value)
   finite <- is.finite(value)
-  if (given) {
-    kinds <- rep_len(as.character(kind), length(value))
-  } else if (identical(kind, "estimate") && !is.null(metric)) {
+  if (identical(default, "estimate") && !is.null(metric)) {
     kinds <- nomo_report_metric_kind(metric)
     whole <- finite & abs(value - round(value)) < 1e-8
     kinds[kinds == "estimate" & whole] <- "count"
   } else {
-    kinds <- rep(kind, length(value))
+    kinds <- rep(default, length(value))
+  }
+  if (!is.null(kind)) {
+    kind <- rep_len(as.character(kind), length(value))
+    kinds[!is.na(kind)] <- kind[!is.na(kind)]
   }
 
   out <- rep(nomo_report_blank, length(value))
@@ -1033,6 +1035,8 @@ nomo_report_missing <- function(m) {
     reference = compared$reference_estimate,
     difference_in_se = compared$difference_in_se
   )
+  kind <- nomo_report_missing_kinds(m, compared)
+  attr(differences, "nomo_report_kinds") <- list(estimate = kind, reference = kind)
 
   # The reference is fitted only when some case is missing a modeled variable;
   # the summary and the empty-table message say which applies (#145).
@@ -1086,6 +1090,27 @@ nomo_report_missing <- function(m) {
     reliability = named(m$reliability),
     log = m$decision_log
   )
+}
+
+
+# Each compared estimate in its kind (#145), as the component's own tables
+# show it: a loading keeps its leading zero and a factor correlation drops it,
+# as print() of the missing-data result gives them, and a network hypothesis
+# drops it when it is a standardized association, as the network's hypotheses
+# table does. The hypotheses' scale and relation type are read from the
+# refitted network. A row whose type is not recorded is NA: its column's name
+# gives its kind.
+nomo_report_missing_kinds <- function(m, compared) {
+  type <- compared[["type"]]
+  if (is.null(type)) return(rep(NA_character_, nrow(compared)))
+  kind <- nomo_missing_estimate_kind(type)
+  fit <- Find(function(f) is.data.frame(f[["hypothesis_evidence"]]), m[["fits"]])
+  he <- as.data.frame(fit[["hypothesis_evidence"]], stringsAsFactors = FALSE)
+  hypothesis <- type %in% "hypothesis" & compared$parameter %in% he$id &
+    all(c("scale", "relation_type") %in% names(he))
+  i <- match(compared$parameter[hypothesis], he$id)
+  kind[hypothesis] <- nomo_network_kind(he$scale[i], he$relation_type[i])
+  kind
 }
 
 
@@ -1331,7 +1356,37 @@ nomo_report_evidence_trace <- function(x) {
 
   preferred <- intersect(preferred, names(log))
   rest <- setdiff(names(log), preferred)
-  log[, c(preferred, rest), drop = FALSE]
+  nomo_report_network_trace(log[, c(preferred, rest), drop = FALSE], x)
+}
+
+
+# The network's theory-concordance rows as its hypotheses table shows them
+# (#145): the estimate in its kind, so a standardized association is a
+# correlation with no leading zero, and the predicted region as print() writes
+# it (">= 0.20", "[-.15, .15]") where the log stores "[0.2, +Inf)". A row is
+# matched to its hypothesis by the relation it names. The stored log is left
+# as it is; every other row keeps the kind its metric gives it.
+nomo_report_network_trace <- function(log, x) {
+  spec <- tryCatch(
+    as.data.frame(x$results$network$hypotheses$hypotheses, stringsAsFactors = FALSE),
+    error = function(e) data.frame()
+  )
+  needed <- c("relation", "relation_type", "scale", "prediction", "lower", "upper",
+              "lower_inclusive", "upper_inclusive", "magnitude_specified")
+  if (!all(needed %in% names(spec)) ||
+      !all(c("pipeline_component", "object", "metric", "reference") %in% names(log))) {
+    return(log)
+  }
+  i <- match(log$object, spec$relation)
+  rows <- which(log$pipeline_component %in% "network" &
+                  log$metric %in% "theory_concordance" & !is.na(i))
+  h <- spec[i[rows], , drop = FALSE]
+  kind <- nomo_network_kind(h$scale, h$relation_type)
+  log$reference[rows] <- nomo_network_region_text(h, kind)
+  kinds <- rep(NA_character_, nrow(log))
+  kinds[rows] <- kind
+  attr(log, "nomo_report_kinds") <- list(value = kinds)
+  log
 }
 
 
@@ -1346,12 +1401,17 @@ nomo_report_flagged_trace <- function(x) {
 
 
 # The review and concern rows of a log, concern first (guide point 22), each
-# group in the log's order.
+# group in the log's order. The kinds a table names row by row
+# (nomo_report_display_table()) stay with their rows.
 nomo_report_flagged_rows <- function(log) {
   if (!nrow(log) || !"severity" %in% names(log)) return(log)
   severity <- tolower(log$severity)
-  log <- log[severity %in% c("review", "concern"), , drop = FALSE]
-  log[order(tolower(log$severity) != "concern"), , drop = FALSE]
+  keep <- which(severity %in% c("review", "concern"))
+  keep <- keep[order(severity[keep] != "concern")]
+  kinds <- attr(log, "nomo_report_kinds")
+  log <- log[keep, , drop = FALSE]
+  if (length(kinds)) attr(log, "nomo_report_kinds") <- lapply(kinds, function(k) k[keep])
+  log
 }
 
 

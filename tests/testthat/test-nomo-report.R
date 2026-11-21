@@ -1919,6 +1919,78 @@ test_that("report cells follow print() where a column's name cannot say how (#14
 })
 
 
+test_that("a network estimate reads alike wherever the report shows it (#145)", {
+  # The theory-concordance rows of the evidence trace, primary and validation
+  # sample alike, show each estimate in its kind and the region as the
+  # network's hypotheses table writes it; other rows keep their metric's kind.
+  h <- nomo_hypotheses(
+    "A -> B" = positive(min = .20),
+    "A <-> C" = negligible(within = c(-.15, .15)),
+    "A -> D" = positive()
+  )
+  log <- tibble::tibble(
+    stage = c("network", "network", "network", "network_validation", "network"),
+    object = c("A -> B", "A <-> C", "A -> D", "A <-> C", "primary"),
+    metric = c(rep("theory_concordance", 4L), "cases_used"),
+    value = c(0.456, 0.151, 0.39, 0.12, 800),
+    reference = c("[0.2, +Inf)", "[-0.15, 0.15]", "(0, +Inf)", "[-0.15, 0.15]", ""),
+    severity = c("info", "concern", "info", "info", "info"),
+    observation = "", recommendation = ""
+  )
+  run <- list(results = list(network = structure(
+    list(decision_log = log, hypotheses = h), class = "nomo_network"
+  )))
+  trace <- nomologR:::nomo_report_evidence_trace(run)
+  shown <- nomologR:::nomo_report_display_table(trace)
+  expect_identical(shown$Value, c("0.46", ".151", "0.39", ".12", "800"))
+  expect_identical(shown$Reference,
+                   c(">= 0.20", "[-.15, .15]", "> 0", "[-.15, .15]", nomologR:::nomo_report_blank))
+  # The flagged rows keep their kinds.
+  flagged <- nomologR:::nomo_report_display_table(nomologR:::nomo_report_flagged_trace(run))
+  expect_identical(flagged$Value, ".151")
+  expect_identical(flagged$Reference, "[-.15, .15]")
+  # A run without hypotheses keeps the log as stored.
+  run$results$network$hypotheses <- NULL
+  stored <- nomologR:::nomo_report_evidence_trace(run)
+  expect_identical(stored$reference, log$reference)
+  expect_null(attr(stored, "nomo_report_kinds"))
+
+  # The missing-data differences: a loading and a path keep the leading zero,
+  # and a factor correlation and a standardized association drop it, as the
+  # missing-data print() and the network's table show them.
+  m <- list(
+    pattern = list(n_incomplete = 15L, n_cases = 500L, pct_incomplete = 0.03),
+    strategies = tibble::tibble(
+      strategy = c("listwise", "ml"), label = c("Listwise deletion", "FIML"),
+      lavaan_missing = c("listwise", "ml"), requires = c("MCAR", "MAR"),
+      role = c("comparison", "reference"), available = TRUE,
+      n_used = c(485, 500), converged = TRUE, admissible = TRUE
+    ),
+    estimates = tibble::tibble(
+      type = c("loading", "factor_correlation", "hypothesis", "hypothesis"),
+      parameter = c("A =~ a1", "A ~~ B", "H1", "H2"),
+      strategy = "listwise", role = "comparison",
+      estimate = c(0.712, 0.451, 0.456, 0.151),
+      reference_estimate = c(0.708, 0.449, 0.450, 0.149),
+      difference_in_se = c(0.4, 0.3, 0.2, 0.1)
+    ),
+    reference = "ml", fit = tibble::tibble(), reliability = NULL,
+    decision_log = tibble::tibble(),
+    fits = list(listwise = NULL, ml = list(hypothesis_evidence = tibble::tibble(
+      id = c("H1", "H2"), scale = "standardized",
+      relation_type = c("directed", "association")
+    )))
+  )
+  differences <- nomologR:::nomo_report_display_table(nomologR:::nomo_report_missing(m)$differences)
+  expect_identical(differences$Estimate, c("0.712", ".451", "0.456", ".151"))
+  expect_identical(differences$Reference, c("0.708", ".449", "0.450", ".149"))
+  # Without the refitted network a hypothesis keeps the leading zero.
+  m$fits <- NULL
+  differences <- nomologR:::nomo_report_display_table(nomologR:::nomo_report_missing(m)$differences)
+  expect_identical(differences$Estimate, c("0.712", ".451", "0.456", "0.151"))
+})
+
+
 test_that("an interval's headings carry its confidence level (#145)", {
   run <- make_m9_report_run()
   labels <- function(obj, stage, type) {
