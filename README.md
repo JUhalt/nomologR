@@ -40,10 +40,17 @@ pak::pak("JUhalt/nomologR")
 ```
 
 `nomologR` is distributed through R-universe, which builds each GitHub
-release, usually within a few hours. `v0.3.0` is the first release
-submitted to CRAN
-([\#39](https://github.com/JUhalt/nomologR/issues/39)); until CRAN
-accepts it, install from R-universe or GitHub.
+release, usually within a few hours. It is not on CRAN yet: CRAN
+returned `v0.3.0` with two requests, both since met
+([\#39](https://github.com/JUhalt/nomologR/issues/39)), and the CRAN
+submission follows the 1.0.0 release. Until CRAN accepts it, install from
+R-universe or GitHub.
+
+The R-universe build is the current stable release, `0.9.0`. This
+README and the [website](https://juhalt.github.io/nomologR/) describe the
+GitHub version, which adds what 1.0.0 will contain, such as
+`nomo_esem()`, `nomo_retest()`, and `nomo_power_rmsea()`; install the
+GitHub version to use them.
 
 ## Who it is for
 
@@ -1164,7 +1171,7 @@ The detailed release plan lives in
 ### Current release: `v0.9.0`
 
 `v0.9.0` is the last minor release before `v1.0.0`, whose release candidate is
-planned for 2026-10-17
+planned for 2026-11-24 or earlier
 ([#113](https://github.com/JUhalt/nomologR/issues/113)). It is about how the
 package presents itself and what it teaches:
 
@@ -1186,9 +1193,10 @@ columns, wording, and arguments.
 
 ### Previous releases
 
-`v0.3.0` is the first release submitted to CRAN
+`v0.3.0` was the first release submitted to CRAN, which returned it with
+two requests, both since met
 ([\#39](https://github.com/JUhalt/nomologR/issues/39)). Its scope was
-kept deliberately lean for that reason
+kept deliberately lean for that submission
 ([\#38](https://github.com/JUhalt/nomologR/issues/38);
 [milestone](https://github.com/JUhalt/nomologR/milestone/3)):
 
@@ -1256,8 +1264,12 @@ comprehensive CFA marker technique (`nomo_method_variance()`); and
 sample-size planning by RMSEA power and Monte Carlo simulation
 (`nomo_power_rmsea()`, `nomo_power_simulate()`). All are additive.
 `nomo_method_variance()` and `nomo_power_simulate()` stay experimental
-after 1.0.0; the rest fall under the stability promise. The feature
-freeze is on 2026-10-13, before the release candidate on 2026-10-17.
+after 1.0.0; the rest fall under the stability promise. The release
+candidate, `v1.0.0-rc.1`, is planned for 2026-11-24 together with
+`contentvalidR`’s, or earlier if both packages are ready, and its tag is
+the interface freeze. `v1.0.0` follows when the maintainer signs off,
+and is released on GitHub and R-universe first; the CRAN submission
+follows it.
 
 Larger extensions, such as IRT/DIF, Bayesian SEM, multiple imputation, and
 formative models, are candidates for `1.x`. They are additive, so they do
@@ -1330,9 +1342,9 @@ For more, see:
 
 ## Stability
 
-From `v0.3.0`, the first release submitted to CRAN, nomologR’s public
-interface changes only after a deprecation period, so code written
-against one release keeps working in the next.
+From `v1.0.0`, nomologR’s public interface changes only after a
+deprecation period, so code written against one release keeps working in
+the next.
 
 - **What it covers.** The exported functions, their documented arguments
   and defaults, the documented fields of returned objects,

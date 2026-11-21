@@ -1,0 +1,220 @@
+# Checks the package as CRAN does, and reports how long the check takes (#39).
+#
+# The R-CMD-check workflow runs the whole test suite: r-lib/actions/setup-r
+# sets NOT_CRAN=true for every later step, so testthat::skip_on_cran() never
+# skips there. CRAN runs with NOT_CRAN unset, so a smaller set of tests runs,
+# and it asks that a check take no more than about ten minutes. This workflow
+# measures that case: `R CMD check --as-cran` on the built tarball with
+# NOT_CRAN unset, with tests, examples (also those in \donttest{}, which
+# --as-cran runs) and vignettes, on Linux and Windows, the two platforms of
+# CRAN's incoming checks. Its figures are the ones cran-comments.md reports.
+#
+# It never fails on time. The durations are printed at the end of the log and
+# in the job summary, and a slow check is a reason to read them, not a red
+# build. It fails on an ERROR or a WARNING, because a test or an example that
+# fails under CRAN conditions would fail on CRAN. A NOTE does not fail it:
+# --as-cran gives the new-submission NOTE to a package that is not on CRAN,
+# and the NOTE on slow examples is one of the figures this workflow is here to
+# report. The R-CMD-check workflow fails on every other NOTE.
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+name: cran-conditions.yaml
+
+permissions: read-all
+
+jobs:
+  cran-conditions:
+    runs-on: ${{ matrix.os }}
+
+    name: ${{ matrix.os }} (release, CRAN conditions)
+
+    # A guard against a check that hangs, not a limit on the check's time.
+    timeout-minutes: 120
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      R_KEEP_PKG_SOURCE: yes
+      # As in R-CMD-check.yaml: no NOTE when the time service does not answer.
+      _R_CHECK_SYSTEM_CLOCK_: false
+
+    steps:
+      - uses: actions/checkout@v5
+
+      # Hosted Ubuntu runners can occasionally retain a stale Google
+      # Chrome apt source, which makes setup-r fail during apt-get update.
+      - name: Remove stale Google Chrome apt source
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          sudo rm -f /etc/apt/sources.list.d/google-chrome.list* /etc/apt/sources.list.d/google-chrome.sources*
+
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: release
+          use-public-rspm: true
+
+      # Every suggested package is installed, as on CRAN. commonmark and xml2
+      # let R CMD check read NEWS.md, as CRAN's check does (see
+      # R-CMD-check.yaml).
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::rcmdcheck, any::commonmark, any::xml2
+          needs: check
+
+      # The tarball is built as the maintainer builds the one submitted, and
+      # timed apart from the check: CRAN checks the tarball it receives and
+      # does not build it. The PDF manual is not built (it needs TeX); CRAN
+      # builds it, which takes seconds. rcmdcheck::rcmdcheck() is called
+      # directly rather than through r-lib/actions/check-r-package, which
+      # turns CRAN's incoming checks off.
+      - name: Check under CRAN conditions
+        shell: Rscript {0}
+        run: |
+          # setup-r exported NOT_CRAN=true to every later step. CRAN leaves it
+          # unset, so it is removed here; the build and the check run as
+          # child processes of this one and so start without it. The step
+          # stops if skip_on_cran() would not skip.
+          Sys.unsetenv("NOT_CRAN")
+          skipped <- tryCatch({ testthat::skip_on_cran(); FALSE }, skip = function(e) TRUE)
+          cat("NOT_CRAN is ", if (is.na(Sys.getenv("NOT_CRAN", unset = NA))) "unset" else "set",
+              "; skip_on_cran() skips: ", skipped, "\n", sep = "")
+          if (!skipped) stop("skip_on_cran() would not skip, so this is not a check under CRAN conditions.")
+
+          minutes <- function(start) as.numeric(difftime(Sys.time(), start, units = "mins"))
+          build_start <- Sys.time()
+          tarball <- pkgbuild::build(".", dest_path = tempdir(), manual = FALSE, vignettes = TRUE)
+          build_minutes <- minutes(build_start)
+
+          check_start <- Sys.time()
+          result <- rcmdcheck::rcmdcheck(
+            tarball,
+            args = c("--as-cran", "--no-manual"),
+            error_on = "never",
+            check_dir = "check"
+          )
+          check_minutes <- minutes(check_start)
+
+          # R CMD check writes a step's time in 00check.log when it is 10 s or
+          # more (--as-cran sets _R_CHECK_TIMINGS_ to 10): elapsed time on
+          # Windows ("[19m]"), CPU and elapsed time elsewhere ("[118s/121s]").
+          # A step's total is on its own line or on the line that closes it
+          # (" [119s/122s] OK"). A step without a total gives each part its
+          # own time, as running each vignette's code does, and the parts'
+          # elapsed times are added.
+          log <- readLines(file.path(result$checkdir, "00check.log"), warn = FALSE)
+          timed <- "\\[[0-9.]+[smh](/[0-9.]+[smh])?\\]"
+          elapsed_seconds <- function(stamp) {
+            value <- sub("^.*[[/]([0-9.]+)[smh]\\]$", "\\1", stamp)
+            unit <- sub("^.*([smh])\\]$", "\\1", stamp)
+            as.numeric(value) * c(s = 1, m = 60, h = 3600)[[unit]]
+          }
+          # A step's lines in 00check.log: its own line and those up to the
+          # next step.
+          step_block <- function(pattern) {
+            at <- grep(pattern, log)[1L]
+            if (is.na(at)) return(character())
+            starts <- c(grep("^[*] ", log), length(log) + 1L)
+            log[at:(min(starts[starts > at]) - 1L)]
+          }
+          step_time <- function(pattern) {
+            block <- step_block(pattern)
+            if (!length(block)) return("not run")
+            has_time <- grepl(timed, block)
+            total <- has_time & (seq_along(block) == 1L | startsWith(block, " ["))
+            if (any(total)) return(regmatches(block[total][[1L]], regexpr(timed, block[total][[1L]])))
+            if (!any(has_time)) return("under 10 s")
+            parts <- regmatches(block[has_time], regexpr(timed, block[has_time]))
+            sprintf("%.0f s elapsed in all (%s)", sum(vapply(parts, elapsed_seconds, 0)),
+                    paste(parts, collapse = " + "))
+          }
+          steps <- c(
+            "Installation" = "can be installed",
+            "Examples" = "checking examples [.][.][.]",
+            "Examples with --run-donttest" = "checking examples with --run-donttest",
+            "Tests" = "checking tests",
+            "Vignette code run" = "checking running R code from vignettes",
+            "Vignettes re-built" = "checking re-building of vignette outputs"
+          )
+          table <- c(
+            sprintf("| Building the tarball (not part of CRAN's check) | %.1f min |", build_minutes),
+            vapply(names(steps), function(step) sprintf("| %s | %s |", step, step_time(steps[[step]])), ""),
+            sprintf("| **The whole check of the tarball** | **%.1f min** |", check_minutes)
+          )
+          header <- c(
+            sprintf("### Check under CRAN conditions: %s, R %s", Sys.getenv("RUNNER_OS"), getRversion()),
+            "",
+            "| Step | Time |",
+            "|---|---|"
+          )
+
+          # The slow examples. CRAN notes any example over 5 s of CPU or
+          # elapsed time in the run without \donttest{}, and R CMD check lists
+          # those under the step's line in 00check.log. The timings file is
+          # written again by the run with --run-donttest, which --as-cran
+          # adds, so it holds that run's times.
+          examples <- character()
+          slow <- step_block("checking examples [.][.][.]")[-1L]
+          if (length(slow)) {
+            examples <- c("", "Examples over 5 s in the run without \\donttest{}, as 00check.log lists them:",
+                          "", "```", slow, "```")
+          }
+          timings_file <- list.files(result$checkdir, pattern = "-Ex[.]timings$", full.names = TRUE)
+          if (length(timings_file)) {
+            # Each row ends with a tab, so the file is split by hand rather
+            # than read with read.table(), which would take the names for
+            # row names and shift every column.
+            fields <- strsplit(readLines(timings_file[[1L]], warn = FALSE)[-1L], "\t", fixed = TRUE)
+            field <- function(i) vapply(fields, function(row) row[[i]], "")
+            timings <- data.frame(name = field(1L), user = as.numeric(field(2L)),
+                                  system = as.numeric(field(3L)), elapsed = as.numeric(field(4L)))
+            timings <- utils::head(timings[order(-timings$elapsed), ], 10L)
+            examples <- c(
+              examples, "",
+              sprintf("Slowest examples in %s, from the run with --run-donttest (seconds):",
+                      basename(timings_file[[1L]])), "",
+              "| Example | User | System | Elapsed |", "|---|---|---|---|",
+              sprintf("| %s | %.1f | %.1f | %.1f |", timings$name, timings$user,
+                      timings$system, timings$elapsed)
+            )
+          }
+
+          cat("\n", paste(c(header, table, examples), collapse = "\n"), "\n", sep = "")
+          cat("\nTimed lines of 00check.log:\n")
+          cat(grep(timed, log, value = TRUE), sep = "\n")
+          summary_file <- Sys.getenv("GITHUB_STEP_SUMMARY")
+          if (nzchar(summary_file)) {
+            cat(c(header, table, examples, ""), file = summary_file, sep = "\n", append = TRUE)
+          }
+
+          # The result decides the job after the times are written down.
+          if (length(result$errors) || length(result$warnings)) {
+            stop("R CMD check --as-cran gave ", length(result$errors), " error(s) and ",
+                 length(result$warnings), " warning(s) under CRAN conditions.")
+          }
+
+      # The check's logs, for the figures in cran-comments.md and for reading
+      # a failure.
+      - name: Upload the check's logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cran-conditions-${{ matrix.os }}
+          path: |
+            check/*.Rcheck/00check.log
+            check/*.Rcheck/00install.out
+            check/*.Rcheck/*-Ex.timings
+            check/*.Rcheck/*-Ex.Rout
+            check/*.Rcheck/tests/*.Rout*
+          if-no-files-found: ignore
