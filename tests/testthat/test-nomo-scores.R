@@ -545,6 +545,7 @@ test_that("a residual covariance is kept, so only the parallel constraints are t
 
 
 test_that("the parallel model is refitted with the fit's own estimator and missing-data handling", {
+  # This test compares the package with lavaan's own tests, so it runs on CRAN.
   dat <- scores_sample(scores_population()$sigma)
 
   robust <- nomo_cfa(scores_model, data = dat, estimator = "MLR", std.lv = TRUE)
@@ -569,6 +570,12 @@ test_that("the parallel model is refitted with the fit's own estimator and missi
     lavaan::cfa(scores_parallel_model, data = holes, std.lv = TRUE)
   )
   expect_false(isTRUE(all.equal(ours$chisq_diff, dropped$chisq_diff)))
+})
+
+
+test_that("bootstrapped standard errors are not resampled for the parallel model", {
+  skip_on_cran()
+  dat <- scores_sample(scores_population()$sigma)
 
   # Bootstrapped standard errors are not resampled for a model whose standard
   # errors are never read; the test is the one maximum likelihood gives. With
@@ -693,6 +700,7 @@ test_that("a negative difference is reported as no test, not as support for a su
 # Matching scores to the data (#145) -------------------------------------------
 
 test_that("`rows` says which row of the data each score belongs to", {
+  skip_on_cran()
   dat <- scores_sample(scores_population()$sigma)
   dat$x1[c(3L, 9L)] <- NA
   dat$x7[40L] <- NA
@@ -931,7 +939,7 @@ test_that("an item loading against its factor is named for a unit-weighted score
   summed <- nomo_scores(nomo_cfa(scores_hs_model, data = hs), method = "sum")
   note <- summed$notes[summed$notes$topic == "loading_signs", ]
   expect_identical(note$severity, "concern")
-  expect_match(note$note, "x3 on visual loads against the strongest item of its factor",
+  expect_match(note$note, "x3 on visual loads with the opposite sign to the other items of its factor",
                fixed = TRUE)
   expect_match(note$note, "Reverse-score each such item", fixed = TRUE)
   # The stored ratio is unchanged; the summary does not show it as though the
@@ -949,8 +957,25 @@ test_that("an item loading against its factor is named for a unit-weighted score
   hs$x6 <- -hs$x6
   two <- nomo_scores(nomo_cfa(scores_hs_model, data = hs), method = "sum")
   expect_match(two$notes$note[two$notes$topic == "loading_signs"],
-               "x3 on visual and x6 on textual load against the strongest item of their factors",
+               "x3 on visual and x6 on textual load with the opposite sign to the other items of their factors",
                fixed = TRUE)
+})
+
+
+test_that("scores name the items the CFA and reliability name as loading against their factor", {
+  skip_on_cran()
+  # On psych::bfi as answered, C4 has C's largest loading, but C4 and C5 are
+  # the reverse-keyed items and run against most of C's loadings.
+  cfa <- nomo_cfa(nomo_model(list(C = paste0("C", 1:5))), psych::bfi,
+                  modification_indices = FALSE)
+  loads <- cfa$standardized_loadings
+  expect_identical(loads$item[which.max(abs(loads$loading))], "C4")
+  summed <- nomo_scores(cfa, method = "sum")
+  expect_identical(nomo_scores_opposite_signs(list(fit = cfa$fit, factors = summed$factors)),
+                   list(C = c("C4", "C5")))
+  expect_match(summed$notes$note[summed$notes$topic == "loading_signs"],
+               "C4 on C and C5 on C load with the opposite sign", fixed = TRUE)
+  expect_identical(nomo_cfa_against_items(cfa$fit)$C, c("C4", "C5"))
 })
 
 
@@ -1082,7 +1107,8 @@ test_that("plot() draws each score's validity against Gorsuch's references (#145
   expect_identical(as.character(p$data$status), c("review", "review"))
   built <- ggplot2::ggplot_build(p)
   expect_equal(sort(built$data[[1L]]$xintercept), c(.80, .90))
-  expect_match(flat_text(p$labels$caption), "Gorsuch's (1983) .80, and .90", fixed = TRUE)
+  expect_match(flat_text(p$labels$caption),
+               "as Gorsuch (1983, p. 260, as cited in Grice, 2001) recommended", fixed = TRUE)
   expect_identical(p$labels$title, "Validity of the scores (Grice, 2001)")
   expect_error(plot(out, type = "scores"), "`type` must be one of", fixed = TRUE)
   skip_on_cran()

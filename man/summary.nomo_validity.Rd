@@ -15,8 +15,10 @@
 An object of class \code{summary_nomo_validity}. \verb{$convergent} combines
 AVE with a compact loading summary, while \verb{$discriminant} aligns latent
 correlations, HTMT2, and original HTMT without repeating the full CFA
-loading table. Printed, it shows both tables, the legacy Fornell-Larcker
-comparison when it was requested, and the full reason for each flag.
+loading table. \verb{$n_used} and \verb{$data_n} are the cases the model analyzed
+and the rows of the data it was given. Printed, it shows those cases,
+both tables, the legacy Fornell-Larcker comparison when it was requested,
+and the full reason for each flag.
 }
 \description{
 Summarize convergent and discriminant measurement evidence

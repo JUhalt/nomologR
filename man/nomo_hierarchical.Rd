@@ -53,9 +53,10 @@ Other fields record the call, the settings used, and the fitted model.
 They may change between releases and are not part of the stable interface
 (see \code{?nomologR}).
 
-\code{print()} shows the indices for the total score and the item set, the
-subscale and factor-score tables, and one sentence for each flagged note;
-\code{summary()} adds each index's interpretation and every note in full.
+\code{print()} shows the cases the model analyzed, the indices for the total
+score and the item set, the subscale and factor-score tables, and one
+sentence for each flagged note; \code{summary()} adds each index's
+interpretation and every note in full.
 }
 \description{
 \code{nomo_hierarchical()} answers the question behind many published scales that
@@ -143,8 +144,10 @@ prefer either, so both are reported.
 Determinacy is always computed from the model-reproduced matrix, whatever
 \code{obs.var} is set to, because that is what the formula is defined on.
 
-Gorsuch (1983) recommended using factor score estimates only when
-determinacy exceeds .90, with competing score sets correlating above .70, and
+Gorsuch (1983, p. 260, as cited in Grice, 2001) recommended a determinacy
+of at least .80, and above .90 where factor score estimates are to serve as
+substitutes for the factors. Gorsuch (1983, p. 260, as cited in Rodriguez et
+al., 2016) also suggested that competing score sets correlate above .70, and
 Hancock and Mueller (2001) proposed .70 as a standard for H. These are
 reported as their authors' recommendations where a value falls below them,
 as with fixed fit-index cutoffs elsewhere in the package, and are never
@@ -188,6 +191,10 @@ a bifactor model as a structure of psychopathology. \emph{Clinical Psychological
 Science, 5}(1), 184-186. \doi{10.1177/2167702616657069}
 
 Gorsuch, R. L. (1983). \emph{Factor analysis} (2nd ed.). Lawrence Erlbaum.
+
+Grice, J. W. (2001). Computing and evaluating factor scores.
+\emph{Psychological Methods, 6}(4), 430-450.
+\doi{10.1037/1082-989X.6.4.430}
 
 Hancock, G. R., & Mueller, R. O. (2001). Rethinking construct reliability
 within latent variable systems. In R. Cudeck, S. du Toit, & D. Sörbom (Eds.),

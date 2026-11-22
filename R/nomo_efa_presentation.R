@@ -1,7 +1,9 @@
 # Presentation methods for nomo_efa -----------------------------------------
 
+#' @rdname printing
 #' @export
-print.nomo_efa <- function(x, ...) {
+print.nomo_efa <- function(x, digits = NULL, ...) {
+  nomo_present_local_digits(digits)
   nomo_present_header("nomo_efa", "Exploratory factor analysis")
   nomo_efa_present_facts(x)
   # The count uses the statuses summary() shows, so a Heywood item counts as a
@@ -54,21 +56,26 @@ nomo_efa_rotation_text <- function(x) {
 
 
 # Problems with the solution itself, from the decision log: identification,
-# Heywood cases, convergence, and engine messages (#145, efa-1 and efa-3), each
-# with the unit a Flagged bullet names: the item of a Heywood case, otherwise
-# what was checked. A summary shows a Heywood case with its item instead.
+# Heywood cases, convergence, and engine messages (#145, efa-1 and efa-3), and
+# items with few categories modeled as continuous, with the remedy
+# (usefulness-04), each with the unit a Flagged bullet names: the item of a
+# Heywood case, otherwise what was checked. A summary shows a Heywood case
+# with its item instead.
 nomo_efa_solution_checks <- function(log,
                                      metrics = c("identification", "heywood", "convergence",
-                                                 "engine_warnings")) {
+                                                 "engine_warnings", "few_categories")) {
   if (!nomo_efa_has_log(log)) {
     return(data.frame(unit = character(), severity = character(), note = character()))
   }
   rows <- log[log$metric %in% metrics, , drop = FALSE]
   rows <- rows[order(match(rows$severity, c("concern", "review", "info"))), , drop = FALSE]
   units <- c(identification = "Identification", convergence = "Convergence",
-             engine_warnings = "Engine messages")
+             engine_warnings = "Engine messages", few_categories = "Categories")
+  note <- ifelse(rows$metric == "few_categories",
+                 nomo_present_then_recommend(rows$observation, rows$recommendation),
+                 rows$observation)
   data.frame(unit = ifelse(rows$metric == "heywood", rows$object, units[rows$metric]),
-             severity = rows$severity, note = rows$observation, stringsAsFactors = FALSE)
+             severity = rows$severity, note = note, stringsAsFactors = FALSE)
 }
 
 nomo_efa_has_log <- function(log) {
@@ -138,8 +145,10 @@ summary.nomo_efa <- function(object, ...) {
   out
 }
 
+#' @rdname printing
 #' @export
-print.summary_nomo_efa <- function(x, ...) {
+print.summary_nomo_efa <- function(x, digits = NULL, ...) {
+  nomo_present_local_digits(digits)
   nomo_present_header("nomo_efa", "Exploratory factor analysis", summary = TRUE)
   nomo_efa_present_facts(x)
   nomo_present_facts(c(
@@ -155,7 +164,7 @@ print.summary_nomo_efa <- function(x, ...) {
     }
   ))
 
-  # A value near its teaching reference shows the decimals that tell them
+  # A value near its review reference shows the decimals that tell them
   # apart (guide point 9); loadings are compared in absolute value.
   load_ref <- nomo_null_default(x$guidance$efa_loading_reference, 0.40)
   cross_ref <- nomo_null_default(x$guidance$efa_crossloading_reference, 0.30)
@@ -196,7 +205,8 @@ print.summary_nomo_efa <- function(x, ...) {
   }
   # One Flagged section: the items, then the checks of the solution itself.
   checks <- nomo_efa_solution_checks(
-    x$decision_log, metrics = c("identification", "convergence", "engine_warnings")
+    x$decision_log,
+    metrics = c("identification", "convergence", "engine_warnings", "few_categories")
   )
   nomo_present_flagged(unit = c(items$item, checks$unit), status = c(status, checks$severity),
                        text = c(text, checks$note))
@@ -352,11 +362,11 @@ plot.nomo_efa <- function(x,
     # reference is drawn and named.
     reference_text <- if (any(references$loading_type == "Secondary")) {
       sprintf(
-        "Dashed lines mark the %s loading and %s cross-loading teaching references.",
+        "Dashed lines mark the %s loading and %s cross-loading review references.",
         nomo_present_stat(load_ref, "loading"), nomo_present_stat(cross_ref, "loading")
       )
     } else {
-      sprintf("The dashed line marks the %s loading teaching reference.",
+      sprintf("The dashed line marks the %s loading review reference.",
               nomo_present_stat(load_ref, "loading"))
     }
 
@@ -423,7 +433,7 @@ plot.nomo_efa <- function(x,
         nomo_plot_labs(
           title = "EFA residual-correlation matrix",
           subtitle = sprintf(
-            "Unique off-diagonal pairs | Root mean square residual (RMSR) = %s",
+            "Unique off-diagonal pairs. Root mean square residual (RMSR) = %s.",
             nomo_present_stat(x$rmsr, "fit")
           ),
           x = NULL,
@@ -456,7 +466,7 @@ plot.nomo_efa <- function(x,
         ggplot2::ylim(-1, 1) +
         nomo_plot_labs(
           title = "EFA factor correlations",
-          subtitle = "Interfactor correlations require at least two factors"
+          subtitle = "Interfactor correlations require at least two factors."
         ) +
         ggplot2::theme_void(base_size = 11)
     )
@@ -497,11 +507,11 @@ plot.nomo_efa <- function(x,
     nomo_plot_labs(
       title = "EFA factor correlations",
       subtitle = if (isTRUE(x$oblique)) {
-        "Unique interfactor correlations from the oblique solution"
+        "Unique interfactor correlations from the oblique solution."
       } else if (identical(x$rotation, "none")) {
-        "Unrotated solution: the factors are uncorrelated by construction"
+        "Unrotated solution: the factors are uncorrelated by construction."
       } else {
-        "Orthogonal rotation constrains interfactor correlations to zero"
+        "Orthogonal rotation constrains interfactor correlations to zero."
       },
       x = NULL,
       y = NULL,
@@ -515,13 +525,13 @@ plot.nomo_efa <- function(x,
 # The pattern plot's subtitle names the solution that was fitted (#145, efa-7).
 nomo_efa_solution_subtitle <- function(x) {
   if (isTRUE(x$n_factors < 2L)) {
-    "One-factor solution: the loadings are not rotated"
+    "One-factor solution: the loadings are not rotated."
   } else if (isTRUE(x$oblique)) {
-    "Oblique solution: pattern coefficients are primary for factor interpretation"
+    "Oblique solution: pattern coefficients are primary for factor interpretation."
   } else if (identical(x$rotation, "none")) {
-    "Unrotated solution: the loadings are not rotated toward simple structure"
+    "Unrotated solution: the loadings are not rotated toward simple structure."
   } else {
-    "Orthogonal solution: factor axes are constrained to be uncorrelated"
+    "Orthogonal solution: factor axes are constrained to be uncorrelated."
   }
 }
 

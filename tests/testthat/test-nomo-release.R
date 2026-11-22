@@ -138,6 +138,12 @@ test_that("the coverage workflow keeps the settings of its line gate (#53)", {
 test_that("a CI job checks the package under CRAN conditions and reports the time (#39)", {
   workflow <- workflow_text("cran-conditions.yaml")
   expect_match(workflow, "os: [ubuntu-latest, windows-latest]", fixed = TRUE)
+  # CRAN notes CPU time over 2.5 times elapsed time; R leaves the thresholds
+  # unset, so the job sets them.
+  for (part in c("EXAMPLE", "TEST", "VIGNETTE")) {
+    expect_match(workflow, paste0("_R_CHECK_", part, "_TIMING_CPU_TO_ELAPSED_THRESHOLD_: 2.5"),
+                 fixed = TRUE)
+  }
   # NOT_CRAN is unset, as on CRAN, for the step and so for the build and the
   # check it starts; the step stops if skip_on_cran() would not skip.
   expect_match(workflow, "Sys.unsetenv(\"NOT_CRAN\")", fixed = TRUE)
@@ -164,10 +170,15 @@ test_that("a CI job checks the package under CRAN conditions and reports the tim
 
 # The release plan --------------------------------------------------------------
 
-# The introduction of NEWS.md: what comes before its first second-level heading.
+# The introduction of the 1.0.0 section of NEWS.md: what comes between its
+# heading and its first second-level heading. Changes made after 1.0.0 are
+# listed above it, under a heading of their own.
 news_introduction <- function() {
   lines <- readLines(release_source_file("NEWS.md"), warn = FALSE, encoding = "UTF-8")
-  paste(lines[seq_len(grep("^## ", lines)[[1L]] - 1L)], collapse = "\n")
+  start <- match("# nomologR 1.0.0", lines)
+  expect_false(is.na(start), label = "NEWS.md has no section for 1.0.0")
+  rest <- lines[-seq_len(start)]
+  paste(rest[seq_len(grep("^## ", rest)[[1L]] - 1L)], collapse = "\n")
 }
 
 # A document's text on one line, with typographic apostrophes as typed.

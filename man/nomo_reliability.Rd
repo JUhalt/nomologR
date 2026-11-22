@@ -84,8 +84,9 @@ Other fields record the call, the settings used, and intermediate engine
 results. They may change between releases and are not part of the stable
 interface (see \code{?nomologR}).
 
-\code{print()} shows the range of omega, the flags it raised against the review
-reference, and how uncertainty was handled; \code{summary()} adds each
+\code{print()} shows the cases the model analyzed, the range of omega, the
+flags it raised against the review reference, and how uncertainty was
+handled; \code{summary()} adds each
 construct's omega and alpha with their intervals and score scales, the
 reason any alpha was not computed, and every flag in the decision log
 with its reason.
@@ -102,7 +103,11 @@ The function is deliberately measurement-first: it refuses nonconverged
 models, structural SEMs, higher-order models, and cross-loaded first-order
 indicators. When global CFA strain or an improper solution is present,
 reliability is still inspectable but the decision log warns that
-model-based reliability can be distorted by misspecification.
+model-based reliability can be distorted by misspecification. An indicator
+that loads on its factor with the opposite sign to the factor's other
+indicators, as a reverse-keyed item does until it is recoded, is a concern:
+omega and alpha describe the unit-weighted sum, in which such an item counts
+against the factor. Recode reverse-keyed items before fitting the CFA.
 
 For ordered indicators, the observed-score omega (\code{ordinal_scale = TRUE})
 is the same whether lavaan fitted the model with its delta or theta

@@ -20,7 +20,7 @@ test_that("auto_delete and auto_respecify cannot be switched on (#145)", {
   # They record a design rule; setting either to TRUE was silently ignored.
   check <- nomologR:::nomo_defaults_check_safeguards
   expect_identical(check(nomo_defaults()), nomo_defaults())
-  expect_silent(check(list()))
+  expect_identical(check(list()), list())
 
   guidance <- nomo_defaults()
   guidance$auto_delete <- TRUE

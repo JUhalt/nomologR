@@ -176,7 +176,7 @@ nomo_screen_descriptives <- function(selected, item_summary, guidance,
         metric = metric,
         value = item_summary$mode_prop[[idx]],
         reference = sprintf(
-          "Teaching reference %s of responses in one category; not a deletion rule",
+          "Review reference %s of responses in one category; not a deletion rule",
           nomo_present_percent(concentration_reference, base = n_observed)
         ),
         severity = "review",

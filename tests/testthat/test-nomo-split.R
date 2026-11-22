@@ -59,7 +59,7 @@ test_that("print.nomo_split communicates the design tradeoff", {
   local_reproducible_output(width = 80)
   txt <- capture.output(print(out))
 
-  expect_true("Rows: 200 | Calibration: 100 | Validation: 100" %in% txt)
+  expect_true("Cases: 200 | Calibration: 100 | Validation: 100" %in% txt)
   # Proportions without the leading zero (#144).
   expect_true(any(grepl("Validation proportion: .50 requested, .50 realized", txt, fixed = TRUE)))
   # The sentence wraps at the console width, so search the joined text.

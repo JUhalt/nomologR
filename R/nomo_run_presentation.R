@@ -419,8 +419,10 @@ nomo_run_print_body <- function(x, research) {
 }
 
 
+#' @rdname printing
 #' @export
-print.nomo_run <- function(x, ...) {
+print.nomo_run <- function(x, digits = NULL, ...) {
+  nomo_present_local_digits(digits)
   research <- identical(x$mode, "research")
   body <- utils::capture.output(nomo_run_print_body(x, research))
   nomo_present_cat(body)
@@ -639,8 +641,12 @@ nomo_run_summary_body <- function(x) {
 }
 
 
+#' @rdname printing
 #' @export
-print.summary_nomo_run <- function(x, ...) {
+print.summary_nomo_run <- function(x, digits = NULL, ...) {
+  nomo_present_digits_unused(
+    digits, "a run's summary shows its stages, decisions, and flags as the stages recorded them."
+  )
   body <- utils::capture.output(nomo_run_summary_body(x))
   nomo_present_cat(body)
   nomo_run_present_abbreviations(body, key = TRUE)

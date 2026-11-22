@@ -42,7 +42,9 @@ printed. Any of them may be empty.
 }
 
 Headings, cells, and notes are written in Markdown, as pandoc reads it:
-italics as \verb{*p*} and a superscript as \verb{^a^}. \code{print()} shows the table as
+italics as \verb{*p*} and a superscript as \verb{^a^}. Knitted to HTML, only these
+two are read as Markdown; other Markdown added to a table, such as
+\verb{**bold**}, shows as written. \code{print()} shows the table as
 aligned text under its number and title, with its notes, the italics
 dropped, and a note marker written \code{(a)}; a table wider than the console
 wraps its long headings and text cells, and names any column it still
@@ -56,13 +58,18 @@ order general, specific, probability.
 }
 \details{
 \strong{Leading zeros follow the statistic, not the value.} APA 7 drops the
-leading zero only for statistics that \emph{cannot} exceed 1. So \emph{p} values,
+leading zero for statistics that cannot exceed 1. So \emph{p} values,
 correlations, reliability coefficients, and CFI are written \code{.95}, while TLI,
-RMSEA, SRMR, and standardized loadings keep it, \code{0.95}, because each can
-exceed 1 in principle: TLI is not bounded above, and a standardized loading
-does in an improper (Heywood) solution. Many published tables print
-standardized loadings without the zero; this follows the rule as written,
-as the output style shared with \code{contentvalidR} does.
+RMSEA, SRMR, and heterotrait-monotrait ratios keep it, \code{0.95}, because each
+can exceed 1. Standardized loadings and standardized path coefficients are
+written without the zero, \code{.82}, as APA's own sample tables write them. A
+standardized value of 1 or more, as in an improper (Heywood) solution, keeps
+its integer digit, \code{1.04}. Unstandardized estimates keep the zero.
+
+\strong{\emph{p} values.} A \emph{p} cell gives the exact value to three decimals, \code{.015}.
+Below .001 it reads \verb{<.001}, and a value that would round to 1 reads
+\verb{>.999}, written without a space as APA writes them in tables. Running text
+and notes keep the spaces, "\emph{p} < .001".
 
 \strong{No verdicts.} Table notes keep the package's reference-value language.
 No cell reads PASS or FAIL, and fit indices are not labeled good or poor.
@@ -99,10 +106,36 @@ problems (Henseler et al., 2015). AVE is convergent evidence and has its own
 \code{"convergent"} table.
 
 \strong{Knitting.} In an R Markdown or Quarto document the table renders as a
-table with its number, title, and notes. Each column's share of the page
-follows its widest entry. Knitted to PDF, the Greek letters and math
-symbols are written as TeX math, so the default \code{pdflatex} engine compiles
-them.
+table with its number, title, and notes, ruled as APA sets a table: a rule
+above it, one beneath the column headings, and one below it, and none
+between rows. Knitted to HTML, the table is written as HTML with its own
+style sheet, so the rules hold in any HTML document, whatever its theme.
+Knitted to Word or PDF, each column's share of the page follows its widest
+entry. Knitted to PDF, the Greek letters and math symbols are written as TeX
+math, so the default \code{pdflatex} engine compiles them.
+
+\strong{Word.} A Word document draws a table's rules from its reference
+document's table style, and pandoc's default draws only the rule beneath the
+headings. The package ships a reference document whose table style draws
+all three APA rules and nothing between rows; it is otherwise pandoc's
+default, and \code{\link[=nomo_report]{nomo_report()}} uses it for a Word report. To use it in your
+own document, name it as the reference document in the YAML header:
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{output:
+  word_document:
+    reference_docx: !expr system.file("rmarkdown", "nomo-apa-reference.docx", package = "nomologR")
+}\if{html}{\out{</div>}}
+
+or in R:
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{rmarkdown::word_document(reference_docx = system.file(
+  "rmarkdown", "nomo-apa-reference.docx", package = "nomologR"
+))
+}\if{html}{\out{</div>}}
+
+Every table in the document then takes these rules. A reference document of
+your own, such as a journal's, can be given the same rules by editing its
+"Table" style in Word.
 
 The rules come from the \emph{Publication Manual of the American Psychological
 Association} (7th ed.), checked against Purdue OWL's APA 7 guides.

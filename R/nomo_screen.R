@@ -59,7 +59,7 @@
 #' psychometric cutoff rules.
 #'
 #' Response concentration and near-zero-variance flags use configurable
-#' teaching references from [nomo_defaults()]. They are screening heuristics,
+#' review references from [nomo_defaults()]. They are screening heuristics,
 #' not psychometric laws or automatic item-retention rules. Ordered and
 #' numeric-discrete items also receive descriptive boundary concentration
 #' summaries, `floor_prop` and `ceiling_prop`. An ordered item's boundaries are
@@ -638,11 +638,17 @@ nomo_screen <- function(data,
 #' entries are flagged; [summary.nomo_screen()] shows each item's review.
 #'
 #' @param x A `nomo_screen` object.
+#' @param digits Changes nothing here: `print()` shows counts, and a value
+#'   given is answered with a message. [summary.nomo_screen()] shows each
+#'   item's statistics. See [printing].
 #' @param ... Additional arguments, currently ignored.
 #'
 #' @return `x`, invisibly.
 #' @export
-print.nomo_screen <- function(x, ...) {
+print.nomo_screen <- function(x, digits = NULL, ...) {
+  nomo_present_digits_unused(
+    digits, "print() of a `nomo_screen` shows counts; summary(x) shows each item's statistics."
+  )
   n_items <- length(x$items)
   n_missing_items <- sum(x$item_summary$n_missing > 0L)
   n_constant <- sum(x$item_summary$constant)

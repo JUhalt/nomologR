@@ -112,7 +112,7 @@ nomo_reliability_flag_text <- function(metric, estimate, reference) {
       estimate < 0 | estimate > 1,
       sprintf("%s %s is outside the 0 to 1 range of a reliability.", label, shown),
       sprintf("%s %s is below the review reference %s.", label, shown,
-              nomo_present_stat(reference, "reliability"))
+              nomo_present_stat(reference, "reliability", given = TRUE))
     )
   )
 }
@@ -125,7 +125,9 @@ nomo_reliability_brief <- c(
     "The latent-response omega and alpha depend on lavaan's theta",
     "parameterization; a delta fit of the same model gives different values."
   ),
-  bootstrap_reproducibility = "No seed was set, so the bootstrap intervals cannot be reproduced exactly."
+  bootstrap_reproducibility = "No seed was set, so the bootstrap intervals cannot be reproduced exactly.",
+  # Its observation names the items (usefulness-02).
+  loading_signs = NA_character_
 )
 
 
@@ -140,7 +142,8 @@ nomo_reliability_other_flags <- function(log, brief = FALSE) {
     unit = ifelse(rows$object %in% c("measurement_model", "uncertainty"), "", rows$object),
     status = rows$severity,
     text = if (isTRUE(brief)) {
-      unname(nomo_reliability_brief[rows$metric])
+      brief_text <- unname(nomo_reliability_brief[rows$metric])
+      ifelse(is.na(brief_text), rows$observation, brief_text)
     } else {
       nomo_present_then_recommend(rows$observation, rows$recommendation)
     }
@@ -148,15 +151,20 @@ nomo_reliability_other_flags <- function(log, brief = FALSE) {
 }
 
 
+#' @rdname printing
 #' @export
-print.nomo_reliability <- function(x, ...) {
+print.nomo_reliability <- function(x, digits = NULL, ...) {
+  nomo_present_local_digits(digits)
   tab <- nomo_reliability_summary_table(x)
   reference <- x$guidance$reliability_reference
   nomo_present_header("nomo_reliability", "Reliability")
   nomo_present_facts(c(
-    sprintf("Constructs: %d", length(unique(tab$construct))),
+    nomo_lavaan_cases_fact(nomo_lavaan_cases(x[["fit"]])),
+    sprintf("Constructs: %d", length(unique(tab$construct)))
+  ))
+  nomo_present_facts(c(
     "Primary coefficient: model-based omega",
-    paste0("Review reference: ", nomo_present_stat(reference, "reliability"))
+    paste0("Review reference: ", nomo_present_stat(reference, "reliability", given = TRUE))
   ))
 
   finite_omega <- tab$omega[is.finite(tab$omega)]
@@ -235,14 +243,19 @@ print.nomo_reliability <- function(x, ...) {
 #'
 #' @param object A `nomo_reliability` object.
 #' @param ... Unused.
-#' @return An object of class `summary_nomo_reliability`. Printed, it shows each
-#'   construct's omega and alpha with their intervals, score scale, and flag,
-#'   why any alpha was not computed, and the reason for each flag in the
+#' @return An object of class `summary_nomo_reliability`. Its `n_used` and
+#'   `data_n` are the cases the model analyzed and the rows of the data it was
+#'   given. Printed, it shows those cases, each construct's omega and alpha
+#'   with their intervals, score scale, and flag, why any alpha was not
+#'   computed, and the reason for each flag in the
 #'   decision log, including those that qualify the coefficients, such as a
 #'   theta parameterization or intervals that could not be computed.
 #' @export
 summary.nomo_reliability <- function(object, ...) {
+  cases <- nomo_lavaan_cases(object[["fit"]])
   out <- list(
+    n_used = cases$n_used,
+    data_n = cases$data_n,
     table = nomo_reliability_summary_table(object),
     alpha_status = object$alpha_status,
     ci_status = object$ci_status,
@@ -259,13 +272,16 @@ summary.nomo_reliability <- function(object, ...) {
 }
 
 
+#' @rdname printing
 #' @export
-print.summary_nomo_reliability <- function(x, ...) {
+print.summary_nomo_reliability <- function(x, digits = NULL, ...) {
+  nomo_present_local_digits(digits)
   reference <- x$reference
   nomo_present_header("nomo_reliability", "Reliability", summary = TRUE)
   nomo_present_facts(c(
+    nomo_lavaan_cases_fact(x),
     sprintf("Constructs: %d", length(unique(x$table$construct))),
-    paste0("Review reference: ", nomo_present_stat(reference, "reliability"))
+    paste0("Review reference: ", nomo_present_stat(reference, "reliability", given = TRUE))
   ))
   nomo_present_section("Coefficients")
   ci_label <- nomo_reliability_ci_label(x$ci_status)

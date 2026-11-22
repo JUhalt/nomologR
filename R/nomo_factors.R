@@ -84,7 +84,12 @@
 #'   `NULL`, the value in `guidance$factor_parallel_iterations` is used. It
 #'   also sets the number of simulated data sets for NEST and Hull, which
 #'   default to 1000 in `EFAtools`, so a small `n_iter` makes those criteria
-#'   coarser too.
+#'   coarser too. Each null data set needs its own correlation matrix. With
+#'   ordinal items it is polychoric (or mixed), which takes far longer than
+#'   Pearson: the default 100 can take many minutes for a large item set, such
+#'   as 25 items and 2800 cases. A message says so before parallel analysis
+#'   starts. A smaller `n_iter` shortens it and makes the null reference
+#'   coarser.
 #' @param quantile Quantile of null eigenvalues used as the parallel-analysis
 #'   reference. If `NULL`, the value in
 #'   `guidance$factor_parallel_quantile` is used. It also sets the percentile
@@ -192,8 +197,23 @@
 #' Journal of Statistical Psychology, 3*(2), 77-85.
 #' \doi{10.1111/j.2044-8317.1950.tb00285.x}
 #'
+#' Kaiser, H. F. (1970). A second generation little jiffy. *Psychometrika,
+#' 35*(4), 401-415. \doi{10.1007/BF02291817}
+#'
 #' Kaiser, H. F. (1974). An index of factorial simplicity. *Psychometrika,
 #' 39*(1), 31-36. \doi{10.1007/BF02291575}
+#'
+#' Correlations for ordered categories:
+#'
+#' Flora, D. B., & Curran, P. J. (2004). An empirical evaluation of alternative
+#' methods of estimation for confirmatory factor analysis with ordinal data.
+#' *Psychological Methods, 9*(4), 466-491. \doi{10.1037/1082-989X.9.4.466}
+#'
+#' Rhemtulla, M., Brosseau-Liard, P. É., & Savalei, V. (2012). When can
+#' categorical variables be treated as continuous? A comparison of robust
+#' continuous and categorical SEM estimation methods under suboptimal
+#' conditions. *Psychological Methods, 17*(3), 354-373.
+#' \doi{10.1037/a0029315}
 #'
 #' @examples
 #' fac <- nomo_factors(nomo_demo_continuous, n_iter = 20, seed = 2026)
@@ -483,6 +503,7 @@ nomo_factors <- function(data,
     np_obs = if (fm == "minchi") pairwise_n
   )
 
+  nomo_factors_parallel_message(method, n_iter, ncol(analysis_data), nrow(analysis_data))
   pa <- nomo_factors_parallel(
     x = analysis_data,
     model_types = item_types$model_type,
@@ -1012,6 +1033,26 @@ nomo_factors_parallel <- function(x,
 }
 
 
+# Parallel analysis estimates one correlation matrix per null data set. A
+# polychoric or mixed matrix can take seconds where a Pearson one takes
+# milliseconds, so with ordinal items the loop can run for many minutes with
+# no output (#183). A message says so before it starts; suppressMessages()
+# silences it.
+nomo_factors_parallel_message <- function(method, n_iter, n_items, n_cases) {
+  if (!method %in% c("polychoric", "mixed")) return(invisible(NULL))
+  message(sprintf(
+    "Parallel analysis with %s correlations: %s for %s and %s; this can take several minutes.%s",
+    method,
+    nomo_present_count(n_iter, "null data set"),
+    nomo_present_count(n_items, "item"),
+    nomo_present_count(n_cases, "case"),
+    # 10 is the fewest `n_iter` allows.
+    if (n_iter > 10L) " Lower `n_iter` to shorten it." else ""
+  ))
+  invisible(NULL)
+}
+
+
 # The null eigenvalues and the retention counts they give. It draws from the
 # random-number stream as it stands, so nomo_factors_parallel() seeds it.
 nomo_factors_parallel_null <- function(x,
@@ -1486,12 +1527,12 @@ nomo_factors_log <- function(item_types,
       metric = "small_sample_prompt",
       value = min_pairwise_n,
       reference = sprintf(
-        "%d is a teaching prompt, not a universal factor-analysis minimum",
+        "%d is a review reference, not a universal factor-analysis minimum",
         small_ref
       ),
       severity = "review",
       observation = sprintf(
-        "The effective sample size is below the teaching reference of %d.",
+        "The effective sample size is below the review reference %d.",
         small_ref
       ),
       recommendation = paste(
@@ -1540,7 +1581,7 @@ nomo_factors_log <- function(item_types,
       metric = "kmo",
       value = kmo$overall,
       reference = sprintf(
-        "%s and %s are teaching review and concern prompts, not universal laws",
+        "%s and %s are review and concern references, not universal laws",
         nomo_present_stat(review_ref, "proportion"),
         nomo_present_stat(concern_ref, "proportion")
       ),

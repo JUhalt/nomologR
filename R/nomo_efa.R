@@ -71,7 +71,12 @@
 #' extractions often stop just short of 1), a model with more parameters than
 #' the correlations can identify (negative degrees of freedom) or exactly as
 #' many (zero), an extraction that did not converge, and any warning or message
-#' from [psych::fa()].
+#' from [psych::fa()]. Numeric items modeled as continuous, with Pearson
+#' correlations, are flagged for review when they use 4 or fewer observed
+#' categories between them. Marking them as ordinal in `types` uses polychoric
+#' correlations, the EFA counterpart of the categorical estimation that
+#' recovers CFA loadings better with so few categories (Rhemtulla et al.,
+#' 2012).
 #'
 #' `print()` shows the settings, the residual misfit, the item flags, and any
 #' problem with the solution; `summary()` adds the item loadings and
@@ -136,6 +141,12 @@
 #'
 #' Kaiser, H. F. (1958). The varimax criterion for analytic rotation in factor
 #' analysis. *Psychometrika, 23*(3), 187-200. \doi{10.1007/BF02289233}
+#'
+#' Rhemtulla, M., Brosseau-Liard, P. É., & Savalei, V. (2012). When can
+#' categorical variables be treated as continuous? A comparison of robust
+#' continuous and categorical SEM estimation methods under suboptimal
+#' conditions. *Psychological Methods, 17*(3), 354-373.
+#' \doi{10.1037/a0029315}
 #'
 #' Watkins, M. W. (2018). Exploratory factor analysis: A guide to best
 #' practice. *Journal of Black Psychology, 44*(3), 219-246.
@@ -621,7 +632,8 @@ nomo_efa <- function(data,
     oblique = oblique,
     heywood = heywood,
     dof = dof,
-    engine_messages = engine_messages
+    engine_messages = engine_messages,
+    few_categories = nomo_efa_few_categories(selected, item_types)
   )
 
   out <- list(
@@ -858,7 +870,8 @@ nomo_efa_log <- function(k,
                          oblique = rotation %in% nomo_efa_rotations$oblique,
                          heywood = character(),
                          dof = NA_real_,
-                         engine_messages = character()) {
+                         engine_messages = character(),
+                         few_categories = character()) {
   log <- nomo_log_new()
 
   log <- nomo_log_add(
@@ -1036,6 +1049,29 @@ nomo_efa_log <- function(k,
     )
   }
 
+  # In the words nomo_factors() uses for numeric-discrete items (usefulness-04).
+  if (length(few_categories)) {
+    log <- nomo_log_add(
+      log,
+      stage = "efa",
+      object = paste(few_categories, collapse = ", "),
+      metric = "few_categories",
+      value = length(few_categories),
+      reference = "Numeric storage does not establish ordinal measurement",
+      severity = "review",
+      observation = sprintf(
+        "%s with 4 or fewer observed categories %s modeled as continuous: %s.",
+        nomo_present_count(length(few_categories), "numeric-discrete item"),
+        nomo_present_noun(length(few_categories), "was", "were"),
+        paste(few_categories, collapse = ", ")
+      ),
+      recommendation = paste(
+        "If these are Likert/ordered indicators, rerun with `types` marking them",
+        "as ordinal, which uses polychoric correlations, and compare the loadings."
+      )
+    )
+  }
+
   if (smoothed) {
     log <- nomo_log_add(
       log,
@@ -1145,7 +1181,7 @@ nomo_efa_log <- function(k,
       metric = "item_structure_review",
       value = abs(row$primary_loading),
       reference = sprintf(
-        "Teaching references: loading %s, cross-loading %s, communality %s",
+        "Review references: loading %s, cross-loading %s, communality %s",
         nomo_present_stat(loading_ref, "loading"),
         nomo_present_stat(cross_ref, "loading"),
         nomo_present_stat(communality_ref, "proportion")
@@ -1223,7 +1259,7 @@ nomo_efa_log <- function(k,
       object = "sample",
       metric = "sample_size",
       value = min_pairwise_n,
-      reference = sprintf("%d cases is a teaching review reference, not a universal minimum", small_n_ref),
+      reference = sprintf("%d cases is a review reference, not a universal minimum", small_n_ref),
       severity = "review",
       observation = sprintf(
         "%d cases were analyzed for %d items%s (%.1f cases per item).",
@@ -1312,6 +1348,20 @@ nomo_efa_engine_messages <- function(messages) {
 }
 
 
+# The items with 4 or fewer observed categories that were modeled as
+# continuous, with Pearson correlations, without a `types` declaration making
+# them so (usefulness-04). Categories are counted over all such items
+# together, as nomo_cfa() counts them over a factor's indicators, so a
+# five-point item whose answers fall in three categories is not named.
+nomo_efa_few_categories <- function(selected, item_types) {
+  continuous <- item_types$item[item_types$model_type == "continuous" &
+                                  item_types$source != "user_override"]
+  values <- unique(stats::na.omit(unlist(selected[continuous], use.names = FALSE)))
+  if (!length(continuous) || length(values) > 4L) return(character())
+  continuous
+}
+
+
 # "3 factors on 4 items leave -3 degrees of freedom: ..." (#145, efa-3).
 nomo_efa_dof_text <- function(k, n_items, dof) {
   lead <- sprintf(
@@ -1349,7 +1399,7 @@ nomo_efa_heywood_text <- function(item, h2) {
     digits <- nchar(shown) - as.integer(regexpr(".", shown, fixed = TRUE))
     sprintf(
       "%s is %s, so its unique variance (%s) is at or near 0: an improper (Heywood) solution.",
-      subject, shown, nomo_present_stat(1 - h2, "proportion", digits = digits)
+      subject, shown, nomo_present_number(1 - h2, digits, bounded = TRUE)
     )
   }
 }

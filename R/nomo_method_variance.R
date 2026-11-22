@@ -327,7 +327,7 @@ nomo_method_variance <- function(model,
   # nomo_esem() report it.
   variants <- NULL
   models <- dplyr::bind_rows(lapply(names(fits), function(label) {
-    m <- suppressWarnings(lavaan::fitMeasures(fits[[label]]))
+    m <- suppressWarnings(nomo_fit_measures_read(fits[[label]]))
     picked <- list()
     get <- function(name, ...) {
       found <- nomo_cfa_first_measure(m, c(...))
@@ -1000,8 +1000,10 @@ nomo_method_variance_display_fields <- function(x) {
 }
 
 
+#' @rdname printing
 #' @export
-print.nomo_method_variance <- function(x, ...) {
+print.nomo_method_variance <- function(x, digits = NULL, ...) {
+  nomo_present_local_digits(digits)
   shown <- nomo_method_variance_display_fields(x)
   nomo_method_variance_present_facts(shown)
   nomo_method_variance_present_comparisons(x$comparisons, single_factor = !nrow(x$correlations))
@@ -1033,8 +1035,10 @@ summary.nomo_method_variance <- function(object, ...) {
 }
 
 
+#' @rdname printing
 #' @export
-print.summary_nomo_method_variance <- function(x, ...) {
+print.summary_nomo_method_variance <- function(x, digits = NULL, ...) {
+  nomo_present_local_digits(digits)
   nomo_method_variance_present_facts(x)
   fit <- function(kind) function(v) nomo_present_stat(v, kind)
   nomo_present_section("Models")

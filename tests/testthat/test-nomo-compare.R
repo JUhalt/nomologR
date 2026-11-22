@@ -1192,8 +1192,48 @@ test_that("compare plots name their references and keep status shapes for status
   pair <- compare_fitted_pair()
   out <- nomo_compare(full = pair$full, zero_b5 = pair$zero, rationale = "x", evidence = FALSE)
   fit <- plot(out, type = "fit")
-  expect_match(gsub("\n", " ", fit$labels$subtitle),
-               "CFI .950, TLI 0.950, RMSEA 0.060, SRMR 0.080", fixed = TRUE)
+  # The design every global-fit plot shares (#145, clarity-13): a row per
+  # model, a panel per index, the references in the shared caption, and a value
+  # beyond its reference flagged as nomo_cfa() flags it.
+  expect_match(plot_text(fit$labels$caption),
+               "Dashed lines are review references: CFI .950, TLI 0.950, RMSEA 0.060, SRMR 0.080.",
+               fixed = TRUE)
+  expect_match(plot_text(fit$labels$caption), "No model is selected automatically.", fixed = TRUE)
+  expect_match(plot_text(fit$labels$subtitle), "Points are each model's values.", fixed = TRUE)
+  expect_identical(levels(droplevels(fit$data$panel)),
+                   c("CFI: higher values favor fit", "TLI: higher values favor fit",
+                     "RMSEA: lower values favor fit", "SRMR: lower values favor fit"))
+  built <- ggplot2::ggplot_build(fit)
+  expect_identical(built$layout$panel_params[[1L]]$y$get_labels(), c("zero_b5", "full"))
+  for (m in c("CFI", "TLI", "RMSEA", "SRMR")) {
+    rows <- fit$data[fit$data$metric == m, , drop = FALSE]
+    expected <- pair$full$fit_evidence$attention[match(m, pair$full$fit_evidence$metric)]
+    expect_identical(as.character(rows$status[rows$model == "full"]),
+                     as.character(nomologR:::nomo_plot_status(expected)))
+    expected <- pair$zero$fit_evidence$attention[match(m, pair$zero$fit_evidence$metric)]
+    expect_identical(as.character(rows$status[rows$model == "zero_b5"]),
+                     as.character(nomologR:::nomo_plot_status(expected)))
+  }
+  # The caption names the versions of the indices in the words every
+  # global-fit plot uses: none for ML fits, and robust values for MLR fits.
+  expect_false(grepl("robust", plot_text(fit$labels$caption), fixed = TRUE))
+  robust <- nomo_compare(
+    full = nomo_cfa(compare_syntax$full, nomo_demo_continuous, estimator = "MLR"),
+    zero_b5 = nomo_cfa(compare_syntax$zero_b5, nomo_demo_continuous, estimator = "MLR"),
+    rationale = "x", evidence = FALSE
+  )
+  expect_match(plot_text(plot(robust, type = "fit")$labels$caption),
+               "theory. CFI, TLI, and RMSEA are robust values. No model is selected automatically.",
+               fixed = TRUE)
+  expect_match(plot_text(plot(robust$fits$full, type = "fit")$labels$caption),
+               "theory. CFI, TLI, and RMSEA are robust values.", fixed = TRUE)
+  # A version that differs across models is named as such.
+  robust$fits$zero_b5$fit_evidence$variant[
+    robust$fits$zero_b5$fit_evidence$metric == "RMSEA"
+  ] <- "rmsea"
+  expect_match(plot_text(plot(robust, type = "fit")$labels$caption),
+               "CFI and TLI are robust values. RMSEA is a robust or standard value.",
+               fixed = TRUE)
   loadings <- plot(out, type = "loadings")
   shapes <- ggplot2::get_guide_data(loadings, "shape")$shape
   expect_false(any(shapes %in% c(16, 1, 15, 4)))

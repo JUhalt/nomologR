@@ -318,17 +318,21 @@ nomo_scores_unit_weighting <- function(input, parts) {
 }
 
 
-# Items whose standardized loading has the opposite sign to their factor's
-# strongest loading. A sum adds them as they are, so each counts against the
+# Items whose standardized loading has the opposite sign to most of their
+# factor's loadings, or on a tie to its strongest: the rule nomo_cfa(),
+# nomo_reliability(), and nomo_validity() use, so all name the same items
+# (usefulness-02). A sum adds them as they are, so each counts against the
 # factor it measures; the model, by contrast, weights them negatively (#145).
-# A named list: one character vector per factor, empty for most.
+# Each factor is compared on its own, so a cross-loaded item, which a sum adds
+# to every factor it loads on, is compared on each. A named list: one
+# character vector per factor, empty for most.
 nomo_scores_opposite_signs <- function(input) {
-  std <- lavaan::standardizedSolution(input$fit)
+  std <- lavaan::standardizedSolution(input$fit, se = FALSE, zstat = FALSE,
+                                      pvalue = FALSE, ci = FALSE)
   std <- std[std$op == "=~" & is.finite(std$est.std), , drop = FALSE]
   out <- lapply(names(input$factors), function(f) {
     rows <- std[std$lhs == f & std$rhs %in% input$factors[[f]], , drop = FALSE]
-    strongest <- sign(rows$est.std[which.max(abs(rows$est.std))])
-    as.character(rows$rhs[sign(rows$est.std) == -strongest])
+    as.character(rows$rhs[nomo_cfa_sign_split(rows$lhs, rows$rhs, rows$est.std)$against])
   })
   stats::setNames(out, names(input$factors))
 }

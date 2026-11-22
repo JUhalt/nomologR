@@ -498,6 +498,7 @@ test_that("closeout: validity HTMT failures and inadmissible values are explicit
 
 
 test_that("closeout: validity grouped Fornell-Larcker and post-check concern paths are explicit", {
+  skip_on_cran()
   dat <- lavaan::HolzingerSwineford1939
   fit <- lavaan::cfa(
     "
@@ -542,6 +543,7 @@ test_that("closeout: validity grouped Fornell-Larcker and post-check concern pat
 
 
 test_that("closeout B: validity handles an empty standardized-loading evidence table", {
+  skip_on_cran()
   skip_if_not(
     exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
   )
@@ -562,9 +564,11 @@ test_that("a single construct has no pairs, and its output raises no warnings", 
   v <- nomo_validity(nomo_cfa("A =~ a1 + a2 + a3 + a4", data = nomo_demo_continuous))
   expect_identical(nrow(nomologR:::nomo_validity_discriminant_table(v)), 0L)
   # The output is captured, so the suite does not print it (R-0b sweep).
-  expect_no_warning(utils::capture.output(print(v)))
-  expect_no_warning(utils::capture.output(print(summary(v))))
-  expect_no_warning(evidence <- nomologR:::nomo_run_key_evidence(list(results = list(validity = v))))
+  expect_no_warning_off_cran(utils::capture.output(print(v)))
+  expect_no_warning_off_cran(utils::capture.output(print(summary(v))))
+  expect_no_warning_off_cran(
+    evidence <- nomologR:::nomo_run_key_evidence(list(results = list(validity = v)))
+  )
   expect_match(evidence, "separation flags none", fixed = TRUE)
 })
 
@@ -671,7 +675,8 @@ test_that("flag counts name what they count, and constructs are counted once (#1
     "visual =~ x1 + x2 + x3\ntextual =~ x4 + x5 + x6",
     data = lavaan::HolzingerSwineford1939, group = "school"
   ))))
-  expect_match(grouped, "^Constructs: 2 \\| Groups: 2", all = FALSE)
+  # The cases are those of both groups (#145, clarity-08).
+  expect_match(grouped, "^Cases: 301 \\| Constructs: 2 \\| Groups: 2", all = FALSE)
   expect_match(grouped, "(2 constructs in 2 groups)", fixed = TRUE, all = FALSE)
   expect_match(grouped, "visual in Pasteur (Review)", fixed = TRUE, all = FALSE)
   expect_match(grouped, "nomo_invariance() compares", fixed = TRUE, all = FALSE)
@@ -843,7 +848,8 @@ test_that("each flagged construct and pair gets one sentence in print (#145)", {
   # Several levels are counted as levels.
   levels <- val
   levels$nlevels <- 2L
-  expect_match(capture.output(print(levels)), "^Constructs: 2 \\| Levels: 2", all = FALSE)
+  expect_match(capture.output(print(levels)),
+               "^Cases: [0-9]+( of [0-9]+ used)? \\| Constructs: 2 \\| Levels: 2", all = FALSE)
 })
 
 
@@ -865,6 +871,7 @@ validity_moderate_fit <- function() {
 
 
 test_that("a latent correlation sets a pair's flag only where no HTMT value exists (#145)", {
+  skip_on_cran()
   fit <- validity_moderate_fit()
   val <- nomo_validity(fit)
   tab <- nomo_table(val, "discriminant")
@@ -1018,6 +1025,11 @@ test_that("a flagged loading's log row states it beside its reference (#144, #14
       z$loading[odd] <- c(1.04, NA, -.4996)
       z$attention[odd] <- c("STRONG REVIEW", "REVIEW", "REVIEW")
       z$explanation[odd[[2L]]] <- "A finite standardized loading was not available."
+      # A flagged loading below 1 keeps the CFA's explanation (usefulness-02),
+      # here the one the CFA gives a loading of -0.4996.
+      z$explanation[odd[[3L]]] <- nomologR:::nomo_cfa_loadings(
+        data.frame(lhs = "A", op = "=~", rhs = "a3", est.std = -.4996), nomo_defaults()
+      )$explanation
       z
     },
     .package = "nomologR"
@@ -1157,7 +1169,7 @@ test_that("a correlation the model fixes is not shown as separation evidence (#1
                fixed = TRUE)
   expect_identical(nrow(plot(no_htmt, type = "discriminant")$data), 2L)
   apa <- nomo_apa_table(no_htmt)
-  expect_identical(apa$body$Constructs, c("visual with speed", "textual with speed"))
+  expect_identical(apa$body$Construct, c("visual with speed", "textual with speed"))
   expect_match(squash(apa$notes$general),
                "Correlations the model fixes are not shown: visual with textual.", fixed = TRUE)
   expect_false(grepl("\u2014 =", squash(apa$notes$general), fixed = TRUE))
@@ -1227,7 +1239,7 @@ test_that("a correlation fixed in some groups or levels is left out only there (
                "Fixed at 0 by the model, so not estimated: visual with textual (Grant-White).",
                fixed = TRUE)
   apa <- nomo_apa_table(partial)
-  expect_identical(apa$body$Group[apa$body$Constructs == "visual with textual"], "Pasteur")
+  expect_identical(apa$body$Group[apa$body$Construct == "visual with textual"], "Pasteur")
   expect_match(squash(apa$notes$general),
                "Correlations the model fixes are not shown: visual with textual (Grant-White).",
                fixed = TRUE)

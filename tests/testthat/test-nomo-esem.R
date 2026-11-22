@@ -66,7 +66,8 @@ test_that("ESEM recovers cross-loadings the CFA inflates the correlation with", 
   expect_s4_class(es$fits$ESEM, "lavaan")
   expect_equal(es$models$chisq[[2L]], unname(lavaan::fitMeasures(es$fits$CFA, "chisq")))
   expect_identical(es$ordered, character())
-  expect_identical(es$estimator, NA_character_)
+  # The estimator lavaan chose is recorded (helppages-7).
+  expect_identical(es$estimator, "ML")
   expect_identical(es$missing, NA_character_)
 
   log <- es$decision_log

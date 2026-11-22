@@ -49,7 +49,7 @@ make_m9_report_run <- local({
       i4 = .72 * f + rnorm(n, sd = .68)
     )
 
-    cache <<- nomo_run(
+    cache <<- suppressMessages(nomo_run(
       data = dat,
       scales = list(WellBeing = names(dat)),
       settings = list(
@@ -70,7 +70,7 @@ make_m9_report_run <- local({
           rationale = "Measurement evidence reviewed for the test fixture."
         )
       )
-    )
+    ))
 
     cache
   }
@@ -174,7 +174,7 @@ make_m9_full_report_run <- local({
       "WellBeing -> criterion" = positive(min = .10)
     )
 
-    cache <<- nomo_run(
+    cache <<- suppressMessages(nomo_run(
       data = dat,
       scales = list(
         WellBeing = c("w1", "w2", "w3", "w4")
@@ -208,7 +208,7 @@ make_m9_full_report_run <- local({
           rationale = "Measurement evidence reviewed for the report fixture."
         )
       )
-    )
+    ))
 
     cache
   }

@@ -1185,7 +1185,7 @@ nomo_methods_registry <- function() {
       "A conventional value below which items were once deleted.",
       paste(
         "No simulation basis for a universal threshold. Displayed as a labeled",
-        "teaching reference; nomologR never deletes an item by this rule."
+        "review reference; nomologR never deletes an item by this rule."
       ),
       "nomo_screen()", "nomologR",
       c("nunnally_bernstein_1994", "clark_watson_2019")
@@ -1610,7 +1610,7 @@ nomo_methods_registry <- function() {
       "Conventional values such as CFI and TLI near .95, RMSEA near .06, SRMR near .08.",
       paste(
         "Derived under specific simulation conditions and widely overgeneralized",
-        "since. Displayed as labeled teaching references, never as pass/fail",
+        "since. Displayed as labeled review references, never as pass/fail",
         "rules."
       ),
       "nomo_cfa()", "nomologR",
@@ -1920,12 +1920,14 @@ nomo_methods_registry <- function() {
       "Correlation between a factor and its estimated factor score.",
       paste(
         "Computed from the model-reproduced correlation matrix, so it does not",
-        "depend on the omega denominator. Gorsuch's (1983) recommendation that",
-        "scores be used above .90, and that competing score sets correlate",
-        "above .70, is reported as his recommendation and not applied."
+        "depend on the omega denominator. Gorsuch (1983, p. 260, as cited in",
+        "Grice, 2001) recommended at least .80, and above .90 for scores used",
+        "as substitutes for the factors. Gorsuch (1983, p. 260, as cited in",
+        "Rodriguez et al., 2016) suggested that competing score sets correlate",
+        "above .70. Both are reported as his recommendations and not applied."
       ),
       "nomo_hierarchical()", "nomologR",
-      c("beauducel_2011", "gorsuch_1983", "rodriguez_2016")
+      c("beauducel_2011", "gorsuch_1983", "grice_2001", "rodriguez_2016")
     ),
     nomo_method_entry(
       "construct_replicability", "reliability",
@@ -2233,9 +2235,10 @@ nomo_methods_registry <- function() {
       "Correlation between a factor score estimate and the factor it estimates.",
       paste(
         "Equals the factor determinacy coefficient for regression scores, which",
-        "maximize it. Gorsuch's (1983) recommendation of at least .80, and",
-        "above .90 for scores used as substitutes for the factors, is reported",
-        "as his recommendation and not applied."
+        "maximize it. Gorsuch (1983, p. 260, as cited in Grice, 2001)",
+        "recommended at least .80, and above .90 for scores used as substitutes",
+        "for the factors. This is reported as his recommendation and not",
+        "applied."
       ),
       "nomo_scores()", "nomologR",
       c("grice_2001", "gorsuch_1983")

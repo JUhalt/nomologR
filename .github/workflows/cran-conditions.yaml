@@ -46,6 +46,14 @@ jobs:
       R_KEEP_PKG_SOURCE: yes
       # As in R-CMD-check.yaml: no NOTE when the time service does not answer.
       _R_CHECK_SYSTEM_CLOCK_: false
+      # CRAN's incoming checks note an example, a test file, or the vignettes
+      # whose CPU time is more than 2.5 times their elapsed time, a sign that
+      # more than two cores were used. R leaves these thresholds unset, so a
+      # check here would not give that NOTE without them. R reports the
+      # ratio for tests and vignettes on Linux only.
+      _R_CHECK_EXAMPLE_TIMING_CPU_TO_ELAPSED_THRESHOLD_: 2.5
+      _R_CHECK_TEST_TIMING_CPU_TO_ELAPSED_THRESHOLD_: 2.5
+      _R_CHECK_VIGNETTE_TIMING_CPU_TO_ELAPSED_THRESHOLD_: 2.5
 
     steps:
       - uses: actions/checkout@v5

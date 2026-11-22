@@ -588,6 +588,7 @@ test_that("new replication statuses have readable labels", {
 
 
 test_that("the #30 example is no longer reported as a sign reversal", {
+  skip_on_cran()
   model <- nomo_model(list(
     Agency = paste0("ag", 1:4),
     Persistence = paste0("pe", 1:4),
@@ -1359,6 +1360,7 @@ test_that("closeout: network low-level classifiers cover non-evaluable and incon
 
 
 test_that("closeout: network measurement context covers empty and strained measurement evidence", {
+  skip_on_cran()
   fit <- make_m9_report_run()$results$cfa$fit
   g <- nomo_defaults()
 
@@ -1684,6 +1686,7 @@ test_that("closeout B: network decision log classifies supportive replication as
 
 
 test_that("closeout B: network presentation covers zero-span theory regions and populated replication summaries", {
+  skip_on_cran()
   net <- make_m9_full_report_run()$results$network
 
   zero_net <- net
@@ -1775,6 +1778,7 @@ test_that("closeout C: network replication decision log marks inconclusive repli
 
 
 test_that("closeout C: replication plots reject rows with no finite paired estimates", {
+  skip_on_cran()
   net <- make_m9_full_report_run()$results$network
 
   net$replication_evidence <- tibble::tibble(
@@ -1871,6 +1875,7 @@ classify_against <- function(expectation, estimate, ci_lower, ci_upper) {
 
 
 test_that("an association is judged against the model that will be fitted (#145)", {
+  skip_on_cran()
   model <- demo_network_model(c("Agency", "Persistence", "SocialDesirability"))
 
   # lavaan covaries exogenous factors by itself, but not once a hypothesized
@@ -2287,6 +2292,7 @@ test_that("an estimate without a standard error is not evaluable (#145)", {
 
 
 test_that("columns stored as ordered factors are treated as declared (#145)", {
+  skip_on_cran()
   dat <- nomo_demo_ordinal
   model <- as.character(nomo_model(list(
     A = paste0("a", 1:5), B = paste0("b", 1:5)
@@ -2329,6 +2335,7 @@ test_that("columns stored as ordered factors are treated as declared (#145)", {
 
 
 test_that("an exogenous covariate stored as an ordered factor is refused, not declared (#145)", {
+  skip_on_cran()
   set.seed(14505)
   dat <- nomo_demo_network
   dat$edu <- sample(1:4, nrow(dat), replace = TRUE)
@@ -2376,6 +2383,7 @@ test_that("an exogenous covariate stored as an ordered factor is refused, not de
 
 
 test_that("an ordered column in either sample is treated as declared in both (#145)", {
+  skip_on_cran()
   ordinal <- nomo_demo_ordinal
   half <- seq_len(nrow(ordinal)) <= nrow(ordinal) / 2
   primary <- as.data.frame(lapply(ordinal[half, ], as.integer))
@@ -2476,6 +2484,7 @@ rg_flat <- function(x) gsub("\\s+", " ", rg_text(x))
 
 
 test_that("relations the added paths fix to zero or lavaan adds are disclosed (#145)", {
+  skip_on_cran()
   dropped <- rg_dropped()
   # The model as given estimates Agency <-> Persistence; the path from
   # SocialDesirability makes Persistence an outcome, so it is fixed to zero.
@@ -2546,6 +2555,7 @@ test_that("relations the added paths fix to zero or lavaan adds are disclosed (#
 
 
 test_that("relations of a variable the hypotheses bring in are disclosed as restrictions (#145)", {
+  skip_on_cran()
   # Performance is not in the model as given. lavaan covaries no factor with
   # an observed predictor, so the path fixes Performance's relations with the
   # exogenous factors to zero, beside Persistence's own.
@@ -2862,6 +2872,7 @@ test_that("a network that did not converge, or whose measurement model failed, s
 
 
 test_that("the cases analyzed are reported beside the rows supplied (#145)", {
+  skip_on_cran()
   dat <- rg_missing_data()
   net <- nomo_network(rg_three(), dat, nomo_hypotheses("Agency -> Persistence" = positive()))
   used <- lavaan::lavInspect(net$fit, "nobs")
@@ -2954,6 +2965,7 @@ test_that("a bare negligible() prediction draws no theory band (#145)", {
 
 
 test_that("the status columns survive an 80-column console, and bullets a 40-column one (#145)", {
+  skip_on_cran()
   local_reproducible_output(width = 80)
   split <- rg_split()
   printed <- utils::capture.output(print(split))
@@ -3001,6 +3013,7 @@ test_that("the validation sample's log rows name their sample (#145)", {
 
 
 test_that("the fit statistics name their version and the estimator (#145)", {
+  skip_on_cran()
   ordinal <- nomo_network(
     "A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4 + b5",
     nomo_demo_ordinal, nomo_hypotheses("A -> B" = positive()), ordered = names(nomo_demo_ordinal)
@@ -3011,8 +3024,14 @@ test_that("the fit statistics name their version and the estimator (#145)", {
   expect_match(text, "Estimator: WLSMV", fixed = TRUE)
   expect_match(text, "Version: scaled chi-square; robust CFI, TLI, and RMSEA.", fixed = TRUE)
   expect_match(text, "WLSMV -- weighted least squares, mean- and variance-adjusted.", fixed = TRUE)
-  expect_match(plot_text(plot(ordinal, "fit")$labels$caption), "Version: scaled chi-square",
-               fixed = TRUE)
+  # The plot shows no chi-square, and names the versions of the indices in the
+  # words every global-fit plot uses (#145, clarity-13).
+  caption <- plot_text(plot(ordinal, "fit")$labels$caption)
+  expect_match(caption, "theory. CFI, TLI, and RMSEA are robust values. summary(x)", fixed = TRUE)
+  expect_false(grepl("chi-square", caption, fixed = TRUE))
+  ordinal$fit_evidence$index_version <- "mixed"
+  expect_match(plot_text(plot(ordinal, "fit")$labels$caption),
+               "CFI, TLI, and RMSEA are robust or scaled values.", fixed = TRUE)
 
   standard <- rg_default()
   expect_identical(standard$fit_evidence$chisq_version, "standard")
@@ -3041,6 +3060,7 @@ test_that("the fit statistics name their version and the estimator (#145)", {
 
 
 test_that("post hoc predictions are marked wherever a concordance is shown (#145)", {
+  skip_on_cran()
   net <- nomo_network(rg_three(), nomo_demo_network, nomo_hypotheses(
     "Agency -> Persistence" = positive(origin = "post_hoc"),
     "Agency -> Performance" = positive()
@@ -3059,6 +3079,7 @@ test_that("post hoc predictions are marked wherever a concordance is shown (#145
 
 
 test_that("the scale of the estimates is stated, row by row when it differs (#145)", {
+  skip_on_cran()
   expect_match(rg_flat(rg_default()), "Estimates are standardized.", fixed = TRUE)
   mixed <- nomo_network(rg_three(), nomo_demo_network, nomo_hypotheses(
     "Agency -> Persistence" = positive(min = .2),
@@ -3182,6 +3203,7 @@ test_that("a direction shared against the prediction is not called replicated (#
 
 
 test_that("flags name the values and references they compare (#145)", {
+  skip_on_cran()
   weak <- nomo_network(
     "A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4 + b5",
     nomo_demo_ordinal, nomo_hypotheses("A -> B" = positive()), ordered = names(nomo_demo_ordinal)
@@ -3189,7 +3211,7 @@ test_that("flags name the values and references they compare (#145)", {
   observation <- weak$measurement_context$summary$observation
   expect_identical(
     observation,
-    "Standardized loading below the review reference of 0.50 in absolute value: b5 (0.34)."
+    "Standardized loading below the review reference 0.50 in absolute value: b5 (0.34)."
   )
   expect_match(rg_text(summary(weak)), "Status: review | Constructs: 2 | Loading flags: 1", fixed = TRUE)
   # The replication table heads its first column with the sample's role.
@@ -3297,11 +3319,53 @@ test_that("the fit plot marks each index against a dashed reference (#145)", {
   expect_identical(p$data$value_label, c(".953", "0.939", "0.064", "0.126"))
   expect_identical(p$data$reference_label,
                    c("reference .950", "reference 0.950", "reference 0.060", "reference 0.080"))
-  expect_identical(ggplot2::layer_data(p, 1L)$linetype[[1L]], 2)
+  geoms <- vapply(p$layers, function(l) class(l$geom)[[1L]], character(1))
+  vline <- which(geoms == "GeomVline")
+  expect_identical(ggplot2::layer_data(p, vline)$linetype[[1L]], 2)
+  # The design every global-fit plot shares (#145, clarity-13): the strips name
+  # the direction that favors fit, and the caption names the references.
+  expect_identical(levels(droplevels(p$data$panel))[c(1L, 3L)],
+                   c("CFI: higher values favor fit", "RMSEA: lower values favor fit"))
+  expect_match(plot_text(p$labels$caption),
+               "Dashed lines are review references: CFI .950, TLI 0.950, RMSEA 0.060, SRMR 0.080.",
+               fixed = TRUE)
+  expect_false(grepl("teaching", plot_text(p$labels$subtitle), fixed = TRUE))
+  expect_identical(plot_text(p$labels$subtitle),
+                   "Points are the network model's values. Each index has its own scale.")
+  # With a validation sample, the subtitle names the sample the values are from.
+  expect_identical(
+    plot_text(plot(rg_split(), "fit")$labels$subtitle),
+    "Points are the network model's values in the calibration sample. Each index has its own scale."
+  )
   # A reference that is not configured draws no line and no label.
   net <- rg_dropped()
   net$guidance$fit_reference$srmr <- NULL
-  expect_identical(plot(net, "fit")$data$reference_label[[4L]], "")
+  missing <- plot(net, "fit")
+  expect_identical(missing$data$reference_label[[4L]], "")
+  expect_identical(nrow(ggplot2::layer_data(missing, vline)), 3L)
+  expect_match(plot_text(missing$labels$caption), "RMSEA 0.060. They are not cutoffs.", fixed = TRUE)
+})
+
+
+test_that("the network summary states the fit references once (#145, clarity-13)", {
+  local_reproducible_output(width = 80)
+  net <- rg_dropped()
+  text <- capture.output(print(summary(net)))
+  fit <- text[(which(text == "Model fit") + 1L):length(text)]
+  expect_identical(
+    fit[grep("^  References:", fit)],
+    "  References: CFI .950 | TLI 0.950 | RMSEA 0.060 | SRMR 0.080"
+  )
+  expect_identical(sum(grepl("References are review values, not cutoffs.", text, fixed = TRUE)), 1L)
+  expect_match(fit, "^    CFI \\.953 \\| TLI 0\\.939 \\| RMSEA 0\\.064 \\| SRMR 0\\.126$", all = FALSE)
+  # An index without a reference is left out, and with none the line is not
+  # printed.
+  net$guidance$fit_reference$srmr <- NULL
+  expect_match(capture.output(print(summary(net))),
+               "^  References: CFI \\.950 \\| TLI 0\\.950 \\| RMSEA 0\\.060$", all = FALSE)
+  net$guidance$fit_reference <- NULL
+  text <- capture.output(print(summary(net)))
+  expect_false(any(grepl("^  References", text)))
 })
 
 

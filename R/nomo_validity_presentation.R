@@ -30,7 +30,7 @@ nomo_validity_convergent_table <- function(x) {
         if (length(vals)) stats::median(vals) else NA_real_
       }, numeric(1)),
       n_loading_review = vapply(pieces, function(z) {
-        sum(z$attention != "KEEP", na.rm = TRUE)
+        sum(nomo_validity_loading_flagged(z, x$loading_reference), na.rm = TRUE)
       }, integer(1)),
       loading_concern = vapply(pieces, function(z) {
         any(z$attention == "STRONG REVIEW", na.rm = TRUE)
@@ -82,6 +82,15 @@ nomo_validity_convergent_table <- function(x) {
     "construct", "block", "AVE", "min_abs_loading", "median_abs_loading",
     "n_loading_review", "signal"
   ), drop = FALSE])
+}
+
+
+# Loadings flagged for their size, or because none was available. A loading
+# flagged only for its sign (usefulness-02) is left out: AVE squares the
+# loadings, and the loading_signs concern reports the sign.
+nomo_validity_loading_flagged <- function(loads, reference) {
+  loads$attention != "KEEP" &
+    !(loads$attention == "REVIEW" & is.finite(loads$loading) & abs(loads$loading) >= reference)
 }
 
 
@@ -299,11 +308,11 @@ nomo_validity_latent_beside <- function(x) {
 }
 
 
-# Shared by print() and summary(): the counts, the references, and how the
-# separation evidence was evaluated. Constructs are counted once however many
-# groups or levels they appear in, and a flag count names what it counts, so
-# "none" never reads as "no separation" (#145).
-nomo_validity_present_facts <- function(constructs, ngroups, nlevels, ave_reference,
+# Shared by print() and summary(): the cases, the counts, the references, and
+# how the separation evidence was evaluated. Constructs are counted once however
+# many groups or levels they appear in, and a flag count names what it counts,
+# so "none" never reads as "no separation" (#145).
+nomo_validity_present_facts <- function(cases, constructs, ngroups, nlevels, ave_reference,
                                         htmt_reference, convergent, discriminant,
                                         fixed = 0L) {
   constructs <- unique(c(constructs, convergent[["construct"]]))
@@ -315,10 +324,13 @@ nomo_validity_present_facts <- function(constructs, ngroups, nlevels, ave_refere
     character()
   }
   nomo_present_facts(c(
+    cases,
     sprintf("Constructs: %d", length(constructs)),
-    if (length(blocks)) sprintf("%s: %s", blocks[[1L]], sub(" .*$", "", blocks[[2L]])) else "",
-    paste0("AVE reference: ", nomo_present_stat(ave_reference, "reliability")),
-    paste0("HTMT reference: ", nomo_present_stat(htmt_reference, "htmt"))
+    if (length(blocks)) sprintf("%s: %s", blocks[[1L]], sub(" .*$", "", blocks[[2L]])) else ""
+  ))
+  nomo_present_facts(c(
+    paste0("AVE reference: ", nomo_present_stat(ave_reference, "reliability", given = TRUE)),
+    paste0("HTMT reference: ", nomo_present_stat(htmt_reference, "htmt", given = TRUE))
   ))
 
   pair_cols <- intersect(c("construct_1", "construct_2"), names(discriminant))
@@ -399,12 +411,13 @@ nomo_validity_flagged_brief <- function(x, convergent, discriminant) {
       } else {
         sprintf("AVE %s is below the review reference %s",
                 nomo_present_stat(row$AVE, "reliability", reference = ave_ref),
-                nomo_present_stat(ave_ref, "reliability"))
+                nomo_present_stat(ave_ref, "reliability", given = TRUE))
       })
     }
     if (is.finite(row$n_loading_review) && row$n_loading_review > 0L) {
       loads <- x$standardized_loadings
-      items <- loads$item[loads$factor == row$construct & loads$attention != "KEEP"]
+      items <- loads$item[loads$factor == row$construct &
+                            nomo_validity_loading_flagged(loads, x$loading_reference)]
       total <- sum(loads$factor == row$construct)
       parts <- c(parts, sprintf(
         "%d of %d standardized loadings %s flagged (%s)",
@@ -429,7 +442,8 @@ nomo_validity_flagged_brief <- function(x, convergent, discriminant) {
     if (is.finite(value) && value > ref) {
       parts <- c(parts, sprintf(
         "%s %s is above the review reference %s", method,
-        nomo_present_stat(value, "htmt", reference = ref), nomo_present_stat(ref, "htmt")
+        nomo_present_stat(value, "htmt", reference = ref),
+        nomo_present_stat(ref, "htmt", given = TRUE)
       ))
     }
     r <- row$latent_r
@@ -442,10 +456,10 @@ nomo_validity_flagged_brief <- function(x, convergent, discriminant) {
         interval <- nomo_present_ci(row$latent_r_ci_lower, row$latent_r_ci_upper, kind = "r")
         parts <- c(parts, if (interval != nomo_present_missing) {
           sprintf("latent r %s, 95%% CI %s, could exceed %s", nomo_present_stat(r, "r"),
-                  interval, nomo_present_stat(ref, "r"))
+                  interval, nomo_present_stat(ref, "r", given = TRUE))
         } else {
           sprintf("latent r %s exceeds %s", nomo_present_stat(r, "r", reference = ref),
-                  nomo_present_stat(ref, "r"))
+                  nomo_present_stat(ref, "r", given = TRUE))
         })
       }
     }
@@ -454,7 +468,12 @@ nomo_validity_flagged_brief <- function(x, convergent, discriminant) {
     status <- c(status, row$signal)
     text <- c(text, paste0(nomo_validity_capitalize(paste(parts, collapse = "; ")), "."))
   }
-  list(unit = units, status = status, text = text)
+
+  # Indicators that load against their factor, named in the log's own words
+  # (usefulness-02).
+  signs <- x$decision_log[x$decision_log$metric %in% "loading_signs", , drop = FALSE]
+  list(unit = c(units, signs$object), status = c(status, signs$severity),
+       text = c(text, signs$observation))
 }
 
 
@@ -463,15 +482,18 @@ nomo_validity_capitalize <- function(x) {
 }
 
 
+#' @rdname printing
 #' @export
-print.nomo_validity <- function(x, ...) {
+print.nomo_validity <- function(x, digits = NULL, ...) {
+  nomo_present_local_digits(digits)
   convergent <- nomo_validity_convergent_table(x)
   discriminant <- nomo_validity_discriminant_table(x)
   fixed <- nomo_validity_fixed_pairs(x)
   nomo_present_header("nomo_validity", "Convergent and discriminant evidence")
   nomo_validity_present_facts(
-    nomo_validity_construct_order(x), x$ngroups, x$nlevels, x$ave_reference,
-    x$htmt_reference, convergent, discriminant, fixed = nrow(fixed)
+    nomo_lavaan_cases_fact(nomo_lavaan_cases(x[["fit"]])), nomo_validity_construct_order(x),
+    x$ngroups, x$nlevels, x$ave_reference, x$htmt_reference, convergent, discriminant,
+    fixed = nrow(fixed)
   )
   note <- nomo_validity_htmt_note(x, discriminant, fixed)
   if (nzchar(note)) nomo_present_text(note)
@@ -511,11 +533,16 @@ print.nomo_validity <- function(x, ...) {
 #' @return An object of class `summary_nomo_validity`. `$convergent` combines
 #'   AVE with a compact loading summary, while `$discriminant` aligns latent
 #'   correlations, HTMT2, and original HTMT without repeating the full CFA
-#'   loading table. Printed, it shows both tables, the legacy Fornell-Larcker
-#'   comparison when it was requested, and the full reason for each flag.
+#'   loading table. `$n_used` and `$data_n` are the cases the model analyzed
+#'   and the rows of the data it was given. Printed, it shows those cases,
+#'   both tables, the legacy Fornell-Larcker comparison when it was requested,
+#'   and the full reason for each flag.
 #' @export
 summary.nomo_validity <- function(object, ...) {
+  cases <- nomo_lavaan_cases(object[["fit"]])
   out <- list(
+    n_used = cases$n_used,
+    data_n = cases$data_n,
     convergent = nomo_validity_convergent_table(object),
     discriminant = nomo_validity_discriminant_table(object),
     fixed_pairs = nomo_validity_fixed_pairs(object),
@@ -540,15 +567,17 @@ summary.nomo_validity <- function(object, ...) {
 }
 
 
+#' @rdname printing
 #' @export
-print.summary_nomo_validity <- function(x, ...) {
+print.summary_nomo_validity <- function(x, digits = NULL, ...) {
+  nomo_present_local_digits(digits)
   nomo_present_header("nomo_validity", "Convergent and discriminant evidence",
                       summary = TRUE)
   # A summary saved before fixed correlations were set apart has none listed.
   fixed <- x$fixed_pairs
   nomo_validity_present_facts(
-    x$construct_order, x$ngroups, x$nlevels, x$ave_reference, x$htmt_reference,
-    x$convergent, x$discriminant, fixed = NROW(fixed)
+    nomo_lavaan_cases_fact(x), x$construct_order, x$ngroups, x$nlevels, x$ave_reference,
+    x$htmt_reference, x$convergent, x$discriminant, fixed = NROW(fixed)
   )
 
   nomo_present_section("Convergent evidence by construct")

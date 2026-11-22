@@ -45,7 +45,7 @@ nomo_scores_scored <- function(scores, factors) {
 # Grice's (2001) three criteria, as one table for print() and summary(). A
 # validity just below Gorsuch's .90, or a discrepancy just short of .05, shows
 # the decimals that tell it from the reference.
-nomo_scores_present_properties <- function(diagnostics, scored, n_cases, digits = NULL) {
+nomo_scores_present_properties <- function(diagnostics, scored, n_cases) {
   nomo_present_section("Score properties (Grice, 2001)")
   shown <- diagnostics
   shown$scored <- scored
@@ -58,10 +58,10 @@ nomo_scores_present_properties <- function(diagnostics, scored, n_cases, digits 
   nomo_present_table(
     shown, columns,
     formats = list(
-      validity = function(v) nomo_present_stat(v, "r", digits, reference = 0.90),
-      univocality = function(v) nomo_present_stat(v, "r", digits),
+      validity = function(v) nomo_present_stat(v, "r", reference = 0.90),
+      univocality = function(v) nomo_present_stat(v, "r"),
       correlational_accuracy = function(v) {
-        nomo_present_stat(v, "r", digits, reference = sign(v) * reference, signed = TRUE)
+        nomo_present_stat(v, "r", reference = sign(v) * reference, signed = TRUE)
       }
     ),
     more = "nomo_table(x, \"diagnostics\")"
@@ -182,14 +182,16 @@ nomo_scores_caveat <- function() {
 }
 
 
+#' @rdname printing
 #' @export
 print.nomo_scores <- function(x, digits = NULL, ...) {
+  nomo_present_local_digits(digits)
   nomo_present_header("nomo_scores", "Scores from a measurement model")
   n_cases <- nrow(x$scores)
   nomo_scores_present_facts(x$method, x$weighting, nrow(x$diagnostics), n_cases)
 
   scored <- nomo_scores_scored(x$scores, x$diagnostics$factor)
-  nomo_scores_present_properties(x$diagnostics, scored, n_cases, digits)
+  nomo_scores_present_properties(x$diagnostics, scored, n_cases)
   nomo_scores_present_ordered(x$ordered)
   nomo_scores_key(nrow(x$diagnostics) > 1L, scored, n_cases)
   nomo_scores_present_parallel(x$parallel_test)
@@ -228,12 +230,14 @@ summary.nomo_scores <- function(object, ...) {
 }
 
 
+#' @rdname printing
 #' @export
 print.summary_nomo_scores <- function(x, digits = NULL, ...) {
+  nomo_present_local_digits(digits)
   nomo_present_header("nomo_scores", "Scores from a measurement model", summary = TRUE)
   nomo_scores_present_facts(x$method, x$weighting, nrow(x$diagnostics), x$n_scored)
 
-  nomo_scores_present_properties(x$diagnostics, x$scored, x$n_scored, digits)
+  nomo_scores_present_properties(x$diagnostics, x$scored, x$n_scored)
   nomo_scores_present_ordered(x$ordered)
 
   spread <- x$unit_weighting
@@ -242,7 +246,7 @@ print.summary_nomo_scores <- function(x, digits = NULL, ...) {
   spread$loading_ratio[is.finite(spread$min_loading) & is.finite(spread$max_loading) &
                          sign(spread$min_loading) != sign(spread$max_loading)] <- NA_real_
   nomo_present_section("Standardized loading spread")
-  loading <- function(v) nomo_present_stat(v, "loading", digits)
+  loading <- function(v) nomo_present_stat(v, "loading")
   nomo_present_table(
     spread,
     c("Factor" = "factor", "Lowest" = "min_loading", "Highest" = "max_loading",
@@ -250,7 +254,7 @@ print.summary_nomo_scores <- function(x, digits = NULL, ...) {
     formats = list(
       min_loading = loading,
       max_loading = loading,
-      loading_ratio = function(v) nomo_present_stat(v, "estimate", digits)
+      loading_ratio = function(v) nomo_present_stat(v, "estimate")
     ),
     more = "nomo_table(x, \"unit_weighting\")"
   )
@@ -309,8 +313,9 @@ plot.nomo_scores <- function(x, type = c("validity"), ...) {
       ),
       x = "Validity", y = NULL,
       caption = paste(
-        "Dashed lines: Gorsuch's (1983) .80, and .90 for scores that stand in",
-        "for the factors, reported as his recommendations, not applied as rules."
+        "Dashed lines: .80, and .90 for scores that stand in for the factors,",
+        "as Gorsuch (1983, p. 260, as cited in Grice, 2001) recommended.",
+        "Reported as his recommendations, not applied as rules."
       )
     ) +
     ggplot2::theme_minimal()

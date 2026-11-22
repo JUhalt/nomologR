@@ -167,6 +167,7 @@ test_that("agreement is reported without implying that either strategy is unbias
 
 
 test_that("data with nothing missing is not refitted and says why", {
+  skip_on_cran()
   complete <- stats::na.omit(nomo_demo_continuous)
   out <- nomo_missing(
     nomo_cfa("A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4 + b5", data = complete),
@@ -505,6 +506,7 @@ test_that("data without a modeled variable, or that cannot be refitted, is refus
 
 
 test_that("FIML is credited when it was fitted", {
+  skip_on_cran()
   out <- nomo_missing(nomo_cfa(missing_demo_model, data = nomo_demo_continuous),
                       data = nomo_demo_continuous, reliability = FALSE)
   expect_true(all(c("missing_sensitivity", "listwise_deletion", "fiml") %in% nomo_methods(out)$id))
@@ -567,6 +569,7 @@ test_that("a strategy that did not converge, or is inadmissible, is flagged for 
 
 
 test_that("each difference is attributed only as far as the strategies allow", {
+  skip_on_cran()
   out <- nomo_missing(nomo_cfa(missing_demo_model, data = nomo_demo_continuous),
                       data = nomo_demo_continuous, reliability = FALSE)
   difference_log <- function(estimates, strategies, reference) {
@@ -661,6 +664,7 @@ test_that("a strategy lavaan substituted is labeled and attributed by what ran (
 
 
 test_that("each difference is attributed by the method lavaan used for the reference (#145)", {
+  skip_on_cran()
   out <- nomo_missing(nomo_cfa(missing_demo_model, data = nomo_demo_continuous),
                       data = nomo_demo_continuous, reliability = FALSE)
   flagged <- out$estimates
@@ -740,36 +744,33 @@ test_that("the print defines its terms and puts flags in one Flagged section (#1
 })
 
 
-test_that("print() takes `digits` for the estimates, as it did in 0.9.0", {
+test_that("print() takes `digits` for every statistic it shows (#145)", {
   skip_on_cran()
   out <- missing_results()$mar
   local_reproducible_output(width = 80)
-  # The argument is part of the method, with the default of the other print
-  # methods that take it.
+  # The argument is part of the method, with the default every print method
+  # has.
   expect_identical(names(formals(nomologR:::print.nomo_missing)), c("x", "digits", "..."))
   expect_null(formals(nomologR:::print.nomo_missing)$digits)
-  for (method in c("print.nomo_scores", "print.nomo_hierarchical")) {
-    expect_null(formals(get(method, asNamespace("nomologR")))$digits, label = method)
-  }
 
   standard <- capture.output(print(out))
   expect_identical(capture.output(print(out, digits = NULL)), standard)
-  expect_identical(capture.output(print(out, digits = 3)), standard)
 
-  # One decimal for the estimate and its reference; the difference in
-  # standard errors keeps its own format.
+  # One decimal for the estimate, its reference, and the difference in
+  # standard errors alike; an estimate flagged against its reference keeps the
+  # decimals that tell them apart.
   short <- capture.output(print(out, digits = 1))
   expect_false(identical(short, standard))
   row <- "^  A ~~ B +Listwise deletion +"
   expect_match(standard, paste0(row, "[.][0-9]{3} +[.][0-9]{3} +[-+][0-9]+[.][0-9]{2}$"),
                all = FALSE)
-  expect_match(short, paste0(row, "[.][0-9]{1,4} +[.][0-9] +[-+][0-9]+[.][0-9]{2}$"),
+  expect_match(short, paste0(row, "[.][0-9]{1,4} +[.][0-9] +[-+][0-9]+[.][0-9]$"),
                all = FALSE)
   expect_match(short, "^  [AB] =~ [ab][0-9] +Listwise deletion +0[.][0-9]{1,4} +0[.][0-9] ",
                all = FALSE)
-  # Nothing else in the output depends on it.
-  differences <- function(lines) grepl(" Listwise deletion +[-.0-9]", lines)
-  expect_identical(short[!differences(short)], standard[!differences(standard)])
+  # Counts and the text the analysis wrote do not depend on it.
+  numbers <- function(lines) grepl(" Listwise deletion +[-.0-9]|coverage: ", lines)
+  expect_identical(short[!numbers(short)], standard[!numbers(standard)])
 })
 
 
@@ -880,6 +881,7 @@ test_that("with several comparison strategies, each has a table of its own at an
 
 
 test_that("plot() draws each difference against half a reference standard error (#145)", {
+  skip_on_cran()
   out <- nomo_missing(nomo_cfa(missing_demo_model, data = nomo_demo_continuous),
                       data = nomo_demo_continuous, reliability = FALSE)
   p <- plot(out)

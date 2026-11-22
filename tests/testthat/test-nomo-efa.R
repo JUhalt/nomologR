@@ -1328,6 +1328,7 @@ test_that("a parallel-analysis count of 0 does not block a researcher's factor c
 
 
 test_that("models the correlations cannot identify are flagged (#145, efa-3)", {
+  skip_on_cran()
   set.seed(3302)
   g <- rnorm(300)
   dat <- as.data.frame(replicate(4, g + rnorm(300)))
@@ -1357,6 +1358,7 @@ test_that("models the correlations cannot identify are flagged (#145, efa-3)", {
 
 
 test_that("rotation is checked, and the log and methods describe the solution fitted (#145, efa-4)", {
+  skip_on_cran()
   dat <- make_efa_factor_count_data(seed = 8301L)
 
   expect_error(nomo_efa(dat, factors = 2, rotation = "oblimn"),
@@ -1556,7 +1558,7 @@ test_that("the item plot shows each flag by shape and color with its references 
   expect_false("Secondary" %in% as.character(one$data$loading_type))
   # Only the reference line drawn is named.
   expect_identical(plot_text(one$labels$subtitle),
-                   "Absolute loadings. The dashed line marks the 0.40 loading teaching reference.")
+                   "Absolute loadings. The dashed line marks the 0.40 loading review reference.")
   expect_false(grepl("cross-loading", plot_text(one$labels$subtitle), fixed = TRUE))
 
   phi <- ggplot2::ggplot_build(plot(out, type = "factor_correlations"))

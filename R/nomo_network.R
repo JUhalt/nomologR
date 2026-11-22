@@ -379,7 +379,7 @@ nomo_network_fit_version <- function(measures, candidates) {
 
 nomo_network_fit_evidence <- function(fit) {
   measures <- tryCatch(
-    lavaan::fitMeasures(fit),
+    nomo_fit_measures_read(fit),
     error = function(e) numeric()
   )
 
@@ -870,7 +870,7 @@ nomo_network_measurement_context <- function(fit,
     low <- loading_table[loading_table$attention == "review", , drop = FALSE]
     reference <- low$review_reference[[1L]]
     notes <- c(notes, sprintf(
-      "%s below the review reference of %s in absolute value: %s.",
+      "%s below the review reference %s in absolute value: %s.",
       nomo_present_noun(low_loading_n, "Standardized loading", "Standardized loadings"),
       nomo_present_stat(reference, "loading"),
       paste0(low$item, " (", nomo_present_stat(low$loading, "loading", reference = reference),
@@ -2600,11 +2600,28 @@ nomo_network_validate_data <- function(data, label) {
 #' practice: A review and recommended two-step approach. *Psychological
 #' Bulletin, 103*(3), 411-423. \doi{10.1037/0033-2909.103.3.411}
 #'
+#' Bagozzi, R. P., & Heatherton, T. F. (1994). A general approach to
+#' representing multifaceted personality constructs: Application to state
+#' self-esteem. *Structural Equation Modeling, 1*(1), 35-67.
+#' \doi{10.1080/10705519409539961}
+#'
 #' Bollen, K. A. (1989). *Structural equations with latent variables*. Wiley.
 #' \doi{10.1002/9781118619179}
 #'
 #' Cronbach, L. J., & Meehl, P. E. (1955). Construct validity in psychological
 #' tests. *Psychological Bulletin, 52*(4), 281-302. \doi{10.1037/h0040957}
+#'
+#' DeShon, R. P. (1998). A cautionary note on measurement error corrections in
+#' structural equation models. *Psychological Methods, 3*(4), 412-423.
+#' \doi{10.1037/1082-989X.3.4.412}
+#'
+#' Fokkema, M., & Greiff, S. (2017). How performing PCA and CFA on the same
+#' data equals trouble: Overfitting in the assessment of internal structure and
+#' some editorial thoughts on it. *European Journal of Psychological
+#' Assessment, 33*(6), 399-402. \doi{10.1027/1015-5759/a000460}
+#'
+#' Hayduk, L. A. (1987). *Structural equation modeling with LISREL: Essentials
+#' and advances*. Johns Hopkins University Press.
 #'
 #' Lakens, D., Scheel, A. M., & Isager, P. M. (2018). Equivalence testing for
 #' psychological research: A tutorial. *Advances in Methods and Practices in
@@ -2634,6 +2651,15 @@ nomo_network_validate_data <- function(data, label) {
 #'
 #' Skrondal, A., & Laake, P. (2001). Regression among factor scores.
 #' *Psychometrika, 66*(4), 563-575. \doi{10.1007/BF02296196}
+#'
+#' Spearman, C. (1904). The proof and measurement of association between two
+#' things. *The American Journal of Psychology, 15*(1), 72-101.
+#' \doi{10.2307/1412159}
+#'
+#' Williams, L. J., & Hazer, J. T. (1986). Antecedents and consequences of
+#' satisfaction and commitment in turnover models: A reanalysis using latent
+#' variable structural equation methods. *Journal of Applied Psychology,
+#' 71*(2), 219-231. \doi{10.1037/0021-9010.71.2.219}
 #'
 #' @examples
 #' model <- nomo_model(list(

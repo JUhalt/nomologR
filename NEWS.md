@@ -1,3 +1,149 @@
+# nomologR (development version)
+
+Changes since 1.0.0, made before the first CRAN submission (#175). They fix
+the findings of the audit before the interface freeze (#145) that 1.0.0 left
+open. Every change fits a 1.0.x patch under the stability policy in
+`?nomologR`. Nothing that is computed changes. A few changes correct APA
+formatting, as the policy allows, and they are described here.
+
+## A change a script may notice
+
+- The stub heading of the factor-correlation APA table is now `Factor`, and
+  that of the construct-pair (discriminant) table is `Construct`. APA 7 writes
+  column headings in the singular. Code that read `tab$body$Factors` or
+  `tab$body$Constructs` should read `tab$body$Factor` or `tab$body$Construct`,
+  or `tab$body[[tab$stub]]` (#145).
+
+## APA tables (#145)
+
+- APA tables write standardized loadings and standardized path coefficients
+  without the leading zero, as APA's own sample tables do: `.82`, not `0.82`.
+  The predicted region beside a standardized path follows the same rule. A
+  standardized value of 1 or more keeps its integer digit (`1.04`).
+  Unstandardized estimates, TLI, RMSEA, SRMR, and HTMT keep the zero. Console
+  output is unchanged. `contentvalidR` follows the same rules.
+- A *p* cell in an APA table reads `<.001` or `>.999`, without a space, as APA
+  writes them in tables. Table notes, running text, and console output keep
+  "p < .001".
+- Knitted to HTML, an APA table is written as an HTML table with its own style
+  sheet. It has APA's rules in any HTML document and theme: one above the
+  table, one beneath the column headings, one below it, and none between rows.
+  Before, an `html_document` drew a rule above every row. The manuscript tables
+  of the HTML report use the same table and style sheet. Markdown, GitHub, and
+  EPUB targets keep the Markdown table.
+- Tables printed in one R Markdown chunk stay apart when knitted to Word, PDF,
+  or Markdown. Before, the number of a table ran into the last note of the
+  table before it.
+- The package ships a Word reference document,
+  `system.file("rmarkdown", "nomo-apa-reference.docx", package = "nomologR")`.
+  It is pandoc's default, except that its table style draws APA's three rules.
+  A Word report from `nomo_report()` uses it. `?nomo_apa_table` shows how to
+  name it as `reference_docx` in your own Word document.
+
+## Printed output (#145)
+
+- **Cases in reliability, validity, and hierarchical printouts.** `print()` and
+  `summary()` of `nomo_reliability()`, `nomo_validity()`, and
+  `nomo_hierarchical()` results now give the cases the model analyzed, as the
+  CFA's do: "Cases: 473 of 500 used", or "Cases: 500" when every row was used.
+  The counts come from the fitted lavaan model and are summed over groups. The
+  summaries hold them as `n_used` and `data_n`. `print()` of a `nomo_split()`
+  result says "Cases" where it said "Rows".
+- **One name for reference values.** Printed text, summaries, plots, and
+  decision logs now call the value a flag is read against a review reference,
+  as the item, loading, and AVE flags already did. Before, the CFA's fit flags
+  read "the teaching reference of .950", and their explanations and
+  decision-log references said "configured teaching reference". The EFA,
+  factor retention, and the item audit used "teaching reference", "teaching
+  review reference", or "teaching prompt" for some rows. A reference now
+  follows its sentence without "of": "is below the review reference .950". The
+  CFA and network summaries both say "References are review values, not
+  cutoffs." The help pages, the articles, and the method registry use the same
+  term. Option names are unchanged.
+- **`digits` in every `print()`.** Every print method, for a result or for its
+  summary, takes `digits = NULL`. `NULL` prints as before. A number gives every
+  statistic shown that many decimals, interval bounds included. Some things
+  keep their own format: *p* values, degrees of freedom, significance levels
+  and power targets, counts, and percentages. References and values you gave
+  can take more decimals but never fewer. These include a review reference, a
+  requested validation proportion, a reliability given to
+  `nomo_single_indicator()`, and a bound of a predicted region. So a CFI
+  reference of .95 never prints as "1.0". A value flagged against its reference
+  still shows the decimals that tell them apart, and a value equal to its
+  reference prints as the reference does. Text written when the analysis ran,
+  such as a flag's explanation, keeps its decimals. Before, only `nomo_scores`,
+  `nomo_hierarchical`, and `nomo_missing` objects took `digits`, and every other
+  method ignored it without a word. For a `nomo_missing` object, `digits` now
+  also sets the differences in standard errors and the covariance coverage, not
+  only the estimates. Five printouts have no statistic to round and say so in a
+  message: a `nomo_model`, a `nomo_partial`, a `nomo_apa_table`, `print()` of a
+  `nomo_screen`, and the summary of a `nomo_run`. `?printing` sets out the
+  rule.
+- **Plurals.** The report's content-review paragraph writes "Declared
+  reverse-keyed item: EF2" or "items" by the count, where it wrote "item(s)".
+  The guided run's keying row and the item audit's keying row do the same.
+
+## Plots (#145)
+
+- `plot(x, type = "fit")` now draws global fit the same way for `nomo_cfa()`,
+  `nomo_network()`, and `nomo_compare()`. Each index has its own panel and
+  scale, and the strip names the direction that favors fit. The only axis label
+  is 1 for CFI and TLI and 0 for RMSEA and SRMR. Each model is a row. The review
+  reference is a dashed line. Each value is printed above its point in its own
+  format, and the line is hidden behind its digits. A value beyond its
+  reference is flagged with the package's status shapes, and the comparison
+  plot now flags values too.
+- The three global-fit plots name the review references and the versions of
+  CFI, TLI, and RMSEA in the same words in their captions. The comparison plot
+  now names robust or scaled versions. The network plot no longer names a
+  chi-square it does not show. With a validation sample, the network fit plot
+  says its values are from the calibration sample.
+- `summary()` of a `nomo_network()` result now states the fit references below
+  the fit lines, as `summary()` of a `nomo_cfa()` fit does. A value that would
+  print the same as its reference shows the extra decimals that tell them
+  apart. The summary object gains a `fit_reference` field.
+- Plot subtitles and captions are sentences and end with a period in every
+  plot. Titles take none. The EFA residual and MAP subtitles are now sentences
+  instead of facts joined by " | ". The parallel-analysis retention subtitle no
+  longer begins with a numeral.
+
+## Help pages and literature (#145)
+
+- Help pages now cite every work that `nomo_methods()` cites for the methods
+  their function implements: Kaiser (1970), Flora and Curran (2004), and
+  Rhemtulla et al. (2012) in `?nomo_factors`; Schuirmann (1987) in
+  `?nomo_hypotheses`; Bollen (1989), Enders and Bandalos (2001), and Schafer
+  and Graham (2002) in `?nomo_cfa`; Meredith (1993) in
+  `?nomo_invariance_longitudinal`; Bonifay et al. (2017) and Murray and Johnson
+  (2013) in `?nomo_model`; Spearman (1904), Hayduk (1987), Williams and Hazer
+  (1986), Bagozzi and Heatherton (1994), DeShon (1998), and Fokkema and Greiff
+  (2017) in `?nomo_network`; Clark and Watson (2019) and Wicherts et al. (2016)
+  in `?nomo_run`; Grice (2001) in `?nomo_hierarchical`; and Flake and Fried
+  (2020) and Wicherts et al. (2016) in a new references section of
+  `?nomo_report`. A test now holds each help page to the registry.
+- Gorsuch's (1983, p. 260) recommendation for factor score estimates is now
+  stated one way throughout, as Grice (2001) cites it: at least .80, and above
+  .90 for scores that serve as substitutes for the factors.
+  `nomo_hierarchical()` and the hierarchical-models vignette gave .90 alone.
+  Every mention cites it as Gorsuch (1983, p. 260, as cited in Grice, 2001),
+  and his .70 for two competing sets of scores as Gorsuch (1983, p. 260, as
+  cited in Rodriguez et al., 2016). No flag changes: determinacy and score
+  validity are still flagged at .90.
+
+## Tests and checks
+
+- Tests that assert that code raises no warning, or runs silently, now make
+  that assertion only off CRAN, so a warning added by a later release of
+  lavaan, psych, semTools, EFAtools, or ggplot2 cannot fail the CRAN check
+  (#145). The rest of each test still runs on CRAN. A new test keeps such
+  assertions off CRAN in later changes.
+- Tests that run a full guided workflow now skip on CRAN (#145). So do other
+  slow tests, except those that compare results with lavaan's or semTools'
+  own. They still run in continuous integration.
+- The CRAN-conditions check in continuous integration now sets CRAN's limit of
+  2.5 for the ratio of CPU time to elapsed time in examples, tests, and
+  vignettes, so it notes what CRAN's incoming checks would note.
+
 # nomologR 1.0.0
 
 The first stable release under the stability policy in `?nomologR`, released

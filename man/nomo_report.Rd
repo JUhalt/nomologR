@@ -24,8 +24,9 @@ it writes a report only where you ask, and stops with an error when \code{file}
 is not given. The extension chooses the format: \code{.html} or
 \code{.htm} for a self-contained HTML report, \code{.docx} for a Word document. The
 Word report carries the same tables, figures, and interpretation contract
-as the HTML one; collapsible sections are shown expanded, and it uses
-Word's default styles.}
+as the HTML one; collapsible sections are shown expanded. It uses pandoc's
+default Word styles, except that its tables are ruled as APA sets a table
+(see \code{\link[=nomo_apa_table]{nomo_apa_table()}}).}
 
 \item{title}{Report title.}
 
@@ -122,4 +123,16 @@ if (requireNamespace("rmarkdown", quietly = TRUE) &&
 }
 }
 
+}
+\references{
+Flake, J. K., & Fried, E. I. (2020). Measurement schmeasurement:
+Questionable measurement practices and how to avoid them. \emph{Advances in
+Methods and Practices in Psychological Science, 3}(4), 456-465.
+\doi{10.1177/2515245920952393}
+
+Wicherts, J. M., Veldkamp, C. L. S., Augusteijn, H. E. M., Bakker, M., van
+Aert, R. C. M., & van Assen, M. A. L. M. (2016). Degrees of freedom in
+planning, running, analyzing, and reporting psychological studies: A
+checklist to avoid p-hacking. \emph{Frontiers in Psychology, 7}, 1832.
+\doi{10.3389/fpsyg.2016.01832}
 }

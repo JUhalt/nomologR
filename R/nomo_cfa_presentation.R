@@ -85,11 +85,13 @@ nomo_cfa_fit_kind <- function(metric) {
 
 
 # Each fit index in its kind, with the decisions that tell a flagged value from
-# its reference when `reference` is given (guide point 9).
-nomo_cfa_fit_number <- function(metric, value, reference = NULL) {
+# its reference when `reference` is given (guide point 9). `given = TRUE` is for
+# the references themselves, which print()'s `digits` never round further.
+nomo_cfa_fit_number <- function(metric, value, reference = NULL, given = FALSE) {
   vapply(seq_along(value), function(i) {
     nomo_present_stat(value[[i]], nomo_cfa_fit_kind(metric[[i]]),
-                      reference = if (is.null(reference)) NULL else reference[[i]])
+                      reference = if (is.null(reference)) NULL else reference[[i]],
+                      given = given)
   }, character(1))
 }
 
@@ -119,6 +121,26 @@ nomo_cfa_cases_fact <- function(n_used, data_n) {
   if (isTRUE(n_used == data_n)) return(sprintf("Cases: %s", nomo_present_stat(data_n, "count")))
   sprintf("Cases: %s of %s used", nomo_present_stat(n_used, "count"),
           nomo_present_stat(data_n, "count"))
+}
+
+
+# The cases a fitted lavaan model analyzed (`nobs`) and the rows of the data it
+# was given (`norig`), summed over groups, for the analyses that keep only the
+# fit: nomo_reliability(), nomo_validity(), and nomo_hierarchical() (#145). An
+# object saved without its fit has neither. The object's fit is read with
+# x[["fit"]], since x$fit would match `fit_context` once `fit` is gone.
+nomo_lavaan_cases <- function(fit) {
+  if (!methods::is(fit, "lavaan")) return(list(n_used = NA_real_, data_n = NA_real_))
+  count <- function(what) sum(as.numeric(unlist(lavaan::lavInspect(fit, what))))
+  list(n_used = count("nobs"), data_n = count("norig"))
+}
+
+
+# "Cases: 500", or "Cases: 473 of 500 used", from those counts, or from the
+# same fields of a summary; nothing when they are not known.
+nomo_lavaan_cases_fact <- function(cases) {
+  if (!isTRUE(is.finite(cases[["n_used"]]))) return("")
+  nomo_cfa_cases_fact(cases[["n_used"]], cases[["data_n"]])
 }
 
 
@@ -286,9 +308,15 @@ nomo_cfa_flagged <- function(x) {
     ))
   }
   log <- x$decision_log
-  own <- log[log$metric %in% c("optimizer_control", "scaled_test_unavailable", "ordered_detected"), ,
+  own <- log[log$metric %in% c("optimizer_control", "scaled_test_unavailable", "ordered_detected",
+                               "few_categories", "cases_below_parameters"), ,
              drop = FALSE]
-  units <- c(optimizer_control = "Optimizer", scaled_test_unavailable = "Scaled test")
+  units <- c(optimizer_control = "Optimizer", scaled_test_unavailable = "Scaled test",
+             few_categories = "Categories", cases_below_parameters = "Free parameters")
+  # A row whose remedy is a setting or more cases says what to do as well.
+  advised <- own$metric %in% c("few_categories", "cases_below_parameters")
+  own$observation[advised] <- nomo_present_then_recommend(own$observation[advised],
+                                                          own$recommendation[advised])
   for (i in seq_len(nrow(own))) {
     add(if (own$metric[[i]] %in% names(units)) units[[own$metric[[i]]]] else own$object[[i]],
         own$severity[[i]], own$observation[[i]])
@@ -303,10 +331,10 @@ nomo_cfa_flagged <- function(x) {
     fit <- x$fit_evidence[x$fit_evidence$attention == "review", , drop = FALSE]
     for (i in seq_len(nrow(fit))) {
       add(fit$metric[[i]], "review", sprintf(
-        "The value, %s, is %s the teaching reference of %s; inspect global and localized model strain.",
+        "The value, %s, is %s the review reference %s; inspect global and localized model strain.",
         nomo_cfa_fit_number(fit$metric[[i]], fit$value[[i]], fit$reference[[i]]),
         if (identical(fit$direction[[i]], "higher")) "below" else "above",
-        nomo_cfa_fit_number(fit$metric[[i]], fit$reference[[i]])
+        nomo_cfa_fit_number(fit$metric[[i]], fit$reference[[i]], given = TRUE)
       ))
     }
     loadings <- x$standardized_loadings
@@ -330,11 +358,27 @@ nomo_cfa_flagged <- function(x) {
 
 # Print ---------------------------------------------------------------------------
 
+#' @rdname printing
 #' @export
-print.nomo_cfa <- function(x, ...) {
+print.nomo_cfa <- function(x, digits = NULL, ...) {
+  nomo_present_local_digits(digits)
   nomo_present_header("nomo_cfa", "Confirmatory factor analysis")
   nomo_cfa_present_facts(x)
   shown <- nomo_cfa_estimator_abbr(x)
+  # Indicators with few categories fitted as continuous, and the remedy
+  # (usefulness-04).
+  few <- x$decision_log[x$decision_log$metric %in% "few_categories", , drop = FALSE]
+  if (nrow(few)) {
+    n <- few$value[[1L]]
+    nomo_present_text(
+      nomo_present_count(n, "indicator"), " ", nomo_present_noun(n, "has", "have"),
+      " 4 or fewer observed categories and ", nomo_present_noun(n, "was", "were"),
+      " fitted as continuous. Name ", nomo_present_noun(n, "it", "them"),
+      " in `ordered` to fit ", nomo_present_noun(n, "it", "them"),
+      " as ordered categories with WLSMV."
+    )
+    shown <- c(shown, "WLSMV")
+  }
 
   if (!isTRUE(x$converged)) {
     nomo_present_text(
@@ -434,8 +478,10 @@ nomo_cfa_fixed_correlations <- function(correlations, fit) {
 }
 
 
+#' @rdname printing
 #' @export
-print.summary_nomo_cfa <- function(x, ...) {
+print.summary_nomo_cfa <- function(x, digits = NULL, ...) {
+  nomo_present_local_digits(digits)
   nomo_present_header("nomo_cfa", "Confirmatory factor analysis", summary = TRUE)
   nomo_cfa_present_facts(x, detail = TRUE)
   shown <- nomo_cfa_estimator_abbr(x)
@@ -514,12 +560,12 @@ nomo_cfa_present_fit <- function(x) {
       "90% CI" = "interval", "Flag" = "flag"),
     formats = list(
       value = function(v) nomo_cfa_fit_number(indices$metric, v, indices$reference),
-      reference = function(v) nomo_cfa_fit_number(indices$metric, v)
+      reference = function(v) nomo_cfa_fit_number(indices$metric, v, given = TRUE)
     ),
     more = "nomo_table(x, \"fit\")"
   )
   nomo_present_text(
-    "References are teaching values for review, not cutoffs.", indent = 2L
+    "References are review values, not cutoffs.", indent = 2L
   )
   c(shown, indices$metric[is.finite(indices$value)], "CI")
 }
@@ -593,7 +639,9 @@ nomo_cfa_issue_label <- function(issue) {
     negative_observed_residual_variance = "Negative residual variance",
     negative_latent_variance = "Negative latent variance",
     standardized_loading_beyond_one = "Loading above 1",
-    latent_correlation_beyond_one = "Correlation above 1"
+    latent_correlation_beyond_one = "Correlation above 1",
+    latent_covariance_not_positive_definite = "Negative eigenvalue",
+    residual_covariance_not_positive_definite = "Negative eigenvalue"
   )
   out <- unname(labels[issue])
   plain <- gsub("_", " ", issue)
@@ -613,8 +661,10 @@ nomo_cfa_present_improper <- function(heywood) {
   heywood$signal <- nomo_cfa_issue_label(heywood$issue)
   kind <- ifelse(heywood$issue == "standardized_loading_beyond_one", "loading",
                  ifelse(heywood$issue == "latent_correlation_beyond_one", "r", "estimate"))
+  # A negative eigenvalue shows the decimals that tell it from 0.
   shown <- vapply(seq_len(nrow(heywood)), function(i) {
-    nomo_present_stat(heywood$value[[i]], kind[[i]])
+    nomo_present_stat(heywood$value[[i]], kind[[i]],
+                      reference = if (heywood$issue[[i]] %in% nomo_cfa_matrix_issues) 0)
   }, character(1))
   nomo_present_table(
     heywood,
@@ -697,7 +747,7 @@ plot.nomo_cfa <- function(x,
         nomo_plot_labs(
           title = "CFA standardized loadings",
           subtitle = paste0(
-            "Dashed lines mark the teaching reference for an absolute loading, ",
+            "Dashed lines mark the review reference for an absolute loading, ",
             nomo_present_stat(ref, "loading"), ". Factor direction depends on the model."
           ),
           x = "Standardized loading", y = NULL, shape = "Flag", colour = "Flag",
@@ -715,47 +765,16 @@ plot.nomo_cfa <- function(x,
 
   if (type == "fit") {
     dat <- x$fit_evidence[
-      x$fit_evidence$metric %in% c("CFI", "TLI", "RMSEA", "SRMR"), , drop = FALSE
+      x$fit_evidence$metric %in% nomo_plot_fit_metrics & is.finite(x$fit_evidence$value), ,
+      drop = FALSE
     ]
-    dat <- dat[is.finite(dat$value), , drop = FALSE]
     if (!nrow(dat)) stop("No global fit evidence is available to plot.", call. = FALSE)
-    references <- paste(dat$metric, nomo_cfa_fit_number(dat$metric, dat$reference),
-                        collapse = ", ")
-    dat$metric <- factor(dat$metric, levels = c("CFI", "TLI", "RMSEA", "SRMR"))
-    # CFI and TLI sit near 1 and RMSEA and SRMR near 0, so one axis squashed
-    # the second pair against zero; each pair gets its own panel and scale (#89).
-    dat$panel <- factor(
-      ifelse(dat$metric %in% c("CFI", "TLI"), "Higher values favor fit",
-             "Lower values favor fit"),
-      levels = c("Higher values favor fit", "Lower values favor fit")
-    )
+    dat$model <- "Model"
     dat$status <- nomo_plot_status(dat$attention)
-    # The reference is a dashed mark, so the cross stays the "not computed"
-    # status it is in every plot (#144).
-    return(
-      ggplot2::ggplot(dat, ggplot2::aes(x = metric, y = value)) +
-        ggplot2::geom_errorbar(
-          ggplot2::aes(ymin = reference, ymax = reference),
-          width = 0.5, linetype = 2, na.rm = TRUE
-        ) +
-        ggplot2::geom_segment(
-          ggplot2::aes(x = metric, xend = metric, y = reference, yend = value),
-          colour = "grey60", na.rm = TRUE
-        ) +
-        ggplot2::geom_point(ggplot2::aes(shape = status, colour = status), size = 3,
-                            na.rm = TRUE) +
-        nomo_plot_status_scales(dat$status, name = "Flag") +
-        ggplot2::facet_wrap(stats::as.formula("~ panel"), scales = "free") +
-        nomo_plot_labs(
-          title = "CFA global fit evidence",
-          subtitle = "Points are observed values; dashed marks are teaching references.",
-          x = NULL, y = "Fit index", shape = "Flag", colour = "Flag",
-          caption = paste0(
-            "References: ", references, ". They are review prompts, not cutoffs; ",
-            "interpret global fit with local strain, estimator, sample, and theory."
-          )
-        ) + ggplot2::theme_minimal()
-    )
+    return(nomo_plot_fit_indices(
+      dat, title = "CFA global fit evidence", values = "the model's values",
+      versions = nomo_plot_fit_cfa_versions(x$fit_evidence)
+    ))
   }
 
   if (type == "residuals") {
@@ -780,7 +799,7 @@ plot.nomo_cfa <- function(x,
         ggplot2::scale_fill_gradient2(midpoint = 0, limits = c(-max_abs, max_abs)) +
         nomo_plot_labs(
           title = "CFA localized residual correlations",
-          subtitle = "Unique off-diagonal residual pairs",
+          subtitle = "Unique off-diagonal residual pairs.",
           x = NULL, y = NULL, fill = "Residual",
           caption = paste(
             "Localized residuals identify strain; they do not automatically",
@@ -804,7 +823,7 @@ plot.nomo_cfa <- function(x,
     ggplot2::geom_col() +
     nomo_plot_labs(
       title = "Largest CFA modification indices",
-      subtitle = "Post hoc diagnostic evidence only",
+      subtitle = "Post hoc diagnostic evidence only.",
       x = "Modification index", y = NULL,
       caption = paste(
         "A large modification index proposes a parameter worth investigating.",

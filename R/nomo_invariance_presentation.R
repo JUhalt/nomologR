@@ -348,13 +348,32 @@ nomo_invariance_parameter_label <- function(pt, row, group_labels, occasion_map 
 }
 
 
+# What the labels of a fit's equality constraints are read from: its parameter
+# table, NULL when lavaan cannot give one, and its group labels.
+nomo_invariance_constraint_context <- function(fit) {
+  list(
+    pt = tryCatch(
+      as.data.frame(lavaan::parTable(fit)),
+      error = function(e) NULL
+    ),
+    group_labels = tryCatch(
+      as.character(lavaan::lavInspect(fit, "group.label")),
+      error = function(e) character()
+    )
+  )
+}
+
+
 # An equality constraint in words. lavaan writes each as the first group's (or
 # occasion's) parameter equal to another's, and a score test frees that one
 # constraint. With two groups it compares them; with three or more, the other
 # groups stay equal to the first, so the test frees the named group from the
 # value the rest share: "Intercept: y3 (three vs. others)", not "(one vs.
-# three)", which read as a comparison of two groups (#145).
-nomo_invariance_pretty_constraint <- function(constraint, fit, occasion_map = NULL) {
+# three)", which read as a comparison of two groups (#145). `context` holds
+# the fit's parameter table and group labels, which a table of many constraints
+# computes once per fit (#183).
+nomo_invariance_pretty_constraint <- function(constraint, fit, occasion_map = NULL,
+                                              context = NULL) {
   if (is.null(fit) ||
       !is.character(constraint) ||
       length(constraint) != 1L ||
@@ -371,10 +390,8 @@ nomo_invariance_pretty_constraint <- function(constraint, fit, occasion_map = NU
 
   if (length(parts) != 2L) return(constraint)
 
-  pt <- tryCatch(
-    as.data.frame(lavaan::parTable(fit)),
-    error = function(e) NULL
-  )
+  if (is.null(context)) context <- nomo_invariance_constraint_context(fit)
+  pt <- context$pt
 
   if (is.null(pt) || !nrow(pt)) return(constraint)
 
@@ -393,10 +410,7 @@ nomo_invariance_pretty_constraint <- function(constraint, fit, occasion_map = NU
 
   if (!length(left) || !length(right)) return(constraint)
 
-  group_labels <- tryCatch(
-    as.character(lavaan::lavInspect(fit, "group.label")),
-    error = function(e) character()
-  )
+  group_labels <- context$group_labels
 
   a <- nomo_invariance_parameter_label(
     pt,
@@ -455,6 +469,12 @@ nomo_invariance_local_strain_display <- function(x) {
     )
   }
 
+  # The parameter table and group labels are read once per level, not once per
+  # row (#183).
+  fitted <- unique(as.character(dat$level))
+  contexts <- lapply(stats::setNames(fitted, fitted), function(level) {
+    if (!is.null(x$fits[[level]])) nomo_invariance_constraint_context(x$fits[[level]])
+  })
   dat$constraint_display <- vapply(
     seq_len(nrow(dat)),
     function(i) {
@@ -463,7 +483,8 @@ nomo_invariance_local_strain_display <- function(x) {
       nomo_invariance_pretty_constraint(
         dat$constraint[[i]],
         fit,
-        occasion_map
+        occasion_map,
+        contexts[[level]]
       )
     },
     character(1)
@@ -548,8 +569,10 @@ nomo_invariance_present_flagged <- function(log, recommendation = FALSE) {
 
 # print() and summary() ---------------------------------------------------------------
 
+#' @rdname printing
 #' @export
-print.nomo_invariance <- function(x, ...) {
+print.nomo_invariance <- function(x, digits = NULL, ...) {
+  nomo_present_local_digits(digits)
   object <- x
   x <- nomo_invariance_display_fields(x)
   nomo_invariance_present_header(x)
@@ -659,8 +682,10 @@ summary.nomo_invariance <- function(object, ...) {
 }
 
 
+#' @rdname printing
 #' @export
-print.summary_nomo_invariance <- function(x, ...) {
+print.summary_nomo_invariance <- function(x, digits = NULL, ...) {
+  nomo_present_local_digits(digits)
   across_occasions <- identical(x$design, "occasions")
   formats <- nomo_invariance_fit_formats()
   nomo_invariance_present_header(x, summary = TRUE)

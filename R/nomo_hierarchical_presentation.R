@@ -28,8 +28,8 @@ nomo_hierarchical_item_set <- c("ecv", "puc")
 
 # The precision of each column: omegas, determinacy, and H as reliabilities,
 # shares as proportions, and the competing-scores correlation as an r (#144).
-nomo_hierarchical_formats <- function(digits = NULL) {
-  stat <- function(kind) function(v) nomo_present_stat(v, kind, digits = digits)
+nomo_hierarchical_formats <- function() {
+  stat <- function(kind) function(v) nomo_present_stat(v, kind)
   list(
     estimate = stat("reliability"),
     share = stat("proportion"),
@@ -42,20 +42,22 @@ nomo_hierarchical_formats <- function(digits = NULL) {
 }
 
 
-nomo_hierarchical_present_facts <- function(x) {
+# `cases` is the "Cases: 500" fact, from the fit for print() and from the
+# summary's counts for summary() (#145).
+nomo_hierarchical_present_facts <- function(x, cases) {
   nomo_present_facts(c(
     sprintf("%s model", nomo_hierarchical_structure_label(x)),
     sprintf("General factor: %s", x$general),
     sprintf("Group factors: %s", paste(names(x$groups), collapse = ", "))
   ))
-  nomo_present_facts(sprintf(
+  nomo_present_facts(c(cases, sprintf(
     "Estimand: %s",
     if (identical(x$estimand, "latent_response")) {
       "latent-response composite (ordered indicators)"
     } else {
       "unit-weighted observed composite"
     }
-  ))
+  )))
 }
 
 
@@ -131,12 +133,14 @@ nomo_hierarchical_caveat <- function() {
 }
 
 
+#' @rdname printing
 #' @export
 print.nomo_hierarchical <- function(x, digits = NULL, ...) {
+  nomo_present_local_digits(digits)
   nomo_present_header("nomo_hierarchical", "Hierarchical model evaluation",
                       source = "Rodriguez, Reise, & Haviland (2016)")
-  nomo_hierarchical_present_facts(x)
-  nomo_hierarchical_present_tables(x, nomo_hierarchical_formats(digits))
+  nomo_hierarchical_present_facts(x, nomo_lavaan_cases_fact(nomo_lavaan_cases(x[["fit"]])))
+  nomo_hierarchical_present_tables(x, nomo_hierarchical_formats())
 
   notes <- x$notes
   nomo_present_flagged(status = notes$severity, text = nomo_hierarchical_brief(notes))
@@ -154,7 +158,10 @@ print.nomo_hierarchical <- function(x, digits = NULL, ...) {
 
 #' @export
 summary.nomo_hierarchical <- function(object, ...) {
+  cases <- nomo_lavaan_cases(object[["fit"]])
   out <- list(
+    n_used = cases$n_used,
+    data_n = cases$data_n,
     structure = object$structure,
     general = object$general,
     groups = object$groups,
@@ -169,14 +176,21 @@ summary.nomo_hierarchical <- function(object, ...) {
 }
 
 
+#' @rdname printing
 #' @export
-print.summary_nomo_hierarchical <- function(x, ...) {
+print.summary_nomo_hierarchical <- function(x, digits = NULL, ...) {
+  nomo_present_local_digits(digits)
   nomo_present_header("nomo_hierarchical", "Hierarchical model evaluation",
                       summary = TRUE, source = "Rodriguez, Reise, & Haviland (2016)")
-  nomo_hierarchical_present_facts(x)
+  nomo_hierarchical_present_facts(x, nomo_lavaan_cases_fact(x))
 
   formats <- nomo_hierarchical_formats()
   idx <- x$indices
+  # Each interpretation is written again here, so its share has the decimals
+  # of the index it follows when print() is given `digits` (guide point 9).
+  idx$interpretation <- nomo_hierarchical_interpretation(
+    idx, list(type = x$structure, general = x$general)
+  )
   bullets <- sprintf(
     "%s = %s: %s", nomo_hierarchical_index_label(idx$index),
     ifelse(idx$index %in% nomo_hierarchical_item_set,
@@ -256,7 +270,7 @@ plot.nomo_hierarchical <- function(x, type = c("variance", "loadings"), ...) {
         ggplot2::geom_point(size = 2.6) +
         nomo_plot_labs(
           title = "Standardized general and group loadings",
-          subtitle = sprintf("%s model, general factor: %s",
+          subtitle = sprintf("%s model, general factor: %s.",
                              nomo_hierarchical_structure_label(x), x$general),
           x = "Standardized loading",
           y = NULL,
@@ -316,7 +330,7 @@ plot.nomo_hierarchical <- function(x, type = c("variance", "loadings"), ...) {
       title = "Where each composite's variance comes from",
       subtitle = paste(
         "General = omega hierarchical;",
-        "general + group = omega; the remainder is not common-factor variance"
+        "general + group = omega; the remainder is not common-factor variance."
       ),
       x = "Proportion of composite variance",
       y = NULL,

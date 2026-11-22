@@ -12,7 +12,11 @@
 #' models, structural SEMs, higher-order models, and cross-loaded first-order
 #' indicators. When global CFA strain or an improper solution is present,
 #' reliability is still inspectable but the decision log warns that
-#' model-based reliability can be distorted by misspecification.
+#' model-based reliability can be distorted by misspecification. An indicator
+#' that loads on its factor with the opposite sign to the factor's other
+#' indicators, as a reverse-keyed item does until it is recoded, is a concern:
+#' omega and alpha describe the unit-weighted sum, in which such an item counts
+#' against the factor. Recode reverse-keyed items before fitting the CFA.
 #'
 #' For ordered indicators, the observed-score omega (`ordinal_scale = TRUE`)
 #' is the same whether lavaan fitted the model with its delta or theta
@@ -82,8 +86,9 @@
 #'   results. They may change between releases and are not part of the stable
 #'   interface (see `?nomologR`).
 #'
-#'   `print()` shows the range of omega, the flags it raised against the review
-#'   reference, and how uncertainty was handled; `summary()` adds each
+#'   `print()` shows the cases the model analyzed, the range of omega, the
+#'   flags it raised against the review reference, and how uncertainty was
+#'   handled; `summary()` adds each
 #'   construct's omega and alpha with their intervals and score scales, the
 #'   reason any alpha was not computed, and every flag in the decision log
 #'   with its reason.
@@ -397,8 +402,14 @@ nomo_reliability <- function(fit,
     shown <- nomo_present_stat(estimate, "reliability", reference = reference)
 
     if (!is.finite(estimate) || estimate < 0 || estimate > 1) {
+      # The coefficient and its value are named, so a guided run's flag says
+      # which it is (usefulness-15).
       core <- paste(
-        "The coefficient is outside the conventional 0-1 reliability range or unavailable.",
+        if (is.finite(estimate)) {
+          paste0(label, " (", shown, ") is outside the 0 to 1 range of a reliability coefficient.")
+        } else {
+          paste(label, "could not be computed.")
+        },
         "Inspect model admissibility, coding, and the measurement model before interpretation."
       )
     } else if (estimate < reference) {
@@ -480,7 +491,9 @@ nomo_reliability <- function(fit,
     ci_status <- ci_result$status
   }
 
-  fit_context <- nomo_reliability_fit_context(fit_info$fit, guidance)
+  fit_context <- nomo_reliability_fit_context(
+    fit_info$fit, guidance, fit_info$wrapper$fit_measures_all
+  )
   model_strain <- FALSE
   if (nrow(fit_context) && "attention" %in% names(fit_context)) {
     model_strain <- any(fit_context$attention %in% c("review", "concern"), na.rm = TRUE)
@@ -625,6 +638,11 @@ nomo_reliability <- function(fit,
       rationale = "Simulation work shows omega can be biased when the measurement model is misspecified."
     )
   }
+
+  # Indicators that load against their factor, as unrecoded reverse-keyed
+  # items do, count against it in the sum omega and alpha describe, which can
+  # take both toward 0 or below (usefulness-02).
+  log <- nomo_reliability_signs_log(log, nomo_cfa_against_items(fit_info$fit), "reliability")
 
   if (include_alpha) {
     skipped_alpha <- alpha_status[!alpha_status$available, , drop = FALSE]
@@ -793,4 +811,52 @@ nomo_reliability <- function(fit,
   )
   class(out) <- c("nomo_reliability", "list")
   out
+}
+
+
+# A concern for each factor with indicators that load against it, as
+# unrecoded reverse-keyed items do (usefulness-02), for nomo_reliability() and
+# nomo_validity(). `against` is from nomo_cfa_against_items(). `reversed` names
+# the factors most of whose loadings are negative, which run opposite to most
+# of their items, so their correlations with other factors change sign.
+nomo_reliability_signs_log <- function(log, against, stage, reversed = character()) {
+  for (f in names(against)) {
+    items <- against[[f]]
+    n <- length(items)
+    found <- sprintf(
+      "%s %s on %s with the opposite sign to its other indicators.",
+      nomo_present_or(items, "and"), nomo_present_noun(n, "loads", "load"), f
+    )
+    log <- nomo_log_add(
+      log, stage = stage, object = f, metric = "loading_signs", value = n,
+      reference = "The indicators of a reflective factor load on it with one sign",
+      severity = "concern",
+      observation = if (identical(stage, "reliability")) {
+        paste(found, "Omega and alpha describe the unit-weighted sum, in which",
+              nomo_present_noun(n, "this item counts", "these items count"),
+              "against the factor.")
+      } else {
+        paste0(
+          found, " AVE and HTMT do not depend on the signs, but a unit-weighted ",
+          "sum, omega, and alpha count ", nomo_present_noun(n, "it", "them"),
+          " against the factor.",
+          if (f %in% reversed) {
+            sprintf(
+              paste(
+                " Most of %s's loadings are negative, so %s runs opposite to most",
+                "of its items, and its correlations with other factors change sign."
+              ),
+              f, f
+            )
+          }
+        )
+      },
+      recommendation = paste(
+        "Recode reverse-keyed items, refit the CFA, and estimate",
+        if (identical(stage, "reliability")) "reliability again." else "the evidence again."
+      ),
+      rationale = "A score adds its items as they are coded, whatever sign the model gives them."
+    )
+  }
+  log
 }

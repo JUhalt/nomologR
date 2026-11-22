@@ -63,7 +63,10 @@ scales came from a \code{contentvalidR} handoff, each of \code{reverse} and
 \code{scale_range} is taken from its declared keying unless given here, as in
 \code{\link[=nomo_screen]{nomo_screen()}}; giving one replaces only that one. The decision log
 records a declared value replaced, or a response scale the handoff did not
-record supplied here.
+record supplied here. The data are never recoded: when an item declared
+reverse-keyed still loads in the CFA with the opposite sign to the items
+of its factor that are not declared, the pause for \code{measurement_model}
+says so, and the component log records it as a concern.
 
 The invariance and network stages refit the measurement model with the
 CFA stage's \code{ordered}, \code{estimator}, and \code{missing} from \code{settings$cfa},
@@ -158,6 +161,13 @@ through \code{settings$invariance} and \code{settings$network}. A network branch
 include a \code{nomo_hypotheses} object. Invariance diagnostics never free
 parameters automatically, and network results never collapse to a one-number
 validity score.
+
+A long step says that it has started, with a message such as "Fitting the
+CFA model...". The steps are factor-retention evidence for each scale, the
+CFA, bootstrap intervals for reliability, the invariance models, the
+network, and the missing-data refits. \code{\link[=nomo_factors]{nomo_factors()}} adds a message before
+parallel analysis with polychoric or mixed correlations, which can take
+minutes. Wrap the call in \code{suppressMessages()} to silence them.
 }
 \examples{
 scales <- list(
@@ -220,6 +230,10 @@ Clark, L. A., & Watson, D. (1995). Constructing validity: Basic issues in
 objective scale development. \emph{Psychological Assessment, 7}(3), 309-319.
 \doi{10.1037/1040-3590.7.3.309}
 
+Clark, L. A., & Watson, D. (2019). Constructing validity: New developments
+in creating objective measuring instruments. \emph{Psychological Assessment,
+31}(12), 1412-1427. \doi{10.1037/pas0000626}
+
 Flake, J. K., & Fried, E. I. (2020). Measurement schmeasurement:
 Questionable measurement practices and how to avoid them. \emph{Advances in
 Methods and Practices in Psychological Science, 3}(4), 456-465.
@@ -238,4 +252,10 @@ Simmons, J. P., Nelson, L. D., & Simonsohn, U. (2011). False-positive
 psychology: Undisclosed flexibility in data collection and analysis allows
 presenting anything as significant. \emph{Psychological Science, 22}(11),
 1359-1366. \doi{10.1177/0956797611417632}
+
+Wicherts, J. M., Veldkamp, C. L. S., Augusteijn, H. E. M., Bakker, M., van
+Aert, R. C. M., & van Assen, M. A. L. M. (2016). Degrees of freedom in
+planning, running, analyzing, and reporting psychological studies: A
+checklist to avoid p-hacking. \emph{Frontiers in Psychology, 7}, 1832.
+\doi{10.3389/fpsyg.2016.01832}
 }

@@ -28,11 +28,19 @@ Model indicators stored as ordered factors are treated as declared whether
 or not they are named here, because \code{lavaan} fits them as categorical; the
 decision log flags them for review. Names that are not variables in the
 model are not used, and the decision log lists them. When any indicator is
-ordered and \code{estimator = NULL}, \code{nomo_cfa()} explicitly requests \code{WLSMV}.}
+ordered and \code{estimator = NULL}, \code{nomo_cfa()} explicitly requests \code{WLSMV}.
+When none is ordered and the estimator is ML or a robust ML, numeric
+indicators with 4 or fewer observed categories are flagged for review,
+and \code{print()} names this argument as the remedy (Rhemtulla et al., 2012).
+An indicator's categories are those its factor's indicators use between
+them, so a five-point item whose answers fall in three categories is not
+flagged; \code{\link[=nomo_screen]{nomo_screen()}} reports its distribution.}
 
 \item{estimator}{Optional \code{lavaan} estimator. For continuous indicators,
 leaving this as \code{NULL} preserves \code{lavaan::cfa()}'s default. Robust ML
-variants such as \code{"MLR"} remain explicit researcher choices.}
+variants such as \code{"MLR"} remain explicit researcher choices; with 5 to 7
+observed categories under ML, the decision log notes that \code{"MLR"} suits
+non-normal responses.}
 
 \item{missing}{Optional \code{lavaan} missing-data option such as \code{"fiml"} for
 continuous ML models or \code{"pairwise"} where supported.}
@@ -60,18 +68,25 @@ A \code{nomo_cfa} object. The fields to read are:
 \item \code{converged}, \code{estimator}, \code{data_n}, \code{n_used}, and \code{sample_summary}.
 \code{estimator} is stored in upper case, so \code{"mlr"} is stored as \code{"MLR"} and
 a requested \code{"default"} as \code{"DEFAULT"}.
-\item \code{fit_evidence}: global fit indices with their teaching references;
+\item \code{fit_evidence}: global fit indices with their review references;
 \code{variant} names the \code{lavaan} measure each value comes from. Robust
 values are preferred, then scaled ones, then standard ones. When
 \code{lavaan} was asked for a scaled test statistic but could not compute it,
 every value is the standard one, and the decision log says so.
 \item \code{standardized_loadings}: one row per loading, with its interval, flag,
-and explanation.
+and explanation. A loading whose sign is opposite to most loadings on
+its factor, as a reverse-keyed item's is until it is recoded, is
+flagged for review; cross-loadings are not compared.
 \item \code{factor_correlations}: latent correlations with intervals. A
 correlation the model fixes, such as the zero correlations of a
 bifactor model, is listed at its fixed value; \code{summary()} shows it as
 fixed rather than estimated.
-\item \code{heywood}: improper-solution signals, if any.
+\item \code{heywood}: improper-solution signals, if any: a negative variance, a
+standardized loading or latent correlation beyond 1, or a latent or
+residual covariance matrix that is not positive definite, whose \code{value}
+is the smallest eigenvalue of the matrix as correlations. The decision
+log also flags for review a model fitted to fewer cases than it has
+free parameters.
 \item \code{parameter_estimates} and \code{standardized_solution}: \code{lavaan}'s parameter
 tables, as tibbles.
 \item \code{residual_matrix} and \code{residual_pairs}: residual correlations, the pairs
@@ -168,6 +183,14 @@ indexes and dangers in overgeneralizing Hu and Bentler's (1999) findings.
 
 Estimation, respecification, and improper solutions:
 
+Bollen, K. A. (1989). \emph{Structural equations with latent variables}. Wiley.
+\doi{10.1002/9781118619179}
+
+Enders, C. K., & Bandalos, D. L. (2001). The relative performance of full
+information maximum likelihood estimation for missing data in structural
+equation models. \emph{Structural Equation Modeling, 8}(3), 430-457.
+\doi{10.1207/S15328007SEM0803_5}
+
 Flora, D. B., & Curran, P. J. (2004). An empirical evaluation of alternative
 methods of estimation for confirmatory factor analysis with ordinal data.
 \emph{Psychological Methods, 9}(4), 466-491. \doi{10.1037/1082-989X.9.4.466}
@@ -189,4 +212,8 @@ conditions. \emph{Psychological Methods, 17}(3), 354-373.
 
 Rosseel, Y. (2012). lavaan: An R package for structural equation modeling.
 \emph{Journal of Statistical Software, 48}(2), 1-36. \doi{10.18637/jss.v048.i02}
+
+Schafer, J. L., & Graham, J. W. (2002). Missing data: Our view of the state
+of the art. \emph{Psychological Methods, 7}(2), 147-177.
+\doi{10.1037/1082-989X.7.2.147}
 }

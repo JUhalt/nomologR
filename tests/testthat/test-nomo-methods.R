@@ -24,8 +24,8 @@ methods_run <- local({
         measurement_model = "proceed"
       ),
       settings = list(
-        # Ten null data sets: the methods credited do not depend on how many,
-        # and this fixture is built under CRAN's check-time limit.
+        # Ten null data sets: the methods credited do not depend on how many.
+        # A full guided workflow, so the tests that use it skip on CRAN.
         factors = list(seed = 2026, n_iter = 10),
         invariance = list(
           group = "group",
@@ -267,6 +267,7 @@ test_that("nomo_methods(run) reports the methods the run actually used", {
 
 
 test_that("methods the run did use are credited", {
+  skip_on_cran()
   used <- nomo_methods(methods_run())$id
 
   expect_true(all(c(
@@ -286,6 +287,7 @@ test_that("methods the run did use are credited", {
 
 
 test_that("methods the run did not use are not credited", {
+  skip_on_cran()
   used <- nomo_methods(methods_run())$id
 
   # Continuous indicators estimated by ML.
@@ -310,6 +312,7 @@ test_that("methods the run did not use are not credited", {
 
 
 test_that("a one-factor solution is credited with no rotation method", {
+  skip_on_cran()
   run <- methods_run()
   used <- nomo_methods(run)$id
 
@@ -324,6 +327,7 @@ test_that("a one-factor solution is credited with no rotation method", {
 
 
 test_that("a same-sample design is not credited as a holdout", {
+  skip_on_cran()
   run <- methods_run()
 
   expect_identical(run$sample_design, "same_sample")
@@ -332,6 +336,7 @@ test_that("a same-sample design is not credited as a holdout", {
 
 
 test_that("historical methods used in the run are labeled as context", {
+  skip_on_cran()
   used <- nomo_methods(methods_run())
 
   context <- used[used$role == "context", ]
@@ -480,6 +485,7 @@ test_that("bootstrap intervals and ordinal-scale reliability are credited", {
 
 
 test_that("invariance credits partial releases and categorical sequences", {
+  skip_on_cran()
   release <- nomo_partial(
     level = "scalar",
     syntax = "ag3 ~ 1",
@@ -591,6 +597,7 @@ test_that("a requested Fornell-Larcker comparison is credited", {
 # Component objects -----------------------------------------------------------
 
 test_that("component objects report their own methods", {
+  skip_on_cran()
   run <- methods_run()
 
   expect_true("omega" %in% nomo_methods(run$results$reliability)$id)
@@ -625,6 +632,7 @@ test_that("nomo_methods() refuses an object it cannot read", {
 # Surfaces --------------------------------------------------------------------
 
 test_that("summary(run) carries and prints the methods used", {
+  skip_on_cran()
   run <- methods_run()
   s <- summary(run)
 
@@ -637,12 +645,14 @@ test_that("summary(run) carries and prints the methods used", {
 
 
 test_that("nomo_table(run, \"methods\") matches nomo_methods(run)", {
+  skip_on_cran()
   run <- methods_run()
   expect_equal(nomo_table(run, "methods"), nomo_methods(run))
 })
 
 
 test_that("the report methods table describes only what the run used", {
+  skip_on_cran()
   run <- methods_run()
   tbl <- nomo_report_methods(run)
 
@@ -657,6 +667,7 @@ test_that("the report methods table describes only what the run used", {
 
 
 test_that("the report reference list names each work once, with a DOI link", {
+  skip_on_cran()
   run <- methods_run()
   refs <- nomo_report_method_references(run)
 
@@ -974,4 +985,27 @@ test_that("registry references are complete (#145, lit-9, lit-11)", {
   expect_match(refs("nomo_cfa"), "Hu, L.-T., & Bentler", fixed = TRUE)
   expect_false(grepl("Sorbom", refs("nomo_hierarchical"), fixed = TRUE))
   expect_match(refs("nomo_split"), "equals trouble: Overfitting in the assessment", fixed = TRUE)
+})
+
+
+test_that("each function's help cites what the registry cites for its methods (#145, lit-14)", {
+  reg <- nomo_methods(references = TRUE)
+  topics <- regmatches(reg$implemented_by,
+                       gregexpr("nomo_[a-z_]+(?=\\(\\))", reg$implemented_by, perl = TRUE))
+  cited <- unique(data.frame(
+    topic = unlist(topics),
+    key = rep(reg$citation_key, lengths(topics)),
+    citation = rep(reg$citation, lengths(topics)),
+    doi = rep(reg$doi, lengths(topics))
+  ))
+  expect_gt(length(unique(cited$topic)), 20L)
+  refs <- lapply(stats::setNames(nm = unique(cited$topic)), function(topic) {
+    gsub("\\s+", "", nomo_test_rd_text(topic, "\\references"))
+  })
+  # A work is found by its DOI, in the registry's form, or a book without one
+  # by its authors and year.
+  wanted <- ifelse(is.na(cited$doi), sub("\\)\\..*$", ")", cited$citation), cited$doi)
+  found <- mapply(function(topic, text) grepl(gsub("\\s+", "", text), refs[[topic]], fixed = TRUE),
+                  cited$topic, wanted)
+  expect_identical(paste(cited$topic, cited$key)[!found], character())
 })

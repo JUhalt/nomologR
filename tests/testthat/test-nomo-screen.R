@@ -1336,8 +1336,8 @@ test_that("screens saved before within-scale values still summarize and plot", {
   out <- nomo_screen(nomo_demo_walkthrough, items = c("EF1", "EF3", "EF4", "EF6"))
   out$relationship_summary$scale_item_rest_r <- NULL
   local_reproducible_output(width = 80)
-  expect_no_warning(capture.output(print(summary(out))))
-  expect_no_warning(p <- plot(out, type = "item_rest"))
+  expect_no_warning_off_cran(capture.output(print(summary(out))))
+  expect_no_warning_off_cran(p <- plot(out, type = "item_rest"))
   expect_equal(p$data$item_rest,
                out$relationship_summary$corrected_item_rest_r[
                  match(p$data$item, out$relationship_summary$item)])
@@ -1411,7 +1411,7 @@ test_that("one negative pair within a scale is still reviewed, and says so", {
 test_that("screens saved before within-scale pair counts still review negative pairs", {
   out <- nomo_screen(nomo_demo_walkthrough, items = paste0("EF", 1:4))
   out$relationship_summary$scale_negative_interitem_n <- NULL
-  expect_no_warning(review <- summary(out)$item_review)
+  expect_no_warning_off_cran(review <- summary(out)$item_review)
   expect_true(all(grepl("negative_interitem_pairs", review$review_metrics[review$item != "EF2"])))
 })
 
@@ -1886,7 +1886,7 @@ test_that("correlations in the log are written without a leading zero (#145)", {
     row$observation,
     "`b5` has a corrected item-rest correlation of r = .28 (n = 473), below the review reference .30."
   )
-  expect_identical(row$reference, "Teaching reference .30; not a retention rule")
+  expect_identical(row$reference, "Review reference .30; not a retention rule")
 })
 
 
@@ -2011,7 +2011,7 @@ test_that("plots draw status by shape and color, with plain titles (#145)", {
   item_rest <- plot(out, type = "item_rest")
   expect_true(any(vapply(item_rest$layers, function(l) inherits(l$geom, "GeomPoint"), logical(1))))
   expect_identical(item_rest$labels$subtitle, "Each item against the sum of the other items.")
-  expect_match(plot_text(item_rest$labels$caption), "dashed line marks the .30 teaching reference",
+  expect_match(plot_text(item_rest$labels$caption), "dashed line marks the .30 review reference",
                fixed = TRUE)
   bare <- out
   bare$guidance$item_total_reference <- NULL

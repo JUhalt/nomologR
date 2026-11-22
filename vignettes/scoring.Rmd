@@ -82,11 +82,11 @@ nomo_table(summed, "diagnostics")
 ```
 
 `validity` is the correlation between a score and the factor it estimates.
-Gorsuch (1983) recommended at least .80, and above .90 where scores are used as
-substitutes for the factors themselves. For `method = "regression"` this
-quantity is the factor determinacy coefficient that
-[`nomo_hierarchical()`](hierarchical-models.html) reports, because that method
-maximizes it.
+Gorsuch (1983, p. 260, as cited in Grice, 2001) recommended at least .80, and
+above .90 where scores are used as substitutes for the factors themselves. For
+`method = "regression"` this quantity is the factor determinacy coefficient
+that [`nomo_hierarchical()`](hierarchical-models.html) reports, because that
+method maximizes it.
 
 `univocality` is a score's largest correlation with a factor it does *not*
 represent. When the factors correlate, a score reaches the others through its

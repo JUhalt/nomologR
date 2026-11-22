@@ -39,6 +39,11 @@ nomo_run_component_logs <- function(x) {
 
       for (scope in names(stage_results)) add(stage, scope, stage_results[[scope]])
     }
+    # Declared reverse-keyed items that still load against their factor
+    # follow the CFA's own rows (usefulness-02).
+    if (identical(stage, "cfa")) {
+      add("cfa", "workflow", list(decision_log = nomo_run_unrecoded_log(x)))
+    }
 
     # Evidence attached to a stage (#73) follows it in the log: the
     # instrument-wide careless-responding screen after the per-scale audits,

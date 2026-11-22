@@ -114,13 +114,18 @@ nomo_network_nearest_bound <- function(x, lower, upper) {
 
 # A bound of a predicted region as the researcher gave it: at least two
 # decimals, more when given, in the format of the estimate's kind; zero is 0.
+# Like a significance level, a bound is never shown with fewer decimals than
+# it was given, whatever `digits` print() was given; more, when it asks for
+# more.
 nomo_network_bound_text <- function(x, kind) {
   decimals <- vapply(x, function(v) {
     nchar(sub("^[^.]*\\.?", "", format(signif(abs(v), 6), scientific = FALSE,
                                        drop0trailing = TRUE)))
   }, numeric(1))
+  asked <- nomo_null_default(nomo_present_digits(), 0L)
   out <- vapply(seq_along(x), function(i) {
-    nomo_present_stat(x[[i]], kind[[i]], digits = min(4L, max(2L, decimals[[i]])))
+    nomo_present_number(x[[i]], max(asked, min(4L, max(2L, decimals[[i]]))),
+                        nomo_present_kinds[[kind[[i]]]]$bounded)
   }, character(1))
   out[x == 0] <- "0"
   out
@@ -312,10 +317,13 @@ nomo_network_present_evidence <- function(x) {
 # composite modeled as a single indicator, and how the evidence moves with it.
 nomo_network_present_single <- function(single, sensitivity, detail = FALSE) {
   if (!is.data.frame(single) || !nrow(single)) return(invisible(NULL))
+  # The reliability and its standard error were given, so `digits` adds
+  # decimals to them but never takes them away.
+  given <- function(kind) function(v) nomo_present_stat(v, kind, given = TRUE)
   if (!isTRUE(detail)) {
     nomo_present_facts(paste0(
       "Single indicator: ", single$variable, " (reliability ",
-      nomo_present_stat(single$reliability, "reliability"), ", ", single$coefficient, ")"
+      given("reliability")(single$reliability), ", ", single$coefficient, ")"
     ))
     return(invisible(NULL))
   }
@@ -330,8 +338,8 @@ nomo_network_present_single <- function(single, sensitivity, detail = FALSE) {
       "Reliability" = "reliability", "SE" = "se", "Variance" = "variance",
       "Error variance" = "error_variance"),
     formats = list(
-      reliability = function(v) nomo_present_stat(v, "reliability"),
-      se = function(v) nomo_present_stat(v, "estimate"),
+      reliability = given("reliability"),
+      se = given("estimate"),
       variance = function(v) nomo_present_stat(v, "estimate"),
       error_variance = function(v) nomo_present_stat(v, "estimate")
     ),
@@ -538,8 +546,10 @@ nomo_network_present_key <- function(text, shown = character()) {
 }
 
 
+#' @rdname printing
 #' @export
-print.nomo_network <- function(x, ...) {
+print.nomo_network <- function(x, digits = NULL, ...) {
+  nomo_present_local_digits(digits)
   nomo_present_header("nomo_network", "Nomological network")
   nomo_network_present_facts(x)
   nomo_present_facts(c(
@@ -615,6 +625,7 @@ summary.nomo_network <- function(object, ...) {
     converged = object$converged,
     estimator = object$estimator,
     fit_evidence = object$fit_evidence,
+    fit_reference = object$guidance$fit_reference,
     measurement_context = object$measurement_context,
     validation_fit_evidence = object$validation$fit_evidence,
     validation_measurement_context = object$validation$measurement_context,
@@ -636,28 +647,53 @@ summary.nomo_network <- function(object, ...) {
 }
 
 
-# The fit lines of one model: its chi-square test, then its indices.
-nomo_network_fit_lines <- function(label, fit) {
+# The four fit indices of one model, or their configured references, as
+# numbers named by index. An index without a value is NA.
+nomo_network_fit_values <- function(fit) {
+  indices <- c(CFI = "cfi", TLI = "tli", RMSEA = "rmsea", SRMR = "srmr")
+  vapply(indices, function(nm) suppressWarnings(as.numeric(c(fit[[nm]], NA)[[1L]])),
+         numeric(1))
+}
+
+
+# The fit lines of one model: its chi-square test, then its indices, each in
+# its own format and with the decimals that tell it from its reference (guide
+# point 9).
+nomo_network_fit_lines <- function(label, fit, refs) {
   nomo_present_text(paste0(label, ": ", nomo_present_chisq(fit$chisq, fit$df, fit$pvalue)),
                     indent = 2L, exdent = 4L)
-  nomo_present_facts(c(
-    paste("CFI", nomo_present_stat(fit$cfi, "fit_bounded")),
-    paste("TLI", nomo_present_stat(fit$tli, "fit")),
-    paste("RMSEA", nomo_present_stat(fit$rmsea, "fit")),
-    paste("SRMR", nomo_present_stat(fit$srmr, "fit"))
-  ), indent = 4L)
+  value <- nomo_network_fit_values(fit)
+  nomo_present_facts(
+    paste(names(value), nomo_cfa_fit_number(names(value), value,
+                                            nomo_network_fit_values(refs))),
+    indent = 4L
+  )
+}
+
+
+# The configured references, stated once below the fit lines, as the CFA's
+# summary states them beside its values (#145, clarity-13). An index without a
+# reference is left out.
+nomo_network_present_references <- function(refs) {
+  reference <- nomo_network_fit_values(refs)
+  reference <- reference[is.finite(reference)]
+  if (!length(reference)) return(invisible(NULL))
+  parts <- paste(names(reference), nomo_cfa_fit_number(names(reference), reference))
+  parts[[1L]] <- paste0("References: ", parts[[1L]])
+  nomo_present_facts(parts, indent = 2L)
+  nomo_present_text("References are review values, not cutoffs.", indent = 2L)
 }
 
 
 # The fit of the network model and of the measurement model alone in one
 # sample, and the test of the structural restrictions between them (#145).
-nomo_network_present_fit <- function(prefix, fit, context) {
+nomo_network_present_fit <- function(prefix, fit, context, refs) {
   sentence <- function(s) paste0(toupper(substr(s, 1L, 1L)), substring(s, 2L))
-  nomo_network_fit_lines(sentence(paste0(prefix, "network model")), fit)
+  nomo_network_fit_lines(sentence(paste0(prefix, "network model")), fit, refs)
   status <- c(context$fit_status, "not_computed")[[1L]]
   label <- sentence(paste0(prefix, "measurement model alone"))
   if (identical(status, "fitted")) {
-    nomo_network_fit_lines(label, context$fit)
+    nomo_network_fit_lines(label, context$fit, refs)
     test <- context$structural_test
     if (is.finite(test$chisq_diff[[1L]])) {
       nomo_present_text(paste0(
@@ -692,8 +728,10 @@ nomo_network_version_text <- function(fit) {
 }
 
 
+#' @rdname printing
 #' @export
-print.summary_nomo_network <- function(x, ...) {
+print.summary_nomo_network <- function(x, digits = NULL, ...) {
+  nomo_present_local_digits(digits)
   nomo_present_header("nomo_network", "Nomological network", summary = TRUE)
   nomo_network_present_facts(x)
   estimator <- c(x$estimator, NA_character_)[[1L]]
@@ -718,13 +756,15 @@ print.summary_nomo_network <- function(x, ...) {
   fit <- x$fit_evidence[1L, , drop = FALSE]
   validation <- is.data.frame(x$validation_fit_evidence) && nrow(x$validation_fit_evidence) > 0L
   prefix <- ifelse(validation, paste0(x$sample_role, " sample, "), "")
-  nomo_network_present_fit(prefix, fit, x$measurement_context)
+  refs <- x[["fit_reference"]]
+  nomo_network_present_fit(prefix, fit, x$measurement_context, refs)
   if (validation) {
     nomo_network_present_fit("validation sample, ", x$validation_fit_evidence[1L, , drop = FALSE],
-                             x$validation_measurement_context)
+                             x$validation_measurement_context, refs)
   }
   version <- nomo_network_version_text(fit)
   if (nzchar(version)) nomo_present_text(version, indent = 2L)
+  nomo_network_present_references(refs)
 
   changes <- x[["model_changes"]]
   if (is.data.frame(changes) && nrow(changes)) {
@@ -1052,101 +1092,39 @@ plot.nomo_network <- function(
   }
 
   if (type == "fit") {
-    refs <- x$guidance$fit_reference
-    kinds <- c(CFI = "fit_bounded", TLI = "fit", RMSEA = "fit", SRMR = "fit")
+    # The network model's indices in the design every global-fit plot shares
+    # (#145, clarity-13), each flagged against its reference as nomo_cfa()
+    # flags it.
+    value <- nomo_network_fit_values(x$fit_evidence)
     dat <- data.frame(
-      metric = factor(names(kinds), levels = names(kinds)),
-      value = c(
-        x$fit_evidence$cfi[[1L]],
-        x$fit_evidence$tli[[1L]],
-        x$fit_evidence$rmsea[[1L]],
-        x$fit_evidence$srmr[[1L]]
-      ),
-      reference = vapply(c("cfi", "tli", "rmsea", "srmr"), function(nm) {
-        suppressWarnings(as.numeric(refs[[nm]])[1L])
-      }, numeric(1)),
-      below = c(TRUE, TRUE, FALSE, FALSE),
-      panel_x = 1
+      model = "Network model",
+      metric = names(value),
+      value = unname(value),
+      reference = unname(nomo_network_fit_values(x$guidance$fit_reference)),
+      stringsAsFactors = FALSE
     )
     dat <- dat[is.finite(dat$value), , drop = FALSE]
 
     if (!nrow(dat)) {
       stop("No finite global fit evidence is available.", call. = FALSE)
     }
+    dat$status <- nomo_plot_fit_status(dat$metric, dat$value, dat$reference)
+    # CFI, TLI, and RMSEA share a version, named as the APA fit table names
+    # it; "mixed" is a mix of robust and scaled values.
+    words <- c(robust = "robust", scaled = "scaled", mixed = "robust or scaled")
+    version <- unname(words[c(x$fit_evidence$index_version, NA_character_)[[1L]]])
+    version[is.na(version)] <- ""
+    # With a validation sample, the plot shows the calibration sample's fit.
+    validation <- is.data.frame(x$validation$fit_evidence) && nrow(x$validation$fit_evidence) > 0L
 
-    # A value beyond its reference is marked for review; the values and the
-    # references print in their own formats, since each panel has its scale.
-    beyond <- is.finite(dat$reference) &
-      ifelse(dat$below, dat$value < dat$reference, dat$value > dat$reference)
-    dat$status <- nomo_plot_status(ifelse(beyond, "review", "info"))
-    kind <- kinds[as.character(dat$metric)]
-    dat$value_label <- vapply(seq_len(nrow(dat)), function(i) {
-      nomo_present_stat(dat$value[[i]], kind[[i]], reference = dat$reference[[i]])
-    }, character(1))
-    dat$reference_label <- ifelse(
-      is.finite(dat$reference),
-      paste("reference", vapply(seq_len(nrow(dat)), function(i) {
-        nomo_present_stat(dat$reference[[i]], kind[[i]])
-      }, character(1))),
-      ""
-    )
-    version <- nomo_network_version_text(x$fit_evidence[1L, , drop = FALSE])
-
-    return(
-      ggplot2::ggplot(
-        dat,
-        ggplot2::aes(x = panel_x, y = value)
-      ) +
-        ggplot2::geom_hline(
-          ggplot2::aes(yintercept = reference),
-          linetype = 2,
-          na.rm = TRUE
-        ) +
-        ggplot2::geom_segment(
-          ggplot2::aes(x = panel_x, xend = panel_x, y = reference, yend = value),
-          colour = "grey60",
-          na.rm = TRUE
-        ) +
-        ggplot2::geom_text(
-          ggplot2::aes(y = reference, label = reference_label),
-          x = 0.75, hjust = 0, vjust = -0.5, size = 3,
-          na.rm = TRUE
-        ) +
-        ggplot2::geom_point(ggplot2::aes(shape = status, colour = status), size = 3) +
-        ggplot2::geom_text(
-          ggplot2::aes(label = value_label),
-          nudge_x = .12, hjust = 0, size = 3.4
-        ) +
-        nomo_plot_status_scales(dat$status) +
-        ggplot2::facet_wrap(
-          stats::as.formula("~ metric"),
-          scales = "free_y",
-          nrow = 1
-        ) +
-        ggplot2::scale_x_continuous(
-          breaks = NULL,
-          limits = c(0.7, 1.6)
-        ) +
-        ggplot2::scale_y_continuous(
-          breaks = NULL,
-          expand = ggplot2::expansion(mult = .35)
-        ) +
-        nomo_plot_labs(
-          title = "Nomological-network global fit evidence",
-          subtitle = paste(
-            "Points are the network model's values; dashed lines are the configured",
-            "teaching references. Each metric uses its own scale."
-          ),
-          x = NULL,
-          y = NULL,
-          caption = paste(
-            "Reference values prompt inspection; they are not pass/fail rules.",
-            "summary(x) separates the measurement model's fit from the structural",
-            "restrictions.", version
-          )
-        ) +
-        ggplot2::theme_minimal()
-    )
+    return(nomo_plot_fit_indices(
+      dat, title = "Nomological-network global fit evidence",
+      values = paste0("the network model's values",
+                      if (validation) sprintf(" in the %s sample", x$sample_role)),
+      versions = data.frame(CFI = version, TLI = version, RMSEA = version),
+      extra = paste("summary(x) separates the measurement model's fit from the",
+                    "structural restrictions.")
+    ))
   }
 
   if (!nrow(x$replication_evidence)) {

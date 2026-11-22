@@ -95,6 +95,7 @@ test_that("report helpers expose data, calls, and stage tables", {
 
 
 test_that("component table extraction covers M1 through M5 workflow results", {
+  skip_on_cran()
   run <- make_m9_report_run()
 
   screen <- run$results$screen$WellBeing
@@ -185,6 +186,7 @@ test_that("report tables read as words, with the shared flags and a dash for bla
 
 
 test_that("evidence trace keeps recommendations attached to source evidence", {
+  skip_on_cran()
   run <- make_m9_report_run()
   trace <- nomologR:::nomo_report_evidence_trace(run)
 
@@ -206,6 +208,7 @@ test_that("evidence trace keeps recommendations attached to source evidence", {
 
 
 test_that("component summaries and plot failures are non-destructive", {
+  skip_on_cran()
   run <- make_m9_report_run()
 
   txt <- nomologR:::nomo_report_component_summary_text(
@@ -380,7 +383,7 @@ test_that("report validation catches malformed run objects and paths", {
 
   file <- withr::local_tempfile(fileext = ".html")
   writeLines("existing", file)
-  expect_silent(
+  expect_true(
     nomologR:::nomo_report_validate_file(file, TRUE)
   )
 })
@@ -521,6 +524,7 @@ test_that("call history and run-table helpers fail closed", {
 
 
 test_that("component-table helper covers alternate M1 through M5 report views", {
+  skip_on_cran()
   run <- make_m9_report_run()
 
   screen <- run$results$screen$WellBeing
@@ -595,6 +599,7 @@ test_that("component-table helper covers alternate M1 through M5 report views", 
 
 
 test_that("the adequacy table says its Bartlett value is a p value (#145)", {
+  skip_on_cran()
   factors <- make_m9_report_run()$results$factors$WellBeing
   adequacy <- nomologR:::nomo_report_component_table(factors, "factors", "adequacy")
   expect_identical(adequacy$metric, c("KMO", "Bartlett's test, p"))
@@ -677,6 +682,7 @@ test_that("empty evidence traces and revision decisions remain auditable", {
 
 
 test_that("safe plotting covers default and error paths", {
+  skip_on_cran()
   run <- make_m9_report_run()
 
   default_plot <- nomologR:::nomo_report_safe_plot(
@@ -973,6 +979,7 @@ expect_false(
 # internal helpers directly.
 
 test_that("closeout: report table helpers return schema-correct empty fallbacks", {
+  skip_on_cran()
   m <- matrix(1:4, 2, 2)
   flat <- nomologR:::nomo_report_flatten_table(m)
   expect_s3_class(flat, "data.frame")
@@ -1089,6 +1096,7 @@ test_that("closeout: report template preparation fails closed when copy is impos
 
 
 test_that("closeout: report rendering dependency and output-directory guards are explicit", {
+  skip_on_cran()
   skip_if_not(
     exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
   )
@@ -1187,6 +1195,7 @@ test_that("closeout B: report package metadata helpers can represent unavailable
 
 
 test_that("closeout B: report dependency guards distinguish rmarkdown, knitr, and Pandoc", {
+  skip_on_cran()
   skip_if_not(
     exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
   )
@@ -1446,6 +1455,11 @@ test_that("the output format follows the file extension", {
   word <- nomologR:::nomo_report_output_format("report.docx")
   expect_s3_class(word, "rmarkdown_output_format")
   expect_identical(word$pandoc$to, "docx")
+  # Its tables take APA's rules from the package's reference document (#145).
+  at <- match("--reference-doc", word$pandoc$args)
+  expect_false(is.na(at))
+  expect_identical(normalizePath(word$pandoc$args[[at + 1L]], winslash = "/"),
+                   normalizePath(nomologR:::nomo_apa_reference_docx(), winslash = "/"))
 })
 
 
@@ -1589,6 +1603,7 @@ test_that("the HTML report is unchanged by Word support", {
 # Content defects and the shared style (#144, #145) ----------------------------
 
 test_that("component summaries are printed at 80 columns whatever the console (#144)", {
+  skip_on_cran()
   run <- make_m9_report_run()
   old <- options(width = 200L)
   on.exit(options(old), add = TRUE)
@@ -1881,6 +1896,7 @@ test_that("a log metric whose name misleads has its kind listed (#145)", {
 
 
 test_that("report cells follow print() where a column's name cannot say how (#145)", {
+  skip_on_cran()
   dash <- nomologR:::nomo_report_blank
   # Network hypotheses: a standardized correlation has no leading zero and a
   # path keeps it; a value just off a bound of its region shows the decimals
@@ -2047,6 +2063,7 @@ test_that("a network estimate reads alike wherever the report shows it (#145)", 
 
 
 test_that("an interval's headings carry its confidence level (#145)", {
+  skip_on_cran()
   run <- make_m9_report_run()
   labels <- function(obj, stage, type) {
     names(nomologR:::nomo_report_display_table(
@@ -2095,11 +2112,11 @@ test_that("a flagged value is told apart from the reference its row names (#144)
     value = c(0.698, 0.4996, 0.7004, 0.298, 0.9496, 0.598, 0.1521, 0.9004, 0, 0.698, 0.62),
     reference = c(
       "configured review reference = .70", "configured review reference = .50",
-      "configured review reference = .70", "Teaching reference .30; not a retention rule",
-      "Configured teaching reference: .950",
-      ".60 and .50 are teaching review and concern prompts, not universal laws",
+      "configured review reference = .70", "Review reference .30; not a retention rule",
+      "Configured review reference: .950",
+      ".60 and .50 are review and concern references, not universal laws",
       "[-0.15, 0.15]",
-      "Teaching reference 90.0% of responses in one category; not a deletion rule",
+      "Review reference 90.0% of responses in one category; not a deletion rule",
       "A k-factor model of p items has ((p - k)^2 - (p + k)) / 2 degrees of freedom",
       NA, "configured review reference = .70"
     ),

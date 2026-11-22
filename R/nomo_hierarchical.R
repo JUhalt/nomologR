@@ -86,8 +86,10 @@
 #' Determinacy is always computed from the model-reproduced matrix, whatever
 #' `obs.var` is set to, because that is what the formula is defined on.
 #'
-#' Gorsuch (1983) recommended using factor score estimates only when
-#' determinacy exceeds .90, with competing score sets correlating above .70, and
+#' Gorsuch (1983, p. 260, as cited in Grice, 2001) recommended a determinacy
+#' of at least .80, and above .90 where factor score estimates are to serve as
+#' substitutes for the factors. Gorsuch (1983, p. 260, as cited in Rodriguez et
+#' al., 2016) also suggested that competing score sets correlate above .70, and
 #' Hancock and Mueller (2001) proposed .70 as a standard for H. These are
 #' reported as their authors' recommendations where a value falls below them,
 #' as with fixed fit-index cutoffs elsewhere in the package, and are never
@@ -135,9 +137,10 @@
 #'   They may change between releases and are not part of the stable interface
 #'   (see `?nomologR`).
 #'
-#'   `print()` shows the indices for the total score and the item set, the
-#'   subscale and factor-score tables, and one sentence for each flagged note;
-#'   `summary()` adds each index's interpretation and every note in full.
+#'   `print()` shows the cases the model analyzed, the indices for the total
+#'   score and the item set, the subscale and factor-score tables, and one
+#'   sentence for each flagged note; `summary()` adds each index's
+#'   interpretation and every note in full.
 #'
 #' @references
 #' Beauducel, A. (2011). Indeterminacy of factor score estimates in slightly
@@ -150,6 +153,10 @@
 #' Science, 5*(1), 184-186. \doi{10.1177/2167702616657069}
 #'
 #' Gorsuch, R. L. (1983). *Factor analysis* (2nd ed.). Lawrence Erlbaum.
+#'
+#' Grice, J. W. (2001). Computing and evaluating factor scores.
+#' *Psychological Methods, 6*(4), 430-450.
+#' \doi{10.1037/1082-989X.6.4.430}
 #'
 #' Hancock, G. R., & Mueller, R. O. (2001). Rethinking construct reliability
 #' within latent variable systems. In R. Cudeck, S. du Toit, & D. Sörbom (Eds.),
@@ -963,14 +970,16 @@ nomo_hierarchical_factor_score_notes <- function(notes, add, factors) {
     notes <- add(notes, "factor_scores", "review", paste0(
       "Factor determinacy is at or below .90 for ",
       paste(undetermined, collapse = ", "),
-      ". Gorsuch (1983, p. 260) recommended using factor score estimates only ",
-      "above that value. This is his recommendation reported as context, not a ",
-      "rule applied here; the score may still be usable for some purposes."
+      ". Gorsuch (1983, p. 260, as cited in Grice, 2001) recommended at least ",
+      ".80, and above .90 where factor score estimates are to serve as ",
+      "substitutes for the factors. This is his recommendation reported as ",
+      "context, not a rule applied here; the score may still be usable for some ",
+      "purposes."
     ), brief = paste0(
       "Factor determinacy is at or below .90 for ",
       paste(undetermined, collapse = ", "),
-      ", the value above which Gorsuch (1983) recommended using factor score ",
-      "estimates."
+      "; Gorsuch (1983, p. 260, as cited in Grice, 2001) recommended above .90 ",
+      "for factor score estimates that serve as substitutes for the factors."
     ))
   }
 
@@ -985,12 +994,14 @@ nomo_hierarchical_factor_score_notes <- function(notes, add, factors) {
     notes <- add(notes, "factor_scores", "review", paste0(
       "Two equally valid sets of factor scores could correlate as low as ",
       lowest,
-      ". Gorsuch (1983, p. 260) suggested this minimum be above .70. A ",
-      "negative value means two researchers scoring the same data could rank ",
-      "people in opposite orders and both be consistent with the model."
+      ". Gorsuch (1983, p. 260, as cited in Rodriguez et al., 2016) suggested ",
+      "this minimum be above .70. A negative value means two researchers ",
+      "scoring the same data could rank people in opposite orders and both be ",
+      "consistent with the model."
     ), brief = paste0(
       "Two equally valid sets of factor scores could correlate as low as ",
-      lowest, ", below the .70 Gorsuch (1983) suggested."
+      lowest, ", below the .70 that Gorsuch (1983, p. 260, as cited in ",
+      "Rodriguez et al., 2016) suggested."
     ))
   }
 

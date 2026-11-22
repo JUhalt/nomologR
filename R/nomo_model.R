@@ -54,8 +54,17 @@
 #'   syntax as it can be copied, then any identification notes.
 #'
 #' @references
+#' Bonifay, W., Lane, S. P., & Reise, S. P. (2017). Three concerns with applying
+#' a bifactor model as a structure of psychopathology. *Clinical Psychological
+#' Science, 5*(1), 184-186. \doi{10.1177/2167702616657069}
+#'
 #' Holzinger, K. J., & Swineford, F. (1937). The bi-factor method.
 #' *Psychometrika, 2*(1), 41-54. \doi{10.1007/BF02287965}
+#'
+#' Murray, A. L., & Johnson, W. (2013). The limitations of model fit in
+#' comparing the bi-factor versus higher-order models of human cognitive
+#' ability structure. *Intelligence, 41*(5), 407-422.
+#' \doi{10.1016/j.intell.2013.06.004}
 #'
 #' Reise, S. P. (2012). The rediscovery of bifactor measurement models.
 #' *Multivariate Behavioral Research, 47*(5), 667-696.
@@ -361,8 +370,10 @@ nomo_model_wrap_syntax <- function(lines, width = nomo_present_width()) {
 }
 
 
+#' @rdname printing
 #' @export
-print.nomo_model <- function(x, ...) {
+print.nomo_model <- function(x, digits = NULL, ...) {
+  nomo_present_digits_unused(digits, "a `nomo_model` prints model syntax, not statistics.")
   # The syntax is printed bare, so it can be copied as it is; the notes are
   # wrapped like every other note (#145).
   nomo_present_header("nomo_model", "Measurement model syntax")

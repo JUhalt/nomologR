@@ -83,14 +83,20 @@
 #   nomo_round_half_up(x, digits)     the rounding agreed with contentvalidR:
 #                                     half away from zero, so .625 is .63.
 #   nomo_present_round(x, digits)     the same, then the negative-zero guard.
-#   nomo_present_stat(x, kind, digits = NULL, reference = NULL, signed = FALSE)
+#   nomo_present_stat(x, kind, digits = NULL, reference = NULL, signed = FALSE,
+#                     given = FALSE)
 #       THE entry point for a statistic: the kind's precision and leading-zero
-#       rule (table below). `digits` overrides the precision. `reference` gives
-#       a value just off a printed reference (a teaching reference or
-#       criterion) the extra decimals it needs to differ from it (guide point
-#       9): a communality of .398 beside a reference of .40 prints .398.
+#       rule (table below). `digits` overrides the precision, and the digits
+#       a print() call was given override both, except for a count (see
+#       "`digits` in print()" below). `reference` gives a value just off a
+#       printed reference (a review reference or criterion) the extra
+#       decimals it needs to differ from it (guide point 9): a communality of
+#       .398 beside a reference of .40 prints .398. A value equal to its
+#       reference prints with the reference's decimals.
 #       `signed = TRUE` prints a change with its sign, unsigned when it rounds
-#       to zero.
+#       to zero. `given = TRUE` marks a reference or a value the researcher
+#       gave, such as a requested proportion: print()'s digits can add
+#       decimals to it but never take them away.
 #   nomo_present_number(x, digits = 3L, bounded = FALSE)   fixed decimals;
 #                                     `bounded = TRUE` drops the leading zero.
 #   nomo_present_signed(x, digits = 3L, bounded = FALSE)   "+0.022", "-0.400",
@@ -128,6 +134,13 @@
 #   nomo_present_ordinal(n)           "1st", "2nd", "93rd", "11th"; "--" when
 #                                     missing.
 #
+# Digits
+#   nomo_present_local_digits(digits)   first in every print() method: sets the
+#                                     digits it was given until it returns.
+#   nomo_present_digits()             those digits, or NULL.
+#   nomo_present_digits_unused(digits, why)   for a print() with no statistic:
+#                                     a message that `digits` changes nothing.
+#
 # Widths and markers
 #   nomo_present_width()              the console width (at least 40), for tables.
 #   nomo_present_prose_width()        min(nomo_present_width(), 80) - 1, the
@@ -154,8 +167,9 @@
 #   htmt         2          kept          HTMT, HTMT2 (can exceed 1)
 #   proportion   2          no            proportions and shares
 #   power        2          no            power and coverage
-#   level        as given,  no            a significance level: .05, .10, .025
-#                at least 2
+#   level        as given,  no            a significance level: .05, .10, .025;
+#                at least 2               a power target and the references of
+#                                         a power analysis: .80, .91
 #   stat         2          kept          chi-square, t, F, z, and differences
 #   estimate     2          kept          unstandardized estimates, means, SDs,
 #                                         SEs
@@ -166,6 +180,22 @@
 #
 # A change (signed = TRUE) follows its quantity's rule: a CFI change prints
 # "+.002", an RMSEA change "-0.004".
+#
+# `digits` in print() (#145) ----------------------------------------------------
+#
+# Every print() method takes `digits` and starts with
+# nomo_present_local_digits(digits). NULL, the default, prints each kind with
+# its digits in the table above, and a call's own `digits`, such as the three
+# decimals of residual correlations. A number replaces both for the rest of
+# that print() call, in nomo_present_stat(), nomo_present_ci() with a kind, and
+# a table column without a format. p values, df, significance levels and
+# power targets, counts, and percentages keep their own format; a reference or
+# a value the researcher gave (`given = TRUE`) gets more decimals but never
+# fewer; a value beside its reference still gets the decimals that tell them
+# apart; and text kept from the analysis, such as a decision log's
+# observation, keeps the decimals it was written with.
+# A print() with no statistic to round, such as a model's syntax, says so with
+# nomo_present_digits_unused(). ?printing documents this for users.
 
 nomo_present_missing <- "--"
 
@@ -195,6 +225,108 @@ nomo_present_kinds <- list(
   df = list(digits = 0L, bounded = FALSE),
   count = list(digits = 0L, bounded = FALSE)
 )
+
+
+# Digits ------------------------------------------------------------------------
+
+# The `digits` a print() call was given, for the formatters to read while it
+# runs. NULL outside print() and when none was given.
+nomo_present_state <- new.env(parent = emptyenv())
+
+nomo_present_digits <- function() {
+  nomo_present_state$digits
+}
+
+nomo_present_check_digits <- function(digits) {
+  if (!nomo_is_whole_number(digits) || digits < 0 || digits > 10) {
+    stop("`digits` must be NULL or one whole number from 0 to 10.", call. = FALSE)
+  }
+  as.integer(digits)
+}
+
+# Sets `digits` until the print() method that calls this returns, however it
+# returns. NULL leaves the setting as it is.
+nomo_present_local_digits <- function(digits, frame = parent.frame()) {
+  if (is.null(digits)) return(invisible(NULL))
+  digits <- nomo_present_check_digits(digits)
+  old <- nomo_present_state$digits
+  nomo_present_state$digits <- digits
+  withr::defer(nomo_present_state$digits <- old, envir = frame)
+  invisible(NULL)
+}
+
+# For a print() method that shows no statistic to round: `digits` is checked,
+# and a value given is said to change nothing rather than being ignored
+# without a word.
+nomo_present_digits_unused <- function(digits, why) {
+  if (is.null(digits)) return(invisible(NULL))
+  nomo_present_check_digits(digits)
+  message("`digits` changes nothing here: ", why)
+  invisible(NULL)
+}
+
+
+#' Print a result or its summary
+#'
+#' Every result prints with `print()`, and so does its `summary()`. `print()`
+#' shows a result's main evidence and any flags and ends with a pointer to
+#' where to look next; `summary()` shows the full evidence, with the reason
+#' for every flag. Printing changes nothing in the object.
+#'
+#' **Decimals.** Each statistic prints with the decimals of its kind: three
+#' for a *p* value and for a fit index such as CFI or RMSEA, and two for most
+#' others, such as a correlation, a reliability, or a loading. A few tables
+#' give a quantity three decimals where values often agree to two, such as
+#' residual correlations. A number given as `digits` replaces these decimals
+#' for every statistic shown, interval bounds included. It leaves alone:
+#'
+#' * *p* values, degrees of freedom, significance levels, power targets,
+#'   counts, and percentages, which keep their own format;
+#' * references and values you gave, such as a review reference, a requested
+#'   validation proportion, a reliability given to [nomo_single_indicator()],
+#'   or a bound of a predicted region. `digits` can give them more decimals
+#'   but never fewer, so a reference of .95 never prints as "1.0";
+#' * the decimals of a value beside its reference. A value that differs from
+#'   the reference but would print as it takes extra decimals, so a flag never
+#'   reads ".40 is below .40"; a value equal to it prints as the reference
+#'   does;
+#' * text written when the analysis ran, such as a flag's explanation from the
+#'   decision log, which keeps the decimals it was written with.
+#'
+#' Rounding is for display only, half away from zero. Returned values are not
+#' rounded.
+#'
+#' Some printouts show no statistic for `digits` to change: a `nomo_model` and
+#' a `nomo_partial` print syntax, `print()` of a `nomo_screen` shows counts,
+#' the summary of a `nomo_run` shows what its stages recorded, and the cells of
+#' a `nomo_apa_table` are formatted by APA rules when the table is built. Given
+#' `digits`, these say so in a message and print as usual.
+#'
+#' The results of [nomo_screen()] and [nomo_factors()] also have print pages
+#' of their own: [print.nomo_screen()], [print.summary_nomo_screen()],
+#' [print.nomo_factors()], and [print.summary_nomo_factors()].
+#'
+#' @param x A result, or the summary of one.
+#' @param digits `NULL` (default) for the decimals of each kind of statistic,
+#'   or one whole number from 0 to 10 for the decimals of every statistic
+#'   shown. See **Decimals**.
+#' @param ... Unused.
+#'
+#' @return `x`, invisibly.
+#'
+#' @examples
+#' model <- '
+#'   visual  =~ x1 + x2 + x3
+#'   textual =~ x4 + x5 + x6
+#'   speed   =~ x7 + x8 + x9
+#' '
+#' cfa <- nomo_cfa(model, data = lavaan::HolzingerSwineford1939)
+#' cfa
+#' print(cfa, digits = 3)
+#' print(summary(cfa), digits = 3)
+#' @name printing
+#' @order 1
+NULL
 
 
 # Widths ------------------------------------------------------------------------
@@ -558,6 +690,7 @@ nomo_present_ci <- function(lower, upper, digits = 3L, bounded = FALSE, kind = N
   if (!is.null(kind)) {
     rule <- nomo_present_kinds[[nomo_match_arg(kind, names(nomo_present_kinds))]]
     if (missing(digits)) digits <- rule$digits
+    digits <- nomo_null_default(nomo_present_digits(), digits)
     bounded <- rule$bounded
   }
   lower <- suppressWarnings(as.numeric(lower))
@@ -611,13 +744,19 @@ nomo_present_level <- function(x) {
 # One entry point for a statistic: the precision and leading-zero rule of its
 # kind (see the table at the top of this file).
 nomo_present_stat <- function(x, kind, digits = NULL, reference = NULL,
-                              signed = FALSE) {
+                              signed = FALSE, given = FALSE) {
   kind <- nomo_match_arg(kind, names(nomo_present_kinds))
   if (kind == "p") return(nomo_present_p(x))
   if (kind == "df") return(nomo_present_df(x))
   if (kind == "level") return(nomo_present_level(x))
   rule <- nomo_present_kinds[[kind]]
   if (is.null(digits)) digits <- rule$digits
+  # A count is a whole number whatever the decimals print() was given. A
+  # reference, or a value the researcher gave, takes more decimals from them
+  # but never fewer, so it is never misstated: a reference of .95 is not "1.0".
+  printed <- if (kind == "count") NULL else nomo_present_digits()
+  kept <- max(digits, printed)
+  if (!is.null(printed)) digits <- if (isTRUE(given)) kept else printed
   format_at <- function(v, d) {
     if (isTRUE(signed)) nomo_present_signed(v, d, rule$bounded) else
       nomo_present_number(v, d, rule$bounded)
@@ -625,10 +764,13 @@ nomo_present_stat <- function(x, kind, digits = NULL, reference = NULL,
   x <- suppressWarnings(as.numeric(x))
   if (is.null(reference)) return(format_at(x, digits))
 
-  # A value that differs from its reference but would print as the reference
-  # gets up to three more decimals, so a flag never reads "0.40 is below 0.40".
+  # A value equal to its reference prints as the reference does, so a split
+  # never reads ".35 requested, .4 realized". A value that differs from its
+  # reference but would print as the reference gets up to three more decimals,
+  # so a flag never reads "0.40 is below 0.40".
   reference <- rep_len(suppressWarnings(as.numeric(reference)), length(x))
   shown_digits <- rep(as.integer(digits), length(x))
+  shown_digits[is.finite(x) & is.finite(reference) & x == reference] <- as.integer(kept)
   for (extra in 1:3) {
     same <- is.finite(x) & is.finite(reference) & x != reference &
       nomo_present_round(x, shown_digits) == nomo_present_round(reference, shown_digits)
@@ -744,7 +886,7 @@ nomo_present_table <- function(x, columns, formats = list(), more = NULL,
     if (is.function(fmt)) {
       out <- fmt(value)
     } else if (is.numeric(value) && !is.integer(value)) {
-      out <- nomo_present_number(value)
+      out <- nomo_present_number(value, nomo_null_default(nomo_present_digits(), 3L))
     } else if (is.logical(value)) {
       out <- ifelse(is.na(value), missing_mark, ifelse(value, "yes", "no"))
     } else {

@@ -306,9 +306,9 @@ nomo_report_reference_numbers <- function(text) {
 
 # For each row of a table, the numbers its `value` is read against, or NULL
 # when the table has no `reference` column. A reference stored as a number,
-# such as the teaching reference of a fit index, is that number. A reference
+# such as the review reference of a fit index, is that number. A reference
 # stored as text, as in every decision log ("configured review reference =
-# .70", "Teaching reference .30; not a retention rule"), gives the numbers it
+# .70", "Review reference .30; not a retention rule"), gives the numbers it
 # names, and only for a row flagged for review or concern: the flag says the
 # value fell on one side of its reference, so the two must not print alike.
 nomo_report_value_reference <- function(x) {
@@ -442,11 +442,15 @@ nomo_report_escape <- function(x, to = c("html", "markdown"), cell = FALSE) {
   # What numbers a list item: digits, one letter, a roman numeral, or "#",
   # which is a character reference by the time the marker is looked for.
   number <- "(?:[0-9]+|[A-Za-z]|[ivxlcdm]+|[IVXLCDM]+|&#35;)"
+  # Works on a whole vector at once (#183). "#" goes first, then each "&" but
+  # those the "#" references begin, then the rest, whose references hold no
+  # character still to be escaped.
   escape_text <- function(s) {
-    chars <- strsplit(s, "", fixed = TRUE)[[1L]]
-    special <- chars %in% markup
-    chars[special] <- sprintf("&#%d;", vapply(chars[special], utf8ToInt, integer(1)))
-    s <- paste(chars, collapse = "")
+    s <- gsub("#", "&#35;", s, fixed = TRUE)
+    s <- gsub("&(?!#35;)", "&#38;", s, perl = TRUE)
+    for (char in setdiff(markup, c("#", "&"))) {
+      s <- gsub(char, sprintf("&#%d;", utf8ToInt(char)), s, fixed = TRUE)
+    }
     s <- gsub("-(?=-)|(?<=-)-", "&#45;", s, perl = TRUE)
     s <- gsub("\\.(?=\\.)|(?<=\\.)\\.", "&#46;", s, perl = TRUE)
     # Text that starts like a list item.
@@ -465,17 +469,28 @@ nomo_report_escape <- function(x, to = c("html", "markdown"), cell = FALSE) {
   # Code spans are left as they are: pandoc shows their contents verbatim.
   # They are found before anything is escaped, so that two spans in one cell
   # stay two spans; those with a bar are then escaped for a Word table cell.
-  vapply(as.character(x), function(s) {
-    if (is.na(s) || !nzchar(s)) return(s)
-    spans <- gregexpr("`[^`\r\n]+`", s)
-    code <- regmatches(s, spans)[[1L]]
-    text <- regmatches(s, spans, invert = TRUE)[[1L]]
-    text <- vapply(text, function(t) if (nzchar(t)) escape_text(t) else t,
-                   character(1), USE.NAMES = FALSE)
-    barred <- bar_ends_cell & grepl("|", code, fixed = TRUE)
-    code[barred] <- vapply(code[barred], escape_text, character(1), USE.NAMES = FALSE)
-    paste0(text, c(code, ""), collapse = "")
-  }, character(1), USE.NAMES = FALSE)
+  out <- unname(as.character(x))
+  todo <- !is.na(out) & nzchar(out)
+  plain <- todo & !grepl("`", out, fixed = TRUE)
+  out[plain] <- escape_text(out[plain])
+  spanned <- which(todo & !plain)
+  if (length(spanned)) {
+    spans <- gregexpr("`[^`\r\n]+`", out[spanned])
+    code <- regmatches(out[spanned], spans)
+    text <- regmatches(out[spanned], spans, invert = TRUE)
+    # Every piece is escaped in one call, then returned to its string.
+    regroup <- function(pieces, sizes) {
+      split(pieces, factor(rep(seq_along(sizes), sizes), levels = seq_along(sizes)))
+    }
+    text <- regroup(escape_text(unlist(text)), lengths(text))
+    flat <- unlist(code)
+    barred <- bar_ends_cell & grepl("|", flat, fixed = TRUE)
+    flat[barred] <- escape_text(flat[barred])
+    code <- regroup(flat, lengths(code))
+    out[spanned] <- unlist(Map(function(t, k) paste0(t, c(k, ""), collapse = ""),
+                               text, code), use.names = FALSE)
+  }
+  out
 }
 
 
@@ -853,7 +868,8 @@ nomo_report_content_review <- function(x) {
     "Keying was declared with no reverse-keyed item among those carried."
   } else {
     sprintf(
-      "Declared reverse-keyed item(s): %s%s.",
+      "Declared reverse-keyed %s: %s%s.",
+      nomo_present_noun(length(keying$reverse), "item"),
       paste(keying$reverse, collapse = ", "),
       if (is.null(keying$scale_range)) {
         ", with no response scale recorded"
@@ -1876,8 +1892,9 @@ nomo_report_title_yaml <- function(title) {
 #'   is not given. The extension chooses the format: `.html` or
 #'   `.htm` for a self-contained HTML report, `.docx` for a Word document. The
 #'   Word report carries the same tables, figures, and interpretation contract
-#'   as the HTML one; collapsible sections are shown expanded, and it uses
-#'   Word's default styles.
+#'   as the HTML one; collapsible sections are shown expanded. It uses pandoc's
+#'   default Word styles, except that its tables are ruled as APA sets a table
+#'   (see [nomo_apa_table()]).
 #' @param title Report title.
 #' @param include_plots Logical; include a compact set of component plots when
 #'   those plots are available.
@@ -1895,6 +1912,18 @@ nomo_report_title_yaml <- function(title) {
 #'   numbered in that order. Default `FALSE`, which leaves the report unchanged.
 #'
 #' @return The normalized report file path, invisibly.
+#'
+#' @references
+#' Flake, J. K., & Fried, E. I. (2020). Measurement schmeasurement:
+#' Questionable measurement practices and how to avoid them. *Advances in
+#' Methods and Practices in Psychological Science, 3*(4), 456-465.
+#' \doi{10.1177/2515245920952393}
+#'
+#' Wicherts, J. M., Veldkamp, C. L. S., Augusteijn, H. E. M., Bakker, M., van
+#' Aert, R. C. M., & van Assen, M. A. L. M. (2016). Degrees of freedom in
+#' planning, running, analyzing, and reporting psychological studies: A
+#' checklist to avoid p-hacking. *Frontiers in Psychology, 7*, 1832.
+#' \doi{10.3389/fpsyg.2016.01832}
 #'
 #' @examples
 #' \donttest{
@@ -2123,9 +2152,11 @@ nomo_report_render_env <- function() {
 # The template's own YAML describes the HTML report, so an HTML file needs no
 # format here. A Word file gets word_document(), and the template writes
 # markdown instead of raw HTML for it, since pandoc drops raw HTML from .docx.
+# Its reference document rules every table as APA sets one (#145).
 nomo_report_output_format <- function(file) {
   if (!grepl("\\.docx$", file, ignore.case = TRUE)) return(NULL)
-  args <- list(toc = TRUE, fig_width = 8, fig_height = 5.2)
+  args <- list(toc = TRUE, fig_width = 8, fig_height = 5.2,
+               reference_docx = nomo_apa_reference_docx())
   # Section numbering for Word arrived in a later rmarkdown than this package
   # requires, so it is used only where the installed version supports it.
   if ("number_sections" %in% names(formals(rmarkdown::word_document))) {

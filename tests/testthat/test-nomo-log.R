@@ -19,7 +19,7 @@ test_that("decision log appends a transparent review record", {
     object = "item_4",
     metric = "corrected item-total correlation",
     value = 0.27,
-    reference = "teaching reference ~= .30",
+    reference = "review reference ~= .30",
     severity = "review",
     observation = "The item is somewhat weakly associated with the remaining items.",
     recommendation = "Inspect wording, construct coverage, and redundancy before deciding."

@@ -342,6 +342,11 @@ nomo_expectation_region_label <- function(expectation) {
 #' preregistration revolution. *Proceedings of the National Academy of
 #' Sciences, 115*(11), 2600-2606. \doi{10.1073/pnas.1708274114}
 #'
+#' Schuirmann, D. J. (1987). A comparison of the two one-sided tests procedure
+#' and the power approach for assessing the equivalence of average
+#' bioavailability. *Journal of Pharmacokinetics and Biopharmaceutics, 15*(6),
+#' 657-680. \doi{10.1007/BF01068419}
+#'
 #' @seealso [nomo_network()] to evaluate the hypotheses.
 #' @export
 #'
@@ -502,8 +507,10 @@ nomo_hypotheses_present_table <- function(hypotheses) {
 }
 
 
+#' @rdname printing
 #' @export
-print.nomo_hypotheses <- function(x, ...) {
+print.nomo_hypotheses <- function(x, digits = NULL, ...) {
+  nomo_present_local_digits(digits)
   nomo_present_header("nomo_hypotheses", "Theory-specified relations")
   nomo_present_facts(c(
     sprintf("Relations: %d", x$n),
@@ -541,8 +548,10 @@ summary.nomo_hypotheses <- function(object, ...) {
 }
 
 
+#' @rdname printing
 #' @export
-print.summary_nomo_hypotheses <- function(x, ...) {
+print.summary_nomo_hypotheses <- function(x, digits = NULL, ...) {
+  nomo_present_local_digits(digits)
   nomo_present_header("nomo_hypotheses", "Theory-specified relations", summary = TRUE)
   nomo_present_facts(c(
     sprintf("Relations: %d", x$n),
