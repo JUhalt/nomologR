@@ -286,6 +286,11 @@ fac_ord <- nomo_factors(
 )
 ```
 
+Parallel analysis then estimates one polychoric matrix for each of its
+`n_iter` null data sets (100 by default), which can take many minutes for a
+large item set; `nomo_factors()` says so in a message, and a smaller `n_iter`
+shortens it.
+
 #### Researcher control with documented guardrails
 
 `types` is an explicit researcher decision, not a request for `nomologR` to guess.

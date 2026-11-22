@@ -84,7 +84,12 @@
 #'   `NULL`, the value in `guidance$factor_parallel_iterations` is used. It
 #'   also sets the number of simulated data sets for NEST and Hull, which
 #'   default to 1000 in `EFAtools`, so a small `n_iter` makes those criteria
-#'   coarser too.
+#'   coarser too. Each null data set needs its own correlation matrix. With
+#'   ordinal items it is polychoric (or mixed), which takes far longer than
+#'   Pearson: the default 100 can take many minutes for a large item set, such
+#'   as 25 items and 2800 cases. A message says so before parallel analysis
+#'   starts. A smaller `n_iter` shortens it and makes the null reference
+#'   coarser.
 #' @param quantile Quantile of null eigenvalues used as the parallel-analysis
 #'   reference. If `NULL`, the value in
 #'   `guidance$factor_parallel_quantile` is used. It also sets the percentile
@@ -498,6 +503,7 @@ nomo_factors <- function(data,
     np_obs = if (fm == "minchi") pairwise_n
   )
 
+  nomo_factors_parallel_message(method, n_iter, ncol(analysis_data), nrow(analysis_data))
   pa <- nomo_factors_parallel(
     x = analysis_data,
     model_types = item_types$model_type,
@@ -1024,6 +1030,26 @@ nomo_factors_parallel <- function(x,
       fm = fm
     )
   )
+}
+
+
+# Parallel analysis estimates one correlation matrix per null data set. A
+# polychoric or mixed matrix can take seconds where a Pearson one takes
+# milliseconds, so with ordinal items the loop can run for many minutes with
+# no output (#183). A message says so before it starts; suppressMessages()
+# silences it.
+nomo_factors_parallel_message <- function(method, n_iter, n_items, n_cases) {
+  if (!method %in% c("polychoric", "mixed")) return(invisible(NULL))
+  message(sprintf(
+    "Parallel analysis with %s correlations: %s for %s and %s; this can take several minutes.%s",
+    method,
+    nomo_present_count(n_iter, "null data set"),
+    nomo_present_count(n_items, "item"),
+    nomo_present_count(n_cases, "case"),
+    # 10 is the fewest `n_iter` allows.
+    if (n_iter > 10L) " Lower `n_iter` to shorten it." else ""
+  ))
+  invisible(NULL)
 }
 
 

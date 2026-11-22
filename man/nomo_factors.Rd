@@ -69,7 +69,12 @@ the result as sensitivity evidence.}
 \code{NULL}, the value in \code{guidance$factor_parallel_iterations} is used. It
 also sets the number of simulated data sets for NEST and Hull, which
 default to 1000 in \code{EFAtools}, so a small \code{n_iter} makes those criteria
-coarser too.}
+coarser too. Each null data set needs its own correlation matrix. With
+ordinal items it is polychoric (or mixed), which takes far longer than
+Pearson: the default 100 can take many minutes for a large item set, such
+as 25 items and 2800 cases. A message says so before parallel analysis
+starts. A smaller \code{n_iter} shortens it and makes the null reference
+coarser.}
 
 \item{quantile}{Quantile of null eigenvalues used as the parallel-analysis
 reference. If \code{NULL}, the value in

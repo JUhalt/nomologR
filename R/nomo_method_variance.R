@@ -327,7 +327,7 @@ nomo_method_variance <- function(model,
   # nomo_esem() report it.
   variants <- NULL
   models <- dplyr::bind_rows(lapply(names(fits), function(label) {
-    m <- suppressWarnings(lavaan::fitMeasures(fits[[label]]))
+    m <- suppressWarnings(nomo_fit_measures_read(fits[[label]]))
     picked <- list()
     get <- function(name, ...) {
       found <- nomo_cfa_first_measure(m, c(...))
