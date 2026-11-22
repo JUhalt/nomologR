@@ -442,11 +442,15 @@ nomo_report_escape <- function(x, to = c("html", "markdown"), cell = FALSE) {
   # What numbers a list item: digits, one letter, a roman numeral, or "#",
   # which is a character reference by the time the marker is looked for.
   number <- "(?:[0-9]+|[A-Za-z]|[ivxlcdm]+|[IVXLCDM]+|&#35;)"
+  # Works on a whole vector at once (#183). "#" goes first, then each "&" but
+  # those the "#" references begin, then the rest, whose references hold no
+  # character still to be escaped.
   escape_text <- function(s) {
-    chars <- strsplit(s, "", fixed = TRUE)[[1L]]
-    special <- chars %in% markup
-    chars[special] <- sprintf("&#%d;", vapply(chars[special], utf8ToInt, integer(1)))
-    s <- paste(chars, collapse = "")
+    s <- gsub("#", "&#35;", s, fixed = TRUE)
+    s <- gsub("&(?!#35;)", "&#38;", s, perl = TRUE)
+    for (char in setdiff(markup, c("#", "&"))) {
+      s <- gsub(char, sprintf("&#%d;", utf8ToInt(char)), s, fixed = TRUE)
+    }
     s <- gsub("-(?=-)|(?<=-)-", "&#45;", s, perl = TRUE)
     s <- gsub("\\.(?=\\.)|(?<=\\.)\\.", "&#46;", s, perl = TRUE)
     # Text that starts like a list item.
@@ -465,17 +469,28 @@ nomo_report_escape <- function(x, to = c("html", "markdown"), cell = FALSE) {
   # Code spans are left as they are: pandoc shows their contents verbatim.
   # They are found before anything is escaped, so that two spans in one cell
   # stay two spans; those with a bar are then escaped for a Word table cell.
-  vapply(as.character(x), function(s) {
-    if (is.na(s) || !nzchar(s)) return(s)
-    spans <- gregexpr("`[^`\r\n]+`", s)
-    code <- regmatches(s, spans)[[1L]]
-    text <- regmatches(s, spans, invert = TRUE)[[1L]]
-    text <- vapply(text, function(t) if (nzchar(t)) escape_text(t) else t,
-                   character(1), USE.NAMES = FALSE)
-    barred <- bar_ends_cell & grepl("|", code, fixed = TRUE)
-    code[barred] <- vapply(code[barred], escape_text, character(1), USE.NAMES = FALSE)
-    paste0(text, c(code, ""), collapse = "")
-  }, character(1), USE.NAMES = FALSE)
+  out <- unname(as.character(x))
+  todo <- !is.na(out) & nzchar(out)
+  plain <- todo & !grepl("`", out, fixed = TRUE)
+  out[plain] <- escape_text(out[plain])
+  spanned <- which(todo & !plain)
+  if (length(spanned)) {
+    spans <- gregexpr("`[^`\r\n]+`", out[spanned])
+    code <- regmatches(out[spanned], spans)
+    text <- regmatches(out[spanned], spans, invert = TRUE)
+    # Every piece is escaped in one call, then returned to its string.
+    regroup <- function(pieces, sizes) {
+      split(pieces, factor(rep(seq_along(sizes), sizes), levels = seq_along(sizes)))
+    }
+    text <- regroup(escape_text(unlist(text)), lengths(text))
+    flat <- unlist(code)
+    barred <- bar_ends_cell & grepl("|", flat, fixed = TRUE)
+    flat[barred] <- escape_text(flat[barred])
+    code <- regroup(flat, lengths(code))
+    out[spanned] <- unlist(Map(function(t, k) paste0(t, c(k, ""), collapse = ""),
+                               text, code), use.names = FALSE)
+  }
+  out
 }
 
 
