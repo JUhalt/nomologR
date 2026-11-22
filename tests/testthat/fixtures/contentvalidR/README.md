@@ -1,11 +1,12 @@
 # contentvalidR handoff fixtures
 
-Thirty-four handoff objects produced by contentvalidR itself, for testing a
+Forty-two handoff objects produced by contentvalidR itself, for testing a
 reader without contentvalidR installed. Each is genuine producer output, never
-edited afterwards: from a release tag for 0.6.0 through 0.10.1, and from the
-release candidate's commit for 0.99.0. `MANIFEST.csv` records each file's tag,
-the commit SHA it was built from, and its md5. The twenty-six files delivered
-before are unchanged, byte for byte. The five 0.10.0 files come from the
+edited afterwards: from a release tag for 0.6.0 through 0.10.1, from the
+release candidate's commit for 0.99.0, and from the 1.0.0 commit for 1.0.0.
+`MANIFEST.csv` records each file's tag, the commit SHA it was built from, and
+its md5. No delivery changed a file stored before it, byte for byte. The five
+0.10.0 files come from the
 `v0.10.0` tag (aff485a), and the five 0.10.1 files from the `v0.10.1` tag
 (4c13be0), both generated on 2026-09-28 with the same script. The eight 0.99.0
 files were generated from untagged commit 3766519 (DESCRIPTION 0.99.0),
@@ -13,17 +14,21 @@ contentvalidR's release candidate on its master, by contentvalidR on
 2026-11-21 with this folder's script; nomologR generated them again from the
 same commit and found the same objects (see "Regenerating"). That commit was
 later tagged `v1.0.0-rc.1`, so the manifest gives that tag for the eight files.
+The eight 1.0.0 files were made the same way on the same day, from untagged
+commit f75d82f (DESCRIPTION 1.0.0), contentvalidR's 1.0.0 on its master, and
+nomologR again found the same objects. That commit was later tagged `v1.0.0`,
+so the manifest gives that tag for the eight files.
 
-| fit | 0.6.0 | 0.7.0 | 0.8.0 | 0.9.0 | 0.10.0 | 0.10.1 | 0.99.0 | what it exercises |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `walkthrough-sort` | plain | `keying` + `response_min/max` set | as 0.7.0 | as 0.8.0 | as 0.9.0 | as 0.10.0 | `n_constructs_given` added | the walkthrough item sort: 12 items, 10 carried, 2 held back; EF2 and TF2 reverse-worded (`keying = -1`), scale 1-5 |
-| `expert-krippendorff` | yes | yes, keying/scale `NA` | as 0.7.0 | as 0.8.0 | as 0.9.0 | as 0.10.0 | `rule` and `citation` reworded | a relevance panel with one `panel_statistics` row (Krippendorff's alpha with a bootstrap interval) |
-| `delphi` | yes | yes, keying/scale `NA` | as 0.7.0 | as 0.8.0 | as 0.9.0 | as 0.10.0 | `rule` and `citation` reworded, one `note` added | a three-round Delphi; `round` varies by item |
-| `expert-nine` | — | yes | yes | as 0.8.0 | as 0.9.0 | as 0.10.0 | `rule` and `citation` reworded | nine experts, one item per count relevant (9, 8, 7, 6); the one input whose decision depends on the producer |
-| `walkthrough-sort-none-reversed` | — | — | — | yes | as 0.9.0 | as 0.10.0 | `n_constructs_given` added | the same sort with `reverse_keyed = character(0)` and `response_scale = c(1, 5)`: keying recorded as checked, no item reversed |
-| `congruence-targeted` | — | — | — | — | — | — | yes | item-objective congruence with a target mapping: five experts, items C1, C2 and C3 written for objectives A, B and C; C2 falls below the criterion and is held back (`items` is `C1 C3`) |
-| `congruence-untargeted` | — | — | — | — | — | — | yes | the same ratings without a target mapping, so every item is "Descriptive only", handed off with `keep = c("Supported", "Descriptive only")` (`items` is `C1 C2 C3`, no scales) |
-| `congruence-untargeted-default` | — | — | — | — | — | — | yes | the same fit with the default `keep = "Supported"`, which carries no item; a reader refuses it |
+| fit | 0.6.0 | 0.7.0 | 0.8.0 | 0.9.0 | 0.10.0 | 0.10.1 | 0.99.0 | 1.0.0 | what it exercises |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `walkthrough-sort` | plain | `keying` + `response_min/max` set | as 0.7.0 | as 0.8.0 | as 0.9.0 | as 0.10.0 | `n_constructs_given` added | as 0.99.0 | the walkthrough item sort: 12 items, 10 carried, 2 held back; EF2 and TF2 reverse-worded (`keying = -1`), scale 1-5 |
+| `expert-krippendorff` | yes | yes, keying/scale `NA` | as 0.7.0 | as 0.8.0 | as 0.9.0 | as 0.10.0 | `rule` and `citation` reworded | as 0.99.0 | a relevance panel with one `panel_statistics` row (Krippendorff's alpha with a bootstrap interval) |
+| `delphi` | yes | yes, keying/scale `NA` | as 0.7.0 | as 0.8.0 | as 0.9.0 | as 0.10.0 | `rule` and `citation` reworded, one `note` added | as 0.99.0 | a three-round Delphi; `round` varies by item |
+| `expert-nine` | — | yes | yes | as 0.8.0 | as 0.9.0 | as 0.10.0 | `rule` and `citation` reworded | as 0.99.0 | nine experts, one item per count relevant (9, 8, 7, 6); the one input whose decision depends on the producer |
+| `walkthrough-sort-none-reversed` | — | — | — | yes | as 0.9.0 | as 0.10.0 | `n_constructs_given` added | as 0.99.0 | the same sort with `reverse_keyed = character(0)` and `response_scale = c(1, 5)`: keying recorded as checked, no item reversed |
+| `congruence-targeted` | — | — | — | — | — | — | yes | as 0.99.0 | item-objective congruence with a target mapping: five experts, items C1, C2 and C3 written for objectives A, B and C; C2 falls below the criterion and is held back (`items` is `C1 C3`) |
+| `congruence-untargeted` | — | — | — | — | — | — | yes | as 0.99.0 | the same ratings without a target mapping, so every item is "Descriptive only", handed off with `keep = c("Supported", "Descriptive only")` (`items` is `C1 C2 C3`, no scales) |
+| `congruence-untargeted-default` | — | — | — | — | — | — | yes | as 0.99.0 | the same fit with the default `keep = "Supported"`, which carries no item; a reader refuses it |
 
 **0.9.0 files are identical to their 0.8.0 counterparts** in every field
 except `provenance$package_version` and `provenance$created`: the same schema
@@ -62,6 +67,11 @@ field:
 The three congruence fits start at 0.99.0, the first producer that hands off
 the index of item-objective congruence with one row per item.
 
+**1.0.0 files are identical to their 0.99.0 counterparts** in every field
+except `provenance$package_version` and `provenance$created`. Between its
+release candidate and 1.0.0, contentvalidR changed nothing these eight fits
+hand off.
+
 ## What a reader should find
 
 - **0.6.0 files have no `note` column and no `keying`, `response_min`, or
@@ -91,7 +101,7 @@ response scale is 1 to 5. That is a different statement from `NA`, which
 means nobody said. Apart from `keying` (where `walkthrough-sort` has `-1` for
 EF2 and TF2) and `provenance$created`, each version's file is identical to
 that version's `walkthrough-sort` file: the same items, decisions, statistics,
-and settings. That holds for 0.9.0, 0.10.0, 0.10.1, and 0.99.0. The first was
+and settings. That holds for 0.9.0, 0.10.0, 0.10.1, 0.99.0, and 1.0.0. The first was
 generated from v0.9.0, then the latest released producer. A run at v0.7.0 or
 v0.8.0 would differ from it the way those versions' `walkthrough-sort` files
 differ from the 0.9.0 one.
@@ -159,7 +169,9 @@ For the 0.99.0 files, nomologR exported contentvalidR's release-candidate
 commit with `git archive`, ran the script on it, and compared each of its eight
 objects with the delivered one after setting `provenance$created` to `NA` in
 both. All eight were identical. Both runs were on 2026-11-21, so the files
-were also the same byte for byte.
+were also the same byte for byte. The 1.0.0 files were checked the same way
+from commit f75d82f, in a process of their own, with the same result: eight
+identical objects, the same byte for byte.
 
 The third congruence fit was first named `congruence-untargeted-default-keep`,
 and contentvalidR delivered its 0.99.0 file under that name. The path
@@ -169,8 +181,8 @@ check noted it. On 2026-11-21 the fit was renamed `congruence-untargeted-default
 in the script, whose only other change is a comment saying why, and the script
 was run again on the same export. It wrote all eight files byte for byte as delivered, the renamed one
 included, so the delivered bytes are stored under the new name. The manifest
-test now checks every stored path, and each fit's 1.0.0 path, against that
-limit.
+test now checks every stored path against that limit; the longest, a 1.0.0
+file's, is 97 bytes.
 
 Checked before handoff, in an R process where contentvalidR was not loaded:
 every 0.8.0 file reads back as a `cv_handoff` at schema version 1 with the
