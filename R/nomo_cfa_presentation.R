@@ -545,7 +545,7 @@ nomo_cfa_present_fit <- function(x) {
     more = "nomo_table(x, \"fit\")"
   )
   nomo_present_text(
-    "References are teaching values for review, not cutoffs.", indent = 2L
+    "References are review values, not cutoffs.", indent = 2L
   )
   c(shown, indices$metric[is.finite(indices$value)], "CI")
 }

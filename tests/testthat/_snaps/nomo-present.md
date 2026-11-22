@@ -31,7 +31,7 @@
         TLI    0.965      0.950
         RMSEA  0.051      0.060  [0.036, 0.066]
         SRMR   0.052      0.080
-        References are teaching values for review, not cutoffs.
+        References are review values, not cutoffs.
       
       Standardized loadings
         Factor  Indicator  Loading    SE  95% CI        Flag
