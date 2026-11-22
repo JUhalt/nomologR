@@ -215,6 +215,7 @@ test_that("blocked result presentation and table branches are retained", {
 
 # ---- consolidated from test-nomo-run-m8-full.R ----
 test_that("one-call prespecification consumes decisions in workflow order", {
+  skip_on_cran()
   dat <- make_m8_full_data(seed = 8501L)
 
   run <- nomo_run(
@@ -314,6 +315,7 @@ test_that("requested branches require explicit identifying inputs", {
 
 
 test_that("decision ordering is explicit rather than silently skipped", {
+  skip_on_cran()
   dat <- make_m8_full_data(seed = 8504L)
 
   expect_error(
@@ -343,6 +345,7 @@ test_that("decision ordering is explicit rather than silently skipped", {
 
 
 test_that("invalid CFA and measurement decisions fail clearly", {
+  skip_on_cran()
   dat <- make_m8_full_data(seed = 8505L)
 
   run <- nomo_run(
@@ -402,6 +405,7 @@ test_that("CFA estimation errors block downstream stages", {
 
 
 test_that("multiple scales require named factor-count decisions", {
+  skip_on_cran()
   set.seed(8507L)
   n <- 320L
   a <- rnorm(n)
@@ -499,6 +503,7 @@ test_that("recipe settings and component log expose reproducibility provenance",
 
 
 test_that("completed workflow rejects decision changes", {
+  skip_on_cran()
   dat <- make_m8_full_data(seed = 8509L)
 
   run <- nomo_run(
@@ -788,6 +793,7 @@ test_that("nomo_table exposes pipeline state without mutating it", {
 
 # ---- consolidated from test-nomo-run-m8b.R ----
 test_that("CFA model handoff runs CFA reliability and validity then pauses", {
+  skip_on_cran()
   dat <- make_m8_full_data()
 
   run <- nomo_run(
@@ -823,6 +829,7 @@ test_that("CFA model handoff runs CFA reliability and validity then pauses", {
 
 
 test_that("measurement proceed completes when optional branches are not requested", {
+  skip_on_cran()
   dat <- make_m8_full_data(seed = 8402L)
 
   run <- nomo_run(
@@ -858,6 +865,7 @@ test_that("measurement proceed completes when optional branches are not requeste
 
 
 test_that("measurement revise stops without hidden downstream refitting", {
+  skip_on_cran()
   dat <- make_m8_full_data(seed = 8403L)
 
   run <- nomo_run(
@@ -884,6 +892,7 @@ test_that("measurement revise stops without hidden downstream refitting", {
 
 
 test_that("future-stage settings can be added without recomputing completed stages", {
+  skip_on_cran()
   dat <- make_m8_full_data(seed = 8404L)
 
   run <- nomo_run(
@@ -959,6 +968,7 @@ test_that("invariance branch is explicit and researcher controlled", {
 
 
 test_that("network branch uses explicit hypotheses", {
+  skip_on_cran()
   dat <- make_m8_full_data(n = 360L, seed = 8406L)
 
   h <- nomo_hypotheses(
@@ -1112,6 +1122,7 @@ test_that("an ordinal CFA's indicators stay ordinal in invariance and the networ
 
 
 test_that("research and teaching modes retain identical statistical objects", {
+  skip_on_cran()
   dat <- make_m8_full_data(seed = 8408L)
 
   teaching <- nomo_run(
@@ -1599,6 +1610,7 @@ test_that("closeout C: workflow decision validation rejects non-list inputs", {
 # Pre-RC fixes (#145) ----------------------------------------------------------
 
 test_that("settings given when resuming merge argument by argument and are logged (#145)", {
+  skip_on_cran()
   dat <- make_m8_full_data(seed = 8510L)
   run <- nomo_run(
     data = dat,
@@ -1782,6 +1794,7 @@ test_that("a guidance list that asks for automatic deletion is refused (#145)", 
 
 
 test_that("decisions left over at a pause are named in number (#145)", {
+  skip_on_cran()
   dat <- make_m8_full_data(seed = 8514L)
   run <- nomo_run(data = dat, scales = list(WellBeing = c("i1", "i2", "i3", "i4")),
                   settings = m8_full_settings())
@@ -1795,6 +1808,7 @@ test_that("decisions left over at a pause are named in number (#145)", {
 
 
 test_that("a measurement model whose items differ from the scales is recorded (#145)", {
+  skip_on_cran()
   dat <- make_m8_full_data(seed = 8515L)
   run <- nomo_run(
     data = dat,
@@ -2198,6 +2212,7 @@ test_that("key evidence follows the number rules and names the fit version (#144
 
 
 test_that("print and summary of a complete run define each abbreviation and end with a pointer (#144)", {
+  skip_on_cran()
   complete <- make_m9_report_run()
   out <- run_lines(complete)
   text <- paste(out, collapse = " ")

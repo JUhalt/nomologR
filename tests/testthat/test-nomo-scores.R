@@ -545,6 +545,7 @@ test_that("a residual covariance is kept, so only the parallel constraints are t
 
 
 test_that("the parallel model is refitted with the fit's own estimator and missing-data handling", {
+  # This test compares the package with lavaan's own tests, so it runs on CRAN.
   dat <- scores_sample(scores_population()$sigma)
 
   robust <- nomo_cfa(scores_model, data = dat, estimator = "MLR", std.lv = TRUE)
@@ -569,6 +570,12 @@ test_that("the parallel model is refitted with the fit's own estimator and missi
     lavaan::cfa(scores_parallel_model, data = holes, std.lv = TRUE)
   )
   expect_false(isTRUE(all.equal(ours$chisq_diff, dropped$chisq_diff)))
+})
+
+
+test_that("bootstrapped standard errors are not resampled for the parallel model", {
+  skip_on_cran()
+  dat <- scores_sample(scores_population()$sigma)
 
   # Bootstrapped standard errors are not resampled for a model whose standard
   # errors are never read; the test is the one maximum likelihood gives. With
@@ -693,6 +700,7 @@ test_that("a negative difference is reported as no test, not as support for a su
 # Matching scores to the data (#145) -------------------------------------------
 
 test_that("`rows` says which row of the data each score belongs to", {
+  skip_on_cran()
   dat <- scores_sample(scores_population()$sigma)
   dat$x1[c(3L, 9L)] <- NA
   dat$x7[40L] <- NA
@@ -1082,7 +1090,8 @@ test_that("plot() draws each score's validity against Gorsuch's references (#145
   expect_identical(as.character(p$data$status), c("review", "review"))
   built <- ggplot2::ggplot_build(p)
   expect_equal(sort(built$data[[1L]]$xintercept), c(.80, .90))
-  expect_match(flat_text(p$labels$caption), "Gorsuch's (1983) .80, and .90", fixed = TRUE)
+  expect_match(flat_text(p$labels$caption),
+               "as Gorsuch (1983, p. 260, as cited in Grice, 2001) recommended", fixed = TRUE)
   expect_identical(p$labels$title, "Validity of the scores (Grice, 2001)")
   expect_error(plot(out, type = "scores"), "`type` must be one of", fixed = TRUE)
   skip_on_cran()

@@ -116,6 +116,14 @@
 #'
 #' Estimation, respecification, and improper solutions:
 #'
+#' Bollen, K. A. (1989). *Structural equations with latent variables*. Wiley.
+#' \doi{10.1002/9781118619179}
+#'
+#' Enders, C. K., & Bandalos, D. L. (2001). The relative performance of full
+#' information maximum likelihood estimation for missing data in structural
+#' equation models. *Structural Equation Modeling, 8*(3), 430-457.
+#' \doi{10.1207/S15328007SEM0803_5}
+#'
 #' Flora, D. B., & Curran, P. J. (2004). An empirical evaluation of alternative
 #' methods of estimation for confirmatory factor analysis with ordinal data.
 #' *Psychological Methods, 9*(4), 466-491. \doi{10.1037/1082-989X.9.4.466}
@@ -137,6 +145,10 @@
 #'
 #' Rosseel, Y. (2012). lavaan: An R package for structural equation modeling.
 #' *Journal of Statistical Software, 48*(2), 1-36. \doi{10.18637/jss.v048.i02}
+#'
+#' Schafer, J. L., & Graham, J. W. (2002). Missing data: Our view of the state
+#' of the art. *Psychological Methods, 7*(2), 147-177.
+#' \doi{10.1037/1082-989X.7.2.147}
 #'
 #' @export
 #'

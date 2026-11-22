@@ -342,6 +342,11 @@ nomo_expectation_region_label <- function(expectation) {
 #' preregistration revolution. *Proceedings of the National Academy of
 #' Sciences, 115*(11), 2600-2606. \doi{10.1073/pnas.1708274114}
 #'
+#' Schuirmann, D. J. (1987). A comparison of the two one-sided tests procedure
+#' and the power approach for assessing the equivalence of average
+#' bioavailability. *Journal of Pharmacokinetics and Biopharmaceutics, 15*(6),
+#' 657-680. \doi{10.1007/BF01068419}
+#'
 #' @seealso [nomo_network()] to evaluate the hypotheses.
 #' @export
 #'

@@ -410,6 +410,10 @@ nomo_run_resume <- function(resume,
 #' objective scale development. *Psychological Assessment, 7*(3), 309-319.
 #' \doi{10.1037/1040-3590.7.3.309}
 #'
+#' Clark, L. A., & Watson, D. (2019). Constructing validity: New developments
+#' in creating objective measuring instruments. *Psychological Assessment,
+#' 31*(12), 1412-1427. \doi{10.1037/pas0000626}
+#'
 #' Flake, J. K., & Fried, E. I. (2020). Measurement schmeasurement:
 #' Questionable measurement practices and how to avoid them. *Advances in
 #' Methods and Practices in Psychological Science, 3*(4), 456-465.
@@ -428,6 +432,12 @@ nomo_run_resume <- function(resume,
 #' psychology: Undisclosed flexibility in data collection and analysis allows
 #' presenting anything as significant. *Psychological Science, 22*(11),
 #' 1359-1366. \doi{10.1177/0956797611417632}
+#'
+#' Wicherts, J. M., Veldkamp, C. L. S., Augusteijn, H. E. M., Bakker, M., van
+#' Aert, R. C. M., & van Assen, M. A. L. M. (2016). Degrees of freedom in
+#' planning, running, analyzing, and reporting psychological studies: A
+#' checklist to avoid p-hacking. *Frontiers in Psychology, 7*, 1832.
+#' \doi{10.3389/fpsyg.2016.01832}
 #'
 #' @examples
 #' scales <- list(

@@ -467,6 +467,7 @@ test_that("the code is ASCII, and the stated output rule allows accented names (
 
 
 test_that("every printed table names the call that shows a column it drops (#145)", {
+  skip_on_cran()
   # Read from the source tree, as above: each nomo_present_table() call passes
   # `more`, so no "Not shown for width" note is left without a pointer.
   source_dir <- testthat::test_path("..", "..", "R")

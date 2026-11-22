@@ -183,6 +183,7 @@ test_that("network print prettifies statuses without changing stored values", {
 
 
 test_that("invariance fit and change plots remove redundant metric legends", {
+  skip_on_cran()
   dat <- make_polish_invariance_fixture()
 
   out <- nomo_invariance(
@@ -220,6 +221,7 @@ test_that("invariance fit and change plots remove redundant metric legends", {
 
 
 test_that("local-strain presentation attempts human-readable parameter labels", {
+  skip_on_cran()
   dat <- make_polish_invariance_fixture(seed = 7509L)
 
   out <- nomo_invariance(
@@ -286,6 +288,7 @@ test_that("reliability presentation is compact and returns a ggplot", {
 
 
 test_that("ordinal reliability summary preserves unavailable observed-scale alpha", {
+  skip_on_cran()
   set.seed(5301)
   n <- 700
   f <- rnorm(n)
@@ -311,6 +314,7 @@ test_that("ordinal reliability summary preserves unavailable observed-scale alph
 
 
 test_that("validity presentation separates convergent and discriminant questions", {
+  skip_on_cran()
   set.seed(5302)
   n <- 900
   f1 <- rnorm(n)
@@ -515,6 +519,7 @@ test_that("M6/M7 plots carry explanatory titles and captions", {
 # Pre-v0.1 coverage sprint: presentation branches -----------------------------
 
 test_that("validity convergent table covers ave-only, loading-only, and empty branches", {
+  skip_on_cran()
   run <- make_m9_report_run()
   val <- run$results$validity
 
@@ -541,6 +546,7 @@ test_that("validity convergent table covers ave-only, loading-only, and empty br
 
 
 test_that("validity convergent signals cover concern and review paths", {
+  skip_on_cran()
   run <- make_m9_report_run()
   val <- run$results$validity
 
@@ -564,6 +570,7 @@ test_that("validity convergent signals cover concern and review paths", {
 
 
 test_that("validity discriminant table covers latent-only and HTMT fallbacks", {
+  skip_on_cran()
   run <- make_m9_report_run()
   val <- run$results$validity
 
@@ -609,6 +616,7 @@ test_that("validity discriminant table covers latent-only and HTMT fallbacks", {
 
 
 test_that("validity print methods cover unavailable, not-requested, grouped, and legacy branches", {
+  skip_on_cran()
   run <- make_m9_report_run()
   val <- run$results$validity
 
@@ -653,6 +661,7 @@ test_that("validity print methods cover unavailable, not-requested, grouped, and
 
 
 test_that("validity plots cover empty, faceted, and HTMT fallback paths", {
+  skip_on_cran()
   run <- make_m9_report_run()
   val <- run$results$validity
 
@@ -757,6 +766,7 @@ test_that("guided-run teaching presentation covers blocked, examples, and comple
 
 
 test_that("guided-run tables and summary printing cover empty and populated branches", {
+  skip_on_cran()
   run <- make_m9_minimal_run()
 
   expect_equal(nrow(nomologR:::nomo_run_decision_table(run)), 1L)
@@ -792,6 +802,7 @@ test_that("guided-run tables and summary printing cover empty and populated bran
 
 
 test_that("validity discriminant table merges latent, HTMT2, and HTMT evidence", {
+  skip_on_cran()
   run <- make_m9_report_run()
   val <- run$results$validity
 
@@ -827,6 +838,7 @@ test_that("validity discriminant table merges latent, HTMT2, and HTMT evidence",
 
 
 test_that("validity summary print covers populated evidence and grouped loading note", {
+  skip_on_cran()
   run <- make_m9_report_run()
   val <- run$results$validity
   s <- summary(val)

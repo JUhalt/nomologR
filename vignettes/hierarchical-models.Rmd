@@ -187,12 +187,13 @@ factors[, c("factor", "role", "factor_determinacy", "min_competing_r")]
 ```
 
 `factor_determinacy` is the correlation between a factor and its estimated
-factor score (Beauducel, 2011; Rodriguez et al., 2016). Gorsuch (1983)
-recommended using factor score estimates only above .90. `min_competing_r` is
-the lowest correlation two equally valid sets of scores could have. When it is
-negative, two researchers scoring the same data with equally defensible
-methods could rank people in opposite orders, and both would be consistent with
-the model.
+factor score (Beauducel, 2011; Rodriguez et al., 2016). Gorsuch (1983, p. 260,
+as cited in Grice, 2001) recommended a determinacy of at least .80, and above
+.90 where the scores are to serve as substitutes for the factors.
+`min_competing_r` is the lowest correlation two equally valid sets of scores
+could have. When it is negative, two researchers scoring the same data with
+equally defensible methods could rank people in opposite orders, and both would
+be consistent with the model.
 
 ```{r replicability}
 factors[, c("factor", "construct_replicability", "determinacy_r2")]
@@ -342,6 +343,9 @@ misspecified confirmatory factor models. *Journal of Modern Applied Statistical
 Methods, 10*(2), 583–598. https://doi.org/10.22237/jmasm/1320120900
 
 Gorsuch, R. L. (1983). *Factor analysis* (2nd ed.). Lawrence Erlbaum.
+
+Grice, J. W. (2001). Computing and evaluating factor scores. *Psychological
+Methods, 6*(4), 430–450. https://doi.org/10.1037/1082-989X.6.4.430
 
 Hancock, G. R., & Mueller, R. O. (2001). Rethinking construct reliability within
 latent variable systems. In R. Cudeck, S. du Toit, & D. Sörbom (Eds.),

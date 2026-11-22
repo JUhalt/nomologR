@@ -57,6 +57,11 @@ Psychological Science, 1}(2), 259-269. \doi{10.1177/2515245918770963}
 Nosek, B. A., Ebersole, C. R., DeHaven, A. C., & Mellor, D. T. (2018). The
 preregistration revolution. \emph{Proceedings of the National Academy of
 Sciences, 115}(11), 2600-2606. \doi{10.1073/pnas.1708274114}
+
+Schuirmann, D. J. (1987). A comparison of the two one-sided tests procedure
+and the power approach for assessing the equivalence of average
+bioavailability. \emph{Journal of Pharmacokinetics and Biopharmaceutics, 15}(6),
+657-680. \doi{10.1007/BF01068419}
 }
 \seealso{
 \code{\link[=nomo_network]{nomo_network()}} to evaluate the hypotheses.

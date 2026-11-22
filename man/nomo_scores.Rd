@@ -112,12 +112,12 @@ treat the scores as observed are not corrected by this, and the result does
 not extend to nonlinear models. \code{vignette("scoring", package = "nomologR")}
 works through the design.
 
-\strong{Thresholds are context.} Gorsuch's (1983) recommendation that validity
-reach .80, and above .90 for scores serving as substitutes for the factors
-themselves, is reported where a value falls below it and is never applied as
-a rule. These references, and the .05 for a discrepancy between
-correlations, are fixed values from the literature; they are not read from
-\code{guidance}.
+\strong{Thresholds are context.} Gorsuch (1983, p. 260, as cited in Grice, 2001)
+recommended that validity reach at least .80, and above .90 for scores
+serving as substitutes for the factors themselves. That recommendation is
+reported where a value falls below it and is never applied as a rule. These
+references, and the .05 for a discrepancy between correlations, are fixed
+values from the literature; they are not read from \code{guidance}.
 
 The supplied data is never modified, and scores are computed only for the
 cases the model used. \code{rows} records which rows of the data those are, so
