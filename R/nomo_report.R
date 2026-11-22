@@ -1876,8 +1876,9 @@ nomo_report_title_yaml <- function(title) {
 #'   is not given. The extension chooses the format: `.html` or
 #'   `.htm` for a self-contained HTML report, `.docx` for a Word document. The
 #'   Word report carries the same tables, figures, and interpretation contract
-#'   as the HTML one; collapsible sections are shown expanded, and it uses
-#'   Word's default styles.
+#'   as the HTML one; collapsible sections are shown expanded. It uses pandoc's
+#'   default Word styles, except that its tables are ruled as APA sets a table
+#'   (see [nomo_apa_table()]).
 #' @param title Report title.
 #' @param include_plots Logical; include a compact set of component plots when
 #'   those plots are available.
@@ -2135,9 +2136,11 @@ nomo_report_render_env <- function() {
 # The template's own YAML describes the HTML report, so an HTML file needs no
 # format here. A Word file gets word_document(), and the template writes
 # markdown instead of raw HTML for it, since pandoc drops raw HTML from .docx.
+# Its reference document rules every table as APA sets one (#145).
 nomo_report_output_format <- function(file) {
   if (!grepl("\\.docx$", file, ignore.case = TRUE)) return(NULL)
-  args <- list(toc = TRUE, fig_width = 8, fig_height = 5.2)
+  args <- list(toc = TRUE, fig_width = 8, fig_height = 5.2,
+               reference_docx = nomo_apa_reference_docx())
   # Section numbering for Word arrived in a later rmarkdown than this package
   # requires, so it is used only where the installed version supports it.
   if ("number_sections" %in% names(formals(rmarkdown::word_document))) {

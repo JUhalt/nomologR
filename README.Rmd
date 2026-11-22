@@ -1110,16 +1110,18 @@ nomo_apa_table(validity, "discriminant", number = 3)
 nomo_apa_table(network, number = 4)
 ```
 
-Leading zeros follow the statistic rather than its value: reliability,
-correlations, CFI, and *p* lose theirs because they cannot exceed 1, while TLI,
-RMSEA, SRMR, and standardized loadings keep theirs because they can. No table
-labels a result as passing or failing. The discriminant table gives each pair
-of constructs its latent correlation with a confidence interval beside HTMT2
-and HTMT, rather than the Fornell-Larcker matrix.
+Leading zeros follow APA: reliability, correlations, CFI, and *p* lose theirs
+because they cannot exceed 1, and standardized loadings and paths lose theirs as
+in APA's own sample tables, while TLI, RMSEA, SRMR, and HTMT keep theirs. No
+table labels a result as passing or failing. The discriminant table gives each
+pair of constructs its latent correlation with a confidence interval beside
+HTMT2 and HTMT, rather than the Fornell-Larcker matrix.
 
 `nomo_report(run, file = "report.html", apa_tables = TRUE)` appends the same
 tables for every result a guided run holds, numbered in order, as a
-*Manuscript tables* appendix.
+*Manuscript tables* appendix. Knitted to HTML, a table carries APA's rules in
+any theme. For Word, the package ships a reference document that draws them;
+`?nomo_apa_table` shows how to use it.
 
 ## Development path
 

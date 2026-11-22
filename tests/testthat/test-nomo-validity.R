@@ -1162,7 +1162,7 @@ test_that("a correlation the model fixes is not shown as separation evidence (#1
                fixed = TRUE)
   expect_identical(nrow(plot(no_htmt, type = "discriminant")$data), 2L)
   apa <- nomo_apa_table(no_htmt)
-  expect_identical(apa$body$Constructs, c("visual with speed", "textual with speed"))
+  expect_identical(apa$body$Construct, c("visual with speed", "textual with speed"))
   expect_match(squash(apa$notes$general),
                "Correlations the model fixes are not shown: visual with textual.", fixed = TRUE)
   expect_false(grepl("\u2014 =", squash(apa$notes$general), fixed = TRUE))
@@ -1232,7 +1232,7 @@ test_that("a correlation fixed in some groups or levels is left out only there (
                "Fixed at 0 by the model, so not estimated: visual with textual (Grant-White).",
                fixed = TRUE)
   apa <- nomo_apa_table(partial)
-  expect_identical(apa$body$Group[apa$body$Constructs == "visual with textual"], "Pasteur")
+  expect_identical(apa$body$Group[apa$body$Construct == "visual with textual"], "Pasteur")
   expect_match(squash(apa$notes$general),
                "Correlations the model fixes are not shown: visual with textual (Grant-White).",
                fixed = TRUE)

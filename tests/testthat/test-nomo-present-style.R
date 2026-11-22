@@ -14,7 +14,9 @@ test_that("a value that rounds to zero prints unsigned, and p never prints 1.000
 
   expect_identical(nomologR:::nomo_present_p(c(0.9996, 1, 0.9994)), c("> .999", "> .999", ".999"))
   expect_identical(nomologR:::nomo_present_p_clause(0.9996), "p > .999")
-  expect_identical(nomologR:::nomo_apa_p(c(0.9996, 0.0004, 0.5)), c("> .999", "< .001", ".500"))
+  # An APA table cell writes the bound without a space, as APA does in tables
+  # (#145); the console keeps it.
+  expect_identical(nomologR:::nomo_apa_p(c(0.9996, 0.0004, 0.5)), c(">.999", "<.001", ".500"))
   # The duplicate p helper reads the new bound too.
   expect_identical(nomologR:::nomo_present_p_text(c(0.9996, 0.043)), c("> .999", "= .043"))
 })
