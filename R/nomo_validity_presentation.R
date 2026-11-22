@@ -454,7 +454,12 @@ nomo_validity_flagged_brief <- function(x, convergent, discriminant) {
     status <- c(status, row$signal)
     text <- c(text, paste0(nomo_validity_capitalize(paste(parts, collapse = "; ")), "."))
   }
-  list(unit = units, status = status, text = text)
+
+  # Indicators that load against their factor, named in the log's own words
+  # (usefulness-02).
+  signs <- x$decision_log[x$decision_log$metric %in% "loading_signs", , drop = FALSE]
+  list(unit = c(units, signs$object), status = c(status, signs$severity),
+       text = c(text, signs$observation))
 }
 
 

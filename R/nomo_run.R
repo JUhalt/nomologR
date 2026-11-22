@@ -343,7 +343,10 @@ nomo_run_resume <- function(resume,
 #'   `scale_range` is taken from its declared keying unless given here, as in
 #'   [nomo_screen()]; giving one replaces only that one. The decision log
 #'   records a declared value replaced, or a response scale the handoff did not
-#'   record supplied here.
+#'   record supplied here. The data are never recoded: when an item declared
+#'   reverse-keyed still loads against its factor in the CFA, the pause for
+#'   `measurement_model` says so, and the component log records it as a
+#'   concern.
 #'
 #'   The invariance and network stages refit the measurement model with the
 #'   CFA stage's `ordered`, `estimator`, and `missing` from `settings$cfa`,

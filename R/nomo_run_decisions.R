@@ -524,10 +524,12 @@ nomo_run_normalize_cfa_model <- function(value) {
 
 
 nomo_run_measurement_request <- function(x) {
+  unrecoded <- nomo_run_unrecoded_items(x)
   logs <- dplyr::bind_rows(
     lapply(
       list(
         cfa = x$results$cfa,
+        keying = list(decision_log = nomo_run_unrecoded_log(x)),
         reliability = x$results$reliability,
         validity = x$results$validity
       ),
@@ -574,7 +576,8 @@ nomo_run_measurement_request <- function(x) {
         "The CFA treats as continuous items the exploratory stages treated as",
         "categorical (decision-log row item_types)."
       )
-    }
+    },
+    if (length(unrecoded)) nomo_run_unrecoded_text(unrecoded)
   ), collapse = " ")
 
   tibble::tibble(
@@ -601,6 +604,53 @@ nomo_run_measurement_request <- function(x) {
     example = paste(
       "decisions = list(measurement_model = list(value = \"proceed\",",
       "rationale = \"Evidence reviewed; model retained for the planned analyses.\"))"
+    )
+  )
+}
+
+
+# Items declared reverse-keyed, in `settings$screen` or a content-review
+# handoff, that still load against their factor in the converged CFA: the data
+# were not recoded (usefulness-02). The run never recodes data, so it says so
+# in the pause and as a concern in the component log.
+nomo_run_unrecoded_items <- function(x) {
+  cfa <- x$results$cfa
+  if (is.null(cfa) || !isTRUE(cfa$converged)) return(character())
+  declared <- as.character(nomo_run_screen_keying(x$settings, x$scales, x$handoff)$reverse)
+  intersect(declared, as.character(unlist(nomo_cfa_against_items(cfa$fit), use.names = FALSE)))
+}
+
+
+nomo_run_unrecoded_text <- function(items) {
+  n <- length(items)
+  sprintf(
+    paste(
+      "%s %s declared reverse-keyed and still %s against %s in the CFA, so the",
+      "data were not recoded; the CFA, reliability, and validity evidence",
+      "describe %s as answered."
+    ),
+    nomo_present_or(items, "and"), nomo_present_noun(n, "is", "are"),
+    nomo_present_noun(n, "loads", "load"), nomo_present_noun(n, "its factor", "their factors"),
+    nomo_present_noun(n, "it", "them")
+  )
+}
+
+
+# The concern, as a CFA log row for the run's component log.
+nomo_run_unrecoded_log <- function(x) {
+  items <- nomo_run_unrecoded_items(x)
+  log <- nomo_log_new()
+  if (!length(items)) return(log)
+  nomo_log_add(
+    log, stage = "cfa", object = paste(items, collapse = ", "),
+    metric = "declared_reverse_keyed", value = length(items),
+    reference = "Declared reverse-keyed items are recoded before analysis",
+    severity = "concern",
+    observation = nomo_run_unrecoded_text(items),
+    recommendation = paste(
+      "Recode the declared items in the data, for example 6 minus the response",
+      "on a 1 to 5 scale, and start a new nomo_run(); `reverse = character(0)`",
+      "in `settings$screen` then records that no item still needs recoding."
     )
   )
 }

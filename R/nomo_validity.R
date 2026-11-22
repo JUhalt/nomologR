@@ -17,6 +17,13 @@
 #' supporting evidence because simulation work has shown that it can miss
 #' discriminant-validity problems that HTMT detects.
 #'
+#' An indicator that loads on its factor with the opposite sign to the factor's
+#' other indicators, as an unrecoded reverse-keyed item does, is flagged for
+#' review in `standardized_loadings` and recorded as a concern: AVE and HTMT do
+#' not depend on the signs, but a unit-weighted score does. When most of a
+#' factor's loadings are negative, the concern adds that the factor's
+#' correlations with other factors change sign.
+#'
 #' @param fit A fitted [nomo_cfa()] object or fitted `lavaan` CFA model.
 #' @param ave_obs_var Logical passed to [semTools::AVE()]. `TRUE` (default) uses
 #'   observed variances in the denominator; `FALSE` uses model-implied
@@ -478,21 +485,17 @@ nomo_validity <- function(fit,
       weak_loadings$loading, "loading",
       reference = sign(weak_loadings$loading) * ifelse(extreme, 1, loading_reference)
     )
+    # Any other flag keeps the CFA's explanation: below the reference it is
+    # the sentence this function once wrote itself, followed by the sign's
+    # when the loading also runs against its factor (usefulness-02).
     loading_observation <- ifelse(
-      !is.finite(weak_loadings$loading), weak_loadings$explanation,
-      ifelse(
-        extreme,
-        paste0(
-          "Standardized loading ", loading_shown, " exceeds 1 in absolute value; ",
-          "inspect for a Heywood case or improper solution, model misspecification, ",
-          "sampling instability, or identification issues."
-        ),
-        paste0(
-          "Standardized loading ", loading_shown, " is below the review reference ",
-          nomo_present_stat(loading_reference, "loading"), " in absolute value; ",
-          "inspect item content, precision, and model specification."
-        )
-      )
+      extreme,
+      paste0(
+        "Standardized loading ", loading_shown, " exceeds 1 in absolute value; ",
+        "inspect for a Heywood case or improper solution, model misspecification, ",
+        "sampling instability, or identification issues."
+      ),
+      weak_loadings$explanation
     )
     for (i in seq_len(nrow(weak_loadings))) {
       log <- nomo_log_add(
@@ -511,6 +514,13 @@ nomo_validity <- function(fit,
       )
     }
   }
+
+  # Indicators that load against their factor, as unrecoded reverse-keyed
+  # items do, and the factors that most of their loadings run against, whose
+  # correlations then change sign (usefulness-02).
+  majority <- tapply(sign(loadings$loading), loadings$factor, sum, na.rm = TRUE)
+  log <- nomo_reliability_signs_log(log, nomo_cfa_against_items(fit_info$fit), "validity",
+                                    reversed = names(majority)[majority < 0])
 
   if (nrow(ave)) {
     for (i in seq_len(nrow(ave))) {

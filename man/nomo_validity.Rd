@@ -120,6 +120,13 @@ indicator content, CFA fit, and latent-factor overlap. The Fornell-Larcker
 comparison is available only by explicit request and is labeled legacy/
 supporting evidence because simulation work has shown that it can miss
 discriminant-validity problems that HTMT detects.
+
+An indicator that loads on its factor with the opposite sign to the factor's
+other indicators, as an unrecoded reverse-keyed item does, is flagged for
+review in \code{standardized_loadings} and recorded as a concern: AVE and HTMT do
+not depend on the signs, but a unit-weighted score does. When most of a
+factor's loadings are negative, the concern adds that the factor's
+correlations with other factors change sign.
 }
 \examples{
 model <- '

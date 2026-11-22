@@ -102,7 +102,11 @@ The function is deliberately measurement-first: it refuses nonconverged
 models, structural SEMs, higher-order models, and cross-loaded first-order
 indicators. When global CFA strain or an improper solution is present,
 reliability is still inspectable but the decision log warns that
-model-based reliability can be distorted by misspecification.
+model-based reliability can be distorted by misspecification. An indicator
+that loads on its factor with the opposite sign to the factor's other
+indicators, as an unrecoded reverse-keyed item does, is a concern: omega and
+alpha describe the unit-weighted sum, in which such an item counts against
+the factor. Recode reverse-keyed items before fitting the CFA.
 
 For ordered indicators, the observed-score omega (\code{ordinal_scale = TRUE})
 is the same whether lavaan fitted the model with its delta or theta

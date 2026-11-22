@@ -71,7 +71,9 @@
 #' extractions often stop just short of 1), a model with more parameters than
 #' the correlations can identify (negative degrees of freedom) or exactly as
 #' many (zero), an extraction that did not converge, and any warning or message
-#' from [psych::fa()].
+#' from [psych::fa()]. Numeric items modeled as continuous, with Pearson
+#' correlations, are flagged for review when they use 4 or fewer observed
+#' categories between them; `types` is the remedy (Rhemtulla et al., 2012).
 #'
 #' `print()` shows the settings, the residual misfit, the item flags, and any
 #' problem with the solution; `summary()` adds the item loadings and
@@ -136,6 +138,12 @@
 #'
 #' Kaiser, H. F. (1958). The varimax criterion for analytic rotation in factor
 #' analysis. *Psychometrika, 23*(3), 187-200. \doi{10.1007/BF02289233}
+#'
+#' Rhemtulla, M., Brosseau-Liard, P. É., & Savalei, V. (2012). When can
+#' categorical variables be treated as continuous? A comparison of robust
+#' continuous and categorical SEM estimation methods under suboptimal
+#' conditions. *Psychological Methods, 17*(3), 354-373.
+#' \doi{10.1037/a0029315}
 #'
 #' Watkins, M. W. (2018). Exploratory factor analysis: A guide to best
 #' practice. *Journal of Black Psychology, 44*(3), 219-246.
@@ -621,7 +629,8 @@ nomo_efa <- function(data,
     oblique = oblique,
     heywood = heywood,
     dof = dof,
-    engine_messages = engine_messages
+    engine_messages = engine_messages,
+    few_categories = nomo_efa_few_categories(selected, item_types)
   )
 
   out <- list(
@@ -858,7 +867,8 @@ nomo_efa_log <- function(k,
                          oblique = rotation %in% nomo_efa_rotations$oblique,
                          heywood = character(),
                          dof = NA_real_,
-                         engine_messages = character()) {
+                         engine_messages = character(),
+                         few_categories = character()) {
   log <- nomo_log_new()
 
   log <- nomo_log_add(
@@ -1033,6 +1043,29 @@ nomo_efa_log <- function(k,
         paste(overrides, collapse = ", ")
       ),
       recommendation = "Document why these indicators were treated at the declared measurement level."
+    )
+  }
+
+  # In the words nomo_factors() uses for numeric-discrete items (usefulness-04).
+  if (length(few_categories)) {
+    log <- nomo_log_add(
+      log,
+      stage = "efa",
+      object = paste(few_categories, collapse = ", "),
+      metric = "few_categories",
+      value = length(few_categories),
+      reference = "Rhemtulla et al. (2012)",
+      severity = "review",
+      observation = sprintf(
+        "%s with 4 or fewer observed categories %s modeled as continuous: %s.",
+        nomo_present_count(length(few_categories), "numeric-discrete item"),
+        nomo_present_noun(length(few_categories), "was", "were"),
+        paste(few_categories, collapse = ", ")
+      ),
+      recommendation = paste(
+        "If these are Likert/ordered indicators, rerun with `types` marking them",
+        "as ordinal, which uses polychoric correlations, and compare the loadings."
+      )
     )
   }
 
@@ -1309,6 +1342,20 @@ nomo_efa_engine_messages <- function(messages) {
   messages <- trimws(gsub("\\s+", " ", messages))
   messages <- messages[nzchar(messages) & !grepl("^Loading required namespace", messages)]
   unique(messages)
+}
+
+
+# The items with 4 or fewer observed categories that were modeled as
+# continuous, with Pearson correlations, without a `types` declaration making
+# them so (usefulness-04). Categories are counted over all such items
+# together, as nomo_cfa() counts them over a factor's indicators, so a
+# five-point item whose answers fall in three categories is not named.
+nomo_efa_few_categories <- function(selected, item_types) {
+  continuous <- item_types$item[item_types$model_type == "continuous" &
+                                  item_types$source != "user_override"]
+  values <- unique(stats::na.omit(unlist(selected[continuous], use.names = FALSE)))
+  if (!length(continuous) || length(values) > 4L) return(character())
+  continuous
 }
 
 

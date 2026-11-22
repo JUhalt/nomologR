@@ -767,11 +767,19 @@ test_that("closeout: reliability engine errors and inadmissible coefficient inte
   )
   bad <- nomo_reliability(cfa, include_alpha = FALSE)
   expect_identical(bad$evidence$attention[[1L]], "concern")
+  # The coefficient and its value are named (usefulness-15).
   expect_match(
     bad$evidence$interpretation[[1L]],
-    "outside the conventional 0-1",
-    fixed = TRUE
+    "^Omega \\(1\\.20\\) is outside the 0 to 1 range of a reliability coefficient\\. Inspect"
   )
+
+  testthat::local_mocked_bindings(
+    compRelSEM = function(...) c(WellBeing = NA_real_),
+    .package = "semTools"
+  )
+  missing <- nomo_reliability(cfa, include_alpha = FALSE)
+  expect_identical(missing$evidence$attention[[1L]], "concern")
+  expect_match(missing$evidence$interpretation[[1L]], "^Omega could not be computed\\. Inspect")
 
   testthat::local_mocked_bindings(
     nomo_reliability_tidy = function(...) tibble::tibble(),

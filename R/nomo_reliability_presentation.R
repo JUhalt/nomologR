@@ -125,7 +125,9 @@ nomo_reliability_brief <- c(
     "The latent-response omega and alpha depend on lavaan's theta",
     "parameterization; a delta fit of the same model gives different values."
   ),
-  bootstrap_reproducibility = "No seed was set, so the bootstrap intervals cannot be reproduced exactly."
+  bootstrap_reproducibility = "No seed was set, so the bootstrap intervals cannot be reproduced exactly.",
+  # Its observation names the items (usefulness-02).
+  loading_signs = NA_character_
 )
 
 
@@ -140,7 +142,8 @@ nomo_reliability_other_flags <- function(log, brief = FALSE) {
     unit = ifelse(rows$object %in% c("measurement_model", "uncertainty"), "", rows$object),
     status = rows$severity,
     text = if (isTRUE(brief)) {
-      unname(nomo_reliability_brief[rows$metric])
+      brief_text <- unname(nomo_reliability_brief[rows$metric])
+      ifelse(is.na(brief_text), rows$observation, brief_text)
     } else {
       nomo_present_then_recommend(rows$observation, rows$recommendation)
     }

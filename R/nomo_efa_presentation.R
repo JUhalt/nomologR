@@ -54,21 +54,26 @@ nomo_efa_rotation_text <- function(x) {
 
 
 # Problems with the solution itself, from the decision log: identification,
-# Heywood cases, convergence, and engine messages (#145, efa-1 and efa-3), each
-# with the unit a Flagged bullet names: the item of a Heywood case, otherwise
-# what was checked. A summary shows a Heywood case with its item instead.
+# Heywood cases, convergence, and engine messages (#145, efa-1 and efa-3), and
+# items with few categories modeled as continuous, with the remedy
+# (usefulness-04), each with the unit a Flagged bullet names: the item of a
+# Heywood case, otherwise what was checked. A summary shows a Heywood case
+# with its item instead.
 nomo_efa_solution_checks <- function(log,
                                      metrics = c("identification", "heywood", "convergence",
-                                                 "engine_warnings")) {
+                                                 "engine_warnings", "few_categories")) {
   if (!nomo_efa_has_log(log)) {
     return(data.frame(unit = character(), severity = character(), note = character()))
   }
   rows <- log[log$metric %in% metrics, , drop = FALSE]
   rows <- rows[order(match(rows$severity, c("concern", "review", "info"))), , drop = FALSE]
   units <- c(identification = "Identification", convergence = "Convergence",
-             engine_warnings = "Engine messages")
+             engine_warnings = "Engine messages", few_categories = "Categories")
+  note <- ifelse(rows$metric == "few_categories",
+                 nomo_present_then_recommend(rows$observation, rows$recommendation),
+                 rows$observation)
   data.frame(unit = ifelse(rows$metric == "heywood", rows$object, units[rows$metric]),
-             severity = rows$severity, note = rows$observation, stringsAsFactors = FALSE)
+             severity = rows$severity, note = note, stringsAsFactors = FALSE)
 }
 
 nomo_efa_has_log <- function(log) {
@@ -196,7 +201,8 @@ print.summary_nomo_efa <- function(x, ...) {
   }
   # One Flagged section: the items, then the checks of the solution itself.
   checks <- nomo_efa_solution_checks(
-    x$decision_log, metrics = c("identification", "convergence", "engine_warnings")
+    x$decision_log,
+    metrics = c("identification", "convergence", "engine_warnings", "few_categories")
   )
   nomo_present_flagged(unit = c(items$item, checks$unit), status = c(status, checks$severity),
                        text = c(text, checks$note))
