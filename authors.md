@@ -7,7 +7,7 @@
 ## Citation
 
 Source:
-[`inst/CITATION`](https://github.com/JUhalt/nomologR/blob/master/inst/CITATION)
+[`inst/CITATION`](https://github.com/JUhalt/nomologR/blob/v1.0.0/inst/CITATION)
 
 Uhalt, J. (2026). nomologR: Guided scale development and construct
 validation (Version 1.0.0) \[Computer software\].
