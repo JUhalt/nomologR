@@ -10,14 +10,14 @@
       -------------------------
       Item  Agency  Persistence
       -------------------------
-      ag1     0.82
-      ag2     0.75
-      ag3     0.71
-      ag4     0.78
-      pe1                  0.77
-      pe2                  0.70
-      pe3                  0.74
-      pe4                  0.69
+      ag1      .82
+      ag2      .75
+      ag3      .71
+      ag4      .78
+      pe1                   .77
+      pe2                   .70
+      pe3                   .74
+      pe4                   .69
       -------------------------
       Note. Standardized loadings from a confirmatory factor analysis. Estimated
       with maximum likelihood (ML); N = 800. Blank cells are loadings fixed to zero
@@ -31,7 +31,7 @@
     Code
       print(nomo_apa_table(apa_validity(), number = 4)$body)
     Output
-                                 Constructs    *r* [95% CI] HTMT2 HTMT
+                                  Construct    *r* [95% CI] HTMT2 HTMT
       1             Agency with Persistence  .46 [.39, .53]  0.45 0.46
       2      Agency with SocialDesirability .01 [-.08, .10]  0.02 0.04
       3 Persistence with SocialDesirability .00 [-.09, .09]  0.04 0.05

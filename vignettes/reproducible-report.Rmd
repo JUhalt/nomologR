@@ -154,13 +154,30 @@ nomo_apa_table(run$results$invariance, number = 6)
 nomo_apa_table(run$results$network, number = 7)
 ```
 
-Notice the leading zeros. APA 7 drops the zero before a decimal point only for a
-statistic that *cannot* exceed 1, so the rule follows the statistic rather than
+Notice the leading zeros. APA 7 drops the zero before a decimal point for a
+statistic that cannot exceed 1, so the rule follows the statistic rather than
 the value it happens to take. Reliability coefficients, correlations, CFI, and
-*p* values lose it; TLI, RMSEA, SRMR, and standardized loadings keep it, because
-each can exceed 1 — TLI is not bounded above, and a standardized loading does in
-an improper solution. Many published tables print standardized loadings without
-the zero; these tables follow the rule as written.
+*p* values lose it; TLI, RMSEA, SRMR, and the heterotrait-monotrait ratios keep
+it, because each can exceed 1. Standardized loadings and standardized path
+coefficients are written without the zero, as APA's own sample tables write
+them. A standardized value of 1 or more, which only an improper solution gives,
+keeps its integer digit. Unstandardized estimates keep the zero. A *p* value
+below .001 reads <.001 in a table cell, without a space, as APA writes it in
+tables; the notes keep the spaces.
+
+Knitted to HTML, as here, each table carries its own style sheet, so it has
+APA's rules in any HTML document: one above the table, one beneath the column
+headings, one below it, and none between rows. A Word document takes a table's
+rules from its reference document. The package ships one that draws the same
+three rules and is otherwise pandoc's default:
+
+```yaml
+output:
+  word_document:
+    reference_docx: !expr system.file("rmarkdown", "nomo-apa-reference.docx", package = "nomologR")
+```
+
+A Word report from `nomo_report()` uses it too.
 
 The notes keep the package's reference-value language. Fit indices are reported
 as evidence rather than against fixed cutoffs, and the hypotheses table

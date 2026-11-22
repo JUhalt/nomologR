@@ -47,12 +47,14 @@ nomo_apa_number <- function(x, digits = 2L, bounded = FALSE) {
 
 # p values are bounded, so they take no leading zero; anything below .001 is
 # written as a bound rather than a rounded zero, and anything that would round
-# to 1.000 as "> .999".
+# to 1.000 as a bound too. These are table cells, which APA's Numbers and
+# Statistics Guide writes without a space: "<.001", and so ">.999". Running
+# text and notes keep the spaces, "p < .001".
 nomo_apa_p <- function(p) {
   p <- suppressWarnings(as.numeric(p))
   out <- nomo_apa_number(p, digits = 3L, bounded = TRUE)
-  out[is.finite(p) & out == "1.000"] <- "> .999"
-  out[is.finite(p) & p < 0.001] <- "< .001"
+  out[is.finite(p) & out == "1.000"] <- ">.999"
+  out[is.finite(p) & p < 0.001] <- "<.001"
   out
 }
 
@@ -292,13 +294,18 @@ nomo_apa_mark <- function(body, marks) {
 #'
 #' @details
 #' **Leading zeros follow the statistic, not the value.** APA 7 drops the
-#' leading zero only for statistics that *cannot* exceed 1. So *p* values,
+#' leading zero for statistics that cannot exceed 1. So *p* values,
 #' correlations, reliability coefficients, and CFI are written `.95`, while TLI,
-#' RMSEA, SRMR, and standardized loadings keep it, `0.95`, because each can
-#' exceed 1 in principle: TLI is not bounded above, and a standardized loading
-#' does in an improper (Heywood) solution. Many published tables print
-#' standardized loadings without the zero; this follows the rule as written,
-#' as the output style shared with `contentvalidR` does.
+#' RMSEA, SRMR, and heterotrait-monotrait ratios keep it, `0.95`, because each
+#' can exceed 1. Standardized loadings and standardized path coefficients are
+#' written without the zero, `.82`, as APA's own sample tables write them. A
+#' standardized value of 1 or more, as in an improper (Heywood) solution, keeps
+#' its integer digit, `1.04`. Unstandardized estimates keep the zero.
+#'
+#' **p values.** A *p* cell gives the exact value to three decimals, `.015`.
+#' Below .001 it reads `<.001`, and a value that would round to 1 reads
+#' `>.999`, written without a space as APA writes them in tables. Running text
+#' and notes keep the spaces, "*p* < .001".
 #'
 #' **No verdicts.** Table notes keep the package's reference-value language.
 #' No cell reads PASS or FAIL, and fit indices are not labeled good or poor.
@@ -335,10 +342,38 @@ nomo_apa_mark <- function(body, marks) {
 #' `"convergent"` table.
 #'
 #' **Knitting.** In an R Markdown or Quarto document the table renders as a
-#' table with its number, title, and notes. Each column's share of the page
-#' follows its widest entry. Knitted to PDF, the Greek letters and math
-#' symbols are written as TeX math, so the default `pdflatex` engine compiles
-#' them.
+#' table with its number, title, and notes, ruled as APA sets a table: a rule
+#' above it, one beneath the column headings, and one below it, and none
+#' between rows. Knitted to HTML, the table is written as HTML with its own
+#' style sheet, so the rules hold in any HTML document, whatever its theme.
+#' Knitted to Word or PDF, each column's share of the page follows its widest
+#' entry. Knitted to PDF, the Greek letters and math symbols are written as TeX
+#' math, so the default `pdflatex` engine compiles them.
+#'
+#' **Word.** A Word document draws a table's rules from its reference
+#' document's table style, and pandoc's default draws only the rule beneath the
+#' headings. The package ships a reference document whose table style draws
+#' all three APA rules and nothing between rows; it is otherwise pandoc's
+#' default, and [nomo_report()] uses it for a Word report. To use it in your
+#' own document, name it as the reference document in the YAML header:
+#'
+#' ```
+#' output:
+#'   word_document:
+#'     reference_docx: !expr system.file("rmarkdown", "nomo-apa-reference.docx", package = "nomologR")
+#' ```
+#'
+#' or in R:
+#'
+#' ```
+#' rmarkdown::word_document(reference_docx = system.file(
+#'   "rmarkdown", "nomo-apa-reference.docx", package = "nomologR"
+#' ))
+#' ```
+#'
+#' Every table in the document then takes these rules. A reference document of
+#' your own, such as a journal's, can be given the same rules by editing its
+#' "Table" style in Word.
 #'
 #' The rules come from the *Publication Manual of the American Psychological
 #' Association* (7th ed.), checked against Purdue OWL's APA 7 guides.
@@ -463,11 +498,14 @@ nomo_apa_table.nomo_cfa <- function(x, type = c("loadings", "fit", "factor_corre
     factors <- unique(as.character(sl$factor))
     items <- unique(as.character(sl$item))
     body <- data.frame(Item = items, stringsAsFactors = FALSE)
+    # Standardized loadings without the leading zero, as APA's sample
+    # factor-analysis table prints them; a loading of 1 or more, which the
+    # console flags as improper, keeps its integer digit.
     for (f in factors) {
       rows <- sl[sl$factor == f, , drop = FALSE]
       body[[f]] <- ifelse(
         items %in% rows$item,
-        nomo_apa_number(rows$loading[match(items, rows$item)], 2L, bounded = FALSE),
+        nomo_apa_number(rows$loading[match(items, rows$item)], 2L, bounded = TRUE),
         ""
       )
     }
@@ -502,17 +540,18 @@ nomo_apa_table.nomo_cfa <- function(x, type = c("loadings", "fit", "factor_corre
         "one, or relates its factors through a higher-order factor."
       ), call. = FALSE)
     }
+    # The stub heading is singular, as APA 7 writes column headings (#145).
     body <- data.frame(
-      Factors = paste(fc$factor1, "with", fc$factor2),
+      Factor = paste(fc$factor1, "with", fc$factor2),
       r = nomo_apa_interval(fc$correlation, fc$ci_lower, fc$ci_upper, bounded = TRUE),
       p = nomo_apa_p(fc$p_value),
       stringsAsFactors = FALSE
     )
-    names(body) <- c("Factors", "*r* [95% CI]", "*p*")
+    names(body) <- c("Factor", "*r* [95% CI]", "*p*")
     return(nomo_apa_new(
       body = body,
       title = nomo_apa_or(title, "Factor Correlations"),
-      stub = "Factors",
+      stub = "Factor",
       general = nomo_apa_join(
         "*r* = latent correlation from the confirmatory factor analysis; CI =",
         "confidence interval.",
@@ -907,11 +946,14 @@ nomo_apa_table.nomo_network <- function(x, type = c("hypotheses", "fit"),
   spec <- as.data.frame(x$hypotheses$hypotheses, stringsAsFactors = FALSE)
   h <- spec[match(he$id, spec$id), , drop = FALSE]
 
-  # Each estimate in its kind: a standardized correlation cannot exceed 1 and
-  # loses its leading zero; a standardized path can, with more than one
-  # predictor, and keeps it, as does any unstandardized value. A value just off
-  # a bound of its predicted region shows the decimals that tell them apart.
+  # Each estimate in its kind. Every standardized estimate, a path as well as a
+  # correlation, is written without its leading zero, as APA's sample
+  # regression table writes standardized coefficients; a path of 1 or more
+  # keeps its integer digit. An unstandardized value keeps its zero. The
+  # console keeps the zero of a standardized path. A value just off a bound of
+  # its predicted region shows the decimals that tell them apart.
   kind <- nomo_network_kind(he$scale, he$relation_type)
+  kind[he$scale %in% "standardized"] <- "r"
   # The interval each concordance was judged on, as the console shows it: the
   # equivalence interval for a negligible() prediction with a region (#145).
   equivalence <- he$prediction %in% "negligible" & h$magnitude_specified %in% TRUE
@@ -1156,7 +1198,7 @@ nomo_apa_table.nomo_validity <- function(x, type = c("discriminant", "convergent
     stop("The model has one construct, so there are no construct pairs.", call. = FALSE)
   }
   body <- data.frame(
-    Constructs = paste(tab$construct_1, "with", tab$construct_2),
+    Construct = paste(tab$construct_1, "with", tab$construct_2),
     Group = as.character(tab$block),
     r = nomo_apa_interval(tab$latent_r, tab$latent_r_ci_lower, tab$latent_r_ci_upper,
                           bounded = TRUE),
@@ -1180,7 +1222,7 @@ nomo_apa_table.nomo_validity <- function(x, type = c("discriminant", "convergent
   nomo_apa_new(
     body = body,
     title = nomo_apa_or(title, "Construct Correlations and Heterotrait-Monotrait Ratios"),
-    stub = "Constructs",
+    stub = "Construct",
     general = c(
       "*r* = latent correlation from the confirmatory factor analysis; CI =",
       "confidence interval, whose upper limit shows how high the correlation",
@@ -1533,7 +1575,116 @@ nomo_apa_markdown <- function(x, latex = nomo_apa_latex()) {
 }
 
 
+# The rules of an APA table on a web page (#145): one above the table, one
+# beneath the column headings, and one below the table, and none between body
+# rows or columns. Headings are not bold, the stub is flush left, and the
+# other columns are centered. The selectors outweigh the table styles of the
+# common HTML themes, which rule every row (Bootstrap, as html_document and
+# pkgdown use it) or shade every other one (html_vignette). A knitted table
+# and the HTML report share this one style sheet.
+nomo_apa_css <- paste(
+  ".nomo-apa { margin: 1em 0 1.5em 0; }",
+  ".nomo-apa > p { margin: 0 0 0.5em 0; }",
+  ".nomo-apa table {",
+  "  width: auto; max-width: 100%; margin: 0 0 0.5em 0;",
+  "  border-collapse: collapse; border-spacing: 0; border: none;",
+  "  border-top: 2px solid currentColor !important;",
+  "  border-bottom: 2px solid currentColor !important;",
+  "}",
+  ".nomo-apa thead, .nomo-apa tbody, .nomo-apa tr, .nomo-apa th, .nomo-apa td {",
+  "  background: transparent !important; box-shadow: none !important;",
+  "}",
+  ".nomo-apa sup { line-height: 0; }",
+  ".nomo-apa th, .nomo-apa td {",
+  "  border: none !important; padding: 0.2em 0.8em;",
+  "  font-weight: normal; text-align: center; vertical-align: top;",
+  "}",
+  ".nomo-apa thead th {",
+  "  border-bottom: 1px solid currentColor !important; vertical-align: bottom;",
+  "}",
+  ".nomo-apa th:first-child, .nomo-apa td:first-child {",
+  "  text-align: left; padding-left: 0;",
+  "}",
+  sep = "\n"
+)
+
+
+# A heading, cell, note, or title as HTML: the text escaped, its Markdown
+# italics and superscripts written as tags, a note's letter kept on the line
+# of the note it opens, and an apostrophe made the typographic one pandoc
+# writes for the Markdown table.
+nomo_apa_html_text <- function(s) {
+  s <- gsub("&", "&amp;", s, fixed = TRUE)
+  s <- gsub("<", "&lt;", s, fixed = TRUE)
+  s <- gsub(">", "&gt;", s, fixed = TRUE)
+  s <- gsub("\\*([^*]+)\\*", "<em>\\1</em>", s)
+  s <- gsub("\\^([^^]+)\\^ ", "<sup>\\1</sup>&#160;", s)
+  s <- gsub("\\^([^^]+)\\^", "<sup>\\1</sup>", s)
+  gsub("'", "\u2019", s, fixed = TRUE)
+}
+
+
+# The table as HTML, for an HTML document: the bold number and italic title
+# above it, the notes below, each kind its own paragraph, and with `css`, the
+# style sheet that draws its rules, so it needs nothing from the document.
+# Each piece carries a class for a document that styles it further.
+nomo_apa_html <- function(x, css = TRUE) {
+  text <- nomo_apa_html_text
+  row <- function(open, close, v) {
+    paste0("<tr>", paste0(open, text(v), close, collapse = ""), "</tr>")
+  }
+  body <- x$body
+  c(
+    if (isTRUE(css)) c("<style>", nomo_apa_css, "</style>"),
+    '<div class="nomo-apa">',
+    if (!is.null(x$number)) {
+      sprintf('<p class="nomo-apa-number"><strong>Table %d</strong></p>', x$number)
+    },
+    sprintf('<p class="nomo-apa-title"><em>%s</em></p>', text(x$title)),
+    # Quarto would otherwise turn the table into one of its own and restyle it.
+    '<table data-quarto-disable-processing="true">',
+    "<thead>",
+    row('<th scope="col">', "</th>", names(body)),
+    "</thead>",
+    "<tbody>",
+    vapply(seq_len(nrow(body)), function(i) {
+      row("<td>", "</td>", vapply(body, `[[`, character(1), i))
+    }, character(1)),
+    "</tbody>",
+    "</table>",
+    sprintf('<p class="nomo-apa-note">%s</p>', text(nomo_apa_notes_text(x$notes))),
+    "</div>"
+  )
+}
+
+
+# Whether knitr is rendering an HTML page. Markdown and EPUB targets, which
+# knitr also counts as HTML, keep the Markdown table.
+nomo_apa_html_output <- function() {
+  isTRUE(knitr::is_html_output(excludes = c("markdown", "gfm", "epub", "epub2")))
+}
+
+
+# What a knitted table writes into the document: for an HTML page, the HTML
+# table in a raw block, which pandoc passes through as written; otherwise the
+# Markdown table, which pandoc renders as Word or PDF.
+nomo_apa_knitted <- function(x, html = nomo_apa_html_output(), css = TRUE) {
+  if (isTRUE(html)) {
+    return(paste(c("", "```{=html}", nomo_apa_html(x, css = css), "```", ""), collapse = "\n"))
+  }
+  paste(nomo_apa_markdown(x), collapse = "\n")
+}
+
+
 #' @exportS3Method knitr::knit_print
 knit_print.nomo_apa_table <- function(x, ...) {
-  knitr::asis_output(paste(nomo_apa_markdown(x), collapse = "\n"))
+  knitr::asis_output(nomo_apa_knitted(x))
+}
+
+
+# The Word reference document the package ships (#145): pandoc's default, with
+# a "Table" style that draws APA's three rules and nothing between rows.
+# data-raw/nomo-apa-reference.R builds it.
+nomo_apa_reference_docx <- function() {
+  system.file("rmarkdown", "nomo-apa-reference.docx", package = "nomologR", mustWork = TRUE)
 }

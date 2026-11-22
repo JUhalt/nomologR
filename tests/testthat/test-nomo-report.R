@@ -1446,6 +1446,11 @@ test_that("the output format follows the file extension", {
   word <- nomologR:::nomo_report_output_format("report.docx")
   expect_s3_class(word, "rmarkdown_output_format")
   expect_identical(word$pandoc$to, "docx")
+  # Its tables take APA's rules from the package's reference document (#145).
+  at <- match("--reference-doc", word$pandoc$args)
+  expect_false(is.na(at))
+  expect_identical(normalizePath(word$pandoc$args[[at + 1L]], winslash = "/"),
+                   normalizePath(nomologR:::nomo_apa_reference_docx(), winslash = "/"))
 })
 
 

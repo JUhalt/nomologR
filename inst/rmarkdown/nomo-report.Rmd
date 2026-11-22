@@ -231,23 +231,6 @@ body { max-width: 1250px; }
 details {
   margin: 1em 0;
 }
-/* APA 7 tables (#145): a rule above the table, one beneath the column
-   headings, and one below the table, and none between body rows. The page
-   script gives every table Bootstrap's classes, whose row borders these
-   replace. */
-.nomo-apa table {
-  width: auto;
-  border-top: 2px solid #000;
-  border-bottom: 2px solid #000;
-  margin-bottom: 0.5em;
-}
-.nomo-apa table > thead > tr > th {
-  border-top: none !important;
-  border-bottom: 1px solid #000 !important;
-}
-.nomo-apa table > tbody > tr > td {
-  border-top: none !important;
-}
 </style>
 
 **Generated:** `r params$generated_at`  
@@ -790,13 +773,14 @@ if (isTRUE(params$apa_tables)) {
       "manuscript. They follow the reference-value language of the report:",
       "no cell reads pass or fail."
     ))
-    # In HTML the tables carry APA rules (top, beneath the headings, bottom)
-    # rather than the page's rule under every row.
-    if (!word_output) cat("\n::: {.nomo-apa}\n\n")
-    for (tab in apa) {
-      cat("\n", paste(nomologR:::nomo_apa_markdown(tab), collapse = "\n"), "\n\n", sep = "")
+    # Each table is written as a knitted document writes it: in HTML with the
+    # APA rules (above, beneath the headings, below), whose style sheet comes
+    # with the first table, and in Word as Markdown, ruled by the reference
+    # document (#145).
+    for (i in seq_along(apa)) {
+      cat("\n", nomologR:::nomo_apa_knitted(apa[[i]], html = !word_output, css = i == 1L),
+          "\n\n", sep = "")
     }
-    if (!word_output) cat("\n:::\n\n")
   }
 }
 ```

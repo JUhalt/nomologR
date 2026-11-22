@@ -28,9 +28,12 @@ test_that("missing values become an em dash, as APA marks empty cells", {
 
 test_that("p values lose the leading zero and small ones become a bound", {
   expect_identical(nomologR:::nomo_apa_p(0.0421), ".042")
-  expect_identical(nomologR:::nomo_apa_p(0.00042), "< .001")
   expect_identical(nomologR:::nomo_apa_p(0.001), ".001")
   expect_identical(nomologR:::nomo_apa_p(NA_real_), "\u2014")
+  # In a table cell the bounds have no space, as APA's Numbers and Statistics
+  # Guide writes them for tables (#145); notes keep "p < .001".
+  expect_identical(nomologR:::nomo_apa_p(c(0.00042, 0, 0.9996, 1)),
+                   c("<.001", "<.001", ">.999", ">.999"))
 })
 
 
@@ -69,16 +72,24 @@ test_that("the loadings table lays out one column per factor", {
   expect_identical(names(tab$body), c("Item", "Agency", "Persistence"))
   expect_identical(tab$stub, "Item")
 
-  # Standardized loadings keep the leading zero: in an improper solution they
-  # can exceed 1, so under the rule as written they are not bounded.
+  # Standardized loadings drop the leading zero, as APA's sample
+  # factor-analysis table prints them (#145).
   sl <- apa_cfa()$standardized_loadings
   ag1 <- sl$loading[sl$item == "ag1"]
-  expect_identical(tab$body$Agency[[1L]], formatC(round(ag1, 2), format = "f", digits = 2))
-  expect_match(tab$body$Agency[[1L]], "^0\\.")
+  expect_identical(tab$body$Agency[[1L]],
+                   sub("^0", "", formatC(round(ag1, 2), format = "f", digits = 2)))
+  expect_true(all(grepl("^\\.[0-9]{2}$", tab$body$Agency[1:4])))
 
   # Items that do not load on a factor are blank, and the note says why.
   expect_identical(tab$body$Persistence[tab$body$Item == "ag1"], "")
   expect_match(tab$notes$general, "fixed to zero", fixed = TRUE)
+
+  # A loading of 1 or more, as in an improper solution, keeps its integer
+  # digit; a negative one keeps its sign.
+  improper <- apa_cfa()
+  improper$standardized_loadings$loading[1:2] <- c(1.04, -0.3)
+  body <- nomo_apa_table(improper, "loadings")$body
+  expect_identical(body$Agency[1:2], c("1.04", "-.30"))
 })
 
 
@@ -161,10 +172,15 @@ test_that("the hypotheses table reports evidence, not whether it was prespecifie
   expect_identical(tab$body$Evidence, nomologR:::nomo_apa_concordance(he$concordance))
   expect_false(any(tab$body$Evidence %in% c("A priori", "a priori")))
 
-  # A directed path can exceed 1 and keeps its zero; a correlation cannot.
+  # Every standardized estimate drops its zero, a directed path as well as a
+  # correlation, as APA's sample regression table prints standardized
+  # coefficients (#145).
   directed <- he$relation_type == "directed"
-  expect_match(tab$body[[3L]][directed], "^0\\.")
-  expect_match(tab$body[[3L]][!directed], "^\\.")
+  expect_true(any(directed) && any(!directed))
+  expect_match(tab$body[[3L]][directed], "^\\.")
+  expect_match(tab$body[[3L]][!directed], "^-?\\.")
+  # The region beside it is written the same way.
+  expect_identical(tab$body$Prediction[directed], "Positive, \u2265 .20")
 })
 
 
@@ -337,6 +353,104 @@ test_that("knitting a table emits its markdown", {
 })
 
 
+# Knitted for HTML with the target set as rmarkdown sets it, and put back.
+apa_knit_for <- function(tab, to) {
+  old <- knitr::opts_knit$get("rmarkdown.pandoc.to")
+  on.exit(knitr::opts_knit$set(rmarkdown.pandoc.to = old), add = TRUE)
+  knitr::opts_knit$set(rmarkdown.pandoc.to = to)
+  as.character(knitr::knit_print(tab))
+}
+
+
+test_that("knitted for HTML, a table is HTML with the APA rules of its own (#145)", {
+  skip_if_not_installed("knitr")
+  tab <- nomologR:::nomo_apa_new(
+    body = data.frame(Factor = c("A with B", "A with C"), r = c(".46 [.39, .53]", ".05^a^"),
+                      p = c("<.001", ">.999"), stringsAsFactors = FALSE),
+    title = "Factor Correlations", stub = "Factor",
+    general = "*r* = latent correlation; CI = confidence interval. lavaan's estimate.",
+    specific = "Fixed.", number = 2
+  )
+  names(tab$body) <- c("Factor", "*r* [95% CI]", "*p*")
+  html <- apa_knit_for(tab, "html")
+  lines <- strsplit(html, "\n", fixed = TRUE)[[1L]]
+
+  # A raw block, which pandoc passes through as written, with the style
+  # sheet first, so the table needs nothing from the document's theme.
+  expect_identical(lines[[2L]], "```{=html}")
+  expect_identical(lines[[length(lines)]], "```")
+  expect_identical(lines[[3L]], "<style>")
+  expect_match(html, ".nomo-apa thead th {\n  border-bottom: 1px solid currentColor !important;",
+               fixed = TRUE)
+  expect_match(html, "border: none !important;", fixed = TRUE)
+  expect_match(html, "background: transparent !important; box-shadow: none !important;",
+               fixed = TRUE)
+
+  # Number in bold and title in italics above the table, the notes below it.
+  expect_match(html, paste0(
+    '<div class="nomo-apa">\n<p class="nomo-apa-number"><strong>Table 2</strong></p>\n',
+    '<p class="nomo-apa-title"><em>Factor Correlations</em></p>\n',
+    '<table data-quarto-disable-processing="true">\n<thead>\n',
+    '<tr><th scope="col">Factor</th><th scope="col"><em>r</em> [95% CI]</th>',
+    '<th scope="col"><em>p</em></th></tr>\n</thead>\n<tbody>\n',
+    "<tr><td>A with B</td><td>.46 [.39, .53]</td><td>&lt;.001</td></tr>\n",
+    "<tr><td>A with C</td><td>.05<sup>a</sup></td><td>&gt;.999</td></tr>\n",
+    "</tbody>\n</table>\n",
+    '<p class="nomo-apa-note"><em>Note.</em> <em>r</em> = latent correlation; ',
+    "CI = confidence interval. lavaan\u2019s estimate.</p>\n",
+    '<p class="nomo-apa-note"><sup>a</sup>&#160;Fixed.</p>\n</div>'
+  ), fixed = TRUE)
+  # No Markdown is left for pandoc to read.
+  expect_false(grepl("*", html, fixed = TRUE))
+  expect_false(grepl("^", html, fixed = TRUE))
+
+  # Without a number, there is no number line; the report sends the style
+  # sheet once, with its first table.
+  tab$number <- NULL
+  bare <- nomologR:::nomo_apa_knitted(tab, html = TRUE, css = FALSE)
+  expect_false(grepl("<style>", bare, fixed = TRUE))
+  expect_false(grepl("nomo-apa-number", bare, fixed = TRUE))
+
+  # Markdown and EPUB targets, which knitr counts as HTML, keep the Markdown
+  # table, as Word and PDF do; the setting is put back.
+  for (to in c("gfm", "markdown_strict", "epub3", "docx", "latex")) {
+    expect_false(grepl("```{=html}", apa_knit_for(tab, to), fixed = TRUE), label = to)
+  }
+  expect_null(knitr::opts_knit$get("rmarkdown.pandoc.to"))
+})
+
+
+test_that("an HTML document renders a knitted table with the APA rules (#145)", {
+  skip_on_cran()
+  skip_if_not_installed("rmarkdown")
+  skip_if_not(rmarkdown::pandoc_available())
+  dir <- withr::local_tempdir()
+  rmd <- file.path(dir, "apa.Rmd")
+  writeLines(c(
+    "---", "title: APA", "output: html_document", "---", "",
+    "```{r, echo = FALSE}",
+    "cfa <- nomologR::nomo_cfa(",
+    "  'Agency =~ ag1 + ag2 + ag3 + ag4\\nPersistence =~ pe1 + pe2 + pe3 + pe4',",
+    "  nomologR::nomo_demo_network)",
+    "nomologR::nomo_apa_table(cfa, 'factor_correlations', number = 1)",
+    "```"
+  ), rmd)
+  out <- rmarkdown::render(rmd, quiet = TRUE, envir = new.env())
+  html <- paste(readLines(out, warn = FALSE, encoding = "UTF-8"), collapse = "\n")
+
+  expect_true(grepl('<div class="nomo-apa">', html, fixed = TRUE))
+  expect_true(grepl("border-bottom: 2px solid currentColor !important;", html, fixed = TRUE))
+  expect_true(grepl('<th scope="col">Factor</th>', html, fixed = TRUE))
+  expect_true(grepl("<td>&lt;.001</td>", html, fixed = TRUE))
+  expect_true(grepl('<p class="nomo-apa-note"><em>Note.</em> <em>r</em> = latent', html,
+                    fixed = TRUE))
+  # The table is not one of pandoc's, whose rows the page script gives
+  # Bootstrap's rule under each row: pandoc passed it through as written.
+  expect_true(grepl('<table data-quarto-disable-processing="true">', html, fixed = TRUE))
+  expect_false(grepl('<tr class="odd">', html, fixed = TRUE))
+})
+
+
 # Convergent and discriminant evidence ------------------------------------------
 
 apa_validity <- local({
@@ -358,8 +472,8 @@ test_that("the discriminant table gives each pair its correlation and ratios", {
   tab <- nomo_apa_table(v)
   expect_identical(tab$source, "nomo_validity")
   expect_identical(tab$title, "Construct Correlations and Heterotrait-Monotrait Ratios")
-  expect_identical(names(tab$body), c("Constructs", "*r* [95% CI]", "HTMT2", "HTMT"))
-  expect_identical(tab$body$Constructs[[1L]], "Agency with Persistence")
+  expect_identical(names(tab$body), c("Construct", "*r* [95% CI]", "HTMT2", "HTMT"))
+  expect_identical(tab$body$Construct[[1L]], "Agency with Persistence")
 
   lc <- v$latent_correlations[v$latent_correlations$construct_1 == "Agency" &
                                 v$latent_correlations$construct_2 == "Persistence", ]
@@ -384,13 +498,13 @@ test_that("the discriminant table leaves out ratios that were not computed", {
   skip_on_cran()
   none <- nomo_validity(apa_validity()$fit, htmt = "none")
   tab <- nomo_apa_table(none, "discriminant")
-  expect_identical(names(tab$body), c("Constructs", "*r* [95% CI]"))
+  expect_identical(names(tab$body), c("Construct", "*r* [95% CI]"))
   expect_match(paste(tab$notes$general, collapse = " "),
                "Heterotrait-monotrait ratios were not computed", fixed = TRUE)
 
   only2 <- nomo_validity(apa_validity()$fit, htmt = "htmt2")
   expect_identical(names(nomo_apa_table(only2)$body),
-                   c("Constructs", "*r* [95% CI]", "HTMT2"))
+                   c("Construct", "*r* [95% CI]", "HTMT2"))
 })
 
 
@@ -476,7 +590,7 @@ test_that("a multi-group model's tables name the groups the same way", {
   v <- nomo_validity(fit)
   pairs <- nomo_apa_table(v)
   convergent <- nomo_apa_table(v, "convergent")
-  expect_identical(names(pairs$body), c("Constructs", "Group", "*r* [95% CI]"))
+  expect_identical(names(pairs$body), c("Construct", "Group", "*r* [95% CI]"))
   expect_setequal(pairs$body$Group, c("Pasteur", "Grant-White"))
   expect_setequal(convergent$body$Group, pairs$body$Group)
   # Each loading is listed once per group; the indicators are counted once.
@@ -773,7 +887,7 @@ test_that("a ratio the validity table could not compute is marked as not compute
   expect_identical(sum(missing_pair), 1L)
   val$htmt2$estimate[missing_pair] <- NA_real_
   tab <- nomo_apa_table(val)
-  expect_identical(tab$body$HTMT2[tab$body$Constructs == "textual with speed"], "\u2014")
+  expect_identical(tab$body$HTMT2[tab$body$Construct == "textual with speed"], "\u2014")
   general <- paste(tab$notes$general, collapse = " ")
   expect_match(general, "\u2014 = not computed.", fixed = TRUE)
   expect_false(grepl("fixed by the model", general, fixed = TRUE))
@@ -799,7 +913,7 @@ test_that("correlations a model fixes are not tabled as estimates (#145)", {
     hs, modification_indices = FALSE
   )
   tab <- nomo_apa_table(orth, "factor_correlations")
-  expect_identical(tab$body$Factors, c("visual with speed", "textual with speed"))
+  expect_identical(tab$body$Factor, c("visual with speed", "textual with speed"))
   expect_match(tab$notes$general,
                "Correlations the model fixes are not shown: visual with textual.", fixed = TRUE)
   # Every abbreviation in the headings is defined, r among them.
@@ -832,7 +946,7 @@ test_that("the hypotheses table shows the interval each concordance was judged o
   tab <- nomo_apa_table(net)
   # The region beside the prediction; a direction alone needs none.
   expect_identical(tab$body$Prediction,
-                   c("Positive, \u2265 0.20", "Negligible, [-.15, .088]", "Positive"))
+                   c("Positive, \u2265 .20", "Negligible, [-.15, .088]", "Positive"))
   # The negligible prediction shows its 90% equivalence interval, marked, and
   # the unstandardized estimate is marked too.
   h2 <- he[he$id == "H2", ]
@@ -988,18 +1102,18 @@ test_that("a console too narrow drops columns from the right, a p value among th
   # when that column goes: the correlation stays, and its p value is named.
   tab <- nomologR:::nomo_apa_new(
     body = data.frame(
-      Factors = c("Agency with Persistence", "Persistence with SocialDesirability"),
-      r = c(".46 [.39, .53]", ".00 [-.09, .09]^a^"), p = c("< .001", ".963"),
+      Factor = c("Agency with Persistence", "Persistence with SocialDesirability"),
+      r = c(".46 [.39, .53]", ".00 [-.09, .09]^a^"), p = c("<.001", ".963"),
       stringsAsFactors = FALSE
     ),
-    title = "Factor Correlations", stub = "Factors",
+    title = "Factor Correlations", stub = "Factor",
     specific = c("First.", "Second.")
   )
-  names(tab$body) <- c("Factors", "*r* [95% CI]", "*p*")
+  names(tab$body) <- c("Factor", "*r* [95% CI]", "*p*")
   local_reproducible_output(width = 40)
   out <- capture.output(print(tab))
   expect_true(all(nchar(out, type = "width") <= 40L))
-  expect_true(any(grepl("^Factors +r \\[95% CI\\]$", out)))
+  expect_true(any(grepl("^Factor +r \\[95% CI\\]$", out)))
   expect_true(any(grepl("Not shown for width: p. See x$body.", out, fixed = TRUE)))
   expect_true(any(grepl(".00 [-.09, .09] (a)", out, fixed = TRUE)))
   # In the console each specific note has its line; knitted, they run on in
