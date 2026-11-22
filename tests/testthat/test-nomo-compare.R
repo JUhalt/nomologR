@@ -1214,6 +1214,26 @@ test_that("compare plots name their references and keep status shapes for status
     expect_identical(as.character(rows$status[rows$model == "zero_b5"]),
                      as.character(nomologR:::nomo_plot_status(expected)))
   }
+  # The caption names the versions of the indices in the words every
+  # global-fit plot uses: none for ML fits, and robust values for MLR fits.
+  expect_false(grepl("robust", plot_text(fit$labels$caption), fixed = TRUE))
+  robust <- nomo_compare(
+    full = nomo_cfa(compare_syntax$full, nomo_demo_continuous, estimator = "MLR"),
+    zero_b5 = nomo_cfa(compare_syntax$zero_b5, nomo_demo_continuous, estimator = "MLR"),
+    rationale = "x", evidence = FALSE
+  )
+  expect_match(plot_text(plot(robust, type = "fit")$labels$caption),
+               "theory. CFI, TLI, and RMSEA are robust values. No model is selected automatically.",
+               fixed = TRUE)
+  expect_match(plot_text(plot(robust$fits$full, type = "fit")$labels$caption),
+               "theory. CFI, TLI, and RMSEA are robust values.", fixed = TRUE)
+  # A version that differs across models is named as such.
+  robust$fits$zero_b5$fit_evidence$variant[
+    robust$fits$zero_b5$fit_evidence$metric == "RMSEA"
+  ] <- "rmsea"
+  expect_match(plot_text(plot(robust, type = "fit")$labels$caption),
+               "CFI and TLI are robust values. RMSEA is a robust or standard value.",
+               fixed = TRUE)
   loadings <- plot(out, type = "loadings")
   shapes <- ggplot2::get_guide_data(loadings, "shape")$shape
   expect_false(any(shapes %in% c(16, 1, 15, 4)))

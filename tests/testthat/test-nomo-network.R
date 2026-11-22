@@ -3011,8 +3011,14 @@ test_that("the fit statistics name their version and the estimator (#145)", {
   expect_match(text, "Estimator: WLSMV", fixed = TRUE)
   expect_match(text, "Version: scaled chi-square; robust CFI, TLI, and RMSEA.", fixed = TRUE)
   expect_match(text, "WLSMV -- weighted least squares, mean- and variance-adjusted.", fixed = TRUE)
-  expect_match(plot_text(plot(ordinal, "fit")$labels$caption), "Version: scaled chi-square",
-               fixed = TRUE)
+  # The plot shows no chi-square, and names the versions of the indices in the
+  # words every global-fit plot uses (#145, clarity-13).
+  caption <- plot_text(plot(ordinal, "fit")$labels$caption)
+  expect_match(caption, "theory. CFI, TLI, and RMSEA are robust values. summary(x)", fixed = TRUE)
+  expect_false(grepl("chi-square", caption, fixed = TRUE))
+  ordinal$fit_evidence$index_version <- "mixed"
+  expect_match(plot_text(plot(ordinal, "fit")$labels$caption),
+               "CFI, TLI, and RMSEA are robust or scaled values.", fixed = TRUE)
 
   standard <- rg_default()
   expect_identical(standard$fit_evidence$chisq_version, "standard")
@@ -3308,6 +3314,13 @@ test_that("the fit plot marks each index against a dashed reference (#145)", {
                "Dashed lines are review references: CFI .950, TLI 0.950, RMSEA 0.060, SRMR 0.080.",
                fixed = TRUE)
   expect_false(grepl("teaching", plot_text(p$labels$subtitle), fixed = TRUE))
+  expect_identical(plot_text(p$labels$subtitle),
+                   "Points are the network model's values. Each index has its own scale.")
+  # With a validation sample, the subtitle names the sample the values are from.
+  expect_identical(
+    plot_text(plot(rg_split(), "fit")$labels$subtitle),
+    "Points are the network model's values in the calibration sample. Each index has its own scale."
+  )
   # A reference that is not configured draws no line and no label.
   net <- rg_dropped()
   net$guidance$fit_reference$srmr <- NULL

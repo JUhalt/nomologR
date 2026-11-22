@@ -721,13 +721,9 @@ plot.nomo_cfa <- function(x,
     if (!nrow(dat)) stop("No global fit evidence is available to plot.", call. = FALSE)
     dat$model <- "Model"
     dat$status <- nomo_plot_status(dat$attention)
-    # The plot shows the indices, not the chi-square, so only their versions
-    # are named.
-    variants <- nomo_cfa_variants(x$fit_evidence)
-    variants[["chi_square"]] <- ""
     return(nomo_plot_fit_indices(
       dat, title = "CFA global fit evidence", values = "the model's values",
-      extra = nomo_cfa_versions_note(variants)
+      versions = nomo_plot_fit_cfa_versions(x$fit_evidence)
     ))
   }
 

@@ -409,9 +409,9 @@ plot.nomo_factors <- function(x,
         nomo_plot_labs(
           title = "Parallel-analysis retention evidence",
           subtitle = sprintf(
-            "%s retained by the %s stopping rule.",
-            nomo_present_count(x$parallel$n_factors, "factor"),
-            x$parallel$rule
+            "The %s stopping rule retained %s.",
+            x$parallel$rule,
+            nomo_present_count(x$parallel$n_factors, "factor")
           ),
           caption = paste(
             "Observed common-factor eigenvalues are compared with the selected null",

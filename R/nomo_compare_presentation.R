@@ -325,6 +325,9 @@ plot.nomo_compare <- function(x, type = c("fit", "loadings"), ...) {
     return(nomo_plot_fit_indices(
       dat, title = "Global fit across compared models",
       values = "each model's values",
+      versions = do.call(rbind, lapply(x$models$model, function(nm) {
+        nomo_plot_fit_cfa_versions(x$fits[[nm]]$fit_evidence)
+      })),
       extra = "No model is selected automatically."
     ))
   }

@@ -2583,6 +2583,10 @@ test_that("percentiles read as ordinals and Bartlett is qualified off Pearson (#
   expect_match(reference, "the 93rd percentile also retained", fixed = TRUE)
   expect_identical(levels(plot(out, type = "retention")$data$series)[[2L]],
                    "Null 93rd percentile")
+  # A sentence does not begin with a numeral (#145, pres-17).
+  expect_identical(plot(out, type = "retention")$labels$subtitle,
+                   sprintf("The percentile stopping rule retained %s.",
+                           nomologR:::nomo_present_count(out$parallel$n_factors, "factor")))
   crawford <- out
   crawford$parallel$rule <- "crawford"
   expect_identical(levels(plot(crawford, type = "retention")$data$series)[[2L]],

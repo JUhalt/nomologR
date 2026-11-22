@@ -1097,15 +1097,21 @@ plot.nomo_network <- function(
       stop("No finite global fit evidence is available.", call. = FALSE)
     }
     dat$status <- nomo_plot_fit_status(dat$metric, dat$value, dat$reference)
+    # CFI, TLI, and RMSEA share a version, named as the APA fit table names
+    # it; "mixed" is a mix of robust and scaled values.
+    words <- c(robust = "robust", scaled = "scaled", mixed = "robust or scaled")
+    version <- unname(words[c(x$fit_evidence$index_version, NA_character_)[[1L]]])
+    version[is.na(version)] <- ""
+    # With a validation sample, the plot shows the calibration sample's fit.
+    validation <- is.data.frame(x$validation$fit_evidence) && nrow(x$validation$fit_evidence) > 0L
 
     return(nomo_plot_fit_indices(
       dat, title = "Nomological-network global fit evidence",
-      values = "the network model's values",
-      extra = c(
-        paste("summary(x) separates the measurement model's fit from the",
-              "structural restrictions."),
-        nomo_network_version_text(x$fit_evidence[1L, , drop = FALSE])
-      )
+      values = paste0("the network model's values",
+                      if (validation) sprintf(" in the %s sample", x$sample_role)),
+      versions = data.frame(CFI = version, TLI = version, RMSEA = version),
+      extra = paste("summary(x) separates the measurement model's fit from the",
+                    "structural restrictions.")
     ))
   }
 
