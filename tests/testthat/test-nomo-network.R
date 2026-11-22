@@ -3024,8 +3024,14 @@ test_that("the fit statistics name their version and the estimator (#145)", {
   expect_match(text, "Estimator: WLSMV", fixed = TRUE)
   expect_match(text, "Version: scaled chi-square; robust CFI, TLI, and RMSEA.", fixed = TRUE)
   expect_match(text, "WLSMV -- weighted least squares, mean- and variance-adjusted.", fixed = TRUE)
-  expect_match(plot_text(plot(ordinal, "fit")$labels$caption), "Version: scaled chi-square",
-               fixed = TRUE)
+  # The plot shows no chi-square, and names the versions of the indices in the
+  # words every global-fit plot uses (#145, clarity-13).
+  caption <- plot_text(plot(ordinal, "fit")$labels$caption)
+  expect_match(caption, "theory. CFI, TLI, and RMSEA are robust values. summary(x)", fixed = TRUE)
+  expect_false(grepl("chi-square", caption, fixed = TRUE))
+  ordinal$fit_evidence$index_version <- "mixed"
+  expect_match(plot_text(plot(ordinal, "fit")$labels$caption),
+               "CFI, TLI, and RMSEA are robust or scaled values.", fixed = TRUE)
 
   standard <- rg_default()
   expect_identical(standard$fit_evidence$chisq_version, "standard")
@@ -3313,11 +3319,53 @@ test_that("the fit plot marks each index against a dashed reference (#145)", {
   expect_identical(p$data$value_label, c(".953", "0.939", "0.064", "0.126"))
   expect_identical(p$data$reference_label,
                    c("reference .950", "reference 0.950", "reference 0.060", "reference 0.080"))
-  expect_identical(ggplot2::layer_data(p, 1L)$linetype[[1L]], 2)
+  geoms <- vapply(p$layers, function(l) class(l$geom)[[1L]], character(1))
+  vline <- which(geoms == "GeomVline")
+  expect_identical(ggplot2::layer_data(p, vline)$linetype[[1L]], 2)
+  # The design every global-fit plot shares (#145, clarity-13): the strips name
+  # the direction that favors fit, and the caption names the references.
+  expect_identical(levels(droplevels(p$data$panel))[c(1L, 3L)],
+                   c("CFI: higher values favor fit", "RMSEA: lower values favor fit"))
+  expect_match(plot_text(p$labels$caption),
+               "Dashed lines are review references: CFI .950, TLI 0.950, RMSEA 0.060, SRMR 0.080.",
+               fixed = TRUE)
+  expect_false(grepl("teaching", plot_text(p$labels$subtitle), fixed = TRUE))
+  expect_identical(plot_text(p$labels$subtitle),
+                   "Points are the network model's values. Each index has its own scale.")
+  # With a validation sample, the subtitle names the sample the values are from.
+  expect_identical(
+    plot_text(plot(rg_split(), "fit")$labels$subtitle),
+    "Points are the network model's values in the calibration sample. Each index has its own scale."
+  )
   # A reference that is not configured draws no line and no label.
   net <- rg_dropped()
   net$guidance$fit_reference$srmr <- NULL
-  expect_identical(plot(net, "fit")$data$reference_label[[4L]], "")
+  missing <- plot(net, "fit")
+  expect_identical(missing$data$reference_label[[4L]], "")
+  expect_identical(nrow(ggplot2::layer_data(missing, vline)), 3L)
+  expect_match(plot_text(missing$labels$caption), "RMSEA 0.060. They are not cutoffs.", fixed = TRUE)
+})
+
+
+test_that("the network summary states the fit references once (#145, clarity-13)", {
+  local_reproducible_output(width = 80)
+  net <- rg_dropped()
+  text <- capture.output(print(summary(net)))
+  fit <- text[(which(text == "Model fit") + 1L):length(text)]
+  expect_identical(
+    fit[grep("^  References:", fit)],
+    "  References: CFI .950 | TLI 0.950 | RMSEA 0.060 | SRMR 0.080"
+  )
+  expect_identical(sum(grepl("References are review values, not cutoffs.", text, fixed = TRUE)), 1L)
+  expect_match(fit, "^    CFI \\.953 \\| TLI 0\\.939 \\| RMSEA 0\\.064 \\| SRMR 0\\.126$", all = FALSE)
+  # An index without a reference is left out, and with none the line is not
+  # printed.
+  net$guidance$fit_reference$srmr <- NULL
+  expect_match(capture.output(print(summary(net))),
+               "^  References: CFI \\.950 \\| TLI 0\\.950 \\| RMSEA 0\\.060$", all = FALSE)
+  net$guidance$fit_reference <- NULL
+  text <- capture.output(print(summary(net)))
+  expect_false(any(grepl("^  References", text)))
 })
 
 

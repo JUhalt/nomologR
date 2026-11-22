@@ -409,9 +409,9 @@ plot.nomo_factors <- function(x,
         nomo_plot_labs(
           title = "Parallel-analysis retention evidence",
           subtitle = sprintf(
-            "%s retained by the %s stopping rule",
-            nomo_present_count(x$parallel$n_factors, "factor"),
-            x$parallel$rule
+            "The %s stopping rule retained %s.",
+            x$parallel$rule,
+            nomo_present_count(x$parallel$n_factors, "factor")
           ),
           caption = paste(
             "Observed common-factor eigenvalues are compared with the selected null",
@@ -449,7 +449,7 @@ plot.nomo_factors <- function(x,
       ) +
       nomo_plot_labs(
         title = "Parallel-analysis rule sensitivity",
-        subtitle = sprintf("Selected rule: %s", x$parallel$rule),
+        subtitle = sprintf("Selected rule: %s.", x$parallel$rule),
         caption = paste(
           "The selected rule is labeled; the alternatives are sensitivity evidence,",
           "not competing p values."
@@ -509,7 +509,7 @@ plot.nomo_factors <- function(x,
         ggplot2::scale_x_continuous(breaks = d$index) +
         nomo_plot_labs(
           title = "Observed scree information",
-          subtitle = "Use the shape as complementary evidence; do not automate the elbow",
+          subtitle = "Use the shape as complementary evidence; do not automate the elbow.",
           caption = paste(
             "Common-factor and component eigenvalues answer related but different",
             "questions. Parallel analysis uses the common-factor series."
@@ -580,12 +580,12 @@ plot.nomo_factors <- function(x,
         },
         subtitle = if (revised) {
           sprintf(
-            "Original TR2 minimum: %d | Revised TR4 minimum: %d",
+            "Original TR2 minimum: %d. Revised TR4 minimum: %d.",
             x$map$n_factors_original,
             x$map$n_factors_revised
           )
         } else {
-          sprintf("Original TR2 minimum: %d", x$map$n_factors_original)
+          sprintf("Original TR2 minimum: %d.", x$map$n_factors_original)
         },
         caption = if (revised) {
           paste(
@@ -649,7 +649,7 @@ plot.nomo_factors <- function(x,
         title = "Factor-retention evidence by method",
         subtitle = paste(
           "Agreement strengthens a candidate solution; disagreement invites",
-          "comparison rather than averaging"
+          "comparison rather than averaging."
         ),
         caption = evidence_caption,
         x = "Suggested factor count",
@@ -698,7 +698,7 @@ plot.nomo_factors <- function(x,
         subtitle = paste(
           "Related variants, such as the two minimum average partial (MAP)",
           "criteria, are grouped before concordance is summarized; a family split",
-          "between counts stays in the tables rather than being forced into one"
+          "between counts stays in the tables rather than being forced into one."
         ),
         caption = paste(
           "Family counts summarize convergence without double-counting closely",
@@ -754,7 +754,7 @@ plot.nomo_factors <- function(x,
     nomo_plot_labs(
       title = "Measure of sampling adequacy (MSA) by item",
       subtitle = sprintf(
-        "Dashed line: the overall Kaiser-Meyer-Olkin (KMO) value, %s",
+        "Dashed line: the overall Kaiser-Meyer-Olkin (KMO) value, %s.",
         nomo_present_stat(x$kmo$overall, "proportion")
       ),
       x = NULL,

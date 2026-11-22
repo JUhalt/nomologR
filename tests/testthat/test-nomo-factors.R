@@ -2471,7 +2471,7 @@ test_that("a minimal criterion set neither shows nor logs revised MAP (#145, fac
   expect_identical(levels(map$data$criterion), "Original MAP (TR2)")
   expect_identical(unique(as.character(map$data$criterion)), "Original MAP (TR2)")
   expect_identical(map$labels$title, "Velicer's minimum average partial (MAP) criterion")
-  expect_identical(map$labels$subtitle, sprintf("Original TR2 minimum: %d", out$map$n_factors_original))
+  expect_identical(map$labels$subtitle, sprintf("Original TR2 minimum: %d.", out$map$n_factors_original))
   for (p in list(map, plot(out, type = "evidence"))) {
     expect_false(grepl("TR4", plot_text(p$labels$caption), fixed = TRUE))
     expect_false(grepl("  ", p$labels$caption, fixed = TRUE))
@@ -2499,7 +2499,7 @@ test_that("a minimal criterion set neither shows nor logs revised MAP (#145, fac
   expect_match(capture.output(print(summary(core))), "TR4, the revised", all = FALSE)
   map <- plot(core, type = "map")
   expect_identical(levels(map$data$criterion), c("Original MAP (TR2)", "Revised MAP (TR4)"))
-  expect_match(map$labels$subtitle, "| Revised TR4 minimum: ", fixed = TRUE)
+  expect_match(map$labels$subtitle, ". Revised TR4 minimum: ", fixed = TRUE)
   # Revised MAP is a matrix power, as the code and the registry say (#145).
   expect_match(plot_text(map$labels$caption),
                "TR4 is based on the trace of the fourth power of the partial-correlation matrix",
@@ -2586,6 +2586,10 @@ test_that("percentiles read as ordinals and Bartlett is qualified off Pearson (#
   expect_match(reference, "the 93rd percentile also retained", fixed = TRUE)
   expect_identical(levels(plot(out, type = "retention")$data$series)[[2L]],
                    "Null 93rd percentile")
+  # A sentence does not begin with a numeral (#145, pres-17).
+  expect_identical(plot(out, type = "retention")$labels$subtitle,
+                   sprintf("The percentile stopping rule retained %s.",
+                           nomologR:::nomo_present_count(out$parallel$n_factors, "factor")))
   crawford <- out
   crawford$parallel$rule <- "crawford"
   expect_identical(levels(plot(crawford, type = "retention")$data$series)[[2L]],

@@ -256,7 +256,7 @@ plot.nomo_hierarchical <- function(x, type = c("variance", "loadings"), ...) {
         ggplot2::geom_point(size = 2.6) +
         nomo_plot_labs(
           title = "Standardized general and group loadings",
-          subtitle = sprintf("%s model, general factor: %s",
+          subtitle = sprintf("%s model, general factor: %s.",
                              nomo_hierarchical_structure_label(x), x$general),
           x = "Standardized loading",
           y = NULL,
@@ -316,7 +316,7 @@ plot.nomo_hierarchical <- function(x, type = c("variance", "loadings"), ...) {
       title = "Where each composite's variance comes from",
       subtitle = paste(
         "General = omega hierarchical;",
-        "general + group = omega; the remainder is not common-factor variance"
+        "general + group = omega; the remainder is not common-factor variance."
       ),
       x = "Proportion of composite variance",
       y = NULL,

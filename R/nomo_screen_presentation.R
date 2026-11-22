@@ -815,8 +815,8 @@ nomo_screen_plot_item_rest <- function(x, items, show_values) {
       caption = if (has_reference) {
         sprintf(
           paste(
-            "The dashed line marks the %s teaching reference, which prompts",
-            "review and does not determine item retention."
+            "The dashed line marks the %s review reference. It does not",
+            "determine item retention."
           ),
           nomo_present_stat(reference, "r")
         )

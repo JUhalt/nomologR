@@ -744,10 +744,16 @@ test_that("all CFA plot views contain interpretable data", {
 
   expect_equal(nrow(p_load$data), nrow(out$standardized_loadings))
   expect_true(all(as.character(p_fit$data$metric) %in% c("CFI", "TLI", "RMSEA", "SRMR")))
-  # Indices near 1 and near 0 get their own panels, and a legend with one
-  # entry is not drawn (#89).
+  # Each index gets a panel and a scale of its own, labeled with the direction
+  # that favors fit, and a legend with one entry is not drawn (#89; #145,
+  # clarity-13).
   fit_layout <- ggplot2::ggplot_build(p_fit)$layout$layout
-  expect_identical(nrow(fit_layout), 2L)
+  expect_identical(nrow(fit_layout), 4L)
+  expect_identical(
+    as.character(fit_layout$panel),
+    c("CFI: higher values favor fit", "TLI: higher values favor fit",
+      "RMSEA: lower values favor fit", "SRMR: lower values favor fit")
+  )
   one_flag <- out
   one_flag$fit_evidence$attention <- "info"
   expect_null(ggplot2::get_guide_data(plot(one_flag, type = "fit"), "shape"))
@@ -1732,15 +1738,32 @@ test_that("CFA plots draw flags with the shared status shapes and name the refer
                "Not drawn, with no finite standardized loading: x2 and x3.", fixed = TRUE)
 
   fit <- plot(out, type = "fit")
-  # The reference is a dashed mark, never the cross that means "not computed".
+  # The reference is a dashed line, never the cross that means "not computed",
+  # and the caption names it in the words every global-fit plot uses (#145,
+  # clarity-13).
   geoms <- vapply(fit$layers, function(l) class(l$geom)[[1L]], character(1))
-  expect_true("GeomErrorbar" %in% geoms)
+  expect_identical(fit$layers[[which(geoms == "GeomVline")]]$aes_params$linetype, 2)
   expect_false(any(vapply(fit$layers, function(l) identical(l$aes_params$shape, 4), logical(1))))
-  expect_match(gsub("\n", " ", fit$labels$caption),
-               "References: CFI .950, TLI 0.950, RMSEA 0.060, SRMR 0.080", fixed = TRUE)
+  expect_match(plot_text(fit$labels$caption),
+               "Dashed lines are review references: CFI .950, TLI 0.950, RMSEA 0.060, SRMR 0.080.",
+               fixed = TRUE)
+  expect_false(grepl("teaching", fit$labels$subtitle, fixed = TRUE))
+  # A standard ML fit names no version; robust indices are named, as the
+  # summary names them.
+  expect_false(grepl("robust", plot_text(fit$labels$caption), fixed = TRUE))
+  robust <- out
+  robust$fit_evidence$variant[robust$fit_evidence$metric %in% c("CFI", "TLI", "RMSEA")] <-
+    c("cfi.robust", "tli.robust", "rmsea.robust")
+  expect_match(plot_text(plot(robust, type = "fit")$labels$caption),
+               "theory. CFI, TLI, and RMSEA are robust values.", fixed = TRUE)
   with_mi <- nomo_cfa(hs_three, lavaan::HolzingerSwineford1939, mi_top = 3)
   expect_identical(plot(with_mi, type = "modification_indices")$labels$subtitle,
-                   "Post hoc diagnostic evidence only")
+                   "Post hoc diagnostic evidence only.")
+  expect_identical(plot(with_mi, type = "residuals")$labels$subtitle,
+                   "Unique off-diagonal residual pairs.")
+  expect_match(plot_text(plot(with_mi, type = "loadings")$labels$subtitle),
+               "Dashed lines mark the review reference for an absolute loading, 0.50.",
+               fixed = TRUE)
 })
 
 

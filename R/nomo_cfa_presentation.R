@@ -697,7 +697,7 @@ plot.nomo_cfa <- function(x,
         nomo_plot_labs(
           title = "CFA standardized loadings",
           subtitle = paste0(
-            "Dashed lines mark the teaching reference for an absolute loading, ",
+            "Dashed lines mark the review reference for an absolute loading, ",
             nomo_present_stat(ref, "loading"), ". Factor direction depends on the model."
           ),
           x = "Standardized loading", y = NULL, shape = "Flag", colour = "Flag",
@@ -715,47 +715,16 @@ plot.nomo_cfa <- function(x,
 
   if (type == "fit") {
     dat <- x$fit_evidence[
-      x$fit_evidence$metric %in% c("CFI", "TLI", "RMSEA", "SRMR"), , drop = FALSE
+      x$fit_evidence$metric %in% nomo_plot_fit_metrics & is.finite(x$fit_evidence$value), ,
+      drop = FALSE
     ]
-    dat <- dat[is.finite(dat$value), , drop = FALSE]
     if (!nrow(dat)) stop("No global fit evidence is available to plot.", call. = FALSE)
-    references <- paste(dat$metric, nomo_cfa_fit_number(dat$metric, dat$reference),
-                        collapse = ", ")
-    dat$metric <- factor(dat$metric, levels = c("CFI", "TLI", "RMSEA", "SRMR"))
-    # CFI and TLI sit near 1 and RMSEA and SRMR near 0, so one axis squashed
-    # the second pair against zero; each pair gets its own panel and scale (#89).
-    dat$panel <- factor(
-      ifelse(dat$metric %in% c("CFI", "TLI"), "Higher values favor fit",
-             "Lower values favor fit"),
-      levels = c("Higher values favor fit", "Lower values favor fit")
-    )
+    dat$model <- "Model"
     dat$status <- nomo_plot_status(dat$attention)
-    # The reference is a dashed mark, so the cross stays the "not computed"
-    # status it is in every plot (#144).
-    return(
-      ggplot2::ggplot(dat, ggplot2::aes(x = metric, y = value)) +
-        ggplot2::geom_errorbar(
-          ggplot2::aes(ymin = reference, ymax = reference),
-          width = 0.5, linetype = 2, na.rm = TRUE
-        ) +
-        ggplot2::geom_segment(
-          ggplot2::aes(x = metric, xend = metric, y = reference, yend = value),
-          colour = "grey60", na.rm = TRUE
-        ) +
-        ggplot2::geom_point(ggplot2::aes(shape = status, colour = status), size = 3,
-                            na.rm = TRUE) +
-        nomo_plot_status_scales(dat$status, name = "Flag") +
-        ggplot2::facet_wrap(stats::as.formula("~ panel"), scales = "free") +
-        nomo_plot_labs(
-          title = "CFA global fit evidence",
-          subtitle = "Points are observed values; dashed marks are teaching references.",
-          x = NULL, y = "Fit index", shape = "Flag", colour = "Flag",
-          caption = paste0(
-            "References: ", references, ". They are review prompts, not cutoffs; ",
-            "interpret global fit with local strain, estimator, sample, and theory."
-          )
-        ) + ggplot2::theme_minimal()
-    )
+    return(nomo_plot_fit_indices(
+      dat, title = "CFA global fit evidence", values = "the model's values",
+      versions = nomo_plot_fit_cfa_versions(x$fit_evidence)
+    ))
   }
 
   if (type == "residuals") {
@@ -780,7 +749,7 @@ plot.nomo_cfa <- function(x,
         ggplot2::scale_fill_gradient2(midpoint = 0, limits = c(-max_abs, max_abs)) +
         nomo_plot_labs(
           title = "CFA localized residual correlations",
-          subtitle = "Unique off-diagonal residual pairs",
+          subtitle = "Unique off-diagonal residual pairs.",
           x = NULL, y = NULL, fill = "Residual",
           caption = paste(
             "Localized residuals identify strain; they do not automatically",
@@ -804,7 +773,7 @@ plot.nomo_cfa <- function(x,
     ggplot2::geom_col() +
     nomo_plot_labs(
       title = "Largest CFA modification indices",
-      subtitle = "Post hoc diagnostic evidence only",
+      subtitle = "Post hoc diagnostic evidence only.",
       x = "Modification index", y = NULL,
       caption = paste(
         "A large modification index proposes a parameter worth investigating.",
