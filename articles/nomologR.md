@@ -239,7 +239,7 @@ citation("nomologR")
 #> To cite nomologR in publications, please use:
 #> 
 #>   Uhalt, J. (2026). nomologR: Guided scale development and construct
-#>   validation (Version 0.99.0) [Computer software].
+#>   validation (Version 1.0.0) [Computer software].
 #>   https://github.com/JUhalt/nomologR
 #> 
 #> A BibTeX entry for LaTeX users is
@@ -248,7 +248,7 @@ citation("nomologR")
 #>     title = {{nomologR}: Guided Scale Development and Construct Validation},
 #>     author = {Joshua Uhalt},
 #>     year = {2026},
-#>     note = {(Version 0.99.0) [Computer software]},
+#>     note = {(Version 1.0.0) [Computer software]},
 #>     url = {https://github.com/JUhalt/nomologR},
 #>   }
 ```

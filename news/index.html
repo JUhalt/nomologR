@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">nomologR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -52,8 +52,9 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="0.99.0" id="nomologr-0990">nomologR 0.99.0<a class="anchor" aria-label="anchor" href="#nomologr-0990"></a></h2>
-<p>This version is the first release candidate, <code>v1.0.0-rc.1</code>, for 1.0.0, the stable release planned jointly with <code>contentvalidR</code> (<a href="https://github.com/JUhalt/nomologR/issues/53" class="external-link">#53</a>). The candidate was planned for 2026-11-24, or earlier if both packages were ready, and its tag is the interface freeze. The 1.0.0 release follows when the maintainer signs off, and goes to GitHub and R-universe first; the CRAN submission follows it.</p>
+<h2 class="pkg-version" data-toc-text="1.0.0" id="nomologr-100">nomologR 1.0.0<a class="anchor" aria-label="anchor" href="#nomologr-100"></a></h2>
+<p>The first stable release under the stability policy in <code><a href="../reference/nomologR-package.html">?nomologR</a></code>, released on the same day as <code>contentvalidR</code> 1.0.0 (<a href="https://github.com/JUhalt/contentvalidR" class="external-link uri">https://github.com/JUhalt/contentvalidR</a>), its partner for content review (<a href="https://github.com/JUhalt/nomologR/issues/53" class="external-link">#53</a>). The handoff between them is schema version 1, which <code>contentvalidR</code> 1.x writes and nomologR 1.x reads. 1.0.0 goes to GitHub and R-universe first; the CRAN submission follows it.</p>
+<p>The release candidate, 0.99.0, was planned for 2026-11-24, or earlier if both packages were ready. Both packages tagged it <code>v1.0.0-rc.1</code> on 2026-11-21, and its tag was the interface freeze. 1.0.0 is that candidate with its version changed, its reader tested against <code>contentvalidR</code> 1.0.0’s handoffs, and the walkthrough handoff it ships made by <code>contentvalidR</code> 1.0.0.</p>
 <ul><li>
 <strong>New methods.</strong> The gap review (<a href="https://github.com/JUhalt/nomologR/issues/129" class="external-link">#129</a>) added the methods social-science scale developers were missing, each taken from its literature.</li>
 <li>
@@ -66,10 +67,10 @@
 <strong>The 1.0 contract.</strong> The contract is now settled: the stability policy covers every exported function and documented field except <code><a href="../reference/nomo_method_variance.html">nomo_method_variance()</a></code> and <code><a href="../reference/nomo_power_simulate.html">nomo_power_simulate()</a></code>, which stay experimental into 1.x.</li>
 </ul><p>Calls whose results or behavior change are listed first. A function that is new since 0.9.0 is described once, as it is now, under “New methods” or “Invariance across groups and occasions”.</p>
 <div class="section level3">
-<h3 id="calls-that-now-behave-differently-0-99-0">Calls that now behave differently<a class="anchor" aria-label="anchor" href="#calls-that-now-behave-differently-0-99-0"></a></h3>
+<h3 id="calls-that-now-behave-differently-1-0-0">Calls that now behave differently<a class="anchor" aria-label="anchor" href="#calls-that-now-behave-differently-1-0-0"></a></h3>
 <p>This section lists what a call written for 0.9.0 can run into. The sections after it give the details. These changes were made before the stability promise takes effect at 1.0.0, so none of them went through a deprecation period.</p>
 <div class="section level4">
-<h4 id="errors-where-calls-used-to-be-accepted-0-99-0">Errors where calls used to be accepted<a class="anchor" aria-label="anchor" href="#errors-where-calls-used-to-be-accepted-0-99-0"></a></h4>
+<h4 id="errors-where-calls-used-to-be-accepted-1-0-0">Errors where calls used to be accepted<a class="anchor" aria-label="anchor" href="#errors-where-calls-used-to-be-accepted-1-0-0"></a></h4>
 <p>These calls ran in 0.9.0. Most of them returned a result that was wrong, or one that had ignored the argument.</p>
 <ul><li>
 <code><a href="../reference/nomo_report.html">nomo_report()</a></code> requires <code>file</code>. It no longer writes <code>nomologR-report.html</code> to the working directory by default.</li>
@@ -111,7 +112,7 @@
 <li>For a <code>nomo_validity</code> result whose model fixes every factor correlation and has no HTMT, such as a bifactor model, <code>nomo_apa_table(x)</code> and <code>plot(x, type = "discriminant")</code> stop, because no pair is left to table or draw. They had shown the fixed zeros as estimates.</li>
 </ul></div>
 <div class="section level4">
-<h4 id="results-that-change-0-99-0">Results that change<a class="anchor" aria-label="anchor" href="#results-that-change-0-99-0"></a></h4>
+<h4 id="results-that-change-1-0-0">Results that change<a class="anchor" aria-label="anchor" href="#results-that-change-1-0-0"></a></h4>
 <ul><li>
 <strong>Item screening.</strong>
 <ul><li>The careless-responding indices of <code>nomo_screen(effort = TRUE)</code> on short item sets.</li>
@@ -161,7 +162,7 @@
 <strong><code>digits</code> in <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>.</strong> <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> for <code>nomo_scores</code>, <code>nomo_hierarchical</code>, and <code>nomo_missing</code> objects, and for the summary of a <code>nomo_scores</code> object, has <code>digits = NULL</code> as its default; it was 3. <code>NULL</code> gives each statistic the decimals of the shared style, and a number given sets them as before.</li>
 </ul></div>
 <div class="section level4">
-<h4 id="new-refusals-0-99-0">New refusals<a class="anchor" aria-label="anchor" href="#new-refusals-0-99-0"></a></h4>
+<h4 id="new-refusals-1-0-0">New refusals<a class="anchor" aria-label="anchor" href="#new-refusals-1-0-0"></a></h4>
 <p>Input that used to fail inside lavaan, psych, or nomologR, with an error that named neither the function nor the argument, now stops early with a message that does. A call that worked is not affected.</p>
 <ul><li>
 <code><a href="../reference/nomo_screen.html">nomo_screen()</a></code>: data with two columns of one name, and a handoff that carries no items or is not a list.</li>
@@ -184,9 +185,9 @@
 </ul></div>
 </div>
 <div class="section level3">
-<h3 id="fixes-from-the-audit-by-area-0-99-0">Fixes from the audit, by area (<a href="https://github.com/JUhalt/nomologR/issues/145" class="external-link">#145</a>)<a class="anchor" aria-label="anchor" href="#fixes-from-the-audit-by-area-0-99-0"></a></h3>
+<h3 id="fixes-from-the-audit-by-area-1-0-0">Fixes from the audit, by area (<a href="https://github.com/JUhalt/nomologR/issues/145" class="external-link">#145</a>)<a class="anchor" aria-label="anchor" href="#fixes-from-the-audit-by-area-1-0-0"></a></h3>
 <div class="section level4">
-<h4 id="item-screening-and-careless-responding-0-99-0">Item screening and careless responding<a class="anchor" aria-label="anchor" href="#item-screening-and-careless-responding-0-99-0"></a></h4>
+<h4 id="item-screening-and-careless-responding-1-0-0">Item screening and careless responding<a class="anchor" aria-label="anchor" href="#item-screening-and-careless-responding-1-0-0"></a></h4>
 <ul><li>
 <code>nomo_screen(effort = TRUE)</code> no longer produces careless-responding flags or values by arithmetic (<a href="https://github.com/JUhalt/nomologR/issues/145" class="external-link">#145</a>).
 <ul><li>
@@ -226,7 +227,7 @@
 </ul></li>
 </ul></div>
 <div class="section level4">
-<h4 id="factor-retention-and-efa-0-99-0">Factor retention and EFA<a class="anchor" aria-label="anchor" href="#factor-retention-and-efa-0-99-0"></a></h4>
+<h4 id="factor-retention-and-efa-1-0-0">Factor retention and EFA<a class="anchor" aria-label="anchor" href="#factor-retention-and-efa-1-0-0"></a></h4>
 <ul><li>
 <code><a href="../reference/nomo_efa.html">nomo_efa()</a></code> and <code><a href="../reference/nomo_factors.html">nomo_factors()</a></code> report the minimum pairwise N beside the case count (<a href="https://github.com/JUhalt/nomologR/issues/145" class="external-link">#145</a>). Under the default <code>missing = "pairwise"</code>, <code>n_cases</code> counts every row, including rows with no item data, so it can overstate the information in the correlations. Both now print “Cases: 500 (minimum pairwise N: 473)” when the two differ, and <code><a href="../reference/nomo_factors.html">nomo_factors()</a></code> returns <code>min_pairwise_n</code>, as <code><a href="../reference/nomo_efa.html">nomo_efa()</a></code> already did; <code>n_cases</code> keeps its meaning. <code><a href="../reference/nomo_efa.html">nomo_efa()</a></code>’s <code>sample_adequacy$cases_per_item</code> and its small-sample review row now use the minimum pairwise N, as <code><a href="../reference/nomo_factors.html">nomo_factors()</a></code>’s prompt already did, so the two functions agree on whether a sample is small. Nothing changes without missing item values or with <code>missing = "complete"</code>.</li>
 <li>Every <code>fm</code> value <code><a href="../reference/nomo_efa.html">nomo_efa()</a></code> and <code><a href="../reference/nomo_factors.html">nomo_factors()</a></code> document now runs as documented (<a href="https://github.com/JUhalt/nomologR/issues/145" class="external-link">#145</a>).
@@ -269,7 +270,7 @@
 <li>Revised MAP (TR4) is described as what it is, the trace of the fourth power of the partial-correlation matrix, in the <code><a href="../reference/nomo_factors.html">nomo_factors()</a></code> summary, its MAP plot, and the abbreviations of <code><a href="../reference/nomo_run.html">nomo_run()</a></code> and <code><a href="../reference/nomo_report.html">nomo_report()</a></code> (<a href="https://github.com/JUhalt/nomologR/issues/145" class="external-link">#145</a>). They had called it an average of fourth powers, against <code><a href="../reference/nomo_factors.html">?nomo_factors</a></code> and the methods registry. The values are unchanged.</li>
 </ul></div>
 <div class="section level4">
-<h4 id="cfa-model-comparison-model-syntax-and-sample-splitting-0-99-0">CFA, model comparison, model syntax, and sample splitting<a class="anchor" aria-label="anchor" href="#cfa-model-comparison-model-syntax-and-sample-splitting-0-99-0"></a></h4>
+<h4 id="cfa-model-comparison-model-syntax-and-sample-splitting-1-0-0">CFA, model comparison, model syntax, and sample splitting<a class="anchor" aria-label="anchor" href="#cfa-model-comparison-model-syntax-and-sample-splitting-1-0-0"></a></h4>
 <ul><li>
 <code><a href="../reference/nomo_cfa.html">nomo_cfa()</a></code> treats model indicators stored as ordered factors as declared, whether or not <code>ordered</code> names them (<a href="https://github.com/JUhalt/nomologR/issues/145" class="external-link">#145</a>). lavaan already fitted such columns as categorical. The result, though, recorded no ordered indicators, gave the estimator as <code>DWLS</code>, and logged that lavaan’s continuous-data default was retained. As a result <code>nomo_methods(x)</code> credited ML, <code><a href="../reference/nomo_reliability.html">nomo_reliability()</a></code> stopped with a semTools error, and <code><a href="../reference/nomo_compare.html">nomo_compare()</a></code> refused the same model fitted with <code>ordered</code>. WLSMV is now requested explicitly, the indicators are recorded in <code>ordered</code> and the print, and the decision log flags them for review. On <code>nomo_demo_ordinal</code> the fit is unchanged, and a guided run without <code>ordered</code> no longer stops at the reliability stage. With an ML-family estimator or FIML, such columns stop the fit with a message that names them, where lavaan’s error used to appear.</li>
 <li>
@@ -303,7 +304,7 @@
 <code><a href="../reference/nomo_split.html">nomo_split()</a></code> records the random-number generator its seed depends on, in a new <code>rng_kind</code> field, the decision log, and the print (<a href="https://github.com/JUhalt/nomologR/issues/145" class="external-link">#145</a>). The same seed under another <code><a href="https://rdrr.io/r/base/Random.html" class="external-link">RNGkind()</a></code> gives a different split.</li>
 </ul></div>
 <div class="section level4">
-<h4 id="reliability-validity-and-hierarchical-models-0-99-0">Reliability, validity, and hierarchical models<a class="anchor" aria-label="anchor" href="#reliability-validity-and-hierarchical-models-0-99-0"></a></h4>
+<h4 id="reliability-validity-and-hierarchical-models-1-0-0">Reliability, validity, and hierarchical models<a class="anchor" aria-label="anchor" href="#reliability-validity-and-hierarchical-models-1-0-0"></a></h4>
 <ul><li>Reliability and validity now read semTools’ results by construct and group (<a href="https://github.com/JUhalt/nomologR/issues/145" class="external-link">#145</a>).
 <ul><li>
 <strong>Multi-group fits.</strong> <code><a href="../reference/nomo_reliability.html">nomo_reliability()</a></code> had given every coefficient of a multi-group CFA the block “overall”. The summary then paired one group’s omega with another group’s alpha, and bootstrap intervals landed on the wrong group. <code>block</code> now names each coefficient’s group, and <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>, <code><a href="../reference/nomo_table.html">nomo_table()</a></code>, the bootstrap intervals, and <code><a href="../reference/nomo_apa_table.html">nomo_apa_table()</a></code> follow it; the APA table has one row per construct and group.</li>
@@ -358,7 +359,7 @@
 <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> for a <code>nomo_reliability</code> object takes <code>type</code>, as the other plot methods do; <code>"coefficients"</code> is the one type (<a href="https://github.com/JUhalt/nomologR/issues/145" class="external-link">#145</a>).</li>
 </ul></div>
 <div class="section level4">
-<h4 id="measurement-invariance-0-99-0">Measurement invariance<a class="anchor" aria-label="anchor" href="#measurement-invariance-0-99-0"></a></h4>
+<h4 id="measurement-invariance-1-0-0">Measurement invariance<a class="anchor" aria-label="anchor" href="#measurement-invariance-1-0-0"></a></h4>
 <ul><li>
 <code><a href="../reference/nomo_invariance.html">nomo_invariance()</a></code> models indicators stored as ordered factors as ordered, whether or not <code>ordered</code> names them (<a href="https://github.com/JUhalt/nomologR/issues/145" class="external-link">#145</a>). lavaan already fitted such columns as categorical, but nomologR recorded them as continuous and used the continuous sequence. The scalar model was then unidentified, and a population latent difference of .50 SD was reported as 0.00. They now get the threshold-aware sequence, WLSMV, and the theta parameterization. <code>ordered</code> includes them, a new <code>ordered_detected</code> field lists them, and the decision log flags them for review. Calls written for continuous indicators can therefore stop: <code>levels</code> from the continuous sequence (such as <code>c("configural", "metric", "scalar")</code>, where the ordered sequence adds <code>"thresholds"</code>), <code>ID.fac = "UL"</code>, an ML-family <code>estimator</code>, or <code>missing = "fiml"</code>. Each such error names the detected indicators and says to convert them to numeric to model them as continuous.</li>
 <li>A partial-invariance release must name a loading, intercept, threshold, or residual variance of an indicator in the model, and must free it (<a href="https://github.com/JUhalt/nomologR/issues/145" class="external-link">#145</a>). semTools ignores a release it cannot match. A misspelled item (<code>"ag9 ~ 1"</code>) or a factor name with the wrong case had left the model fully constrained while the fit table, summary, and decision log reported the release. Such releases are now errors, as is one the generated model fixes, such as a marker loading under <code>ID.fac = "UL"</code>.</li>
@@ -378,7 +379,7 @@
 <li>The <code>score_diagnostics</code> row of the decision log, which counts the score diagnostics that were kept, has severity <code>"info"</code> (<a href="https://github.com/JUhalt/nomologR/issues/145" class="external-link">#145</a>). It was <code>"review"</code> whenever a diagnostic existed, which is every run with the default <code>localize = TRUE</code>. So “Score diagnostics (Review): 12 univariate equality-constraint score diagnostics were retained.” was the one flag of every invariance print, of the summary, and of a guided run’s invariance stage, whatever the fit. The row stays in <code>nomo_table(x, "decision_log")</code>, and the print still points to <code>nomo_table(x, "local_strain")</code>. This holds for <code><a href="../reference/nomo_invariance_longitudinal.html">nomo_invariance_longitudinal()</a></code> too.</li>
 </ul></div>
 <div class="section level4">
-<h4 id="nomological-network-0-99-0">Nomological network<a class="anchor" aria-label="anchor" href="#nomological-network-0-99-0"></a></h4>
+<h4 id="nomological-network-1-0-0">Nomological network<a class="anchor" aria-label="anchor" href="#nomological-network-1-0-0"></a></h4>
 <ul><li>
 <code><a href="../reference/nomo_network.html">nomo_network()</a></code> judges associations against the model that is fitted (<a href="https://github.com/JUhalt/nomologR/issues/145" class="external-link">#145</a>).
 <ul><li>
@@ -424,7 +425,7 @@
 </ul></li>
 </ul></div>
 <div class="section level4">
-<h4 id="scores-and-missing-data-0-99-0">Scores and missing data<a class="anchor" aria-label="anchor" href="#scores-and-missing-data-0-99-0"></a></h4>
+<h4 id="scores-and-missing-data-1-0-0">Scores and missing data<a class="anchor" aria-label="anchor" href="#scores-and-missing-data-1-0-0"></a></h4>
 <ul><li>
 <code><a href="../reference/nomo_scores.html">nomo_scores()</a></code> tests the parallel model that unit weighting assumes against a model it is nested in (<a href="https://github.com/JUhalt/nomologR/issues/145" class="external-link">#145</a>). The parallel model is now the fitted model with equal loadings and equal residual variances added and nothing else changed. It is refitted with the fit’s own estimator, missing-data handling, and cases. It had been written from the loadings alone and refitted with lavaan’s defaults. Results for a default correlated-factor model fitted by maximum likelihood are unchanged.
 <ul><li>
@@ -476,7 +477,7 @@
 <li>New <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> methods, each taking <code>type</code> (<a href="https://github.com/JUhalt/nomologR/issues/145" class="external-link">#145</a>): for <code>nomo_scores</code>, each score’s validity against Gorsuch’s references; for <code>nomo_missing</code>, each difference from the reference, in reference standard errors.</li>
 </ul></div>
 <div class="section level4">
-<h4 id="guided-workflow-0-99-0">Guided workflow<a class="anchor" aria-label="anchor" href="#guided-workflow-0-99-0"></a></h4>
+<h4 id="guided-workflow-1-0-0">Guided workflow<a class="anchor" aria-label="anchor" href="#guided-workflow-1-0-0"></a></h4>
 <ul><li>The stages of <code><a href="../reference/nomo_run.html">nomo_run()</a></code> agree with one another (<a href="https://github.com/JUhalt/nomologR/issues/145" class="external-link">#145</a>).
 <ul><li>
 <strong>Estimation settings.</strong> The invariance and network stages refit the measurement model with the CFA stage’s <code>ordered</code>, <code>estimator</code>, and <code>missing</code> from <code>settings$cfa</code>, unless their own settings name them. A CFA estimated with FIML, a robust estimator, or ordinal indicators used to be refitted downstream as listwise, normal-theory, continuous ML, on a different N, with nothing in the log. An <code>estimation_settings:&lt;stage&gt;</code> row records what was inherited and any setting of the stage’s own that differs from the CFA’s; naming one as <code>NULL</code> in a stage’s settings asks for the default.</li>
@@ -514,7 +515,7 @@
 <li>The run’s own decision log (<a href="https://github.com/JUhalt/nomologR/issues/145" class="external-link">#145</a>). The missing-data row names only the strategies that were fitted, a held-back item’s missing status or recommendation is no longer quoted as “NA”, and a parallel-analysis count of 0 gets its own request with a usable example. <code><a href="../reference/nomo_run.html">?nomo_run</a></code> lists the log’s columns and the values of <code>source</code>.</li>
 </ul></div>
 <div class="section level4">
-<h4 id="report-0-99-0">Report<a class="anchor" aria-label="anchor" href="#report-0-99-0"></a></h4>
+<h4 id="report-1-0-0">Report<a class="anchor" aria-label="anchor" href="#report-1-0-0"></a></h4>
 <ul><li>
 <strong>Breaking:</strong> <code><a href="../reference/nomo_report.html">nomo_report()</a></code> requires <code>file</code> (<a href="https://github.com/JUhalt/nomologR/issues/145" class="external-link">#145</a>). It used to default to <code>"nomologR-report.html"</code> in the working directory, and CRAN policy asks packages not to write to the user’s file space by default. A call without <code>file</code> now stops with an error that names the argument and suggests a path, before anything is written. Calls that give <code>file</code> are unchanged; to keep the old behavior, pass <code>file = "nomologR-report.html"</code>.</li>
 <li>
@@ -563,8 +564,8 @@
 </ul></li>
 </ul></div>
 <div class="section level4">
-<h4 id="apa-tables-and-nomo_table-0-99-0">APA tables and <code>nomo_table()</code>
-<a class="anchor" aria-label="anchor" href="#apa-tables-and-nomo_table-0-99-0"></a></h4>
+<h4 id="apa-tables-and-nomo_table-1-0-0">APA tables and <code>nomo_table()</code>
+<a class="anchor" aria-label="anchor" href="#apa-tables-and-nomo_table-1-0-0"></a></h4>
 <ul><li>
 <code><a href="../reference/nomo_apa_table.html">nomo_apa_table()</a></code> no longer misreports what a table shows (<a href="https://github.com/JUhalt/nomologR/issues/145" class="external-link">#145</a>).
 <ul><li>
@@ -625,7 +626,7 @@
 </ul></li>
 </ul></div>
 <div class="section level4">
-<h4 id="methods-registry-0-99-0">Methods registry<a class="anchor" aria-label="anchor" href="#methods-registry-0-99-0"></a></h4>
+<h4 id="methods-registry-1-0-0">Methods registry<a class="anchor" aria-label="anchor" href="#methods-registry-1-0-0"></a></h4>
 <ul><li>
 <code>nomo_methods(x)</code>, and so the methods section of <code><a href="../reference/nomo_report.html">nomo_report()</a></code>, credits what ran (<a href="https://github.com/JUhalt/nomologR/issues/145" class="external-link">#145</a>).
 <ul><li>
@@ -649,7 +650,7 @@
 </ul></div>
 </div>
 <div class="section level3">
-<h3 id="output-style-shared-with-contentvalidr-0-99-0">Output style shared with contentvalidR (<a href="https://github.com/JUhalt/nomologR/issues/144" class="external-link">#144</a>)<a class="anchor" aria-label="anchor" href="#output-style-shared-with-contentvalidr-0-99-0"></a></h3>
+<h3 id="output-style-shared-with-contentvalidr-1-0-0">Output style shared with contentvalidR (<a href="https://github.com/JUhalt/nomologR/issues/144" class="external-link">#144</a>)<a class="anchor" aria-label="anchor" href="#output-style-shared-with-contentvalidr-1-0-0"></a></h3>
 <p>nomologR and <code>contentvalidR</code> now print, plot, and tabulate in one style, so a project that uses both reads as one. The changes are to what is shown. No field, argument, <code><a href="../reference/nomo_table.html">nomo_table()</a></code> type, or decision-log column changes for it; the observations in decision logs follow the same number rules.</p>
 <ul><li>
 <strong>Headers.</strong> Every <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> begins with its class and a title, such as <code>&lt;nomo_cfa&gt; Confirmatory factor analysis</code> and <code>&lt;nomo_cfa summary&gt; Confirmatory factor analysis</code>. A technique taken from one source names it on the next line.</li>
@@ -703,7 +704,7 @@
 <strong><code><a href="../reference/nomo_run.html">nomo_run()</a></code>.</strong> Statuses are in sentence case and stages in words. A blocked run is shown as one block that says what failed and what to do. <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> lists each component flag under “Flagged”, where it was raised, and names each fit index’s version. A network flag about a relation is written as the network’s own output writes it, as in “- Agency &lt;-&gt; Persistence in the network (Review): The relation …”, without backticks. The samples of a split are named as <code><a href="../reference/nomo_split.html">nomo_split()</a></code> names them: “Sample design: calibration and validation samples”, then “Calibration cases” and “Validation cases”.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="additions-to-the-documented-interface-0-99-0">Additions to the documented interface<a class="anchor" aria-label="anchor" href="#additions-to-the-documented-interface-0-99-0"></a></h3>
+<h3 id="additions-to-the-documented-interface-1-0-0">Additions to the documented interface<a class="anchor" aria-label="anchor" href="#additions-to-the-documented-interface-1-0-0"></a></h3>
 <p>Everything below is new since 0.9.0. The stability policy covers the functions, arguments, fields, and table types as it covers the rest of the interface. The exception is the two experimental functions, <code><a href="../reference/nomo_method_variance.html">nomo_method_variance()</a></code> and <code><a href="../reference/nomo_power_simulate.html">nomo_power_simulate()</a></code>, whose output may change during 1.x without a deprecation period.</p>
 <ul><li>
 <strong>New functions.</strong> <code><a href="../reference/nomo_esem.html">nomo_esem()</a></code>, <code><a href="../reference/nomo_invariance_longitudinal.html">nomo_invariance_longitudinal()</a></code>, <code><a href="../reference/nomo_method_variance.html">nomo_method_variance()</a></code> (experimental), <code><a href="../reference/nomo_power_rmsea.html">nomo_power_rmsea()</a></code>, <code><a href="../reference/nomo_power_simulate.html">nomo_power_simulate()</a></code> (experimental), <code><a href="../reference/nomo_retest.html">nomo_retest()</a></code>, and <code><a href="../reference/nomo_single_indicator.html">nomo_single_indicator()</a></code>. Each has <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>, and each but the last has <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>, <code><a href="../reference/nomo_table.html">nomo_table()</a></code>, and <code><a href="../reference/nomo_methods.html">nomo_methods()</a></code>. New dataset <code>nomo_demo_longitudinal</code>.</li>
@@ -774,7 +775,7 @@
 </ul></li>
 </ul></div>
 <div class="section level3">
-<h3 id="the-cran-review-and-a-new-lavaan-0-99-0">The CRAN review and a new lavaan<a class="anchor" aria-label="anchor" href="#the-cran-review-and-a-new-lavaan-0-99-0"></a></h3>
+<h3 id="the-cran-review-and-a-new-lavaan-1-0-0">The CRAN review and a new lavaan<a class="anchor" aria-label="anchor" href="#the-cran-review-and-a-new-lavaan-1-0-0"></a></h3>
 <p>CRAN returned 0.3.0 with two requests: not to write to the user’s file space by default, and not to modify the global environment.</p>
 <ul><li>
 <strong>No default write path.</strong> <code><a href="../reference/nomo_report.html">nomo_report()</a></code> requires <code>file</code>, and writes the report and nothing else (see “Report”).</li>
@@ -795,7 +796,7 @@
 <strong><code><a href="../reference/nomo_power_simulate.html">nomo_power_simulate()</a></code>.</strong> It still generates its samples with <code><a href="https://rdrr.io/pkg/lavaan/man/simulateData.html" class="external-link">lavaan::simulateData()</a></code>, so a <code>seed</code> reproduces a study only under the same lavaan version. Its help page says so.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="new-methods-0-99-0">New methods (<a href="https://github.com/JUhalt/nomologR/issues/129" class="external-link">#129</a>)<a class="anchor" aria-label="anchor" href="#new-methods-0-99-0"></a></h3>
+<h3 id="new-methods-1-0-0">New methods (<a href="https://github.com/JUhalt/nomologR/issues/129" class="external-link">#129</a>)<a class="anchor" aria-label="anchor" href="#new-methods-1-0-0"></a></h3>
 <ul><li>Sample-size planning (<a href="https://github.com/JUhalt/nomologR/issues/129" class="external-link">#129</a>).
 <ul><li>
 <code><a href="../reference/nomo_power_rmsea.html">nomo_power_rmsea()</a></code> gives the power of MacCallum, Browne, and Sugawara’s (1996) RMSEA tests of close, not-close, and exact fit, or the smallest N reaching a target power. It reproduces their sample sizes (for example, 132 for close fit and 178 for not-close fit at 100 df). The degrees of freedom come from a model string, <code><a href="../reference/nomo_model.html">nomo_model()</a></code>, <code><a href="../reference/nomo_cfa.html">nomo_cfa()</a></code>, or a single-group lavaan fit. A multi-group fit is refused, because lavaan’s RMSEA for several groups carries a factor of the square root of their number. So is a <code>rmsea_null</code> that contradicts <code>test</code>: the test of exact fit needs a null of 0.</li>
@@ -847,7 +848,7 @@ The log explains what the marker must be: theoretically unrelated to the constru
 </ul><code><a href="../reference/nomo_table.html">nomo_table()</a></code> gains the <code>"single_indicators"</code> and <code>"sensitivity"</code> types, and the APA hypotheses table notes the correction. The nomological-network article shows the correction recovering the population path (.45) from the Persistence mean (.41 uncorrected, .46 corrected).</li>
 </ul></div>
 <div class="section level3">
-<h3 id="invariance-across-groups-and-occasions-0-99-0">Invariance across groups and occasions (<a href="https://github.com/JUhalt/nomologR/issues/129" class="external-link">#129</a>)<a class="anchor" aria-label="anchor" href="#invariance-across-groups-and-occasions-0-99-0"></a></h3>
+<h3 id="invariance-across-groups-and-occasions-1-0-0">Invariance across groups and occasions (<a href="https://github.com/JUhalt/nomologR/issues/129" class="external-link">#129</a>)<a class="anchor" aria-label="anchor" href="#invariance-across-groups-and-occasions-1-0-0"></a></h3>
 <ul><li>
 <code><a href="../reference/nomo_invariance.html">nomo_invariance()</a></code> reports latent means, which are known-groups evidence in structured-means form (<a href="https://github.com/JUhalt/nomologR/issues/129" class="external-link">#129</a>). At each level that holds intercepts equal, <code>latent_means</code> gives each group’s latent means relative to the reference group. Under the default <code>ID.fac = "std.lv"</code> they are in the reference group’s latent standard deviations (Hancock, 2001), with intervals. The summary shows them, <code>nomo_table(x, "latent_means")</code> returns them, and the log says they are comparable only with invariant intercepts, fully or partially (Byrne, Shavelson, &amp; Muthén, 1989). On <code>nomo_demo_network</code>, holding the biased <code>ag3</code> intercept equal inflates the Agency difference between modes to .44 SD. Releasing it gives .33 [.17, .49], which covers the population’s .25. The measurement-invariance article walks through this.
 <ul><li>
@@ -866,21 +867,21 @@ The log explains what the marker must be: theoretically unrelated to the constru
 <li>New teaching dataset <code>nomo_demo_longitudinal</code>: four Wellbeing items answered on three occasions, with a latent mean rising .30 and then .50 SD and the <code>w3</code> intercept drifting .40 after the first occasion. In the measurement-invariance article, holding that intercept equal inflates the change at the third occasion to .66 SD. Releasing it gives .55 [.43, .67], which covers the population’s .50.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="the-stability-contract-0-99-0">The stability contract (<a href="https://github.com/JUhalt/nomologR/issues/113" class="external-link">#113</a>)<a class="anchor" aria-label="anchor" href="#the-stability-contract-0-99-0"></a></h3>
+<h3 id="the-stability-contract-1-0-0">The stability contract (<a href="https://github.com/JUhalt/nomologR/issues/113" class="external-link">#113</a>)<a class="anchor" aria-label="anchor" href="#the-stability-contract-1-0-0"></a></h3>
 <ul><li>
 <code><a href="../reference/nomo_missing.html">nomo_missing()</a></code> and <code><a href="../reference/nomo_apa_table.html">nomo_apa_table()</a></code> leave the experimental list and are covered by the stability policy (<a href="https://github.com/JUhalt/nomologR/issues/113" class="external-link">#113</a>). <code><a href="../reference/nomo_missing.html">nomo_missing()</a></code>’s flagging rule is adapted from Schafer and Graham (2002, p. 157), who judged a bias beyond about half a standard error practically important, because it degrades interval coverage. Separating sampling variability from bias would be new output, added alongside the rule. <code><a href="../reference/nomo_apa_table.html">nomo_apa_table()</a></code>’s <code>type</code> values and returned structure are covered. A table’s formatting (headings, number formats, notes) may still be corrected where it departs from APA style, with the correction described in NEWS.</li>
 <li>The stability policy in <code><a href="../reference/nomologR-package.html">?nomologR</a></code> takes effect at 1.0.0 (<a href="https://github.com/JUhalt/nomologR/issues/113" class="external-link">#113</a>). Its text had said 0.3.0, while the roadmap gave 1.0.0, and this release changes parts of the interface without a deprecation period; “Calls that now behave differently” lists them.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="the-contentvalidr-handoff-0-99-0">The contentvalidR handoff (<a href="https://github.com/JUhalt/nomologR/issues/53" class="external-link">#53</a>)<a class="anchor" aria-label="anchor" href="#the-contentvalidr-handoff-0-99-0"></a></h3>
+<h3 id="the-contentvalidr-handoff-1-0-0">The contentvalidR handoff (<a href="https://github.com/JUhalt/nomologR/issues/53" class="external-link">#53</a>)<a class="anchor" aria-label="anchor" href="#the-contentvalidr-handoff-1-0-0"></a></h3>
 <ul><li>The content-review reader is tested against <code>contentvalidR</code> 0.10.0 and 0.10.1 output too (<a href="https://github.com/JUhalt/nomologR/issues/53" class="external-link">#53</a>). Their handoffs are identical to 0.9.0’s apart from the producer version and date, and the reader needed no change.</li>
 <li>A handoff that lists an item more than once is still refused, but the message no longer says that <code>content_handoff()</code> cannot produce such an object (<a href="https://github.com/JUhalt/nomologR/issues/46" class="external-link">#46</a>, <a href="https://github.com/JUhalt/nomologR/issues/53" class="external-link">#53</a>). <code>contentvalidR</code> 0.10.1 and earlier wrote one row per objective for a congruence fit without a target mapping. The message now says that a handoff has one row per reviewed item, names the items listed more than once, and says that such a congruence handoff has to be made again from a new fit with <code>contentvalidR</code> 1.0 or later. The reader takes each decision as its producer recorded it and does not branch on the producer’s version, so a congruence handoff written before 1.0 with a target mapping is read as before.</li>
 <li>The refusal of a handoff that carries no items names the statuses its items have, which are the ones <code>keep</code> would have to name, and writes the carry rule as it is typed (<a href="https://github.com/JUhalt/nomologR/issues/53" class="external-link">#53</a>). A review that applies no decision rule, such as a congruence fit without a target mapping, gives every item the status “Descriptive only”, and <code>content_handoff()</code>’s default <code>keep = "Supported"</code> then carries none.</li>
 <li>The fixture generator writes three item-objective congruence handoffs from <code>contentvalidR</code> 0.99.0 on, and the reader’s tests for them are in place for the release candidate’s fixtures (<a href="https://github.com/JUhalt/nomologR/issues/53" class="external-link">#53</a>). The stored fixtures are now checked against the version list and their manifest.</li>
-<li>The content-review reader is tested against <code>contentvalidR</code> 0.99.0 output, the partner package’s release candidate (<a href="https://github.com/JUhalt/nomologR/issues/53" class="external-link">#53</a>). That covers the five fits stored before and the three congruence fits, which are new. The 0.99.0 handoffs keep every decision of 0.10.1’s, and the reader needed no change. The handoff stored with the package for the walkthrough items (<code>inst/extdata/content-handoff-walkthrough.rds</code>) is now the one 0.99.0 wrote, where it was 0.7.0’s. Its items, scales, keying, and decisions are the same.</li>
+<li>The content-review reader is tested against output from <code>contentvalidR</code> 0.99.0, the partner package’s release candidate, and from 1.0.0 (<a href="https://github.com/JUhalt/nomologR/issues/53" class="external-link">#53</a>). That covers the five fits stored before and the three congruence fits, which are new. The 0.99.0 and 1.0.0 handoffs keep every decision of 0.10.1’s, and the reader needed no change. The handoff stored with the package for the walkthrough items (<code>inst/extdata/content-handoff-walkthrough.rds</code>) is now the one 1.0.0 wrote, where it was 0.7.0’s. Its items, scales, keying, and decisions are the same.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="documentation-0-99-0">Documentation (<a href="https://github.com/JUhalt/nomologR/issues/129" class="external-link">#129</a>, <a href="https://github.com/JUhalt/nomologR/issues/138" class="external-link">#138</a>, <a href="https://github.com/JUhalt/nomologR/issues/144" class="external-link">#144</a>, <a href="https://github.com/JUhalt/nomologR/issues/145" class="external-link">#145</a>)<a class="anchor" aria-label="anchor" href="#documentation-0-99-0"></a></h3>
+<h3 id="documentation-1-0-0">Documentation (<a href="https://github.com/JUhalt/nomologR/issues/129" class="external-link">#129</a>, <a href="https://github.com/JUhalt/nomologR/issues/138" class="external-link">#138</a>, <a href="https://github.com/JUhalt/nomologR/issues/144" class="external-link">#144</a>, <a href="https://github.com/JUhalt/nomologR/issues/145" class="external-link">#145</a>)<a class="anchor" aria-label="anchor" href="#documentation-1-0-0"></a></h3>
 <ul><li>Documentation for 1.0 (<a href="https://github.com/JUhalt/nomologR/issues/129" class="external-link">#129</a>, <a href="https://github.com/JUhalt/nomologR/issues/138" class="external-link">#138</a>). Get started and the research-basis article say that every analysis assumes reflective measurement, why the tools do not apply to formative measures, and where the criteria for choosing between the two are. The research-basis article places each method added in <a href="https://github.com/JUhalt/nomologR/issues/129" class="external-link">#129</a> between historical and contemporary practice, and gains the McGraw and Wong (1996) entry its test-retest paragraph cites. The README walks through the new functions stage by stage, lists <code>nomo_demo_longitudinal</code>, says what 1.0.0 contains, and notes that <code><a href="../reference/nomo_method_variance.html">nomo_method_variance()</a></code> and <code><a href="../reference/nomo_power_simulate.html">nomo_power_simulate()</a></code> stay experimental after 1.0.0; its license note now says that releases from 0.2.0 on are GPL-3. Get started adds the new functions and dataset to its workflow and dataset tables and its learning path, and the package description names the new methods. ROADMAP lists the gap review in the 1.0.0 scope, names 0.9.0 as the current release, and records the release candidate on 2026-11-24, whose tag is the interface freeze. The README and the exploratory-workflow article read the documented <code>correlation_method</code> and <code>item_types</code> of <code><a href="../reference/nomo_factors.html">nomo_factors()</a></code>, not their undocumented aliases.</li>
 <li>The interface frozen at 1.0 is written down where it was missing (<a href="https://github.com/JUhalt/nomologR/issues/145" class="external-link">#145</a>). No value, name, or behavior changes for it.
 <ul><li>
@@ -927,6 +928,7 @@ The log explains what the marker must be: theoretically unrelated to the constru
 <li>
 <strong>Teaching</strong> explains, in the answer to its first exercise, the third flag the reader sees: an item flagged only for a communality within rounding of .40, as <code>b4</code> is, shows sampling variability around a teaching reference.</li>
 </ul></li>
+<li>The README and ROADMAP describe 1.0.0 as released (<a href="https://github.com/JUhalt/nomologR/issues/53" class="external-link">#53</a>). The handoff section of the README shows the example both packages’ READMEs share: the walkthrough-sort handoff <code>h</code>, read from the copy nomologR ships, and <code>nomo_screen(nomo_demo_walkthrough, items = h)</code>. It gives nomologR’s side of the compatibility table: <code>contentvalidR</code> 1.x writes handoff schema version 1, and nomologR 1.x reads it. It says that the reader is tested against <code>contentvalidR</code> 0.6.0 through 1.0.0, and that a congruence handoff made by <code>contentvalidR</code> 0.10.1 or earlier should be made again from a new fit.</li>
 </ul></div>
 </div>
     <div class="section level2">

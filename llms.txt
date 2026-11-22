@@ -3,7 +3,7 @@
 [![R-CMD-check](https://github.com/JUhalt/nomologR/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/JUhalt/nomologR/actions/workflows/R-CMD-check.yaml)
 [![test-coverage](https://github.com/JUhalt/nomologR/actions/workflows/test-coverage.yaml/badge.svg)](https://github.com/JUhalt/nomologR/actions/workflows/test-coverage.yaml)
 
-**Current stable release: `0.9.0`.**
+**Current stable release: `1.0.0`.**
 
 `nomologR` is a guided, evidence-based workflow for **empirical scale
 development and construct validation**. It coordinates established R
@@ -14,7 +14,7 @@ explanations, decision logging, and theory-aware guidance.
 
 [Documentation](https://juhalt.github.io/nomologR/) ·
 [Roadmap](https://github.com/JUhalt/nomologR/blob/master/ROADMAP.md) ·
-[v1.0.0 milestone](https://github.com/JUhalt/nomologR/milestone/5) ·
+[Release notes](https://juhalt.github.io/nomologR/news/index.html) ·
 [Open issues](https://github.com/JUhalt/nomologR/issues)
 
 ## Installation
@@ -47,14 +47,10 @@ returned `v0.3.0` with two requests, both since met
 submission follows the 1.0.0 release. Until CRAN accepts it, install
 from R-universe or GitHub.
 
-The R-universe build is the current stable release, `0.9.0`. This README
+The R-universe build is the current stable release, `1.0.0`. This README
 and the [website](https://juhalt.github.io/nomologR/) describe the
-GitHub version, which adds what 1.0.0 will contain, such as
-[`nomo_esem()`](https://juhalt.github.io/nomologR/reference/nomo_esem.md),
-[`nomo_retest()`](https://juhalt.github.io/nomologR/reference/nomo_retest.md),
-and
-[`nomo_power_rmsea()`](https://juhalt.github.io/nomologR/reference/nomo_power_rmsea.md);
-install the GitHub version to use them.
+GitHub version. A change made after a release reaches GitHub first, and
+`NEWS.md` lists it under the version that will contain it.
 
 ## Who it is for
 
@@ -1244,12 +1240,54 @@ same tables for every result a guided run holds, numbered in order, as a
 The detailed release plan lives in
 [`ROADMAP.md`](https://github.com/JUhalt/nomologR/blob/master/ROADMAP.md).
 
-### Current release: `v0.9.0`
+### Current release: `v1.0.0`
 
-`v0.9.0` is the last minor release before `v1.0.0`, whose release
-candidate is planned for 2026-11-24 or earlier
-([\#113](https://github.com/JUhalt/nomologR/issues/113)). It is about
-how the package presents itself and what it teaches:
+`v1.0.0` is the joint stable release with
+[`contentvalidR`](https://github.com/JUhalt/contentvalidR), the
+package’s content-validity counterpart
+([\#53](https://github.com/JUhalt/nomologR/issues/53)), released on the
+same day as `contentvalidR` 1.0.0. It is the stability promise: from it,
+existing behavior changes only after a deprecation period, as
+[Stability](#stability) describes. Its scope was set in
+[\#113](https://github.com/JUhalt/nomologR/issues/113).
+
+`v1.0.0` contains everything in `v0.9.0` and closes the gaps
+social-science scale developers meet most often, each method taken from
+its literature ([\#129](https://github.com/JUhalt/nomologR/issues/129)):
+ESEM beside its CFA
+([`nomo_esem()`](https://juhalt.github.io/nomologR/reference/nomo_esem.md));
+measurement invariance across occasions, with latent change
+([`nomo_invariance_longitudinal()`](https://juhalt.github.io/nomologR/reference/nomo_invariance_longitudinal.md)
+and the `nomo_demo_longitudinal` teaching data); latent means as
+known-groups evidence in
+[`nomo_invariance()`](https://juhalt.github.io/nomologR/reference/nomo_invariance.md);
+test-retest reliability, measurement error, and reliable change
+([`nomo_retest()`](https://juhalt.github.io/nomologR/reference/nomo_retest.md));
+reliability-corrected single indicators for observed composites
+([`nomo_single_indicator()`](https://juhalt.github.io/nomologR/reference/nomo_single_indicator.md)
+and `nomo_network(single_indicators = )`); common method variance by the
+comprehensive CFA marker technique
+([`nomo_method_variance()`](https://juhalt.github.io/nomologR/reference/nomo_method_variance.md));
+and sample-size planning by RMSEA power and Monte Carlo simulation
+([`nomo_power_rmsea()`](https://juhalt.github.io/nomologR/reference/nomo_power_rmsea.md),
+[`nomo_power_simulate()`](https://juhalt.github.io/nomologR/reference/nomo_power_simulate.md)).
+All are additive.
+[`nomo_method_variance()`](https://juhalt.github.io/nomologR/reference/nomo_method_variance.md)
+and
+[`nomo_power_simulate()`](https://juhalt.github.io/nomologR/reference/nomo_power_simulate.md)
+stay experimental after 1.0.0; the rest fall under the stability
+promise.
+
+The release candidate, `v1.0.0-rc.1`, was planned for 2026-11-24
+together with `contentvalidR`’s, or earlier if both packages were ready.
+Both packages tagged it on 2026-11-21, and its tag was the interface
+freeze. `v1.0.0` is released on GitHub and R-universe first; the CRAN
+submission follows it.
+
+### Previous releases
+
+`v0.9.0` was the last minor release before `v1.0.0`. It was about how
+the package presents itself and what it teaches:
 
 - redesigned console output, plots, and report tables, with one flag
   wording throughout
@@ -1269,8 +1307,6 @@ how the package presents itself and what it teaches:
 
 No computed estimate changed from `v0.3.0`; NEWS lists the changes to
 returned columns, wording, and arguments.
-
-### Previous releases
 
 `v0.3.0` was the first release submitted to CRAN, which returned it with
 two requests, both since met
@@ -1329,53 +1365,12 @@ research-basis article; readable invariance labels (#31); maintenance
 [`nomo_hierarchical()`](https://juhalt.github.io/nomologR/reference/nomo_hierarchical.md)
 (#29); and release certification (#37).
 
-### Next: `v1.0.0`, then `1.x`
-
-`v1.0.0` is planned as a joint release with
-[`contentvalidR`](https://github.com/JUhalt/contentvalidR), the
-package’s content-validity counterpart
-([\#53](https://github.com/JUhalt/nomologR/issues/53)). It is the
-stability promise: after it, existing behavior changes only after a
-deprecation period. Its scope is set in
-[\#113](https://github.com/JUhalt/nomologR/issues/113). The companion
-article on the shared item set is done
-([\#60](https://github.com/JUhalt/nomologR/issues/60)).
-
-`v1.0.0` contains everything in `v0.9.0` and closes the gaps
-social-science scale developers meet most often, each method taken from
-its literature ([\#129](https://github.com/JUhalt/nomologR/issues/129)):
-ESEM beside its CFA
-([`nomo_esem()`](https://juhalt.github.io/nomologR/reference/nomo_esem.md));
-measurement invariance across occasions, with latent change
-([`nomo_invariance_longitudinal()`](https://juhalt.github.io/nomologR/reference/nomo_invariance_longitudinal.md)
-and the `nomo_demo_longitudinal` teaching data); latent means as
-known-groups evidence in
-[`nomo_invariance()`](https://juhalt.github.io/nomologR/reference/nomo_invariance.md);
-test-retest reliability, measurement error, and reliable change
-([`nomo_retest()`](https://juhalt.github.io/nomologR/reference/nomo_retest.md));
-reliability-corrected single indicators for observed composites
-([`nomo_single_indicator()`](https://juhalt.github.io/nomologR/reference/nomo_single_indicator.md)
-and `nomo_network(single_indicators = )`); common method variance by the
-comprehensive CFA marker technique
-([`nomo_method_variance()`](https://juhalt.github.io/nomologR/reference/nomo_method_variance.md));
-and sample-size planning by RMSEA power and Monte Carlo simulation
-([`nomo_power_rmsea()`](https://juhalt.github.io/nomologR/reference/nomo_power_rmsea.md),
-[`nomo_power_simulate()`](https://juhalt.github.io/nomologR/reference/nomo_power_simulate.md)).
-All are additive.
-[`nomo_method_variance()`](https://juhalt.github.io/nomologR/reference/nomo_method_variance.md)
-and
-[`nomo_power_simulate()`](https://juhalt.github.io/nomologR/reference/nomo_power_simulate.md)
-stay experimental after 1.0.0; the rest fall under the stability
-promise. The release candidate, `v1.0.0-rc.1`, is planned for 2026-11-24
-together with `contentvalidR`’s, or earlier if both packages are ready,
-and its tag is the interface freeze. `v1.0.0` follows when the
-maintainer signs off, and is released on GitHub and R-universe first;
-the CRAN submission follows it.
+### Next: `1.x`
 
 Larger extensions, such as IRT/DIF, Bayesian SEM, multiple imputation,
 and formative models, are candidates for `1.x`. They are additive, so
-they do not need to precede the freeze. None was rejected, and none is a
-commitment until selected.
+they can arrive within the stability promise. None was rejected, and
+none is a commitment until selected.
 
 ### Completed: `v0.1.0`
 
@@ -1422,13 +1417,51 @@ decisions without retyping anything. A handoff brings:
 - the declared keying and the response scale, which the keying notes and
   the careless-responding indices use. The data are never recoded.
 
+The example is the item sort from the joint walkthrough, in which items
+`EF2` and `TF2` are reverse-worded. `contentvalidR` makes the handoff:
+
+``` r
+
+library(contentvalidR)
+sorted <- read.csv(system.file("extdata", "walkthrough_sort.csv", package = "contentvalidR"))
+h <- content_handoff(sort_validity(sorted),
+                     reverse_keyed = c("EF2", "TF2"), response_scale = c(1, 5))
+```
+
+nomologR ships that handoff, made by `contentvalidR` 1.0.0, and the
+walkthrough’s responses as `nomo_demo_walkthrough`, so the rest runs
+without `contentvalidR` installed:
+
+``` r
+
+h <- readRDS(system.file("extdata", "content-handoff-walkthrough.rds", package = "nomologR"))
+h$items
+```
+
+``` R
+##  [1] "EF1" "EF2" "EF3" "EF4" "EF6" "TF1" "TF2" "TF3" "TF4" "TF6"
+```
+
+``` r
+
+h$scales
+```
+
+``` R
+## $EF
+## [1] "EF1" "EF2" "EF3" "EF4" "EF6"
+## 
+## $TF
+## [1] "TF1" "TF2" "TF3" "TF4" "TF6"
+```
+
 Pass the handoff itself, not `h$items`, so everything it records travels
 with the items:
 
 ``` r
 
-nomo_screen(responses, items = h)  # screens the carried items
-nomo_run(responses, scales = h)    # runs the empirical stage on the handoff's scales
+nomo_screen(nomo_demo_walkthrough, items = h)  # screens the carried items
+nomo_run(nomo_demo_walkthrough, scales = h)    # runs the empirical stage on the handoff's scales
 ```
 
 **How nomologR reads a handoff.**
@@ -1444,11 +1477,26 @@ nomo_run(responses, scales = h)    # runs the empirical stage on the handoff's s
   forward-worded.
 
 **Versions.** The handoff is schema version 1. Within it, fields are
-only added, and nomologR ignores fields it does not know. A schema
-version nomologR does not read is refused, with both packages’ versions
-named. The reader is tested against handoffs from `contentvalidR` 0.6.0
-through 0.10.1. They are generated from each release tag and stored with
-their checksums, and neither package depends on the other.
+only added, and nomologR ignores fields it does not know. A column added
+after a handoff was written is treated as absent in it, never as an
+error: the 0.6.0 handoffs have no `note`, `keying`, `response_min`, or
+`response_max`. A schema version nomologR does not read is refused, with
+both packages’ versions named. The reader is tested against handoffs
+from `contentvalidR` 0.6.0 through 1.0.0, `contentvalidR`’s own output
+stored with the commit each was made from and its checksum. Neither
+package depends on the other.
+
+| nomologR          | Handoff it reads                                   |
+|-------------------|----------------------------------------------------|
+| 1.x               | schema version 1, which `contentvalidR` 1.x writes |
+| 0.3.0 to 0.99.0   | schema version 1                                   |
+| 0.2.1 and earlier | none: the reader was added in 0.3.0                |
+
+The README of `contentvalidR` gives the writing side. A congruence
+handoff made by `contentvalidR` 0.10.1 or earlier should be made again
+from a new fit with 1.0 or later. Its `target IOC` held a mean rating,
+not the index of item-objective congruence, and without a target mapping
+it had one row per objective, which nomologR refuses.
 
 For more, see:
 

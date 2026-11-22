@@ -21,7 +21,7 @@
 
     <a class="navbar-brand me-2" href="index.html">nomologR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -70,12 +70,12 @@
 <div class="page-header"><h1 id="nomologr">nomologR<a class="anchor" aria-label="anchor" href="#nomologr"></a>
 </h1></div>
 <p><a href="https://github.com/JUhalt/nomologR/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/JUhalt/nomologR/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check"></a> <a href="https://github.com/JUhalt/nomologR/actions/workflows/test-coverage.yaml" class="external-link"><img src="https://github.com/JUhalt/nomologR/actions/workflows/test-coverage.yaml/badge.svg" alt="test-coverage"></a></p>
-<p><strong>Current stable release: <code>0.9.0</code>.</strong></p>
+<p><strong>Current stable release: <code>1.0.0</code>.</strong></p>
 <p><code>nomologR</code> is a guided, evidence-based workflow for <strong>empirical scale development and construct validation</strong>. It coordinates established R engines while adding transparent diagnostics, literature-linked explanations, decision logging, and theory-aware guidance.</p>
 <blockquote>
 <p><strong>Core rule:</strong> Flag, explain, and document. Never silently delete.</p>
 </blockquote>
-<p><a href="https://juhalt.github.io/nomologR/">Documentation</a> · <a href="https://github.com/JUhalt/nomologR/blob/master/ROADMAP.md" class="external-link">Roadmap</a> · <a href="https://github.com/JUhalt/nomologR/milestone/5" class="external-link">v1.0.0 milestone</a> · <a href="https://github.com/JUhalt/nomologR/issues" class="external-link">Open issues</a></p>
+<p><a href="https://juhalt.github.io/nomologR/">Documentation</a> · <a href="https://github.com/JUhalt/nomologR/blob/master/ROADMAP.md" class="external-link">Roadmap</a> · <a href="https://juhalt.github.io/nomologR/news/index.html">Release notes</a> · <a href="https://github.com/JUhalt/nomologR/issues" class="external-link">Open issues</a></p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
@@ -93,7 +93,7 @@
 <code class="sourceCode R"><span><span class="co"># install.packages("pak")</span></span>
 <span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pak.html" class="external-link">pak</a></span><span class="op">(</span><span class="st">"JUhalt/nomologR"</span><span class="op">)</span></span></code></pre></div>
 <p><code>nomologR</code> is distributed through R-universe, which builds each GitHub release, usually within a few hours. It is not on CRAN yet: CRAN returned <code>v0.3.0</code> with two requests, both since met (<a href="https://github.com/JUhalt/nomologR/issues/39" class="external-link">#39</a>), and the CRAN submission follows the 1.0.0 release. Until CRAN accepts it, install from R-universe or GitHub.</p>
-<p>The R-universe build is the current stable release, <code>0.9.0</code>. This README and the <a href="https://juhalt.github.io/nomologR/">website</a> describe the GitHub version, which adds what 1.0.0 will contain, such as <code><a href="reference/nomo_esem.html">nomo_esem()</a></code>, <code><a href="reference/nomo_retest.html">nomo_retest()</a></code>, and <code><a href="reference/nomo_power_rmsea.html">nomo_power_rmsea()</a></code>; install the GitHub version to use them.</p>
+<p>The R-universe build is the current stable release, <code>1.0.0</code>. This README and the <a href="https://juhalt.github.io/nomologR/">website</a> describe the GitHub version. A change made after a release reaches GitHub first, and <code>NEWS.md</code> lists it under the version that will contain it.</p>
 </div>
 <div class="section level2">
 <h2 id="who-it-is-for">Who it is for<a class="anchor" aria-label="anchor" href="#who-it-is-for"></a>
@@ -819,10 +819,17 @@
 </h2>
 <p>The detailed release plan lives in <a href="https://github.com/JUhalt/nomologR/blob/master/ROADMAP.md" class="external-link"><code>ROADMAP.md</code></a>.</p>
 <div class="section level3">
-<h3 id="current-release-v090">Current release: <code>v0.9.0</code>
-<a class="anchor" aria-label="anchor" href="#current-release-v090"></a>
+<h3 id="current-release-v100">Current release: <code>v1.0.0</code>
+<a class="anchor" aria-label="anchor" href="#current-release-v100"></a>
 </h3>
-<p><code>v0.9.0</code> is the last minor release before <code>v1.0.0</code>, whose release candidate is planned for 2026-11-24 or earlier (<a href="https://github.com/JUhalt/nomologR/issues/113" class="external-link">#113</a>). It is about how the package presents itself and what it teaches:</p>
+<p><code>v1.0.0</code> is the joint stable release with <a href="https://github.com/JUhalt/contentvalidR" class="external-link"><code>contentvalidR</code></a>, the package’s content-validity counterpart (<a href="https://github.com/JUhalt/nomologR/issues/53" class="external-link">#53</a>), released on the same day as <code>contentvalidR</code> 1.0.0. It is the stability promise: from it, existing behavior changes only after a deprecation period, as <a href="#stability">Stability</a> describes. Its scope was set in <a href="https://github.com/JUhalt/nomologR/issues/113" class="external-link">#113</a>.</p>
+<p><code>v1.0.0</code> contains everything in <code>v0.9.0</code> and closes the gaps social-science scale developers meet most often, each method taken from its literature (<a href="https://github.com/JUhalt/nomologR/issues/129" class="external-link">#129</a>): ESEM beside its CFA (<code><a href="reference/nomo_esem.html">nomo_esem()</a></code>); measurement invariance across occasions, with latent change (<code><a href="reference/nomo_invariance_longitudinal.html">nomo_invariance_longitudinal()</a></code> and the <code>nomo_demo_longitudinal</code> teaching data); latent means as known-groups evidence in <code><a href="reference/nomo_invariance.html">nomo_invariance()</a></code>; test-retest reliability, measurement error, and reliable change (<code><a href="reference/nomo_retest.html">nomo_retest()</a></code>); reliability-corrected single indicators for observed composites (<code><a href="reference/nomo_single_indicator.html">nomo_single_indicator()</a></code> and <code>nomo_network(single_indicators = )</code>); common method variance by the comprehensive CFA marker technique (<code><a href="reference/nomo_method_variance.html">nomo_method_variance()</a></code>); and sample-size planning by RMSEA power and Monte Carlo simulation (<code><a href="reference/nomo_power_rmsea.html">nomo_power_rmsea()</a></code>, <code><a href="reference/nomo_power_simulate.html">nomo_power_simulate()</a></code>). All are additive. <code><a href="reference/nomo_method_variance.html">nomo_method_variance()</a></code> and <code><a href="reference/nomo_power_simulate.html">nomo_power_simulate()</a></code> stay experimental after 1.0.0; the rest fall under the stability promise.</p>
+<p>The release candidate, <code>v1.0.0-rc.1</code>, was planned for 2026-11-24 together with <code>contentvalidR</code>’s, or earlier if both packages were ready. Both packages tagged it on 2026-11-21, and its tag was the interface freeze. <code>v1.0.0</code> is released on GitHub and R-universe first; the CRAN submission follows it.</p>
+</div>
+<div class="section level3">
+<h3 id="previous-releases">Previous releases<a class="anchor" aria-label="anchor" href="#previous-releases"></a>
+</h3>
+<p><code>v0.9.0</code> was the last minor release before <code>v1.0.0</code>. It was about how the package presents itself and what it teaches:</p>
 <ul>
 <li>redesigned console output, plots, and report tables, with one flag wording throughout (<a href="https://github.com/JUhalt/nomologR/issues/89" class="external-link">#89</a>);</li>
 <li>the historical record in <code><a href="reference/nomo_methods.html">nomo_methods()</a></code>: when each method was introduced, and what took over from each historical one, drawn into a timeline in the research-basis article;</li>
@@ -831,10 +838,6 @@
 <li>every help page naming the fields of the object it returns (<a href="https://github.com/JUhalt/nomologR/issues/114" class="external-link">#114</a>).</li>
 </ul>
 <p>No computed estimate changed from <code>v0.3.0</code>; NEWS lists the changes to returned columns, wording, and arguments.</p>
-</div>
-<div class="section level3">
-<h3 id="previous-releases">Previous releases<a class="anchor" aria-label="anchor" href="#previous-releases"></a>
-</h3>
 <p><code>v0.3.0</code> was the first release submitted to CRAN, which returned it with two requests, both since met (<a href="https://github.com/JUhalt/nomologR/issues/39" class="external-link">#39</a>). Its scope was kept deliberately lean for that submission (<a href="https://github.com/JUhalt/nomologR/issues/38" class="external-link">#38</a>; <a href="https://github.com/JUhalt/nomologR/milestone/3" class="external-link">milestone</a>):</p>
 <ul>
 <li>
@@ -848,12 +851,10 @@
 <p><code>v0.2.0</code> made the workflow research-backed from historical to contemporary practice and more useful to graduate students and researchers. Scope was selected in <a href="https://github.com/JUhalt/nomologR/issues/22" class="external-link">#22</a>. It added learning foundations (#25) with teaching datasets, runnable vignettes, and the research-basis article; readable invariance labels (#31); maintenance (#36); model comparison with <code><a href="reference/nomo_compare.html">nomo_compare()</a></code> (#27); auditable revision lineage with <code><a href="reference/nomo_revise.html">nomo_revise()</a></code> (#28); the methods registry with <code><a href="reference/nomo_methods.html">nomo_methods()</a></code> (#26); interval-based replication-status language for sign changes (#30); bifactor and higher-order models with <code><a href="reference/nomo_hierarchical.html">nomo_hierarchical()</a></code> (#29); and release certification (#37).</p>
 </div>
 <div class="section level3">
-<h3 id="next-v100-then-1x">Next: <code>v1.0.0</code>, then <code>1.x</code>
-<a class="anchor" aria-label="anchor" href="#next-v100-then-1x"></a>
+<h3 id="next-1x">Next: <code>1.x</code>
+<a class="anchor" aria-label="anchor" href="#next-1x"></a>
 </h3>
-<p><code>v1.0.0</code> is planned as a joint release with <a href="https://github.com/JUhalt/contentvalidR" class="external-link"><code>contentvalidR</code></a>, the package’s content-validity counterpart (<a href="https://github.com/JUhalt/nomologR/issues/53" class="external-link">#53</a>). It is the stability promise: after it, existing behavior changes only after a deprecation period. Its scope is set in <a href="https://github.com/JUhalt/nomologR/issues/113" class="external-link">#113</a>. The companion article on the shared item set is done (<a href="https://github.com/JUhalt/nomologR/issues/60" class="external-link">#60</a>).</p>
-<p><code>v1.0.0</code> contains everything in <code>v0.9.0</code> and closes the gaps social-science scale developers meet most often, each method taken from its literature (<a href="https://github.com/JUhalt/nomologR/issues/129" class="external-link">#129</a>): ESEM beside its CFA (<code><a href="reference/nomo_esem.html">nomo_esem()</a></code>); measurement invariance across occasions, with latent change (<code><a href="reference/nomo_invariance_longitudinal.html">nomo_invariance_longitudinal()</a></code> and the <code>nomo_demo_longitudinal</code> teaching data); latent means as known-groups evidence in <code><a href="reference/nomo_invariance.html">nomo_invariance()</a></code>; test-retest reliability, measurement error, and reliable change (<code><a href="reference/nomo_retest.html">nomo_retest()</a></code>); reliability-corrected single indicators for observed composites (<code><a href="reference/nomo_single_indicator.html">nomo_single_indicator()</a></code> and <code>nomo_network(single_indicators = )</code>); common method variance by the comprehensive CFA marker technique (<code><a href="reference/nomo_method_variance.html">nomo_method_variance()</a></code>); and sample-size planning by RMSEA power and Monte Carlo simulation (<code><a href="reference/nomo_power_rmsea.html">nomo_power_rmsea()</a></code>, <code><a href="reference/nomo_power_simulate.html">nomo_power_simulate()</a></code>). All are additive. <code><a href="reference/nomo_method_variance.html">nomo_method_variance()</a></code> and <code><a href="reference/nomo_power_simulate.html">nomo_power_simulate()</a></code> stay experimental after 1.0.0; the rest fall under the stability promise. The release candidate, <code>v1.0.0-rc.1</code>, is planned for 2026-11-24 together with <code>contentvalidR</code>’s, or earlier if both packages are ready, and its tag is the interface freeze. <code>v1.0.0</code> follows when the maintainer signs off, and is released on GitHub and R-universe first; the CRAN submission follows it.</p>
-<p>Larger extensions, such as IRT/DIF, Bayesian SEM, multiple imputation, and formative models, are candidates for <code>1.x</code>. They are additive, so they do not need to precede the freeze. None was rejected, and none is a commitment until selected.</p>
+<p>Larger extensions, such as IRT/DIF, Bayesian SEM, multiple imputation, and formative models, are candidates for <code>1.x</code>. They are additive, so they can arrive within the stability promise. None was rejected, and none is a commitment until selected.</p>
 </div>
 <div class="section level3">
 <h3 id="completed-v010">Completed: <code>v0.1.0</code>
@@ -894,10 +895,28 @@
 <li>the scales, which become the run’s scales;</li>
 <li>the declared keying and the response scale, which the keying notes and the careless-responding indices use. The data are never recoded.</li>
 </ul>
-<p>Pass the handoff itself, not <code>h$items</code>, so everything it records travels with the items:</p>
+<p>The example is the item sort from the joint walkthrough, in which items <code>EF2</code> and <code>TF2</code> are reverse-worded. <code>contentvalidR</code> makes the handoff:</p>
 <div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="reference/nomo_screen.html">nomo_screen</a></span><span class="op">(</span><span class="va">responses</span>, items <span class="op">=</span> <span class="va">h</span><span class="op">)</span>  <span class="co"># screens the carried items</span></span>
-<span><span class="fu"><a href="reference/nomo_run.html">nomo_run</a></span><span class="op">(</span><span class="va">responses</span>, scales <span class="op">=</span> <span class="va">h</span><span class="op">)</span>    <span class="co"># runs the empirical stage on the handoff's scales</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/JUhalt/contentvalidR" class="external-link">contentvalidR</a></span><span class="op">)</span></span>
+<span><span class="va">sorted</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.csv</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"walkthrough_sort.csv"</span>, package <span class="op">=</span> <span class="st">"contentvalidR"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">h</span> <span class="op">&lt;-</span> <span class="fu">content_handoff</span><span class="op">(</span><span class="fu">sort_validity</span><span class="op">(</span><span class="va">sorted</span><span class="op">)</span>,</span>
+<span>                     reverse_keyed <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"EF2"</span>, <span class="st">"TF2"</span><span class="op">)</span>, response_scale <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">5</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p>nomologR ships that handoff, made by <code>contentvalidR</code> 1.0.0, and the walkthrough’s responses as <code>nomo_demo_walkthrough</code>, so the rest runs without <code>contentvalidR</code> installed:</p>
+<div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">h</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"content-handoff-walkthrough.rds"</span>, package <span class="op">=</span> <span class="st">"nomologR"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">h</span><span class="op">$</span><span class="va">items</span></span></code></pre></div>
+<div class="sourceCode" id="cb46"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" tabindex="-1"></a><span class="do">##  [1] "EF1" "EF2" "EF3" "EF4" "EF6" "TF1" "TF2" "TF3" "TF4" "TF6"</span></span></code></pre></div>
+<div class="sourceCode" id="cb47"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">h</span><span class="op">$</span><span class="va">scales</span></span></code></pre></div>
+<div class="sourceCode" id="cb48"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" tabindex="-1"></a><span class="do">## $EF</span></span>
+<span id="cb48-2"><a href="#cb48-2" tabindex="-1"></a><span class="do">## [1] "EF1" "EF2" "EF3" "EF4" "EF6"</span></span>
+<span id="cb48-3"><a href="#cb48-3" tabindex="-1"></a><span class="do">## </span></span>
+<span id="cb48-4"><a href="#cb48-4" tabindex="-1"></a><span class="do">## $TF</span></span>
+<span id="cb48-5"><a href="#cb48-5" tabindex="-1"></a><span class="do">## [1] "TF1" "TF2" "TF3" "TF4" "TF6"</span></span></code></pre></div>
+<p>Pass the handoff itself, not <code>h$items</code>, so everything it records travels with the items:</p>
+<div class="sourceCode" id="cb49"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="reference/nomo_screen.html">nomo_screen</a></span><span class="op">(</span><span class="va">nomo_demo_walkthrough</span>, items <span class="op">=</span> <span class="va">h</span><span class="op">)</span>  <span class="co"># screens the carried items</span></span>
+<span><span class="fu"><a href="reference/nomo_run.html">nomo_run</a></span><span class="op">(</span><span class="va">nomo_demo_walkthrough</span>, scales <span class="op">=</span> <span class="va">h</span><span class="op">)</span>    <span class="co"># runs the empirical stage on the handoff's scales</span></span></code></pre></div>
 <p><strong>How nomologR reads a handoff.</strong></p>
 <ul>
 <li>Each item’s decision comes from <code>carried</code>, which says whether it travels, and <code>status</code>, which says why.</li>
@@ -906,7 +925,32 @@
 <li>A decision is never re-derived by comparing a statistic with its criterion, or by branching on the version that produced the handoff.</li>
 <li>A <code>keying</code> of <code>NA</code> means nobody said, never that an item is forward-worded.</li>
 </ul>
-<p><strong>Versions.</strong> The handoff is schema version 1. Within it, fields are only added, and nomologR ignores fields it does not know. A schema version nomologR does not read is refused, with both packages’ versions named. The reader is tested against handoffs from <code>contentvalidR</code> 0.6.0 through 0.10.1. They are generated from each release tag and stored with their checksums, and neither package depends on the other.</p>
+<p><strong>Versions.</strong> The handoff is schema version 1. Within it, fields are only added, and nomologR ignores fields it does not know. A column added after a handoff was written is treated as absent in it, never as an error: the 0.6.0 handoffs have no <code>note</code>, <code>keying</code>, <code>response_min</code>, or <code>response_max</code>. A schema version nomologR does not read is refused, with both packages’ versions named. The reader is tested against handoffs from <code>contentvalidR</code> 0.6.0 through 1.0.0, <code>contentvalidR</code>’s own output stored with the commit each was made from and its checksum. Neither package depends on the other.</p>
+<table class="table">
+<colgroup>
+<col width="26%">
+<col width="73%">
+</colgroup>
+<thead><tr>
+<th>nomologR</th>
+<th>Handoff it reads</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>1.x</td>
+<td>schema version 1, which <code>contentvalidR</code> 1.x writes</td>
+</tr>
+<tr>
+<td>0.3.0 to 0.99.0</td>
+<td>schema version 1</td>
+</tr>
+<tr>
+<td>0.2.1 and earlier</td>
+<td>none: the reader was added in 0.3.0</td>
+</tr>
+</tbody>
+</table>
+<p>The README of <code>contentvalidR</code> gives the writing side. A congruence handoff made by <code>contentvalidR</code> 0.10.1 or earlier should be made again from a new fit with 1.0 or later. Its <code>target IOC</code> held a mean rating, not the index of item-objective congruence, and without a target mapping it had one row per objective, which nomologR refuses.</p>
 <p>For more, see:</p>
 <ul>
 <li>

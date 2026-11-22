@@ -577,7 +577,7 @@ handoff$items
 #>  [1] "EF1" "EF2" "EF3" "EF4" "EF6" "TF1" "TF2" "TF3" "TF4" "TF6"
 ```
 
-Its provenance records the release that made it, `contentvalidR` 0.99.0.
+Its provenance records the release that made it, `contentvalidR` 1.0.0.
 
 Responses to those items, simulated here, with EF2 and TF2 worded in
 reverse:
@@ -608,7 +608,7 @@ screened$items
 review_log <- nomo_table(screened, "decision_log")
 cat(review_log$observation[review_log$object %in% c("content_review", "EF5", "TF5")],
     sep = "\n")
-#> Items and their construct membership came from content review in contentvalidR 0.99.0 (workflow: item-sort; carry rule: Supported; method: Anderson-Gerbing Psa/Csv with Howard-Melloy exact inference), not from these data.
+#> Items and their construct membership came from content review in contentvalidR 1.0.0 (workflow: item-sort; carry rule: Supported; method: Anderson-Gerbing Psa/Csv with Howard-Melloy exact inference), not from these data.
 #> 10 of 12 reviewed items were carried and 2 held back. Status counts: Review 2, Supported 10.
 #> EF5 was held back by content review: status "Review", recommendation "Review".
 #> TF5 was held back by content review: status "Review", recommendation "Review".

@@ -1,14 +1,22 @@
 # Changelog
 
-## nomologR 0.99.0
+## nomologR 1.0.0
 
-This version is the first release candidate, `v1.0.0-rc.1`, for 1.0.0,
-the stable release planned jointly with `contentvalidR`
-([\#53](https://github.com/JUhalt/nomologR/issues/53)). The candidate
-was planned for 2026-11-24, or earlier if both packages were ready, and
-its tag is the interface freeze. The 1.0.0 release follows when the
-maintainer signs off, and goes to GitHub and R-universe first; the CRAN
-submission follows it.
+The first stable release under the stability policy in
+[`?nomologR`](https://juhalt.github.io/nomologR/reference/nomologR-package.md),
+released on the same day as `contentvalidR` 1.0.0
+(<https://github.com/JUhalt/contentvalidR>), its partner for content
+review ([\#53](https://github.com/JUhalt/nomologR/issues/53)). The
+handoff between them is schema version 1, which `contentvalidR` 1.x
+writes and nomologR 1.x reads. 1.0.0 goes to GitHub and R-universe
+first; the CRAN submission follows it.
+
+The release candidate, 0.99.0, was planned for 2026-11-24, or earlier if
+both packages were ready. Both packages tagged it `v1.0.0-rc.1` on
+2026-11-21, and its tag was the interface freeze. 1.0.0 is that
+candidate with its version changed, its reader tested against
+`contentvalidR` 1.0.0’s handoffs, and the walkthrough handoff it ships
+made by `contentvalidR` 1.0.0.
 
 - **New methods.** The gap review
   ([\#129](https://github.com/JUhalt/nomologR/issues/129)) added the
@@ -2222,15 +2230,16 @@ Estimation is not affected.
   place for the release candidate’s fixtures
   ([\#53](https://github.com/JUhalt/nomologR/issues/53)). The stored
   fixtures are now checked against the version list and their manifest.
-- The content-review reader is tested against `contentvalidR` 0.99.0
-  output, the partner package’s release candidate
-  ([\#53](https://github.com/JUhalt/nomologR/issues/53)). That covers
-  the five fits stored before and the three congruence fits, which are
-  new. The 0.99.0 handoffs keep every decision of 0.10.1’s, and the
-  reader needed no change. The handoff stored with the package for the
-  walkthrough items (`inst/extdata/content-handoff-walkthrough.rds`) is
-  now the one 0.99.0 wrote, where it was 0.7.0’s. Its items, scales,
-  keying, and decisions are the same.
+- The content-review reader is tested against output from
+  `contentvalidR` 0.99.0, the partner package’s release candidate, and
+  from 1.0.0 ([\#53](https://github.com/JUhalt/nomologR/issues/53)).
+  That covers the five fits stored before and the three congruence fits,
+  which are new. The 0.99.0 and 1.0.0 handoffs keep every decision of
+  0.10.1’s, and the reader needed no change. The handoff stored with the
+  package for the walkthrough items
+  (`inst/extdata/content-handoff-walkthrough.rds`) is now the one 1.0.0
+  wrote, where it was 0.7.0’s. Its items, scales, keying, and decisions
+  are the same.
 
 ### Documentation ([\#129](https://github.com/JUhalt/nomologR/issues/129), [\#138](https://github.com/JUhalt/nomologR/issues/138), [\#144](https://github.com/JUhalt/nomologR/issues/144), [\#145](https://github.com/JUhalt/nomologR/issues/145))
 
@@ -2395,6 +2404,16 @@ Estimation is not affected.
     third flag the reader sees: an item flagged only for a communality
     within rounding of .40, as `b4` is, shows sampling variability
     around a teaching reference.
+- The README and ROADMAP describe 1.0.0 as released
+  ([\#53](https://github.com/JUhalt/nomologR/issues/53)). The handoff
+  section of the README shows the example both packages’ READMEs share:
+  the walkthrough-sort handoff `h`, read from the copy nomologR ships,
+  and `nomo_screen(nomo_demo_walkthrough, items = h)`. It gives
+  nomologR’s side of the compatibility table: `contentvalidR` 1.x writes
+  handoff schema version 1, and nomologR 1.x reads it. It says that the
+  reader is tested against `contentvalidR` 0.6.0 through 1.0.0, and that
+  a congruence handoff made by `contentvalidR` 0.10.1 or earlier should
+  be made again from a new fit.
 
 ## nomologR 0.9.0
 
