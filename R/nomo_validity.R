@@ -95,10 +95,11 @@
 #'   results. They may change between releases and are not part of the stable
 #'   interface (see `?nomologR`).
 #'
-#'   `print()` counts the convergent and construct-separation flags and names
-#'   each flagged construct or pair; `summary()` adds the AVE and loading
-#'   summary for each construct, the latent correlation and HTMT-family values
-#'   for each pair, and the full reason for each flag.
+#'   `print()` gives the cases the model analyzed, counts the convergent and
+#'   construct-separation flags, and names each flagged construct or pair;
+#'   `summary()` adds the AVE and loading summary for each construct, the
+#'   latent correlation and HTMT-family values for each pair, and the full
+#'   reason for each flag.
 #'
 #' @references
 #' Historical context:

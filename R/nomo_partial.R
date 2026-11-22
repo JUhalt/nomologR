@@ -126,8 +126,10 @@ nomo_partial <- function(level, syntax, rationale) {
 }
 
 
+#' @rdname printing
 #' @export
-print.nomo_partial <- function(x, ...) {
+print.nomo_partial <- function(x, digits = NULL, ...) {
+  nomo_present_digits_unused(digits, "a `nomo_partial` prints parameter releases, not statistics.")
   nomo_present_header("nomo_partial", "Partial invariance releases")
   nomo_present_facts(sprintf("Releases: %d (researcher specified)", x$n))
   nomo_present_section("Releases")

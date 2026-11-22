@@ -123,7 +123,7 @@ has no observed values. These are hard data conditions rather than
 psychometric cutoff rules.
 
 Response concentration and near-zero-variance flags use configurable
-teaching references from \code{\link[=nomo_defaults]{nomo_defaults()}}. They are screening heuristics,
+review references from \code{\link[=nomo_defaults]{nomo_defaults()}}. They are screening heuristics,
 not psychometric laws or automatic item-retention rules. Ordered and
 numeric-discrete items also receive descriptive boundary concentration
 summaries, \code{floor_prop} and \code{ceiling_prop}. An ordered item's boundaries are

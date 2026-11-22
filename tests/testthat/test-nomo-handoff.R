@@ -316,6 +316,16 @@ test_that("the keying rows say what was used, from the handoff or the call (#145
   none <- nomo_screen(data, items = full, reverse = character(0))
   expect_match(rows(none, "keying_override")$observation, "`reverse` (none) was supplied",
                fixed = TRUE)
+  # One declared item is "the reverse-keyed item" (#145).
+  one <- list(
+    origin = c(reverse = "override", scale_range = "handoff"),
+    given = list(reverse = character(0), scale_range = c(1, 5)),
+    recorded = list(reverse = "EF2", scale_range = c(1, 5))
+  )
+  expect_match(
+    nomologR:::nomo_handoff_keying_rows(nomologR:::nomo_log_new(), one, "screen")$observation,
+    "in place of the reverse-keyed item the handoff declared (EF2).", fixed = TRUE
+  )
 })
 
 
@@ -895,6 +905,14 @@ test_that("a run from a handoff reports its content review; other runs do not", 
   run$handoff$keying$scale_range <- NULL
   expect_match(nomologR:::nomo_report_content_review(run)$summary,
                "with no response scale recorded", fixed = TRUE)
+  # The noun agrees with the count, never "item(s)" (#145).
+  expect_match(nomologR:::nomo_report_content_review(run)$summary,
+               "Declared reverse-keyed item: EF2, with no response scale recorded.",
+               fixed = TRUE)
+  run$handoff$keying$reverse <- c("EF2", "TF2")
+  expect_match(nomologR:::nomo_report_content_review(run)$summary,
+               "Declared reverse-keyed items: EF2, TF2, with no response scale recorded.",
+               fixed = TRUE)
 })
 
 

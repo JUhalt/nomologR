@@ -225,6 +225,23 @@ test_that("invariance summaries say what each level holds equal (#89)", {
 })
 
 
+# `digits` changes a printout that shows statistics and leaves the default
+# as it was; a printout with none says so and prints as usual (#145,
+# clarity-22).
+expect_digits_apply <- function(x) {
+  default <- utils::capture.output(print(x))
+  expect_identical(utils::capture.output(print(x, digits = NULL)), default)
+  expect_false(identical(utils::capture.output(print(x, digits = 4)), default))
+}
+
+expect_digits_unused <- function(x) {
+  default <- utils::capture.output(print(x))
+  expect_message(given <- utils::capture.output(print(x, digits = 4)),
+                 "`digits` changes nothing here", fixed = TRUE)
+  expect_identical(given, default)
+}
+
+
 test_that("the CFA print and summary read as designed (#89)", {
   cfa <- nomo_cfa(
     nomo_model(list(A = paste0("a", 1:5), B = paste0("b", 1:5))),
@@ -232,6 +249,13 @@ test_that("the CFA print and summary read as designed (#89)", {
   )
   expect_snapshot(print(cfa))
   expect_snapshot(print(summary(cfa)))
+  expect_digits_apply(cfa)
+  expect_digits_apply(summary(cfa))
+  # Fewer decimals round the fit values but never the references: a CFI
+  # reference of .95 had read "1.0" (#145, clarity-22).
+  fewer <- utils::capture.output(print(summary(cfa), digits = 1))
+  expect_true("  CFI      .97       .950" %in% fewer)
+  expect_true("  RMSEA   0.05      0.060  [0.0, 0.1]" %in% fewer)
 })
 
 
@@ -246,6 +270,8 @@ test_that("the item audit, factor retention, and EFA read as designed (#89)", {
   expect_snapshot(print(summary(fac)))
   expect_snapshot(print(efa))
   expect_snapshot(print(summary(efa)))
+  expect_digits_unused(scr)
+  for (x in list(summary(scr), fac, summary(fac), efa, summary(efa))) expect_digits_apply(x)
 })
 
 
@@ -264,7 +290,17 @@ test_that("reliability, validity, scores, and missing-data output read as design
   expect_snapshot(print(summary(val)))
   expect_snapshot(print(sc))
   expect_snapshot(print(summary(sc)))
-  expect_snapshot(print(nomo_missing(cfa, data = nomo_demo_continuous)))
+  mis <- nomo_missing(cfa, data = nomo_demo_continuous)
+  expect_snapshot(print(mis))
+  for (x in list(rel, summary(rel), val, summary(val), sc, summary(sc), mis, summary(mis))) {
+    expect_digits_apply(x)
+  }
+  # References keep at least their own decimals (#145, clarity-22).
+  expect_true("Primary coefficient: model-based omega | Review reference: .70" %in%
+                utils::capture.output(print(rel, digits = 1)))
+  fewer <- utils::capture.output(print(val, digits = 1))
+  expect_true("AVE reference: .50 | HTMT reference: 0.85" %in% fewer)
+  expect_true("  - A (Review): AVE .497 is below the review reference .50." %in% fewer)
 })
 
 
@@ -282,6 +318,12 @@ test_that("hierarchical output reads as designed (#89)", {
   hier <- nomo_hierarchical(nomo_cfa(nomo_model(factors, structure = "bifactor"), data = dat))
   expect_snapshot(print(hier))
   expect_snapshot(print(summary(hier)))
+  expect_digits_apply(hier)
+  expect_digits_apply(summary(hier))
+  # An index and the share in its interpretation have one precision (#145).
+  more <- paste(utils::capture.output(print(summary(hier), digits = 4)), collapse = "\n")
+  expect_match(more, "Omega total = .8962: Common sources explain .8962 of", fixed = TRUE)
+  expect_match(more, "PUC = .7500: Of the item correlations, .7500 are", fixed = TRUE)
 })
 
 
@@ -313,7 +355,51 @@ test_that("comparison, invariance, and network output read as designed (#89)", {
   net <- nomo_network(nomo_model(scales), data = nomo_demo_network, hypotheses = h)
   expect_snapshot(print(net))
   expect_snapshot(print(summary(net)))
-  expect_snapshot(print(nomo_split(nomo_demo_network, validation_prop = 0.4, seed = 2026)))
+  split <- nomo_split(nomo_demo_network, validation_prop = 0.4, seed = 2026)
+  expect_snapshot(print(split))
+  for (x in list(cmp, summary(cmp), inv, summary(inv), h, summary(h), net, summary(net), split)) {
+    expect_digits_apply(x)
+  }
+  # The requested proportion was given, and the realized one equals it, so
+  # both keep their decimals (#145, clarity-22).
+  expect_true("Validation proportion: .40 requested, .40 realized | Seed: 2026" %in%
+                utils::capture.output(print(split, digits = 1)))
+  expect_digits_unused(nomo_partial(level = "scalar", syntax = "ag3 ~ 1",
+                                    rationale = "Anticipated mode difference."))
+})
+
+
+test_that("the other printouts take `digits` too (#145, clarity-22)", {
+  skip_on_cran()
+  model <- nomo_model(list(Agency = paste0("ag", 1:4), Persistence = paste0("pe", 1:4)))
+  expect_digits_unused(model)
+  esem <- nomo_esem(model, nomo_demo_network)
+  method <- nomo_method_variance(model, data = nomo_demo_network, marker = c("sd1", "sd2", "sd3"))
+  rmsea <- nomo_power_rmsea(model)
+  simulated <- nomo_power_simulate("F =~ .7*y1 + .7*y2 + .7*y3 + .7*y4", n = 100, reps = 20,
+                                   seed = 1)
+  set.seed(2026)
+  true <- stats::rnorm(150)
+  panel <- data.frame(agency_t1 = 3 + true + stats::rnorm(150, sd = .45),
+                      agency_t2 = 3.1 + true + stats::rnorm(150, sd = .45))
+  retest <- nomo_retest(panel, scores = c("agency_t1", "agency_t2"), interval = "two weeks")
+  single <- nomo_single_indicator(.85, source = "Test manual, Table 4")
+  for (x in list(esem, summary(esem), method, summary(method), rmsea, summary(rmsea),
+                 simulated, summary(simulated), retest, summary(retest), single)) {
+    expect_digits_apply(x)
+  }
+  # Values the researcher gave never print with fewer decimals than by
+  # default, and the references of a power analysis keep theirs, as its target
+  # does (#145, clarity-22).
+  expect_true("df: 19 | RMSEA: null 0.050, alternative 0.080 | alpha = .05" %in%
+                utils::capture.output(print(rmsea, digits = 1)))
+  expect_true("Reliability: .850 (omega)" %in% utils::capture.output(print(single, digits = 1)))
+  fewer <- utils::capture.output(print(summary(simulated), digits = 1))
+  expect_true(any(grepl("^  100  F=~y1 +0\\.70 +0\\.7 ", fewer)))
+  more <- paste(utils::capture.output(print(simulated, digits = 4)), collapse = " ")
+  expect_match(more, ".91 to .98, and power .80 for", fixed = TRUE)
+  cfa <- nomo_cfa(model, data = nomo_demo_network)
+  expect_digits_unused(nomo_apa_table(cfa, "loadings", number = 1))
 })
 
 
@@ -362,6 +448,8 @@ test_that("guided runs say what they found, and group repeated requests (#89)", 
   )
   expect_snapshot(print(complete))
   expect_snapshot(print(summary(complete)))
+  expect_digits_apply(complete)
+  expect_digits_unused(summary(complete))
   # A network flag about a relation reads as the network's own summary gives
   # it: the relation is the unit, and no bullet puts it in backticks (#145,
   # out-11).

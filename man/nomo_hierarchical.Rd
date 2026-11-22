@@ -53,9 +53,10 @@ Other fields record the call, the settings used, and the fitted model.
 They may change between releases and are not part of the stable interface
 (see \code{?nomologR}).
 
-\code{print()} shows the indices for the total score and the item set, the
-subscale and factor-score tables, and one sentence for each flagged note;
-\code{summary()} adds each index's interpretation and every note in full.
+\code{print()} shows the cases the model analyzed, the indices for the total
+score and the item set, the subscale and factor-score tables, and one
+sentence for each flagged note; \code{summary()} adds each index's
+interpretation and every note in full.
 }
 \description{
 \code{nomo_hierarchical()} answers the question behind many published scales that

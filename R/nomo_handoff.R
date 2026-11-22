@@ -463,6 +463,18 @@ nomo_handoff_range_text <- function(range) {
 }
 
 
+# What a keying argument names, in a sentence about replacing it: "the
+# reverse-keyed item" for one item, "the reverse-keyed items" for none or
+# several (#145), or "the response scale".
+nomo_keying_what <- function(arg, value) {
+  if (identical(arg, "reverse")) {
+    paste("the reverse-keyed", nomo_present_noun(length(value), "item"))
+  } else {
+    "the response scale"
+  }
+}
+
+
 # Rows for keying the call supplied alongside a handoff that declared keying:
 # a response scale that completes keying the handoff recorded without one, and
 # a `reverse` or `scale_range` that replaces what the handoff declared. Keying
@@ -491,14 +503,14 @@ nomo_handoff_keying_rows <- function(log, used, stage) {
   }
   replaced <- names(origin)[origin == "override"]
   if (length(replaced)) {
-    what <- c(reverse = "the reverse-keyed items", scale_range = "the response scale")
     log <- nomo_log_add(
       log, stage = stage, object = "content_review", metric = "keying_override",
       severity = "info",
       observation = paste(vapply(replaced, function(arg) {
         sprintf(
           "`%s` (%s) was supplied in the call, so it was used in place of %s the handoff declared (%s).",
-          arg, shown(used$given[[arg]]), what[[arg]], shown(used$recorded[[arg]])
+          arg, shown(used$given[[arg]]), nomo_keying_what(arg, used$recorded[[arg]]),
+          shown(used$recorded[[arg]])
         )
       }, character(1)), collapse = " "),
       recommendation = "Record why the declared keying was set aside."

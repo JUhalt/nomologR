@@ -137,9 +137,10 @@
 #'   They may change between releases and are not part of the stable interface
 #'   (see `?nomologR`).
 #'
-#'   `print()` shows the indices for the total score and the item set, the
-#'   subscale and factor-score tables, and one sentence for each flagged note;
-#'   `summary()` adds each index's interpretation and every note in full.
+#'   `print()` shows the cases the model analyzed, the indices for the total
+#'   score and the item set, the subscale and factor-score tables, and one
+#'   sentence for each flagged note; `summary()` adds each index's
+#'   interpretation and every note in full.
 #'
 #' @references
 #' Beauducel, A. (2011). Indeterminacy of factor score estimates in slightly

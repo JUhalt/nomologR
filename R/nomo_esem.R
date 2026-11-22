@@ -550,8 +550,10 @@ nomo_esem_version_note <- function(x) {
 nomo_esem_abbreviations <- c("ESEM", "CFA", "CFI", "TLI", "RMSEA", "SRMR", "df")
 
 
+#' @rdname printing
 #' @export
-print.nomo_esem <- function(x, ...) {
+print.nomo_esem <- function(x, digits = NULL, ...) {
+  nomo_present_local_digits(digits)
   nomo_esem_present_header(x)
   nomo_esem_present_fit(x$models, x$comparisons, nomo_esem_version_note(x),
                         x$comparison_method)
@@ -581,8 +583,10 @@ summary.nomo_esem <- function(object, ...) {
 }
 
 
+#' @rdname printing
 #' @export
-print.summary_nomo_esem <- function(x, ...) {
+print.summary_nomo_esem <- function(x, digits = NULL, ...) {
+  nomo_present_local_digits(digits)
   nomo_esem_present_header(x, summary = TRUE)
   nomo_esem_present_fit(x$models, x$comparisons, x$version_note, x$comparison_method)
 

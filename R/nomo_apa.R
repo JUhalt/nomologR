@@ -1469,8 +1469,12 @@ nomo_apa_console_layout <- function(headings, cells, room) {
 }
 
 
+#' @rdname printing
 #' @export
-print.nomo_apa_table <- function(x, ...) {
+print.nomo_apa_table <- function(x, digits = NULL, ...) {
+  nomo_present_digits_unused(
+    digits, "the cells of a `nomo_apa_table` are formatted by APA rules when the table is built."
+  )
   nomo_present_header("nomo_apa_table", "Manuscript table in APA style")
   cat("\n")
   if (!is.null(x$number)) cat(sprintf("Table %d\n", x$number))

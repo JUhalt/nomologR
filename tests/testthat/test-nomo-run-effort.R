@@ -173,7 +173,7 @@ test_that("a handoff's declared keying reaches the run, and settings override it
                fixed = TRUE)
   keying <- run_effort_entry(overridden, "keying")
   expect_match(keying$observation,
-               "`settings$screen$reverse` (EF2) was used in place of the reverse-keyed item(s) the content-review handoff declared (EF2, TF2).",
+               "`settings$screen$reverse` (EF2) was used in place of the reverse-keyed items the content-review handoff declared (EF2, TF2).",
                fixed = TRUE)
   expect_match(keying$observation,
                "`settings$screen$scale_range` (0 to 6) was used in place of the response scale the content-review handoff declared (1 to 5).",
@@ -255,7 +255,7 @@ test_that("keying replaced in settings reaches the item audits and the log witho
   expect_false("careless_responding" %in% replaced$decision_log$id)
   keying <- run_effort_entry(replaced, "keying")
   expect_identical(keying$stage, "screen")
-  expect_match(keying$observation, "in place of the reverse-keyed item(s)", fixed = TRUE)
+  expect_match(keying$observation, "in place of the reverse-keyed items", fixed = TRUE)
 })
 
 
@@ -279,7 +279,7 @@ test_that("keying is resolved one argument at a time", {
   row <- nomologR:::nomo_run_keying_log(nomologR:::nomo_run_workflow_log_new(), replaced)
   expect_identical(
     row$observation,
-    paste("`settings$screen$reverse` (none) was used in place of the reverse-keyed item(s)",
+    paste("`settings$screen$reverse` (none) was used in place of the reverse-keyed items",
           "the content-review handoff declared (EF2, TF2).")
   )
   expect_identical(row$decision, "reverse: none; scale_range: 1 to 5")
@@ -287,6 +287,19 @@ test_that("keying is resolved one argument at a time", {
   # A handoff's reverse-keyed items are those among the run's items.
   fewer <- nomologR:::nomo_run_screen_keying(list(), list(EF = c("EF1", "EF3")), h)
   expect_identical(fewer$reverse, character(0))
+
+  # The noun agrees with the items it names: one declared item is "the
+  # reverse-keyed item", not "item(s)" (#145).
+  one <- list(
+    origin = c(reverse = "override", scale_range = "handoff"),
+    given = list(reverse = character(0), scale_range = c(1, 5)),
+    recorded = list(reverse = "EF2", scale_range = c(1, 5))
+  )
+  expect_identical(
+    nomologR:::nomo_run_keying_log(nomologR:::nomo_run_workflow_log_new(), one)$observation,
+    paste("`settings$screen$reverse` (none) was used in place of the reverse-keyed item",
+          "the content-review handoff declared (EF2).")
+  )
 
   # Without a handoff, settings are the only source.
   plain <- keying(list(reverse = "EF2", scale_range = c(1, 5)), handoff = NULL)

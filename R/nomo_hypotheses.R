@@ -507,8 +507,10 @@ nomo_hypotheses_present_table <- function(hypotheses) {
 }
 
 
+#' @rdname printing
 #' @export
-print.nomo_hypotheses <- function(x, ...) {
+print.nomo_hypotheses <- function(x, digits = NULL, ...) {
+  nomo_present_local_digits(digits)
   nomo_present_header("nomo_hypotheses", "Theory-specified relations")
   nomo_present_facts(c(
     sprintf("Relations: %d", x$n),
@@ -546,8 +548,10 @@ summary.nomo_hypotheses <- function(object, ...) {
 }
 
 
+#' @rdname printing
 #' @export
-print.summary_nomo_hypotheses <- function(x, ...) {
+print.summary_nomo_hypotheses <- function(x, digits = NULL, ...) {
+  nomo_present_local_digits(digits)
   nomo_present_header("nomo_hypotheses", "Theory-specified relations", summary = TRUE)
   nomo_present_facts(c(
     sprintf("Relations: %d", x$n),

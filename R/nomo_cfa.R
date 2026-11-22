@@ -43,7 +43,7 @@
 #'   * `converged`, `estimator`, `data_n`, `n_used`, and `sample_summary`.
 #'     `estimator` is stored in upper case, so `"mlr"` is stored as `"MLR"` and
 #'     a requested `"default"` as `"DEFAULT"`.
-#'   * `fit_evidence`: global fit indices with their teaching references;
+#'   * `fit_evidence`: global fit indices with their review references;
 #'     `variant` names the `lavaan` measure each value comes from. Robust
 #'     values are preferred, then scaled ones, then standard ones. When
 #'     `lavaan` was asked for a scaled test statistic but could not compute it,
@@ -640,16 +640,16 @@ nomo_cfa_fit_evidence <- function(measures, guidance) {
     idx <- names(values) == metric
     explanation[idx] <- ifelse(
       attention[idx] == "review",
-      "Below the configured teaching reference; inspect global and localized model strain.",
-      "At or above the configured teaching reference; this does not establish model correctness."
+      "Below the configured review reference; inspect global and localized model strain.",
+      "At or above the configured review reference; this does not establish model correctness."
     )
   }
   for (metric in c("RMSEA", "SRMR")) {
     idx <- names(values) == metric
     explanation[idx] <- ifelse(
       attention[idx] == "review",
-      "Above the configured teaching reference; inspect global and localized model strain.",
-      "At or below the configured teaching reference; this does not establish model correctness."
+      "Above the configured review reference; inspect global and localized model strain.",
+      "At or below the configured review reference; this does not establish model correctness."
     )
   }
 
@@ -1083,7 +1083,7 @@ nomo_cfa_decision_log <- function(estimator_label, engine_estimator,
         log <- nomo_log_add(
           log, stage = "cfa", object = "model",
           metric = paste0("fit_", tolower(row$metric)), value = row$value,
-          reference = paste("Configured teaching reference:",
+          reference = paste("Configured review reference:",
                             nomo_present_stat(row$reference, nomo_cfa_fit_kind(row$metric))),
           severity = "review", observation = row$explanation,
           recommendation = paste(

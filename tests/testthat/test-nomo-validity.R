@@ -675,7 +675,8 @@ test_that("flag counts name what they count, and constructs are counted once (#1
     "visual =~ x1 + x2 + x3\ntextual =~ x4 + x5 + x6",
     data = lavaan::HolzingerSwineford1939, group = "school"
   ))))
-  expect_match(grouped, "^Constructs: 2 \\| Groups: 2", all = FALSE)
+  # The cases are those of both groups (#145, clarity-08).
+  expect_match(grouped, "^Cases: 301 \\| Constructs: 2 \\| Groups: 2", all = FALSE)
   expect_match(grouped, "(2 constructs in 2 groups)", fixed = TRUE, all = FALSE)
   expect_match(grouped, "visual in Pasteur (Review)", fixed = TRUE, all = FALSE)
   expect_match(grouped, "nomo_invariance() compares", fixed = TRUE, all = FALSE)
@@ -847,7 +848,8 @@ test_that("each flagged construct and pair gets one sentence in print (#145)", {
   # Several levels are counted as levels.
   levels <- val
   levels$nlevels <- 2L
-  expect_match(capture.output(print(levels)), "^Constructs: 2 \\| Levels: 2", all = FALSE)
+  expect_match(capture.output(print(levels)),
+               "^Cases: [0-9]+( of [0-9]+ used)? \\| Constructs: 2 \\| Levels: 2", all = FALSE)
 })
 
 

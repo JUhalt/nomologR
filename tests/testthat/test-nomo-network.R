@@ -3211,7 +3211,7 @@ test_that("flags name the values and references they compare (#145)", {
   observation <- weak$measurement_context$summary$observation
   expect_identical(
     observation,
-    "Standardized loading below the review reference of 0.50 in absolute value: b5 (0.34)."
+    "Standardized loading below the review reference 0.50 in absolute value: b5 (0.34)."
   )
   expect_match(rg_text(summary(weak)), "Status: review | Constructs: 2 | Loading flags: 1", fixed = TRUE)
   # The replication table heads its first column with the sample's role.

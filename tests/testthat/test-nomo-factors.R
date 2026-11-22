@@ -631,6 +631,13 @@ test_that("Bartlett's test is written as every chi-square test is (#145)", {
   display <- summary(out)$adequacy$display[[2L]]
   expect_identical(display, "chi-square(10) = 12.35, p = .264")
   expect_false(exists("nomo_format_p", envir = asNamespace("nomologR"), inherits = FALSE))
+  # Printed, KMO and the test are formatted then, so `digits` reaches them (#145).
+  local_reproducible_output(width = 80)
+  printed <- capture.output(print(summary(out), digits = 3))
+  expect_true("  - Bartlett's test: chi-square(10) = 12.346, p = .264" %in% printed)
+  expect_match(printed, "^  - KMO: \\.[0-9]{3}$", all = FALSE)
+  expect_true("  - Bartlett's test: chi-square(10) = 12.35, p = .264" %in%
+                capture.output(print(summary(out))))
 
   log <- out$decision_log
   expect_match(log$observation[log$metric == "bartlett"],

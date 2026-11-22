@@ -10,7 +10,7 @@
 \item{x}{A \code{nomo_compare} object.}
 
 \item{type}{\code{"fit"} shows CFI, TLI, RMSEA, and SRMR for each model with the
-configured teaching references; \code{"loadings"} shows standardized loadings
+configured review references; \code{"loadings"} shows standardized loadings
 for each model side by side.}
 
 \item{...}{Unused.}

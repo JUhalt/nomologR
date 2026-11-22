@@ -1501,12 +1501,12 @@ nomo_factors_log <- function(item_types,
       metric = "small_sample_prompt",
       value = min_pairwise_n,
       reference = sprintf(
-        "%d is a teaching prompt, not a universal factor-analysis minimum",
+        "%d is a review reference, not a universal factor-analysis minimum",
         small_ref
       ),
       severity = "review",
       observation = sprintf(
-        "The effective sample size is below the teaching reference of %d.",
+        "The effective sample size is below the review reference %d.",
         small_ref
       ),
       recommendation = paste(
@@ -1555,7 +1555,7 @@ nomo_factors_log <- function(item_types,
       metric = "kmo",
       value = kmo$overall,
       reference = sprintf(
-        "%s and %s are teaching review and concern prompts, not universal laws",
+        "%s and %s are review and concern references, not universal laws",
         nomo_present_stat(review_ref, "proportion"),
         nomo_present_stat(concern_ref, "proportion")
       ),

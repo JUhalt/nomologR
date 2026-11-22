@@ -1886,7 +1886,7 @@ test_that("correlations in the log are written without a leading zero (#145)", {
     row$observation,
     "`b5` has a corrected item-rest correlation of r = .28 (n = 473), below the review reference .30."
   )
-  expect_identical(row$reference, "Teaching reference .30; not a retention rule")
+  expect_identical(row$reference, "Review reference .30; not a retention rule")
 })
 
 

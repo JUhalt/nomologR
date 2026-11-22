@@ -306,9 +306,9 @@ nomo_report_reference_numbers <- function(text) {
 
 # For each row of a table, the numbers its `value` is read against, or NULL
 # when the table has no `reference` column. A reference stored as a number,
-# such as the teaching reference of a fit index, is that number. A reference
+# such as the review reference of a fit index, is that number. A reference
 # stored as text, as in every decision log ("configured review reference =
-# .70", "Teaching reference .30; not a retention rule"), gives the numbers it
+# .70", "Review reference .30; not a retention rule"), gives the numbers it
 # names, and only for a row flagged for review or concern: the flag says the
 # value fell on one side of its reference, so the two must not print alike.
 nomo_report_value_reference <- function(x) {
@@ -853,7 +853,8 @@ nomo_report_content_review <- function(x) {
     "Keying was declared with no reverse-keyed item among those carried."
   } else {
     sprintf(
-      "Declared reverse-keyed item(s): %s%s.",
+      "Declared reverse-keyed %s: %s%s.",
+      nomo_present_noun(length(keying$reverse), "item"),
       paste(keying$reverse, collapse = ", "),
       if (is.null(keying$scale_range)) {
         ", with no response scale recorded"

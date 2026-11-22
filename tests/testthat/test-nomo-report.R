@@ -2112,11 +2112,11 @@ test_that("a flagged value is told apart from the reference its row names (#144)
     value = c(0.698, 0.4996, 0.7004, 0.298, 0.9496, 0.598, 0.1521, 0.9004, 0, 0.698, 0.62),
     reference = c(
       "configured review reference = .70", "configured review reference = .50",
-      "configured review reference = .70", "Teaching reference .30; not a retention rule",
-      "Configured teaching reference: .950",
-      ".60 and .50 are teaching review and concern prompts, not universal laws",
+      "configured review reference = .70", "Review reference .30; not a retention rule",
+      "Configured review reference: .950",
+      ".60 and .50 are review and concern references, not universal laws",
       "[-0.15, 0.15]",
-      "Teaching reference 90.0% of responses in one category; not a deletion rule",
+      "Review reference 90.0% of responses in one category; not a deletion rule",
       "A k-factor model of p items has ((p - k)^2 - (p + k)) / 2 degrees of freedom",
       NA, "configured review reference = .70"
     ),

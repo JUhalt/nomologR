@@ -411,7 +411,7 @@ plot(efa, type = "factor_correlations")
 ```
 
 The pattern heatmap preserves loading sign; the loading plot distinguishes
-primary from secondary loadings and displays both teaching references; residual
+primary from secondary loadings and displays both review references; residual
 and factor-correlation plots show unique matrix information rather than
 duplicating symmetric cells.
 
@@ -449,7 +449,7 @@ The full Checkpoint A walkthrough is in the
 
 Milestone 4 adds a guided CFA layer around `lavaan::cfa()`. The underlying
 `lavaan` fit is retained in `cfa$fit`; `nomologR` adds diagnostics,
-literature-linked teaching references, plots, and decision logging without
+literature-linked review references, plots, and decision logging without
 silently changing the researcher-specified model.
 
 ```r
@@ -489,7 +489,7 @@ plot(cfa, type = "residuals")
 plot(cfa, type = "modification_indices")
 ```
 
-Fit-index values are teaching references rather than pass/fail laws. The
+Fit-index references are prompts for review rather than pass/fail laws. The
 package deliberately asks users to interpret global fit, localized strain,
 parameter estimates, estimator, sample characteristics, and theory together.
 

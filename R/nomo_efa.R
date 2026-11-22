@@ -1145,7 +1145,7 @@ nomo_efa_log <- function(k,
       metric = "item_structure_review",
       value = abs(row$primary_loading),
       reference = sprintf(
-        "Teaching references: loading %s, cross-loading %s, communality %s",
+        "Review references: loading %s, cross-loading %s, communality %s",
         nomo_present_stat(loading_ref, "loading"),
         nomo_present_stat(cross_ref, "loading"),
         nomo_present_stat(communality_ref, "proportion")
@@ -1223,7 +1223,7 @@ nomo_efa_log <- function(k,
       object = "sample",
       metric = "sample_size",
       value = min_pairwise_n,
-      reference = sprintf("%d cases is a teaching review reference, not a universal minimum", small_n_ref),
+      reference = sprintf("%d cases is a review reference, not a universal minimum", small_n_ref),
       severity = "review",
       observation = sprintf(
         "%d cases were analyzed for %d items%s (%.1f cases per item).",
@@ -1349,7 +1349,7 @@ nomo_efa_heywood_text <- function(item, h2) {
     digits <- nchar(shown) - as.integer(regexpr(".", shown, fixed = TRUE))
     sprintf(
       "%s is %s, so its unique variance (%s) is at or near 0: an improper (Heywood) solution.",
-      subject, shown, nomo_present_stat(1 - h2, "proportion", digits = digits)
+      subject, shown, nomo_present_number(1 - h2, digits, bounded = TRUE)
     )
   }
 }
