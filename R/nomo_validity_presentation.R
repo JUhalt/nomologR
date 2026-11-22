@@ -30,7 +30,7 @@ nomo_validity_convergent_table <- function(x) {
         if (length(vals)) stats::median(vals) else NA_real_
       }, numeric(1)),
       n_loading_review = vapply(pieces, function(z) {
-        sum(z$attention != "KEEP", na.rm = TRUE)
+        sum(nomo_validity_loading_flagged(z, x$loading_reference), na.rm = TRUE)
       }, integer(1)),
       loading_concern = vapply(pieces, function(z) {
         any(z$attention == "STRONG REVIEW", na.rm = TRUE)
@@ -82,6 +82,15 @@ nomo_validity_convergent_table <- function(x) {
     "construct", "block", "AVE", "min_abs_loading", "median_abs_loading",
     "n_loading_review", "signal"
   ), drop = FALSE])
+}
+
+
+# Loadings flagged for their size, or because none was available. A loading
+# flagged only for its sign (usefulness-02) is left out: AVE squares the
+# loadings, and the loading_signs concern reports the sign.
+nomo_validity_loading_flagged <- function(loads, reference) {
+  loads$attention != "KEEP" &
+    !(loads$attention == "REVIEW" & is.finite(loads$loading) & abs(loads$loading) >= reference)
 }
 
 
@@ -404,7 +413,8 @@ nomo_validity_flagged_brief <- function(x, convergent, discriminant) {
     }
     if (is.finite(row$n_loading_review) && row$n_loading_review > 0L) {
       loads <- x$standardized_loadings
-      items <- loads$item[loads$factor == row$construct & loads$attention != "KEEP"]
+      items <- loads$item[loads$factor == row$construct &
+                            nomo_validity_loading_flagged(loads, x$loading_reference)]
       total <- sum(loads$factor == row$construct)
       parts <- c(parts, sprintf(
         "%d of %d standardized loadings %s flagged (%s)",

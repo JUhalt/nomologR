@@ -73,7 +73,10 @@
 #' many (zero), an extraction that did not converge, and any warning or message
 #' from [psych::fa()]. Numeric items modeled as continuous, with Pearson
 #' correlations, are flagged for review when they use 4 or fewer observed
-#' categories between them; `types` is the remedy (Rhemtulla et al., 2012).
+#' categories between them. Marking them as ordinal in `types` uses polychoric
+#' correlations, the EFA counterpart of the categorical estimation that
+#' recovers CFA loadings better with so few categories (Rhemtulla et al.,
+#' 2012).
 #'
 #' `print()` shows the settings, the residual misfit, the item flags, and any
 #' problem with the solution; `summary()` adds the item loadings and
@@ -1054,7 +1057,7 @@ nomo_efa_log <- function(k,
       object = paste(few_categories, collapse = ", "),
       metric = "few_categories",
       value = length(few_categories),
-      reference = "Rhemtulla et al. (2012)",
+      reference = "Numeric storage does not establish ordinal measurement",
       severity = "review",
       observation = sprintf(
         "%s with 4 or fewer observed categories %s modeled as continuous: %s.",

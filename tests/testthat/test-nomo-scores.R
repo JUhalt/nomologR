@@ -931,7 +931,7 @@ test_that("an item loading against its factor is named for a unit-weighted score
   summed <- nomo_scores(nomo_cfa(scores_hs_model, data = hs), method = "sum")
   note <- summed$notes[summed$notes$topic == "loading_signs", ]
   expect_identical(note$severity, "concern")
-  expect_match(note$note, "x3 on visual loads against the strongest item of its factor",
+  expect_match(note$note, "x3 on visual loads with the opposite sign to the other items of its factor",
                fixed = TRUE)
   expect_match(note$note, "Reverse-score each such item", fixed = TRUE)
   # The stored ratio is unchanged; the summary does not show it as though the
@@ -949,8 +949,25 @@ test_that("an item loading against its factor is named for a unit-weighted score
   hs$x6 <- -hs$x6
   two <- nomo_scores(nomo_cfa(scores_hs_model, data = hs), method = "sum")
   expect_match(two$notes$note[two$notes$topic == "loading_signs"],
-               "x3 on visual and x6 on textual load against the strongest item of their factors",
+               "x3 on visual and x6 on textual load with the opposite sign to the other items of their factors",
                fixed = TRUE)
+})
+
+
+test_that("scores name the items the CFA and reliability name as loading against their factor", {
+  skip_on_cran()
+  # On psych::bfi as answered, C4 has C's largest loading, but C4 and C5 are
+  # the reverse-keyed items and run against most of C's loadings.
+  cfa <- nomo_cfa(nomo_model(list(C = paste0("C", 1:5))), psych::bfi,
+                  modification_indices = FALSE)
+  loads <- cfa$standardized_loadings
+  expect_identical(loads$item[which.max(abs(loads$loading))], "C4")
+  summed <- nomo_scores(cfa, method = "sum")
+  expect_identical(nomo_scores_opposite_signs(list(fit = cfa$fit, factors = summed$factors)),
+                   list(C = c("C4", "C5")))
+  expect_match(summed$notes$note[summed$notes$topic == "loading_signs"],
+               "C4 on C and C5 on C load with the opposite sign", fixed = TRUE)
+  expect_identical(nomo_cfa_against_items(cfa$fit)$C, c("C4", "C5"))
 })
 
 

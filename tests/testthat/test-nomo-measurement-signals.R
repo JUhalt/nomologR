@@ -331,8 +331,11 @@ test_that("category rows say one indicator in the singular and suggest MLR only 
   )
   expect_identical(
     one$observation[[2L]],
-    "1 indicator has 5 to 7 observed categories and was fitted as continuous with ML."
+    paste("1 indicator was fitted as continuous with ML; its factor's indicators use",
+          "5 to 7 observed categories between them.")
   )
+  two <- nomo_cfa_categories_log(nomo_log_new(), c(a1 = 5L, b1 = 6L), "ML")
+  expect_match(two$observation, "^2 indicators were fitted as continuous with ML; their factors'")
   expect_match(one$recommendation[[2L]], "`estimator = \"MLR\"`", fixed = TRUE)
   robust <- nomo_cfa_categories_log(nomo_log_new(), c(a1 = 6L, b1 = 9L), "MLR")
   expect_identical(nrow(robust), 0L)
@@ -410,6 +413,17 @@ test_that("a loading against most of its factor's loadings is flagged for review
   tie <- nomo_cfa_sign_split(rep("F", 4), paste0("y", 1:4), c(.6, .5, -.8, -.55))
   expect_identical(tie$against, c(TRUE, TRUE, FALSE, FALSE))
   expect_identical(tie$others[1:2], c("y3 and y4", "y3 and y4"))
+  # Items declared reverse-keyed do not set the direction, so the declared
+  # pair is against its factor whatever its loadings' size.
+  keyed <- nomo_cfa_sign_split(rep("F", 4), paste0("y", 1:4), c(.6, .5, -.8, -.55),
+                               reference = c(TRUE, TRUE, FALSE, FALSE))
+  expect_identical(keyed$against, c(FALSE, FALSE, TRUE, TRUE))
+  expect_identical(keyed$others[3:4], c("y1 and y2", "y1 and y2"))
+  # A factor whose items are all declared has nothing to compare them with.
+  all_keyed <- nomo_cfa_sign_split(rep("F", 3), paste0("y", 1:3), c(.6, -.5, -.4),
+                                   reference = FALSE)
+  expect_false(any(all_keyed$against))
+  expect_identical(all_keyed$lead, c(0, 0, 0))
   # Cross-loaded items, and factors loading on a higher-order factor, are not
   # compared.
   split <- nomo_cfa_sign_split(
@@ -475,6 +489,15 @@ test_that("unrecoded reverse-keyed items are flagged by the CFA, reliability, an
   expect_match(c4$observation, "^Standardized loading -0\\.[0-9]{2} is opposite in sign")
   printed <- paste(trimws(capture.output(print(val))), collapse = " ")
   expect_match(printed, "C (Concern): C4 and C5 load on C with the opposite sign", fixed = TRUE)
+  # AVE squares the loadings, so a loading flagged only for its sign is not
+  # counted beside it; a weak one still is.
+  conv <- nomo_validity_convergent_table(val)
+  expect_identical(conv$n_loading_review[conv$construct %in% c("C", "E")], c(0L, 0L))
+  expect_false(grepl("loadings are flagged (C4", printed, fixed = TRUE))
+  weak <- val
+  weak$standardized_loadings$loading[weak$standardized_loadings$item == "C4"] <- -0.2
+  conv <- nomo_validity_convergent_table(weak)
+  expect_identical(conv$n_loading_review[conv$construct == "C"], 1L)
 })
 
 
@@ -489,9 +512,9 @@ test_that("a guided run says when declared reverse-keyed items still load agains
   expect_identical(raw$next_stage, "measurement_review")
   expect_identical(nomo_run_unrecoded_items(raw), c("EF2", "TF2"))
   expect_match(raw$decision_requests$observation, paste(
-    "EF2 and TF2 are declared reverse-keyed and still load against their factors in",
-    "the CFA, so the data were not recoded; the CFA, reliability, and validity",
-    "evidence describe them as answered."
+    "EF2 and TF2 are declared reverse-keyed and still load on their factors in the",
+    "CFA with the opposite sign to the items not declared, so the data were not",
+    "recoded; the CFA, reliability, and validity evidence describe them as answered."
   ), fixed = TRUE)
   log <- nomo_table(raw, "component_log")
   row <- log[log$metric %in% "declared_reverse_keyed", , drop = FALSE]
@@ -499,11 +522,14 @@ test_that("a guided run says when declared reverse-keyed items still load agains
   expect_identical(row$pipeline_component, "cfa")
   # Listed under the CFA, the row does not name it again.
   expect_identical(row$observation, paste(
-    "EF2 and TF2 are declared reverse-keyed and still load against their factors,",
-    "so the data were not recoded; the CFA, reliability, and validity evidence",
-    "describe them as answered."
+    "EF2 and TF2 are declared reverse-keyed and still load on their factors with the",
+    "opposite sign to the items not declared, so the data were not recoded; the CFA,",
+    "reliability, and validity evidence describe them as answered."
   ))
-  expect_match(row$recommendation, "start a new nomo_run()", fixed = TRUE)
+  expect_match(row$recommendation, paste(
+    "Recode the declared items in the data, as 6 minus the response on the declared",
+    "1 to 5 scale, and start a new nomo_run()"
+  ), fixed = TRUE)
   printed <- paste(trimws(capture.output(print(raw))), collapse = " ")
   expect_match(printed, "EF2 and TF2 are declared reverse-keyed and still load", fixed = TRUE)
   summarized <- paste(trimws(capture.output(print(summary(raw)))), collapse = " ")
@@ -518,6 +544,50 @@ test_that("a guided run says when declared reverse-keyed items still load agains
   expect_false("declared_reverse_keyed" %in% nomo_table(recoded, "component_log")$metric)
   # Before the CFA there is nothing to check.
   expect_identical(nomo_run_unrecoded_items(list(results = list(cfa = NULL))), character())
+})
+
+
+test_that("declared items are found when they are half or more of a factor's items", {
+  skip_on_cran()
+  # The run's state as nomo_run_unrecoded_items() reads it.
+  run_state <- function(data, scales, reverse, scale_range = NULL) {
+    cfa <- nomo_cfa(nomo_model(scales), data, modification_indices = FALSE)
+    list(results = list(cfa = cfa), scales = scales, handoff = NULL,
+         settings = list(screen = list(reverse = reverse, scale_range = scale_range)))
+  }
+  # C1, C2, and C3 declared and left as answered: most of C's loadings run
+  # with them, so the CFA names C4 and C5, and the declared items are judged
+  # against the items not declared.
+  majority <- bfi_recoded()[1:800, ]
+  majority[c("C1", "C2", "C3")] <- 7L - majority[c("C1", "C2", "C3")]
+  x <- run_state(majority, big_five[c("C", "E")], c("C1", "C2", "C3"), c(1, 6))
+  expect_identical(unlist(nomo_cfa_against_items(x$results$cfa$fit), use.names = FALSE),
+                   c("C4", "C5"))
+  expect_identical(nomo_run_unrecoded_items(x), c("C1", "C2", "C3"))
+  row <- nomo_run_unrecoded_log(x)
+  expect_identical(row$object, "C1, C2, C3")
+  expect_match(row$observation, "^C1, C2, and C3 are declared reverse-keyed and still load")
+  # The recode follows the declared 1 to 6 scale.
+  expect_match(row$recommendation, "as 7 minus the response on the declared 1 to 6 scale",
+               fixed = TRUE)
+  x$settings$screen$scale_range <- NULL
+  expect_match(nomo_run_unrecoded_log(x)$recommendation,
+               "for example as 6 minus the response on a 1 to 5 scale", fixed = TRUE)
+
+  # Two of four declared, with the largest loading among them: an even split
+  # that the largest loading would decide against E3 and E4.
+  balanced <- bfi_recoded()[1:800, ]
+  balanced[c("E1", "E2")] <- 7L - balanced[c("E1", "E2")]
+  x <- run_state(balanced, list(E = paste0("E", 1:4), C = paste0("C", 1:5)), c("E1", "E2"))
+  expect_identical(unlist(nomo_cfa_against_items(x$results$cfa$fit), use.names = FALSE),
+                   c("E3", "E4"))
+  expect_identical(nomo_run_unrecoded_items(x), c("E1", "E2"))
+
+  # Recoded as declared, the same declarations find nothing.
+  x <- run_state(bfi_recoded()[1:800, ], list(E = paste0("E", 1:4), C = paste0("C", 1:5)),
+                 c("E1", "E2"))
+  expect_identical(nomo_run_unrecoded_items(x), character())
+  expect_identical(nrow(nomo_run_unrecoded_log(x)), 0L)
 })
 
 

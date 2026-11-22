@@ -15,9 +15,8 @@
 #' model-based reliability can be distorted by misspecification. An indicator
 #' that loads on its factor with the opposite sign to the factor's other
 #' indicators, as a reverse-keyed item does until it is recoded, is a concern:
-#' omega and
-#' alpha describe the unit-weighted sum, in which such an item counts against
-#' the factor. Recode reverse-keyed items before fitting the CFA.
+#' omega and alpha describe the unit-weighted sum, in which such an item counts
+#' against the factor. Recode reverse-keyed items before fitting the CFA.
 #'
 #' For ordered indicators, the observed-score omega (`ordinal_scale = TRUE`)
 #' is the same whether lavaan fitted the model with its delta or theta

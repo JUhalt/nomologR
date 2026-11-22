@@ -610,14 +610,18 @@ nomo_run_measurement_request <- function(x) {
 
 
 # Items declared reverse-keyed, in `settings$screen` or a content-review
-# handoff, that still load against their factor in the converged CFA: the data
-# were not recoded (usefulness-02). The run never recodes data, so it says so
+# handoff, that still load in the converged CFA with the opposite sign to the
+# items of their factor not declared: the data were not recoded
+# (usefulness-02). The items not declared set each factor's direction, so the
+# check holds when the declared items are half or more of a factor's items,
+# as on scales with balanced keying. The run never recodes data, so it says so
 # in the pause and as a concern in the component log.
 nomo_run_unrecoded_items <- function(x) {
   cfa <- x$results$cfa
   if (is.null(cfa) || !isTRUE(cfa$converged)) return(character())
   declared <- as.character(nomo_run_screen_keying(x$settings, x$scales, x$handoff)$reverse)
-  intersect(declared, as.character(unlist(nomo_cfa_against_items(cfa$fit), use.names = FALSE)))
+  against <- nomo_cfa_against_items(cfa$fit, keyed = declared)
+  intersect(declared, as.character(unlist(against, use.names = FALSE)))
 }
 
 
@@ -626,9 +630,9 @@ nomo_run_unrecoded_text <- function(items, where = " in the CFA") {
   n <- length(items)
   sprintf(
     paste(
-      "%s %s declared reverse-keyed and still %s against %s%s, so the data",
-      "were not recoded; the CFA, reliability, and validity evidence describe",
-      "%s as answered."
+      "%s %s declared reverse-keyed and still %s on %s%s with the opposite sign",
+      "to the items not declared, so the data were not recoded; the CFA,",
+      "reliability, and validity evidence describe %s as answered."
     ),
     nomo_present_or(items, "and"), nomo_present_noun(n, "is", "are"),
     nomo_present_noun(n, "loads", "load"), nomo_present_noun(n, "its factor", "their factors"),
@@ -637,21 +641,29 @@ nomo_run_unrecoded_text <- function(items, where = " in the CFA") {
 }
 
 
-# The concern, as a CFA log row for the run's component log.
+# The concern, as a CFA log row for the run's component log. The recode is
+# written for the declared response scale when the run has one.
 nomo_run_unrecoded_log <- function(x) {
   items <- nomo_run_unrecoded_items(x)
   log <- nomo_log_new()
   if (!length(items)) return(log)
+  range <- nomo_run_screen_keying(x$settings, x$scales, x$handoff)$scale_range
+  recode <- if (is.numeric(range) && length(range) == 2L && all(is.finite(range))) {
+    sprintf("as %s minus the response on the declared %s to %s scale",
+            format(sum(range)), format(range[[1L]]), format(range[[2L]]))
+  } else {
+    "for example as 6 minus the response on a 1 to 5 scale"
+  }
   nomo_log_add(
     log, stage = "cfa", object = paste(items, collapse = ", "),
     metric = "declared_reverse_keyed", value = length(items),
     reference = "Declared reverse-keyed items are recoded before analysis",
     severity = "concern",
     observation = nomo_run_unrecoded_text(items, where = ""),
-    recommendation = paste(
-      "Recode the declared items in the data, for example 6 minus the response",
-      "on a 1 to 5 scale, and start a new nomo_run(); `reverse = character(0)`",
-      "in `settings$screen` then records that no item still needs recoding."
+    recommendation = paste0(
+      "Recode the declared items in the data, ", recode, ", and start a new ",
+      "nomo_run(); `reverse = character(0)` in `settings$screen` then records ",
+      "that no item still needs recoding."
     )
   )
 }

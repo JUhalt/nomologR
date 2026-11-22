@@ -783,26 +783,33 @@ nomo_cfa_loading_block <- function(rows) {
 # does. Only indicators that load on one factor are compared, since a
 # cross-loading or a bifactor model's specific loading can be negative by
 # design, and so are only observed indicators, since a higher-order factor's
-# loadings are on factors. `others` names, for each row against its factor,
-# the indicators that set the direction, and `lead` is that direction (0 for a
+# loadings are on factors. `reference` marks the rows that set the direction,
+# by default all of them: nomo_run() passes the items not declared
+# reverse-keyed, so declared items are judged against the others even when
+# they are half or more of a factor's items, and a factor with none of those
+# is not compared. `others` names, for each row against its factor, the
+# indicators that set the direction, and `lead` is that direction (0 for a
 # row not compared).
-nomo_cfa_sign_split <- function(factor, item, loading, block = "", observed = TRUE) {
+nomo_cfa_sign_split <- function(factor, item, loading, block = "", observed = TRUE,
+                                reference = TRUE) {
   n <- length(item)
   block <- rep_len(as.character(block), n)
   key <- paste(block, item, sep = "\r")
   compared <- !(duplicated(key) | duplicated(key, fromLast = TRUE)) &
     rep_len(observed, n) & is.finite(loading) & loading != 0
+  reference <- compared & rep_len(reference, n)
   against <- logical(n)
   others <- character(n)
   lead_sign <- numeric(n)
   group <- paste(block, factor, sep = "\r")
-  for (g in unique(group[compared])) {
+  for (g in unique(group[reference])) {
     idx <- which(compared & group == g)
-    s <- sign(loading[idx])
+    ref <- idx[reference[idx]]
+    s <- sign(loading[ref])
     lead <- sign(sum(s))
-    if (lead == 0) lead <- s[[which.max(abs(loading[idx]))]]
-    against[idx] <- s != lead
-    others[idx] <- nomo_present_or(item[idx][s == lead], "and")
+    if (lead == 0) lead <- s[[which.max(abs(loading[ref]))]]
+    against[idx] <- sign(loading[idx]) != lead
+    others[idx] <- nomo_present_or(item[ref][s == lead], "and")
     lead_sign[idx] <- lead
   }
   list(against = against, others = others, lead = lead_sign)
@@ -812,12 +819,16 @@ nomo_cfa_sign_split <- function(factor, item, loading, block = "", observed = TR
 # The indicators of each factor of a fitted lavaan model that load against it,
 # as a list named by factor; empty when none does. Its attribute `reversed`
 # names the factors among them whose loadings are mostly negative, which run
-# opposite to most of their items.
-nomo_cfa_against_items <- function(fit) {
-  std <- lavaan::standardizedSolution(fit, type = "std.all")
+# opposite to most of their items. Items in `keyed`, declared reverse-keyed,
+# do not set a factor's direction. Only the estimates are needed, so no
+# standard errors are computed.
+nomo_cfa_against_items <- function(fit, keyed = character()) {
+  std <- lavaan::standardizedSolution(fit, type = "std.all", se = FALSE, zstat = FALSE,
+                                      pvalue = FALSE, ci = FALSE)
   rows <- std[std$op == "=~", , drop = FALSE]
   signs <- nomo_cfa_sign_split(rows$lhs, rows$rhs, rows$est.std, nomo_cfa_loading_block(rows),
-                               observed = !rows$rhs %in% rows$lhs)
+                               observed = !rows$rhs %in% rows$lhs,
+                               reference = !rows$rhs %in% keyed)
   hit <- rows[signs$against, , drop = FALSE]
   out <- lapply(split(as.character(hit$rhs), factor(hit$lhs, levels = unique(hit$lhs))), unique)
   attr(out, "reversed") <- unique(as.character(hit$lhs[signs$lead[signs$against] < 0]))
@@ -1112,11 +1123,13 @@ nomo_cfa_categories_log <- function(log, categories, estimator_label) {
       metric = "moderate_categories", value = length(moderate),
       reference = "Rhemtulla et al. (2012)",
       severity = "info",
+      # Counted over a factor's indicators, so a ceiling item among them may
+      # use fewer categories itself.
       observation = sprintf(
-        "%s %s 5 to 7 observed categories and %s fitted as continuous with ML.",
+        "%s %s fitted as continuous with ML; %s indicators use 5 to 7 observed categories between them.",
         nomo_present_count(length(moderate), "indicator"),
-        nomo_present_noun(length(moderate), "has", "have"),
-        nomo_present_noun(length(moderate), "was", "were")
+        nomo_present_noun(length(moderate), "was", "were"),
+        nomo_present_noun(length(moderate), "its factor's", "their factors'")
       ),
       recommendation = paste(
         "With 5 or more categories, continuous estimation is reasonable, and",

@@ -142,7 +142,10 @@ the correlations can identify (negative degrees of freedom) or exactly as
 many (zero), an extraction that did not converge, and any warning or message
 from \code{\link[psych:fa]{psych::fa()}}. Numeric items modeled as continuous, with Pearson
 correlations, are flagged for review when they use 4 or fewer observed
-categories between them; \code{types} is the remedy (Rhemtulla et al., 2012).
+categories between them. Marking them as ordinal in \code{types} uses polychoric
+correlations, the EFA counterpart of the categorical estimation that
+recovers CFA loadings better with so few categories (Rhemtulla et al.,
+2012).
 
 \code{print()} shows the settings, the residual misfit, the item flags, and any
 problem with the solution; \code{summary()} adds the item loadings and
