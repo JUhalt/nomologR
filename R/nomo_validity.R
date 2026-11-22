@@ -18,7 +18,7 @@
 #' discriminant-validity problems that HTMT detects.
 #'
 #' An indicator that loads on its factor with the opposite sign to the factor's
-#' other indicators, as an unrecoded reverse-keyed item does, is flagged for
+#' other indicators, as a reverse-keyed item does until it is recoded, is flagged for
 #' review in `standardized_loadings` and recorded as a concern: AVE and HTMT do
 #' not depend on the signs, but a unit-weighted score does. When most of a
 #' factor's loadings are negative, the concern adds that the factor's
@@ -518,9 +518,8 @@ nomo_validity <- function(fit,
   # Indicators that load against their factor, as unrecoded reverse-keyed
   # items do, and the factors that most of their loadings run against, whose
   # correlations then change sign (usefulness-02).
-  majority <- tapply(sign(loadings$loading), loadings$factor, sum, na.rm = TRUE)
-  log <- nomo_reliability_signs_log(log, nomo_cfa_against_items(fit_info$fit), "validity",
-                                    reversed = names(majority)[majority < 0])
+  against <- nomo_cfa_against_items(fit_info$fit)
+  log <- nomo_reliability_signs_log(log, against, "validity", reversed = attr(against, "reversed"))
 
   if (nrow(ave)) {
     for (i in seq_len(nrow(ave))) {

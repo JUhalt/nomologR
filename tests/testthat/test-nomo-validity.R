@@ -1018,6 +1018,11 @@ test_that("a flagged loading's log row states it beside its reference (#144, #14
       z$loading[odd] <- c(1.04, NA, -.4996)
       z$attention[odd] <- c("STRONG REVIEW", "REVIEW", "REVIEW")
       z$explanation[odd[[2L]]] <- "A finite standardized loading was not available."
+      # A flagged loading below 1 keeps the CFA's explanation (usefulness-02),
+      # here the one the CFA gives a loading of -0.4996.
+      z$explanation[odd[[3L]]] <- nomologR:::nomo_cfa_loadings(
+        data.frame(lhs = "A", op = "=~", rhs = "a3", est.std = -.4996), nomo_defaults()
+      )$explanation
       z
     },
     .package = "nomologR"

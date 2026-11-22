@@ -75,8 +75,8 @@ values are preferred, then scaled ones, then standard ones. When
 every value is the standard one, and the decision log says so.
 \item \code{standardized_loadings}: one row per loading, with its interval, flag,
 and explanation. A loading whose sign is opposite to most loadings on
-its factor, as an unrecoded reverse-keyed item's is, is flagged for
-review; cross-loadings are not compared.
+its factor, as a reverse-keyed item's is until it is recoded, is
+flagged for review; cross-loadings are not compared.
 \item \code{factor_correlations}: latent correlations with intervals. A
 correlation the model fixes, such as the zero correlations of a
 bifactor model, is listed at its fixed value; \code{summary()} shows it as

@@ -437,8 +437,12 @@ test_that("unrecoded reverse-keyed items are flagged by the CFA, reliability, an
   # A's marker is A1, so A2 to A5 load negatively and A1 is the item against.
   expect_setequal(against, c("A1", "C4", "C5", "E1", "E2"))
   expect_true(all(loads$attention[loads$item %in% against] == "REVIEW"))
-  expect_identical(nomo_cfa_against_items(raw$fit),
-                   list(A = "A1", C = c("C4", "C5"), E = c("E1", "E2")))
+  against <- nomo_cfa_against_items(raw$fit)
+  expect_named(against, c("A", "C", "E"))
+  expect_identical(against[c("A", "C", "E")], list(A = "A1", C = c("C4", "C5"), E = c("E1", "E2")))
+  # Most of A's and E's loadings are negative: those factors run opposite to
+  # most of their items.
+  expect_identical(attr(against, "reversed"), c("A", "E"))
 
   rel <- nomo_reliability(raw)
   signs <- rel$decision_log[rel$decision_log$metric == "loading_signs", ]

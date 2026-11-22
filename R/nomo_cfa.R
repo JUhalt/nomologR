@@ -58,8 +58,8 @@
 #'     every value is the standard one, and the decision log says so.
 #'   * `standardized_loadings`: one row per loading, with its interval, flag,
 #'     and explanation. A loading whose sign is opposite to most loadings on
-#'     its factor, as an unrecoded reverse-keyed item's is, is flagged for
-#'     review; cross-loadings are not compared.
+#'     its factor, as a reverse-keyed item's is until it is recoded, is
+#'     flagged for review; cross-loadings are not compared.
 #'   * `factor_correlations`: latent correlations with intervals. A
 #'     correlation the model fixes, such as the zero correlations of a
 #'     bifactor model, is listed at its fixed value; `summary()` shows it as
@@ -784,7 +784,8 @@ nomo_cfa_loading_block <- function(rows) {
 # cross-loading or a bifactor model's specific loading can be negative by
 # design, and so are only observed indicators, since a higher-order factor's
 # loadings are on factors. `others` names, for each row against its factor,
-# the indicators that set the direction.
+# the indicators that set the direction, and `lead` is that direction (0 for a
+# row not compared).
 nomo_cfa_sign_split <- function(factor, item, loading, block = "", observed = TRUE) {
   n <- length(item)
   block <- rep_len(as.character(block), n)
@@ -793,6 +794,7 @@ nomo_cfa_sign_split <- function(factor, item, loading, block = "", observed = TR
     rep_len(observed, n) & is.finite(loading) & loading != 0
   against <- logical(n)
   others <- character(n)
+  lead_sign <- numeric(n)
   group <- paste(block, factor, sep = "\r")
   for (g in unique(group[compared])) {
     idx <- which(compared & group == g)
@@ -801,20 +803,25 @@ nomo_cfa_sign_split <- function(factor, item, loading, block = "", observed = TR
     if (lead == 0) lead <- s[[which.max(abs(loading[idx]))]]
     against[idx] <- s != lead
     others[idx] <- nomo_present_or(item[idx][s == lead], "and")
+    lead_sign[idx] <- lead
   }
-  list(against = against, others = others)
+  list(against = against, others = others, lead = lead_sign)
 }
 
 
 # The indicators of each factor of a fitted lavaan model that load against it,
-# as a list named by factor; empty when none does.
+# as a list named by factor; empty when none does. Its attribute `reversed`
+# names the factors among them whose loadings are mostly negative, which run
+# opposite to most of their items.
 nomo_cfa_against_items <- function(fit) {
   std <- lavaan::standardizedSolution(fit, type = "std.all")
   rows <- std[std$op == "=~", , drop = FALSE]
   signs <- nomo_cfa_sign_split(rows$lhs, rows$rhs, rows$est.std, nomo_cfa_loading_block(rows),
                                observed = !rows$rhs %in% rows$lhs)
   hit <- rows[signs$against, , drop = FALSE]
-  lapply(split(as.character(hit$rhs), factor(hit$lhs, levels = unique(hit$lhs))), unique)
+  out <- lapply(split(as.character(hit$rhs), factor(hit$lhs, levels = unique(hit$lhs))), unique)
+  attr(out, "reversed") <- unique(as.character(hit$lhs[signs$lead[signs$against] < 0]))
+  out
 }
 
 

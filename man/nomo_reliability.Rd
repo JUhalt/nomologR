@@ -104,7 +104,8 @@ indicators. When global CFA strain or an improper solution is present,
 reliability is still inspectable but the decision log warns that
 model-based reliability can be distorted by misspecification. An indicator
 that loads on its factor with the opposite sign to the factor's other
-indicators, as an unrecoded reverse-keyed item does, is a concern: omega and
+indicators, as a reverse-keyed item does until it is recoded, is a concern:
+omega and
 alpha describe the unit-weighted sum, in which such an item counts against
 the factor. Recode reverse-keyed items before fitting the CFA.
 
