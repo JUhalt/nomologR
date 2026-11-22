@@ -868,7 +868,7 @@ nomo_apa_table.nomo_network <- function(x, type = c("hypotheses", "fit"),
     # the RMSEA the evidence reports. Any warning lavaan raises here was raised
     # when nomo_network() read the same fit and is recorded in
     # `engine_warnings` and the decision log, so it is not raised again.
-    measures <- tryCatch(suppressWarnings(lavaan::fitMeasures(x$fit)),
+    measures <- tryCatch(suppressWarnings(lavaan::fitMeasures(x$fit, nomo_fit_measure_names)),
                          error = function(e) numeric())
     variants <- c(".robust", ".scaled", "")
     reported <- vapply(variants, function(v) {

@@ -391,8 +391,29 @@ nomo_reliability_item_types <- function(fit_info) {
 
 
 
-nomo_reliability_fit_context <- function(fit, guidance) {
-  measures <- tryCatch(lavaan::fitMeasures(fit), error = function(e) numeric())
+# The fit measures nomologR reads: the chi-square test, CFI, TLI, RMSEA with
+# its interval, and SRMR, each in its standard, scaled, and robust versions.
+# lavaan computes only the measures named. Its full set adds the GFI family and
+# other indices nomologR never shows, which took most of the time with
+# full-information maximum likelihood (#183). A version the model lacks is
+# left out of both, so the values read are the same.
+nomo_fit_measure_names <- c(
+  "chisq", "df", "pvalue", "chisq.scaled", "df.scaled", "pvalue.scaled",
+  "cfi", "cfi.scaled", "cfi.robust", "tli", "tli.scaled", "tli.robust",
+  "rmsea", "rmsea.scaled", "rmsea.robust",
+  "rmsea.ci.lower", "rmsea.ci.lower.scaled", "rmsea.ci.lower.robust",
+  "rmsea.ci.upper", "rmsea.ci.upper.scaled", "rmsea.ci.upper.robust",
+  "srmr"
+)
+
+
+# The fit context of reliability and validity. A nomo_cfa result passes the
+# fit measures it stored, which are reused rather than computed again (#183).
+nomo_reliability_fit_context <- function(fit, guidance, measures = NULL) {
+  if (is.null(measures)) {
+    measures <- tryCatch(lavaan::fitMeasures(fit, nomo_fit_measure_names),
+                         error = function(e) numeric())
+  }
   if (!length(measures)) return(tibble::tibble())
 
   tryCatch(

@@ -426,7 +426,9 @@ nomo_validity <- function(fit,
     }
   }
 
-  fit_context <- nomo_reliability_fit_context(fit_info$fit, guidance)
+  fit_context <- nomo_reliability_fit_context(
+    fit_info$fit, guidance, fit_info$wrapper$fit_measures_all
+  )
 
   references <- tibble::tibble(
     topic = c(

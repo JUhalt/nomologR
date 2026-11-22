@@ -480,7 +480,9 @@ nomo_reliability <- function(fit,
     ci_status <- ci_result$status
   }
 
-  fit_context <- nomo_reliability_fit_context(fit_info$fit, guidance)
+  fit_context <- nomo_reliability_fit_context(
+    fit_info$fit, guidance, fit_info$wrapper$fit_measures_all
+  )
   model_strain <- FALSE
   if (nrow(fit_context) && "attention" %in% names(fit_context)) {
     model_strain <- any(fit_context$attention %in% c("review", "concern"), na.rm = TRUE)

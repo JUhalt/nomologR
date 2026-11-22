@@ -379,7 +379,7 @@ nomo_network_fit_version <- function(measures, candidates) {
 
 nomo_network_fit_evidence <- function(fit) {
   measures <- tryCatch(
-    lavaan::fitMeasures(fit),
+    lavaan::fitMeasures(fit, nomo_fit_measure_names),
     error = function(e) numeric()
   )
 

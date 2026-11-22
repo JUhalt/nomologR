@@ -274,7 +274,10 @@ nomo_esem <- function(model,
   # chi-square and indices they show.
   variants <- list()
   fit_row <- function(fit, label) {
-    m <- collect(lavaan::fitMeasures(fit), label)
+    # AIC and BIC as lavaan's full set has them: for ML estimation only.
+    ml <- identical(lavaan::lavInspect(fit, "options")$estimator, "ML")
+    m <- collect(lavaan::fitMeasures(fit, c(nomo_fit_measure_names, if (ml) c("aic", "bic"))),
+                 label)
     get <- function(...) {
       found <- nomo_cfa_first_measure(m, c(...))
       variants[[label]][[sub("[.].*$", "", c(...)[[1L]])]] <<- found$variant

@@ -306,12 +306,15 @@ nomo_invariance_warning_text <- function(x, period = TRUE) {
 }
 
 
+# `measures` are the level's lavaan fit measures, which the caller computes
+# once and keeps with the result (#183).
 nomo_invariance_fit_row <- function(level,
                                     constraints,
                                     fit,
                                     warnings = character(),
                                     error = NULL,
-                                    partial_requested = character()) {
+                                    partial_requested = character(),
+                                    measures = numeric()) {
   partial_label <- if (length(partial_requested)) {
     paste(partial_requested, collapse = "; ")
   } else {
@@ -352,11 +355,6 @@ nomo_invariance_fit_row <- function(level,
     lavaan::lavInspect(fit, "converged"),
     error = function(e) FALSE
   ))
-
-  measures <- tryCatch(
-    lavaan::fitMeasures(fit),
-    error = function(e) numeric()
-  )
 
   tibble::tibble(
     level = level,
@@ -1417,15 +1415,7 @@ nomo_invariance_fit_levels <- function(levels,
     fits[[level]] <- fit
     engine_warnings[[level]] <- warnings
 
-    row <- nomo_invariance_fit_row(
-      level = level,
-      constraints = equality,
-      fit = fit,
-      warnings = warnings,
-      error = fit_error,
-      partial_requested = partial_for_level
-    )
-
+    # Computed once per level and read by the evidence row too (#183).
     if (!is.null(fit)) {
       fit_measures[[level]] <- tryCatch(
         lavaan::fitMeasures(fit),
@@ -1434,6 +1424,16 @@ nomo_invariance_fit_levels <- function(levels,
     } else {
       fit_measures[[level]] <- numeric()
     }
+
+    row <- nomo_invariance_fit_row(
+      level = level,
+      constraints = equality,
+      fit = fit,
+      warnings = warnings,
+      error = fit_error,
+      partial_requested = partial_for_level,
+      measures = fit_measures[[level]]
+    )
 
     if (!is.null(previous_level) &&
         !is.null(fit) &&
