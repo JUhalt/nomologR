@@ -558,6 +558,7 @@ test_that("validity convergent signals cover concern and review paths", {
   review <- val
   review$ave$attention[] <- "info"
   review$standardized_loadings$attention[1L] <- "REVIEW"
+  review$standardized_loadings$loading[1L] <- 0.2
   out2 <- nomologR:::nomo_validity_convergent_table(review)
   expect_true(any(out2$signal == "review"))
 

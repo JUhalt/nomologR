@@ -308,9 +308,15 @@ nomo_cfa_flagged <- function(x) {
     ))
   }
   log <- x$decision_log
-  own <- log[log$metric %in% c("optimizer_control", "scaled_test_unavailable", "ordered_detected"), ,
+  own <- log[log$metric %in% c("optimizer_control", "scaled_test_unavailable", "ordered_detected",
+                               "few_categories", "cases_below_parameters"), ,
              drop = FALSE]
-  units <- c(optimizer_control = "Optimizer", scaled_test_unavailable = "Scaled test")
+  units <- c(optimizer_control = "Optimizer", scaled_test_unavailable = "Scaled test",
+             few_categories = "Categories", cases_below_parameters = "Free parameters")
+  # A row whose remedy is a setting or more cases says what to do as well.
+  advised <- own$metric %in% c("few_categories", "cases_below_parameters")
+  own$observation[advised] <- nomo_present_then_recommend(own$observation[advised],
+                                                          own$recommendation[advised])
   for (i in seq_len(nrow(own))) {
     add(if (own$metric[[i]] %in% names(units)) units[[own$metric[[i]]]] else own$object[[i]],
         own$severity[[i]], own$observation[[i]])
@@ -359,6 +365,20 @@ print.nomo_cfa <- function(x, digits = NULL, ...) {
   nomo_present_header("nomo_cfa", "Confirmatory factor analysis")
   nomo_cfa_present_facts(x)
   shown <- nomo_cfa_estimator_abbr(x)
+  # Indicators with few categories fitted as continuous, and the remedy
+  # (usefulness-04).
+  few <- x$decision_log[x$decision_log$metric %in% "few_categories", , drop = FALSE]
+  if (nrow(few)) {
+    n <- few$value[[1L]]
+    nomo_present_text(
+      nomo_present_count(n, "indicator"), " ", nomo_present_noun(n, "has", "have"),
+      " 4 or fewer observed categories and ", nomo_present_noun(n, "was", "were"),
+      " fitted as continuous. Name ", nomo_present_noun(n, "it", "them"),
+      " in `ordered` to fit ", nomo_present_noun(n, "it", "them"),
+      " as ordered categories with WLSMV."
+    )
+    shown <- c(shown, "WLSMV")
+  }
 
   if (!isTRUE(x$converged)) {
     nomo_present_text(
@@ -619,7 +639,9 @@ nomo_cfa_issue_label <- function(issue) {
     negative_observed_residual_variance = "Negative residual variance",
     negative_latent_variance = "Negative latent variance",
     standardized_loading_beyond_one = "Loading above 1",
-    latent_correlation_beyond_one = "Correlation above 1"
+    latent_correlation_beyond_one = "Correlation above 1",
+    latent_covariance_not_positive_definite = "Negative eigenvalue",
+    residual_covariance_not_positive_definite = "Negative eigenvalue"
   )
   out <- unname(labels[issue])
   plain <- gsub("_", " ", issue)
@@ -639,8 +661,10 @@ nomo_cfa_present_improper <- function(heywood) {
   heywood$signal <- nomo_cfa_issue_label(heywood$issue)
   kind <- ifelse(heywood$issue == "standardized_loading_beyond_one", "loading",
                  ifelse(heywood$issue == "latent_correlation_beyond_one", "r", "estimate"))
+  # A negative eigenvalue shows the decimals that tell it from 0.
   shown <- vapply(seq_len(nrow(heywood)), function(i) {
-    nomo_present_stat(heywood$value[[i]], kind[[i]])
+    nomo_present_stat(heywood$value[[i]], kind[[i]],
+                      reference = if (heywood$issue[[i]] %in% nomo_cfa_matrix_issues) 0)
   }, character(1))
   nomo_present_table(
     heywood,

@@ -63,7 +63,10 @@ scales came from a \code{contentvalidR} handoff, each of \code{reverse} and
 \code{scale_range} is taken from its declared keying unless given here, as in
 \code{\link[=nomo_screen]{nomo_screen()}}; giving one replaces only that one. The decision log
 records a declared value replaced, or a response scale the handoff did not
-record supplied here.
+record supplied here. The data are never recoded: when an item declared
+reverse-keyed still loads in the CFA with the opposite sign to the items
+of its factor that are not declared, the pause for \code{measurement_model}
+says so, and the component log records it as a concern.
 
 The invariance and network stages refit the measurement model with the
 CFA stage's \code{ordered}, \code{estimator}, and \code{missing} from \code{settings$cfa},

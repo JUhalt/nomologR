@@ -37,8 +37,9 @@
 #'
 #' **Admissibility.** Both models must converge; otherwise the function stops
 #' and names the model that did not. The warnings `lavaan` raises are kept, and
-#' a negative variance, a standardized loading above 1, or a latent correlation
-#' above 1 in either model is recorded as a concern, as [nomo_cfa()] records
+#' a negative variance, a standardized loading above 1, a latent correlation
+#' above 1, or a latent or residual covariance matrix that is not positive
+#' definite in either model is recorded as a concern, as [nomo_cfa()] records
 #' it. Cases `lavaan` did not use, such as incomplete cases without
 #' `missing = "fiml"`, are reported.
 #'
@@ -47,8 +48,17 @@
 #'   the items, and the target.
 #' @param data A data frame with the indicators.
 #' @param rotation `"target"` (default) or `"geomin"`.
-#' @param ordered Optional character vector of ordered indicators.
-#' @param estimator,missing Optional lavaan `estimator` and `missing` options.
+#' @param ordered Optional character vector naming binary/ordinal indicators.
+#'   Model indicators stored as ordered factors are treated as declared whether
+#'   or not they are named here, because `lavaan` fits them as categorical; the
+#'   decision log flags them for review. When any indicator is ordered and
+#'   `estimator = NULL`, `lavaan` uses `WLSMV`.
+#' @param estimator Optional `lavaan` estimator. Leaving this as `NULL` keeps
+#'   `lavaan`'s default: ML for continuous indicators and `WLSMV` when any
+#'   indicator is ordered. The result records the estimator used. Robust ML
+#'   variants such as `"MLR"` remain explicit researcher choices.
+#' @param missing Optional `lavaan` missing-data option such as `"fiml"` for
+#'   continuous ML models.
 #' @param guidance Guidance settings from [nomo_defaults()]; its
 #'   `efa_loading_reference` and `efa_crossloading_reference` are used, and
 #'   they are checked before any model is fitted.
@@ -69,6 +79,9 @@
 #'     Bentler, 2001) under a robust ML estimator, and the scaled-and-shifted
 #'     test (Satorra, 2000) under WLSMV, as [lavaan::lavTestLRT()] chooses.
 #'   * `n` and `data_n`: the cases the models used and the rows of `data`.
+#'   * `ordered` and `estimator`: the indicators fitted as ordered, including
+#'     columns stored as ordered factors, and the estimator, as requested or,
+#'     with `estimator = NULL`, as `lavaan` chose it.
 #'   * `fits`: the fitted `lavaan` models, named `ESEM` and `CFA`.
 #'   * `engine_warnings`: the warnings `lavaan` raised, as a list with elements
 #'     `ESEM`, `CFA`, and `comparison` (the difference test).
@@ -158,6 +171,11 @@ nomo_esem <- function(model,
     stop("ESEM needs two or more factors; with one, it is the CFA itself.", call. = FALSE)
   }
   nomo_check_model_variables(model, data)
+  # lavaan fits a column stored as an ordered factor as categorical whether or
+  # not `ordered` names it, so such columns are recorded as declared, as
+  # nomo_cfa() records them (#145, helppages-7). The models are fitted as
+  # before.
+  ordered_found <- nomo_ordered_indicators(model, data, if (is.null(ordered)) character() else ordered)
   # Checked before fitting, so a bad setting is named at once rather than
   # failing inside the decision log after both models are fitted (#145).
   references <- c(
@@ -313,7 +331,8 @@ nomo_esem <- function(model,
       parameter_estimates = collect(lavaan::parameterEstimates(fits[[label]]), label),
       standardized_solution = standardized[[label]],
       latent_names = factors,
-      observed_names = items
+      observed_names = items,
+      fit = fits[[label]]
     )
     found$model <- rep(label, nrow(found))
     found
@@ -325,8 +344,15 @@ nomo_esem <- function(model,
     model = model,
     esem_syntax = esem_syntax,
     rotation = rotation,
-    ordered = if (is.null(ordered)) character() else ordered,
-    estimator = if (is.null(estimator)) NA_character_ else estimator,
+    ordered = ordered_found$ordered,
+    ordered_detected = ordered_found$detected,
+    # Without a request, the estimator lavaan chose, by the name it was
+    # requested under: ML, or WLSMV with ordered indicators (helppages-7).
+    estimator = if (is.null(estimator)) {
+      toupper(lavaan::lavInspect(esem_fit, "options")$estimator.orig)
+    } else {
+      estimator
+    },
     missing = if (is.null(missing)) NA_character_ else missing,
     n = n,
     data_n = nrow(data),
@@ -341,7 +367,8 @@ nomo_esem <- function(model,
                                  cases = c(used = n, input = nrow(data)),
                                  engine_warnings = engine_warnings,
                                  improper = improper,
-                                 method = nomo_compare_lrt_method(test)),
+                                 method = nomo_compare_lrt_method(test),
+                                 ordered_detected = ordered_found$detected),
     fit_variants = variants,
     comparison_method = nomo_compare_lrt_method(test),
     guidance = guidance
@@ -354,7 +381,7 @@ nomo_esem <- function(model,
 nomo_esem_log <- function(loadings, factor_correlations, models, comparisons, rotation,
                           references, cases = c(used = NA_real_, input = NA_real_),
                           engine_warnings = list(), improper = NULL,
-                          method = "standard") {
+                          method = "standard", ordered_detected = character()) {
   log <- nomo_log_new()
   loading <- function(x, reference = NULL) nomo_present_stat(x, "loading", reference = reference)
   cross_ref <- references[["cross"]]
@@ -375,6 +402,7 @@ nomo_esem_log <- function(loadings, factor_correlations, models, comparisons, ro
     },
     recommendation = "The ESEM solution depends on the rotation, as any exploratory solution does."
   )
+  log <- nomo_ordered_detected_log(log, ordered_detected, stage = "esem")
 
   # Cases lavaan did not use are reported, as nomo_cfa() reports them (#145).
   if (is.finite(cases[["used"]])) {
@@ -419,14 +447,21 @@ nomo_esem_log <- function(loadings, factor_correlations, models, comparisons, ro
   if (!is.null(improper) && nrow(improper)) {
     for (i in seq_len(nrow(improper))) {
       row <- improper[i, , drop = FALSE]
+      # A whole matrix reads "CFA latent covariances", and its explanation
+      # already gives its smallest eigenvalue (usefulness-03).
+      matrix_wide <- row$issue %in% nomo_cfa_matrix_issues
       log <- nomo_log_add(
-        log, stage = "esem", object = paste(row$model, row$object), metric = row$issue,
+        log, stage = "esem",
+        object = paste(row$model, if (matrix_wide) tolower(row$object) else row$object),
+        metric = row$issue,
         value = row$value,
         reference = "Proper solutions should not contain inadmissible variances, loadings, or latent correlations",
         severity = "concern",
         observation = paste0(
-          row$explanation, " The value in the ", row$model, " is ",
-          nomo_present_stat(row$value, "estimate"), "."
+          row$explanation,
+          if (!matrix_wide) {
+            paste0(" The value in the ", row$model, " is ", nomo_present_stat(row$value, "estimate"), ".")
+          }
         ),
         recommendation = paste(
           "Do not read the comparison as evidence until the improper solution is",

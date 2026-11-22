@@ -23,9 +23,19 @@ the items, and the target.}
 
 \item{rotation}{\code{"target"} (default) or \code{"geomin"}.}
 
-\item{ordered}{Optional character vector of ordered indicators.}
+\item{ordered}{Optional character vector naming binary/ordinal indicators.
+Model indicators stored as ordered factors are treated as declared whether
+or not they are named here, because \code{lavaan} fits them as categorical; the
+decision log flags them for review. When any indicator is ordered and
+\code{estimator = NULL}, \code{lavaan} uses \code{WLSMV}.}
 
-\item{estimator, missing}{Optional lavaan \code{estimator} and \code{missing} options.}
+\item{estimator}{Optional \code{lavaan} estimator. Leaving this as \code{NULL} keeps
+\code{lavaan}'s default: ML for continuous indicators and \code{WLSMV} when any
+indicator is ordered. The result records the estimator used. Robust ML
+variants such as \code{"MLR"} remain explicit researcher choices.}
+
+\item{missing}{Optional \code{lavaan} missing-data option such as \code{"fiml"} for
+continuous ML models.}
 
 \item{guidance}{Guidance settings from \code{\link[=nomo_defaults]{nomo_defaults()}}; its
 \code{efa_loading_reference} and \code{efa_crossloading_reference} are used, and
@@ -48,6 +58,9 @@ likelihood-ratio test under ML, the scaled difference test (Satorra &
 Bentler, 2001) under a robust ML estimator, and the scaled-and-shifted
 test (Satorra, 2000) under WLSMV, as \code{\link[lavaan:lavTestLRT]{lavaan::lavTestLRT()}} chooses.
 \item \code{n} and \code{data_n}: the cases the models used and the rows of \code{data}.
+\item \code{ordered} and \code{estimator}: the indicators fitted as ordered, including
+columns stored as ordered factors, and the estimator, as requested or,
+with \code{estimator = NULL}, as \code{lavaan} chose it.
 \item \code{fits}: the fitted \code{lavaan} models, named \code{ESEM} and \code{CFA}.
 \item \code{engine_warnings}: the warnings \code{lavaan} raised, as a list with elements
 \code{ESEM}, \code{CFA}, and \code{comparison} (the difference test).
@@ -98,8 +111,9 @@ loadings below its loading reference.
 
 \strong{Admissibility.} Both models must converge; otherwise the function stops
 and names the model that did not. The warnings \code{lavaan} raises are kept, and
-a negative variance, a standardized loading above 1, or a latent correlation
-above 1 in either model is recorded as a concern, as \code{\link[=nomo_cfa]{nomo_cfa()}} records
+a negative variance, a standardized loading above 1, a latent correlation
+above 1, or a latent or residual covariance matrix that is not positive
+definite in either model is recorded as a concern, as \code{\link[=nomo_cfa]{nomo_cfa()}} records
 it. Cases \code{lavaan} did not use, such as incomplete cases without
 \code{missing = "fiml"}, are reported.
 }

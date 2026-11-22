@@ -28,11 +28,19 @@ Model indicators stored as ordered factors are treated as declared whether
 or not they are named here, because \code{lavaan} fits them as categorical; the
 decision log flags them for review. Names that are not variables in the
 model are not used, and the decision log lists them. When any indicator is
-ordered and \code{estimator = NULL}, \code{nomo_cfa()} explicitly requests \code{WLSMV}.}
+ordered and \code{estimator = NULL}, \code{nomo_cfa()} explicitly requests \code{WLSMV}.
+When none is ordered and the estimator is ML or a robust ML, numeric
+indicators with 4 or fewer observed categories are flagged for review,
+and \code{print()} names this argument as the remedy (Rhemtulla et al., 2012).
+An indicator's categories are those its factor's indicators use between
+them, so a five-point item whose answers fall in three categories is not
+flagged; \code{\link[=nomo_screen]{nomo_screen()}} reports its distribution.}
 
 \item{estimator}{Optional \code{lavaan} estimator. For continuous indicators,
 leaving this as \code{NULL} preserves \code{lavaan::cfa()}'s default. Robust ML
-variants such as \code{"MLR"} remain explicit researcher choices.}
+variants such as \code{"MLR"} remain explicit researcher choices; with 5 to 7
+observed categories under ML, the decision log notes that \code{"MLR"} suits
+non-normal responses.}
 
 \item{missing}{Optional \code{lavaan} missing-data option such as \code{"fiml"} for
 continuous ML models or \code{"pairwise"} where supported.}
@@ -66,12 +74,19 @@ values are preferred, then scaled ones, then standard ones. When
 \code{lavaan} was asked for a scaled test statistic but could not compute it,
 every value is the standard one, and the decision log says so.
 \item \code{standardized_loadings}: one row per loading, with its interval, flag,
-and explanation.
+and explanation. A loading whose sign is opposite to most loadings on
+its factor, as a reverse-keyed item's is until it is recoded, is
+flagged for review; cross-loadings are not compared.
 \item \code{factor_correlations}: latent correlations with intervals. A
 correlation the model fixes, such as the zero correlations of a
 bifactor model, is listed at its fixed value; \code{summary()} shows it as
 fixed rather than estimated.
-\item \code{heywood}: improper-solution signals, if any.
+\item \code{heywood}: improper-solution signals, if any: a negative variance, a
+standardized loading or latent correlation beyond 1, or a latent or
+residual covariance matrix that is not positive definite, whose \code{value}
+is the smallest eigenvalue of the matrix as correlations. The decision
+log also flags for review a model fitted to fewer cases than it has
+free parameters.
 \item \code{parameter_estimates} and \code{standardized_solution}: \code{lavaan}'s parameter
 tables, as tibbles.
 \item \code{residual_matrix} and \code{residual_pairs}: residual correlations, the pairs

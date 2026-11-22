@@ -108,6 +108,18 @@ See `?nomo_demo_continuous`, `?nomo_demo_ordinal`, `?nomo_demo_network`,
 `?nomo_demo_walkthrough`, and `?nomo_demo_longitudinal` for the full population
 models.
 
+`EF2` and `TF2` in `nomo_demo_walkthrough` are reverse-worded. `nomologR`
+never recodes data. Screen the items as answered, then recode reverse-keyed
+items before fitting factor models or estimating reliability: an item left as
+answered loads against its factor, so omega and alpha count it against the
+construct. On a 1 to 5 scale the recoded response is 6 minus the response, and
+`walk` is the data those analyses would use:
+
+```{r recode}
+walk <- nomo_demo_walkthrough
+walk[c("EF2", "TF2")] <- 6L - walk[c("EF2", "TF2")]
+```
+
 # A first look
 
 An item audit describes the data without changing it:

@@ -20,9 +20,17 @@
 #'   decision log flags them for review. Names that are not variables in the
 #'   model are not used, and the decision log lists them. When any indicator is
 #'   ordered and `estimator = NULL`, `nomo_cfa()` explicitly requests `WLSMV`.
+#'   When none is ordered and the estimator is ML or a robust ML, numeric
+#'   indicators with 4 or fewer observed categories are flagged for review,
+#'   and `print()` names this argument as the remedy (Rhemtulla et al., 2012).
+#'   An indicator's categories are those its factor's indicators use between
+#'   them, so a five-point item whose answers fall in three categories is not
+#'   flagged; [nomo_screen()] reports its distribution.
 #' @param estimator Optional `lavaan` estimator. For continuous indicators,
 #'   leaving this as `NULL` preserves `lavaan::cfa()`'s default. Robust ML
-#'   variants such as `"MLR"` remain explicit researcher choices.
+#'   variants such as `"MLR"` remain explicit researcher choices; with 5 to 7
+#'   observed categories under ML, the decision log notes that `"MLR"` suits
+#'   non-normal responses.
 #' @param missing Optional `lavaan` missing-data option such as `"fiml"` for
 #'   continuous ML models or `"pairwise"` where supported.
 #' @param std.lv Logical. Passed directly to `lavaan::cfa()`.
@@ -49,12 +57,19 @@
 #'     `lavaan` was asked for a scaled test statistic but could not compute it,
 #'     every value is the standard one, and the decision log says so.
 #'   * `standardized_loadings`: one row per loading, with its interval, flag,
-#'     and explanation.
+#'     and explanation. A loading whose sign is opposite to most loadings on
+#'     its factor, as a reverse-keyed item's is until it is recoded, is
+#'     flagged for review; cross-loadings are not compared.
 #'   * `factor_correlations`: latent correlations with intervals. A
 #'     correlation the model fixes, such as the zero correlations of a
 #'     bifactor model, is listed at its fixed value; `summary()` shows it as
 #'     fixed rather than estimated.
-#'   * `heywood`: improper-solution signals, if any.
+#'   * `heywood`: improper-solution signals, if any: a negative variance, a
+#'     standardized loading or latent correlation beyond 1, or a latent or
+#'     residual covariance matrix that is not positive definite, whose `value`
+#'     is the smallest eigenvalue of the matrix as correlations. The decision
+#'     log also flags for review a model fitted to fewer cases than it has
+#'     free parameters.
 #'   * `parameter_estimates` and `standardized_solution`: `lavaan`'s parameter
 #'     tables, as tibbles.
 #'   * `residual_matrix` and `residual_pairs`: residual correlations, the pairs
@@ -355,6 +370,15 @@ nomo_cfa <- function(model,
   n_used <- suppressWarnings(sum(as.numeric(unlist(n_used_raw)), na.rm = TRUE))
   if (!length(n_used) || !is.finite(n_used) || n_used <= 0) n_used <- NA_real_
 
+  n_parameters <- as.numeric(lavaan::lavInspect(fit, "npar"))
+  # Numeric indicators with few categories, fitted as continuous because none
+  # was declared ordered and the estimator is ML or a robust ML (usefulness-04).
+  categories <- if (!length(ordered) && grepl("^ML", estimator_label)) {
+    nomo_cfa_category_counts(fit, data)
+  } else {
+    integer()
+  }
+
   n_dropped <- if (is.finite(n_used)) max(0, nrow(data) - n_used) else NA_real_
   pct_dropped <- if (is.finite(n_dropped) && nrow(data) > 0L) {
     n_dropped / nrow(data)
@@ -413,7 +437,9 @@ nomo_cfa <- function(model,
     parameter_estimates = parameter_estimates,
     standardized_solution = standardized_solution,
     latent_names = latent_names,
-    observed_names = observed_names
+    observed_names = observed_names,
+    # lavaan checks the matrices only after convergence, and so does this.
+    fit = if (converged) fit
   )
 
   residual_warnings <- character()
@@ -483,7 +509,9 @@ nomo_cfa <- function(model,
     residual_pairs = residual_pairs,
     modification_indices = modification_table,
     modification_indices_requested = modification_indices,
-    mi_error = mi_error
+    mi_error = mi_error,
+    categories = categories,
+    n_parameters = n_parameters
   )
 
   out <- list(
@@ -636,21 +664,30 @@ nomo_cfa_fit_evidence <- function(measures, guidance) {
     "Descriptive model-fit information; interpret with estimator, sample, local fit, and theory.",
     length(values)
   )
-  for (metric in c("CFI", "TLI")) {
-    idx <- names(values) == metric
-    explanation[idx] <- ifelse(
-      attention[idx] == "review",
-      "Below the configured review reference; inspect global and localized model strain.",
-      "At or above the configured review reference; this does not establish model correctness."
-    )
-  }
-  for (metric in c("RMSEA", "SRMR")) {
-    idx <- names(values) == metric
-    explanation[idx] <- ifelse(
-      attention[idx] == "review",
-      "Above the configured review reference; inspect global and localized model strain.",
-      "At or below the configured review reference; this does not establish model correctness."
-    )
+  # Each index names itself, its value, and its reference, so the sentence
+  # still says which index it is when a guided run lists it away from the fit
+  # table (usefulness-15).
+  for (metric in c("CFI", "TLI", "RMSEA", "SRMR")) {
+    idx <- which(names(values) == metric)
+    higher <- direction[[idx]] == "higher"
+    explanation[[idx]] <- if (!is.finite(values[[idx]])) {
+      paste(metric, "is unavailable.")
+    } else {
+      paste0(
+        metric, " ", nomo_cfa_fit_number(metric, values[[idx]], reference[[idx]]),
+        if (attention[[idx]] == "review") {
+          paste0(" is ", if (higher) "below" else "above", " the review reference ")
+        } else {
+          paste0(" is at or ", if (higher) "above" else "below", " the review reference ")
+        },
+        nomo_cfa_fit_number(metric, reference[[idx]]),
+        if (attention[[idx]] == "review") {
+          "; inspect global and localized model strain."
+        } else {
+          "; this does not establish model correctness."
+        }
+      )
+    }
   }
 
   tibble::tibble(
@@ -702,6 +739,20 @@ nomo_cfa_loadings <- function(standardized_solution, guidance) {
     nomo_present_stat(guidance$cfa_loading_reference, "loading"),
     " in absolute value; inspect ", content[weak], ", precision, and model specification."
   )
+  # A loading whose sign is opposite to most of its factor's loadings, as an
+  # unrecoded reverse-keyed item's is, counts against the factor in a summed
+  # score and in omega (usefulness-02).
+  signs <- nomo_cfa_sign_split(rows$lhs, rows$rhs, loading, nomo_cfa_loading_block(rows),
+                               observed = !rows$rhs %in% rows$lhs)
+  against <- signs$against & !extreme
+  attention[against] <- "REVIEW"
+  explanation[against] <- paste0(
+    ifelse(weak[against], paste0(explanation[against], " It is also"),
+           paste0("Standardized loading ", nomo_present_stat(loading[against], "loading"), " is")),
+    " opposite in sign to the loadings of ", signs$others[against], " on ", rows$lhs[against],
+    ". If ", rows$rhs[against], " is reverse-keyed, recode it and refit: as it stands, ",
+    "a summed score and omega count it against the factor."
+  )
   attention[extreme] <- "STRONG REVIEW"
   explanation[extreme] <- paste(
     "Absolute standardized loading exceeds 1; inspect for a Heywood/improper",
@@ -725,6 +776,75 @@ nomo_cfa_loadings <- function(standardized_solution, guidance) {
     attention = attention,
     explanation = explanation
   )
+}
+
+
+# The group and level of each row of a lavaan parameter table, as one key; ""
+# for a single-group, single-level model.
+nomo_cfa_loading_block <- function(rows) {
+  columns <- intersect(c("group", "level"), names(rows))
+  do.call(paste, c(list(rep("", nrow(rows))), as.list(rows[columns]), sep = "\r"))
+}
+
+
+# Which loadings run against their factor (usefulness-02): those whose sign is
+# opposite to most of the factor's loadings, or, when the signs split evenly,
+# to its largest loading. An unrecoded reverse-keyed item is the usual cause.
+# The majority sets the direction rather than the largest loading, because a
+# reverse-keyed item can have the largest loading: on raw psych::bfi data, C4
+# does. Only indicators that load on one factor are compared, since a
+# cross-loading or a bifactor model's specific loading can be negative by
+# design, and so are only observed indicators, since a higher-order factor's
+# loadings are on factors. `reference` marks the rows that set the direction,
+# by default all of them: nomo_run() passes the items not declared
+# reverse-keyed, so declared items are judged against the others even when
+# they are half or more of a factor's items, and a factor with none of those
+# is not compared. `others` names, for each row against its factor, the
+# indicators that set the direction, and `lead` is that direction (0 for a
+# row not compared).
+nomo_cfa_sign_split <- function(factor, item, loading, block = "", observed = TRUE,
+                                reference = TRUE) {
+  n <- length(item)
+  block <- rep_len(as.character(block), n)
+  key <- paste(block, item, sep = "\r")
+  compared <- !(duplicated(key) | duplicated(key, fromLast = TRUE)) &
+    rep_len(observed, n) & is.finite(loading) & loading != 0
+  reference <- compared & rep_len(reference, n)
+  against <- logical(n)
+  others <- character(n)
+  lead_sign <- numeric(n)
+  group <- paste(block, factor, sep = "\r")
+  for (g in unique(group[reference])) {
+    idx <- which(compared & group == g)
+    ref <- idx[reference[idx]]
+    s <- sign(loading[ref])
+    lead <- sign(sum(s))
+    if (lead == 0) lead <- s[[which.max(abs(loading[ref]))]]
+    against[idx] <- sign(loading[idx]) != lead
+    others[idx] <- nomo_present_or(item[ref][s == lead], "and")
+    lead_sign[idx] <- lead
+  }
+  list(against = against, others = others, lead = lead_sign)
+}
+
+
+# The indicators of each factor of a fitted lavaan model that load against it,
+# as a list named by factor; empty when none does. Its attribute `reversed`
+# names the factors among them whose loadings are mostly negative, which run
+# opposite to most of their items. Items in `keyed`, declared reverse-keyed,
+# do not set a factor's direction. Only the estimates are needed, so no
+# standard errors are computed.
+nomo_cfa_against_items <- function(fit, keyed = character()) {
+  std <- lavaan::standardizedSolution(fit, type = "std.all", se = FALSE, zstat = FALSE,
+                                      pvalue = FALSE, ci = FALSE)
+  rows <- std[std$op == "=~", , drop = FALSE]
+  signs <- nomo_cfa_sign_split(rows$lhs, rows$rhs, rows$est.std, nomo_cfa_loading_block(rows),
+                               observed = !rows$rhs %in% rows$lhs,
+                               reference = !rows$rhs %in% keyed)
+  hit <- rows[signs$against, , drop = FALSE]
+  out <- lapply(split(as.character(hit$rhs), factor(hit$lhs, levels = unique(hit$lhs))), unique)
+  attr(out, "reversed") <- unique(as.character(hit$lhs[signs$lead[signs$against] < 0]))
+  out
 }
 
 
@@ -762,7 +882,7 @@ nomo_cfa_factor_correlations <- function(standardized_solution, latent_names) {
 
 
 nomo_cfa_heywood <- function(parameter_estimates, standardized_solution,
-                             latent_names, observed_names) {
+                             latent_names, observed_names, fit = NULL) {
   out <- tibble::tibble(
     object = character(), issue = character(), value = numeric(),
     severity = character(), explanation = character()
@@ -863,7 +983,174 @@ nomo_cfa_heywood <- function(parameter_estimates, standardized_solution,
       )
     }
   }
+  if (!is.null(fit)) {
+    out <- dplyr::bind_rows(out, nomo_cfa_not_positive_definite(fit, out$issue))
+  }
   out
+}
+
+
+# The improper-solution signals that are about a whole matrix rather than one
+# parameter.
+nomo_cfa_matrix_issues <- c(
+  "latent_covariance_not_positive_definite", "residual_covariance_not_positive_definite"
+)
+
+
+# A latent or residual covariance matrix with a negative eigenvalue is
+# improper even when every variance is positive and every correlation is
+# within 1 (usefulness-03): no real variables could have those covariances.
+# The test is lavaan's own post-estimation check, with its tolerance. As
+# there, a matrix is not checked when a variance in it is already negative,
+# and the residuals of ordered indicators are left out; nor is the latent
+# matrix checked when a latent correlation beyond 1 already shows it is
+# improper. The rows above report those. `value` is the smallest
+# eigenvalue of the matrix as correlations, which does not depend on how the
+# factors are scaled.
+nomo_cfa_not_positive_definite <- function(fit, found = character()) {
+  ordered <- as.character(lavaan::lavNames(fit, type = "ov.ord"))
+  checks <- list(
+    list(what = "cov.lv", skip = c("negative_latent_variance", "latent_correlation_beyond_one"),
+         issue = "latent_covariance_not_positive_definite", object = "Latent covariances",
+         of = "factors", near = "factor"),
+    list(what = "theta", skip = "negative_observed_residual_variance",
+         issue = "residual_covariance_not_positive_definite", object = "Residual covariances",
+         of = "residuals", near = "residual")
+  )
+  rows <- list()
+  for (check in checks) {
+    if (any(check$skip %in% found)) next
+    for (m in lavaan::lavInspect(fit, check$what, drop.list.single.group = FALSE)) {
+      keep <- !rownames(m) %in% ordered
+      m <- unclass(m)[keep, keep, drop = FALSE]
+      if (!nrow(m) || anyNA(m)) next
+      values <- eigen(m, symmetric = TRUE, only.values = TRUE)$values
+      if (!any(values < -.Machine$double.eps^(3 / 4) * max(1, abs(values[[1L]])))) next
+      positive <- diag(m) > 0
+      smallest <- min(eigen(stats::cov2cor(m[positive, positive, drop = FALSE]),
+                            symmetric = TRUE, only.values = TRUE)$values)
+      # The factors are named; a residual matrix would list every indicator.
+      described <- if (check$what == "cov.lv") {
+        paste("latent covariance matrix of", nomo_present_or(rownames(m), "and"))
+      } else {
+        "residual covariance matrix (theta)"
+      }
+      rows[[length(rows) + 1L]] <- tibble::tibble(
+        object = check$object,
+        issue = check$issue,
+        value = smallest,
+        severity = "concern",
+        explanation = sprintf(
+          paste(
+            "The %s is not positive definite (smallest eigenvalue %s), so no",
+            "real %s could have these correlations: the solution is improper.",
+            "Inspect %s correlations near 1, identification, and the sample size."
+          ),
+          described, nomo_present_stat(smallest, "estimate", reference = 0),
+          check$of, check$near
+        )
+      )
+    }
+  }
+  dplyr::bind_rows(rows)
+}
+
+
+# The observed categories of each numeric indicator of a fitted model
+# (usefulness-04), named by indicator. An indicator takes the number of
+# distinct values the numeric indicators of its factor use between them, the
+# largest over its factors, so a five-point item whose answers pile up in
+# three categories counts five: its distribution is the screen's to report,
+# not a coarse response scale.
+nomo_cfa_category_counts <- function(fit, data) {
+  pt <- lavaan::parTable(fit)
+  loads <- unique(pt[pt$op == "=~" & pt$rhs %in% names(data), c("lhs", "rhs")])
+  loads <- loads[vapply(data[loads$rhs], is.numeric, logical(1)), , drop = FALSE]
+  if (!nrow(loads)) return(integer())
+  per_factor <- vapply(split(loads$rhs, loads$lhs), function(items) {
+    length(unique(stats::na.omit(unlist(data[items], use.names = FALSE))))
+  }, integer(1))
+  counts <- tapply(per_factor[loads$lhs], loads$rhs, max)
+  stats::setNames(as.integer(counts[unique(loads$rhs)]), unique(loads$rhs))
+}
+
+
+# A review row when the CFA used fewer cases than it has free parameters
+# (usefulness-03).
+nomo_cfa_parameters_log <- function(log, n_used, n_parameters) {
+  if (!is.finite(n_used) || !is.finite(n_parameters) || n_used >= n_parameters) return(log)
+  nomo_log_add(
+    log, stage = "cfa", object = "model", metric = "cases_below_parameters",
+    value = n_parameters,
+    reference = "Stable estimates need more cases than free parameters",
+    severity = "review",
+    observation = sprintf(
+      paste(
+        "The model has %s and %s used. With fewer cases than free parameters",
+        "the estimates are unstable, and an improper solution is more likely."
+      ),
+      nomo_present_count(as.integer(n_parameters), "free parameter"),
+      nomo_present_count(as.integer(n_used), "case was", "cases were")
+    ),
+    recommendation = paste(
+      "Fit the model to more cases, or fit a model with fewer parameters, before",
+      "interpreting its estimates."
+    )
+  )
+}
+
+
+# Rows for numeric indicators fitted as continuous (usefulness-04): a review
+# for those with 4 or fewer observed categories, for which categorical
+# estimation recovers the loadings better, and information for those with 5
+# to 7 under plain ML, for which robust ML suits non-normal responses
+# (Rhemtulla et al., 2012). `categories` is from nomo_cfa_category_counts().
+nomo_cfa_categories_log <- function(log, categories, estimator_label) {
+  few <- names(categories)[categories <= 4L]
+  if (length(few)) {
+    log <- nomo_log_add(
+      log, stage = "cfa", object = paste(few, collapse = ", "),
+      metric = "few_categories", value = length(few),
+      reference = "Rhemtulla et al. (2012)",
+      severity = "review",
+      observation = sprintf(
+        "%s %s 4 or fewer observed categories and %s fitted as continuous with %s: %s.",
+        nomo_present_count(length(few), "indicator"),
+        nomo_present_noun(length(few), "has", "have"),
+        nomo_present_noun(length(few), "was", "were"), estimator_label,
+        paste(few, collapse = ", ")
+      ),
+      recommendation = paste(
+        "With 4 or fewer categories, categorical estimation recovers the loadings",
+        "better than continuous estimation (Rhemtulla et al., 2012). Name these",
+        "indicators in `ordered` to fit them as ordered categories with WLSMV,",
+        "and compare the loadings."
+      )
+    )
+  }
+  moderate <- names(categories)[categories >= 5L & categories <= 7L]
+  if (length(moderate) && identical(estimator_label, "ML")) {
+    log <- nomo_log_add(
+      log, stage = "cfa", object = paste(moderate, collapse = ", "),
+      metric = "moderate_categories", value = length(moderate),
+      reference = "Rhemtulla et al. (2012)",
+      severity = "info",
+      # Counted over a factor's indicators, so a ceiling item among them may
+      # use fewer categories itself.
+      observation = sprintf(
+        "%s %s fitted as continuous with ML; %s indicators use 5 to 7 observed categories between them.",
+        nomo_present_count(length(moderate), "indicator"),
+        nomo_present_noun(length(moderate), "was", "were"),
+        nomo_present_noun(length(moderate), "its factor's", "their factors'")
+      ),
+      recommendation = paste(
+        "With 5 or more categories, continuous estimation is reasonable, and",
+        "robust ML (`estimator = \"MLR\"`) guards against non-normal responses",
+        "(Rhemtulla et al., 2012)."
+      )
+    )
+  }
+  log
 }
 
 
@@ -912,7 +1199,9 @@ nomo_cfa_decision_log <- function(estimator_label, engine_estimator,
                                   modification_indices_requested,
                                   mi_error, ordered_detected = character(),
                                   ordered_unused = character(),
-                                  scaled_unavailable = FALSE) {
+                                  scaled_unavailable = FALSE,
+                                  categories = integer(),
+                                  n_parameters = NA_real_) {
   log <- nomo_log_new()
   estimator_observation <- switch(
     estimator_source,
@@ -976,6 +1265,7 @@ nomo_cfa_decision_log <- function(estimator_label, engine_estimator,
     recommendation = "Confirm the measurement level of all indicators before interpreting the model."
   )
   log <- nomo_ordered_detected_log(log, ordered_detected, stage = "cfa")
+  log <- nomo_cfa_categories_log(log, categories, estimator_label)
 
   if (!is.null(missing)) {
     log <- nomo_log_add(
@@ -1032,6 +1322,7 @@ nomo_cfa_decision_log <- function(estimator_label, engine_estimator,
       }
     )
   }
+  log <- nomo_cfa_parameters_log(log, n_used, n_parameters)
 
   log <- nomo_log_add(
     log, stage = "cfa", object = "model", metric = "convergence",
