@@ -3,9 +3,9 @@
 # Each note's first sentence states what was found, so that print() can show
 # that sentence and summary() the whole note. The references the notes apply
 # are fixed values from the literature, not settings read from `guidance`:
-# Gorsuch's (1983) .90 for validity, as Grice (2001) cites it, and .05 for a
-# discrepancy between correlations, for correlational accuracy and for
-# univocality alike.
+# the .90 for validity that Gorsuch (1983, p. 260, as cited in Grice, 2001)
+# recommended, and .05 for a discrepancy between correlations, for
+# correlational accuracy and for univocality alike.
 
 # The size of a discrepancy between correlations that a note raises, for
 # correlational accuracy and for univocality.
@@ -353,12 +353,12 @@ nomo_scores_ordered_note <- function(method, k) {
 #' not extend to nonlinear models. `vignette("scoring", package = "nomologR")`
 #' works through the design.
 #'
-#' **Thresholds are context.** Gorsuch's (1983, p. 260) recommendation, as
-#' cited in Grice (2001), that validity reach at least .80, and above .90 for
-#' scores serving as substitutes for the factors themselves, is reported where
-#' a value falls below it and is never applied as a rule. These references,
-#' and the .05 for a discrepancy between correlations, are fixed values from
-#' the literature; they are not read from `guidance`.
+#' **Thresholds are context.** Gorsuch (1983, p. 260, as cited in Grice, 2001)
+#' recommended that validity reach at least .80, and above .90 for scores
+#' serving as substitutes for the factors themselves. That recommendation is
+#' reported where a value falls below it and is never applied as a rule. These
+#' references, and the .05 for a discrepancy between correlations, are fixed
+#' values from the literature; they are not read from `guidance`.
 #'
 #' The supplied data is never modified, and scores are computed only for the
 #' cases the model used. `rows` records which rows of the data those are, so

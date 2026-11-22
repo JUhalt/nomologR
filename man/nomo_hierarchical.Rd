@@ -145,11 +145,12 @@ Determinacy is always computed from the model-reproduced matrix, whatever
 
 Gorsuch (1983, p. 260, as cited in Grice, 2001) recommended a determinacy
 of at least .80, and above .90 where factor score estimates are to serve as
-substitutes for the factors. Rodriguez et al. (2016) report his suggestion
-that competing score sets correlate above .70, and Hancock and Mueller
-(2001) proposed .70 as a standard for H. These are reported as their
-authors' recommendations where a value falls below them, as with fixed
-fit-index cutoffs elsewhere in the package, and are never applied as rules.
+substitutes for the factors. Gorsuch (1983, p. 260, as cited in Rodriguez et
+al., 2016) also suggested that competing score sets correlate above .70, and
+Hancock and Mueller (2001) proposed .70 as a standard for H. These are
+reported as their authors' recommendations where a value falls below them,
+as with fixed fit-index cutoffs elsewhere in the package, and are never
+applied as rules.
 
 \strong{Improper solutions.} A negative variance estimate, a residual variance or
 the variance of a general or group source (in a higher-order model, a

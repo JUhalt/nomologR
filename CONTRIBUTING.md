@@ -106,7 +106,8 @@ Contributions should keep `R CMD check --as-cran` clean, keep examples and
 vignettes fast, and use `skip_on_cran()` for long-running simulations, for
 tests that run a full guided workflow or render a report, and for any test that
 replaces a function of another package. A test that asserts that code raises no
-warning, or runs silently, uses `expect_no_warning_off_cran()` or
+warning, or runs silently, makes that assertion after the test's
+`skip_on_cran()`, or uses `expect_no_warning_off_cran()` or
 `expect_silent_off_cran()` from `tests/testthat/helper-cran.R`, so that a new
 warning in a dependency cannot fail the check on CRAN. A pull request merges
 only when continuous integration is green: the R-CMD-check workflow fails on

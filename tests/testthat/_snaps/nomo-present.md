@@ -592,12 +592,12 @@
         C       group            .64             -.18              .41
       
       Flagged
-        - Review: Factor determinacy is at or below .90 for G, A, B, C, the value
-          above which Gorsuch (1983, as cited in Grice, 2001) recommended factor
+        - Review: Factor determinacy is at or below .90 for G, A, B, C; Gorsuch
+          (1983, p. 260, as cited in Grice, 2001) recommended above .90 for factor
           score estimates that serve as substitutes for the factors.
         - Review: Two equally valid sets of factor scores could correlate as low as
-          G (.50), A (-.01), B (.02), C (-.18), below the .70 Gorsuch (1983, as
-          cited in Rodriguez et al., 2016) suggested.
+          G (.50), A (-.01), B (.02), C (-.18), below the .70 that Gorsuch
+          (1983, p. 260, as cited in Rodriguez et al., 2016) suggested.
         - Review: Construct replicability H is below .70, the standard Hancock and
           Mueller (2001) proposed, for A, B, C.
       

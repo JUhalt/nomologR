@@ -202,19 +202,88 @@ test_that("the stability policy takes effect at 1.0.0 (#113)", {
 test_that("no test asserts on CRAN that a dependency raises no warning (#145, cran-9)", {
   # A later release of lavaan, psych, semTools, EFAtools, or ggplot2 could add
   # a warning and fail the check on CRAN. Such assertions use the helpers in
-  # helper-cran.R, or sit in a test that skips on CRAN.
+  # helper-cran.R, or come after the skip_on_cran() of their test.
   quiet <- c("expect_no_warning", "expect_silent", "expect_no_condition", "expect_no_message")
-  files <- list.files(testthat::test_path(), pattern = "^test-.*[.]R$", full.names = TRUE)
-  expect_gt(length(files), 40L)
-  on_cran <- character()
-  for (file in files) {
-    for (e in as.list(parse(file, keep.source = FALSE))) {
-      if (!is.call(e) || !identical(e[[1L]], as.name("test_that"))) next
-      used <- all.names(e[[3L]])
-      if (any(quiet %in% used) && !"skip_on_cran" %in% used) {
-        on_cran <- c(on_cran, paste0(basename(file), ": ", e[[2L]]))
+  name_of <- function(x) {
+    f <- x[[1L]]
+    if (is.name(f)) return(as.character(f))
+    if (is.call(f) && length(f) == 3L && is.name(f[[1L]]) &&
+        as.character(f[[1L]]) %in% c("::", ":::")) {
+      return(as.character(f[[3L]]))
+    }
+    ""
+  }
+  # TRUE when `x` asserts that code raises no warning or message: one of
+  # `quiet`, expect_warning(..., NA) and its relatives, or a warning handler
+  # that stops.
+  asserts_quiet <- function(x) {
+    if (!is.call(x)) return(FALSE)
+    name <- name_of(x)
+    if (name %in% quiet) return(TRUE)
+    args <- as.list(x)[-1L]
+    named <- if (is.null(names(args))) rep("", length(args)) else names(args)
+    if (name %in% c("expect_warning", "expect_message", "expect_condition")) {
+      regexp <- if ("regexp" %in% named) args[["regexp"]] else if (sum(named == "") >= 2L) {
+        args[named == ""][[2L]]
+      }
+      if (identical(regexp, NA)) return(TRUE)
+    }
+    if (name == "withCallingHandlers" && "warning" %in% named &&
+        any(c("stop", "fail", "abort") %in% all.names(args[["warning"]]))) {
+      return(TRUE)
+    }
+    for (i in seq_along(args)) {
+      if (!identical(args[[i]], quote(expr = )) && asserts_quiet(args[[i]])) return(TRUE)
+    }
+    FALSE
+  }
+  # Tests, and file-level code, that assert quiet before any skip_on_cran().
+  on_cran <- function(exprs, file) {
+    found <- character()
+    for (e in exprs) {
+      if (!is.call(e)) next
+      if (!identical(name_of(e), "test_that")) {
+        if (asserts_quiet(e)) found <- c(found, paste0(file, ": file level"))
+        next
+      }
+      body <- e[[3L]]
+      steps <- if (is.call(body) && identical(body[[1L]], as.name("{"))) {
+        as.list(body)[-1L]
+      } else {
+        list(body)
+      }
+      for (step in steps) {
+        if (is.call(step) && name_of(step) == "skip_on_cran") break
+        if (asserts_quiet(step)) {
+          found <- c(found, paste0(file, ": ", e[[2L]]))
+          break
+        }
       }
     }
+    found
   }
-  expect_identical(on_cran, character())
+
+  # The check finds each form, and an assertion made before the skip.
+  probes <- parse(text = c(
+    'test_that("a", { expect_no_warning(f()); skip_on_cran() })',
+    'test_that("b", { x <- 1; testthat::expect_silent(f()) })',
+    'test_that("c", { expect_warning(f(), NA) })',
+    'test_that("d", { y <- list(expect_message(f(), regexp = NA)) })',
+    'test_that("e", withCallingHandlers(f(), warning = function(w) stop(w)))',
+    'test_that("f", { skip_on_cran(); expect_no_warning(f()) })',
+    'test_that("g", { expect_warning(f(), "x"); y[, 1] })',
+    'quiet_helper <- function() expect_silent(f())'
+  ), keep.source = FALSE)
+  expect_identical(
+    on_cran(as.list(probes), "probe"),
+    paste0("probe: ", c("a", "b", "c", "d", "e", "file level"))
+  )
+
+  files <- list.files(testthat::test_path(), pattern = "^test-.*[.]R$", full.names = TRUE)
+  expect_gt(length(files), 40L)
+  found <- character()
+  for (file in files) {
+    found <- c(found, on_cran(as.list(parse(file, keep.source = FALSE)), basename(file)))
+  }
+  expect_identical(found, character())
 })

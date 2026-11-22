@@ -88,11 +88,12 @@
 #'
 #' Gorsuch (1983, p. 260, as cited in Grice, 2001) recommended a determinacy
 #' of at least .80, and above .90 where factor score estimates are to serve as
-#' substitutes for the factors. Rodriguez et al. (2016) report his suggestion
-#' that competing score sets correlate above .70, and Hancock and Mueller
-#' (2001) proposed .70 as a standard for H. These are reported as their
-#' authors' recommendations where a value falls below them, as with fixed
-#' fit-index cutoffs elsewhere in the package, and are never applied as rules.
+#' substitutes for the factors. Gorsuch (1983, p. 260, as cited in Rodriguez et
+#' al., 2016) also suggested that competing score sets correlate above .70, and
+#' Hancock and Mueller (2001) proposed .70 as a standard for H. These are
+#' reported as their authors' recommendations where a value falls below them,
+#' as with fixed fit-index cutoffs elsewhere in the package, and are never
+#' applied as rules.
 #'
 #' **Improper solutions.** A negative variance estimate, a residual variance or
 #' the variance of a general or group source (in a higher-order model, a
@@ -976,9 +977,8 @@ nomo_hierarchical_factor_score_notes <- function(notes, add, factors) {
     ), brief = paste0(
       "Factor determinacy is at or below .90 for ",
       paste(undetermined, collapse = ", "),
-      ", the value above which Gorsuch (1983, as cited in Grice, 2001) ",
-      "recommended factor score estimates that serve as substitutes for the ",
-      "factors."
+      "; Gorsuch (1983, p. 260, as cited in Grice, 2001) recommended above .90 ",
+      "for factor score estimates that serve as substitutes for the factors."
     ))
   }
 
@@ -999,8 +999,8 @@ nomo_hierarchical_factor_score_notes <- function(notes, add, factors) {
       "consistent with the model."
     ), brief = paste0(
       "Two equally valid sets of factor scores could correlate as low as ",
-      lowest, ", below the .70 Gorsuch (1983, as cited in Rodriguez et al., ",
-      "2016) suggested."
+      lowest, ", below the .70 that Gorsuch (1983, p. 260, as cited in ",
+      "Rodriguez et al., 2016) suggested."
     ))
   }
 
