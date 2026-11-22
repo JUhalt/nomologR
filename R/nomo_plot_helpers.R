@@ -251,7 +251,7 @@ nomo_plot_fit_indices <- function(dat, title, values, versions = NULL, extra = N
   # the dashed line where it runs behind the digits. ggplot2 4.0 sets the
   # border's width through `linewidth`, and earlier versions through
   # `label.size`.
-  border <- if (utils::packageVersion("ggplot2") >= "4.0.0") "linewidth" else "label.size"
+  border <- c("label.size", "linewidth")[[1L + (utils::packageVersion("ggplot2") >= "4.0.0")]]
   value_labels <- do.call(ggplot2::geom_label, c(list(
     ggplot2::aes(label = value_label), vjust = -0.5, size = 3.4,
     label.padding = ggplot2::unit(0.08, "lines")
