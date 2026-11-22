@@ -302,7 +302,7 @@ nomo_apa_mark <- function(body, marks) {
 #' standardized value of 1 or more, as in an improper (Heywood) solution, keeps
 #' its integer digit, `1.04`. Unstandardized estimates keep the zero.
 #'
-#' **p values.** A *p* cell gives the exact value to three decimals, `.015`.
+#' ***p* values.** A *p* cell gives the exact value to three decimals, `.015`.
 #' Below .001 it reads `<.001`, and a value that would round to 1 reads
 #' `>.999`, written without a space as APA writes them in tables. Running text
 #' and notes keep the spaces, "*p* < .001".
@@ -413,7 +413,9 @@ nomo_apa_mark <- function(body, marks) {
 #'     `"nomo_cfa"`.
 #'
 #'   Headings, cells, and notes are written in Markdown, as pandoc reads it:
-#'   italics as `*p*` and a superscript as `^a^`. `print()` shows the table as
+#'   italics as `*p*` and a superscript as `^a^`. Knitted to HTML, only these
+#'   two are read as Markdown; other Markdown added to a table, such as
+#'   `**bold**`, shows as written. `print()` shows the table as
 #'   aligned text under its number and title, with its notes, the italics
 #'   dropped, and a note marker written `(a)`; a table wider than the console
 #'   wraps its long headings and text cells, and names any column it still
@@ -1502,7 +1504,7 @@ print.nomo_apa_table <- function(x, ...) {
     nomo_present_text(nomo_apa_bind(note))
   }
   nomo_present_pointer(c("x$body", "knitr::knit_print(x)"),
-                       c("the cells", "the Markdown a knitted document renders"))
+                       c("the cells", "the table a knitted document renders"))
   invisible(x)
 }
 
@@ -1648,7 +1650,7 @@ nomo_apa_html <- function(x, css = TRUE) {
     "</thead>",
     "<tbody>",
     vapply(seq_len(nrow(body)), function(i) {
-      row("<td>", "</td>", vapply(body, `[[`, character(1), i))
+      row("<td>", "</td>", vapply(body, function(v) as.character(v[[i]]), character(1)))
     }, character(1)),
     "</tbody>",
     "</table>",
@@ -1667,12 +1669,16 @@ nomo_apa_html_output <- function() {
 
 # What a knitted table writes into the document: for an HTML page, the HTML
 # table in a raw block, which pandoc passes through as written; otherwise the
-# Markdown table, which pandoc renders as Word or PDF.
+# Markdown table, which pandoc renders as Word or PDF. Either way it starts
+# and ends with a line break, so a blank line separates it from the text or
+# table before and after it: knitr joins the outputs of a chunk with nothing
+# between them, and the number of a second table would otherwise end the
+# last note of the first (#145).
 nomo_apa_knitted <- function(x, html = nomo_apa_html_output(), css = TRUE) {
   if (isTRUE(html)) {
     return(paste(c("", "```{=html}", nomo_apa_html(x, css = css), "```", ""), collapse = "\n"))
   }
-  paste(nomo_apa_markdown(x), collapse = "\n")
+  paste(c("", nomo_apa_markdown(x), ""), collapse = "\n")
 }
 
 

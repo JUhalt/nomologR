@@ -23,7 +23,7 @@
       with maximum likelihood (ML); N = 800. Blank cells are loadings fixed to zero
       by the model.
       
-      See x$body for the cells and knitr::knit_print(x) for the Markdown a knitted
+      See x$body for the cells and knitr::knit_print(x) for the table a knitted
       document renders.
 
 # the validity tables are stable
@@ -58,6 +58,6 @@
       loadings and content coverage. AVE is convergent evidence and is not a
       reliability coefficient. Estimated with maximum likelihood (ML); N = 800.
       
-      See x$body for the cells and knitr::knit_print(x) for the Markdown a knitted
+      See x$body for the cells and knitr::knit_print(x) for the table a knitted
       document renders.
 

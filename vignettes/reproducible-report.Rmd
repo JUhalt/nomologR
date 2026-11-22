@@ -106,7 +106,8 @@ nomo_report(run, file = file.path(report_dir, "construct-validation-report.docx"
 
 The Word document carries the same tables, figures, and interpretation contract
 as the HTML report. Sections that collapse in HTML, such as the full evidence
-trace, are shown expanded, and it uses Word's default styles.
+trace, are shown expanded. It uses pandoc's default Word styles, except that
+its tables are ruled as APA sets a table (see "Tables for a manuscript" below).
 
 `nomo_report()` works the same from the console, a script, or a chunk inside
 your own R Markdown or Quarto document, such as a thesis chapter. This article
@@ -162,8 +163,8 @@ it, because each can exceed 1. Standardized loadings and standardized path
 coefficients are written without the zero, as APA's own sample tables write
 them. A standardized value of 1 or more, which only an improper solution gives,
 keeps its integer digit. Unstandardized estimates keep the zero. A *p* value
-below .001 reads <.001 in a table cell, without a space, as APA writes it in
-tables; the notes keep the spaces.
+below .001 reads `<.001` in a table cell, without a space, as APA writes it in
+tables; running text keeps the spaces, *p* < .001.
 
 Knitted to HTML, as here, each table carries its own style sheet, so it has
 APA's rules in any HTML document: one above the table, one beneath the column

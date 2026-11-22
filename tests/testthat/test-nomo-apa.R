@@ -348,8 +348,46 @@ test_that("knitting a table emits its markdown", {
   expect_s3_class(out, "knit_asis")
   expect_identical(
     as.character(out),
-    paste(nomologR:::nomo_apa_markdown(tab), collapse = "\n")
+    paste(c("", nomologR:::nomo_apa_markdown(tab), ""), collapse = "\n")
   )
+})
+
+
+test_that("tables knitted in one chunk are kept apart by a blank line (#145)", {
+  skip_if_not_installed("knitr")
+  first <- nomologR:::nomo_apa_new(
+    body = data.frame(Item = "ag1", Agency = ".82", stringsAsFactors = FALSE),
+    title = "Loadings", stub = "Item", general = "Estimated with ML; *N* = 800.",
+    number = 1
+  )
+  second <- first
+  second$number <- 2L
+  second$title <- "More Loadings"
+
+  # knitr joins the outputs of a chunk with nothing between them, as pasted
+  # here; the number of the second table starts its own paragraph.
+  joined <- paste0(as.character(knitr::knit_print(first)),
+                   as.character(knitr::knit_print(second)))
+  expect_match(joined, "*N* = 800.\n\n**Table 2**\n", fixed = TRUE)
+
+  # The same, knitted as a document is: the note of the first table, a
+  # blank line, and the number of the second.
+  dir <- withr::local_tempdir()
+  rmd <- file.path(dir, "two.Rmd")
+  md <- file.path(dir, "two.md")
+  writeLines(c("```{r, echo = FALSE}", "first", "second", "```", "", "Text after."), rmd)
+  env <- new.env()
+  env$first <- first
+  env$second <- second
+  knitr::knit(rmd, md, envir = env, quiet = TRUE)
+  out <- readLines(md, warn = FALSE, encoding = "UTF-8")
+  at <- which(out == "**Table 2**")
+  expect_length(at, 1L)
+  expect_identical(out[[at - 1L]], "")
+  expect_identical(out[[at - 2L]], "*Note.* Estimated with ML; *N* = 800.")
+  # The last note is a paragraph of its own, apart from the text after it.
+  last <- which(startsWith(out, "*Note.*"))[[2L]]
+  expect_identical(out[[last + 1L]], "")
 })
 
 
@@ -417,6 +455,12 @@ test_that("knitted for HTML, a table is HTML with the APA rules of its own (#145
     expect_false(grepl("```{=html}", apa_knit_for(tab, to), fixed = TRUE), label = to)
   }
   expect_null(knitr::opts_knit$get("rmarkdown.pandoc.to"))
+
+  # A cell changed to a number after the table was made is written as
+  # print() and the Markdown table write it.
+  tab$body$Extra <- c(1.5, 2)
+  expect_match(nomologR:::nomo_apa_knitted(tab, html = TRUE, css = FALSE),
+               "<td>&gt;.999</td><td>2</td></tr>", fixed = TRUE)
 })
 
 
@@ -1050,7 +1094,7 @@ test_that("the console fits an APA table to its width and names what it leaves o
   expect_true(any(grepl("Persistence (a)", out, fixed = TRUE)))
   expect_true(any(startsWith(out, "(a) Specified after the data were seen")))
   expect_match(paste(utils::tail(out, 2L), collapse = " "),
-               "knitr::knit_print(x) for the Markdown a knitted document renders.",
+               "knitr::knit_print(x) for the table a knitted document renders.",
                fixed = TRUE)
   # The retest table's long headings wrap, so it fits 80 columns.
   retest <- capture.output(print(tables[[2L]]))

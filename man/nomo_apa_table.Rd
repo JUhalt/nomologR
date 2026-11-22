@@ -42,7 +42,9 @@ printed. Any of them may be empty.
 }
 
 Headings, cells, and notes are written in Markdown, as pandoc reads it:
-italics as \verb{*p*} and a superscript as \verb{^a^}. \code{print()} shows the table as
+italics as \verb{*p*} and a superscript as \verb{^a^}. Knitted to HTML, only these
+two are read as Markdown; other Markdown added to a table, such as
+\verb{**bold**}, shows as written. \code{print()} shows the table as
 aligned text under its number and title, with its notes, the italics
 dropped, and a note marker written \code{(a)}; a table wider than the console
 wraps its long headings and text cells, and names any column it still
@@ -64,7 +66,7 @@ written without the zero, \code{.82}, as APA's own sample tables write them. A
 standardized value of 1 or more, as in an improper (Heywood) solution, keeps
 its integer digit, \code{1.04}. Unstandardized estimates keep the zero.
 
-\strong{p values.} A \emph{p} cell gives the exact value to three decimals, \code{.015}.
+\strong{\emph{p} values.} A \emph{p} cell gives the exact value to three decimals, \code{.015}.
 Below .001 it reads \verb{<.001}, and a value that would round to 1 reads
 \verb{>.999}, written without a space as APA writes them in tables. Running text
 and notes keep the spaces, "\emph{p} < .001".
