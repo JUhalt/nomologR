@@ -598,7 +598,7 @@ test_that("`digits` reaches every statistic, and never rounds a given value furt
     expect_error(nomologR:::nomo_present_digits_unused(bad, "why"),
                  "`digits` must be NULL or one whole number from 0 to 10.", fixed = TRUE)
   }
-  expect_silent(nomologR:::nomo_present_digits_unused(NULL, "why"))
+  expect_silent_off_cran(nomologR:::nomo_present_digits_unused(NULL, "why"))
   expect_message(nomologR:::nomo_present_digits_unused(2, "a reason."),
                  "`digits` changes nothing here: a reason.", fixed = TRUE)
 })
