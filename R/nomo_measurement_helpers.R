@@ -395,8 +395,7 @@ nomo_reliability_item_types <- function(fit_info) {
 # its interval, and SRMR, each in its standard, scaled, and robust versions.
 # lavaan computes only the measures named. Its full set adds the GFI family and
 # other indices nomologR never shows, which took most of the time with
-# full-information maximum likelihood (#183). A version the model lacks is
-# left out of both, so the values read are the same.
+# full-information maximum likelihood (#183).
 nomo_fit_measure_names <- c(
   "chisq", "df", "pvalue", "chisq.scaled", "df.scaled", "pvalue.scaled",
   "cfi", "cfi.scaled", "cfi.robust", "tli", "tli.scaled", "tli.robust",
@@ -407,11 +406,30 @@ nomo_fit_measure_names <- c(
 )
 
 
+# The measures nomologR reads, with the versions lavaan's full set has. Asked
+# for by name, lavaan can return versions its full set leaves out: with ULS on
+# continuous data, its second test makes the CFI and RMSEA helpers add scaled
+# versions, although the model has no scaled test. lavaan's full set has the
+# scaled versions only with a scaled chi-square, and the robust ones only with
+# a scaled chi-square, categorical data, or full-information maximum
+# likelihood, so the same rule is applied here (#183).
+nomo_fit_measures_read <- function(fit, extra = character()) {
+  measures <- lavaan::fitMeasures(fit, c(nomo_fit_measure_names, extra))
+  read <- as.character(names(measures))
+  scaled <- "chisq.scaled" %in% read
+  robust <- scaled || isTRUE(lavaan::lavInspect(fit, "categorical")) ||
+    lavaan::lavInspect(fit, "options")$missing %in% c("ml", "ml.x")
+  drop <- (!scaled & endsWith(read, ".scaled")) | (!robust & endsWith(read, ".robust"))
+  if (any(drop)) measures <- structure(measures[!drop], class = class(measures))
+  measures
+}
+
+
 # The fit context of reliability and validity. A nomo_cfa result passes the
 # fit measures it stored, which are reused rather than computed again (#183).
 nomo_reliability_fit_context <- function(fit, guidance, measures = NULL) {
   if (is.null(measures)) {
-    measures <- tryCatch(lavaan::fitMeasures(fit, nomo_fit_measure_names),
+    measures <- tryCatch(nomo_fit_measures_read(fit),
                          error = function(e) numeric())
   }
   if (!length(measures)) return(tibble::tibble())

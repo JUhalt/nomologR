@@ -52,22 +52,59 @@ demo_scales <- list(A = paste0("a", 1:5), B = paste0("b", 1:5))
 test_that("the measures nomologR reads equal lavaan's full set (#183)", {
   skip_on_cran()
   model <- as.character(nomo_model(demo_scales))
+  network_model <- "A =~ ag1 + ag2 + ag3 + ag4"
   fits <- list(
     ml = lavaan::cfa(model, nomo_demo_continuous),
     mlr_fiml = lavaan::cfa(model, fiml_demo(), estimator = "MLR", missing = "ml"),
     wlsmv = lavaan::cfa(model, nomo_demo_ordinal, ordered = unlist(demo_scales)),
-    groups = lavaan::cfa("A =~ ag1 + ag2 + ag3 + ag4", nomo_demo_network,
-                         group = "group", estimator = "MLM")
+    groups = lavaan::cfa(network_model, nomo_demo_network, group = "group", estimator = "MLM"),
+    # ULS on continuous data has a second test but no scaled one. Asked for by
+    # name, lavaan adds scaled CFI, TLI, and RMSEA that its full set leaves out.
+    uls = lavaan::cfa(model, nomo_demo_continuous, estimator = "ULS"),
+    uls_groups = lavaan::cfa(network_model, nomo_demo_network, group = "group", estimator = "ULS")
   )
   for (fit in fits) {
     full <- lavaan::fitMeasures(fit)
-    read <- lavaan::fitMeasures(fit, nomologR:::nomo_fit_measure_names)
+    read <- nomologR:::nomo_fit_measures_read(fit)
     # A version the model lacks is left out of both.
     expect_identical(names(read), intersect(nomologR:::nomo_fit_measure_names, names(full)))
     expect_identical(unclass(unname(read)), unclass(unname(full[names(read)])))
+    expect_identical(class(read), class(full))
     expect_identical(nomologR:::nomo_cfa_fit_evidence(read, nomo_defaults()),
                      nomologR:::nomo_cfa_fit_evidence(full, nomo_defaults()))
   }
+  expect_false(any(grepl("[.]scaled$", names(nomologR:::nomo_fit_measures_read(fits$uls)))))
+  rel <- nomo_reliability(fits$uls)
+  expect_identical(rel$fit_context,
+                   nomologR:::nomo_cfa_fit_evidence(lavaan::fitMeasures(fits$uls), nomo_defaults()))
+  expect_identical(nomo_validity(fits$uls)$fit_context, rel$fit_context)
+  expect_false(any(grepl("scaled", rel$fit_context$variant)))
+})
+
+
+test_that("the measures read keep a version only where lavaan's full set has it (#183)", {
+  skip_on_cran()
+  ml <- lavaan::cfa("A =~ ag1 + ag2 + ag3 + ag4", nomo_demo_network)
+  fiml <- lavaan::cfa("A =~ a1 + a2 + a3 + a4 + a5", fiml_demo(), missing = "ml")
+  ordinal <- lavaan::cfa("A =~ a1 + a2 + a3 + a4 + a5", nomo_demo_ordinal,
+                         ordered = paste0("a", 1:5))
+  # A stand-in for lavaan that returns every version, wanted or not.
+  vector <- function(...) structure(c(...), class = c("lavaan.vector", "numeric"))
+  answer <- vector(chisq = 1, cfi = 0.9, cfi.scaled = 0.91, cfi.robust = 0.92)
+  testthat::local_mocked_bindings(
+    fitMeasures = function(object, measures, ...) answer,
+    .package = "lavaan"
+  )
+  # Without a scaled chi-square, categorical data, or FIML, neither version.
+  expect_identical(nomologR:::nomo_fit_measures_read(ml), vector(chisq = 1, cfi = 0.9))
+  # With FIML or categorical data, the robust version but not the scaled one.
+  expect_identical(nomologR:::nomo_fit_measures_read(fiml),
+                   vector(chisq = 1, cfi = 0.9, cfi.robust = 0.92))
+  expect_identical(nomologR:::nomo_fit_measures_read(ordinal),
+                   vector(chisq = 1, cfi = 0.9, cfi.robust = 0.92))
+  # With a scaled chi-square, both.
+  answer <- vector(chisq = 1, chisq.scaled = 1.2, cfi = 0.9, cfi.scaled = 0.91, cfi.robust = 0.92)
+  expect_identical(nomologR:::nomo_fit_measures_read(ml), answer)
 })
 
 
@@ -155,28 +192,41 @@ test_that("the network, its APA fit table, ESEM, and method variance give 1.0.0'
   model <- "Agency =~ ag1 + ag2 + ag3 + ag4\nPersistence =~ pe1 + pe2 + pe3 + pe4"
   h <- nomo_hypotheses("Agency -> Persistence" = positive(),
                        "Agency -> Performance" = positive())
-  fit_all <- function() {
-    list(
-      network = nomo_network(model, nomo_demo_network, h, estimator = "MLR"),
-      esem = nomo_esem(as.character(nomo_model(demo_scales)), nomo_demo_continuous),
+  # ESEM's rotation draws random starts, so each pair of fits shares a seed.
+  fit_all <- function(estimator = NULL) {
+    withr::with_seed(183, list(
+      network = nomo_network(model, nomo_demo_network, h, estimator = estimator),
+      esem = nomo_esem(as.character(nomo_model(demo_scales)), nomo_demo_continuous,
+                       estimator = estimator),
       method = nomo_method_variance(
-        "Agency =~ ag1 + ag2 + ag3 + ag4", nomo_demo_network, marker = c("sd1", "sd2", "sd3")
+        "Agency =~ ag1 + ag2 + ag3 + ag4", nomo_demo_network, marker = c("sd1", "sd2", "sd3"),
+        estimator = estimator
       )
-    )
+    ))
   }
-  new <- fit_all()
-  new_apa <- nomo_apa_table(new$network, "fit")
-  old <- local({
-    fit_measure_stand_in()
-    out <- fit_all()
-    out$apa <- nomo_apa_table(out$network, "fit")
-    out
-  })
-  expect_identical(strip_fits(new$network), strip_fits(old$network))
-  expect_identical(new_apa, old$apa)
-  expect_identical(strip_fits(new$esem), strip_fits(old$esem))
-  expect_identical(strip_fits(new$method), strip_fits(old$method))
-  expect_true(all(is.finite(new$esem$models$aic)))
+  results <- list()
+  for (estimator in c("MLR", "ULS")) {
+    new <- fit_all(estimator)
+    new_apa <- nomo_apa_table(new$network, "fit")
+    old <- local({
+      fit_measure_stand_in()
+      out <- fit_all(estimator)
+      out$apa <- nomo_apa_table(out$network, "fit")
+      out
+    })
+    expect_identical(strip_fits(new$network), strip_fits(old$network))
+    expect_identical(new_apa, old$apa)
+    expect_identical(strip_fits(new$esem), strip_fits(old$esem))
+    expect_identical(capture.output(print(new$esem)), capture.output(print(old$esem)))
+    expect_identical(strip_fits(new$method), strip_fits(old$method))
+    results[[estimator]] <- new
+  }
+  # MLR is maximum likelihood, so lavaan's full set has AIC and BIC.
+  expect_true(all(is.finite(results$MLR$esem$models$aic)))
+  expect_identical(results$MLR$network$fit_evidence$index_version, "robust")
+  # ULS has no scaled test, so the values are the standard ones.
+  expect_identical(results$ULS$network$fit_evidence$index_version, "standard")
+  expect_false(any(grepl("scaled", unlist(results$ULS$esem$fit_variants))))
 })
 
 

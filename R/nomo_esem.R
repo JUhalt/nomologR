@@ -276,7 +276,7 @@ nomo_esem <- function(model,
   fit_row <- function(fit, label) {
     # AIC and BIC as lavaan's full set has them: for ML estimation only.
     ml <- identical(lavaan::lavInspect(fit, "options")$estimator, "ML")
-    m <- collect(lavaan::fitMeasures(fit, c(nomo_fit_measure_names, if (ml) c("aic", "bic"))),
+    m <- collect(nomo_fit_measures_read(fit, if (ml) c("aic", "bic")),
                  label)
     get <- function(...) {
       found <- nomo_cfa_first_measure(m, c(...))
