@@ -497,6 +497,12 @@ test_that("a guided run says when declared reverse-keyed items still load agains
   row <- log[log$metric %in% "declared_reverse_keyed", , drop = FALSE]
   expect_identical(row$severity, "concern")
   expect_identical(row$pipeline_component, "cfa")
+  # Listed under the CFA, the row does not name it again.
+  expect_identical(row$observation, paste(
+    "EF2 and TF2 are declared reverse-keyed and still load against their factors,",
+    "so the data were not recoded; the CFA, reliability, and validity evidence",
+    "describe them as answered."
+  ))
   expect_match(row$recommendation, "start a new nomo_run()", fixed = TRUE)
   printed <- paste(trimws(capture.output(print(raw))), collapse = " ")
   expect_match(printed, "EF2 and TF2 are declared reverse-keyed and still load", fixed = TRUE)

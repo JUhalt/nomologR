@@ -621,17 +621,18 @@ nomo_run_unrecoded_items <- function(x) {
 }
 
 
-nomo_run_unrecoded_text <- function(items) {
+# The pause names the CFA; the component log's row is listed under it.
+nomo_run_unrecoded_text <- function(items, where = " in the CFA") {
   n <- length(items)
   sprintf(
     paste(
-      "%s %s declared reverse-keyed and still %s against %s in the CFA, so the",
-      "data were not recoded; the CFA, reliability, and validity evidence",
-      "describe %s as answered."
+      "%s %s declared reverse-keyed and still %s against %s%s, so the data",
+      "were not recoded; the CFA, reliability, and validity evidence describe",
+      "%s as answered."
     ),
     nomo_present_or(items, "and"), nomo_present_noun(n, "is", "are"),
     nomo_present_noun(n, "loads", "load"), nomo_present_noun(n, "its factor", "their factors"),
-    nomo_present_noun(n, "it", "them")
+    where, nomo_present_noun(n, "it", "them")
   )
 }
 
@@ -646,7 +647,7 @@ nomo_run_unrecoded_log <- function(x) {
     metric = "declared_reverse_keyed", value = length(items),
     reference = "Declared reverse-keyed items are recoded before analysis",
     severity = "concern",
-    observation = nomo_run_unrecoded_text(items),
+    observation = nomo_run_unrecoded_text(items, where = ""),
     recommendation = paste(
       "Recode the declared items in the data, for example 6 minus the response",
       "on a 1 to 5 scale, and start a new nomo_run(); `reverse = character(0)`",
