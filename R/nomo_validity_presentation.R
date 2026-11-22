@@ -320,8 +320,8 @@ nomo_validity_present_facts <- function(cases, constructs, ngroups, nlevels, ave
     if (length(blocks)) sprintf("%s: %s", blocks[[1L]], sub(" .*$", "", blocks[[2L]])) else ""
   ))
   nomo_present_facts(c(
-    paste0("AVE reference: ", nomo_present_stat(ave_reference, "reliability")),
-    paste0("HTMT reference: ", nomo_present_stat(htmt_reference, "htmt"))
+    paste0("AVE reference: ", nomo_present_stat(ave_reference, "reliability", given = TRUE)),
+    paste0("HTMT reference: ", nomo_present_stat(htmt_reference, "htmt", given = TRUE))
   ))
 
   pair_cols <- intersect(c("construct_1", "construct_2"), names(discriminant))
@@ -402,7 +402,7 @@ nomo_validity_flagged_brief <- function(x, convergent, discriminant) {
       } else {
         sprintf("AVE %s is below the review reference %s",
                 nomo_present_stat(row$AVE, "reliability", reference = ave_ref),
-                nomo_present_stat(ave_ref, "reliability"))
+                nomo_present_stat(ave_ref, "reliability", given = TRUE))
       })
     }
     if (is.finite(row$n_loading_review) && row$n_loading_review > 0L) {
@@ -432,7 +432,8 @@ nomo_validity_flagged_brief <- function(x, convergent, discriminant) {
     if (is.finite(value) && value > ref) {
       parts <- c(parts, sprintf(
         "%s %s is above the review reference %s", method,
-        nomo_present_stat(value, "htmt", reference = ref), nomo_present_stat(ref, "htmt")
+        nomo_present_stat(value, "htmt", reference = ref),
+        nomo_present_stat(ref, "htmt", given = TRUE)
       ))
     }
     r <- row$latent_r
@@ -445,10 +446,10 @@ nomo_validity_flagged_brief <- function(x, convergent, discriminant) {
         interval <- nomo_present_ci(row$latent_r_ci_lower, row$latent_r_ci_upper, kind = "r")
         parts <- c(parts, if (interval != nomo_present_missing) {
           sprintf("latent r %s, 95%% CI %s, could exceed %s", nomo_present_stat(r, "r"),
-                  interval, nomo_present_stat(ref, "r"))
+                  interval, nomo_present_stat(ref, "r", given = TRUE))
         } else {
           sprintf("latent r %s exceeds %s", nomo_present_stat(r, "r", reference = ref),
-                  nomo_present_stat(ref, "r"))
+                  nomo_present_stat(ref, "r", given = TRUE))
         })
       }
     }

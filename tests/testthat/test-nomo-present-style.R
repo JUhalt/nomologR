@@ -545,7 +545,7 @@ test_that("every print method takes `digits`, NULL by default (#145)", {
 })
 
 
-test_that("`digits` reaches every statistic but p, df, levels, counts, and percentages (#145)", {
+test_that("`digits` reaches every statistic, and never rounds a given value further (#145)", {
   shown <- function(digits) {
     nomologR:::nomo_present_local_digits(digits)
     stat <- nomologR:::nomo_present_stat
@@ -555,14 +555,19 @@ test_that("`digits` reaches every statistic but p, df, levels, counts, and perce
       nomologR:::nomo_present_ci(0.1, 0.2, kind = "r"),
       # A value just off its reference still shows the decimals that tell them
       # apart.
-      stat(0.398, "loading", reference = 0.40))
+      stat(0.398, "loading", reference = 0.40),
+      # A reference or a value the researcher gave takes more decimals but
+      # never fewer, and a value equal to its reference prints as it does.
+      stat(0.95, "fit_bounded", given = TRUE), stat(0.85, "reliability", digits = 3L, given = TRUE),
+      stat(0.35, "proportion", reference = 0.35))
   }
   expect_identical(shown(NULL), c(".46", "0.457", "1.235", ".046", "33.47", ".05", "473",
-                                  "50%", "[.10, .20]", "0.398"))
+                                  "50%", "[.10, .20]", "0.398", ".950", ".850", ".35"))
   expect_identical(shown(4), c(".4567", "0.4567", "1.2346", ".046", "33.47", ".05", "473",
-                               "50%", "[.1000, .2000]", "0.3980"))
+                               "50%", "[.1000, .2000]", "0.3980", ".9500", ".8500", ".3500"))
   expect_identical(shown(1), c(".5", "0.5", "1.2", ".046", "33.47", ".05", "473",
-                               "50%", "[.1, .2]", "0.398"))
+                               "50%", "[.1, .2]", "0.398", ".950", ".850", ".35"))
+  expect_identical(shown(0)[11:13], c(".950", ".850", ".35"))
 
   # Only for the call that set it, however that call ends.
   expect_null(nomologR:::nomo_present_digits())

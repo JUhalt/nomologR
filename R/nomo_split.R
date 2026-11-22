@@ -196,10 +196,11 @@ print.nomo_split <- function(x, digits = NULL, ...) {
     sprintf("Validation: %d", x$n_validation)
   ))
   # A proportion, without the leading zero, and the realized one with the
-  # decimals that tell it from the requested one.
+  # decimals that tell it from the requested one. The requested one was given,
+  # so `digits` never rounds it further.
   nomo_present_facts(c(
     sprintf("Validation proportion: %s requested, %s realized",
-            nomo_present_stat(x$validation_prop_requested, "proportion"),
+            nomo_present_stat(x$validation_prop_requested, "proportion", given = TRUE),
             nomo_present_stat(x$validation_prop_realized, "proportion",
                               reference = x$validation_prop_requested)),
     sprintf("Seed: %d", x$seed),

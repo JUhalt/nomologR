@@ -870,7 +870,7 @@ nomo_network_measurement_context <- function(fit,
     low <- loading_table[loading_table$attention == "review", , drop = FALSE]
     reference <- low$review_reference[[1L]]
     notes <- c(notes, sprintf(
-      "%s below the review reference of %s in absolute value: %s.",
+      "%s below the review reference %s in absolute value: %s.",
       nomo_present_noun(low_loading_n, "Standardized loading", "Standardized loadings"),
       nomo_present_stat(reference, "loading"),
       paste0(low$item, " (", nomo_present_stat(low$loading, "loading", reference = reference),

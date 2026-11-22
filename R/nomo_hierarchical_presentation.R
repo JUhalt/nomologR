@@ -186,6 +186,11 @@ print.summary_nomo_hierarchical <- function(x, digits = NULL, ...) {
 
   formats <- nomo_hierarchical_formats()
   idx <- x$indices
+  # Each interpretation is written again here, so its share has the decimals
+  # of the index it follows when print() is given `digits` (guide point 9).
+  idx$interpretation <- nomo_hierarchical_interpretation(
+    idx, list(type = x$structure, general = x$general)
+  )
   bullets <- sprintf(
     "%s = %s: %s", nomo_hierarchical_index_label(idx$index),
     ifelse(idx$index %in% nomo_hierarchical_item_set,

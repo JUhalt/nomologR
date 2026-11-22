@@ -697,11 +697,13 @@ nomo_power_present <- function(x, detail = FALSE) {
     nomo_present_header("nomo_power", sprintf("Power of the test of %s", labels[[x$test]]),
                         summary = detail,
                         source = "MacCallum, Browne, & Sugawara (1996)")
-    # An alternative just off the null shows the decimals that tell them apart.
+    # Both RMSEAs were given, so `digits` never rounds them further, and an
+    # alternative just off the null shows the decimals that tell them apart.
     nomo_present_facts(c(
       sprintf("df: %s", nomo_present_stat(x$df, "df")),
-      sprintf("RMSEA: null %s, alternative %s", nomo_present_stat(x$rmsea_null, "fit"),
-              nomo_present_stat(x$rmsea_alt, "fit", reference = x$rmsea_null)),
+      sprintf("RMSEA: null %s, alternative %s",
+              nomo_present_stat(x$rmsea_null, "fit", given = TRUE),
+              nomo_present_stat(x$rmsea_alt, "fit", reference = x$rmsea_null, given = TRUE)),
       sprintf("alpha = %s", nomo_present_stat(x$alpha, "level"))
     ))
     # The target keeps the digits it was given, and a power just short of it
@@ -739,6 +741,7 @@ nomo_power_present <- function(x, detail = FALSE) {
   ))
   summary <- x$summary
   power <- function(v) nomo_present_stat(v, "power")
+  reference <- function(v) nomo_present_stat(v, "level")
   # The range of coverage across parameters, or the missing marker when an N
   # has no converged replication: never half a range.
   summary$coverage <- ifelse(
@@ -782,7 +785,8 @@ nomo_power_present <- function(x, detail = FALSE) {
       c("N" = "n", "Parameter" = "parameter", "Population" = "population",
         "Estimate" = "mean_estimate", "Bias" = "relative_bias",
         "SE bias" = "se_bias", "Coverage" = "coverage", "Power" = "power"),
-      formats = list(population = estimate, mean_estimate = estimate,
+      formats = list(population = function(v) nomo_present_stat(v, "estimate", given = TRUE),
+                     mean_estimate = estimate,
                      relative_bias = nomo_present_percent,
                      se_bias = nomo_present_percent,
                      coverage = power, power = power),
@@ -828,8 +832,11 @@ nomo_power_present <- function(x, detail = FALSE) {
   nomo_present_text(
     "References: parameter and SE bias within 10% for every parameter given a ",
     "population value, SE bias within 5% for the focus parameters, coverage ",
-    # A range is kept on one line, as an interval is (guide point 17).
-    paste(power(0.91), "to", power(0.98), sep = nomo_present_nbsp), ", and power ", power(0.80),
+    # A range is kept on one line, as an interval is (guide point 17). The
+    # references keep the digits they are given, as the target power of
+    # nomo_power_rmsea() does.
+    paste(reference(0.91), "to", reference(0.98), sep = nomo_present_nbsp),
+    ", and power ", reference(0.80),
     " for the focus parameters. They are guides for choosing N, not rules."
   )
   nomo_present_pointer(

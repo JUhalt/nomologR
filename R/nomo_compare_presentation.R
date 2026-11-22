@@ -295,7 +295,7 @@ nomo_compare_present_evidence <- function(ev, guidance) {
 #'
 #' @param x A `nomo_compare` object.
 #' @param type `"fit"` shows CFI, TLI, RMSEA, and SRMR for each model with the
-#'   configured teaching references; `"loadings"` shows standardized loadings
+#'   configured review references; `"loadings"` shows standardized loadings
 #'   for each model side by side.
 #' @param ... Unused.
 #'

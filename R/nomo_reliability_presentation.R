@@ -112,7 +112,7 @@ nomo_reliability_flag_text <- function(metric, estimate, reference) {
       estimate < 0 | estimate > 1,
       sprintf("%s %s is outside the 0 to 1 range of a reliability.", label, shown),
       sprintf("%s %s is below the review reference %s.", label, shown,
-              nomo_present_stat(reference, "reliability"))
+              nomo_present_stat(reference, "reliability", given = TRUE))
     )
   )
 }
@@ -161,7 +161,7 @@ print.nomo_reliability <- function(x, digits = NULL, ...) {
   ))
   nomo_present_facts(c(
     "Primary coefficient: model-based omega",
-    paste0("Review reference: ", nomo_present_stat(reference, "reliability"))
+    paste0("Review reference: ", nomo_present_stat(reference, "reliability", given = TRUE))
   ))
 
   finite_omega <- tab$omega[is.finite(tab$omega)]
@@ -278,7 +278,7 @@ print.summary_nomo_reliability <- function(x, digits = NULL, ...) {
   nomo_present_facts(c(
     nomo_lavaan_cases_fact(x),
     sprintf("Constructs: %d", length(unique(x$table$construct))),
-    paste0("Review reference: ", nomo_present_stat(reference, "reliability"))
+    paste0("Review reference: ", nomo_present_stat(reference, "reliability", given = TRUE))
   ))
   nomo_present_section("Coefficients")
   ci_label <- nomo_reliability_ci_label(x$ci_status)

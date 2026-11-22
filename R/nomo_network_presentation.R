@@ -317,10 +317,13 @@ nomo_network_present_evidence <- function(x) {
 # composite modeled as a single indicator, and how the evidence moves with it.
 nomo_network_present_single <- function(single, sensitivity, detail = FALSE) {
   if (!is.data.frame(single) || !nrow(single)) return(invisible(NULL))
+  # The reliability and its standard error were given, so `digits` adds
+  # decimals to them but never takes them away.
+  given <- function(kind) function(v) nomo_present_stat(v, kind, given = TRUE)
   if (!isTRUE(detail)) {
     nomo_present_facts(paste0(
       "Single indicator: ", single$variable, " (reliability ",
-      nomo_present_stat(single$reliability, "reliability"), ", ", single$coefficient, ")"
+      given("reliability")(single$reliability), ", ", single$coefficient, ")"
     ))
     return(invisible(NULL))
   }
@@ -335,8 +338,8 @@ nomo_network_present_single <- function(single, sensitivity, detail = FALSE) {
       "Reliability" = "reliability", "SE" = "se", "Variance" = "variance",
       "Error variance" = "error_variance"),
     formats = list(
-      reliability = function(v) nomo_present_stat(v, "reliability"),
-      se = function(v) nomo_present_stat(v, "estimate"),
+      reliability = given("reliability"),
+      se = given("estimate"),
       variance = function(v) nomo_present_stat(v, "estimate"),
       error_variance = function(v) nomo_present_stat(v, "estimate")
     ),

@@ -148,16 +148,18 @@ for a \emph{p} value and for a fit index such as CFI or RMSEA, and two for most
 others, such as a correlation, a reliability, or a loading. A few tables
 give a quantity three decimals where values often agree to two, such as
 residual correlations. A number given as \code{digits} replaces these decimals
-for every statistic shown, references and interval bounds included. It
-leaves alone:
+for every statistic shown, interval bounds included. It leaves alone:
 \itemize{
-\item \emph{p} values, degrees of freedom, significance levels, counts, and
-percentages, which keep their own format;
-\item the extra decimals a value takes when it would otherwise print as the
-reference it is flagged against, so a flag never reads ".40 is below
-.40";
-\item a bound of a predicted region, which never shows fewer decimals than it
-was given;
+\item \emph{p} values, degrees of freedom, significance levels, power targets,
+counts, and percentages, which keep their own format;
+\item references and values you gave, such as a review reference, a requested
+validation proportion, a reliability given to \code{\link[=nomo_single_indicator]{nomo_single_indicator()}},
+or a bound of a predicted region. \code{digits} can give them more decimals
+but never fewer, so a reference of .95 never prints as "1.0";
+\item the decimals of a value beside its reference. A value that differs from
+the reference but would print as it takes extra decimals, so a flag never
+reads ".40 is below .40"; a value equal to it prints as the reference
+does;
 \item text written when the analysis ran, such as a flag's explanation from the
 decision log, which keeps the decimals it was written with.
 }

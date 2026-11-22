@@ -1491,7 +1491,7 @@ nomo_factors_log <- function(item_types,
       ),
       severity = "review",
       observation = sprintf(
-        "The effective sample size is below the review reference of %d.",
+        "The effective sample size is below the review reference %d.",
         small_ref
       ),
       recommendation = paste(
