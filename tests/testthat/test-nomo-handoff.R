@@ -1,11 +1,12 @@
 # Fixtures ---------------------------------------------------------------------
 #
-# Genuine contentvalidR output from the v0.6.0 to v0.10.1 tags and from its
-# 0.99.0 release candidate, stored so the reader is tested against the real
-# interface without contentvalidR installed (#46, #53). See
-# fixtures/contentvalidR/README.md and MANIFEST.csv.
+# Genuine contentvalidR output from the v0.6.0 to v0.10.1 tags, from its
+# 0.99.0 release candidate, and from its 1.0.0 release, stored so the reader is
+# tested against the real interface without contentvalidR installed (#46,
+# #53). See fixtures/contentvalidR/README.md and MANIFEST.csv.
 
-handoff_versions <- c("0.6.0", "0.7.0", "0.8.0", "0.9.0", "0.10.0", "0.10.1", "0.99.0")
+handoff_versions <- c("0.6.0", "0.7.0", "0.8.0", "0.9.0", "0.10.0", "0.10.1", "0.99.0",
+                      "1.0.0")
 
 # Every stored version after `version`, so a version added to the end of
 # handoff_versions joins each comparison with an earlier baseline.
@@ -71,12 +72,11 @@ test_that("the stored fixtures are the ones the version list and the manifest na
 
   # A tarball stores a path portably only up to 100 bytes, and R CMD check
   # notes a longer one, so every stored file's path in the source package must
-  # fit. The fits' 1.0.0 names are checked too, before their files arrive.
+  # fit.
   in_package <- function(file) {
     file.path("nomologR", "tests", "testthat", "fixtures", "contentvalidR", file)
   }
-  next_names <- sprintf("handoff-%s-v1.0.0.rds", names(handoff_fit_from))
-  for (file in c(stored, next_names)) {
+  for (file in stored) {
     expect_lte(nchar(in_package(file), type = "bytes"), 100L, label = file)
   }
 

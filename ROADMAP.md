@@ -8,12 +8,19 @@
 >
 > **Core principle:** Flag, explain, and document. Never silently delete.
 
-**Current stable release:** [0.9.0](https://github.com/JUhalt/nomologR/releases/tag/v0.9.0)
-(September 28, 2026), GPL-3.0-only — the last minor release before 1.0.0. It
-redesigns console output, plots, and report tables, records in
-`nomo_methods()` how practice changed, adds the teaching and content-review
-articles and APA tables for validity evidence, and names the returned fields
-in every help page. It follows
+**Current stable release:** [1.0.0](https://github.com/JUhalt/nomologR/releases/tag/v1.0.0)
+(November 21, 2026), GPL-3.0-only — the joint stable release with
+`contentvalidR` ([#53](https://github.com/JUhalt/nomologR/issues/53)), released
+the same day as `contentvalidR` 1.0.0, and the first release under the
+stability policy in `?nomologR`. It adds the methods of the gap review
+([#129](https://github.com/JUhalt/nomologR/issues/129)) and the fixes of the
+audit before the freeze ([#145](https://github.com/JUhalt/nomologR/issues/145));
+see [v1.0.0](#v100--joint-stable-release-with-contentvalidr) below. It follows
+[0.9.0](https://github.com/JUhalt/nomologR/releases/tag/v0.9.0) (September 28,
+2026), the last minor release before 1.0.0, which redesigned console output,
+plots, and report tables, recorded in `nomo_methods()` how practice changed,
+added the teaching and content-review articles and APA tables for validity
+evidence, and named the returned fields in every help page;
 [0.3.0](https://github.com/JUhalt/nomologR/releases/tag/v0.3.0) (September 26,
 2026), the first release submitted to CRAN, which CRAN returned on 2026-10-08
 with two requests, both since met; [0.2.1](https://github.com/JUhalt/nomologR/releases/tag/v0.2.1)
@@ -21,15 +28,8 @@ with two requests, both since met; [0.2.1](https://github.com/JUhalt/nomologR/re
 [0.2.0](https://github.com/JUhalt/nomologR/releases/tag/v0.2.0) (September 19,
 2026). The earlier [0.1.0](https://github.com/JUhalt/nomologR/releases/tag/v0.1.0)
 release (September 9, 2026) keeps its original MIT license.
-**Next release:** [v1.0.0](https://github.com/JUhalt/nomologR/milestone/5) —
-the joint release with `contentvalidR`
-([#53](https://github.com/JUhalt/nomologR/issues/53)), scoped in
-[#113](https://github.com/JUhalt/nomologR/issues/113): release candidate
-`v1.0.0-rc.1` on 2026-11-24, or earlier if both packages are ready, whose tag
-is the interface freeze; then 1.0.0 on GitHub and R-universe, with the CRAN
-submission after it. See
-[v1.0.0](#v100--joint-stable-release-with-contentvalidr) below; candidates for
-1.x follow it.
+**Next release:** a 1.x release. Its candidates, all additive, are under
+[1.x](#1x--modern-extensions) below; none is selected yet.
 **Distribution:** [R-universe](https://juhalt.r-universe.dev), which builds each
 GitHub release. The package is not on CRAN yet: CRAN returned `v0.3.0` with
 two requests, both since met
@@ -229,11 +229,16 @@ to that date.
 
 # v1.0.0 — Joint Stable Release with contentvalidR
 
-**Status:** Release candidate planned for 2026-11-24, together with
-`contentvalidR`'s, or earlier if both packages are ready (date set by the
-maintainer on 2026-11-20). The candidate's tag is the interface freeze. 1.0.0
-follows the candidate on the maintainer's sign-off. It is released on GitHub
-and R-universe first, and submitted to CRAN after that. The scope is set in
+**Status:** Released 2026-11-21, the same day as `contentvalidR` 1.0.0. The
+release candidate was planned for 2026-11-24, together with `contentvalidR`'s,
+or earlier if both packages were ready (date set by the maintainer on
+2026-11-20). Both packages tagged it `v1.0.0-rc.1` on 2026-11-21, and its tag
+was the interface freeze. 1.0.0 followed the same day: the candidate with its
+version changed, tested against `contentvalidR` 1.0.0's handoffs. It is
+released on GitHub and R-universe first. The CRAN submission comes after that,
+once every finding of the audit that is still open is fixed (decided by the
+maintainer on 2026-11-21). The
+scope is set in
 [#113](https://github.com/JUhalt/nomologR/issues/113), where the maintainer
 delegated decisions to what the literature says. On 2026-09-28 the maintainer
 asked that the gaps social-science scale developers meet be closed before the
@@ -242,7 +247,7 @@ sequence is in [#53](https://github.com/JUhalt/nomologR/issues/53).
 
 1.0.0 is the stability promise in `?nomologR`. After it, changes to existing
 behavior need a deprecation cycle, and additions stay free. So anything that
-would change existing behavior is decided before the freeze. Anything additive
+would change existing behavior was decided before the freeze. Anything additive
 can wait for 1.x.
 
 - [x] [#60](https://github.com/JUhalt/nomologR/issues/60) The companion article
@@ -284,10 +289,17 @@ can wait for 1.x.
   ([#39](https://github.com/JUhalt/nomologR/issues/39), now closed): no
   default write paths, and no changes to the global environment. Both are met.
   The resubmission is 1.0.0 or later, after its release on GitHub and
-  R-universe, on the maintainer's go-ahead.
-- [ ] [#53](https://github.com/JUhalt/nomologR/issues/53) Release candidates,
+  R-universe, on the maintainer's go-ahead. It waits until every finding of
+  the audit ([#145](https://github.com/JUhalt/nomologR/issues/145)) that is
+  still open is fixed, so that the first version CRAN accepts has none
+  (decided 2026-11-21).
+- [x] [#53](https://github.com/JUhalt/nomologR/issues/53) Release candidates,
   fixtures from contentvalidR's RC, the compatibility table, and a same-day
-  release with release notes linking each other. Both packages number a
+  release with release notes linking each other. The candidate was tagged
+  `v1.0.0-rc.1` in both packages on 2026-11-21, and its fixtures and then
+  1.0.0's were tested before each tag; both READMEs give their side of the
+  compatibility table, with the walkthrough-sort handoff as the shared
+  example. Both packages number a
   candidate the same way (decided 2026-09-28): DESCRIPTION `0.99.0` and a git
   tag `v1.0.0-rc.N`, as a tag only, with no GitHub release, so R-universe does
   not publish it. 1.0.0 itself is a GitHub release, which R-universe builds;
@@ -326,7 +338,7 @@ interactions, and multitrait-multimethod models to this list.
 - Stable releases are published as GitHub releases. [R-universe](https://juhalt.r-universe.dev) builds each release, usually within a few hours.
 - `v0.2.0` certification ([#37](https://github.com/JUhalt/nomologR/issues/37)) includes a CRAN-readiness gate: `R CMD check --as-cran` clean on win-builder, the macOS builder, and R-hub; long-running tests skipped on CRAN; fast examples and vignettes.
 - [x] First CRAN submission with `v0.3.0` ([#39](https://github.com/JUhalt/nomologR/issues/39), closed 2026-11-20). Decision recorded September 15, 2026: submitting after the v0.2 functions have been used on R-universe avoids repeated CRAN resubmissions while the API is still growing. CRAN returned 0.3.0 on 2026-10-08 with two requests: no default write paths, and no changes to the global environment. Both are met.
-- [ ] CRAN resubmission with 1.0.0 or later ([#175](https://github.com/JUhalt/nomologR/issues/175)). Decision recorded 2026-11-16: 1.0.0 is released on GitHub and R-universe first, and the CRAN submission follows it, on the maintainer's go-ahead. The cran-conditions workflow checks each pull request and each push to `master` as CRAN does, with `NOT_CRAN` unset, and reports how long the check takes; `cran-comments.md` takes its figures from it.
+- [ ] CRAN resubmission with 1.0.0 or later ([#175](https://github.com/JUhalt/nomologR/issues/175)). Decision recorded 2026-11-16: 1.0.0 is released on GitHub and R-universe first, and the CRAN submission follows it, on the maintainer's go-ahead. On 2026-11-21 the maintainer added that it waits until every open finding of the audit before the freeze ([#145](https://github.com/JUhalt/nomologR/issues/145)) is fixed. The cran-conditions workflow checks each pull request and each push to `master` as CRAN does, with `NOT_CRAN` unset, and reports how long the check takes; `cran-comments.md` takes its figures from it.
 
 ***
 # Long-Term Research Program

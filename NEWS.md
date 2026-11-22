@@ -1,10 +1,17 @@
-# nomologR 0.99.0
+# nomologR 1.0.0
 
-This version is the first release candidate, `v1.0.0-rc.1`, for 1.0.0, the
-stable release planned jointly with `contentvalidR` (#53). The candidate was
-planned for 2026-11-24, or earlier if both packages were ready, and its tag is
-the interface freeze. The 1.0.0 release follows when the maintainer signs off,
-and goes to GitHub and R-universe first; the CRAN submission follows it.
+The first stable release under the stability policy in `?nomologR`, released
+on the same day as `contentvalidR` 1.0.0
+(<https://github.com/JUhalt/contentvalidR>), its partner for content review
+(#53). The handoff between them is schema version 1, which `contentvalidR` 1.x
+writes and nomologR 1.x reads. 1.0.0 goes to GitHub and R-universe first; the
+CRAN submission follows it.
+
+The release candidate, 0.99.0, was planned for 2026-11-24, or earlier if both
+packages were ready. Both packages tagged it `v1.0.0-rc.1` on 2026-11-21, and
+its tag was the interface freeze. 1.0.0 is that candidate with its version
+changed, its reader tested against `contentvalidR` 1.0.0's handoffs, and the
+walkthrough handoff it ships made by `contentvalidR` 1.0.0.
 
 - **New methods.** The gap review (#129) added the methods social-science scale
   developers were missing, each taken from its literature.
@@ -583,7 +590,7 @@ affected.
 - A handoff that lists an item more than once is still refused, but the message no longer says that `content_handoff()` cannot produce such an object (#46, #53). `contentvalidR` 0.10.1 and earlier wrote one row per objective for a congruence fit without a target mapping. The message now says that a handoff has one row per reviewed item, names the items listed more than once, and says that such a congruence handoff has to be made again from a new fit with `contentvalidR` 1.0 or later. The reader takes each decision as its producer recorded it and does not branch on the producer's version, so a congruence handoff written before 1.0 with a target mapping is read as before.
 - The refusal of a handoff that carries no items names the statuses its items have, which are the ones `keep` would have to name, and writes the carry rule as it is typed (#53). A review that applies no decision rule, such as a congruence fit without a target mapping, gives every item the status "Descriptive only", and `content_handoff()`'s default `keep = "Supported"` then carries none.
 - The fixture generator writes three item-objective congruence handoffs from `contentvalidR` 0.99.0 on, and the reader's tests for them are in place for the release candidate's fixtures (#53). The stored fixtures are now checked against the version list and their manifest.
-- The content-review reader is tested against `contentvalidR` 0.99.0 output, the partner package's release candidate (#53). That covers the five fits stored before and the three congruence fits, which are new. The 0.99.0 handoffs keep every decision of 0.10.1's, and the reader needed no change. The handoff stored with the package for the walkthrough items (`inst/extdata/content-handoff-walkthrough.rds`) is now the one 0.99.0 wrote, where it was 0.7.0's. Its items, scales, keying, and decisions are the same.
+- The content-review reader is tested against output from `contentvalidR` 0.99.0, the partner package's release candidate, and from 1.0.0 (#53). That covers the five fits stored before and the three congruence fits, which are new. The 0.99.0 and 1.0.0 handoffs keep every decision of 0.10.1's, and the reader needed no change. The handoff stored with the package for the walkthrough items (`inst/extdata/content-handoff-walkthrough.rds`) is now the one 1.0.0 wrote, where it was 0.7.0's. Its items, scales, keying, and decisions are the same.
 
 ## Documentation (#129, #138, #144, #145)
 
@@ -611,6 +618,7 @@ affected.
   - **Reproducible report** lists every section of the report, adding the five it left out: the scores, the missing-data sensitivity, the revision lineage, the manuscript tables, and the abbreviations. `?nomo_report` names the scores, the missing-data sensitivity, and the revision lineage among the report's contents.
   - **Research basis** gives Koo and Li's (2016) recommendation as a two-way mixed-effects model with absolute agreement.
   - **Teaching** explains, in the answer to its first exercise, the third flag the reader sees: an item flagged only for a communality within rounding of .40, as `b4` is, shows sampling variability around a teaching reference.
+- The README and ROADMAP describe 1.0.0 as released (#53). The handoff section of the README shows the example both packages' READMEs share: the walkthrough-sort handoff `h`, read from the copy nomologR ships, and `nomo_screen(nomo_demo_walkthrough, items = h)`. It gives nomologR's side of the compatibility table: `contentvalidR` 1.x writes handoff schema version 1, and nomologR 1.x reads it. It says that the reader is tested against `contentvalidR` 0.6.0 through 1.0.0, and that a congruence handoff made by `contentvalidR` 0.10.1 or earlier should be made again from a new fit.
 
 # nomologR 0.9.0
 
