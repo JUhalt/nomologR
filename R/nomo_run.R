@@ -140,6 +140,7 @@ nomo_run_fresh <- function(data,
       scales = scales
     )
 
+    nomo_run_progress("Estimating factor-retention evidence for `%s`...", scope)
     result <- nomo_run_safe_component(
       fun = nomo_factors,
       fixed = list(
@@ -299,6 +300,13 @@ nomo_run_resume <- function(resume,
 #' include a `nomo_hypotheses` object. Invariance diagnostics never free
 #' parameters automatically, and network results never collapse to a one-number
 #' validity score.
+#'
+#' A long step says that it has started, with a message such as "Fitting the
+#' CFA model...". The steps are factor-retention evidence for each scale, the
+#' CFA, bootstrap intervals for reliability, the invariance models, the
+#' network, and the missing-data refits. [nomo_factors()] adds a message before
+#' parallel analysis with polychoric or mixed correlations, which can take
+#' minutes. Wrap the call in `suppressMessages()` to silence them.
 #'
 #' @param data A non-empty data frame or a [nomo_split()] object. A split uses
 #'   calibration rows for exploratory stages and validation rows for CFA,

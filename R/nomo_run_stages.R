@@ -1,5 +1,13 @@
 # Guided workflow: stage execution and blocking --------------------------------
 
+# A long step of the guided workflow says that it has started, so a run that
+# takes minutes is not taken for a stalled session (#183). These are ordinary
+# messages, which suppressMessages() silences.
+nomo_run_progress <- function(...) {
+  message(sprintf(...))
+}
+
+
 nomo_run_component_call <- function(fun, fixed, extra, stage) {
   if (length(extra)) {
     overlap <- intersect(names(extra), names(fixed))
@@ -214,6 +222,10 @@ nomo_run_run_invariance <- function(x) {
   x$decision_log <- inherited$log
   roles <- nomo_run_data_roles(x$source_data)
 
+  nomo_run_progress(
+    "Fitting the invariance models across `%s` (%s)...", group,
+    nomo_present_count(length(unique(stats::na.omit(roles$confirmatory[[group]]))), "group")
+  )
   result <- nomo_run_safe_component(
     fun = nomo_invariance,
     fixed = list(
@@ -267,6 +279,7 @@ nomo_run_run_network <- function(x) {
   extra <- inherited$extra
   x$decision_log <- inherited$log
 
+  nomo_run_progress("Fitting the nomological network model...")
   result <- nomo_run_safe_component(
     fun = nomo_network,
     fixed = list(

@@ -645,6 +645,7 @@ nomo_run_apply_cfa_model <- function(x, decision) {
   x$decision_requests <- nomo_run_empty_requests()
   roles <- nomo_run_data_roles(x$source_data)
 
+  nomo_run_progress("Fitting the CFA model...")
   cfa_result <- nomo_run_safe_component(
     fun = nomo_cfa,
     fixed = list(
@@ -689,6 +690,15 @@ nomo_run_apply_cfa_model <- function(x, decision) {
     )
   )
 
+  # Without bootstrap intervals reliability takes moments.
+  boot <- x$settings$reliability
+  if (isTRUE(pmatch(boot$ci[1L], "bootstrap") == 1L)) {
+    nomo_run_progress(
+      "Computing bootstrap intervals for reliability (%s)...",
+      nomo_present_count(nomo_null_default(boot$ci_boot, formals(nomo_reliability)$ci_boot),
+                         "resample")
+    )
+  }
   rel_result <- nomo_run_safe_component(
     fun = nomo_reliability,
     fixed = list(

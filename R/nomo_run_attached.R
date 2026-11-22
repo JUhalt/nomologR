@@ -114,6 +114,10 @@ nomo_run_run_missing <- function(x, target = c("cfa", "network")) {
     extra$reliability <- x$settings$missing$reliability
   }
 
+  nomo_run_progress(
+    "Refitting the %s under each missing-data strategy...",
+    if (identical(target, "cfa")) "measurement model" else "network"
+  )
   result <- nomo_run_safe_component(
     fun = nomo_missing,
     fixed = list(fit = fitted, data = data),
