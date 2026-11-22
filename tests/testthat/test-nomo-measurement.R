@@ -369,6 +369,7 @@ test_that("HTMT and Fornell-Larcker helpers disclose unavailable cases", {
 
 
 test_that("presentation branches communicate point-only and interval workflows", {
+  skip_on_cran()
   model <- '
     F1 =~ x1 + x2 + x3
     F2 =~ x4 + x5 + x6
@@ -411,6 +412,7 @@ test_that("presentation branches communicate point-only and interval workflows",
 # internal helpers directly.
 
 test_that("closeout: measurement helper fallback schemas cover data-frame, list, and HTMT alignment branches", {
+  skip_on_cran()
   # Two rows without a group column are two blocks, never one block twice
   # (#145); one row is the single overall block.
   tidy_df <- nomologR:::nomo_reliability_tidy(

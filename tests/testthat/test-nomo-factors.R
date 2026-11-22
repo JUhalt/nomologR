@@ -247,7 +247,7 @@ test_that("non-positive-definite matrices are never silently smoothed", {
     "not positive definite"
   )
 
-  expect_silent(
+  expect_silent_off_cran(
     out <- nomo_factors(
       dat,
       n_iter = 10,
@@ -1366,6 +1366,7 @@ test_that("ordinal analyses skip incompatible extended criteria explicitly", {
 
 
 test_that("NEST and Hull wrappers run on supported continuous data", {
+  skip_on_cran()
   dat <- make_m2b_two_factor(n = 300L, seed = 6)
   r <- stats::cor(dat)
 
@@ -2458,6 +2459,7 @@ test_that("tetrachoric and mixed correlations print nothing to the console (#145
 
 
 test_that("a minimal criterion set neither shows nor logs revised MAP (#145, factors-7)", {
+  skip_on_cran()
   out <- nomo_factors(make_cov_final_data(), criterion_set = "minimal", n_iter = 10, seed = 9431)
   expect_false(any(out$decision_log$metric == "map_revised"))
   printed <- capture.output(print(out))
@@ -2573,6 +2575,7 @@ test_that("the synthesis is worded by how much agrees, and 0 factors has its own
 
 
 test_that("percentiles read as ordinals and Bartlett is qualified off Pearson (#145, factors-9, factors-13)", {
+  skip_on_cran()
   percentile <- nomologR:::nomo_factors_percentile
   expect_identical(percentile(c(0.93)), "93rd percentile")
   expect_identical(percentile(0.95), "95th percentile")
@@ -2601,6 +2604,7 @@ test_that("percentiles read as ordinals and Bartlett is qualified off Pearson (#
 
 
 test_that("factor-retention plots wrap their text and keep labels off the reference line (#145)", {
+  skip_on_cran()
   out <- nomo_factors(make_cov_final_data(seed = 9451L), n_iter = 10, seed = 9451)
   legacy <- out
   row <- legacy$evidence[1L, , drop = FALSE]
@@ -2712,7 +2716,7 @@ test_that("null correlation matrices that were smoothed are logged, not warned (
   set.seed(9481)
   f <- stats::rnorm(120)
   dat <- as.data.frame(replicate(6, as.integer(0.8 * f + stats::rnorm(120, sd = 0.6) > 1)))
-  expect_no_warning(out <- nomo_factors(dat, n_iter = 10, seed = 9481))
+  expect_no_warning_off_cran(out <- nomo_factors(dat, n_iter = 10, seed = 9481))
 
   pa <- out$parallel
   log_for <- function(pa) {

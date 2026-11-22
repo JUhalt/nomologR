@@ -81,8 +81,17 @@ nomo_model(factors, structure = "higher_order", general = "Wellbeing")
 nomo_model(factors, structure = "bifactor", general = "Wellbeing")
 }
 \references{
+Bonifay, W., Lane, S. P., & Reise, S. P. (2017). Three concerns with applying
+a bifactor model as a structure of psychopathology. \emph{Clinical Psychological
+Science, 5}(1), 184-186. \doi{10.1177/2167702616657069}
+
 Holzinger, K. J., & Swineford, F. (1937). The bi-factor method.
 \emph{Psychometrika, 2}(1), 41-54. \doi{10.1007/BF02287965}
+
+Murray, A. L., & Johnson, W. (2013). The limitations of model fit in
+comparing the bi-factor versus higher-order models of human cognitive
+ability structure. \emph{Intelligence, 41}(5), 407-422.
+\doi{10.1016/j.intell.2013.06.004}
 
 Reise, S. P. (2012). The rediscovery of bifactor measurement models.
 \emph{Multivariate Behavioral Research, 47}(5), 667-696.

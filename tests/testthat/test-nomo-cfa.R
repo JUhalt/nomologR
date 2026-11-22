@@ -1249,7 +1249,7 @@ test_that("a model its fit indices cannot test says so, and keeps its warnings (
 
   # Two indicators: lavaan fits it, but it is not identified. Nothing reaches
   # the console as a loose warning; lavaan's warning stays with the model.
-  expect_no_warning(under <- nomo_cfa("A =~ a1 + a2", data = cont))
+  expect_no_warning_off_cran(under <- nomo_cfa("A =~ a1 + a2", data = cont))
   expect_output(print(under), "Fit: not testable (df = -1, not identified)", fixed = TRUE)
   expect_true(any(grepl("not identified", under$engine_warnings, fixed = TRUE)))
   log <- under$decision_log

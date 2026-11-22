@@ -167,6 +167,7 @@ test_that("agreement is reported without implying that either strategy is unbias
 
 
 test_that("data with nothing missing is not refitted and says why", {
+  skip_on_cran()
   complete <- stats::na.omit(nomo_demo_continuous)
   out <- nomo_missing(
     nomo_cfa("A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4 + b5", data = complete),
@@ -505,6 +506,7 @@ test_that("data without a modeled variable, or that cannot be refitted, is refus
 
 
 test_that("FIML is credited when it was fitted", {
+  skip_on_cran()
   out <- nomo_missing(nomo_cfa(missing_demo_model, data = nomo_demo_continuous),
                       data = nomo_demo_continuous, reliability = FALSE)
   expect_true(all(c("missing_sensitivity", "listwise_deletion", "fiml") %in% nomo_methods(out)$id))
@@ -567,6 +569,7 @@ test_that("a strategy that did not converge, or is inadmissible, is flagged for 
 
 
 test_that("each difference is attributed only as far as the strategies allow", {
+  skip_on_cran()
   out <- nomo_missing(nomo_cfa(missing_demo_model, data = nomo_demo_continuous),
                       data = nomo_demo_continuous, reliability = FALSE)
   difference_log <- function(estimates, strategies, reference) {
@@ -661,6 +664,7 @@ test_that("a strategy lavaan substituted is labeled and attributed by what ran (
 
 
 test_that("each difference is attributed by the method lavaan used for the reference (#145)", {
+  skip_on_cran()
   out <- nomo_missing(nomo_cfa(missing_demo_model, data = nomo_demo_continuous),
                       data = nomo_demo_continuous, reliability = FALSE)
   flagged <- out$estimates
@@ -880,6 +884,7 @@ test_that("with several comparison strategies, each has a table of its own at an
 
 
 test_that("plot() draws each difference against half a reference standard error (#145)", {
+  skip_on_cran()
   out <- nomo_missing(nomo_cfa(missing_demo_model, data = nomo_demo_continuous),
                       data = nomo_demo_continuous, reliability = FALSE)
   p <- plot(out)

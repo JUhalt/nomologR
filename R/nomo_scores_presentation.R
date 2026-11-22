@@ -309,8 +309,9 @@ plot.nomo_scores <- function(x, type = c("validity"), ...) {
       ),
       x = "Validity", y = NULL,
       caption = paste(
-        "Dashed lines: Gorsuch's (1983) .80, and .90 for scores that stand in",
-        "for the factors, reported as his recommendations, not applied as rules."
+        "Dashed lines: Gorsuch's (1983, as cited in Grice, 2001) .80, and .90",
+        "for scores that stand in for the factors, reported as his",
+        "recommendations, not applied as rules."
       )
     ) +
     ggplot2::theme_minimal()

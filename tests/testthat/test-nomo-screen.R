@@ -1336,8 +1336,8 @@ test_that("screens saved before within-scale values still summarize and plot", {
   out <- nomo_screen(nomo_demo_walkthrough, items = c("EF1", "EF3", "EF4", "EF6"))
   out$relationship_summary$scale_item_rest_r <- NULL
   local_reproducible_output(width = 80)
-  expect_no_warning(capture.output(print(summary(out))))
-  expect_no_warning(p <- plot(out, type = "item_rest"))
+  expect_no_warning_off_cran(capture.output(print(summary(out))))
+  expect_no_warning_off_cran(p <- plot(out, type = "item_rest"))
   expect_equal(p$data$item_rest,
                out$relationship_summary$corrected_item_rest_r[
                  match(p$data$item, out$relationship_summary$item)])
@@ -1411,7 +1411,7 @@ test_that("one negative pair within a scale is still reviewed, and says so", {
 test_that("screens saved before within-scale pair counts still review negative pairs", {
   out <- nomo_screen(nomo_demo_walkthrough, items = paste0("EF", 1:4))
   out$relationship_summary$scale_negative_interitem_n <- NULL
-  expect_no_warning(review <- summary(out)$item_review)
+  expect_no_warning_off_cran(review <- summary(out)$item_review)
   expect_true(all(grepl("negative_interitem_pairs", review$review_metrics[review$item != "EF2"])))
 })
 

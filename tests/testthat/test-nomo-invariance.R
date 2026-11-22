@@ -1311,6 +1311,7 @@ test_that("invariance print and summary cover ordered and partial presentation",
 
 
 test_that("invariance plots cover fit, change, local-strain, and empty errors", {
+  skip_on_cran()
   run <- make_m9_full_report_run()
   inv <- run$results$invariance
 
@@ -1350,6 +1351,7 @@ test_that("invariance plots cover fit, change, local-strain, and empty errors", 
 
 
 test_that("invariance local-strain display handles empty diagnostics", {
+  skip_on_cran()
   run <- make_m9_full_report_run()
   inv <- run$results$invariance
 
@@ -2079,6 +2081,7 @@ test_that("a release that frees no parameter is an error, not a silent no-op (#1
 
 
 test_that("a release declared at the wrong level is moved or refused (#145)", {
+  skip_on_cran()
   model <- "Agency =~ ag1 + ag2 + ag3 + ag4"
   levels <- c("configural", "metric", "scalar")
 
@@ -2150,6 +2153,7 @@ test_that("latent means come from the fitted parameter table (#145)", {
 
 
 test_that("a latent mean fixed by releasing every intercept is not reported (#145)", {
+  skip_on_cran()
   model <- "Agency =~ ag1 + ag2 + ag3 + ag4"
   all_free <- nomo_invariance(
     model, nomo_demo_network, group = "group", localize = FALSE,

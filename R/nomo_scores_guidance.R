@@ -3,8 +3,9 @@
 # Each note's first sentence states what was found, so that print() can show
 # that sentence and summary() the whole note. The references the notes apply
 # are fixed values from the literature, not settings read from `guidance`:
-# Gorsuch's (1983) .90 for validity, and .05 for a discrepancy between
-# correlations, for correlational accuracy and for univocality alike.
+# Gorsuch's (1983) .90 for validity, as Grice (2001) cites it, and .05 for a
+# discrepancy between correlations, for correlational accuracy and for
+# univocality alike.
 
 # The size of a discrepancy between correlations that a note raises, for
 # correlational accuracy and for univocality.
@@ -100,9 +101,10 @@ nomo_scores_notes <- function(input, method, diagnostics, unit_weighting,
   if (length(low_validity)) {
     notes <- add(notes, "validity", "review", paste0(
       "Validity is below .90 for ", nomo_present_or(low_validity, "and"),
-      ". Gorsuch (1983, p. 260) recommended at least .80, and above .90 if ",
-      "the scores are to serve as adequate substitutes for the factors ",
-      "themselves. Reported as his recommendation, not applied as a rule."
+      ". Gorsuch (1983, p. 260, as cited in Grice, 2001) recommended at least ",
+      ".80, and above .90 if the scores are to serve as adequate substitutes ",
+      "for the factors themselves. Reported as his recommendation, not applied ",
+      "as a rule."
     ))
   }
 
@@ -351,12 +353,12 @@ nomo_scores_ordered_note <- function(method, k) {
 #' not extend to nonlinear models. `vignette("scoring", package = "nomologR")`
 #' works through the design.
 #'
-#' **Thresholds are context.** Gorsuch's (1983) recommendation that validity
-#' reach .80, and above .90 for scores serving as substitutes for the factors
-#' themselves, is reported where a value falls below it and is never applied as
-#' a rule. These references, and the .05 for a discrepancy between
-#' correlations, are fixed values from the literature; they are not read from
-#' `guidance`.
+#' **Thresholds are context.** Gorsuch's (1983, p. 260) recommendation, as
+#' cited in Grice (2001), that validity reach at least .80, and above .90 for
+#' scores serving as substitutes for the factors themselves, is reported where
+#' a value falls below it and is never applied as a rule. These references,
+#' and the .05 for a discrepancy between correlations, are fixed values from
+#' the literature; they are not read from `guidance`.
 #'
 #' The supplied data is never modified, and scores are computed only for the
 #' cases the model used. `rows` records which rows of the data those are, so

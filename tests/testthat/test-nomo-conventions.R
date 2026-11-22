@@ -197,3 +197,24 @@ test_that("the stability policy takes effect at 1.0.0 (#113)", {
   expect_true(grepl("From version 1.0.0, the public interface changes only", text, fixed = TRUE))
   expect_false(grepl("0.3.0", text, fixed = TRUE))
 })
+
+
+test_that("no test asserts on CRAN that a dependency raises no warning (#145, cran-9)", {
+  # A later release of lavaan, psych, semTools, EFAtools, or ggplot2 could add
+  # a warning and fail the check on CRAN. Such assertions use the helpers in
+  # helper-cran.R, or sit in a test that skips on CRAN.
+  quiet <- c("expect_no_warning", "expect_silent", "expect_no_condition", "expect_no_message")
+  files <- list.files(testthat::test_path(), pattern = "^test-.*[.]R$", full.names = TRUE)
+  expect_gt(length(files), 40L)
+  on_cran <- character()
+  for (file in files) {
+    for (e in as.list(parse(file, keep.source = FALSE))) {
+      if (!is.call(e) || !identical(e[[1L]], as.name("test_that"))) next
+      used <- all.names(e[[3L]])
+      if (any(quiet %in% used) && !"skip_on_cran" %in% used) {
+        on_cran <- c(on_cran, paste0(basename(file), ": ", e[[2L]]))
+      }
+    }
+  }
+  expect_identical(on_cran, character())
+})

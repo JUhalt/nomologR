@@ -192,8 +192,23 @@
 #' Journal of Statistical Psychology, 3*(2), 77-85.
 #' \doi{10.1111/j.2044-8317.1950.tb00285.x}
 #'
+#' Kaiser, H. F. (1970). A second generation little jiffy. *Psychometrika,
+#' 35*(4), 401-415. \doi{10.1007/BF02291817}
+#'
 #' Kaiser, H. F. (1974). An index of factorial simplicity. *Psychometrika,
 #' 39*(1), 31-36. \doi{10.1007/BF02291575}
+#'
+#' Correlations for ordered categories:
+#'
+#' Flora, D. B., & Curran, P. J. (2004). An empirical evaluation of alternative
+#' methods of estimation for confirmatory factor analysis with ordinal data.
+#' *Psychological Methods, 9*(4), 466-491. \doi{10.1037/1082-989X.9.4.466}
+#'
+#' Rhemtulla, M., Brosseau-Liard, P. É., & Savalei, V. (2012). When can
+#' categorical variables be treated as continuous? A comparison of robust
+#' continuous and categorical SEM estimation methods under suboptimal
+#' conditions. *Psychological Methods, 17*(3), 354-373.
+#' \doi{10.1037/a0029315}
 #'
 #' @examples
 #' fac <- nomo_factors(nomo_demo_continuous, n_iter = 20, seed = 2026)

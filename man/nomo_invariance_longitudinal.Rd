@@ -181,6 +181,9 @@ Liu, Y., Millsap, R. E., West, S. G., Tein, J.-Y., Tanaka, R., & Grimm, K. J.
 ordered-categorical measures. \emph{Psychological Methods, 22}(3), 486-506.
 \doi{10.1037/met0000075}
 
+Meredith, W. (1993). Measurement invariance, factor analysis and factorial
+invariance. \emph{Psychometrika, 58}(4), 525-543. \doi{10.1007/BF02294825}
+
 Widaman, K. F., Ferrer, E., & Conger, R. D. (2010). Factorial invariance
 within longitudinal structural equation models: Measuring the same construct
 across time. \emph{Child Development Perspectives, 4}(1), 10-18.

@@ -937,7 +937,7 @@ test_that("a negative disturbance variance gives NA indices and a concern, not a
   expect_true(lavaan::lavInspect(fit, "converged"))
   expect_lt(lavaan::lavInspect(fit, "est")$psi["A", "A"], 0)
 
-  expect_no_warning(h <- nomo_hierarchical(fit))
+  expect_no_warning_off_cran(h <- nomo_hierarchical(fit))
   index <- function(name) h$indices$estimate[h$indices$index == name]
   # The total score includes A's negative contribution; the general factor's
   # share does not.
@@ -968,7 +968,7 @@ test_that("a negative disturbance variance gives NA indices and a concern, not a
   expect_match(printed, "^  - Concern: Negative disturbance variance for A", all = FALSE)
   summarized <- capture.output(print(summary(h)))
   # A page citation is never broken after "p." (#144).
-  expect_true(any(grepl("Gorsuch (1983, p. 260)", summarized, fixed = TRUE)))
+  expect_true(any(grepl("(1983, p. 260", summarized, fixed = TRUE)))
   expect_false(any(grepl("\\bp\\.$", summarized)))
   expect_true(all(nchar(summarized) <= 80L))
   expect_identical(nomologR:::nomo_present_bind("pp. 6-47 and p. 3"),

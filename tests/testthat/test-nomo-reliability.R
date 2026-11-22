@@ -227,6 +227,9 @@ test_that("reliability input validation is explicit", {
 })
 
 test_that("reliability core is free of tidyselect deprecation warnings", {
+  # The test asserts only that no warning is raised, which a dependency's
+  # next release could change, so it does not run on CRAN (#145, cran-9).
+  skip_on_cran()
   model <- '
     visual  =~ x1 + x2 + x3
     textual =~ x4 + x5 + x6
@@ -318,6 +321,7 @@ test_that("reliability CI arguments are validated", {
 # Pre-v0.1 coverage sprint: reliability presentation and uncertainty ----------
 
 test_that("reliability summary table covers empty and missing-coefficient branches", {
+  skip_on_cran()
   run <- make_m9_report_run()
   rel <- run$results$reliability
 
@@ -345,6 +349,7 @@ test_that("reliability summary table covers empty and missing-coefficient branch
 
 
 test_that("reliability summary signals and score scales cover ordered branches", {
+  skip_on_cran()
   run <- make_m9_report_run()
   rel <- run$results$reliability
 
@@ -390,6 +395,7 @@ test_that("reliability flag text and plot limits cover edge branches", {
 
 
 test_that("reliability print methods cover point, bootstrap, strain, and empty branches", {
+  skip_on_cran()
   run <- make_m9_report_run()
   rel <- run$results$reliability
 
@@ -460,6 +466,7 @@ test_that("reliability print methods cover point, bootstrap, strain, and empty b
 
 
 test_that("reliability summary print reports bootstrap interval notation", {
+  skip_on_cran()
   run <- make_m9_report_run()
   rel <- run$results$reliability
   s <- summary(rel)
@@ -474,6 +481,7 @@ test_that("reliability summary print reports bootstrap interval notation", {
 
 
 test_that("reliability plot covers errors, one-coefficient guides, CIs, and facets", {
+  skip_on_cran()
   run <- make_m9_report_run()
   rel <- run$results$reliability
 
@@ -517,6 +525,7 @@ test_that("reliability plot covers errors, one-coefficient guides, CIs, and face
 
 
 test_that("reliability bootstrap helper returns aligned point statistics for a fitted CFA", {
+  skip_on_cran()
   run <- make_m9_report_run()
   rel <- run$results$reliability
   cfa <- run$results$cfa
@@ -546,6 +555,7 @@ test_that("reliability bootstrap helper returns aligned point statistics for a f
 
 
 test_that("reliability bootstrap CI helper fails closed for an invalid fitted model", {
+  skip_on_cran()
   run <- make_m9_report_run()
   rel <- run$results$reliability
 
@@ -574,6 +584,7 @@ test_that("reliability bootstrap CI helper fails closed for an invalid fitted mo
 
 
 test_that("reliability print covers alpha-not-requested and no-finite-omega branches", {
+  skip_on_cran()
   run <- make_m9_report_run()
   rel <- run$results$reliability
 
@@ -590,6 +601,7 @@ test_that("reliability print covers alpha-not-requested and no-finite-omega bran
 
 
 test_that("reliability plot labels point-estimate subtitle without intervals", {
+  skip_on_cran()
   run <- make_m9_report_run()
   rel <- run$results$reliability
 
@@ -603,6 +615,7 @@ test_that("reliability plot labels point-estimate subtitle without intervals", {
 
 
 test_that("reliability summary table fills missing CI-success columns", {
+  skip_on_cran()
   run <- make_m9_report_run()
   rel <- run$results$reliability
 
@@ -910,6 +923,7 @@ test_that("closeout B: continuous-alpha failure is explicit in a model containin
 
 
 test_that("closeout B: reliability marks an improper measurement model as a model-dependence concern", {
+  skip_on_cran()
   skip_if_not(
     exists("local_mocked_bindings", envir = asNamespace("testthat"), inherits = FALSE)
   )
@@ -1093,6 +1107,7 @@ test_that("a parallel bootstrap is reproducible for a seed and a worker count", 
 # Return shapes and undeclared ordered factors (#145) ---------------------------
 
 test_that("ordered-factor columns fitted without `ordered` are reliability's ordered indicators", {
+  skip_on_cran()
   model <- "A =~ a1 + a2 + a3 + a4 + a5\nB =~ b1 + b2 + b3 + b4 + b5"
   undeclared <- lavaan::cfa(model, data = nomo_demo_ordinal)
   declared <- lavaan::cfa(model, data = nomo_demo_ordinal,
@@ -1243,7 +1258,7 @@ test_that("bootstrapping a covariance-matrix fit says that raw data are needed (
     "A =~ a1 + a2 + a3\nB =~ b1 + b2 + b3",
     sample.cov = lavaan::lavInspect(fit, "sampstat")$cov, sample.nobs = 473
   )
-  expect_no_warning(rel <- nomo_reliability(covariance, ci = "bootstrap", ci_boot = 20))
+  expect_no_warning_off_cran(rel <- nomo_reliability(covariance, ci = "bootstrap", ci_boot = 20))
   expect_false(rel$ci_status$available)
   expect_identical(
     rel$ci_status$reason,

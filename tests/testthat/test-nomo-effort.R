@@ -320,6 +320,7 @@ test_that("long-string is reported but not flagged on a short item set", {
 
 
 test_that("long-string is flagged from the minimum item count in the guidance", {
+  skip_on_cran()
   # Twenty items is the default minimum, so the rule applies.
   out <- nomo_screen(short_effort_data(20), effort = TRUE)
   expect_true(out$effort_settings$long_string_rule_applied)
@@ -370,6 +371,7 @@ test_that("long-string is flagged from the minimum item count in the guidance", 
 
 
 test_that("the report states when the long-string rule was not applied", {
+  skip_on_cran()
   applied <- nomologR:::nomo_report_effort(nomo_screen(short_effort_data(20), effort = TRUE))
   expect_match(applied$indices$rule[[1L]], "a run of 10 or more, half the items", fixed = TRUE)
   expect_gte(applied$indices$cases_flagged[[1L]], 5L)
@@ -681,6 +683,7 @@ test_that("effort arguments are validated, and every screen table is returned", 
 # Indices with no value say why (#145) -----------------------------------------
 
 test_that("Mahalanobis distance says how many cases have it, and why any do not", {
+  skip_on_cran()
   entry <- function(out, metric) {
     out$decision_log[out$decision_log$metric == metric, , drop = FALSE]
   }
@@ -793,6 +796,7 @@ test_that("pair counts read in the right number (#145)", {
 
 
 test_that("a rule that flags no case is information, not review", {
+  skip_on_cran()
   fx <- effort_data()
   attentive <- fx$data[fx$group == "attentive", ]
 

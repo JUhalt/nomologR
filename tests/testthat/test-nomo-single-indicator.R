@@ -15,8 +15,8 @@ si_reliability <- local({
     if (is.null(cache)) {
       cache <<- nomo_reliability(
         nomo_cfa("Persistence =~ pe1 + pe2 + pe3 + pe4", si_data),
-        # Twenty draws: the tests read the interval's width, whatever it is,
-        # and this fixture is built under CRAN's check-time limit.
+        # Twenty draws: the tests read the interval's width, whatever it is.
+        # A bootstrap, so the tests that use it skip on CRAN.
         ci = "bootstrap", ci_boot = 20L, ci_seed = 1L
       )
     }
@@ -68,6 +68,7 @@ test_that("a reliability must be a proportion, and its companions well formed", 
 
 
 test_that("omega and its bootstrap uncertainty come from a reliability result", {
+  skip_on_cran()
   rel <- si_reliability()
   si <- nomo_single_indicator(rel)
   omega <- rel$omega[rel$omega$construct == "Persistence", ]

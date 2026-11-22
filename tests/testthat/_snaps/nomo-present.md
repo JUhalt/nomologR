@@ -487,10 +487,10 @@
           items gives the weakest indicator the same say as the strongest, so two
           people with the same total can differ on the construct by having endorsed
           different items.
-        - Validity (Review): Validity is below .90 for B. Gorsuch (1983, p. 260)
-          recommended at least .80, and above .90 if the scores are to serve as
-          adequate substitutes for the factors themselves. Reported as his
-          recommendation, not applied as a rule.
+        - Validity (Review): Validity is below .90 for B. Gorsuch (1983, p. 260, as
+          cited in Grice, 2001) recommended at least .80, and above .90 if the
+          scores are to serve as adequate substitutes for the factors themselves.
+          Reported as his recommendation, not applied as a rule.
       
       Notes
         - A score is not the latent variable. Every method here produces an estimate
@@ -593,10 +593,11 @@
       
       Flagged
         - Review: Factor determinacy is at or below .90 for G, A, B, C, the value
-          above which Gorsuch (1983) recommended using factor score estimates.
+          above which Gorsuch (1983, as cited in Grice, 2001) recommended factor
+          score estimates that serve as substitutes for the factors.
         - Review: Two equally valid sets of factor scores could correlate as low as
-          G (.50), A (-.01), B (.02), C (-.18), below the .70 Gorsuch (1983)
-          suggested.
+          G (.50), A (-.01), B (.02), C (-.18), below the .70 Gorsuch (1983, as
+          cited in Rodriguez et al., 2016) suggested.
         - Review: Construct replicability H is below .70, the standard Hancock and
           Mueller (2001) proposed, for A, B, C.
       
@@ -659,14 +660,15 @@
       
       Flagged
         - Review: Factor determinacy is at or below .90 for G, A, B, C. Gorsuch
-          (1983, p. 260) recommended using factor score estimates only above that
-          value. This is his recommendation reported as context, not a rule applied
-          here; the score may still be usable for some purposes.
+          (1983, p. 260, as cited in Grice, 2001) recommended at least .80, and
+          above .90 where factor score estimates are to serve as substitutes for the
+          factors. This is his recommendation reported as context, not a rule
+          applied here; the score may still be usable for some purposes.
         - Review: Two equally valid sets of factor scores could correlate as low as
-          G (.50), A (-.01), B (.02), C (-.18). Gorsuch (1983, p. 260) suggested
-          this minimum be above .70. A negative value means two researchers scoring
-          the same data could rank people in opposite orders and both be consistent
-          with the model.
+          G (.50), A (-.01), B (.02), C (-.18). Gorsuch (1983, p. 260, as cited in
+          Rodriguez et al., 2016) suggested this minimum be above .70. A negative
+          value means two researchers scoring the same data could rank people in
+          opposite orders and both be consistent with the model.
         - Review: Construct replicability H is below .70 for A, B, C. Hancock and
           Mueller (2001) proposed .70 as a standard; a factor below it is not well
           defined by its own indicators and is expected to change across studies.
@@ -1315,9 +1317,9 @@
           convenience, and that `validity` and `correlational_accuracy` describe
           what it costs.
         - Scores (Review): Validity is below .90 for SocialDesirability. Gorsuch
-          (1983, p. 260) recommended at least .80, and above .90 if the scores are
-          to serve as adequate substitutes for the factors themselves. Reported as
-          his recommendation, not applied as a rule.
+          (1983, p. 260, as cited in Grice, 2001) recommended at least .80, and
+          above .90 if the scores are to serve as adequate substitutes for the
+          factors themselves. Reported as his recommendation, not applied as a rule.
         - Persistence <-> SocialDesirability in the network (Review): The relation,
           estimated in the model as given, is fixed to zero in the fitted model:
           with the hypothesized paths, `Persistence` is an outcome, and lavaan does
