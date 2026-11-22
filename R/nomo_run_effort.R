@@ -107,7 +107,6 @@ nomo_run_keying_log <- function(log, keying) {
   shown <- function(value) {
     if (length(value)) paste(value, collapse = if (is.numeric(value)) " to " else ", ") else "none"
   }
-  what <- c(reverse = "the reverse-keyed item(s)", scale_range = "the response scale")
   sentences <- vapply(changed, function(arg) {
     if (identical(keying$origin[[arg]], "override")) {
       sprintf(
@@ -115,12 +114,13 @@ nomo_run_keying_log <- function(log, keying) {
           "`settings$screen$%s` (%s) was used in place of %s the content-review",
           "handoff declared (%s)."
         ),
-        arg, shown(keying$given[[arg]]), what[[arg]], shown(keying$recorded[[arg]])
+        arg, shown(keying$given[[arg]]), nomo_keying_what(arg, keying$recorded[[arg]]),
+        shown(keying$recorded[[arg]])
       )
     } else {
       sprintf(
         "`settings$screen$%s` (%s) supplied %s the content-review handoff did not record.",
-        arg, shown(keying$given[[arg]]), what[[arg]]
+        arg, shown(keying$given[[arg]]), nomo_keying_what(arg, keying$given[[arg]])
       )
     }
   }, character(1))

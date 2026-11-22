@@ -548,8 +548,10 @@ nomo_invariance_present_flagged <- function(log, recommendation = FALSE) {
 
 # print() and summary() ---------------------------------------------------------------
 
+#' @rdname printing
 #' @export
-print.nomo_invariance <- function(x, ...) {
+print.nomo_invariance <- function(x, digits = NULL, ...) {
+  nomo_present_local_digits(digits)
   object <- x
   x <- nomo_invariance_display_fields(x)
   nomo_invariance_present_header(x)
@@ -659,8 +661,10 @@ summary.nomo_invariance <- function(object, ...) {
 }
 
 
+#' @rdname printing
 #' @export
-print.summary_nomo_invariance <- function(x, ...) {
+print.summary_nomo_invariance <- function(x, digits = NULL, ...) {
+  nomo_present_local_digits(digits)
   across_occasions <- identical(x$design, "occasions")
   formats <- nomo_invariance_fit_formats()
   nomo_invariance_present_header(x, summary = TRUE)

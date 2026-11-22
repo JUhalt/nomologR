@@ -4,10 +4,14 @@
 \alias{print.summary_nomo_factors}
 \title{Print a factor-retention summary}
 \usage{
-\method{print}{summary_nomo_factors}(x, ...)
+\method{print}{summary_nomo_factors}(x, digits = NULL, ...)
 }
 \arguments{
 \item{x}{A \code{summary_nomo_factors} object.}
+
+\item{digits}{\code{NULL} (default) for the decimals of each kind of statistic,
+or one whole number from 0 to 10 for the decimals of every statistic
+shown. See \link{printing}.}
 
 \item{...}{Additional arguments, currently ignored.}
 }

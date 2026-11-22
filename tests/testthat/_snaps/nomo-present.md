@@ -298,7 +298,8 @@
       print(rel)
     Output
       <nomo_reliability> Reliability
-      Constructs: 2 | Primary coefficient: model-based omega | Review reference: .70
+      Cases: 473 of 500 used | Constructs: 2
+      Primary coefficient: model-based omega | Review reference: .70
       Omega: .78 to .83 | Omega flags: none
       Alpha: 2 of 2 constructs, as a secondary coefficient
       Uncertainty: point estimates only; use `ci = "bootstrap"` for interval
@@ -314,7 +315,7 @@
       print(summary(rel))
     Output
       <nomo_reliability summary> Reliability
-      Constructs: 2 | Review reference: .70
+      Cases: 473 of 500 used | Constructs: 2 | Review reference: .70
       
       Coefficients
         Construct  Indicators  Omega  Alpha
@@ -335,7 +336,8 @@
       print(val)
     Output
       <nomo_validity> Convergent and discriminant evidence
-      Constructs: 2 | AVE reference: .50 | HTMT reference: 0.85
+      Cases: 473 of 500 used | Constructs: 2
+      AVE reference: .50 | HTMT reference: 0.85
       Convergent flags: 0 concern, 2 review (2 constructs)
       Separation flags: none (1 pair)
       
@@ -357,7 +359,8 @@
       print(summary(val))
     Output
       <nomo_validity summary> Convergent and discriminant evidence
-      Constructs: 2 | AVE reference: .50 | HTMT reference: 0.85
+      Cases: 473 of 500 used | Constructs: 2
+      AVE reference: .50 | HTMT reference: 0.85
       Convergent flags: 0 concern, 2 review (2 constructs)
       Separation flags: none (1 pair)
       
@@ -518,7 +521,7 @@
 ---
 
     Code
-      print(nomo_missing(cfa, data = nomo_demo_continuous))
+      print(mis)
     Output
       <nomo_missing> Missing-data sensitivity
       Model: CFA | Reference: FIML | Fitted with: Listwise deletion
@@ -565,7 +568,7 @@
       <nomo_hierarchical> Hierarchical model evaluation
       Rodriguez, Reise, and Haviland (2016).
       Bifactor model | General factor: G | Group factors: A, B, C
-      Estimand: unit-weighted observed composite
+      Cases: 500 | Estimand: unit-weighted observed composite
       
       Total score
         Index                         Estimate
@@ -624,7 +627,7 @@
       <nomo_hierarchical summary> Hierarchical model evaluation
       Rodriguez, Reise, and Haviland (2016).
       Bifactor model | General factor: G | Group factors: A, B, C
-      Estimand: unit-weighted observed composite
+      Cases: 500 | Estimand: unit-weighted observed composite
       
       Total score
         - Omega total = .90: Common sources explain .90 of the variance of the
@@ -1081,10 +1084,10 @@
 ---
 
     Code
-      print(nomo_split(nomo_demo_network, validation_prop = 0.4, seed = 2026))
+      print(split)
     Output
       <nomo_split> Calibration and validation split
-      Rows: 800 | Calibration: 480 | Validation: 320
+      Cases: 800 | Calibration: 480 | Validation: 320
       Validation proportion: .40 requested, .40 realized | Seed: 2026
       Generator: Mersenne-Twister, Inversion, Rejection
       

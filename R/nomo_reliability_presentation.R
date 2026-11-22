@@ -148,13 +148,18 @@ nomo_reliability_other_flags <- function(log, brief = FALSE) {
 }
 
 
+#' @rdname printing
 #' @export
-print.nomo_reliability <- function(x, ...) {
+print.nomo_reliability <- function(x, digits = NULL, ...) {
+  nomo_present_local_digits(digits)
   tab <- nomo_reliability_summary_table(x)
   reference <- x$guidance$reliability_reference
   nomo_present_header("nomo_reliability", "Reliability")
   nomo_present_facts(c(
-    sprintf("Constructs: %d", length(unique(tab$construct))),
+    nomo_lavaan_cases_fact(nomo_lavaan_cases(x[["fit"]])),
+    sprintf("Constructs: %d", length(unique(tab$construct)))
+  ))
+  nomo_present_facts(c(
     "Primary coefficient: model-based omega",
     paste0("Review reference: ", nomo_present_stat(reference, "reliability"))
   ))
@@ -235,14 +240,19 @@ print.nomo_reliability <- function(x, ...) {
 #'
 #' @param object A `nomo_reliability` object.
 #' @param ... Unused.
-#' @return An object of class `summary_nomo_reliability`. Printed, it shows each
-#'   construct's omega and alpha with their intervals, score scale, and flag,
-#'   why any alpha was not computed, and the reason for each flag in the
+#' @return An object of class `summary_nomo_reliability`. Its `n_used` and
+#'   `data_n` are the cases the model analyzed and the rows of the data it was
+#'   given. Printed, it shows those cases, each construct's omega and alpha
+#'   with their intervals, score scale, and flag, why any alpha was not
+#'   computed, and the reason for each flag in the
 #'   decision log, including those that qualify the coefficients, such as a
 #'   theta parameterization or intervals that could not be computed.
 #' @export
 summary.nomo_reliability <- function(object, ...) {
+  cases <- nomo_lavaan_cases(object[["fit"]])
   out <- list(
+    n_used = cases$n_used,
+    data_n = cases$data_n,
     table = nomo_reliability_summary_table(object),
     alpha_status = object$alpha_status,
     ci_status = object$ci_status,
@@ -259,11 +269,14 @@ summary.nomo_reliability <- function(object, ...) {
 }
 
 
+#' @rdname printing
 #' @export
-print.summary_nomo_reliability <- function(x, ...) {
+print.summary_nomo_reliability <- function(x, digits = NULL, ...) {
+  nomo_present_local_digits(digits)
   reference <- x$reference
   nomo_present_header("nomo_reliability", "Reliability", summary = TRUE)
   nomo_present_facts(c(
+    nomo_lavaan_cases_fact(x),
     sprintf("Constructs: %d", length(unique(x$table$construct))),
     paste0("Review reference: ", nomo_present_stat(reference, "reliability"))
   ))

@@ -1568,8 +1568,8 @@ test_that("references are written as the values they are compared with (#144)", 
   # The sentence nomo_validity() uses, so a guided run groups the two (#145).
   expect_match(weak, "^Standardized loading 0\\.[0-9]{2} is below the review reference 0\\.50 in absolute value; ")
   log <- out$decision_log
-  expect_identical(log$reference[log$metric == "fit_cfi"], "Configured teaching reference: .950")
-  expect_identical(log$reference[log$metric == "fit_rmsea"], "Configured teaching reference: 0.060")
+  expect_identical(log$reference[log$metric == "fit_cfi"], "Configured review reference: .950")
+  expect_identical(log$reference[log$metric == "fit_rmsea"], "Configured review reference: 0.060")
   expect_match(log$observation[log$metric == "largest_residual_correlation"],
                "^Largest absolute residual correlation: 0\\.[0-9]{2}\\.$")
 })
@@ -1587,7 +1587,7 @@ test_that("the CFA says which chi-square and which index versions it shows (#145
   expect_match(summarized, "chi-square(24) = 87.13, p < .001   The chi-square is the Yuan-Bentler",
                fixed = TRUE)
   # A flagged value is shown beside its reference, in the same format.
-  expect_match(summarized, "CFI (Review): The value, .930, is below the teaching reference of .950",
+  expect_match(summarized, "CFI (Review): The value, .930, is below the review reference .950",
                fixed = TRUE)
   expect_match(summarized, "RMSEA (Review): The value, 0.092, is above", fixed = TRUE)
 

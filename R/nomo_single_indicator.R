@@ -259,8 +259,10 @@ nomo_single_indicator_from_reliability <- function(x, construct) {
 }
 
 
+#' @rdname printing
 #' @export
-print.nomo_single_indicator <- function(x, ...) {
+print.nomo_single_indicator <- function(x, digits = NULL, ...) {
+  nomo_present_local_digits(digits)
   nomo_present_header("nomo_single_indicator", "Reliability for a single indicator")
   # Three decimals: the value is fixed in the model as given (#144).
   nomo_present_facts(c(

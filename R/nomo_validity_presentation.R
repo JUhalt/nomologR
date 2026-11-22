@@ -299,11 +299,11 @@ nomo_validity_latent_beside <- function(x) {
 }
 
 
-# Shared by print() and summary(): the counts, the references, and how the
-# separation evidence was evaluated. Constructs are counted once however many
-# groups or levels they appear in, and a flag count names what it counts, so
-# "none" never reads as "no separation" (#145).
-nomo_validity_present_facts <- function(constructs, ngroups, nlevels, ave_reference,
+# Shared by print() and summary(): the cases, the counts, the references, and
+# how the separation evidence was evaluated. Constructs are counted once however
+# many groups or levels they appear in, and a flag count names what it counts,
+# so "none" never reads as "no separation" (#145).
+nomo_validity_present_facts <- function(cases, constructs, ngroups, nlevels, ave_reference,
                                         htmt_reference, convergent, discriminant,
                                         fixed = 0L) {
   constructs <- unique(c(constructs, convergent[["construct"]]))
@@ -315,8 +315,11 @@ nomo_validity_present_facts <- function(constructs, ngroups, nlevels, ave_refere
     character()
   }
   nomo_present_facts(c(
+    cases,
     sprintf("Constructs: %d", length(constructs)),
-    if (length(blocks)) sprintf("%s: %s", blocks[[1L]], sub(" .*$", "", blocks[[2L]])) else "",
+    if (length(blocks)) sprintf("%s: %s", blocks[[1L]], sub(" .*$", "", blocks[[2L]])) else ""
+  ))
+  nomo_present_facts(c(
     paste0("AVE reference: ", nomo_present_stat(ave_reference, "reliability")),
     paste0("HTMT reference: ", nomo_present_stat(htmt_reference, "htmt"))
   ))
@@ -463,15 +466,18 @@ nomo_validity_capitalize <- function(x) {
 }
 
 
+#' @rdname printing
 #' @export
-print.nomo_validity <- function(x, ...) {
+print.nomo_validity <- function(x, digits = NULL, ...) {
+  nomo_present_local_digits(digits)
   convergent <- nomo_validity_convergent_table(x)
   discriminant <- nomo_validity_discriminant_table(x)
   fixed <- nomo_validity_fixed_pairs(x)
   nomo_present_header("nomo_validity", "Convergent and discriminant evidence")
   nomo_validity_present_facts(
-    nomo_validity_construct_order(x), x$ngroups, x$nlevels, x$ave_reference,
-    x$htmt_reference, convergent, discriminant, fixed = nrow(fixed)
+    nomo_lavaan_cases_fact(nomo_lavaan_cases(x[["fit"]])), nomo_validity_construct_order(x),
+    x$ngroups, x$nlevels, x$ave_reference, x$htmt_reference, convergent, discriminant,
+    fixed = nrow(fixed)
   )
   note <- nomo_validity_htmt_note(x, discriminant, fixed)
   if (nzchar(note)) nomo_present_text(note)
@@ -511,11 +517,16 @@ print.nomo_validity <- function(x, ...) {
 #' @return An object of class `summary_nomo_validity`. `$convergent` combines
 #'   AVE with a compact loading summary, while `$discriminant` aligns latent
 #'   correlations, HTMT2, and original HTMT without repeating the full CFA
-#'   loading table. Printed, it shows both tables, the legacy Fornell-Larcker
-#'   comparison when it was requested, and the full reason for each flag.
+#'   loading table. `$n_used` and `$data_n` are the cases the model analyzed
+#'   and the rows of the data it was given. Printed, it shows those cases,
+#'   both tables, the legacy Fornell-Larcker comparison when it was requested,
+#'   and the full reason for each flag.
 #' @export
 summary.nomo_validity <- function(object, ...) {
+  cases <- nomo_lavaan_cases(object[["fit"]])
   out <- list(
+    n_used = cases$n_used,
+    data_n = cases$data_n,
     convergent = nomo_validity_convergent_table(object),
     discriminant = nomo_validity_discriminant_table(object),
     fixed_pairs = nomo_validity_fixed_pairs(object),
@@ -540,15 +551,17 @@ summary.nomo_validity <- function(object, ...) {
 }
 
 
+#' @rdname printing
 #' @export
-print.summary_nomo_validity <- function(x, ...) {
+print.summary_nomo_validity <- function(x, digits = NULL, ...) {
+  nomo_present_local_digits(digits)
   nomo_present_header("nomo_validity", "Convergent and discriminant evidence",
                       summary = TRUE)
   # A summary saved before fixed correlations were set apart has none listed.
   fixed <- x$fixed_pairs
   nomo_validity_present_facts(
-    x$construct_order, x$ngroups, x$nlevels, x$ave_reference, x$htmt_reference,
-    x$convergent, x$discriminant, fixed = NROW(fixed)
+    nomo_lavaan_cases_fact(x), x$construct_order, x$ngroups, x$nlevels, x$ave_reference,
+    x$htmt_reference, x$convergent, x$discriminant, fixed = NROW(fixed)
   )
 
   nomo_present_section("Convergent evidence by construct")

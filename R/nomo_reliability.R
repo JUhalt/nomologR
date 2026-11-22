@@ -82,8 +82,9 @@
 #'   results. They may change between releases and are not part of the stable
 #'   interface (see `?nomologR`).
 #'
-#'   `print()` shows the range of omega, the flags it raised against the review
-#'   reference, and how uncertainty was handled; `summary()` adds each
+#'   `print()` shows the cases the model analyzed, the range of omega, the
+#'   flags it raised against the review reference, and how uncertainty was
+#'   handled; `summary()` adds each
 #'   construct's omega and alpha with their intervals and score scales, the
 #'   reason any alpha was not computed, and every flag in the decision log
 #'   with its reason.

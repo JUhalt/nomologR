@@ -1,7 +1,9 @@
 # Presentation methods for nomo_efa -----------------------------------------
 
+#' @rdname printing
 #' @export
-print.nomo_efa <- function(x, ...) {
+print.nomo_efa <- function(x, digits = NULL, ...) {
+  nomo_present_local_digits(digits)
   nomo_present_header("nomo_efa", "Exploratory factor analysis")
   nomo_efa_present_facts(x)
   # The count uses the statuses summary() shows, so a Heywood item counts as a
@@ -138,8 +140,10 @@ summary.nomo_efa <- function(object, ...) {
   out
 }
 
+#' @rdname printing
 #' @export
-print.summary_nomo_efa <- function(x, ...) {
+print.summary_nomo_efa <- function(x, digits = NULL, ...) {
+  nomo_present_local_digits(digits)
   nomo_present_header("nomo_efa", "Exploratory factor analysis", summary = TRUE)
   nomo_efa_present_facts(x)
   nomo_present_facts(c(
@@ -155,7 +159,7 @@ print.summary_nomo_efa <- function(x, ...) {
     }
   ))
 
-  # A value near its teaching reference shows the decimals that tell them
+  # A value near its review reference shows the decimals that tell them
   # apart (guide point 9); loadings are compared in absolute value.
   load_ref <- nomo_null_default(x$guidance$efa_loading_reference, 0.40)
   cross_ref <- nomo_null_default(x$guidance$efa_crossloading_reference, 0.30)

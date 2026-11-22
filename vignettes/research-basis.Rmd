@@ -259,7 +259,7 @@ alternative to fixed thresholds (McNeish & Wolf, 2023).
 
 **What nomologR does.** Retains the unchanged `lavaan` fit (Rosseel, 2012) and
 reports chi-square, CFI (Bentler, 1990), TLI, RMSEA with its interval, and SRMR
-against teaching references; localized residual correlations; Heywood and
+against review references; localized residual correlations; Heywood and
 convergence diagnostics; and modification indices quarantined as post hoc
 diagnostics that never change the model. Declared ordered indicators request
 WLSMV. `nomo_split()` supports calibration and validation samples because

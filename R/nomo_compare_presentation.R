@@ -75,8 +75,10 @@ nomo_compare_line <- function(cmp) {
 }
 
 
+#' @rdname printing
 #' @export
-print.nomo_compare <- function(x, ...) {
+print.nomo_compare <- function(x, digits = NULL, ...) {
+  nomo_present_local_digits(digits)
   nomo_present_header("nomo_compare", "Measurement-model comparison")
   nomo_compare_present_facts(x, x$fits[[x$reference]]$data_n)
   nomo_present_text("Rationale: ", x$rationale)
@@ -144,8 +146,10 @@ summary.nomo_compare <- function(object, ...) {
 }
 
 
+#' @rdname printing
 #' @export
-print.summary_nomo_compare <- function(x, ...) {
+print.summary_nomo_compare <- function(x, digits = NULL, ...) {
+  nomo_present_local_digits(digits)
   nomo_present_header("nomo_compare", "Measurement-model comparison", summary = TRUE)
   nomo_present_text("Rationale: ", x$rationale)
   nomo_compare_present_facts(x, x$data_n, summary = TRUE)

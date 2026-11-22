@@ -10,11 +10,15 @@
 #' and the concordance across criterion families.
 #'
 #' @param x A `nomo_factors` object.
+#' @param digits `NULL` (default) for the decimals of each kind of statistic,
+#'   or one whole number from 0 to 10 for the decimals of every statistic
+#'   shown. See [printing].
 #' @param ... Additional arguments, currently ignored.
 #'
 #' @return `x`, invisibly.
 #' @export
-print.nomo_factors <- function(x, ...) {
+print.nomo_factors <- function(x, digits = NULL, ...) {
+  nomo_present_local_digits(digits)
   nomo_present_header("nomo_factors", "Factor-retention evidence")
   nomo_present_facts(c(
     nomo_factors_cases_text(x$n_cases, x$min_pairwise_n),
@@ -104,6 +108,16 @@ nomo_factors_method_counts <- function(x) {
 }
 
 
+# Bartlett's test as printed: "chi-square(45) = 1234.56, p < .001", qualified
+# for correlations other than Pearson's.
+nomo_factors_bartlett_text <- function(bartlett, correlation_method) {
+  paste0(
+    nomo_present_chisq(bartlett$chisq, bartlett$df, bartlett$p_value),
+    nomo_factors_bartlett_qualifier(correlation_method)
+  )
+}
+
+
 # The overall KMO as printed: two decimals, without the leading zero.
 nomo_factors_kmo_text <- function(kmo) {
   if (isTRUE(kmo$available)) {
@@ -132,11 +146,7 @@ summary.nomo_factors <- function(object, ...) {
   }
 
   bartlett_display <- if (isTRUE(object$bartlett$available)) {
-    paste0(
-      nomo_present_chisq(object$bartlett$chisq, object$bartlett$df,
-                         object$bartlett$p_value),
-      nomo_factors_bartlett_qualifier(object$correlation_method)
-    )
+    nomo_factors_bartlett_text(object$bartlett, object$correlation_method)
   } else {
     object$bartlett$reason
   }
@@ -172,6 +182,7 @@ summary.nomo_factors <- function(object, ...) {
     family_concordance = object$family_concordance,
     method_concordance = object$method_concordance,
     adequacy = adequacy,
+    bartlett = object$bartlett,
     item_kmo = object$kmo$item,
     plausible_factors = object$plausible_factors,
     recommendation = object$recommendation,
@@ -186,11 +197,15 @@ summary.nomo_factors <- function(object, ...) {
 #' Print a factor-retention summary
 #'
 #' @param x A `summary_nomo_factors` object.
+#' @param digits `NULL` (default) for the decimals of each kind of statistic,
+#'   or one whole number from 0 to 10 for the decimals of every statistic
+#'   shown. See [printing].
 #' @param ... Additional arguments, currently ignored.
 #'
 #' @return `x`, invisibly.
 #' @export
-print.summary_nomo_factors <- function(x, ...) {
+print.summary_nomo_factors <- function(x, digits = NULL, ...) {
+  nomo_present_local_digits(digits)
   nomo_present_header("nomo_factors", "Factor-retention evidence", summary = TRUE)
   nomo_present_facts(c(
     nomo_factors_cases_text(x$n_cases, x$min_pairwise_n),
@@ -247,6 +262,13 @@ print.summary_nomo_factors <- function(x, ...) {
   nomo_present_section("Supporting adequacy evidence")
   adequacy <- x$adequacy
   kmo <- adequacy$metric == "KMO"
+  # The values are formatted here, so `digits` reaches them; `display` keeps
+  # the default form.
+  shown <- kmo & adequacy$available
+  adequacy$display[shown] <- nomo_present_stat(adequacy$value[shown], "proportion")
+  if (isTRUE(x$bartlett$available)) {
+    adequacy$display[!kmo] <- nomo_factors_bartlett_text(x$bartlett, x$correlation_method)
+  }
   nomo_present_bullets(ifelse(
     kmo,
     paste0("KMO: ", ifelse(adequacy$available, adequacy$display,

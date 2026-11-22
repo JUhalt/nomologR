@@ -99,10 +99,11 @@ Other fields record the call, the settings used, and intermediate engine
 results. They may change between releases and are not part of the stable
 interface (see \code{?nomologR}).
 
-\code{print()} counts the convergent and construct-separation flags and names
-each flagged construct or pair; \code{summary()} adds the AVE and loading
-summary for each construct, the latent correlation and HTMT-family values
-for each pair, and the full reason for each flag.
+\code{print()} gives the cases the model analyzed, counts the convergent and
+construct-separation flags, and names each flagged construct or pair;
+\code{summary()} adds the AVE and loading summary for each construct, the
+latent correlation and HTMT-family values for each pair, and the full
+reason for each flag.
 }
 \description{
 \code{nomo_validity()} summarizes several complementary forms of measurement

@@ -4,10 +4,14 @@
 \alias{print.nomo_screen}
 \title{Print a nomo_screen object}
 \usage{
-\method{print}{nomo_screen}(x, ...)
+\method{print}{nomo_screen}(x, digits = NULL, ...)
 }
 \arguments{
 \item{x}{A \code{nomo_screen} object.}
+
+\item{digits}{Changes nothing here: \code{print()} shows counts, and a value
+given is answered with a message. \code{\link[=summary.nomo_screen]{summary.nomo_screen()}} shows each
+item's statistics. See \link{printing}.}
 
 \item{...}{Additional arguments, currently ignored.}
 }

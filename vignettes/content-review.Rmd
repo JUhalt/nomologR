@@ -99,7 +99,7 @@ evidence against the item.
 
 Left as answered, the item also makes the rest of the facet look bad. Every other EF
 item's correlation with the rest of the scale includes `EF2` running the wrong
-way, so all of them fall below the teaching reference. A screen of data that are
+way, so all of them fall below the review reference. A screen of data that are
 not yet recoded cannot say much about any item in the facet.
 
 `nomologR` never recodes data. Recoding is the researcher's step, and it belongs

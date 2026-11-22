@@ -122,6 +122,26 @@ nomo_cfa_cases_fact <- function(n_used, data_n) {
 }
 
 
+# The cases a fitted lavaan model analyzed (`nobs`) and the rows of the data it
+# was given (`norig`), summed over groups, for the analyses that keep only the
+# fit: nomo_reliability(), nomo_validity(), and nomo_hierarchical() (#145). An
+# object saved without its fit has neither. The object's fit is read with
+# x[["fit"]], since x$fit would match `fit_context` once `fit` is gone.
+nomo_lavaan_cases <- function(fit) {
+  if (!methods::is(fit, "lavaan")) return(list(n_used = NA_real_, data_n = NA_real_))
+  count <- function(what) sum(as.numeric(unlist(lavaan::lavInspect(fit, what))))
+  list(n_used = count("nobs"), data_n = count("norig"))
+}
+
+
+# "Cases: 500", or "Cases: 473 of 500 used", from those counts, or from the
+# same fields of a summary; nothing when they are not known.
+nomo_lavaan_cases_fact <- function(cases) {
+  if (!isTRUE(is.finite(cases[["n_used"]]))) return("")
+  nomo_cfa_cases_fact(cases[["n_used"]], cases[["data_n"]])
+}
+
+
 # Shared by print() and summary(): case use, estimator, and convergence.
 nomo_cfa_present_facts <- function(x, detail = FALSE) {
   cases <- nomo_cfa_cases_fact(x$n_used, x$data_n)
@@ -303,7 +323,7 @@ nomo_cfa_flagged <- function(x) {
     fit <- x$fit_evidence[x$fit_evidence$attention == "review", , drop = FALSE]
     for (i in seq_len(nrow(fit))) {
       add(fit$metric[[i]], "review", sprintf(
-        "The value, %s, is %s the teaching reference of %s; inspect global and localized model strain.",
+        "The value, %s, is %s the review reference %s; inspect global and localized model strain.",
         nomo_cfa_fit_number(fit$metric[[i]], fit$value[[i]], fit$reference[[i]]),
         if (identical(fit$direction[[i]], "higher")) "below" else "above",
         nomo_cfa_fit_number(fit$metric[[i]], fit$reference[[i]])
@@ -330,8 +350,10 @@ nomo_cfa_flagged <- function(x) {
 
 # Print ---------------------------------------------------------------------------
 
+#' @rdname printing
 #' @export
-print.nomo_cfa <- function(x, ...) {
+print.nomo_cfa <- function(x, digits = NULL, ...) {
+  nomo_present_local_digits(digits)
   nomo_present_header("nomo_cfa", "Confirmatory factor analysis")
   nomo_cfa_present_facts(x)
   shown <- nomo_cfa_estimator_abbr(x)
@@ -434,8 +456,10 @@ nomo_cfa_fixed_correlations <- function(correlations, fit) {
 }
 
 
+#' @rdname printing
 #' @export
-print.summary_nomo_cfa <- function(x, ...) {
+print.summary_nomo_cfa <- function(x, digits = NULL, ...) {
+  nomo_present_local_digits(digits)
   nomo_present_header("nomo_cfa", "Confirmatory factor analysis", summary = TRUE)
   nomo_cfa_present_facts(x, detail = TRUE)
   shown <- nomo_cfa_estimator_abbr(x)

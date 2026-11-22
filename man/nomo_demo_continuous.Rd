@@ -43,8 +43,8 @@ delete \code{a5} or \code{b5}; whether such items remain depends on theory, cont
 coverage, and later evidence.
 
 Population model: factors A and B are standard normal with correlation .40.
-Each indicator is a linear function of its factor(s) plus normal unique
-variance chosen so that the indicator has unit population variance.
+Each indicator is a linear function of the factors it loads on plus normal
+unique variance chosen so that the indicator has unit population variance.
 Scores are reported on a continuous rating metric (population mean 4, SD 1)
 and rounded to two decimals; the linear transformation does not affect
 correlations or standardized estimates.

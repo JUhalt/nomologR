@@ -60,7 +60,7 @@ A \code{nomo_cfa} object. The fields to read are:
 \item \code{converged}, \code{estimator}, \code{data_n}, \code{n_used}, and \code{sample_summary}.
 \code{estimator} is stored in upper case, so \code{"mlr"} is stored as \code{"MLR"} and
 a requested \code{"default"} as \code{"DEFAULT"}.
-\item \code{fit_evidence}: global fit indices with their teaching references;
+\item \code{fit_evidence}: global fit indices with their review references;
 \code{variant} names the \code{lavaan} measure each value comes from. Robust
 values are preferred, then scaled ones, then standard ones. When
 \code{lavaan} was asked for a scaled test statistic but could not compute it,

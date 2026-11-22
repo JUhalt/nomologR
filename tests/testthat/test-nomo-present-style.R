@@ -529,3 +529,135 @@ test_that("every pointer to a decision log names nomo_table() (#145, out-16)", {
     expect_false(any(grepl("^.x[$]decision_log.$", strings)), label = basename(file))
   }
 })
+
+
+# `digits` in print() (#145, clarity-22) ----------------------------------------
+
+test_that("every print method takes `digits`, NULL by default (#145)", {
+  methods <- getNamespaceInfo(asNamespace("nomologR"), "S3methods")
+  printed <- methods[methods[, 1L] == "print", 3L]
+  expect_gt(length(printed), 40L)
+  for (method in printed) {
+    f <- get(method, envir = asNamespace("nomologR"))
+    expect_identical(names(formals(f)), c("x", "digits", "..."), label = method)
+    expect_null(formals(f)$digits, label = method)
+  }
+})
+
+
+test_that("`digits` reaches every statistic but p, df, levels, counts, and percentages (#145)", {
+  shown <- function(digits) {
+    nomologR:::nomo_present_local_digits(digits)
+    stat <- nomologR:::nomo_present_stat
+    c(stat(0.4567, "r"), stat(0.4567, "fit"), stat(1.23456, "estimate", digits = 3L),
+      stat(0.04567, "p"), stat(33.4667, "df"), stat(0.05, "level"), stat(473, "count"),
+      nomologR:::nomo_present_percent(0.5, base = 50),
+      nomologR:::nomo_present_ci(0.1, 0.2, kind = "r"),
+      # A value just off its reference still shows the decimals that tell them
+      # apart.
+      stat(0.398, "loading", reference = 0.40))
+  }
+  expect_identical(shown(NULL), c(".46", "0.457", "1.235", ".046", "33.47", ".05", "473",
+                                  "50%", "[.10, .20]", "0.398"))
+  expect_identical(shown(4), c(".4567", "0.4567", "1.2346", ".046", "33.47", ".05", "473",
+                               "50%", "[.1000, .2000]", "0.3980"))
+  expect_identical(shown(1), c(".5", "0.5", "1.2", ".046", "33.47", ".05", "473",
+                               "50%", "[.1, .2]", "0.398"))
+
+  # Only for the call that set it, however that call ends.
+  expect_null(nomologR:::nomo_present_digits())
+  failing <- function() {
+    nomologR:::nomo_present_local_digits(2)
+    stop("stopped")
+  }
+  expect_error(failing(), "stopped")
+  expect_null(nomologR:::nomo_present_digits())
+
+  # NULL keeps the setting of the call around it.
+  outer <- function() {
+    nomologR:::nomo_present_local_digits(3)
+    inner <- function() {
+      nomologR:::nomo_present_local_digits(NULL)
+      nomologR:::nomo_present_digits()
+    }
+    c(inner(), nomologR:::nomo_present_digits())
+  }
+  expect_identical(outer(), c(3L, 3L))
+
+  for (bad in list(-1, 1.5, 11, "2", c(1, 2), NA_real_)) {
+    expect_error(nomologR:::nomo_present_local_digits(bad),
+                 "`digits` must be NULL or one whole number from 0 to 10.", fixed = TRUE)
+    expect_error(nomologR:::nomo_present_digits_unused(bad, "why"),
+                 "`digits` must be NULL or one whole number from 0 to 10.", fixed = TRUE)
+  }
+  expect_silent(nomologR:::nomo_present_digits_unused(NULL, "why"))
+  expect_message(nomologR:::nomo_present_digits_unused(2, "a reason."),
+                 "`digits` changes nothing here: a reason.", fixed = TRUE)
+})
+
+
+test_that("`digits` reaches plain table columns; a region's bounds keep their own (#145)", {
+  table <- function(digits) {
+    nomologR:::nomo_present_local_digits(digits)
+    utils::capture.output(nomologR:::nomo_present_table(
+      data.frame(item = "a1", value = 0.12345, n = 5L),
+      c("Item" = "item", "Value" = "value", "N" = "n"),
+      more = "x"
+    ))
+  }
+  expect_identical(table(NULL)[[2L]], "  a1    0.123  5")
+  expect_identical(table(1)[[2L]], "  a1      0.1  5")
+
+  bounds <- function(digits) {
+    nomologR:::nomo_present_local_digits(digits)
+    nomologR:::nomo_network_bound_text(c(0.2, -0.15, 0.125, 0), c("estimate", "r", "r", "r"))
+  }
+  expect_identical(bounds(NULL), c("0.20", "-.15", ".125", "0"))
+  # Never fewer decimals than given, and more when asked.
+  expect_identical(bounds(1), c("0.20", "-.15", ".125", "0"))
+  expect_identical(bounds(4), c("0.2000", "-.1500", ".1250", "0"))
+})
+
+
+# Cases (#145, clarity-08) ------------------------------------------------------
+
+test_that("reliability, validity, and hierarchical printouts give the cases analyzed (#145)", {
+  # Ten cases lose x1, all of them in the first school, so lavaan's listwise
+  # deletion leaves 291 of the 301; the count is summed over the groups.
+  hs <- lavaan::HolzingerSwineford1939
+  hs$x1[1:10] <- NA
+  fit <- lavaan::cfa("visual =~ x1 + x2 + x3\ntextual =~ x4 + x5 + x6", data = hs,
+                     group = "school")
+  expect_identical(nomologR:::nomo_lavaan_cases(fit), list(n_used = 291, data_n = 301))
+  cases <- nomologR:::nomo_lavaan_cases(fit)
+  expect_identical(nomologR:::nomo_lavaan_cases_fact(cases), "Cases: 291 of 301 used")
+
+  local_reproducible_output(width = 80)
+  rel <- nomo_reliability(fit)
+  expect_true("Cases: 291 of 301 used | Constructs: 2" %in% capture.output(print(rel)))
+  expect_identical(summary(rel)[c("n_used", "data_n")], list(n_used = 291, data_n = 301))
+  expect_match(capture.output(print(summary(rel))),
+               "^Cases: 291 of 301 used \\| Constructs: 2 \\| Review reference: \\.70$",
+               all = FALSE)
+
+  # A model fitted from a covariance matrix analyzed the sample size it was
+  # given.
+  covariance <- lavaan::cfa(
+    "visual =~ x1 + x2 + x3\ntextual =~ x4 + x5 + x6",
+    sample.cov = stats::cov(lavaan::HolzingerSwineford1939[paste0("x", 1:6)]),
+    sample.nobs = 301
+  )
+  expect_identical(nomologR:::nomo_lavaan_cases_fact(nomologR:::nomo_lavaan_cases(covariance)),
+                   "Cases: 301")
+
+  # An object saved without its fit prints without the fact, rather than
+  # reading another field for it.
+  unfitted <- rel
+  unfitted$fit <- NULL
+  expect_identical(nomologR:::nomo_lavaan_cases(unfitted[["fit"]]),
+                   list(n_used = NA_real_, data_n = NA_real_))
+  printed <- capture.output(print(unfitted))
+  expect_identical(printed[[2L]], "Constructs: 2")
+  expect_false(any(grepl("^Cases", capture.output(print(summary(unfitted))))))
+  expect_identical(nomologR:::nomo_lavaan_cases_fact(list()), "")
+})

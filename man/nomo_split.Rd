@@ -39,8 +39,9 @@ Other fields record the call, the settings used, and intermediate engine
 results. They may change between releases and are not part of the stable
 interface (see \code{?nomologR}).
 
-\code{print()} shows the sizes of the two samples, the proportion requested and
-realized, the seed, and the random-number generator.
+\code{print()} shows the cases split, the sizes of the two samples, the
+proportion requested and realized, the seed, and the random-number
+generator.
 }
 \description{
 \code{nomo_split()} creates an explicit random split for workflows in which EFA

@@ -254,10 +254,10 @@ Compare the table with the known population model:
 - `b4` is flagged for `r shown(b4)` (`r stored(b4)`) even though its population
   loading is 0.70. Its sample communality of
   `r proportion(b4$communality, reference = .40)` sits essentially at the .40
-  reference. This is sampling variability around a teaching reference — a
+  reference. This is sampling variability around a review reference — a
   reminder that references are prompts, not cliffs.
 
-`KEEP` means that no configured numerical teaching reference fired. It does
+`KEEP` means that no configured numerical review reference fired. It does
 **not** mean that theory, wording, content coverage, redundancy, or external
 validity evidence has approved the item. Likewise, `REVIEW` does not mean
 "delete." Defensible options for `a5` include retaining it because its content

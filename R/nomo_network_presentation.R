@@ -114,13 +114,18 @@ nomo_network_nearest_bound <- function(x, lower, upper) {
 
 # A bound of a predicted region as the researcher gave it: at least two
 # decimals, more when given, in the format of the estimate's kind; zero is 0.
+# Like a significance level, a bound is never shown with fewer decimals than
+# it was given, whatever `digits` print() was given; more, when it asks for
+# more.
 nomo_network_bound_text <- function(x, kind) {
   decimals <- vapply(x, function(v) {
     nchar(sub("^[^.]*\\.?", "", format(signif(abs(v), 6), scientific = FALSE,
                                        drop0trailing = TRUE)))
   }, numeric(1))
+  asked <- nomo_null_default(nomo_present_digits(), 0L)
   out <- vapply(seq_along(x), function(i) {
-    nomo_present_stat(x[[i]], kind[[i]], digits = min(4L, max(2L, decimals[[i]])))
+    nomo_present_number(x[[i]], max(asked, min(4L, max(2L, decimals[[i]]))),
+                        nomo_present_kinds[[kind[[i]]]]$bounded)
   }, character(1))
   out[x == 0] <- "0"
   out
@@ -538,8 +543,10 @@ nomo_network_present_key <- function(text, shown = character()) {
 }
 
 
+#' @rdname printing
 #' @export
-print.nomo_network <- function(x, ...) {
+print.nomo_network <- function(x, digits = NULL, ...) {
+  nomo_present_local_digits(digits)
   nomo_present_header("nomo_network", "Nomological network")
   nomo_network_present_facts(x)
   nomo_present_facts(c(
@@ -692,8 +699,10 @@ nomo_network_version_text <- function(fit) {
 }
 
 
+#' @rdname printing
 #' @export
-print.summary_nomo_network <- function(x, ...) {
+print.summary_nomo_network <- function(x, digits = NULL, ...) {
+  nomo_present_local_digits(digits)
   nomo_present_header("nomo_network", "Nomological network", summary = TRUE)
   nomo_network_present_facts(x)
   estimator <- c(x$estimator, NA_character_)[[1L]]

@@ -361,8 +361,10 @@ nomo_model_wrap_syntax <- function(lines, width = nomo_present_width()) {
 }
 
 
+#' @rdname printing
 #' @export
-print.nomo_model <- function(x, ...) {
+print.nomo_model <- function(x, digits = NULL, ...) {
+  nomo_present_digits_unused(digits, "a `nomo_model` prints model syntax, not statistics.")
   # The syntax is printed bare, so it can be copied as it is; the notes are
   # wrapped like every other note (#145).
   nomo_present_header("nomo_model", "Measurement model syntax")

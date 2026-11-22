@@ -18,7 +18,8 @@ universal deletion or validity rules.
 
 \code{print()} shows a result's main evidence and any flags and ends with a
 pointer to where to look next; \code{summary()} shows the full evidence, with the
-reason for every flag.
+reason for every flag. Either printout takes \code{digits} for the decimals of
+the statistics it shows; see \link{printing}.
 }
 \section{Stability and deprecation}{
 

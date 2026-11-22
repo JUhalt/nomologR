@@ -394,7 +394,7 @@ nomo_screen_relationships <- function(selected, item_summary, guidance,
           "Negative sign requires coding/structure review"
         } else {
           sprintf(
-            "Teaching reference %s; negative sign requires coding/structure review",
+            "Review reference %s; negative sign requires coding/structure review",
             nomo_present_stat(item_total_reference, "r")
           )
         },
@@ -439,7 +439,7 @@ nomo_screen_relationships <- function(selected, item_summary, guidance,
         metric = "corrected_item_rest",
         value = item_rest_r,
         reference = sprintf(
-          "Teaching reference %s; not a retention rule",
+          "Review reference %s; not a retention rule",
           nomo_present_stat(item_total_reference, "r")
         ),
         severity = "review",

@@ -634,8 +634,10 @@ nomo_power_summary <- function(run, parameters, focus, size) {
 }
 
 
+#' @rdname printing
 #' @export
-print.nomo_power <- function(x, ...) {
+print.nomo_power <- function(x, digits = NULL, ...) {
+  nomo_present_local_digits(digits)
   nomo_power_present(x)
   invisible(x)
 }
@@ -651,8 +653,10 @@ summary.nomo_power <- function(object, ...) {
 }
 
 
+#' @rdname printing
 #' @export
-print.summary_nomo_power <- function(x, ...) {
+print.summary_nomo_power <- function(x, digits = NULL, ...) {
+  nomo_present_local_digits(digits)
   nomo_power_present(x, detail = TRUE)
   invisible(x)
 }

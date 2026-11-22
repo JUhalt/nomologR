@@ -69,11 +69,15 @@ nomo_screen_reviewed_negative_pairs <- function(x) {
 #' Print a summary_nomo_screen object
 #'
 #' @param x A `summary_nomo_screen` object.
+#' @param digits `NULL` (default) for the decimals of each kind of statistic,
+#'   or one whole number from 0 to 10 for the decimals of every statistic
+#'   shown. See [printing].
 #' @param ... Additional arguments, currently ignored.
 #'
 #' @return `x`, invisibly.
 #' @export
-print.summary_nomo_screen <- function(x, ...) {
+print.summary_nomo_screen <- function(x, digits = NULL, ...) {
+  nomo_present_local_digits(digits)
   overview <- x$overview[1L, , drop = FALSE]
 
   nomo_present_header("nomo_screen", "Item and data audit", summary = TRUE)
@@ -140,7 +144,7 @@ print.summary_nomo_screen <- function(x, ...) {
 }
 
 
-# The teaching reference for item-rest correlations, or NA when the guidance
+# The review reference for item-rest correlations, or NA when the guidance
 # has no usable one.
 nomo_screen_item_rest_reference <- function(guidance) {
   reference <- guidance$item_total_reference

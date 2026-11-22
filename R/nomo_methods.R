@@ -1185,7 +1185,7 @@ nomo_methods_registry <- function() {
       "A conventional value below which items were once deleted.",
       paste(
         "No simulation basis for a universal threshold. Displayed as a labeled",
-        "teaching reference; nomologR never deletes an item by this rule."
+        "review reference; nomologR never deletes an item by this rule."
       ),
       "nomo_screen()", "nomologR",
       c("nunnally_bernstein_1994", "clark_watson_2019")
@@ -1610,7 +1610,7 @@ nomo_methods_registry <- function() {
       "Conventional values such as CFI and TLI near .95, RMSEA near .06, SRMR near .08.",
       paste(
         "Derived under specific simulation conditions and widely overgeneralized",
-        "since. Displayed as labeled teaching references, never as pass/fail",
+        "since. Displayed as labeled review references, never as pass/fail",
         "rules."
       ),
       "nomo_cfa()", "nomologR",

@@ -84,8 +84,9 @@ Other fields record the call, the settings used, and intermediate engine
 results. They may change between releases and are not part of the stable
 interface (see \code{?nomologR}).
 
-\code{print()} shows the range of omega, the flags it raised against the review
-reference, and how uncertainty was handled; \code{summary()} adds each
+\code{print()} shows the cases the model analyzed, the range of omega, the
+flags it raised against the review reference, and how uncertainty was
+handled; \code{summary()} adds each
 construct's omega and alpha with their intervals and score scales, the
 reason any alpha was not computed, and every flag in the decision log
 with its reason.

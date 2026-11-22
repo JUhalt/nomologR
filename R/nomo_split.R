@@ -38,8 +38,9 @@
 #'   results. They may change between releases and are not part of the stable
 #'   interface (see `?nomologR`).
 #'
-#'   `print()` shows the sizes of the two samples, the proportion requested and
-#'   realized, the seed, and the random-number generator.
+#'   `print()` shows the cases split, the sizes of the two samples, the
+#'   proportion requested and realized, the seed, and the random-number
+#'   generator.
 #'
 #' @references
 #' Fokkema, M., & Greiff, S. (2017). How performing PCA and CFA on the same
@@ -184,11 +185,13 @@ nomo_split <- function(data,
 }
 
 
+#' @rdname printing
 #' @export
-print.nomo_split <- function(x, ...) {
+print.nomo_split <- function(x, digits = NULL, ...) {
+  nomo_present_local_digits(digits)
   nomo_present_header("nomo_split", "Calibration and validation split")
   nomo_present_facts(c(
-    sprintf("Rows: %d", x$n_total),
+    sprintf("Cases: %d", x$n_total),
     sprintf("Calibration: %d", x$n_calibration),
     sprintf("Validation: %d", x$n_validation)
   ))

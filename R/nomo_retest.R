@@ -455,8 +455,10 @@ nomo_retest_log <- function(icc, reliable_change, interval, n_cases = NA_integer
 }
 
 
+#' @rdname printing
 #' @export
-print.nomo_retest <- function(x, ...) {
+print.nomo_retest <- function(x, digits = NULL, ...) {
+  nomo_present_local_digits(digits)
   nomo_retest_present_header(x, summary = FALSE)
   nomo_retest_present_table(x$icc)
   nomo_retest_present_change(x$reliable_change)
@@ -485,8 +487,10 @@ summary.nomo_retest <- function(object, ...) {
 }
 
 
+#' @rdname printing
 #' @export
-print.summary_nomo_retest <- function(x, ...) {
+print.summary_nomo_retest <- function(x, digits = NULL, ...) {
+  nomo_present_local_digits(digits)
   nomo_retest_present_header(x, summary = TRUE)
   nomo_retest_present_table(x$icc)
 

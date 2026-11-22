@@ -11,7 +11,8 @@
 #'
 #' `print()` shows a result's main evidence and any flags and ends with a
 #' pointer to where to look next; `summary()` shows the full evidence, with the
-#' reason for every flag.
+#' reason for every flag. Either printout takes `digits` for the decimals of
+#' the statistics it shows; see [printing].
 #'
 #' @section Stability and deprecation:
 #' From version 1.0.0, the public interface changes only after a deprecation
