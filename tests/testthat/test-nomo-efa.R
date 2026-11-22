@@ -1556,7 +1556,7 @@ test_that("the item plot shows each flag by shape and color with its references 
   expect_false("Secondary" %in% as.character(one$data$loading_type))
   # Only the reference line drawn is named.
   expect_identical(plot_text(one$labels$subtitle),
-                   "Absolute loadings. The dashed line marks the 0.40 loading teaching reference.")
+                   "Absolute loadings. The dashed line marks the 0.40 loading review reference.")
   expect_false(grepl("cross-loading", plot_text(one$labels$subtitle), fixed = TRUE))
 
   phi <- ggplot2::ggplot_build(plot(out, type = "factor_correlations"))

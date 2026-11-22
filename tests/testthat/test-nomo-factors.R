@@ -2469,7 +2469,7 @@ test_that("a minimal criterion set neither shows nor logs revised MAP (#145, fac
   expect_identical(levels(map$data$criterion), "Original MAP (TR2)")
   expect_identical(unique(as.character(map$data$criterion)), "Original MAP (TR2)")
   expect_identical(map$labels$title, "Velicer's minimum average partial (MAP) criterion")
-  expect_identical(map$labels$subtitle, sprintf("Original TR2 minimum: %d", out$map$n_factors_original))
+  expect_identical(map$labels$subtitle, sprintf("Original TR2 minimum: %d.", out$map$n_factors_original))
   for (p in list(map, plot(out, type = "evidence"))) {
     expect_false(grepl("TR4", plot_text(p$labels$caption), fixed = TRUE))
     expect_false(grepl("  ", p$labels$caption, fixed = TRUE))
@@ -2497,7 +2497,7 @@ test_that("a minimal criterion set neither shows nor logs revised MAP (#145, fac
   expect_match(capture.output(print(summary(core))), "TR4, the revised", all = FALSE)
   map <- plot(core, type = "map")
   expect_identical(levels(map$data$criterion), c("Original MAP (TR2)", "Revised MAP (TR4)"))
-  expect_match(map$labels$subtitle, "| Revised TR4 minimum: ", fixed = TRUE)
+  expect_match(map$labels$subtitle, ". Revised TR4 minimum: ", fixed = TRUE)
   # Revised MAP is a matrix power, as the code and the registry say (#145).
   expect_match(plot_text(map$labels$caption),
                "TR4 is based on the trace of the fourth power of the partial-correlation matrix",

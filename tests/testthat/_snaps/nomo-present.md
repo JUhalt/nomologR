@@ -1023,6 +1023,8 @@
         Measurement model alone: chi-square(49) = 61.60, p = .107
           CFI .996 | TLI 0.994 | RMSEA 0.018 | SRMR 0.020
         Structural restrictions: Delta chi-square(2) = 0.02, p = .991
+        References: CFI .950 | TLI 0.950 | RMSEA 0.060 | SRMR 0.080
+        References are review values, not cutoffs.
       
       Relations the hypothesized paths changed
         - Persistence <-> SocialDesirability: fixed to zero, although the model as

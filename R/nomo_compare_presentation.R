@@ -295,56 +295,38 @@ nomo_compare_present_evidence <- function(ev, guidance) {
 #'   for each model side by side.
 #' @param ... Unused.
 #'
-#' @return A `ggplot2` object. Models are told apart by color and by shapes
-#'   that the package does not use for a status.
+#' @return A `ggplot2` object. The fit plot draws each model as a row and
+#'   flags a value beyond its reference with the package's status shapes, as
+#'   `plot()` of a [nomo_cfa()] fit does. In the loadings plot, models are told
+#'   apart by color and by shapes that the package does not use for a status.
 #' @export
 plot.nomo_compare <- function(x, type = c("fit", "loadings"), ...) {
   type <- nomo_match_arg(type)
-  model_levels <- rev(x$models$model)
 
   if (type == "fit") {
+    # One row per model, in the design every global-fit plot shares (#145,
+    # clarity-13), with each value flagged against its reference as nomo_cfa()
+    # flags it.
     metrics <- c(CFI = "cfi", TLI = "tli", RMSEA = "rmsea", SRMR = "srmr")
+    refs <- x$guidance$fit_reference
     dat <- do.call(rbind, lapply(names(metrics), function(label) {
       data.frame(
         model = x$models$model,
         metric = label,
         value = x$models[[metrics[[label]]]],
+        reference = suppressWarnings(as.numeric(refs[[metrics[[label]]]])[1L]),
         stringsAsFactors = FALSE
       )
     }))
     dat <- dat[is.finite(dat$value), , drop = FALSE]
     if (!nrow(dat)) stop("No finite fit indices are available to plot.", call. = FALSE)
+    dat$status <- nomo_plot_fit_status(dat$metric, dat$value, dat$reference)
 
-    refs <- x$guidance$fit_reference
-    ref_dat <- data.frame(
-      metric = names(metrics),
-      reference = c(refs$cfi, refs$tli, refs$rmsea, refs$srmr),
-      stringsAsFactors = FALSE
-    )
-    named <- paste(ref_dat$metric, nomo_cfa_fit_number(ref_dat$metric, ref_dat$reference),
-                   collapse = ", ")
-    dat$metric <- factor(dat$metric, levels = names(metrics))
-    ref_dat$metric <- factor(ref_dat$metric, levels = names(metrics))
-    dat$model <- factor(dat$model, levels = model_levels)
-
-    return(
-      ggplot2::ggplot(dat, ggplot2::aes(x = value, y = model)) +
-        ggplot2::geom_vline(
-          data = ref_dat,
-          mapping = ggplot2::aes(xintercept = reference),
-          linetype = 2
-        ) +
-        ggplot2::geom_point(size = 3) +
-        ggplot2::facet_wrap(stats::as.formula("~ metric"), scales = "free_x") +
-        nomo_plot_labs(
-          title = "Global fit across compared models",
-          subtitle = paste0("Dashed lines are teaching references: ", named, "."),
-          x = NULL,
-          y = NULL,
-          caption = "References are review prompts, not decision rules. No model is selected automatically."
-        ) +
-        ggplot2::theme_minimal()
-    )
+    return(nomo_plot_fit_indices(
+      dat, title = "Global fit across compared models",
+      values = "each model's values",
+      extra = "No model is selected automatically."
+    ))
   }
 
   if (!nrow(x$loadings)) stop("No standardized loadings are available to plot.", call. = FALSE)
@@ -379,7 +361,7 @@ plot.nomo_compare <- function(x, type = c("fit", "loadings"), ...) {
     nomo_plot_labs(
       title = "Standardized loadings across compared models",
       subtitle = paste0(
-        "Dashed line: teaching reference, ",
+        "Dashed line: review reference, ",
         nomo_present_stat(x$guidance$cfa_loading_reference, "loading"), "."
       ),
       x = "Standardized loading",

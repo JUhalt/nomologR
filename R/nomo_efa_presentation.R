@@ -352,11 +352,11 @@ plot.nomo_efa <- function(x,
     # reference is drawn and named.
     reference_text <- if (any(references$loading_type == "Secondary")) {
       sprintf(
-        "Dashed lines mark the %s loading and %s cross-loading teaching references.",
+        "Dashed lines mark the %s loading and %s cross-loading review references.",
         nomo_present_stat(load_ref, "loading"), nomo_present_stat(cross_ref, "loading")
       )
     } else {
-      sprintf("The dashed line marks the %s loading teaching reference.",
+      sprintf("The dashed line marks the %s loading review reference.",
               nomo_present_stat(load_ref, "loading"))
     }
 
@@ -423,7 +423,7 @@ plot.nomo_efa <- function(x,
         nomo_plot_labs(
           title = "EFA residual-correlation matrix",
           subtitle = sprintf(
-            "Unique off-diagonal pairs | Root mean square residual (RMSR) = %s",
+            "Unique off-diagonal pairs. Root mean square residual (RMSR) = %s.",
             nomo_present_stat(x$rmsr, "fit")
           ),
           x = NULL,
@@ -456,7 +456,7 @@ plot.nomo_efa <- function(x,
         ggplot2::ylim(-1, 1) +
         nomo_plot_labs(
           title = "EFA factor correlations",
-          subtitle = "Interfactor correlations require at least two factors"
+          subtitle = "Interfactor correlations require at least two factors."
         ) +
         ggplot2::theme_void(base_size = 11)
     )
@@ -497,11 +497,11 @@ plot.nomo_efa <- function(x,
     nomo_plot_labs(
       title = "EFA factor correlations",
       subtitle = if (isTRUE(x$oblique)) {
-        "Unique interfactor correlations from the oblique solution"
+        "Unique interfactor correlations from the oblique solution."
       } else if (identical(x$rotation, "none")) {
-        "Unrotated solution: the factors are uncorrelated by construction"
+        "Unrotated solution: the factors are uncorrelated by construction."
       } else {
-        "Orthogonal rotation constrains interfactor correlations to zero"
+        "Orthogonal rotation constrains interfactor correlations to zero."
       },
       x = NULL,
       y = NULL,
@@ -515,13 +515,13 @@ plot.nomo_efa <- function(x,
 # The pattern plot's subtitle names the solution that was fitted (#145, efa-7).
 nomo_efa_solution_subtitle <- function(x) {
   if (isTRUE(x$n_factors < 2L)) {
-    "One-factor solution: the loadings are not rotated"
+    "One-factor solution: the loadings are not rotated."
   } else if (isTRUE(x$oblique)) {
-    "Oblique solution: pattern coefficients are primary for factor interpretation"
+    "Oblique solution: pattern coefficients are primary for factor interpretation."
   } else if (identical(x$rotation, "none")) {
-    "Unrotated solution: the loadings are not rotated toward simple structure"
+    "Unrotated solution: the loadings are not rotated toward simple structure."
   } else {
-    "Orthogonal solution: factor axes are constrained to be uncorrelated"
+    "Orthogonal solution: factor axes are constrained to be uncorrelated."
   }
 }
 

@@ -2011,7 +2011,7 @@ test_that("plots draw status by shape and color, with plain titles (#145)", {
   item_rest <- plot(out, type = "item_rest")
   expect_true(any(vapply(item_rest$layers, function(l) inherits(l$geom, "GeomPoint"), logical(1))))
   expect_identical(item_rest$labels$subtitle, "Each item against the sum of the other items.")
-  expect_match(plot_text(item_rest$labels$caption), "dashed line marks the .30 teaching reference",
+  expect_match(plot_text(item_rest$labels$caption), "dashed line marks the .30 review reference",
                fixed = TRUE)
   bare <- out
   bare$guidance$item_total_reference <- NULL

@@ -16,8 +16,10 @@ for each model side by side.}
 \item{...}{Unused.}
 }
 \value{
-A \code{ggplot2} object. Models are told apart by color and by shapes
-that the package does not use for a status.
+A \code{ggplot2} object. The fit plot draws each model as a row and
+flags a value beyond its reference with the package's status shapes, as
+\code{plot()} of a \code{\link[=nomo_cfa]{nomo_cfa()}} fit does. In the loadings plot, models are told
+apart by color and by shapes that the package does not use for a status.
 }
 \description{
 Plot a measurement-model comparison
